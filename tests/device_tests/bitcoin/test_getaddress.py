@@ -197,7 +197,6 @@ def test_altcoin_address_mac(client: Client):
 
 
 @pytest.mark.multisig
-@pytest.mark.models(skip="legacy", reason="Sortedmulti is not supported")
 def test_multisig_pubkeys_order(client: Client):
     xpub_internal = btc.get_public_node(client, parse_path("m/45h/0")).xpub
     xpub_external = btc.get_public_node(client, parse_path("m/45h/1")).xpub

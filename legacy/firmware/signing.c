@@ -124,8 +124,8 @@ typedef struct {
   bool multisig_fp_set;
   bool multisig_fp_mismatch;
   uint8_t multisig_fp[32];
-  bool multisig;
-  MatchState multisig_state;
+  bool is_multisig;
+  MatchState is_multisig_state;
   uint32_t in_address_n[8];
   size_t in_address_n_count;
   InputScriptType in_script_type;
@@ -980,17 +980,17 @@ static bool extract_input_multisig_fp(TxInfo *tx_info,
   return true;
 }
 
-static void extract_multisig(TxInfo *tx_info, const TxInputType *txinput) {
-  switch (tx_info->multisig_state) {
+static void extract_is_multisig(TxInfo *tx_info, const TxInputType *txinput) {
+  switch (tx_info->is_multisig_state) {
     case MatchState_MISMATCH:
       return;
     case MatchState_UNDEFINED:
-      tx_info->multisig_state = MatchState_MATCH;
-      tx_info->multisig = txinput->has_multisig;
+      tx_info->is_multisig_state = MatchState_MATCH;
+      tx_info->is_multisig = txinput->has_multisig;
       return;
     case MatchState_MATCH:
-      if (txinput->has_multisig != tx_info->multisig) {
-        tx_info->multisig_state = MatchState_MISMATCH;
+      if (txinput->has_multisig != tx_info->is_multisig) {
+        tx_info->is_multisig_state = MatchState_MISMATCH;
       }
       return;
   }
@@ -1004,10 +1004,10 @@ bool check_change_multisig_fp(const TxInfo *tx_info,
          memcmp(tx_info->multisig_fp, h, 32) == 0;
 }
 
-bool check_change_multisig(const TxInfo *tx_info,
-                           const TxOutputType *txoutput) {
-  return tx_info->multisig_state == MatchState_MATCH &&
-         tx_info->multisig == txoutput->has_multisig;
+bool check_change_is_multisig(const TxInfo *tx_info,
+                              const TxOutputType *txoutput) {
+  return tx_info->is_multisig_state == MatchState_MATCH &&
+         tx_info->is_multisig == txoutput->has_multisig;
 }
 
 static InputScriptType simple_script_type(InputScriptType script_type) {
@@ -1269,7 +1269,7 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
   tx_info->min_sequence = SEQUENCE_FINAL;
   tx_info->multisig_fp_set = false;
   tx_info->multisig_fp_mismatch = false;
-  tx_info->multisig_state = MatchState_UNDEFINED;
+  tx_info->is_multisig_state = MatchState_UNDEFINED;
   tx_info->in_address_n_count = 0;
   tx_info->in_script_type = 0;
   tx_info->in_script_type_state = MatchState_UNDEFINED;
@@ -1738,7 +1738,7 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
 
     // Remember whether all inputs are singlesig or all inputs are multisig.
     // Change-outputs must be of the same type.
-    extract_multisig(tx_info, txinput);
+    extract_is_multisig(tx_info, txinput);
 
     // Remember the input's script type. Change-outputs must use the same script
     // type as all inputs.
@@ -2102,7 +2102,7 @@ static bool is_change_output(const TxInfo *tx_info,
     return false;
   }
 
-  if (!check_change_multisig(tx_info, txoutput)) {
+  if (!check_change_is_multisig(tx_info, txoutput)) {
     return false;
   }
 

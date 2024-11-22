@@ -162,7 +162,6 @@ def test_2_of_3(client: Client, chunkify: bool):
 
 
 @pytest.mark.multisig
-@pytest.mark.models(skip="legacy", reason="Sortedmulti is not supported")
 def test_pubkeys_order(client: Client):
     node_internal = btc.get_public_node(
         client, parse_path("m/45h/0"), coin_name="Bitcoin"
