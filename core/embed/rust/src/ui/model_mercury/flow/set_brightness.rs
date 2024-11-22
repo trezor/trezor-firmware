@@ -64,7 +64,8 @@ impl FlowController for SetBrightness {
 
 static BRIGHTNESS: AtomicU8 = AtomicU8::new(0);
 
-pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
+pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
+    let brightness = brightness.unwrap_or(theme::backlight::get_backlight_normal());
     let content_slider = Frame::left_aligned(
         TR::brightness__title.into(),
         NumberInputSliderDialog::new(
@@ -122,6 +123,7 @@ pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
     )
     .with_footer(TR::instructions__swipe_up.into(), None)
     .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
     .map(move |_msg| Some(FlowMsg::Confirmed));
 
     let res = SwipeFlow::new(&SetBrightness::Slider)?

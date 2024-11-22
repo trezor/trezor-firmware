@@ -671,7 +671,7 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
 
 extern "C" fn new_set_brightness(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let current: u8 = kwargs.get(Qstr::MP_QSTR_current)?.try_into()?;
+        let current: Option<u8> = kwargs.get(Qstr::MP_QSTR_current)?.try_into_option()?;
         let flow = flow::set_brightness::new_set_brightness(current)?;
         Ok(LayoutObj::new_root(flow)?.into())
     };
