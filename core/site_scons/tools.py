@@ -52,7 +52,8 @@ def get_defs_for_cmake(defs: list[str | tuple[str, str]]) -> list[str]:
     result: list[str] = []
     for d in defs:
         if type(d) is tuple:
-            result.append(d[0] + "=" + d[1])
+            val = d[1].replace('"', '\\"').replace("(", "\\(").replace(")", "\\)")
+            result.append(f'{d[0]}="{val}"')
         else:
             result.append(d)
     return result
