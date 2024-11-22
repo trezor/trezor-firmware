@@ -226,7 +226,7 @@ def test_external_internal(client: Client):
                 client,
                 INP1,
                 INP2,
-                change_indices=[] if is_core(client) else [2],
+                change_indices=[],
                 foreign_indices=[2],
             )
         )
@@ -262,7 +262,7 @@ def test_internal_external(client: Client):
                 client,
                 INP1,
                 INP2,
-                change_indices=[] if is_core(client) else [1],
+                change_indices=[],
                 foreign_indices=[1],
             )
         )
