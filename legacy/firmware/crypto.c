@@ -18,6 +18,7 @@
  */
 
 #include "crypto.h"
+#include <stdlib.h>
 #include <string.h>
 #include "address.h"
 #include "aes/aes.h"
@@ -368,6 +369,11 @@ uint32_t cryptoMultisigPubkeyCount(const MultisigRedeemScriptType *multisig) {
                                : multisig->pubkeys_count;
 }
 
+static int comparePubkeysLexicographically(const void *first,
+                                           const void *second) {
+  return memcmp(first, second, 33);
+}
+
 uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
                                const MultisigRedeemScriptType *multisig,
                                uint8_t *pubkeys) {
@@ -384,12 +390,35 @@ uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
     memcpy(pubkeys + i * 33, pubnode->public_key, 33);
   }
 
+  if (multisig->has_pubkeys_order &&
+      multisig->pubkeys_order == MultisigPubkeysOrder_LEXICOGRAPHIC) {
+    qsort(pubkeys, n, 33, comparePubkeysLexicographically);
+  }
+
   return n;
 }
 
 int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
                               const MultisigRedeemScriptType *multisig,
                               const uint8_t *pubkey) {
+  uint32_t n = cryptoMultisigPubkeyCount(multisig);
+
+  uint8_t pubkeys[33 * n];
+  if (!cryptoMultisigPubkeys(coin, multisig, pubkeys)) {
+    return -1;
+  }
+
+  for (size_t i = 0; i < n; i++) {
+    if (memcmp(pubkeys + i * 33, pubkey, 33) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int cryptoMultisigXpubIndex(const CoinInfo *coin,
+                            const MultisigRedeemScriptType *multisig,
+                            const uint8_t *pubkey) {
   for (size_t i = 0; i < cryptoMultisigPubkeyCount(multisig); i++) {
     const HDNode *pubnode = cryptoMultisigPubkey(coin, multisig, i);
     if (pubnode && memcmp(pubnode->public_key, pubkey, 33) == 0) {
@@ -399,9 +428,15 @@ int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
   return -1;
 }
 
+static int comparePubnodesLexicographically(const void *first,
+                                            const void *second) {
+  return memcmp(*(const HDNodeType **)first, *(const HDNodeType **)second,
+                sizeof(HDNodeType));
+}
+
 int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
                               uint8_t *hash) {
-  static const HDNodeType *pubnodes[15], *swap;
+  static const HDNodeType *pubnodes[15];
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
   if (n < 1 || n > 15) {
     return 0;
@@ -422,21 +457,22 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
     if (pubnodes[i]->public_key.size != 33) return 0;
     if (pubnodes[i]->chain_code.size != 32) return 0;
   }
-  // minsort according to pubkey
-  for (uint32_t i = 0; i < n - 1; i++) {
-    for (uint32_t j = n - 1; j > i; j--) {
-      if (memcmp(pubnodes[i]->public_key.bytes, pubnodes[j]->public_key.bytes,
-                 33) > 0) {
-        swap = pubnodes[i];
-        pubnodes[i] = pubnodes[j];
-        pubnodes[j] = swap;
-      }
-    }
+
+  uint32_t pubkeys_order = multisig->has_pubkeys_order
+                               ? multisig->pubkeys_order
+                               : MultisigPubkeysOrder_PRESERVED;
+
+  if (pubkeys_order == MultisigPubkeysOrder_LEXICOGRAPHIC) {
+    // If the order of pubkeys is lexicographic, we don't want the fingerprint
+    // to depend on the order of the pubnodes, so we sort the pubnodes before
+    // hashing.
+    qsort(pubnodes, n, sizeof(HDNodeType *), comparePubnodesLexicographically);
   }
-  // hash sorted nodes
+
   SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
   sha256_Update(&ctx, (const uint8_t *)&(multisig->m), sizeof(uint32_t));
+  sha256_Update(&ctx, (const uint8_t *)&(pubkeys_order), sizeof(uint32_t));
   for (uint32_t i = 0; i < n; i++) {
     sha256_Update(&ctx, (const uint8_t *)&(pubnodes[i]->depth),
                   sizeof(uint32_t));
