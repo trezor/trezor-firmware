@@ -437,7 +437,6 @@ def test_crw(client: Client):
 
 
 @pytest.mark.multisig
-@pytest.mark.models(skip="legacy", reason="Not fixed")
 def test_multisig_different_paths(client: Client):
     nodes = [
         btc.get_public_node(client, parse_path(f"m/45h/{i}"), coin_name="Bitcoin").node
