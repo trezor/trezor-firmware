@@ -42,11 +42,8 @@ MP_DEFINE_EXCEPTION(TropicError, Exception)
 #define ECC_SLOT_COUNT 32
 #define SIG_SIZE 64
 
-STATIC void tropic_deinit(lt_handle_t *handle) {
-  if (lt_deinit(handle) != LT_OK) {
-    mp_raise_msg(&mp_type_TropicError, "lt_deinit failed.");
-  }
-}
+STATIC bool lt_handle_initialized = false;
+STATIC lt_handle_t lt_handle = {0};
 
 STATIC void tropic_init(lt_handle_t *handle) {
   lt_ret_t ret = LT_FAIL;
@@ -60,14 +57,12 @@ STATIC void tropic_init(lt_handle_t *handle) {
 
   ret = lt_get_info_cert(handle, X509_cert, LT_L2_GET_INFO_REQ_CERT_SIZE);
   if (ret != LT_OK) {
-    tropic_deinit(handle);
     mp_raise_msg(&mp_type_TropicError, "lt_get_info_cert failed.");
   }
 
   uint8_t stpub[32] = {0};
   ret = lt_cert_verify_and_parse(X509_cert, 512, stpub);
   if (ret != LT_OK) {
-    tropic_deinit(handle);
     mp_raise_msg(&mp_type_TropicError, "lt_cert_verify_and_parse failed.");
   }
 
@@ -77,7 +72,6 @@ STATIC void tropic_init(lt_handle_t *handle) {
 
   ret = lt_handshake(handle, stpub, pkey_index, shipriv, shipub);
   if (ret != LT_OK) {
-    tropic_deinit(handle);
     mp_raise_msg(&mp_type_TropicError, "lt_handshake failed.");
   }
 }
@@ -87,28 +81,26 @@ STATIC void tropic_init(lt_handle_t *handle) {
 ///     Test the session by pinging the chip.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
-  lt_handle_t handle = {0};
   lt_ret_t ret = LT_FAIL;
 
-  tropic_init(&handle);
+  if (!lt_handle_initialized) {
+    tropic_init(&lt_handle);
+    lt_handle_initialized = true;
+  }
 
   uint8_t msg_in[PING_MSG_MAX_LEN] = {0};
 
   mp_buffer_info_t message_b = {0};
   mp_get_buffer_raise(message, &message_b, MP_BUFFER_READ);
   if (message_b.len > 0) {
-    ret = lt_ping(&handle, (uint8_t *)message_b.buf, (uint8_t *)msg_in,
+    ret = lt_ping(&lt_handle, (uint8_t *)message_b.buf, (uint8_t *)msg_in,
                   message_b.len);
     if (ret != LT_OK) {
-      tropic_deinit(&handle);
       mp_raise_msg(&mp_type_TropicError, "lt_ping failed.");
     }
   } else {
-    tropic_deinit(&handle);
     return mp_const_none;
   }
-
-  tropic_deinit(&handle);
 
   vstr_t result = {0};
   vstr_init_len(&result, message_b.len);
@@ -126,19 +118,18 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_ping_obj,
 ///     Return the chip's certificate.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_tropic_get_certificate() {
-  lt_handle_t handle = {0};
   lt_ret_t ret = LT_FAIL;
 
-  tropic_init(&handle);
-
-  uint8_t X509_cert[512] = {0};
-  ret = lt_get_info_cert(&handle, X509_cert, 512);
-  if (ret != LT_OK) {
-    tropic_deinit(&handle);
-    mp_raise_msg(&mp_type_TropicError, "lt_get_info_cert failed.");
+  if (!lt_handle_initialized) {
+    tropic_init(&lt_handle);
+    lt_handle_initialized = true;
   }
 
-  tropic_deinit(&handle);
+  uint8_t X509_cert[512] = {0};
+  ret = lt_get_info_cert(&lt_handle, X509_cert, 512);
+  if (ret != LT_OK) {
+    mp_raise_msg(&mp_type_TropicError, "lt_get_info_cert failed.");
+  }
 
   vstr_t vstr = {0};
   vstr_init_len(&vstr, 512);
@@ -162,59 +153,23 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_key_generate(mp_obj_t key_index) {
     mp_raise_ValueError("Invalid index.");
   }
 
-  lt_handle_t handle = {0};
   lt_ret_t ret = LT_FAIL;
 
-  tropic_init(&handle);
-
-  ret = lt_ecc_key_generate(&handle, idx, CURVE_ED25519);
-  if (ret != LT_OK) {
-    tropic_deinit(&handle);
-    mp_raise_msg(&mp_type_TropicError, "lt_ecc_key_generate failed.");
+  if (!lt_handle_initialized) {
+    tropic_init(&lt_handle);
+    lt_handle_initialized = true;
   }
 
-  tropic_deinit(&handle);
+  ret = lt_ecc_key_generate(&lt_handle, idx, CURVE_ED25519);
+  if (ret != LT_OK) {
+    mp_raise_msg(&mp_type_TropicError, "lt_ecc_key_generate failed.");
+  }
 
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_key_generate_obj,
                                  mod_trezorcrypto_tropic_key_generate);
 
-/// def random_get(
-///     len: int,
-/// ) -> bytes:
-///     """
-///     Get number of random bytes.
-///     """
-STATIC mp_obj_t mod_trezorcrypto_tropic_random_get(mp_obj_t len) {
-  mp_int_t len_rand = mp_obj_get_int(len);
-  if (len_rand < 0 || len_rand > RANDOM_VALUE_GET_LEN_MAX) {
-    mp_raise_ValueError("Invalid length.");
-  }
-
-  lt_handle_t handle = {0};
-  lt_ret_t ret = LT_FAIL;
-
-  tropic_init(&handle);
-
-  uint8_t buff[RANDOM_VALUE_GET_LEN_MAX] = {0};
-  ret = lt_random_get(&handle, buff, len_rand);
-  if (ret != LT_OK) {
-    tropic_deinit(&handle);
-    mp_raise_msg(&mp_type_TropicError, "lt_random_get failed.");
-  }
-
-  tropic_deinit(&handle);
-
-  vstr_t vstr = {0};
-  vstr_init_len(&vstr, len_rand);
-
-  memcpy(vstr.buf, buff, len_rand);
-
-  return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_random_get_obj,
-                                 mod_trezorcrypto_tropic_random_get);
 
 /// def sign(
 ///     key_index: int,
@@ -236,23 +191,22 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
     mp_raise_ValueError("Invalid length of digest.");
   }
 
-  lt_handle_t handle = {0};
   lt_ret_t ret = LT_FAIL;
 
-  tropic_init(&handle);
+  if (!lt_handle_initialized) {
+    tropic_init(&lt_handle);
+    lt_handle_initialized = true;
+  }
 
   vstr_t sig = {0};
   vstr_init_len(&sig, SIG_SIZE);
 
-  ret = lt_ecc_eddsa_sign(&handle, idx, (const uint8_t *)dig.buf, dig.len,
+  ret = lt_ecc_eddsa_sign(&lt_handle, idx, (const uint8_t *)dig.buf, dig.len,
                           ((uint8_t *)sig.buf), SIG_SIZE);
   if (ret != LT_OK) {
     vstr_clear(&sig);
-    tropic_deinit(&handle);
     mp_raise_msg(&mp_type_TropicError, "lt_ecc_eddsa_sign failed.");
   }
-
-  tropic_deinit(&handle);
 
   sig.len = SIG_SIZE;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
@@ -267,8 +221,6 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_tropic_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_tropic_get_certificate_obj)},
     {MP_ROM_QSTR(MP_QSTR_key_generate),
      MP_ROM_PTR(&mod_trezorcrypto_tropic_key_generate_obj)},
-    {MP_ROM_QSTR(MP_QSTR_random_get),
-     MP_ROM_PTR(&mod_trezorcrypto_tropic_random_get_obj)},
     {MP_ROM_QSTR(MP_QSTR_sign), MP_ROM_PTR(&mod_trezorcrypto_tropic_sign_obj)},
     {MP_ROM_QSTR(MP_QSTR_TropicError), MP_ROM_PTR(&mp_type_TropicError)}};
 STATIC MP_DEFINE_CONST_DICT(mod_trezorcrypto_tropic_globals,
