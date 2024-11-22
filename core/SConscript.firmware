@@ -20,6 +20,13 @@ MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 
+STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
+if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
+    raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
+if STORAGE_INSECURE_TESTING_MODE:
+    DISABLE_OPTIGA = True
+    PYOPT = "0"
+
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
   exit(1)
@@ -370,6 +377,9 @@ if THP:
     SOURCE_MOD += [
         'vendor/trezor-crypto/elligator2.c',
     ]
+
+if STORAGE_INSECURE_TESTING_MODE:
+    CPPDEFINES_MOD += ['STORAGE_INSECURE_TESTING_MODE']
 
 ui.init_ui(TREZOR_MODEL, "firmware", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
 
@@ -875,6 +885,14 @@ elif 'STM32U5G9xx' in CPPDEFINES_HAL or 'STM32U585xx' in CPPDEFINES_HAL:
         ]
 else:
     raise Exception("Unknown MCU")
+
+if STORAGE_INSECURE_TESTING_MODE:
+    INSECURE_TESTING_MODE_STR = """
+#########################################################
+#   STORAGE_INSECURE_TESTING_MODE enabled, DO NOT USE   #
+#########################################################
+"""
+    action_bin.append(INSECURE_TESTING_MODE_STR)
 
 program_bin = env.Command(
     target='firmware.bin',

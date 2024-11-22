@@ -86,8 +86,12 @@ const uint32_t V0_PIN_EMPTY = 1;
 // up constant storage space.
 #define MAX_WIPE_CODE_LEN 50
 
+#if STORAGE_INSECURE_TESTING_MODE && !PRODUCTION
+#define PIN_ITER_COUNT 1
+#else
 // The total number of iterations to use in PBKDF2.
 #define PIN_ITER_COUNT 20000
+#endif
 
 // The minimum number of milliseconds between progress updates.
 #define MIN_PROGRESS_UPDATE_MS 100

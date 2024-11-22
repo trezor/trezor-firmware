@@ -16,6 +16,13 @@ DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 
+STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
+if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
+    raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
+if STORAGE_INSECURE_TESTING_MODE:
+    DISABLE_OPTIGA = True
+    PYOPT = "0"
+
 FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
@@ -238,6 +245,8 @@ if THP:
         'vendor/trezor-crypto/elligator2.c',
     ]
 
+if STORAGE_INSECURE_TESTING_MODE:
+    CPPDEFINES_MOD += ['STORAGE_INSECURE_TESTING_MODE']
 
 env = Environment(
     ENV=os.environ,
@@ -413,6 +422,14 @@ action_bin=[
     '$OBJCOPY -O binary -j .flash -j .uflash  -j .data -j .confidential $SOURCE ${TARGET}',
     '$CP $TARGET ' + BINARY_NAME,
 ]
+
+if STORAGE_INSECURE_TESTING_MODE:
+    INSECURE_TESTING_MODE_STR = """
+#########################################################
+#   STORAGE_INSECURE_TESTING_MODE enabled, DO NOT USE   #
+#########################################################
+"""
+    action_bin.append(INSECURE_TESTING_MODE_STR)
 
 program_bin = env.Command(
     target='kernel.bin',
