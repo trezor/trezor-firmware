@@ -2,6 +2,7 @@
 #define TREZOR_T3W1_REVA_H_
 
 #define VDD_1V8 1
+#define USE_SMPS 1
 
 #define BTN_POWER_PIN GPIO_PIN_5
 #define BTN_POWER_PORT GPIOE
