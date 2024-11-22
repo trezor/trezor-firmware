@@ -76,21 +76,17 @@ def configure(
         features_available.append("haptic")
         defines += ["USE_HAPTIC=1"]
 
-    # if "ble" in features_wanted:
-    #     sources += ["embed/trezorhal/stm32f4/ble/ble_hal.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/dfu.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/fwu.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/ble.c"]
-    #     sources += ["embed/trezorhal/stm32f4/ble/messages.c"]
-    #     sources += [
-    #         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_uart.c"
-    #     ]
-    #     features_available.append("ble")
-    #     defines += [("USE_BLE", "1")]
-
     if "ble" in features_wanted:
+        sources += ["embed/io/ble/stm32/ble.c"]
+        paths += ["embed/io/ble/inc"]
+        features_available.append("ble")
+        defines += [("USE_BLE", "1")]
+        sources += ["embed/io/nrf/stm32u5/nrf.c"]
+        sources += ["embed/io/nrf/crc8.c"]
+        paths += ["embed/io/nrf/inc"]
         sources += [
-            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart.c",
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart_ex.c",
         ]
 
     if "optiga" in features_wanted:
