@@ -182,6 +182,7 @@ async def _require_confirm_change_display_rotation(rotation: DisplayRotation) ->
     await confirm_action(
         "set_rotation",
         TR.rotation__title_change,
+        subtitle=TR.words__settings,
         description=TR.rotation__change_template,
         description_param=label,
         br_code=BRT_PROTECT_CALL,

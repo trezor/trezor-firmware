@@ -894,11 +894,11 @@ pub enum TranslatedString {
     ripple__confirm_tag = 605,  // "Confirm tag"
     #[cfg(feature = "universal_fw")]
     ripple__destination_tag_template = 606,  // "Destination tag:\n{0}"
-    rotation__change_template = 607,  // "Do you want to change device rotation to {0}?"
+    rotation__change_template = 607,  // "Change display orientation to {0}?"
     rotation__east = 608,  // "east"
     rotation__north = 609,  // "north"
     rotation__south = 610,  // "south"
-    rotation__title_change = 611,  // "Change rotation"
+    rotation__title_change = 611,  // "Display orientation"
     rotation__west = 612,  // "west"
     safety_checks__approve_unsafe_always = 613,  // "Trezor will allow you to approve some actions which might be unsafe."
     safety_checks__approve_unsafe_temporary = 614,  // "Trezor will temporarily allow you to approve some actions which might be unsafe."
@@ -2270,11 +2270,11 @@ impl TranslatedString {
             Self::ripple__confirm_tag => "Confirm tag",
             #[cfg(feature = "universal_fw")]
             Self::ripple__destination_tag_template => "Destination tag:\n{0}",
-            Self::rotation__change_template => "Do you want to change device rotation to {0}?",
+            Self::rotation__change_template => "Change display orientation to {0}?",
             Self::rotation__east => "east",
             Self::rotation__north => "north",
             Self::rotation__south => "south",
-            Self::rotation__title_change => "Change rotation",
+            Self::rotation__title_change => "Display orientation",
             Self::rotation__west => "west",
             Self::safety_checks__approve_unsafe_always => "Trezor will allow you to approve some actions which might be unsafe.",
             Self::safety_checks__approve_unsafe_temporary => "Trezor will temporarily allow you to approve some actions which might be unsafe.",
