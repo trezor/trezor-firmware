@@ -95,29 +95,32 @@ def navigate_to_action_and_press(
     except ValueError:
         raise ValueError(f"Action {wanted_action} is not supported in {all_actions}")
 
-    def current_action() -> str:
-        return layout.get_middle_choice()
-
-    def current_is_wanted(wanted_action: str) -> bool:
-        # Allowing for possible multiple actions on one button
-        return (
-            current_action() == wanted_action
-            or current_action() in wanted_action.split("|")
-        )
-
     # Navigate
     layout = debug.read_layout()
-    while not current_is_wanted(wanted_action):
-        layout = _move_one_closer(
-            debug=debug,
-            wanted_action=wanted_action,
-            current_action=current_action(),
-            all_actions=all_actions,
-            is_carousel=is_carousel,
-        )
+    current_action = layout.get_middle_choice()
+    current_index = _get_action_index(current_action, all_actions)
+    wanted_index = _get_action_index(wanted_action, all_actions)
+
+    if not is_carousel:
+        steps = wanted_index - current_index
+    else:
+        steps = _carousel_steps(current_index, wanted_index, len(all_actions))
+
+    if steps < 0:
+        for _ in range(-steps):
+            layout = debug.press_left()
+    else:
+        for _ in range(steps):
+            layout = debug.press_right()
 
     # Press or hold
     debug.press_middle(hold_ms=hold_ms)
+
+
+def _carousel_steps(current_index: int, wanted_index: int, length: int) -> int:
+    steps_forward = (wanted_index - current_index) % length
+    steps_backward = (current_index - wanted_index) % length
+    return steps_forward if steps_forward <= steps_backward else -steps_backward
 
 
 def unlock_gesture(debug: "DebugLink") -> LayoutContent:
@@ -147,30 +150,3 @@ def _get_action_index(wanted_action: str, all_actions: AllActionsType) -> int:
                 return index
 
     raise ValueError(f"Action {wanted_action} is not supported in {all_actions}")
-
-
-def _move_one_closer(
-    debug: "DebugLink",
-    wanted_action: str,
-    current_action: str,
-    all_actions: AllActionsType,
-    is_carousel: bool,
-) -> LayoutContent:
-    """Pressing either left or right regarding to the current situation"""
-    index_diff = _get_action_index(wanted_action, all_actions) - _get_action_index(
-        current_action, all_actions
-    )
-    if not is_carousel:
-        # Simply move according to the index in a closed list
-        if index_diff > 0:
-            return debug.press_right()
-        else:
-            return debug.press_left()
-    else:
-        # Carousel can move in a circle - over the edges
-        # Always move the shortest way
-        action_half = len(all_actions) // 2
-        if index_diff > action_half or -action_half < index_diff < 0:
-            return debug.press_left()
-        else:
-            return debug.press_right()
