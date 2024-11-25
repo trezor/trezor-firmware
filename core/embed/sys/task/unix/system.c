@@ -52,7 +52,7 @@ void system_exit(int exitcode) {
 void system_exit_error_ex(const char* title, size_t title_len,
                           const char* message, size_t message_len,
                           const char* footer, size_t footer_len) {
-  fprintf(stderr, "ERROR: %s\n", message);
+  fprintf(stderr, "ERROR: %.*s\n", (int)message_len, message);
   fflush(stderr);
 
   if (g_error_handler != NULL) {
