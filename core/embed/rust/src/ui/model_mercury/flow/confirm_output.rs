@@ -136,16 +136,19 @@ impl FlowController for ConfirmOutputWithSummary {
             (Self::Main, Direction::Left) => Self::MainMenu.swipe(direction),
             (Self::Main, Direction::Up) => Self::Summary.swipe(direction),
             (Self::MainMenu, Direction::Right) => Self::Main.swipe(direction),
+            (Self::MainMenuCancel, Direction::Right) => Self::MainMenu.swipe(direction),
             (Self::AddressInfo, Direction::Right) => Self::MainMenu.swipe(direction),
             (Self::AccountInfo, Direction::Right) => Self::MainMenu.swipe(direction),
             (Self::Summary, Direction::Left) => Self::SummaryMenu.swipe(direction),
             (Self::Summary, Direction::Up) => Self::Hold.swipe(direction),
             (Self::Summary, Direction::Down) => Self::Main.swipe(direction),
             (Self::SummaryMenu, Direction::Right) => Self::Summary.swipe(direction),
+            (Self::SummaryMenuCancel, Direction::Right) => Self::SummaryMenu.swipe(direction),
             (Self::FeeInfo, Direction::Right) => Self::SummaryMenu.swipe(direction),
             (Self::Hold, Direction::Left) => Self::HoldMenu.swipe(direction),
             (Self::Hold, Direction::Down) => Self::Summary.swipe(direction),
             (Self::HoldMenu, Direction::Right) => Self::Hold.swipe(direction),
+            (Self::HoldMenuCancel, Direction::Right) => Self::HoldMenu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -156,19 +159,19 @@ impl FlowController for ConfirmOutputWithSummary {
             (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::MainMenuCancel.swipe_left()
             }
-            (Self::AccountInfo, FlowMsg::Cancelled) => Self::MainMenu.swipe_right(),
-            (Self::MainMenuCancel, FlowMsg::Cancelled) => Self::MainMenu.swipe_right(),
+            (Self::AccountInfo, FlowMsg::Cancelled) => Self::MainMenu.goto(),
+            (Self::MainMenuCancel, FlowMsg::Cancelled) => Self::MainMenu.goto(),
             (Self::AddressInfo, FlowMsg::Info) => Self::MainMenu.goto(),
             (Self::Summary, FlowMsg::Info) => Self::SummaryMenu.goto(),
             (Self::SummaryMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::SummaryMenuCancel.swipe_left()
             }
-            (Self::SummaryMenuCancel, FlowMsg::Cancelled) => Self::SummaryMenu.swipe_right(),
+            (Self::SummaryMenuCancel, FlowMsg::Cancelled) => Self::SummaryMenu.goto(),
             (Self::Hold, FlowMsg::Info) => Self::HoldMenu.goto(),
             (Self::HoldMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::HoldMenuCancel.swipe_left()
             }
-            (Self::HoldMenuCancel, FlowMsg::Cancelled) => Self::HoldMenu.swipe_right(),
+            (Self::HoldMenuCancel, FlowMsg::Cancelled) => Self::HoldMenu.goto(),
             (Self::SummaryMenu, FlowMsg::Choice(MENU_ITEM_FEE_INFO)) => Self::FeeInfo.swipe_left(),
             (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_ADDRESS_INFO)) => {
                 Self::AddressInfo.swipe_left()
@@ -178,7 +181,7 @@ impl FlowController for ConfirmOutputWithSummary {
             }
             (Self::MainMenu, FlowMsg::Cancelled) => Self::Main.swipe_right(),
             (Self::SummaryMenu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
-            (Self::FeeInfo, FlowMsg::Cancelled) => Self::SummaryMenu.swipe_right(),
+            (Self::FeeInfo, FlowMsg::Cancelled) => Self::SummaryMenu.goto(),
             (Self::HoldMenu, FlowMsg::Cancelled) => Self::Hold.swipe_right(),
             (
                 Self::MainMenuCancel | Self::SummaryMenuCancel | Self::HoldMenuCancel,
@@ -201,8 +204,7 @@ fn get_cancel_page(
     )
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Left, SwipeSettings::default())
+    .with_swipe(Direction::Right, SwipeSettings::default())
     .map(|msg| match msg {
         FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
         FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
