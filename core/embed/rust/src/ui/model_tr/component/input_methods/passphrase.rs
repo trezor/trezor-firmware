@@ -287,7 +287,9 @@ impl PassphraseEntry {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
                 .with_carousel(true)
                 .with_initial_page_counter(random_menu_position()),
-            passphrase_dots: Child::new(ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH)),
+            passphrase_dots: Child::new(
+                ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH).without_ellipsis(),
+            ),
             show_plain_passphrase: false,
             show_last_digit: false,
             textbox: TextBox::empty(MAX_PASSPHRASE_LENGTH),
