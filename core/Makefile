@@ -306,7 +306,7 @@ build_firmware: templates build_cross build_kernel ## build firmware with frozen
 	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: templates ## build unix port
-	$(SCONS) $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
+	$(SCONS) PYOPT=0 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
 
 build_unix_frozen: templates build_cross ## build unix port with frozen modules
 	$(SCONS) $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_EMULATOR_FROZEN=1
