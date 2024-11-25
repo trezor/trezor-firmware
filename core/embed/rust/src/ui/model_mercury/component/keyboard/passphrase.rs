@@ -295,7 +295,6 @@ impl Component for PassphraseKeyboard {
             .1;
 
         let top_area = top_area.inset(INPUT_INSETS);
-        // let input_area = input_area.inset(INPUT_INSETS);
         let confirm_btn_area = confirm_btn_area.inset(CONFIRM_BTN_INSETS);
         let confirm_empty_btn_area = confirm_empty_btn_area.inset(CONFIRM_EMPTY_BTN_INSETS);
 
