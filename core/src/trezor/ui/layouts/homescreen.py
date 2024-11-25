@@ -15,13 +15,17 @@ class HomescreenBase(ui.Layout):
 
     def __init__(self, layout: Any) -> None:
         super().__init__(layout=layout)
+        self.should_resume = self._should_resume()
+
+    def _should_resume(self) -> bool:
+        return storage_cache.homescreen_shown is self.RENDER_INDICATOR
 
     def _paint(self) -> None:
         if self.layout.paint():
             ui.refresh()
 
     def _first_paint(self) -> None:
-        if storage_cache.homescreen_shown is not self.RENDER_INDICATOR:
+        if not self.should_resume:
             super()._first_paint()
             storage_cache.homescreen_shown = self.RENDER_INDICATOR
         # else:
@@ -50,15 +54,14 @@ class Homescreen(HomescreenBase):
             elif notification_is_error:
                 level = 0
 
-        skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_homescreen(
                 label=label,
                 notification=notification,
                 notification_level=level,
                 hold=hold_to_lock,
-                skip_first_paint=skip,
-            ),
+                skip_first_paint=self._should_resume(),
+            )
         )
 
     async def usb_checker_task(self) -> None:
@@ -99,6 +102,7 @@ class Lockscreen(HomescreenBase):
                 coinjoin_authorized=coinjoin_authorized,
             ),
         )
+        self.should_resume = skip
 
     async def get_result(self) -> Any:
         result = await super().get_result()
@@ -111,13 +115,12 @@ class Busyscreen(HomescreenBase):
     RENDER_INDICATOR = storage_cache.BUSYSCREEN_ON
 
     def __init__(self, delay_ms: int) -> None:
-        skip = storage_cache.homescreen_shown is self.RENDER_INDICATOR
         super().__init__(
             layout=trezorui2.show_progress_coinjoin(
                 title=TR.coinjoin__waiting_for_others,
                 indeterminate=True,
                 time_ms=delay_ms,
-                skip_first_paint=skip,
+                skip_first_paint=self._should_resume(),
             )
         )
 
