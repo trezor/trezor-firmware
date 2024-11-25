@@ -40,6 +40,7 @@ def configure(
 
     sources += [
         "embed/io/display/st7785ma/display_driver.c",
+        "embed/io/display/st7785ma/display_fb.c",
         "embed/io/display/backlight/stm32/backlight_pwm.c",
     ]
 
