@@ -287,6 +287,23 @@ class InputFlowSignMessageInfo(InputFlowBase):
         yield
 
 
+class InputFlowSetBrightness(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_tt(self) -> BRGeneratorType:
+        self.debug.press_yes()
+        yield
+        self.debug.press_yes()
+        yield
+
+    def input_flow_t3t1(self) -> BRGeneratorType:
+        self.debug.swipe_up()
+        yield
+        self.debug.press_yes()
+        yield
+
+
 class InputFlowShowAddressQRCode(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)

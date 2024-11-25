@@ -22,7 +22,7 @@ from trezorlib import btc, device, exceptions, messages, misc, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
-from ..input_flows import InputFlowConfirmAllWarnings
+from ..input_flows import InputFlowConfirmAllWarnings, InputFlowSetBrightness
 
 HERE = Path(__file__).parent.resolve()
 
@@ -421,3 +421,16 @@ def test_label_too_long(client: Client):
     with pytest.raises(exceptions.TrezorFailure), client:
         client.set_expected_responses([messages.Failure])
         device.apply_settings(client, label="A" * 33)
+
+
+@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.setup_client(pin=None)
+def test_set_brightness(client: Client):
+    with client:
+        IF = InputFlowSetBrightness(client)
+        client.set_input_flow(IF.get())
+        # Set brightness to a default value
+        device.set_brightness(
+            client,
+            None,
+        )
