@@ -216,7 +216,7 @@ impl SwipeFlow {
 
         let mut attach = false;
 
-        let e = if self.allow_swipe {
+        let event = if self.allow_swipe {
             let page = self.current_page();
             let config = page
                 .get_swipe_config()
@@ -251,12 +251,12 @@ impl SwipeFlow {
 
         match decision {
             Decision::Nothing => {
-                decision = self.handle_event_child(ctx, e);
+                decision = self.handle_event_child(ctx, event);
 
                 // when doing internal transition, pass attach event to the child after sending
                 // swipe end.
                 if attach {
-                    if let Event::Swipe(SwipeEvent::End(dir)) = e {
+                    if let Event::Swipe(SwipeEvent::End(dir)) = event {
                         self.current_page_mut()
                             .event(ctx, Event::Attach(AttachType::Swipe(dir)));
                     }
