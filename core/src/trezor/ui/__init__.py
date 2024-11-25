@@ -8,12 +8,12 @@ import trezorui2
 from trezor import io, log, loop, utils, wire, workflow
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import context
-from trezorui2 import BacklightLevels, LayoutState
+from trezorui2 import AttachType, BacklightLevels, LayoutState
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
 
-    from trezorui2 import AttachType, LayoutObj, UiResult  # noqa: F401
+    from trezorui2 import LayoutObj, UiResult  # noqa: F401
 
     T = TypeVar("T", covariant=True)
 
@@ -169,6 +169,10 @@ class Layout(Generic[T]):
         self.context: context.Context | None = None
         self.state: LayoutState = LayoutState.INITIAL
 
+        # Indicates whether we should use Resume attach style when launching.
+        # Homescreen layouts can override this.
+        self.should_resume = False
+
     def is_ready(self) -> bool:
         """True if the layout is in READY state."""
         return CURRENT_LAYOUT is not self and self.result_box.is_empty()
@@ -198,7 +202,7 @@ class Layout(Generic[T]):
         # make sure we are not restarted before picking the previous result
         assert self.is_ready()
 
-        transition_in = None
+        transition_in = AttachType.RESUME if self.should_resume else AttachType.INITIAL
 
         # set up the global layout, shutting down any competitors
         # (caller should still call `workflow.close_others()` to ensure that someone

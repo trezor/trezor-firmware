@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui2
-from trezor import ui, utils, workflow
+from trezor import ui, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import ActionCancelled, context
@@ -109,14 +109,4 @@ async def with_info(
 
 
 def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
-    # Simple drawing not supported for layouts that set timers.
-    def dummy_set_timer(token: int, duration: int) -> None:
-        raise RuntimeError
-
-    layout.attach_timer_fn(dummy_set_timer, None)
-    if utils.USE_BACKLIGHT:
-        ui.backlight_fade(ui.BacklightLevels.DIM)
-    if layout.paint():
-        ui.refresh()
-    if utils.USE_BACKLIGHT:
-        ui.backlight_fade(ui.BacklightLevels.NORMAL)
+    ui.Layout(layout).start()
