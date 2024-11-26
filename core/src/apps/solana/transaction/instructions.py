@@ -101,6 +101,7 @@ _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE = const(17)
 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3 = const(18)
 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER = const(22)
 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE = None
+_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE1 = const(0)
 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT = const(1)
 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED = const(2)
 _MEMO_PROGRAM_ID_INS_MEMO = None
@@ -282,6 +283,11 @@ def __getattr__(name: str) -> Type[Instruction]:
             return (
                 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
                 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+            )
+        if name == "AssociatedTokenAccountProgramCreate1Instruction":
+            return (
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE1,
             )
         if name == "AssociatedTokenAccountProgramCreateIdempotentInstruction":
             return (
@@ -781,6 +787,16 @@ if TYPE_CHECKING:
         account_to_initialize: Account
 
     class AssociatedTokenAccountProgramCreateInstruction(Instruction):
+
+        funding_account: Account
+        associated_token_account: Account
+        wallet_address: Account
+        token_mint: Account
+        system_program: Account
+        spl_token: Account
+        rent_sysvar: Account | None
+
+    class AssociatedTokenAccountProgramCreate1Instruction(Instruction):
 
         funding_account: Account
         associated_token_account: Account
@@ -5217,6 +5233,87 @@ def get_instruction(
                     ),
                 ],
                 "Associated Token Account Program: Create",
+                True,
+                True,
+                False,
+                False,
+                None,
+            )
+        if instruction_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE1:
+            return Instruction(
+                instruction_data,
+                program_id,
+                instruction_accounts,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE1,
+                [],
+                [
+                    AccountTemplate(
+                        "funding_account",
+                        True,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "associated_token_account",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "wallet_address",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "token_mint",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "system_program",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "spl_token",
+                        False,
+                        False,
+                    ),
+                    AccountTemplate(
+                        "rent_sysvar",
+                        False,
+                        True,
+                    ),
+                ],
+                [
+                    UIProperty(
+                        None,
+                        "associated_token_account",
+                        "Create token account",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "token_mint",
+                        "For token",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "wallet_address",
+                        "Owned by",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "funding_account",
+                        "Funded by",
+                        False,
+                        None,
+                    ),
+                ],
+                "Associated Token Account Program: Create1",
                 True,
                 True,
                 False,

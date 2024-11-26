@@ -5,6 +5,7 @@ from trezor.crypto import base58
 from .transaction import Transaction
 from .transaction.instructions import (
     AssociatedTokenAccountProgramCreateInstruction,
+    AssociatedTokenAccountProgramCreate1Instruction,
     Instruction,
     Token2022ProgramTransferCheckedInstruction,
     TokenProgramTransferCheckedInstruction,
@@ -32,11 +33,14 @@ def get_token_transfer_instructions(
 
 def get_create_associated_token_account_instructions(
     instructions: list[Instruction],
-) -> list[AssociatedTokenAccountProgramCreateInstruction]:
+) -> list[AssociatedTokenAccountProgramCreateInstruction | AssociatedTokenAccountProgramCreate1Instruction]:
     return [
         instruction
         for instruction in instructions
-        if AssociatedTokenAccountProgramCreateInstruction.is_type_of(instruction)
+        if (
+            AssociatedTokenAccountProgramCreateInstruction.is_type_of(instruction)
+            or AssociatedTokenAccountProgramCreate1Instruction.is_type_of(instruction)
+        )
     ]
 
 
