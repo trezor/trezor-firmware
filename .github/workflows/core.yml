@@ -124,7 +124,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
-        if: matrix.coins == 'universal'
+        if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "poetry run make -C core build_unix_frozen"
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
