@@ -51,23 +51,22 @@
 #define WRP_DEFAULT_VALUE 0xFF00FFFF
 #define SEC_WM1R1_DEFAULT_VALUE 0xFF00FF00
 #define SEC_WM1R2_DEFAULT_VALUE 0x7F007F00
-#define SEC_AREA_1_PAGE_START 0
-#define HDP_AREA_1_PAGE_END 1
-#define SEC_AREA_1_PAGE_END 0x07
 #define SEC_AREA_2_PAGE_START 0xFF
 #define SEC_AREA_2_PAGE_END 0x00
 #elif defined STM32U585xx
 #define WRP_DEFAULT_VALUE 0xFF80FFFF
 #define SEC_WM1R1_DEFAULT_VALUE 0xFF80FF80
 #define SEC_WM1R2_DEFAULT_VALUE 0x7F807F80
-#define SEC_AREA_1_PAGE_START 0
-#define HDP_AREA_1_PAGE_END 1
-#define SEC_AREA_1_PAGE_END 0x07
 #define SEC_AREA_2_PAGE_START 0x7F
 #define SEC_AREA_2_PAGE_END 0x00
 #else
 #error Unknown MCU
 #endif
+
+_Static_assert(SECRET_SECTOR_START == 0, "secret sector start must be 0");
+#define SEC_AREA_1_PAGE_START SECRET_SECTOR_START
+#define HDP_AREA_1_PAGE_END SECRET_SECTOR_END
+#define SEC_AREA_1_PAGE_END BOARDLOADER_SECTOR_END
 
 #define WRP_LOCKED_VALUE                                       \
   ((WRP_DEFAULT_VALUE &                                        \
