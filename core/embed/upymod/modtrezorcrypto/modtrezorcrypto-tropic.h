@@ -70,9 +70,9 @@ STATIC void tropic_init(lt_handle_t *handle) {
   uint8_t shipriv[] = SHiPRIV_BYTES;
   uint8_t shipub[] = SHiPUB_BYTES;
 
-  ret = lt_handshake(handle, stpub, pkey_index, shipriv, shipub);
+  ret = lt_session_start(handle, stpub, pkey_index, shipriv, shipub);
   if (ret != LT_OK) {
-    mp_raise_msg(&mp_type_TropicError, "lt_handshake failed.");
+    mp_raise_msg(&mp_type_TropicError, "lt_session_start failed.");
   }
 }
 
