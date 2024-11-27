@@ -145,8 +145,6 @@ saes_invoke(void) {
   return 0;
 }
 
-extern uint8_t sram_u_start;
-extern uint8_t sram_u_end;
 extern uint8_t _uflash_start;
 extern uint8_t _uflash_end;
 
@@ -166,10 +164,10 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   __set_BASEPRI(IRQ_PRI_HIGHEST + 1);
 
 #ifdef USE_TRUSTZONE
-  uint32_t unpriv_ram_start = (uint32_t)&sram_u_start;
-  uint32_t unpriv_ram_size = &sram_u_end - &sram_u_start;
+  uint32_t unpriv_ram_start = SAES_RAM_START;
+  uint32_t unpriv_ram_size = SAES_RAM_SIZE;
 
-  // `saes_invoke()` function is too small to justigy placing it in a region
+  // `saes_invoke()` function is too small to justify placing it in a region
   // that is aligned to TZ_FLASH_ALIGNMENT (8KB), as doing so would result
   // in significant wasted space. Therefore, we need to align the flash
   // addresses to the nearest lower and the nearest higher multiple of
@@ -187,7 +185,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
 
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_SAES);
 
-  memset(&sram_u_start, 0, &sram_u_end - &sram_u_start);
+  memset((void*)SAES_RAM_START, 0, SAES_RAM_SIZE);
   memcpy(saes_input, input, size);
 
   SAES->CR |= AES_CR_KEYSEL_0;
@@ -205,7 +203,7 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   __HAL_RCC_SAES_CLK_ENABLE();
 
   memcpy(output, saes_output, size);
-  memset(&sram_u_start, 0, &sram_u_end - &sram_u_start);
+  memset((void*)SAES_RAM_START, 0, SAES_RAM_SIZE);
 
   mpu_reconfig(mpu_mode);
 

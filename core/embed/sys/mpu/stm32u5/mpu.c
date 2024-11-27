@@ -137,16 +137,10 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
 #define OTP_AND_ID_SIZE 0x800
 
-// clang-format on
-extern uint8_t boot_args_start;
-#define BOOTARGS_START ((uint32_t) & boot_args_start)
-
 #ifdef KERNEL
 
 extern uint8_t _uflash_start;
 extern uint8_t _uflash_end;
-#define KERNEL_RAM_U_START (KERNEL_RAM_START + KERNEL_RAM_SIZE)
-#define KERNEL_RAM_U_SIZE KERNEL_U_RAM_SIZE
 #define KERNEL_FLASH_U_START (uint32_t) & _uflash_start
 #define KERNEL_FLASH_U_SIZE ((uint32_t) & _uflash_end - KERNEL_FLASH_U_START)
 
@@ -160,36 +154,6 @@ extern uint32_t _codelen;
   (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE) - KERNEL_FLASH_U_SIZE)
 #define COREAPP_FLASH_SIZE \
   (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - KERNEL_FLASH_START))
-
-#define KERNEL_RAM_START (SRAM2_BASE)
-#define KERNEL_RAM_SIZE (KERNEL_SRAM2_SIZE)
-
-#ifdef STM32U585xx
-#define COREAPP_RAM1_START SRAM1_BASE
-#define COREAPP_RAM1_SIZE (SRAM1_SIZE - 512)
-
-#define COREAPP_RAM2_START (SRAM2_BASE + KERNEL_SRAM2_SIZE + KERNEL_U_RAM_SIZE)
-#define COREAPP_RAM2_SIZE                                            \
-  (SRAM2_SIZE - KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE + SRAM3_SIZE - \
-   FRAMEBUFFER_SRAM_SIZE)
-#else
-#define COREAPP_RAM1_START SRAM5_BASE
-#define COREAPP_RAM1_SIZE SRAM5_SIZE
-#endif
-
-#else
-
-#ifdef STM32U585xx
-#define MAIN_SRAM_START SRAM2_BASE
-#define MAIN_SRAM_SIZE SRAM2_SIZE
-#define AUX_SRAM_START SRAM1_BASE
-#define AUX_SRAM_SIZE (SRAM1_SIZE - BOOTARGS_SIZE)
-#else
-#define MAIN_SRAM_START SRAM2_BASE
-#define MAIN_SRAM_SIZE SRAM2_SIZE
-#define AUX_SRAM_START SRAM5_BASE
-#define AUX_SRAM_SIZE SRAM5_SIZE
-#endif
 
 #endif
 
@@ -218,27 +182,27 @@ static void mpu_init_fixed_regions(void) {
 #if defined(BOARDLOADER)
   //   REGION    ADDRESS                   SIZE                 TYPE       WRITE   UNPRIV
   SET_REGION( 0, BOARDLOADER_START,        BOARDLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, MAIN_SRAM_START,          MAIN_SRAM_SIZE,      SRAM,        YES,    NO );
+  SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,       SRAM,        YES,    NO );
   SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_MAXSIZE,  FLASH_DATA,  YES,    NO );
   SET_REGION( 3, FIRMWARE_START,           FIRMWARE_MAXSIZE,    FLASH_DATA,  YES,    NO );
-  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,       SRAM,        YES,    NO );
+  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,       SRAM,        YES,    NO );
 #endif
 #if defined(BOOTLOADER)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, MAIN_SRAM_START,          MAIN_SRAM_SIZE,     SRAM,        YES,    NO );
+  SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO );
   SET_REGION( 2, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_DATA,  YES,    NO );
   DIS_REGION( 3 );
-  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,      SRAM,        YES,    NO );
+  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE ,     SRAM,        YES,    NO );
 #endif
 #if defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGRUN( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
-  SET_REGION( 1, KERNEL_RAM_START,         KERNEL_RAM_SIZE,    SRAM,        YES,    NO ); // Kernel RAM
+  SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO ); // Kernel RAM
   SET_REGRUN( 2, COREAPP_FLASH_START,      COREAPP_FLASH_SIZE, FLASH_CODE,   NO,   YES ); // CoreApp Code
-  SET_REGION( 3, COREAPP_RAM1_START,       COREAPP_RAM1_SIZE,  SRAM,        YES,   YES ); // CoraApp RAM
+  SET_REGION( 3, AUX1_RAM_START,           AUX1_RAM_SIZE,      SRAM,        YES,   YES ); // CoraApp RAM
 #ifdef STM32U585xx
-  SET_REGION( 4, COREAPP_RAM2_START,       COREAPP_RAM2_SIZE,  SRAM,        YES,   YES ); // CoraAPP RAM2
+  SET_REGION( 4, AUX2_RAM_START,           AUX2_RAM_SIZE,      SRAM,        YES,   YES ); // CoraAPP RAM2
 #else
   DIS_REGION( 4 );
 #endif
@@ -246,17 +210,17 @@ static void mpu_init_fixed_regions(void) {
 #if defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_CODE,   NO,    NO );
-  SET_REGION( 1, MAIN_SRAM_START,          MAIN_SRAM_SIZE,     SRAM,        YES,    NO );
+  SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO );
   DIS_REGION( 2 );
   DIS_REGION( 3 );
-  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,      SRAM,        YES,    NO );
+  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,      SRAM,        YES,    NO );
 #endif
 #if defined(TREZOR_PRODTEST)
   SET_REGION( 0, FIRMWARE_START,           1024,               FLASH_DATA,  YES,    NO );
   SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
-  SET_REGION( 2, MAIN_SRAM_START,          MAIN_SRAM_SIZE,     SRAM,        YES,    NO );
+  SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
   DIS_REGION( 3 );
-  SET_REGION( 4, AUX_SRAM_START,           AUX_SRAM_SIZE,      SRAM,        YES,    NO );
+  SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
 #endif
 
   // Regions #6 and #7 are banked
@@ -386,7 +350,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,   YES );
       break;
     case MPU_MODE_BOOTARGS:
-      SET_REGRUN( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
+      SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
       break;
     default:
       DIS_REGION( 6 );
@@ -401,7 +365,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
 #ifdef KERNEL
     case MPU_MODE_SAES:
-      SET_REGION( 7, KERNEL_RAM_U_START,       KERNEL_RAM_U_SIZE,  SRAM,        YES,   YES ); // Unprivileged kernel SRAM
+      SET_REGION( 7, SAES_RAM_START,           SAES_RAM_SIZE,      SRAM,        YES,   YES ); // Unprivileged kernel SRAM
       break;
 #endif
     case MPU_MODE_APP:

@@ -136,7 +136,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=f'-T build/prodtest/memory.ld -Wl,--gc-sections -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
+    LINKFLAGS=f'-T build/prodtest/memory.ld -Wl,--gc-sections -Wl,--print-memory-usage -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
     CPPPATH=[
         'embed/projects/prodtest',
         'embed/rtl/inc',

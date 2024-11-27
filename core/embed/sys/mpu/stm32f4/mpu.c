@@ -67,14 +67,6 @@ mpu_driver_t g_mpu_driver = {
     .mode = MPU_MODE_DISABLED,
 };
 
-#define SRAM_SIZE (192 * 1024)
-
-#define KERNEL_STACK_START (CCMDATARAM_BASE)
-#define KERNEL_CCMRAM_START (CCMDATARAM_END + 1 - KERNEL_CCMRAM_SIZE)
-#define KERNEL_SRAM_START (SRAM1_BASE + SRAM_SIZE - KERNEL_SRAM_SIZE)
-
-#define KERNEL_CCMRAM_FB_START (KERNEL_CCMRAM_START - KERNEL_FRAMEBUFFER_SIZE)
-
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_1_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 _Static_assert(NORCOW_SECTOR_SIZE == SIZE_64K, "norcow misconfigured");
