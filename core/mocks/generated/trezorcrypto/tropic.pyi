@@ -1,7 +1,7 @@
 from typing import *
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-tropic.h
+# upymod/modtrezorcrypto/modtrezorcrypto-tropic.h
 class TropicError(Exception):
     """Error returned by the Tropic Square chip."""
 
@@ -20,13 +20,6 @@ class TropicError(Exception):
     ) -> None:
         """
         Generate ECC key in the device's ECC key slot.
-        """
-
-    def random_get(
-        len: int,
-    ) -> bytes:
-        """
-        Get number of random bytes.
         """
 
     def sign(
