@@ -93,20 +93,12 @@ where
         left: Option<TString<'static>>,
         right: Option<TString<'static>>,
     ) -> Self {
-        let cancel = match left {
-            Some(verb) => verb.map(|s| match s {
-                "^" => Button::with_icon(theme::ICON_UP),
-                "<" => Button::with_icon(theme::ICON_BACK),
-                _ => Button::with_text(verb),
-            }),
-            _ => Button::with_icon(theme::ICON_CANCEL),
-        };
         let confirm = match right {
             Some(verb) => Button::with_text(verb).styled(theme::button_confirm()),
             _ => Button::with_icon(theme::ICON_CONFIRM).styled(theme::button_confirm()),
         };
-        self.button_cancel = Some(cancel);
         self.button_confirm = confirm;
+        self = self.with_cancel_button(left);
         self
     }
 
@@ -117,8 +109,16 @@ where
         self
     }
 
-    pub fn with_cancel_arrow(mut self) -> Self {
-        self.button_cancel = Some(Button::with_icon(theme::ICON_UP));
+    pub fn with_cancel_button(mut self, left: Option<TString<'static>>) -> Self {
+        let cancel = match left {
+            Some(verb) => verb.map(|s| match s {
+                "^" => Button::with_icon(theme::ICON_UP),
+                "<" => Button::with_icon(theme::ICON_BACK),
+                _ => Button::with_text(verb),
+            }),
+            _ => Button::with_icon(theme::ICON_CANCEL),
+        };
+        self.button_cancel = Some(cancel);
         self
     }
 
