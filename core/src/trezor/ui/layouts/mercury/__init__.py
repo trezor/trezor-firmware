@@ -1010,12 +1010,14 @@ async def confirm_signverify(
         address_title = TR.sign_message__confirm_address
         br_name = "sign_message"
 
-    address_layout = trezorui2.confirm_address(
+    address_layout = trezorui2.confirm_value(
         title=address_title,
-        data=address,
+        subtitle=None,
         description="",
+        value=address,
         verb=TR.buttons__continue,
-        extra=None,
+        verb_info=TR.buttons__more_info,
+        info_button=True,
         chunkify=chunkify,
     )
 

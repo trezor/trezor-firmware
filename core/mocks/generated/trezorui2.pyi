@@ -91,20 +91,6 @@ def confirm_blob_intro(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def confirm_address(
-    *,
-    title: str,
-    data: str | bytes,
-    description: str | None,
-    verb: str | None = "CONFIRM",
-    extra: str | None,
-    chunkify: bool = False,
-) -> LayoutObj[UiResult]:
-    """Confirm address. Similar to `confirm_blob` but has corner info button
-    and allows left swipe which does the same thing as the button."""
-
-
-# rust/src/ui/model_mercury/layout.rs
 def confirm_properties(
     *,
     title: str,
@@ -148,6 +134,7 @@ def confirm_value(
     description: str | None,
     subtitle: str | None,
     verb: str | None = None,
+    verb_info: str | None = None,
     verb_cancel: str | None = None,
     info_button: bool = False,
     hold: bool = False,
@@ -710,6 +697,7 @@ def confirm_value(
     description: str,
     value: str,
     verb: str | None = None,
+    verb_info: str | None = None,
     hold: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm value."""
@@ -1291,6 +1279,7 @@ def confirm_value(
     description: str | None,
     subtitle: str | None,
     verb: str | None = None,
+    verb_info: str | None = None,
     verb_cancel: str | None = None,
     info_button: bool = False,
     hold: bool = False,
