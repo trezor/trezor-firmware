@@ -814,15 +814,23 @@ def confirm_total(
 ) -> Awaitable[None]:
     total_label = total_label or f"{TR.send__total_amount}:"  # def_arg
     fee_label = fee_label or TR.send__including_fee  # def_arg
-    return interact(
-        # TODO: resolve these differences in TT's and TR's confirm_total
-        trezorui2.confirm_total(  # type: ignore [Arguments missing]
-            total_amount=total_amount,  # type: ignore [No parameter named]
-            fee_amount=fee_amount,  # type: ignore [No parameter named]
-            fee_rate_amount=fee_rate_amount,  # type: ignore [No parameter named]
-            account_label=source_account,  # type: ignore [No parameter named]
-            total_label=total_label,  # type: ignore [No parameter named]
-            fee_label=fee_label,  # type: ignore [No parameter named]
+
+    fee_info_items = []
+    if fee_rate_amount:
+        fee_info_items.append((TR.confirm_total__fee_rate_colon, fee_rate_amount))
+    account_info_items = []
+    if source_account:
+        account_info_items.append((TR.words__account_colon, source_account))
+
+    return raise_if_not_confirmed(
+        trezorui2.confirm_summary(
+            amount=total_amount,
+            amount_label=total_label,
+            fee=fee_amount,
+            fee_label=fee_label,
+            account_items=account_info_items or None,
+            extra_items=fee_info_items or None,
+            extra_title=TR.confirm_total__title_fee,
         ),
         br_name,
         br_code,
@@ -871,14 +879,13 @@ if not utils.BITCOIN_ONLY:
             amount_title = f"{TR.words__amount}:"
             amount_value = total_amount
         await raise_if_not_confirmed(
-            trezorui2.altcoin_tx_summary(
-                amount_title=amount_title,
-                amount_value=amount_value,
-                fee_title=f"{TR.send__maximum_fee}:",
-                fee_value=maximum_fee,
-                items_title=TR.confirm_total__title_fee,
-                items=[(f"{k}:", v) for (k, v) in info_items],
-                cancel_cross=True,
+            trezorui2.confirm_summary(
+                amount=amount_value,
+                amount_label=amount_title,
+                fee=maximum_fee,
+                fee_label=f"{TR.send__maximum_fee}:",
+                extra_items=[(f"{k}:", v) for (k, v) in info_items],
+                extra_title=TR.confirm_total__title_fee,
             ),
             br_name=br_name,
             br_code=br_code,
@@ -898,14 +905,12 @@ if not utils.BITCOIN_ONLY:
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
         return raise_if_not_confirmed(
-            trezorui2.altcoin_tx_summary(
-                amount_title=amount_title,
-                amount_value=amount,
-                fee_title=fee_title,
-                fee_value=fee,
-                items_title=TR.confirm_total__title_fee,
-                items=items,
-                cancel_cross=True,
+            trezorui2.confirm_summary(
+                amount=amount,
+                amount_label=amount_title,
+                fee=fee,
+                fee_label=fee_title,
+                extra_items=items,  # TODO: extra_title here?
             ),
             br_name=br_name,
             br_code=br_code,
@@ -922,14 +927,12 @@ if not utils.BITCOIN_ONLY:
         fee_title = TR.send__including_fee
 
         return raise_if_not_confirmed(
-            trezorui2.altcoin_tx_summary(
-                amount_title=amount_title,
-                amount_value=amount,
-                fee_title=fee_title,
-                fee_value=fee,
-                items_title=TR.words__title_information,
-                items=items,
-                cancel_cross=True,
+            trezorui2.confirm_summary(
+                amount=amount,
+                amount_label=amount_title,
+                fee=fee,
+                fee_label=fee_title,
+                extra_items=items,
             ),
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
@@ -947,13 +950,13 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        summary_layout = trezorui2.altcoin_tx_summary(
-            amount_title=f"{TR.words__amount}:",
-            amount_value=total_amount,
-            fee_title=f"{TR.send__maximum_fee}:",
-            fee_value=maximum_fee,
-            items_title=TR.confirm_total__title_fee,
-            items=[(f"{k}:", v) for (k, v) in fee_info_items],
+        summary_layout = trezorui2.confirm_summary(
+            amount=total_amount,
+            amount_label=f"{TR.words__amount}:",
+            fee=maximum_fee,
+            fee_label=f"{TR.send__maximum_fee}:",
+            extra_items=[(f"{k}:", v) for (k, v) in fee_info_items],
+            extra_title=TR.confirm_total__title_fee,
         )
 
         if not is_contract_interaction:
