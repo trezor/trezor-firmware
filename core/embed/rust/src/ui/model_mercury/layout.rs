@@ -412,14 +412,19 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
         let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_NORMAL, description.unwrap_or("".into())),
             Paragraph::new(data_style, data.as_str_offset(0)),
-        ]);
+        ])
+        .into_paragraphs();
 
-        let flow = flow::new_confirm_with_info(
-            title,
-            None,
-            TR::buttons__more_info.into(),
+        let flow = flow::new_confirm_action_simple(
             paragraphs,
+            ConfirmActionExtra::Menu(
+                ConfirmActionMenuStrings::new().with_verb_info(Some(TR::buttons__more_info.into())),
+            ),
+            ConfirmActionStrings::new(title, None, None, None),
+            false,
             None,
+            0,
+            false,
         )?;
         Ok(LayoutObj::new_root(flow)?.into())
     };
@@ -881,13 +886,19 @@ extern "C" fn new_confirm_modify_fee(n_args: usize, args: *const Obj, kwargs: *m
             Paragraph::new(&theme::TEXT_MONO, total_fee_new),
         ]);
 
-        let flow = flow::new_confirm_with_info(
-            title,
+        let flow = flow::new_confirm_action_simple(
+            paragraphs.into_paragraphs(),
+            ConfirmActionExtra::Menu(
+                ConfirmActionMenuStrings::new()
+                    .with_verb_info(Some(TR::words__title_information.into())),
+            ),
+            ConfirmActionStrings::new(title, None, None, Some(title)),
+            true,
             None,
-            TR::words__title_information.into(),
-            paragraphs,
-            Some(title),
+            0,
+            false,
         )?;
+
         Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1076,7 +1087,18 @@ extern "C" fn new_confirm_with_info(n_args: usize, args: *const Obj, kwargs: *mu
             }
         }
 
-        let flow = flow::new_confirm_with_info(title, Some(button), info_button, paragraphs, None)?;
+        let flow = flow::new_confirm_action_simple(
+            paragraphs.into_paragraphs(),
+            ConfirmActionExtra::Menu(
+                ConfirmActionMenuStrings::new().with_verb_info(Some(info_button)),
+            ),
+            ConfirmActionStrings::new(title, None, None, None)
+                .with_footer_description(Some(button)),
+            false,
+            None,
+            0,
+            false,
+        )?;
         Ok(LayoutObj::new_root(flow)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
