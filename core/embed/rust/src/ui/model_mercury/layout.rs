@@ -48,7 +48,7 @@ use crate::{
             base::LAYOUT_STATE,
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, PropsList, RecoveryType, StrOrBytes},
+            util::{upy_disable_animation, PropsList, RecoveryType},
         },
         model_mercury::{
             component::{check_homescreen_format, SwipeContent},
@@ -392,44 +392,6 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
-extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let description: Option<TString> =
-            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let _extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
-        let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
-        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
-
-        let data_style = if chunkify {
-            let address: TString = data.try_into()?;
-            theme::get_chunkified_text_style(address.len())
-        } else {
-            &theme::TEXT_MONO
-        };
-
-        let data: StrOrBytes = data.try_into()?;
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_NORMAL, description.unwrap_or("".into())),
-            Paragraph::new(data_style, data.as_str_offset(0)),
-        ])
-        .into_paragraphs();
-
-        let flow = flow::new_confirm_action_simple(
-            paragraphs,
-            ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new().with_verb_info(Some(TR::buttons__more_info.into())),
-            ),
-            ConfirmActionStrings::new(title, None, None, None),
-            false,
-            None,
-            0,
-            false,
-        )?;
-        Ok(LayoutObj::new_root(flow)?.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
 
 extern "C" fn new_confirm_firmware_update(
     n_args: usize,
@@ -767,6 +729,10 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let verb_info: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_verb_info)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
@@ -780,7 +746,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .with_verb(verb)
             .with_verb_cancel(verb_cancel)
             .with_verb_info(if info_button {
-                Some(TR::words__title_information.into())
+                Some(verb_info.unwrap_or(TR::words__title_information.into()))
             } else {
                 None
             })
@@ -1634,19 +1600,6 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     which can then be confirmed using confirm_blob."""
     Qstr::MP_QSTR_confirm_blob_intro => obj_fn_kw!(0, new_confirm_blob_intro).as_obj(),
 
-    /// def confirm_address(
-    ///     *,
-    ///     title: str,
-    ///     data: str | bytes,
-    ///     description: str | None,
-    ///     verb: str | None = "CONFIRM",
-    ///     extra: str | None,
-    ///     chunkify: bool = False,
-    /// ) -> LayoutObj[UiResult]:
-    ///     """Confirm address. Similar to `confirm_blob` but has corner info button
-    ///     and allows left swipe which does the same thing as the button."""
-    Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
-
     /// def confirm_properties(
     ///     *,
     ///     title: str,
@@ -1687,6 +1640,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str | None,
     ///     subtitle: str | None,
     ///     verb: str | None = None,
+    ///     verb_info: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     info_button: bool = False,
     ///     hold: bool = False,

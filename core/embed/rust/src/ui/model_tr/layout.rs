@@ -1769,6 +1769,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str,
     ///     value: str,
     ///     verb: str | None = None,
+    ///     verb_info: str | None = None,
     ///     hold: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm value."""

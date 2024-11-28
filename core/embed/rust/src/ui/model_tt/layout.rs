@@ -1858,6 +1858,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str | None,
     ///     subtitle: str | None,
     ///     verb: str | None = None,
+    ///     verb_info: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     info_button: bool = False,
     ///     hold: bool = False,
