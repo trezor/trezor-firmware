@@ -19,3 +19,17 @@ def test_singlesig_p2wsh(client: Client):
             script_type=messages.InputScriptType.SPENDP2SHWITNESS,
             show_display=True,
         )
+
+def test_singlesig_p2wpkh(client: Client):
+    with client:
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
+
+        btc.get_address(
+            client,
+            "Bitcoin",
+            parse_path("m/45h/0/0/0/0/0"),
+            script_type=messages.InputScriptType.SPENDWITNESS,
+            show_display=True,
+        )
