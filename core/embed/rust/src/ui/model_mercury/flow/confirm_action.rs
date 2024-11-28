@@ -1,3 +1,5 @@
+use heapless::Vec;
+
 use crate::{
     error::{self, Error},
     maybe_trace::MaybeTrace,
@@ -330,25 +332,26 @@ fn create_menu(
     prompt_screen: Option<TString<'static>>,
 ) -> Result<SwipeFlow, Error> {
     if let ConfirmActionExtra::Menu(menu_strings) = extra {
-        // NB: The Cancel menu item is always the first,
-        // because of the MENU_ITEM_CANCEL = 0.
-        // If we want the cancel item to be somewhere else,
-        // we would need to account for that and we could not use a constant.
-        let mut menu_choices =
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, menu_strings.verb_cancel);
+        let mut menu = VerticalMenu::empty();
+        let mut menu_items = Vec::<usize, 2>::new();
 
         if let Some(verb_info) = menu_strings.verb_info {
-            // The Info menu item (if present) has to be the 2nd,
-            // because of MENU_ITEM_INFO = 1!
-            menu_choices = menu_choices.item(theme::ICON_CHEVRON_RIGHT, verb_info);
+            menu = menu.item(theme::ICON_CHEVRON_RIGHT, verb_info);
+            unwrap!(menu_items.push(MENU_ITEM_INFO));
         }
 
-        let content_menu = Frame::left_aligned("".into(), menu_choices)
+        menu = menu.danger(theme::ICON_CANCEL, menu_strings.verb_cancel);
+        unwrap!(menu_items.push(MENU_ITEM_CANCEL));
+
+        let content_menu = Frame::left_aligned("".into(), menu)
             .with_cancel_button()
             .with_swipe(Direction::Right, SwipeSettings::immediate());
 
         let content_menu = content_menu.map(move |msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => {
+                let selected_item = menu_items[i];
+                Some(FlowMsg::Choice(selected_item))
+            }
             FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
