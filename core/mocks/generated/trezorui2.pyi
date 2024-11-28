@@ -1290,14 +1290,19 @@ def confirm_value(
 
 
 # rust/src/ui/model_tt/layout.rs
-def confirm_total(
+def confirm_summary(
     *,
-    title: str,
-    items: Iterable[tuple[str, str]],
-    info_button: bool = False,
-    cancel_arrow: bool = False,
+    amount: str,
+    amount_label: str,
+    fee: str,
+    fee_label: str,
+    title: str | None = None,
+    account_items: Iterable[tuple[str, str]] | None = None,
+    extra_items: Iterable[tuple[str, str]] | None = None,
+    extra_title: str | None = None,
+    verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
-    """Transaction summary. Always hold to confirm."""
+    """Confirm summary of a transaction."""
 
 
 # rust/src/ui/model_tt/layout.rs

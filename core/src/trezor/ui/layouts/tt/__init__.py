@@ -750,43 +750,61 @@ def confirm_total(
     total_label = total_label or f"{TR.send__total_amount}:"  # def_arg
     fee_label = fee_label or TR.send__including_fee  # def_arg
 
-    items = [
-        (total_label, total_amount),
-        (fee_label, fee_amount),
-    ]
-    info_items = []
+    account_info_items = []
+    extra_info_items = []
     if source_account:
-        info_items.append((TR.confirm_total__sending_from_account, source_account))
+        account_info_items.append(
+            (TR.confirm_total__sending_from_account, source_account)
+        )
     if fee_rate_amount:
-        info_items.append((f"{TR.confirm_total__fee_rate}:", fee_rate_amount))
+        extra_info_items.append((f"{TR.confirm_total__fee_rate}:", fee_rate_amount))
 
     return _confirm_summary(
-        items,
-        TR.words__title_summary,
-        info_items=info_items,
+        total_amount,
+        total_label,
+        fee_amount,
+        fee_label,
+        title=title,
+        account_items=account_info_items,
+        extra_items=extra_info_items,
+        extra_title=TR.words__title_information,
         br_name=br_name,
         br_code=br_code,
     )
 
 
 def _confirm_summary(
-    items: Iterable[tuple[str, str]],
+    amount: str,
+    amount_label: str,
+    fee: str,
+    fee_label: str,
     title: str | None = None,
-    info_items: Iterable[tuple[str, str]] | None = None,
-    info_title: str | None = None,
+    account_items: Iterable[tuple[str, str]] | None = None,
+    extra_items: Iterable[tuple[str, str]] | None = None,
+    extra_title: str | None = None,
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
     title = title or TR.words__title_summary  # def_arg
 
-    total_layout = trezorui2.confirm_total(
+    total_layout = trezorui2.confirm_summary(
+        amount=amount,
+        amount_label=amount_label,
+        fee=fee,
+        fee_label=fee_label,
         title=title,
-        items=items,
-        info_button=bool(info_items),
+        account_items=account_items or None,
+        extra_items=extra_items or None,
     )
-    info_items = info_items or []
+
+    # TODO: use `_info` params directly in this^ layout instead of using `with_info`
+    info_items = []
+    if account_items:
+        info_items.extend(account_items)
+    if extra_items:
+        info_items.extend(extra_items)
     info_layout = trezorui2.show_info_with_cancel(
-        title=info_title if info_title else TR.words__title_information,
+        title=extra_title if extra_title else TR.words__title_information,
         items=info_items,
     )
     return with_info(total_layout, info_layout, br_name, br_code)
@@ -811,14 +829,16 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        total_layout = trezorui2.confirm_total(
+        # NOTE: fee_info used so that info button is shown
+        total_layout = trezorui2.confirm_summary(
+            amount=total_amount,
+            amount_label=f"{TR.words__amount}:",
+            fee=maximum_fee,
+            fee_label=f"{TR.send__maximum_fee}:",
             title=TR.words__title_summary,
-            items=[
-                (f"{TR.words__amount}:", total_amount),
-                (f"{TR.send__maximum_fee}:", maximum_fee),
-            ],
-            info_button=True,
-            cancel_arrow=True,
+            extra_items=fee_info_items,
+            extra_title=TR.confirm_total__title_fee,
+            verb_cancel="^",
         )
         info_layout = trezorui2.show_info_with_cancel(
             title=TR.confirm_total__title_fee,
@@ -879,17 +899,23 @@ if not utils.BITCOIN_ONLY:
 
         # confirmation
         if verb == TR.ethereum__staking_claim:
-            items = ((f"{TR.send__maximum_fee}:", maximum_fee),)
+            amount = ""
+            amount_label = ""
+            fee_label = f"{TR.send__maximum_fee}:"
+            fee = maximum_fee
         else:
-            items = (
-                (f"{TR.words__amount}:", total_amount),
-                (f"{TR.send__maximum_fee}:", maximum_fee),
-            )
+            amount_label = f"{TR.words__amount}:"
+            amount = total_amount
+            fee_label = f"{TR.send__maximum_fee}:"
+            fee = maximum_fee
         await _confirm_summary(
-            items,  # items
+            amount,
+            amount_label,
+            fee,
+            fee_label,
             title=title,
-            info_title=TR.confirm_total__title_fee,
-            info_items=[(f"{k}:", v) for (k, v) in info_items],
+            extra_items=[(f"{k}:", v) for (k, v) in info_items],
+            extra_title=TR.confirm_total__title_fee,
             br_name=br_name,
             br_code=br_code,
         )
@@ -908,8 +934,11 @@ if not utils.BITCOIN_ONLY:
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
         return _confirm_summary(
-            ((amount_title, amount), (fee_title, fee)),
-            info_items=items,
+            amount,
+            amount_title,
+            fee,
+            fee_title,
+            extra_items=items,
             br_name=br_name,
             br_code=br_code,
         )
@@ -922,8 +951,11 @@ if not utils.BITCOIN_ONLY:
         amount_title = f"{TR.send__total_amount}:"
         fee_title = TR.send__including_fee
         return _confirm_summary(
-            ((amount_title, amount), (fee_title, fee)),
-            info_items=items,
+            amount,
+            amount_title,
+            fee,
+            fee_title,
+            extra_items=items,
             br_name="confirm_cardano_tx",
             br_code=ButtonRequestType.SignTx,
         )
@@ -931,12 +963,13 @@ if not utils.BITCOIN_ONLY:
 
 def confirm_joint_total(spending_amount: str, total_amount: str) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        trezorui2.confirm_total(
+        # FIXME: arguments for amount/fee are misused here
+        trezorui2.confirm_summary(
+            amount=spending_amount,
+            amount_label=TR.send__you_are_contributing,
+            fee=total_amount,
+            fee_label=TR.send__to_the_total_amount,
             title=TR.send__title_joint_transaction,
-            items=[
-                (TR.send__you_are_contributing, spending_amount),
-                (TR.send__to_the_total_amount, total_amount),
-            ],
         ),
         "confirm_joint_total",
         ButtonRequestType.SignTx,

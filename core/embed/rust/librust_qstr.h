@@ -37,6 +37,7 @@ static void _librust_qstrs(void) {
   MP_QSTR___dict__;
   MP_QSTR___name__;
   MP_QSTR_account;
+  MP_QSTR_account_info;
   MP_QSTR_account_items;
   MP_QSTR_account_items_title;
   MP_QSTR_account_label;
@@ -72,6 +73,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_altcoin_tx_summary;
   MP_QSTR_amount;
   MP_QSTR_amount_change;
+  MP_QSTR_amount_label;
   MP_QSTR_amount_new;
   MP_QSTR_amount_title;
   MP_QSTR_amount_value;
@@ -209,6 +211,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_recovery;
   MP_QSTR_confirm_reset_device;
+  MP_QSTR_confirm_summary;
   MP_QSTR_confirm_total;
   MP_QSTR_confirm_total__fee_rate;
   MP_QSTR_confirm_total__fee_rate_colon;
@@ -242,7 +245,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;
   MP_QSTR_extra;
+  MP_QSTR_extra_info;
+  MP_QSTR_fee;
   MP_QSTR_fee_amount;
+  MP_QSTR_fee_info;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;

@@ -763,28 +763,52 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
-        let cancel_arrow: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_arrow, false)?;
+        let amount: TString = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
+        let amount_label: TString = kwargs.get(Qstr::MP_QSTR_amount_label)?.try_into()?;
+        let fee: TString = kwargs.get(Qstr::MP_QSTR_fee)?.try_into()?;
+        let fee_label: TString = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
+        let title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let account_items: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_account_items)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let extra_items: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_extra_items)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let _extra_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_extra_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let verb_cancel: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
-        let mut paragraphs = ParagraphVecShort::new();
+        let info_button: bool = account_items.is_some() || extra_items.is_some();
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_NORMAL, amount_label).no_break(),
+            Paragraph::new(&theme::TEXT_MONO, amount),
+            Paragraph::new(&theme::TEXT_NORMAL, fee_label).no_break(),
+            Paragraph::new(&theme::TEXT_MONO, fee),
+        ]);
 
-        for pair in IterBuf::new().try_iterate(items)? {
-            let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label).no_break());
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
-        }
-        let mut page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG).with_hold()?;
-        if cancel_arrow {
-            page = page.with_cancel_arrow()
-        }
+        let mut page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+            .with_hold()?
+            .with_cancel_button(verb_cancel);
         if info_button {
             page = page.with_swipe_left();
         }
-        let mut frame = Frame::left_aligned(theme::label_title(), title, page);
+        let mut frame = Frame::left_aligned(
+            theme::label_title(),
+            title.unwrap_or(TString::empty()),
+            page,
+        );
         if info_button {
             frame = frame.with_info_button();
         }
@@ -1868,15 +1892,20 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm value. Merge of confirm_total and confirm_output."""
     Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
 
-    /// def confirm_total(
+    /// def confirm_summary(
     ///     *,
-    ///     title: str,
-    ///     items: Iterable[tuple[str, str]],
-    ///     info_button: bool = False,
-    ///     cancel_arrow: bool = False,
+    ///     amount: str,
+    ///     amount_label: str,
+    ///     fee: str,
+    ///     fee_label: str,
+    ///     title: str | None = None,
+    ///     account_items: Iterable[tuple[str, str]] | None = None,
+    ///     extra_items: Iterable[tuple[str, str]] | None = None,
+    ///     extra_title: str | None = None,
+    ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Transaction summary. Always hold to confirm."""
-    Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
+    ///     """Confirm summary of a transaction."""
+    Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
 
     /// def confirm_modify_output(
     ///     *,
