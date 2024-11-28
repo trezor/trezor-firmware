@@ -571,7 +571,6 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     valid = valid && (address_n[3] <= 1000000);
     valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
     valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
-    valid = valid && has_multisig;
 
     if (full_check) {
       valid = valid && (script_type == InputScriptType_SPENDADDRESS ||
