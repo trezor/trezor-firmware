@@ -7,7 +7,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.8.6] (internal release)
 
 ### Added
-- Initial support for Italian and Portugese translations.  [#4047]
 - Add benchmark application.  [#4101]
 - Show last typed PIN number for short period of time.  [#3863]
 - Add P2WSH support for Unchained BIP32 paths.  [#4271]

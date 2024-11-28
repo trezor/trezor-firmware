@@ -7,7 +7,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.8.6] (internal release)
 
 ### Added
-- Initial support for Italian and Portugese translations.  [#4047]
 - Add benchmark application.  [#4101]
 - Show last typed PIN number for short period of time.  [#3863]
 - Add P2WSH support for Unchained BIP32 paths.  [#4271]
@@ -21,8 +20,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fix ETH account number detection.  [#3627]
 - New EVM call contract flow UI.  [#4251]
 - Fix translation of the 'Enable labeling' screen.  [#3813]
-- Fix data size mismatch when confirming a blob.  [#4302]
-- Add "continue" button after scrolling through the whole blob.  [#4302]
+- Improve paginated blob display.  [#4302]
 
 ## [2.8.5] (internal release)
 

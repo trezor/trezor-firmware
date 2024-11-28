@@ -7,7 +7,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.8.6] (18th December 2024)
 
 ### Added
-- Initial support for Italian and Portugese translations.  [#4047]
 - Add benchmark application.  [#4101]
 - Show last typed PIN number for short period of time.  [#3863]
 - Add P2WSH support for Unchained BIP32 paths.  [#4271]
@@ -32,11 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - [T3T1] Add swipe back in FIDO confirm flow menu.  [#4176]
 - [T3T1] Make swipe back action in tutorial flow menu consistent with menu cancel action.  [#4294]
 - [T3T1] Fix color and icon for 'Success' string in `set_brightness` flow.  [#4295]
-- [T3B1] Fix data size mismatch when confirming a blob.  [#4302]
-- [T3T1] Add margin to the first page of a blob.  [#4302]
-- [T3T1] Add page counter to paginated blobs.  [#4302]
-- [T3B1] Add "continue" button after scrolling through the whole blob.  [#4302]
-- [T3T1] Add cancel button to individual pages of a blob.  [#4302]
+- [T2B1,T3B1,T3T1] Improve paginated blob display.  [#4302]
 - [T3T1] Fix incorrect navigation in handy menu while signing BTC message.  [#4309]
 - [T3T1] Fix information screen when signing BTC fee bump transaction.  [#4326]
 
