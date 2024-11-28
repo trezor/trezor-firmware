@@ -45,6 +45,7 @@ use crate::{
             },
             ComponentExt, FormattedText, Label, LineBreaking, Never, Timeout,
         },
+        display::Font,
         geometry,
         layout::{
             base::LAYOUT_STATE,
@@ -638,131 +639,109 @@ extern "C" fn new_confirm_output_amount(n_args: usize, args: *const Obj, kwargs:
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = |_args: &[Obj], kwargs: &Map| {
-        let total_amount: TString = kwargs.get(Qstr::MP_QSTR_total_amount)?.try_into()?;
-        let fee_amount: TString = kwargs.get(Qstr::MP_QSTR_fee_amount)?.try_into()?;
-        let fee_rate_amount: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_fee_rate_amount)?
-            .try_into_option()?;
-        let account_label: Option<TString> =
-            kwargs.get(Qstr::MP_QSTR_account_label)?.try_into_option()?;
-        let total_label: TString = kwargs.get(Qstr::MP_QSTR_total_label)?.try_into()?;
+        let amount: TString = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
+        let amount_label: TString = kwargs.get(Qstr::MP_QSTR_amount_label)?.try_into()?;
+        let fee: TString = kwargs.get(Qstr::MP_QSTR_fee)?.try_into()?;
         let fee_label: TString = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
+        let _title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let account_items: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_account_items)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let extra_items: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_extra_items)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let extra_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_extra_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let verb_cancel: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
+        // collect available info pages
+        let mut info_pages: Vec<(TString, Obj), 2> = Vec::new();
+        if let Some(info) = extra_items {
+            // put extra items first as it's typically used for fee info
+            let extra_title = extra_title.unwrap_or(TR::words__title_information.into());
+            unwrap!(info_pages.push((extra_title, info)));
+        }
+        if let Some(info) = account_items {
+            unwrap!(info_pages.push((TR::confirm_total__title_sending_from.into(), info)));
+        }
+
+        // button layouts and actions
+        let verb_cancel: TString = verb_cancel.unwrap_or(TString::empty());
+        let btns_summary_page = move |has_pages_after: bool| -> (ButtonLayout, ButtonActions) {
+            // if there are no info pages, the right button is not needed
+            // if verb_cancel is "^", the left button is an arrow pointing up
+            let left_btn = Some(ButtonDetails::from_text_possible_icon(verb_cancel));
+            let right_btn = has_pages_after.then(|| {
+                ButtonDetails::text("i".into())
+                    .with_fixed_width(theme::BUTTON_ICON_WIDTH)
+                    .with_font(Font::NORMAL)
+            });
+            let middle_btn = Some(ButtonDetails::armed_text(TR::buttons__confirm.into()));
+
+            (
+                ButtonLayout::new(left_btn, middle_btn, right_btn),
+                if has_pages_after {
+                    ButtonActions::cancel_confirm_next()
+                } else {
+                    ButtonActions::cancel_confirm_none()
+                },
+            )
+        };
+        let btns_info_page = |is_last: bool| -> (ButtonLayout, ButtonActions) {
+            // on the last info page, the right button is not needed
+            if is_last {
+                (
+                    ButtonLayout::arrow_none_none(),
+                    ButtonActions::prev_none_none(),
+                )
+            } else {
+                (
+                    ButtonLayout::arrow_none_arrow(),
+                    ButtonActions::prev_none_next(),
+                )
+            }
+        };
+
+        let total_pages = 1 + info_pages.len();
         let get_page = move |page_index| {
             match page_index {
                 0 => {
                     // Total amount + fee
-                    let btn_layout = ButtonLayout::cancel_armed_info(TR::buttons__confirm.into());
-                    let btn_actions = ButtonActions::cancel_confirm_next();
+                    let (btn_layout, btn_actions) = btns_summary_page(!info_pages.is_empty());
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(total_label)
+                        .text_bold(amount_label)
                         .newline()
-                        .text_mono(total_amount)
+                        .text_mono(amount)
                         .newline()
                         .newline()
                         .text_bold(fee_label)
                         .newline()
-                        .text_mono(fee_amount);
+                        .text_mono(fee);
 
                     let formatted = FormattedText::new(ops);
                     Page::new(btn_layout, btn_actions, formatted)
                 }
-                1 => {
-                    // Fee rate info
-                    let btn_layout = ButtonLayout::arrow_none_arrow();
-                    let btn_actions = ButtonActions::prev_none_next();
-
-                    let fee_rate_amount = fee_rate_amount.unwrap_or("".into());
-
-                    let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold_upper(TR::confirm_total__title_fee)
-                        .newline()
-                        .newline()
-                        .newline_half()
-                        .text_bold(TR::confirm_total__fee_rate_colon)
-                        .newline()
-                        .text_mono(fee_rate_amount);
-
-                    let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted)
-                }
-                2 => {
-                    // Wallet and account info
-                    let btn_layout = ButtonLayout::arrow_none_none();
-                    let btn_actions = ButtonActions::prev_none_none();
-
-                    let account_label = account_label.unwrap_or("".into());
-
-                    // TODO: include wallet info when available
-
-                    let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold_upper(TR::confirm_total__title_sending_from)
-                        .newline()
-                        .newline()
-                        .newline_half()
-                        .text_bold(TR::words__account_colon)
-                        .newline()
-                        .text_mono(account_label);
-
-                    let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted)
-                }
-                _ => unreachable!(),
-            }
-        };
-        let pages = FlowPages::new(get_page, 3);
-
-        let obj = LayoutObj::new(Flow::new(pages))?;
-        Ok(obj.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = |_args: &[Obj], kwargs: &Map| {
-        let amount_title: TString = kwargs.get(Qstr::MP_QSTR_amount_title)?.try_into()?;
-        let amount_value: TString = kwargs.get(Qstr::MP_QSTR_amount_value)?.try_into()?;
-        let fee_title: TString = kwargs.get(Qstr::MP_QSTR_fee_title)?.try_into()?;
-        let fee_value: TString = kwargs.get(Qstr::MP_QSTR_fee_value)?.try_into()?;
-        let items_title: TString = kwargs.get(Qstr::MP_QSTR_items_title)?.try_into()?;
-        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let cancel_cross: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_cross, false)?;
-
-        let get_page = move |page_index| {
-            match page_index {
-                0 => {
-                    // Amount + fee
-                    let btn_layout = if cancel_cross {
-                        ButtonLayout::cancel_armed_info(TR::buttons__confirm.into())
-                    } else {
-                        ButtonLayout::up_arrow_armed_info(TR::buttons__confirm.into())
-                    };
-                    let btn_actions = ButtonActions::cancel_confirm_next();
-
-                    let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(amount_title)
-                        .newline()
-                        .text_mono(amount_value)
-                        .newline()
-                        .newline_half()
-                        .text_bold(fee_title)
-                        .newline()
-                        .text_mono(fee_value);
-
-                    let formatted = FormattedText::new(ops);
-                    Page::new(btn_layout, btn_actions, formatted)
-                }
-                1 => {
-                    // Other information
-                    let btn_layout = ButtonLayout::arrow_none_none();
-                    let btn_actions = ButtonActions::prev_none_none();
+                i => {
+                    // Other info pages as provided
+                    let (title, info_obj) = &info_pages[i - 1];
+                    let is_last = i == total_pages - 1;
+                    let (btn_layout, btn_actions) = btns_info_page(is_last);
 
                     let mut ops = OpTextLayout::new(theme::TEXT_MONO);
-
-                    for item in unwrap!(IterBuf::new().try_iterate(items)) {
+                    for item in unwrap!(IterBuf::new().try_iterate(*info_obj)) {
                         let [key, value]: [Obj; 2] = unwrap!(util::iter_into_array(item));
                         if !ops.is_empty() {
                             // Each key-value pair is on its own page
@@ -776,13 +755,12 @@ extern "C" fn new_altcoin_tx_summary(n_args: usize, args: *const Obj, kwargs: *m
 
                     let formatted = FormattedText::new(ops).vertically_centered();
                     Page::new(btn_layout, btn_actions, formatted)
-                        .with_title(items_title)
                         .with_slim_arrows()
+                        .with_title(*title)
                 }
-                _ => unreachable!(),
             }
         };
-        let pages = FlowPages::new(get_page, 2);
+        let pages = FlowPages::new(get_page, total_pages);
 
         let obj = LayoutObj::new(Flow::new(pages).with_scrollbar(false))?;
         Ok(obj.into())
@@ -1810,30 +1788,20 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm output amount."""
     Qstr::MP_QSTR_confirm_output_amount => obj_fn_kw!(0, new_confirm_output_amount).as_obj(),
 
-    /// def confirm_total(
+    /// def confirm_summary(
     ///     *,
-    ///     total_amount: str,
-    ///     fee_amount: str,
-    ///     fee_rate_amount: str | None,
-    ///     account_label: str | None,
-    ///     total_label: str,
+    ///     amount: str,
+    ///     amount_label: str,
+    ///     fee: str,
     ///     fee_label: str,
+    ///     title: str | None = None,
+    ///     account_items: Iterable[tuple[str, str]] | None = None,
+    ///     extra_items: Iterable[tuple[str, str]] | None = None,
+    ///     extra_title: str | None = None,
+    ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm summary of a transaction."""
-    Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
-
-    /// def altcoin_tx_summary(
-    ///     *,
-    ///     amount_title: str,
-    ///     amount_value: str,
-    ///     fee_title: str,
-    ///     fee_value: str,
-    ///     items_title: str,
-    ///     items: Iterable[Tuple[str, str]],
-    ///     cancel_cross: bool = False,
-    /// ) -> LayoutObj[UiResult]:
-    ///     """Confirm details about altcoin transaction."""
-    Qstr::MP_QSTR_altcoin_tx_summary => obj_fn_kw!(0, new_altcoin_tx_summary).as_obj(),
+    Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
 
     /// def tutorial() -> LayoutObj[UiResult]:
     ///     """Show user how to interact with the device."""

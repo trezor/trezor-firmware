@@ -40,7 +40,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_account_info;
   MP_QSTR_account_items;
   MP_QSTR_account_items_title;
-  MP_QSTR_account_label;
   MP_QSTR_account_path;
   MP_QSTR_accounts;
   MP_QSTR_action;
@@ -70,13 +69,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_qr;
   MP_QSTR_address_title;
   MP_QSTR_allow_cancel;
-  MP_QSTR_altcoin_tx_summary;
   MP_QSTR_amount;
   MP_QSTR_amount_change;
   MP_QSTR_amount_label;
   MP_QSTR_amount_new;
   MP_QSTR_amount_title;
-  MP_QSTR_amount_value;
   MP_QSTR_app_name;
   MP_QSTR_area_bytesize;
   MP_QSTR_attach_timer_fn;
@@ -178,7 +175,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
   MP_QSTR_cancel_arrow;
-  MP_QSTR_cancel_cross;
   MP_QSTR_cancel_text;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
@@ -212,7 +208,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_recovery;
   MP_QSTR_confirm_reset_device;
   MP_QSTR_confirm_summary;
-  MP_QSTR_confirm_total;
   MP_QSTR_confirm_total__fee_rate;
   MP_QSTR_confirm_total__fee_rate_colon;
   MP_QSTR_confirm_total__sending_from_account;
@@ -247,13 +242,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_extra;
   MP_QSTR_extra_info;
   MP_QSTR_fee;
-  MP_QSTR_fee_amount;
   MP_QSTR_fee_info;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
-  MP_QSTR_fee_title;
-  MP_QSTR_fee_value;
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
@@ -323,7 +315,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__view_all_data;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
-  MP_QSTR_items_title;
   MP_QSTR_joint__title;
   MP_QSTR_joint__to_the_total_amount;
   MP_QSTR_joint__you_are_contributing;
@@ -703,7 +694,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_title;
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
-  MP_QSTR_total_label;
   MP_QSTR_total_len;
   MP_QSTR_touch_event;
   MP_QSTR_trace;

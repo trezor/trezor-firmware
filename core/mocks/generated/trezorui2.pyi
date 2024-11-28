@@ -743,30 +743,19 @@ def confirm_output_amount(
 
 
 # rust/src/ui/model_tr/layout.rs
-def confirm_total(
+def confirm_summary(
     *,
-    total_amount: str,
-    fee_amount: str,
-    fee_rate_amount: str | None,
-    account_label: str | None,
-    total_label: str,
+    amount: str,
+    amount_label: str,
+    fee: str,
     fee_label: str,
+    title: str | None = None,
+    account_items: Iterable[tuple[str, str]] | None = None,
+    extra_items: Iterable[tuple[str, str]] | None = None,
+    extra_title: str | None = None,
+    verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm summary of a transaction."""
-
-
-# rust/src/ui/model_tr/layout.rs
-def altcoin_tx_summary(
-    *,
-    amount_title: str,
-    amount_value: str,
-    fee_title: str,
-    fee_value: str,
-    items_title: str,
-    items: Iterable[Tuple[str, str]],
-    cancel_cross: bool = False,
-) -> LayoutObj[UiResult]:
-    """Confirm details about altcoin transaction."""
 
 
 # rust/src/ui/model_tr/layout.rs

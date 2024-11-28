@@ -915,6 +915,15 @@ impl ButtonActions {
         )
     }
 
+    /// Cancelling with left and confirming with middle
+    pub fn cancel_confirm_none() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            Some(ButtonAction::Confirm),
+            None,
+        )
+    }
+
     /// Cancelling with left, confirming with middle and info with right
     pub fn cancel_confirm_info() -> Self {
         Self::new(

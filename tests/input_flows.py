@@ -835,10 +835,10 @@ def sign_tx_go_to_info_tr(
         yield
 
     layout = client.debug.press_right()
-    screen_texts.append(layout.text_content())
+    screen_texts.append(layout.visible_screen())
 
     layout = client.debug.press_right()
-    screen_texts.append(layout.text_content())
+    screen_texts.append(layout.visible_screen())
 
     client.debug.press_left()
     client.debug.press_left()
