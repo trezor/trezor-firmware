@@ -505,11 +505,12 @@ impl Input {
         }
     }
 
-    fn render_dots<'s>(&self, last_char: bool, area: Rect, target: &mut impl Renderer<'s>) {
+    fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
         let style = theme::label_keyboard_mono();
-        let bullet = theme::ICON_PIN_BULLET;
+        let bullet = theme::ICON_PIN_BULLET.toif;
         let mut cursor = area.left_center();
         let all_chars = self.textbox.content().len();
+        let last_char = self.display_style == DisplayStyle::LastChar;
 
         if all_chars > 0 {
             // Find out how much text can fit into the textbox.
@@ -521,6 +522,7 @@ impl Input {
                 area.width() - 1,
             );
             let visible_chars = truncated.len();
+            let visible_dots = visible_chars - last_char as usize;
 
             // Jiggle when overflowed.
             if all_chars > visible_chars
@@ -550,13 +552,16 @@ impl Input {
                 cursor.x += Self::X_STEP;
                 char_idx += 1;
             }
-            // Classical dot(s)
-            for _ in char_idx..(visible_chars - 1) {
-                shape::ToifImage::new(cursor, bullet)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(style.text_color)
-                    .render(target);
-                cursor.x += Self::X_STEP;
+
+            if visible_dots > 0 {
+                // Classical dot(s)
+                for _ in char_idx..visible_dots {
+                    shape::ToifImage::new(cursor, bullet)
+                        .with_align(Alignment2D::TOP_LEFT)
+                        .with_fg(style.text_color)
+                        .render(target);
+                    cursor.x += Self::X_STEP;
+                }
             }
 
             if last_char {
@@ -574,12 +579,6 @@ impl Input {
                 if self.multi_tap.pending_key().is_some() {
                     render_pending_marker(target, cursor, last, style.text_font, style.text_color);
                 }
-            } else {
-                // Last classical dot
-                shape::ToifImage::new(cursor, bullet)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(style.text_color)
-                    .render(target);
             }
         }
     }
@@ -624,8 +623,7 @@ impl Component for Input {
         if !self.textbox.content().is_empty() {
             match self.display_style {
                 DisplayStyle::Chars => self.render_chars(text_area, target),
-                DisplayStyle::Dots => self.render_dots(false, text_area, target),
-                DisplayStyle::LastChar => self.render_dots(true, text_area, target),
+                _ => self.render_dots(text_area, target),
             }
         }
     }

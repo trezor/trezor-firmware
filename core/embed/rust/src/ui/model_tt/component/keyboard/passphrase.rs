@@ -1,5 +1,5 @@
 use crate::{
-    strutil::TString,
+    strutil::{ShortString, TString},
     time::Duration,
     ui::{
         component::{
@@ -8,7 +8,7 @@ use crate::{
         },
         display,
         event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Grid, Offset, Rect},
+        geometry::{Alignment, Grid, Offset, Rect},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg},
             keyboard::common::{render_pending_marker, MultiTapKeyboard},
@@ -417,11 +417,11 @@ impl Input {
         }
     }
 
-    fn render_dots<'s>(&self, last_char: bool, area: Rect, target: &mut impl Renderer<'s>) {
+    fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
         let style = theme::label_keyboard_mono();
-        let dot = theme::ICON_MAGIC.toif;
-        let mut cursor = area.top_left();
+        let mut cursor = area.top_left() + Offset::y(style.text_font.text_height());
         let all_chars = self.textbox.content().len();
+        let last_char = self.display_style == DisplayStyle::LastChar;
 
         if all_chars > 0 {
             // Find out how much text can fit into the textbox.
@@ -443,41 +443,27 @@ impl Input {
                 cursor.x += Self::TWITCH;
             }
 
-            // Adapt y position for the icons
-            cursor.y += Self::Y_STEP;
-            let mut char_idx = 0;
-            // Small leftmost dot.
-            if all_chars > visible_chars + 1 {
-                shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(theme::GREY_DARK)
-                    .render(target);
-                cursor.x += Self::X_STEP;
-                char_idx += 1;
-            }
-            // Greyed out dot.
-            if all_chars > visible_chars {
-                shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(style.text_color)
-                    .render(target);
-                cursor.x += Self::X_STEP;
-                char_idx += 1;
-            }
-            // Classical dot(s)
-            for _ in char_idx..(visible_chars - 1) {
-                shape::ToifImage::new(cursor, dot)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(style.text_color)
-                    .render(target);
-                cursor.x += Self::X_STEP;
+            let visible_dots = visible_chars - last_char as usize;
+            let mut dots = ShortString::new();
+            for _ in 0..visible_dots {
+                dots.push('*').unwrap();
             }
 
+            // Paint the dots
+            shape::Text::new(cursor, &dots)
+                .with_align(Alignment::Start)
+                .with_font(style.text_font)
+                .with_fg(theme::GREY_MEDIUM)
+                .render(target);
+
             if last_char {
-                // Adapt y position for the character
-                cursor.y = area.top_left().y + style.text_font.text_height();
                 // This should not fail because all_chars > 0
                 let last = &self.textbox.content()[(all_chars - 1)..all_chars];
+
+                // Adapt x position for the character
+                cursor.x +=
+                    style.text_font.text_width(&truncated) - style.text_font.text_width(&last);
+
                 // Paint the last character
                 shape::Text::new(cursor, last)
                     .with_align(Alignment::Start)
@@ -488,12 +474,6 @@ impl Input {
                 if self.multi_tap.pending_key().is_some() {
                     render_pending_marker(target, cursor, last, style.text_font, style.text_color);
                 }
-            } else {
-                // Last classical dot
-                shape::ToifImage::new(cursor, dot)
-                    .with_align(Alignment2D::TOP_LEFT)
-                    .with_fg(style.text_color)
-                    .render(target);
             }
         }
     }
@@ -538,8 +518,7 @@ impl Component for Input {
         if !self.textbox.content().is_empty() {
             match self.display_style {
                 DisplayStyle::Chars => self.render_chars(text_area, target),
-                DisplayStyle::Dots => self.render_dots(false, text_area, target),
-                DisplayStyle::LastChar => self.render_dots(true, text_area, target),
+                _ => self.render_dots(text_area, target),
             }
         }
     }
