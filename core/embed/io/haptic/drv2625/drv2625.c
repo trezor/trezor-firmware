@@ -22,6 +22,7 @@
 
 #include <io/haptic.h>
 #include <io/i2c_bus.h>
+#include <sys/systick.h>
 
 #include "drv2625.h"
 
@@ -109,6 +110,29 @@ bool haptic_init(void) {
 
   memset(driver, 0, sizeof(haptic_driver_t));
 
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+#ifdef DRV2625_RESET_PIN
+  DRV2625_RESET_CLK_ENA();
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = DRV2625_RESET_PIN;
+  HAL_GPIO_WritePin(DRV2625_RESET_PORT, DRV2625_RESET_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(DRV2625_RESET_PORT, &GPIO_InitStructure);
+  systick_delay_ms(1);
+  HAL_GPIO_WritePin(DRV2625_RESET_PORT, DRV2625_RESET_PIN, GPIO_PIN_SET);
+  systick_delay_ms(1);
+#endif
+
+  DRV2625_TRIG_CLK_ENA();
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = DRV2625_TRIG_PIN;
+  GPIO_InitStructure.Alternate = DRV2625_TRIG_AF;
+  HAL_GPIO_Init(DRV2625_TRIG_PORT, &GPIO_InitStructure);
+
   driver->i2c_bus = i2c_bus_open(DRV2625_I2C_INSTANCE);
   if (driver->i2c_bus == NULL) {
     goto cleanup;
@@ -146,26 +170,6 @@ bool haptic_init(void) {
     goto cleanup;
   }
 
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
-
-#ifdef DRV2625_RESET_PIN
-  DRV2625_RESET_CLK_ENA();
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = DRV2625_RESET_PIN;
-  HAL_GPIO_Init(DRV2625_RESET_PORT, &GPIO_InitStructure);
-  HAL_GPIO_WritePin(DRV2625_RESET_PORT, DRV2625_RESET_PIN, GPIO_PIN_SET);
-#endif
-
-  DRV2625_TRIG_CLK_ENA();
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = DRV2625_TRIG_PIN;
-  GPIO_InitStructure.Alternate = DRV2625_TRIG_AF;
-  HAL_GPIO_Init(DRV2625_TRIG_PORT, &GPIO_InitStructure);
-
   DRV2625_TRIG_TIM_CLK_ENA();
   TIM_HandleTypeDef TIM_Handle = {0};
   TIM_Handle.State = HAL_TIM_STATE_RESET;
@@ -197,6 +201,9 @@ bool haptic_init(void) {
 cleanup:
   i2c_bus_close(driver->i2c_bus);
   memset(driver, 0, sizeof(haptic_driver_t));
+#ifdef DRV2625_RESET_PIN
+  HAL_GPIO_WritePin(DRV2625_RESET_PORT, DRV2625_RESET_PIN, GPIO_PIN_RESET);
+#endif
   return false;
 }
 
