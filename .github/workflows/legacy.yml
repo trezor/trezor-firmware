@@ -139,6 +139,8 @@ jobs:
           status: ${{ job.status }}
         continue-on-error: true
         if: ${{ always() && matrix.coins == 'universal' }}
+      - run: echo "${{ env.PULL_COMMENT }}" >> $GITHUB_STEP_SUMMARY
+        if: ${{ always() && matrix.coins == 'universal' }}
 
   legacy_upgrade_test:
     name: Upgrade test
@@ -216,14 +218,6 @@ jobs:
         run: |
           aws s3 sync --only-show-errors master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
         continue-on-error: true
-
-  legacy_ui_comment:
-    name: Post comment with UI diff URLs
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/ui-comment
 
   legacy_upload_emu:
     name: Upload emulator binaries
