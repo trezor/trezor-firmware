@@ -1,15 +1,15 @@
 use heapless::Vec;
 
 use crate::{
-    error,
+    error::{self},
+    maybe_trace::MaybeTrace,
     strutil::TString,
     translations::TR,
     ui::{
-        button_request::ButtonRequest,
-        component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt},
+        component::{swipe_detect::SwipeSettings, Component, ComponentExt},
         flow::{
             base::{Decision, DecisionBuilder as _},
-            FlowController, FlowMsg, SwipeFlow,
+            FlowController, FlowMsg, Swipable, SwipeFlow,
         },
         geometry::Direction,
     },
@@ -27,7 +27,7 @@ use super::{
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
-const MENU_ITEM_FEE_INFO: usize = 1;
+const MENU_ITEM_EXTRA_INFO: usize = 1;
 const MENU_ITEM_ACCOUNT_INFO: usize = 2;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -35,7 +35,7 @@ pub enum ConfirmSummary {
     Summary,
     Hold,
     Menu,
-    FeeInfo,
+    ExtraInfo,
     AccountInfo,
     CancelTap,
 }
@@ -52,7 +52,7 @@ impl FlowController for ConfirmSummary {
             (Self::Summary, Direction::Up) => Self::Hold.swipe(direction),
             (Self::Hold, Direction::Down) => Self::Summary.swipe(direction),
             (Self::Menu, Direction::Right) => Self::Summary.swipe(direction),
-            (Self::AccountInfo | Self::FeeInfo | Self::CancelTap, Direction::Right) => {
+            (Self::ExtraInfo | Self::AccountInfo | Self::CancelTap, Direction::Right) => {
                 Self::Menu.swipe(direction)
             }
             _ => self.do_nothing(),
@@ -64,7 +64,7 @@ impl FlowController for ConfirmSummary {
             (_, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Hold, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => Self::CancelTap.swipe_left(),
-            (Self::Menu, FlowMsg::Choice(MENU_ITEM_FEE_INFO)) => Self::FeeInfo.swipe_left(),
+            (Self::Menu, FlowMsg::Choice(MENU_ITEM_EXTRA_INFO)) => Self::ExtraInfo.swipe_left(),
             (Self::Menu, FlowMsg::Choice(MENU_ITEM_ACCOUNT_INFO)) => Self::AccountInfo.swipe_left(),
             (Self::Menu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
             (Self::CancelTap, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Cancelled),
@@ -74,18 +74,20 @@ impl FlowController for ConfirmSummary {
     }
 }
 
+fn dummy_page() -> impl Component<Msg = FlowMsg> + Swipable + MaybeTrace {
+    Frame::left_aligned(TString::empty(), VerticalMenu::empty()).map(|_| Some(FlowMsg::Cancelled))
+}
+
 pub fn new_confirm_summary(
     summary_params: ShowInfoParams,
-    account_params: ShowInfoParams,
-    fee_params: ShowInfoParams,
-    br_name: TString<'static>,
-    br_code: u16,
-    cancel_text: Option<TString<'static>>,
+    account_params: Option<ShowInfoParams>,
+    extra_params: Option<ShowInfoParams>,
+    extra_title: Option<TString<'static>>,
+    verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
     let content_summary = summary_params
         .into_layout()?
-        .one_button_request(ButtonRequest::from_num(br_code, br_name))
         // Summary(1) + Hold(1)
         .with_pages(|summary_pages| summary_pages + 1);
 
@@ -104,25 +106,26 @@ pub fn new_confirm_summary(
         _ => None,
     });
 
-    // FeeInfo
-    let has_fee_info = !fee_params.is_empty();
-    let content_fee = fee_params.into_layout()?;
-
+    // ExtraInfo
+    let content_extra = extra_params
+        .map(|params| params.into_layout())
+        .transpose()?;
     // AccountInfo
-    let has_account_info = !account_params.is_empty();
-    let content_account = account_params.into_layout()?;
+    let content_account = account_params
+        .map(|params| params.into_layout())
+        .transpose()?;
 
-    // Menu
+    // Menu with provided info and cancel
     let mut menu = VerticalMenu::empty();
     let mut menu_items = Vec::<usize, 3>::new();
-    if has_fee_info {
+    if content_extra.is_some() {
         menu = menu.item(
             theme::ICON_CHEVRON_RIGHT,
-            TR::confirm_total__title_fee.into(),
+            extra_title.unwrap_or(TR::buttons__more_info.into()),
         );
-        unwrap!(menu_items.push(MENU_ITEM_FEE_INFO));
+        unwrap!(menu_items.push(MENU_ITEM_EXTRA_INFO));
     }
-    if has_account_info {
+    if content_account.is_some() {
         menu = menu.item(
             theme::ICON_CHEVRON_RIGHT,
             TR::address_details__account_info.into(),
@@ -131,7 +134,7 @@ pub fn new_confirm_summary(
     }
     menu = menu.danger(
         theme::ICON_CANCEL,
-        cancel_text.unwrap_or(TR::send__cancel_sign.into()),
+        verb_cancel.unwrap_or(TR::send__cancel_sign.into()),
     );
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
     let content_menu = Frame::left_aligned(TString::empty(), menu)
@@ -159,13 +162,21 @@ pub fn new_confirm_summary(
         _ => None,
     });
 
-    let res = SwipeFlow::new(&ConfirmSummary::Summary)?
+    let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?
         .with_page(&ConfirmSummary::Summary, content_summary)?
         .with_page(&ConfirmSummary::Hold, content_hold)?
-        .with_page(&ConfirmSummary::Menu, content_menu)?
-        .with_page(&ConfirmSummary::FeeInfo, content_fee)?
-        .with_page(&ConfirmSummary::AccountInfo, content_account)?
-        .with_page(&ConfirmSummary::CancelTap, content_cancel_tap)?;
+        .with_page(&ConfirmSummary::Menu, content_menu)?;
+    if let Some(content_extra) = content_extra {
+        res = res.with_page(&ConfirmSummary::ExtraInfo, content_extra)?
+    } else {
+        res = res.with_page(&ConfirmSummary::ExtraInfo, dummy_page())?
+    };
+    if let Some(content_account) = content_account {
+        res = res.with_page(&ConfirmSummary::AccountInfo, content_account)?
+    } else {
+        res = res.with_page(&ConfirmSummary::AccountInfo, dummy_page())?
+    };
+    res = res.with_page(&ConfirmSummary::CancelTap, content_cancel_tap)?;
 
     Ok(res)
 }

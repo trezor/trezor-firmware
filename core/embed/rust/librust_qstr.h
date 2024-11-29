@@ -37,9 +37,7 @@ static void _librust_qstrs(void) {
   MP_QSTR___dict__;
   MP_QSTR___name__;
   MP_QSTR_account;
-  MP_QSTR_account_info;
   MP_QSTR_account_items;
-  MP_QSTR_account_items_title;
   MP_QSTR_account_path;
   MP_QSTR_accounts;
   MP_QSTR_action;
@@ -174,7 +172,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__view_all_data;
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
-  MP_QSTR_cancel_arrow;
   MP_QSTR_cancel_text;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
@@ -240,9 +237,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;
   MP_QSTR_extra;
-  MP_QSTR_extra_info;
+  MP_QSTR_extra_items;
+  MP_QSTR_extra_title;
   MP_QSTR_fee;
-  MP_QSTR_fee_info;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
@@ -253,7 +250,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_reset;
   MP_QSTR_flow_confirm_set_new_pin;
-  MP_QSTR_flow_confirm_summary;
   MP_QSTR_flow_continue_recovery;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
