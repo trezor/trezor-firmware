@@ -56,6 +56,10 @@ void display_init(display_content_mode_t mode) {
 
   memset(drv, 0, sizeof(display_driver_t));
 
+#ifdef FRAMEBUFFER
+  display_fb_init();
+#endif
+
   if (mode == DISPLAY_RESET_CONTENT) {
     display_io_init_gpio();
     display_io_init_fmc();
@@ -149,7 +153,7 @@ int display_set_orientation(int angle) {
       drv->orientation_angle = angle;
 
 #ifdef FRAMEBUFFER
-      display_physical_fb_clear();
+      display_fb_clear();
 #endif
 
       display_panel_set_window(0, 0, INTERNAL_FB_WIDTH - 1,
