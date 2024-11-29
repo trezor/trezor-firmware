@@ -47,6 +47,7 @@ def configure(
     sources += ["embed/io/display/st-7789/display_io.c"]
     sources += ["embed/io/display/st-7789/display_panel.c"]
     sources += ["embed/io/display/st-7789/panels/lx154a2482.c"]
+    sources += ["embed/io/display/fb_queue/fb_queue.c"]
     paths += ["embed/io/display/inc"]
 
     sources += ["embed/io/display/backlight/stm32/backlight_pwm.c"]

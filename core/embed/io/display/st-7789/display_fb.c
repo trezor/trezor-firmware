@@ -63,7 +63,7 @@ _Static_assert(FRAME_BUFFER_COUNT == 1 || FRAME_BUFFER_COUNT == 2);
                  PHYSICAL_FRAME_BUFFER_ALIGNMENT)
 
 // Physical frame buffers in internal SRAM memory.
-// Both frame buffers layes in the fixed addresses that
+// Both frame buffers layers in the fixed addresses that
 // are shared between bootloaders and the firmware.
 static
     __attribute__((section(".fb1"), aligned(PHYSICAL_FRAME_BUFFER_ALIGNMENT)))
@@ -91,6 +91,21 @@ void display_set_unpriv_access(bool unpriv) {
 }
 #endif  // USE_TRUSTZONE
 
+void display_fb_init(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized) {
+    return;
+  }
+
+  fb_queue_reset(&drv->empty_frames);
+  fb_queue_reset(&drv->ready_frames);
+
+  for (int16_t i = 0; i < FRAME_BUFFER_COUNT; i++) {
+    fb_queue_put(&drv->empty_frames, i);
+  }
+}
+
 // Returns the pointer to the physical frame buffer (0.. FRAME_BUFFER_COUNT-1)
 // Returns NULL if the framebuffer index is out of range.
 static uint8_t *get_fb_ptr(uint32_t index) {
@@ -105,7 +120,7 @@ static uint8_t *get_fb_ptr(uint32_t index) {
   }
 }
 
-void display_physical_fb_clear(void) {
+void display_fb_clear(void) {
   for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
     mpu_set_active_fb(get_fb_ptr(i), PHYSICAL_FRAME_BUFFER_SIZE);
     memset(get_fb_ptr(i), 0, PHYSICAL_FRAME_BUFFER_SIZE);
@@ -120,13 +135,7 @@ void display_physical_fb_clear(void) {
 static void bg_copy_callback(void) {
   display_driver_t *drv = &g_display_driver;
 
-  if (drv->queue.rix >= FRAME_BUFFER_COUNT) {
-    // This is an invalid state and we should never get here
-    return;
-  }
-
-  drv->queue.entry[drv->queue.rix] = FB_STATE_EMPTY;
-  drv->queue.rix = (drv->queue.rix + 1) % FRAME_BUFFER_COUNT;
+  fb_queue_put(&drv->empty_frames, fb_queue_take(&drv->ready_frames));
 }
 
 // Interrupt routing handling TE signal
@@ -135,37 +144,15 @@ static void display_te_interrupt_handler(void) {
 
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 
-  if (drv->queue.rix >= FRAME_BUFFER_COUNT) {
-    // This is an invalid state and we should never get here
-    return;
-  }
+  if (!fb_queue_peeked(&drv->ready_frames)) {
+    int16_t fb_idx = fb_queue_peek(&drv->ready_frames);
 
-  switch (drv->queue.entry[drv->queue.rix]) {
-    case FB_STATE_EMPTY:
-    case FB_STATE_PREPARING:
-      // No new frame queued
-      break;
-
-    case FB_STATE_COPYING:
-      // Currently we are copying a data to the display.
-      // We need to wait for the next TE interrupt.
-      break;
-
-    case FB_STATE_READY:
-      // Now it's proper time to copy the data to the display
-      drv->queue.entry[drv->queue.rix] = FB_STATE_COPYING;
+    if (fb_idx >= 0) {
       display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-      bg_copy_start_const_out_8(get_fb_ptr(drv->queue.rix),
+      bg_copy_start_const_out_8(get_fb_ptr(fb_idx),
                                 (uint8_t *)DISPLAY_DATA_ADDRESS,
                                 PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
-
-      // NOTE: when copying is done, this queue slot is marked empty
-      // (see bg_copy_callback())
-      break;
-
-    default:
-      // This is an invalid state and we should never get here
-      break;
+    }
   }
 }
 
@@ -187,17 +174,10 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
     return false;
   }
 
-  frame_buffer_state_t state;
+  fb_queue_wait(&drv->empty_frames);
+  uint8_t fb_idx = fb_queue_peek(&drv->empty_frames);
 
-  // We have to wait if the buffer was passed for copying
-  // to the interrupt handler
-  do {
-    state = drv->queue.entry[drv->queue.wix];
-  } while (state == FB_STATE_READY || state == FB_STATE_COPYING);
-
-  drv->queue.entry[drv->queue.wix] = FB_STATE_PREPARING;
-
-  fb->ptr = get_fb_ptr(drv->queue.wix);
+  fb->ptr = get_fb_ptr(fb_idx);
   fb->stride = DISPLAY_RESX * sizeof(uint16_t);
   // Enable access to the frame buffer from the unprivileged code
   mpu_set_active_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
@@ -205,6 +185,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   return true;
 }
 
+#ifdef BOARDLOADER
 // Copies the frame buffer with the given index to the display
 static void copy_fb_to_display(uint8_t index) {
   uint16_t *fb = (uint16_t *)get_fb_ptr(index);
@@ -228,6 +209,7 @@ static void wait_for_te_signal(void) {
   while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
   }
 }
+#endif
 
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
@@ -236,7 +218,7 @@ void display_refresh(void) {
     return;
   }
 
-  if (drv->queue.entry[drv->queue.wix] != FB_STATE_PREPARING) {
+  if (!fb_queue_peeked(&drv->empty_frames)) {
     // No refresh needed as the frame buffer is not in
     // the state to be copied to the display
     return;
@@ -246,35 +228,16 @@ void display_refresh(void) {
   mpu_set_active_fb(NULL, 0);
 
 #ifndef BOARDLOADER
-  if (is_mode_exception()) {
-    // Disable scheduling of any new background copying
-    NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-    // Wait for next TE signal. During this time the
-    // display might be updated in the background
-    wait_for_te_signal();
-    // Stop any background copying even if it is not finished yet
-    bg_copy_abort();
-    // Copy the frame buffer to the display manually
-    copy_fb_to_display(drv->queue.wix);
-    // Reset the buffer queue so we can eventually continue
-    // safely in thread mode
-    drv->queue.wix = 0;
-    drv->queue.rix = 0;
-    for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
-      drv->queue.entry[i] = FB_STATE_EMPTY;
-    }
-    // Enable normal processing again
-    NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-  } else {
-    // Mark the buffer ready to switch to
-    drv->queue.entry[drv->queue.wix] = FB_STATE_READY;
-    drv->queue.wix = (drv->queue.wix + 1) % FRAME_BUFFER_COUNT;
-  }
+  // Mark the buffer ready to switch to
+  fb_queue_put(&drv->ready_frames, fb_queue_take(&drv->empty_frames));
 
 #else  // BOARDLOADER
   wait_for_te_signal();
-  copy_fb_to_display(drv->queue.wix);
-  drv->queue.entry[drv->queue.wix] = FB_STATE_EMPTY;
+  int16_t fb_idx = fb_queue_take(&drv->empty_frames);
+  if (fb_idx >= 0) {
+    copy_fb_to_display(fb_idx);
+    fb_queue_put(&drv->empty_frames, fb_idx);
+  }
 #endif
 }
 
@@ -293,14 +256,7 @@ void display_ensure_refreshed(void) {
     //  so we can be sure there's not scheduled or pending
     // background copying
     do {
-      copy_pending = false;
-      for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
-        frame_buffer_state_t state = drv->queue.entry[i];
-        if (state == FB_STATE_READY || state == FB_STATE_COPYING) {
-          copy_pending = true;
-          break;
-        }
-      }
+      copy_pending = !fb_queue_empty(&drv->ready_frames);
       __WFI();
     } while (copy_pending);
 

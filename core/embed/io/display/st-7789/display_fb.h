@@ -24,8 +24,10 @@
 
 #ifdef FRAMEBUFFER
 
+void display_fb_init(void);
+
 // Clears both physical frame buffers
-void display_physical_fb_clear(void);
+void display_fb_clear(void);
 
 void display_ensure_refreshed(void);
 
