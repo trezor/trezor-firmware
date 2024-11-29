@@ -302,7 +302,7 @@ The command returns `OK` followed by the version in the format `<major>.<minor>.
 
 Example:
 ```
-BOOTLOADER_VERSION
+BOOTLOADER VERSION
 OK 2.1.7
 ```
 
@@ -312,7 +312,7 @@ The command returns `OK` followed by the version in the format `<major>.<minor>.
 
 Example:
 ```
-FIRMWARE VERSION
+BOARDLOADER VERSION
 OK 0.2.6
 ```
 
