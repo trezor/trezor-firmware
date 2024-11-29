@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import time
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Generator, Optional
 
@@ -53,6 +54,9 @@ AAA_51 = AAA_50 + "a"
 AAA_51_ADDRESS = "miPeCUxf1Ufh5DtV3AuBopNM8YEDvnQZMh"
 assert len(AAA_51) == 51
 assert AAA_51_ADDRESS == AAA_50_ADDRESS
+
+# entered character is shown for 1 second, so the delay must be grater
+DELAY_S = 1.1
 
 
 BACK = "inputs__back"
@@ -263,4 +267,17 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             # use_carousel=False because we want to reach BACK at the end of the list
             go_to_category(debug, PassphraseCategory.MENU, use_carousel=False)
 
+        enter_passphrase(debug)
+
+
+@pytest.mark.setup_client(passphrase=True)
+def test_last_char_timeout(device_handler: "BackgroundDeviceHandler"):
+    with prepare_passphrase_dialogue(device_handler) as debug:
+        for character in CommonPass.MULTI_CATEGORY:
+            # insert a digit
+            input_passphrase(debug, character)
+            # wait until the last digit is hidden
+            time.sleep(DELAY_S)
+            # show the entire PIN
+            show_passphrase(debug)
         enter_passphrase(debug)
