@@ -712,6 +712,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - run: sleep 1m  # try avoiding github api rate limit
       - uses: ./.github/actions/ui-comment
 
   core_upload_emu:
