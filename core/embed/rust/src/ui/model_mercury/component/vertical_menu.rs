@@ -25,7 +25,7 @@ pub enum VerticalMenuChoiceMsg {
 
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
-const MAX_ITEMS: usize = 3;
+const MENU_MAX_ITEMS: usize = 3;
 
 /// Fixed height of each menu button.
 const MENU_BUTTON_HEIGHT: i16 = 64;
@@ -33,7 +33,7 @@ const MENU_BUTTON_HEIGHT: i16 = 64;
 /// Fixed height of a separator.
 const MENU_SEP_HEIGHT: i16 = 2;
 
-type VerticalMenuButtons = Vec<Button, MAX_ITEMS>;
+type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
 
 #[derive(Default, Clone)]
 struct AttachAnimation {
@@ -180,7 +180,7 @@ impl VerticalMenu {
     fn new(buttons: VerticalMenuButtons) -> Self {
         Self {
             buttons,
-            n_items: MAX_ITEMS,
+            n_items: MENU_MAX_ITEMS,
             attach_animation: AttachAnimation::default(),
         }
     }

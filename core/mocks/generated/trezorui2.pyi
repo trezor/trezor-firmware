@@ -145,17 +145,6 @@ def confirm_value(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def confirm_total(
-    *,
-    title: str,
-    items: Iterable[tuple[str, str]],
-    info_button: bool = False,
-    cancel_arrow: bool = False,
-) -> LayoutObj[UiResult]:
-    """Transaction summary. Always hold to confirm."""
-
-
-# rust/src/ui/model_mercury/layout.rs
 def confirm_modify_output(
     *,
     sign: int,
@@ -534,18 +523,19 @@ def flow_confirm_output(
 
 
 # rust/src/ui/model_mercury/layout.rs
-def flow_confirm_summary(
+def confirm_summary(
     *,
-    title: str,
-    items: Iterable[tuple[str, str]],
-    account_items: Iterable[tuple[str, str]],
-    account_items_title: str | None,
-    fee_items: Iterable[tuple[str, str]],
-    br_code: ButtonRequestType,
-    br_name: str,
-    cancel_text: str | None = None,
+    amount: str,
+    amount_label: str,
+    fee: str,
+    fee_label: str,
+    title: str | None = None,
+    account_items: Iterable[tuple[str, str]] | None = None,
+    extra_items: Iterable[tuple[str, str]] | None = None,
+    extra_title: str | None = None,
+    verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
-    """Total summary and hold to confirm."""
+    """Confirm summary of a transaction."""
 
 
 # rust/src/ui/model_mercury/layout.rs
