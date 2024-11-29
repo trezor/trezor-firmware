@@ -24,7 +24,7 @@ use crate::{
     },
 };
 
-use core::{cell::Cell, mem};
+use core::cell::Cell;
 use num_traits::ToPrimitive;
 
 pub enum PassphraseKeyboardMsg {
@@ -198,8 +198,14 @@ impl PassphraseKeyboard {
             Direction::Right => self.active_layout.prev(),
             _ => self.active_layout,
         };
-        // Clear the pending state.
-        self.input.multi_tap.clear_pending_state(ctx);
+        if self.input.multi_tap.pending_key().is_some() {
+            // Clear the pending state.
+            self.input.multi_tap.clear_pending_state(ctx);
+            // the character has been added, show it for a bit and then hide it
+            self.input
+                .last_char_timer
+                .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+        }
         // Update keys.
         self.replace_keys_contents(ctx);
         // Reset backlight to normal level on next paint.
@@ -602,11 +608,9 @@ impl Component for Input {
                 self.display_style = DisplayStyle::Chars;
                 ctx.request_paint();
             }
-            Event::Touch(TouchEvent::TouchEnd(_)) => {
-                if mem::replace(&mut self.display_style, DisplayStyle::Dots) == DisplayStyle::Chars
-                {
-                    ctx.request_paint();
-                };
+            Event::Touch(TouchEvent::TouchEnd(pos)) if self.area.contains(pos) => {
+                self.display_style = DisplayStyle::Dots;
+                ctx.request_paint();
             }
             _ => {}
         }

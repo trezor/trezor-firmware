@@ -19,7 +19,7 @@ use crate::{
         util::long_line_content_with_ellipsis,
     },
 };
-use core::{cell::Cell, mem};
+use core::cell::Cell;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum PassphraseKeyboardMsg {
@@ -113,8 +113,17 @@ impl PassphraseKeyboard {
         };
         self.scrollbar.go_to(key_page);
         // Clear the pending state.
-        self.input
-            .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
+
+        let pending = self
+            .input
+            .mutate(ctx, |_ctx, i| i.multi_tap.pending_key().is_some());
+        if pending {
+            self.input
+                .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
+            // the character has been added, show it for a bit and then hide it
+            self.input
+                .mutate(ctx, |ctx, t| t.start_timer(ctx, LAST_DIGIT_TIMEOUT_S));
+        }
         // Update buttons.
         self.replace_button_content(ctx, key_page);
         // Reset backlight to normal level on next paint.
@@ -497,11 +506,9 @@ impl Component for Input {
                 self.display_style = DisplayStyle::Chars;
                 ctx.request_paint();
             }
-            Event::Touch(TouchEvent::TouchEnd(_)) => {
-                if mem::replace(&mut self.display_style, DisplayStyle::Dots) == DisplayStyle::Chars
-                {
-                    ctx.request_paint();
-                };
+            Event::Touch(TouchEvent::TouchEnd(pos)) if self.area.contains(pos) => {
+                self.display_style = DisplayStyle::Dots;
+                ctx.request_paint();
             }
             _ => {}
         }
