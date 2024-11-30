@@ -78,6 +78,7 @@ async def _request_on_host() -> str:
                 "passphrase_host2",
                 TR.passphrase__title_confirm,
                 passphrase,
+                info=False,
             )
 
     return passphrase
