@@ -68,6 +68,8 @@ if TYPE_CHECKING:
     from trezor.enums import StellarSignerType  # noqa: F401
     from trezor.enums import TezosBallotType  # noqa: F401
     from trezor.enums import TezosContractType  # noqa: F401
+    from trezor.enums import ThpMessageType  # noqa: F401
+    from trezor.enums import ThpPairingMethod  # noqa: F401
     from trezor.enums import WordRequestType  # noqa: F401
 
     class BenchmarkListNames(protobuf.MessageType):
@@ -2866,11 +2868,13 @@ if TYPE_CHECKING:
 
     class DebugLinkGetState(protobuf.MessageType):
         wait_layout: "DebugWaitType"
+        thp_channel_id: "bytes | None"
 
         def __init__(
             self,
             *,
             wait_layout: "DebugWaitType | None" = None,
+            thp_channel_id: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -2892,6 +2896,9 @@ if TYPE_CHECKING:
         reset_word_pos: "int | None"
         mnemonic_type: "BackupType | None"
         tokens: "list[str]"
+        thp_pairing_code_entry_code: "int | None"
+        thp_pairing_code_qr_code: "bytes | None"
+        thp_pairing_code_nfc_unidirectional: "bytes | None"
 
         def __init__(
             self,
@@ -2909,6 +2916,9 @@ if TYPE_CHECKING:
             recovery_word_pos: "int | None" = None,
             reset_word_pos: "int | None" = None,
             mnemonic_type: "BackupType | None" = None,
+            thp_pairing_code_entry_code: "int | None" = None,
+            thp_pairing_code_qr_code: "bytes | None" = None,
+            thp_pairing_code_nfc_unidirectional: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -6128,6 +6138,278 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TezosManagerTransfer"]:
+            return isinstance(msg, cls)
+
+    class ThpDeviceProperties(protobuf.MessageType):
+        internal_model: "str | None"
+        model_variant: "int | None"
+        bootloader_mode: "bool | None"
+        protocol_version: "int | None"
+        pairing_methods: "list[ThpPairingMethod]"
+
+        def __init__(
+            self,
+            *,
+            pairing_methods: "list[ThpPairingMethod] | None" = None,
+            internal_model: "str | None" = None,
+            model_variant: "int | None" = None,
+            bootloader_mode: "bool | None" = None,
+            protocol_version: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpDeviceProperties"]:
+            return isinstance(msg, cls)
+
+    class ThpHandshakeCompletionReqNoisePayload(protobuf.MessageType):
+        host_pairing_credential: "bytes | None"
+        pairing_methods: "list[ThpPairingMethod]"
+
+        def __init__(
+            self,
+            *,
+            pairing_methods: "list[ThpPairingMethod] | None" = None,
+            host_pairing_credential: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpHandshakeCompletionReqNoisePayload"]:
+            return isinstance(msg, cls)
+
+    class ThpCreateNewSession(protobuf.MessageType):
+        passphrase: "str | None"
+        on_device: "bool | None"
+        derive_cardano: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            passphrase: "str | None" = None,
+            on_device: "bool | None" = None,
+            derive_cardano: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCreateNewSession"]:
+            return isinstance(msg, cls)
+
+    class ThpNewSession(protobuf.MessageType):
+        new_session_id: "int | None"
+
+        def __init__(
+            self,
+            *,
+            new_session_id: "int | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpNewSession"]:
+            return isinstance(msg, cls)
+
+    class ThpStartPairingRequest(protobuf.MessageType):
+        host_name: "str | None"
+
+        def __init__(
+            self,
+            *,
+            host_name: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpStartPairingRequest"]:
+            return isinstance(msg, cls)
+
+    class ThpPairingPreparationsFinished(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpPairingPreparationsFinished"]:
+            return isinstance(msg, cls)
+
+    class ThpCodeEntryCommitment(protobuf.MessageType):
+        commitment: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            commitment: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCodeEntryCommitment"]:
+            return isinstance(msg, cls)
+
+    class ThpCodeEntryChallenge(protobuf.MessageType):
+        challenge: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            challenge: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCodeEntryChallenge"]:
+            return isinstance(msg, cls)
+
+    class ThpCodeEntryCpaceHost(protobuf.MessageType):
+        cpace_host_public_key: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            cpace_host_public_key: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCodeEntryCpaceHost"]:
+            return isinstance(msg, cls)
+
+    class ThpCodeEntryCpaceTrezor(protobuf.MessageType):
+        cpace_trezor_public_key: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            cpace_trezor_public_key: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCodeEntryCpaceTrezor"]:
+            return isinstance(msg, cls)
+
+    class ThpCodeEntryTag(protobuf.MessageType):
+        tag: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            tag: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCodeEntryTag"]:
+            return isinstance(msg, cls)
+
+    class ThpCodeEntrySecret(protobuf.MessageType):
+        secret: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            secret: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCodeEntrySecret"]:
+            return isinstance(msg, cls)
+
+    class ThpQrCodeTag(protobuf.MessageType):
+        tag: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            tag: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpQrCodeTag"]:
+            return isinstance(msg, cls)
+
+    class ThpQrCodeSecret(protobuf.MessageType):
+        secret: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            secret: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpQrCodeSecret"]:
+            return isinstance(msg, cls)
+
+    class ThpNfcUnidirectionalTag(protobuf.MessageType):
+        tag: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            tag: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpNfcUnidirectionalTag"]:
+            return isinstance(msg, cls)
+
+    class ThpNfcUnidirectionalSecret(protobuf.MessageType):
+        secret: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            secret: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpNfcUnidirectionalSecret"]:
+            return isinstance(msg, cls)
+
+    class ThpCredentialRequest(protobuf.MessageType):
+        host_static_pubkey: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            host_static_pubkey: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCredentialRequest"]:
+            return isinstance(msg, cls)
+
+    class ThpCredentialResponse(protobuf.MessageType):
+        trezor_static_pubkey: "bytes | None"
+        credential: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            trezor_static_pubkey: "bytes | None" = None,
+            credential: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpCredentialResponse"]:
+            return isinstance(msg, cls)
+
+    class ThpEndRequest(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpEndRequest"]:
+            return isinstance(msg, cls)
+
+    class ThpEndResponse(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ThpEndResponse"]:
             return isinstance(msg, cls)
 
     class ThpCredentialMetadata(protobuf.MessageType):
