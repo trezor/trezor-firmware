@@ -35,8 +35,8 @@ from . import exceptions, messages, tools
 from .tools import expect
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .protobuf import MessageType
+    from .transport.session import Session
 
 PROTOCOL_MAGICS = {
     "mainnet": 764824073,
@@ -825,7 +825,7 @@ def _get_collateral_inputs_items(
 
 @expect(messages.CardanoAddress, field="address", ret_type=str)
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_parameters: messages.CardanoAddressParametersType,
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
@@ -833,7 +833,7 @@ def get_address(
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
     chunkify: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.CardanoGetAddress(
             address_parameters=address_parameters,
             protocol_magic=protocol_magic,
@@ -847,12 +847,12 @@ def get_address(
 
 @expect(messages.CardanoPublicKey)
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address_n: List[int],
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
     show_display: bool = False,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.CardanoGetPublicKey(
             address_n=address_n,
             derivation_type=derivation_type,
@@ -863,12 +863,12 @@ def get_public_key(
 
 @expect(messages.CardanoNativeScriptHash)
 def get_native_script_hash(
-    client: "TrezorClient",
+    session: "Session",
     native_script: messages.CardanoNativeScript,
     display_format: messages.CardanoNativeScriptHashDisplayFormat = messages.CardanoNativeScriptHashDisplayFormat.HIDE,
     derivation_type: messages.CardanoDerivationType = messages.CardanoDerivationType.ICARUS,
 ) -> "MessageType":
-    return client.call(
+    return session.call(
         messages.CardanoGetNativeScriptHash(
             script=native_script,
             display_format=display_format,
@@ -878,7 +878,7 @@ def get_native_script_hash(
 
 
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     signing_mode: messages.CardanoTxSigningMode,
     inputs: List[InputWithPath],
     outputs: List[OutputWithData],
@@ -915,7 +915,7 @@ def sign_tx(
         signing_mode,
     )
 
-    response = client.call(
+    response = session.call(
         messages.CardanoSignTxInit(
             signing_mode=signing_mode,
             inputs_count=len(inputs),
@@ -951,14 +951,14 @@ def sign_tx(
         _get_certificates_items(certificates),
         withdrawals,
     ):
-        response = client.call(tx_item)
+        response = session.call(tx_item)
         if not isinstance(response, messages.CardanoTxItemAck):
             raise UNEXPECTED_RESPONSE_ERROR
 
     sign_tx_response: Dict[str, Any] = {}
 
     if auxiliary_data is not None:
-        auxiliary_data_supplement = client.call(auxiliary_data)
+        auxiliary_data_supplement = session.call(auxiliary_data)
         if not isinstance(
             auxiliary_data_supplement, messages.CardanoTxAuxiliaryDataSupplement
         ):
@@ -971,7 +971,7 @@ def sign_tx(
                 auxiliary_data_supplement.__dict__
             )
 
-        response = client.call(messages.CardanoTxHostAck())
+        response = session.call(messages.CardanoTxHostAck())
         if not isinstance(response, messages.CardanoTxItemAck):
             raise UNEXPECTED_RESPONSE_ERROR
 
@@ -980,24 +980,24 @@ def sign_tx(
         _get_collateral_inputs_items(collateral_inputs),
         required_signers,
     ):
-        response = client.call(tx_item)
+        response = session.call(tx_item)
         if not isinstance(response, messages.CardanoTxItemAck):
             raise UNEXPECTED_RESPONSE_ERROR
 
     if collateral_return is not None:
         for tx_item in _get_output_items(collateral_return):
-            response = client.call(tx_item)
+            response = session.call(tx_item)
             if not isinstance(response, messages.CardanoTxItemAck):
                 raise UNEXPECTED_RESPONSE_ERROR
 
     for reference_input in reference_inputs:
-        response = client.call(reference_input)
+        response = session.call(reference_input)
         if not isinstance(response, messages.CardanoTxItemAck):
             raise UNEXPECTED_RESPONSE_ERROR
 
     sign_tx_response["witnesses"] = []
     for witness_request in witness_requests:
-        response = client.call(witness_request)
+        response = session.call(witness_request)
         if not isinstance(response, messages.CardanoTxWitnessResponse):
             raise UNEXPECTED_RESPONSE_ERROR
         sign_tx_response["witnesses"].append(
@@ -1009,12 +1009,12 @@ def sign_tx(
             }
         )
 
-    response = client.call(messages.CardanoTxHostAck())
+    response = session.call(messages.CardanoTxHostAck())
     if not isinstance(response, messages.CardanoTxBodyHash):
         raise UNEXPECTED_RESPONSE_ERROR
     sign_tx_response["tx_hash"] = response.tx_hash
 
-    response = client.call(messages.CardanoTxHostAck())
+    response = session.call(messages.CardanoTxHostAck())
     if not isinstance(response, messages.CardanoSignTxFinished):
         raise UNEXPECTED_RESPONSE_ERROR
 
