@@ -14,33 +14,42 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import functools
+import logging
+import os
 import sys
+import typing as t
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Callable, Dict, Optional
 
 import click
 
-from .. import exceptions, transport
-from ..client import TrezorClient
-from ..ui import ClickUI, ScriptUI
+from .. import exceptions, transport, ui
+from ..client import ProtocolVersion, TrezorClient
+from ..messages import Capability
+from ..transport import Transport
+from ..transport.session import Session, SessionV1, SessionV2
+from ..transport.thp.channel_database import get_channel_db
 
-if TYPE_CHECKING:
+LOG = logging.getLogger(__name__)
+
+if t.TYPE_CHECKING:
     # Needed to enforce a return value from decorators
     # More details: https://www.python.org/dev/peps/pep-0612/
-    from typing import TypeVar
 
     from typing_extensions import Concatenate, ParamSpec
 
-    from ..transport import Transport
-    from ..ui import TrezorClientUI
-
     P = ParamSpec("P")
-    R = TypeVar("R")
+    R = t.TypeVar("R")
+    FuncWithSession = t.Callable[Concatenate[Session, P], R]
 
 
 class ChoiceType(click.Choice):
-    def __init__(self, typemap: Dict[str, Any], case_sensitive: bool = True) -> None:
+
+    def __init__(
+        self, typemap: t.Dict[str, t.Any], case_sensitive: bool = True
+    ) -> None:
         super().__init__(list(typemap.keys()))
         self.case_sensitive = case_sensitive
         if case_sensitive:
@@ -48,7 +57,7 @@ class ChoiceType(click.Choice):
         else:
             self.typemap = {k.lower(): v for k, v in typemap.items()}
 
-    def convert(self, value: Any, param: Any, ctx: click.Context) -> Any:
+    def convert(self, value: t.Any, param: t.Any, ctx: click.Context) -> t.Any:
         if value in self.typemap.values():
             return value
         value = super().convert(value, param, ctx)
@@ -57,11 +66,69 @@ class ChoiceType(click.Choice):
         return self.typemap[value]
 
 
+def get_passphrase(
+    passphrase_on_host: bool, available_on_device: bool
+) -> t.Union[str, object]:
+    if available_on_device and not passphrase_on_host:
+        return ui.PASSPHRASE_ON_DEVICE
+
+    env_passphrase = os.getenv("PASSPHRASE")
+    if env_passphrase is not None:
+        ui.echo("Passphrase required. Using PASSPHRASE environment variable.")
+        return env_passphrase
+
+    while True:
+        try:
+            passphrase = ui.prompt(
+                "Passphrase required",
+                hide_input=True,
+                default="",
+                show_default=False,
+            )
+            # In case user sees the input on the screen, we do not need confirmation
+            if not ui.CAN_HANDLE_HIDDEN_INPUT:
+                return passphrase
+            second = ui.prompt(
+                "Confirm your passphrase",
+                hide_input=True,
+                default="",
+                show_default=False,
+            )
+            if passphrase == second:
+                return passphrase
+            else:
+                ui.echo("Passphrase did not match. Please try again.")
+        except click.Abort:
+            raise exceptions.Cancelled from None
+
+
+def get_client(transport: Transport) -> TrezorClient:
+    stored_channels = get_channel_db().load_stored_channels()
+    stored_transport_paths = [ch.transport_path for ch in stored_channels]
+    path = transport.get_path()
+    if path in stored_transport_paths:
+        stored_channel_with_correct_transport_path = next(
+            ch for ch in stored_channels if ch.transport_path == path
+        )
+        try:
+            client = TrezorClient.resume(
+                transport, stored_channel_with_correct_transport_path
+            )
+        except Exception:
+            LOG.debug("Failed to resume a channel. Replacing by a new one.")
+            get_channel_db().remove_channel(path)
+            client = TrezorClient(transport)
+    else:
+        client = TrezorClient(transport)
+    return client
+
+
 class TrezorConnection:
+
     def __init__(
         self,
         path: str,
-        session_id: Optional[bytes],
+        session_id: bytes | None,
         passphrase_on_host: bool,
         script: bool,
     ) -> None:
@@ -69,6 +136,54 @@ class TrezorConnection:
         self.session_id = session_id
         self.passphrase_on_host = passphrase_on_host
         self.script = script
+
+    def get_session(
+        self,
+        derive_cardano: bool = False,
+        empty_passphrase: bool = False,
+        must_resume: bool = False,
+    ) -> Session:
+        client = self.get_client()
+        if must_resume and self.session_id is None:
+            click.echo("Failed to resume session - no session id provided")
+            raise RuntimeError("Failed to resume session - no session id provided")
+
+        # Try resume session from id
+        if self.session_id is not None:
+            if client.protocol_version is ProtocolVersion.PROTOCOL_V1:
+                session = SessionV1.resume_from_id(
+                    client=client, session_id=self.session_id
+                )
+            elif client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+                session = SessionV2(client, self.session_id)
+                # TODO fix resumption on THP
+            else:
+                raise Exception("Unsupported client protocol", client.protocol_version)
+            if must_resume:
+                if session.id != self.session_id or session.id is None:
+                    click.echo("Failed to resume session")
+                    RuntimeError("Failed to resume session - no session id provided")
+            return session
+
+        features = client.protocol.get_features()
+
+        passphrase_enabled = True  # TODO what to do here?
+
+        if not passphrase_enabled:
+            return client.get_session(derive_cardano=derive_cardano)
+
+        if empty_passphrase:
+            passphrase = ""
+        else:
+            available_on_device = Capability.PassphraseEntry in features.capabilities
+            passphrase = get_passphrase(available_on_device, self.passphrase_on_host)
+            # TODO handle case when PASSPHRASE_ON_DEVICE is returned from get_passphrase func
+        if not isinstance(passphrase, str):
+            raise RuntimeError("Passphrase must be a str")
+        session = client.get_session(
+            passphrase=passphrase, derive_cardano=derive_cardano
+        )
+        return session
 
     def get_transport(self) -> "Transport":
         try:
@@ -82,19 +197,13 @@ class TrezorConnection:
         # if this fails, we want the exception to bubble up to the caller
         return transport.get_transport(self.path, prefix_search=True)
 
-    def get_ui(self) -> "TrezorClientUI":
-        if self.script:
-            # It is alright to return just the class object instead of instance,
-            # as the ScriptUI class object itself is the implementation of TrezorClientUI
-            # (ScriptUI is just a set of staticmethods)
-            return ScriptUI
-        else:
-            return ClickUI(passphrase_on_host=self.passphrase_on_host)
-
     def get_client(self) -> TrezorClient:
-        transport = self.get_transport()
-        ui = self.get_ui()
-        return TrezorClient(transport, ui=ui, session_id=self.session_id)
+        return get_client(self.get_transport())
+
+    def get_management_session(self) -> Session:
+        client = self.get_client()
+        management_session = client.get_management_session()
+        return management_session
 
     @contextmanager
     def client_context(self):
@@ -128,7 +237,57 @@ class TrezorConnection:
             # other exceptions may cause a traceback
 
 
-def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[P, R]":
+def with_session(
+    func: "t.Callable[Concatenate[Session, P], R]|None" = None,
+    *,
+    empty_passphrase: bool = False,
+    derive_cardano: bool = False,
+    management: bool = False,
+    must_resume: bool = False,
+) -> t.Callable[[FuncWithSession], t.Callable[P, R]]:
+    """Provides a Click command with parameter `session=obj.get_session(...)` or
+    `session=obj.get_management_session()` based on the parameters provided.
+
+    If default parameters are ok, this decorator can be used without parentheses.
+
+    TODO: handle resumption of sessions and their (potential) closure.
+    """
+
+    def decorator(
+        func: FuncWithSession,
+    ) -> "t.Callable[P, R]":
+
+        @click.pass_obj
+        @functools.wraps(func)
+        def function_with_session(
+            obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
+        ) -> "R":
+            if management:
+                session = obj.get_management_session()
+            else:
+                session = obj.get_session(
+                    derive_cardano=derive_cardano,
+                    empty_passphrase=empty_passphrase,
+                    must_resume=must_resume,
+                )
+            try:
+                return func(session, *args, **kwargs)
+            finally:
+                pass
+                # TODO try end session if not resumed
+
+        return function_with_session
+
+    # If the decorator @get_session is used without parentheses
+    if func and callable(func):
+        return decorator(func)  # type: ignore [Function return type]
+
+    return decorator
+
+
+def with_client(
+    func: "t.Callable[Concatenate[TrezorClient, P], R]",
+) -> "t.Callable[P, R]":
     """Wrap a Click command in `with obj.client_context() as client`.
 
     Sessions are handled transparently. The user is warned when session did not resume
@@ -142,21 +301,60 @@ def with_client(func: "Callable[Concatenate[TrezorClient, P], R]") -> "Callable[
         obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
     ) -> "R":
         with obj.client_context() as client:
-            session_was_resumed = obj.session_id == client.session_id
-            if not session_was_resumed and obj.session_id is not None:
-                # tried to resume but failed
-                click.echo("Warning: failed to resume session.", err=True)
-
+            # session_was_resumed = obj.session_id == client.session_id
+            # if not session_was_resumed and obj.session_id is not None:
+            #     # tried to resume but failed
+            #     click.echo("Warning: failed to resume session.", err=True)
+            click.echo(
+                "Warning: resume session detection is not implemented yet!", err=True
+            )
             try:
                 return func(client, *args, **kwargs)
             finally:
-                if not session_was_resumed:
-                    try:
-                        client.end_session()
-                    except Exception:
-                        pass
+                if client.protocol_version == ProtocolVersion.PROTOCOL_V2:
+                    get_channel_db().save_channel(client.protocol)
+                # if not session_was_resumed:
+                #     try:
+                #         client.end_session()
+                #     except Exception:
+                #         pass
 
     return trezorctl_command_with_client
+
+
+# def with_client(
+#     func: "t.Callable[Concatenate[TrezorClient, P], R]",
+# ) -> "t.Callable[P, R]":
+#     """Wrap a Click command in `with obj.client_context() as client`.
+
+#     Sessions are handled transparently. The user is warned when session did not resume
+#     cleanly. The session is closed after the command completes - unless the session
+#     was resumed, in which case it should remain open.
+#     """
+
+#     @click.pass_obj
+#     @functools.wraps(func)
+#     def trezorctl_command_with_client(
+#         obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
+#     ) -> "R":
+#         with obj.client_context() as client:
+#             session_was_resumed = obj.session_id == client.session_id
+#             if not session_was_resumed and obj.session_id is not None:
+#                 # tried to resume but failed
+#                 click.echo("Warning: failed to resume session.", err=True)
+
+#             try:
+#                 return func(client, *args, **kwargs)
+#             finally:
+#                 if not session_was_resumed:
+#                     try:
+#                         client.end_session()
+#                     except Exception:
+#                         pass
+
+#     # the return type of @click.pass_obj is improperly specified and pyright doesn't
+#     # understand that it converts f(obj, *args, **kwargs) to f(*args, **kwargs)
+#     return trezorctl_command_with_client
 
 
 class AliasedGroup(click.Group):
@@ -188,14 +386,14 @@ class AliasedGroup(click.Group):
 
     def __init__(
         self,
-        aliases: Optional[Dict[str, click.Command]] = None,
-        *args: Any,
-        **kwargs: Any,
+        aliases: t.Dict[str, click.Command] | None = None,
+        *args: t.Any,
+        **kwargs: t.Any,
     ) -> None:
         super().__init__(*args, **kwargs)
         self.aliases = aliases or {}
 
-    def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
+    def get_command(self, ctx: click.Context, cmd_name: str) -> click.Command | None:
         cmd_name = cmd_name.replace("_", "-")
         # try to look up the real name
         cmd = super().get_command(ctx, cmd_name)
