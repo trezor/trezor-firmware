@@ -191,6 +191,12 @@ void fsm_sendFailure(FailureType code, const char *text)
       case FailureType_Failure_InvalidSession:
         text = _("Invalid session");
         break;
+      case FailureType_Failure_ThpUnallocatedSession:
+        text = _("Unallocated session");
+        break;
+      case FailureType_Failure_InvalidProtocol:
+        text = _("Invalid protocol");
+        break;
       case FailureType_Failure_FirmwareError:
         text = _("Firmware error");
         break;
