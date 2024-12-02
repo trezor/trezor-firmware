@@ -20,17 +20,17 @@ from . import messages
 from .tools import expect
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .protobuf import MessageType
+    from .transport.session import Session
 
 
 @expect(messages.BenchmarkNames)
 def list_names(
-    client: "TrezorClient",
+    session: "Session",
 ) -> "MessageType":
-    return client.call(messages.BenchmarkListNames())
+    return session.call(messages.BenchmarkListNames())
 
 
 @expect(messages.BenchmarkResult)
-def run(client: "TrezorClient", name: str) -> "MessageType":
-    return client.call(messages.BenchmarkRun(name=name))
+def run(session: "Session", name: str) -> "MessageType":
+    return session.call(messages.BenchmarkRun(name=name))
