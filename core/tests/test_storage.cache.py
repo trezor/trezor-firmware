@@ -14,10 +14,11 @@ if utils.USE_THP:
     _PROTOCOL_CACHE = cache_thp
 
 else:
+    from mock_storage import mock_storage
     from storage import cache, cache_codec
     from trezor.messages import EndSession, Initialize
+
     from apps.base import handle_EndSession
-    from mock_storage import mock_storage
 
     _PROTOCOL_CACHE = cache_codec
 
@@ -307,8 +308,8 @@ class TestStorageCache(unittest.TestCase):
     else:
 
         def setUpClass(self):
-            from trezor.wire.codec.codec_context import CodecContext
             from trezor.wire import context
+            from trezor.wire.codec.codec_context import CodecContext
 
             context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
 

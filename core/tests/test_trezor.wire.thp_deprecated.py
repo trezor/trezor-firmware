@@ -11,9 +11,8 @@ from trezor.wire.protocol_common import Message
 if utils.USE_THP:
     import thp_common
     import trezor.wire.thp
-    from trezor.wire.thp import thp_main
     from trezor.wire.thp import alternating_bit_protocol as ABP
-    from trezor.wire.thp import checksum
+    from trezor.wire.thp import checksum, thp_main
     from trezor.wire.thp.checksum import CHECKSUM_LENGTH
     from trezor.wire.thp.writer import PACKET_LENGTH
 

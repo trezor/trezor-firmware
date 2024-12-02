@@ -7,7 +7,7 @@ import typing as t
 from importlib import metadata
 
 from . import device
-from .client import TrezorClient
+from .transport.session import Session
 
 try:
     cryptography_version = metadata.version("cryptography")
@@ -361,7 +361,7 @@ def verify_authentication_response(
 
 
 def authenticate_device(
-    client: TrezorClient,
+    session: Session,
     challenge: bytes | None = None,
     *,
     whitelist: t.Collection[bytes] | None = None,
@@ -371,7 +371,7 @@ def authenticate_device(
     if challenge is None:
         challenge = secrets.token_bytes(16)
 
-    resp = device.authenticate(client, challenge)
+    resp = device.authenticate(session, challenge)
 
     return verify_authentication_response(
         challenge,

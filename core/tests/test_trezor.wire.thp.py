@@ -28,8 +28,7 @@ if utils.USE_THP:
         ThpEndRequest,
         ThpStartPairingRequest,
     )
-    from trezor.wire.thp import thp_main
-    from trezor.wire.thp import ChannelState, checksum, interface_manager
+    from trezor.wire.thp import ChannelState, checksum, interface_manager, thp_main
     from trezor.wire.thp.crypto import Handshake
     from trezor.wire.thp.pairing_context import PairingContext
 
