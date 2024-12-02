@@ -10,9 +10,6 @@ MEMORY {
   KERNEL_URAM (wal) : ORIGIN = KERNEL_URAM_START, LENGTH = KERNEL_URAM_SIZE
   FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
-
-  COREAPP_RAM (wal) : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
-  COREAPP_RAM2 (wal) : ORIGIN = COREAPP_RAM2_START, LENGTH = COREAPP_RAM2_SIZE
 }
 
 main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -60,12 +57,6 @@ _shutdown_clear_ram_2_start = 0;
 _shutdown_clear_ram_2_end = 0;
 _shutdown_clear_ram_3_start = 0;
 _shutdown_clear_ram_3_end = 0;
-
-/* used by applet cleaning code */
-_coreapp_clear_ram_0_start = ORIGIN(COREAPP_RAM);
-_coreapp_clear_ram_0_size = LENGTH(COREAPP_RAM);
-_coreapp_clear_ram_1_start = ORIGIN(COREAPP_RAM2);
-_coreapp_clear_ram_1_size = LENGTH(COREAPP_RAM2);
 
 _codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash)  + SIZEOF(.uflash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
