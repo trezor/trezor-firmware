@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, models
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -64,7 +64,7 @@ TXHASH_c96621 = bytes.fromhex(
 
 
 @pytest.mark.parametrize("chunkify", (True, False))
-def test_send_p2tr(client: Client, chunkify: bool):
+def test_send_p2tr(session: Session, chunkify: bool):
     inp1 = messages.TxInputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
         address_n=parse_path("m/86h/1h/0h/1/0"),
@@ -79,13 +79,13 @@ def test_send_p2tr(client: Client, chunkify: bool):
         amount=4_450,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -94,7 +94,7 @@ def test_send_p2tr(client: Client, chunkify: bool):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API, chunkify=chunkify
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API, chunkify=chunkify
         )
 
     assert_tx_matches(
@@ -104,7 +104,7 @@ def test_send_p2tr(client: Client, chunkify: bool):
     )
 
 
-def test_send_two_with_change(client: Client):
+def test_send_two_with_change(session: Session):
     inp1 = messages.TxInputType(
         # tb1pswrqtykue8r89t9u4rprjs0gt4qzkdfuursfnvqaa3f2yql07zmq8s8a5u
         address_n=parse_path("m/86h/1h/0h/0/0"),
@@ -133,14 +133,14 @@ def test_send_two_with_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
         amount=6_800 + 13_000 - 200 - 15_000,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -153,7 +153,7 @@ def test_send_two_with_change(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_API
+            session, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_API
         )
 
     assert_tx_matches(
@@ -163,7 +163,7 @@ def test_send_two_with_change(client: Client):
     )
 
 
-def test_send_mixed(client: Client):
+def test_send_mixed(session: Session):
     inp1 = messages.TxInputType(
         # 2MutHjgAXkqo3jxX2DZWorLAckAnwTxSM9V
         address_n=parse_path("m/49h/1h/1h/0/0"),
@@ -222,8 +222,8 @@ def test_send_mixed(client: Client):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 # process inputs
                 request_input(0),
@@ -233,19 +233,19 @@ def test_send_mixed(client: Client):
                 # approve outputs
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(3),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 request_output(4),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
-                (is_core(client), messages.ButtonRequest(code=B.SignTx)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.SignTx)),
                 messages.ButtonRequest(code=B.SignTx),
                 # verify inputs
                 request_input(0),
@@ -293,12 +293,12 @@ def test_send_mixed(client: Client):
                 request_input(0),
                 request_input(1),
                 request_input(2),
-                (client.model is models.T1B1, request_input(3)),
+                (session.model is models.T1B1, request_input(3)),
                 request_finished(),
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2, inp3, inp4],
             [out1, out2, out3, out4, out5],
@@ -312,13 +312,12 @@ def test_send_mixed(client: Client):
     )
 
 
-def test_attack_script_type(client: Client):
+def test_attack_script_type(session: Session):
     # Scenario: The attacker falsely claims that the transaction is Taproot-only to
     # avoid prev tx streaming and gives a lower amount for one of the inputs. The
     # correct input types and amounts are revelaled only in step6_sign_segwit_inputs()
     # to get a valid signature. This results in a transaction which pays a fee much
     # larger than what the user confirmed.
-
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/0h/1/0"),
         amount=7_289_000,
@@ -354,16 +353,16 @@ def test_attack_script_type(client: Client):
 
         return msg
 
-    with client:
-        client.set_filter(messages.TxAck, attack_processor)
-        client.set_expected_responses(
+    with session:
+        session.set_filter(messages.TxAck, attack_processor)
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
-                (is_core(client), messages.ButtonRequest(code=B.SignTx)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.SignTx)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_input(1),
@@ -374,7 +373,7 @@ def test_attack_script_type(client: Client):
             ]
         )
         with pytest.raises(TrezorFailure) as exc:
-            btc.sign_tx(client, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API)
+            btc.sign_tx(session, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API)
         assert exc.value.code == messages.FailureType.ProcessError
         assert exc.value.message.endswith("Transaction has changed during signing")
 
@@ -392,7 +391,7 @@ def test_attack_script_type(client: Client):
         "tb1pllllllllllllllllllllllllllllllllllllllllllllallllscqgl4zhn",
     ),
 )
-def test_send_invalid_address(client: Client, address: str):
+def test_send_invalid_address(session: Session, address: str):
     inp1 = messages.TxInputType(
         # tb1pn2d0yjeedavnkd8z8lhm566p0f2utm3lgvxrsdehnl94y34txmts5s7t4c
         address_n=parse_path("m/86h/1h/0h/1/0"),
@@ -407,12 +406,12 @@ def test_send_invalid_address(client: Client, address: str):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client, pytest.raises(TrezorFailure):
-        client.set_expected_responses(
+    with session, pytest.raises(TrezorFailure):
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.Failure,
             ]
         )
-        btc.sign_tx(client, "Testnet", [inp1], [out1], prev_txes=TX_API)
+        btc.sign_tx(session, "Testnet", [inp1], [out1], prev_txes=TX_API)

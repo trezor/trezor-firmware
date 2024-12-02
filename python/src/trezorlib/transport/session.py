@@ -77,10 +77,12 @@ class Session:
         return self.call(messages.EndSession())
 
     def ping(self, message: str, button_protection: bool | None = None) -> str:
-        resp: messages.Success = self.call(
-            messages.Ping(message=message, button_protection=button_protection)
+        resp = self.call(
+            messages.Ping(message=message, button_protection=button_protection),
+            expect=messages.Success,
         )
-        return resp.message or ""
+        assert resp.message is not None
+        return resp.message
 
     @property
     def features(self) -> messages.Features:
@@ -164,7 +166,7 @@ class SessionV1(Session):
 
 def _send_passphrase(session: Session, resp: t.Any) -> None:
     assert isinstance(session.passphrase, str)
-    return session.call(messages.PassphraseAck(passphrase=session.passphrase))
+    session.call(messages.PassphraseAck(passphrase=session.passphrase))
 
 
 def _callback_button(session: Session, msg: t.Any) -> t.Any:
@@ -180,10 +182,11 @@ class SessionV2(Session):
     ) -> SessionV2:
         assert isinstance(client.protocol, ProtocolV2)
         session = cls(client, b"\x00")
-        new_session: messages.ThpNewSession = session.call(
+        new_session = session.call(
             messages.ThpCreateNewSession(
                 passphrase=passphrase, derive_cardano=derive_cardano
-            )
+            ),
+            expect=messages.ThpNewSession,
         )
         assert new_session.new_session_id is not None
         session_id = new_session.new_session_id
