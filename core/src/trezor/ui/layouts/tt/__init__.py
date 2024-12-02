@@ -1285,7 +1285,9 @@ def confirm_set_new_pin(
     br_name: str,
     title: str,
     description: str,
+    cancel_title: str,
     information: str,
+    is_wipe_code: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(

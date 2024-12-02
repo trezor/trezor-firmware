@@ -66,6 +66,7 @@ def _require_confirm_action(
         return confirm_action(
             "disable_wipe_code",
             TR.wipe_code__title_settings,
+            subtitle=TR.words__settings,
             description=TR.wipe_code__turn_off,
             verb=TR.buttons__turn_off,
             prompt_screen=True,
@@ -75,6 +76,7 @@ def _require_confirm_action(
         return confirm_action(
             "change_wipe_code",
             TR.wipe_code__title_settings,
+            subtitle=TR.words__settings,
             description=TR.wipe_code__change,
             verb=TR.buttons__change,
         )
@@ -84,7 +86,9 @@ def _require_confirm_action(
             "set_wipe_code",
             TR.wipe_code__title_settings,
             TR.wipe_code__turn_on,
+            TR.buttons__cancel,
             TR.wipe_code__info,
+            is_wipe_code=True,
         )
 
     # Removing non-existing wipe code.
