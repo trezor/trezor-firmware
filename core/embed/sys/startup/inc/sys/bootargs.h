@@ -20,7 +20,6 @@
 #ifndef TREZORHAL_BOOTARGS_H
 #define TREZORHAL_BOOTARGS_H
 
-#include <trezor_model.h>
 #include <trezor_types.h>
 
 // Defines boot command processed in bootloader on next reboot
@@ -34,7 +33,7 @@ typedef enum {
 } boot_command_t;
 
 // Maximum size boot_args array
-#define BOOT_ARGS_MAX_SIZE (BOOTARGS_SIZE - 8)
+#define BOOT_ARGS_MAX_SIZE (256 - 8)
 
 typedef union {
   uint8_t raw[BOOT_ARGS_MAX_SIZE];
