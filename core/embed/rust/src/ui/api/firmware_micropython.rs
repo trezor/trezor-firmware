@@ -532,8 +532,25 @@ extern "C" fn new_flow_confirm_set_new_pin(
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let cancel_title: TString = kwargs.get(Qstr::MP_QSTR_cancel_title)?.try_into()?;
 
-        let layout = ModelUI::flow_confirm_set_new_pin(title, description)?;
+        let layout = ModelUI::flow_confirm_set_new_pin(title, description, cancel_title)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_flow_confirm_set_new_wipe_code(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
+        let cancel_title: TString = kwargs.get(Qstr::MP_QSTR_cancel_title)?.try_into()?;
+
+        let layout = ModelUI::flow_confirm_set_new_wipe_code(title, description, cancel_title)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1378,15 +1395,23 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
     Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, new_flow_confirm_output).as_obj(),
 
-    // TODO: supply more arguments for Wipe code setting (mercury)
-    ///
     /// def flow_confirm_set_new_pin(
     ///     *,
     ///     title: str,
     ///     description: str,
+    ///     cancel_title: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm new PIN setup with an option to cancel action."""
     Qstr::MP_QSTR_flow_confirm_set_new_pin => obj_fn_kw!(0, new_flow_confirm_set_new_pin).as_obj(),
+
+    /// def flow_confirm_set_new_wipe_code(
+    ///     *,
+    ///     title: str,
+    ///     description: str,
+    ///     cancel_title: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Confirm new wipe code setup with an option to cancel action."""
+    Qstr::MP_QSTR_flow_confirm_set_new_wipe_code => obj_fn_kw!(0, new_flow_confirm_set_new_wipe_code).as_obj(),
 
     /// def flow_get_address(
     ///     *,

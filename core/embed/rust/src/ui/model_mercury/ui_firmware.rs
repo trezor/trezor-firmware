@@ -631,8 +631,22 @@ impl FirmwareUI for UIMercury {
     fn flow_confirm_set_new_pin(
         title: TString<'static>,
         description: TString<'static>,
+        cancel_title: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let flow = flow::confirm_set_new_pin::new_set_new_pin(title, description)?;
+        let flow = flow::confirm_set_new_pin::new_set_new_pin(title, description, cancel_title)?;
+        Ok(flow)
+    }
+
+    fn flow_confirm_set_new_wipe_code(
+        title: TString<'static>,
+        description: TString<'static>,
+        cancel_title: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow = flow::confirm_set_new_wipe_code::new_set_new_wipe_code(
+            title,
+            description,
+            cancel_title,
+        )?;
         Ok(flow)
     }
 

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import TR, config, wire
+from trezor import TR, config, utils, wire
 
 if TYPE_CHECKING:
     from typing import Awaitable
@@ -67,10 +67,16 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
 
     has_pin = config.has_pin()
 
+    if utils.UI_LAYOUT == "MERCURY":
+        title = TR.pin__title_settings
+    else:
+        title = TR.pin__title_settings + " " + TR.words__settings
+
     if msg.remove and has_pin:  # removing pin
         return confirm_action(
             "disable_pin",
-            TR.pin__title_settings,
+            title,
+            subtitle=TR.words__settings,
             description=TR.pin__turn_off,
             verb=TR.buttons__turn_off,
         )
@@ -78,7 +84,8 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
     if not msg.remove and has_pin:  # changing pin
         return confirm_action(
             "change_pin",
-            TR.pin__title_settings,
+            title,
+            subtitle=TR.words__settings,
             description=TR.pin__change,
             verb=TR.buttons__change,
             prompt_screen=False,
@@ -87,8 +94,9 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
     if not msg.remove and not has_pin:  # setting new pin
         return confirm_set_new_pin(
             "set_pin",
-            TR.pin__title_settings,
+            title,
             TR.pin__turn_on,
+            TR.pin__cancel_setup,
             TR.pin__info,
         )
 

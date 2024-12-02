@@ -1295,7 +1295,9 @@ async def confirm_set_new_pin(
     br_name: str,
     title: str,
     description: str,
+    cancel_title: str,  # unused for model r
     information: str,
+    is_wipe_code: bool = False,  # unused for model r
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> None:
     await _confirm_multiple_pages_texts(
