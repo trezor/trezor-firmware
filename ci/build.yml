@@ -307,6 +307,7 @@ core unix frozen debug build:
   needs: []
   variables:
     PYOPT: "0"
+    THP: "1"
   script:
     - $NIX_SHELL --run "poetry run make -C core build_unix_frozen"
   artifacts:
