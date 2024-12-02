@@ -164,9 +164,9 @@ stdenvNoCC.mkDerivation ({
   ] ++ lib.optionals devTools [
     shellcheck
     openocd-stm
-    kcachegrind
   ] ++ lib.optionals (devTools && !stdenv.isDarwin) [
     gdb
+    kcachegrind
   ] ++ lib.optionals (devTools && acceptJlink) [
     nrfutil
     nrfconnect
