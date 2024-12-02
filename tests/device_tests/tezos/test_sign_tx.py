@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import messages, tezos
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.protobuf import dict_to_proto
 from trezorlib.tools import parse_path
 
@@ -32,10 +32,10 @@ pytestmark = [
 ]
 
 
-def test_tezos_sign_tx_proposal(client: Client):
-    with client:
+def test_tezos_sign_tx_proposal(session: Session):
+    with session:
         resp = tezos.sign_tx(
-            client,
+            session,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -63,10 +63,10 @@ def test_tezos_sign_tx_proposal(client: Client):
     assert resp.operation_hash == "opLqntFUu984M7LnGsFvfGW6kWe9QjAz4AfPDqQvwJ1wPM4Si4c"
 
 
-def test_tezos_sign_tx_multiple_proposals(client: Client):
-    with client:
+def test_tezos_sign_tx_multiple_proposals(session: Session):
+    with session:
         resp = tezos.sign_tx(
-            client,
+            session,
             TEZOS_PATH_10,
             dict_to_proto(
                 messages.TezosSignTx,
@@ -95,9 +95,9 @@ def test_tezos_sign_tx_multiple_proposals(client: Client):
     assert resp.operation_hash == "onobSyNgiitGXxSVFJN6949MhUomkkxvH4ZJ2owgWwNeDdntF9Y"
 
 
-def test_tezos_sing_tx_ballot_yay(client: Client):
+def test_tezos_sing_tx_ballot_yay(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -119,9 +119,9 @@ def test_tezos_sing_tx_ballot_yay(client: Client):
     )
 
 
-def test_tezos_sing_tx_ballot_nay(client: Client):
+def test_tezos_sing_tx_ballot_nay(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -142,9 +142,9 @@ def test_tezos_sing_tx_ballot_nay(client: Client):
     )
 
 
-def test_tezos_sing_tx_ballot_pass(client: Client):
+def test_tezos_sing_tx_ballot_pass(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -167,9 +167,9 @@ def test_tezos_sing_tx_ballot_pass(client: Client):
 
 
 @pytest.mark.parametrize("chunkify", (True, False))
-def test_tezos_sign_tx_tranasaction(client: Client, chunkify: bool):
+def test_tezos_sign_tx_tranasaction(session: Session, chunkify: bool):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -202,9 +202,9 @@ def test_tezos_sign_tx_tranasaction(client: Client, chunkify: bool):
     assert resp.operation_hash == "oon8PNUsPETGKzfESv1Epv4535rviGS7RdCfAEKcPvzojrcuufb"
 
 
-def test_tezos_sign_tx_delegation(client: Client):
+def test_tezos_sign_tx_delegation(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_15,
         dict_to_proto(
             messages.TezosSignTx,
@@ -232,9 +232,9 @@ def test_tezos_sign_tx_delegation(client: Client):
     assert resp.operation_hash == "op79C1tR7wkUgYNid2zC1WNXmGorS38mTXZwtAjmCQm2kG7XG59"
 
 
-def test_tezos_sign_tx_origination(client: Client):
+def test_tezos_sign_tx_origination(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -263,9 +263,9 @@ def test_tezos_sign_tx_origination(client: Client):
     assert resp.operation_hash == "onmq9FFZzvG2zghNdr1bgv9jzdbzNycXjSSNmCVhXCGSnV3WA9g"
 
 
-def test_tezos_sign_tx_reveal(client: Client):
+def test_tezos_sign_tx_reveal(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH,
         dict_to_proto(
             messages.TezosSignTx,
@@ -305,9 +305,9 @@ def test_tezos_sign_tx_reveal(client: Client):
     assert resp.operation_hash == "oo9JFiWTnTSvUZfajMNwQe1VyFN2pqwiJzZPkpSAGfGD57Z6mZJ"
 
 
-def test_tezos_smart_contract_delegation(client: Client):
+def test_tezos_smart_contract_delegation(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -342,9 +342,9 @@ def test_tezos_smart_contract_delegation(client: Client):
     assert resp.operation_hash == "oo75gfQGGPEPChXZzcPPAGtYqCpsg2BS5q9gmhrU3NQP7CEffpU"
 
 
-def test_tezos_kt_remove_delegation(client: Client):
+def test_tezos_kt_remove_delegation(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -377,9 +377,9 @@ def test_tezos_kt_remove_delegation(client: Client):
     assert resp.operation_hash == "ootMi1tXbfoVgFyzJa8iXyR4mnHd5TxLm9hmxVzMVRkbyVjKaHt"
 
 
-def test_tezos_smart_contract_transfer(client: Client):
+def test_tezos_smart_contract_transfer(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
@@ -420,9 +420,9 @@ def test_tezos_smart_contract_transfer(client: Client):
     assert resp.operation_hash == "ooRGGtCmoQDgB36XvQqmM7govc3yb77YDUoa7p2QS7on27wGRns"
 
 
-def test_tezos_smart_contract_transfer_to_contract(client: Client):
+def test_tezos_smart_contract_transfer_to_contract(session: Session):
     resp = tezos.sign_tx(
-        client,
+        session,
         TEZOS_PATH_10,
         dict_to_proto(
             messages.TezosSignTx,
