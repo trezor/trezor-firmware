@@ -2,14 +2,19 @@ DebugLinkDecision.input                 max_size:33
 DebugLinkDecision.x                     type:FT_IGNORE
 DebugLinkDecision.y                     type:FT_IGNORE
 
-DebugLinkState.layout                   max_size:1024
-DebugLinkState.pin                      max_size:51
-DebugLinkState.matrix                   max_size:10
-DebugLinkState.mnemonic_secret          max_size:240
-DebugLinkState.reset_word               max_size:12
-DebugLinkState.reset_entropy            max_size:128
-DebugLinkState.recovery_fake_word       max_size:12
-DebugLinkState.tokens                   type:FT_IGNORE
+DebugLinkGetState.thp_channel_id        type:FT_IGNORE
+
+DebugLinkState.layout                                 max_size:1024
+DebugLinkState.pin                                    max_size:51
+DebugLinkState.matrix                                 max_size:10
+DebugLinkState.mnemonic_secret                        max_size:240
+DebugLinkState.reset_word                             max_size:12
+DebugLinkState.reset_entropy                          max_size:128
+DebugLinkState.recovery_fake_word                     max_size:12
+DebugLinkState.tokens                                 type:FT_IGNORE
+DebugLinkState.thp_pairing_code_entry_code            type:FT_IGNORE
+DebugLinkState.thp_pairing_code_qr_code               type:FT_IGNORE
+DebugLinkState.thp_pairing_code_nfc_unidirectional    type:FT_IGNORE
 
 DebugLinkLog.bucket                     max_size:33
 DebugLinkLog.text                       max_size:256
