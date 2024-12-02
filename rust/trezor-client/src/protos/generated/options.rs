@@ -42,6 +42,14 @@ pub mod exts {
 
     pub const wire_no_fsm: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::EnumValueOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(50008, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
 
+    pub const channel_in: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::EnumValueOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(50009, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
+
+    pub const channel_out: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::EnumValueOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(50010, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
+
+    pub const pairing_in: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::EnumValueOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(50011, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
+
+    pub const pairing_out: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::EnumValueOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(50012, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
+
     pub const bitcoin_only: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::EnumValueOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(60000, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
 
     pub const has_bitcoin_only_values: ::protobuf::ext::ExtFieldOptional<::protobuf::descriptor::EnumOptions, bool> = ::protobuf::ext::ExtFieldOptional::new(51001, ::protobuf::descriptor::field_descriptor_proto::Type::TYPE_BOOL);
@@ -68,19 +76,25 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\x08wireTiny\
     :L\n\x0fwire_bootloader\x18\xd7\x86\x03\x20\x01(\x08\x12!.google.protobu\
     f.EnumValueOptionsR\x0ewireBootloader:C\n\x0bwire_no_fsm\x18\xd8\x86\x03\
-    \x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\twireNoFsm:F\n\x0cb\
-    itcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueO\
-    ptionsR\x0bbitcoinOnly:U\n\x17has_bitcoin_only_values\x18\xb9\x8e\x03\
-    \x20\x01(\x08\x12\x1c.google.protobuf.EnumOptionsR\x14hasBitcoinOnlyValu\
-    es:T\n\x14experimental_message\x18\xa1\x96\x03\x20\x01(\x08\x12\x1f.goog\
-    le.protobuf.MessageOptionsR\x13experimentalMessage:>\n\twire_type\x18\
-    \xa2\x96\x03\x20\x01(\r\x12\x1f.google.protobuf.MessageOptionsR\x08wireT\
-    ype:F\n\rinternal_only\x18\xa3\x96\x03\x20\x01(\x08\x12\x1f.google.proto\
-    buf.MessageOptionsR\x0cinternalOnly:N\n\x12experimental_field\x18\x89\
-    \x9e\x03\x20\x01(\x08\x12\x1d.google.protobuf.FieldOptionsR\x11experimen\
-    talField:U\n\x17include_in_bitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\x12\
-    \x1c.google.protobuf.FileOptionsR\x14includeInBitcoinOnlyB4\n#com.satosh\
-    ilabs.trezor.lib.protobufB\rTrezorOptions\
+    \x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\twireNoFsm:B\n\ncha\
+    nnel_in\x18\xd9\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptio\
+    nsR\tchannelIn:D\n\x0bchannel_out\x18\xda\x86\x03\x20\x01(\x08\x12!.goog\
+    le.protobuf.EnumValueOptionsR\nchannelOut:B\n\npairing_in\x18\xdb\x86\
+    \x03\x20\x01(\x08\x12!.google.protobuf.EnumValueOptionsR\tpairingIn:D\n\
+    \x0bpairing_out\x18\xdc\x86\x03\x20\x01(\x08\x12!.google.protobuf.EnumVa\
+    lueOptionsR\npairingOut:F\n\x0cbitcoin_only\x18\xe0\xd4\x03\x20\x01(\x08\
+    \x12!.google.protobuf.EnumValueOptionsR\x0bbitcoinOnly:U\n\x17has_bitcoi\
+    n_only_values\x18\xb9\x8e\x03\x20\x01(\x08\x12\x1c.google.protobuf.EnumO\
+    ptionsR\x14hasBitcoinOnlyValues:T\n\x14experimental_message\x18\xa1\x96\
+    \x03\x20\x01(\x08\x12\x1f.google.protobuf.MessageOptionsR\x13experimenta\
+    lMessage:>\n\twire_type\x18\xa2\x96\x03\x20\x01(\r\x12\x1f.google.protob\
+    uf.MessageOptionsR\x08wireType:F\n\rinternal_only\x18\xa3\x96\x03\x20\
+    \x01(\x08\x12\x1f.google.protobuf.MessageOptionsR\x0cinternalOnly:N\n\
+    \x12experimental_field\x18\x89\x9e\x03\x20\x01(\x08\x12\x1d.google.proto\
+    buf.FieldOptionsR\x11experimentalField:U\n\x17include_in_bitcoin_only\
+    \x18\xe0\xd4\x03\x20\x01(\x08\x12\x1c.google.protobuf.FileOptionsR\x14in\
+    cludeInBitcoinOnlyB4\n#com.satoshilabs.trezor.lib.protobufB\rTrezorOptio\
+    ns\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
