@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ..common import (
     MNEMONIC_SLIP39_BASIC_20_3of6,
@@ -28,14 +28,14 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6, passphrase="TREZOR")
-def test_3of6_passphrase(client: Client):
+def test_3of6_passphrase(session: Session):
     """
     BIP32 Root Key for passphrase TREZOR:
     provided by Andrew, address calculated via https://iancoleman.io/bip39/
     xprv9s21ZrQH143K2pMWi8jrTawHaj16uKk4CSbvo4Zt61tcrmuUDMx2o1Byzcr3saXNGNvHP8zZgXVdJHsXVdzYFPavxvCyaGyGr1WkAYG83ce
     """
-    assert client.features.passphrase_protection is True
-    address = get_test_address(client)
+    assert session.features.passphrase_protection is True
+    address = get_test_address(session)
     assert address == "mi4HXfRJAqCDyEdet5veunBvXLTKSxpuim"
 
 
@@ -46,25 +46,25 @@ def test_3of6_passphrase(client: Client):
     ),
     passphrase="TREZOR",
 )
-def test_2of5_passphrase(client: Client):
+def test_2of5_passphrase(session: Session):
     """
     BIP32 Root Key for passphrase TREZOR:
     provided by Andrew, address calculated via https://iancoleman.io/bip39/
     xprv9s21ZrQH143K2o6EXEHpVy8TCYoMmkBnDCCESLdR2ieKwmcNG48ck2XJQY4waS7RUQcXqR9N7HnQbUVEDMWYyREdF1idQqxFHuCfK7fqFni
     """
-    assert client.features.passphrase_protection is True
-    address = get_test_address(client)
+    assert session.features.passphrase_protection is True
+    address = get_test_address(session)
     assert address == "mjXH4pN7TtbHp3tWLqVKktKuaQeByHMoBZ"
 
 
 @pytest.mark.setup_client(
     mnemonic=MNEMONIC_SLIP39_BASIC_EXT_20_2of3, passphrase="TREZOR"
 )
-def test_2of3_ext_passphrase(client: Client):
+def test_2of3_ext_passphrase(session: Session):
     """
     BIP32 Root Key for passphrase TREZOR:
     xprv9s21ZrQH143K4FS1qQdXYAFVAHiSAnjj21YAKGh2CqUPJ2yQhMmYGT4e5a2tyGLiVsRgTEvajXkxhg92zJ8zmWZas9LguQWz7WZShfJg6RS
     """
-    assert client.features.passphrase_protection is True
-    address = get_test_address(client)
+    assert session.features.passphrase_protection is True
+    address = get_test_address(session)
     assert address == "moELJhDbGK41k6J2ePYh2U8uc5qskC663C"

@@ -34,14 +34,14 @@ def test_128bit_passphrase(client: Client):
     xprv9s21ZrQH143K3dzDLfeY3cMp23u5vDeFYftu5RPYZPucKc99mNEddU4w99GxdgUGcSfMpVDxhnR1XpJzZNXRN1m6xNgnzFS5MwMP6QyBRKV
     """
     assert client.features.passphrase_protection is True
-    client.use_passphrase("TREZOR")
-    address = get_test_address(client)
+    session = client.get_session(passphrase="TREZOR")
+    address = get_test_address(session)
     assert address == "mkKDUMRR1CcK8eLAzCZAjKnNbCquPoWPxN"
 
-    client.clear_session()
-    client.use_passphrase("ROZERT")
-    address_compare = get_test_address(client)
+    session = client.get_session(passphrase="ROZERT")
+    address_compare = get_test_address(session)
     assert address != address_compare
+    assert address_compare == "n1HeeeojjHgQnG6Bf5VWkM1gcpQkkXqSGw"
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_33, passphrase=True)
@@ -53,11 +53,10 @@ def test_256bit_passphrase(client: Client):
     xprv9s21ZrQH143K2UspC9FRPfQC9NcDB4HPkx1XG9UEtuceYtpcCZ6ypNZWdgfxQ9dAFVeD1F4Zg4roY7nZm2LB7THPD6kaCege3M7EuS8v85c
     """
     assert client.features.passphrase_protection is True
-    client.use_passphrase("TREZOR")
-    address = get_test_address(client)
+    session = client.get_session(passphrase="TREZOR")
+    address = get_test_address(session)
     assert address == "mxVtGxUJ898WLzPMmy6PT1FDHD1GUCWGm7"
 
-    client.clear_session()
-    client.use_passphrase("ROZERT")
-    address_compare = get_test_address(client)
+    session = client.get_session(passphrase="ROZERT")
+    address_compare = get_test_address(session)
     assert address != address_compare

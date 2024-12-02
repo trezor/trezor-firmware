@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 TXHASH_33043a = bytes.fromhex(
@@ -27,7 +27,7 @@ TXHASH_33043a = bytes.fromhex(
 pytestmark = pytest.mark.altcoin
 
 
-def test_send_p2tr(client: Client):
+def test_send_p2tr(session: Session):
     inp1 = messages.TxInputType(
         # fc1prr07akly3xjtmggue0p04vghr8pdcgxrye2s00sahptwjeawxrkq2rxzr7
         address_n=parse_path("m/86h/75h/0h/0/1"),
@@ -42,7 +42,7 @@ def test_send_p2tr(client: Client):
         amount=99_996_670_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    _, serialized_tx = btc.sign_tx(client, "Fujicoin", [inp1], [out1])
+    _, serialized_tx = btc.sign_tx(session, "Fujicoin", [inp1], [out1])
     # Transaction hex changed with fix #2085, all other details are the same as this tx:
     # https://explorer.fujicoin.org/tx/a1c6a81f5e8023b17e6e3e51e2596d5b5e1d4914ea13c0c31cef90b3c3edee86
     assert (
