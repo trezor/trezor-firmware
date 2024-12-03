@@ -10,6 +10,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '15 23 * * *'  # every day @ 23:15
+  push:
+    branches:
+      - 'release/**'
 
 # cancel any previous runs on the same PR
 concurrency:
