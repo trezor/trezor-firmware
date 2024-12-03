@@ -32,10 +32,17 @@ class HID:
         Sends message using USB HID (device) or UDP (emulator).
         """
 
+    def read(self, buf: bytearray, offset: int = 0) -> int:
+        """
+        Reads message using USB HID (device) or UDP (emulator).
+        """
+
     def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
         """
         Sends message using USB HID (device) or UDP (emulator).
         """
+    PACKET_LEN: ClassVar[int]
+    """Length of one USB packet."""
 
 
 # upymod/modtrezorio/modtrezorio-poll.h
@@ -148,6 +155,13 @@ class WebUSB:
         """
         Sends message using USB WebUSB (device) or UDP (emulator).
         """
+
+    def read(self, buf: bytearray, offset: int = 0) -> int:
+        """
+        Reads message using USB WebUSB (device) or UDP (emulator).
+        """
+    PACKET_LEN: ClassVar[int]
+    """Length of one USB packet."""
 from . import fatfs, haptic, sdcard
 POLL_READ: int  # wait until interface is readable and return read data
 POLL_WRITE: int  # wait until interface is writable
