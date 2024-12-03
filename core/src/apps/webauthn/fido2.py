@@ -376,7 +376,9 @@ async def _read_cmd(iface: HID) -> Cmd | None:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
     # wait for incoming command indefinitely
-    buf = await read
+    msg_len = await read
+    buf = bytearray(msg_len)
+    iface.read(buf, 0)
     while True:
         ifrm = overlay_struct(bytearray(buf), desc_init)
         bcnt = ifrm.bcnt
@@ -415,7 +417,9 @@ async def _read_cmd(iface: HID) -> Cmd | None:
         read.timeout_ms = _CTAP_HID_TIMEOUT_MS
         while datalen < bcnt:
             try:
-                buf = await read
+                msg_len = await read
+                buf = bytearray(msg_len)
+                iface.read(buf, 0)
             except loop.Timeout:
                 if __debug__:
                     warning(__name__, "_ERR_MSG_TIMEOUT")

@@ -13,6 +13,13 @@ class MockHID:
     def __init__(self, num):
         self.num = num
         self.data = []
+        self.packet = None
+
+    def pad_packet(self, data):
+        if len(data) > 64:
+            raise Exception("Too long packet")
+        padding_length = 64 - len(data)
+        return data + b"\x00" * padding_length
 
     def iface_num(self):
         return self.num
@@ -20,6 +27,28 @@ class MockHID:
     def write(self, msg):
         self.data.append(bytearray(msg))
         return len(msg)
+
+    def mock_read(self, packet, gen):
+        self.packet = self.pad_packet(packet)
+        return gen.send(64)
+
+    def read(self, buffer, offset=0):
+        if self.packet is None:
+            raise Exception("No packet to read")
+
+        if offset > len(buffer):
+            raise Exception("Offset out of bounds")
+
+        buffer_space = len(buffer) - offset
+
+        if len(self.packet) > buffer_space:
+            raise Exception("Buffer too small")
+        else:
+            end = offset + len(self.packet)
+            buffer[offset:end] = self.packet
+            read = len(self.packet)
+            self.packet = None
+            return read
 
     def wait_object(self, mode):
         return wait(mode | self.num)
@@ -49,7 +78,7 @@ class TestWireCodecV1(unittest.TestCase):
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
 
         with self.assertRaises(StopIteration) as e:
-            gen.send(message_packet)
+            self.interface.mock_read(message_packet, gen)
 
         # e.value is StopIteration. e.value.value is the return value of the call
         result = e.value.value
@@ -75,11 +104,11 @@ class TestWireCodecV1(unittest.TestCase):
         query = gen.send(None)
         for packet in packets[:-1]:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
-            query = gen.send(packet)
+            query = self.interface.mock_read(packet, gen)
 
         # last packet will stop
         with self.assertRaises(StopIteration) as e:
-            gen.send(packets[-1])
+            self.interface.mock_read(packets[-1], gen)
 
         # e.value is StopIteration. e.value.value is the return value of the call
         result = e.value.value
@@ -104,7 +133,7 @@ class TestWireCodecV1(unittest.TestCase):
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
         with self.assertRaises(StopIteration) as e:
-            gen.send(packet)
+            self.interface.mock_read(packet, gen)
 
         # e.value is StopIteration. e.value.value is the return value of the call
         result = e.value.value
@@ -170,10 +199,10 @@ class TestWireCodecV1(unittest.TestCase):
         query = gen.send(None)
         for packet in self.interface.data[:-1]:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
-            query = gen.send(packet)
+            query = self.interface.mock_read(packet, gen)
 
         with self.assertRaises(StopIteration) as e:
-            gen.send(self.interface.data[-1])
+            self.interface.mock_read(self.interface.data[-1], gen)
 
         result = e.value.value
         self.assertEqual(result.type, MESSAGE_TYPE)
@@ -195,10 +224,10 @@ class TestWireCodecV1(unittest.TestCase):
         query = gen.send(None)
         for _ in range(PACKET_COUNT - 1):
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
-            query = gen.send(packet)
+            query = self.interface.mock_read(packet, gen)
 
         with self.assertRaises(codec_v1.CodecError) as e:
-            gen.send(packet)
+            self.interface.mock_read(packet, gen)
 
         self.assertEqual(e.value.args[0], "Message too large")
 

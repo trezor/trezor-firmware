@@ -8,7 +8,7 @@ from trezor.wire.protocol_common import Message, WireError
 if TYPE_CHECKING:
     from trezorio import WireInterface
 
-_REP_LEN = const(64)
+_REP_LEN = io.WebUSB.PACKET_LEN
 
 _REP_MARKER = const(63)  # ord('?')
 _REP_MAGIC = const(35)  # org('#')
@@ -23,9 +23,12 @@ class CodecError(WireError):
 
 async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Message:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
+    report = bytearray(_REP_LEN)
 
     # wait for initial report
-    report = await read
+    msg_len = await read
+    assert msg_len == len(report)
+    iface.read(report, 0)
     if report[0] != _REP_MARKER:
         raise CodecError("Invalid magic")
     _, magic1, magic2, mtype, msize = ustruct.unpack(_REP_INIT, report)
@@ -50,7 +53,9 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
 
     while nread < msize:
         # wait for continuation report
-        report = await read
+        msg_len = await read
+        assert msg_len == len(report)
+        iface.read(report, 0)
         if report[0] != _REP_MARKER:
             raise CodecError("Invalid magic")
 
