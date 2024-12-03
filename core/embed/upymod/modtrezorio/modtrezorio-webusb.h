@@ -127,10 +127,25 @@ STATIC mp_obj_t mod_trezorio_WebUSB_write(mp_obj_t self, mp_obj_t msg) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_WebUSB_write_obj,
                                  mod_trezorio_WebUSB_write);
 
+/// def read(self, buf: bytes) -> int:
+///     """
+///     Reads message using WebUSB (device) or UDP (emulator).
+///     """
+STATIC mp_obj_t mod_trezorio_WebUSB_read(mp_obj_t self, mp_obj_t buffer) {
+  mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
+  mp_buffer_info_t buf = {0};
+  mp_get_buffer_raise(buffer, &buf, MP_BUFFER_WRITE);
+  ssize_t r = usb_webusb_read(o->info.iface_num, buf.buf, buf.len);
+  return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_WebUSB_read_obj,
+                                 mod_trezorio_WebUSB_read);
+
 STATIC const mp_rom_map_elem_t mod_trezorio_WebUSB_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_iface_num),
      MP_ROM_PTR(&mod_trezorio_WebUSB_iface_num_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_WebUSB_write_obj)},
+    {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_WebUSB_read_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_WebUSB_locals_dict,
                             mod_trezorio_WebUSB_locals_dict_table);

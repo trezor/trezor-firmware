@@ -25,7 +25,11 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
     # wait for initial report
-    report = await read
+    msg_len = await read
+    report = bytearray(msg_len)
+    read_len = iface.read(report)
+    if read_len != msg_len:
+        raise CodecError("Invalid length")
     if report[0] != _REP_MARKER:
         raise CodecError("Invalid magic")
     _, magic1, magic2, mtype, msize = ustruct.unpack(_REP_INIT, report)
@@ -50,7 +54,11 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
 
     while nread < msize:
         # wait for continuation report
-        report = await read
+        msg_len = await read
+        report = bytearray(msg_len)
+        read_len = iface.read(report)
+        if read_len != msg_len:
+            raise CodecError("Invalid length")
         if report[0] != _REP_MARKER:
             raise CodecError("Invalid magic")
 

@@ -141,6 +141,20 @@ STATIC mp_obj_t mod_trezorio_HID_write(mp_obj_t self, mp_obj_t msg) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_write_obj,
                                  mod_trezorio_HID_write);
 
+/// def read(self, buf: bytes) -> int:
+///     """
+///     Reads message using USB HID (device) or UDP (emulator).
+///     """
+STATIC mp_obj_t mod_trezorio_HID_read(mp_obj_t self, mp_obj_t buffer) {
+  mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
+  mp_buffer_info_t buf = {0};
+  mp_get_buffer_raise(buffer, &buf, MP_BUFFER_WRITE);
+  ssize_t r = usb_hid_read(o->info.iface_num, buf.buf, buf.len);
+  return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_read_obj,
+                                 mod_trezorio_HID_read);
+
 /// def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
 ///     """
 ///     Sends message using USB HID (device) or UDP (emulator).
@@ -162,6 +176,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_HID_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_iface_num),
      MP_ROM_PTR(&mod_trezorio_HID_iface_num_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_HID_write_obj)},
+    {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_HID_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write_blocking),
      MP_ROM_PTR(&mod_trezorio_HID_write_blocking_obj)},
 };
