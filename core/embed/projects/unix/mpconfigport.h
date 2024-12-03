@@ -217,6 +217,10 @@ extern const struct _mp_print_t mp_stderr_print;
 
 #define MP_STATE_PORT MP_STATE_VM
 
+// by default contains nearest git tag, which may not be present in shallow
+// repo, breaking reproducibility
+#define MICROPY_BANNER_NAME_AND_VERSION ""
+
 // ============= this ends common config section ===================
 
 // For size_t and ssize_t
