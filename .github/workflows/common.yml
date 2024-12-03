@@ -5,6 +5,10 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '14 23 * * *'  # every day @ 23:14
+  push:
+    branches:
+      - 'release/**'
+
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -123,8 +127,8 @@ jobs:
 
   docker_build:
     name: Firmware docker build
-    # scheduled, manual runs, PRs for release branches
-    if: github.event_name != 'pull_request' || startsWith(github.head_ref, 'release/')
+    # scheduled, manual runs, push to release branches
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
