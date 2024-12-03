@@ -15,10 +15,10 @@ def create_new_channel(iface: WireInterface, buffer: utils.BufferType) -> Channe
     Creates a new channel for the interface `iface` with the buffer `buffer`.
     """
     channel_cache = cache_thp.get_new_channel(interface_manager.encode_iface(iface))
-    r = Channel(channel_cache)
-    r.set_buffer(buffer)
-    r.set_channel_state(ChannelState.TH1)
-    return r
+    channel = Channel(channel_cache)
+    channel.set_buffer(buffer)
+    channel.set_channel_state(ChannelState.TH1)
+    return channel
 
 
 def load_cached_channels(buffer: utils.BufferType) -> dict[int, Channel]:
@@ -27,8 +27,8 @@ def load_cached_channels(buffer: utils.BufferType) -> dict[int, Channel]:
     """
     channels: dict[int, Channel] = {}
     cached_channels = cache_thp.get_all_allocated_channels()
-    for c in cached_channels:
-        channels[int.from_bytes(c.channel_id, "big")] = Channel(c)
-    for c in channels.values():
-        c.set_buffer(buffer)
+    for channel in cached_channels:
+        channels[int.from_bytes(channel.channel_id, "big")] = Channel(channel)
+    for channel in channels.values():
+        channel.set_buffer(buffer)
     return channels
