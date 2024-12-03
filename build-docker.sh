@@ -225,7 +225,7 @@ fi  # init
 cat <<EOF >> "$SCRIPT_NAME"
   $GIT_CLEAN_REPO
   git submodule update --init --recursive
-  poetry install
+  poetry install -v --no-ansi --no-interaction
   cd core/embed/rust
   cargo fetch
 
@@ -305,7 +305,6 @@ EOF
 
     $DOCKER run \
       --network=host \
-      -it \
       --rm \
       -v "$DIR:/local" \
       -v "$DIR/build/core$DIRSUFFIX":/build:z \
@@ -354,7 +353,6 @@ EOF
 
   $DOCKER run \
     --network=host \
-    -it \
     --rm \
     -v "$DIR:/local" \
     -v "$DIR/build/legacy$DIRSUFFIX":/build:z \
