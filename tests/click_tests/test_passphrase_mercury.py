@@ -343,10 +343,10 @@ def test_cycle_through_last_character(
 def test_last_char_timeout(device_handler: "BackgroundDeviceHandler"):
     with prepare_passphrase_dialogue(device_handler) as debug:
         for character in CommonPass.MULTI_CATEGORY:
-            # insert a digit
+            # insert a character
             input_passphrase(debug, character)
-            # wait until the last digit is hidden
+            # wait until the last character is hidden
             time.sleep(DELAY_S)
-            # show the entire PIN
+            # show the entire passphrase
             show_passphrase(debug)
         enter_passphrase(debug)
