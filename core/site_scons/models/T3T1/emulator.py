@@ -57,6 +57,8 @@ def configure(
 
     if "tropic" in features_wanted:
         sources += [
+            "embed/sec/secret/unix/secret.c",
+            "embed/sec/tropic/tropic_transport.c",
             "vendor/libtropic/src/libtropic.c",
             "vendor/libtropic/src/lt_crc16.c",
             "vendor/libtropic/src/lt_hkdf.c",
@@ -72,9 +74,10 @@ def configure(
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_sha256.c",
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_x25519.c",
         ]
+        paths += ["embed/sec/tropic/inc"]
         defines += ["USE_TREZOR_CRYPTO"]
         features_available.append("tropic")
-    defines += ["USE_TROPIC=1"]
+        defines += ["USE_TROPIC=1"]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/unix/touch.c"]

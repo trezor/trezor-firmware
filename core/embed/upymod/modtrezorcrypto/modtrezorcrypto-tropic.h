@@ -19,18 +19,13 @@
 
 #if USE_TROPIC
 
-// Default initial Tropic handshake keys
-#define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
-#define SHiPRIV_BYTES                                                \
-  {0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf, \
-   0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9, \
-   0x43, 0x12, 0xf3, 0x13, 0xdf, 0x2d, 0xce, 0x8d, 0x41, 0x64};
-#define SHiPUB_BYTES                                                 \
-  {0x84, 0x2f, 0xe3, 0x21, 0xa8, 0x24, 0x74, 0x08, 0x37, 0x37, 0xff, \
-   0x2b, 0x9b, 0x88, 0xa2, 0xaf, 0x42, 0x44, 0x2d, 0xb0, 0xd8, 0xaa, \
-   0xcc, 0x6d, 0xc6, 0x9e, 0x99, 0x53, 0x33, 0x44, 0xb2, 0x46};
-
+#include <sec/secret.h>
+#include <sec/tropic_transport.h>
 #include "libtropic.h"
+
+#define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
+
+extern STATIC lt_handle_t lt_handle;
 
 /// package: trezorcrypto.tropic
 
@@ -42,51 +37,12 @@ MP_DEFINE_EXCEPTION(TropicError, Exception)
 #define ECC_SLOT_COUNT 32
 #define SIG_SIZE 64
 
-STATIC bool lt_handle_initialized = false;
-STATIC lt_handle_t lt_handle = {0};
-
-STATIC void tropic_init(lt_handle_t *handle) {
-  lt_ret_t ret = LT_FAIL;
-
-  ret = lt_init(handle);
-  if (ret != LT_OK) {
-    mp_raise_msg(&mp_type_TropicError, "lt_init failed.");
-  }
-
-  uint8_t X509_cert[LT_L2_GET_INFO_REQ_CERT_SIZE] = {0};
-
-  ret = lt_get_info_cert(handle, X509_cert, LT_L2_GET_INFO_REQ_CERT_SIZE);
-  if (ret != LT_OK) {
-    mp_raise_msg(&mp_type_TropicError, "lt_get_info_cert failed.");
-  }
-
-  uint8_t stpub[32] = {0};
-  ret = lt_cert_verify_and_parse(X509_cert, 512, stpub);
-  if (ret != LT_OK) {
-    mp_raise_msg(&mp_type_TropicError, "lt_cert_verify_and_parse failed.");
-  }
-
-  uint8_t pkey_index = PKEY_INDEX_BYTE;
-  uint8_t shipriv[] = SHiPRIV_BYTES;
-  uint8_t shipub[] = SHiPUB_BYTES;
-
-  ret = lt_session_start(handle, stpub, pkey_index, shipriv, shipub);
-  if (ret != LT_OK) {
-    mp_raise_msg(&mp_type_TropicError, "lt_session_start failed.");
-  }
-}
-
 /// def ping(message: str) -> str:
 ///     """
 ///     Test the session by pinging the chip.
 ///     """
 STATIC mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
   lt_ret_t ret = LT_FAIL;
-
-  if (!lt_handle_initialized) {
-    tropic_init(&lt_handle);
-    lt_handle_initialized = true;
-  }
 
   uint8_t msg_in[PING_MSG_MAX_LEN] = {0};
 
@@ -120,11 +76,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_tropic_ping_obj,
 STATIC mp_obj_t mod_trezorcrypto_tropic_get_certificate() {
   lt_ret_t ret = LT_FAIL;
 
-  if (!lt_handle_initialized) {
-    tropic_init(&lt_handle);
-    lt_handle_initialized = true;
-  }
-
   uint8_t X509_cert[512] = {0};
   ret = lt_get_info_cert(&lt_handle, X509_cert, 512);
   if (ret != LT_OK) {
@@ -154,11 +105,6 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_key_generate(mp_obj_t key_index) {
   }
 
   lt_ret_t ret = LT_FAIL;
-
-  if (!lt_handle_initialized) {
-    tropic_init(&lt_handle);
-    lt_handle_initialized = true;
-  }
 
   ret = lt_ecc_key_generate(&lt_handle, idx, CURVE_ED25519);
   if (ret != LT_OK) {
@@ -192,11 +138,6 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
   }
 
   lt_ret_t ret = LT_FAIL;
-
-  if (!lt_handle_initialized) {
-    tropic_init(&lt_handle);
-    lt_handle_initialized = true;
-  }
 
   vstr_t sig = {0};
   vstr_init_len(&sig, SIG_SIZE);
