@@ -145,7 +145,7 @@ def _try_allocate_new_buffer(payload_length: int) -> utils.BufferType:
     try:
         payload: utils.BufferType = bytearray(payload_length)
     except MemoryError:
-        payload = bytearray(PACKET_LENGTH)
+        payload = bytearray(PACKET_LENGTH)  # TODO ???
         raise ThpError("Message too large")
     return payload
 
