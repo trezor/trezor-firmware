@@ -72,6 +72,7 @@ class TrezorClient:
         protobuf_mapping: ProtobufMapping | None = None,
         protocol: ProtocolAndChannel | None = None,
     ) -> None:
+        self._is_invalidated: bool = False
         self.transport = transport
 
         if protobuf_mapping is None:
@@ -181,6 +182,9 @@ class TrezorClient:
         assert self._management_session is not None
         return self._management_session
 
+    def invalidate(self) -> None:
+        self._is_invalidated = True
+
     @property
     def features(self) -> messages.Features:
         if self._features is None:
@@ -213,6 +217,10 @@ class TrezorClient:
             f.patch_version,
         )
         return ver
+
+    @property
+    def is_invalidated(self) -> bool:
+        return self._is_invalidated
 
     def refresh_features(self) -> None:
         self.protocol.update_features()
