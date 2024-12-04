@@ -25,12 +25,23 @@ class MockHID:
         self.packet = packet
         return gen.send(len(packet))
 
-    def read(self, buffer):
+    def read(self, buffer, offset=0, limit=None):
         if self.packet is None:
             raise Exception("No packet to read")
-        buffer[:] = self.packet
-        self.packet = None
-        return len(buffer)
+        if limit is None:
+            limit = len(buffer) - offset
+
+        if len(self.packet) > limit:
+            end = offset + limit
+            buffer[offset:end] = self.packet[:limit]
+            self.packet = None
+            return limit
+        else:
+            end = offset + len(self.packet)
+            buffer[offset:end] = self.packet
+            read = len(self.packet)
+            self.packet = None
+            return read
 
     def wait_object(self, mode):
         return wait(mode | self.num)

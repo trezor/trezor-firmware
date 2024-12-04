@@ -150,18 +150,20 @@ STATIC mp_obj_t mod_trezorio_HID_read(size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t buf = {0};
   mp_get_buffer_raise(args[1], &buf, MP_BUFFER_WRITE);
 
-  int offset = mp_obj_get_int(args[2]);
+  int offset = 0;
+  if (n_args >= 2) {
+    offset = mp_obj_get_int(args[2]);
+  }
 
-  int len = buf.len - offset;
+  int limit;
   if (n_args >= 3) {
-    int limit = mp_obj_get_int(args[3]);
-    if ((limit - offset) < len) {
-      len = (limit - offset);
-    }
+    limit = mp_obj_get_int(args[3]);
+  } else {
+    limit = buf.len - offset;
   }
 
   ssize_t r =
-      usb_hid_read(o->info.iface_num, &((uint8_t *)buf.buf)[offset], len);
+      usb_hid_read(o->info.iface_num, &((uint8_t *)buf.buf)[offset], limit);
   return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_HID_read_obj, 3, 4,
