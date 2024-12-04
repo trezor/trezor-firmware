@@ -18,22 +18,29 @@ if __debug__:
     from trezor import utils
 
 if utils.USE_THP:
-    protocol_specific = ThpMessageType.ThpCreateNewSession
+    ALLOW_WHILE_LOCKED = (
+        ThpMessageType.ThpCreateNewSession,
+        MessageType.EndSession,
+        MessageType.GetFeatures,
+        MessageType.Cancel,
+        MessageType.LockDevice,
+        MessageType.DoPreauthorized,
+        MessageType.WipeDevice,
+        MessageType.SetBusy,
+        MessageType.Ping,
+    )
 else:
-    protocol_specific = MessageType.Initialize
-
-
-ALLOW_WHILE_LOCKED = (
-    protocol_specific,
-    MessageType.EndSession,
-    MessageType.GetFeatures,
-    MessageType.Cancel,
-    MessageType.LockDevice,
-    MessageType.DoPreauthorized,
-    MessageType.WipeDevice,
-    MessageType.SetBusy,
-    MessageType.Ping,
-)
+    ALLOW_WHILE_LOCKED = (
+        MessageType.Initialize,
+        MessageType.EndSession,
+        MessageType.GetFeatures,
+        MessageType.Cancel,
+        MessageType.LockDevice,
+        MessageType.DoPreauthorized,
+        MessageType.WipeDevice,
+        MessageType.SetBusy,
+        MessageType.Ping,
+    )
 
 
 # Set of workflow tasks.  Multiple workflows can be running at the same time.
