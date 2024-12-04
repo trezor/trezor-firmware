@@ -143,7 +143,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_write_obj,
 
 /// def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
 ///     """
-///     Reads message using HID (device) or UDP (emulator).
+///     Reads message using USB HID (device) or UDP (emulator).
 ///     """
 STATIC mp_obj_t mod_trezorio_HID_read(size_t n_args, const mp_obj_t *args) {
   mp_obj_HID_t *o = MP_OBJ_TO_PTR(args[0]);

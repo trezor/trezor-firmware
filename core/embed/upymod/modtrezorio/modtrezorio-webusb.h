@@ -129,7 +129,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_WebUSB_write_obj,
 
 /// def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
 ///     """
-///     Reads message using WebUSB (device) or UDP (emulator).
+///     Reads message using USB WebUSB (device) or UDP (emulator).
 ///     """
 STATIC mp_obj_t mod_trezorio_WebUSB_read(size_t n_args, const mp_obj_t *args) {
   mp_obj_WebUSB_t *o = MP_OBJ_TO_PTR(args[0]);

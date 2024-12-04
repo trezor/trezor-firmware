@@ -34,7 +34,7 @@ class HID:
 
     def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
         """
-        Reads message using HID (device) or UDP (emulator).
+        Reads message using USB HID (device) or UDP (emulator).
         """
 
     def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
@@ -156,7 +156,7 @@ class WebUSB:
 
     def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
         """
-        Reads message using WebUSB (device) or UDP (emulator).
+        Reads message using USB WebUSB (device) or UDP (emulator).
         """
 from . import fatfs, haptic, sdcard
 POLL_READ: int  # wait until interface is readable and return read data
