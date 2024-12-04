@@ -60,9 +60,7 @@ if TYPE_CHECKING:
     from .channel import Channel
 
 if __debug__:
-    from ubinascii import hexlify
-
-    from . import state_to_str
+    from trezor.utils import get_bytes_as_str
 
 
 _TREZOR_STATE_UNPAIRED = b"\x00"
@@ -198,8 +196,6 @@ def _handle_message_to_app_or_channel(
     ctrl_byte: int,
 ) -> Awaitable[None]:
     state = ctx.get_channel_state()
-    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-        log.debug(__name__, "state: %s", state_to_str(state))
 
     if state is ChannelState.ENCRYPTED_TRANSPORT:
         return _handle_state_ENCRYPTED_TRANSPORT(ctx, message_length)
@@ -244,14 +240,14 @@ async def _handle_state_TH1(
         log.debug(
             __name__,
             "trezor ephemeral pubkey: %s",
-            hexlify(trezor_ephemeral_pubkey).decode(),
+            get_bytes_as_str(trezor_ephemeral_pubkey),
         )
         log.debug(
             __name__,
             "encrypted trezor masked static pubkey: %s",
-            hexlify(encrypted_trezor_static_pubkey).decode(),
+            get_bytes_as_str(encrypted_trezor_static_pubkey),
         )
-        log.debug(__name__, "tag: %s", hexlify(tag))
+        log.debug(__name__, "tag: %s", get_bytes_as_str(tag))
 
     payload = trezor_ephemeral_pubkey + encrypted_trezor_static_pubkey + tag
 
