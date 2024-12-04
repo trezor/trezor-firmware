@@ -56,7 +56,7 @@ class Channel:
         self.channel_id: bytes = channel_cache.channel_id
 
         # Shared variables
-        self.buffer: utils.BufferType
+        self.buffer: utils.BufferType = bytearray(64)
         self.bytes_read: int = 0
         self.expected_payload_length: int = 0
         self.is_cont_packet_expected: bool = False

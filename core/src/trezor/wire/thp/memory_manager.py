@@ -11,6 +11,10 @@ from .writer import (
     PACKET_LENGTH,
 )
 
+_PROTOBUF_BUFFER_SIZE = 8192
+READ_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
+WRITE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
+
 
 def select_buffer(
     channel_state: int,
@@ -115,22 +119,20 @@ def _get_buffer_for_read(
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Allocating a new buffer")
 
-        from .thp_main import get_raw_read_buffer
-
-        if length > len(get_raw_read_buffer()):
+        if length > len(READ_BUFFER):
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(
                     __name__,
                     "Required length is %d, where raw buffer has capacity only %d",
                     length,
-                    len(get_raw_read_buffer()),
+                    len(READ_BUFFER),
                 )
             raise ThpError("Message is too large")
 
         try:
-            payload: utils.BufferType = memoryview(get_raw_read_buffer())[:length]
+            payload: utils.BufferType = memoryview(READ_BUFFER)[:length]
         except MemoryError:
-            payload = memoryview(get_raw_read_buffer())[:PACKET_LENGTH]
+            payload = memoryview(READ_BUFFER)[:PACKET_LENGTH]
             raise ThpError("Message is too large")
         return payload
 
@@ -161,15 +163,13 @@ def _get_buffer_for_write(
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Creating a new write buffer from raw write buffer")
 
-        from .thp_main import get_raw_write_buffer
-
-        if length > len(get_raw_write_buffer()):
+        if length > len(WRITE_BUFFER):
             raise ThpError("Message is too large")
 
         try:
-            payload: utils.BufferType = memoryview(get_raw_write_buffer())[:length]
+            payload: utils.BufferType = memoryview(WRITE_BUFFER)[:length]
         except MemoryError:
-            payload = memoryview(get_raw_write_buffer())[:PACKET_LENGTH]
+            payload = memoryview(WRITE_BUFFER)[:PACKET_LENGTH]
             raise ThpError("Message is too large")
         return payload
 

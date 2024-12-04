@@ -28,7 +28,7 @@ if utils.USE_THP:
         ThpEndRequest,
         ThpStartPairingRequest,
     )
-    from trezor.wire.thp import thp_main
+    from trezor.wire.thp import thp_main, memory_manager
     from trezor.wire.thp import ChannelState, checksum, interface_manager
     from trezor.wire.thp.crypto import Handshake
     from trezor.wire.thp.pairing_context import PairingContext
@@ -97,10 +97,8 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
     def setUp(self):
         self.interface = MockHID(0xDEADBEEF)
-        buffer = bytearray(64)
-        buffer2 = bytearray(256)
-        thp_main.set_read_buffer(buffer)
-        thp_main.set_write_buffer(buffer2)
+        memory_manager.READ_BUFFER = bytearray(64)
+        memory_manager.WRITE_BUFFER = bytearray(256)
         interface_manager.decode_iface = thp_common.dummy_decode_iface
 
     def test_codec_message(self):
