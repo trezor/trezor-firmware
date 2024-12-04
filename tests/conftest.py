@@ -291,7 +291,7 @@ def client(
             protocol_version == ProtocolVersion.PROTOCOL_V1
             and "protocol_v1" not in args
         ):
-            pytest.xfail(
+            pytest.skip(
                 f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
             )
 
@@ -299,7 +299,7 @@ def client(
             protocol_version == ProtocolVersion.PROTOCOL_V2
             and "protocol_v2" not in args
         ):
-            pytest.xfail(
+            pytest.skip(
                 f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
             )
 
