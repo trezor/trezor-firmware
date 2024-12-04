@@ -265,6 +265,7 @@ def with_session(
             if management:
                 session = obj.get_management_session()
             else:
+                # TODO try (sys.exit ve finally)
                 session = obj.get_session(
                     derive_cardano=derive_cardano,
                     empty_passphrase=empty_passphrase,
