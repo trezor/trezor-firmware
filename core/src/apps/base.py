@@ -242,6 +242,7 @@ if utils.USE_THP:
 
         new_session = create_new_session(channel)
         try:
+            await unlock_device()
             await derive_and_store_roots(new_session, message)
         except DataError as e:
             return Failure(code=FailureType.DataError, message=e.message)
