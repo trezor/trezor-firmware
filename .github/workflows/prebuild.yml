@@ -7,7 +7,7 @@ on:
     - cron: '13 23 * * *'  # every day @ 23:13
   push:
     branches:
-      - 'release/**'
+      - 'mmilata/ci-push'
 
 # cancel any previous runs on the same PR
 concurrency:
