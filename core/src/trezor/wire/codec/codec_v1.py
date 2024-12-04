@@ -27,8 +27,9 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
     # wait for initial report
     msg_len = await read
     report = bytearray(msg_len)
-    read_len = iface.read(report)
+    read_len = iface.read(report, 0, msg_len)
     if read_len != msg_len:
+        print("read_len", read_len, "msg_len", msg_len)
         raise CodecError("Invalid length")
     if report[0] != _REP_MARKER:
         raise CodecError("Invalid magic")
@@ -56,7 +57,7 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
         # wait for continuation report
         msg_len = await read
         report = bytearray(msg_len)
-        read_len = iface.read(report)
+        read_len = iface.read(report, 0, msg_len)
         if read_len != msg_len:
             raise CodecError("Invalid length")
         if report[0] != _REP_MARKER:

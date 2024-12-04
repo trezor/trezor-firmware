@@ -141,19 +141,31 @@ STATIC mp_obj_t mod_trezorio_HID_write(mp_obj_t self, mp_obj_t msg) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_write_obj,
                                  mod_trezorio_HID_write);
 
-/// def read(self, buf: bytes) -> int:
+/// def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
 ///     """
-///     Reads message using USB HID (device) or UDP (emulator).
+///     Reads message using HID (device) or UDP (emulator).
 ///     """
-STATIC mp_obj_t mod_trezorio_HID_read(mp_obj_t self, mp_obj_t buffer) {
-  mp_obj_HID_t *o = MP_OBJ_TO_PTR(self);
+STATIC mp_obj_t mod_trezorio_HID_read(size_t n_args, const mp_obj_t *args) {
+  mp_obj_HID_t *o = MP_OBJ_TO_PTR(args[0]);
   mp_buffer_info_t buf = {0};
-  mp_get_buffer_raise(buffer, &buf, MP_BUFFER_WRITE);
-  ssize_t r = usb_hid_read(o->info.iface_num, buf.buf, buf.len);
+  mp_get_buffer_raise(args[1], &buf, MP_BUFFER_WRITE);
+
+  int offset = mp_obj_get_int(args[2]);
+
+  int len = buf.len - offset;
+  if (n_args >= 3) {
+    int limit = mp_obj_get_int(args[3]);
+    if ((limit - offset) < len) {
+      len = (limit - offset);
+    }
+  }
+
+  ssize_t r =
+      usb_hid_read(o->info.iface_num, &((uint8_t *)buf.buf)[offset], len);
   return MP_OBJ_NEW_SMALL_INT(r);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_read_obj,
-                                 mod_trezorio_HID_read);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_HID_read_obj, 3, 4,
+                                           mod_trezorio_HID_read);
 
 /// def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
 ///     """

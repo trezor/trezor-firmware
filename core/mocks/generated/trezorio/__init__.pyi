@@ -32,9 +32,9 @@ class HID:
         Sends message using USB HID (device) or UDP (emulator).
         """
 
-    def read(self, buf: bytes) -> int:
+    def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
         """
-        Reads message using USB HID (device) or UDP (emulator).
+        Reads message using HID (device) or UDP (emulator).
         """
 
     def write_blocking(self, msg: bytes, timeout_ms: int) -> int:
@@ -154,7 +154,7 @@ class WebUSB:
         Sends message using USB WebUSB (device) or UDP (emulator).
         """
 
-    def read(self, buf: bytes) -> int:
+    def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
         """
         Reads message using WebUSB (device) or UDP (emulator).
         """

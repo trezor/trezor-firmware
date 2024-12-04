@@ -378,7 +378,7 @@ async def _read_cmd(iface: HID) -> Cmd | None:
     # wait for incoming command indefinitely
     msg_len = await read
     buf = bytearray(msg_len)
-    read_len = iface.read(buf)
+    read_len = iface.read(buf, 0, msg_len)
     if read_len != msg_len:
         raise ValueError("Invalid length")
     while True:
@@ -421,7 +421,7 @@ async def _read_cmd(iface: HID) -> Cmd | None:
             try:
                 msg_len = await read
                 buf = bytearray(msg_len)
-                read_len = iface.read(buf)
+                read_len = iface.read(buf, 0, msg_len)
                 if read_len != msg_len:
                     raise ValueError("Invalid length")
             except loop.Timeout:
