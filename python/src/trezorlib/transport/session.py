@@ -84,6 +84,9 @@ class Session:
         assert resp.message is not None
         return resp.message
 
+    def invalidate(self) -> None:
+        self.client.invalidate()
+
     @property
     def features(self) -> messages.Features:
         return self.client.features

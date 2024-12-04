@@ -93,16 +93,9 @@ class Emulator:
         """
         if self._client is None:
             raise RuntimeError
+        if self._client.is_invalidated:
+            self._client = self._client.get_new_client()
         return self._client
-
-    @client.setter
-    def client(self, new_client: TrezorClientDebugLink) -> None:
-        """Setter for the client property to update _client."""
-        if not isinstance(new_client, TrezorClientDebugLink):
-            raise TypeError(
-                f"Expected a TrezorClientDebugLink, got {type(new_client).__name__}."
-            )
-        self._client = new_client
 
     def make_args(self) -> List[str]:
         return []
