@@ -42,12 +42,6 @@ from .message_handler import failure
 # other packages.
 from .errors import *  # isort:skip # noqa: F401,F403
 
-_PROTOBUF_BUFFER_SIZE = const(8192)
-
-WIRE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
-if utils.USE_THP:
-    WIRE_BUFFER_2 = bytearray(_PROTOBUF_BUFFER_SIZE)
-
 if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Any, Callable, Coroutine, TypeVar
@@ -65,11 +59,11 @@ def setup(iface: WireInterface) -> None:
 
 
 if utils.USE_THP:
+    # memory_manager is imported to create READ/WRITE buffers
+    # in more stable area of memory
+    from .thp import memory_manager  # noqa: F401
 
     async def handle_session(iface: WireInterface) -> None:
-
-        thp_main.set_read_buffer(WIRE_BUFFER)
-        thp_main.set_write_buffer(WIRE_BUFFER_2)
 
         # Take a mark of modules that are imported at this point, so we can
         # roll back and un-import any others.
@@ -91,6 +85,8 @@ if utils.USE_THP:
                 return  # pylint: disable=lost-exception
 
 else:
+    _PROTOBUF_BUFFER_SIZE = const(8192)
+    WIRE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
 
     async def handle_session(iface: WireInterface) -> None:
         ctx = CodecContext(iface, WIRE_BUFFER)
