@@ -58,7 +58,8 @@ async def recovery_process() -> Success:
         if recovery_type == RecoveryType.NormalRecovery:
             from trezor.wire.context import try_get_ctx_ids
 
-            storage.wipe(excluded=try_get_ctx_ids())
+            storage.wipe(clear_cache=False)
+            storage.wipe_cache(excluded=try_get_ctx_ids())
         raise wire.ActionCancelled
 
 

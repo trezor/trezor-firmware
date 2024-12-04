@@ -9,20 +9,21 @@ if TYPE_CHECKING:
     pass
 
 
-def wipe(excluded: Tuple[bytes, bytes] | None) -> None:
+def wipe(clear_cache: bool = True) -> None:
     """
-    TODO REPHRASE SO THAT IT IS TRUE! Wipes the storage. Using `exclude_protocol=False` destroys the THP communication channel.
-    If the device should communicate after wipe, use `exclude_protocol=True` and clear cache manually later using
+    Wipes the storage.
+    If the device should communicate after wipe, use `clear_cache=False` and clear cache manually later using
     `wipe_cache()`.
     """
     from trezor import config
 
     config.wipe()
+    if clear_cache:
+        cache.clear_all()
+
+
+def wipe_cache(excluded: Tuple[bytes, bytes] | None = None) -> None:
     cache.clear_all(excluded)
-
-
-def wipe_cache() -> None:
-    cache.clear_all()
 
 
 def init_unlocked() -> None:
@@ -42,7 +43,8 @@ def reset(excluded: Tuple[bytes, bytes] | None) -> None:
     Wipes storage but keeps the device id unchanged.
     """
     device_id = device.get_device_id()
-    wipe(excluded)
+    wipe(clear_cache=False)
+    wipe_cache(excluded)
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
 
 
