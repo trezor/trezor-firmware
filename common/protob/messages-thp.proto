@@ -15,24 +15,24 @@ option (include_in_bitcoin_only) = true;
 enum ThpMessageType {
     reserved 0 to 999; // Values reserved by other messages, see messages.proto
 
-    ThpMessageType_ThpCreateNewSession = 1000[(bitcoin_only)=true, (channel_in) = true];
-    ThpMessageType_ThpNewSession = 1001[(bitcoin_only)=true, (channel_out) = true];
-    ThpMessageType_ThpStartPairingRequest = 1008 [(bitcoin_only) = true, (pairing_in) = true];
-    ThpMessageType_ThpPairingPreparationsFinished = 1009 [(bitcoin_only) = true, (pairing_out) = true];
-    ThpMessageType_ThpCredentialRequest = 1010 [(bitcoin_only) = true, (pairing_in) = true];
-    ThpMessageType_ThpCredentialResponse = 1011 [(bitcoin_only) = true, (pairing_out) = true];
-    ThpMessageType_ThpEndRequest = 1012 [(bitcoin_only) = true, (pairing_in) = true];
-    ThpMessageType_ThpEndResponse = 1013[(bitcoin_only) = true, (pairing_out) = true];
-    ThpMessageType_ThpCodeEntryCommitment = 1016[(bitcoin_only)=true, (pairing_out) = true];
-    ThpMessageType_ThpCodeEntryChallenge = 1017[(bitcoin_only)=true, (pairing_in) = true];
-    ThpMessageType_ThpCodeEntryCpaceHost = 1018[(bitcoin_only)=true, (pairing_in) = true];
-    ThpMessageType_ThpCodeEntryCpaceTrezor = 1019[(bitcoin_only)=true, (pairing_out) = true];
-    ThpMessageType_ThpCodeEntryTag = 1020[(bitcoin_only)=true, (pairing_in) = true];
-    ThpMessageType_ThpCodeEntrySecret = 1021[(bitcoin_only)=true, (pairing_out) = true];
-    ThpMessageType_ThpQrCodeTag = 1024[(bitcoin_only)=true, (pairing_in) = true];
-    ThpMessageType_ThpQrCodeSecret = 1025[(bitcoin_only)=true, (pairing_out) = true];
-    ThpMessageType_ThpNfcUnidirectionalTag = 1032[(bitcoin_only)=true, (pairing_in) = true];
-    ThpMessageType_ThpNfcUnidirectionalSecret = 1033[(bitcoin_only)=true, (pairing_in) = true];
+    ThpMessageType_ThpCreateNewSession = 1000[(bitcoin_only)=true];
+    ThpMessageType_ThpNewSession = 1001[(bitcoin_only)=true];
+    ThpMessageType_ThpStartPairingRequest = 1008 [(bitcoin_only) = true];
+    ThpMessageType_ThpPairingPreparationsFinished = 1009 [(bitcoin_only) = true];
+    ThpMessageType_ThpCredentialRequest = 1010 [(bitcoin_only) = true];
+    ThpMessageType_ThpCredentialResponse = 1011 [(bitcoin_only) = true];
+    ThpMessageType_ThpEndRequest = 1012 [(bitcoin_only) = true];
+    ThpMessageType_ThpEndResponse = 1013[(bitcoin_only) = true];
+    ThpMessageType_ThpCodeEntryCommitment = 1016[(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryChallenge = 1017[(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryCpaceHost = 1018[(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryCpaceTrezor = 1019[(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryTag = 1020[(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntrySecret = 1021[(bitcoin_only)=true];
+    ThpMessageType_ThpQrCodeTag = 1024[(bitcoin_only)=true];
+    ThpMessageType_ThpQrCodeSecret = 1025[(bitcoin_only)=true];
+    ThpMessageType_ThpNfcUnidirectionalTag = 1032[(bitcoin_only)=true];
+    ThpMessageType_ThpNfcUnidirectionalSecret = 1033[(bitcoin_only)=true];
 
     reserved 1100 to 2147483647; // Values reserved by other messages, see messages.proto
 }
