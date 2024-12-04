@@ -1,59 +1,27 @@
-use core::{cmp::Ordering, convert::TryInto};
+use core::convert::TryInto;
 
-use super::{
-    component::{
-        AddressDetails, Bip39Input, Button, ButtonMsg, ButtonPage, ButtonStyleSheet,
-        CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress, Dialog, DialogMsg, FidoConfirm,
-        FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog, Lockscreen, MnemonicInput,
-        MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog, NumberInputDialogMsg,
-        PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
-        SelectWordCount, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
-        Slip39Input,
-    },
-    theme,
+use super::component::{
+    AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress, Dialog,
+    DialogMsg, FidoConfirm, FidoMsg, Frame, FrameMsg, Homescreen, HomescreenMsg, IconDialog,
+    Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputDialog,
+    NumberInputDialogMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PinKeyboard, PinKeyboardMsg,
+    Progress, SelectWordCountMsg, SelectWordMsg, SetBrightnessDialog, SimplePage,
 };
 use crate::{
-    error::{value_error, Error},
-    io::BinaryData,
-    micropython::{
-        gc::Gc,
-        iter::IterBuf,
-        list::List,
-        macros::{obj_fn_1, obj_fn_kw, obj_module},
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
+    error::Error,
+    micropython::{macros::obj_module, map::Map, module::Module, obj::Obj, qstr::Qstr, util},
     strutil::TString,
-    translations::TR,
-    trezorhal::model,
     ui::{
         component::{
-            base::ComponentExt,
-            connect::Connect,
-            image::BlendedImage,
-            jpeg::Jpeg,
             paginated::{PageMsg, Paginate},
             placed::GridPlaced,
-            text::{
-                op::OpTextLayout,
-                paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
-                },
-                TextStyle,
-            },
-            Border, Component, Empty, FormattedText, Label, Never, Timeout,
+            text::paragraphs::{ParagraphSource, Paragraphs},
+            Component, FormattedText, Never, Timeout,
         },
-        geometry,
         layout::{
-            obj::{ComponentMsgObj, LayoutObj},
+            obj::ComponentMsgObj,
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{ConfirmBlob, PropsList, RecoveryType},
         },
-        model_tt::component::check_homescreen_format,
     },
 };
 
@@ -317,59 +285,10 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
     }
 }
 
-
-#[cfg(test)]
-mod tests {
-    use serde_json;
-
-    use crate::{
-        trace::tests::trace,
-        ui::{component::text::op::OpTextLayout, geometry::Rect, model_tt::constant},
-    };
-
-    use super::*;
-
-    const SCREEN: Rect = constant::screen().inset(theme::borders());
-
-    #[test]
-    fn trace_example_layout() {
-        let buttons = Button::cancel_confirm(
-            Button::with_text("Left".into()),
-            Button::with_text("Right".into()),
-            false,
-        );
-
-        let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-            .text_normal("Testing text layout, with some text, and some more text. And ")
-            .text_bold_upper("parameters!");
-        let formatted = FormattedText::new(ops);
-        let mut layout = Dialog::new(formatted, buttons);
-        layout.place(SCREEN);
-
-        let expected = serde_json::json!({
-            "component": "Dialog",
-            "content": {
-                "component": "FormattedText",
-                "text": ["Testing text layout, with", "\n", "some text, and some", "\n",
-                "more text. And ", "parame", "-", "\n", "ters!"],
-                "fits": true,
-            },
-            "controls": {
-                "component": "FixedHeightBar",
-                "inner": {
-                    "component": "Split",
-                    "first": {
-                        "component": "Button",
-                        "text": "Left",
-                    },
-                    "second": {
-                        "component": "Button",
-                        "text": "Right",
-                    },
-                },
-            },
-        });
-
-        assert_eq!(trace(&layout), expected);
-    }
-}
+#[no_mangle]
+pub static mp_module_trezorui2: Module = obj_module! {
+    /// from trezor import utils
+    /// from trezorui_api import *
+    ///
+    Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
+};

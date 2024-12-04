@@ -1348,3 +1348,62 @@ impl ConfirmBlobParams {
         LayoutObj::new(frame)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json;
+
+    use crate::{
+        trace::tests::trace,
+        ui::{
+            component::text::op::OpTextLayout, component::Component, geometry::Rect,
+            model_tt::constant,
+        },
+    };
+
+    use super::*;
+
+    const SCREEN: Rect = constant::screen().inset(theme::borders());
+
+    #[test]
+    fn trace_example_layout() {
+        let buttons = Button::cancel_confirm(
+            Button::with_text("Left".into()),
+            Button::with_text("Right".into()),
+            false,
+        );
+
+        let ops = OpTextLayout::new(theme::TEXT_NORMAL)
+            .text_normal("Testing text layout, with some text, and some more text. And ")
+            .text_bold_upper("parameters!");
+        let formatted = FormattedText::new(ops);
+        let mut layout = Dialog::new(formatted, buttons);
+        layout.place(SCREEN);
+
+        let expected = serde_json::json!({
+            "component": "Dialog",
+            "content": {
+                "component": "FormattedText",
+                "text": ["Testing text layout, with", "\n", "some text, and some", "\n",
+                "more text. And ", "parame", "-", "\n", "ters!"],
+                "fits": true,
+            },
+            "controls": {
+                "component": "FixedHeightBar",
+                "inner": {
+                    "component": "Split",
+                    "first": {
+                        "component": "Button",
+                        "text": "Left",
+                    },
+                    "second": {
+                        "component": "Button",
+                        "text": "Right",
+                    },
+                },
+            },
+        });
+
+        assert_eq!(trace(&layout), expected);
+    }
+}

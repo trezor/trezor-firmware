@@ -1,64 +1,25 @@
-use core::{cmp::Ordering, convert::TryInto};
-use heapless::Vec;
+use core::convert::TryInto;
 
-use super::{
-    component::{
-        AddressDetails, Bip39Input, CoinJoinProgress, Frame, FrameMsg, Homescreen, HomescreenMsg,
-        Lockscreen, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
-        PinKeyboardMsg, Progress, PromptScreen, SelectWordCount, SelectWordCountMsg, Slip39Input,
-        StatusScreen, SwipeUpScreen, SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
-    },
-    flow::{self},
-    theme,
+use super::component::{
+    AddressDetails, CoinJoinProgress, Frame, FrameMsg, Homescreen, HomescreenMsg, Lockscreen,
+    MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard, PinKeyboardMsg, Progress,
+    PromptScreen, SelectWordCount, SelectWordCountMsg, StatusScreen, SwipeUpScreen,
+    SwipeUpScreenMsg, VerticalMenu, VerticalMenuChoiceMsg,
 };
 use crate::{
-    error::{value_error, Error},
-    io::BinaryData,
-    micropython::{
-        iter::IterBuf,
-        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
-    strutil::TString,
-    translations::TR,
-    trezorhal::model,
+    error::Error,
+    micropython::{macros::obj_module, module::Module, obj::Obj, qstr::Qstr},
     ui::{
-        backlight::BACKLIGHT_LEVELS_OBJ,
         component::{
-            base::ComponentExt,
-            connect::Connect,
-            swipe_detect::SwipeSettings,
-            text::{
-                op::OpTextLayout,
-                paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
-                },
-                TextStyle,
-            },
-            Border, CachedJpeg, Component, FormattedText, Never, Timeout,
+            text::paragraphs::{ParagraphSource, Paragraphs},
+            Component, Never, Timeout,
         },
         flow::Swipable,
-        geometry::{self, Direction},
         layout::{
-            base::LAYOUT_STATE,
-            obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
-            result::{CANCELLED, CONFIRMED, INFO},
-            util::{upy_disable_animation, PropsList, RecoveryType},
+            obj::ComponentMsgObj,
+            result::{CANCELLED, CONFIRMED},
         },
-        model_mercury::{
-            component::{check_homescreen_format, SwipeContent},
-            flow::{
-                new_confirm_action_simple,
-                util::{ConfirmBlobParams, ShowInfoParams},
-                ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
-            },
-            theme::ICON_BULLET_CHECKMARK,
-        },
+        model_mercury::component::SwipeContent,
     },
 };
 

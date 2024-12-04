@@ -1,55 +1,23 @@
-use core::{cmp::Ordering, convert::TryInto};
+use core::convert::TryInto;
 
-use heapless::Vec;
-
-use super::{
-    component::{
-        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CancelConfirmMsg,
-        CancelInfoConfirmMsg, CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame,
-        Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry, PinEntry, Progress,
-        ScrollableContent, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WordlistEntry,
-        WordlistType,
-    },
-    constant, theme,
+use super::component::{
+    AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress,
+    ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry,
+    PinEntry, Progress, ScrollableContent, ScrollableFrame, ShowMore, SimpleChoice, WordlistEntry,
 };
 use crate::{
     error::Error,
-    maybe_trace::MaybeTrace,
-    micropython::{
-        gc::Gc,
-        iter::IterBuf,
-        list::List,
-        macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
-        map::Map,
-        module::Module,
-        obj::Obj,
-        qstr::Qstr,
-        util,
-    },
-    strutil::TString,
-    translations::TR,
-    trezorhal::model,
+    micropython::{macros::obj_module, map::Map, module::Module, obj::Obj, qstr::Qstr},
     ui::{
         component::{
             base::Component,
-            connect::Connect,
             paginated::{PageMsg, Paginate},
-            text::{
-                op::OpTextLayout,
-                paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
-                    Paragraphs, VecExt,
-                },
-                TextStyle,
-            },
-            ComponentExt, FormattedText, Label, LineBreaking, Never, Timeout,
+            text::paragraphs::{ParagraphSource, Paragraphs},
+            Never, Timeout,
         },
-        display::Font,
-        geometry,
         layout::{
-            obj::{ComponentMsgObj, LayoutObj},
+            obj::ComponentMsgObj,
             result::{CANCELLED, CONFIRMED, INFO},
-            util::{ConfirmBlob, RecoveryType},
         },
     },
 };
@@ -233,43 +201,6 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
     }
 }
 
-/// Function to create and call a `ButtonPage` dialog based on paginable content
-/// (e.g. `Paragraphs` or `FormattedText`).
-/// Has optional title (supply empty `TString` for that) and hold-to-confirm
-/// functionality.
-fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
-    title: TString<'static>,
-    content: T,
-    verb: TString<'static>,
-    verb_cancel: Option<TString<'static>>,
-    hold: bool,
-) -> Result<Obj, Error> {
-    // Left button - icon, text or nothing.
-    let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
-
-    // Right button - text or nothing.
-    // Optional HoldToConfirm
-    let mut confirm_btn = if !verb.is_empty() {
-        Some(ButtonDetails::text(verb))
-    } else {
-        None
-    };
-    if hold {
-        confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
-    }
-
-    let content = ButtonPage::new(content, theme::BG)
-        .with_cancel_btn(cancel_btn)
-        .with_confirm_btn(confirm_btn);
-
-    let mut frame = ScrollableFrame::new(content);
-    if !title.is_empty() {
-        frame = frame.with_title(title);
-    }
-    let obj = LayoutObj::new(frame)?;
-
-    Ok(obj.into())
-}
 #[no_mangle]
 pub static mp_module_trezorui2: Module = obj_module! {
     /// from trezor import utils
