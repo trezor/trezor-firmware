@@ -30,35 +30,12 @@ if TYPE_CHECKING:
     from trezorio import WireInterface
 
 _CID_REQ_PAYLOAD_LENGTH = const(12)
-_READ_BUFFER: bytearray
-_WRITE_BUFFER: bytearray
 _CHANNELS: dict[int, Channel] = {}
-
-
-def set_read_buffer(buffer: bytearray) -> None:
-    global _READ_BUFFER
-    _READ_BUFFER = buffer
-
-
-def set_write_buffer(buffer: bytearray) -> None:
-    global _WRITE_BUFFER
-    _WRITE_BUFFER = buffer
-
-
-def get_raw_read_buffer() -> bytearray:
-    global _READ_BUFFER
-    return _READ_BUFFER
-
-
-def get_raw_write_buffer() -> bytearray:
-    global _WRITE_BUFFER
-    return _WRITE_BUFFER
 
 
 async def thp_main_loop(iface: WireInterface) -> None:
     global _CHANNELS
-    global _READ_BUFFER
-    _CHANNELS = channel_manager.load_cached_channels(_READ_BUFFER)
+    _CHANNELS = channel_manager.load_cached_channels()
 
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
@@ -100,7 +77,6 @@ async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:
 async def _handle_broadcast(
     iface: WireInterface, ctrl_byte: int, packet: utils.BufferType
 ) -> None:
-    global _READ_BUFFER
     if ctrl_byte != CHANNEL_ALLOCATION_REQ:
         raise ThpError("Unexpected ctrl_byte in a broadcast channel packet")
     if __debug__:
@@ -114,7 +90,7 @@ async def _handle_broadcast(
     ):
         raise ThpError("Checksum is not valid")
 
-    new_channel: Channel = channel_manager.create_new_channel(iface, _READ_BUFFER)
+    new_channel: Channel = channel_manager.create_new_channel(iface)
     cid = int.from_bytes(new_channel.channel_id, "big")
     _CHANNELS[cid] = new_channel
 
