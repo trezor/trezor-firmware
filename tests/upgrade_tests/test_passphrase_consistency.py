@@ -53,7 +53,7 @@ def emulator(gen: str, tag: str) -> Iterator[Emulator]:
             pin_protection=False,
             skip_backup=True,
         )
-        emu.client = emu.client.get_new_client()
+        emu.client.invalidate()
         resp = emu.client.get_management_session().call(
             ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
         )

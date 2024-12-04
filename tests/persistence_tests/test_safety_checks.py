@@ -21,7 +21,6 @@ def test_safety_checks_level_after_reboot(
     core_emulator: Emulator, set_level: SafetyCheckLevel, after_level: SafetyCheckLevel
 ):
     device.wipe(core_emulator.client.get_management_session())
-    core_emulator.client = core_emulator.client.get_new_client()
     debuglink.load_device(
         core_emulator.client.get_management_session(),
         mnemonic=MNEMONIC12,

@@ -283,7 +283,6 @@ def cli(
 
         assert emulator.client is not None
         trezorlib.device.wipe(emulator.client.get_management_session())
-        emulator.client = emulator.client.get_new_client()
 
         trezorlib.debuglink.load_device(
             emulator.client.get_management_session(),
