@@ -13,7 +13,7 @@ use crate::{
         model_mercury::{
             component::{
                 button::{Button, ButtonContent, ButtonMsg},
-                keyboard::common::{render_pending_marker, MultiTapKeyboard},
+                keyboard::common::{render_pending_marker, DisplayStyle, MultiTapKeyboard},
                 theme,
             },
             cshape,
@@ -30,14 +30,6 @@ use num_traits::ToPrimitive;
 pub enum PassphraseKeyboardMsg {
     Confirmed(ShortString),
     Cancelled,
-}
-
-#[derive(PartialEq, Debug, Copy, Clone)]
-#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
-enum DisplayStyle {
-    Dots,
-    Chars,
-    LastChar,
 }
 
 /// Enum keeping track of which keyboard is shown and which comes next. Keep the
@@ -415,7 +407,7 @@ impl Component for PassphraseKeyboard {
                     // multi tap timer is runnig, the last digit timer should be stopped
                     self.input.last_char_timer.stop();
                 }
-                self.input.display_style = DisplayStyle::LastChar;
+                self.input.display_style = DisplayStyle::LastOnly;
                 return None;
             }
         }
@@ -462,7 +454,7 @@ impl Input {
             area: Rect::zero(),
             textbox: TextBox::empty(MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
-            display_style: DisplayStyle::LastChar,
+            display_style: DisplayStyle::LastOnly,
             last_char_timer: Timer::new(),
         }
     }
@@ -486,8 +478,8 @@ impl Input {
             // Jiggle hidden passphrase when overflowed.
             if chars > truncated.len()
                 && chars % 2 == 0
-                && (self.display_style == DisplayStyle::Dots
-                    || self.display_style == DisplayStyle::LastChar)
+                && (self.display_style == DisplayStyle::Hidden
+                    || self.display_style == DisplayStyle::LastOnly)
             {
                 text_baseline.x += Self::TWITCH;
             }
@@ -516,7 +508,7 @@ impl Input {
         let bullet = theme::ICON_PIN_BULLET.toif;
         let mut cursor = area.left_center();
         let all_chars = self.textbox.content().len();
-        let last_char = self.display_style == DisplayStyle::LastChar;
+        let last_char = self.display_style == DisplayStyle::LastOnly;
 
         if all_chars > 0 {
             // Find out how much text can fit into the textbox.
@@ -533,8 +525,8 @@ impl Input {
             // Jiggle when overflowed.
             if all_chars > visible_chars
                 && all_chars % 2 == 0
-                && (self.display_style == DisplayStyle::Dots
-                    || self.display_style == DisplayStyle::LastChar)
+                && (self.display_style == DisplayStyle::Hidden
+                    || self.display_style == DisplayStyle::LastOnly)
             {
                 cursor.x += Self::TWITCH;
             }
@@ -601,15 +593,15 @@ impl Component for Input {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             Event::Timer(_) if self.last_char_timer.expire(event) => {
-                self.display_style = DisplayStyle::Dots;
+                self.display_style = DisplayStyle::Hidden;
                 ctx.request_paint();
             }
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
-                self.display_style = DisplayStyle::Chars;
+                self.display_style = DisplayStyle::Shown;
                 ctx.request_paint();
             }
             Event::Touch(TouchEvent::TouchEnd(pos)) if self.area.contains(pos) => {
-                self.display_style = DisplayStyle::Dots;
+                self.display_style = DisplayStyle::Hidden;
                 ctx.request_paint();
             }
             _ => {}
@@ -626,7 +618,7 @@ impl Component for Input {
         // Paint the passphrase
         if !self.textbox.content().is_empty() {
             match self.display_style {
-                DisplayStyle::Chars => self.render_chars(text_area, target),
+                DisplayStyle::Shown => self.render_chars(text_area, target),
                 _ => self.render_dots(text_area, target),
             }
         }

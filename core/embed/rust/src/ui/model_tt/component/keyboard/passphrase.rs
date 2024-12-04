@@ -11,7 +11,7 @@ use crate::{
         geometry::{Alignment, Grid, Offset, Rect},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg},
-            keyboard::common::{render_pending_marker, MultiTapKeyboard},
+            keyboard::common::{render_pending_marker, DisplayStyle, MultiTapKeyboard},
             swipe::{Swipe, SwipeDirection},
             theme, ScrollBar,
         },
@@ -25,14 +25,6 @@ use core::cell::Cell;
 pub enum PassphraseKeyboardMsg {
     Confirmed,
     Cancelled,
-}
-
-#[derive(PartialEq, Debug, Copy, Clone)]
-#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
-enum DisplayStyle {
-    Dots,
-    Chars,
-    LastChar,
 }
 
 pub struct PassphraseKeyboard {
@@ -324,7 +316,7 @@ impl Component for PassphraseKeyboard {
                     self.input.mutate(ctx, |_ctx, t| t.stop_timer());
                 }
                 self.input
-                    .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::LastChar));
+                    .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::LastOnly));
                 return None;
             }
         }
@@ -364,7 +356,7 @@ impl Input {
             area: Rect::zero(),
             textbox: TextBox::empty(MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
-            display_style: DisplayStyle::LastChar,
+            display_style: DisplayStyle::LastOnly,
             last_char_timer: Timer::new(),
         }
     }
@@ -394,15 +386,15 @@ impl Component for Input {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         match event {
             Event::Timer(_) if self.last_char_timer.expire(event) => {
-                self.display_style = DisplayStyle::Dots;
+                self.display_style = DisplayStyle::Hidden;
                 ctx.request_paint();
             }
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
-                self.display_style = DisplayStyle::Chars;
+                self.display_style = DisplayStyle::Shown;
                 ctx.request_paint();
             }
             Event::Touch(TouchEvent::TouchEnd(pos)) if self.area.contains(pos) => {
-                self.display_style = DisplayStyle::Dots;
+                self.display_style = DisplayStyle::Hidden;
                 ctx.request_paint();
             }
             _ => {}
@@ -435,15 +427,15 @@ impl Component for Input {
             // Jiggle when overflowed.
             if pp_len > pp_visible_len
                 && pp_len % 2 == 0
-                && !matches!(self.display_style, DisplayStyle::Chars)
+                && !matches!(self.display_style, DisplayStyle::Shown)
             {
                 cursor.x += Self::TWITCH;
             }
 
             let (visible_dots, visible_chars) = match self.display_style {
-                DisplayStyle::Dots => (pp_visible_len, 0),
-                DisplayStyle::Chars => (0, pp_visible_len),
-                DisplayStyle::LastChar => (pp_visible_len - 1, 1),
+                DisplayStyle::Hidden => (pp_visible_len, 0),
+                DisplayStyle::Shown => (0, pp_visible_len),
+                DisplayStyle::LastOnly => (pp_visible_len - 1, 1),
             };
 
             // Render dots if applicable
@@ -479,13 +471,7 @@ impl Component for Input {
                     .render(target);
                 // Paint the pending marker.
                 if self.multi_tap.pending_key().is_some() {
-                    render_pending_marker(
-                        target,
-                        cursor,
-                        chars,
-                        style.text_font,
-                        style.text_color,
-                    );
+                    render_pending_marker(target, cursor, chars, style.text_font, style.text_color);
                 }
             }
         }
