@@ -72,7 +72,7 @@ INIT=1
 MODELS=(R T T3T1)
 CORE_TARGETS=(boardloader bootloader firmware)
 
-REPOSITORY="/local"
+REPOSITORY="file:///local"
 
 while true; do
   case "$1" in
@@ -204,7 +204,7 @@ if [ $INIT -eq 1 ]; then
 
     mkdir -p /reproducible-build
     cd /reproducible-build
-    git clone "$REPOSITORY" trezor-firmware
+    git clone --branch="$TAG" --depth=1 "$REPOSITORY" trezor-firmware
     cd trezor-firmware
 EOF
 
@@ -224,8 +224,6 @@ fi  # init
 # append common part to script
 cat <<EOF >> "$SCRIPT_NAME"
   $GIT_CLEAN_REPO
-  git fetch origin "$COMMIT_HASH"
-  git checkout "$COMMIT_HASH"
   git submodule update --init --recursive
   poetry install
   cd core/embed/rust
