@@ -369,12 +369,14 @@ impl Component for PassphraseKeyboard {
                 self.input.multi_tap.clear_pending_state(ctx);
                 self.input.textbox.delete_last(ctx);
                 self.after_edit(ctx);
+                self.input.display_style = DisplayStyle::Hidden;
                 return None;
             }
             Some(ButtonMsg::LongPressed) => {
                 self.input.multi_tap.clear_pending_state(ctx);
                 self.input.textbox.clear(ctx);
                 self.after_edit(ctx);
+                self.input.display_style = DisplayStyle::Hidden;
                 return None;
             }
             _ => {}

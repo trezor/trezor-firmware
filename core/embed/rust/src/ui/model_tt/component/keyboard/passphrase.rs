@@ -273,6 +273,8 @@ impl Component for PassphraseKeyboard {
                         i.textbox.delete_last(ctx);
                     });
                     self.after_edit(ctx);
+                    self.input
+                        .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::Hidden));
                     None
                 };
             }
@@ -282,6 +284,8 @@ impl Component for PassphraseKeyboard {
                     i.textbox.clear(ctx);
                 });
                 self.after_edit(ctx);
+                self.input
+                    .mutate(ctx, |_ctx, t| t.set_display_style(DisplayStyle::Hidden));
                 return None;
             }
             _ => {}
