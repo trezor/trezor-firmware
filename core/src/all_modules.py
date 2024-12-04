@@ -461,8 +461,6 @@ if utils.USE_THP:
     import trezor.wire.thp.writer
     apps.thp
     import apps.thp
-    apps.thp.create_new_session
-    import apps.thp.create_new_session
     apps.thp.credential_manager
     import apps.thp.credential_manager
     apps.thp.pairing

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
 from trezor import TR, config, utils, wire, workflow
-from trezor.enums import HomescreenFormat, MessageType
+from trezor.enums import HomescreenFormat, MessageType, ThpMessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
 from trezor.wire import context
@@ -26,6 +26,9 @@ if TYPE_CHECKING:
         SetBusy,
     )
     from trezor.wire import Handler, Msg
+
+    if utils.USE_THP:
+        from trezor.messages import Failure, ThpCreateNewSession, ThpNewSession
 
 
 _SCREENSAVER_IS_ON = False
@@ -204,7 +207,69 @@ def get_features() -> Features:
     return f
 
 
-if not utils.USE_THP:
+if utils.USE_THP:
+
+    async def handle_ThpCreateNewSession(
+        message: ThpCreateNewSession,
+    ) -> ThpNewSession | Failure:
+        """
+        Creates a new `ThpSession` based on the provided parameters and returns a
+        `ThpNewSession` message containing the new session ID.
+
+        Returns an appropriate `Failure` message if session creation fails.
+        """
+        from trezor import log, loop
+        from trezor.enums import FailureType
+        from trezor.messages import Failure, ThpNewSession
+        from trezor.wire import NotInitialized
+        from trezor.wire.context import get_context
+        from trezor.wire.errors import ActionCancelled, DataError
+        from trezor.wire.thp import SessionState
+        from trezor.wire.thp.session_context import GenericSessionContext
+        from trezor.wire.thp.session_manager import create_new_session
+
+        from apps.common.seed import derive_and_store_roots
+
+        ctx = get_context()
+
+        # Assert that context `ctx` is `GenericSessionContext`
+        assert isinstance(ctx, GenericSessionContext)
+
+        channel = ctx.channel
+
+        # Do not use `ctx` beyond this point, as it is techically
+        # allowed to change in between await statements
+
+        new_session = create_new_session(channel)
+        try:
+            await derive_and_store_roots(new_session, message)
+        except DataError as e:
+            return Failure(code=FailureType.DataError, message=e.message)
+        except ActionCancelled as e:
+            return Failure(code=FailureType.ActionCancelled, message=e.message)
+        except NotInitialized as e:
+            return Failure(code=FailureType.NotInitialized, message=e.message)
+        # TODO handle other errors (`Exception`` when "Cardano icarus secret is already set!"
+        # and `RuntimeError` when accessing storage for mnemonic.get_secret - it actually
+        # happens for locked devices)
+
+        new_session.set_session_state(SessionState.ALLOCATED)
+        channel.sessions[new_session.session_id] = new_session
+        loop.schedule(new_session.handle())
+        new_session_id: int = new_session.session_id
+
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+            log.debug(
+                __name__,
+                "create_new_session - new session created. Passphrase: %s, Session id: %d\n%s",
+                message.passphrase if message.passphrase is not None else "",
+                new_session.session_id,
+                str(channel.sessions),
+            )
+
+        return ThpNewSession(new_session_id=new_session_id)
+
+else:
 
     async def handle_Initialize(msg: Initialize) -> Features:
         import storage.cache_codec as cache_codec
@@ -468,7 +533,10 @@ def boot() -> None:
     MT = MessageType  # local_cache_global
 
     # Register workflow handlers
-    if not utils.USE_THP:
+    if utils.USE_THP:
+        TMT = ThpMessageType
+        workflow_handlers.register(TMT.ThpCreateNewSession, handle_ThpCreateNewSession)
+    else:
         workflow_handlers.register(MT.Initialize, handle_Initialize)
     for msg_type, handler in [
         (MT.GetFeatures, handle_GetFeatures),
