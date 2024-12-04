@@ -38,8 +38,13 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
 
     # start an empty progress screen so that the screen is not blank while waiting
     render_empty_loader(config.StorageMessage.PROCESSING_MSG)
+
     # wipe storage
-    storage.wipe(excluded=try_get_ctx_ids())
+    storage.wipe(clear_cache=False)
+
+    # clear cache - exclude current context
+    storage.wipe_cache(excluded=try_get_ctx_ids())
+
     # erase translations
     translations.deinit()
     translations.erase()
