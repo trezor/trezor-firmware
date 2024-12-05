@@ -25,7 +25,10 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmBlob, PropsList, RecoveryType},
         },
-        ui_features_fw::UIFeaturesFirmware,
+        ui_features::ModelUI,
+        ui_features_fw::{
+            UIFeaturesFirmware, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+        },
     },
 };
 
@@ -45,14 +48,14 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         title: TString<'static>,
         action: Option<TString<'static>>,
         description: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
+        _subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
         hold_danger: bool,
         reverse: bool,
-        prompt_screen: bool,
-        prompt_title: Option<TString<'static>>,
+        _prompt_screen: bool,
+        _prompt_title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = {
             let action = action.unwrap_or("".into());
@@ -284,7 +287,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         sign: i32,
         user_fee_change: TString<'static>,
         total_fee_new: TString<'static>,
-        fee_rate_amount: Option<TString<'static>>,
+        _fee_rate_amount: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let (description, change, total_label) = match sign {
             s if s < 0 => (
@@ -441,7 +444,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         title: Option<TString<'static>>,
         account_items: Option<Obj>,
         extra_items: Option<Obj>,
-        extra_title: Option<TString<'static>>,
+        _extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let info_button: bool = account_items.is_some() || extra_items.is_some();
@@ -520,7 +523,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         Ok(layout)
     }
 
-    fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool {
+    fn check_homescreen_format(image: BinaryData, _accept_toif: bool) -> bool {
         super::component::check_homescreen_format(image, false)
     }
 
@@ -530,7 +533,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         button: Option<TString<'static>>,
         recovery_type: RecoveryType,
         _show_instructions: bool,
-        remaining_shares: Option<crate::micropython::obj::Obj>,
+        remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = Paragraphs::new([
             Paragraph::new(&theme::TEXT_DEMIBOLD, text),
@@ -587,7 +590,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         _summary_br_name: Option<TString<'static>>,
         _cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"flow_confirm_output not supported",
         ))
     }
@@ -596,7 +599,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         _title: TString<'static>,
         _description: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"flow_confirm_set_new_pin not supported",
         ))
     }
@@ -616,7 +619,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         _br_code: u16,
         _br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"flow_get_address not supported",
         ))
     }
@@ -626,13 +629,13 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         _verb: TString<'static>,
         _items: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"multiple_pages_texts not implemented",
         ))
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"prompt_backup not implemented",
         ))
     }
@@ -697,8 +700,8 @@ impl UIFeaturesFirmware for ModelTTFeatures {
     }
 
     fn request_passphrase(
-        prompt: TString<'static>,
-        max_len: u32,
+        _prompt: TString<'static>,
+        _max_len: u32,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(PassphraseKeyboard::new());
         Ok(layout)
@@ -707,7 +710,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
-        words: [TString<'static>; 3],
+        words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = Paragraphs::new([Paragraph::new(&theme::TEXT_DEMIBOLD, description)]);
         let layout = RootComponent::new(Frame::left_aligned(
@@ -788,7 +791,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         title: TString<'static>,
         button: TString<'static>,
         active: usize,
-        items: [TString<'static>; 3],
+        items: [TString<'static>; MAX_CHECKLIST_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for (i, item) in items.into_iter().enumerate() {
@@ -829,9 +832,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         _value: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
-            c"show_danger not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_danger not supported"))
     }
 
     fn show_error(
@@ -861,7 +862,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
     }
 
     fn show_group_share_success(
-        lines: [TString<'static>; 4],
+        lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(IconDialog::new_shares(
             lines,
@@ -1049,18 +1050,14 @@ impl UIFeaturesFirmware for ModelTTFeatures {
     fn show_share_words_mercury(
         _words: heapless::Vec<TString<'static>, 33>,
         _subtitle: Option<TString<'static>>,
-        _instructions: crate::micropython::obj::Obj,
+        _instructions: Obj,
         _text_footer: Option<TString<'static>>,
         _text_confirm: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
-            c"use show_share_words",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"use show_share_words"))
     }
 
-    fn show_remaining_shares(
-        pages_iterable: crate::micropython::obj::Obj, // TODO: replace Obj
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    fn show_remaining_shares(pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for page in crate::micropython::iter::IterBuf::new().try_iterate(pages_iterable)? {
             let [title, description]: [TString; 2] =
@@ -1156,8 +1153,7 @@ impl UIFeaturesFirmware for ModelTTFeatures {
         value: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        time_ms: u32,
-        danger: bool,
+        _danger: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let icon = BlendedImage::new(
             theme::IMAGE_BG_OCTAGON,
@@ -1179,12 +1175,11 @@ impl UIFeaturesFirmware for ModelTTFeatures {
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelTTFeatures>, Error>(Error::ValueError(
-            c"tutorial not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"tutorial not supported"))
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn new_show_modal(
     title: TString<'static>,
     value: TString<'static>,
@@ -1356,7 +1351,8 @@ mod tests {
     use crate::{
         trace::tests::trace,
         ui::{
-            component::text::op::OpTextLayout, component::Component, geometry::Rect,
+            component::{text::op::OpTextLayout, Component},
+            geometry::Rect,
             model_tt::constant,
         },
     };

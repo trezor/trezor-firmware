@@ -2,7 +2,6 @@ use crate::{
     io::BinaryData,
     micropython::{
         gc::Gc,
-        iter::IterBuf,
         list::List,
         macros::{obj_fn_0, obj_fn_1, obj_fn_kw, obj_module},
         map::Map,
@@ -23,16 +22,18 @@ use crate::{
             util::{upy_disable_animation, RecoveryType},
         },
         ui_features::ModelUI,
-        ui_features_fw::UIFeaturesFirmware,
+        ui_features_fw::{
+            UIFeaturesFirmware, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+        },
     },
 };
 use heapless::Vec;
 
-/// Dummy implementation so that we can use `Empty` in a return type of unimplemented trait
-/// function
+/// Dummy implementation so that we can use `Empty` in a return type of
+/// unimplemented trait function
 impl ComponentMsgObj for Empty {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, crate::error::Error> {
-        Ok(Obj::const_none())
+        unimplemented!()
     }
 }
 
@@ -231,7 +232,6 @@ extern "C" fn new_confirm_fido(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-// TODO: there was `no_mangle` attribute in TT, should we apply it?
 extern "C" fn new_confirm_firmware_update(
     n_args: usize,
     args: *const Obj,
@@ -637,12 +637,11 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let more_info_cb = more_info_callback.and_then(|callback| {
-            let cb = move |n: u32| {
+        let more_info_cb = more_info_callback.map(|callback| {
+            move |n: u32| {
                 let text = callback.call_with_n_args(&[n.try_into().unwrap()]).unwrap();
                 TString::try_from(text).unwrap()
-            };
-            Some(cb)
+            }
         });
 
         let layout = ModelUI::request_number(
@@ -687,7 +686,7 @@ extern "C" fn new_select_word(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let words_iterable: Obj = kwargs.get(Qstr::MP_QSTR_words)?;
-        let words: [TString<'static>; 3] = util::iter_into_array(words_iterable)?;
+        let words: [TString<'static>; MAX_WORD_QUIZ_ITEMS] = util::iter_into_array(words_iterable)?;
 
         let layout = ModelUI::select_word(title, description, words)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -746,7 +745,7 @@ extern "C" fn new_show_checklist(n_args: usize, args: *const Obj, kwargs: *mut M
         let active: usize = kwargs.get(Qstr::MP_QSTR_active)?.try_into()?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
-        let items: [TString<'static>; 3] = util::iter_into_array(items)?;
+        let items: [TString<'static>; MAX_CHECKLIST_ITEMS] = util::iter_into_array(items)?;
 
         let layout = ModelUI::show_checklist(title, button, active, items)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -791,7 +790,7 @@ extern "C" fn new_show_group_share_success(
 ) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let lines_iterable: Obj = kwargs.get(Qstr::MP_QSTR_lines)?;
-        let lines: [TString; 4] = util::iter_into_array(lines_iterable)?;
+        let lines: [TString; MAX_GROUP_SHARE_LINES] = util::iter_into_array(lines_iterable)?;
 
         let layout = ModelUI::show_group_share_success(lines)?;
         Ok(LayoutObj::new_root(layout)?.into())
@@ -825,9 +824,7 @@ extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let button: TString = kwargs
-            .get_or(Qstr::MP_QSTR_button, TString::empty())?
-            .try_into()?;
+        let button: TString = kwargs.get_or(Qstr::MP_QSTR_button, TString::empty())?;
         let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?.try_into()?;
 
         let obj = ModelUI::show_info(title, description, button, time_ms)?;
@@ -1014,18 +1011,10 @@ extern "C" fn new_show_warning(n_args: usize, args: *const Obj, kwargs: *mut Map
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
         let description: TString = kwargs.get_or(Qstr::MP_QSTR_description, "".into())?;
         let allow_cancel: bool = kwargs.get_or(Qstr::MP_QSTR_allow_cancel, true)?;
-        let time_ms: u32 = kwargs.get_or(Qstr::MP_QSTR_time_ms, 0)?;
         let danger: bool = kwargs.get_or(Qstr::MP_QSTR_danger, false)?;
 
-        let layout = ModelUI::show_warning(
-            title,
-            button,
-            value,
-            description,
-            allow_cancel,
-            time_ms,
-            danger,
-        )?;
+        let layout =
+            ModelUI::show_warning(title, button, value, description, allow_cancel, danger)?;
         Ok(layout.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1059,7 +1048,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     see `trezor::ui::layout::obj::LayoutObj`.
     ///     """
     ///
-    ///     def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> LayoutState | None:
+    ///     def attach_timer_fn(
+    ///         self, fn: Callable[[int, int], None], attach_type: AttachType | None
+    ///     ) -> LayoutState | None:
     ///         """Attach a timer setter function.
     ///
     ///         The layout object can call the timer setter with two arguments,
@@ -1129,8 +1120,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///         """Calls drop on contents of the root component."""
     ///
     /// class UiResult:
-    ///    """Result of a UI operation."""
-    ///    pass
+    ///     """Result of a UI operation."""
+    ///     pass
     ///
     /// mock:global
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui_api.to_obj(),
@@ -1446,7 +1437,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     prefill_word: str,
     ///     can_go_back: bool,
     /// ) -> LayoutObj[str]:
-    ///    """SLIP39 word input keyboard."""
+    ///     """SLIP39 word input keyboard."""
     Qstr::MP_QSTR_request_slip39 => obj_fn_kw!(0, new_request_slip39).as_obj(),
 
     /// def request_number(
@@ -1487,7 +1478,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     words: Iterable[str],
     /// ) -> LayoutObj[int]:
     ///     """Select mnemonic word from three possibilities - seed check after backup. The
-    ///    iterable must be of exact size. Returns index in range `0..3`."""
+    ///     iterable must be of exact size. Returns index in range `0..3`."""
     Qstr::MP_QSTR_select_word => obj_fn_kw!(0, new_select_word).as_obj(),
 
     /// def select_word_count(
@@ -1498,10 +1489,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     For unlocking a repeated backup, select from 20 or 33."""
     Qstr::MP_QSTR_select_word_count => obj_fn_kw!(0, new_select_word_count).as_obj(),
 
-    /// def set_brightness(
-    ///     *,
-    ///     current: int | None = None
-    /// ) -> LayoutObj[UiResult]:
+    /// def set_brightness(*, current: int | None = None) -> LayoutObj[UiResult]:
     ///     """Show the brightness configuration dialog."""
     Qstr::MP_QSTR_set_brightness => obj_fn_kw!(0, new_set_brightness).as_obj(),
 
@@ -1526,7 +1514,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     button: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Checklist of backup steps. Active index is highlighted, previous items have check
-    ///    mark next to them. Limited to 3 items."""
+    ///     mark next to them. Limited to 3 items."""
     Qstr::MP_QSTR_show_checklist => obj_fn_kw!(0, new_show_checklist).as_obj(),
 
     /// def show_danger(
@@ -1554,7 +1542,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     lines: Iterable[str],
     /// ) -> LayoutObj[UiResult]:
-    ///    """Shown after successfully finishing a group."""
+    ///     """Shown after successfully finishing a group."""
     Qstr::MP_QSTR_show_group_share_success => obj_fn_kw!(0, new_show_group_share_success).as_obj(),
 
     /// def show_homescreen(
@@ -1581,7 +1569,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_info_with_cancel(
     ///     *,
     ///     title: str,
-    ///     items: Iterable[Tuple[str, str]],
+    ///     items: Iterable[tuple[str, str]],
     ///     horizontal: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:
@@ -1609,8 +1597,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Show progress loader. Please note that the number of lines reserved on screen for
-    ///    description is determined at construction time. If you want multiline descriptions
-    ///    make sure the initial description has at least that amount of lines."""
+    ///     description is determined at construction time. If you want multiline descriptions
+    ///     make sure the initial description has at least that amount of lines."""
     Qstr::MP_QSTR_show_progress => obj_fn_kw!(0, new_show_progress).as_obj(),
 
     /// def show_progress_coinjoin(
@@ -1621,7 +1609,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     skip_first_paint: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
-    ///    time_ms timeout is passed."""
+    ///     time_ms timeout is passed."""
     Qstr::MP_QSTR_show_progress_coinjoin => obj_fn_kw!(0, new_show_progress_coinjoin).as_obj(),
 
     /// def show_remaining_shares(
@@ -1682,7 +1670,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     value: str = "",
     ///     description: str = "",
     ///     allow_cancel: bool = True,
-    ///     time_ms: int = 0,
     ///     danger: bool = False,  # unused on TT
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal. TT: No buttons shown when `button` is empty string. TR: middle button and centered text."""

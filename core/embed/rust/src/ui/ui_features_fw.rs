@@ -11,7 +11,12 @@ use super::layout::{
     util::RecoveryType,
 };
 
+pub const MAX_CHECKLIST_ITEMS: usize = 3;
+pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
+pub const MAX_GROUP_SHARE_LINES: usize = 4;
+
 pub trait UIFeaturesFirmware {
+    #[allow(clippy::too_many_arguments)]
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,
@@ -35,6 +40,7 @@ pub trait UIFeaturesFirmware {
         chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn confirm_blob(
         title: TString<'static>,
         data: Obj, // TODO: replace Obj
@@ -119,6 +125,7 @@ pub trait UIFeaturesFirmware {
 
     fn confirm_reset_device(recovery: bool) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn confirm_summary(
         amount: TString<'static>,
         amount_label: TString<'static>,
@@ -131,6 +138,7 @@ pub trait UIFeaturesFirmware {
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn confirm_value(
         title: TString<'static>,
         value: Obj, // TODO: replace Obj
@@ -164,6 +172,7 @@ pub trait UIFeaturesFirmware {
 
     fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool;
 
+    #[allow(clippy::too_many_arguments)]
     fn flow_confirm_output(
         title: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
@@ -190,6 +199,7 @@ pub trait UIFeaturesFirmware {
         description: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    #[allow(clippy::too_many_arguments)]
     fn flow_get_address(
         address: Obj, // TODO: replace Obj
         title: TString<'static>,
@@ -251,7 +261,7 @@ pub trait UIFeaturesFirmware {
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
-        words: [TString<'static>; 3],
+        words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error>;
@@ -272,7 +282,7 @@ pub trait UIFeaturesFirmware {
         title: TString<'static>,
         button: TString<'static>,
         active: usize,
-        items: [TString<'static>; 3],
+        items: [TString<'static>; MAX_CHECKLIST_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_danger(
@@ -291,7 +301,7 @@ pub trait UIFeaturesFirmware {
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn show_group_share_success(
-        lines: [TString<'static>; 4],
+        lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_homescreen(
@@ -345,7 +355,8 @@ pub trait UIFeaturesFirmware {
         title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    // TODO: merge with `show_share_words` instead of having specific version for mercury
+    // TODO: merge with `show_share_words` instead of having specific version for
+    // mercury
     fn show_share_words_mercury(
         words: Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
@@ -376,7 +387,6 @@ pub trait UIFeaturesFirmware {
         value: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        time_ms: u32,
         danger: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 

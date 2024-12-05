@@ -29,7 +29,7 @@ _DEFAULT_BACKUP_TYPE = BAK_T_BIP39
 
 
 async def reset_device(msg: ResetDevice) -> Success:
-    from trezor import TR, config
+    from trezor import config
     from trezor.crypto import bip39, random
     from trezor.messages import EntropyAck, EntropyRequest, Success
     from trezor.pin import render_empty_loader

@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING
 
+import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
-import trezorui_api
 
 from ..common import interact, raise_if_not_confirmed
 from . import confirm_action, show_success, show_warning

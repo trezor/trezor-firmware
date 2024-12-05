@@ -8,7 +8,9 @@ class LayoutObj(Generic[T]):
     """Representation of a Rust-based layout object.
     see `trezor::ui::layout::obj::LayoutObj`.
     """
-    def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> LayoutState | None:
+    def attach_timer_fn(
+        self, fn: Callable[[int, int], None], attach_type: AttachType | None
+    ) -> LayoutState | None:
         """Attach a timer setter function.
         The layout object can call the timer setter with two arguments,
         `token` and `duration_ms`. When `duration_ms` elapses, the layout object
@@ -61,8 +63,8 @@ class LayoutObj(Generic[T]):
 
 # rust/src/ui/api/firmware_upy.rs
 class UiResult:
-   """Result of a UI operation."""
-   pass
+    """Result of a UI operation."""
+    pass
 CONFIRMED: UiResult
 CANCELLED: UiResult
 INFO: UiResult
@@ -394,7 +396,7 @@ def request_slip39(
     prefill_word: str,
     can_go_back: bool,
 ) -> LayoutObj[str]:
-   """SLIP39 word input keyboard."""
+    """SLIP39 word input keyboard."""
 
 
 # rust/src/ui/api/firmware_upy.rs
@@ -439,7 +441,7 @@ def select_word(
     words: Iterable[str],
 ) -> LayoutObj[int]:
     """Select mnemonic word from three possibilities - seed check after backup. The
-   iterable must be of exact size. Returns index in range `0..3`."""
+    iterable must be of exact size. Returns index in range `0..3`."""
 
 
 # rust/src/ui/api/firmware_upy.rs
@@ -452,10 +454,7 @@ def select_word_count(
 
 
 # rust/src/ui/api/firmware_upy.rs
-def set_brightness(
-    *,
-    current: int | None = None
-) -> LayoutObj[UiResult]:
+def set_brightness(*, current: int | None = None) -> LayoutObj[UiResult]:
     """Show the brightness configuration dialog."""
 
 
@@ -482,7 +481,7 @@ def show_checklist(
     button: str,
 ) -> LayoutObj[UiResult]:
     """Checklist of backup steps. Active index is highlighted, previous items have check
-   mark next to them. Limited to 3 items."""
+    mark next to them. Limited to 3 items."""
 
 
 # rust/src/ui/api/firmware_upy.rs
@@ -513,7 +512,7 @@ def show_group_share_success(
     *,
     lines: Iterable[str],
 ) -> LayoutObj[UiResult]:
-   """Shown after successfully finishing a group."""
+    """Shown after successfully finishing a group."""
 
 
 # rust/src/ui/api/firmware_upy.rs
@@ -543,7 +542,7 @@ def show_info(
 def show_info_with_cancel(
     *,
     title: str,
-    items: Iterable[Tuple[str, str]],
+    items: Iterable[tuple[str, str]],
     horizontal: bool = False,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
@@ -574,8 +573,8 @@ def show_progress(
     title: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Show progress loader. Please note that the number of lines reserved on screen for
-   description is determined at construction time. If you want multiline descriptions
-   make sure the initial description has at least that amount of lines."""
+    description is determined at construction time. If you want multiline descriptions
+    make sure the initial description has at least that amount of lines."""
 
 
 # rust/src/ui/api/firmware_upy.rs
@@ -587,7 +586,7 @@ def show_progress_coinjoin(
     skip_first_paint: bool = False,
 ) -> LayoutObj[UiResult]:
     """Show progress loader for coinjoin. Returns CANCELLED after a specified time when
-   time_ms timeout is passed."""
+    time_ms timeout is passed."""
 
 
 # rust/src/ui/api/firmware_upy.rs
@@ -655,7 +654,6 @@ def show_warning(
     value: str = "",
     description: str = "",
     allow_cancel: bool = True,
-    time_ms: int = 0,
     danger: bool = False,  # unused on TT
 ) -> LayoutObj[UiResult]:
     """Warning modal. TT: No buttons shown when `button` is empty string. TR: middle button and centered text."""
