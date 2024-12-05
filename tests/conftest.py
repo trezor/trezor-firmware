@@ -401,6 +401,7 @@ def client(
         if use_passphrase and isinstance(setup_params["passphrase"], str):
             _raw_client.use_passphrase(setup_params["passphrase"])
 
+        _raw_client.lock()
         # TODO _raw_client.clear_session()
 
     with ui_tests.screen_recording(_raw_client, request):
