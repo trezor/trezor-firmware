@@ -392,8 +392,7 @@ def client(
             needs_backup=setup_params["needs_backup"],  # type: ignore
             no_backup=setup_params["no_backup"],  # type: ignore
         )
-        if setup_params["pin"] is not None:
-            _raw_client._has_setup_pin = True
+        _raw_client._setup_pin = setup_params["pin"]
 
         if request.node.get_closest_marker("experimental"):
             apply_settings(session, experimental_features=True)
@@ -419,12 +418,14 @@ def session(
     else:
         derive_cardano = bool(request.node.get_closest_marker("cardano"))
         passphrase = client.passphrase or ""
+        if client._setup_pin is not None:
+            client.use_pin_sequence([client._setup_pin])
         session = client.get_session(
             derive_cardano=derive_cardano, passphrase=passphrase
         )
     try:
         wrapped_session = SessionDebugWrapper(session)
-        if client._has_setup_pin:
+        if client._setup_pin is not None:
             wrapped_session.lock()
         yield wrapped_session
     finally:
