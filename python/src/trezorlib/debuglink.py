@@ -1437,6 +1437,10 @@ class TrezorClientDebugLink(TrezorClient):
         # TODO is this needed?
         # self.debug.close()
 
+    def lock(self) -> None:
+        s = SessionDebugWrapper(self.get_management_session())
+        s.lock()
+
     def get_session(
         self,
         passphrase: str | object | None = "",
