@@ -45,7 +45,7 @@ impl<'a> Component for ShareWords<'a> {
         bounds
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
     }
 

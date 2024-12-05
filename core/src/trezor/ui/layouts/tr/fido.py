@@ -12,7 +12,7 @@ async def confirm_fido(
     accounts: list[str | None],
 ) -> int:
     """Webauthn confirmation for one or more credentials."""
-    confirm = trezorui_api.confirm_fido(  # type: ignore [Argument missing for parameter "icon_name"]
+    confirm = trezorui_api.confirm_fido(
         title=header,
         app_name=app_name,
         icon_name=None,

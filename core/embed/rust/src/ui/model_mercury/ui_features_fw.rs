@@ -23,9 +23,12 @@ use crate::{
         geometry::{self, Direction},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmBlob, PropsList, RecoveryType, StrOrBytes},
+            util::{PropsList, RecoveryType},
         },
-        ui_features_fw::UIFeaturesFirmware,
+        ui_features::ModelUI,
+        ui_features_fw::{
+            UIFeaturesFirmware, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+        },
     },
 };
 
@@ -48,10 +51,10 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         action: Option<TString<'static>>,
         description: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
-        verb: Option<TString<'static>>,
+        _verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         hold: bool,
-        hold_danger: bool,
+        _hold_danger: bool,
         reverse: bool,
         prompt_screen: bool,
         prompt_title: Option<TString<'static>>,
@@ -71,15 +74,15 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
     }
 
     fn confirm_address(
-        title: TString<'static>,
-        data: Obj,
-        description: Option<TString<'static>>,
+        _title: TString<'static>,
+        _data: Obj,
+        _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
-        chunkify: bool,
+        _chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         // confirm_value is used instead
-        Err::<RootComponent<Empty, ModelMercuryFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"confirm_address not implemented",
         ))
     }
@@ -218,7 +221,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
     fn confirm_emphasized(
         title: TString<'static>,
         items: Obj,
-        verb: Option<TString<'static>>,
+        _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
         for item in IterBuf::new().try_iterate(items)? {
@@ -254,11 +257,9 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         accounts: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         #[cfg(feature = "universal_fw")]
-        return Ok(flow::confirm_fido::new_confirm_fido(
-            title, app_name, icon, accounts,
-        )?);
+        return flow::confirm_fido::new_confirm_fido(title, app_name, icon, accounts);
         #[cfg(not(feature = "universal_fw"))]
-        Err::<RootComponent<Empty, ModelMercuryFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"confirm_fido not used in bitcoin-only firmware",
         ))
     }
@@ -277,7 +278,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         sign: i32,
         user_fee_change: TString<'static>,
         total_fee_new: TString<'static>,
-        fee_rate_amount: Option<TString<'static>>,
+        _fee_rate_amount: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let (description, change, total_label) = match sign {
             s if s < 0 => (
@@ -353,7 +354,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         _button_style_confirm: bool,
         _items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelMercuryFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"confirm_more not implemented",
         ))
     }
@@ -474,7 +475,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         title: TString<'static>,
         button: TString<'static>,
         info_button: TString<'static>,
-        verb_cancel: Option<TString<'static>>,
+        _verb_cancel: Option<TString<'static>>,
         items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
@@ -514,11 +515,11 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         _button: Option<TString<'static>>,
         recovery_type: RecoveryType,
         show_instructions: bool,
-        remaining_shares: Option<crate::micropython::obj::Obj>,
+        remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let pages_vec = if let Some(pages_obj) = remaining_shares {
             let mut vec = ParagraphVecLong::new();
-            for page in crate::micropython::iter::IterBuf::new().try_iterate(pages_obj)? {
+            for page in IterBuf::new().try_iterate(pages_obj)? {
                 let [title, description]: [TString; 2] = util::iter_into_array(page)?;
                 vec.add(Paragraph::new(&theme::TEXT_SUB_GREY, title))
                     .add(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, description).break_after());
@@ -675,7 +676,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         _verb: TString<'static>,
         _items: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelMercuryFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"multiple_pages_texts not implemented",
         ))
     }
@@ -756,8 +757,8 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
     }
 
     fn request_passphrase(
-        prompt: TString<'static>,
-        max_len: u32,
+        _prompt: TString<'static>,
+        _max_len: u32,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::request_passphrase::new_request_passphrase()?;
         Ok(flow)
@@ -766,7 +767,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
     fn select_word(
         title: TString<'static>,
         description: TString<'static>,
-        words: [TString<'static>; 3],
+        words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let content = VerticalMenu::select_word(words);
         let layout =
@@ -801,16 +802,16 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         _path: Option<TString<'static>>,
         _xpubs: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelMercuryFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_address_details not implemented",
         ))
     }
 
     fn show_checklist(
         title: TString<'static>,
-        button: TString<'static>,
+        _button: TString<'static>,
         active: usize,
-        items: [TString<'static>; 3],
+        items: [TString<'static>; MAX_CHECKLIST_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
         for (i, item) in items.into_iter().enumerate() {
@@ -855,10 +856,10 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
 
     fn show_error(
         title: TString<'static>,
-        button: TString<'static>,
+        _button: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        time_ms: u32,
+        _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let frame = if allow_cancel {
@@ -879,7 +880,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
     }
 
     fn show_group_share_success(
-        lines: [TString<'static>; 4],
+        lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_NORMAL_GREY_EXTRA_LIGHT, lines[0]).centered(),
@@ -1019,10 +1020,10 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
     }
 
     fn show_share_words(
-        words: heapless::Vec<TString<'static>, 33>,
+        _words: heapless::Vec<TString<'static>, 33>,
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelMercuryFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"use share_words_mercury instead",
         ))
     }
@@ -1030,12 +1031,12 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
     fn show_share_words_mercury(
         words: heapless::Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
-        instructions: crate::micropython::obj::Obj,
+        instructions: Obj,
         text_footer: Option<TString<'static>>,
         text_confirm: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut instructions_paragraphs = ParagraphVecShort::new();
-        for item in crate::micropython::iter::IterBuf::new().try_iterate(instructions)? {
+        for item in IterBuf::new().try_iterate(instructions)? {
             let text: TString = item.try_into()?;
             instructions_paragraphs.add(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text));
         }
@@ -1050,11 +1051,9 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         Ok(flow)
     }
 
-    fn show_remaining_shares(
-        pages_iterable: crate::micropython::obj::Obj, // TODO: replace Obj
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    fn show_remaining_shares(_pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
         // Mercury: remaining shares is a part of `continue_recovery` flow
-        Err::<RootComponent<Empty, ModelMercuryFeatures>, Error>(Error::ValueError(
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_remaining_shares not implemented",
         ))
     }
@@ -1073,10 +1072,10 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
 
     fn show_success(
         title: TString<'static>,
-        button: TString<'static>,
+        _button: TString<'static>,
         description: TString<'static>,
-        allow_cancel: bool,
-        time_ms: u32,
+        _allow_cancel: bool,
+        _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         // description used in the Footer
         let description = if description.is_empty() {
@@ -1107,8 +1106,7 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
         button: TString<'static>,
         value: TString<'static>,
         description: TString<'static>,
-        allow_cancel: bool,
-        time_ms: u32,
+        _allow_cancel: bool,
         danger: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let action = if button.is_empty() {
@@ -1132,7 +1130,8 @@ impl UIFeaturesFirmware for ModelMercuryFeatures {
             frame.with_warning_low_icon()
         };
 
-        Ok(LayoutObj::new(SwipeUpScreen::new(frame_with_icon))?)
+        let layout = LayoutObj::new(SwipeUpScreen::new(frame_with_icon))?;
+        Ok(layout)
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {

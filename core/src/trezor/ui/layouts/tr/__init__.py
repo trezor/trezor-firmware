@@ -400,7 +400,7 @@ def show_warning(
         content = content + "\n"
 
     return interact(
-        trezorui_api.show_warning(  # type: ignore [Argument missing for parameter "title"]
+        trezorui_api.show_warning(
             title="",
             button=button,
             value=content,

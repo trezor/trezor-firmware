@@ -3,8 +3,7 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        button_request::ButtonRequest,
-        component::{swipe_detect::SwipeSettings, ButtonRequestExt, ComponentExt},
+        component::{swipe_detect::SwipeSettings, ComponentExt},
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
