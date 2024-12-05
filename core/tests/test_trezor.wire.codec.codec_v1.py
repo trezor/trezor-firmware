@@ -25,17 +25,14 @@ class MockHID:
         self.packet = packet
         return gen.send(len(packet))
 
-    def read(self, buffer, offset=0, limit=None):
+    def read(self, buffer, offset=0):
         if self.packet is None:
             raise Exception("No packet to read")
-        if limit is None:
-            limit = len(buffer) - offset
 
-        if len(self.packet) > limit:
-            end = offset + limit
-            buffer[offset:end] = self.packet[:limit]
-            self.packet = None
-            return limit
+        buffer_space = len(buffer) - offset
+
+        if len(self.packet) > buffer_space:
+            raise Exception("Buffer too small")
         else:
             end = offset + len(self.packet)
             buffer[offset:end] = self.packet

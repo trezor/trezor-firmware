@@ -141,7 +141,7 @@ STATIC mp_obj_t mod_trezorio_HID_write(mp_obj_t self, mp_obj_t msg) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_HID_write_obj,
                                  mod_trezorio_HID_write);
 
-/// def read(self, buf: bytes, offset: int = 0, limit: int | None = None) -> int
+/// def read(self, buf: bytes, offset: int = 0) -> int
 ///     """
 ///     Reads message using USB HID (device) or UDP (emulator).
 ///     """
@@ -155,15 +155,23 @@ STATIC mp_obj_t mod_trezorio_HID_read(size_t n_args, const mp_obj_t *args) {
     offset = mp_obj_get_int(args[2]);
   }
 
-  int limit;
-  if (n_args >= 3) {
-    limit = mp_obj_get_int(args[3]);
-  } else {
-    limit = buf.len - offset;
+  if (offset < 0) {
+    mp_raise_ValueError("Negative offset not allowed");
   }
 
-  ssize_t r =
-      usb_hid_read(o->info.iface_num, &((uint8_t *)buf.buf)[offset], limit);
+  uint32_t buffer_space = buf.len - offset;
+
+  if (buffer_space < USB_PACKET_LEN) {
+    mp_raise_ValueError("Buffer too small");
+  }
+
+  ssize_t r = usb_hid_read(o->info.iface_num, &((uint8_t *)buf.buf)[offset],
+                           USB_PACKET_LEN);
+
+  if (r != USB_PACKET_LEN) {
+    mp_raise_msg(&mp_type_RuntimeError, "Unexpected read length");
+  }
+
   return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_HID_read_obj, 3, 4,

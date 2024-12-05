@@ -169,15 +169,12 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         if ((sectrue == usb_hid_can_read(iface)) ||
             (sectrue == usb_webusb_can_read(iface))) {
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = MP_OBJ_NEW_SMALL_INT(64);
+          ret->items[1] = MP_OBJ_NEW_SMALL_INT(USB_PACKET_LEN);
           return mp_const_true;
         }
       } else if (mode == POLL_WRITE) {
-        if (sectrue == usb_hid_can_write(iface)) {
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = mp_const_none;
-          return mp_const_true;
-        } else if (sectrue == usb_webusb_can_write(iface)) {
+        if ((sectrue == usb_hid_can_write(iface)) ||
+            (sectrue == usb_webusb_can_write(iface))) {
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
           ret->items[1] = mp_const_none;
           return mp_const_true;

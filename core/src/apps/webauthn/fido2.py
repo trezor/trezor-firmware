@@ -378,9 +378,7 @@ async def _read_cmd(iface: HID) -> Cmd | None:
     # wait for incoming command indefinitely
     msg_len = await read
     buf = bytearray(msg_len)
-    read_len = iface.read(buf, 0, msg_len)
-    if read_len != msg_len:
-        raise ValueError("Invalid length")
+    iface.read(buf, 0)
     while True:
         ifrm = overlay_struct(bytearray(buf), desc_init)
         bcnt = ifrm.bcnt
@@ -421,9 +419,7 @@ async def _read_cmd(iface: HID) -> Cmd | None:
             try:
                 msg_len = await read
                 buf = bytearray(msg_len)
-                read_len = iface.read(buf, 0, msg_len)
-                if read_len != msg_len:
-                    raise ValueError("Invalid length")
+                iface.read(buf, 0)
             except loop.Timeout:
                 if __debug__:
                     warning(__name__, "_ERR_MSG_TIMEOUT")
