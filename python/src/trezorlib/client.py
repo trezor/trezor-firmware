@@ -64,7 +64,7 @@ class TrezorClient:
     _management_session: Session | None = None
     _features: messages.Features | None = None
     _protocol_version: int
-    _has_setup_pin: bool = False  # Should by used only by conftest
+    _setup_pin: str | None = None  # Should by used only by conftest
 
     def __init__(
         self,
