@@ -55,22 +55,28 @@ typedef struct {
 
 } applet_layout_t;
 
+// Applet privileges
+typedef struct {
+  bool assets_area_access;
+} applet_privileges_t;
+
 typedef struct {
   // Points to the applet header found at the beginning of the applet binary
   applet_header_t* header;
   // Applet memory layout describing the memory areas
   // the applet is allowed to use
   applet_layout_t layout;
+  // Applet privileges
+  applet_privileges_t privileges;
+
   // Applet task
   systask_t task;
-
-  // + privileges
 
 } applet_t;
 
 // Initializes the applet structure
 void applet_init(applet_t* applet, applet_header_t* header,
-                 applet_layout_t* layout);
+                 applet_layout_t* layout, applet_privileges_t* privileges);
 
 // Resets the applet and prepares it for execution from its entry point.
 //
