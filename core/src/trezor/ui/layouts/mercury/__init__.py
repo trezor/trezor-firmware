@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-import trezorui2
 import trezorui_api
 from trezor import TR, ui, utils
 from trezor.enums import ButtonRequestType

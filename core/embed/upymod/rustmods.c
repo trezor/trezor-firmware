@@ -20,10 +20,6 @@
 #include "librust.h"
 #include "py/runtime.h"
 
-#if MICROPY_PY_TREZORUI2
-MP_REGISTER_MODULE(MP_QSTR_trezorui2, mp_module_trezorui2);
-#endif
-
 #if MICROPY_PY_TREZORUI_API
 MP_REGISTER_MODULE(MP_QSTR_trezorui_api, mp_module_trezorui_api);
 #endif

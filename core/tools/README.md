@@ -119,12 +119,3 @@ Generate a CMakeLists.txt file for the core.
 ### `provision_device.py`
 
 Run the provisioning flow on a prodtest firmware, against a staging provisioning server.
-
-### `rust_api_checks.py`
-
-Check that the Rust UI API is consistent with the Python UI API.
-
-### `rust_api_models_unification.py`
-
-Checks the consistency of the Rust API between models.
-
