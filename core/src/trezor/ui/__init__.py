@@ -4,7 +4,6 @@ from micropython import const
 from trezorui import Display
 from typing import TYPE_CHECKING
 
-import trezorui2
 from trezor import io, log, loop, utils, wire, workflow
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import context

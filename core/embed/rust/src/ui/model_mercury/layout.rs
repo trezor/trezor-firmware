@@ -8,7 +8,7 @@ use super::component::{
 };
 use crate::{
     error::Error,
-    micropython::{macros::obj_module, module::Module, obj::Obj, qstr::Qstr},
+    micropython::obj::Obj,
     ui::{
         component::{
             text::paragraphs::{ParagraphSource, Paragraphs},
@@ -184,12 +184,3 @@ where
         unreachable!();
     }
 }
-
-#[no_mangle]
-pub static mp_module_trezorui2: Module = obj_module! {
-    /// from trezor import utils
-    /// from trezorui_api import *
-    ///
-    Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
-
-};

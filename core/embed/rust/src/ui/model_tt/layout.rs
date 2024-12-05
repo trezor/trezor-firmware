@@ -9,7 +9,7 @@ use super::component::{
 };
 use crate::{
     error::Error,
-    micropython::{macros::obj_module, map::Map, module::Module, obj::Obj, qstr::Qstr, util},
+    micropython::obj::Obj,
     strutil::TString,
     ui::{
         component::{
@@ -284,11 +284,3 @@ impl ComponentMsgObj for super::component::bl_confirm::Confirm<'_> {
         }
     }
 }
-
-#[no_mangle]
-pub static mp_module_trezorui2: Module = obj_module! {
-    /// from trezor import utils
-    /// from trezorui_api import *
-    ///
-    Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
-};
