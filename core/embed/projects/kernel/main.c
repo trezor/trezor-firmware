@@ -235,7 +235,11 @@ static void coreapp_init(applet_t *applet) {
 #endif
   };
 
-  applet_init(applet, coreapp_header, &coreapp_layout);
+  applet_privileges_t coreapp_privileges = {
+      .assets_area_access = true,
+  };
+
+  applet_init(applet, coreapp_header, &coreapp_layout, &coreapp_privileges);
 }
 
 // Shows RSOD (Red Screen of Death)

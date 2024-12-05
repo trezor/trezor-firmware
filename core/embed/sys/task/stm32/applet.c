@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <io/display.h>
@@ -32,11 +33,12 @@
 #ifdef SYSCALL_DISPATCH
 
 void applet_init(applet_t* applet, applet_header_t* header,
-                 applet_layout_t* layout) {
+                 applet_layout_t* layout, applet_privileges_t* privileges) {
   memset(applet, 0, sizeof(applet_t));
 
   applet->header = header;
   applet->layout = *layout;
+  applet->privileges = *privileges;
 }
 
 static void applet_clear_memory(applet_t* applet) {
@@ -85,6 +87,10 @@ static void applet_set_unpriv(applet_t* applet, bool unpriv) {
   tz_set_sram_unpriv(layout->data2.start, layout->data2.size, unpriv);
   tz_set_flash_unpriv(layout->code1.start, layout->code1.size, unpriv);
   tz_set_flash_unpriv(layout->code2.start, layout->code2.size, unpriv);
+
+  if (applet->privileges.assets_area_access) {
+    tz_set_flash_unpriv(ASSETS_START, ASSETS_MAXSIZE, unpriv);
+  }
 
   display_set_unpriv_access(unpriv);
 }
