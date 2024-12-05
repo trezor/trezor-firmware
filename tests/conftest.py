@@ -252,7 +252,7 @@ class ModelsFilter:
 
 
 @pytest.fixture(scope="function")
-def client(
+def _client_unlocked(
     request: pytest.FixtureRequest, _raw_client: Client
 ) -> t.Generator[Client, None, None]:
     """Client fixture.
@@ -400,34 +400,42 @@ def client(
         if use_passphrase and isinstance(setup_params["passphrase"], str):
             _raw_client.use_passphrase(setup_params["passphrase"])
 
-        _raw_client.lock()
         # TODO _raw_client.clear_session()
 
-    with ui_tests.screen_recording(_raw_client, request):
-        yield _raw_client
+    yield _raw_client
 
     _raw_client.close()
 
 
 @pytest.fixture(scope="function")
+def client(
+    request: pytest.FixtureRequest, _client_unlocked: Client
+) -> t.Generator[Client, None, None]:
+    _client_unlocked.lock()
+    with ui_tests.screen_recording(_client_unlocked, request):
+        yield _client_unlocked
+
+
+@pytest.fixture(scope="function")
 def session(
-    request: pytest.FixtureRequest, client: Client
+    request: pytest.FixtureRequest, _client_unlocked: Client
 ) -> t.Generator[SessionDebugWrapper, None, None]:
     if bool(request.node.get_closest_marker("uninitialized_session")):
-        session = client.get_management_session()
+        session = _client_unlocked.get_management_session()
     else:
         derive_cardano = bool(request.node.get_closest_marker("cardano"))
-        passphrase = client.passphrase or ""
-        if client._setup_pin is not None:
-            client.use_pin_sequence([client._setup_pin])
-        session = client.get_session(
+        passphrase = _client_unlocked.passphrase or ""
+        if _client_unlocked._setup_pin is not None:
+            _client_unlocked.use_pin_sequence([_client_unlocked._setup_pin])
+        session = _client_unlocked.get_session(
             derive_cardano=derive_cardano, passphrase=passphrase
         )
     try:
         wrapped_session = SessionDebugWrapper(session)
-        if client._setup_pin is not None:
+        if _client_unlocked._setup_pin is not None:
             wrapped_session.lock()
-        yield wrapped_session
+        with ui_tests.screen_recording(_client_unlocked, request):
+            yield wrapped_session
     finally:
         pass
         # TODO
