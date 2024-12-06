@@ -83,8 +83,8 @@
 #define ASSETS_SECTOR_END 0xFF
 
 // RAM layout
-#define AUX_RAM_START 0x30000000
-#define AUX_RAM_SIZE (192 * 1024 - 512)
+#define AUX1_RAM_START 0x30000000
+#define AUX1_RAM_SIZE (192 * 1024 - 512)
 
 // 256 bytes skipped - trustzone alignment vs fixed bootargs position
 
@@ -94,11 +94,11 @@
 #define MAIN_RAM_START 0x30030000
 #define MAIN_RAM_SIZE (24 * 1024 - 512)
 
-#define KERNEL_URAM_START 0x30035E00
-#define KERNEL_URAM_SIZE 512
+#define SAES_RAM_START 0x30035E00
+#define SAES_RAM_SIZE 512
 
-#define COREAPP_RAM2_START 0x30036000
-#define COREAPP_RAM2_SIZE (544 * 1024)
+#define AUX2_RAM_START 0x30036000
+#define AUX2_RAM_SIZE (544 * 1024)
 
 #define FB1_RAM_START 0x300BE000
 #define FB1_RAM_SIZE (0x2000)

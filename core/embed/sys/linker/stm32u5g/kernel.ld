@@ -7,7 +7,7 @@ MEMORY {
 
   MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  KERNEL_URAM (wal) : ORIGIN = KERNEL_URAM_START, LENGTH = KERNEL_URAM_SIZE
+  SAES_RAM (wal) : ORIGIN = SAES_RAM_START, LENGTH = SAES_RAM_SIZE
   FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
 }
@@ -111,7 +111,7 @@ SECTIONS {
     *(.udata*);
     . = ALIGN(256);
     . = 256; /* Overflow causes UsageFault */
-  } >KERNEL_URAM
+  } >SAES_RAM
 
   .confidential : ALIGN(512) {
     *(.confidential*);

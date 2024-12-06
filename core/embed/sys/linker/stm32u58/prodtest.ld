@@ -6,9 +6,9 @@ MEMORY {
   FLASH  (rx)  : ORIGIN = FIRMWARE_START, LENGTH = FIRMWARE_MAXSIZE
 
   MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
-  AUX_RAM (wal) : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
+  AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  KERNEL_URAM (wal) : ORIGIN = KERNEL_URAM_START, LENGTH = KERNEL_URAM_SIZE
+  SAES_RAM (wal) : ORIGIN = SAES_RAM_START, LENGTH = SAES_RAM_SIZE
   FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
 }
@@ -80,7 +80,7 @@ SECTIONS {
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >AUX_RAM AT>FLASH
+  } >AUX1_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -89,14 +89,14 @@ SECTIONS {
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4);
-  } >AUX_RAM
+  } >AUX1_RAM
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
     *(.no_dma_buffers*);
     . = ALIGN(4);
-  } >AUX_RAM
+  } >AUX1_RAM
 
   .stack : ALIGN(8) {
     . = 16K; /* Overflow causes UsageFault */

@@ -4,8 +4,8 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = FIRMWARE_MAXSIZE
-  COREAPP_RAM (wal) : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
-  COREAPP_RAM2 (wal) : ORIGIN = COREAPP_RAM2_START, LENGTH = COREAPP_RAM2_SIZE
+  AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  AUX2_RAM (wal) : ORIGIN = AUX2_RAM_START, LENGTH = AUX2_RAM_SIZE
 }
 
 main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -55,7 +55,7 @@ SECTIONS {
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >COREAPP_RAM AT>FLASH
+  } >AUX1_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -65,24 +65,24 @@ SECTIONS {
     *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
-  } >COREAPP_RAM
+  } >AUX1_RAM
 
   .stack : ALIGN(8) {
     . = 32K; /* Overflow causes UsageFault */
-  } >COREAPP_RAM2
+  } >AUX2_RRAM
 
   .confidential : ALIGN(512) {
     *(.confidential*);
     . = ALIGN(512);
-  } >COREAPP_RAM2 AT>FLASH
+  } >AUX2_RAM AT>FLASH
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >COREAPP_RAM2
+  } >AUX2_RAM
 
   .heap : ALIGN(4) {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
-    . = ABSOLUTE(ORIGIN(COREAPP_RAM2) + LENGTH(COREAPP_RAM2)); /* this explicitly sets the end of the heap */
-  } >COREAPP_RAM2
+    . = ABSOLUTE(ORIGIN(AUX2_RAM) + LENGTH(AUX2_RAM)); /* this explicitly sets the end of the heap */
+  } >AUX2_RAM
 }
