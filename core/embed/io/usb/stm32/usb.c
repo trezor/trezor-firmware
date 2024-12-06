@@ -84,6 +84,9 @@ typedef struct {
   // Set to `sectrue` if the USB stack was ready sinced the last start
   secbool was_ready;
 
+  // Current state of USB configuration
+  secbool configured;
+
 } usb_driver_t;
 
 // USB driver instance
@@ -118,8 +121,8 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   // Device descriptor
   drv->dev_desc.bLength = sizeof(usb_device_descriptor_t);
   drv->dev_desc.bDescriptorType = USB_DESC_TYPE_DEVICE;
-  drv->dev_desc.bcdUSB =
-      (sectrue == drv->usb21_enabled) ? 0x0210 : 0x0200;  // USB 2.1 or USB 2.0
+  // USB 2.1 or USB 2.0
+  drv->dev_desc.bcdUSB = (sectrue == drv->usb21_enabled) ? 0x0210 : 0x0200;
   drv->dev_desc.bDeviceClass = dev_info->device_class;
   drv->dev_desc.bDeviceSubClass = dev_info->device_subclass;
   drv->dev_desc.bDeviceProtocol = dev_info->device_protocol;
@@ -127,11 +130,12 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   drv->dev_desc.idVendor = dev_info->vendor_id;
   drv->dev_desc.idProduct = dev_info->product_id;
   drv->dev_desc.bcdDevice = dev_info->release_num;
-  drv->dev_desc.iManufacturer =
-      USBD_IDX_MFC_STR;  // Index of manufacturer string
-  drv->dev_desc.iProduct = USBD_IDX_PRODUCT_STR;  // Index of product string
-  drv->dev_desc.iSerialNumber =
-      USBD_IDX_SERIAL_STR;  // Index of serial number string
+  // Index of manufacturer string
+  drv->dev_desc.iManufacturer = USBD_IDX_MFC_STR;
+  // Index of product string
+  drv->dev_desc.iProduct = USBD_IDX_PRODUCT_STR;
+  // Index of serial number string
+  drv->dev_desc.iSerialNumber = USBD_IDX_SERIAL_STR;
   drv->dev_desc.bNumConfigurations = 1;
 
   // String table
@@ -158,17 +162,19 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   // Configuration descriptor
   drv->config_desc->bLength = sizeof(usb_config_descriptor_t);
   drv->config_desc->bDescriptorType = USB_DESC_TYPE_CONFIGURATION;
-  drv->config_desc->wTotalLength =
-      sizeof(usb_config_descriptor_t);  // will be updated later via
-                                        // usb_alloc_class_descriptors()
-  drv->config_desc->bNumInterfaces =
-      0;  // will be updated later via usb_set_iface_class()
+  // will be updated later via usb_alloc_class_descriptors()
+  drv->config_desc->wTotalLength = sizeof(usb_config_descriptor_t);
+  // will be updated later via usb_set_iface_class()
+  drv->config_desc->bNumInterfaces = 0;
   drv->config_desc->bConfigurationValue = 0x01;
   drv->config_desc->iConfiguration = 0;
-  drv->config_desc->bmAttributes =
-      0x80;  // 0x80 = bus powered; 0xC0 = self powered
-  drv->config_desc->bMaxPower = 0x32;  // Maximum Power Consumption in 2mA units
+  // 0x80 = bus powered; 0xC0 = self powered
+  drv->config_desc->bmAttributes = 0x80;
+  // Maximum Power Consumption in 2mA units
+  drv->config_desc->bMaxPower = 0x32;
 
+  // starting with this flag set, to avoid false warnings
+  drv->configured = sectrue;
   drv->initialized = sectrue;
 
   return sectrue;
@@ -241,7 +247,7 @@ void usb_stop(void) {
   memset(&drv->dev_handle, 0, sizeof(drv->dev_handle));
 }
 
-secbool usb_configured(void) {
+static secbool usb_configured(void) {
   usb_driver_t *drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
@@ -293,6 +299,39 @@ secbool usb_configured(void) {
   }
 
   return ready;
+}
+
+usb_event_t usb_get_event(void) {
+  usb_driver_t *drv = &g_usb_driver;
+
+  if (drv->initialized != sectrue) {
+    // The driver is not initialized
+    return false;
+  }
+
+  secbool configured = usb_configured();
+  if (configured != drv->configured) {
+    drv->configured = configured;
+    if (configured == sectrue) {
+      return USB_EVENT_CONFIGURED;
+    } else {
+      return USB_EVENT_DECONFIGURED;
+    }
+  }
+
+  return USB_EVENT_NONE;
+}
+
+void usb_get_state(usb_state_t *state) {
+  usb_driver_t *drv = &g_usb_driver;
+
+  usb_state_t s = {0};
+
+  if (drv->initialized == sectrue) {
+    s.configured = drv->configured == sectrue;
+  }
+
+  *state = s;
 }
 
 // ==========================================================================
