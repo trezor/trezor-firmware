@@ -34,6 +34,8 @@ void system_init(systask_error_handler_t error_handler) {
   systimer_init();
 }
 
+void system_deinit(void) { systick_deinit(); }
+
 void system_exit(int exitcode) {
   if (g_error_handler != NULL) {
     systask_postmortem_t pminfo = {0};

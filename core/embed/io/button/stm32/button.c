@@ -21,6 +21,11 @@
 #include <trezor_rtl.h>
 
 #include <io/button.h>
+#include <sys/irq.h>
+
+#ifdef USE_POWERCTL
+#include <sys/wakeup_flags.h>
+#endif
 
 #ifdef KERNEL_MODE
 
@@ -89,7 +94,7 @@ bool button_init(void) {
   EXTI_Config.Trigger = EXTI_TRIGGER_FALLING;
   HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
   NVIC_SetPriority(BTN_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
-  __HAL_GPIO_EXTI_CLEAR_FLAG(BTN_INT_PIN);
+  __HAL_GPIO_EXTI_CLEAR_FLAG(BTN_EXTI_INTERRUPT_PIN);
   NVIC_EnableIRQ(BTN_EXTI_INTERRUPT_NUM);
 #endif  // BTN_EXTI_INTERRUPT_HANDLER
 
@@ -180,10 +185,12 @@ void BTN_EXTI_INTERRUPT_HANDLER(void) {
   // button_driver_t *drv = &g_button_driver;
 
   // Clear the EXTI line pending bit
-  __HAL_GPIO_EXTI_CLEAR_FLAG(BTN_INT_PIN);
+  __HAL_GPIO_EXTI_CLEAR_FLAG(BTN_EXTI_INTERRUPT_PIN);
 
+#ifdef USE_POWERCTL
   // Inform the powerctl module about button press
-  // wakeup_flags_set(WAKEUP_FLAGS_BUTTON);
+  wakeup_flags_set(WAKEUP_FLAG_BUTTON);
+#endif
 }
 #endif
 

@@ -90,6 +90,56 @@ void failed_jump_to_firmware(void);
 CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
+static void drivers_init(secbool *touch_initialized) {
+  random_delays_init();
+#ifdef USE_PVD
+  pvd_init();
+#endif
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
+  gfx_bitblt_init();
+  display_init(DISPLAY_JUMP_BEHAVIOR);
+  unit_properties_init();
+
+#ifdef USE_TOUCH
+  secbool allow_touchless_mode = secfalse;
+#if defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1
+  // on T3T1 and T3W1, tester needs to run without touch, so making an exception
+  // until unit variant is written in OTP
+  const secbool manufacturing_mode =
+      unit_properties()->locked ? secfalse : sectrue;
+  allow_touchless_mode = manufacturing_mode;
+
+#endif
+  *touch_initialized = touch_init();
+  if (allow_touchless_mode != sectrue) {
+    ensure(*touch_initialized, "Touch screen panel was not loaded properly.");
+  }
+#endif
+
+#ifdef USE_OPTIGA
+  optiga_hal_init();
+#endif
+#ifdef USE_BUTTON
+  button_init();
+#endif
+#ifdef USE_CONSUMPTION_MASK
+  consumption_mask_init();
+#endif
+#ifdef USE_RGB_LED
+  rgb_led_init();
+#endif
+}
+
+static void drivers_deinit(void) {
+#ifdef FIXED_HW_DEINIT
+  // TODO
+#endif
+  display_deinit(DISPLAY_JUMP_BEHAVIOR);
+  ensure_compatible_settings();
+}
+
 static void usb_init_all(secbool usb21_landing) {
   usb_dev_info_t dev_info = {
       .device_class = 0x00,
@@ -324,11 +374,9 @@ void real_jump_to_firmware(void) {
     ui_screen_boot_stage_1(false);
   }
 
-  display_deinit(DISPLAY_JUMP_BEHAVIOR);
+  drivers_deinit();
 
-  ensure_compatible_settings();
-
-  mpu_reconfig(MPU_MODE_DISABLED);
+  system_deinit();
 
   jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
@@ -347,41 +395,11 @@ int main(void) {
 int bootloader_main(void) {
 #endif
   secbool stay_in_bootloader = secfalse;
+  secbool touch_initialized = secfalse;
 
   system_init(&rsod_panic_handler);
 
-  random_delays_init();
-
-#ifdef USE_PVD
-  pvd_init();
-#endif
-
-#ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
-#endif
-
-  gfx_bitblt_init();
-
-  display_init(DISPLAY_JUMP_BEHAVIOR);
-
-  unit_properties_init();
-
-#ifdef USE_TOUCH
-  secbool touch_initialized = secfalse;
-  secbool allow_touchless_mode = secfalse;
-#if defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1
-  // on T3T1 and T3W1, tester needs to run without touch, so making an exception
-  // until unit variant is written in OTP
-  const secbool manufacturing_mode =
-      unit_properties()->locked ? secfalse : sectrue;
-  allow_touchless_mode = manufacturing_mode;
-
-#endif
-  touch_initialized = touch_init();
-  if (allow_touchless_mode != sectrue) {
-    ensure(touch_initialized, "Touch screen panel was not loaded properly.");
-  }
-#endif
+  drivers_init(&touch_initialized);
 
   ui_screen_boot_stage_1(false);
 
@@ -448,22 +466,6 @@ int bootloader_main(void) {
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
     firmware_present_backup = firmware_present;
   }
-
-#ifdef USE_OPTIGA
-  optiga_hal_init();
-#endif
-
-#ifdef USE_BUTTON
-  button_init();
-#endif
-
-#ifdef USE_CONSUMPTION_MASK
-  consumption_mask_init();
-#endif
-
-#ifdef USE_RGB_LED
-  rgb_led_init();
-#endif
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader

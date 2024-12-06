@@ -36,6 +36,7 @@ def configure(
         ("HW_REVISION", str(hw_revision)),
         ("HSE_VALUE", "32000000"),
         ("USE_HSE", "1"),
+        ("FIXED_HW_DEINIT", "1"),
     ]
 
     sources += [
@@ -48,10 +49,8 @@ def configure(
     defines += [("USE_BACKLIGHT", "1")]
 
     if "input" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/io/touch/ft6x36/ft6x36.c"]
         sources += ["embed/io/touch/ft6x36/panels/lhs200kb-if21.c"]
-        paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         sources += ["embed/io/button/stm32/button.c"]
@@ -59,9 +58,12 @@ def configure(
         features_available.append("button")
         defines += [
             ("USE_TOUCH", "1"),
-            ("USE_I2C", "1"),
             ("USE_BUTTON", "1"),
         ]
+
+    sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+    paths += ["embed/io/i2c_bus/inc"]
+    defines += [("USE_I2C", "1")]
 
     if "haptic" in features_wanted:
         sources += [
@@ -146,6 +148,16 @@ def configure(
         ("USE_OEM_KEYS_CHECK", "1"),
         ("USE_RESET_TO_BOOT", "1"),
     ]
+
+    sources += [
+        "embed/sys/powerctl/npm1300/npm1300.c",
+        "embed/sys/powerctl/stwlc38/stwlc38.c",
+        "embed/sys/powerctl/stm32u5/powerctl.c",
+        "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
+        "embed/sys/powerctl/wakeup_flags.c",
+    ]
+    paths += ["embed/sys/powerctl/inc"]
+    defines += [("USE_POWERCTL", "1")]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

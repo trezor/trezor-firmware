@@ -36,10 +36,6 @@
 #include <util/image.h>
 #include <util/rsod.h>
 
-#ifdef USE_TOUCH
-#include <io/touch.h>
-#endif
-
 #include "version.h"
 
 #include "bootui.h"
@@ -51,6 +47,22 @@
 #endif
 
 #define USB_IFACE_NUM 0
+
+static void drivers_init(void) {
+  display_init(DISPLAY_RESET_CONTENT);
+
+  random_delays_init();
+
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
+}
+
+static void drivers_deinit(void) {
+#ifdef FIXED_HW_DEINIT
+  display_deinit(DISPLAY_RESET_CONTENT);
+#endif
+}
 
 static void usb_init_all(secbool usb21_landing) {
   usb_dev_info_t dev_info = {
@@ -180,21 +192,12 @@ static secbool check_vendor_header_lock(const vendor_header *const vhdr) {
 int main(void) {
   system_init(&rsod_panic_handler);
 
-  random_delays_init();
-#ifdef USE_TOUCH
-  touch_init();
-#endif
-
-#ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
-#endif
+  drivers_init();
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
   ensure_bootloader_min_version();
 #endif
-
-  gfx_clear();
 
   const image_header *hdr = NULL;
   vendor_header vhdr;
@@ -269,7 +272,9 @@ int main(void) {
 
   // do not check any trust flags on header, proceed
 
-  mpu_reconfig(MPU_MODE_DISABLED);
+  drivers_deinit();
+
+  system_deinit();
 
   jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 
