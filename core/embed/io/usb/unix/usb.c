@@ -322,3 +322,9 @@ secbool usb_configured(void) {
 
   return sectrue;
 }
+
+usb_event_t usb_get_event(void) { return USB_EVENT_NONE; }
+
+void usb_get_state(usb_state_t *state) {
+  state->flags.configured = usb_configured() == sectrue;
+}

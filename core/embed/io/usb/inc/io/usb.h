@@ -28,6 +28,18 @@
 
 #define USB_PACKET_LEN 64
 
+typedef enum {
+  USB_EVENT_NONE = 0,
+  USB_EVENT_CONFIGURED = 1,
+  USB_EVENT_DECONFIGURED = 2,
+} usb_event_t;
+
+typedef union {
+  struct {
+    uint32_t configured : 1;
+  } flags;
+} usb_state_t;
+
 // clang-format off
 //
 // USB stack high-level state machine
@@ -94,7 +106,7 @@ void usb_deinit(void);
 // Initializes the USB stack (and hardware) and starts all registered class
 // drivers.
 //
-// This function can called after all class drivers are registered or after
+// This function can be called after all class drivers are registered or after
 // `usb_stop()` is called.
 //
 // Returns `sectrue` if the USB stack is started successfully.
@@ -102,17 +114,18 @@ secbool usb_start(void);
 
 // Stops USB driver and its class drivers
 //
-// Unitializes the USB stack (and hardware) but leaves all configuration intact,
-// so it can be started again with `usb_start()`.
+// Uninitializes the USB stack (and hardware) but leaves all configuration
+// intact, so it can be started again with `usb_start()`.
 //
 // When the USB stack is stopped, it does not respond to any USB events and
 // the CPU can go to stop/standby mode.
 void usb_stop(void);
 
-// Returns `sectrue` if the device is connected to the host (or is expected to
-// be)
-//
-// TODO: Review and clarify the logic of this function in the future
-secbool usb_configured(void);
+// Reads USB event
+// Return USB_EVENT_NONE if no event is available
+usb_event_t usb_get_event(void);
+
+// Reads USB state into `state`
+void usb_get_state(usb_state_t *state);
 
 #endif
