@@ -195,7 +195,7 @@ def click_through(
 def read_and_confirm_mnemonic(
     debug: "DebugLink", choose_wrong: bool = False
 ) -> Generator[None, "ButtonRequest", Optional[str]]:
-    """Read a given number of mnemonic words from the screen and answer
+    """Read mnemonic words from the screen and answer
     confirmation questions.
     Return the full mnemonic or None if `choose_wrong` is True.
 
