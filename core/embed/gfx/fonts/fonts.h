@@ -20,8 +20,7 @@
 #ifndef _FONTS_H
 #define _FONTS_H
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 #include "font_bitmap.h"
 
 #ifdef USE_RGB_COLORS
@@ -51,22 +50,11 @@ typedef enum {
   FONT_SUB = -8,
 } font_id_t;
 
-/// Font glyph iterator structure
-typedef struct {
-  const font_id_t font;
-  const uint8_t *text;
-  int remaining;
-} font_glyph_iter_t;
+const font_info_t *get_font_info(font_id_t font_id);
+const uint8_t *font_get_glyph(font_id_t font, const char c);
 
-int font_height(font_id_t font);
-int font_max_height(font_id_t font);
 int font_baseline(font_id_t font);
-const uint8_t *font_get_glyph(font_id_t font, const uint16_t c);
-const uint8_t *font_nonprintable_glyph(font_id_t font);
-
-font_glyph_iter_t font_glyph_iter_init(font_id_t font, const uint8_t *text,
-                                       const int len);
-bool font_next_glyph(font_glyph_iter_t *iter, const uint8_t **out);
+int font_max_height(font_id_t font);
 int font_text_width(font_id_t font, const char *text, int textlen);
 
 #endif  //_FONTS_H

@@ -5,38 +5,23 @@ use core::ptr;
 
 pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
 
+pub type FontInfo = ffi::font_info_t;
+
 pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_set_backlight(val) }
 }
 
-pub fn text_width(text: &str, font: i32) -> i16 {
+pub fn get_font_info(font: i32) -> Option<FontInfo> {
+    // SAFETY:
+    // - `ffi::get_font_info` returns either null (for invalid fonts) or a pointer
+    //   to a static font_info_t struct
+    // - The font_info_t data is in ROM, making it immutable and static
+    // - The font_info_t contains pointers to static glyph data arrays also in ROM
+    // - All font data is generated at compile time and included in the binary
     unsafe {
-        ffi::font_text_width(font, text.as_ptr() as _, text.len() as _)
-            .try_into()
-            .unwrap_or(i16::MAX)
+        let font = ffi::get_font_info(font);
+        Some(*font.as_ref()?)
     }
-}
-
-pub fn char_width(ch: char, font: i32) -> i16 {
-    let mut buf = [0u8; 4];
-    let encoding = ch.encode_utf8(&mut buf);
-    text_width(encoding, font)
-}
-
-pub fn get_char_glyph(ch: u16, font: i32) -> *const u8 {
-    unsafe { ffi::font_get_glyph(font, ch) }
-}
-
-pub fn text_height(font: i32) -> i16 {
-    unsafe { ffi::font_height(font).try_into().unwrap_or(i16::MAX) }
-}
-
-pub fn text_max_height(font: i32) -> i16 {
-    unsafe { ffi::font_max_height(font).try_into().unwrap_or(i16::MAX) }
-}
-
-pub fn text_baseline(font: i32) -> i16 {
-    unsafe { ffi::font_baseline(font).try_into().unwrap_or(i16::MAX) }
 }
 
 pub fn sync() {
