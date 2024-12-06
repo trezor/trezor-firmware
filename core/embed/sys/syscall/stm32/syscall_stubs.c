@@ -162,8 +162,12 @@ secbool usb_start(void) { return (secbool)syscall_invoke0(SYSCALL_USB_START); }
 
 void usb_stop(void) { syscall_invoke0(SYSCALL_USB_STOP); }
 
-secbool usb_configured(void) {
-  return (secbool)syscall_invoke0(SYSCALL_USB_CONFIGURED);
+usb_event_t usb_get_event(void) {
+  return (usb_event_t)syscall_invoke0(SYSCALL_USB_GET_EVENT);
+}
+
+void usb_get_state(usb_state_t *state) {
+  syscall_invoke1((uint32_t)state, SYSCALL_USB_GET_STATE);
 }
 
 // =============================================================================

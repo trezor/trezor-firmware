@@ -8,7 +8,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Timer},
         display::{image::ImageInfo, Color, Font},
-        event::{TouchEvent, USBEvent},
+        event::TouchEvent,
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         layout_quicksilver::constant,
@@ -501,7 +501,7 @@ impl Homescreen {
     }
 
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
-        if let Event::USB(USBEvent::Connected(_)) = event {
+        if let Event::USB(_) = event {
             ctx.request_paint();
         }
     }
