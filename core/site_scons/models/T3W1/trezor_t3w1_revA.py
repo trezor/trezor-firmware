@@ -59,9 +59,10 @@ def configure(
         sources += ["embed/io/button/stm32/button.c"]
         paths += ["embed/io/button/inc"]
         features_available.append("button")
-        defines += [("USE_TOUCH", "1"),
-                    ("USE_BUTTON", "1"),
-                    ]
+        defines += [
+            ("USE_TOUCH", "1"),
+            ("USE_BUTTON", "1"),
+        ]
 
     paths += ["embed/io/i2c_bus/inc"]
     sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
@@ -79,13 +80,13 @@ def configure(
         sources += ["embed/io/ble/stm32/ble.c"]
         paths += ["embed/io/ble/inc"]
         features_available.append("ble")
-        defines += [("USE_BLE","1")]
+        defines += [("USE_BLE", "1")]
         sources += ["embed/io/nrf/stm32u5/nrf.c"]
         sources += ["embed/io/nrf/crc8.c"]
         paths += ["embed/io/nrf/inc"]
         sources += [
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart.c",
-            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart_ex.c"
+            "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart_ex.c",
         ]
 
     if "optiga" in features_wanted:
