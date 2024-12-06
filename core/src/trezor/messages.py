@@ -6214,6 +6214,7 @@ if TYPE_CHECKING:
         passphrase: "str | None"
         on_device: "bool | None"
         derive_cardano: "bool | None"
+        session_id: "int | None"
 
         def __init__(
             self,
@@ -6221,6 +6222,7 @@ if TYPE_CHECKING:
             passphrase: "str | None" = None,
             on_device: "bool | None" = None,
             derive_cardano: "bool | None" = None,
+            session_id: "int | None" = None,
         ) -> None:
             pass
 

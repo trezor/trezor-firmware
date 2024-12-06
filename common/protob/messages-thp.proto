@@ -72,11 +72,13 @@ message ThpHandshakeCompletionReqNoisePayload {
  * Request: Ask device for a new session with given passphrase.
  * @start
  * @next ThpNewSession
+ * @next Success
  */
 message ThpCreateNewSession{
     optional string passphrase = 1;
     optional bool on_device = 2;       // User wants to enter passphrase on the device
     optional bool derive_cardano = 3;  // If True, Cardano keys will be derived. Ignored with BTC-only
+    optional uint32 session_id = 4;    // Id of the session to modify
 }
 
 /**
