@@ -239,26 +239,26 @@ if utils.USE_THP:
 
         # Do not use `ctx` beyond this point, as it is techically
         # allowed to change in between await statements
+        if message.session_id is None:
+            new_session = create_new_session(channel)
+            try:
+                await unlock_device()
+                await derive_and_store_roots(new_session, message)
+            except DataError as e:
+                return Failure(code=FailureType.DataError, message=e.message)
+            except ActionCancelled as e:
+                return Failure(code=FailureType.ActionCancelled, message=e.message)
+            except NotInitialized as e:
+                return Failure(code=FailureType.NotInitialized, message=e.message)
+            # TODO handle other errors (`Exception` when "Cardano icarus secret is already set!")
 
-        new_session = create_new_session(channel)
-        try:
-            await unlock_device()
-            await derive_and_store_roots(new_session, message)
-        except DataError as e:
-            return Failure(code=FailureType.DataError, message=e.message)
-        except ActionCancelled as e:
-            return Failure(code=FailureType.ActionCancelled, message=e.message)
-        except NotInitialized as e:
-            return Failure(code=FailureType.NotInitialized, message=e.message)
-        # TODO handle other errors (`Exception`` when "Cardano icarus secret is already set!"
-        # and `RuntimeError` when accessing storage for mnemonic.get_secret - it actually
-        # happens for locked devices)
-
-        new_session.set_session_state(SessionState.ALLOCATED)
-        channel.sessions[new_session.session_id] = new_session
-        loop.schedule(new_session.handle())
-        new_session_id: int = new_session.session_id
-
+            new_session.set_session_state(SessionState.ALLOCATED)
+            channel.sessions[new_session.session_id] = new_session
+            loop.schedule(new_session.handle())
+            new_session_id: int = new_session.session_id
+        else:
+            # HMMMMMMMMMMMMMMMMMM
+            pass
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,

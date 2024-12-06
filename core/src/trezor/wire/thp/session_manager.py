@@ -28,6 +28,8 @@ def create_new_management_session(
 
     Seed cannot be derived with this type of session.
     """
+    if session_id != cache_thp.MANAGEMENT_SESSION_ID:
+        cache_thp.get_new_session(channel_ctx.channel_cache, management=True)
     return ManagementSessionContext(channel_ctx, session_id)
 
 
