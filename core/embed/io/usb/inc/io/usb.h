@@ -26,6 +26,8 @@
 #include <io/usb_vcp.h>
 #include <io/usb_webusb.h>
 
+#define USB_PACKET_LEN 64
+
 // clang-format off
 //
 // USB stack high-level state machine

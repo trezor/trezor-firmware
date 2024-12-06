@@ -50,6 +50,8 @@ static struct {
   int sock;
   struct sockaddr_in si_me, si_other;
   socklen_t slen;
+  uint8_t msg[64];
+  int msg_len;
 } usb_ifaces[USBD_MAX_NUM_INTERFACES];
 
 secbool usb_init(const usb_dev_info_t *dev_info) {
@@ -60,7 +62,9 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
     usb_ifaces[i].sock = -1;
     memzero(&usb_ifaces[i].si_me, sizeof(struct sockaddr_in));
     memzero(&usb_ifaces[i].si_other, sizeof(struct sockaddr_in));
+    memzero(&usb_ifaces[i].msg, sizeof(usb_ifaces[i].msg));
     usb_ifaces[i].slen = 0;
+    usb_ifaces[i].msg_len = 0;
   }
   return sectrue;
 }
@@ -136,36 +140,66 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   return sectrue;
 }
 
-static secbool usb_emulated_poll(uint8_t iface_num, short dir) {
+static secbool usb_emulated_poll_read(uint8_t iface_num) {
   struct pollfd fds[] = {
-      {usb_ifaces[iface_num].sock, dir, 0},
+      {usb_ifaces[iface_num].sock, POLLIN, 0},
   };
-  int r = poll(fds, 1, 0);
-  return sectrue * (r > 0);
-}
+  int res = poll(fds, 1, 0);
 
-static int usb_emulated_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
+  if (res <= 0) {
+    return secfalse;
+  }
+
   struct sockaddr_in si;
   socklen_t sl = sizeof(si);
-  ssize_t r = recvfrom(usb_ifaces[iface_num].sock, buf, len, MSG_DONTWAIT,
+  ssize_t r = recvfrom(usb_ifaces[iface_num].sock, usb_ifaces[iface_num].msg,
+                       sizeof(usb_ifaces[iface_num].msg), MSG_DONTWAIT,
                        (struct sockaddr *)&si, &sl);
-  if (r < 0) {
-    return r;
+  if (r <= 0) {
+    return secfalse;
   }
+
   usb_ifaces[iface_num].si_other = si;
   usb_ifaces[iface_num].slen = sl;
   static const char *ping_req = "PINGPING";
   static const char *ping_resp = "PONGPONG";
-  if (r == strlen(ping_req) && 0 == memcmp(ping_req, buf, strlen(ping_req))) {
+  if (r == strlen(ping_req) &&
+      0 == memcmp(ping_req, usb_ifaces[iface_num].msg, strlen(ping_req))) {
     if (usb_ifaces[iface_num].slen > 0) {
       sendto(usb_ifaces[iface_num].sock, ping_resp, strlen(ping_resp),
              MSG_DONTWAIT,
              (const struct sockaddr *)&usb_ifaces[iface_num].si_other,
              usb_ifaces[iface_num].slen);
     }
-    return 0;
+    memzero(usb_ifaces[iface_num].msg, sizeof(usb_ifaces[iface_num].msg));
+    return secfalse;
   }
-  return r;
+
+  usb_ifaces[iface_num].msg_len = r;
+
+  return sectrue;
+}
+
+static secbool usb_emulated_poll_write(uint8_t iface_num) {
+  struct pollfd fds[] = {
+      {usb_ifaces[iface_num].sock, POLLOUT, 0},
+  };
+  int r = poll(fds, 1, 0);
+  return sectrue * (r > 0);
+}
+
+static int usb_emulated_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
+  if (usb_ifaces[iface_num].msg_len > 0) {
+    if (usb_ifaces[iface_num].msg_len < len) {
+      len = usb_ifaces[iface_num].msg_len;
+    }
+    memcpy(buf, usb_ifaces[iface_num].msg, len);
+    usb_ifaces[iface_num].msg_len = 0;
+    memzero(usb_ifaces[iface_num].msg, sizeof(usb_ifaces[iface_num].msg));
+    return len;
+  }
+
+  return 0;
 }
 
 static int usb_emulated_write(uint8_t iface_num, const uint8_t *buf,
@@ -184,7 +218,7 @@ secbool usb_hid_can_read(uint8_t iface_num) {
       usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
     return secfalse;
   }
-  return usb_emulated_poll(iface_num, POLLIN);
+  return usb_emulated_poll_read(iface_num);
 }
 
 secbool usb_webusb_can_read(uint8_t iface_num) {
@@ -192,7 +226,7 @@ secbool usb_webusb_can_read(uint8_t iface_num) {
       usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
     return secfalse;
   }
-  return usb_emulated_poll(iface_num, POLLIN);
+  return usb_emulated_poll_read(iface_num);
 }
 
 secbool usb_hid_can_write(uint8_t iface_num) {
@@ -200,7 +234,7 @@ secbool usb_hid_can_write(uint8_t iface_num) {
       usb_ifaces[iface_num].type != USB_IFACE_TYPE_HID) {
     return secfalse;
   }
-  return usb_emulated_poll(iface_num, POLLOUT);
+  return usb_emulated_poll_write(iface_num);
 }
 
 secbool usb_webusb_can_write(uint8_t iface_num) {
@@ -208,7 +242,7 @@ secbool usb_webusb_can_write(uint8_t iface_num) {
       usb_ifaces[iface_num].type != USB_IFACE_TYPE_WEBUSB) {
     return secfalse;
   }
-  return usb_emulated_poll(iface_num, POLLOUT);
+  return usb_emulated_poll_write(iface_num);
 }
 
 int usb_hid_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
