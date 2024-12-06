@@ -1382,6 +1382,20 @@ pub enum TranslatedString {
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
+    #[cfg(feature = "universal_fw")]
+    cardano__confirm_message = 975,  // "Confirm message"
+    #[cfg(feature = "universal_fw")]
+    cardano__empty_message = 976,  // "Empty message"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_hash = 977,  // "Message hash:"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_hex = 978,  // "Message hex"
+    #[cfg(feature = "universal_fw")]
+    cardano__message_text = 979,  // "Message text"
+    #[cfg(feature = "universal_fw")]
+    cardano__sign_message_hash_path_template = 980,  // "Sign message hash with {0}:"
+    #[cfg(feature = "universal_fw")]
+    cardano__sign_message_path_template = 981,  // "Sign message with {0}:"
 }
 
 impl TranslatedString {
@@ -2758,6 +2772,20 @@ impl TranslatedString {
             Self::misc__enable_labeling => "Enable labeling?",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__confirm_message => "Confirm message",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__empty_message => "Empty message",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__message_hash => "Message hash:",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__message_hex => "Message hex",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__message_text => "Message text",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__sign_message_hash_path_template => "Sign message hash with {0}:",
+            #[cfg(feature = "universal_fw")]
+            Self::cardano__sign_message_path_template => "Sign message with {0}:",
         }
     }
 
@@ -4135,6 +4163,20 @@ impl TranslatedString {
             Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__confirm_message => Some(Self::cardano__confirm_message),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__empty_message => Some(Self::cardano__empty_message),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__message_hash => Some(Self::cardano__message_hash),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__message_hex => Some(Self::cardano__message_hex),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__message_text => Some(Self::cardano__message_text),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__sign_message_hash_path_template => Some(Self::cardano__sign_message_hash_path_template),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_cardano__sign_message_path_template => Some(Self::cardano__sign_message_path_template),
             _ => None,
         }
     }

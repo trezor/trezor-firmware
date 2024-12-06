@@ -12,6 +12,7 @@ from trezor.strings import format_amount
 from trezor.ui import layouts
 from trezor.ui.layouts import confirm_metadata, confirm_properties
 
+from apps.cardano.helpers.chunks import MAX_CHUNK_SIZE
 from apps.common.paths import address_n_to_str
 
 from . import addresses
@@ -21,10 +22,11 @@ from .helpers.utils import (
     format_asset_fingerprint,
     format_optional_int,
     format_stake_pool_id,
+    is_unambiguous_ascii,
 )
 
 if TYPE_CHECKING:
-    from typing import Literal
+    from typing import Callable, Literal
 
     from trezor import messages
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
@@ -70,6 +72,8 @@ CERTIFICATE_TYPE_NAMES = {
 BRT_Other = ButtonRequestType.Other  # global_import_cache
 
 CVOTE_REWARD_ELIGIBILITY_WARNING = TR.cardano__reward_eligibility_warning
+
+_DEFAULT_MAX_DISPLAYED_CHUNK_SIZE = 56
 
 
 def format_coin_amount(amount: int, network_id: int) -> str:
@@ -281,7 +285,7 @@ async def confirm_datum_hash(datum_hash: bytes) -> None:
 
 
 async def confirm_inline_datum(first_chunk: bytes, inline_datum_size: int) -> None:
-    await _confirm_data_chunk(
+    await _confirm_tx_data_chunk(
         "confirm_inline_datum",
         TR.cardano__inline_datum,
         first_chunk,
@@ -292,7 +296,7 @@ async def confirm_inline_datum(first_chunk: bytes, inline_datum_size: int) -> No
 async def confirm_reference_script(
     first_chunk: bytes, reference_script_size: int
 ) -> None:
-    await _confirm_data_chunk(
+    await _confirm_tx_data_chunk(
         "confirm_reference_script",
         TR.cardano__reference_script,
         first_chunk,
@@ -300,24 +304,80 @@ async def confirm_reference_script(
     )
 
 
-async def _confirm_data_chunk(
-    br_name: str, title: str, first_chunk: bytes, data_size: int
+async def confirm_message_payload(
+    payload_first_chunk: bytes,
+    payload_hash: bytes,
+    payload_size: int,
+    is_signing_hash: bool,
+    prefer_hex_display: bool,
 ) -> None:
-    MAX_DISPLAYED_SIZE = 56
-    displayed_bytes = first_chunk[:MAX_DISPLAYED_SIZE]
+    props: list[PropertyType]
+
+    max_displayed_bytes = (
+        _DEFAULT_MAX_DISPLAYED_CHUNK_SIZE if is_signing_hash else MAX_CHUNK_SIZE
+    )
+
+    if not payload_first_chunk:
+        assert payload_size == 0
+        props = _get_data_chunk_props(
+            title=TR.cardano__empty_message,
+            first_chunk=payload_first_chunk,
+            data_size=payload_size,
+        )
+    elif not prefer_hex_display and is_unambiguous_ascii(payload_first_chunk):
+        props = _get_data_chunk_props(
+            title=TR.cardano__message_text,
+            first_chunk=payload_first_chunk,
+            data_size=payload_size,
+            max_displayed_size=max_displayed_bytes,
+            decoder=lambda chunk: chunk.decode("ascii"),
+        )
+    else:
+        props = _get_data_chunk_props(
+            title=TR.cardano__message_hex,
+            first_chunk=payload_first_chunk,
+            data_size=payload_size,
+            max_displayed_size=max_displayed_bytes,
+        )
+
+    props.append((TR.cardano__message_hash, payload_hash))
+
+    await confirm_properties(
+        "confirm_message_payload",
+        title=TR.cardano__confirm_message,
+        props=props,
+        br_code=BRT_Other,
+    )
+
+
+def _get_data_chunk_props(
+    title: str,
+    first_chunk: bytes,
+    data_size: int,
+    max_displayed_size: int = _DEFAULT_MAX_DISPLAYED_CHUNK_SIZE,
+    decoder: Callable[[bytes], bytes | str] | None = None,
+) -> list[PropertyType]:
+    displayed_bytes = first_chunk[:max_displayed_size]
     bytes_optional_plural = "byte" if data_size == 1 else "bytes"
-    props: list[tuple[str, bytes | None]] = [
+    props: list[PropertyType] = [
         (
             f"{title} ({data_size} {bytes_optional_plural}):",
-            displayed_bytes,
+            decoder(displayed_bytes) if decoder else displayed_bytes,
         )
     ]
-    if data_size > MAX_DISPLAYED_SIZE:
+    if data_size > max_displayed_size:
         props.append(("...", None))
+
+    return props
+
+
+async def _confirm_tx_data_chunk(
+    br_name: str, title: str, first_chunk: bytes, data_size: int
+) -> None:
     await confirm_properties(
         br_name,
         title=TR.cardano__confirm_transaction,
-        props=props,
+        props=_get_data_chunk_props(title, first_chunk, data_size),
         br_code=BRT_Other,
     )
 
@@ -329,6 +389,12 @@ async def show_credentials(
     intro_text = TR.words__address
     await _show_credential(payment_credential, intro_text, purpose="address")
     await _show_credential(stake_credential, intro_text, purpose="address")
+
+
+async def show_message_header_credentials(credentials: list[Credential]) -> None:
+    intro_text = TR.words__address
+    for credential in credentials:
+        await _show_credential(credential, intro_text, purpose="message")
 
 
 async def show_change_output_credentials(
@@ -375,13 +441,14 @@ async def show_cvote_registration_payment_credentials(
 async def _show_credential(
     credential: Credential,
     intro_text: str,
-    purpose: Literal["address", "output", "cvote_reg_payment_address"],
+    purpose: Literal["address", "output", "cvote_reg_payment_address", "message"],
     extra_text: str | None = None,
 ) -> None:
     title = {
         "address": f"{ADDRESS_TYPE_NAMES[credential.address_type]} address",
         "output": TR.cardano__confirm_transaction,
         "cvote_reg_payment_address": TR.cardano__confirm_transaction,
+        "message": TR.cardano__confirm_message,
     }[purpose]
 
     props: list[PropertyType] = []
@@ -491,23 +558,41 @@ async def warn_unknown_total_collateral() -> None:
     )
 
 
+def _get_path_title(path: list[int]) -> str:
+    from . import seed
+
+    if seed.is_multisig_path(path):
+        return TR.cardano__multisig_path
+    elif seed.is_minting_path(path):
+        return TR.cardano__token_minting_path
+    else:
+        return TR.cardano__path
+
+
 async def confirm_witness_request(
     witness_path: list[int],
 ) -> None:
-    from . import seed
-
-    if seed.is_multisig_path(witness_path):
-        path_title = TR.cardano__multisig_path
-    elif seed.is_minting_path(witness_path):
-        path_title = TR.cardano__token_minting_path
-    else:
-        path_title = TR.cardano__path
-
     await layouts.confirm_text(
         "confirm_total",
         TR.cardano__confirm_transaction,
         address_n_to_str(witness_path),
-        TR.cardano__sign_tx_path_template.format(path_title),
+        TR.cardano__sign_tx_path_template.format(_get_path_title(witness_path)),
+        BRT_Other,
+    )
+
+
+async def confirm_message_path(path: list[int], is_signing_hash: bool) -> None:
+    path_title = _get_path_title(path)
+    text = (
+        TR.cardano__sign_message_hash_path_template.format(path_title)
+        if is_signing_hash
+        else TR.cardano__sign_message_path_template.format(path_title)
+    )
+    await layouts.confirm_text(
+        "confirm_message_signing_path",
+        TR.cardano__confirm_message,
+        address_n_to_str(path),
+        text,
         BRT_Other,
     )
 

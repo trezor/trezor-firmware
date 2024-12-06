@@ -973,5 +973,12 @@
   "971": "instructions__view_all_data",
   "972": "ethereum__interaction_contract",
   "973": "misc__enable_labeling",
-  "974": "ethereum__unknown_contract_address_short"
+  "974": "ethereum__unknown_contract_address_short",
+  "975": "cardano__confirm_message",
+  "976": "cardano__empty_message",
+  "977": "cardano__message_hash",
+  "978": "cardano__message_hex",
+  "979": "cardano__message_text",
+  "980": "cardano__sign_message_hash_path_template",
+  "981": "cardano__sign_message_path_template"
 }

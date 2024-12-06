@@ -113,3 +113,39 @@ def validate_network_info(network_id: int, protocol_magic: int) -> None:
 
     if is_mainnet_network_id != is_mainnet_protocol_magic:
         raise wire.ProcessError("Invalid network id/protocol magic combination!")
+
+
+def is_printable_ascii(bytestring: bytes) -> bool:
+    """Includes space character."""
+    return all(32 <= b <= 126 for b in bytestring)
+
+
+def is_unambiguous_ascii(bytestring: bytes) -> bool:
+    """
+    Checks whether the bytestring can be printed as ASCII without confusion.
+    Based on https://github.com/vacuumlabs/ledger-app-cardano-shelley/blob/6ddc60e8fdff13e35bff5cdf108b84b81a79f10c/src/textUtils.c#L274
+    """
+    # no empty strings
+    if len(bytestring) == 0:
+        return False
+
+    # no non-printable ascii except spaces
+    if not is_printable_ascii(bytestring):
+        return False
+
+    SPACE = ord(" ")
+
+    # no leading space
+    if bytestring[0] == SPACE:
+        return False
+
+    # no trailing space
+    if bytestring[-1] == SPACE:
+        return False
+
+    # no consecutive spaces
+    for a, b in zip(bytestring, bytestring[1:]):
+        if a == SPACE and b == SPACE:
+            return False
+
+    return True
