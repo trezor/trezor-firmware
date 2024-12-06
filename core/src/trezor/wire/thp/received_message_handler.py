@@ -357,13 +357,19 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
             s = session_manager.create_new_management_session(ctx)
         else:
             s = session_manager.get_session_from_cache(ctx, session_id)
+
         if s is None:
-            raise ThpUnallocatedSessionError(session_id)
+            assert session_id != MANAGEMENT_SESSION_ID
+
+            # Create management session backed by cache (non-trivial session_id)
+            s = session_manager.create_new_management_session(ctx, session_id)
+
         ctx.sessions[session_id] = s
         loop.schedule(s.handle())
 
     elif ctx.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
+        # TODO what should happen here? Should I create a new management session?
 
     s = ctx.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
