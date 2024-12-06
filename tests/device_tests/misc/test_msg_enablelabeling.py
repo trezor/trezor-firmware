@@ -17,16 +17,16 @@
 import pytest
 
 from trezorlib import misc
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 @pytest.mark.models("core")
-def test_encrypt(client: Client):
+def test_encrypt(session: Session):
     misc.encrypt_keyvalue(
-        client,
+        session,
         [],
         "Enable labeling?",
         b"",
