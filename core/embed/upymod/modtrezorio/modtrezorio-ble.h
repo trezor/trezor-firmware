@@ -95,33 +95,31 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_write_obj,
 ///     Reads message using BLE (device).
 ///     """
 STATIC mp_obj_t mod_trezorio_BLE_read(size_t n_args, const mp_obj_t *args) {
+  mp_buffer_info_t buf = {0};
+  mp_get_buffer_raise(args[0], &buf, MP_BUFFER_WRITE);
 
-    mp_buffer_info_t buf = {0};
-    mp_get_buffer_raise(args[0], &buf, MP_BUFFER_WRITE);
+  int offset = 0;
+  if (n_args >= 1) {
+    offset = mp_obj_get_int(args[1]);
+  }
 
-    int offset = 0;
-    if (n_args >= 1) {
-        offset = mp_obj_get_int(args[1]);
-    }
+  if (offset < 0) {
+    mp_raise_ValueError("Negative offset not allowed");
+  }
 
-    if (offset < 0) {
-        mp_raise_ValueError("Negative offset not allowed");
-    }
+  uint32_t buffer_space = buf.len - offset;
 
-    uint32_t buffer_space = buf.len - offset;
+  if (buffer_space < BLE_RX_PACKET_SIZE) {
+    mp_raise_ValueError("Buffer too small");
+  }
 
-    if (buffer_space < BLE_RX_PACKET_SIZE) {
-        mp_raise_ValueError("Buffer too small");
-    }
+  uint32_t r = ble_read(&((uint8_t *)buf.buf)[offset], BLE_RX_PACKET_SIZE);
 
-    uint32_t r = ble_read(&((uint8_t *)buf.buf)[offset],
-                                BLE_RX_PACKET_SIZE);
+  if (r != BLE_RX_PACKET_SIZE) {
+    mp_raise_msg(&mp_type_RuntimeError, "Unexpected read length");
+  }
 
-    if (r != BLE_RX_PACKET_SIZE) {
-        mp_raise_msg(&mp_type_RuntimeError, "Unexpected read length");
-    }
-
-    return MP_OBJ_NEW_SMALL_INT(r);
+  return MP_OBJ_NEW_SMALL_INT(r);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_BLE_read_obj, 1, 2,
                                            mod_trezorio_BLE_read);
