@@ -149,7 +149,7 @@ impl StatusScreen {
         icon: Icon,
         icon_color: Color,
         circle_color: Color,
-        dismiss_style: DismissType,
+        dismiss_type: DismissType,
         msg: TString<'static>,
     ) -> Self {
         Self {
@@ -157,7 +157,7 @@ impl StatusScreen {
             icon,
             icon_color,
             circle_color,
-            dismiss_type: dismiss_style,
+            dismiss_type,
             anim: StatusAnimation::default(),
             msg: Label::new(msg, Alignment::Start, theme::TEXT_NORMAL).vertically_centered(),
         }
@@ -174,11 +174,12 @@ impl StatusScreen {
     }
 
     pub fn new_success_timeout(msg: TString<'static>) -> Self {
+        let timeout_ms = if !animation_disabled() { TIMEOUT_MS } else { 0 };
         Self::new(
             theme::ICON_SIMPLE_CHECKMARK30,
             theme::GREEN_LIME,
             theme::GREEN_LIGHT,
-            DismissType::Timeout(Timeout::new(TIMEOUT_MS)),
+            DismissType::Timeout(Timeout::new(timeout_ms)),
             msg,
         )
     }
@@ -194,11 +195,12 @@ impl StatusScreen {
     }
 
     pub fn new_neutral_timeout(msg: TString<'static>) -> Self {
+        let timeout_ms = if !animation_disabled() { TIMEOUT_MS } else { 0 };
         Self::new(
             theme::ICON_SIMPLE_CHECKMARK30,
             theme::GREY_EXTRA_LIGHT,
             theme::GREY_DARK,
-            DismissType::Timeout(Timeout::new(TIMEOUT_MS)),
+            DismissType::Timeout(Timeout::new(timeout_ms)),
             msg,
         )
     }

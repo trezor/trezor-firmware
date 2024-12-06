@@ -655,7 +655,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             layout = self.debug.swipe_up()
         self.debug.synchronize_at("PromptScreen")
         # tap to confirm
-        self.debug.press_yes()
+        self.debug.click(buttons.TAP_TO_CONFIRM)
 
 
 class InputFlowPaymentRequestDetails(InputFlowBase):
