@@ -5,12 +5,12 @@ ENTRY(reset_handler)
 MEMORY {
   FLASH  (rx)     : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_MAXSIZE - BOARDCAPS_MAXSIZE
   BOARDCAPS (rx)  : ORIGIN = BOARDCAPS_START, LENGTH = BOARDCAPS_MAXSIZE
-  CCMRAM (wal)    : ORIGIN = MCU_CCMRAM, LENGTH = MCU_CCMRAM_SIZE
-  SRAM   (wal)    : ORIGIN = MCU_SRAM, LENGTH = MCU_SRAM_SIZE
+  MAIN_RAM (wal)  : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
+  AUX_RAM (wal)   : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
 }
 
-main_stack_base = ORIGIN(CCMRAM) + LENGTH(CCMRAM); /* 8-byte aligned full descending stack */
-_sstack = ORIGIN(CCMRAM);
+main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+_sstack = ADDR(.stack);
 _estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
@@ -53,27 +53,28 @@ SECTIONS {
     . = ALIGN(4); /* make the section size a multiple of the word size */
   } >FLASH AT>FLASH
 
+  .stack : ALIGN(8) {
+    . = 16K; /* this acts as a build time assertion that at least this much memory is available for stack use */
+  } >MAIN_RAM
+
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(4); /* make the section size a multiple of the word size */
-  } >CCMRAM AT>FLASH
+  } >MAIN_RAM AT>FLASH
 
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4); /* make the section size a multiple of the word size */
-  } >CCMRAM
+  } >MAIN_RAM
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >SRAM
+  } >AUX_RAM
 
   .capabilities : ALIGN(4) {
     KEEP(*(.capabilities_section*));
     . = ALIGN(4);
   } >BOARDCAPS
 
-  .stack : ALIGN(8) {
-    . = 4K; /* this acts as a build time assertion that at least this much memory is available for stack use */
-  } >CCMRAM
 }

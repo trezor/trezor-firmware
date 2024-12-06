@@ -4,13 +4,13 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = BOOTLOADER_START, LENGTH = BOOTLOADER_MAXSIZE
-  CCMRAM (wal)    : ORIGIN = MCU_CCMRAM, LENGTH = MCU_CCMRAM_SIZE - BOOTARGS_SIZE
-  BOOT_ARGS (wal) : ORIGIN = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
-  SRAM   (wal)    : ORIGIN = MCU_SRAM, LENGTH = MCU_SRAM_SIZE
+  MAIN_RAM (wal)  : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
+  BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
+  AUX_RAM   (wal) : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
 }
 
-main_stack_base = ORIGIN(CCMRAM) + SIZEOF(.stack) ; /* 8-byte aligned full descending stack */
-_sstack = ORIGIN(CCMRAM);
+main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+_sstack = ADDR(.stack);
 _estack = main_stack_base;
 
 /* used by the startup code to populate variables used by the C code */
@@ -60,12 +60,12 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
-  } >CCMRAM
+  } >MAIN_RAM
 
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >CCMRAM AT>FLASH
+  } >MAIN_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -74,14 +74,14 @@ SECTIONS {
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4);
-  } >CCMRAM
+  } >MAIN_RAM
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
     *(.no_dma_buffers*);
     . = ALIGN(4);
-  } >SRAM
+  } >AUX_RAM
 
   .boot_args : ALIGN(8) {
     *(.boot_args*);
