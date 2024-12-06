@@ -406,7 +406,8 @@ fn generate_trezorhal_bindings() {
         // toif
         .allowlist_type("toif_format_t")
         //usb
-        .allowlist_function("usb_configured")
+        .allowlist_type("usb_event_t")
+        .allowlist_function("usb_get_state")
         // touch
         .allowlist_function("touch_get_event")
         // button

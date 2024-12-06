@@ -545,7 +545,7 @@ extern "C" fn ui_layout_usb_event(n_args: usize, args: *const Obj) -> Obj {
             return Err(Error::TypeError);
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
-        let event = USBEvent::Connected(args[1].try_into()?);
+        let event = USBEvent::new(args[1].try_into()?)?;
         let msg = this.inner_mut().obj_event(Event::USB(event))?;
         Ok(msg)
     };

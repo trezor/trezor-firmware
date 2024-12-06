@@ -193,6 +193,18 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+void usb_get_state__verified(usb_state_t *state) {
+  if (!probe_write_access(state, sizeof(*state))) {
+    goto access_violation;
+  }
+
+  usb_get_state(state);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
 int usb_hid_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len) {
   if (!probe_write_access(buf, len)) {
     goto access_violation;

@@ -51,6 +51,10 @@ void display_fill__verified(const gfx_bitblt_t *bb);
 void display_copy_rgb565__verified(const gfx_bitblt_t *bb);
 
 // ---------------------------------------------------------------------
+#include <io/usb.h>
+void usb_get_state__verified(usb_state_t *state);
+
+// ---------------------------------------------------------------------
 #include <io/usb_hid.h>
 
 int usb_hid_read__verified(uint8_t iface_num, uint8_t *buf, uint32_t len);

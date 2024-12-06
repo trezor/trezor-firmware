@@ -11,7 +11,7 @@ use crate::{
             toif::Icon,
             Color, Font,
         },
-        event::{TouchEvent, USBEvent},
+        event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         model_tt::{constant, theme::IMAGE_HOMESCREEN},
@@ -130,7 +130,7 @@ impl Homescreen {
     }
 
     fn event_usb(&mut self, ctx: &mut EventCtx, event: Event) {
-        if let Event::USB(USBEvent::Connected(_)) = event {
+        if let Event::USB(_) = event {
             self.paint_notification_only = true;
             ctx.request_paint();
         }
