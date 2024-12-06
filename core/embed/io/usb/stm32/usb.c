@@ -172,6 +172,8 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
       0x80;  // 0x80 = bus powered; 0xC0 = self powered
   drv->config_desc->bMaxPower = 0x32;  // Maximum Power Consumption in 2mA units
 
+  drv->configured =
+      sectrue;  // starting with this flag set, to avoid false warnings
   drv->initialized = sectrue;
 
   return sectrue;
