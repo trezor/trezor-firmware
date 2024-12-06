@@ -112,6 +112,7 @@ def _from_env(name: str) -> bool:
 @click.option("-G", "--alloc-profiling/--no-alloc-profiling", default=_from_env("TREZOR_MEMPERF"), help="Profile memory allocation (requires special micropython build)")
 @click.option("-h", "--headless", is_flag=True, help="Headless mode (no display, disables animation)")
 @click.option("--heap-size", metavar="SIZE", default="20M", help="Configure heap size")
+@click.option("-m", "--tropic-model", is_flag=True, help="Start the Tropic Square model, needed for running the Tropic tests. Needs to be installed first.")
 @click.option("--main", help="Path to python main file")
 @click.option("--mnemonic", "mnemonics", multiple=True, help="Initialize device with given mnemonic. Specify multiple times for Shamir shares.")
 @click.option("--log-memory/--no-log-memory", default=_from_env("TREZOR_LOG_MEMORY"), help="Print memory usage after workflows")
@@ -139,6 +140,7 @@ def cli(
     alloc_profiling: bool,
     headless: bool,
     heap_size: str,
+    tropic_model: bool,
     main: str,
     mnemonics: list[str],
     log_memory: bool,
@@ -177,7 +179,7 @@ def cli(
     if command and not run_command:
         raise click.ClickException("Extra arguments found. Did you mean to use -c?")
 
-    if watch and (command or debugger):
+    if watch and (command or debugger or tropic_model):
         raise click.ClickException("Cannot use -w together with -c or -D")
 
     if watch and inotify is None:
@@ -296,6 +298,10 @@ def cli(
         trezorlib.debuglink.record_screen(
             emulator.client, record_dir, report_func=print
         )
+
+    if tropic_model:
+        run_command = True
+        command = "./tropic-model.sh"
 
     if run_command:
         ret = run_command_with_emulator(emulator, command)
