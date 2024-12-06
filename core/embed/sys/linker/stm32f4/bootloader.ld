@@ -4,9 +4,11 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = BOOTLOADER_START, LENGTH = BOOTLOADER_MAXSIZE
+  MAIN_STACK (wal)  : ORIGIN = MAIN_STACK_START, LENGTH = MAIN_STACK_SIZE
   MAIN_RAM (wal)  : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
+  FB1 (wal)       : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  AUX_RAM   (wal) : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
+  AUX1_RAM   (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
 main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -60,7 +62,7 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
-  } >MAIN_RAM
+  } >MAIN_STACK
 
   .data : ALIGN(4) {
     *(.data*);
@@ -76,12 +78,17 @@ SECTIONS {
     . = ALIGN(4);
   } >MAIN_RAM
 
+  .fb : ALIGN(4) {
+    *(.fb1*);
+    . = ALIGN(4);
+  } >FB1
+
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
     *(.no_dma_buffers*);
     . = ALIGN(4);
-  } >AUX_RAM
+  } >AUX1_RAM
 
   .boot_args : ALIGN(8) {
     *(.boot_args*);

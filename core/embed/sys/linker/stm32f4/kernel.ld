@@ -4,11 +4,11 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
-  STACK (wal)     : ORIGIN = KERNEL_STACK_START, LENGTH = KERNEL_STACK_SIZE
-  FB1 (wal)       : ORIGIN = KERNEL_FB1_START, LENGTH = KERNEL_FB1_SIZE
-  MAIN_RAM (wal)  : ORIGIN = KERNEL_RAM_START, LENGTH = KERNEL_RAM_SIZE
+  MAIN_STACK (wal): ORIGIN = K_MAIN_STACK_START, LENGTH = K_MAIN_STACK_SIZE
+  FB1 (wal)       : ORIGIN = K_FB1_RAM_START, LENGTH = K_FB1_RAM_SIZE
+  MAIN_RAM (wal)  : ORIGIN = K_MAIN_RAM_START, LENGTH = K_MAIN_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  SRAM   (wal)    : ORIGIN = KERNEL_SRAM_START, LENGTH = KERNEL_SRAM_SIZE
+  DMABUF   (wal)  : ORIGIN = DMABUF_RAM_START, LENGTH = DMABUF_RAM_SIZE
 }
 
 main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -66,7 +66,7 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 8K; /* Exactly 6k allocated for stack. Overflow causes MemManage fault (when using MPU). */
-  } >STACK
+  } >MAIN_STACK
 
   .data : ALIGN(4) {
     *(.data*);
@@ -81,7 +81,7 @@ SECTIONS {
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >SRAM
+  } >DMABUF
 
   .fb : ALIGN(4) {
     *(.fb1*);

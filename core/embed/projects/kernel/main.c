@@ -206,9 +206,9 @@ void drivers_init() {
 extern uint32_t _codelen;
 
 #define KERNEL_SIZE (uint32_t) & _codelen
-#ifndef COREAPP_RAM2_START
-#define COREAPP_RAM2_START 0
-#define COREAPP_RAM2_SIZE 0
+#ifndef AUX2_RAM_START
+#define AUX2_RAM_START 0
+#define AUX2_RAM_SIZE 0
 #endif
 
 // Initializes coreapp applet
@@ -224,10 +224,10 @@ static void coreapp_init(applet_t *applet) {
   applet_header_t *coreapp_header = (applet_header_t *)CODE1_START;
 
   applet_layout_t coreapp_layout = {
-      .data1.start = (uint32_t)AUX_RAM_START,
-      .data1.size = (uint32_t)AUX_RAM_SIZE,
-      .data2.start = (uint32_t)COREAPP_RAM2_START,
-      .data2.size = (uint32_t)COREAPP_RAM2_SIZE,
+      .data1.start = (uint32_t)AUX1_RAM_START,
+      .data1.size = (uint32_t)AUX1_RAM_SIZE,
+      .data2.start = (uint32_t)AUX2_RAM_START,
+      .data2.size = (uint32_t)AUX2_RAM_SIZE,
       .code1.start = CODE1_START,
       .code1.size = CODE1_END - CODE1_START,
 #ifdef FIRMWARE_P2_START

@@ -5,8 +5,10 @@ ENTRY(reset_handler)
 MEMORY {
   FLASH  (rx)     : ORIGIN = BOARDLOADER_START, LENGTH = BOARDLOADER_MAXSIZE - BOARDCAPS_MAXSIZE
   BOARDCAPS (rx)  : ORIGIN = BOARDCAPS_START, LENGTH = BOARDCAPS_MAXSIZE
+  MAIN_STACK (wal)  : ORIGIN = MAIN_STACK_START, LENGTH = MAIN_STACK_SIZE
   MAIN_RAM (wal)  : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
-  AUX_RAM (wal)   : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
+  FB1 (wal)       : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
+  AUX1_RAM (wal)  : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
 main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -55,7 +57,7 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 16K; /* this acts as a build time assertion that at least this much memory is available for stack use */
-  } >MAIN_RAM
+  } >MAIN_STACK
 
   .data : ALIGN(4) {
     *(.data*);
@@ -67,10 +69,15 @@ SECTIONS {
     . = ALIGN(4); /* make the section size a multiple of the word size */
   } >MAIN_RAM
 
+  .fb : ALIGN(4) {
+    *(.fb1*);
+    . = ALIGN(4);
+  } >FB1
+
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >AUX_RAM
+  } >AUX1_RAM
 
   .capabilities : ALIGN(4) {
     KEEP(*(.capabilities_section*));

@@ -94,31 +94,38 @@
 #define FIRMWARE_P2_SECTOR_START 17
 #define FIRMWARE_P2_SECTOR_END 23
 
-// unified RAM for boardloader, bootloader, prodtest
-#define MAIN_RAM_START 0x10000000
-#define MAIN_RAM_SIZE (64 * 1024 - 0x100)
+// Ram layout - boardloader, bootloader, prodtest
+#define MAIN_STACK_START 0x10000000
+#define MAIN_STACK_SIZE (16 * 1024)
 
-// RAM layout
-#define KERNEL_STACK_START 0x10000000
-#define KERNEL_STACK_SIZE (8 * 1024)
+#define FB1_RAM_START 0x10004000
+#define FB1_RAM_SIZE (8 * 1024)
 
-#define COREAPP_RAM2_START 0x10002000
-#define COREAPP_RAM2_SIZE (32 * 1024)
+#define MAIN_RAM_START 0x10006000
+#define MAIN_RAM_SIZE (40 * 1024 - 0x100)
 
-#define KERNEL_FB1_START 0x1000A000
-#define KERNEL_FB1_SIZE (8 * 1024)
+// RAM layout - kernel
+#define K_MAIN_STACK_START 0x10000000
+#define K_MAIN_STACK_SIZE (8 * 1024)
 
-#define KERNEL_RAM_START 0x1000C000
-#define KERNEL_RAM_SIZE (16 * 1024 - 0x100)
+#define K_AUX2_RAM_START 0x10002000
+#define K_AUX2_RAM_SIZE (32 * 1024)
 
+#define K_FB1_RAM_START 0x1000A000
+#define K_FB1_RAM_SIZE (8 * 1024)
+
+#define K_MAIN_RAM_START 0x1000C000
+#define K_MAIN_RAM_SIZE (16 * 1024 - 0x100)
+
+// RAM layout - commom
 #define BOOTARGS_START 0x1000FF00
 #define BOOTARGS_SIZE 0x100
 
-#define KERNEL_SRAM_START 0x20000000
-#define KERNEL_SRAM_SIZE (1 * 1024)
+#define DMABUF_RAM_START 0x20000000
+#define DMABUF_RAM_SIZE (1 * 1024)
 
-#define AUX_RAM_START (0x20000400)
-#define AUX_RAM_SIZE (191 * 1024)
+#define AUX1_RAM_START (0x20000400)
+#define AUX1_RAM_SIZE (191 * 1024)
 
 // misc
 #define CODE_ALIGNMENT 0x200

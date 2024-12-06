@@ -4,9 +4,11 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)     : ORIGIN = FIRMWARE_P1_START, LENGTH = FIRMWARE_P1_MAXSIZE
+  MAIN_STACK (wal)  : ORIGIN = MAIN_STACK_START, LENGTH = MAIN_STACK_SIZE
   MAIN_RAM (wal)  : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
+  FB1 (wal)       : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
-  AUX_RAM   (wal) : ORIGIN = AUX_RAM_START, LENGTH = AUX_RAM_SIZE
+  AUX1_RAM   (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
 main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
@@ -70,17 +72,22 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 16K; /* this acts as a build time assertion that at least this much memory is available for stack use */
-  } >AUX_RAM
+  } >MAIN_STACK
 
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >AUX_RAM AT>FLASH
+  } >AUX1_RAM AT>FLASH
 
   .bss : ALIGN(4) {
     *(.bss*);
     . = ALIGN(4);
-  } >AUX_RAM
+  } >AUX1_RAM
+
+  .fb : ALIGN(4) {
+    *(.fb1*);
+    . = ALIGN(4);
+  } >FB1
 
   .boot_args : ALIGN(8) {
     *(.boot_args*);
