@@ -397,10 +397,15 @@ static void ge25519_cmove_stride4(long * r, long * p, long * pos, long * n, int 
     y1 = p[1];
     y2 = p[2];
     y3 = p[3];
-    x0 = flag ? y0 : x0;
-    x1 = flag ? y1 : x1;
-    x2 = flag ? y2 : x2;
-    x3 = flag ? y3 : x3;
+    
+    const long mask_y = -flag;
+    const long mask_x = ~mask_y;
+    
+    // x = flag ? y : x
+    x0 = (y0 & mask_y) | (x0 & mask_x);
+    x1 = (y1 & mask_y) | (x1 & mask_x);
+    x2 = (y2 & mask_y) | (x2 & mask_x);
+    x3 = (y3 & mask_y) | (x3 & mask_x);
   }
   r[0] = x0;
   r[1] = x1;
@@ -417,10 +422,15 @@ static void ge25519_cmove_stride4b(long * r, long * p, long * pos, long * n, int
     y1 = p[1];
     y2 = p[2];
     y3 = p[3];
-    x0 = flag ? y0 : x0;
-    x1 = flag ? y1 : x1;
-    x2 = flag ? y2 : x2;
-    x3 = flag ? y3 : x3;
+    
+    const long mask_y = -flag;
+    const long mask_x = ~mask_y;
+    
+    // x = flag ? y : x
+    x0 = (y0 & mask_y) | (x0 & mask_x);
+    x1 = (y1 & mask_y) | (x1 & mask_x);
+    x2 = (y2 & mask_y) | (x2 & mask_x);
+    x3 = (y3 & mask_y) | (x3 & mask_x);
   }
   r[0] = x0;
   r[1] = x1;
