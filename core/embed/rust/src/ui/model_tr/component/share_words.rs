@@ -92,23 +92,24 @@ impl<'a> ShareWords<'a> {
     fn render_words<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut y_offset = 0;
         // Showing the word index and the words itself
-        for i in 0..WORDS_PER_PAGE {
+        for (word_idx, word) in self
+            .share_words
+            .iter()
+            .enumerate()
+            .skip(self.page_index * WORDS_PER_PAGE)
+            .take(WORDS_PER_PAGE)
+        {
+            let ordinal = word_idx + 1;
             y_offset += NUMBER_FONT.line_height() + EXTRA_LINE_HEIGHT;
-            let index = self.word_index() + i;
-            if index >= self.share_words.len() {
-                break;
-            }
-            let word = &self.share_words[index];
-            let baseline = self.area.top_left() + Offset::y(y_offset);
-            let ordinal = uformat!("{}.", index + 1);
+            let base = self.area.top_left() + Offset::y(y_offset);
 
-            shape::Text::new(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal)
+            let ordinal_txt = uformat!("{}.", ordinal);
+            shape::Text::new(base + Offset::x(NUMBER_X_OFFSET), &ordinal_txt)
                 .with_font(NUMBER_FONT)
                 .with_fg(theme::FG)
                 .render(target);
-
             word.map(|w| {
-                shape::Text::new(baseline + Offset::x(WORD_X_OFFSET), w)
+                shape::Text::new(base + Offset::x(WORD_X_OFFSET), w)
                     .with_font(WORD_FONT)
                     .with_fg(theme::FG)
                     .render(target);
@@ -170,13 +171,15 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
             self.get_final_text()
         } else {
             let mut content = ShortString::new();
-            for i in 0..WORDS_PER_PAGE {
-                let index = self.word_index() + i;
-                if index >= self.share_words.len() {
-                    break;
-                }
-                self.share_words[index]
-                    .map(|word| unwrap!(uwrite!(content, "{}. {}\n", index + 1, word)));
+            for (word_idx, word) in self
+                .share_words
+                .iter()
+                .enumerate()
+                .skip(self.page_index * WORDS_PER_PAGE)
+                .take(WORDS_PER_PAGE)
+            {
+                let ordinal = word_idx + 1;
+                word.map(|w| unwrap!(uwrite!(content, "{}. {}\n", ordinal, w)));
             }
             content
         };

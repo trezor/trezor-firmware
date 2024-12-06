@@ -96,6 +96,7 @@ pub fn new_get_address(
     account: Option<TString<'static>>,
     path: Option<TString<'static>>,
     xpubs: Obj, // TODO: get rid of Obj
+    title_success: TString<'static>,
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
@@ -141,7 +142,7 @@ pub fn new_get_address(
 
     let content_confirmed = Frame::left_aligned(
         TR::words__title_success.into(),
-        StatusScreen::new_success_timeout(TR::address__confirmed.into()),
+        StatusScreen::new_success_timeout(title_success),
     )
     .with_footer(TR::instructions__continue_in_app.into(), None)
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)

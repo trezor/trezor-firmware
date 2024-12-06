@@ -1,4 +1,4 @@
-import trezorui2
+import trezorui_api
 from trezor import ui
 from trezor.enums import ButtonRequestType
 
@@ -12,7 +12,7 @@ async def confirm_fido(
     accounts: list[str | None],
 ) -> int:
     """Webauthn confirmation for one or more credentials."""
-    confirm = trezorui2.confirm_fido(
+    confirm = trezorui_api.confirm_fido(
         title=header,
         app_name=app_name,
         icon_name=icon_name,
@@ -20,7 +20,7 @@ async def confirm_fido(
     )
     result = await interact(confirm, "confirm_fido", ButtonRequestType.Other)
 
-    if __debug__ and result is trezorui2.CONFIRMED:
+    if __debug__ and result is trezorui_api.CONFIRMED:
         # debuglink will directly inject a CONFIRMED message which we need to handle
         # by playing back a click to the Rust layout and getting out the selected number
         # that way
@@ -43,7 +43,7 @@ async def confirm_fido_reset() -> bool:
     from trezor import TR
 
     confirm = ui.Layout(
-        trezorui2.confirm_action(
+        trezorui_api.confirm_action(
             title=TR.fido__title_reset,
             action=TR.fido__erase_credentials,
             description=TR.words__really_wanna,
@@ -51,4 +51,4 @@ async def confirm_fido_reset() -> bool:
             prompt_screen=True,
         )
     )
-    return (await confirm.get_result()) is trezorui2.CONFIRMED
+    return (await confirm.get_result()) is trezorui_api.CONFIRMED

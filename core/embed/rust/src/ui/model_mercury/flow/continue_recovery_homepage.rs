@@ -154,11 +154,11 @@ fn footer_update_fn(
     footer.update_page_counter(ctx, current_page, total_pages);
 }
 
-pub fn new_continue_recovery(
-    first_screen: bool,
-    recovery_type: RecoveryType,
+pub fn new_continue_recovery_homepage(
     text: TString<'static>,
     subtext: Option<TString<'static>>,
+    recovery_type: RecoveryType,
+    show_instructions: bool, // 1st screen of the recovery process
     pages: Option<ParagraphVecLong<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     let (title, cancel_btn, cancel_title, cancel_intro) = match recovery_type {
@@ -179,7 +179,7 @@ pub fn new_continue_recovery(
     let mut pars_main = ParagraphVecShort::new();
     let footer_instruction;
     let footer_description;
-    if first_screen {
+    if show_instructions {
         pars_main.add(Paragraph::new(
             &theme::TEXT_MAIN_GREY_EXTRA_LIGHT,
             TR::recovery__enter_each_word,
@@ -246,7 +246,7 @@ pub fn new_continue_recovery(
         _ => None,
     });
 
-    let res = if first_screen {
+    let res = if show_instructions {
         let content_menu = Frame::left_aligned(
             TString::empty(),
             VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_btn.into()),

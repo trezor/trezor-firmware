@@ -67,7 +67,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
         return await recovery_process()
 
     if recovery_type == RecoveryType.NormalRecovery:
-        await confirm_reset_device(TR.recovery__title_recover, recovery=True)
+        await confirm_reset_device(recovery=True)
 
         # wipe storage to make sure the device is in a clear state
         storage.reset()
