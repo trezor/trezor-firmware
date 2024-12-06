@@ -131,12 +131,20 @@ class GenericSessionContext(Context):
 class ManagementSessionContext(GenericSessionContext):
 
     def __init__(
-        self, channel_ctx: Channel, session_id: int = MANAGEMENT_SESSION_ID
+        self,
+        channel_ctx: Channel,
+        session_id: int = MANAGEMENT_SESSION_ID,
+        session_cache: SessionThpCache | None = None,
     ) -> None:
+        self.session_cache = session_cache
         super().__init__(channel_ctx, session_id)
 
     def get_session_state(self) -> SessionState:
         return SessionState.MANAGEMENT
+
+    def release(self) -> None:
+        if self.session_cache is not None:
+            cache_thp.clear_session(self.session_cache)
 
 
 class SessionContext(GenericSessionContext):

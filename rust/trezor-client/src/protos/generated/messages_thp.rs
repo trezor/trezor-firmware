@@ -504,6 +504,8 @@ pub struct ThpCreateNewSession {
     pub on_device: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCreateNewSession.derive_cardano)
     pub derive_cardano: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCreateNewSession.session_id)
+    pub session_id: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpCreateNewSession.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -594,8 +596,27 @@ impl ThpCreateNewSession {
         self.derive_cardano = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 session_id = 4;
+
+    pub fn session_id(&self) -> u32 {
+        self.session_id.unwrap_or(0)
+    }
+
+    pub fn clear_session_id(&mut self) {
+        self.session_id = ::std::option::Option::None;
+    }
+
+    pub fn has_session_id(&self) -> bool {
+        self.session_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_session_id(&mut self, v: u32) {
+        self.session_id = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "passphrase",
@@ -611,6 +632,11 @@ impl ThpCreateNewSession {
             "derive_cardano",
             |m: &ThpCreateNewSession| { &m.derive_cardano },
             |m: &mut ThpCreateNewSession| { &mut m.derive_cardano },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "session_id",
+            |m: &ThpCreateNewSession| { &m.session_id },
+            |m: &mut ThpCreateNewSession| { &mut m.session_id },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpCreateNewSession>(
             "ThpCreateNewSession",
@@ -639,6 +665,9 @@ impl ::protobuf::Message for ThpCreateNewSession {
                 24 => {
                     self.derive_cardano = ::std::option::Option::Some(is.read_bool()?);
                 },
+                32 => {
+                    self.session_id = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -660,6 +689,9 @@ impl ::protobuf::Message for ThpCreateNewSession {
         if let Some(v) = self.derive_cardano {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.session_id {
+            my_size += ::protobuf::rt::uint32_size(4, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -674,6 +706,9 @@ impl ::protobuf::Message for ThpCreateNewSession {
         }
         if let Some(v) = self.derive_cardano {
             os.write_bool(3, v)?;
+        }
+        if let Some(v) = self.session_id {
+            os.write_uint32(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -695,6 +730,7 @@ impl ::protobuf::Message for ThpCreateNewSession {
         self.passphrase = ::std::option::Option::None;
         self.on_device = ::std::option::Option::None;
         self.derive_cardano = ::std::option::Option::None;
+        self.session_id = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -703,6 +739,7 @@ impl ::protobuf::Message for ThpCreateNewSession {
             passphrase: ::std::option::Option::None,
             on_device: ::std::option::Option::None,
             derive_cardano: ::std::option::Option::None,
+            session_id: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4046,62 +4083,62 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     .thp.ThpPairingMethodR\x0epairingMethods\"\xb2\x01\n%ThpHandshakeComplet\
     ionReqNoisePayload\x126\n\x17host_pairing_credential\x18\x01\x20\x01(\
     \x0cR\x15hostPairingCredential\x12Q\n\x0fpairing_methods\x18\x02\x20\x03\
-    (\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x0epairingMethods\"y\n\
-    \x13ThpCreateNewSession\x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\npassp\
-    hrase\x12\x1b\n\ton_device\x18\x02\x20\x01(\x08R\x08onDevice\x12%\n\x0ed\
-    erive_cardano\x18\x03\x20\x01(\x08R\rderiveCardano\"5\n\rThpNewSession\
-    \x12$\n\x0enew_session_id\x18\x01\x20\x01(\rR\x0cnewSessionId\"5\n\x16Th\
-    pStartPairingRequest\x12\x1b\n\thost_name\x18\x01\x20\x01(\tR\x08hostNam\
-    e\"\x20\n\x1eThpPairingPreparationsFinished\"8\n\x16ThpCodeEntryCommitme\
-    nt\x12\x1e\n\ncommitment\x18\x01\x20\x01(\x0cR\ncommitment\"5\n\x15ThpCo\
-    deEntryChallenge\x12\x1c\n\tchallenge\x18\x01\x20\x01(\x0cR\tchallenge\"\
-    J\n\x15ThpCodeEntryCpaceHost\x121\n\x15cpace_host_public_key\x18\x01\x20\
-    \x01(\x0cR\x12cpaceHostPublicKey\"P\n\x17ThpCodeEntryCpaceTrezor\x125\n\
-    \x17cpace_trezor_public_key\x18\x01\x20\x01(\x0cR\x14cpaceTrezorPublicKe\
-    y\"#\n\x0fThpCodeEntryTag\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\
-    \",\n\x12ThpCodeEntrySecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\
-    \x06secret\"\x20\n\x0cThpQrCodeTag\x12\x10\n\x03tag\x18\x01\x20\x01(\x0c\
-    R\x03tag\")\n\x0fThpQrCodeSecret\x12\x16\n\x06secret\x18\x01\x20\x01(\
-    \x0cR\x06secret\"+\n\x17ThpNfcUnidirectionalTag\x12\x10\n\x03tag\x18\x01\
-    \x20\x01(\x0cR\x03tag\"4\n\x1aThpNfcUnidirectionalSecret\x12\x16\n\x06se\
-    cret\x18\x01\x20\x01(\x0cR\x06secret\"D\n\x14ThpCredentialRequest\x12,\n\
-    \x12host_static_pubkey\x18\x01\x20\x01(\x0cR\x10hostStaticPubkey\"i\n\
-    \x15ThpCredentialResponse\x120\n\x14trezor_static_pubkey\x18\x01\x20\x01\
-    (\x0cR\x12trezorStaticPubkey\x12\x1e\n\ncredential\x18\x02\x20\x01(\x0cR\
-    \ncredential\"\x0f\n\rThpEndRequest\"\x10\n\x0eThpEndResponse\":\n\x15Th\
-    pCredentialMetadata\x12\x1b\n\thost_name\x18\x01\x20\x01(\tR\x08hostName\
-    :\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\x12R\n\rcred_m\
-    etadata\x18\x01\x20\x01(\x0b2-.hw.trezor.messages.thp.ThpCredentialMetad\
-    ataR\x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac:\x04\
-    \x98\xb2\x19\x01\"\xa8\x01\n\x1eThpAuthenticatedCredentialData\x12,\n\
-    \x12host_static_pubkey\x18\x01\x20\x01(\x0cR\x10hostStaticPubkey\x12R\n\
-    \rcred_metadata\x18\x02\x20\x01(\x0b2-.hw.trezor.messages.thp.ThpCredent\
-    ialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01*\xf6\x06\n\x0eThpMessa\
-    geType\x12-\n\"ThpMessageType_ThpCreateNewSession\x10\xe8\x07\x1a\x04\
-    \x80\xa6\x1d\x01\x12'\n\x1cThpMessageType_ThpNewSession\x10\xe9\x07\x1a\
-    \x04\x80\xa6\x1d\x01\x120\n%ThpMessageType_ThpStartPairingRequest\x10\
-    \xf0\x07\x1a\x04\x80\xa6\x1d\x01\x128\n-ThpMessageType_ThpPairingPrepara\
-    tionsFinished\x10\xf1\x07\x1a\x04\x80\xa6\x1d\x01\x12.\n#ThpMessageType_\
-    ThpCredentialRequest\x10\xf2\x07\x1a\x04\x80\xa6\x1d\x01\x12/\n$ThpMessa\
-    geType_ThpCredentialResponse\x10\xf3\x07\x1a\x04\x80\xa6\x1d\x01\x12'\n\
-    \x1cThpMessageType_ThpEndRequest\x10\xf4\x07\x1a\x04\x80\xa6\x1d\x01\x12\
-    (\n\x1dThpMessageType_ThpEndResponse\x10\xf5\x07\x1a\x04\x80\xa6\x1d\x01\
-    \x120\n%ThpMessageType_ThpCodeEntryCommitment\x10\xf8\x07\x1a\x04\x80\
-    \xa6\x1d\x01\x12/\n$ThpMessageType_ThpCodeEntryChallenge\x10\xf9\x07\x1a\
-    \x04\x80\xa6\x1d\x01\x12/\n$ThpMessageType_ThpCodeEntryCpaceHost\x10\xfa\
-    \x07\x1a\x04\x80\xa6\x1d\x01\x121\n&ThpMessageType_ThpCodeEntryCpaceTrez\
-    or\x10\xfb\x07\x1a\x04\x80\xa6\x1d\x01\x12)\n\x1eThpMessageType_ThpCodeE\
-    ntryTag\x10\xfc\x07\x1a\x04\x80\xa6\x1d\x01\x12,\n!ThpMessageType_ThpCod\
-    eEntrySecret\x10\xfd\x07\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bThpMessageTyp\
-    e_ThpQrCodeTag\x10\x80\x08\x1a\x04\x80\xa6\x1d\x01\x12)\n\x1eThpMessageT\
-    ype_ThpQrCodeSecret\x10\x81\x08\x1a\x04\x80\xa6\x1d\x01\x121\n&ThpMessag\
-    eType_ThpNfcUnidirectionalTag\x10\x88\x08\x1a\x04\x80\xa6\x1d\x01\x124\n\
-    )ThpMessageType_ThpNfcUnidirectionalSecret\x10\x89\x08\x1a\x04\x80\xa6\
-    \x1d\x01\"\x05\x08\0\x10\xe7\x07\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07\
-    *S\n\x10ThpPairingMethod\x12\x0c\n\x08NoMethod\x10\x01\x12\r\n\tCodeEntr\
-    y\x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x16\n\x12NFC_Unidirectional\x10\
-    \x04B;\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageThp\x80\
-    \xa6\x1d\x01\
+    (\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x0epairingMethods\"\x98\
+    \x01\n\x13ThpCreateNewSession\x12\x1e\n\npassphrase\x18\x01\x20\x01(\tR\
+    \npassphrase\x12\x1b\n\ton_device\x18\x02\x20\x01(\x08R\x08onDevice\x12%\
+    \n\x0ederive_cardano\x18\x03\x20\x01(\x08R\rderiveCardano\x12\x1d\n\nses\
+    sion_id\x18\x04\x20\x01(\rR\tsessionId\"5\n\rThpNewSession\x12$\n\x0enew\
+    _session_id\x18\x01\x20\x01(\rR\x0cnewSessionId\"5\n\x16ThpStartPairingR\
+    equest\x12\x1b\n\thost_name\x18\x01\x20\x01(\tR\x08hostName\"\x20\n\x1eT\
+    hpPairingPreparationsFinished\"8\n\x16ThpCodeEntryCommitment\x12\x1e\n\n\
+    commitment\x18\x01\x20\x01(\x0cR\ncommitment\"5\n\x15ThpCodeEntryChallen\
+    ge\x12\x1c\n\tchallenge\x18\x01\x20\x01(\x0cR\tchallenge\"J\n\x15ThpCode\
+    EntryCpaceHost\x121\n\x15cpace_host_public_key\x18\x01\x20\x01(\x0cR\x12\
+    cpaceHostPublicKey\"P\n\x17ThpCodeEntryCpaceTrezor\x125\n\x17cpace_trezo\
+    r_public_key\x18\x01\x20\x01(\x0cR\x14cpaceTrezorPublicKey\"#\n\x0fThpCo\
+    deEntryTag\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\",\n\x12ThpCode\
+    EntrySecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\x06secret\"\x20\n\
+    \x0cThpQrCodeTag\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\")\n\x0fT\
+    hpQrCodeSecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\x06secret\"+\n\
+    \x17ThpNfcUnidirectionalTag\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03ta\
+    g\"4\n\x1aThpNfcUnidirectionalSecret\x12\x16\n\x06secret\x18\x01\x20\x01\
+    (\x0cR\x06secret\"D\n\x14ThpCredentialRequest\x12,\n\x12host_static_pubk\
+    ey\x18\x01\x20\x01(\x0cR\x10hostStaticPubkey\"i\n\x15ThpCredentialRespon\
+    se\x120\n\x14trezor_static_pubkey\x18\x01\x20\x01(\x0cR\x12trezorStaticP\
+    ubkey\x12\x1e\n\ncredential\x18\x02\x20\x01(\x0cR\ncredential\"\x0f\n\rT\
+    hpEndRequest\"\x10\n\x0eThpEndResponse\":\n\x15ThpCredentialMetadata\x12\
+    \x1b\n\thost_name\x18\x01\x20\x01(\tR\x08hostName:\x04\x98\xb2\x19\x01\"\
+    \x82\x01\n\x14ThpPairingCredential\x12R\n\rcred_metadata\x18\x01\x20\x01\
+    (\x0b2-.hw.trezor.messages.thp.ThpCredentialMetadataR\x0ccredMetadata\
+    \x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac:\x04\x98\xb2\x19\x01\"\
+    \xa8\x01\n\x1eThpAuthenticatedCredentialData\x12,\n\x12host_static_pubke\
+    y\x18\x01\x20\x01(\x0cR\x10hostStaticPubkey\x12R\n\rcred_metadata\x18\
+    \x02\x20\x01(\x0b2-.hw.trezor.messages.thp.ThpCredentialMetadataR\x0ccre\
+    dMetadata:\x04\x98\xb2\x19\x01*\xf6\x06\n\x0eThpMessageType\x12-\n\"ThpM\
+    essageType_ThpCreateNewSession\x10\xe8\x07\x1a\x04\x80\xa6\x1d\x01\x12'\
+    \n\x1cThpMessageType_ThpNewSession\x10\xe9\x07\x1a\x04\x80\xa6\x1d\x01\
+    \x120\n%ThpMessageType_ThpStartPairingRequest\x10\xf0\x07\x1a\x04\x80\
+    \xa6\x1d\x01\x128\n-ThpMessageType_ThpPairingPreparationsFinished\x10\
+    \xf1\x07\x1a\x04\x80\xa6\x1d\x01\x12.\n#ThpMessageType_ThpCredentialRequ\
+    est\x10\xf2\x07\x1a\x04\x80\xa6\x1d\x01\x12/\n$ThpMessageType_ThpCredent\
+    ialResponse\x10\xf3\x07\x1a\x04\x80\xa6\x1d\x01\x12'\n\x1cThpMessageType\
+    _ThpEndRequest\x10\xf4\x07\x1a\x04\x80\xa6\x1d\x01\x12(\n\x1dThpMessageT\
+    ype_ThpEndResponse\x10\xf5\x07\x1a\x04\x80\xa6\x1d\x01\x120\n%ThpMessage\
+    Type_ThpCodeEntryCommitment\x10\xf8\x07\x1a\x04\x80\xa6\x1d\x01\x12/\n$T\
+    hpMessageType_ThpCodeEntryChallenge\x10\xf9\x07\x1a\x04\x80\xa6\x1d\x01\
+    \x12/\n$ThpMessageType_ThpCodeEntryCpaceHost\x10\xfa\x07\x1a\x04\x80\xa6\
+    \x1d\x01\x121\n&ThpMessageType_ThpCodeEntryCpaceTrezor\x10\xfb\x07\x1a\
+    \x04\x80\xa6\x1d\x01\x12)\n\x1eThpMessageType_ThpCodeEntryTag\x10\xfc\
+    \x07\x1a\x04\x80\xa6\x1d\x01\x12,\n!ThpMessageType_ThpCodeEntrySecret\
+    \x10\xfd\x07\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bThpMessageType_ThpQrCodeT\
+    ag\x10\x80\x08\x1a\x04\x80\xa6\x1d\x01\x12)\n\x1eThpMessageType_ThpQrCod\
+    eSecret\x10\x81\x08\x1a\x04\x80\xa6\x1d\x01\x121\n&ThpMessageType_ThpNfc\
+    UnidirectionalTag\x10\x88\x08\x1a\x04\x80\xa6\x1d\x01\x124\n)ThpMessageT\
+    ype_ThpNfcUnidirectionalSecret\x10\x89\x08\x1a\x04\x80\xa6\x1d\x01\"\x05\
+    \x08\0\x10\xe7\x07\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*S\n\x10ThpPai\
+    ringMethod\x12\x0c\n\x08NoMethod\x10\x01\x12\r\n\tCodeEntry\x10\x02\x12\
+    \n\n\x06QrCode\x10\x03\x12\x16\n\x12NFC_Unidirectional\x10\x04B;\n#com.s\
+    atoshilabs.trezor.lib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
