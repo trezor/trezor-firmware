@@ -1216,8 +1216,9 @@ class InputFlowEthereumSignTxStaking(InputFlowBase):
         yield from self.ETH.confirm_tx_staking(info=True)
 
 
-def get_mnemonic_and_confirm_success(
+def get_mnemonic(
     debug: DebugLink,
+    confirm_success: bool = True,
 ) -> Generator[None, "messages.ButtonRequest", str]:
     # mnemonic phrases
     mnemonic = yield from read_and_confirm_mnemonic(debug)
@@ -1228,8 +1229,10 @@ def get_mnemonic_and_confirm_success(
         assert br.code == B.Success
         debug.press_yes()
 
-    br = yield  # confirm success
-    assert br.code == B.Success
+    if confirm_success:
+        br = yield
+        assert br.code == B.Success
+
     debug.press_yes()
 
     assert mnemonic is not None
@@ -1237,9 +1240,10 @@ def get_mnemonic_and_confirm_success(
 
 
 class InputFlowBip39Backup(InputFlowBase):
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, confirm_success: bool = True):
         super().__init__(client)
         self.mnemonic = None
+        self.confirm_success = confirm_success
 
     def input_flow_common(self) -> BRGeneratorType:
         # 1. Backup intro
@@ -1247,7 +1251,7 @@ class InputFlowBip39Backup(InputFlowBase):
         yield from click_through(self.debug, screens=2, code=B.ResetDevice)
 
         # mnemonic phrases and rest
-        self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
+        self.mnemonic = yield from get_mnemonic(self.debug, self.confirm_success)
 
 
 class InputFlowBip39ResetBackup(InputFlowBase):
@@ -1264,7 +1268,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         yield from click_through(self.debug, screens=4, code=B.ResetDevice)
 
         # mnemonic phrases and rest
-        self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
+        self.mnemonic = yield from get_mnemonic(self.debug)
 
     def input_flow_tr(self) -> BRGeneratorType:
         # 1. Confirm Reset
@@ -1274,7 +1278,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         yield from click_through(self.debug, screens=4, code=B.ResetDevice)
 
         # mnemonic phrases and rest
-        self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
+        self.mnemonic = yield from get_mnemonic(self.debug)
 
     def input_flow_t3t1(self) -> BRGeneratorType:
         # 1. Confirm Reset
@@ -1285,7 +1289,7 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         yield from click_through(self.debug, screens=5, code=B.ResetDevice)
 
         # mnemonic phrases and rest
-        self.mnemonic = yield from get_mnemonic_and_confirm_success(self.debug)
+        self.mnemonic = yield from get_mnemonic(self.debug)
 
 
 class InputFlowBip39ResetPIN(InputFlowBase):
