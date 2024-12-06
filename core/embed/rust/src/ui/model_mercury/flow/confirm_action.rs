@@ -248,7 +248,6 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     let mut content = Frame::left_aligned(strings.title, content)
         .with_margin(frame_margin)
         .with_swipe(Direction::Up, SwipeSettings::default())
-        .with_swipe(Direction::Left, SwipeSettings::default())
         .with_vertical_pages()
         .with_footer(
             TR::instructions__swipe_up.into(),
@@ -257,7 +256,9 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
 
     match extra {
         ConfirmActionExtra::Menu { .. } => {
-            content = content.with_menu_button();
+            content = content
+                .with_menu_button()
+                .with_swipe(Direction::Left, SwipeSettings::default());
         }
         ConfirmActionExtra::Cancel => {
             content = content.with_cancel_button();
