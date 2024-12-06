@@ -8,6 +8,9 @@ use crate::{
 };
 use core::slice;
 
+#[cfg(feature = "translations")]
+use crate::translations::get_utf8_glyph;
+
 /// Representation of a single glyph.
 /// We use standard typographic terms. For a nice explanation, see, e.g.,
 /// the FreeType docs at https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
@@ -129,8 +132,9 @@ impl From<Font> for i32 {
 }
 
 impl Font {
+    /// Supports UTF8 characters
     pub fn text_width(self, text: &str) -> i16 {
-        display::text_width(text, self.into())
+        text.chars().fold(0, |acc, c| acc + self.char_width(c))
     }
 
     /// Supports UTF8 characters
@@ -198,31 +202,26 @@ impl Font {
             return 0;
         }
 
-        if let Some(glyph) = self.get_first_glyph_from_text(text) {
-            glyph.bearing_x
-        } else {
-            0
-        }
+        self.get_first_glyph_from_text(text)
+            .map_or(0, |glyph| glyph.bearing_x)
     }
 
     pub fn char_width(self, ch: char) -> i16 {
-        display::char_width(ch, self.into())
+        self.get_glyph(ch).adv
     }
 
     pub fn text_height(self) -> i16 {
-        display::text_height(self.into())
+        display::get_font_info(self.into()).map_or(i16::MAX, |font| font.height.try_into().unwrap())
     }
 
     pub fn text_max_height(self) -> i16 {
-        display::text_max_height(self.into())
+        display::get_font_info(self.into())
+            .map_or(i16::MAX, |font| font.max_height.try_into().unwrap())
     }
 
     pub fn text_baseline(self) -> i16 {
-        display::text_baseline(self.into())
-    }
-
-    pub fn max_height(self) -> i16 {
-        display::text_max_height(self.into())
+        display::get_font_info(self.into())
+            .map_or(i16::MAX, |font| font.baseline.try_into().unwrap())
     }
 
     pub fn line_height(self) -> i16 {
@@ -248,6 +247,29 @@ impl Font {
         (start + end + self.visible_text_height(text)) / 2
     }
 
+    fn get_glyph_data(&self, codepoint: u16) -> *const u8 {
+        display::get_font_info((*self).into()).map_or(core::ptr::null(), |font_info| {
+            #[cfg(feature = "translations")]
+            {
+                if codepoint >= 0x7F {
+                    // UTF8 character from embedded blob
+                    return unsafe { get_utf8_glyph(codepoint, *self) };
+                }
+            }
+
+            if codepoint >= ' ' as u16 && codepoint < 0x7F {
+                // ASCII character
+                unsafe {
+                    *font_info
+                        .glyph_data
+                        .offset((codepoint - ' ' as u16) as isize)
+                }
+            } else {
+                font_info.glyph_nonprintable
+            }
+        })
+    }
+
     pub fn get_glyph(self, ch: char) -> Glyph {
         /* have the non-breaking space counted for width but not counted as a
          * breaking point */
@@ -255,7 +277,7 @@ impl Font {
             '\u{00a0}' => '\u{0020}',
             c => c,
         };
-        let gl_data = display::get_char_glyph(ch as u16, self.into());
+        let gl_data = self.get_glyph_data(ch as u16);
 
         ensure!(!gl_data.is_null(), "Failed to load glyph");
         // SAFETY: Glyph::load is valid for data returned by get_char_glyph

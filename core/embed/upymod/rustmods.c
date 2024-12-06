@@ -18,7 +18,6 @@
  */
 
 #include "librust.h"
-#include "librust_fonts.h"
 #include "py/runtime.h"
 
 #if MICROPY_PY_TREZORUI2

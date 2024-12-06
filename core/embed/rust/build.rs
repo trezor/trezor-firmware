@@ -379,11 +379,9 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("gfx_mono8_blend_mono4")
         .allowlist_function("gfx_bitblt_wait")
         // fonts
-        .allowlist_function("font_height")
-        .allowlist_function("font_max_height")
-        .allowlist_function("font_baseline")
-        .allowlist_function("font_get_glyph")
-        .allowlist_function("font_text_width")
+        .allowlist_type("font_info_t")
+        .allowlist_function("get_font_info")
+        // .allowlist_function("font_get_glyph")
         // uzlib
         .allowlist_function("uzlib_uncompress_init")
         .allowlist_function("uzlib_uncompress")
