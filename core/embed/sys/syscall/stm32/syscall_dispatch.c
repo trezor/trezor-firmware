@@ -212,8 +212,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       usb_stop();
     } break;
 
-    case SYSCALL_USB_CONFIGURED: {
-      args[0] = usb_configured();
+    case SYSCALL_USB_GET_EVENT: {
+      args[0] = usb_get_event();
+    } break;
+
+    case SYSCALL_USB_GET_STATE: {
+      usb_state_t *state = (usb_state_t *)args[0];
+      usb_get_state__verified(state);
     } break;
 
     case SYSCALL_USB_HID_ADD: {

@@ -96,10 +96,10 @@ class Homescreen(HomescreenBase):
     async def usb_checker_task(self) -> None:
         from trezor import io, loop
 
-        usbcheck = loop.wait(io.USB_CHECK)
+        usbcheck = loop.wait(io.USB_EVENT)
         while True:
-            is_connected = await usbcheck
-            self._event(self.layout.usb_event, is_connected)
+            event = await usbcheck
+            self._event(self.layout.usb_event, event)
 
     def create_tasks(self) -> Iterator[loop.Task]:
         yield from super().create_tasks()
