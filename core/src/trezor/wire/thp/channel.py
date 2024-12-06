@@ -23,6 +23,7 @@ from . import (
 from .checksum import CHECKSUM_LENGTH
 from .transmission_loop import TransmissionLoop
 from .writer import (
+    PACKET_LENGTH,
     CONT_HEADER_LENGTH,
     INIT_HEADER_LENGTH,
     write_payload_to_wire_and_add_checksum,
@@ -56,7 +57,7 @@ class Channel:
         self.channel_id: bytes = channel_cache.channel_id
 
         # Shared variables
-        self.buffer: utils.BufferType = bytearray(64)
+        self.buffer: utils.BufferType = bytearray(PACKET_LENGTH)
         self.bytes_read: int = 0
         self.expected_payload_length: int = 0
         self.is_cont_packet_expected: bool = False

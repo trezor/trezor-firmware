@@ -93,7 +93,9 @@ class SessionThpCache(ThpDataCache):
         super().__init__()
 
     def clear(self) -> None:
-        self.state[:] = bytearray(int.to_bytes(0, 1, "big"))  # Set state to UNALLOCATED
+        self.state[:] = bytearray(
+            int.to_bytes(0, _SESSION_STATE_LENGTH, "big")
+        )  # Set state to UNALLOCATED
         self.session_id[:] = b""
         super().clear()
 
@@ -204,7 +206,7 @@ def set_channel_host_ephemeral_key(channel: ChannelCache, key: bytearray) -> Non
     channel.host_ephemeral_pubkey = key
 
 
-def get_new_session(channel: ChannelCache) -> SessionThpCache:
+def get_new_session(channel: ChannelCache, management: bool = False) -> SessionThpCache:
     new_sid = get_next_session_id(channel)
     index = _get_next_session_index()
 
@@ -215,9 +217,15 @@ def get_new_session(channel: ChannelCache) -> SessionThpCache:
     channel.last_usage = (
         _get_usage_counter_and_increment()
     )  # increment also use of the channel so it does not get replaced
-    _SESSIONS[index].state[:] = bytearray(
-        _UNALLOCATED_STATE.to_bytes(_SESSION_STATE_LENGTH, "big")
-    )
+
+    if management:
+        _SESSIONS[index].state[:] = bytearray(
+            _MANAGEMENT_STATE.to_bytes(_SESSION_STATE_LENGTH, "big")
+        )
+    else:
+        _SESSIONS[index].state[:] = bytearray(
+            _UNALLOCATED_STATE.to_bytes(_SESSION_STATE_LENGTH, "big")
+        )
     return _SESSIONS[index]
 
 
