@@ -1,6 +1,6 @@
 from common import H_, await_result, unittest  # isort:skip
 
-import storage.cache
+import storage.cache_codec
 from trezor import wire
 from trezor.crypto import bip32
 from trezor.enums import InputScriptType, OutputScriptType
@@ -11,6 +11,8 @@ from trezor.messages import (
     TxInput,
     TxOutput,
 )
+from trezor.wire import context
+from trezor.wire.codec.codec_context import CodecContext
 
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
@@ -20,6 +22,13 @@ from apps.common import coins
 
 
 class TestApprover(unittest.TestCase):
+
+    def setUpClass(self):
+        context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
+
+    def tearDownClass(self):
+        context.CURRENT_CONTEXT = None
+
     def setUp(self):
         self.coin = coins.by_name("Bitcoin")
         self.fee_rate_percent = 0.3
@@ -39,15 +48,13 @@ class TestApprover(unittest.TestCase):
         self.msg_auth = AuthorizeCoinJoin(
             coordinator=self.coordinator_name,
             max_rounds=10,
-            max_coordinator_fee_rate=int(
-                self.fee_rate_percent * 10**FEE_RATE_DECIMALS
-            ),
+            max_coordinator_fee_rate=int(self.fee_rate_percent * 10**FEE_RATE_DECIMALS),
             max_fee_per_kvbyte=7000,
             address_n=[H_(10025), H_(0), H_(0), H_(1)],
             coin_name=self.coin.coin_name,
             script_type=InputScriptType.SPENDTAPROOT,
         )
-        storage.cache.start_session()
+        storage.cache_codec.start_session()
 
     def make_coinjoin_request(self, inputs):
         return CoinJoinRequest(
@@ -146,7 +153,11 @@ class TestApprover(unittest.TestCase):
             if txo.address_n:
                 await_result(approver.add_change_output(txo, script_pubkey=bytes(22)))
             else:
-                await_result(approver.add_external_output(txo, script_pubkey=bytes(22), tx_info=tx_info))
+                await_result(
+                    approver.add_external_output(
+                        txo, script_pubkey=bytes(22), tx_info=tx_info
+                    )
+                )
 
         await_result(approver.approve_tx(tx_info, [], None))
 

@@ -51,13 +51,13 @@ def prepare_tutorial_and_cancel_after_it(
 
 
 def go_through_tutorial_tr(debug: "DebugLink") -> None:
-    debug.press_right(wait=True)
-    debug.press_right(wait=True)
-    debug.press_right_htc(hold_ms=1000)
-    debug.press_right(wait=True)
-    debug.press_right(wait=True)
-    layout = debug.press_middle(wait=True)
-    TR.assert_equals(layout.title(), "tutorial__title_tutorial_complete")
+    debug.press_right()
+    debug.press_right()
+    debug.press_right(hold_ms=1000)
+    debug.press_right()
+    debug.press_right()
+    layout = debug.press_middle()
+    assert layout.title() == TR.tutorial__title_tutorial_complete
 
 
 def test_tutorial_finish(device_handler: "BackgroundDeviceHandler"):
@@ -66,14 +66,14 @@ def test_tutorial_finish(device_handler: "BackgroundDeviceHandler"):
         go_through_tutorial_tr(debug)
 
         # FINISH
-        debug.press_right(wait=True)
+        debug.press_right()
 
 
 def test_tutorial_skip(device_handler: "BackgroundDeviceHandler"):
     with prepare_tutorial_and_cancel_after_it(device_handler, cancelled=True) as debug:
         # SKIP
-        debug.press_left(wait=True)
-        debug.press_right(wait=True)
+        debug.press_left()
+        debug.press_right()
 
 
 def test_tutorial_again_and_skip(device_handler: "BackgroundDeviceHandler"):
@@ -82,8 +82,8 @@ def test_tutorial_again_and_skip(device_handler: "BackgroundDeviceHandler"):
         go_through_tutorial_tr(debug)
 
         # AGAIN
-        debug.press_left(wait=True)
+        debug.press_left()
 
         # SKIP
-        debug.press_left(wait=True)
-        debug.press_right(wait=True)
+        debug.press_left()
+        debug.press_right()

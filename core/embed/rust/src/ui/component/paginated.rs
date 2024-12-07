@@ -1,4 +1,5 @@
 /// Common message type for pagination components.
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum PageMsg<T> {
     /// Pass-through from paged component.
     Content(T),
@@ -9,6 +10,9 @@ pub enum PageMsg<T> {
     /// Cancelled using page controls.
     Cancelled,
 
+    /// Info button pressed
+    Info,
+
     /// Page component was configured to react to swipes and user swiped left.
     SwipeLeft,
 
@@ -18,7 +22,7 @@ pub enum PageMsg<T> {
 
 pub trait Paginate {
     /// How many pages of content are there in total?
-    fn page_count(&mut self) -> usize;
+    fn page_count(&self) -> usize;
     /// Navigate to the given page.
     fn change_page(&mut self, active_page: usize);
 }

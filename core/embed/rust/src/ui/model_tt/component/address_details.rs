@@ -125,7 +125,7 @@ impl AddressDetails {
 }
 
 impl Paginate for AddressDetails {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
         2usize.saturating_add(total_xpub_pages.into())
     }
@@ -166,14 +166,6 @@ impl Component for AddressDetails {
         match msg {
             Some(FrameMsg::Button(_)) => Some(()),
             _ => None,
-        }
-    }
-
-    fn paint(&mut self) {
-        match self.current_page {
-            0 => self.qr_code.paint(),
-            1 => self.details.paint(),
-            _ => self.xpub_view.paint(),
         }
     }
 

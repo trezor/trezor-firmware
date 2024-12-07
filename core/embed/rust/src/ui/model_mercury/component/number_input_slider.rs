@@ -5,7 +5,6 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx},
         constant::screen,
-        display,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
@@ -76,28 +75,24 @@ impl Component for NumberInputSliderDialog {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(value) = self.input.event(ctx, event) {
-            self.val = value;
+        let msg_opt = self.input.event(ctx, event);
 
-            if self.val == self.init_val || self.input.touching {
-                self.footer
-                    .update_instruction(ctx, TR::instructions__swipe_horizontally);
-                self.footer.update_description(ctx, TR::setting__adjust);
-                ctx.request_paint();
-            } else {
-                self.footer
-                    .update_instruction(ctx, TR::instructions__swipe_up);
-                self.footer.update_description(ctx, TR::setting__apply);
-                ctx.request_paint();
-            }
-
-            return Some(Self::Msg::Changed(value));
+        if self.val == self.init_val || self.input.touching {
+            self.footer
+                .update_instruction(ctx, TR::instructions__swipe_horizontally);
+            self.footer.update_description(ctx, TR::setting__adjust);
+            ctx.request_paint();
+        } else {
+            self.footer
+                .update_instruction(ctx, TR::instructions__swipe_up);
+            self.footer.update_description(ctx, TR::setting__apply);
+            ctx.request_paint();
         }
-        None
-    }
 
-    fn paint(&mut self) {
-        self.input.paint();
+        msg_opt.map(|value| {
+            self.val = value;
+            Self::Msg::Changed(value)
+        })
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -188,13 +183,6 @@ impl Component for NumberInputSlider {
             };
         }
         None
-    }
-
-    fn paint(&mut self) {
-        let val_pct = (100 * (self.value - self.min)) / (self.max - self.min);
-        let fill_to = (val_pct as i16 * self.area.width()) / 100;
-
-        display::bar_with_text_and_fill(self.area, None, theme::FG, theme::BG, 0, fill_to as _);
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

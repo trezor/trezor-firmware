@@ -4,7 +4,7 @@ use crate::ui::{
     geometry::Rect,
 };
 
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+#[cfg(all(feature = "micropython", feature = "touch"))]
 use crate::ui::component::swipe_detect::SwipeConfig;
 
 /// Component that sends a ButtonRequest after receiving Event::Attach. The
@@ -53,7 +53,7 @@ impl<T: Component> Component for SendButtonRequest<T> {
                     }
                 }
                 SendButtonRequestPolicy::OnAttachAlways => {
-                    if let Some(br) = self.button_request.clone() {
+                    if let Some(br) = self.button_request {
                         ctx.send_button_request(br.code, br.name);
                     }
                 }
@@ -62,16 +62,12 @@ impl<T: Component> Component for SendButtonRequest<T> {
         self.inner.event(ctx, event)
     }
 
-    fn paint(&mut self) {
-        self.inner.paint()
-    }
-
     fn render<'s>(&'s self, target: &mut impl crate::ui::shape::Renderer<'s>) {
         self.inner.render(target)
     }
 }
 
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+#[cfg(all(feature = "micropython", feature = "touch"))]
 impl<T: crate::ui::flow::Swipable> crate::ui::flow::Swipable for SendButtonRequest<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.inner.get_swipe_config()

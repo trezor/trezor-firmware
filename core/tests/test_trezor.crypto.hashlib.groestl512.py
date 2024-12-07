@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.crypto import hashlib
@@ -62,12 +63,10 @@ class TestCryptoGroestl512(unittest.TestCase):
             self.assertEqual(x.digest(), unhexlify(d))
 
         # Test from ExtremelyLongMsgKAT_512.txt, disabled by default because it resource-expensive
-        """
-        x = hashlib.groestl512()
-        for i in range(16777216):
-            x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        self.assertEqual(x.digest(), unhexlify('787C88460E5D09ABD7A98C050F3422BBFDBD36A74B05DE04B57A13FA3F36A570B8561580AB9DA4096CCD5111B5DE948F769D9D61833A6CE2B2F223061E688994'))
-        """
+        # x = hashlib.groestl512()
+        # for i in range(16777216):
+        #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
+        # self.assertEqual(x.digest(), unhexlify('787C88460E5D09ABD7A98C050F3422BBFDBD36A74B05DE04B57A13FA3F36A570B8561580AB9DA4096CCD5111B5DE948F769D9D61833A6CE2B2F223061E688994'))
 
     def test_digest_multi(self):
         x = hashlib.groestl512()

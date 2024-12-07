@@ -21,8 +21,22 @@ LIST_RUNS_TEMPLATE = "https://api.github.com/repos/trezor/trezor-firmware/action
 FIXTURES_TEMPLATE = "https://data.trezor.io/dev/firmware/ui_report/{run}/{model}-{lang}-{job}/fixtures.results.json"
 
 MODELS = [model.internal_name for model in models.TREZORS]
-LANGUAGES = ["en", "cs", "de", "es", "fr", "it", "pt", "tr"]
-JOBS = ["core_device_test", "core_click_test", "core_persistence_test"]
+CORE_LANGUAGES = ["en", "cs", "de", "es", "fr", "it", "pt", "tr"]
+CORE_JOBS = ["core_device_test", "core_click_test", "core_persistence_test"]
+LEGACY_LANGUAGES = ["en"]
+LEGACY_JOBS = ["legacy_device_test"]
+
+
+def get_last_run(branch_name: str, workflow: str) -> int | None:
+    response = requests.get(
+        LIST_RUNS_TEMPLATE.format(branch=branch_name, workflow=workflow)
+    )
+    response.raise_for_status()
+    try:
+        return response.json()["workflow_runs"][0]["id"]
+    except IndexError:
+        print(f"No workflow runs found for {workflow}")
+        return None
 
 
 def get_branch_ui_fixtures_results(
@@ -33,16 +47,25 @@ def get_branch_ui_fixtures_results(
 ) -> dict[str, AnyDict]:
     print(f"Checking branch {branch_name}")
 
-    response = requests.get(
-        LIST_RUNS_TEMPLATE.format(branch=branch_name, workflow="core.yml")
-    )
-    response.raise_for_status()
-    run_id = run_id or response.json()["workflow_runs"][0]["id"]
+    core_run_id = run_id or get_last_run(branch_name, "core.yml")
+    legacy_run_id = run_id or get_last_run(branch_name, "legacy.yml")
 
     def yield_key_value() -> Iterator[tuple[str, AnyDict]]:
         for model in MODELS:
-            for lang in LANGUAGES:
-                for job in JOBS:
+            if model == "T1B1":
+                run_id = legacy_run_id
+                jobs = LEGACY_JOBS
+                languages = LEGACY_LANGUAGES
+            else:
+                run_id = core_run_id
+                jobs = CORE_JOBS
+                languages = CORE_LANGUAGES
+
+            if run_id is None:
+                continue
+
+            for lang in languages:
+                for job in jobs:
                     job_instance = f"{model}-{lang}-{job}"
 
                     if only_jobs and all(

@@ -140,10 +140,11 @@ class TestCase:
             func(*args, **kwargs)
         except Exception as e:
             if isinstance(e, exc):
-                return
+                return None
             raise
         else:
             ensure(False, f"{repr(exc)} not raised")
+        return None
 
     def assertListEqual(self, x, y, msg=""):
         if len(x) != len(y):
@@ -236,38 +237,48 @@ generator_type = type((lambda: (yield))())
 
 def run_class(c, test_result):
     o = c()
+    set_up_class = getattr(o, "setUpClass", lambda: None)
+    tear_down_class = getattr(o, "tearDownClass", lambda: None)
     set_up = getattr(o, "setUp", lambda: None)
     tear_down = getattr(o, "tearDown", lambda: None)
     print("class", c.__qualname__)
-    for name in dir(o):
-        if name.startswith("test"):
-            print(" ", name, end=" ...")
-            m = getattr(o, name)
-            try:
-                try:
-                    set_up()
-                    test_result.testsRun += 1
-                    retval = m()
-                    if isinstance(retval, generator_type):
-                        raise RuntimeError(
-                            f"{name} must not be a generator (it is async, uses yield or await)."
-                        )
-                    elif retval is not None:
-                        raise RuntimeError(f"{name} should not return a result.")
-                finally:
-                    tear_down()
-                print(f"{OK_COLOR} ok{DEFAULT_COLOR}")
-            except SkipTest as e:
-                print(" skipped:", e.args[0])
-                test_result.skippedNum += 1
-            except AssertionError as e:
-                print(f"{ERROR_COLOR} failed{DEFAULT_COLOR}")
-                sys.print_exception(e)
-                test_result.failuresNum += 1
-            except BaseException as e:
-                print(f"{ERROR_COLOR} errored:{DEFAULT_COLOR}", e)
-                sys.print_exception(e)
-                test_result.errorsNum += 1
+    try:
+        set_up_class()
+        for name in dir(o):
+            if name.startswith("test"):
+                run_test_method(o, name, set_up, tear_down, test_result)
+    finally:
+        tear_down_class()
+
+
+def run_test_method(o, name, set_up, tear_down, test_result):
+    print(" ", name, end=" ...")
+    m = getattr(o, name)
+    try:
+        try:
+            set_up()
+            test_result.testsRun += 1
+            retval = m()
+            if isinstance(retval, generator_type):
+                raise RuntimeError(
+                    f"{name} must not be a generator (it is async, uses yield or await)."
+                )
+            elif retval is not None:
+                raise RuntimeError(f"{name} should not return a result.")
+        finally:
+            tear_down()
+        print(f"{OK_COLOR} ok{DEFAULT_COLOR}")
+    except SkipTest as e:
+        print(" skipped:", e.args[0])
+        test_result.skippedNum += 1
+    except AssertionError as e:
+        print(f"{ERROR_COLOR} failed{DEFAULT_COLOR}")
+        sys.print_exception(e)
+        test_result.failuresNum += 1
+    except BaseException as e:
+        print(f"{ERROR_COLOR} errored:{DEFAULT_COLOR}", e)
+        sys.print_exception(e)
+        test_result.errorsNum += 1
 
 
 def main(module="__main__"):

@@ -5,18 +5,18 @@ use crate::{
     time::Duration,
     ui::{
         component::{
-            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, TimerToken,
+            Component, ComponentExt, Event, EventCtx, FixedHeightBar, MsgMap, Split, Timer,
         },
-        display::{self, toif::Icon, Color, Font},
+        display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
     },
 };
 
 use super::theme;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum ButtonMsg {
     Pressed,
     Released,
@@ -31,7 +31,7 @@ pub struct Button {
     styles: ButtonStyleSheet,
     state: State,
     long_press: Option<Duration>,
-    long_timer: Option<TimerToken>,
+    long_timer: Timer,
     haptics: bool,
 }
 
@@ -48,7 +48,7 @@ impl Button {
             styles: theme::button_default(),
             state: State::Initial,
             long_press: None,
-            long_timer: None,
+            long_timer: Timer::new(),
             haptics: true,
         }
     }
@@ -164,38 +164,6 @@ impl Button {
         }
     }
 
-    pub fn paint_background(&self, style: &ButtonStyle) {
-        match &self.content {
-            ButtonContent::IconBlend(_, _, _) => {}
-            _ => {
-                if style.border_width > 0 {
-                    // Paint the border and a smaller background on top of it.
-                    display::rect_fill_rounded(
-                        self.area,
-                        style.border_color,
-                        style.background_color,
-                        style.border_radius,
-                    );
-                    display::rect_fill_rounded(
-                        self.area.inset(Insets::uniform(style.border_width)),
-                        style.button_color,
-                        style.border_color,
-                        style.border_radius,
-                    );
-                } else {
-                    // We do not need to draw an explicit border in this case, just a
-                    // bigger background.
-                    display::rect_fill_rounded(
-                        self.area,
-                        style.button_color,
-                        style.background_color,
-                        style.border_radius,
-                    );
-                }
-            }
-        }
-    }
-
     pub fn render_background<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
         match &self.content {
             ButtonContent::IconBlend(_, _, _) => {}
@@ -205,45 +173,6 @@ impl Button {
                 .with_thickness(style.border_width)
                 .with_radius(style.border_radius as i16)
                 .render(target),
-        }
-    }
-
-    pub fn paint_content(&self, style: &ButtonStyle) {
-        match &self.content {
-            ButtonContent::Empty => {}
-            ButtonContent::Text(text) => {
-                let width = text.map(|c| style.font.text_width(c));
-                let height = style.font.text_height();
-                let start_of_baseline = self.area.center()
-                    + Offset::new(-width / 2, height / 2)
-                    + Offset::y(Self::BASELINE_OFFSET);
-                text.map(|text| {
-                    display::text_left(
-                        start_of_baseline,
-                        text,
-                        style.font,
-                        style.text_color,
-                        style.button_color,
-                    );
-                });
-            }
-            ButtonContent::Icon(icon) => {
-                icon.draw(
-                    self.area.center(),
-                    Alignment2D::CENTER,
-                    style.text_color,
-                    style.button_color,
-                );
-            }
-            ButtonContent::IconAndText(child) => {
-                child.paint(self.area, self.style(), Self::BASELINE_OFFSET);
-            }
-            ButtonContent::IconBlend(bg, fg, offset) => display::icon_over_icon(
-                Some(self.area),
-                (*bg, Offset::zero(), style.button_color),
-                (*fg, *offset, style.text_color),
-                style.background_color,
-            ),
         }
     }
 
@@ -317,7 +246,7 @@ impl Component for Button {
                             }
                             self.set(ctx, State::Pressed);
                             if let Some(duration) = self.long_press {
-                                self.long_timer = Some(ctx.request_timer(duration));
+                                self.long_timer.start(ctx, duration)
                             }
                             return Some(ButtonMsg::Pressed);
                         }
@@ -349,32 +278,23 @@ impl Component for Button {
                     _ => {
                         // Touch finished outside our area.
                         self.set(ctx, State::Initial);
-                        self.long_timer = None;
+                        self.long_timer.stop();
                     }
                 }
             }
-            Event::Timer(token) => {
-                if self.long_timer == Some(token) {
-                    self.long_timer = None;
-                    if matches!(self.state, State::Pressed) {
-                        #[cfg(feature = "haptic")]
-                        if self.haptics {
-                            haptic::play(HapticEffect::ButtonPress);
-                        }
-                        self.set(ctx, State::Initial);
-                        return Some(ButtonMsg::LongPressed);
+            Event::Timer(_) if self.long_timer.expire(event) => {
+                if matches!(self.state, State::Pressed) {
+                    #[cfg(feature = "haptic")]
+                    if self.haptics {
+                        haptic::play(HapticEffect::ButtonPress);
                     }
+                    self.set(ctx, State::Initial);
+                    return Some(ButtonMsg::LongPressed);
                 }
             }
             _ => {}
         };
         None
-    }
-
-    fn paint(&mut self) {
-        let style = self.style();
-        self.paint_background(style);
-        self.paint_content(style);
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -555,6 +475,7 @@ impl Button {
     }
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum CancelConfirmMsg {
     Cancelled,
     Confirmed,
@@ -566,12 +487,14 @@ type CancelInfoConfirm<F0, F1, F2> =
 type CancelConfirm<F0, F1> = FixedHeightBar<Split<MsgMap<Button, F0>, MsgMap<Button, F1>>>;
 
 #[derive(Clone, Copy)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum CancelInfoConfirmMsg {
     Cancelled,
     Info,
     Confirmed,
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SelectWordMsg {
     Selected(usize),
 }
@@ -589,53 +512,6 @@ impl IconText {
 
     pub fn new(text: &'static str, icon: Icon) -> Self {
         Self { text, icon }
-    }
-
-    pub fn paint(&self, area: Rect, style: &ButtonStyle, baseline_offset: i16) {
-        let width = style.font.text_width(self.text);
-        let height = style.font.text_height();
-
-        let mut use_icon = false;
-        let mut use_text = false;
-
-        let mut icon_pos = Point::new(
-            area.top_left().x + ((Self::ICON_SPACE + Self::ICON_MARGIN) / 2),
-            area.center().y,
-        );
-        let mut text_pos =
-            area.center() + Offset::new(-width / 2, height / 2) + Offset::y(baseline_offset);
-
-        if area.width() > (Self::ICON_SPACE + Self::TEXT_MARGIN + width) {
-            //display both icon and text
-            text_pos = Point::new(area.top_left().x + Self::ICON_SPACE, text_pos.y);
-            use_text = true;
-            use_icon = true;
-        } else if area.width() > (width + Self::TEXT_MARGIN) {
-            use_text = true;
-        } else {
-            //if we can't fit the text, retreat to centering the icon
-            icon_pos = area.center();
-            use_icon = true;
-        }
-
-        if use_text {
-            display::text_left(
-                text_pos,
-                self.text,
-                style.font,
-                style.text_color,
-                style.button_color,
-            );
-        }
-
-        if use_icon {
-            self.icon.draw(
-                icon_pos,
-                Alignment2D::CENTER,
-                style.text_color,
-                style.button_color,
-            );
-        }
     }
 
     pub fn render<'s>(

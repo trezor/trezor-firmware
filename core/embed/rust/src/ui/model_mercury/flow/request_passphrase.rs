@@ -1,7 +1,6 @@
 use crate::{
     error,
-    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
-    strutil::{ShortString, TString},
+    strutil::ShortString,
     translations::TR,
     ui::{
         component::ComponentExt,
@@ -10,7 +9,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
-        layout::obj::LayoutObj,
     },
 };
 
@@ -53,34 +51,24 @@ impl FlowController for RequestPassphrase {
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn new_request_passphrase(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, RequestPassphrase::new_obj) }
-}
+pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
+    let content_confirm_empty = Frame::left_aligned(
+        TR::passphrase__continue_with_empty_passphrase.into(),
+        PromptScreen::new_yes_or_no(),
+    )
+    .map(|msg| match msg {
+        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
+        FrameMsg::Content(PromptMsg::Cancelled) => Some(FlowMsg::Cancelled),
+        _ => None,
+    });
 
-impl RequestPassphrase {
-    fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-        let _prompt: TString = kwargs.get(Qstr::MP_QSTR_prompt)?.try_into()?;
-        let _max_len: u32 = kwargs.get(Qstr::MP_QSTR_max_len)?.try_into()?;
+    let content_keypad = PassphraseKeyboard::new().map(|msg| match msg {
+        PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
+        PassphraseKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
+    });
 
-        let content_confirm_empty = Frame::left_aligned(
-            TR::passphrase__continue_with_empty_passphrase.into(),
-            PromptScreen::new_yes_or_no(),
-        )
-        .map(|msg| match msg {
-            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-            FrameMsg::Content(PromptMsg::Cancelled) => Some(FlowMsg::Cancelled),
-            _ => None,
-        });
-
-        let content_keypad = PassphraseKeyboard::new().map(|msg| match msg {
-            PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),
-            PassphraseKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
-        });
-
-        let res = SwipeFlow::new(&RequestPassphrase::Keypad)?
-            .with_page(&RequestPassphrase::Keypad, content_keypad)?
-            .with_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
-        Ok(LayoutObj::new(res)?.into())
-    }
+    let res = SwipeFlow::new(&RequestPassphrase::Keypad)?
+        .with_page(&RequestPassphrase::Keypad, content_keypad)?
+        .with_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
+    Ok(res)
 }

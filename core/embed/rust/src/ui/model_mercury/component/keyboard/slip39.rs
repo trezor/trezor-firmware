@@ -106,7 +106,7 @@ impl Component for Slip39Input {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if self.multi_tap.is_timeout_event(event) {
+        if self.multi_tap.timeout_event(event) {
             // Timeout occurred. Reset the pending key.
             self.multi_tap.clear_pending_state(ctx);
             return Some(MnemonicInputMsg::TimedOut);
@@ -119,10 +119,6 @@ impl Component for Slip39Input {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done")
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

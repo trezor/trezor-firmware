@@ -42,7 +42,7 @@ class PropertyTemplate(Generic[T]):
         is_optional: bool,
         parse: Callable[[BufferReader], T],
         format: Callable[[Instruction, T], str],
-    ):
+    ) -> None:
         self.name = name
         self.is_authority = is_authority
         self.is_optional = is_optional
@@ -51,7 +51,7 @@ class PropertyTemplate(Generic[T]):
 
 
 class AccountTemplate:
-    def __init__(self, name: str, is_authority: bool, optional: bool):
+    def __init__(self, name: str, is_authority: bool, optional: bool) -> None:
         self.name = name
         self.is_authority = is_authority
         self.optional = optional

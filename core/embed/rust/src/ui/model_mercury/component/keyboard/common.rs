@@ -1,11 +1,10 @@
 use crate::{
     time::Duration,
     ui::{
-        component::{text::common::TextEdit, Event, EventCtx, TimerToken},
-        display::{self, Color, Font},
+        component::{text::common::TextEdit, Event, EventCtx, Timer},
+        display::{Color, Font},
         geometry::{Alignment2D, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
     },
 };
 
@@ -17,6 +16,8 @@ pub struct MultiTapKeyboard {
     timeout: Duration,
     /// The currently pending state.
     pending: Option<Pending>,
+    /// Timer for clearing the pending state.
+    timer: Timer,
 }
 
 struct Pending {
@@ -25,8 +26,6 @@ struct Pending {
     /// Index of the key press (how many times the `key` was pressed, minus
     /// one).
     press: usize,
-    /// Timer for clearing the pending state.
-    timer: TimerToken,
 }
 
 impl MultiTapKeyboard {
@@ -35,6 +34,7 @@ impl MultiTapKeyboard {
         Self {
             timeout: Duration::from_secs(1),
             pending: None,
+            timer: Timer::new(),
         }
     }
 
@@ -48,21 +48,17 @@ impl MultiTapKeyboard {
         self.pending.as_ref().map(|p| p.press)
     }
 
-    /// Return the token for the currently pending timer.
-    pub fn pending_timer(&self) -> Option<TimerToken> {
-        self.pending.as_ref().map(|p| p.timer)
-    }
-
     /// Returns `true` if `event` is an `Event::Timer` for the currently pending
     /// timer.
-    pub fn is_timeout_event(&self, event: Event) -> bool {
-        matches!((event, self.pending_timer()), (Event::Timer(t), Some(pt)) if pt == t)
+    pub fn timeout_event(&mut self, event: Event) -> bool {
+        self.timer.expire(event)
     }
 
     /// Reset to the empty state. Takes `EventCtx` to request a paint pass (to
     /// either hide or show any pending marker our caller might want to draw
     /// later).
     pub fn clear_pending_state(&mut self, ctx: &mut EventCtx) {
+        self.timer.stop();
         if self.pending.is_some() {
             self.pending = None;
             ctx.request_paint();
@@ -97,11 +93,8 @@ impl MultiTapKeyboard {
         // transition only happens as a result of an append op, so the painting should
         // be requested by handling the `TextEdit`.
         self.pending = if key_text.len() > 1 {
-            Some(Pending {
-                key,
-                press,
-                timer: ctx.request_timer(self.timeout),
-            })
+            self.timer.start(ctx, self.timeout);
+            Some(Pending { key, press })
         } else {
             None
         };
@@ -114,21 +107,6 @@ impl MultiTapKeyboard {
         } else {
             TextEdit::Append(ch)
         }
-    }
-}
-
-/// Create a visible "underscoring" of the last letter of a text.
-pub fn paint_pending_marker(text_baseline: Point, text: &str, font: Font, color: Color) {
-    // Measure the width of the last character of input.
-    if let Some(last) = text.chars().last() {
-        let width = font.text_width(text);
-        let last_width = font.char_width(last);
-        // Draw the marker 2px under the start of the baseline of the last character.
-        let marker_origin = text_baseline + Offset::new(width - last_width, 2);
-        // Draw the marker 1px longer than the last character, and 3px thick.
-        let marker_rect =
-            Rect::from_top_left_and_size(marker_origin, Offset::new(last_width + 1, 3));
-        display::rect_fill(marker_rect, color);
     }
 }
 

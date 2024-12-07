@@ -1,6 +1,5 @@
 use crate::{
     error,
-    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -11,7 +10,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
-        layout::obj::LayoutObj,
     },
 };
 
@@ -61,77 +59,68 @@ impl FlowController for RequestNumber {
 
 static NUM_DISPLAYED: AtomicU16 = AtomicU16::new(0);
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, RequestNumber::new_obj) }
-}
+#[allow(clippy::too_many_arguments)]
+pub fn new_request_number(
+    title: TString<'static>,
+    count: u32,
+    min_count: u32,
+    max_count: u32,
+    description: TString<'static>,
+    info_closure: impl Fn(u32) -> TString<'static> + 'static,
+    br_code: u16,
+    br_name: TString<'static>,
+) -> Result<SwipeFlow, error::Error> {
+    NUM_DISPLAYED.store(count as u16, Ordering::Relaxed);
 
-impl RequestNumber {
-    fn new_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
-        let min_count: u32 = kwargs.get(Qstr::MP_QSTR_min_count)?.try_into()?;
-        let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
-        let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
-        let info: Obj = kwargs.get(Qstr::MP_QSTR_info)?;
-        assert!(info != Obj::const_none());
-        let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
-        let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
+    // wrap the closure for obtaining MoreInfo text and call it with NUM_DISPLAYED
+    let info_closure = move || {
+        let curr_number = NUM_DISPLAYED.load(Ordering::Relaxed);
+        info_closure(curr_number as u32)
+    };
 
-        NUM_DISPLAYED.store(count as u16, Ordering::Relaxed);
-        let info_cb = move || {
-            let curr_number = NUM_DISPLAYED.load(Ordering::Relaxed) as u32;
-            let text = info
-                .call_with_n_args(&[curr_number.try_into().unwrap()])
-                .unwrap();
-            TString::try_from(text).unwrap()
-        };
+    let number_input_dialog = NumberInputDialog::new(min_count, max_count, count, description)?;
+    let content_number_input = Frame::left_aligned(title, SwipeContent::new(number_input_dialog))
+        .with_menu_button()
+        .with_footer(TR::instructions__swipe_up.into(), None)
+        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipe(Direction::Left, SwipeSettings::default())
+        .map(|msg| match msg {
+            FrameMsg::Button(_) => Some(FlowMsg::Info),
+            FrameMsg::Content(NumberInputDialogMsg::Changed(n)) => {
+                NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
+                None
+            }
+            FrameMsg::Content(NumberInputDialogMsg::Confirmed(n)) => {
+                NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
+                Some(FlowMsg::Choice(n as usize))
+            }
+        })
+        .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
-        let number_input_dialog = NumberInputDialog::new(min_count, max_count, count, description)?;
-        let content_number_input =
-            Frame::left_aligned(title, SwipeContent::new(number_input_dialog))
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default())
-                .with_swipe(Direction::Left, SwipeSettings::default())
-                .map(|msg| match msg {
-                    FrameMsg::Button(_) => Some(FlowMsg::Info),
-                    FrameMsg::Content(NumberInputDialogMsg::Changed(n)) => {
-                        NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
-                        None
-                    }
-                    FrameMsg::Content(NumberInputDialogMsg::Confirmed(n)) => {
-                        NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
-                        Some(FlowMsg::Choice(n as usize))
-                    }
-                })
-                .one_button_request(ButtonRequest::from_num(br_code, br_name));
+    let content_menu = Frame::left_aligned(
+        TString::empty(),
+        VerticalMenu::empty().item(theme::ICON_CHEVRON_RIGHT, TR::buttons__more_info.into()),
+    )
+    .with_cancel_button()
+    .with_swipe(Direction::Right, SwipeSettings::immediate())
+    .map(|msg| match msg {
+        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
+        FrameMsg::Button(_) => None,
+    });
 
-        let content_menu = Frame::left_aligned(
-            TString::empty(),
-            VerticalMenu::empty().item(theme::ICON_CHEVRON_RIGHT, TR::buttons__more_info.into()),
-        )
+    let updatable_info = UpdatableMoreInfo::new(info_closure);
+    let content_info = Frame::left_aligned(TString::empty(), SwipeContent::new(updatable_info))
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
             FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-            FrameMsg::Button(_) => None,
+            _ => None,
         });
 
-        let updatable_info = UpdatableMoreInfo::new(info_cb);
-        let content_info = Frame::left_aligned(TString::empty(), SwipeContent::new(updatable_info))
-            .with_cancel_button()
-            .with_swipe(Direction::Right, SwipeSettings::immediate())
-            .map(|msg| match msg {
-                FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-                _ => None,
-            });
-
-        let res = SwipeFlow::new(&RequestNumber::Number)?
-            .with_page(&RequestNumber::Number, content_number_input)?
-            .with_page(&RequestNumber::Menu, content_menu)?
-            .with_page(&RequestNumber::Info, content_info)?;
-        Ok(LayoutObj::new(res)?.into())
-    }
+    let res = SwipeFlow::new(&RequestNumber::Number)?
+        .with_page(&RequestNumber::Number, content_number_input)?
+        .with_page(&RequestNumber::Menu, content_menu)?
+        .with_page(&RequestNumber::Info, content_info)?;
+    Ok(res)
 }

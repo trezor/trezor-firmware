@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.crypto import hashlib
@@ -36,7 +37,7 @@ class TestCryptoSha512(unittest.TestCase):
             self.assertEqual(x.digest(), unhexlify(d))
 
         x = hashlib.sha512()
-        for i in range(1000000):
+        for _ in range(1000000):
             x.update(b"a")
         self.assertEqual(
             x.digest(),
@@ -45,12 +46,10 @@ class TestCryptoSha512(unittest.TestCase):
             ),
         )
 
-        """
-        x = hashlib.sha512()
-        for i in range(16777216):
-            x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        self.assertEqual(x.digest(), unhexlify('b47c933421ea2db149ad6e10fce6c7f93d0752380180ffd7f4629a712134831d77be6091b819ed352c2967a2e2d4fa5050723c9630691f1a05a7281dbe6c1086'))
-        """
+        # x = hashlib.sha512()
+        # for i in range(16777216):
+        #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
+        # self.assertEqual(x.digest(), unhexlify('b47c933421ea2db149ad6e10fce6c7f93d0752380180ffd7f4629a712134831d77be6091b819ed352c2967a2e2d4fa5050723c9630691f1a05a7281dbe6c1086'))
 
     def test_digest_multi(self):
         x = hashlib.sha512()

@@ -517,7 +517,7 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     return valid;
   }
 
-  if (address_n[0] == PATH_HARDENED + 45) {
+  if (address_n[0] == PATH_HARDENED + 45 && address_n_count != 6) {
     if (address_n_count == 4) {
       // m/45' - BIP45 Copay Abandoned Multisig P2SH
       // m / purpose' / cosigner_index / change / address_index
@@ -546,20 +546,6 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
         valid = valid && (address_n[3] <= PATH_MAX_CHANGE);
         valid = valid && (address_n[4] <= PATH_MAX_ADDRESS_INDEX);
       }
-    } else if (address_n_count == 6) {
-      // Unchained Capital compatibility pattern. Will be removed in the
-      // future.
-      // m/45'/coin_type'/account'/[0-1000000]/change/address_index
-      // m/45'/coin_type/account/[0-1000000]/change/address_index
-      valid = valid &&
-              check_cointype(coin, PATH_HARDENED | address_n[1], full_check);
-      valid = valid && ((address_n[1] & PATH_HARDENED) ==
-                        (address_n[2] & PATH_HARDENED));
-      valid =
-          valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
-      valid = valid && (address_n[3] <= 1000000);
-      valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
-      valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
     } else {
       return false;
     }
@@ -567,6 +553,29 @@ bool coin_path_check(const CoinInfo *coin, InputScriptType script_type,
     if (full_check) {
       valid = valid && (script_type == InputScriptType_SPENDADDRESS ||
                         script_type == InputScriptType_SPENDMULTISIG);
+      valid = valid && has_multisig;
+    }
+
+    return valid;
+  }
+
+  if (address_n[0] == PATH_HARDENED + 45 && address_n_count == 6) {
+    // Unchained Capital compatibility pattern.
+    // m/45'/coin_type'/account'/[0-1000000]/change/address_index
+    // m/45'/coin_type/account/[0-1000000]/change/address_index
+    valid =
+        valid && check_cointype(coin, PATH_HARDENED | address_n[1], full_check);
+    valid = valid &&
+            ((address_n[1] & PATH_HARDENED) == (address_n[2] & PATH_HARDENED));
+    valid = valid && ((address_n[2] & PATH_UNHARDEN_MASK) <= PATH_MAX_ACCOUNT);
+    valid = valid && (address_n[3] <= 1000000);
+    valid = valid && (address_n[4] <= PATH_MAX_CHANGE);
+    valid = valid && (address_n[5] <= PATH_MAX_ADDRESS_INDEX);
+
+    if (full_check) {
+      valid = valid && (script_type == InputScriptType_SPENDADDRESS ||
+                        script_type == InputScriptType_SPENDMULTISIG ||
+                        script_type == InputScriptType_SPENDWITNESS);
       valid = valid && has_multisig;
     }
 

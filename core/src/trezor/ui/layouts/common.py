@@ -1,42 +1,112 @@
 from typing import TYPE_CHECKING
 
-from trezor import workflow
+import trezorui2
+from trezor import ui, workflow
 from trezor.enums import ButtonRequestType
 from trezor.messages import ButtonAck, ButtonRequest
-from trezor.wire import context
+from trezor.wire import ActionCancelled, context
+
+if __debug__:
+    from trezor import log
 
 if TYPE_CHECKING:
-    from typing import Awaitable, Protocol, TypeVar
+    from typing import Any, Awaitable, Callable, TypeVar
 
-    T = TypeVar("T")
-
-    LayoutType = Awaitable
     PropertyType = tuple[str | None, str | bytes | None]
     ExceptionType = BaseException | type[BaseException]
 
-    class ProgressLayout(Protocol):
-        def report(self, value: int, description: str | None = None) -> None: ...
+    InfoFunc = Callable[[], Awaitable[None]]
+
+    T = TypeVar("T")
 
 
-async def button_request(
+async def _button_request(
     br_name: str,
     code: ButtonRequestType = ButtonRequestType.Other,
-    pages: int | None = None,
+    pages: int = 0,
 ) -> None:
     workflow.close_others()
+    if __debug__:
+        log.info(__name__, "ButtonRequest sent: %s", br_name)
     await context.maybe_call(
-        ButtonRequest(code=code, pages=pages, name=br_name), ButtonAck
+        ButtonRequest(code=code, pages=pages or None, name=br_name), ButtonAck
     )
+    if __debug__:
+        log.info(__name__, "ButtonRequest acked: %s", br_name)
 
 
 async def interact(
-    layout: LayoutType[T],
-    br_name: str,
+    layout_obj: ui.LayoutObj[T],
+    br_name: str | None,
     br_code: ButtonRequestType = ButtonRequestType.Other,
+    raise_on_cancel: ExceptionType | None = ActionCancelled,
 ) -> T:
-    pages = None
-    if hasattr(layout, "page_count") and layout.page_count() > 1:  # type: ignore [Cannot access attribute "page_count" for class "LayoutType"]
-        # We know for certain how many pages the layout will have
-        pages = layout.page_count()  # type: ignore [Cannot access attribute "page_count" for class "LayoutType"]
-    await button_request(br_name, br_code, pages)
-    return await layout
+    # shut down other workflows to prevent them from interfering with the current one
+    workflow.close_others()
+    # start the layout
+    layout = ui.Layout(layout_obj)
+    layout.start()
+    # send the button request
+    if br_name is not None:
+        await _button_request(br_name, br_code, layout_obj.page_count())
+    # wait for the layout result
+    result = await layout.get_result()
+    # raise an exception if the user cancelled the action
+    if raise_on_cancel is not None and result is trezorui2.CANCELLED:
+        raise raise_on_cancel
+    return result
+
+
+def raise_if_not_confirmed(
+    layout_obj: ui.LayoutObj[ui.UiResult],
+    br_name: str | None,
+    br_code: ButtonRequestType = ButtonRequestType.Other,
+    exc: ExceptionType = ActionCancelled,
+) -> Awaitable[None]:
+    action = interact(layout_obj, br_name, br_code, exc)
+    return action  # type: ignore ["UiResult" is incompatible with "None"]
+
+
+async def with_info(
+    main_layout: ui.LayoutObj[ui.UiResult],
+    info_layout: ui.LayoutObj[Any],
+    br_name: str,
+    br_code: ButtonRequestType,
+    repeat_button_request: bool = False,  # TODO this should eventually always be true
+    info_layout_can_confirm: bool = False,  # whether the info layout is allowed to confirm the whole flow
+) -> None:
+    first_br = br_name
+    next_br = br_name if repeat_button_request else None
+
+    # if repeat_button_request is True:
+    #  * `first_br` (br_name) is sent on first interaction
+    #  * `next_br` (br_name) is sent on the info screen
+    #  * `first_br` is updated to `next_br` (still br_name) and that is sent for every
+    #    subsequent interaction
+    # if repeat_button_request is False:
+    #  * `first_br` (br_name) is sent on first interaction
+    #  * `next_br` (None) is sent on the info screen
+    #  * `first_br` is cleared to None for every subsequent interaction
+    while True:
+        result = await interact(main_layout, first_br, br_code)
+        # raises on cancel
+
+        first_br = next_br
+
+        if result is trezorui2.CONFIRMED:
+            return
+        elif result is trezorui2.INFO:
+            info_result = await interact(
+                info_layout, next_br, br_code, raise_on_cancel=None
+            )
+            if info_layout_can_confirm and info_result is trezorui2.CONFIRMED:
+                return
+            else:
+                # no matter what the info layout returns, we always go back to the main layout
+                continue
+        else:
+            raise RuntimeError  # unexpected result
+
+
+def draw_simple(layout: trezorui2.LayoutObj[Any]) -> None:
+    ui.Layout(layout).start()

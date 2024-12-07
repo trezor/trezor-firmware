@@ -15,8 +15,13 @@ PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 
+STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
+if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
+    raise RuntimeError("STORAGE_INSECURE_TESTING_MODE cannot be used in production")
+if STORAGE_INSECURE_TESTING_MODE:
+    DISABLE_OPTIGA = True
+    PYOPT = "0"
 
 FEATURE_FLAGS = {
     "RDI": True,
@@ -25,11 +30,12 @@ FEATURE_FLAGS = {
     "AES_GCM": False,
 }
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
-if DISABLE_OPTIGA and PYOPT == '0':
+FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic"]
+if DISABLE_OPTIGA:
+    # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
+    if PRODUCTION:
+        raise RuntimeError("DISABLE_OPTIGA requires non-production build")
     FEATURES_WANTED.remove("optiga")
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -44,12 +50,12 @@ FROZEN = True
 
 # modtrezorconfig
 CPPPATH_MOD += [
-    'embed/extmod/modtrezorconfig',
+    'embed/upymod/modtrezorconfig',
     'vendor/trezor-storage',
     'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-#    'embed/extmod/modtrezorconfig/modtrezorconfig.c',
+#    'embed/upymod/modtrezorconfig/modtrezorconfig.c',
     'vendor/trezor-storage/norcow.c',
     'vendor/trezor-storage/storage.c',
     'vendor/trezor-storage/storage_utils.c',
@@ -183,39 +189,25 @@ if FEATURE_FLAGS["AES_GCM"]:
     ]
 
 SOURCE_MOD += [
-    'embed/lib/bl_check.c',
-#    'embed/lib/buffers.c',
-#    'embed/lib/colors.c',
-#    'embed/lib/display_utils.c',
-    'embed/lib/error_handling.c',
-    'embed/lib/fonts/font_bitmap.c',
-#    'embed/lib/fonts/fonts.c',
-    'embed/lib/gfx_color.c',
-    'embed/lib/gfx_bitblt_rgb565.c',
-    'embed/lib/gfx_bitblt_rgba8888.c',
-    'embed/lib/gfx_bitblt_mono8.c',
-    'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
-    'embed/lib/rsod.c',
-    'embed/lib/terminal.c',
-    'embed/lib/translations.c',
-    'embed/lib/unit_variant.c',
-    'embed/extmod/modtrezorcrypto/rand.c',
+    'embed/gfx/bitblt/gfx_bitblt.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/gfx/fonts/font_bitmap.c',
+    'embed/gfx/gfx_color.c',
+    'embed/gfx/gfx_draw.c',
+    'embed/gfx/terminal.c',
+    'embed/util/bl_check/bl_check.c',
+    'embed/util/translations/translations.c',
+    'embed/util/image/image.c',
+    'embed/util/rsod/rsod.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
+    'embed/upymod/modtrezorcrypto/rand.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
-    ]
-
 
 CPPDEFINES_MOD += [
     'TRANSLATIONS',
@@ -226,17 +218,18 @@ if FEATURE_FLAGS["RDI"]:
     CPPDEFINES_MOD += ['RDI']
 
 if FEATURE_FLAGS["SYSTEM_VIEW"]:
-    SOURCE_FIRMWARE += [
-        'embed/segger/SEGGER/SEGGER_SYSVIEW_Config_NoOS.c',
-        'embed/segger/SEGGER/SEGGER_SYSVIEW.c',
-        'embed/segger/SEGGER/SEGGER_RTT.c',
-        'embed/segger/SEGGER/SEGGER_RTT_ASM_ARMv7M.S',
-        'embed/segger/SEGGER/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
-        'embed/firmware/systemview.c',
+    SOURCE_MOD += [
+        'embed/sys/systemview/stm32/config/SEGGER_SYSVIEW_Config_NoOS.c',
+        'embed/sys/systemview/stm32/segger/SEGGER_SYSVIEW.c',
+        'embed/sys/systemview/stm32/segger/SEGGER_RTT.c',
+        'embed/sys/systemview/stm32/segger/SEGGER_RTT_ASM_ARMv7M.S',
+        'embed/sys/systemview/stm32/segger/Syscalls/SEGGER_RTT_Syscalls_GCC.c',
+        'embed/sys/systemview/systemview.c',
     ]
     CPPPATH_MOD += [
-        'embed/segger/SEGGER/',
-        'embed/segger/Config/',
+        'embed/sys/systemview/inc',
+        'embed/sys/systemview/stm32/config',
+        'embed/sys/systemview/stm32/segger',
     ]
     CPPDEFINES_MOD += ['SYSTEM_VIEW']
     CCFLAGS_MOD += '-DSYSTEM_VIEW '
@@ -252,20 +245,24 @@ if THP:
         'vendor/trezor-crypto/elligator2.c',
     ]
 
+if STORAGE_INSECURE_TESTING_MODE:
+    CPPDEFINES_MOD += ['STORAGE_INSECURE_TESTING_MODE']
 
 env = Environment(
     ENV=os.environ,
     CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DPYOPT={PYOPT} -DBOOTLOADER_QA={int(BOOTLOADER_QA)} -DBITCOIN_ONLY={BITCOIN_ONLY}",
-    CPPDEFINES_IMPLICIT=[]
-    )
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_FIRMWARE = [
-    'embed/kernel/main.c',
-    f'embed/trezorhal/{FILE_SUFFIX}/startup_stage_2.s',
+    'embed/projects/kernel/main.c',
+    f'embed/sys/startup/{FILE_SUFFIX}/startup_stage_2.s',
 ]
 
 if 'sd_card' in FEATURES_AVAILABLE:
@@ -291,10 +288,15 @@ env.Replace(
 
 ALLPATHS = [
         '.',
-        'embed/firmware',
-        'embed/lib',
+        'embed/projects/firmware',
+        'embed/rtl/inc',
         'embed/models',
-        'embed/trezorhal',
+        'embed/gfx/inc',
+        'embed/sys/bsp/inc',
+        'embed/util/bl_check/inc',
+        'embed/util/image/inc',
+        'embed/util/rsod/inc',
+        'embed/util/translations/inc',
     ] + CPPPATH_MOD + PATH_HAL
 
 env.Replace(
@@ -374,7 +376,7 @@ VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_{vend
 
 obj_program.extend(
     env.Command(
-        target='embed/kernel/vendorheader.o',
+        target='embed/projects/kernel/vendorheader.o',
         source=VENDORHEADER,
         action='$OBJCOPY -I binary -O elf32-littlearm -B arm'
         ' --rename-section .data=.vendorheader,alloc,load,readonly,contents'
@@ -384,9 +386,10 @@ tools.embed_compressed_binary(
         obj_program,
         env,
         'bootloader',
-        'embed/bootloaders/bootloader.o',
+        'embed/projects/bootloaders/bootloader.o',
         f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
-        'kernel'
+        'kernel',
+        'bootloader',
         )
 
 linkerscript_gen = env.Command(
@@ -410,7 +413,7 @@ if CMAKELISTS != 0:
 BINARY_NAME = f"build/kernel/kernel-{models.get_model_identifier(TREZOR_MODEL)}"
 if not EVERYTHING:
     BINARY_NAME += "-btconly"
-BINARY_NAME += "-" + tools.get_version('embed/kernel/version.h')
+BINARY_NAME += "-" + tools.get_version('embed/projects/kernel/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"
@@ -419,6 +422,14 @@ action_bin=[
     '$OBJCOPY -O binary -j .flash -j .uflash  -j .data -j .confidential $SOURCE ${TARGET}',
     '$CP $TARGET ' + BINARY_NAME,
 ]
+
+if STORAGE_INSECURE_TESTING_MODE:
+    INSECURE_TESTING_MODE_STR = """
+#########################################################
+#   STORAGE_INSECURE_TESTING_MODE enabled, DO NOT USE   #
+#########################################################
+"""
+    action_bin.append(INSECURE_TESTING_MODE_STR)
 
 program_bin = env.Command(
     target='kernel.bin',

@@ -621,12 +621,13 @@ impl ::protobuf::reflect::ProtobufValue for BenchmarkResult {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x18messages-benchmark.proto\x12\x1ahw.trezor.messages.bitcoin\"\x14\n\
-    \x12BenchmarkListNames\"&\n\x0eBenchmarkNames\x12\x14\n\x05names\x18\x01\
-    \x20\x03(\tR\x05names\"\"\n\x0cBenchmarkRun\x12\x12\n\x04name\x18\x01\
-    \x20\x01(\tR\x04name\";\n\x0fBenchmarkResult\x12\x14\n\x05value\x18\x01\
-    \x20\x01(\tR\x05value\x12\x12\n\x04unit\x18\x03\x20\x01(\tR\x04unitB=\n#\
-    com.satoshilabs.trezor.lib.protobufB\x16TrezorMessageBenchmark\
+    \n\x18messages-benchmark.proto\x12\x1ahw.trezor.messages.bitcoin\x1a\rop\
+    tions.proto\"\x14\n\x12BenchmarkListNames\"&\n\x0eBenchmarkNames\x12\x14\
+    \n\x05names\x18\x01\x20\x03(\tR\x05names\"\"\n\x0cBenchmarkRun\x12\x12\n\
+    \x04name\x18\x01\x20\x01(\tR\x04name\";\n\x0fBenchmarkResult\x12\x14\n\
+    \x05value\x18\x01\x20\x01(\tR\x05value\x12\x12\n\x04unit\x18\x03\x20\x01\
+    (\tR\x04unitBA\n#com.satoshilabs.trezor.lib.protobufB\x16TrezorMessageBe\
+    nchmark\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -643,7 +644,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(0);
+            let mut deps = ::std::vec::Vec::with_capacity(1);
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(4);
             messages.push(BenchmarkListNames::generated_message_descriptor_data());
             messages.push(BenchmarkNames::generated_message_descriptor_data());

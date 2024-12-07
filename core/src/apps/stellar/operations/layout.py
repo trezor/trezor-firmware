@@ -37,8 +37,8 @@ async def confirm_source_account(source_account: str) -> None:
     await confirm_address(
         TR.stellar__confirm_operation,
         source_account,
-        TR.stellar__source_account,
-        "op_source_account",
+        description=TR.stellar__source_account,
+        br_name="op_source_account",
     )
 
 
@@ -57,8 +57,8 @@ async def confirm_account_merge_op(op: StellarAccountMergeOp) -> None:
     await confirm_address(
         TR.stellar__account_merge,
         op.destination_account,
-        TR.stellar__all_will_be_sent_to,
-        "op_account_merge",
+        description=TR.stellar__all_will_be_sent_to,
+        br_name="op_account_merge",
     )
 
 
@@ -240,8 +240,8 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
         await confirm_address(
             TR.stellar__inflation,
             op.inflation_destination_account,
-            TR.stellar__destination,
-            "op_inflation",
+            description=TR.stellar__destination,
+            br_name="op_inflation",
         )
 
     if op.clear_flags:
@@ -339,6 +339,6 @@ async def confirm_asset_issuer(asset: StellarAsset) -> None:
     await confirm_address(
         TR.stellar__confirm_issuer,
         asset.issuer,
-        TR.stellar__issuer_template.format(asset.code),
-        "confirm_asset_issuer",
+        description=TR.stellar__issuer_template.format(asset.code),
+        br_name="confirm_asset_issuer",
     )

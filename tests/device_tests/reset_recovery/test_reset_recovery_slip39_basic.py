@@ -28,6 +28,7 @@ from ...input_flows import (
     InputFlowSlip39BasicRecovery,
     InputFlowSlip39BasicResetRecovery,
 )
+from ...translations import set_language
 
 
 @pytest.mark.models("core")
@@ -38,7 +39,9 @@ def test_reset_recovery(client: Client):
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
 
     for share_subset in itertools.combinations(mnemonics, 3):
+        lang = client.features.language or "en"
         device.wipe(client)
+        set_language(client, lang[:2])
         selected_mnemonics = share_subset
         recover(client, selected_mnemonics)
         address_after = btc.get_address(

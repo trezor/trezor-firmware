@@ -1,7 +1,9 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from storage import device
 from trezor import config, utils
+
 
 class TestConfig(unittest.TestCase):
 
@@ -38,7 +40,7 @@ class TestConfig(unittest.TestCase):
 
         def test_cred_auth_key_counter_overflow(self):
             from storage import common
-            from storage.device import _NAMESPACE, _CRED_AUTH_KEY_COUNTER
+            from storage.device import _CRED_AUTH_KEY_COUNTER, _NAMESPACE
 
             common.set(_NAMESPACE, _CRED_AUTH_KEY_COUNTER, b"\xff\xff\xff\xfe")
             device.increment_cred_auth_key_counter()

@@ -9,6 +9,7 @@ use crate::ui::{
 };
 use heapless::Vec;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SelectWordCountMsg {
     Selected(u32),
 }
@@ -52,10 +53,6 @@ impl Component for SelectWordCount {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.keypad.event(ctx, event)
-    }
-
-    fn paint(&mut self) {
-        self.keypad.paint()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -107,12 +104,6 @@ impl Component for ValueKeypad {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        for btn in self.buttons.iter_mut() {
-            btn.0.paint()
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

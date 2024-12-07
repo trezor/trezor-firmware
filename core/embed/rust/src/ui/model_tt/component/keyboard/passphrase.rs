@@ -8,7 +8,7 @@ use crate::{
         geometry::{Grid, Offset, Rect},
         model_tt::component::{
             button::{Button, ButtonContent, ButtonMsg},
-            keyboard::common::{paint_pending_marker, render_pending_marker, MultiTapKeyboard},
+            keyboard::common::{render_pending_marker, MultiTapKeyboard},
             swipe::{Swipe, SwipeDirection},
             theme, ScrollBar,
         },
@@ -20,6 +20,7 @@ use crate::{
 
 use core::cell::Cell;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum PassphraseKeyboardMsg {
     Confirmed,
     Cancelled,
@@ -221,9 +222,15 @@ impl Component for PassphraseKeyboard {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if self.input.inner().multi_tap.is_timeout_event(event) {
-            self.input
-                .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
+        let multitap_timeout = self.input.mutate(ctx, |ctx, i| {
+            if i.multi_tap.timeout_event(event) {
+                i.multi_tap.clear_pending_state(ctx);
+                true
+            } else {
+                false
+            }
+        });
+        if multitap_timeout {
             return None;
         }
         if let Some(swipe) = self.page_swipe.event(ctx, event) {
@@ -287,20 +294,6 @@ impl Component for PassphraseKeyboard {
         None
     }
 
-    fn paint(&mut self) {
-        self.input.paint();
-        self.scrollbar.paint();
-        self.confirm.paint();
-        self.back.paint();
-        for btn in &mut self.keys {
-            btn.paint();
-        }
-        if self.fade.take() {
-            // Note that this is blocking and takes some time.
-            display::fade_backlight(theme::backlight::get_backlight_normal());
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.scrollbar.render(target);
@@ -342,46 +335,6 @@ impl Component for Input {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        let style = theme::label_keyboard();
-
-        let text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
-            - Offset::y(style.text_font.text_baseline());
-
-        let text = self.textbox.content();
-
-        // Preparing the new text to be displayed.
-        // Possible optimization is to redraw the background only when pending character
-        // is replaced, or only draw rectangle over the pending character and
-        // marker.
-        display::rect_fill(self.area, theme::BG);
-
-        // Find out how much text can fit into the textbox.
-        // Accounting for the pending marker, which draws itself one pixel longer than
-        // the last character
-        let available_area_width = self.area.width() - 1;
-        let text_to_display =
-            long_line_content_with_ellipsis(text, "...", style.text_font, available_area_width);
-
-        display::text_left(
-            text_baseline,
-            &text_to_display,
-            style.text_font,
-            style.text_color,
-            style.background_color,
-        );
-
-        // Paint the pending marker.
-        if self.multi_tap.pending_key().is_some() {
-            paint_pending_marker(
-                text_baseline,
-                &text_to_display,
-                style.text_font,
-                style.text_color,
-            );
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from slip39_vectors import vectors
@@ -40,17 +41,24 @@ class TestCryptoSlip39(unittest.TestCase):
     def test_basic_sharing_extend(self):
         identifier = slip39.generate_random_identifier()
         for extendable in (False, True):
-            mnemonics = slip39.split_ems(1, [(2, 3)], identifier, extendable, 1, self.EMS)
+            mnemonics = slip39.split_ems(
+                1, [(2, 3)], identifier, extendable, 1, self.EMS
+            )
             mnemonics = mnemonics[0]
             extended_mnemonics = slip39.extend_mnemonics(4, mnemonics[1:])
             self.assertEqual(mnemonics, extended_mnemonics[:3])
             for i in range(3):
-                self.assertEqual(slip39.recover_ems([extended_mnemonics[3], mnemonics[i]])[3], self.EMS)
+                self.assertEqual(
+                    slip39.recover_ems([extended_mnemonics[3], mnemonics[i]])[3],
+                    self.EMS,
+                )
 
     def test_basic_sharing_fixed(self):
         for extendable in (False, True):
             generated_identifier = slip39.generate_random_identifier()
-            mnemonics = slip39.split_ems(1, [(3, 5)], generated_identifier, extendable, 1, self.EMS)
+            mnemonics = slip39.split_ems(
+                1, [(3, 5)], generated_identifier, extendable, 1, self.EMS
+            )
             mnemonics = mnemonics[0]
             identifier, _, _, ems = slip39.recover_ems(mnemonics[:3])
             self.assertEqual(ems, self.EMS)
@@ -62,15 +70,19 @@ class TestCryptoSlip39(unittest.TestCase):
     def test_iteration_exponent(self):
         for extendable in (False, True):
             identifier = slip39.generate_random_identifier()
-            mnemonics = slip39.split_ems(1, [(3, 5)], identifier, extendable, 1, self.EMS)
+            mnemonics = slip39.split_ems(
+                1, [(3, 5)], identifier, extendable, 1, self.EMS
+            )
             mnemonics = mnemonics[0]
-            identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics[1:4])
+            identifier, extendable, _, ems = slip39.recover_ems(mnemonics[1:4])
             self.assertEqual(ems, self.EMS)
 
             identifier = slip39.generate_random_identifier()
-            mnemonics = slip39.split_ems(1, [(3, 5)], identifier, extendable, 2, self.EMS)
+            mnemonics = slip39.split_ems(
+                1, [(3, 5)], identifier, extendable, 2, self.EMS
+            )
             mnemonics = mnemonics[0]
-            identifier, extendable, exponent, ems = slip39.recover_ems(mnemonics[1:4])
+            identifier, extendable, _, ems = slip39.recover_ems(mnemonics[1:4])
             self.assertEqual(ems, self.EMS)
 
     def test_group_sharing(self):
@@ -89,7 +101,9 @@ class TestCryptoSlip39(unittest.TestCase):
             )
 
             # Test all valid combinations of mnemonics.
-            for groups in combinations(zip(mnemonics, member_thresholds), group_threshold):
+            for groups in combinations(
+                zip(mnemonics, member_thresholds), group_threshold
+            ):
                 for group1_subset in combinations(groups[0][0], groups[0][1]):
                     for group2_subset in combinations(groups[1][0], groups[1][1]):
                         mnemonic_subset = list(group1_subset + group2_subset)
@@ -103,7 +117,9 @@ class TestCryptoSlip39(unittest.TestCase):
             )
             self.assertEqual(ems, self.EMS)
             self.assertEqual(
-                slip39.recover_ems([mnemonics[2][3], mnemonics[3][0], mnemonics[2][4]])[3],
+                slip39.recover_ems([mnemonics[2][3], mnemonics[3][0], mnemonics[2][4]])[
+                    3
+                ],
                 ems,
             )
 
@@ -159,23 +175,33 @@ class TestCryptoSlip39(unittest.TestCase):
 
             # Group threshold exceeds number of groups.
             with self.assertRaises(ValueError):
-                slip39.split_ems(3, [(3, 5), (2, 5)], identifier, extendable, 1, self.EMS)
+                slip39.split_ems(
+                    3, [(3, 5), (2, 5)], identifier, extendable, 1, self.EMS
+                )
 
             # Invalid group threshold.
             with self.assertRaises(ValueError):
-                slip39.split_ems(0, [(3, 5), (2, 5)], identifier, extendable, 1, self.EMS)
+                slip39.split_ems(
+                    0, [(3, 5), (2, 5)], identifier, extendable, 1, self.EMS
+                )
 
             # Member threshold exceeds number of members.
             with self.assertRaises(ValueError):
-                slip39.split_ems(2, [(3, 2), (2, 5)], identifier, extendable, 1, self.EMS)
+                slip39.split_ems(
+                    2, [(3, 2), (2, 5)], identifier, extendable, 1, self.EMS
+                )
 
             # Invalid member threshold.
             with self.assertRaises(ValueError):
-                slip39.split_ems(2, [(0, 2), (2, 5)], identifier, extendable, 1, self.EMS)
+                slip39.split_ems(
+                    2, [(0, 2), (2, 5)], identifier, extendable, 1, self.EMS
+                )
 
             # Group with multiple members and threshold 1.
             with self.assertRaises(ValueError):
-                slip39.split_ems(2, [(3, 5), (1, 3), (2, 5)], identifier, extendable, 1, self.EMS)
+                slip39.split_ems(
+                    2, [(3, 5), (1, 3), (2, 5)], identifier, extendable, 1, self.EMS
+                )
 
     def test_vectors(self):
         for mnemonics, secret in vectors:

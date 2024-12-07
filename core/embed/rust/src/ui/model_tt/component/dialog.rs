@@ -16,6 +16,7 @@ use crate::{
 
 use super::theme;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum DialogMsg<T, U> {
     Content(T),
     Controls(U),
@@ -65,11 +66,6 @@ where
             .event(ctx, event)
             .map(Self::Msg::Content)
             .or_else(|| self.controls.event(ctx, event).map(Self::Msg::Controls))
-    }
-
-    fn paint(&mut self) {
-        self.content.paint();
-        self.controls.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -188,12 +184,6 @@ where
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.paragraphs.event(ctx, event);
         self.controls.event(ctx, event).map(Self::Msg::Controls)
-    }
-
-    fn paint(&mut self) {
-        self.image.paint();
-        self.paragraphs.paint();
-        self.controls.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

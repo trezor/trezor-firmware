@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
@@ -107,7 +108,7 @@ class TestMoneroClsag(unittest.TestCase):
         Cp = crypto.add_keys2_into(None, alpha, amnt, crypto.xmr_H())
 
         ring = []
-        for i in range(ring_size - 1):
+        for _ in range(ring_size - 1):
             tk = TmpKey(
                 crypto_helpers.encodepoint(
                     crypto.scalarmult_base_into(None, crypto.random_scalar())

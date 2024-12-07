@@ -1,9 +1,4 @@
-use crate::ui::{
-    display::{self, Color},
-    geometry::Rect,
-    shape,
-    shape::Renderer,
-};
+use crate::ui::{display::Color, geometry::Rect, shape, shape::Renderer};
 
 pub struct Pad {
     pub area: Rect,
@@ -44,14 +39,6 @@ impl Pad {
             Some((self.area, self.color))
         } else {
             None
-        }
-    }
-
-    pub fn paint(&mut self) {
-        if self.clear {
-            self.clear = false;
-
-            display::rect_fill(self.area, self.color);
         }
     }
 

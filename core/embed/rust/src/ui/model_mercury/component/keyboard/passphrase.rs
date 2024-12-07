@@ -321,7 +321,7 @@ impl Component for PassphraseKeyboard {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if self.input.multi_tap.is_timeout_event(event) {
+        if self.input.multi_tap.timeout_event(event) {
             self.input.multi_tap.clear_pending_state(ctx);
             return None;
         }
@@ -389,10 +389,6 @@ impl Component for PassphraseKeyboard {
         None
     }
 
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done")
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.next_btn.render(target);
@@ -442,10 +438,6 @@ impl Component for Input {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

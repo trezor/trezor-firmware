@@ -2,12 +2,11 @@ use crate::{
     trezorhal::bip39,
     ui::{
         component::{text::common::TextBox, Component, Event, EventCtx},
-        display,
         geometry::{Alignment2D, Offset, Rect},
         model_tt::{
             component::{
                 keyboard::{
-                    common::{paint_pending_marker, render_pending_marker, MultiTapKeyboard},
+                    common::{render_pending_marker, MultiTapKeyboard},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
                 Button, ButtonContent, ButtonMsg,
@@ -93,65 +92,12 @@ impl Component for Bip39Input {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.button_suggestion.event(ctx, event);
-        if self.multi_tap.is_timeout_event(event) {
+        if self.multi_tap.timeout_event(event) {
             self.on_timeout(ctx)
         } else if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
             self.on_input_click(ctx)
         } else {
             None
-        }
-    }
-
-    fn paint(&mut self) {
-        let area = self.button.area();
-        let style = self.button.style();
-
-        // First, paint the button background.
-        self.button.paint_background(style);
-
-        // Paint the entered content (the prefix of the suggested word).
-        let text = self.textbox.content();
-        let width = style.font.text_width(text);
-        // Content starts in the left-center point, offset by 16px to the right and 8px
-        // to the bottom.
-        let text_baseline = area.top_left().center(area.bottom_left()) + Offset::new(16, 8);
-        display::text_left(
-            text_baseline,
-            text,
-            style.font,
-            style.text_color,
-            style.button_color,
-        );
-
-        // Paint the rest of the suggested dictionary word.
-        if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
-            let word_baseline = text_baseline + Offset::new(width, 0);
-            let style = self.button_suggestion.style();
-            display::text_left(
-                word_baseline,
-                word,
-                style.font,
-                style.text_color,
-                style.button_color,
-            );
-        }
-
-        // Paint the pending marker.
-        if self.multi_tap.pending_key().is_some() {
-            paint_pending_marker(text_baseline, text, style.font, style.text_color);
-        }
-
-        // Paint the icon.
-        if let ButtonContent::Icon(icon) = self.button.content() {
-            // Icon is painted in the right-center point, of expected size 16x16 pixels, and
-            // 16px from the right edge.
-            let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
-            icon.draw(
-                icon_center,
-                Alignment2D::CENTER,
-                style.text_color,
-                style.button_color,
-            );
         }
     }
 

@@ -31,10 +31,6 @@ use super::{
 
 use crate::ui::{ui_features::UIFeaturesBootloader, UIFeaturesCommon};
 
-#[cfg(not(feature = "new_rendering"))]
-use super::theme::BLACK;
-
-#[cfg(feature = "new_rendering")]
 use crate::ui::{
     display::{toif::Toif, LOADER_MAX},
     geometry::Alignment2D,
@@ -43,10 +39,8 @@ use crate::ui::{
     shape::render_on_display,
 };
 
-#[cfg(feature = "new_rendering")]
 use ufmt::uwrite;
 
-#[cfg(feature = "new_rendering")]
 use super::theme::bootloader::BLD_WARN_COLOR;
 use intro::Intro;
 use menu::Menu;
@@ -63,42 +57,6 @@ const SCREEN: Rect = ModelMercuryFeatures::SCREEN;
 const PROGRESS_TEXT_ORIGIN: Point = Point::new(2, 28);
 
 impl ModelMercuryFeatures {
-    #[cfg(not(feature = "new_rendering"))]
-    fn screen_progress(
-        text: &str,
-        progress: u16,
-        initialize: bool,
-        fg_color: Color,
-        bg_color: Color,
-        icon: Option<(Icon, Color)>,
-        center_text: Option<&str>,
-    ) {
-        let loader_offset: i16 = 19;
-        let center_text_offset: i16 = 10;
-
-        if initialize {
-            Self::fadeout();
-            display::rect_fill(SCREEN, bg_color);
-        }
-
-        display::text_left(PROGRESS_TEXT_ORIGIN, text, Font::NORMAL, BLD_FG, bg_color);
-        display::loader(progress, 19, fg_color, bg_color, icon);
-        if let Some(center_text) = center_text {
-            display::text_center(
-                SCREEN.center() + Offset::y(loader_offset + center_text_offset),
-                center_text,
-                Font::NORMAL,
-                GREY,
-                bg_color,
-            );
-        }
-        display::refresh();
-        if initialize {
-            Self::fadein();
-        }
-    }
-
-    #[cfg(feature = "new_rendering")]
     fn screen_progress(
         text: &str,
         progress: u16,
@@ -168,17 +126,6 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
     fn screen_welcome() {
         let mut frame = Welcome::new();
         show(&mut frame, true);
-    }
-
-    #[cfg(not(feature = "new_rendering"))]
-    fn bld_continue_label(bg_color: Color) {
-        display::text_center(
-            Point::new(SCREEN.width() / 2, SCREEN.height() - 5),
-            "click to continue ...",
-            Font::NORMAL,
-            BLD_FG,
-            bg_color,
-        );
     }
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
@@ -372,9 +319,6 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
             Self::fadeout();
         }
 
-        #[cfg(not(feature = "new_rendering"))]
-        display::rect_fill(SCREEN, BLACK);
-
         let mut frame = WelcomeScreen::new();
         show(&mut frame, false);
 
@@ -443,7 +387,6 @@ impl UIFeaturesBootloader for ModelMercuryFeatures {
         show(&mut frame, true);
     }
 
-    #[cfg(feature = "new_rendering")]
     fn screen_boot(
         warning: bool,
         vendor_str: Option<&str>,

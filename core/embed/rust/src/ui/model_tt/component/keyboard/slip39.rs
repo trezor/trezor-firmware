@@ -8,12 +8,11 @@ use crate::{
             text::common::{TextBox, TextEdit},
             Component, Event, EventCtx,
         },
-        display,
         geometry::{Alignment2D, Offset, Rect},
         model_tt::{
             component::{
                 keyboard::{
-                    common::{paint_pending_marker, render_pending_marker, MultiTapKeyboard},
+                    common::{render_pending_marker, MultiTapKeyboard},
                     mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
                 },
                 Button, ButtonContent, ButtonMsg,
@@ -106,7 +105,7 @@ impl Component for Slip39Input {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if self.multi_tap.is_timeout_event(event) {
+        if self.multi_tap.timeout_event(event) {
             // Timeout occurred. Reset the pending key.
             self.multi_tap.clear_pending_state(ctx);
             return Some(MnemonicInputMsg::TimedOut);
@@ -119,70 +118,6 @@ impl Component for Slip39Input {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        let area = self.button.area();
-        let style = self.button.style();
-
-        // First, paint the button background.
-        self.button.paint_background(style);
-
-        // Content starts in the left-center point, offset by 16px to the right and 8px
-        // to the bottom.
-        let text_baseline = area.top_left().center(area.bottom_left()) + Offset::new(16, 8);
-
-        // To simplify things, we always copy the printed string here, even if it
-        // wouldn't be strictly necessary.
-        let mut text = ShortString::new();
-
-        if let Some(word) = self.final_word {
-            // We're done with input, paint the full word.
-            text.push_str(word)
-                .assert_if_debugging_ui("Text buffer is too small");
-        } else {
-            // Paint an asterisk for each letter of input.
-            for ch in iter::repeat('*').take(self.textbox.content().len()) {
-                text.push(ch)
-                    .assert_if_debugging_ui("Text buffer is too small");
-            }
-            // If we're in the pending state, paint the pending character at the end.
-            if let (Some(key), Some(press)) =
-                (self.multi_tap.pending_key(), self.multi_tap.pending_press())
-            {
-                assert!(!Self::keys()[key].is_empty());
-                // Now we can be sure that the looped iterator will return a value.
-                let ch = unwrap!(Self::keys()[key].chars().cycle().nth(press));
-                text.pop();
-                text.push(ch)
-                    .assert_if_debugging_ui("Text buffer is too small");
-            }
-        }
-        display::text_left(
-            text_baseline,
-            text.as_str(),
-            style.font,
-            style.text_color,
-            style.button_color,
-        );
-
-        // Paint the pending marker.
-        if self.multi_tap.pending_key().is_some() && self.final_word.is_none() {
-            paint_pending_marker(text_baseline, text.as_str(), style.font, style.text_color);
-        }
-
-        // Paint the icon.
-        if let ButtonContent::Icon(icon) = self.button.content() {
-            // Icon is painted in the right-center point, of expected size 16x16 pixels, and
-            // 16px from the right edge.
-            let icon_center = area.top_right().center(area.bottom_right()) - Offset::new(16 + 8, 0);
-            icon.draw(
-                icon_center,
-                Alignment2D::CENTER,
-                style.text_color,
-                style.button_color,
-            );
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

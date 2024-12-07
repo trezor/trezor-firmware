@@ -50,6 +50,7 @@ use crate::{
         },
         geometry,
         layout::{
+            base::LAYOUT_STATE,
             obj::{ComponentMsgObj, LayoutObj, ATTACH_TYPE_OBJ},
             result::{CANCELLED, CONFIRMED, INFO},
             util::{upy_disable_animation, ConfirmBlob, PropsList, RecoveryType},
@@ -198,6 +199,7 @@ where
             PageMsg::Content(_) => Err(Error::TypeError),
             PageMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             PageMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            PageMsg::Info => Ok(INFO.as_obj()),
             PageMsg::SwipeLeft => Ok(INFO.as_obj()),
             PageMsg::SwipeRight => Ok(CANCELLED.as_obj()),
         }
@@ -492,6 +494,7 @@ impl ConfirmBlobParams {
         if let Some(subtitle) = self.subtitle {
             frame = frame.with_subtitle(theme::label_subtitle(), subtitle);
         }
+
         if self.info_button {
             frame = frame.with_info_button();
         }
@@ -506,7 +509,11 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
         let description: Option<TString> =
             kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
-        let extra: Option<TString> = kwargs.get(Qstr::MP_QSTR_extra)?.try_into_option()?;
+        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
+        let extra: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_extra)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
@@ -515,12 +522,15 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let info: bool = kwargs.get_or(Qstr::MP_QSTR_info, false)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         ConfirmBlobParams::new(title, data, description, verb, verb_cancel, hold)
+            .with_text_mono(text_mono)
             .with_extra(extra)
             .with_chunkify(chunkify)
+            .with_info_button(info)
             .into_layout()
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -753,28 +763,52 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_total(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
-        let cancel_arrow: bool = kwargs.get_or(Qstr::MP_QSTR_cancel_arrow, false)?;
+        let amount: TString = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
+        let amount_label: TString = kwargs.get(Qstr::MP_QSTR_amount_label)?.try_into()?;
+        let fee: TString = kwargs.get(Qstr::MP_QSTR_fee)?.try_into()?;
+        let fee_label: TString = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
+        let title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let account_items: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_account_items)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let extra_items: Option<Obj> = kwargs
+            .get(Qstr::MP_QSTR_extra_items)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let _extra_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_extra_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let verb_cancel: Option<TString<'static>> = kwargs
+            .get(Qstr::MP_QSTR_verb_cancel)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
-        let mut paragraphs = ParagraphVecShort::new();
+        let info_button: bool = account_items.is_some() || extra_items.is_some();
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_NORMAL, amount_label).no_break(),
+            Paragraph::new(&theme::TEXT_MONO, amount),
+            Paragraph::new(&theme::TEXT_NORMAL, fee_label).no_break(),
+            Paragraph::new(&theme::TEXT_MONO, fee),
+        ]);
 
-        for pair in IterBuf::new().try_iterate(items)? {
-            let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_NORMAL, label).no_break());
-            paragraphs.add(Paragraph::new(&theme::TEXT_MONO, value));
-        }
-        let mut page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG).with_hold()?;
-        if cancel_arrow {
-            page = page.with_cancel_arrow()
-        }
+        let mut page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+            .with_hold()?
+            .with_cancel_button(verb_cancel);
         if info_button {
             page = page.with_swipe_left();
         }
-        let mut frame = Frame::left_aligned(theme::label_title(), title, page);
+        let mut frame = Frame::left_aligned(
+            theme::label_title(),
+            title.unwrap_or(TString::empty()),
+            page,
+        );
         if info_button {
             frame = frame.with_info_button();
         }
@@ -1139,6 +1173,8 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let button: TString = kwargs.get(Qstr::MP_QSTR_button)?.try_into()?;
+        let button_style_confirm: bool =
+            kwargs.get_or(Qstr::MP_QSTR_button_style_confirm, false)?;
         let items: Obj = kwargs.get(Qstr::MP_QSTR_items)?;
 
         let mut paragraphs = ParagraphVecLong::new();
@@ -1155,7 +1191,11 @@ extern "C" fn new_confirm_more(n_args: usize, args: *const Obj, kwargs: *mut Map
             title,
             ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
                 .with_cancel_confirm(None, Some(button))
-                .with_confirm_style(theme::button_default())
+                .with_confirm_style(if button_style_confirm {
+                    theme::button_confirm()
+                } else {
+                    theme::button_default()
+                })
                 .with_back_button(),
         ))?;
         Ok(obj.into())
@@ -1632,29 +1672,29 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     see `trezor::ui::layout::obj::LayoutObj`.
     ///     """
     ///
-    ///     def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> None:
+    ///     def attach_timer_fn(self, fn: Callable[[int, int], None], attach_type: AttachType | None) -> LayoutState | None:
     ///         """Attach a timer setter function.
     ///
     ///         The layout object can call the timer setter with two arguments,
-    ///         `token` and `duration`. When `duration` elapses, the layout object
+    ///         `token` and `duration_ms`. When `duration_ms` elapses, the layout object
     ///         expects a callback to `self.timer(token)`.
     ///         """
     ///
     ///     if utils.USE_TOUCH:
-    ///         def touch_event(self, event: int, x: int, y: int) -> T | None:
+    ///         def touch_event(self, event: int, x: int, y: int) -> LayoutState | None:
     ///             """Receive a touch event `event` at coordinates `x`, `y`."""
     ///
     ///     if utils.USE_BUTTON:
-    ///         def button_event(self, event: int, button: int) -> T | None:
+    ///         def button_event(self, event: int, button: int) -> LayoutState | None:
     ///             """Receive a button event `event` for button `button`."""
     ///
-    ///     def progress_event(self, value: int, description: str) -> T | None:
+    ///     def progress_event(self, value: int, description: str) -> LayoutState | None:
     ///         """Receive a progress event."""
     ///
-    ///     def usb_event(self, connected: bool) -> T | None:
+    ///     def usb_event(self, connected: bool) -> LayoutState | None:
     ///         """Receive a USB connect/disconnect event."""
     ///
-    ///     def timer(self, token: int) -> T | None:
+    ///     def timer(self, token: int) -> LayoutState | None:
     ///         """Callback for the timer set by `attach_timer_fn`.
     ///
     ///         This function should be called by the executor after the corresponding
@@ -1695,12 +1735,15 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     def get_transition_out(self) -> AttachType:
     ///         """Return the transition type."""
     ///
+    ///     def return_value(self) -> T:
+    ///         """Retrieve the return value of the layout object."""
+    ///
     ///     def __del__(self) -> None:
     ///         """Calls drop on contents of the root component."""
     ///
     /// class UiResult:
-    ///    """Result of a UI operation."""
-    ///    pass
+    ///     """Result of a UI operation."""
+    ///     pass
     ///
     /// mock:global
     Qstr::MP_QSTR___name__ => Qstr::MP_QSTR_trezorui2.to_obj(),
@@ -1762,12 +1805,18 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     title: str,
     ///     data: str | bytes,
     ///     description: str | None,
-    ///     extra: str | None,
+    ///     text_mono: bool = True,
+    ///     extra: str | None = None,
+    ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
+    ///     verb_info: str | None = None,
+    ///     info: bool = True,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
+    ///     page_counter: bool = False,
     ///     prompt_screen: bool = False,
+    ///     cancel: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
     Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
@@ -1833,6 +1882,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     description: str | None,
     ///     subtitle: str | None,
     ///     verb: str | None = None,
+    ///     verb_info: str | None = None,
     ///     verb_cancel: str | None = None,
     ///     info_button: bool = False,
     ///     hold: bool = False,
@@ -1842,15 +1892,20 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     """Confirm value. Merge of confirm_total and confirm_output."""
     Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
 
-    /// def confirm_total(
+    /// def confirm_summary(
     ///     *,
-    ///     title: str,
-    ///     items: Iterable[tuple[str, str]],
-    ///     info_button: bool = False,
-    ///     cancel_arrow: bool = False,
+    ///     amount: str,
+    ///     amount_label: str,
+    ///     fee: str,
+    ///     fee_label: str,
+    ///     title: str | None = None,
+    ///     account_items: Iterable[tuple[str, str]] | None = None,
+    ///     extra_items: Iterable[tuple[str, str]] | None = None,
+    ///     extra_title: str | None = None,
+    ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Transaction summary. Always hold to confirm."""
-    Qstr::MP_QSTR_confirm_total => obj_fn_kw!(0, new_confirm_total).as_obj(),
+    ///     """Confirm summary of a transaction."""
+    Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
 
     /// def confirm_modify_output(
     ///     *,
@@ -1959,6 +2014,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     *,
     ///     title: str,
     ///     button: str,
+    ///     button_style_confirm: bool = False,
     ///     items: Iterable[tuple[int, str | bytes]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm long content with the possibility to go back from any page.
@@ -2063,6 +2119,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     button: str,
     ///     recovery_type: RecoveryType,
     ///     info_button: bool = False,
+    ///     show_instructions: bool = False,  # unused on TT
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_confirm_recovery => obj_fn_kw!(0, new_confirm_recovery).as_obj(),
@@ -2163,6 +2220,14 @@ pub static mp_module_trezorui2: Module = obj_module! {
     ///     SWIPE_LEFT: ClassVar[int]
     ///     SWIPE_RIGHT: ClassVar[int]
     Qstr::MP_QSTR_AttachType => ATTACH_TYPE_OBJ.as_obj(),
+
+    /// class LayoutState:
+    ///     """Layout state."""
+    ///     INITIAL: "ClassVar[LayoutState]"
+    ///     ATTACHED: "ClassVar[LayoutState]"
+    ///     TRANSITIONING: "ClassVar[LayoutState]"
+    ///     DONE: "ClassVar[LayoutState]"
+    Qstr::MP_QSTR_LayoutState => LAYOUT_STATE.as_obj(),
 };
 
 #[cfg(test)]

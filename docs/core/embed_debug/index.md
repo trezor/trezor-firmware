@@ -128,7 +128,7 @@ First, clone the repo and build both emulator and embedded code:
 Now rename `Makefile` under `core` to something else, like `Makefile.orig`. Open the
 `core` directory as new project in CLion.
 
-Open any .c file, e.g. `embed/firmware/main.c`.
+Open any .c file, e.g. `embed/projects/firmware/main.c`.
 At this point since CLion does not see `Makefile` or `CMakeLists.txt`, it will
 [suggest creating CMakeLists for you based on existing files](https://www.jetbrains.com/help/clion/creating-new-project-from-scratch.html#example).
 

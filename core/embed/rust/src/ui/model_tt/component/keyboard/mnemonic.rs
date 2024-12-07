@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{maybe::paint_overlapping, Child, Component, Event, EventCtx, Label, Maybe},
+        component::{Child, Component, Event, EventCtx, Label, Maybe},
         geometry::{Alignment2D, Grid, Offset, Rect},
         model_tt::{
             component::{Button, ButtonMsg, Swipe, SwipeDirection},
@@ -13,6 +13,7 @@ use crate::{
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum MnemonicKeyboardMsg {
     Confirmed,
     Previous,
@@ -183,13 +184,6 @@ where
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        paint_overlapping(&mut [&mut self.prompt, &mut self.input, &mut self.back]);
-        for btn in &mut self.keys {
-            btn.paint();
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

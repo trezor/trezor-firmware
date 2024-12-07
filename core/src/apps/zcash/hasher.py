@@ -46,7 +46,7 @@ def blake_hash_writer_32(personal: bytes) -> HashWriter:
 
 
 class ZcashHasher:
-    def __init__(self, tx: SignTx | PrevTx):
+    def __init__(self, tx: SignTx | PrevTx) -> None:
         from trezor.utils import empty_bytearray
 
         self.header = HeaderHasher(tx)
@@ -130,7 +130,7 @@ class ZcashHasher:
 
 
 class HeaderHasher:
-    def __init__(self, tx: SignTx | PrevTx):
+    def __init__(self, tx: SignTx | PrevTx) -> None:
         h = blake_hash_writer_32(b"ZTxIdHeadersHash")
 
         assert tx.version_group_id is not None

@@ -9,6 +9,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+from ...input_flows import InputFlowConfirmAllWarnings
 from . import common
 from .test_sign_typed_data import DATA as TYPED_DATA
 
@@ -122,12 +123,15 @@ def test_external_token(client: Client) -> None:
 
 
 def test_external_chain_without_token(client: Client) -> None:
-    # when using an external chains, unknown tokens are allowed
-    network = common.encode_network(chain_id=66666, slip44=60)
-    params = DEFAULT_ERC20_PARAMS.copy()
-    params.update(to=ERC20_BUILTIN_TOKEN, chain_id=66666)
-    ethereum.sign_tx(client, **params, definitions=common.make_defs(network, None))
-    # TODO check that UNKN token is used, FAKE network
+    with client:
+        if not client.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        # when using an external chains, unknown tokens are allowed
+        network = common.encode_network(chain_id=66666, slip44=60)
+        params = DEFAULT_ERC20_PARAMS.copy()
+        params.update(to=ERC20_BUILTIN_TOKEN, chain_id=66666)
+        ethereum.sign_tx(client, **params, definitions=common.make_defs(network, None))
+        # TODO check that UNKN token is used, FAKE network
 
 
 def test_external_chain_token_ok(client: Client) -> None:
@@ -141,14 +145,19 @@ def test_external_chain_token_ok(client: Client) -> None:
 
 
 def test_external_chain_token_mismatch(client: Client) -> None:
-    # when providing external defs, we explicitly allow, but not use, tokens
-    # from other chains
-    network = common.encode_network(chain_id=66666, slip44=60)
-    token = common.encode_token(address=ERC20_FAKE_ADDRESS, chain_id=55555, decimals=8)
-    params = DEFAULT_ERC20_PARAMS.copy()
-    params.update(to=ERC20_FAKE_ADDRESS, chain_id=66666)
-    ethereum.sign_tx(client, **params, definitions=common.make_defs(network, token))
-    # TODO check that UNKN is used for token, FAKE for network
+    with client:
+        if not client.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+        # when providing external defs, we explicitly allow, but not use, tokens
+        # from other chains
+        network = common.encode_network(chain_id=66666, slip44=60)
+        token = common.encode_token(
+            address=ERC20_FAKE_ADDRESS, chain_id=55555, decimals=8
+        )
+        params = DEFAULT_ERC20_PARAMS.copy()
+        params.update(to=ERC20_FAKE_ADDRESS, chain_id=66666)
+        ethereum.sign_tx(client, **params, definitions=common.make_defs(network, token))
+        # TODO check that UNKN is used for token, FAKE for network
 
 
 def _call_getaddress(client: Client, slip44: int, network: bytes | None) -> None:

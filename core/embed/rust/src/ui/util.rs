@@ -1,12 +1,4 @@
-use crate::{
-    strutil::{ShortString, TString},
-    ui::{
-        component::text::TextStyle,
-        display,
-        display::toif::Icon,
-        geometry::{Alignment2D, Offset, Point},
-    },
-};
+use crate::strutil::ShortString;
 
 use super::display::Font;
 
@@ -92,38 +84,6 @@ pub fn animation_disabled() -> bool {
 #[cfg(not(feature = "ui_debug"))]
 pub fn set_animation_disabled(_disabled: bool) {}
 
-/// Display an icon and a text centered relative to given `Point`.
-pub fn icon_text_center(
-    baseline: Point,
-    icon: Icon,
-    space: i16,
-    text: TString<'_>,
-    style: TextStyle,
-    text_offset: Offset,
-) {
-    text.map(|t| {
-        let icon_width = icon.toif.width();
-        let text_width = style.text_font.text_width(t);
-        let text_height = style.text_font.text_height();
-        let text_center = baseline + Offset::new((icon_width + space) / 2, text_height / 2);
-        let icon_center = baseline - Offset::x((text_width + space) / 2);
-
-        display::text_center(
-            text_center + text_offset,
-            t,
-            style.text_font,
-            style.text_color,
-            style.background_color,
-        );
-        icon.draw(
-            icon_center,
-            Alignment2D::CENTER,
-            style.text_color,
-            style.background_color,
-        );
-    });
-}
-
 /// Convert char to a ShortString.
 pub fn char_to_string(ch: char) -> ShortString {
     let mut s = ShortString::new();
@@ -181,28 +141,16 @@ pub fn long_line_content_with_ellipsis(
 }
 
 /// Create the `Icon` constant with given name and path.
-/// Possibly users can supply `true` as a third argument and this
-/// will signify that the icon has empty right column.
 macro_rules! include_icon {
-    ($name:ident, $path:expr, empty_right_col = $empty:expr) => {
-        pub const $name: $crate::ui::display::toif::Icon = if $empty {
-            $crate::ui::display::toif::Icon::debug_named(
-                $crate::ui::util::include_res!($path),
-                stringify!($name),
-            )
-            .with_empty_right_column()
-        } else {
-            $crate::ui::display::toif::Icon::debug_named(
-                $crate::ui::util::include_res!($path),
-                stringify!($name),
-            )
-        };
-    };
-    // No empty right column by default.
     ($name:ident, $path:expr) => {
-        include_icon!($name, $path, empty_right_col = false);
+        pub const $name: $crate::ui::display::toif::Icon =
+            $crate::ui::display::toif::Icon::debug_named(
+                $crate::ui::util::include_res!($path),
+                stringify!($name),
+            );
     };
 }
+
 pub(crate) use include_icon;
 
 macro_rules! include_res {

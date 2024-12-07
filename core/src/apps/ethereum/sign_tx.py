@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor import utils
 from trezor.crypto import rlp
 from trezor.messages import EthereumTxRequest
 from trezor.utils import BufferReader
@@ -20,7 +19,6 @@ if TYPE_CHECKING:
         EthereumTokenInfo,
         EthereumTxAck,
     )
-    from trezor.ui.layouts.common import ProgressLayout
 
     from apps.common.keychain import Keychain
 
@@ -40,7 +38,9 @@ async def sign_tx(
     keychain: Keychain,
     defs: Definitions,
 ) -> EthereumTxRequest:
+    from trezor import TR
     from trezor.crypto.hashlib import sha3_256
+    from trezor.ui.layouts.progress import progress
     from trezor.utils import HashWriter
 
     from apps.common import paths
@@ -56,7 +56,7 @@ async def sign_tx(
         raise DataError("Fee overflow")
     check_common_fields(msg)
 
-    # have a user confirm signing
+    # have the user confirm signing
     await paths.validate_path(keychain, msg.address_n)
     address_bytes = bytes_from_address(msg.to)
     gas_price = int.from_bytes(msg.gas_price, "big")
@@ -69,9 +69,8 @@ async def sign_tx(
     )
     await confirm_tx_data(msg, defs, address_bytes, maximum_fee, fee_items, data_total)
 
-    _start_progress()
-
-    _render_progress(30)
+    progress_obj = progress(title=TR.progress__signing_transaction)
+    progress_obj.report(30)
 
     # sign
     data = bytearray()
@@ -95,7 +94,7 @@ async def sign_tx(
         rlp.write_header(sha, data_total, rlp.STRING_HEADER_BYTE, data)
         sha.extend(data)
 
-    _render_progress(60)
+    progress_obj.report(60)
 
     while data_left > 0:
         resp = await send_request_chunk(data_left)
@@ -110,7 +109,7 @@ async def sign_tx(
     digest = sha.get_digest()
     result = _sign_digest(msg, keychain, digest)
 
-    _finish_progress()
+    progress_obj.stop()
 
     return result
 
@@ -130,9 +129,11 @@ async def confirm_tx_data(
         return
 
     # Handle ERC-20, currently only 'transfer' function
-    token, recipient, value = await handle_erc20_transfer(msg, defs, address_bytes)
+    token, recipient, value = await _handle_erc20_transfer(msg, defs, address_bytes)
 
-    if token is None and data_total_len > 0:
+    is_contract_interaction = token is None and data_total_len > 0
+
+    if is_contract_interaction:
         await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
 
     await require_confirm_tx(
@@ -143,7 +144,8 @@ async def confirm_tx_data(
         fee_items,
         defs.network,
         token,
-        bool(msg.chunkify),
+        is_contract_interaction=is_contract_interaction,
+        chunkify=bool(msg.chunkify),
     )
 
 
@@ -189,7 +191,7 @@ async def handle_staking(
     return False
 
 
-async def handle_erc20_transfer(
+async def _handle_erc20_transfer(
     msg: MsgInSignTx,
     definitions: Definitions,
     address_bytes: bytes,
@@ -393,30 +395,3 @@ async def _handle_staking_tx_claim(
     await require_confirm_claim(
         staking_addr, msg.address_n, maximum_fee, fee_items, network, chunkify
     )
-
-
-_progress_obj: ProgressLayout | None = None
-
-
-def _start_progress() -> None:
-    from trezor import TR, workflow
-    from trezor.ui.layouts.progress import progress
-
-    global _progress_obj
-
-    if not utils.DISABLE_ANIMATION:
-        # Because we are drawing to the screen manually, without a layout, we
-        # should make sure that no other layout is running.
-        workflow.close_others()
-        _progress_obj = progress(title=TR.progress__signing_transaction)
-
-
-def _render_progress(progress: int) -> None:
-    global _progress_obj
-    if _progress_obj is not None:
-        _progress_obj.report(progress)
-
-
-def _finish_progress() -> None:
-    global _progress_obj
-    _progress_obj = None

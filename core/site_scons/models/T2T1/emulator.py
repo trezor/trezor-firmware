@@ -17,45 +17,44 @@ def configure(
     hw_revision = 0
     mcu = "STM32F427xx"
 
-    if "new_rendering" in features_wanted:
-        defines += ["DISPLAY_RGB565"]
-        features_available.append("display_rgb565")
+    defines += ["DISPLAY_RGB565"]
+    features_available.append("display_rgb565")
+    defines += [("USE_RGB_COLORS", "1")]
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    defines += [f"MCU_TYPE={mcu}"]
-    defines += ["FLASH_BIT_ACCESS=1"]
-    defines += ["FLASH_BLOCK_WORDS=1"]
-
-    if "dma2d" in features_wanted:
-        features_available.append("dma2d")
-        if "new_rendering" in features_wanted:
-            sources += [
-                "embed/trezorhal/unix/dma2d_bitblt.c",
-            ]
-        else:
-            sources += ["embed/lib/dma2d_emul.c"]
-        defines += ["USE_DMA2D"]
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("MCU_TYPE", mcu),
+        ("FLASH_BIT_ACCESS", "1"),
+        ("FLASH_BLOCK_WORDS", "1"),
+    ]
 
     if "sd_card" in features_wanted:
         features_available.append("sd_card")
         sources += [
-            "embed/trezorhal/unix/sdcard.c",
-            "embed/extmod/modtrezorio/ff.c",
-            "embed/extmod/modtrezorio/ffunicode.c",
+            "embed/io/sdcard/unix/sdcard.c",
+            "embed/upymod/modtrezorio/ff.c",
+            "embed/upymod/modtrezorio/ffunicode.c",
         ]
+        paths += ["embed/io/sdcard/inc"]
+        defines += [("USE_SD_CARD", "1")]
 
     if "sbu" in features_wanted:
-        sources += ["embed/trezorhal/unix/sbu.c"]
+        sources += ["embed/io/sbu/unix/sbu.c"]
+        paths += ["embed/io/sbu/inc"]
+        defines += [("USE_SBU", "1")]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/unix/touch.c"]
+        sources += ["embed/io/touch/unix/touch.c"]
+        paths += ["embed/io/touch/inc"]
         features_available.append("touch")
+        defines += [("USE_TOUCH", "1")]
 
     features_available.append("backlight")
+    defines += [("USE_BACKLIGHT", "1")]
 
-    sources += ["embed/trezorhal/stm32f4/layout.c"]
+    sources += ["embed/util/flash/stm32f4/flash_layout.c"]
 
     return features_available

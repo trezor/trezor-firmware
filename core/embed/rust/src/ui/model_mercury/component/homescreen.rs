@@ -5,7 +5,7 @@ use crate::{
     translations::TR,
     trezorhal::usb::usb_configured,
     ui::{
-        component::{Component, Event, EventCtx, TimerToken},
+        component::{Component, Event, EventCtx, Timer},
         display::{image::ImageInfo, Color, Font},
         event::{TouchEvent, USBEvent},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
@@ -235,8 +235,8 @@ impl AttachAnimation {
 }
 
 struct HideLabelAnimation {
-    pub timer: Stopwatch,
-    token: TimerToken,
+    pub stopwatch: Stopwatch,
+    timer: Timer,
     animating: bool,
     hidden: bool,
     duration: Duration,
@@ -260,8 +260,8 @@ impl HideLabelAnimation {
 
     fn new(label_width: i16) -> Self {
         Self {
-            timer: Stopwatch::default(),
-            token: TimerToken::INVALID,
+            stopwatch: Stopwatch::default(),
+            timer: Timer::new(),
             animating: false,
             hidden: false,
             duration: Duration::from_millis((label_width as u32 * 300) / 120),
@@ -269,19 +269,19 @@ impl HideLabelAnimation {
     }
 
     fn is_active(&self) -> bool {
-        self.timer.is_running_within(self.duration)
+        self.stopwatch.is_running_within(self.duration)
     }
 
     fn reset(&mut self) {
-        self.timer = Stopwatch::default();
+        self.stopwatch = Stopwatch::default();
     }
 
     fn elapsed(&self) -> Duration {
-        self.timer.elapsed()
+        self.stopwatch.elapsed()
     }
 
     fn change_dir(&mut self) {
-        let elapsed = self.timer.elapsed();
+        let elapsed = self.stopwatch.elapsed();
 
         let start = self
             .duration
@@ -289,9 +289,9 @@ impl HideLabelAnimation {
             .and_then(|e| Instant::now().checked_sub(e));
 
         if let Some(start) = start {
-            self.timer = Stopwatch::Running(start);
+            self.stopwatch = Stopwatch::Running(start);
         } else {
-            self.timer = Stopwatch::new_started();
+            self.stopwatch = Stopwatch::new_started();
         }
     }
 
@@ -300,7 +300,7 @@ impl HideLabelAnimation {
             return Offset::zero();
         }
 
-        let t = self.timer.elapsed().to_millis() as f32 / 1000.0;
+        let t = self.stopwatch.elapsed().to_millis() as f32 / 1000.0;
 
         let pos = if self.hidden {
             pareen::constant(0.0)
@@ -329,7 +329,7 @@ impl HideLabelAnimation {
         match event {
             Event::Attach(AttachType::Initial) => {
                 ctx.request_anim_frame();
-                self.token = ctx.request_timer(Self::HIDE_AFTER);
+                self.timer.start(ctx, Self::HIDE_AFTER);
             }
             Event::Attach(AttachType::Resume) => {
                 self.hidden = resume.hidden;
@@ -341,13 +341,13 @@ impl HideLabelAnimation {
                 self.animating = resume.animating;
 
                 if self.animating {
-                    self.timer = Stopwatch::Running(start);
+                    self.stopwatch = Stopwatch::Running(start);
                     ctx.request_anim_frame();
                 } else {
-                    self.timer = Stopwatch::new_stopped();
+                    self.stopwatch = Stopwatch::new_stopped();
                 }
                 if !self.animating && !self.hidden {
-                    self.token = ctx.request_timer(Self::HIDE_AFTER);
+                    self.timer.start(ctx, Self::HIDE_AFTER);
                 }
             }
             Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
@@ -361,28 +361,26 @@ impl HideLabelAnimation {
                     ctx.request_paint();
 
                     if !self.hidden {
-                        self.token = ctx.request_timer(Self::HIDE_AFTER);
+                        self.timer.start(ctx, Self::HIDE_AFTER);
                     }
                 }
             }
-            Event::Timer(token) => {
-                if token == self.token && !animation_disabled() {
-                    self.timer.start();
-                    ctx.request_anim_frame();
-                    self.animating = true;
-                    self.hidden = false;
-                }
+            Event::Timer(_) if self.timer.expire(event) && !animation_disabled() => {
+                self.stopwatch.start();
+                ctx.request_anim_frame();
+                self.animating = true;
+                self.hidden = false;
             }
 
             Event::Touch(TouchEvent::TouchStart(_)) => {
                 if !self.animating {
                     if self.hidden {
-                        self.timer.start();
+                        self.stopwatch.start();
                         self.animating = true;
                         ctx.request_anim_frame();
                         ctx.request_paint();
                     } else {
-                        self.token = ctx.request_timer(Self::HIDE_AFTER);
+                        self.timer.start(ctx, Self::HIDE_AFTER);
                     }
                 } else if !self.hidden {
                     self.change_dir();
@@ -399,7 +397,7 @@ impl HideLabelAnimation {
         HideLabelAnimationState {
             animating: self.animating,
             hidden: self.hidden,
-            elapsed: self.timer.elapsed().to_millis(),
+            elapsed: self.stopwatch.elapsed().to_millis(),
         }
     }
 }
@@ -420,7 +418,7 @@ pub struct Homescreen {
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
     hold_to_lock: bool,
     loader: Loader,
-    delay: Option<TimerToken>,
+    delay: Timer,
     attach_animation: AttachAnimation,
     label_anim: HideLabelAnimation,
 }
@@ -458,7 +456,7 @@ impl Homescreen {
             bg_image: buf,
             hold_to_lock,
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
-            delay: None,
+            delay: Timer::new(),
             attach_animation: AttachAnimation::default(),
             label_anim: HideLabelAnimation::new(label_width),
         }
@@ -513,11 +511,11 @@ impl Homescreen {
                 if self.loader.is_animating() {
                     self.loader.start_growing(ctx, Instant::now());
                 } else {
-                    self.delay = Some(ctx.request_timer(LOADER_DELAY));
+                    self.delay.start(ctx, LOADER_DELAY);
                 }
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
-                self.delay = None;
+                self.delay.stop();
                 let now = Instant::now();
                 if self.loader.is_completely_grown(now) {
                     return true;
@@ -526,8 +524,7 @@ impl Homescreen {
                     self.loader.start_shrinking(ctx, now);
                 }
             }
-            Event::Timer(token) if Some(token) == self.delay => {
-                self.delay = None;
+            Event::Timer(_) if self.delay.expire(event) => {
                 self.loader.start_growing(ctx, Instant::now());
             }
             _ => {}
@@ -574,10 +571,6 @@ impl Component for Homescreen {
         } else {
             None
         }
-    }
-
-    fn paint(&mut self) {
-        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -799,10 +792,6 @@ impl Component for Lockscreen {
         }
 
         None
-    }
-
-    fn paint(&mut self) {
-        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

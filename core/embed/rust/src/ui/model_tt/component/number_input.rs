@@ -9,7 +9,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Pad,
         },
-        display::{self, Font},
+        display::Font,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
@@ -17,6 +17,7 @@ use crate::{
 
 use super::{theme, Button, ButtonMsg};
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum NumberInputDialogMsg {
     Selected,
     InfoRequested,
@@ -113,14 +114,6 @@ where
         None
     }
 
-    fn paint(&mut self) {
-        self.input.paint();
-        self.paragraphs_pad.paint();
-        self.paragraphs.paint();
-        self.info_button.paint();
-        self.confirm_button.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.paragraphs_pad.render(target);
@@ -207,24 +200,6 @@ impl Component for NumberInput {
             return Some(NumberInputMsg::Changed(self.value));
         }
         None
-    }
-
-    fn paint(&mut self) {
-        let mut buf = [0u8; 10];
-        if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
-            let digit_font = Font::DEMIBOLD;
-            let y_offset = digit_font.text_height() / 2 + Button::BASELINE_OFFSET;
-            display::rect_fill(self.area, theme::BG);
-            display::text_center(
-                self.area.center() + Offset::y(y_offset),
-                text,
-                digit_font,
-                theme::FG,
-                theme::BG,
-            );
-        }
-        self.dec.paint();
-        self.inc.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

@@ -1,21 +1,21 @@
 from typing import *
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def generate_secret() -> bytes:
     """
     Generate secret key.
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def publickey(secret_key: bytes) -> bytes:
     """
     Computes public key from secret key.
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def sign(
     secret_key: bytes,
     digest: bytes,
@@ -25,7 +25,7 @@ def sign(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def verify_publickey(public_key: bytes) -> bool:
     """
     Verifies whether the public key is valid.
@@ -33,7 +33,7 @@ def verify_publickey(public_key: bytes) -> bool:
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
     """
     Uses public key to verify the signature of the digest.
@@ -41,7 +41,7 @@ def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def tweak_public_key(
     public_key: bytes,
     root_hash: bytes | None = None,
@@ -51,7 +51,7 @@ def tweak_public_key(
     """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-bip340.h
+# upymod/modtrezorcrypto/modtrezorcrypto-bip340.h
 def tweak_secret_key(
     secret_key: bytes,
     root_hash: bytes | None = None,

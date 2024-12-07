@@ -3,7 +3,7 @@
 
 #include "bootloaders/bootloader_hashes.h"
 
-#include "sizedefs.h"
+#include <rtl/sizedefs.h>
 
 #define MODEL_NAME "Safe 3"
 #define MODEL_FULL_NAME "Trezor Safe 3"
@@ -25,7 +25,10 @@
 
 #define IMAGE_CHUNK_SIZE (128 * 1024)
 #define IMAGE_HASH_SHA256
+
 #define DISPLAY_JUMP_BEHAVIOR DISPLAY_RETAIN_CONTENT
+#define DISPLAY_RESX 128
+#define DISPLAY_RESY 64
 
 // SHARED WITH MAKEFILE, LINKER SCRIPT etc.
 // misc
@@ -40,7 +43,7 @@
 
 // overlaps with secret
 #define BHK_START 0x0C002000
-#define BHK_MAXSIZE (2 * 8 * 1024)  // 8 kB
+#define BHK_MAXSIZE (1 * 8 * 1024)  // 8 kB
 #define BHK_SECTOR_START 0x1
 #define BHK_SECTOR_END 0x1
 
@@ -73,7 +76,6 @@
 #define FIRMWARE_SECTOR_END 0xF7
 #define KERNEL_START 0x0C050000
 #define KERNEL_MAXSIZE (512 * 1024)  // 512 kB
-#define KERNEL_U_FLASH_SIZE 512
 
 #define ASSETS_START 0x0C1F0000
 #define ASSETS_MAXSIZE (8 * 8 * 1024)  // 64 kB
@@ -82,11 +84,11 @@
 
 // RAM layout
 #define KERNEL_U_RAM_SIZE 512
-#define KERNEL_SRAM1_SIZE 16 * 1024
-#define KERNEL_SRAM2_SIZE 8 * 1024
-#define KERNEL_SRAM3_SIZE 0x38400
+#define KERNEL_SRAM2_SIZE (24 * 1024)
+#define FRAMEBUFFER_SRAM_SIZE 0x38400
 
 #define BOOTARGS_SIZE 0x100
 #define CODE_ALIGNMENT 0x200
+#define COREAPP_ALIGNMENT 0x2000
 
 #endif

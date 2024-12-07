@@ -8,12 +8,8 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rdb_led", "usb", "consumption_mask", "optiga", "haptic"]
-
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -66,42 +62,35 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
-    'embed/lib/colors.c',
-    'embed/lib/display_utils.c',
-    'embed/lib/error_handling.c',
-    'embed/lib/fonts/font_bitmap.c',
-    'embed/lib/fonts/fonts.c',
-    'embed/lib/gfx_color.c',
-    'embed/lib/gfx_bitblt_rgb565.c',
-    'embed/lib/gfx_bitblt_rgba8888.c',
-    'embed/lib/gfx_bitblt_mono8.c',
-    'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
-    'embed/lib/rsod.c',
-    'embed/lib/qr-code-generator/qrcodegen.c',
-    'embed/lib/terminal.c',
+    'embed/gfx/bitblt/gfx_bitblt.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/gfx/fonts/font_bitmap.c',
+    'embed/gfx/fonts/fonts.c',
+    'embed/gfx/gfx_color.c',
+    'embed/gfx/gfx_draw.c',
+    'embed/gfx/terminal.c',
+    'embed/gfx/qrcode/qrcodegen.c',
+    'embed/io/display/display_utils.c',
+    'embed/util/image/image.c',
+    'embed/util/rsod/rsod.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-
-
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
-    ]
 
 ui.init_ui(TREZOR_MODEL, "prodtest", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
 
 env = Environment(
     ENV=os.environ,
     CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
-    CPPDEFINES_IMPLICIT=[])
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
@@ -109,15 +98,15 @@ FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 
 SOURCE_PRODTEST = [
-    f'embed/trezorhal/{FILE_SUFFIX}/startup_stage_2.s',
-    'embed/prodtest/header.S',
-    'embed/prodtest/main.c',
-    'embed/prodtest/prodtest_common.c',
+    f'embed/sys/startup/{FILE_SUFFIX}/startup_stage_2.s',
+    'embed/projects/prodtest/header.S',
+    'embed/projects/prodtest/main.c',
+    'embed/projects/prodtest/prodtest_common.c',
 ]
 
 if 'optiga' in FEATURES_AVAILABLE:
     SOURCE_PRODTEST += [
-        'embed/prodtest/optiga_prodtest.c',
+        'embed/projects/prodtest/optiga_prodtest.c',
     ]
 
 env.Replace(
@@ -149,11 +138,14 @@ env.Replace(
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS=f'-T build/prodtest/memory.ld -Wl,--gc-sections -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
     CPPPATH=[
-        'embed/prodtest',
-        'embed/lib',
+        'embed/projects/prodtest',
+        'embed/rtl/inc',
         'embed/models',
-        'embed/trezorhal',
-        'embed/extmod/modtrezorui',
+        'embed/gfx/inc',
+        'embed/sys/bsp/inc',
+        'embed/util/image/inc',
+        'embed/util/rsod/inc',
+        'embed/upymod/modtrezorui',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
         'TREZOR_PRODTEST',
@@ -214,7 +206,7 @@ tools.embed_raw_binary(
         obj_program,
         env,
         'vendorheader',
-        'embed/firmware/vendorheader.o',
+        'embed/projects/firmware/vendorheader.o',
         VENDORHEADER,
         )
 
@@ -234,7 +226,7 @@ program_elf = env.Command(
 env.Depends(program_elf, linkerscript_gen)
 
 BINARY_NAME = f"build/prodtest/prodtest-{models.get_model_identifier(TREZOR_MODEL)}"
-BINARY_NAME += "-" + tools.get_version('embed/prodtest/version.h')
+BINARY_NAME += "-" + tools.get_version('embed/projects/prodtest/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"

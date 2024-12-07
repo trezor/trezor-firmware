@@ -25,6 +25,7 @@ from ..helpers.paths import SCHEMA_STAKING
 from ..helpers.utils import derive_public_key
 
 if TYPE_CHECKING:
+    from enum import IntEnum
     from typing import Any, Awaitable, ClassVar
 
     from trezor.enums import CardanoAddressType
@@ -35,6 +36,9 @@ if TYPE_CHECKING:
     from ..helpers.hash_builder_collection import HashBuilderEmbeddedCBOR
 
     CardanoTxResponseType = CardanoTxItemAck | messages.CardanoTxWitnessResponse
+else:
+    IntEnum = object
+
 
 _MINTING_POLICY_ID_LENGTH = const(28)
 _MAX_ASSET_NAME_LENGTH = const(32)
@@ -69,6 +73,22 @@ _POOL_REGISTRATION_CERTIFICATE_ITEMS_COUNT = const(10)
 _MAX_CHUNK_SIZE = const(1024)
 
 
+class SuiteTxType(IntEnum):
+    """
+    The `SuiteTxType` class is an enumeration that serves to categorize transactions initiated by TrezorSuite.
+
+    - `SIMPLE_SEND`: Represents a send transaction (possibly to multiple recipients) with no additional features.
+    - `SIMPLE_STAKE_DELEGATE`: Represents a simple stake delegation transaction with no additional features.
+    - `SIMPLE_STAKE_WITHDRAW`: Represents a simple stake withdrawal transaction with no additional features.
+    - `NOT_SUITE_TX`: Represents a transaction that is not a suite transaction.
+    """
+
+    SIMPLE_SEND = 0
+    SIMPLE_STAKE_DELEGATE = 1
+    SIMPLE_STAKE_WITHDRAW = 2
+    NOT_SUITE_TX = 3
+
+
 class Signer:
     """
     This class encapsulates the entire tx signing process. By default, most tx items are
@@ -89,6 +109,8 @@ class Signer:
 
         self.msg = msg
         self.keychain = keychain
+        self.total_out = 0  # sum of output amounts
+        self.change_out = 0  # sum of change amounts
 
         self.account_path_checker = AccountPathChecker()
 
@@ -117,6 +139,7 @@ class Signer:
             tx_dict_items_count, ProcessError("Invalid tx signing request")
         )
 
+        self.suite_tx_type = SuiteTxType.NOT_SUITE_TX
         self.should_show_details = False
 
     async def sign(self) -> None:
@@ -270,25 +293,25 @@ class Signer:
     # outputs
 
     async def _process_outputs(self, outputs_list: HashBuilderList) -> None:
-        total_amount = 0
-        for _ in range(self.msg.outputs_count):
+        for output_index in range(self.msg.outputs_count):
             output: CardanoTxOutput = await ctx_call(
                 CardanoTxItemAck(), CardanoTxOutput
             )
-            await self._process_output(outputs_list, output)
+            await self._process_output(outputs_list, output, output_index)
+            self.total_out += output.amount
+            if self._is_change_output(output):
+                self.change_out += output.amount
 
-            total_amount += output.amount
-
-        if total_amount > LOVELACE_MAX_SUPPLY:
+        if self.total_out > LOVELACE_MAX_SUPPLY:
             raise ProcessError("Total transaction amount is out of range!")
 
     async def _process_output(
-        self, outputs_list: HashBuilderList, output: CardanoTxOutput
+        self, outputs_list: HashBuilderList, output: CardanoTxOutput, output_index: int
     ) -> None:
         self._validate_output(output)
         should_show = self._should_show_output(output)
         if should_show:
-            await self._show_output_init(output)
+            await self._show_output_init(output, output_index)
 
         output_items_count = 2 + sum(
             (
@@ -349,7 +372,9 @@ class Signer:
 
         self.account_path_checker.add_output(output)
 
-    async def _show_output_init(self, output: CardanoTxOutput) -> None:
+    async def _show_output_init(
+        self, output: CardanoTxOutput, output_index: int
+    ) -> None:
         address_type = self._get_output_address_type(output)
         if (
             output.datum_hash is None
@@ -377,6 +402,7 @@ class Signer:
             output.amount,
             address,
             "change" if self._is_change_output(output) else "address",
+            output_index if self.suite_tx_type is SuiteTxType.SIMPLE_SEND else None,
             self.msg.network_id,
             chunkify=bool(self.msg.chunkify),
         )
@@ -796,11 +822,13 @@ class Signer:
             )
             self._validate_withdrawal(withdrawal)
             address_bytes = self._derive_withdrawal_address_bytes(withdrawal)
-            await self._show_if_showing_details(
-                layout.confirm_withdrawal(
+            if (
+                self.should_show_details
+                or self.suite_tx_type is SuiteTxType.SIMPLE_STAKE_WITHDRAW
+            ):
+                await layout.confirm_withdrawal(
                     withdrawal, address_bytes, self.msg.network_id
                 )
-            )
             withdrawals_dict.add(address_bytes, withdrawal.amount)
 
     def _validate_withdrawal(self, withdrawal: messages.CardanoTxWithdrawal) -> None:
@@ -1052,6 +1080,7 @@ class Signer:
             output.amount,
             address,
             "collateral-return",
+            None,
             self.msg.network_id,
             chunkify=bool(self.msg.chunkify),
         )

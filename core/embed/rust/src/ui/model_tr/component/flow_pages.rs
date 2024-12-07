@@ -118,10 +118,6 @@ impl Page {
         self
     }
 
-    pub fn paint(&mut self) {
-        self.formatted.paint();
-    }
-
     pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.formatted.render(target);
     }
@@ -203,7 +199,7 @@ impl Page {
 
 // Pagination
 impl Paginate for Page {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.formatted.page_count()
     }
 

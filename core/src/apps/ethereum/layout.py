@@ -35,18 +35,13 @@ async def require_confirm_tx(
     fee_info_items: Iterable[tuple[str, str]],
     network: EthereumNetworkInfo,
     token: EthereumTokenInfo | None,
+    is_contract_interaction: bool,
     chunkify: bool,
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_tx
 
-    if to_bytes:
-        to_str = address_from_bytes(to_bytes, network)
-    else:
-        to_str = TR.ethereum__new_contract
-        chunkify = False
-
+    to_str = address_from_bytes(to_bytes, network) if to_bytes else None
     total_amount = format_ethereum_amount(value, token, network)
-
     account, account_path = get_account_and_path(address_n)
 
     await confirm_ethereum_tx(
@@ -56,6 +51,7 @@ async def require_confirm_tx(
         account_path,
         maximum_fee,
         fee_info_items,
+        is_contract_interaction,
         chunkify=chunkify,
     )
 
@@ -145,17 +141,23 @@ async def require_confirm_claim(
     )
 
 
-def require_confirm_unknown_token(address_bytes: bytes) -> Awaitable[None]:
+async def require_confirm_unknown_token(address_bytes: bytes) -> None:
     from ubinascii import hexlify
 
-    from trezor.ui.layouts import confirm_address
+    from trezor.ui.layouts import (
+        confirm_address,
+        confirm_ethereum_unknown_contract_warning,
+    )
+
+    await confirm_ethereum_unknown_contract_warning()
 
     contract_address_hex = "0x" + hexlify(address_bytes).decode()
-    return confirm_address(
-        TR.ethereum__unknown_token,
+    await confirm_address(
+        TR.words__address,
         contract_address_hex,
-        TR.ethereum__contract,
-        "unknown_token",
+        subtitle=TR.ethereum__token_contract,
+        verb=TR.buttons__continue,
+        br_name="unknown_token",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -176,9 +178,11 @@ def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
 def require_confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
     return confirm_blob(
         "confirm_data",
-        TR.ethereum__title_confirm_data,
+        TR.ethereum__title_input_data,
         data,
         TR.ethereum__data_size_template.format(data_total),
+        verb=TR.buttons__confirm,
+        verb_cancel=TR.send__cancel_sign,
         br_code=ButtonRequestType.SignTx,
         ask_pagination=True,
     )
@@ -301,7 +305,6 @@ async def confirm_typed_value(
             title,
             data,
             description,
-            ask_pagination=True,
         )
     else:
         await confirm_text(

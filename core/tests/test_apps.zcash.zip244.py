@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.enums import InputScriptType
@@ -138,7 +139,7 @@ class TestZcashSigHasher(unittest.TestCase):
         self.assertEqual(computed_txid, expected_txid)
 
         # test ZcashSigHasher.signature_digest
-        for txi, expected_sighash, pk in zip(inputs, expected_sighashes, pubkeys):
+        for txi, expected_sighash, _ in zip(inputs, expected_sighashes, pubkeys):
             computed_sighash = hasher.signature_digest(txi, txi.script_pubkey)
             self.assertEqual(computed_sighash, expected_sighash)
 

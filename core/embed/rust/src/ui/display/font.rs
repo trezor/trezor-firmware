@@ -2,13 +2,11 @@ use crate::{
     trezorhal::display,
     ui::{
         constant,
-        geometry::{Offset, Point, Rect},
+        geometry::Offset,
         shape::{Bitmap, BitmapFormat},
     },
 };
 use core::slice;
-
-use super::{get_color_table, get_offset, pixeldata, set_window, Color};
 
 /// Representation of a single glyph.
 /// We use standard typographic terms. For a nice explanation, see, e.g.,
@@ -67,28 +65,6 @@ impl Glyph {
         self.adv - self.width - self.bearing_x
     }
 
-    pub fn print(&self, pos: Point, colortable: [Color; 16]) -> i16 {
-        let bearing = Offset::new(self.bearing_x, -self.bearing_y);
-        let size = Offset::new(self.width, self.height);
-        let pos_adj = pos + bearing;
-        let r = Rect::from_top_left_and_size(pos_adj, size);
-
-        let area = r.translate(get_offset());
-        let window = area.clamp(constant::screen());
-
-        set_window(window);
-
-        for y in window.y0..window.y1 {
-            for x in window.x0..window.x1 {
-                let p = Point::new(x, y);
-                let r = p - pos_adj;
-                let c = self.get_pixel_data(r);
-                pixeldata(colortable[c as usize]);
-            }
-        }
-        self.adv
-    }
-
     pub fn unpack_bpp1(&self, a: i16) -> u8 {
         let c_data = self.data[(a / 8) as usize];
         ((c_data >> (7 - (a % 8))) & 0x01) * 15
@@ -107,18 +83,6 @@ impl Glyph {
     pub fn unpack_bpp8(&self, a: i16) -> u8 {
         let c_data = self.data[a as usize];
         c_data >> 4
-    }
-
-    pub fn get_pixel_data(&self, p: Offset) -> u8 {
-        let a = p.x + p.y * self.width;
-
-        match constant::FONT_BPP {
-            1 => self.unpack_bpp1(a),
-            2 => self.unpack_bpp2(a),
-            4 => self.unpack_bpp4(a),
-            8 => self.unpack_bpp8(a),
-            _ => 0,
-        }
     }
 
     pub fn bitmap(&self) -> Bitmap<'static> {
@@ -143,7 +107,7 @@ impl Glyph {
 }
 
 /// Font constants. Keep in sync with FONT_ definitions in
-/// `core/embed/lib/fonts/fonts.h`.
+/// `core/embed/gfx/fonts/fonts.h`.
 #[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 #[repr(u8)]
 #[allow(non_camel_case_types)]
@@ -296,16 +260,6 @@ impl Font {
         ensure!(!gl_data.is_null(), "Failed to load glyph");
         // SAFETY: Glyph::load is valid for data returned by get_char_glyph
         unsafe { Glyph::load(gl_data) }
-    }
-
-    pub fn display_text(self, text: &str, baseline: Point, fg_color: Color, bg_color: Color) {
-        let colortable = get_color_table(fg_color, bg_color);
-        let mut adv_total = 0;
-        for c in text.chars() {
-            let gly = self.get_glyph(c);
-            let adv = gly.print(baseline + Offset::new(adv_total, 0), colortable);
-            adv_total += adv;
-        }
     }
 
     /// Get the longest prefix of a given `text` (breaking at word boundaries)

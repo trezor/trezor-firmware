@@ -52,7 +52,7 @@ from .parse import (
 )
 
 if TYPE_CHECKING:
-    from typing import Any, Type
+    from typing import Any, Type, TypeGuard
 
     from ..types import Account, InstructionId, InstructionData
 
@@ -88,7 +88,7 @@ def __getattr__(name: str) -> Type[Instruction]:
 
     class FakeClass(Instruction):
         @classmethod
-        def is_type_of(cls, ins: Any):
+        def is_type_of(cls, ins: Any) -> TypeGuard[Instruction]:
             return ins.program_id == id[0] and ins.instruction_id == id[1]
 
     return FakeClass

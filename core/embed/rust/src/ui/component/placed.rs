@@ -61,10 +61,6 @@ where
         self.inner.event(ctx, event)
     }
 
-    fn paint(&mut self) {
-        self.inner.paint()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner.render(target);
     }
@@ -106,10 +102,6 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.inner.event(ctx, event)
-    }
-
-    fn paint(&mut self) {
-        self.inner.paint()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -182,10 +174,6 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.inner.event(ctx, event)
-    }
-
-    fn paint(&mut self) {
-        self.inner.paint()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -276,11 +264,6 @@ where
         self.first
             .event(ctx, event)
             .or_else(|| self.second.event(ctx, event))
-    }
-
-    fn paint(&mut self) {
-        self.first.paint();
-        self.second.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

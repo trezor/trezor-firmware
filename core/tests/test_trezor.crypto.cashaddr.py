@@ -1,5 +1,3 @@
-from common import *  # isort:skip
-
 # Copyright (c) 2017 Pieter Wuille
 # Copyright (c) 2018 Pavol Rusnak
 #
@@ -21,8 +19,10 @@ from common import *  # isort:skip
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-
 """Reference tests for cashaddr adresses"""
+
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
 
 from trezor.crypto import base58, cashaddr
 

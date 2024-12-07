@@ -2024,22 +2024,22 @@ impl ::protobuf::reflect::ProtobufValue for ECDHSessionKey {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x15messages-crypto.proto\x12\x19hw.trezor.messages.crypto\x1a\x0emess\
-    ages.proto\"\xcb\x01\n\x0eCipherKeyValue\x12\x1b\n\taddress_n\x18\x01\
-    \x20\x03(\rR\x08addressN\x12\x10\n\x03key\x18\x02\x20\x02(\tR\x03key\x12\
-    \x14\n\x05value\x18\x03\x20\x02(\x0cR\x05value\x12\x18\n\x07encrypt\x18\
-    \x04\x20\x01(\x08R\x07encrypt\x12$\n\x0eask_on_encrypt\x18\x05\x20\x01(\
-    \x08R\x0caskOnEncrypt\x12$\n\x0eask_on_decrypt\x18\x06\x20\x01(\x08R\x0c\
-    askOnDecrypt\x12\x0e\n\x02iv\x18\x07\x20\x01(\x0cR\x02iv\"(\n\x10Ciphere\
-    dKeyValue\x12\x14\n\x05value\x18\x01\x20\x02(\x0cR\x05value\"\x8d\x01\n\
-    \x0cIdentityType\x12\x14\n\x05proto\x18\x01\x20\x01(\tR\x05proto\x12\x12\
-    \n\x04user\x18\x02\x20\x01(\tR\x04user\x12\x12\n\x04host\x18\x03\x20\x01\
-    (\tR\x04host\x12\x12\n\x04port\x18\x04\x20\x01(\tR\x04port\x12\x12\n\x04\
-    path\x18\x05\x20\x01(\tR\x04path\x12\x17\n\x05index\x18\x06\x20\x01(\r:\
-    \x010R\x05index\"\xd7\x01\n\x0cSignIdentity\x12C\n\x08identity\x18\x01\
-    \x20\x02(\x0b2'.hw.trezor.messages.crypto.IdentityTypeR\x08identity\x12+\
-    \n\x10challenge_hidden\x18\x02\x20\x01(\x0c:\0R\x0fchallengeHidden\x12+\
-    \n\x10challenge_visual\x18\x03\x20\x01(\t:\0R\x0fchallengeVisual\x12(\n\
+    \n\x15messages-crypto.proto\x12\x19hw.trezor.messages.crypto\x1a\roption\
+    s.proto\"\xcb\x01\n\x0eCipherKeyValue\x12\x1b\n\taddress_n\x18\x01\x20\
+    \x03(\rR\x08addressN\x12\x10\n\x03key\x18\x02\x20\x02(\tR\x03key\x12\x14\
+    \n\x05value\x18\x03\x20\x02(\x0cR\x05value\x12\x18\n\x07encrypt\x18\x04\
+    \x20\x01(\x08R\x07encrypt\x12$\n\x0eask_on_encrypt\x18\x05\x20\x01(\x08R\
+    \x0caskOnEncrypt\x12$\n\x0eask_on_decrypt\x18\x06\x20\x01(\x08R\x0caskOn\
+    Decrypt\x12\x0e\n\x02iv\x18\x07\x20\x01(\x0cR\x02iv\"(\n\x10CipheredKeyV\
+    alue\x12\x14\n\x05value\x18\x01\x20\x02(\x0cR\x05value\"\x8d\x01\n\x0cId\
+    entityType\x12\x14\n\x05proto\x18\x01\x20\x01(\tR\x05proto\x12\x12\n\x04\
+    user\x18\x02\x20\x01(\tR\x04user\x12\x12\n\x04host\x18\x03\x20\x01(\tR\
+    \x04host\x12\x12\n\x04port\x18\x04\x20\x01(\tR\x04port\x12\x12\n\x04path\
+    \x18\x05\x20\x01(\tR\x04path\x12\x17\n\x05index\x18\x06\x20\x01(\r:\x010\
+    R\x05index\"\xd7\x01\n\x0cSignIdentity\x12C\n\x08identity\x18\x01\x20\
+    \x02(\x0b2'.hw.trezor.messages.crypto.IdentityTypeR\x08identity\x12+\n\
+    \x10challenge_hidden\x18\x02\x20\x01(\x0c:\0R\x0fchallengeHidden\x12+\n\
+    \x10challenge_visual\x18\x03\x20\x01(\t:\0R\x0fchallengeVisual\x12(\n\
     \x10ecdsa_curve_name\x18\x04\x20\x01(\tR\x0eecdsaCurveName\"g\n\x0eSigne\
     dIdentity\x12\x18\n\x07address\x18\x01\x20\x01(\tR\x07address\x12\x1d\n\
     \npublic_key\x18\x02\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\
@@ -2068,7 +2068,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(7);
             messages.push(CipherKeyValue::generated_message_descriptor_data());
             messages.push(CipheredKeyValue::generated_message_descriptor_data());

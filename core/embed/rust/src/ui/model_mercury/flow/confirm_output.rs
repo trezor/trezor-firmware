@@ -2,7 +2,6 @@ use heapless::Vec;
 
 use crate::{
     error,
-    micropython::{iter::IterBuf, map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -13,7 +12,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
-        layout::obj::LayoutObj,
     },
 };
 
@@ -138,16 +136,19 @@ impl FlowController for ConfirmOutputWithSummary {
             (Self::Main, Direction::Left) => Self::MainMenu.swipe(direction),
             (Self::Main, Direction::Up) => Self::Summary.swipe(direction),
             (Self::MainMenu, Direction::Right) => Self::Main.swipe(direction),
+            (Self::MainMenuCancel, Direction::Right) => Self::MainMenu.swipe(direction),
             (Self::AddressInfo, Direction::Right) => Self::MainMenu.swipe(direction),
             (Self::AccountInfo, Direction::Right) => Self::MainMenu.swipe(direction),
             (Self::Summary, Direction::Left) => Self::SummaryMenu.swipe(direction),
             (Self::Summary, Direction::Up) => Self::Hold.swipe(direction),
             (Self::Summary, Direction::Down) => Self::Main.swipe(direction),
             (Self::SummaryMenu, Direction::Right) => Self::Summary.swipe(direction),
+            (Self::SummaryMenuCancel, Direction::Right) => Self::SummaryMenu.swipe(direction),
             (Self::FeeInfo, Direction::Right) => Self::SummaryMenu.swipe(direction),
             (Self::Hold, Direction::Left) => Self::HoldMenu.swipe(direction),
             (Self::Hold, Direction::Down) => Self::Summary.swipe(direction),
             (Self::HoldMenu, Direction::Right) => Self::Hold.swipe(direction),
+            (Self::HoldMenuCancel, Direction::Right) => Self::HoldMenu.swipe(direction),
             _ => self.do_nothing(),
         }
     }
@@ -158,19 +159,19 @@ impl FlowController for ConfirmOutputWithSummary {
             (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::MainMenuCancel.swipe_left()
             }
-            (Self::AccountInfo, FlowMsg::Cancelled) => Self::MainMenu.swipe_right(),
-            (Self::MainMenuCancel, FlowMsg::Cancelled) => Self::MainMenu.swipe_right(),
+            (Self::AccountInfo, FlowMsg::Cancelled) => Self::MainMenu.goto(),
+            (Self::MainMenuCancel, FlowMsg::Cancelled) => Self::MainMenu.goto(),
             (Self::AddressInfo, FlowMsg::Info) => Self::MainMenu.goto(),
             (Self::Summary, FlowMsg::Info) => Self::SummaryMenu.goto(),
             (Self::SummaryMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::SummaryMenuCancel.swipe_left()
             }
-            (Self::SummaryMenuCancel, FlowMsg::Cancelled) => Self::SummaryMenu.swipe_right(),
+            (Self::SummaryMenuCancel, FlowMsg::Cancelled) => Self::SummaryMenu.goto(),
             (Self::Hold, FlowMsg::Info) => Self::HoldMenu.goto(),
             (Self::HoldMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::HoldMenuCancel.swipe_left()
             }
-            (Self::HoldMenuCancel, FlowMsg::Cancelled) => Self::HoldMenu.swipe_right(),
+            (Self::HoldMenuCancel, FlowMsg::Cancelled) => Self::HoldMenu.goto(),
             (Self::SummaryMenu, FlowMsg::Choice(MENU_ITEM_FEE_INFO)) => Self::FeeInfo.swipe_left(),
             (Self::MainMenu, FlowMsg::Choice(MENU_ITEM_ADDRESS_INFO)) => {
                 Self::AddressInfo.swipe_left()
@@ -180,7 +181,7 @@ impl FlowController for ConfirmOutputWithSummary {
             }
             (Self::MainMenu, FlowMsg::Cancelled) => Self::Main.swipe_right(),
             (Self::SummaryMenu, FlowMsg::Cancelled) => Self::Summary.swipe_right(),
-            (Self::FeeInfo, FlowMsg::Cancelled) => Self::SummaryMenu.swipe_right(),
+            (Self::FeeInfo, FlowMsg::Cancelled) => Self::SummaryMenu.goto(),
             (Self::HoldMenu, FlowMsg::Cancelled) => Self::Hold.swipe_right(),
             (
                 Self::MainMenuCancel | Self::SummaryMenuCancel | Self::HoldMenuCancel,
@@ -203,8 +204,7 @@ fn get_cancel_page(
     )
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
-    .with_swipe(Direction::Down, SwipeSettings::default())
-    .with_swipe(Direction::Left, SwipeSettings::default())
+    .with_swipe(Direction::Right, SwipeSettings::default())
     .map(|msg| match msg {
         FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
         FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
@@ -212,65 +212,32 @@ fn get_cancel_page(
     })
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, new_confirm_output_obj) }
-}
-
-fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-    let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
-    let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
-
-    let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
-    let account_path: Option<TString> =
-        kwargs.get(Qstr::MP_QSTR_account_path)?.try_into_option()?;
-
-    let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
-    let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
-
-    let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
-    let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
-
-    let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
-    let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
-
-    let address: Option<Obj> = kwargs.get(Qstr::MP_QSTR_address)?.try_into_option()?;
-    let address_title: Option<TString> =
-        kwargs.get(Qstr::MP_QSTR_address_title)?.try_into_option()?;
-
-    let summary_items: Obj = kwargs.get(Qstr::MP_QSTR_summary_items)?;
-    let fee_items: Obj = kwargs.get(Qstr::MP_QSTR_fee_items)?;
-
-    let summary_title: Option<TString> =
-        kwargs.get(Qstr::MP_QSTR_summary_title)?.try_into_option()?;
-    let summary_br_name: Option<TString> = kwargs
-        .get(Qstr::MP_QSTR_summary_br_name)?
-        .try_into_option()?;
-    let summary_br_code: Option<u16> = kwargs
-        .get(Qstr::MP_QSTR_summary_br_code)?
-        .try_into_option()?;
-
-    let cancel_text: Option<TString> = kwargs.get(Qstr::MP_QSTR_cancel_text)?.try_into_option()?;
-
+#[allow(clippy::too_many_arguments)]
+pub fn new_confirm_output(
+    main_params: ConfirmBlobParams,
+    account: Option<TString<'static>>,
+    account_path: Option<TString<'static>>,
+    br_name: TString<'static>,
+    br_code: u16,
+    content_amount_params: Option<ConfirmBlobParams>,
+    address_params: Option<ConfirmBlobParams>,
+    address_title: TString<'static>,
+    summary_items_params: Option<ShowInfoParams>,
+    fee_items_params: ShowInfoParams,
+    summary_br_name: Option<TString<'static>>,
+    summary_br_code: Option<u16>,
+    cancel_text: Option<TString<'static>>,
+) -> Result<SwipeFlow, error::Error> {
     // Main
-    let main_content = ConfirmBlobParams::new(title.unwrap_or(TString::empty()), message, None)
-        .with_subtitle(subtitle)
-        .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_chunkify(chunkify)
-        .with_text_mono(text_mono)
-        .with_swipe_up()
+    let main_content = main_params
         .into_layout()?
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // MainMenu
     let mut main_menu = VerticalMenu::empty();
     let mut main_menu_items = Vec::<usize, 3>::new();
-    if address.is_some() {
-        main_menu = main_menu.item(
-            theme::ICON_CHEVRON_RIGHT,
-            address_title.unwrap_or(TR::words__address.into()),
-        );
+    if address_params.is_some() {
+        main_menu = main_menu.item(theme::ICON_CHEVRON_RIGHT, address_title);
         unwrap!(main_menu_items.push(MENU_ITEM_ADDRESS_INFO));
     }
     if account.is_some() && account_path.is_some() {
@@ -300,17 +267,10 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
     let ac = AddressDetails::new(TR::send__send_from.into(), account, account_path)?;
     let account_content = ac.map(|_| Some(FlowMsg::Cancelled));
 
-    let res = if amount.is_some() {
-        let content_amount =
-            ConfirmBlobParams::new(TR::words__amount.into(), amount.unwrap(), None)
-                .with_subtitle(subtitle)
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_text_mono(text_mono)
-                .with_swipe_up()
-                .with_swipe_down()
-                .into_layout()?
-                .one_button_request(ButtonRequest::from_num(br_code, br_name));
+    let res = if let Some(content_amount_params) = content_amount_params {
+        let content_amount = content_amount_params
+            .into_layout()?
+            .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         SwipeFlow::new(&ConfirmOutputWithAmount::Address)?
             .with_page(&ConfirmOutputWithAmount::Address, main_content)?
@@ -318,19 +278,9 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .with_page(&ConfirmOutputWithAmount::Menu, content_main_menu)?
             .with_page(&ConfirmOutputWithAmount::AccountInfo, account_content)?
             .with_page(&ConfirmOutputWithAmount::CancelTap, get_cancel_page())?
-    } else if summary_items != Obj::const_none() {
+    } else if let Some(summary_items_params) = summary_items_params {
         // Summary
-        let mut summary =
-            ShowInfoParams::new(summary_title.unwrap_or(TR::words__title_summary.into()))
-                .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe_up()
-                .with_swipe_down();
-        for pair in IterBuf::new().try_iterate(summary_items)? {
-            let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-            summary = unwrap!(summary.add(label, value));
-        }
-        let content_summary = summary
+        let content_summary = summary_items_params
             .into_layout()?
             .one_button_request(ButtonRequest::from_num(
                 summary_br_code.unwrap(),
@@ -354,16 +304,8 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
         });
 
         // FeeInfo
-        let mut has_fee_info = false;
-        let mut fee = ShowInfoParams::new(TR::confirm_total__title_fee.into()).with_cancel_button();
-        if fee_items != Obj::const_none() {
-            for pair in IterBuf::new().try_iterate(fee_items)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                fee = unwrap!(fee.add(label, value));
-                has_fee_info = true;
-            }
-        }
-        let content_fee = fee.into_layout()?;
+        let has_fee_info = !fee_items_params.is_empty();
+        let content_fee = fee_items_params.into_layout()?;
 
         // SummaryMenu
         let mut summary_menu = VerticalMenu::empty();
@@ -410,17 +352,8 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .with_page(&ConfirmOutputWithSummary::Main, main_content)?
             .with_page(&ConfirmOutputWithSummary::MainMenu, content_main_menu)?
             .with_page(&ConfirmOutputWithSummary::MainMenuCancel, get_cancel_page())?;
-        if address.is_some() {
-            let address_content = ConfirmBlobParams::new(
-                address_title.unwrap_or(TR::words__address.into()),
-                address.unwrap(),
-                None,
-            )
-            .with_cancel_button()
-            .with_chunkify(true)
-            .with_text_mono(true)
-            .with_swipe_right()
-            .into_layout()?;
+        if let Some(address_params) = address_params {
+            let address_content = address_params.into_layout()?;
             flow = flow.with_page(&ConfirmOutputWithSummary::AddressInfo, address_content)?;
         } else {
             // dummy page - this will never be shown since there is no menu item pointing to
@@ -450,5 +383,5 @@ fn new_confirm_output_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Err
             .with_page(&ConfirmOutput::CancelTap, get_cancel_page())?
     };
 
-    Ok(LayoutObj::new(res)?.into())
+    Ok(res)
 }

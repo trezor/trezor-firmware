@@ -4,4 +4,4 @@
 #include "py/obj.h"
 #include "py/runtime.h"
 
-#include "../extmod/trezorobj.h"
+#include "../upymod/trezorobj.h"

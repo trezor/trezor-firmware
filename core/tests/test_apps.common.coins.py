@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from apps.common import coins
@@ -22,7 +23,9 @@ class TestCoins(unittest.TestCase):
             ("ZEC", "Zcash", 7352),
             ("TAZ", "Zcash Testnet", 7461),
         ]
-        if utils.INTERNAL_MODEL in ("T2T1",):
+        if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
+            "T2T1",
+        ):
             ref.extend(
                 [
                     ("NMC", "Namecoin", 52),

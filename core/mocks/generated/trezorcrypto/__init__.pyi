@@ -1,7 +1,7 @@
 from typing import *
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-aes.h
+# upymod/modtrezorcrypto/modtrezorcrypto-aes.h
 class aes:
     """
     AES context.
@@ -33,7 +33,7 @@ class aes:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-aesgcm.h
+# upymod/modtrezorcrypto/modtrezorcrypto-aesgcm.h
 class aesgcm:
     """
     AES-GCM context.
@@ -55,9 +55,9 @@ class aesgcm:
         """
 
     def encrypt_in_place(self, data: bytearray | memoryview) -> int:
-       """
-       Encrypt data chunk in place. Returns the length of the encrypted data.
-       """
+        """
+        Encrypt data chunk in place. Returns the length of the encrypted data.
+        """
 
     def decrypt(self, data: bytes) -> bytes:
         """
@@ -65,9 +65,9 @@ class aesgcm:
         """
 
     def decrypt_in_place(self, data: bytearray | memoryview) -> int:
-      """
-      Decrypt data chunk in place. Returns the length of the decrypted data.
-      """
+        """
+        Decrypt data chunk in place. Returns the length of the decrypted data.
+        """
 
     def auth(self, data: bytes) -> None:
         """
@@ -82,7 +82,7 @@ class aesgcm:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-blake256.h
+# upymod/modtrezorcrypto/modtrezorcrypto-blake256.h
 class blake256:
     """
     Blake256 context.
@@ -106,7 +106,7 @@ class blake256:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-blake2b.h
+# upymod/modtrezorcrypto/modtrezorcrypto-blake2b.h
 class blake2b:
     """
     Blake2b context.
@@ -136,7 +136,7 @@ class blake2b:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-blake2s.h
+# upymod/modtrezorcrypto/modtrezorcrypto-blake2s.h
 class blake2s:
     """
     Blake2s context.
@@ -166,7 +166,7 @@ class blake2s:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-chacha20poly1305.h
+# upymod/modtrezorcrypto/modtrezorcrypto-chacha20poly1305.h
 class chacha20poly1305:
     """
     ChaCha20Poly1305 context.
@@ -203,7 +203,7 @@ class chacha20poly1305:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-groestl.h
+# upymod/modtrezorcrypto/modtrezorcrypto-groestl.h
 class groestl512:
     """
     GROESTL512 context.
@@ -227,7 +227,7 @@ class groestl512:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-hmac.h
+# upymod/modtrezorcrypto/modtrezorcrypto-hmac.h
 class hmac:
     """
     HMAC context.
@@ -256,7 +256,7 @@ class hmac:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
+# upymod/modtrezorcrypto/modtrezorcrypto-pbkdf2.h
 class pbkdf2:
     """
     PBKDF2 context.
@@ -287,7 +287,7 @@ class pbkdf2:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-ripemd160.h
+# upymod/modtrezorcrypto/modtrezorcrypto-ripemd160.h
 class ripemd160:
     """
     RIPEMD160 context.
@@ -311,7 +311,7 @@ class ripemd160:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-sha1.h
+# upymod/modtrezorcrypto/modtrezorcrypto-sha1.h
 class sha1:
     """
     SHA1 context.
@@ -335,7 +335,7 @@ class sha1:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-sha256.h
+# upymod/modtrezorcrypto/modtrezorcrypto-sha256.h
 class sha256:
     """
     SHA256 context.
@@ -359,7 +359,7 @@ class sha256:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-sha3-256.h
+# upymod/modtrezorcrypto/modtrezorcrypto-sha3-256.h
 class sha3_256:
     """
     SHA3_256 context.
@@ -392,7 +392,7 @@ class sha3_256:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-sha3-512.h
+# upymod/modtrezorcrypto/modtrezorcrypto-sha3-512.h
 class sha3_512:
     """
     SHA3_512 context.
@@ -425,7 +425,7 @@ class sha3_512:
         """
 
 
-# extmod/modtrezorcrypto/modtrezorcrypto-sha512.h
+# upymod/modtrezorcrypto/modtrezorcrypto-sha512.h
 class sha512:
     """
     SHA512 context.

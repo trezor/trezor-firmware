@@ -74,9 +74,9 @@ def test_apply_settings_rotation(client: Client):
 
     with client:
         _set_expected_responses(client)
-        device.apply_settings(client, display_rotation=270)
+        device.apply_settings(client, display_rotation=messages.DisplayRotation.West)
 
-    assert client.features.display_rotation == 270
+    assert client.features.display_rotation == messages.DisplayRotation.West
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase=False)
@@ -421,3 +421,16 @@ def test_label_too_long(client: Client):
     with pytest.raises(exceptions.TrezorFailure), client:
         client.set_expected_responses([messages.Failure])
         device.apply_settings(client, label="A" * 33)
+
+
+@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.setup_client(pin=None)
+def test_set_brightness(client: Client):
+    with client:
+        assert (
+            device.set_brightness(
+                client,
+                None,
+            )
+            == "Settings applied"
+        )

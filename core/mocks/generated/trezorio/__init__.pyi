@@ -1,7 +1,7 @@
 from typing import *
 
 
-# extmod/modtrezorio/modtrezorio-hid.h
+# upymod/modtrezorio/modtrezorio-hid.h
 class HID:
     """
     USB HID interface configuration.
@@ -38,7 +38,7 @@ class HID:
         """
 
 
-# extmod/modtrezorio/modtrezorio-poll.h
+# upymod/modtrezorio/modtrezorio-poll.h
 def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
     """
     Wait until one of `ifaces` is ready to read or write (using masks
@@ -56,7 +56,7 @@ def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
     """
 
 
-# extmod/modtrezorio/modtrezorio-usb.h
+# upymod/modtrezorio/modtrezorio-usb.h
 class USB:
     """
     USB device configuration.
@@ -95,7 +95,7 @@ class USB:
         """
 
 
-# extmod/modtrezorio/modtrezorio-vcp.h
+# upymod/modtrezorio/modtrezorio-vcp.h
 class VCP:
     """
     USB VCP interface configuration.
@@ -119,7 +119,7 @@ class VCP:
         """
 
 
-# extmod/modtrezorio/modtrezorio-webusb.h
+# upymod/modtrezorio/modtrezorio-webusb.h
 class WebUSB:
     """
     USB WebUSB interface configuration.

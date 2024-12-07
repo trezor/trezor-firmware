@@ -14,16 +14,16 @@ if TYPE_CHECKING:
 
 
 class HashBenchmark:
-    def __init__(self, hash_ctx_constructor: Callable[[], HashCtx]):
+    def __init__(self, hash_ctx_constructor: Callable[[], HashCtx]) -> None:
         self.hash_ctx_constructor = hash_ctx_constructor
 
-    def prepare(self):
+    def prepare(self) -> None:
         self.hash_ctx = self.hash_ctx_constructor()
         self.blocks_count = maximum_used_memory_in_bytes // self.hash_ctx.block_size
         self.iterations_count = 100
         self.data = random_bytes(self.blocks_count * self.hash_ctx.block_size)
 
-    def run(self):
+    def run(self) -> None:
         for _ in range(self.iterations_count):
             self.hash_ctx.update(self.data)
 

@@ -6,13 +6,9 @@ import tools, models
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1'
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 FEATURES_WANTED = ["sd_card"]
-
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -56,46 +52,38 @@ CPPPATH_MOD += [
         'vendor/micropython/lib/uzlib',
 ]
 SOURCE_MOD += [
-    'embed/lib/colors.c',
-    'embed/lib/display_utils.c',
-    'embed/lib/error_handling.c',
-    'embed/lib/flash_utils.c',
-    'embed/lib/fonts/font_bitmap.c',
-    'embed/lib/fonts/fonts.c',
-    'embed/lib/gfx_color.c',
-    'embed/lib/gfx_bitblt_rgb565.c',
-    'embed/lib/gfx_bitblt_rgba8888.c',
-    'embed/lib/gfx_bitblt_mono8.c',
-    'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
-    'embed/lib/rsod.c',
-    'embed/lib/terminal.c',
+    'embed/gfx/bitblt/gfx_bitblt.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/gfx/fonts/font_bitmap.c',
+    'embed/gfx/fonts/fonts.c',
+    'embed/gfx/gfx_color.c',
+    'embed/gfx/gfx_draw.c',
+    'embed/gfx/terminal.c',
+    'embed/io/display/display_utils.c',
+    'embed/util/flash/flash_utils.c',
+    'embed/util/image/image.c',
+    'embed/util/rsod/rsod.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
 ]
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
-    ]
-
-
 
 env = Environment(ENV=os.environ,
-     CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
-     CONSTRAINTS=["limited_util_s"],
-     CPPDEFINES_IMPLICIT=[]
- )
+    CFLAGS='%s -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')),
+    CONSTRAINTS=["limited_util_s"],
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_BOARDLOADER = [
-    f"embed/trezorhal/{FILE_SUFFIX}/startup_stage_0.s",
-    'embed/boardloader/main.c',
+    f"embed/sys/startup/{FILE_SUFFIX}/startup_stage_0.s",
+    'embed/projects/boardloader/main.c',
 ]
 
 
@@ -128,11 +116,18 @@ env.Replace(
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
     LINKFLAGS="-T build/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage",
     CPPPATH=[
-        'embed/boardloader',
-        'embed/lib',
+        'embed/projects/boardloader',
+        'embed/rtl/inc',
         'embed/models',
-        'embed/trezorhal',
-        'embed/extmod/modtrezorui',
+        'embed/upymod/modtrezorui',
+        'embed/gfx/inc',
+        'embed/io/button/inc',
+        'embed/io/haptic/inc',
+        'embed/io/touch/inc',
+        'embed/io/usb/inc',
+        'embed/sys/bsp/inc',
+        'embed/util/image/inc',
+        'embed/util/rsod/inc',
         'vendor/micropython/lib/cmsis/inc',
     ] + CPPPATH_MOD + PATH_HAL,
     CPPDEFINES=[
@@ -180,7 +175,7 @@ program_elf = env.Command(
 env.Depends(program_elf, linkerscript_gen)
 
 BINARY_NAME = f"build/boardloader/boardloader-{models.get_model_identifier(TREZOR_MODEL)}"
-BINARY_NAME += "-" + tools.get_version('embed/boardloader/version.h')
+BINARY_NAME += "-" + tools.get_version('embed/projects/boardloader/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"

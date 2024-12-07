@@ -85,8 +85,6 @@ VECTORS_MULTISIG = (  # paths, address_index
     ),
     # Unchained unhardened m/45'/coin_type/account/[0-1000000]/change/address_index
     (("m/45h/0/63/1000000", "m/45h/0/62/1000000", "m/45h/0/61/1000000"), [0, 255]),
-    # Unchained deprecated m/45'/coin_type'/account'/[0-1000000]/address_index
-    (("m/45h/0h/63h/1000000", "m/45h/0h/62h/1000000", "m/45h/0/61/1000000"), [255]),
     # Casa Paths
     (("m/45h/0/60/1", "m/45h/1/60/0", "m/45h/2/60/0"), [255]),
 )

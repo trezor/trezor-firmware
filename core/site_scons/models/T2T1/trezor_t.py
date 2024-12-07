@@ -13,14 +13,12 @@ def configure(
 ) -> list[str]:
     features_available: list[str] = []
     board = "T2T1/boards/trezor_t.h"
-    display = "st7789v.c"
     hw_model = get_hw_model_as_number("T2T1")
     hw_revision = 0
-    features_available.append("disp_i8080_8bit_dw")
 
-    if "new_rendering" in features_wanted:
-        defines += ["DISPLAY_RGB565"]
-        features_available.append("display_rgb565")
+    defines += ["DISPLAY_RGB565"]
+    features_available.append("display_rgb565")
+    defines += [("USE_RGB_COLORS", "1")]
 
     mcu = "STM32F427xx"
 
@@ -34,93 +32,79 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mtune=cortex-m4 "
     env.get("ENV")["RUST_TARGET"] = "thumbv7em-none-eabihf"
 
-    defines += [mcu]
-    defines += [f'TREZOR_BOARD=\\"{board}\\"']
-    defines += [f"HW_MODEL={hw_model}"]
-    defines += [f"HW_REVISION={hw_revision}"]
-    sources += [
-        "embed/models/T2T1/compat_settings.c",
+    defines += [
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("HSE_VALUE", "8000000"),
+        ("USE_HSE", "1"),
     ]
 
-    if "new_rendering" in features_wanted:
-        sources += ["embed/trezorhal/xdisplay_legacy.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_nofb.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_driver.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_io.c"]
-        sources += ["embed/trezorhal/stm32f4/xdisplay/st-7789/display_panel.c"]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/tf15411a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/154a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2411.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/xdisplay/st-7789/panels/lx154a2422.c",
-        ]
+    sources += ["embed/io/display/st-7789/display_nofb.c"]
+    sources += ["embed/io/display/st-7789/display_driver.c"]
+    sources += ["embed/io/display/st-7789/display_io.c"]
+    sources += ["embed/io/display/st-7789/display_panel.c"]
+    sources += ["embed/io/display/st-7789/panels/tf15411a.c"]
+    sources += ["embed/io/display/st-7789/panels/154a.c"]
+    sources += ["embed/io/display/st-7789/panels/lx154a2411.c"]
+    sources += ["embed/io/display/st-7789/panels/lx154a2422.c"]
+    paths += ["embed/io/display/inc"]
 
-    else:
-        sources += [f"embed/trezorhal/stm32f4/displays/{display}"]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/tf15411a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/154a.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/lx154a2411.c",
-        ]
-        sources += [
-            "embed/trezorhal/stm32f4/displays/panels/lx154a2422.c",
-        ]
-
-    sources += ["embed/trezorhal/stm32f4/backlight_pwm.c"]
+    sources += ["embed/io/display/backlight/stm32/backlight_pwm.c"]
 
     features_available.append("backlight")
+    defines += [("USE_BACKLIGHT", "1")]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/stm32f4/i2c_bus.c"]
-        sources += ["embed/trezorhal/stm32f4/touch/ft6x36.c"]
+        sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]
+        sources += ["embed/io/touch/ft6x36/ft6x36.c"]
+        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/io/touch/inc"]
         features_available.append("touch")
+        defines += [("USE_TOUCH", "1")]
+        defines += [("USE_I2C", "1")]
 
     if "sd_card" in features_wanted:
-        sources += ["embed/trezorhal/stm32f4/sdcard.c"]
-        sources += ["embed/extmod/modtrezorio/ff.c"]
-        sources += ["embed/extmod/modtrezorio/ffunicode.c"]
+        sources += ["embed/io/sdcard/stm32f4/sdcard.c"]
+        sources += ["embed/upymod/modtrezorio/ff.c"]
+        sources += ["embed/upymod/modtrezorio/ffunicode.c"]
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
         ]
+        paths += ["embed/io/sdcard/inc"]
         features_available.append("sd_card")
+        defines += [("USE_SD_CARD", "1")]
 
     if "sbu" in features_wanted:
-        sources += ["embed/trezorhal/stm32f4/sbu.c"]
+        sources += ["embed/io/sbu/stm32/sbu.c"]
+        paths += ["embed/io/sbu/inc"]
         features_available.append("sbu")
+        defines += [("USE_SBU", "1")]
 
     if "usb" in features_wanted:
         sources += [
-            "embed/trezorhal/stm32f4/usb/usb_class_hid.c",
-            "embed/trezorhal/stm32f4/usb/usb_class_vcp.c",
-            "embed/trezorhal/stm32f4/usb/usb_class_webusb.c",
-            "embed/trezorhal/stm32f4/usb/usb.c",
-            "embed/trezorhal/stm32f4/usb/usbd_conf.c",
-            "embed/trezorhal/stm32f4/usb/usbd_core.c",
-            "embed/trezorhal/stm32f4/usb/usbd_ctlreq.c",
-            "embed/trezorhal/stm32f4/usb/usbd_ioreq.c",
+            "embed/io/usb/stm32/usb_class_hid.c",
+            "embed/io/usb/stm32/usb_class_vcp.c",
+            "embed/io/usb/stm32/usb_class_webusb.c",
+            "embed/io/usb/stm32/usb.c",
+            "embed/io/usb/stm32/usbd_conf.c",
+            "embed/io/usb/stm32/usbd_core.c",
+            "embed/io/usb/stm32/usbd_ctlreq.c",
+            "embed/io/usb/stm32/usbd_ioreq.c",
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_ll_usb.c",
         ]
         features_available.append("usb")
+        paths += ["embed/io/usb/inc"]
 
     if "dma2d" in features_wanted:
         defines += ["USE_DMA2D"]
-        if "new_rendering" in features_wanted:
-            sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
-        else:
-            sources += ["embed/trezorhal/stm32u5/dma2d.c"]
+        sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
         sources += [
             "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma2d.c"
         ]
         features_available.append("dma2d")
+
+    defines += [("USE_PVD", "1")]
 
     return features_available

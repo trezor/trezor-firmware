@@ -1,23 +1,30 @@
-use super::super::{
-    component::{Frame, FrameMsg},
-    theme,
+use super::{
+    super::{
+        component::{Frame, FrameMsg},
+        theme,
+    },
+    ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
 };
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::obj::Obj,
     strutil::TString,
+    translations::TR,
     ui::{
         component::{
             base::ComponentExt,
             swipe_detect::SwipeSettings,
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+            text::{
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+                TextStyle,
+            },
             Component,
         },
-        flow::{FlowMsg, Swipable, SwipePage},
+        flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
         geometry::Direction,
         layout::util::{ConfirmBlob, StrOrBytes},
-        model_mercury::component::SwipeContent,
+        model_mercury::{component::SwipeContent, flow},
     },
 };
 use heapless::Vec;
@@ -29,22 +36,28 @@ pub struct ConfirmBlobParams {
     footer_description: Option<TString<'static>>,
     data: Obj,
     description: Option<TString<'static>>,
+    description_font: &'static TextStyle,
     extra: Option<TString<'static>>,
-    menu_button: bool,
+    verb: Option<TString<'static>>,
+    verb_cancel: TString<'static>,
+    verb_info: Option<TString<'static>>,
     cancel_button: bool,
+    menu_button: bool,
+    prompt: bool,
+    hold: bool,
     chunkify: bool,
     text_mono: bool,
+    page_counter: bool,
+    page_limit: Option<usize>,
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
+    frame_margin: usize,
+    cancel: bool,
 }
 
 impl ConfirmBlobParams {
-    pub const fn new(
-        title: TString<'static>,
-        data: Obj,
-        description: Option<TString<'static>>,
-    ) -> Self {
+    pub fn new(title: TString<'static>, data: Obj, description: Option<TString<'static>>) -> Self {
         Self {
             title,
             subtitle: None,
@@ -52,14 +65,24 @@ impl ConfirmBlobParams {
             footer_description: None,
             data,
             description,
+            description_font: &theme::TEXT_NORMAL,
             extra: None,
-            menu_button: false,
+            verb: None,
+            verb_cancel: TR::buttons__cancel.into(),
+            verb_info: None,
             cancel_button: false,
+            menu_button: false,
+            prompt: false,
+            hold: false,
             chunkify: false,
             text_mono: true,
+            page_counter: false,
+            page_limit: None,
             swipe_up: false,
             swipe_down: false,
             swipe_right: false,
+            frame_margin: 0,
+            cancel: false,
         }
     }
 
@@ -83,6 +106,31 @@ impl ConfirmBlobParams {
         self
     }
 
+    pub const fn with_verb(mut self, verb: Option<TString<'static>>) -> Self {
+        self.verb = verb;
+        self
+    }
+
+    pub fn with_verb_cancel(mut self, verb_cancel: Option<TString<'static>>) -> Self {
+        self.verb_cancel = verb_cancel.unwrap_or(TR::buttons__cancel.into());
+        self
+    }
+
+    pub const fn with_verb_info(mut self, verb_info: Option<TString<'static>>) -> Self {
+        self.verb_info = verb_info;
+        self
+    }
+
+    pub const fn with_prompt(mut self, prompt: bool) -> Self {
+        self.prompt = prompt;
+        self
+    }
+
+    pub const fn with_hold(mut self, hold: bool) -> Self {
+        self.hold = hold;
+        self
+    }
+
     pub const fn with_swipe_up(mut self) -> Self {
         self.swipe_up = true;
         self
@@ -95,6 +143,24 @@ impl ConfirmBlobParams {
 
     pub const fn with_swipe_right(mut self) -> Self {
         self.swipe_right = true;
+        self
+    }
+
+    pub const fn with_frame_margin(mut self, frame_margin: usize) -> Self {
+        self.frame_margin = frame_margin;
+        self
+    }
+
+    pub const fn with_footer_description(
+        mut self,
+        footer_description: Option<TString<'static>>,
+    ) -> Self {
+        self.footer_description = footer_description;
+        self
+    }
+
+    pub const fn with_cancel(mut self, cancel: bool) -> Self {
+        self.cancel = cancel;
         self
     }
 
@@ -115,6 +181,21 @@ impl ConfirmBlobParams {
 
     pub const fn with_text_mono(mut self, text_mono: bool) -> Self {
         self.text_mono = text_mono;
+        self
+    }
+
+    pub fn with_page_counter(mut self, page_counter: bool) -> Self {
+        self.page_counter = page_counter;
+        self
+    }
+
+    pub const fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+        self.page_limit = page_limit;
+        self
+    }
+
+    pub const fn with_description_font(mut self, description_font: &'static TextStyle) -> Self {
+        self.description_font = description_font;
         self
     }
 
@@ -174,6 +255,51 @@ impl ConfirmBlobParams {
 
         Ok(frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)))
     }
+
+    pub fn into_flow(self) -> Result<SwipeFlow, Error> {
+        let paragraphs = ConfirmBlob {
+            description: self.description.unwrap_or("".into()),
+            extra: self.extra.unwrap_or("".into()),
+            data: self.data.try_into()?,
+            description_font: self.description_font,
+            extra_font: &theme::TEXT_DEMIBOLD,
+            data_font: if self.chunkify {
+                let data: TString = self.data.try_into()?;
+                theme::get_chunkified_text_style(data.len())
+            } else if self.text_mono {
+                &theme::TEXT_MONO
+            } else {
+                &theme::TEXT_NORMAL
+            },
+        }
+        .into_paragraphs();
+
+        let confirm_extra = if self.cancel {
+            ConfirmActionExtra::Cancel
+        } else {
+            ConfirmActionExtra::Menu(
+                ConfirmActionMenuStrings::new()
+                    .with_verb_cancel(Some(self.verb_cancel))
+                    .with_verb_info(self.verb_info),
+            )
+        };
+
+        flow::new_confirm_action_simple(
+            paragraphs,
+            confirm_extra,
+            ConfirmActionStrings::new(
+                self.title,
+                self.subtitle,
+                self.verb,
+                self.prompt.then_some(self.title),
+            )
+            .with_footer_description(self.footer_description),
+            self.hold,
+            self.page_limit,
+            self.frame_margin,
+            self.page_counter,
+        )
+    }
 }
 
 pub struct ShowInfoParams {
@@ -213,6 +339,10 @@ impl ShowInfoParams {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
     #[inline(never)]
     pub const fn with_subtitle(mut self, subtitle: Option<TString<'static>>) -> Self {
         self.subtitle = subtitle;
@@ -239,11 +369,6 @@ impl ShowInfoParams {
     ) -> Self {
         self.footer_instruction = Some(instruction);
         self.footer_description = description;
-        self
-    }
-
-    pub const fn with_chunkify(mut self, chunkify: bool) -> Self {
-        self.chunkify = chunkify;
         self
     }
 

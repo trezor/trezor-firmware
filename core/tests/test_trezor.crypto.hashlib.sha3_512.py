@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.crypto import hashlib
@@ -59,7 +60,7 @@ class TestCryptoSha3_512(unittest.TestCase):
             self.assertEqual(x.digest(), unhexlify(d))
 
         x = hashlib.sha3_512()
-        for i in range(1000000):
+        for _ in range(1000000):
             x.update(b"a")
         self.assertEqual(
             x.digest(),
@@ -68,12 +69,10 @@ class TestCryptoSha3_512(unittest.TestCase):
             ),
         )
 
-        """
-        x = hashlib.sha3_512()
-        for i in range(16777216):
-            x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        self.assertEqual(x.digest(), unhexlify('235ffd53504ef836a1342b488f483b396eabbfe642cf78ee0d31feec788b23d0d18d5c339550dd5958a500d4b95363da1b5fa18affc1bab2292dc63b7d85097c'))
-        """
+        # x = hashlib.sha3_512()
+        # for i in range(16777216):
+        #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
+        # self.assertEqual(x.digest(), unhexlify('235ffd53504ef836a1342b488f483b396eabbfe642cf78ee0d31feec788b23d0d18d5c339550dd5958a500d4b95363da1b5fa18affc1bab2292dc63b7d85097c'))
 
     def test_update_keccak(self):
         for b, d in self.vectors_keccak:

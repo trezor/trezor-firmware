@@ -26,19 +26,31 @@ fn build_dir() -> String {
 }
 
 const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
-    "-I../unix",
-    "-I../trezorhal/unix",
+    "-I../projects/unix",
     "-I../../build/unix",
     "-I../../vendor/micropython/ports/unix",
     "-I../../../crypto",
     "-I../../../storage",
     "-I../../vendor/micropython",
     "-I../../vendor/micropython/lib/uzlib",
-    "-I../lib",
-    "-I../trezorhal",
-    "-I../trezorhal/unix",
+    "-I../rtl/inc",
+    "-I../gfx/inc",
+    "-I../io/button/inc",
+    "-I../io/display/inc",
+    "-I../io/haptic/inc",
+    "-I../io/touch/inc",
+    "-I../io/rgb_led/inc",
+    "-I../io/usb/inc",
+    "-I../sec/entropy/inc",
+    "-I../sys/time/inc",
+    "-I../util/flash/inc",
+    "-I../util/translations/inc",
     "-I../models",
     "-DTREZOR_EMULATOR",
+    "-DUSE_BUTTON",
+    "-DUSE_TOUCH",
+    "-DUSE_HAPTIC",
+    "-DUSE_RGB_LED",
 ];
 
 #[cfg(feature = "model_tt")]
@@ -138,14 +150,9 @@ fn prepare_bindings() -> bindgen::Builder {
     let bindgen_macros_env = env::var("BINDGEN_MACROS").ok();
     add_bindgen_macros(&mut clang_args, bindgen_macros_env.as_deref());
 
-    #[cfg(feature = "xframebuffer")]
+    #[cfg(feature = "framebuffer")]
     {
-        bindings = bindings.clang_args(&["-DXFRAMEBUFFER"]);
-    }
-
-    #[cfg(feature = "new_rendering")]
-    {
-        bindings = bindings.clang_args(["-DNEW_RENDERING"]);
+        bindings = bindings.clang_args(&["-DFRAMEBUFFER"]);
     }
 
     clang_args.push(&build_dir_include);
@@ -342,23 +349,10 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("translations_erase")
         .allowlist_function("translations_area_bytesize")
         // display
-        .allowlist_function("display_clear")
-        .allowlist_function("display_offset")
         .allowlist_function("display_refresh")
-        .allowlist_function("display_backlight")
-        .allowlist_function("display_text")
-        .allowlist_function("display_text_render_buffer")
-        .allowlist_function("display_pixeldata")
-        .allowlist_function("display_pixeldata_dirty")
-        .allowlist_function("display_set_window")
-        .allowlist_function("display_sync")
-        .allowlist_function("display_get_fb_addr")
-        .allowlist_function("display_get_wr_addr")
-        .allowlist_var("DISPLAY_DATA_ADDRESS")
-        .allowlist_var("DISPLAY_FRAMEBUFFER_WIDTH")
-        .allowlist_var("DISPLAY_FRAMEBUFFER_HEIGHT")
-        .allowlist_var("DISPLAY_FRAMEBUFFER_OFFSET_X")
-        .allowlist_var("DISPLAY_FRAMEBUFFER_OFFSET_Y")
+        .allowlist_function("display_set_backlight")
+        .allowlist_function("display_get_backlight")
+        .allowlist_function("display_wait_for_sync")
         .allowlist_var("DISPLAY_RESX")
         .allowlist_var("DISPLAY_RESY")
         .allowlist_type("display_fb_info_t")
@@ -383,7 +377,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("gfx_mono8_copy_mono4")
         .allowlist_function("gfx_mono8_blend_mono1p")
         .allowlist_function("gfx_mono8_blend_mono4")
-        .allowlist_function("dma2d_wait")
+        .allowlist_function("gfx_bitblt_wait")
         // fonts
         .allowlist_function("font_height")
         .allowlist_function("font_max_height")
@@ -411,46 +405,13 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("systick_ms")
         // toif
         .allowlist_type("toif_format_t")
-        // dma2d
-        .allowlist_function("dma2d_setup_const")
-        .allowlist_function("dma2d_setup_4bpp")
-        .allowlist_function("dma2d_setup_16bpp")
-        .allowlist_function("dma2d_setup_4bpp_over_4bpp")
-        .allowlist_function("dma2d_setup_4bpp_over_16bpp")
-        .allowlist_function("dma2d_start")
-        .allowlist_function("dma2d_start_blend")
-        .allowlist_function("dma2d_start_const")
-        .allowlist_function("dma2d_start_const_multiline")
-        .allowlist_function("dma2d_wait_for_transfer")
-        //buffers
-        .allowlist_function("buffers_get_line_16bpp")
-        .allowlist_function("buffers_free_line_16bpp")
-        .allowlist_function("buffers_get_line_4bpp")
-        .allowlist_function("buffers_free_line_4bpp")
-        .allowlist_function("buffers_get_text")
-        .allowlist_function("buffers_free_text")
-        .allowlist_function("buffers_get_jpeg")
-        .allowlist_function("buffers_free_jpeg")
-        .allowlist_function("buffers_get_jpeg_work")
-        .allowlist_function("buffers_free_jpeg_work")
-        .allowlist_function("buffers_get_blurring")
-        .allowlist_function("buffers_free_blurring")
-        .allowlist_function("buffers_get_blurring_totals")
-        .allowlist_function("buffers_free_blurring_totals")
-        .allowlist_var("TEXT_BUFFER_HEIGHT")
-        .no_copy("buffer_line_16bpp_t")
-        .no_copy("buffer_line_4bpp_t")
-        .no_copy("buffer_text_t")
-        .no_copy("buffer_jpeg_t")
-        .no_copy("buffer_jpeg_work_t")
-        .no_copy("buffer_blurring_t")
-        .no_copy("buffer_blurring_totals_t")
         //usb
         .allowlist_function("usb_configured")
         // touch
         .allowlist_function("touch_get_event")
         // button
-        .allowlist_function("button_read")
+        .allowlist_type("button_t")
+        .allowlist_function("button_get_event")
         // haptic
         .allowlist_type("haptic_effect_t")
         .allowlist_function("haptic_play")

@@ -8,7 +8,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx, Label, Never, Pad,
         },
-        display::{self, Font, LOADER_MAX},
+        display::{Font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
         model_mercury::{
             constant,
@@ -86,23 +86,6 @@ impl Component for Progress {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.title.paint();
-        if self.indeterminate {
-            display::loader_indeterminate(
-                self.value,
-                self.loader_y_offset,
-                theme::FG,
-                theme::BG,
-                None,
-            );
-        } else {
-            display::loader(self.value, self.loader_y_offset, theme::FG, theme::BG, None);
-        }
-        self.description_pad.paint();
-        self.description.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

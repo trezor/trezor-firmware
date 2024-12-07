@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '14 23 * * *'  # every day @ 23:14
 
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   crypto_build:
     name: Crypto library

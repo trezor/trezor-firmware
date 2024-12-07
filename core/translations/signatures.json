@@ -1,10 +1,38 @@
 {
   "current": {
-    "merkle_root": "6eb9892932a20c647aa7f22063a003e792512daef20790cce84c1ef67aa62ad1",
-    "datetime": "2024-10-14T17:19:07.194969",
-    "commit": "7ca835a9a18fda9be9ca044378644bd5212cc33f"
+    "merkle_root": "007f67665e08d5512c3d287949ada4fab7ef7de33dd5edc0539f090d0d3d2d98",
+    "datetime": "2024-11-28T12:34:57.070219",
+    "commit": "66e992540ecc37e77c8fc40f626039fa6a68eeb2"
   },
   "history": [
+    {
+      "signature": "038e53755061a45698db059c7447fb11785a39fa744dcba557b1f15e51bbb6295602d06e4365dea99bfbd72fd259e982b431f842a06b59bc9cd69f4473e1fad708",
+      "version": "2.8.5.0",
+      "merkle_root": "0b23f6277b51bf2a80fd6d10b8d3c5dc5cb9808db808cd18669315e7ce733c6b",
+      "datetime": "2024-11-07T14:16:59.546174",
+      "commit": "a61e783448043760a7c925e017bd08a4673a61c8"
+    },
+    {
+      "signature": "03fa962dfddecfa68434b65c4e1b1ad3ac0b3fd42491343a92ef91fb3e9e1084ce22c2f199aa9c9fb51eeac918a5f927573020bec014660625f36ea0269f359309",
+      "version": "2.8.3.0",
+      "merkle_root": "925126d020dc9841f36f56791b6c731f95be1c0dbe3d463938aeee9c7e7d5407",
+      "datetime": "2024-11-06T14:07:12.592964",
+      "commit": "a01e3be17ca162870fc2ece01d6db5814756d8fe"
+    },
+    {
+      "signature": "03e679e619c61f6f63cd425b9a9b240d361bcd5690379c4ae242d612645fdee3b800958c7cf7e0432460b2a6ab6d76149804d4d9bc83787424b9e53a6b20736f05",
+      "version": "2.8.1.0",
+      "merkle_root": "2560bfc63d09ef94230823925591b831d800f140572dec58cc4b28d11e31cb0a",
+      "datetime": "2024-11-06T14:06:54.683552",
+      "commit": "a01e3be17ca162870fc2ece01d6db5814756d8fe"
+    },
+    {
+      "signature": "03899d069a40c3c5ddb53185f3b39e3eec33f3dd8e1b1f1ac58e58df7128cfb9696956d2f9905d879163654c69943fd2b7623ea21e6360895c06ab4d10acc49e05",
+      "version": "2.8.0.0",
+      "merkle_root": "0155dab1ef60443b9b5e9dca8f007f9a18e8bc3aecc33d329601876d4bf2a40f",
+      "datetime": "2024-11-06T14:06:10.243424",
+      "commit": "a01e3be17ca162870fc2ece01d6db5814756d8fe"
+    },
     {
       "signature": "03c39ff74ecada5161d651cd725a34739d57c298bb2f8df636fa718490ca1a1b5ac1243e8e73fd707ec23b0dd450a843af03100964cc27263cbb5cb1b0bdedaa04",
       "version": "2.8.3.0",

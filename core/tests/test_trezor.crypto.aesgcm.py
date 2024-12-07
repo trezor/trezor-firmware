@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.crypto import aesgcm
@@ -115,7 +116,7 @@ class TestCryptoAes(unittest.TestCase):
 
             # Decrypt by chunks and add authenticated data by chunks.
             ctx = aesgcm(key, iv)
-            returned = ctx.decrypt_in_place(memoryview(buffer)[: chunk1_length])
+            returned = ctx.decrypt_in_place(memoryview(buffer)[:chunk1_length])
             self.assertEqual(returned, chunk1_length)
             ctx.auth(aad[:17])
             returned = ctx.decrypt_in_place(memoryview(buffer)[chunk1_length:])
@@ -127,7 +128,7 @@ class TestCryptoAes(unittest.TestCase):
             # Encrypt by chunks and add authenticated data by chunks.
             ctx.reset(iv)
             ctx.auth(aad[:7])
-            returned = ctx.encrypt_in_place(memoryview(buffer)[: chunk1_length])
+            returned = ctx.encrypt_in_place(memoryview(buffer)[:chunk1_length])
             self.assertEqual(returned, chunk1_length)
             ctx.auth(aad[7:])
             returned = ctx.encrypt_in_place(memoryview(buffer)[chunk1_length:])

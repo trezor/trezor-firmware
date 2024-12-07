@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.crypto import hashlib
@@ -37,7 +38,7 @@ class TestCryptoRipemd160(unittest.TestCase):
             self.assertEqual(x.digest(), unhexlify(d))
 
         x = hashlib.ripemd160()
-        for i in range(8):
+        for _ in range(8):
             x.update(b"1234567890")
         self.assertEqual(
             x.digest(), unhexlify("9b752e45573d4b39f4dbd3323cab82bf63326bfb")

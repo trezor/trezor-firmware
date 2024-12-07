@@ -9,7 +9,6 @@ JOBS = $(shell sysctl -n hw.perflevel0.physicalcpu 2>/dev/null ||\
                nproc                               2>/dev/null ||\
                echo 4)
 MAKE = make -j $(JOBS)
-SCONS = scons -Q -j $(JOBS)
 
 BUILD_DIR             = build
 BOARDLOADER_BUILD_DIR = $(BUILD_DIR)/boardloader
@@ -32,15 +31,19 @@ PYOPT      ?= 1
 BITCOIN_ONLY ?= 0
 BOOTLOADER_QA ?= 0
 BOOTLOADER_DEVEL ?= 0
+DISABLE_OPTIGA ?= 0
 TREZOR_MODEL ?= T
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
 PYTEST_TIMEOUT ?= 500
 TEST_LANG ?= "en"
-NEW_RENDERING ?= 1
 THP ?= 0
 BENCHMARK ?= 0
+TREZOR_EMULATOR_DEBUGGABLE ?= 0
+QUIET_MODE ?= 0
+TREZOR_DISABLE_ANIMATION ?= $(if $(filter 0,$(PYOPT)),1,0)
+STORAGE_INSECURE_TESTING_MODE ?= 0
 
 # OpenOCD interface default. Alternative: ftdi/olimex-arm-usb-tiny-h
 OPENOCD_INTERFACE ?= stlink
@@ -64,8 +67,8 @@ MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
 MODEL_FEATURE = model_tr
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3W1))
-MCU = STM32F4
-OPENOCD_TARGET = target/stm32f4x.cfg
+MCU = STM32U5
+OPENOCD_TARGET = target/stm32u5x.cfg
 MODEL_FEATURE = model_tt
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
 MCU = STM32F4
@@ -128,6 +131,34 @@ TREZOR_FIDO2_UDP_PORT = 21326
 RUST_TARGET=$(shell rustc -vV | sed -n 's/host: //p')
 
 MULTICORE ?= "auto"
+RANDOM=$(shell python -c 'import random; print(random.randint(0, 1000000))')
+
+SCONS_VARS = \
+	BENCHMARK="$(BENCHMARK)" \
+	BITCOIN_ONLY="$(BITCOIN_ONLY)" \
+	BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
+	BOOTLOADER_QA="$(BOOTLOADER_QA)" \
+	CFLAGS="$(CFLAGS)" \
+	CMAKELISTS="$(CMAKELISTS)" \
+	DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
+	NEW_RENDERING="$(NEW_RENDERING)" \
+	PRODUCTION="$(PRODUCTION)" \
+	PYOPT="$(PYOPT)" \
+	QUIET_MODE="$(QUIET_MODE)" \
+	STORAGE_INSECURE_TESTING_MODE="$(STORAGE_INSECURE_TESTING_MODE)" \
+	THP="$(THP)" \
+	TREZOR_DISABLE_ANIMATION="$(TREZOR_DISABLE_ANIMATION)" \
+	TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
+	TREZOR_EMULATOR_DEBUGGABLE=$(TREZOR_EMULATOR_DEBUGGABLE) \
+	TREZOR_MEMPERF="$(TREZOR_MEMPERF)" \
+	TREZOR_MODEL="$(TREZOR_MODEL)"
+
+SCONS_OPTS = -Q -j $(JOBS)
+ifeq ($(QUIET_MODE),1)
+SCONS_OPTS += --quiet
+endif
+
+SCONS = scons $(SCONS_OPTS) $(SCONS_VARS)
 
 ## help commands:
 
@@ -163,7 +194,7 @@ test_emu: ## run selected device tests from python-trezor
 
 test_emu_multicore: ## run device tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
 test_emu_monero: ## run selected monero device tests from monero-agent
@@ -199,7 +230,7 @@ test_emu_ui: ## run ui integration tests
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
 		--ui=test --ui-check-missing --record-text-layout --do-master-diff \
-		--control-emulators --model=core --random-order-seed=$(shell echo $$RANDOM) \
+		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
 test_emu_ui_record: ## record and hash screens for ui integration tests
@@ -239,6 +270,8 @@ translations: ## update translations
 	python ./translations/cli.py gen
 
 translations_check: ## check that translations are up to date
+	python ./translations/order.py --check
+	python ./translations/cli.py gen --check
 	# spits out error if the stored merkle root is not up to date
 	python ./translations/cli.py merkle-root > /dev/null
 
@@ -249,69 +282,43 @@ build: build_boardloader build_bootloader build_firmware build_prodtest build_un
 build_embed: build_boardloader build_bootloader build_firmware # build boardloader, bootloader, firmware
 
 build_boardloader: ## build boardloader
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" $(BOARDLOADER_BUILD_DIR)/boardloader.bin
+	$(SCONS) $(BOARDLOADER_BUILD_DIR)/boardloader.bin
 
 build_bootloader: ## build bootloader
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
-		NEW_RENDERING="$(NEW_RENDERING)" $(BOOTLOADER_BUILD_DIR)/bootloader.bin
+	$(SCONS) $(BOOTLOADER_BUILD_DIR)/bootloader.bin
 
 build_bootloader_ci: ## build CI device testing bootloader
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin
+	$(SCONS) $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin
 
 build_bootloader_emu: ## build the unix bootloader emulator
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-	CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
+	$(SCONS) $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
 
 build_bootloader_emu_debug: ## build the unix bootloader emulator
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-	CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" TREZOR_EMULATOR_DEBUGGABLE=1 \
-	$(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
+	$(SCONS) TREZOR_EMULATOR_DEBUGGABLE=1 $(BOOTLOADER_EMU_BUILD_DIR)/bootloader.elf
 
 build_prodtest: ## build production test firmware
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" $(PRODTEST_BUILD_DIR)/prodtest.bin
+	$(SCONS) $(PRODTEST_BUILD_DIR)/prodtest.bin
 
 build_reflash: ## build reflash firmware + reflash image
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" TREZOR_MODEL="$(TREZOR_MODEL)" \
-		CMAKELISTS="$(CMAKELISTS)" NEW_RENDERING="$(NEW_RENDERING)" $(REFLASH_BUILD_DIR)/reflash.bin
+	$(SCONS) $(REFLASH_BUILD_DIR)/reflash.bin
 	dd if=build/boardloader/boardloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=0
 	dd if=build/bootloader/bootloader.bin of=$(REFLASH_BUILD_DIR)/sdimage.bin bs=1 seek=49152
 
 build_kernel: ## build kernel image
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
-		TREZOR_MODEL="$(TREZOR_MODEL)"  CMAKELISTS="$(CMAKELISTS)" \
-		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
-		$(KERNEL_BUILD_DIR)/kernel.bin
+	$(SCONS) PYOPT=1 $(KERNEL_BUILD_DIR)/kernel.bin
 
 build_firmware: templates build_cross build_kernel ## build firmware with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" PRODUCTION="$(PRODUCTION)" \
-		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
-		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" \
-		BOOTLOADER_QA="$(BOOTLOADER_QA)" BOOTLOADER_DEVEL="$(BOOTLOADER_DEVEL)" \
-		DISABLE_OPTIGA="$(DISABLE_OPTIGA)" THP="$(THP)" NEW_RENDERING="$(NEW_RENDERING)" \
-		BENCHMARK="$(BENCHMARK)" $(FIRMWARE_BUILD_DIR)/firmware.bin
+	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
 
 build_unix: templates ## build unix port
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
-		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" THP="$(THP)" \
-		PYOPT="0" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
-		NEW_RENDERING="$(NEW_RENDERING)" BENCHMARK="$(BENCHMARK)"
+	$(SCONS) PYOPT=0 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
 
 build_unix_frozen: templates build_cross ## build unix port with frozen modules
-	$(SCONS) CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
-		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
-		PYOPT="$(PYOPT)" BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN="$(ADDRESS_SANITIZER)" \
-		TREZOR_MEMPERF="$(TREZOR_MEMPERF)" TREZOR_EMULATOR_FROZEN=1 NEW_RENDERING="$(NEW_RENDERING)" \
-		BENCHMARK="$(BENCHMARK)"
+	$(SCONS) $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_EMULATOR_FROZEN=1
 
 build_unix_debug: templates ## build unix port
-	$(SCONS) --max-drift=1 CFLAGS="$(CFLAGS)" $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
-		TREZOR_MODEL="$(TREZOR_MODEL)" CMAKELISTS="$(CMAKELISTS)" \
-		BITCOIN_ONLY="$(BITCOIN_ONLY)" TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1 \
-		NEW_RENDERING="$(NEW_RENDERING)" BENCHMARK="$(BENCHMARK)"
+	$(SCONS) --max-drift=1 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
+		TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
 
 build_cross: ## build mpy-cross port
 	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
@@ -399,10 +406,10 @@ flash_erase_storage: ## erase storage sectors from flash
 	$(OPENOCD) -c "init; reset halt; flash erase_sector 0 $(STORAGE_1_SECTOR_START) $(STORAGE_1_SECTOR_END); flash erase_sector 0 $(STORAGE_2_SECTOR_START) $(STORAGE_2_SECTOR_END); exit"
 
 flash_bootloader_jlink: $(BOOTLOADER_BUILD_DIR)/bootloader.bin ## flash bootloader using JLink
-	JLinkExe -nogui 1 -commanderscript embed/bootloader/bootloader_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/projects/bootloader/bootloader_flash.jlink
 
 flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI bootloader using JLink
-	JLinkExe -nogui 1 -commanderscript embed/bootloader_ci/bootloader_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/projects/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
 	cp -f $<.p1 $<.p1.bin
@@ -410,7 +417,7 @@ flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using
 	## pad 2nd part so that FW integrity works after flash
 	## read&compare in flashing will avoid erasing unmodified sectors
 	truncate -s $(FIRMWARE_P2_MAXSIZE) $<.p2.bin
-	JLinkExe -nogui 1 -commanderscript embed/firmware/firmware_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/projects/firmware/firmware_flash.jlink
 
 ## openocd debug commands:
 
@@ -444,12 +451,19 @@ bloaty: ## run bloaty size profiler
 	bloaty -d symbols -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
 	bloaty -d compileunits -n 0 -s file $(FIRMWARE_BUILD_DIR)/firmware.elf | less
 
+ifeq  ($(MCU),$(filter $(MCU),STM32F4))
 sizecheck: ## check sizes of binary files
-	test $(BOARDLOADER_MAXSIZE) -ge $(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)
-	test $(BOOTLOADER_MAXSIZE) -ge $(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)
-	test $(FIRMWARE_P1_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p1)
-	test $(FIRMWARE_P2_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)
-	test $(FIRMWARE_MAXSIZE) -ge $(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)
+	test "$(BOARDLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)"
+	test "$(BOOTLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)"
+	test "$(FIRMWARE_P1_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p1)"
+	test "$(FIRMWARE_P2_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin.p2)"
+	test "$(FIRMWARE_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)"
+else ifeq ($(MCU),$(filter $(MCU),STM32U5))
+sizecheck: ## check sizes of binary files
+	test "$(BOARDLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOARDLOADER_BUILD_DIR)/boardloader.bin)"
+	test "$(BOOTLOADER_MAXSIZE)" -ge "$(shell wc -c < $(BOOTLOADER_BUILD_DIR)/bootloader.bin)"
+	test "$(FIRMWARE_MAXSIZE)" -ge "$(shell wc -c < $(FIRMWARE_BUILD_DIR)/firmware.bin)"
+endif
 
 combine: ## combine boardloader + bootloader + prodtest into one combined image
 	combine_firmware \

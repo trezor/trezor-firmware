@@ -73,10 +73,6 @@ impl Component for NumberInputDialog {
         None
     }
 
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
         self.paragraphs_pad.render(target);
@@ -150,10 +146,6 @@ impl Component for NumberInput {
             return Some(NumberInputMsg::Changed(self.value));
         }
         None
-    }
-
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

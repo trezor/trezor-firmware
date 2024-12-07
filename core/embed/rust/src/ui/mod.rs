@@ -6,7 +6,7 @@ pub mod component;
 pub mod constant;
 pub mod display;
 pub mod event;
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+#[cfg(all(feature = "micropython", feature = "touch"))]
 pub mod flow;
 pub mod geometry;
 pub mod lerp;

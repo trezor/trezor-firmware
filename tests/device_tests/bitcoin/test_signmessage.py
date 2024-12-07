@@ -307,9 +307,7 @@ def test_signmessage(
     assert sig.signature.hex() == signature
 
 
-@pytest.mark.models(
-    "core", skip=["safe3", "mercury"], reason="Not yet implemented in new UI"
-)
+@pytest.mark.models("core", skip=["safe3"], reason="Not implemented")
 @pytest.mark.parametrize(
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )
@@ -383,8 +381,8 @@ def test_signmessage_pagination_trailing_newline(client: Client):
             [
                 # expect address confirmation
                 message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
-                # expect a ButtonRequest that does not have pagination set
-                message_filters.ButtonRequest(pages=None),
+                # expect a ButtonRequest for a single-page screen
+                message_filters.ButtonRequest(pages=1),
                 messages.MessageSignature,
             ]
         )

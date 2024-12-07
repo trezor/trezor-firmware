@@ -3,8 +3,8 @@ use crate::{
     time::{Duration, Instant},
     ui::{
         animation::Animation,
-        component::{Component, Event, EventCtx, Never, TimerToken},
-        display::{self, Color, Font},
+        component::{Component, Event, EventCtx, Never, Timer},
+        display::{Color, Font},
         geometry::{Offset, Rect},
         shape::{self, Renderer},
         util::animation_disabled,
@@ -24,7 +24,7 @@ enum State {
 
 pub struct Marquee {
     area: Rect,
-    pause_token: Option<TimerToken>,
+    pause_timer: Timer,
     min_offset: i16,
     max_offset: i16,
     state: State,
@@ -40,7 +40,7 @@ impl Marquee {
     pub fn new(text: TString<'static>, font: Font, fg: Color, bg: Color) -> Self {
         Self {
             area: Rect::zero(),
-            pause_token: None,
+            pause_timer: Timer::new(),
             min_offset: 0,
             max_offset: 0,
             state: State::Initial,
@@ -119,11 +119,6 @@ impl Marquee {
         self.animation().is_some()
     }
 
-    pub fn paint_anim(&mut self, offset: i16) {
-        self.text
-            .map(|t| display::marquee(self.area, t, offset, self.font, self.fg, self.bg));
-    }
-
     pub fn render_anim<'s>(&'s self, target: &mut impl Renderer<'s>, offset: i16) {
         target.in_window(self.area, &|target| {
             let text_height = self.font.text_height();
@@ -154,78 +149,51 @@ impl Component for Marquee {
 
         let now = Instant::now();
 
-        if let Event::Timer(token) = event {
-            if self.pause_token == Some(token) {
-                match self.state {
-                    State::PauseLeft => {
-                        let anim =
-                            Animation::new(self.max_offset, self.min_offset, self.duration, now);
-                        self.state = State::Right(anim);
-                    }
-                    State::PauseRight => {
-                        let anim =
-                            Animation::new(self.min_offset, self.max_offset, self.duration, now);
-                        self.state = State::Left(anim);
-                    }
-                    _ => {}
+        if self.pause_timer.expire(event) {
+            match self.state {
+                State::PauseLeft => {
+                    let anim = Animation::new(self.max_offset, self.min_offset, self.duration, now);
+                    self.state = State::Right(anim);
                 }
+                State::PauseRight => {
+                    let anim = Animation::new(self.min_offset, self.max_offset, self.duration, now);
+                    self.state = State::Left(anim);
+                }
+                _ => {}
+            }
+            // We have something to paint, so request to be painted in the next pass.
+            ctx.request_paint();
+            // There is further progress in the animation, request an animation frame event.
+            ctx.request_anim_frame();
+        }
+
+        if EventCtx::is_anim_frame(event) {
+            if self.is_animating() {
                 // We have something to paint, so request to be painted in the next pass.
                 ctx.request_paint();
-                // There is further progress in the animation, request an animation frame event.
+                // There is further progress in the animation, request an animation frame
+                // event.
                 ctx.request_anim_frame();
             }
 
-            if token == EventCtx::ANIM_FRAME_TIMER {
-                if self.is_animating() {
-                    // We have something to paint, so request to be painted in the next pass.
-                    ctx.request_paint();
-                    // There is further progress in the animation, request an animation frame
-                    // event.
-                    ctx.request_anim_frame();
-                }
-
-                match self.state {
-                    State::Right(_) => {
-                        if self.is_at_right(now) {
-                            self.pause_token = Some(ctx.request_timer(self.pause));
-                            self.state = State::PauseRight;
-                        }
+            match self.state {
+                State::Right(_) => {
+                    if self.is_at_right(now) {
+                        self.pause_timer.start(ctx, self.pause);
+                        self.state = State::PauseRight;
                     }
-                    State::Left(_) => {
-                        if self.is_at_left(now) {
-                            self.pause_token = Some(ctx.request_timer(self.pause));
-                            self.state = State::PauseLeft;
-                        }
-                    }
-                    _ => {}
                 }
+                State::Left(_) => {
+                    if self.is_at_left(now) {
+                        self.pause_timer.start(ctx, self.pause);
+                        self.state = State::PauseLeft;
+                    }
+                }
+                _ => {}
             }
         }
+
         None
-    }
-
-    fn paint(&mut self) {
-        let now = Instant::now();
-
-        match self.state {
-            State::Initial => {
-                self.paint_anim(0);
-            }
-            State::PauseRight => {
-                self.paint_anim(self.min_offset);
-            }
-            State::PauseLeft => {
-                self.paint_anim(self.max_offset);
-            }
-            _ => {
-                let progress = self.progress(now);
-                if let Some(done) = progress {
-                    self.paint_anim(done);
-                } else {
-                    self.paint_anim(0);
-                }
-            }
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

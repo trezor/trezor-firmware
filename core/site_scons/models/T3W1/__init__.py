@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from . import emulator, trezor_t3w1_d1
+from . import emulator, trezor_t3w1_revA
 
 
 def configure_board(
@@ -14,12 +14,12 @@ def configure_board(
     paths: list[str],
 ):
     # Set default revision if None
-    revision = revision or "d1"
+    revision = revision or "A"
 
     # Mapping of revisions to their respective configurations
     revision_map = {
         "emulator": emulator,
-        "d1": trezor_t3w1_d1,
+        "A": trezor_t3w1_revA,
     }
 
     module = revision_map.get(revision)

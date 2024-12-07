@@ -1,17 +1,7 @@
 #ifndef _STM32F429I_DISC1_H
 #define _STM32F429I_DISC1_H
 
-#define HSE_8MHZ
-
-#define DISPLAY_RESX 240
-#define DISPLAY_RESY 320
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
-#define DISPLAY_LEGACY_HEADER "displays/ltdc.h"
-
-#define USE_I2C 1
-#define USE_TOUCH 1
-#define USE_SDRAM 1
-#define USE_RGB_COLORS 1
 
 #define I2C_COUNT 1
 #define I2C_INSTANCE_0 I2C3

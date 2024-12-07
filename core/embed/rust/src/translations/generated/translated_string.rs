@@ -457,7 +457,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__name_and_version = 277,  // "Name and version"
     #[cfg(feature = "universal_fw")]
-    ethereum__new_contract = 278,  // "new contract?"
+    ethereum__new_contract = 278,  // "New contract will be deployed"
     #[cfg(feature = "universal_fw")]
     ethereum__no_message_field = 279,  // "No message field"
     #[cfg(feature = "universal_fw")]
@@ -473,7 +473,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__sign_eip712 = 285,  // "Really sign EIP-712 typed data?"
     #[cfg(feature = "universal_fw")]
-    ethereum__title_confirm_data = 286,  // "Confirm data"
+    ethereum__title_input_data = 286,  // "Input data"
     #[cfg(feature = "universal_fw")]
     ethereum__title_confirm_domain = 287,  // "Confirm domain"
     #[cfg(feature = "universal_fw")]
@@ -948,7 +948,7 @@ pub enum TranslatedString {
     sign_message__bytes_template = 658,  // "{0} Bytes"
     sign_message__confirm_address = 659,  // "Signing address"
     sign_message__confirm_message = 660,  // "Confirm message"
-    sign_message__message_size = 661,  // "Message size:"
+    sign_message__message_size = 661,  // "Message size"
     sign_message__verify_address = 662,  // "Verify address"
     #[cfg(feature = "universal_fw")]
     solana__account_index = 663,  // "Account index"
@@ -1371,6 +1371,17 @@ pub enum TranslatedString {
     fido__title_credential_details = 965,  // "Credential details"
     address__public_key_confirmed = 966,  // "Public key confirmed"
     words__continue_anyway = 967,  // "Continue anyway"
+    #[cfg(feature = "universal_fw")]
+    ethereum__unknown_contract_address = 968,  // "Unknown contract address. Continue only if you know what you are doing."
+    #[cfg(feature = "universal_fw")]
+    ethereum__token_contract = 969,  // "Token contract"
+    buttons__view_all_data = 970,  // "View all data"
+    instructions__view_all_data = 971,  // "View all data in the menu."
+    #[cfg(feature = "universal_fw")]
+    ethereum__interaction_contract = 972,  // "Interaction contract"
+    misc__enable_labeling = 973,  // "Enable labeling?"
+    #[cfg(feature = "universal_fw")]
+    ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
 }
 
 impl TranslatedString {
@@ -1822,7 +1833,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::ethereum__name_and_version => "Name and version",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__new_contract => "new contract?",
+            Self::ethereum__new_contract => "New contract will be deployed",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__no_message_field => "No message field",
             #[cfg(feature = "universal_fw")]
@@ -1838,7 +1849,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::ethereum__sign_eip712 => "Really sign EIP-712 typed data?",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__title_confirm_data => "Confirm data",
+            Self::ethereum__title_input_data => "Input data",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__title_confirm_domain => "Confirm domain",
             #[cfg(feature = "universal_fw")]
@@ -2313,7 +2324,7 @@ impl TranslatedString {
             Self::sign_message__bytes_template => "{0} Bytes",
             Self::sign_message__confirm_address => "Signing address",
             Self::sign_message__confirm_message => "Confirm message",
-            Self::sign_message__message_size => "Message size:",
+            Self::sign_message__message_size => "Message size",
             Self::sign_message__verify_address => "Verify address",
             #[cfg(feature = "universal_fw")]
             Self::solana__account_index => "Account index",
@@ -2736,6 +2747,17 @@ impl TranslatedString {
             Self::fido__title_credential_details => "Credential details",
             Self::address__public_key_confirmed => "Public key confirmed",
             Self::words__continue_anyway => "Continue anyway",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__unknown_contract_address => "Unknown contract address. Continue only if you know what you are doing.",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__token_contract => "Token contract",
+            Self::buttons__view_all_data => "View all data",
+            Self::instructions__view_all_data => "View all data in the menu.",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__interaction_contract => "Interaction contract",
+            Self::misc__enable_labeling => "Enable labeling?",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
         }
     }
 
@@ -3204,7 +3226,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__sign_eip712 => Some(Self::ethereum__sign_eip712),
             #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__title_confirm_data => Some(Self::ethereum__title_confirm_data),
+            Qstr::MP_QSTR_ethereum__title_input_data => Some(Self::ethereum__title_input_data),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__title_confirm_domain => Some(Self::ethereum__title_confirm_domain),
             #[cfg(feature = "universal_fw")]
@@ -4102,6 +4124,17 @@ impl TranslatedString {
             Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
             Qstr::MP_QSTR_address__public_key_confirmed => Some(Self::address__public_key_confirmed),
             Qstr::MP_QSTR_words__continue_anyway => Some(Self::words__continue_anyway),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__unknown_contract_address => Some(Self::ethereum__unknown_contract_address),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__token_contract => Some(Self::ethereum__token_contract),
+            Qstr::MP_QSTR_buttons__view_all_data => Some(Self::buttons__view_all_data),
+            Qstr::MP_QSTR_instructions__view_all_data => Some(Self::instructions__view_all_data),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__interaction_contract => Some(Self::ethereum__interaction_contract),
+            Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
             _ => None,
         }
     }

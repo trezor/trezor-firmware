@@ -23,6 +23,7 @@ const SCROLLBAR_HEIGHT: i16 = 10;
 const APP_NAME_PADDING: i16 = 12;
 const APP_NAME_HEIGHT: i16 = 30;
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum FidoMsg {
     Confirmed(usize),
     Cancelled,
@@ -181,36 +182,6 @@ where
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.icon.paint();
-        self.controls.paint();
-        self.app_name.paint();
-
-        if self.scrollbar.page_count > 1 {
-            self.scrollbar.paint();
-        }
-
-        // Erasing the old text content before writing the new one.
-        let account_name_area = self.account_name.area();
-        let real_area = account_name_area
-            .with_height(account_name_area.height() + self.account_name.font().text_baseline() + 1);
-        display::rect_fill(real_area, theme::BG);
-
-        // Account name is optional.
-        // Showing it only if it differs from app name.
-        // (Dummy requests usually have some text as both app_name and account_name.)
-        let account_name = self.account_name.text();
-        let app_name = self.app_name.text();
-        if !account_name.is_empty() && account_name != app_name {
-            self.account_name.paint();
-        }
-
-        if self.fade.take() {
-            // Note that this is blocking and takes some time.
-            display::fade_backlight(theme::backlight::get_backlight_normal());
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

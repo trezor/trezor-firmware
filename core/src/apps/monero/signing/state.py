@@ -25,7 +25,7 @@ class State:
         from apps.monero.xmr.mlsag_hasher import PreMlsagHasher
 
         # Account credentials
-        # type: AccountCreds
+        # - type: AccountCreds
         # - view private/public key
         # - spend private/public key
         # - and its corresponding address

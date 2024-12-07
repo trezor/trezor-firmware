@@ -5,7 +5,6 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Pad},
         constant::screen,
-        display,
         display::{Font, Icon},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::simplified::ReturnToC,
@@ -52,25 +51,6 @@ impl MenuChoice {
 }
 
 impl Choice for MenuChoice {
-    fn paint_center(&self, _area: Rect, _inverse: bool) {
-        // Icon on top and two lines of text below
-        self.icon.draw(
-            SCREEN_CENTER + Offset::y(-20),
-            Alignment2D::CENTER,
-            BLD_FG,
-            BLD_BG,
-        );
-
-        display::text_center(SCREEN_CENTER, self.first_line, Font::NORMAL, BLD_FG, BLD_BG);
-        display::text_center(
-            SCREEN_CENTER + Offset::y(10),
-            self.second_line,
-            Font::NORMAL,
-            BLD_FG,
-            BLD_BG,
-        );
-    }
-
     fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool) {
         // Icon on top and two lines of text below
         shape::ToifImage::new(SCREEN_CENTER + Offset::y(-20), self.icon.toif)
@@ -177,11 +157,6 @@ impl Component for Menu {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.choice_page.event(ctx, event).map(|evt| evt.0)
-    }
-
-    fn paint(&mut self) {
-        self.pad.paint();
-        self.choice_page.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

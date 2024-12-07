@@ -1,6 +1,5 @@
 use crate::{
     error,
-    micropython::{map::Map, obj::Obj, qstr::Qstr, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -15,7 +14,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
-        layout::obj::LayoutObj,
     },
 };
 
@@ -93,14 +91,7 @@ impl FlowController for ConfirmResetRecover {
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn new_confirm_reset(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, new_confirm_reset_obj) }
-}
-
-fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Error> {
-    let recovery: bool = kwargs.get_or(Qstr::MP_QSTR_recovery, false)?;
-
+pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     let (title, br, cancel_btn_text) = if recovery {
         (
             TR::recovery__title_recover.into(),
@@ -166,5 +157,5 @@ fn new_confirm_reset_obj(_args: &[Obj], kwargs: &Map) -> Result<Obj, error::Erro
             .with_page(&ConfirmResetCreate::Menu, content_menu)?
             .with_page(&ConfirmResetCreate::Confirm, content_confirm)?
     };
-    Ok(LayoutObj::new(res)?.into())
+    Ok(res)
 }

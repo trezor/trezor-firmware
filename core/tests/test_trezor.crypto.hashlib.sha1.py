@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.crypto import hashlib
@@ -30,18 +31,16 @@ class TestCryptoSha1(unittest.TestCase):
             self.assertEqual(x.digest(), unhexlify(d))
 
         x = hashlib.sha1()
-        for i in range(1000000):
+        for _ in range(1000000):
             x.update(b"a")
         self.assertEqual(
             x.digest(), unhexlify("34aa973cd4c4daa4f61eeb2bdbad27316534016f")
         )
 
-        """
-        x = hashlib.sha1()
-        for i in range(16777216):
-            x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
-        self.assertEqual(x.digest(), unhexlify('7789f0c9ef7bfc40d93311143dfbe69e2017f592'))
-        """
+        # x = hashlib.sha1()
+        # for i in range(16777216):
+        #     x.update(b'abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmno')
+        # self.assertEqual(x.digest(), unhexlify('7789f0c9ef7bfc40d93311143dfbe69e2017f592'))
 
     def test_digest_multi(self):
         x = hashlib.sha1()

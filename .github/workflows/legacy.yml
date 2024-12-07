@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '35 22 * * *'  # every day @ 22:35
 
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   id-token: write       # for fetching the OIDC token
   contents: read        # for actions/checkout
@@ -134,8 +139,8 @@ jobs:
           status: ${{ job.status }}
         continue-on-error: true
         if: ${{ always() && matrix.coins == 'universal' }}
-      - uses: ./.github/actions/ui-comment
-        if: ${{ failure() && matrix.coins == 'universal' }}
+      - run: echo "${{ env.PULL_COMMENT }}" >> $GITHUB_STEP_SUMMARY
+        if: ${{ always() && matrix.coins == 'universal' }}
 
   legacy_upgrade_test:
     name: Upgrade test
@@ -211,24 +216,8 @@ jobs:
           fi
       - name: Upload main branch diff
         run: |
-          aws s3 sync --no-progress master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
+          aws s3 sync --only-show-errors master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
         continue-on-error: true
-
-  legacy_ui_comment:
-    name: Post comment with UI diff URLs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-      - run: |
-          git fetch origin main
-          git diff --quiet origin/main...HEAD -- tests/ui_tests/fixtures.json || echo "FIXTURES_CHANGED=$?" >> $GITHUB_OUTPUT
-        id: check-fixtures-changed
-      - uses: ./.github/actions/ui-comment
-        # TODO: always run if comment already exists
-        if: ${{ steps.check-fixtures-changed.outputs.FIXTURES_CHANGED == '1' }}
 
   legacy_upload_emu:
     name: Upload emulator binaries
@@ -251,4 +240,4 @@ jobs:
       - run: |
           mkdir emulators
           cp trezor-emu-* emulators
-          aws s3 sync --no-progress emulators s3://data.trezor.io/dev/firmware/emu-nightly
+          aws s3 sync --only-show-errors emulators s3://data.trezor.io/dev/firmware/emu-nightly

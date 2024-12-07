@@ -1,5 +1,8 @@
 import json
+import re
+import threading
 import typing as t
+import warnings
 from hashlib import sha256
 from pathlib import Path
 
@@ -12,11 +15,13 @@ from . import common
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 
-TRANSLATIONS = ROOT / "core" / "translations"
-FONTS_DIR = TRANSLATIONS / "fonts"
-ORDER_FILE = TRANSLATIONS / "order.json"
+TRANSLATIONS_DIR = ROOT / "core" / "translations"
+FONTS_DIR = TRANSLATIONS_DIR / "fonts"
+ORDER_FILE = TRANSLATIONS_DIR / "order.json"
 
-LANGUAGES = [file.stem for file in TRANSLATIONS.glob("??.json")]
+LANGUAGES = [file.stem for file in TRANSLATIONS_DIR.glob("??.json")]
+
+_CURRENT_TRANSLATION = threading.local()
 
 
 def prepare_blob(
@@ -66,110 +71,65 @@ def set_language(client: Client, lang: str):
         language_data = build_and_sign_blob(lang, client)
     with client:
         device.change_language(client, language_data)  # type: ignore
+    _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
 def get_lang_json(lang: str) -> translations.JsonDef:
     assert lang in LANGUAGES
-    lang_json = json.loads((TRANSLATIONS / f"{lang}.json").read_text())
+    lang_json = json.loads((TRANSLATIONS_DIR / f"{lang}.json").read_text())
     if (fonts_safe3 := lang_json.get("fonts", {}).get("##Safe3")) is not None:
         lang_json["fonts"]["T2B1"] = fonts_safe3
         lang_json["fonts"]["T3B1"] = fonts_safe3
     return lang_json
 
 
-def _get_all_language_data() -> list[dict[str, str]]:
-    return [_get_language_data(language) for language in LANGUAGES]
+class Translation:
+    FORMAT_STR_RE = re.compile(r"\\{\d+\\}")
+
+    def __init__(self, lang: str) -> None:
+        self.lang = lang
+        self.lang_json = get_lang_json(lang)
+
+    @property
+    def translations(self) -> dict[str, str]:
+        return self.lang_json["translations"]
+
+    def _translate_raw(self, key: str, _stacklevel: int = 0) -> str:
+        tr = self.translations.get(key)
+        if tr is not None:
+            return tr
+        if self.lang != "en":
+            warnings.warn(
+                f"Translation key '{key}' not found in '{self.lang}' translation file",
+                stacklevel=_stacklevel + 2,
+            )
+            return TRANSLATIONS["en"]._translate_raw(key)
+        raise KeyError(key)
+
+    def translate(self, key: str, _stacklevel: int = 0) -> str:
+        tr = self._translate_raw(key, _stacklevel=_stacklevel + 1)
+        return tr.replace("\xa0", " ").strip()
+
+    def as_regexp(self, key: str, _stacklevel: int = 0) -> re.Pattern:
+        tr = self.translate(key, _stacklevel=_stacklevel + 1)
+        re_safe = re.escape(tr)
+        return re.compile(self.FORMAT_STR_RE.sub(r".*?", re_safe))
 
 
-def _get_language_data(lang: str) -> dict[str, str]:
-    return get_lang_json(lang)["translations"]
+TRANSLATIONS = {lang: Translation(lang) for lang in LANGUAGES}
+_CURRENT_TRANSLATION.TR = TRANSLATIONS["en"]
 
 
-all_language_data = _get_all_language_data()
+def translate(key: str, _stacklevel: int = 0) -> str:
+    return _CURRENT_TRANSLATION.TR.translate(key, _stacklevel=_stacklevel + 1)
 
 
-def _resolve_path_to_texts(
-    path: str, template: t.Iterable[t.Any] = (), lower: bool = True
-) -> list[str]:
-    texts: list[str] = []
-    lookups = path.split(".")
-    for language_data in all_language_data:
-        language_data_missing = False
-        data: dict[str, t.Any] | str = language_data
-        for lookup in lookups:
-            assert isinstance(data, dict), f"{lookup} is not a dict"
-            if lookup not in data:
-                language_data_missing = True
-                break
-            data = data[lookup]
-        if language_data_missing:
-            continue
-        assert isinstance(data, str), f"{path} is not a string"
-        if template:
-            data = data.format(*template)
-        texts.append(data)
-
-    if lower:
-        texts = [t.lower() for t in texts]
-    texts = [t.replace("\xa0", " ").strip() for t in texts]
-    return texts
+def regexp(key: str) -> re.Pattern:
+    return _CURRENT_TRANSLATION.TR.as_regexp(key, _stacklevel=1)
 
 
-def assert_equals(text: str, path: str, template: t.Iterable[t.Any] = ()) -> None:
-    # TODO: we can directly pass in the current device language
-    texts = _resolve_path_to_texts(path, template)
-    assert text.lower() in texts, f"{text} not found in {texts}"
-
-
-def assert_equals_multiple(
-    text: str, paths: list[str], template: t.Iterable[t.Any] = ()
-) -> None:
-    texts: list[str] = []
-    for path in paths:
-        texts += _resolve_path_to_texts(path, template)
-    assert text.lower() in texts, f"{text} not found in {texts}"
-
-
-def assert_in(text: str, path: str, template: t.Iterable[t.Any] = ()) -> None:
-    texts = _resolve_path_to_texts(path, template)
-    for tt in texts:
-        if tt in text.lower():
-            return
-    assert False, f"{text} not found in {texts}"
-
-
-def assert_in_multiple(
-    text: str, paths: list[str], template: t.Iterable[t.Any] = ()
-) -> None:
-    texts: list[str] = []
-    for path in paths:
-        texts += _resolve_path_to_texts(path, template)
-    for tt in texts:
-        if tt in text.lower():
-            return
-    assert False, f"{text} not found in {texts}"
-
-
-def assert_startswith(text: str, path: str, template: t.Iterable[t.Any] = ()) -> None:
-    texts = _resolve_path_to_texts(path, template)
-    for tt in texts:
-        if text.lower().startswith(tt):
-            return
-    assert False, f"{text} not found in {texts}"
-
-
-def assert_template(text: str, template_path: str) -> None:
-    templates = _resolve_path_to_texts(template_path)
-    for tt in templates:
-        # Checking at least the first part
-        first_part = tt.split("{")[0]
-        if text.lower().startswith(first_part):
-            return
-    assert False, f"{text} not found in {templates}"
-
-
-def translate(
-    path: str, template: t.Iterable[t.Any] = (), lower: bool = False
-) -> list[str]:
-    # Do not converting to lowercase, we want the exact value
-    return _resolve_path_to_texts(path, template, lower=lower)
+def __getattr__(key: str) -> str:
+    try:
+        return translate(key, _stacklevel=1)
+    except KeyError as e:
+        raise AttributeError(f"Translation key '{key}' not found") from e

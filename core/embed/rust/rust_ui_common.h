@@ -1,4 +1,4 @@
-#include "common.h"
+#include <trezor_types.h>
 
 void display_rsod_rust(const char* title, const char* message,
                        const char* footer);

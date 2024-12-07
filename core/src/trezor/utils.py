@@ -11,10 +11,12 @@ from trezorutils import (  # noqa: F401
     SCM_REVISION,
     UI_LAYOUT,
     USE_BACKLIGHT,
+    USE_BUTTON,
     USE_HAPTIC,
     USE_OPTIGA,
     USE_SD_CARD,
     USE_THP,
+    USE_TOUCH,
     VERSION,
     bootloader_locked,
     check_firmware_header,
@@ -31,16 +33,19 @@ from trezorutils import (  # noqa: F401
 )
 from typing import TYPE_CHECKING
 
-DISABLE_ANIMATION = 0
-
 if __debug__:
     if EMULATOR:
         import uos
 
-        DISABLE_ANIMATION = int(uos.getenv("TREZOR_DISABLE_ANIMATION") or "0")
-        LOG_MEMORY = int(uos.getenv("TREZOR_LOG_MEMORY") or "0")
+        DISABLE_ANIMATION = uos.getenv("TREZOR_DISABLE_ANIMATION") == "1"
+        LOG_MEMORY = uos.getenv("TREZOR_LOG_MEMORY") == "1"
     else:
+        from trezorutils import DISABLE_ANIMATION  # noqa: F401
+
         LOG_MEMORY = 0
+
+else:
+    DISABLE_ANIMATION = False
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Protocol, Sequence, TypeVar
@@ -109,6 +114,7 @@ def presize_module(modname: str, size: int) -> None:
 
 
 if __debug__:
+    from ubinascii import hexlify
 
     def mem_dump(filename: str) -> None:
         from micropython import mem_info
@@ -124,6 +130,10 @@ if __debug__:
             mem_info()
         else:
             mem_info(True)
+
+    def get_bytes_as_str(a: bytes) -> str:
+        """Converts the provided bytes to a hexadecimal string (decoded as`utf-8`)."""
+        return hexlify(a).decode("utf-8")
 
 
 def ensure(cond: bool, msg: str | None = None) -> None:

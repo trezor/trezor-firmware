@@ -6,15 +6,18 @@
 
 static void _librust_qstrs(void) {
   MP_QSTR_;
+  MP_QSTR_ATTACHED;
   MP_QSTR_AttachType;
   MP_QSTR_BacklightLevels;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_DIM;
+  MP_QSTR_DONE;
   MP_QSTR_INFO;
   MP_QSTR_INITIAL;
   MP_QSTR_LOW;
   MP_QSTR_LayoutObj;
+  MP_QSTR_LayoutState;
   MP_QSTR_MAX;
   MP_QSTR_MESSAGE_NAME;
   MP_QSTR_MESSAGE_WIRE_TYPE;
@@ -28,13 +31,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_SWIPE_RIGHT;
   MP_QSTR_SWIPE_UP;
   MP_QSTR_TR;
+  MP_QSTR_TRANSITIONING;
   MP_QSTR_TranslationsHeader;
   MP_QSTR___del__;
   MP_QSTR___dict__;
   MP_QSTR___name__;
   MP_QSTR_account;
   MP_QSTR_account_items;
-  MP_QSTR_account_label;
   MP_QSTR_account_path;
   MP_QSTR_accounts;
   MP_QSTR_action;
@@ -64,12 +67,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_qr;
   MP_QSTR_address_title;
   MP_QSTR_allow_cancel;
-  MP_QSTR_altcoin_tx_summary;
   MP_QSTR_amount;
   MP_QSTR_amount_change;
+  MP_QSTR_amount_label;
   MP_QSTR_amount_new;
   MP_QSTR_amount_title;
-  MP_QSTR_amount_value;
   MP_QSTR_app_name;
   MP_QSTR_area_bytesize;
   MP_QSTR_attach_timer_fn;
@@ -128,6 +130,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_button;
   MP_QSTR_button_event;
   MP_QSTR_button_request;
+  MP_QSTR_button_style_confirm;
   MP_QSTR_buttons__abort;
   MP_QSTR_buttons__access;
   MP_QSTR_buttons__again;
@@ -166,9 +169,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_buttons__try_again;
   MP_QSTR_buttons__turn_off;
   MP_QSTR_buttons__turn_on;
+  MP_QSTR_buttons__view_all_data;
   MP_QSTR_can_go_back;
-  MP_QSTR_cancel_arrow;
-  MP_QSTR_cancel_cross;
+  MP_QSTR_cancel;
   MP_QSTR_cancel_text;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
@@ -186,6 +189,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_address;
   MP_QSTR_confirm_backup;
   MP_QSTR_confirm_blob;
+  MP_QSTR_confirm_blob_intro;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
@@ -200,7 +204,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_properties;
   MP_QSTR_confirm_recovery;
   MP_QSTR_confirm_reset_device;
-  MP_QSTR_confirm_total;
+  MP_QSTR_confirm_summary;
   MP_QSTR_confirm_total__fee_rate;
   MP_QSTR_confirm_total__fee_rate_colon;
   MP_QSTR_confirm_total__sending_from_account;
@@ -233,12 +237,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;
   MP_QSTR_extra;
-  MP_QSTR_fee_amount;
+  MP_QSTR_extra_items;
+  MP_QSTR_extra_title;
+  MP_QSTR_fee;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
   MP_QSTR_fee_rate_amount;
-  MP_QSTR_fee_title;
-  MP_QSTR_fee_value;
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
@@ -246,14 +250,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_reset;
   MP_QSTR_flow_confirm_set_new_pin;
-  MP_QSTR_flow_confirm_summary;
   MP_QSTR_flow_continue_recovery;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
   MP_QSTR_flow_request_number;
   MP_QSTR_flow_request_passphrase;
   MP_QSTR_flow_show_share_words;
-  MP_QSTR_flow_warning_hi_prio;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
   MP_QSTR_haptic_feedback__disable;
@@ -306,6 +308,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__swipe_up;
   MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_instructions__tap_to_start;
+  MP_QSTR_instructions__view_all_data;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_joint__title;
@@ -330,6 +333,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_message;
   MP_QSTR_min_count;
   MP_QSTR_misc__decrypt_value;
+  MP_QSTR_misc__enable_labeling;
   MP_QSTR_misc__encrypt_value;
   MP_QSTR_misc__title_suite_labeling;
   MP_QSTR_modify_amount__decrease_amount;
@@ -347,6 +351,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_notification;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;
+  MP_QSTR_page_counter;
   MP_QSTR_pages;
   MP_QSTR_paint;
   MP_QSTR_passphrase__access_wallet;
@@ -572,6 +577,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__wrong_word_selected;
   MP_QSTR_reset__you_need_one_share;
   MP_QSTR_reset__your_backup_is_done;
+  MP_QSTR_return_value;
   MP_QSTR_reverse;
   MP_QSTR_rotation__change_template;
   MP_QSTR_rotation__east;
@@ -638,11 +644,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_share_words__wrote_down_all;
   MP_QSTR_show_address_details;
   MP_QSTR_show_checklist;
+  MP_QSTR_show_danger;
   MP_QSTR_show_error;
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
   MP_QSTR_show_info;
   MP_QSTR_show_info_with_cancel;
+  MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
   MP_QSTR_show_passphrase;
@@ -680,10 +688,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_time_ms;
   MP_QSTR_timer;
   MP_QSTR_title;
-  MP_QSTR_title_success;
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
-  MP_QSTR_total_label;
   MP_QSTR_total_len;
   MP_QSTR_touch_event;
   MP_QSTR_trace;
@@ -728,6 +734,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_value;
   MP_QSTR_verb;
   MP_QSTR_verb_cancel;
+  MP_QSTR_verb_info;
   MP_QSTR_verify;
   MP_QSTR_version;
   MP_QSTR_warning;
@@ -978,6 +985,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__data_size_template;
   MP_QSTR_ethereum__gas_limit;
   MP_QSTR_ethereum__gas_price;
+  MP_QSTR_ethereum__interaction_contract;
   MP_QSTR_ethereum__max_gas_price;
   MP_QSTR_ethereum__name_and_version;
   MP_QSTR_ethereum__new_contract;
@@ -996,13 +1004,16 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__staking_stake_intro;
   MP_QSTR_ethereum__staking_unstake;
   MP_QSTR_ethereum__staking_unstake_intro;
-  MP_QSTR_ethereum__title_confirm_data;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;
   MP_QSTR_ethereum__title_confirm_struct;
   MP_QSTR_ethereum__title_confirm_typed_data;
+  MP_QSTR_ethereum__title_input_data;
   MP_QSTR_ethereum__title_signing_address;
+  MP_QSTR_ethereum__token_contract;
   MP_QSTR_ethereum__units_template;
+  MP_QSTR_ethereum__unknown_contract_address;
+  MP_QSTR_ethereum__unknown_contract_address_short;
   MP_QSTR_ethereum__unknown_token;
   MP_QSTR_ethereum__valid_signature;
   MP_QSTR_fido__already_registered;

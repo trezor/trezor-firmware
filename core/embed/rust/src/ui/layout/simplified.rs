@@ -1,5 +1,5 @@
 #[cfg(feature = "button")]
-use crate::trezorhal::io::io_button_read;
+use crate::trezorhal::io::io_button_get_event;
 #[cfg(feature = "touch")]
 use crate::trezorhal::io::io_touch_get_event;
 #[cfg(feature = "button")]
@@ -15,7 +15,6 @@ use crate::ui::{
 
 use num_traits::ToPrimitive;
 
-#[cfg(feature = "new_rendering")]
 use crate::ui::{display::color::Color, shape::render_on_display};
 
 pub trait ReturnToC {
@@ -38,7 +37,7 @@ where
 }
 #[cfg(feature = "button")]
 fn button_eval() -> Option<ButtonEvent> {
-    let event = io_button_read();
+    let event = io_button_get_event();
     if event == 0 {
         return None;
     }
@@ -68,21 +67,11 @@ fn touch_eval() -> Option<TouchEvent> {
 }
 
 fn render(frame: &mut impl Component) {
-    #[cfg(not(feature = "new_rendering"))]
-    {
-        display::sync();
-        frame.paint();
-        display::refresh();
-    }
-
-    #[cfg(feature = "new_rendering")]
-    {
-        display::sync();
-        render_on_display(None, Some(Color::black()), |target| {
-            frame.render(target);
-        });
-        display::refresh();
-    }
+    display::sync();
+    render_on_display(None, Some(Color::black()), |target| {
+        frame.render(target);
+    });
+    display::refresh();
 }
 
 pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {

@@ -68,7 +68,7 @@ async def bootscreen() -> None:
                 lockscreen = Lockscreen(
                     label=storage.device.get_label(), bootscreen=True
                 )
-                await lockscreen
+                await lockscreen.get_result()
                 lockscreen.__del__()
                 await verify_user_pin()
                 storage.init_unlocked()

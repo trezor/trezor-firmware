@@ -300,8 +300,8 @@ T3B1_HASH_PARAMS = FirmwareHashParameters(
 )
 
 T3W1_HASH_PARAMS = FirmwareHashParameters(
-    hash_function=hashlib.blake2s,
-    chunk_size=1024 * 128,
+    hash_function=hashlib.sha256,
+    chunk_size=1024 * 256,
     padding_byte=None,
 )
 

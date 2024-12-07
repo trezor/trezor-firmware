@@ -13,7 +13,6 @@ pub enum BinarySelectionMsg {
 
 /// Component presenting a binary choice represented as two buttons, left and
 /// right. Both buttons are parameterized with content and style.
-#[derive(Clone)]
 pub struct BinarySelection {
     buttons_area: Rect,
     button_left: Button,
@@ -71,10 +70,6 @@ impl Component for BinarySelection {
             return Some(BinarySelectionMsg::Right);
         }
         None
-    }
-
-    fn paint(&mut self) {
-        unimplemented!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

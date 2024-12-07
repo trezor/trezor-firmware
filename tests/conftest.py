@@ -53,6 +53,11 @@ if t.TYPE_CHECKING:
 HERE = Path(__file__).resolve().parent
 CORE = HERE.parent / "core"
 
+# So that we see details of failed asserts from this module
+pytest.register_assert_rewrite("tests.common")
+pytest.register_assert_rewrite("tests.input_flows")
+pytest.register_assert_rewrite("tests.input_flows_helpers")
+
 
 def _emulator_wrapper_main_args() -> list[str]:
     """Look at TREZOR_PROFILING env variable, so that we can generate coverage reports."""
@@ -281,6 +286,7 @@ def client(
     _raw_client.reset_debug_features()
     _raw_client.open()
     try:
+        _raw_client.sync_responses()
         _raw_client.init_device()
     except Exception:
         request.session.shouldstop = "Failed to communicate with Trezor"
@@ -303,8 +309,7 @@ def client(
     if _raw_client.model is not models.T1B1:
         lang = request.session.config.getoption("lang") or "en"
         assert isinstance(lang, str)
-        if lang != "en":
-            translations.set_language(_raw_client, lang)
+        translations.set_language(_raw_client, lang)
 
     setup_params = dict(
         uninitialized=False,

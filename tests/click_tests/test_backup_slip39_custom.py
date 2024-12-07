@@ -21,6 +21,7 @@ import pytest
 from trezorlib import device, messages
 from trezorlib.debuglink import LayoutType
 
+from .. import translations as TR
 from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
 from . import reset
 
@@ -73,15 +74,20 @@ def test_backup_slip39_custom(
         groups=[(share_threshold, share_count)],
     )
 
-    # confirm backup warning
-    reset.confirm_read(debug, middle_r=True)
-
+    # confirm backup configuration
     if share_count > 1:
-        # confirm shamir warning
-        reset.confirm_read(debug, middle_r=True)
+        assert TR.regexp("reset__create_x_of_y_multi_share_backup_template").match(
+            debug.read_layout().text_content()
+        )
     else:
-        # confirm backup intro
-        reset.confirm_read(debug, middle_r=True)
+        assert TR.regexp("backup__info_single_share_backup").match(
+            debug.read_layout().text_content()
+        )
+    reset.confirm_read(debug)
+
+    # confirm backup intro
+    assert TR.reset__never_make_digital_copy in debug.read_layout().text_content()
+    reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []
     for _ in range(share_count):

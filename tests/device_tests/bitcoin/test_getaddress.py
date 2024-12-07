@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import SafetyCheckLevel
+from trezorlib.messages import MultisigPubkeysOrder, SafetyCheckLevel
 from trezorlib.tools import parse_path
 
 from ... import bip32
@@ -197,6 +197,73 @@ def test_altcoin_address_mac(client: Client):
 
 
 @pytest.mark.multisig
+@pytest.mark.models(skip="legacy", reason="Sortedmulti is not supported")
+def test_multisig_pubkeys_order(client: Client):
+    xpub_internal = btc.get_public_node(client, parse_path("m/45h/0")).xpub
+    xpub_external = btc.get_public_node(client, parse_path("m/44h/1")).xpub
+
+    multisig_unsorted_1 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_internal]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.PRESERVED,
+    )
+
+    multisig_unsorted_2 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_external]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.PRESERVED,
+    )
+
+    multisig_sorted_1 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_external]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    multisig_sorted_2 = messages.MultisigRedeemScriptType(
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_external, xpub_internal]],
+        address_n=[0, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    address_unsorted_1 = "3JpFrKHq9F2R3Kr65pXMe8M8vy4dwJj7Ci"
+    address_unsorted_2 = "3HnEADzLm88XUugzXmfkfC5Ed6PXK9AXQh"
+
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_1
+        )
+        == address_unsorted_1
+    )
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_2
+        )
+        == address_unsorted_2
+    )
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_1
+        )
+        == address_unsorted_2
+    )
+    assert (
+        btc.get_address(
+            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_2
+        )
+        == address_unsorted_2
+    )
+
+
+@pytest.mark.multisig
 def test_multisig(client: Client):
     xpubs = []
     for n in range(1, 4):
@@ -233,27 +300,22 @@ def test_multisig(client: Client):
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
 def test_multisig_missing(client: Client, show_display):
-    # Multisig with global suffix specification.
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
         btc.get_public_node(client, parse_path(f"m/44h/0h/{i}h")).node
         for i in range(1, 4)
     ]
+
+    # Multisig with global suffix specification.
     multisig1 = messages.MultisigRedeemScriptType(
         nodes=nodes, address_n=[0, 0], signatures=[b"", b"", b""], m=2
     )
 
     # Multisig with per-node suffix specification.
-    node = btc.get_public_node(
-        client, parse_path("m/44h/0h/0h/0"), coin_name="Bitcoin"
-    ).node
-
     multisig2 = messages.MultisigRedeemScriptType(
         pubkeys=[
-            messages.HDNodePathType(node=node, address_n=[1]),
-            messages.HDNodePathType(node=node, address_n=[2]),
-            messages.HDNodePathType(node=node, address_n=[3]),
+            messages.HDNodePathType(node=node, address_n=[0, 0]) for node in nodes
         ],
         signatures=[b"", b"", b""],
         m=2,
@@ -373,3 +435,51 @@ def test_crw(client: Client):
         btc.get_address(client, "Crown", parse_path("m/44h/72h/0h/0/0"))
         == "CRWYdvZM1yXMKQxeN3hRsAbwa7drfvTwys48"
     )
+
+
+@pytest.mark.multisig
+@pytest.mark.models(skip="legacy", reason="Not fixed")
+def test_multisig_different_paths(client: Client):
+    nodes = [
+        btc.get_public_node(client, parse_path(f"m/45h/{i}"), coin_name="Bitcoin").node
+        for i in range(2)
+    ]
+
+    multisig = messages.MultisigRedeemScriptType(
+        pubkeys=[
+            messages.HDNodePathType(node=node, address_n=[0, i])
+            for i, node in enumerate(nodes)
+        ],
+        signatures=[b"", b"", b""],
+        m=2,
+    )
+
+    with pytest.raises(
+        Exception, match="Using different paths for different xpubs is not allowed"
+    ):
+        with client:
+            if is_core(client):
+                IF = InputFlowConfirmAllWarnings(client)
+                client.set_input_flow(IF.get())
+            btc.get_address(
+                client,
+                "Bitcoin",
+                parse_path("m/45h/0/0/0"),
+                show_display=True,
+                multisig=multisig,
+                script_type=messages.InputScriptType.SPENDMULTISIG,
+            )
+
+    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    with client:
+        if is_core(client):
+            IF = InputFlowConfirmAllWarnings(client)
+            client.set_input_flow(IF.get())
+        btc.get_address(
+            client,
+            "Bitcoin",
+            parse_path("m/45h/0/0/0"),
+            show_display=True,
+            multisig=multisig,
+            script_type=messages.InputScriptType.SPENDMULTISIG,
+        )

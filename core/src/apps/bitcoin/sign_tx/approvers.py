@@ -227,7 +227,9 @@ class BasicApprover(Approver):
                     "Adding new OP_RETURN outputs in replacement transactions is not supported."
                 )
         elif txo.payment_req_index is None or self.show_payment_req_details:
-            source_path = tx_info.wallet_path.get_path() if tx_info else None
+            source_path = (
+                tx_info.change_detector.wallet_path.get_path() if tx_info else None
+            )
             # Ask user to confirm output, unless it is part of a payment
             # request, which gets confirmed separately.
             await helpers.confirm_output(
@@ -294,7 +296,7 @@ class BasicApprover(Approver):
         if self.has_unverified_external_input:
             await helpers.confirm_unverified_external_input()
 
-        if tx_info.wallet_path.get_path() is None:
+        if tx_info.change_detector.wallet_path.get_path() is None:
             await helpers.confirm_multiple_accounts()
 
         fee = self.total_in - self.total_out
@@ -390,7 +392,7 @@ class BasicApprover(Approver):
                     fee_rate,
                     coin,
                     amount_unit,
-                    tx_info.wallet_path.get_path(),
+                    tx_info.change_detector.wallet_path.get_path(),
                 )
             else:
                 await helpers.confirm_joint_total(spending, total, coin, amount_unit)

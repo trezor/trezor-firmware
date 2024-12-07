@@ -1,6 +1,7 @@
 # pylint: disable=E0602
 
 import os
+import shlex
 import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
@@ -8,13 +9,9 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d"]
-
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -65,38 +62,26 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
-    'embed/extmod/modtrezorcrypto/rand.c',
-    'embed/lib/buffers.c',
-    'embed/lib/colors.c',
-    'embed/lib/display_utils.c',
-    'embed/lib/error_handling.c',
-    'embed/lib/flash_utils.c',
-    'embed/lib/fonts/font_bitmap.c',
-    'embed/lib/fonts/fonts.c',
-    'embed/lib/gfx_color.c',
-    'embed/lib/gfx_bitblt_mono8.c',
-    'embed/lib/gfx_bitblt_rgb565.c',
-    'embed/lib/gfx_bitblt_rgba8888.c',
-    'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
-    'embed/lib/rsod.c',
-    'embed/lib/terminal.c',
-    'embed/lib/unit_variant.c',
+    'embed/upymod/modtrezorcrypto/rand.c',
+    'embed/gfx/bitblt/gfx_bitblt.c',
+    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/gfx/fonts/font_bitmap.c',
+    'embed/gfx/fonts/fonts.c',
+    'embed/gfx/gfx_color.c',
+    'embed/gfx/gfx_draw.c',
+    'embed/gfx/terminal.c',
+    'embed/io/display/display_utils.c',
+    'embed/util/flash/flash_utils.c',
+    'embed/util/image/image.c',
+    'embed/util/rsod/rsod.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
-
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
-    ]
-
 
 SOURCE_NANOPB = [
     'vendor/nanopb/pb_common.c',
@@ -109,7 +94,9 @@ ui.init_ui(TREZOR_MODEL, "bootloader", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATU
 env = Environment(
     ENV=os.environ,
     CFLAGS=f"{ARGUMENTS.get('CFLAGS', '')} -DPRODUCTION={int(PRODUCTION)} -DBOOTLOADER_QA={int(BOOTLOADER_QA)}",
-    CPPDEFINES_IMPLICIT=[]
+    CPPDEFINES_IMPLICIT=[],
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
     )
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
@@ -117,13 +104,13 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 FILE_SUFFIX= env.get('ENV')['SUFFIX']
 
 SOURCE_BOOTLOADER = [
-    f'embed/trezorhal/{FILE_SUFFIX}/startup_stage_1.s',
-    'embed/bootloader/header.S',
-    'embed/bootloader/bootui.c',
-    'embed/bootloader/main.c',
-    'embed/bootloader/messages.c',
-    'embed/bootloader/protob/messages.pb.c',
-    'embed/bootloader/version_check.c',
+    f'embed/sys/startup/{FILE_SUFFIX}/startup_stage_1.s',
+    'embed/projects/bootloader/header.S',
+    'embed/projects/bootloader/bootui.c',
+    'embed/projects/bootloader/main.c',
+    'embed/projects/bootloader/messages.c',
+    'embed/projects/bootloader/protob/messages.pb.c',
+    'embed/projects/bootloader/version_check.c',
 ]
 
 
@@ -145,13 +132,17 @@ env.Replace(
 
 ALLPATHS = [
         'embed/rust',
-        'embed/bootloader',
-        'embed/bootloader/nanopb',
-        'embed/bootloader/protob',
-        'embed/lib',
+        'embed/projects/bootloader',
+        'embed/projects/bootloader/nanopb',
+        'embed/projects/bootloader/protob',
+        'embed/rtl/inc',
         'embed/models',
-        'embed/trezorhal',
-        'embed/extmod/modtrezorui',
+        'embed/sys/bsp/inc',
+        'embed/gfx/inc',
+        'embed/util/translations/inc',
+        'embed/util/image/inc',
+        'embed/util/rsod/inc',
+        'embed/upymod/modtrezorui',
         'vendor/nanopb',
     ] + CPPPATH_MOD + PATH_HAL
 
@@ -217,9 +208,6 @@ def cargo_build():
     features.append("bootloader")
     features.extend(FEATURES_AVAILABLE)
 
-    if NEW_RENDERING:
-        features.append('new_rendering')
-
     cargo_opts = [
         f'--target={env.get("ENV")["RUST_TARGET"]}',
         f'--target-dir=../../build/bootloader/rust',
@@ -232,7 +220,7 @@ def cargo_build():
     bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
     build_dir = str(Dir('.').abspath)
 
-    return f'export BINDGEN_MACROS=\'{bindgen_macros}\'; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
+    return f'export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
 
 rust = env.Command(
     target=RUST_LIBPATH,
@@ -273,7 +261,7 @@ env.Depends(program_elf, rust)
 SUFFIX = '_qa' if BOOTLOADER_QA else ''
 
 BINARY_NAME = f"build/bootloader/bootloader-{models.get_model_identifier(TREZOR_MODEL)}{SUFFIX}"
-BINARY_NAME += "-" + tools.get_version('embed/bootloader/version.h')
+BINARY_NAME += "-" + tools.get_version('embed/projects/bootloader/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
 BINARY_NAME += ".bin"

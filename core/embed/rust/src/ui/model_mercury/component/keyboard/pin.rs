@@ -8,7 +8,7 @@ use crate::{
         component::{
             base::{AttachType, ComponentExt},
             text::TextStyle,
-            Component, Event, EventCtx, Label, Never, Pad, TimerToken,
+            Component, Event, EventCtx, Label, Never, Pad, Timer,
         },
         display::Font,
         event::TouchEvent,
@@ -48,6 +48,8 @@ const HEADER_PADDING: Insets = Insets::new(
     HEADER_PADDING_BOTTOM,
     HEADER_PADDING_SIDE,
 );
+
+const LAST_DIGIT_TIMEOUT_S: u32 = 1;
 
 #[derive(Default, Clone)]
 struct AttachAnimation {
@@ -256,10 +258,11 @@ pub struct PinKeyboard<'a> {
     cancel_btn: Button,
     confirm_btn: Button,
     digit_btns: [(Button, usize); DIGIT_COUNT],
-    warning_timer: Option<TimerToken>,
+    warning_timer: Timer,
     attach_animation: AttachAnimation,
     close_animation: CloseAnimation,
     close_confirm: bool,
+    timeout_timer: Timer,
 }
 
 impl<'a> PinKeyboard<'a> {
@@ -295,10 +298,11 @@ impl<'a> PinKeyboard<'a> {
                 .styled(theme::button_pin_confirm())
                 .initially_enabled(false),
             digit_btns: Self::generate_digit_buttons(),
-            warning_timer: None,
+            warning_timer: Timer::new(),
             attach_animation: AttachAnimation::default(),
             close_animation: CloseAnimation::default(),
             close_confirm: false,
+            timeout_timer: Timer::new(),
         }
     }
 
@@ -417,12 +421,18 @@ impl Component for PinKeyboard<'_> {
         match event {
             // Set up timer to switch off warning prompt.
             Event::Attach(_) if self.major_warning.is_some() => {
-                self.warning_timer = Some(ctx.request_timer(Duration::from_secs(2)));
+                self.warning_timer.start(ctx, Duration::from_secs(2));
             }
             // Hide warning, show major prompt.
-            Event::Timer(token) if Some(token) == self.warning_timer => {
+            Event::Timer(_) if self.warning_timer.expire(event) => {
                 self.major_warning = None;
                 self.minor_prompt.request_complete_repaint(ctx);
+                ctx.request_paint();
+            }
+            // Timeout for showing the last digit.
+            Event::Timer(_) if self.timeout_timer.expire(event) => {
+                self.textbox.display_style = DisplayStyle::Dots;
+                self.textbox.request_complete_repaint(ctx);
                 ctx.request_paint();
             }
             _ => {}
@@ -470,15 +480,16 @@ impl Component for PinKeyboard<'_> {
                         self.textbox.push(ctx, text);
                     });
                     self.pin_modified(ctx);
+                    self.timeout_timer
+                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+                    self.textbox.display_style = DisplayStyle::LastDigit;
+                    self.textbox.request_complete_repaint(ctx);
+                    ctx.request_paint();
                     return None;
                 }
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -528,7 +539,15 @@ struct PinDots {
     pad: Pad,
     style: TextStyle,
     digits: ShortString,
-    display_digits: bool,
+    display_style: DisplayStyle,
+}
+
+#[derive(PartialEq, Debug, Copy, Clone)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+enum DisplayStyle {
+    Dots,
+    Digits,
+    LastDigit,
 }
 
 impl PinDots {
@@ -542,7 +561,7 @@ impl PinDots {
             pad: Pad::with_background(style.background_color),
             style,
             digits: ShortString::new(),
-            display_digits: false,
+            display_style: DisplayStyle::Dots,
         }
     }
 
@@ -604,7 +623,7 @@ impl PinDots {
         }
     }
 
-    fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+    fn render_dots<'s>(&self, last_digit: bool, area: Rect, target: &mut impl Renderer<'s>) {
         let mut cursor = area.left_center();
 
         let digits = self.digits.len();
@@ -638,12 +657,27 @@ impl PinDots {
         }
 
         // Draw a dot for each PIN digit.
-        for _ in digit_idx..dots_visible {
+        for _ in digit_idx..dots_visible - 1 {
             shape::ToifImage::new(cursor, theme::ICON_PIN_BULLET.toif)
                 .with_align(Alignment2D::CENTER_LEFT)
                 .with_fg(self.style.text_color)
                 .render(target);
             cursor.x += step;
+        }
+
+        if last_digit && digits > 0 {
+            let last = &self.digits[(digits - 1)..digits];
+            cursor.y = area.left_center().y + (Font::MONO.visible_text_height("1") / 2);
+            shape::Text::new(cursor, last)
+                .with_align(Alignment::Start)
+                .with_font(Font::MONO)
+                .with_fg(self.style.text_color)
+                .render(target);
+        } else {
+            shape::ToifImage::new(cursor, theme::ICON_PIN_BULLET.toif)
+                .with_align(Alignment2D::CENTER_LEFT)
+                .with_fg(self.style.text_color)
+                .render(target);
         }
     }
 }
@@ -661,14 +695,15 @@ impl Component for PinDots {
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
                 if self.area.contains(pos) {
-                    self.display_digits = true;
+                    self.display_style = DisplayStyle::Digits;
                     self.pad.clear();
                     ctx.request_paint();
                 };
                 None
             }
             Event::Touch(TouchEvent::TouchEnd(_)) => {
-                if mem::replace(&mut self.display_digits, false) {
+                if mem::replace(&mut self.display_style, DisplayStyle::Dots) == DisplayStyle::Digits
+                {
                     self.pad.clear();
                     ctx.request_paint();
                 };
@@ -678,17 +713,13 @@ impl Component for PinDots {
         }
     }
 
-    fn paint(&mut self) {
-        // TODO: remove when ui-t3t1 done
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let dot_area = self.area.inset(HEADER_PADDING);
         self.pad.render(target);
-        if self.display_digits {
-            self.render_digits(dot_area, target)
-        } else {
-            self.render_dots(dot_area, target)
+        match self.display_style {
+            DisplayStyle::Digits => self.render_digits(dot_area, target),
+            DisplayStyle::Dots => self.render_dots(false, dot_area, target),
+            DisplayStyle::LastDigit => self.render_dots(true, dot_area, target),
         }
     }
 }
@@ -707,8 +738,9 @@ impl crate::trace::Trace for PinKeyboard<'_> {
                 });
             }
         }
+        let display_style = uformat!("{:?}", self.textbox.display_style);
         t.string("digits_order", digits_order.as_str().into());
         t.string("pin", self.textbox.pin().into());
-        t.bool("display_digits", self.textbox.display_digits);
+        t.string("display_style", display_style.as_str().into());
     }
 }

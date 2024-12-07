@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor import utils
@@ -11,9 +12,6 @@ if not utils.BITCOIN_ONLY:
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestMoneroSerializer(unittest.TestCase):
-    def __init__(self, *args, **kwargs):
-        super(TestMoneroSerializer, self).__init__(*args, **kwargs)
-
     def test_varint(self):
         """
         Var int

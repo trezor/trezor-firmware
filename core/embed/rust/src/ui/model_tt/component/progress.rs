@@ -13,7 +13,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
-        display::{self, Font, LOADER_MAX},
+        display::{Font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
         model_tt::constant,
         shape::Renderer,
@@ -88,25 +88,11 @@ impl Component for Progress {
                     }
                 });
             }
+        } else {
+            self.title.event(ctx, event);
+            self.description.event(ctx, event);
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.title.paint();
-        if self.indeterminate {
-            display::loader_indeterminate(
-                self.value,
-                self.loader_y_offset,
-                theme::FG,
-                theme::BG,
-                None,
-            );
-        } else {
-            display::loader(self.value, self.loader_y_offset, theme::FG, theme::BG, None);
-        }
-        self.description_pad.paint();
-        self.description.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

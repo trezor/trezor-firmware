@@ -1,6 +1,5 @@
 use crate::{
     error,
-    micropython::{map::Map, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -14,7 +13,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
-        layout::obj::LayoutObj,
     },
 };
 
@@ -65,82 +63,75 @@ impl FlowController for PromptBackup {
     }
 }
 
-#[allow(clippy::not_unsafe_ptr_arg_deref)]
-pub extern "C" fn new_prompt_backup(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, PromptBackup::new_obj) }
-}
+pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
+    let title: TString = TR::backup__title_create_wallet_backup.into();
+    let text_intro: TString = TR::backup__it_should_be_backed_up.into();
 
-impl PromptBackup {
-    fn new_obj(_args: &[Obj], _kwargs: &Map) -> Result<Obj, error::Error> {
-        let title: TString = TR::backup__title_create_wallet_backup.into();
-        let text_intro: TString = TR::backup__it_should_be_backed_up.into();
-
-        let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text_intro));
-        let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
-            .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_swipe(Direction::Up, SwipeSettings::default())
-            .with_swipe(Direction::Left, SwipeSettings::default())
-            .map(|msg| match msg {
-                FrameMsg::Button(bm) => Some(bm),
-                _ => None,
-            });
-
-        let content_menu = Frame::left_aligned(
-            "".into(),
-            VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
-        )
-        .with_cancel_button()
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-            FrameMsg::Button(_) => None,
-        });
-
-        let paragraphs_skip_intro = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_WARNING, TR::words__not_recommended),
-            Paragraph::new(
-                &theme::TEXT_MAIN_GREY_LIGHT,
-                TR::backup__create_backup_to_prevent_loss,
-            ),
-        ])
-        .into_paragraphs();
-        let content_skip_intro = Frame::left_aligned(
-            TR::backup__title_skip.into(),
-            SwipeContent::new(paragraphs_skip_intro),
-        )
-        .with_cancel_button()
-        .with_footer(
-            TR::instructions__swipe_up.into(),
-            Some(TR::words__continue_anyway_question.into()),
-        )
+    let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text_intro));
+    let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
+        .with_menu_button()
+        .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(Direction::Up, SwipeSettings::default())
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
+        .with_swipe(Direction::Left, SwipeSettings::default())
         .map(|msg| match msg {
-            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
+            FrameMsg::Button(bm) => Some(bm),
             _ => None,
         });
 
-        let content_skip_confirm = Frame::left_aligned(
-            TR::backup__title_skip.into(),
-            SwipeContent::new(PromptScreen::new_tap_to_cancel()),
-        )
-        .with_cancel_button()
-        .with_footer(TR::instructions__tap_to_confirm.into(), None)
-        .with_swipe(Direction::Down, SwipeSettings::default())
-        .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-            _ => None,
-        });
+    let content_menu = Frame::left_aligned(
+        "".into(),
+        VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::backup__title_skip.into()),
+    )
+    .with_cancel_button()
+    .with_swipe(Direction::Right, SwipeSettings::immediate())
+    .map(|msg| match msg {
+        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
+        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
+        FrameMsg::Button(_) => None,
+    });
 
-        let res = SwipeFlow::new(&PromptBackup::Intro)?
-            .with_page(&PromptBackup::Intro, content_intro)?
-            .with_page(&PromptBackup::Menu, content_menu)?
-            .with_page(&PromptBackup::SkipBackupIntro, content_skip_intro)?
-            .with_page(&PromptBackup::SkipBackupConfirm, content_skip_confirm)?;
-        Ok(LayoutObj::new(res)?.into())
-    }
+    let paragraphs_skip_intro = ParagraphVecShort::from_iter([
+        Paragraph::new(&theme::TEXT_WARNING, TR::words__not_recommended),
+        Paragraph::new(
+            &theme::TEXT_MAIN_GREY_LIGHT,
+            TR::backup__create_backup_to_prevent_loss,
+        ),
+    ])
+    .into_paragraphs();
+    let content_skip_intro = Frame::left_aligned(
+        TR::backup__title_skip.into(),
+        SwipeContent::new(paragraphs_skip_intro),
+    )
+    .with_cancel_button()
+    .with_footer(
+        TR::instructions__swipe_up.into(),
+        Some(TR::words__continue_anyway_question.into()),
+    )
+    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipe(Direction::Right, SwipeSettings::immediate())
+    .map(|msg| match msg {
+        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
+        _ => None,
+    });
+
+    let content_skip_confirm = Frame::left_aligned(
+        TR::backup__title_skip.into(),
+        SwipeContent::new(PromptScreen::new_tap_to_cancel()),
+    )
+    .with_cancel_button()
+    .with_footer(TR::instructions__tap_to_confirm.into(), None)
+    .with_swipe(Direction::Down, SwipeSettings::default())
+    .with_swipe(Direction::Right, SwipeSettings::immediate())
+    .map(|msg| match msg {
+        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
+        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
+        _ => None,
+    });
+
+    let res = SwipeFlow::new(&PromptBackup::Intro)?
+        .with_page(&PromptBackup::Intro, content_intro)?
+        .with_page(&PromptBackup::Menu, content_menu)?
+        .with_page(&PromptBackup::SkipBackupIntro, content_skip_intro)?
+        .with_page(&PromptBackup::SkipBackupConfirm, content_skip_confirm)?;
+    Ok(res)
 }

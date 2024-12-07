@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 import storage
@@ -174,19 +175,19 @@ class TestSlip39(unittest.TestCase):
         storage.recovery.set_in_progress(True)
 
         words = MNEMONIC_SLIP39_BASIC_20_3of6[0]
-        secret, share = process_slip39(words)
+        secret, _ = process_slip39(words)
         self.assertIsNone(secret)
 
         # same mnemonic
         words = MNEMONIC_SLIP39_BASIC_20_3of6[0]
         with self.assertRaises(RuntimeError):
-            secret, share = process_slip39(words)
+            secret, _ = process_slip39(words)
             self.assertIsNone(secret)
 
         # identifier mismatch
         words = MNEMONIC_SLIP39_ADVANCED_20[0]
         with self.assertRaises(RuntimeError):
-            secret, share = process_slip39(words)
+            secret, _ = process_slip39(words)
             self.assertIsNone(secret)
 
         # same identifier but different group settings
@@ -199,7 +200,7 @@ class TestSlip39(unittest.TestCase):
         w[19] = "merchant"
         words = " ".join(w)
         with self.assertRaises(RuntimeError):
-            secret, share = process_slip39(words)
+            secret, _ = process_slip39(words)
             self.assertIsNone(secret)
 
     @mock_storage
@@ -217,11 +218,11 @@ class TestSlip39(unittest.TestCase):
         check(BackupType.Bip39, ["ocean"])
 
         # let's store two shares in the storage
-        secret, share = process_slip39(
+        secret, _ = process_slip39(
             "trash smug adjust ambition criminal prisoner security math cover pecan response pharmacy center criminal salary elbow bracelet lunar briefing dragon"
         )
         self.assertIsNone(secret)
-        secret, share = process_slip39(
+        secret, _ = process_slip39(
             "trash smug adjust aide benefit temple round clogs devote prevent type cards clogs plastic aspect paper behavior lunar custody intimate"
         )
         self.assertIsNone(secret)
@@ -243,11 +244,11 @@ class TestSlip39(unittest.TestCase):
             check(BackupType.Slip39_Advanced, ["trash", "smug", "adjust", "ambition"])
 
         # Let's store two more. The group is 4/6 so this group is now complete.
-        secret, share = process_slip39(
+        secret, _ = process_slip39(
             "trash smug adjust arena beard quick language program true hush amount round geology should training practice language diet order ruin"
         )
         self.assertIsNone(secret)
-        secret, share = process_slip39(
+        secret, _ = process_slip39(
             "trash smug adjust beam brave sack magazine radar toxic emission domestic cradle vocal petition mule toxic acid hobo welcome downtown"
         )
         self.assertIsNone(secret)

@@ -26,6 +26,7 @@ from ...input_flows import (
     InputFlowSlip39AdvancedRecovery,
     InputFlowSlip39AdvancedResetRecovery,
 )
+from ...translations import set_language
 
 
 @pytest.mark.models("core")
@@ -49,7 +50,10 @@ def test_reset_recovery(client: Client):
         + mnemonics[22:25],
     ]
     for combination in test_combinations:
+        lang = client.features.language or "en"
         device.wipe(client)
+        set_language(client, lang[:2])
+
         recover(client, combination)
         address_after = btc.get_address(
             client, "Bitcoin", parse_path("m/44h/0h/0h/0/0")

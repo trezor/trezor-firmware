@@ -62,12 +62,20 @@ def test_reset_slip39_advanced(
     reset.confirm_new_wallet(debug)
 
     # confirm back up
+    # TR.assert_in_multiple(
+    #     debug.read_layout().text_content(),
+    #     ["backup__it_should_be_backed_up", "backup__it_should_be_backed_up_now"],
+    # )
     reset.confirm_read(debug)
 
     # confirm backup intro
+    # TR.assert_in(debug.read_layout().text_content(), "backup__info_multi_share_backup")
     reset.confirm_read(debug)
 
     # confirm checklist
+    # TR.assert_in(
+    #     debug.read_layout().text_content(), "reset__slip39_checklist_num_groups"
+    # )
     reset.confirm_read(debug)
 
     # set num of groups - default is 5
@@ -79,6 +87,14 @@ def test_reset_slip39_advanced(
         reset.set_selection(debug, buttons.reset_plus(model_name), group_count - 5)
 
     # confirm checklist
+    # TR.assert_in_multiple(
+    #     debug.read_layout().text_content(),
+    #     [
+    #         "reset__slip39_checklist_set_threshold",  # basic
+    #         "reset__slip39_checklist_set_num_shares",  # advanced (model_tt, mercury)
+    #         "reset__slip39_checklist_num_shares",  # advanced (model_tr)
+    #     ],
+    # )
     reset.confirm_read(debug)
 
     # set group threshold
@@ -91,6 +107,13 @@ def test_reset_slip39_advanced(
         raise RuntimeError("not a supported combination")
 
     # confirm checklist
+    # TR.assert_in_multiple(
+    #     debug.read_layout().text_content(),
+    #     [
+    #         "reset__slip39_checklist_set_sizes",
+    #         "reset__slip39_checklist_set_sizes_longer",
+    #     ],
+    # )
     reset.confirm_read(debug)
 
     # set share num and threshold for groups
@@ -111,6 +134,7 @@ def test_reset_slip39_advanced(
             raise RuntimeError("not a supported combination")
 
     # confirm backup warning
+    # TR.assert_in(debug.read_layout().text_content(), "reset__never_make_digital_copy")
     reset.confirm_read(debug, middle_r=True)
 
     all_words: list[str] = []

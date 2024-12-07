@@ -1,4 +1,5 @@
-from common import * # isort:skip
+# flake8: noqa: F403,F405
+from common import *  # isort:skip
 
 from trezor.crypto import base32
 
@@ -25,15 +26,15 @@ class TestCryptoBase32(unittest.TestCase):
             b"zlutoucky kun upel dabelske ody",
             "PJWHK5DPOVRWW6JANN2W4IDVOBSWYIDEMFRGK3DTNNSSA33EPE======",
         ),
-        # fmt: off
-        (b"中文", "4S4K3ZUWQ4======"),    # noqa: E999
-        (b"中文1", "4S4K3ZUWQ4YQ===="),   # noqa: E999
-        (b"中文12", "4S4K3ZUWQ4YTE==="),  # noqa: E999
-        (b"aécio", "MHB2SY3JN4======"),   # noqa: E999
-        (b"𠜎", "6CQJZDQ="),              # noqa: E999
-        (b"Base64是一種基於64個可列印字元來表示二進制資料的表示方法",  # noqa: E999
-         "IJQXGZJWGTTJRL7EXCAOPKFO4WP3VZUWXQ3DJZMARPSY7L7FRCL6LDNQ4WWZPZMFQPSL5BXIUGUOPJF24S5IZ2MAWLSYRNXIWOD6NFUZ46NIJ2FBVDT2JOXGS246NM4V"),
-        # fmt: on
+        ("中文".encode(), "4S4K3ZUWQ4======"),
+        ("中文1".encode(), "4S4K3ZUWQ4YQ===="),
+        ("中文12".encode(), "4S4K3ZUWQ4YTE==="),
+        ("aécio".encode(), "MHB2SY3JN4======"),
+        ("𠜎".encode(), "6CQJZDQ="),
+        (
+            "Base64是一種基於64個可列印字元來表示二進制資料的表示方法".encode(),
+            "IJQXGZJWGTTJRL7EXCAOPKFO4WP3VZUWXQ3DJZMARPSY7L7FRCL6LDNQ4WWZPZMFQPSL5BXIUGUOPJF24S5IZ2MAWLSYRNXIWOD6NFUZ46NIJ2FBVDT2JOXGS246NM4V",
+        ),
     ]
 
     def test_encode(self):

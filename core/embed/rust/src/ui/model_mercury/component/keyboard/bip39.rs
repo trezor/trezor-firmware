@@ -93,17 +93,13 @@ impl Component for Bip39Input {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.button_suggestion.event(ctx, event);
-        if self.multi_tap.is_timeout_event(event) {
+        if self.multi_tap.timeout_event(event) {
             self.on_timeout(ctx)
         } else if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
             self.on_input_click(ctx)
         } else {
             None
         }
-    }
-
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done");
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

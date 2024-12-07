@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 import typing as t
@@ -57,7 +58,7 @@ class TestDecodeDefinition(unittest.TestCase):
 
     def test_missing_signature(self):
         payload = make_payload()
-        proof, signature = sign_payload(payload, [])
+        proof, _ = sign_payload(payload, [])
         self.assertFailed(payload + proof)
 
     def test_mangled_payload(self):
@@ -68,7 +69,7 @@ class TestDecodeDefinition(unittest.TestCase):
 
     def test_proof_length_mismatch(self):
         payload = make_payload()
-        proof, signature = sign_payload(payload, [])
+        _, signature = sign_payload(payload, [])
         bad_proof = b"\x01"
         self.assertFailed(payload + bad_proof + signature)
 
@@ -132,13 +133,13 @@ class TestEthereumDefinitions(unittest.TestCase):
             return
         if what is tokens.UNKNOWN_TOKEN:
             return
-        self.fail("Expected UNKNOWN_*, got %r" % what)
+        self.fail(f"Expected UNKNOWN_*, got {what}")
 
     def assertKnown(self, what: t.Any) -> None:
         if not EthereumNetworkInfo.is_type_of(
             what
         ) and not EthereumTokenInfo.is_type_of(what):
-            self.fail("Expected network / token info, got %r" % what)
+            self.fail(f"Expected network / token info, got {what}")
         if what is networks.UNKNOWN_NETWORK:
             self.fail("Expected known network, got UNKNOWN_NETWORK")
         if what is tokens.UNKNOWN_TOKEN:

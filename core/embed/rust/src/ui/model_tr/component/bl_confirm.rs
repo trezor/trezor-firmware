@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
-        display::{self, Color, Font},
+        display::{Color, Font},
         geometry::{Point, Rect},
         shape,
         shape::Renderer,
@@ -193,29 +193,6 @@ impl Component for Confirm<'_> {
                 _ => None,
             }
         }
-    }
-
-    fn paint(&mut self) {
-        self.bg.paint();
-
-        let display_top_left = |text: TString| {
-            text.map(|t| {
-                display::text_top_left(Point::zero(), t, Font::BOLD, WHITE, self.bg_color)
-            });
-        };
-
-        // We are either on the info screen or on the "main" screen
-        if self.showing_info_screen {
-            if let Some(title) = self.info_title {
-                display_top_left(title);
-            }
-            self.info_text.paint();
-        } else {
-            display_top_left(self.title);
-            self.message.paint();
-            self.alert.paint();
-        }
-        self.buttons.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

@@ -36,7 +36,13 @@ try:
 except ImportError:
     PIL_AVAILABLE = False
 
-ROTATION = {"north": 0, "east": 90, "south": 180, "west": 270}
+ROTATION = {
+    "north": messages.DisplayRotation.North,
+    "east": messages.DisplayRotation.East,
+    "south": messages.DisplayRotation.South,
+    "west": messages.DisplayRotation.West,
+}
+
 SAFETY_LEVELS = {
     "strict": messages.SafetyCheckLevel.Strict,
     "prompt": messages.SafetyCheckLevel.PromptTemporarily,
@@ -261,7 +267,7 @@ def language(
 @cli.command()
 @click.argument("rotation", type=ChoiceType(ROTATION))
 @with_client
-def display_rotation(client: "TrezorClient", rotation: int) -> str:
+def display_rotation(client: "TrezorClient", rotation: messages.DisplayRotation) -> str:
     """Set display rotation.
 
     Configure display rotation for Trezor Model T. The options are

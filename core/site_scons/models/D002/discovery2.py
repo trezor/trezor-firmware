@@ -12,13 +12,12 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "D002/boards/stm32u5a9j-dk.h"
-    display = "dsi.c"
+    board = "D002/boards/stm32u5g9j-dk.h"
     hw_model = get_hw_model_as_number("D002")
     hw_revision = 0
 
-    mcu = "STM32U5A9xx"
-    linker_script = """embed/trezorhal/stm32u5/linker/u5a/{target}.ld"""
+    mcu = "STM32U5G9xx"
+    linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
 
     stm32u5_common_files(env, defines, sources, paths)
 
@@ -30,75 +29,72 @@ def configure(
     ] = "-mthumb -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16 -mtune=cortex-m33 -mcmse "
     env.get("ENV")["RUST_TARGET"] = "thumbv8m.main-none-eabihf"
 
-    defines += [mcu]
     defines += [
-        f'TREZOR_BOARD=\\"{board}\\"',
-    ]
-    defines += [
-        f"HW_MODEL={hw_model}",
-    ]
-    defines += [
-        f"HW_REVISION={hw_revision}",
+        mcu,
+        ("TREZOR_BOARD", f'"{board}"'),
+        ("HW_MODEL", str(hw_model)),
+        ("HW_REVISION", str(hw_revision)),
+        ("HSE_VALUE", "16000000"),
+        ("USE_HSE", "1"),
     ]
 
-    if "new_rendering" in features_wanted:
-        sources += [
-            "embed/trezorhal/xdisplay_legacy.c",
-            "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_driver.c",
-            "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_fb.c",
-            "embed/trezorhal/stm32u5/xdisplay/stm32u5a9j-dk/display_ltdc_dsi.c",
-        ]
-    else:
-        sources += [
-            f"embed/trezorhal/stm32u5/displays/{display}",
-        ]
+    sources += [
+        "embed/io/display/stm32u5a9j-dk/display_driver.c",
+        "embed/io/display/stm32u5a9j-dk/display_fb.c",
+        "embed/io/display/stm32u5a9j-dk/display_ltdc_dsi.c",
+    ]
+    paths += ["embed/io/display/inc"]
 
     if "input" in features_wanted:
-        sources += ["embed/trezorhal/stm32u5/i2c_bus.c"]
-        sources += ["embed/trezorhal/stm32u5/touch/sitronix.c"]
+        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+        sources += ["embed/io/touch/sitronix/sitronix.c"]
+        paths += ["embed/io/i2c_bus/inc"]
+        paths += ["embed/io/touch/inc"]
         features_available.append("touch")
-
-    # if "sd_card" in features_wanted:
-    #     sources += ['embed/trezorhal/sdcard.c', ]
-    #     sources += ['embed/extmod/modtrezorio/ff.c', ]
-    #     sources += ['embed/extmod/modtrezorio/ffunicode.c', ]
-    #     features_available.append("sd_card")
-
-    if "sbu" in features_wanted:
-        sources += [
-            "embed/trezorhal/stm32u5/sbu.c",
+        defines += [
+            ("USE_TOUCH", "1"),
+            ("USE_I2C", "1"),
         ]
-        features_available.append("sbu")
 
     if "usb" in features_wanted:
         sources += [
-            "embed/trezorhal/stm32u5/usb/usb_class_hid.c",
-            "embed/trezorhal/stm32u5/usb/usb_class_vcp.c",
-            "embed/trezorhal/stm32u5/usb/usb_class_webusb.c",
-            "embed/trezorhal/stm32u5/usb/usb.c",
-            "embed/trezorhal/stm32u5/usb/usbd_conf.c",
-            "embed/trezorhal/stm32u5/usb/usbd_core.c",
-            "embed/trezorhal/stm32u5/usb/usbd_ctlreq.c",
-            "embed/trezorhal/stm32u5/usb/usbd_ioreq.c",
+            "embed/io/usb/stm32/usb_class_hid.c",
+            "embed/io/usb/stm32/usb_class_vcp.c",
+            "embed/io/usb/stm32/usb_class_webusb.c",
+            "embed/io/usb/stm32/usb.c",
+            "embed/io/usb/stm32/usbd_conf.c",
+            "embed/io/usb/stm32/usbd_core.c",
+            "embed/io/usb/stm32/usbd_ctlreq.c",
+            "embed/io/usb/stm32/usbd_ioreq.c",
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_ll_usb.c",
         ]
         features_available.append("usb")
+        paths += ["embed/io/usb/inc"]
 
-    defines += ["USE_DMA2D", "FRAMEBUFFER", "FRAMEBUFFER32BIT", "UI_COLOR_32BIT"]
-    if "new_rendering" in features_wanted:
-        sources += ["embed/trezorhal/stm32u5/dma2d_bitblt.c"]
-    else:
-        sources += ["embed/trezorhal/stm32u5/dma2d.c"]
+    defines += [
+        "USE_DMA2D",
+        ("UI_COLOR_32BIT", "1"),
+        ("USE_RGB_COLORS", "1"),
+    ]
+
+    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+
     features_available.append("dma2d")
-    features_available.append("framebuffer")
-    features_available.append("framebuffer32bit")
     features_available.append("ui_color_32bit")
 
-    if "new_rendering" in features_wanted:
-        defines += ["XFRAMEBUFFER"]
-        defines += ["DISPLAY_RGBA8888"]
-        features_available.append("xframebuffer")
-        features_available.append("display_rgba8888")
+    defines += ["FRAMEBUFFER"]
+    defines += ["DISPLAY_RGBA8888"]
+    features_available.append("framebuffer")
+    features_available.append("display_rgba8888")
+
+    defines += [
+        "USE_HASH_PROCESSOR=1",
+        "USE_STORAGE_HWKEY=1",
+        "USE_TAMPER=1",
+        "USE_FLASH_BURST=1",
+        "USE_OEM_KEYS_CHECK=1",
+        "USE_RESET_TO_BOOT=1",
+    ]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

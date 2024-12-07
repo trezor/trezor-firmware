@@ -1,9 +1,12 @@
 use crate::{
     strutil::{ShortString, TString},
+    time::Duration,
     translations::TR,
     trezorhal::random,
     ui::{
-        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        component::{
+            text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx, Timer,
+        },
         display::{Font, Icon},
         geometry::Rect,
         shape::Renderer,
@@ -51,6 +54,8 @@ const EMPTY_PIN_STR: &str = "_";
 
 const CHOICE_LENGTH: usize = 13;
 const NUMBER_START_INDEX: usize = 3;
+
+const LAST_DIGIT_TIMEOUT_S: u32 = 1;
 
 const CHOICES: [PinChoice; CHOICE_LENGTH] = [
     // DELETE should be triggerable without release (after long-press)
@@ -140,6 +145,7 @@ pub struct PinEntry<'a> {
     show_real_pin: bool,
     show_last_digit: bool,
     textbox: TextBox,
+    timeout_timer: Timer,
 }
 
 impl<'a> PinEntry<'a> {
@@ -179,6 +185,7 @@ impl<'a> PinEntry<'a> {
             show_real_pin: false,
             show_last_digit: false,
             textbox: TextBox::empty(MAX_PIN_LENGTH),
+            timeout_timer: Timer::new(),
         }
     }
 
@@ -262,17 +269,22 @@ impl Component for PinEntry<'_> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Any non-timer event when showing real PIN should hide it
-        // Same with showing last digit
-        if !matches!(event, Event::Timer(_)) {
-            if self.show_real_pin {
+        match event {
+            // Timeout for showing the last digit.
+            Event::Timer(_) if self.timeout_timer.expire(event) => {
+                if self.show_last_digit {
+                    self.show_last_digit = false;
+                    self.update(ctx)
+                }
+            }
+            // Other timers are ignored.
+            Event::Timer(_) => {}
+            // Any non-timer event when showing real PIN should hide it
+            _ if self.show_real_pin => {
                 self.show_real_pin = false;
-                self.update(ctx)
+                self.update(ctx);
             }
-            if self.show_last_digit {
-                self.show_last_digit = false;
-                self.update(ctx)
-            }
+            _ => {}
         }
 
         // Any button event will show the "real" prompt
@@ -308,18 +320,14 @@ impl Component for PinEntry<'_> {
                     self.choice_page
                         .set_page_counter(ctx, get_random_digit_position(), true);
                     self.show_last_digit = true;
+                    self.timeout_timer
+                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
                     self.update(ctx);
                 }
                 _ => {}
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.header_line.paint();
-        self.pin_line.paint();
-        self.choice_page.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

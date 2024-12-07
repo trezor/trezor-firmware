@@ -1,8 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display,
     display::{
-        toif::{image, Toif, ToifFormat},
+        toif::{Toif, ToifFormat},
         Color, Icon,
     },
     geometry::{Alignment2D, Offset, Point, Rect},
@@ -25,13 +24,6 @@ impl Image {
             area: Rect::zero(),
         }
     }
-
-    /// Display the icon with baseline Point, aligned according to the
-    /// `alignment` argument.
-    pub fn draw(&self, baseline: Point, alignment: Alignment2D) {
-        let r = Rect::snap(baseline, self.toif.size(), alignment);
-        image(self, r.center());
-    }
 }
 
 impl Component for Image {
@@ -44,10 +36,6 @@ impl Component for Image {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        self.draw(self.area.center(), Alignment2D::CENTER);
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -92,15 +80,6 @@ impl BlendedImage {
     pub fn single(icon: Icon, color: Color, area_color: Color) -> Self {
         Self::new(icon, icon, color, color, area_color)
     }
-
-    fn paint_image(&self) {
-        display::icon_over_icon(
-            None,
-            (self.bg, self.bg_top_left.into(), self.bg_color),
-            (self.fg, self.fg_offset, self.fg_color),
-            self.area_color,
-        );
-    }
 }
 
 impl Component for BlendedImage {
@@ -124,10 +103,6 @@ impl Component for BlendedImage {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        self.paint_image();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

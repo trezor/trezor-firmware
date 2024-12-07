@@ -1,6 +1,5 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad, Paginate},
-    display,
     geometry::{Offset, Point, Rect},
     shape,
     shape::Renderer,
@@ -64,45 +63,6 @@ impl ScrollBar {
 
     pub fn set_page_count(&mut self, page_count: usize) {
         self.page_count = page_count;
-    }
-
-    /// Create a (seemingly circular) dot given its top left point.
-    /// Make it full when it is active, otherwise paint just the perimeter and
-    /// leave center empty.
-    fn paint_dot(&self, dot_type: &DotType, top_right: Point) {
-        let full_square =
-            Rect::from_top_right_and_size(top_right, Offset::uniform(Self::MAX_DOT_SIZE));
-
-        match dot_type {
-            DotType::BigFull | DotType::Big => {
-                // FG - painting the full square
-                display::rect_fill(full_square, theme::FG);
-
-                // BG - erase four corners
-                display::rect_fill_corners(full_square, theme::BG);
-
-                // BG - erasing the middle when not full
-                if matches!(dot_type, DotType::Big) {
-                    display::rect_fill(full_square.shrink(1), theme::BG)
-                }
-            }
-            DotType::Middle => {
-                let middle_square = full_square.shrink(1);
-
-                // FG - painting the middle square
-                display::rect_fill(middle_square, theme::FG);
-
-                // BG - erase four corners
-                display::rect_fill_corners(middle_square, theme::BG);
-
-                // BG - erasing the middle
-                display::rect_fill(middle_square.shrink(1), theme::BG)
-            }
-            DotType::Small => {
-                // FG - painting the small square
-                display::rect_fill(full_square.shrink(2), theme::FG)
-            }
-        }
     }
 
     /// Create a (seemingly circular) dot given its top left point.
@@ -225,15 +185,6 @@ impl ScrollBar {
         dots
     }
 
-    /// Drawing the dots horizontally and aligning to the right.
-    fn paint_horizontal(&mut self) {
-        let mut top_right = self.pad.area.top_right();
-        for dot in self.get_drawable_dots().iter().rev() {
-            self.paint_dot(dot, top_right);
-            top_right.x -= Self::DOTS_INTERVAL;
-        }
-    }
-
     fn render_horizontal<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut top_right = self.pad.area.top_right();
         for dot in self.get_drawable_dots().iter().rev() {
@@ -262,18 +213,6 @@ impl Component for ScrollBar {
     }
 
     /// Displaying one dot for each page.
-    fn paint(&mut self) {
-        // Not showing the scrollbar dot when there is only one page
-        if self.page_count <= 1 {
-            return;
-        }
-
-        self.pad.clear();
-        self.pad.paint();
-        self.paint_horizontal();
-    }
-
-    /// Displaying one dot for each page.
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Not showing the scrollbar dot when there is only one page
         if self.page_count <= 1 {
@@ -286,7 +225,7 @@ impl Component for ScrollBar {
 }
 
 impl Paginate for ScrollBar {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.page_count
     }
 

@@ -80,7 +80,6 @@ PATTERN_UNCHAINED_HARDENED = (
 PATTERN_UNCHAINED_UNHARDENED = (
     "m/45'/coin_type/account/[0-1000000]/change/address_index"
 )
-PATTERN_UNCHAINED_DEPRECATED = "m/45'/coin_type'/account'/[0-1000000]/address_index"
 
 # Model 1 firmware signing.
 # 826421588 is ASCII string "T1B1" as a little-endian 32-bit integer.
@@ -138,7 +137,6 @@ def validate_path_against_script_type(
         if coin.coin_name in BITCOIN_NAMES:
             append(PATTERN_UNCHAINED_HARDENED)
             append(PATTERN_UNCHAINED_UNHARDENED)
-            append(PATTERN_UNCHAINED_DEPRECATED)
 
     elif coin.segwit and script_type == InputScriptType.SPENDP2SHWITNESS:
         append(PATTERN_BIP49)
@@ -158,6 +156,9 @@ def validate_path_against_script_type(
         if slip44 == SLIP44_BITCOIN:
             append(PATTERN_GREENADDRESS_A)
             append(PATTERN_GREENADDRESS_B)
+        if coin.coin_name in BITCOIN_NAMES and multisig:
+            append(PATTERN_UNCHAINED_HARDENED)
+            append(PATTERN_UNCHAINED_UNHARDENED)
 
     elif coin.taproot and script_type == InputScriptType.SPENDTAPROOT:
         append(PATTERN_BIP86)
@@ -204,7 +205,6 @@ def _get_schemas_for_coin(
                 PATTERN_CASA_UNHARDENED,
                 PATTERN_UNCHAINED_HARDENED,
                 PATTERN_UNCHAINED_UNHARDENED,
-                PATTERN_UNCHAINED_DEPRECATED,
             )
         )
 
@@ -342,7 +342,7 @@ class AccountType:
         require_bech32: bool,
         require_taproot: bool,
         account_level: bool = False,
-    ):
+    ) -> None:
         self.account_name = account_name
         self.pattern = pattern
         self.script_type = script_type

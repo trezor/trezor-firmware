@@ -77,11 +77,6 @@ where
         self.content.event(ctx, event)
     }
 
-    fn paint(&mut self) {
-        self.title.paint();
-        self.content.paint();
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.title.render(target);
         self.content.render(target);
@@ -92,7 +87,7 @@ impl<T> Paginate for Frame<T>
 where
     T: Component + Paginate,
 {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.content.page_count()
     }
 
@@ -196,12 +191,6 @@ where
         }
         self.title.event(ctx, event);
         msg
-    }
-
-    fn paint(&mut self) {
-        self.title.paint();
-        self.scrollbar.paint();
-        self.content.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

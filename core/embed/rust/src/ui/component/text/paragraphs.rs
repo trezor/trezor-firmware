@@ -5,9 +5,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
         display::{toif::Icon, Color, Font},
-        geometry::{
-            Alignment, Alignment2D, Dimensions, Insets, LinearPlacement, Offset, Point, Rect,
-        },
+        geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect},
         shape,
         shape::Renderer,
     },
@@ -196,24 +194,13 @@ where
         None
     }
 
-    fn paint(&mut self) {
-        Self::foreach_visible(
-            &self.source,
-            &self.visible,
-            self.offset,
-            &mut |layout, content| {
-                layout.render_text(content);
-            },
-        )
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         Self::foreach_visible(
             &self.source,
             &self.visible,
             self.offset,
             &mut |layout, content| {
-                layout.render_text2(content, target);
+                layout.render_text(content, target);
             },
         )
     }
@@ -223,7 +210,7 @@ impl<'a, T> Paginate for Paragraphs<T>
 where
     T: ParagraphSource<'a>,
 {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         // There's always at least one page.
         self.break_pages().count().max(1)
     }
@@ -387,7 +374,7 @@ struct PageOffset {
 }
 
 impl PageOffset {
-    /// Given an `PageOffset` and a `Rect` area, returns:
+    /// Given a `PageOffset` and a `Rect` area, returns:
     ///
     /// - The next offset.
     /// - Part of `area` that remains free after the current offset is rendered
@@ -649,16 +636,6 @@ where
         }
     }
 
-    fn paint_icon(&self, layout: &TextLayout, icon: Icon, offset: Offset) {
-        let top_left = Point::new(self.area.x0, layout.bounds.y0);
-        icon.draw(
-            top_left + offset,
-            Alignment2D::TOP_LEFT,
-            layout.style.text_color,
-            layout.style.background_color,
-        );
-    }
-
     fn render_numeral<'s>(
         &self,
         base_point: Point,
@@ -703,26 +680,6 @@ where
         self.paragraphs.event(ctx, event)
     }
 
-    fn paint(&mut self) {
-        self.paragraphs.paint();
-
-        let current_visible = self.current.saturating_sub(self.paragraphs.offset.par);
-        for layout in self.paragraphs.visible.iter().take(current_visible) {
-            self.paint_icon(
-                &layout.layout(&self.paragraphs.source),
-                self.icon_done,
-                self.done_offset,
-            );
-        }
-        if let Some(layout) = self.paragraphs.visible.iter().nth(current_visible) {
-            self.paint_icon(
-                &layout.layout(&self.paragraphs.source),
-                self.icon_current,
-                self.current_offset,
-            );
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.paragraphs.render(target);
         self.render_left_column(target);
@@ -733,7 +690,7 @@ impl<'a, T> Paginate for Checklist<T>
 where
     T: ParagraphSource<'a>,
 {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         1
     }
 

@@ -13,6 +13,7 @@ pub struct SwipePage<T> {
     axis: Axis,
     pages: usize,
     current: usize,
+    limit: Option<usize>,
 }
 
 impl<T: Component + Paginate> SwipePage<T> {
@@ -23,6 +24,7 @@ impl<T: Component + Paginate> SwipePage<T> {
             axis: Axis::Vertical,
             pages: 1,
             current: 0,
+            limit: None,
         }
     }
 
@@ -33,11 +35,25 @@ impl<T: Component + Paginate> SwipePage<T> {
             axis: Axis::Horizontal,
             pages: 1,
             current: 0,
+            limit: None,
         }
     }
 
     pub fn inner(&self) -> &T {
         &self.inner
+    }
+
+    pub fn with_limit(mut self, limit: Option<usize>) -> Self {
+        self.limit = limit;
+        self
+    }
+
+    pub fn page_count(&self) -> usize {
+        self.pages
+    }
+
+    pub fn current_page(&self) -> usize {
+        self.current
     }
 }
 
@@ -47,6 +63,9 @@ impl<T: Component + Paginate> Component for SwipePage<T> {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bounds = self.inner.place(bounds);
         self.pages = self.inner.page_count();
+        if let Some(limit) = self.limit {
+            self.pages = self.pages.min(limit);
+        }
         self.bounds
     }
 
@@ -80,10 +99,6 @@ impl<T: Component + Paginate> Component for SwipePage<T> {
         }
 
         self.inner.event(ctx, event)
-    }
-
-    fn paint(&mut self) {
-        self.inner.paint()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

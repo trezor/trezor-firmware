@@ -186,10 +186,6 @@ impl<'a> Component for ShareWords<'a> {
         None
     }
 
-    fn paint(&mut self) {
-        // TODO: remove when ui-t3t1 done
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // corner highlights
         let (_, top_right_shape, bot_left_shape, bot_right_shape) =

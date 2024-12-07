@@ -69,11 +69,8 @@ impl<'a> Footer<'a> {
         )
     }
 
-    pub fn with_page_counter(max_pages: u8, instruction: TString<'static>) -> Self {
-        Self::from_content(FooterContent::PageCounter(PageCounter::new(
-            max_pages,
-            instruction,
-        )))
+    pub fn with_page_counter(instruction: TString<'static>) -> Self {
+        Self::from_content(FooterContent::PageCounter(PageCounter::new(instruction)))
     }
 
     pub fn with_page_hint(
@@ -115,18 +112,18 @@ impl<'a> Footer<'a> {
         }
     }
 
-    pub fn update_page_counter(&mut self, ctx: &mut EventCtx, current: usize, max: Option<usize>) {
+    pub fn update_page_counter(&mut self, ctx: &mut EventCtx, current: usize, max: usize) {
         match &mut self.content {
             FooterContent::PageCounter(counter) => {
-                counter.update_current_page(current);
+                counter.update_current_page(current, max);
                 self.swipe_allow_down = counter.is_first_page();
                 self.swipe_allow_up = counter.is_last_page();
                 ctx.request_paint();
             }
-            FooterContent::PageHint(page_hint) => {
-                page_hint.update_current_page(current, max);
-                self.swipe_allow_down = page_hint.is_first_page();
-                self.swipe_allow_up = page_hint.is_last_page();
+            FooterContent::PageHint(hint) => {
+                hint.update_current_page(current, max);
+                self.swipe_allow_down = hint.is_first_page();
+                self.swipe_allow_up = hint.is_last_page();
                 ctx.request_paint();
             }
             _ => {
@@ -184,10 +181,6 @@ impl<'a> Component for Footer<'a> {
         };
 
         None
-    }
-
-    fn paint(&mut self) {
-        todo!("remove when ui-t3t1 done")
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -326,16 +319,17 @@ struct PageCounter {
 }
 
 impl PageCounter {
-    fn new(page_max: u8, instruction: TString<'static>) -> Self {
+    fn new(instruction: TString<'static>) -> Self {
         Self {
             instruction,
             page_curr: 0,
-            page_max,
+            page_max: 0,
             font: Font::SUB,
         }
     }
 
-    fn update_current_page(&mut self, new_value: usize) {
+    fn update_current_page(&mut self, new_value: usize, max: usize) {
+        self.page_max = max as u8;
         self.page_curr = (new_value as u8).clamp(0, self.page_max.saturating_sub(1));
     }
 
@@ -414,11 +408,9 @@ struct PageHint {
 }
 
 impl PageHint {
-    fn update_current_page(&mut self, current: usize, max: Option<usize>) {
+    fn update_current_page(&mut self, current: usize, max: usize) {
+        self.page_num = max as u8;
         self.page_curr = (current as u8).clamp(0, self.page_num.saturating_sub(1));
-        if let Some(max) = max {
-            self.page_num = max as u8;
-        }
     }
 
     fn update_max_page(&mut self, max: usize) {

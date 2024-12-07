@@ -49,6 +49,13 @@ impl FlowController for ConfirmFido {
     fn handle_swipe(&'static self, direction: Direction) -> Decision {
         match (self, direction) {
             (Self::Intro, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::Menu, Direction::Right) => {
+                if Self::single_cred() {
+                    Self::Details.swipe_right()
+                } else {
+                    Self::Intro.swipe_right()
+                }
+            }
             (Self::Intro, Direction::Up) => Self::ChooseCredential.swipe(direction),
             (Self::ChooseCredential, Direction::Down) => Self::Intro.swipe(direction),
             (Self::Details, Direction::Up) => Self::Tap.swipe(direction),
@@ -93,7 +100,7 @@ fn footer_update_fn(
 ) {
     let current_page = content.inner().inner().current_page();
     let total_pages = content.inner().inner().num_pages();
-    footer.update_page_counter(ctx, current_page, Some(total_pages));
+    footer.update_page_counter(ctx, current_page, total_pages);
 }
 
 impl ConfirmFido {
@@ -214,6 +221,6 @@ impl ConfirmFido {
             .with_page(&ConfirmFido::Details, content_details)?
             .with_page(&ConfirmFido::Tap, content_tap)?
             .with_page(&ConfirmFido::Menu, content_menu)?;
-        Ok(LayoutObj::new(res)?.into())
+        Ok(LayoutObj::new_root(res)?.into())
     }
 }

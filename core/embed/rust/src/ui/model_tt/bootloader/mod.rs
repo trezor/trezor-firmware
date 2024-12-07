@@ -31,30 +31,21 @@ use super::{
 
 use crate::ui::{ui_features::UIFeaturesBootloader, UIFeaturesCommon};
 
-#[cfg(not(feature = "new_rendering"))]
-use super::theme::BLACK;
-
-#[cfg(feature = "new_rendering")]
 use crate::ui::{
-    constant,
     display::toif::Toif,
     geometry::{Alignment, Alignment2D, Offset},
     shape,
     shape::render_on_display,
 };
 
-#[cfg(feature = "new_rendering")]
 use ufmt::uwrite;
 
-#[cfg(feature = "new_rendering")]
 use super::theme::bootloader::BLD_WARN_COLOR;
 
 use intro::Intro;
 use menu::Menu;
 
-#[cfg(feature = "new_rendering")]
 use super::cshape::{render_loader, LoaderRange};
-#[cfg(feature = "new_rendering")]
 use crate::ui::display::LOADER_MAX;
 
 pub mod intro;
@@ -68,35 +59,6 @@ const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 const SCREEN: Rect = ModelTTFeatures::SCREEN;
 
 impl ModelTTFeatures {
-    #[cfg(not(feature = "new_rendering"))]
-    fn screen_progress(
-        text: &str,
-        progress: u16,
-        initialize: bool,
-        fg_color: Color,
-        bg_color: Color,
-        icon: Option<(Icon, Color)>,
-    ) {
-        if initialize {
-            Self::fadeout();
-            display::rect_fill(SCREEN, bg_color);
-        }
-
-        display::text_center(
-            Point::new(SCREEN.width() / 2, SCREEN.height() - 45),
-            text,
-            Font::NORMAL,
-            fg_color,
-            bg_color,
-        );
-        display::loader(progress, -20, fg_color, bg_color, icon);
-        display::refresh();
-        if initialize {
-            Self::fadein();
-        }
-    }
-
-    #[cfg(feature = "new_rendering")]
     fn screen_progress(
         text: &str,
         progress: u16,
@@ -175,17 +137,6 @@ impl UIFeaturesBootloader for ModelTTFeatures {
     fn screen_welcome() {
         let mut frame = Welcome::new();
         show(&mut frame, true);
-    }
-
-    #[cfg(not(feature = "new_rendering"))]
-    fn bld_continue_label(bg_color: Color) {
-        display::text_center(
-            Point::new(SCREEN.width() / 2, SCREEN.height() - 5),
-            "click to continue ...",
-            Font::NORMAL,
-            BLD_FG,
-            bg_color,
-        );
     }
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
@@ -331,9 +282,6 @@ impl UIFeaturesBootloader for ModelTTFeatures {
             Self::fadeout();
         }
 
-        #[cfg(not(feature = "new_rendering"))]
-        display::rect_fill(SCREEN, BLACK);
-
         let mut frame = WelcomeScreen::new(true);
         show(&mut frame, false);
 
@@ -399,7 +347,6 @@ impl UIFeaturesBootloader for ModelTTFeatures {
         show(&mut frame, true);
     }
 
-    #[cfg(feature = "new_rendering")]
     fn screen_boot(
         warning: bool,
         vendor_str: Option<&str>,

@@ -8,7 +8,8 @@ import storage.device as storage_device
 from trezor import TR, config, io, log, loop, utils, wire, workflow
 from trezor.crypto import hashlib
 from trezor.crypto.curve import nist256p1
-from trezor.ui.layouts import show_error_popup
+from trezor.ui import Layout
+from trezor.ui.layouts import error_popup
 
 from apps.base import set_homescreen
 from apps.common import cbor
@@ -218,7 +219,7 @@ _last_auth_valid = False
 
 
 class CborError(Exception):
-    def __init__(self, code: int):
+    def __init__(self, code: int) -> None:
         super().__init__()
         self.code = code
 
@@ -374,6 +375,7 @@ async def _read_cmd(iface: HID) -> Cmd | None:
     desc_cont = frame_cont()
     read = loop.wait(iface.iface_num() | io.POLL_READ)
 
+    # wait for incoming command indefinitely
     buf = await read
     while True:
         ifrm = overlay_struct(bytearray(buf), desc_init)
@@ -409,9 +411,12 @@ async def _read_cmd(iface: HID) -> Cmd | None:
         else:
             data = data[:bcnt]
 
+        # set a timeout for subsequent reads
+        read.timeout_ms = _CTAP_HID_TIMEOUT_MS
         while datalen < bcnt:
-            buf = await loop.race(read, loop.sleep(_CTAP_HID_TIMEOUT_MS))
-            if not isinstance(buf, bytes):
+            try:
+                buf = await read
+            except loop.Timeout:
                 if __debug__:
                     warning(__name__, "_ERR_MSG_TIMEOUT")
                 await send_cmd(cmd_error(ifrm_cid, _ERR_MSG_TIMEOUT), iface)
@@ -494,7 +499,9 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
     if offset < datalen:
         frm = overlay_struct(buf, cont_desc)
 
-    write = loop.wait(iface.iface_num() | io.POLL_WRITE)
+    write = loop.wait(
+        iface.iface_num() | io.POLL_WRITE, timeout_ms=_CTAP_HID_TIMEOUT_MS
+    )
     while offset < datalen:
         frm.seq = seq
         copied = utils.memcpy(frm.data, 0, cmd.data, offset, datalen)
@@ -502,10 +509,7 @@ async def send_cmd(cmd: Cmd, iface: HID) -> None:
         if copied < _FRAME_CONT_SIZE:
             frm.data[copied:] = bytearray(_FRAME_CONT_SIZE - copied)
         while True:
-            ret = await loop.race(write, loop.sleep(_CTAP_HID_TIMEOUT_MS))
-            if ret is not None:
-                raise TimeoutError
-
+            await write
             if iface.write(buf) > 0:
                 break
         seq += 1
@@ -612,16 +616,36 @@ async def _confirm_fido(title: str, credential: Credential) -> bool:
         return False
 
 
+async def _show_error_popup(
+    title: str,
+    description: str,
+    subtitle: str | None = None,
+    description_param: str = "",
+    *,
+    button: str = "",
+    timeout_ms: int = 0,
+) -> None:
+    popup = error_popup(
+        title,
+        description,
+        subtitle,
+        description_param,
+        button=button,
+        timeout_ms=timeout_ms,
+    )
+    await Layout(popup).get_result()
+
+
 async def _confirm_bogus_app(title: str) -> None:
     if _last_auth_valid:
-        await show_error_popup(
+        await _show_error_popup(
             title,
             TR.fido__device_already_registered,
             TR.fido__already_registered,
             timeout_ms=_POPUP_TIMEOUT_MS,
         )
     else:
-        await show_error_popup(
+        await _show_error_popup(
             title,
             TR.fido__device_not_registered,
             TR.fido__not_registered,
@@ -838,7 +862,7 @@ class Fido2ConfirmExcluded(Fido2ConfirmMakeCredential):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_error_popup(
+        await _show_error_popup(
             TR.fido__title_register,
             TR.fido__device_already_registered_with_template,
             TR.fido__already_registered,
@@ -921,7 +945,7 @@ class Fido2ConfirmNoPin(State):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_error_popup(
+        await _show_error_popup(
             TR.fido__title_verify_user,
             TR.fido__please_enable_pin_protection,
             TR.fido__unable_to_verify_user,
@@ -944,7 +968,7 @@ class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
         await send_cmd(cmd, self.iface)
         self.finished = True
 
-        await show_error_popup(
+        await _show_error_popup(
             TR.fido__title_authenticate,
             TR.fido__not_registered_with_template,
             TR.fido__not_registered,
@@ -1056,6 +1080,7 @@ class DialogManager:
 
         try:
             while self.result is _RESULT_NONE:
+                workflow.close_others()
                 result = await self.state.confirm_dialog()
                 if isinstance(result, State):
                     self.state = result

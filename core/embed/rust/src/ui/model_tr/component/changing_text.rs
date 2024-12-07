@@ -9,7 +9,7 @@ use crate::{
     },
 };
 
-use super::{common, theme};
+use super::theme;
 
 /// Component that allows for "allocating" a standalone line of text anywhere
 /// on the screen and updating it arbitrarily - without affecting the rest
@@ -108,21 +108,11 @@ impl ChangingTextLine {
         self.font.text_width(self.text.as_ref()) <= self.pad.area.width()
     }
 
-    fn paint_left(&self) {
-        let baseline = Point::new(self.pad.area.x0, self.y_baseline());
-        common::display_left(baseline, &self.text, self.font);
-    }
-
     fn render_left<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.x0, self.y_baseline());
         shape::Text::new(baseline, self.text.as_ref())
             .with_font(self.font)
             .render(target);
-    }
-
-    fn paint_center(&self) {
-        let baseline = Point::new(self.pad.area.bottom_center().x, self.y_baseline());
-        common::display_center(baseline, &self.text, self.font);
     }
 
     fn render_center<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -133,34 +123,12 @@ impl ChangingTextLine {
             .render(target);
     }
 
-    fn paint_right(&self) {
-        let baseline = Point::new(self.pad.area.x1, self.y_baseline());
-        common::display_right(baseline, &self.text, self.font);
-    }
-
     fn render_right<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.x1, self.y_baseline());
         shape::Text::new(baseline, self.text.as_ref())
             .with_align(Alignment::End)
             .with_font(self.font)
             .render(target);
-    }
-
-    fn paint_long_content_with_ellipsis(&self) {
-        let text_to_display = long_line_content_with_ellipsis(
-            self.text.as_ref(),
-            self.ellipsis,
-            self.font,
-            self.pad.area.width(),
-        );
-
-        // Creating the notion of motion by shifting the text left and right with
-        // each new text character.
-        // (So that it is apparent for the user that the text is changing.)
-        let x_offset = if self.text.len() % 2 == 0 { 0 } else { 2 };
-
-        let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
-        common::display_left(baseline, &text_to_display, self.font);
     }
 
     fn render_long_content_with_ellipsis<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -177,7 +145,7 @@ impl ChangingTextLine {
         let x_offset = if self.text.len() % 2 == 0 { 0 } else { 2 };
 
         let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
-        shape::Text::new(baseline, self.text.as_ref())
+        shape::Text::new(baseline, &text_to_display)
             .with_font(self.font)
             .render(target);
     }
@@ -193,26 +161,6 @@ impl Component for ChangingTextLine {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        // Always re-painting from scratch.
-        // Effectively clearing the line completely
-        // when `self.show_content` is set to `false`.
-        self.pad.clear();
-        self.pad.paint();
-        if self.show_content {
-            // In the case text cannot fit, show ellipsis and its right part
-            if !self.text_fits_completely() {
-                self.paint_long_content_with_ellipsis();
-            } else {
-                match self.alignment {
-                    Alignment::Start => self.paint_left(),
-                    Alignment::Center => self.paint_center(),
-                    Alignment::End => self.paint_right(),
-                }
-            }
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

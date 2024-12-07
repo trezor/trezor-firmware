@@ -397,11 +397,8 @@ def test_hide_passphrase_from_host(client: Client):
 
         def input_flow():
             yield
-            content = client.debug.wait_layout().text_content().lower()
-            assert any(
-                (s[:50].lower() in content)
-                for s in TR.translate("passphrase__from_host_not_shown")
-            )
+            content = client.debug.read_layout().text_content().lower()
+            assert TR.passphrase__from_host_not_shown[:50].lower() in content
             if client.layout_type in (LayoutType.TT, LayoutType.Mercury):
                 client.debug.press_yes()
             elif client.layout_type is LayoutType.TR:
@@ -435,18 +432,15 @@ def test_hide_passphrase_from_host(client: Client):
 
         def input_flow():
             yield
-            TR.assert_in(
-                client.debug.wait_layout().text_content(),
-                "passphrase__next_screen_will_show_passphrase",
+            assert (
+                TR.passphrase__next_screen_will_show_passphrase
+                in client.debug.read_layout().text_content()
             )
             client.debug.press_yes()
 
             yield
-            TR.assert_equals(
-                client.debug.wait_layout().title(),
-                "passphrase__title_confirm",
-            )
-            assert passphrase in client.debug.wait_layout().text_content()
+            assert client.debug.read_layout().title() == TR.passphrase__title_confirm
+            assert passphrase in client.debug.read_layout().text_content()
             client.debug.press_yes()
 
         client.watch_layout()

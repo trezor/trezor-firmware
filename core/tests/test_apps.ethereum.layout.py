@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
@@ -8,6 +9,7 @@ if not utils.BITCOIN_ONLY:
     from apps.ethereum.tokens import UNKNOWN_TOKEN
 
     ETH = networks.by_chain_id(1)
+
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")
 class TestFormatEthereumAmount(unittest.TestCase):

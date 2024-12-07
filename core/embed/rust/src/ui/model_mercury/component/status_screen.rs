@@ -129,7 +129,6 @@ impl StatusAnimation {
 
 /// Component showing status of an operation. Most typically embedded as a
 /// content of a Frame and showing success (checkmark with a circle around).
-#[derive(Clone)]
 pub struct StatusScreen {
     area: Rect,
     icon: Icon,
@@ -140,7 +139,6 @@ pub struct StatusScreen {
     msg: Label<'static>,
 }
 
-#[derive(Clone)]
 enum DismissType {
     SwipeUp,
     Timeout(Timeout),
@@ -235,10 +233,6 @@ impl Component for StatusScreen {
         }
 
         None
-    }
-
-    fn paint(&mut self) {
-        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

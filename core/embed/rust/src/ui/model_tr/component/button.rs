@@ -4,7 +4,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never},
         constant,
-        display::{self, Color, Font, Icon},
+        display::{Color, Font, Icon},
         event::PhysicalButton,
         geometry::{Alignment2D, Offset, Point, Rect},
         shape,
@@ -28,6 +28,7 @@ impl From<PhysicalButton> for ButtonPos {
         match btn {
             PhysicalButton::Left => ButtonPos::Left,
             PhysicalButton::Right => ButtonPos::Right,
+            _ => fatal_error!("unsupported button"),
         }
     }
 }
@@ -187,80 +188,6 @@ impl Component for Button {
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         // Events are handled by `ButtonController`
         None
-    }
-
-    fn paint(&mut self) {
-        let style = self.style();
-        let fg_color = style.text_color;
-        let bg_color = fg_color.negate();
-        let area = self.get_current_area();
-        let inversed_colors = bg_color != theme::BG;
-
-        // Filling the background (with 2-pixel rounding when applicable)
-        if inversed_colors {
-            display::rect_outline_rounded(area, bg_color, fg_color, 2);
-            display::rect_fill(area.shrink(1), bg_color);
-        } else if style.with_outline {
-            display::rect_outline_rounded(area, fg_color, bg_color, 2);
-        } else {
-            display::rect_fill(area, bg_color);
-        }
-
-        // Optionally display "arms" at both sides of content - always in FG and BG
-        // colors (they are not inverted).
-        if style.with_arms {
-            theme::ICON_ARM_LEFT.draw(
-                area.left_center(),
-                Alignment2D::TOP_RIGHT,
-                theme::FG,
-                theme::BG,
-            );
-            theme::ICON_ARM_RIGHT.draw(
-                area.right_center(),
-                Alignment2D::TOP_LEFT,
-                theme::FG,
-                theme::BG,
-            );
-        }
-
-        // Painting the content
-        match &self.content {
-            ButtonContent::Text(text) => text.map(|t| {
-                display::text_left(
-                    self.get_text_baseline(style) - Offset::x(style.font.start_x_bearing(t)),
-                    t,
-                    style.font,
-                    fg_color,
-                    bg_color,
-                );
-            }),
-            ButtonContent::Icon(icon) => {
-                // Allowing for possible offset of the area from current style
-                let icon_area = area.translate(style.offset);
-                if style.with_outline {
-                    icon.draw(icon_area.center(), Alignment2D::CENTER, fg_color, bg_color);
-                } else {
-                    // Positioning the icon in the corresponding corner/center
-                    match self.pos {
-                        ButtonPos::Left => icon.draw(
-                            icon_area.bottom_left(),
-                            Alignment2D::BOTTOM_LEFT,
-                            fg_color,
-                            bg_color,
-                        ),
-                        ButtonPos::Right => icon.draw(
-                            icon_area.bottom_right(),
-                            Alignment2D::BOTTOM_RIGHT,
-                            fg_color,
-                            bg_color,
-                        ),
-                        ButtonPos::Middle => {
-                            icon.draw(icon_area.center(), Alignment2D::CENTER, fg_color, bg_color)
-                        }
-                    }
-                }
-            }
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -985,6 +912,15 @@ impl ButtonActions {
             Some(ButtonAction::Cancel),
             Some(ButtonAction::Confirm),
             Some(ButtonAction::NextPage),
+        )
+    }
+
+    /// Cancelling with left and confirming with middle
+    pub fn cancel_confirm_none() -> Self {
+        Self::new(
+            Some(ButtonAction::Cancel),
+            Some(ButtonAction::Confirm),
+            None,
         )
     }
 

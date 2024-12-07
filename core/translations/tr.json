@@ -43,7 +43,7 @@
   },
   "header": {
     "language": "tr-TR",
-    "version": "2.8.4"
+    "version": "2.8.7"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Lütfen Trezor support ile iletişime geçin:",
@@ -332,7 +332,6 @@
     "ethereum__gas_price": "Gaz fiyatı:",
     "ethereum__max_gas_price": "Maksimum gaz fiyatı:",
     "ethereum__name_and_version": "Ad ve sürüm",
-    "ethereum__new_contract": "yeni sözleşme mi?",
     "ethereum__no_message_field": "Mesaj alanı yok",
     "ethereum__priority_fee": "Öncelik ücreti:",
     "ethereum__show_full_array": "Tüm diziyi göster",
@@ -348,11 +347,11 @@
     "ethereum__staking_stake_intro": "Everstake'te ETH stake edilsin mi?",
     "ethereum__staking_unstake": "Unstake et",
     "ethereum__staking_unstake_intro": "Everstake'ten ETH unstake edilsin mi?",
-    "ethereum__title_confirm_data": "Veri̇leri̇ onayla",
     "ethereum__title_confirm_domain": "Etki̇ alanini onayla",
     "ethereum__title_confirm_message": "Mesaji onayla",
     "ethereum__title_confirm_struct": "Yapiyi onayla",
     "ethereum__title_confirm_typed_data": "Yzln veri̇yi̇ onayla",
+    "ethereum__title_input_data": "Veri̇leri̇ girdiyi",
     "ethereum__title_signing_address": "İmza adresi̇",
     "ethereum__units_template": "{0} birim",
     "ethereum__unknown_token": "Bilinmeyen token",
@@ -417,6 +416,7 @@
     "lockscreen__title_locked": "Ki̇li̇tli̇",
     "lockscreen__title_not_connected": "Bağli deği̇l",
     "misc__decrypt_value": "Değerin şifresini çöz",
+    "misc__enable_labeling": "Etiketleme etkinleştirilsin mi?",
     "misc__encrypt_value": "Değeri şifrele",
     "misc__title_suite_labeling": "Suite eti̇ketleme",
     "modify_amount__decrease_amount": "Tutarı şu kadar azalt:",
@@ -734,7 +734,7 @@
     "sign_message__bytes_template": "{0} Bayt",
     "sign_message__confirm_address": "İmza adresi̇",
     "sign_message__confirm_message": "Mesaji onayla",
-    "sign_message__message_size": "Mesaj boyutu:",
+    "sign_message__message_size": "Mesaj boyutu",
     "sign_message__verify_address": "Adresi̇ doğrula",
     "solana__account_index": "Hesap dizini",
     "solana__associated_token_account": "İlişkili token hesabı",

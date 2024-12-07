@@ -51,10 +51,8 @@ def test_repeated_backup(
 
     # confirm new wallet
     reset.confirm_new_wallet(debug)
-
     # confirm back up
     reset.confirm_read(debug)
-
     # confirm backup intro
     reset.confirm_read(debug)
 
@@ -65,34 +63,24 @@ def test_repeated_backup(
 
     # confirm checklist
     reset.confirm_read(debug)
-
     # shares=1
     reset.set_selection(debug, buttons.reset_minus(model_name), 5 - 1)
-
     # confirm checklist
     reset.confirm_read(debug)
-
     # threshold=1
     reset.set_selection(debug, buttons.reset_plus(model_name), 0)
-
     # confirm checklist
     reset.confirm_read(debug)
-
     # confirm backup warning
     reset.confirm_read(debug, middle_r=True)
-
     # read words
     initial_backup_1_of_1 = reset.read_words(debug)
-
     # confirm words
     reset.confirm_words(debug, initial_backup_1_of_1)
-
     # confirm share checked
     reset.confirm_read(debug)
-
     # confirm backup done
     reset.confirm_read(debug)
-
     # Your backup is done
     go_next(debug)
 
@@ -112,7 +100,6 @@ def test_repeated_backup(
     )
 
     recovery.confirm_recovery(debug, "recovery__title_unlock_repeated_backup")
-
     recovery.select_number_of_words(debug, num_of_words=20, unlock_repeated_backup=True)
     recovery.enter_seed(
         debug,
@@ -123,8 +110,6 @@ def test_repeated_backup(
     )
 
     # backup is enabled
-    go_next(debug)
-
     assert device_handler.result().message == "Backup unlocked"
 
     # we are now in recovery mode
@@ -136,29 +121,21 @@ def test_repeated_backup(
     assert features.recovery_status == messages.RecoveryStatus.Backup
 
     # at this point, the backup is unlocked...
+    go_next(debug)
 
     # ... so let's try to do a 2-of-3 backup
-
-    debug.wait_layout()
-
     # confirm backup intro
     reset.confirm_read(debug)
-
     # confirm checklist
     reset.confirm_read(debug)
-
     # shares=3
     reset.set_selection(debug, buttons.reset_minus(model_name), 5 - 3)
-
     # confirm checklist
     reset.confirm_read(debug)
-
     # threshold=2
     reset.set_selection(debug, buttons.reset_minus(model_name), 1)
-
     # confirm checklist
     reset.confirm_read(debug)
-
     # confirm backup warning
     reset.confirm_read(debug, middle_r=True)
 

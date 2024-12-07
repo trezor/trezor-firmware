@@ -14,9 +14,11 @@ use crate::{
         event::SwipeEvent,
         flow::{base::Decision, FlowController},
         geometry::{Direction, Rect},
-        layout::obj::ObjComponent,
+        layout::base::{Layout, LayoutState},
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
+        ui_features::ModelUI,
         util::animation_disabled,
+        UIFeaturesCommon,
     },
 };
 
@@ -102,13 +104,17 @@ pub struct SwipeFlow {
     swipe: SwipeDetect,
     /// Swipe allowed
     allow_swipe: bool,
-    /// Current internal state
-    internal_state: u16,
+    /// Current page index
+    internal_page_idx: u16,
     /// Internal pages count
     internal_pages: u16,
     /// If triggering swipe by event, make this decision instead of default
     /// after the swipe.
-    decision_override: Option<Decision>,
+    pending_decision: Option<Decision>,
+    /// Layout lifecycle state.
+    lifecycle_state: LayoutState,
+    /// Returned value from latest transition, stored as Obj.
+    returned_value: Option<Result<Obj, Error>>,
 }
 
 impl SwipeFlow {
@@ -118,9 +124,11 @@ impl SwipeFlow {
             swipe: SwipeDetect::new(),
             store: Vec::new(),
             allow_swipe: true,
-            internal_state: 0,
+            internal_page_idx: 0,
             internal_pages: 1,
-            decision_override: None,
+            pending_decision: None,
+            lifecycle_state: LayoutState::Initial,
+            returned_value: None,
         })
     }
 
@@ -147,25 +155,36 @@ impl SwipeFlow {
         &mut self.store[self.state.index()]
     }
 
-    fn goto(&mut self, ctx: &mut EventCtx, attach_type: AttachType) {
+    fn update_page_count(&mut self, attach_type: AttachType) {
+        // update page count
+        self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
+        // reset internal state:
+        self.internal_page_idx = if let Swipe(Direction::Down) = attach_type {
+            // if coming from below, set to the last page
+            self.internal_pages.saturating_sub(1)
+        } else {
+            // else reset to the first page
+            0
+        };
+    }
+
+    /// Transition to a different state.
+    ///
+    /// This is the only way to change the current flow state.
+    fn goto(&mut self, ctx: &mut EventCtx, new_state: FlowState, attach_type: AttachType) {
+        // update current page
+        self.state = new_state;
+
+        // reset and unlock swipe config
         self.swipe = SwipeDetect::new();
+        // unlock swipe events
         self.allow_swipe = true;
 
+        // send an Attach event to the new page
         self.current_page_mut()
             .event(ctx, Event::Attach(attach_type));
 
-        self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
-
-        match attach_type {
-            Swipe(Direction::Up) => {
-                self.internal_state = 0;
-            }
-            Swipe(Direction::Down) => {
-                self.internal_state = self.internal_pages.saturating_sub(1);
-            }
-            _ => {}
-        }
-
+        self.update_page_count(attach_type);
         ctx.request_paint();
     }
 
@@ -187,36 +206,39 @@ impl SwipeFlow {
         }
     }
 
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<FlowMsg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState> {
         let mut decision = Decision::Nothing;
         let mut return_transition: AttachType = AttachType::Initial;
 
+        if let Event::Attach(attach_type) = event {
+            self.update_page_count(attach_type);
+        }
+
         let mut attach = false;
 
-        let e = if self.allow_swipe {
+        let event = if self.allow_swipe {
             let page = self.current_page();
             let config = page
                 .get_swipe_config()
-                .with_pagination(self.internal_state, self.internal_pages);
-
-            self.internal_pages = page.get_internal_page_count() as u16;
+                .with_pagination(self.internal_page_idx, self.internal_pages);
 
             match self.swipe.event(ctx, event, config) {
                 Some(SwipeEvent::End(dir)) => {
-                    if let Some(override_decision) = self.decision_override.take() {
-                        decision = override_decision;
-                    } else {
-                        decision = self.handle_swipe_child(ctx, dir);
-                    }
-
                     return_transition = AttachType::Swipe(dir);
 
-                    let new_internal_state =
-                        config.paging_event(dir, self.internal_state, self.internal_pages);
-                    if new_internal_state != self.internal_state {
-                        self.internal_state = new_internal_state;
+                    let new_internal_page_idx =
+                        config.paging_event(dir, self.internal_page_idx, self.internal_pages);
+                    if new_internal_page_idx != self.internal_page_idx {
+                        // internal paging event
+                        self.internal_page_idx = new_internal_page_idx;
                         decision = Decision::Nothing;
                         attach = true;
+                    } else if let Some(override_decision) = self.pending_decision.take() {
+                        // end of simulated swipe, applying original decision
+                        decision = override_decision;
+                    } else {
+                        // normal end-of-swipe event handling
+                        decision = self.handle_swipe_child(ctx, dir);
                     }
                     Event::Swipe(SwipeEvent::End(dir))
                 }
@@ -229,12 +251,12 @@ impl SwipeFlow {
 
         match decision {
             Decision::Nothing => {
-                decision = self.handle_event_child(ctx, e);
+                decision = self.handle_event_child(ctx, event);
 
                 // when doing internal transition, pass attach event to the child after sending
                 // swipe end.
                 if attach {
-                    if let Event::Swipe(SwipeEvent::End(dir)) = e {
+                    if let Event::Swipe(SwipeEvent::End(dir)) = event {
                         self.current_page_mut()
                             .event(ctx, Event::Attach(AttachType::Swipe(dir)));
                     }
@@ -253,66 +275,63 @@ impl SwipeFlow {
 
                 if let Decision::Transition(_, Swipe(direction)) = decision {
                     if config.is_allowed(direction) {
+                        self.allow_swipe = true;
                         if !animation_disabled() {
                             self.swipe.trigger(ctx, direction, config);
-                            self.decision_override = Some(decision);
-                            decision = Decision::Nothing;
+                            self.pending_decision = Some(decision);
+                            return Some(LayoutState::Transitioning(return_transition));
                         }
-                        self.allow_swipe = true;
                     }
                 }
             }
             _ => {
                 //ignore message, we are already transitioning
-                self.current_page_mut().event(ctx, event);
+                let msg = self.current_page_mut().event(ctx, event);
+                assert!(msg.is_none());
             }
         }
 
         match decision {
             Decision::Transition(new_state, attach) => {
-                self.state = new_state;
-                self.goto(ctx, attach);
-                None
+                self.goto(ctx, new_state, attach);
+                Some(LayoutState::Attached(ctx.button_request().take()))
             }
             Decision::Return(msg) => {
                 ctx.set_transition_out(return_transition);
                 self.swipe.reset();
                 self.allow_swipe = true;
-                Some(msg)
+                self.returned_value = Some(msg.try_into());
+                Some(LayoutState::Done)
+            }
+            Decision::Nothing if matches!(event, Event::Attach(_)) => {
+                Some(LayoutState::Attached(ctx.button_request().take()))
             }
             _ => None,
         }
     }
 }
 
-/// ObjComponent implementation for SwipeFlow.
+/// Layout implementation for SwipeFlow.
 ///
-/// Instead of using the generic `impl ObjComponent for ComponentMsgObj`, we
-/// provide our own short-circuit implementation for `SwipeFlow`. This way we
-/// can completely avoid implementing `Component`. That also allows us to pass
-/// around concrete Renderers instead of having to conform to `Component`'s
-/// not-object-safe interface.
-///
-/// This implementation relies on the fact that swipe components always return
-/// `FlowMsg` as their `Component::Msg` (provided by `impl FlowComponentTrait`
-/// earlier in this file).
-#[cfg(feature = "micropython")]
-impl ObjComponent for SwipeFlow {
-    fn obj_place(&mut self, bounds: Rect) -> Rect {
+/// This way we can completely avoid implementing `Component`. That also allows
+/// us to pass around concrete Renderers instead of having to conform to
+/// `Component`'s not-object-safe interface.
+impl Layout<Result<Obj, Error>> for SwipeFlow {
+    fn place(&mut self) {
         for elem in self.store.iter_mut() {
-            elem.place(bounds);
-        }
-        bounds
-    }
-
-    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
-        match self.event(ctx, event) {
-            None => Ok(Obj::const_none()),
-            Some(msg) => msg.try_into(),
+            elem.place(ModelUI::SCREEN);
         }
     }
 
-    fn obj_paint(&mut self) {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState> {
+        self.event(ctx, event)
+    }
+
+    fn value(&self) -> Option<&Result<Obj, Error>> {
+        self.returned_value.as_ref()
+    }
+
+    fn paint(&mut self) {
         render_on_display(None, Some(Color::black()), |target| {
             self.render_state(self.state.index(), target);
         });

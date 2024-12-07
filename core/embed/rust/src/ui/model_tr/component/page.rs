@@ -21,13 +21,9 @@ where
     active_page: usize,
     content: Child<T>,
     pad: Pad,
-    /// Left button of the first screen
     cancel_btn_details: Option<ButtonDetails>,
-    /// Right button of the last screen
     confirm_btn_details: Option<ButtonDetails>,
-    /// Left button of every screen
     back_btn_details: Option<ButtonDetails>,
-    /// Right button of every screen apart the last one
     next_btn_details: Option<ButtonDetails>,
     buttons: Child<ButtonController>,
 }
@@ -123,7 +119,6 @@ where
         ButtonLayout::new(btn_left, None, btn_right)
     }
 
-    /// Get the left button details, depending whether the page is first or not.
     fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails> {
         if is_first {
             self.cancel_btn_details.clone()
@@ -132,8 +127,6 @@ where
         }
     }
 
-    /// Get the right button details, depending on whether there is a next
-    /// page.
     fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
         if has_next_page {
             self.next_btn_details.clone()
@@ -209,12 +202,6 @@ where
             return Some(PageMsg::Content(msg));
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.pad.paint();
-        self.content.paint();
-        self.buttons.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

@@ -167,6 +167,12 @@ def cli() -> None:
     type=int,
     default=2,
 )
+@click.option(
+    "-s",
+    "--multisig-sort-pubkeys",
+    is_flag=True,
+    help="Sort pubkeys lexicographically using BIP-67",
+)
 @click.option("-C", "--chunkify", is_flag=True)
 @with_client
 def get_address(
@@ -178,6 +184,7 @@ def get_address(
     multisig_xpub: List[str],
     multisig_threshold: Optional[int],
     multisig_suffix_length: int,
+    multisig_sort_pubkeys: bool,
     chunkify: bool,
 ) -> str:
     """Get address for specified path.
@@ -211,8 +218,16 @@ def get_address(
 
         multisig_suffix = address_n[-multisig_suffix_length:]
         nodes = [xpub_deserialize(x)[1] for x in multisig_xpub]
+        pubkeys_order = (
+            messages.MultisigPubkeysOrder.LEXICOGRAPHIC
+            if multisig_sort_pubkeys
+            else messages.MultisigPubkeysOrder.PRESERVED
+        )
         multisig = messages.MultisigRedeemScriptType(
-            nodes=nodes, address_n=multisig_suffix, m=multisig_threshold
+            nodes=nodes,
+            address_n=multisig_suffix,
+            m=multisig_threshold,
+            pubkeys_order=pubkeys_order,
         )
         if script_type == messages.InputScriptType.SPENDADDRESS:
             script_type = messages.InputScriptType.SPENDMULTISIG

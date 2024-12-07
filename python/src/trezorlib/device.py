@@ -43,7 +43,7 @@ def apply_settings(
     homescreen: Optional[bytes] = None,
     passphrase_always_on_device: Optional[bool] = None,
     auto_lock_delay_ms: Optional[int] = None,
-    display_rotation: Optional[int] = None,
+    display_rotation: Optional[messages.DisplayRotation] = None,
     safety_checks: Optional[messages.SafetyCheckLevel] = None,
     experimental_features: Optional[bool] = None,
     hide_passphrase_from_host: Optional[bool] = None,
@@ -175,6 +175,7 @@ def recover(
         warnings.warn(
             "Use type=RecoveryType.DryRun instead!",
             DeprecationWarning,
+            stacklevel=3,
         )
 
         if type is not None:

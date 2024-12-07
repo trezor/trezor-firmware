@@ -5,11 +5,11 @@ package hw.trezor.messages.debug;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageDebug";
 
-option (include_in_bitcoin_only) = true;
-
-import "messages.proto";
 import "messages-common.proto";
 import "messages-management.proto";
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
 
 /**
  * Request: "Press" the button on the device
@@ -51,7 +51,7 @@ message DebugLinkDecision {
 
     optional uint32 x = 4;                             // touch X coordinate
     optional uint32 y = 5;                             // touch Y coordinate
-    optional bool wait = 6;                            // wait for layout change
+    optional bool wait = 6 [deprecated=true];          // wait for layout change
     optional uint32 hold_ms = 7;                       // touch hold duration
     optional DebugPhysicalButton physical_button = 8;  // physical button press
 }
@@ -61,6 +61,7 @@ message DebugLinkDecision {
  * @end
  */
 message DebugLinkLayout {
+    option deprecated = true;
     repeated string tokens = 1;
 }
 
@@ -89,9 +90,26 @@ message DebugLinkRecordScreen {
  * @next DebugLinkState
  */
 message DebugLinkGetState {
-    optional bool wait_word_list = 1;  // Trezor T only - wait until mnemonic words are shown
-    optional bool wait_word_pos = 2;   // Trezor T only - wait until reset word position is requested
-    optional bool wait_layout = 3;     // wait until current layout changes
+    /// Wait behavior of the call.
+    enum DebugWaitType {
+        /// Respond immediately. If no layout is currently displayed, the layout
+        /// response will be empty.
+        IMMEDIATE = 0;
+        /// Wait for next layout. If a layout is displayed, waits for it to change.
+        /// If no layout is displayed, waits for one to come up.
+        NEXT_LAYOUT = 1;
+        /// Return current layout. If no layout is currently displayed, waits for
+        /// one to come up.
+        CURRENT_LAYOUT = 2;
+    }
+
+    // Trezor T < 2.6.0 only - wait until mnemonic words are shown
+    optional bool wait_word_list = 1 [deprecated=true];
+    // Trezor T < 2.6.0 only - wait until reset word position is requested
+    optional bool wait_word_pos = 2  [deprecated=true];
+    // trezor-core only - wait until current layout changes
+    // changed in 2.6.4: multiple wait types instead of true/false.
+    optional DebugWaitType wait_layout = 3 [default=IMMEDIATE];
 }
 
 /**
@@ -103,7 +121,7 @@ message DebugLinkState {
     optional string pin = 2;                                // current PIN, blank if PIN is not set/enabled
     optional string matrix = 3;                             // current PIN matrix
     optional bytes mnemonic_secret = 4;                     // current mnemonic secret
-    optional common.HDNodeType node = 5; // current BIP-32 node
+    optional common.HDNodeType node = 5;                    // current BIP-32 node
     optional bool passphrase_protection = 6;                // is node/mnemonic encrypted using passphrase?
     optional string reset_word = 7;                         // word on device display during ResetDevice workflow
     optional bytes reset_entropy = 8;                       // current entropy during ResetDevice workflow
@@ -192,6 +210,7 @@ message DebugLinkEraseSdCard {
  * @next Success
  */
 message DebugLinkWatchLayout {
+    option deprecated = true;
     optional bool watch = 1;  // if true, start watching layout.
                               // if false, stop.
 }
@@ -203,6 +222,7 @@ message DebugLinkWatchLayout {
  * @next Success
  */
 message DebugLinkResetDebugEvents {
+    option deprecated = true;
 }
 
 

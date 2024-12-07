@@ -23,22 +23,22 @@ FR_INVALID_PARAMETER: int    # (19) Given parameter is invalid
 FR_NO_SPACE: int             # (64) No space left on device
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 class FatFSError(OSError):
     pass
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 class NotMounted(FatFSError):
     pass
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 class NoFilesystem(FatFSError):
     pass
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 class FatFSFile:
     """
     Class encapsulating file
@@ -90,7 +90,7 @@ class FatFSFile:
         """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 class FatFSDir(Iterator[tuple[int, str, str]]):
     """
     Class encapsulating directory
@@ -102,77 +102,77 @@ class FatFSDir(Iterator[tuple[int, str, str]]):
         """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def open(path: str, flags: str) -> FatFSFile:
     """
     Open or create a file
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def listdir(path: str) -> FatFSDir:
     """
     List a directory (return generator)
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def mkdir(path: str, exist_ok: bool=False) -> None:
     """
     Create a sub directory
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def unlink(path: str) -> None:
     """
     Delete an existing file or directory
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def stat(path: str) -> tuple[int, str, str]:
     """
     Get file status
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def rename(oldpath: str, newpath: str) -> None:
     """
     Rename/Move a file or directory
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def mount() -> None:
     """
     Mount the SD card filesystem.
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def unmount() -> None:
     """
     Unmount the SD card filesystem.
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def is_mounted() -> bool:
-   """
-   Check if the filesystem is mounted.
-   """
+    """
+    Check if the filesystem is mounted.
+    """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def mkfs(callback: Callable[[int], None] | None = None) -> None:
     """
     Create a FAT volume on the SD card,
     """
 
 
-# extmod/modtrezorio/modtrezorio-fatfs.h
+# upymod/modtrezorio/modtrezorio-fatfs.h
 def setlabel(label: str) -> None:
     """
     Set volume label

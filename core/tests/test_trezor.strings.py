@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor import strings
@@ -43,14 +44,54 @@ class TestStrings(unittest.TestCase):
 
     def test_format_plural(self):
         VECTORS = [
-            ("You are about to sign {count} {plural}", 0, "action|actions", "You are about to sign 0 actions"),
-            ("You are about to sign {count} {plural}", 1, "action|actions", "You are about to sign 1 action"),
-            ("You are about to sign {count} {plural}", 3, "action|actions", "You are about to sign 3 actions"),
-            ("You are about to sign {count} {plural}", 15, "action|actions", "You are about to sign 15 actions"),
-            ("Chystáte se podepsat {count} {plural}", 0, "akci|akce|akcí", "Chystáte se podepsat 0 akcí"),
-            ("Chystáte se podepsat {count} {plural}", 1, "akci|akce|akcí", "Chystáte se podepsat 1 akci"),
-            ("Chystáte se podepsat {count} {plural}", 3, "akci|akce|akcí", "Chystáte se podepsat 3 akce"),
-            ("Chystáte se podepsat {count} {plural}", 15, "akci|akce|akcí", "Chystáte se podepsat 15 akcí"),
+            (
+                "You are about to sign {count} {plural}",
+                0,
+                "action|actions",
+                "You are about to sign 0 actions",
+            ),
+            (
+                "You are about to sign {count} {plural}",
+                1,
+                "action|actions",
+                "You are about to sign 1 action",
+            ),
+            (
+                "You are about to sign {count} {plural}",
+                3,
+                "action|actions",
+                "You are about to sign 3 actions",
+            ),
+            (
+                "You are about to sign {count} {plural}",
+                15,
+                "action|actions",
+                "You are about to sign 15 actions",
+            ),
+            (
+                "Chystáte se podepsat {count} {plural}",
+                0,
+                "akci|akce|akcí",
+                "Chystáte se podepsat 0 akcí",
+            ),
+            (
+                "Chystáte se podepsat {count} {plural}",
+                1,
+                "akci|akce|akcí",
+                "Chystáte se podepsat 1 akci",
+            ),
+            (
+                "Chystáte se podepsat {count} {plural}",
+                3,
+                "akci|akce|akcí",
+                "Chystáte se podepsat 3 akce",
+            ),
+            (
+                "Chystáte se podepsat {count} {plural}",
+                15,
+                "akci|akce|akcí",
+                "Chystáte se podepsat 15 akcí",
+            ),
         ]
         for v in VECTORS:
             self.assertEqual(strings.format_plural(v[0], v[1], v[2]), v[3])

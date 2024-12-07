@@ -25,7 +25,7 @@ pub enum VerticalMenuChoiceMsg {
 
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
-const MAX_ITEMS: usize = 3;
+const MENU_MAX_ITEMS: usize = 3;
 
 /// Fixed height of each menu button.
 const MENU_BUTTON_HEIGHT: i16 = 64;
@@ -33,7 +33,7 @@ const MENU_BUTTON_HEIGHT: i16 = 64;
 /// Fixed height of a separator.
 const MENU_SEP_HEIGHT: i16 = 2;
 
-type VerticalMenuButtons = Vec<Button, MAX_ITEMS>;
+type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
 
 #[derive(Default, Clone)]
 struct AttachAnimation {
@@ -167,7 +167,6 @@ impl AttachAnimation {
     }
 }
 
-#[derive(Clone)]
 pub struct VerticalMenu {
     /// buttons placed vertically from top to bottom
     buttons: VerticalMenuButtons,
@@ -181,7 +180,7 @@ impl VerticalMenu {
     fn new(buttons: VerticalMenuButtons) -> Self {
         Self {
             buttons,
-            n_items: MAX_ITEMS,
+            n_items: MENU_MAX_ITEMS,
             attach_animation: AttachAnimation::default(),
         }
     }
@@ -249,10 +248,6 @@ impl Component for VerticalMenu {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        // TODO remove when ui-t3t1 done
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -340,7 +335,7 @@ impl<F: Fn(usize) -> TString<'static>> PagedVerticalMenu<F> {
 }
 
 impl<F: Fn(usize) -> TString<'static>> Paginate for PagedVerticalMenu<F> {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.num_pages()
     }
 
@@ -376,10 +371,6 @@ impl<F: Fn(usize) -> TString<'static>> Component for PagedVerticalMenu<F> {
             ));
         }
         msg
-    }
-
-    fn paint(&mut self) {
-        // TODO remove when ui-t3t1 done
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

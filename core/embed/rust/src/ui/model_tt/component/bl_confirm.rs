@@ -32,6 +32,7 @@ const CONTENT_AREA: Rect = Rect::new(
 );
 
 #[derive(Copy, Clone, ToPrimitive)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum ConfirmMsg {
     Cancel = 1,
     Confirm = 2,
@@ -201,42 +202,6 @@ impl Component for Confirm<'_> {
             return Some(Self::Msg::Confirm);
         };
         None
-    }
-
-    fn paint(&mut self) {
-        self.bg.paint();
-        self.content_pad.paint();
-
-        if let Some(info) = self.info.as_mut() {
-            if self.show_info {
-                info.close_button.paint();
-                info.title.paint();
-                info.text.paint();
-                self.left_button.paint();
-                self.right_button.paint();
-                // short-circuit before painting the main components
-                return;
-            } else {
-                info.info_button.paint();
-                // pass through to the rest of the paint
-            }
-        }
-
-        self.message.paint();
-        self.alert.paint();
-        self.left_button.paint();
-        self.right_button.paint();
-        match &mut self.title {
-            ConfirmTitle::Text(label) => label.paint(),
-            ConfirmTitle::Icon(icon) => {
-                icon.draw(
-                    Point::new(screen().center().x, ICON_TOP),
-                    Alignment2D::TOP_CENTER,
-                    WHITE,
-                    self.bg_color,
-                );
-            }
-        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

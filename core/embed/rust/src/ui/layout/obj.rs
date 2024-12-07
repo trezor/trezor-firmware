@@ -1,14 +1,17 @@
 use core::{
     cell::{RefCell, RefMut},
     convert::{TryFrom, TryInto},
+    marker::PhantomData,
     ops::{Deref, DerefMut},
 };
+#[cfg(feature = "touch")]
 use num_traits::{FromPrimitive, ToPrimitive};
 
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
-#[cfg(feature = "new_rendering")]
+
 use crate::ui::{display::Color, shape::render_on_display};
+
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, geometry::Direction};
 use crate::{
@@ -28,12 +31,18 @@ use crate::{
     time::Duration,
     ui::{
         button_request::ButtonRequest,
-        component::{base::AttachType, Component, Event, EventCtx, Never, TimerToken},
-        constant, display,
+        component::{
+            base::{AttachType, TimerToken},
+            Component, Event, EventCtx, Never,
+        },
+        display,
         event::USBEvent,
-        geometry::Rect,
+        ui_features::ModelUI,
+        UIFeaturesCommon,
     },
 };
+
+use super::base::{Layout, LayoutState};
 
 impl AttachType {
     fn to_obj(self) -> Obj {
@@ -82,52 +91,78 @@ pub trait ComponentMsgObj: Component {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error>;
 }
 
-/// Object-safe interface between trait `Component` and MicroPython world. It
-/// converts the result of `Component::event` into `Obj` via the
-/// `ComponentMsgObj` trait, in order to easily return the value to Python. It
-/// also optionally implies `Trace` for UI debugging.
-/// Note: we need to use an object-safe trait in order to store it in a `Gc<dyn
-/// T>` field. `Component` itself is not object-safe because of `Component::Msg`
-/// associated type.
-pub trait ObjComponent: MaybeTrace {
-    fn obj_place(&mut self, bounds: Rect) -> Rect;
-    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error>;
-    fn obj_paint(&mut self);
-    fn obj_bounds(&self, _sink: &mut dyn FnMut(Rect)) {}
-}
+pub trait ComponentMaybeTrace: Component + ComponentMsgObj + MaybeTrace {}
+impl<T> ComponentMaybeTrace for T where T: Component + ComponentMsgObj + MaybeTrace {}
 
-impl<T> ObjComponent for T
+struct RootComponent<T, M>
 where
-    T: Component + ComponentMsgObj + MaybeTrace,
+    T: Component,
+    M: UIFeaturesCommon,
 {
-    fn obj_place(&mut self, bounds: Rect) -> Rect {
-        self.place(bounds)
-    }
+    inner: T,
+    returned_value: Option<Result<Obj, Error>>,
+    _features: PhantomData<M>,
+}
 
-    fn obj_event(&mut self, ctx: &mut EventCtx, event: Event) -> Result<Obj, Error> {
-        if let Some(msg) = self.event(ctx, event) {
-            self.msg_try_into_obj(msg)
-        } else {
-            Ok(Obj::const_none())
-        }
-    }
-
-    fn obj_paint(&mut self) {
-        #[cfg(not(feature = "new_rendering"))]
-        {
-            self.paint();
-        }
-
-        #[cfg(feature = "new_rendering")]
-        {
-            render_on_display(None, Some(Color::black()), |target| {
-                self.render(target);
-            });
+impl<T, M> RootComponent<T, M>
+where
+    T: ComponentMaybeTrace,
+    M: UIFeaturesCommon,
+{
+    pub fn new(component: T) -> Self {
+        Self {
+            inner: component,
+            returned_value: None,
+            _features: PhantomData,
         }
     }
 }
+
+impl<T> Layout<Result<Obj, Error>> for RootComponent<T, ModelUI>
+where
+    T: Component + ComponentMsgObj,
+{
+    fn place(&mut self) {
+        self.inner.place(ModelUI::SCREEN);
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState> {
+        if let Some(msg) = self.inner.event(ctx, event) {
+            self.returned_value = Some(self.inner.msg_try_into_obj(msg));
+            Some(LayoutState::Done)
+        } else if matches!(event, Event::Attach(_)) {
+            Some(LayoutState::Attached(ctx.button_request().take()))
+        } else {
+            None
+        }
+    }
+
+    fn value(&self) -> Option<&Result<Obj, Error>> {
+        self.returned_value.as_ref()
+    }
+
+    fn paint(&mut self) {
+        render_on_display(None, Some(Color::black()), |target| {
+            self.inner.render(target);
+        });
+    }
+}
+
+#[cfg(feature = "ui_debug")]
+impl<T> crate::trace::Trace for RootComponent<T, ModelUI>
+where
+    T: Component + crate::trace::Trace,
+{
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        self.inner.trace(t);
+    }
+}
+
+pub trait LayoutMaybeTrace: Layout<Result<Obj, Error>> + MaybeTrace {}
+impl<T> LayoutMaybeTrace for T where T: Layout<Result<Obj, Error>> + MaybeTrace {}
 
 #[derive(Copy, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 enum Repaint {
     None,
     Partial,
@@ -144,28 +179,38 @@ pub struct LayoutObj {
 }
 
 struct LayoutObjInner {
-    root: Option<GcBox<dyn ObjComponent>>,
+    root: Option<GcBox<dyn LayoutMaybeTrace>>,
     event_ctx: EventCtx,
     timer_fn: Obj,
     page_count: u16,
     repaint: Repaint,
     transition_out: AttachType,
+    button_request: Option<ButtonRequest>,
 }
 
 impl LayoutObjInner {
     /// Create a new `LayoutObj`, wrapping a root component.
     #[inline(never)]
-    pub fn new(root: impl ObjComponent + 'static) -> Result<Self, Error> {
+    pub fn new(root: impl LayoutMaybeTrace + 'static) -> Result<Self, Error> {
         let root = GcBox::new(root)?;
 
-        Ok(Self {
-            root: Some(gc::coerce!(ObjComponent, root)),
+        let mut new = Self {
+            root: Some(gc::coerce!(LayoutMaybeTrace, root)),
             event_ctx: EventCtx::new(),
             timer_fn: Obj::const_none(),
             page_count: 1,
             repaint: Repaint::Full,
             transition_out: AttachType::Initial,
-        })
+            button_request: None,
+        };
+
+        // invoke the initial placement
+        new.root_mut().place();
+        // cause a repaint pass to update the number of pages
+        let msg = new.obj_event(Event::RequestPaint);
+        assert!(matches!(msg, Ok(s) if s == Obj::const_none()));
+
+        Ok(new)
     }
 
     fn obj_delete(&mut self) {
@@ -178,24 +223,22 @@ impl LayoutObjInner {
         self.timer_fn = timer_fn;
     }
 
-    fn root(&self) -> &impl Deref<Target = dyn ObjComponent> {
+    fn root(&self) -> &impl Deref<Target = dyn LayoutMaybeTrace> {
         unwrap!(self.root.as_ref())
     }
 
-    fn root_mut(&mut self) -> &mut impl DerefMut<Target = dyn ObjComponent> {
+    fn root_mut(&mut self) -> &mut impl DerefMut<Target = dyn LayoutMaybeTrace> {
         unwrap!(self.root.as_mut())
     }
 
     fn obj_request_repaint(&mut self) {
         self.repaint = Repaint::Full;
-        let mut dummy_ctx = EventCtx::new();
-        let paint_msg = self
-            .root_mut()
-            .obj_event(&mut dummy_ctx, Event::RequestPaint);
-        // paint_msg must not be an error and it must not return a result
-        assert!(matches!(paint_msg, Ok(s) if s == Obj::const_none()));
+        let mut event_ctx = EventCtx::new();
+        let paint_msg = self.root_mut().event(&mut event_ctx, Event::RequestPaint);
+        // paint_msg must not change the state
+        assert!(paint_msg.is_none());
         // there must be no timers set
-        assert!(dummy_ctx.pop_timer().is_none());
+        assert!(event_ctx.pop_timer().is_none());
     }
 
     /// Run an event pass over the component tree. After the traversal, any
@@ -204,21 +247,32 @@ impl LayoutObjInner {
     /// an error, `Ok` with the message otherwise.
     fn obj_event(&mut self, event: Event) -> Result<Obj, Error> {
         let root = unwrap!(self.root.as_mut());
-        // Place the root component on the screen in case it was previously requested.
-        if self.event_ctx.needs_place() {
-            root.obj_place(constant::screen());
-        }
 
-        // Clear the leftover flags from the previous event pass.
+        // Get the event context ready for a new event
         self.event_ctx.clear();
 
-        // Send the event down the component tree. Bail out in case of failure.
-        let msg = root.obj_event(&mut self.event_ctx, event)?;
+        // Send the event down the component tree.
+        let msg = root.event(&mut self.event_ctx, event);
+
+        match msg {
+            Some(LayoutState::Done) => return Ok(msg.into()), // short-circuit
+            Some(LayoutState::Attached(br)) => {
+                assert!(self.button_request.is_none());
+                self.button_request = br;
+            }
+            Some(LayoutState::Transitioning(t)) => self.transition_out = t,
+            _ => (),
+        };
+
+        // Place the root component on the screen in case it was requested.
+        if self.event_ctx.needs_place() {
+            root.place();
+        }
 
         // Check if we should repaint next time
         if self.event_ctx.needs_repaint_root() {
             self.obj_request_repaint();
-        } else if self.event_ctx.needs_repaint() {
+        } else if self.event_ctx.needs_repaint() && self.repaint == Repaint::None {
             self.repaint = Repaint::Partial;
         }
 
@@ -236,34 +290,22 @@ impl LayoutObjInner {
             }
         }
 
+        // Update page count if it changed
         if let Some(count) = self.event_ctx.page_count() {
             self.page_count = count as u16;
         }
 
-        if let Some(t) = self.event_ctx.get_transition_out() {
-            self.transition_out = t;
-        }
-
-        Ok(msg)
+        Ok(msg.into())
     }
 
     /// Run a paint pass over the component tree. Returns true if any component
     /// actually requested painting since last invocation of the function.
     fn obj_paint_if_requested(&mut self) -> bool {
-        if self.repaint == Repaint::Full {
-            display::clear();
-        }
-
-        // Place the root component on the screen in case it was previously requested.
-        if self.event_ctx.needs_place() {
-            self.root_mut().obj_place(constant::screen());
-        }
-
         display::sync();
 
         if self.repaint != Repaint::None {
             self.repaint = Repaint::None;
-            self.root_mut().obj_paint();
+            self.root_mut().paint();
             true
         } else {
             false
@@ -284,10 +326,10 @@ impl LayoutObjInner {
         // For Reasons(tm), we must pass a closure in which we call `root.trace(t)`,
         // instead of passing `root` into the tracer.
 
-        // (The Reasons being, root is a `Gc<dyn ObjComponent>`, and `Gc` does not
-        // implement `Trace`, and `dyn ObjComponent` is unsized so we can't deref it to
-        // claim that it implements `Trace`, and we also can't upcast it to `&dyn Trace`
-        // because trait upcasting is unstable.
+        // (The Reasons being, root is a `Gc<dyn LayoutMaybeTrace>`, and `Gc` does not
+        // implement `Trace`, and `dyn LayoutMaybeTrace` is unsized so we can't deref it
+        // to claim that it implements `Trace`, and we also can't upcast it to
+        // `&dyn Trace` because trait upcasting is unstable.
         // Luckily, calling `root.trace()` works perfectly fine in spite of the above.)
         tracer.root(&|t| {
             self.root().trace(t);
@@ -299,7 +341,7 @@ impl LayoutObjInner {
     }
 
     fn obj_button_request(&mut self) -> Result<Obj, Error> {
-        match self.event_ctx.button_request() {
+        match self.button_request.take() {
             None => Ok(Obj::const_none()),
             Some(ButtonRequest { code, name }) => (code.num().into(), name.try_into()?).try_into(),
         }
@@ -308,11 +350,23 @@ impl LayoutObjInner {
     fn obj_get_transition_out(&self) -> Obj {
         self.transition_out.to_obj()
     }
+
+    fn obj_return_value(&self) -> Result<Obj, Error> {
+        self.root()
+            .value()
+            .cloned()
+            .unwrap_or(Ok(Obj::const_none()))
+    }
 }
 
 impl LayoutObj {
     /// Create a new `LayoutObj`, wrapping a root component.
-    pub fn new(root: impl ObjComponent + 'static) -> Result<Gc<Self>, Error> {
+    pub fn new<T: ComponentMaybeTrace + 'static>(root: T) -> Result<Gc<Self>, Error> {
+        let root_component = RootComponent::new(root);
+        Self::new_root(root_component)
+    }
+
+    pub fn new_root(root: impl LayoutMaybeTrace + 'static) -> Result<Gc<Self>, Error> {
         // SAFETY: This is a Python object and hase a base as first element
         unsafe {
             Gc::new_with_custom_finaliser(Self {
@@ -343,6 +397,7 @@ impl LayoutObj {
                 Qstr::MP_QSTR_page_count => obj_fn_1!(ui_layout_page_count).as_obj(),
                 Qstr::MP_QSTR_button_request => obj_fn_1!(ui_layout_button_request).as_obj(),
                 Qstr::MP_QSTR_get_transition_out => obj_fn_1!(ui_layout_get_transition_out).as_obj(),
+                Qstr::MP_QSTR_return_value => obj_fn_1!(ui_layout_return_value).as_obj(),
             }),
         };
         &TYPE
@@ -420,9 +475,8 @@ extern "C" fn ui_layout_attach_timer_fn(this: Obj, timer_fn: Obj, attach_type: O
 
         let msg = this
             .inner_mut()
-            .obj_event(Event::Attach(AttachType::try_from_obj(attach_type)?))?;
-        assert!(msg == Obj::const_none());
-        Ok(Obj::const_none())
+            .obj_event(Event::Attach(AttachType::try_from_obj(attach_type)?));
+        msg
     };
     unsafe { util::try_or_raise(block) }
 }
@@ -549,6 +603,15 @@ extern "C" fn ui_layout_get_transition_out(this: Obj) -> Obj {
         let this: Gc<LayoutObj> = this.try_into()?;
         let transition_out = this.inner_mut().obj_get_transition_out();
         Ok(transition_out)
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+extern "C" fn ui_layout_return_value(this: Obj) -> Obj {
+    let block = || {
+        let this: Gc<LayoutObj> = this.try_into()?;
+        let value = this.inner_mut().obj_return_value();
+        value
     };
     unsafe { util::try_or_raise(block) }
 }

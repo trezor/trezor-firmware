@@ -11,7 +11,6 @@ use super::{super::theme, BinarySelection, ButtonContent, HoldToConfirm, TapToCo
 ///     - Tap to confirm
 ///     - Hold to confirm
 ///     - Yes/No selection
-#[derive(Clone)]
 pub enum PromptScreen {
     Tap(TapToConfirm),
     Hold(HoldToConfirm),
@@ -105,10 +104,6 @@ impl Component for PromptScreen {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

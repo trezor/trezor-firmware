@@ -1,3 +1,5 @@
+pub mod base;
+
 #[cfg(feature = "micropython")]
 pub mod obj;
 

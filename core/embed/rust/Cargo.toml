@@ -15,12 +15,10 @@ micropython = []
 protobuf = ["micropython"]
 ui = []
 dma2d = []
-xframebuffer = []
+framebuffer = []
 display_mono = []
 display_rgb565 = ["ui_antialiasing"]
 display_rgba8888 = ["ui_antialiasing"]
-framebuffer = []
-framebuffer32bit = []
 ui_debug = []
 ui_antialiasing = []
 ui_blurring = []
@@ -29,14 +27,11 @@ ui_image_buffer = []
 ui_color_32bit = []
 ui_overlay = []
 ui_empty_lock = []
-new_rendering = []
 bootloader = []
 button = []
 touch = []
 clippy = []
 jpeg = []
-disp_i8080_8bit_dw = [] # write pixels directly to peripheral
-disp_i8080_16bit_dw = [] # write pixels directly to peripheral
 debug = ["ui_debug"]
 sbu = []
 haptic = []
@@ -55,7 +50,6 @@ test = [
     "debug",
     "glob",
     "micropython",
-    "new_rendering",
     "optiga",
     "protobuf",
     "touch",

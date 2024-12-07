@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor.crypto import hmac
@@ -110,7 +111,7 @@ class TestCryptoHmac(unittest.TestCase):
         # case 3
         key = b"\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa\xaa"
         x = hmac(hmac.SHA256, key)
-        for i in range(50):
+        for _ in range(50):
             x.update(b"\xdd")
         self.assertEqual(
             x.digest(),
@@ -119,7 +120,7 @@ class TestCryptoHmac(unittest.TestCase):
             ),
         )
         x = hmac(hmac.SHA512, key)
-        for i in range(50):
+        for _ in range(50):
             x.update(b"\xdd")
         self.assertEqual(
             x.digest(),
@@ -131,7 +132,7 @@ class TestCryptoHmac(unittest.TestCase):
         # case 4
         key = b"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19"
         x = hmac(hmac.SHA256, key)
-        for i in range(50):
+        for _ in range(50):
             x.update(b"\xcd")
         self.assertEqual(
             x.digest(),
@@ -140,7 +141,7 @@ class TestCryptoHmac(unittest.TestCase):
             ),
         )
         x = hmac(hmac.SHA512, key)
-        for i in range(50):
+        for _ in range(50):
             x.update(b"\xcd")
         self.assertEqual(
             x.digest(),

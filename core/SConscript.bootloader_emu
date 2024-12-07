@@ -1,12 +1,12 @@
 # pylint: disable=E0602
 
 import os
+import shlex
 import tools, models, ui
 
 TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = 'emulator'
-NEW_RENDERING = ARGUMENTS.get('NEW_RENDERING', '1') == '1' or TREZOR_MODEL in ('T3T1',)
 
 if not models.has_emulator(TREZOR_MODEL):
     # skip bootloader build
@@ -20,10 +20,7 @@ if not models.has_emulator(TREZOR_MODEL):
              )
     Return()
 
-FEATURES_WANTED = ["input", "rgb_led", "dma2d", "optiga_hal"]
-
-if NEW_RENDERING:
-    FEATURES_WANTED.append("new_rendering")
+FEATURES_WANTED = ["input", "rgb_led", "dma2d", "optiga"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -71,36 +68,26 @@ CPPPATH_MOD += [
 ]
 
 SOURCE_MOD += [
-    'embed/extmod/modtrezorcrypto/rand.c',
-    'embed/lib/colors.c',
-    'embed/lib/display_utils.c',
-    'embed/lib/error_handling.c',
-    'embed/lib/flash_utils.c',
-    'embed/lib/fonts/font_bitmap.c',
-    'embed/lib/fonts/fonts.c',
-    'embed/lib/gfx_color.c',
-    'embed/lib/gfx_bitblt_mono8.c',
-    'embed/lib/gfx_bitblt_rgb565.c',
-    'embed/lib/gfx_bitblt_rgba8888.c',
-    'embed/lib/image.c',
-    'embed/lib/mini_printf.c',
-    'embed/lib/rsod.c',
-    'embed/lib/terminal.c',
-    'embed/lib/unit_variant.c',
+    'embed/upymod/modtrezorcrypto/rand.c',
+    'embed/gfx/bitblt/gfx_bitblt.c',
+    'embed/gfx/bitblt/gfx_bitblt_mono8.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
+    'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
+    'embed/gfx/fonts/font_bitmap.c',
+    'embed/gfx/fonts/fonts.c',
+    'embed/gfx/gfx_color.c',
+    'embed/gfx/gfx_draw.c',
+    'embed/gfx/terminal.c',
+    'embed/io/display/display_utils.c',
+    'embed/util/flash/flash_utils.c',
+    'embed/util/image/image.c',
+    'embed/util/rsod/rsod.c',
+    'embed/rtl/error_handling.c',
+    'embed/rtl/mini_printf.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
     'vendor/trezor-storage/flash_area.c',
-]
-
-if NEW_RENDERING:
-    CPPDEFINES_MOD += ['NEW_RENDERING']
-    SOURCE_MOD += [
-        'embed/lib/gfx_draw.c',
-    ]
-else:
-    SOURCE_MOD += [
-        'embed/lib/display_draw.c',
 ]
 
 SOURCE_NANOPB = [
@@ -110,47 +97,43 @@ SOURCE_NANOPB = [
 ]
 
 SOURCE_BOOTLOADER = [
-    'embed/bootloader/bootui.c',
-    'embed/bootloader/main.c',
-    'embed/bootloader/messages.c',
-    'embed/bootloader/emulator.c',
-    'embed/bootloader/version_check.c',
-    'embed/bootloader/protob/messages.pb.c',
+    'embed/projects/bootloader/bootui.c',
+    'embed/projects/bootloader/main.c',
+    'embed/projects/bootloader/messages.c',
+    'embed/projects/bootloader/emulator.c',
+    'embed/projects/bootloader/version_check.c',
+    'embed/projects/bootloader/protob/messages.pb.c',
 ]
 
 SOURCE_TREZORHAL = [
-    'embed/trezorhal/unix/bootutils.c',
-    'embed/trezorhal/unix/common.c',
-    'embed/trezorhal/unix/flash.c',
-    'embed/trezorhal/unix/flash_otp.c',
-    'embed/trezorhal/unix/mpu.c',
-    'embed/trezorhal/unix/monoctr.c',
-    'embed/trezorhal/unix/random_delays.c',
-    'embed/trezorhal/unix/rng.c',
-    'embed/trezorhal/unix/secret.c',
-    'embed/trezorhal/unix/system.c',
-    'embed/trezorhal/unix/systick.c',
-    'embed/trezorhal/unix/systimer.c',
-    'embed/trezorhal/unix/usb.c',
+    'embed/io/display/unix/display_driver.c',
+    'embed/io/usb/unix/usb.c',
+    'embed/sec/monoctr/unix/monoctr.c',
+    'embed/sec/random_delays/unix/random_delays.c',
+    'embed/sec/rng/unix/rng.c',
+    'embed/sec/secret/unix/secret.c',
+    'embed/sys/mpu/unix/mpu.c',
+    'embed/sys/startup/unix/bootutils.c',
+    'embed/sys/task/unix/system.c',
+    'embed/sys/time/unix/systick.c',
+    'embed/sys/time/unix/systimer.c',
+    'embed/util/flash/unix/flash.c',
+    'embed/util/flash/unix/flash_otp.c',
+    'embed/util/unit_properties/unix/unit_properties.c',
 ]
 
-if NEW_RENDERING:
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/unix/display_driver.c',
-        'embed/trezorhal/xdisplay_legacy.c',
-    ]
-else:
-    SOURCE_TREZORHAL += [
-        'embed/trezorhal/unix/display-unix.c',
-    ]
-
 SOURCE_UNIX = [
-    'embed/unix/profile.c',
+    'embed/projects/unix/profile.c',
 ]
 
 ui.init_ui(TREZOR_MODEL, "bootloader", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
 
-env = Environment(ENV=os.environ, CFLAGS='%s -DCONFIDENTIAL= -DPRODUCTION=%s' % (ARGUMENTS.get('CFLAGS', ''), ARGUMENTS.get('PRODUCTION', '0')))
+env = Environment(
+    ENV=os.environ,
+    CFLAGS=ARGUMENTS.get('CFLAGS', '') + f" -DCONFIDENTIAL= -DPRODUCTION={ARGUMENTS.get('PRODUCTION', '0')}",
+    CPPDEFPREFIX="-D'",
+    CPPDEFSUFFIX="'",
+)
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
 
@@ -160,6 +143,7 @@ env.Replace(
     AR='ar',
     CC='gcc',
     LINK='ld',
+
     SIZE='size',
     STRIP='strip',
     OBJCOPY='objcopy',
@@ -170,15 +154,32 @@ MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 MODEL_AS_NUMBER = str(models.get_hw_model_as_number(MODEL_IDENTIFIER))
 
 ALLPATHS = ['embed/rust',
-           'embed/bootloader',
-           'embed/bootloader/nanopb',
-           'embed/bootloader/protob',
-           'embed/lib',
+           'embed/projects/bootloader',
+           'embed/projects/bootloader/nanopb',
+           'embed/projects/bootloader/protob',
+           'embed/rtl/inc',
            'embed/models',
-           'embed/trezorhal',
-           'embed/trezorhal/unix',
-           'embed/unix',
-           'embed/extmod/modtrezorui',
+           'embed/projects/unix',
+           'embed/upymod/modtrezorui',
+           'embed/gfx/inc',
+           'embed/io/display/inc',
+           'embed/io/usb/inc',
+           'embed/sec/entropy/inc',
+           'embed/sec/monoctr/inc',
+           'embed/sec/random_delays/inc',
+           'embed/sec/rng/inc',
+           'embed/sec/secret/inc',
+           'embed/sys/bsp/inc',
+           'embed/sys/irq/inc',
+           'embed/sys/mpu/inc',
+           'embed/sys/startup/inc',
+           'embed/sys/task/inc',
+           'embed/sys/time/inc',
+           'embed/util/flash/inc',
+           'embed/util/image/inc',
+           'embed/util/rsod/inc',
+           'embed/util/translations/inc',
+           'embed/util/unit_properties/inc',
            'vendor/nanopb',
        ] + CPPPATH_MOD + PATH_HAL
 
@@ -188,7 +189,7 @@ env.Replace(
     '-g3 '
     '-nostdlib '
     '-std=gnu11 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
-    '-fsingle-precision-constant -fdata-sections -ffunction-sections '
+    '-fdata-sections -ffunction-sections '
     '-ffreestanding '
     '-fstack-protector-all '
     + CCFLAGS_MOD,
@@ -239,9 +240,6 @@ RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
 def cargo_build():
     features = []
 
-    if NEW_RENDERING:
-        features.append('new_rendering')
-
     features.extend(RUST_UI_FEATURES)
     features.append("ui")
     features.append("bootloader")
@@ -260,7 +258,7 @@ def cargo_build():
     bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
     build_dir = str(Dir('.').abspath)
 
-    return f'export BINDGEN_MACROS=\'{bindgen_macros}\'; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build --profile {RUST_PROFILE} ' + ' '.join(cargo_opts)
+    return f'export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build --profile {RUST_PROFILE} ' + ' '.join(cargo_opts)
 
 rust = env.Command(
     target=RUST_LIBPATH,
@@ -270,6 +268,7 @@ rust = env.Command(
 env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
 env.Append(LINKFLAGS=f'-l{RUST_LIB}')
 env.Append(LINKFLAGS='-lm')
+env.Append(LINKFLAGS='-Wl,' + ('-dead_strip' if env['PLATFORM'] == 'darwin' else '--gc-sections'))
 
 #
 # Program objects

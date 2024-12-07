@@ -10,7 +10,6 @@ use crate::{
             base::Never, Bar, Child, Component, ComponentExt, Empty, Event, EventCtx, Label, Split,
         },
         constant,
-        display::loader::{loader_circular_uncompress, LoaderDimensions},
         geometry::{Insets, Offset, Rect},
         shape,
         shape::Renderer,
@@ -109,20 +108,6 @@ where
             _ => {}
         }
         None
-    }
-
-    fn paint(&mut self) {
-        self.content.paint();
-        loader_circular_uncompress(
-            LoaderDimensions::new(LOADER_OUTER, LOADER_INNER),
-            LOADER_OFFSET,
-            theme::FG,
-            theme::BG,
-            self.value,
-            self.indeterminate,
-            None,
-        );
-        self.label.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

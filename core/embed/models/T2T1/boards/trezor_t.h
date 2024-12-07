@@ -1,24 +1,12 @@
 #ifndef _TREZOR_T_H
 #define _TREZOR_T_H
 
-#define HSE_8MHZ
-
-#define USE_SD_CARD 1
-#define USE_I2C 1
-#define USE_TOUCH 1
-#define USE_SBU 1
-#define USE_RGB_COLORS 1
-#define USE_BACKLIGHT 1
-#define USE_DISP_I8080_8BIT_DW 1
-
-#define DISPLAY_RESX 240
-#define DISPLAY_RESY 240
 #define DISPLAY_COLOR_MODE DMA2D_OUTPUT_RGB565
-#define DISPLAY_LEGACY_HEADER "displays/st7789v.h"
 
 #define DISPLAY_IDENTIFY 1
 #define DISPLAY_TE_PORT GPIOD
 #define DISPLAY_TE_PIN GPIO_PIN_12
+#define DISPLAY_I8080_8BIT_DW 1
 
 #define BACKLIGHT_PWM_FREQ 10000
 #define BACKLIGHT_PWM_TIM TIM1
@@ -64,11 +52,11 @@
 #define SD_ENABLE_PORT GPIOC
 #define SD_ENABLE_PIN GPIO_PIN_0
 
-// Ensure compatible hardware settings before jumping to
-// the different booting stage. This function is used to
-// ensure backward compatibility with older versions of
-// released bootloaders and firmware.
-#define ENSURE_COMPATIBLE_SETTINGS
-extern void ensure_compatible_settings(void);
+#define SBU_1_PIN GPIO_PIN_2
+#define SBU_1_PORT GPIOA
+#define SBU_1_CLK_ENA __HAL_RCC_GPIOA_CLK_ENABLE
+#define SBU_2_PIN GPIO_PIN_3
+#define SBU_2_PORT GPIOA
+#define SBU_2_CLK_ENA __HAL_RCC_GPIOA_CLK_ENABLE
 
 #endif  //_TREZOR_T_H

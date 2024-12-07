@@ -1,7 +1,7 @@
 use super::{Component, Event, EventCtx};
 use crate::ui::{geometry::Rect, shape::Renderer};
 
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+#[cfg(all(feature = "micropython", feature = "touch"))]
 use crate::ui::component::swipe_detect::SwipeConfig;
 
 pub struct MsgMap<T, F> {
@@ -30,16 +30,12 @@ where
         self.inner.event(ctx, event).and_then(&self.func)
     }
 
-    fn paint(&mut self) {
-        self.inner.paint()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner.render(target);
     }
 }
 
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+#[cfg(all(feature = "micropython", feature = "touch"))]
 impl<T, F> crate::ui::flow::Swipable for MsgMap<T, F>
 where
     T: Component + crate::ui::flow::Swipable,
@@ -90,10 +86,6 @@ where
         res
     }
 
-    fn paint(&mut self) {
-        self.inner.paint()
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.inner.render(target);
     }
@@ -109,7 +101,7 @@ where
     }
 }
 
-#[cfg(all(feature = "micropython", feature = "touch", feature = "new_rendering"))]
+#[cfg(all(feature = "micropython", feature = "touch"))]
 impl<T, F> crate::ui::flow::Swipable for PageMap<T, F>
 where
     T: Component + crate::ui::flow::Swipable,

@@ -21,6 +21,7 @@ pub struct Frame<T> {
     content: Child<T>,
 }
 
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum FrameMsg<T> {
     Content(T),
     Button(CancelInfoConfirmMsg),
@@ -167,13 +168,6 @@ where
             return Some(FrameMsg::Button(self.button_msg));
         }
         self.content.event(ctx, event).map(FrameMsg::Content)
-    }
-
-    fn paint(&mut self) {
-        self.title.paint();
-        self.subtitle.paint();
-        self.button.paint();
-        self.content.paint();
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

@@ -14,7 +14,7 @@ _PREV_TX_MULTIPLIER = 5
 
 
 class Progress:
-    def __init__(self):
+    def __init__(self) -> None:
         self.progress = 0
         self.steps = 0
         self.signing = False
@@ -122,10 +122,6 @@ class Progress:
         self.progress_layout = progress_layout(text)
 
     def report(self) -> None:
-        from trezor import utils
-
-        if utils.DISABLE_ANIMATION:
-            return
         p = int(1000 * self.progress / self.steps)
         self.progress_layout.report(p)
 

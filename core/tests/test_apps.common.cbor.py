@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from apps.common.cbor import (
@@ -33,19 +34,19 @@ class TestCardanoCbor(unittest.TestCase):
 
     def test_create_tagged_set_header(self):
         test_vectors = [
-            (0, 'd9010280'),
-            (23, 'd9010297'),
-            ((2 ** 8) - 1, 'd9010298ff'),
-            ((2 ** 16) - 1, 'd9010299ffff'),
-            ((2 ** 32) - 1, 'd901029affffffff'),
-            ((2 ** 64) - 1, 'd901029bffffffffffffffff'),
+            (0, "d9010280"),
+            (23, "d9010297"),
+            ((2**8) - 1, "d9010298ff"),
+            ((2**16) - 1, "d9010299ffff"),
+            ((2**32) - 1, "d901029affffffff"),
+            ((2**64) - 1, "d901029bffffffffffffffff"),
         ]
         for val, header_hex in test_vectors:
             header = unhexlify(header_hex)
             self.assertEqual(create_tagged_set_header(val), header)
 
         with self.assertRaises(NotImplementedError):
-            create_tagged_set_header(2 ** 64)
+            create_tagged_set_header(2**64)
 
     def test_create_map_header(self):
         test_vectors = [

@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Component, Event, EventCtx, Never, Pad},
-        display::{self, Color, Font},
+        display::{Color, Font},
         geometry::{Alignment, Offset, Rect},
         shape::{self, Renderer},
     },
@@ -40,21 +40,6 @@ impl Component for Connect {
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
-    }
-
-    fn paint(&mut self) {
-        let font = Font::NORMAL;
-
-        self.bg.paint();
-        self.message.map(|t| {
-            display::text_center(
-                self.bg.area.center() + Offset::y(font.text_height() / 2),
-                t,
-                font,
-                self.fg,
-                self.bg.color,
-            )
-        });
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

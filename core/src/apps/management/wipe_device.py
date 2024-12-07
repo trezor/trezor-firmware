@@ -6,9 +6,10 @@ if TYPE_CHECKING:
 
 async def wipe_device(msg: WipeDevice) -> Success:
     import storage
-    from trezor import TR, translations
+    from trezor import TR, config, translations
     from trezor.enums import ButtonRequestType
     from trezor.messages import Success
+    from trezor.pin import render_empty_loader
     from trezor.ui.layouts import confirm_action
 
     from apps.base import reload_settings_from_storage
@@ -24,6 +25,9 @@ async def wipe_device(msg: WipeDevice) -> Success:
         hold_danger=True,
         br_code=ButtonRequestType.WipeDevice,
     )
+
+    # start an empty progress screen so that the screen is not blank while waiting
+    render_empty_loader(config.StorageMessage.PROCESSING_MSG)
 
     # wipe storage
     storage.wipe()

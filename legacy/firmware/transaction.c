@@ -25,6 +25,8 @@
 #include "crypto.h"
 #include "debug.h"
 #include "ecdsa.h"
+#include "fsm.h"
+#include "gettext.h"
 #include "layout2.h"
 #include "memzero.h"
 #include "messages.pb.h"
@@ -362,6 +364,11 @@ uint32_t compile_script_sig(uint32_t address_type, const uint8_t *pubkeyhash,
 uint32_t compile_script_multisig(const CoinInfo *coin,
                                  const MultisigRedeemScriptType *multisig,
                                  uint8_t *out) {
+  if (multisig->pubkeys_order != MultisigPubkeysOrder_PRESERVED) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Sortedmulti is not supported"));
+    return 0;
+  }
   const uint32_t m = multisig->m;
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
   if (m < 1 || m > 15) return 0;
@@ -391,6 +398,12 @@ uint32_t compile_script_multisig(const CoinInfo *coin,
 uint32_t compile_script_multisig_hash(const CoinInfo *coin,
                                       const MultisigRedeemScriptType *multisig,
                                       uint8_t *hash) {
+  if (multisig->pubkeys_order != MultisigPubkeysOrder_PRESERVED) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Sortedmulti is not supported"));
+    return 0;
+  }
+
   const uint32_t m = multisig->m;
   const uint32_t n = cryptoMultisigPubkeyCount(multisig);
   if (m < 1 || m > 15) return 0;
@@ -436,6 +449,11 @@ uint32_t serialize_script_sig(const uint8_t *signature, uint32_t signature_len,
 uint32_t serialize_script_multisig(const CoinInfo *coin,
                                    const MultisigRedeemScriptType *multisig,
                                    uint8_t sighash, uint8_t *out) {
+  if (multisig->pubkeys_order != MultisigPubkeysOrder_PRESERVED) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Sortedmulti is not supported"));
+    return 0;
+  }
   uint32_t r = 0;
 #if !BITCOIN_ONLY
   if (!coin->decred) {

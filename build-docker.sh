@@ -72,7 +72,7 @@ INIT=1
 MODELS=(R T T3T1)
 CORE_TARGETS=(boardloader bootloader firmware)
 
-REPOSITORY="/local"
+REPOSITORY="file:///local"
 
 while true; do
   case "$1" in
@@ -185,6 +185,11 @@ if [ $INIT -eq 1 ]; then
   echo ">>> DOCKER BUILD ALPINE_VERSION=$ALPINE_VERSION ALPINE_ARCH=$ALPINE_ARCH NIX_VERSION=$NIX_VERSION -t $CONTAINER_NAME"
   echo
 
+  # some Nix installations have problem with shell.nix -> ci/shell.nix symlink
+  # docker can't handle ci/shell.nix -> shell.nix
+  # let's copy the file and try to fix paths ...
+  sed "s|./ci/|./|" < shell.nix > ci/shell.nix
+
   $DOCKER build \
     --network=host \
     --build-arg ALPINE_VERSION="$ALPINE_VERSION" \
@@ -199,7 +204,7 @@ if [ $INIT -eq 1 ]; then
 
     mkdir -p /reproducible-build
     cd /reproducible-build
-    git clone "$REPOSITORY" trezor-firmware
+    git clone --branch="$TAG" --depth=1 "$REPOSITORY" trezor-firmware
     cd trezor-firmware
 EOF
 
@@ -219,8 +224,6 @@ fi  # init
 # append common part to script
 cat <<EOF >> "$SCRIPT_NAME"
   $GIT_CLEAN_REPO
-  git fetch origin "$COMMIT_HASH"
-  git checkout "$COMMIT_HASH"
   git submodule update --init --recursive
   poetry install
   cd core/embed/rust
@@ -282,7 +285,7 @@ for TREZOR_MODEL in ${MODELS[@]}; do
       set -e -o pipefail
       cd /reproducible-build/trezor-firmware/core
       $GIT_CLEAN_REPO
-      poetry run make clean vendor $MAKE_TARGETS
+      poetry run make clean vendor $MAKE_TARGETS QUIET_MODE=1
       for item in bootloader firmware prodtest; do
         if [ -f build/\$item/\$item.bin ]; then
           poetry run ../python/tools/firmware-fingerprint.py \

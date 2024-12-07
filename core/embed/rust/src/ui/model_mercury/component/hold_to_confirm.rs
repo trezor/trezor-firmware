@@ -163,7 +163,6 @@ impl HoldToConfirmAnim {
 
 /// Component requesting a hold to confirm action from a user. Most typically
 /// embedded as a content of a Frame.
-#[derive(Clone)]
 pub struct HoldToConfirm {
     title: Label<'static>,
     area: Rect,
@@ -270,10 +269,6 @@ impl Component for HoldToConfirm {
             }
         }
         None
-    }
-
-    fn paint(&mut self) {
-        unimplemented!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

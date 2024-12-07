@@ -11,6 +11,11 @@ on:
   schedule:
     - cron: '15 23 * * *'  # every day @ 23:15
 
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 permissions:
   id-token: write       # for fetching the OIDC token
   contents: read        # for actions/checkout
@@ -21,7 +26,7 @@ env:
     |core UI changes|device test|click test|persistence test|
     |---------------|-----------|----------|----------------|
     |T2T1 Model T   |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/status.png" width="24" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/master_diff.html))||
-    |T3B1 Safe 3    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_diff.html)) |[2724](https://github.com/trezor/trezor-firmware/issues/2724)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    ||
+    |T3B1 Safe 3    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_diff.html))||
     |T3T1 Safe 5    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_diff.html))||
     |All            |<img src="https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/status.png" width="20px" height="20px" /> [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/index.html)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html)) ||
 
@@ -53,6 +58,9 @@ jobs:
           - model: D001
             coins: universal
             type: normal
+        exclude:
+          - model: T3W1
+            type: production
     env:
       TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'D001' && 'DISC1' || matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
@@ -116,7 +124,7 @@ jobs:
           submodules: recursive
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
-        if: matrix.coins == 'universal'
+        if: matrix.coins == 'universal' && matrix.asan == 'noasan'
       - run: nix-shell --run "poetry run make -C core build_unix_frozen"
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
@@ -283,8 +291,6 @@ jobs:
           status: ${{ job.status }}
         if: ${{ always() && env.ACTIONS_DO_UI_TEST == 'true' }}
         continue-on-error: true
-      - uses: ./.github/actions/ui-comment
-        if: ${{ failure() && env.ACTIONS_DO_UI_TEST == 'true' }}
       - uses: ./.github/actions/upload-coverage
 
   # Click tests - UI.
@@ -380,7 +386,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3T1]  # TODO T3B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T3B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -697,24 +703,17 @@ jobs:
           fi
       - name: Upload diff from main branch
         run: |
-          aws s3 sync --no-progress master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
+          aws s3 sync --only-show-errors master_diff s3://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}
         continue-on-error: true
 
   core_ui_comment:
     name: Post comment with UI diff URLs
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-      - run: |
-          git fetch origin main
-          git diff --quiet origin/main...HEAD -- tests/ui_tests/fixtures.json || echo "FIXTURES_CHANGED=$?" >> $GITHUB_OUTPUT
-        id: check-fixtures-changed
+      - run: sleep 1m  # try avoiding github api rate limit
       - uses: ./.github/actions/ui-comment
-        # TODO: always run if comment already exists
-        if: ${{ steps.check-fixtures-changed.outputs.FIXTURES_CHANGED == '1' }}
 
   core_upload_emu:
     name: Upload emulator binaries
@@ -736,7 +735,39 @@ jobs:
         continue-on-error: true
       - run: |
           rm unix/trezor-emu-core
-          aws s3 sync --no-progress unix s3://data.trezor.io/dev/firmware/emu-nightly
+          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-nightly
+
+  core_upload_emu_branch:
+    name: Upload emulator binaries for the current branch
+    # Not building it for nightly CI
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    needs:
+      # Do not include ARM, they are only built on nightly
+      - core_emu
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: core-emu*debuglink-noasan
+          merge-multiple: true
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-west-1
+        continue-on-error: true
+      - name: Determine branch name
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            branch_name=${{ github.head_ref }}
+          else
+            branch_name=${{ github.ref_name }}
+          fi
+          echo "branch_name=$branch_name" >> $GITHUB_ENV
+      - name: Upload artifacts to branch directory
+        run: |
+          rm unix/trezor-emu-core
+          aws s3 sync --only-show-errors unix s3://data.trezor.io/dev/firmware/emu-branches/$branch_name
 
   # Connect
   # TODO: core_connect_test

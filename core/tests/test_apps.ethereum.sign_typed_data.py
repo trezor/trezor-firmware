@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor import wire
@@ -134,6 +135,7 @@ def parse_type_n(type_name: str) -> int:
             buf += char
         else:
             return int("".join(reversed(buf)))
+    raise ValueError(f"Invalid type name: {type_name}")
 
 
 def parse_array_n(type_name: str) -> Union[int, str]:

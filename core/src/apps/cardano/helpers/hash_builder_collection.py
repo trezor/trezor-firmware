@@ -107,7 +107,7 @@ class HashBuilderDict(HashBuilderCollection, Generic[K, V]):
     key_order_error: wire.ProcessError
     previous_encoded_key: bytes
 
-    def __init__(self, size: int, key_order_error: wire.ProcessError):
+    def __init__(self, size: int, key_order_error: wire.ProcessError) -> None:
         super().__init__(size)
         self.key_order_error = key_order_error
         self.previous_encoded_key = b""

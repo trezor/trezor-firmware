@@ -6,6 +6,11 @@ on:
   schedule:
     - cron: '13 23 * * *'  # every day @ 23:13
 
+# cancel any previous runs on the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CARGOLOCK_COMMENT: Looks like you changed `Cargo.lock`. Please make sure to review the dependencies and update [internal version list](https://www.notion.so/satoshilabs/Rust-dependencies-a9cc6e8dab934def8eb27896c001e6e2).
 

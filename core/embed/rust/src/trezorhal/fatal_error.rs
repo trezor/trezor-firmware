@@ -1,27 +1,29 @@
 mod ffi {
     extern "C" {
-        // error_handling.h
-        pub fn error_shutdown(msg: *const cty::c_char) -> !;
+        // system.h
+        pub fn system_exit_error_ex(
+            title: *const cty::c_char,
+            title_len: usize,
+            message: *const cty::c_char,
+            message_len: usize,
+            footer: *const cty::c_char,
+            footer_len: usize,
+        ) -> !;
     }
 }
 
 pub fn error_shutdown(msg: &str) -> ! {
-    const MAX_LEN: usize = 63;
-    let mut buffer: [u8; MAX_LEN + 1] = [0; MAX_LEN + 1];
-
-    // Copy the message to the buffer
-    let msg_bytes = msg.as_bytes();
-    let len = if msg_bytes.len() < MAX_LEN {
-        msg_bytes.len()
-    } else {
-        MAX_LEN
-    };
-    buffer[..len].copy_from_slice(&msg_bytes[..len]);
-
     unsafe {
-        // SAFETY: `buffer` is a valid null-terminated string
-        // and the function never returns.
-        ffi::error_shutdown(buffer.as_ptr() as *const cty::c_char);
+        // SAFETY: we pass a valid string to the C function
+        // and the function does not return.
+        ffi::system_exit_error_ex(
+            core::ptr::null(),
+            0,
+            msg.as_ptr() as *const cty::c_char,
+            msg.len(),
+            core::ptr::null(),
+            0,
+        );
     }
 }
 

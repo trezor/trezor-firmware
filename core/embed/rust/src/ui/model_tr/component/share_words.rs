@@ -3,8 +3,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::util::{text_multiline, text_multiline2},
-            Child, Component, Event, EventCtx, Never, Paginate,
+            text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
         },
         display::Font,
         geometry::{Alignment, Offset, Rect},
@@ -16,7 +15,7 @@ use heapless::Vec;
 #[cfg(feature = "ui_debug")]
 use ufmt::uwrite;
 
-use super::{common::display_left, scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};
+use super::{scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};
 
 const WORDS_PER_PAGE: usize = 3;
 const EXTRA_LINE_HEIGHT: i16 = -2;
@@ -76,22 +75,9 @@ impl<'a> ShareWords<'a> {
     }
 
     /// Display the final page with user confirmation.
-    fn paint_final_page(&mut self) {
-        let final_text = self.get_final_text();
-        text_multiline(
-            self.area.split_top(INFO_TOP_OFFSET).1,
-            final_text.as_str().into(),
-            Font::NORMAL,
-            theme::FG,
-            theme::BG,
-            Alignment::Start,
-        );
-    }
-
-    /// Display the final page with user confirmation.
     fn render_final_page<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let final_text = self.get_final_text();
-        text_multiline2(
+        text_multiline(
             target,
             self.area.split_top(INFO_TOP_OFFSET).1,
             final_text.as_str().into(),
@@ -100,26 +86,6 @@ impl<'a> ShareWords<'a> {
             theme::BG,
             Alignment::Start,
         );
-    }
-
-    /// Display current set of recovery words.
-    fn paint_words(&mut self) {
-        let mut y_offset = 0;
-        // Showing the word index and the words itself
-        for i in 0..WORDS_PER_PAGE {
-            y_offset += NUMBER_FONT.line_height() + EXTRA_LINE_HEIGHT;
-            let index = self.word_index() + i;
-            if index >= self.share_words.len() {
-                break;
-            }
-            let baseline = self.area.top_left() + Offset::y(y_offset);
-            let ordinal = uformat!("{}.", index + 1);
-            display_left(baseline + Offset::x(NUMBER_X_OFFSET), &ordinal, NUMBER_FONT);
-            let word = &self.share_words[index];
-            word.map(|w| {
-                display_left(baseline + Offset::x(WORD_X_OFFSET), w, WORD_FONT);
-            });
-        }
     }
 
     /// Display current set of recovery words.
@@ -171,17 +137,6 @@ impl<'a> Component for ShareWords<'a> {
         None
     }
 
-    fn paint(&mut self) {
-        // Showing scrollbar in all cases
-        // Individual pages are responsible for not colliding with it
-        self.scrollbar.paint();
-        if self.is_final_page() {
-            self.paint_final_page();
-        } else {
-            self.paint_words();
-        }
-    }
-
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // Showing scrollbar in all cases
         // Individual pages are responsible for not colliding with it
@@ -195,8 +150,7 @@ impl<'a> Component for ShareWords<'a> {
 }
 
 impl<'a> Paginate for ShareWords<'a> {
-    fn page_count(&mut self) -> usize {
-        // Not defining the logic here, as we do not want it to be `&mut`.
+    fn page_count(&self) -> usize {
         self.total_page_count()
     }
 

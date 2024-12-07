@@ -59,7 +59,7 @@ impl AttachAnimation {
 }
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
-#[derive(Clone)]
+
 pub struct Header {
     area: Rect,
     title: Label<'static>,
@@ -210,10 +210,6 @@ impl Component for Header {
         };
 
         None
-    }
-
-    fn paint(&mut self) {
-        todo!()
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

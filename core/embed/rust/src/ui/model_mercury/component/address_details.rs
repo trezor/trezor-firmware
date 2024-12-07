@@ -21,7 +21,6 @@ use super::{theme, Frame, FrameMsg};
 
 const MAX_XPUBS: usize = 16;
 
-#[derive(Clone)]
 pub struct AddressDetails {
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
@@ -118,7 +117,7 @@ impl AddressDetails {
 }
 
 impl Paginate for AddressDetails {
-    fn page_count(&mut self) -> usize {
+    fn page_count(&self) -> usize {
         self.get_internal_page_count()
     }
 
@@ -172,13 +171,6 @@ impl Component for AddressDetails {
         match msg {
             Some(FrameMsg::Button(_)) => Some(()),
             _ => None,
-        }
-    }
-
-    fn paint(&mut self) {
-        match self.current_page {
-            0 => self.details.paint(),
-            _ => self.xpub_view.paint(),
         }
     }
 

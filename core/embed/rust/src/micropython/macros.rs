@@ -79,9 +79,9 @@ macro_rules! obj_fn_kw {
 /// Construct fixed static const `Map` from `key` => `val` pairs.
 macro_rules! obj_map {
     ($($key:expr => $val:expr),*) => ({
-        Map::from_fixed_static(&[
+        $crate::micropython::map::Map::from_fixed_static(&[
             $(
-                Map::at($key, $val),
+                $crate::micropython::map::Map::at($key, $val),
             )*
         ])
     });
@@ -110,6 +110,7 @@ macro_rules! obj_dict {
 /// Compose a `Type` object definition.
 macro_rules! obj_type {
     (name: $name:expr,
+     $(base: $base:expr,)?
      $(locals: $locals:expr,)?
      $(make_new_fn: $make_new_fn:path,)?
      $(attr_fn: $attr_fn:path,)?
@@ -120,6 +121,11 @@ macro_rules! obj_type {
             use $crate::micropython::ffi;
 
             let name = $name.to_u16();
+
+            #[allow(unused_mut)]
+            #[allow(unused_assignments)]
+            let mut base_type: &'static ffi::mp_obj_type_t = &ffi::mp_type_type;
+            $(base_type = &$base;)?
 
             #[allow(unused_mut)]
             #[allow(unused_assignments)]
@@ -146,7 +152,7 @@ macro_rules! obj_type {
 
             ffi::mp_obj_type_t {
                 base: ffi::mp_obj_base_t {
-                    type_: &ffi::mp_type_type,
+                    type_: base_type,
                 },
                 flags: 0,
                 name,
@@ -168,7 +174,7 @@ macro_rules! obj_type {
     }};
 }
 
-/// Construct an extmod definition.
+/// Construct an upymod definition.
 macro_rules! obj_module {
     ($($key:expr => $val:expr),*) => ({
         #[allow(unused_unsafe)]

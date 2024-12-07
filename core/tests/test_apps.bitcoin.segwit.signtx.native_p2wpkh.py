@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from trezor import wire
@@ -112,7 +113,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,
@@ -120,7 +123,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out2)),
-            helpers.UiConfirmOutput(out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out2, coin, AmountUnit.BITCOIN, 1, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             helpers.UiConfirmTotal(
                 12300000, 11000, fee_rate, coin, AmountUnit.BITCOIN, inp1.address_n[:3]
@@ -309,7 +314,9 @@ class TestSignSegwitTxNativeP2WPKH(unittest.TestCase):
                 serialized=EMPTY_SERIALIZED,
             ),
             TxAckOutput(tx=TxAckOutputWrapper(output=out1)),
-            helpers.UiConfirmOutput(out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]),
+            helpers.UiConfirmOutput(
+                out1, coin, AmountUnit.BITCOIN, 0, False, [H_(49), H_(1), H_(0)]
+            ),
             True,
             TxRequest(
                 request_type=TXOUTPUT,

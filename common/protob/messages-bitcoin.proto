@@ -5,10 +5,10 @@ package hw.trezor.messages.bitcoin;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageBitcoin";
 
-option (include_in_bitcoin_only) = true;
-
-import "messages.proto";
 import "messages-common.proto";
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
 
 /**
  * Type of script which will be used for transaction input
@@ -53,16 +53,22 @@ enum AmountUnit {
     SATOSHI = 3;        // sat
 }
 
+enum MultisigPubkeysOrder {
+    PRESERVED = 0;      // order of pubkeys is preserved
+    LEXICOGRAPHIC = 1;  // pubkeys are sorted lexicographically (BIP-67)
+}
+
 /**
  * Type of redeem script used in input
  * @embed
  */
 message MultisigRedeemScriptType {
-    repeated HDNodePathType pubkeys = 1;    // pubkeys from multisig address (sorted lexicographically)
+    repeated HDNodePathType pubkeys = 1;    // this field is deprecated and will be removed in the future, use nodes together with address_n instead
     repeated bytes signatures = 2;          // existing signatures for partially signed input
     required uint32 m = 3;                  // "m" from n, how many valid signatures is necessary for spending
-    repeated common.HDNodeType nodes = 4;    // simplified way how to specify pubkeys if they share the same address_n path
-    repeated uint32 address_n = 5;                              // use only field 1 or fields 4+5, if fields 4+5 are used, field 1 is ignored
+    repeated common.HDNodeType nodes = 4;
+    repeated uint32 address_n = 5;          // path to derive pubkeys from nodes
+    optional MultisigPubkeysOrder pubkeys_order = 6 [default=PRESERVED]; // order of pubkeys in script pubkey
     /**
     * Structure representing HDNode + Path
     */
@@ -625,4 +631,3 @@ message AuthorizeCoinJoin {
     optional InputScriptType script_type = 7 [default=SPENDADDRESS];    // used to distinguish between various address formats (non-segwit, segwit, etc.)
     optional AmountUnit amount_unit = 8 [default=BITCOIN];              // show amounts in
 }
-
