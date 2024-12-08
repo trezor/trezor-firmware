@@ -1,5 +1,4 @@
 use crate::{
-    translations::get_utf8_glyph,
     trezorhal::display,
     ui::{
         constant,
@@ -8,6 +7,9 @@ use crate::{
     },
 };
 use core::slice;
+
+#[cfg(feature = "translations")]
+use crate::translations::get_utf8_glyph;
 
 /// Representation of a single glyph.
 /// We use standard typographic terms. For a nice explanation, see, e.g.,
@@ -249,10 +251,15 @@ impl Font {
 
     fn get_glyph_data(&self, c: u16) -> *const u8 {
         display::get_font_info((*self).into()).map_or(core::ptr::null(), |font_info| {
-            if c >= 0x7F {
-                // UTF8 character from embedded blob
-                unsafe { get_utf8_glyph(c, *self) }
-            } else if c >= ' ' as u16 && c < 0x7F {
+            #[cfg(feature = "translations")]
+            {
+                if c >= 0x7F {
+                    // UTF8 character from embedded blob
+                    return unsafe { get_utf8_glyph(c, *self) };
+                }
+            }
+
+            if c >= ' ' as u16 && c < 0x7F {
                 // ASCII character
                 unsafe { *font_info.glyph_data.offset((c - ' ' as u16) as isize) }
             } else {
