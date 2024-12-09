@@ -89,15 +89,15 @@
 #define FIRMWARE_P2_SECTOR_START 17
 #define FIRMWARE_P2_SECTOR_END 23
 
-// Ram layout - boardloader, bootloader, prodtest
-#define MAIN_STACK_START 0x10000000
-#define MAIN_STACK_SIZE (16 * 1024)
+// Ram layout - shared boardloader, bootloader, prodtest
+#define S_MAIN_STACK_START 0x10000000
+#define S_MAIN_STACK_SIZE (16 * 1024)
 
-#define FB1_RAM_START 0x10004000
-#define FB1_RAM_SIZE (0)
+#define S_FB1_RAM_START 0x10004000
+#define S_FB1_RAM_SIZE (0)
 
-#define MAIN_RAM_START 0x10004000
-#define MAIN_RAM_SIZE (48 * 1024 - 0x100)
+#define S_MAIN_RAM_START 0x10004000
+#define S_MAIN_RAM_SIZE (48 * 1024 - 0x100)
 
 // RAM layout - kernel
 #define K_MAIN_STACK_START 0x10000000
@@ -112,7 +112,7 @@
 #define K_MAIN_RAM_START 0x1000C000
 #define K_MAIN_RAM_SIZE (16 * 1024 - 0x100)
 
-// RAM layout - commom
+// RAM layout - common
 #define BOOTARGS_START 0x1000FF00
 #define BOOTARGS_SIZE 0x100
 
