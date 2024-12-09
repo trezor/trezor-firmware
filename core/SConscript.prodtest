@@ -220,7 +220,7 @@ program_elf = env.Command(
     target='prodtest.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc -lm',
 )
 
 env.Depends(program_elf, linkerscript_gen)
