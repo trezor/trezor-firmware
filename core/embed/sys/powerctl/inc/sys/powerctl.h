@@ -31,7 +31,7 @@ void powerctl_deinit(void);
 typedef enum {
   POWER_SOURCE_BATT,
   POWER_SOURCE_USB,
-  POWER_SOURCE_QI,
+  POWER_SOURCE_WIRELESS,
 } power_source_t;
 
 typedef struct {
