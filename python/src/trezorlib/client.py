@@ -130,6 +130,7 @@ class TrezorClient:
         self,
         passphrase: str | object | None = None,
         derive_cardano: bool = False,
+        session_id: int = 0,
     ) -> Session:
         """
         Returns initialized session (with derived seed).
@@ -144,7 +145,7 @@ class TrezorClient:
             return SessionV1.new(self, passphrase, derive_cardano)
         if isinstance(self.protocol, ProtocolV2):
             assert isinstance(passphrase, str) or passphrase is None
-            return SessionV2.new(self, passphrase, derive_cardano)
+            return SessionV2.new(self, passphrase, derive_cardano, session_id)
         raise NotImplementedError  # TODO
 
     def resume_session(self, session: Session):
