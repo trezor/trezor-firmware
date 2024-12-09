@@ -1,17 +1,19 @@
 use crate::{
     strutil::{ShortString, TString},
+    time::Duration,
     translations::TR,
     ui::{
         component::{
             base::ComponentExt, swipe_detect::SwipeConfig, text::common::TextBox, Component, Event,
-            EventCtx, Label, Maybe, Never, Swipe,
+            EventCtx, Label, Maybe, Never, Swipe, Timer,
         },
         display,
-        geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
+        event::TouchEvent,
+        geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect},
         model_mercury::{
             component::{
                 button::{Button, ButtonContent, ButtonMsg},
-                keyboard::common::{render_pending_marker, MultiTapKeyboard},
+                keyboard::common::{render_pending_marker, DisplayStyle, MultiTapKeyboard},
                 theme,
             },
             cshape,
@@ -105,6 +107,8 @@ const MAX_LENGTH: usize = 50;
 const CONFIRM_BTN_INSETS: Insets = Insets::new(5, 0, 5, 0);
 const CONFIRM_EMPTY_BTN_MARGIN_RIGHT: i16 = 7;
 const CONFIRM_EMPTY_BTN_INSETS: Insets = Insets::new(5, CONFIRM_EMPTY_BTN_MARGIN_RIGHT, 5, 0);
+const INPUT_INSETS: Insets = Insets::new(10, 2, 10, 4);
+const LAST_DIGIT_TIMEOUT_S: u32 = 1;
 
 impl PassphraseKeyboard {
     pub fn new() -> Self {
@@ -186,8 +190,14 @@ impl PassphraseKeyboard {
             Direction::Right => self.active_layout.prev(),
             _ => self.active_layout,
         };
-        // Clear the pending state.
-        self.input.multi_tap.clear_pending_state(ctx);
+        if self.input.multi_tap.pending_key().is_some() {
+            // Clear the pending state.
+            self.input.multi_tap.clear_pending_state(ctx);
+            // the character has been added, show it for a bit and then hide it
+            self.input
+                .last_char_timer
+                .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+        }
         // Update keys.
         self.replace_keys_contents(ctx);
         // Reset backlight to normal level on next paint.
@@ -272,7 +282,6 @@ impl Component for PassphraseKeyboard {
     fn place(&mut self, bounds: Rect) -> Rect {
         const CONFIRM_BTN_WIDTH: i16 = 78;
         const CONFIRM_EMPTY_BTN_WIDTH: i16 = 32;
-        const INPUT_INSETS: Insets = Insets::new(10, 2, 10, 4);
 
         let bounds = bounds.inset(theme::borders());
         let (top_area, keypad_area) =
@@ -284,7 +293,6 @@ impl Component for PassphraseKeyboard {
             .1;
 
         let top_area = top_area.inset(INPUT_INSETS);
-        let input_area = input_area.inset(INPUT_INSETS);
         let confirm_btn_area = confirm_btn_area.inset(CONFIRM_BTN_INSETS);
         let confirm_empty_btn_area = confirm_empty_btn_area.inset(CONFIRM_EMPTY_BTN_INSETS);
 
@@ -323,8 +331,14 @@ impl Component for PassphraseKeyboard {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.input.multi_tap.timeout_event(event) {
             self.input.multi_tap.clear_pending_state(ctx);
+            self.input
+                .last_char_timer
+                .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
             return None;
         }
+
+        self.input.event(ctx, event);
+
         if let Some(swipe) = self.page_swipe.event(ctx, event) {
             // We have detected a horizontal swipe. Change the keyboard page.
             self.on_page_change(ctx, swipe);
@@ -355,12 +369,14 @@ impl Component for PassphraseKeyboard {
                 self.input.multi_tap.clear_pending_state(ctx);
                 self.input.textbox.delete_last(ctx);
                 self.after_edit(ctx);
+                self.input.display_style = DisplayStyle::Hidden;
                 return None;
             }
             Some(ButtonMsg::LongPressed) => {
                 self.input.multi_tap.clear_pending_state(ctx);
                 self.input.textbox.clear(ctx);
                 self.after_edit(ctx);
+                self.input.display_style = DisplayStyle::Hidden;
                 return None;
             }
             _ => {}
@@ -383,6 +399,17 @@ impl Component for PassphraseKeyboard {
                 let edit = text.map(|c| self.input.multi_tap.click_key(ctx, key, c));
                 self.input.textbox.apply(ctx, edit);
                 self.after_edit(ctx);
+                if text.len() == 1 {
+                    // If the key has just one character, it is immediately applied and the last
+                    // digit timer should be started
+                    self.input
+                        .last_char_timer
+                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+                } else {
+                    // multi tap timer is runnig, the last digit timer should be stopped
+                    self.input.last_char_timer.stop();
+                }
+                self.input.display_style = DisplayStyle::LastOnly;
                 return None;
             }
         }
@@ -416,14 +443,143 @@ struct Input {
     area: Rect,
     textbox: TextBox,
     multi_tap: MultiTapKeyboard,
+    display_style: DisplayStyle,
+    last_char_timer: Timer,
 }
 
 impl Input {
+    const TWITCH: i16 = 4;
+    const X_STEP: i16 = 13;
+
     fn new() -> Self {
         Self {
             area: Rect::zero(),
             textbox: TextBox::empty(MAX_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
+            display_style: DisplayStyle::LastOnly,
+            last_char_timer: Timer::new(),
+        }
+    }
+
+    fn render_chars<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        let style = theme::label_keyboard_mono();
+        let mut text_baseline = area.top_left() + Offset::y(style.text_font.text_height());
+        let chars = self.textbox.content().len();
+
+        if chars > 0 {
+            // Find out how much text can fit into the textbox.
+            // Accounting for the pending marker, which draws itself one extra pixel
+            let available_area_width = area.width() - 1;
+            let truncated = long_line_content_with_ellipsis(
+                self.textbox.content(),
+                "",
+                style.text_font,
+                available_area_width,
+            );
+
+            // Jiggle hidden passphrase when overflowed.
+            if chars > truncated.len()
+                && chars % 2 == 0
+                && (self.display_style == DisplayStyle::Hidden
+                    || self.display_style == DisplayStyle::LastOnly)
+            {
+                text_baseline.x += Self::TWITCH;
+            }
+
+            // Paint the visible passphrase.
+            shape::Text::new(text_baseline, &truncated)
+                .with_font(style.text_font)
+                .with_fg(style.text_color)
+                .render(target);
+
+            // Paint the pending marker.
+            if self.multi_tap.pending_key().is_some() {
+                render_pending_marker(
+                    target,
+                    text_baseline,
+                    &truncated,
+                    style.text_font,
+                    style.text_color,
+                );
+            }
+        }
+    }
+
+    fn render_dots<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
+        let style = theme::label_keyboard_mono();
+        let bullet = theme::ICON_PIN_BULLET.toif;
+        let mut cursor = area.left_center();
+        let all_chars = self.textbox.content().len();
+        let last_char = self.display_style == DisplayStyle::LastOnly;
+
+        if all_chars > 0 {
+            // Find out how much text can fit into the textbox.
+            // Accounting for the pending marker, which draws itself one extra pixel
+            let truncated = long_line_content_with_ellipsis(
+                self.textbox.content(),
+                "",
+                style.text_font,
+                area.width() - 1,
+            );
+            let visible_chars = truncated.len();
+            let visible_dots = visible_chars - last_char as usize;
+
+            // Jiggle when overflowed.
+            if all_chars > visible_chars
+                && all_chars % 2 == 0
+                && (self.display_style == DisplayStyle::Hidden
+                    || self.display_style == DisplayStyle::LastOnly)
+            {
+                cursor.x += Self::TWITCH;
+            }
+
+            let mut char_idx = 0;
+            // Small leftmost dot.
+            if all_chars > visible_chars + 1 {
+                shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_fg(theme::GREY)
+                    .render(target);
+                cursor.x += Self::X_STEP;
+                char_idx += 1;
+            }
+            // Greyed out dot.
+            if all_chars > visible_chars {
+                shape::ToifImage::new(cursor, theme::DOT_SMALL.toif)
+                    .with_align(Alignment2D::TOP_LEFT)
+                    .with_fg(style.text_color)
+                    .render(target);
+                cursor.x += Self::X_STEP;
+                char_idx += 1;
+            }
+
+            if visible_dots > 0 {
+                // Classical dot(s)
+                for _ in char_idx..visible_dots {
+                    shape::ToifImage::new(cursor, bullet)
+                        .with_align(Alignment2D::TOP_LEFT)
+                        .with_fg(style.text_color)
+                        .render(target);
+                    cursor.x += Self::X_STEP;
+                }
+            }
+
+            if last_char {
+                // Adapt y position for the character
+                cursor.y = area.top_left().y + style.text_font.text_height();
+                // This should not fail because all_chars > 0
+                let last = &self.textbox.content()[(all_chars - 1)..all_chars];
+                // Paint the last character
+                shape::Text::new(cursor, last)
+                    .with_align(Alignment::Start)
+                    .with_font(style.text_font)
+                    .with_fg(style.text_color)
+                    .render(target);
+                // Paint the pending marker.
+                if self.multi_tap.pending_key().is_some() {
+                    render_pending_marker(target, cursor, last, style.text_font, style.text_color);
+                }
+            }
         }
     }
 }
@@ -436,41 +592,37 @@ impl Component for Input {
         self.area
     }
 
-    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        match event {
+            Event::Timer(_) if self.last_char_timer.expire(event) => {
+                self.display_style = DisplayStyle::Hidden;
+                ctx.request_paint();
+            }
+            Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
+                self.display_style = DisplayStyle::Shown;
+                ctx.request_paint();
+            }
+            Event::Touch(TouchEvent::TouchEnd(pos)) if self.area.contains(pos) => {
+                self.display_style = DisplayStyle::Hidden;
+                ctx.request_paint();
+            }
+            _ => {}
+        }
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let style = theme::label_keyboard();
+        let text_area = self.area.inset(INPUT_INSETS);
 
-        let text_baseline = self.area.top_left() + Offset::y(style.text_font.text_height())
-            - Offset::y(style.text_font.text_baseline());
+        // Paint the background
+        shape::Bar::new(text_area).with_bg(theme::BG).render(target);
 
-        let text = self.textbox.content();
-
-        shape::Bar::new(self.area).with_bg(theme::BG).render(target);
-
-        // Find out how much text can fit into the textbox.
-        // Accounting for the pending marker, which draws itself one pixel longer than
-        // the last character
-        let available_area_width = self.area.width() - 1;
-        let text_to_display =
-            long_line_content_with_ellipsis(text, "...", style.text_font, available_area_width);
-
-        shape::Text::new(text_baseline, &text_to_display)
-            .with_font(style.text_font)
-            .with_fg(style.text_color)
-            .render(target);
-
-        // Paint the pending marker.
-        if self.multi_tap.pending_key().is_some() {
-            render_pending_marker(
-                target,
-                text_baseline,
-                &text_to_display,
-                style.text_font,
-                style.text_color,
-            );
+        // Paint the passphrase
+        if !self.textbox.content().is_empty() {
+            match self.display_style {
+                DisplayStyle::Shown => self.render_chars(text_area, target),
+                _ => self.render_dots(text_area, target),
+            }
         }
     }
 }
