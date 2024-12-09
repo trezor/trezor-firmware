@@ -21,7 +21,7 @@
 #define _FONTS_H
 
 #include <stdbool.h>
-#include <stdint.h>
+#include <trezor_types.h>
 #include "font_bitmap.h"
 
 #ifdef USE_RGB_COLORS

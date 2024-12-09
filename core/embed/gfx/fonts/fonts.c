@@ -20,9 +20,6 @@
 #include <trezor_rtl.h>
 
 #include "fonts.h"
-#ifdef TRANSLATIONS
-#include "librust_fonts.h"
-#endif
 
 // include selectively based on the SCons variables
 #ifdef TREZOR_FONT_NORMAL_ENABLE
