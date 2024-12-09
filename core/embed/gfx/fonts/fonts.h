@@ -20,7 +20,6 @@
 #ifndef _FONTS_H
 #define _FONTS_H
 
-#include <stdbool.h>
 #include <trezor_types.h>
 #include "font_bitmap.h"
 
