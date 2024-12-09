@@ -38,7 +38,8 @@ typedef struct {
   const uint8_t *glyph_nonprintable;
 } font_info_t;
 
-/// Font identifiers
+/// Font identifiers. Keep in sync with `enum font` definition in
+/// `core/embed/rust/src/ui/display/font.rs`.
 typedef enum {
   FONT_NORMAL = -1,
   FONT_BOLD = -2,
