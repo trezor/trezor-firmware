@@ -267,6 +267,7 @@ impl<'a> Translations<'a> {
     /// string not to the underlying data, but to the _reference_ to the
     /// translations object. This is to facilitate safe interface to
     /// flash-based translations. See docs for `flash::get` for details.
+    #[allow(clippy::needless_lifetimes)]
     pub fn get_utf8_glyph<'b>(&'b self, codepoint: u16, font_index: u16) -> *const u8 {
         if let Some(glyph) = self.font(font_index).and_then(|t| t.get(codepoint)) {
             glyph.as_ptr()
