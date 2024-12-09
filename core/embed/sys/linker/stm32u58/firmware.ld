@@ -69,7 +69,7 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 32K; /* Overflow causes UsageFault */
-  } >AUX2_RRAM
+  } >AUX2_RAM
 
   .confidential : ALIGN(512) {
     *(.confidential*);
