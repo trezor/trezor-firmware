@@ -971,7 +971,55 @@ void test_pmic(const char *args) {
 void test_wpc(const char *args) {
   stwlc38_init();
 
-  if (strcmp(args, "EN") == 0) {
+  if (strcmp(args, "UPDATE") == 0) {
+    vcp_println("Trying to update STWLC38 ... ");
+
+    uint32_t update_time_ms = systick_ms();
+    bool status = stwlc38_patch_and_config();
+    update_time_ms = systick_ms() - update_time_ms;
+
+    if (status == false) {
+      vcp_println("ERROR # Some problem occured");
+    } else {
+      vcp_println("WPC update completed {%d ms}", update_time_ms);
+      vcp_println("OK");
+    }
+
+  } else if (strcmp(args, "CHIP_INFO") == 0) {
+    stwlc38_chip_info_t chip_info;
+
+    if (!stwlc38_read_chip_info(&chip_info)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+
+    vcp_println("chip_id  0x%d", chip_info.chip_id);
+    vcp_println("chip_rev 0x%d ", chip_info.chip_rev);
+    vcp_println("cust_id  0x%d ", chip_info.cust_id);
+    vcp_println("rom_id   0x%X ", chip_info.rom_id);
+    vcp_println("patch_id 0x%X ", chip_info.patch_id);
+    vcp_println("cfg_id   0x%X ", chip_info.cfg_id);
+    vcp_println("pe_id    0x%X ", chip_info.pe_id);
+    vcp_println("op_mode  0x%X ", chip_info.op_mode);
+
+    vcp_print("device_id : ");
+    for (uint8_t i = 0; i < sizeof(chip_info.device_id); i++) {
+      vcp_print("%x", chip_info.device_id[i]);
+    }
+    vcp_println("");
+
+    vcp_println("sys_err  0x%X ", chip_info.sys_err);
+    vcp_println(" - core_hard_fault:   0x%X ", chip_info.core_hard_fault);
+    vcp_println(" - nvm_ip_err:        0x%X ", chip_info.nvm_ip_err);
+    vcp_println(" - nvm_boot_err:      0x%X ", chip_info.nvm_boot_err);
+    vcp_println(" - nvm_pe_error:      0x%X ", chip_info.nvm_pe_error);
+    vcp_println(" - nvm_config_err:    0x%X ", chip_info.nvm_config_err);
+    vcp_println(" - nvm_patch_err:     0x%X ", chip_info.nvm_patch_err);
+    vcp_println(" - nvm_prod_info_err: 0x%X ", chip_info.nvm_prod_info_err);
+
+    vcp_println("OK");
+
+  } else if (strcmp(args, "EN") == 0) {
     if (!stwlc38_enable(true)) {
       vcp_println("ERROR # STWLC38 not initialized");
       return;
