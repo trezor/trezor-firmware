@@ -270,6 +270,13 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    DatabaseWipe = 1000
+    DatabaseWipeResponse = 1001
+    DatabaseModifyKey = 1002
+    DatabaseModifyKeyResponse = 1003
+    DatabaseProveMembership = 1004
+    DatabaseMerge = 1005
+    DatabaseMergeResponse = 1006
 
 
 class FailureType(IntEnum):
@@ -3133,6 +3140,142 @@ class ECDHSessionKey(protobuf.MessageType):
     ) -> None:
         self.session_key = session_key
         self.public_key = public_key
+
+
+class DatabaseWipe(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1000
+
+
+class DatabaseWipeResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1001
+    FIELDS = {
+        1: protobuf.Field("identifier", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("signature", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        identifier: Optional["bytes"] = None,
+        signature: Optional["bytes"] = None,
+    ) -> None:
+        self.identifier = identifier
+        self.signature = signature
+
+
+class DatabaseModifyKey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1002
+    FIELDS = {
+        1: protobuf.Field("database_time", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("database_signature", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("key", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("value", "string", repeated=False, required=False, default=None),
+        5: protobuf.Field("proof", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        database_time: Optional["bytes"] = None,
+        database_signature: Optional["bytes"] = None,
+        key: Optional["str"] = None,
+        value: Optional["str"] = None,
+        proof: Optional["bytes"] = None,
+    ) -> None:
+        self.database_time = database_time
+        self.database_signature = database_signature
+        self.key = key
+        self.value = value
+        self.proof = proof
+
+
+class DatabaseModifyKeyResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1003
+    FIELDS = {
+        1: protobuf.Field("database_signature", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("update_signature", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        database_signature: Optional["bytes"] = None,
+        update_signature: Optional["bytes"] = None,
+    ) -> None:
+        self.database_signature = database_signature
+        self.update_signature = update_signature
+
+
+class DatabaseProveMembership(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1004
+    FIELDS = {
+        1: protobuf.Field("database_time", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("database_signature", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("key", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("proof", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        database_time: Optional["bytes"] = None,
+        database_signature: Optional["bytes"] = None,
+        key: Optional["str"] = None,
+        proof: Optional["bytes"] = None,
+    ) -> None:
+        self.database_time = database_time
+        self.database_signature = database_signature
+        self.key = key
+        self.proof = proof
+
+
+class DatabaseMerge(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1005
+    FIELDS = {
+        1: protobuf.Field("database_time", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("database_signature", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("key", "string", repeated=False, required=False, default=None),
+        4: protobuf.Field("value", "string", repeated=False, required=False, default=None),
+        5: protobuf.Field("proof", "bytes", repeated=False, required=False, default=None),
+        6: protobuf.Field("update_identifier", "bytes", repeated=False, required=False, default=None),
+        7: protobuf.Field("update_time", "bytes", repeated=False, required=False, default=None),
+        8: protobuf.Field("update_signature", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        database_time: Optional["bytes"] = None,
+        database_signature: Optional["bytes"] = None,
+        key: Optional["str"] = None,
+        value: Optional["str"] = None,
+        proof: Optional["bytes"] = None,
+        update_identifier: Optional["bytes"] = None,
+        update_time: Optional["bytes"] = None,
+        update_signature: Optional["bytes"] = None,
+    ) -> None:
+        self.database_time = database_time
+        self.database_signature = database_signature
+        self.key = key
+        self.value = value
+        self.proof = proof
+        self.update_identifier = update_identifier
+        self.update_time = update_time
+        self.update_signature = update_signature
+
+
+class DatabaseMergeResponse(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 1006
+    FIELDS = {
+        1: protobuf.Field("database_signature", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        database_signature: Optional["bytes"] = None,
+    ) -> None:
+        self.database_signature = database_signature
 
 
 class Initialize(protobuf.MessageType):

@@ -262,6 +262,13 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        DatabaseWipe = 1000
+        DatabaseWipeResponse = 1001
+        DatabaseModifyKey = 1002
+        DatabaseModifyKeyResponse = 1003
+        DatabaseProveMembership = 1004
+        DatabaseMerge = 1005
+        DatabaseMergeResponse = 1006
 
     class FailureType(IntEnum):
         UnexpectedMessage = 1

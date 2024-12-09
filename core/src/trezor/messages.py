@@ -2033,6 +2033,128 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ECDHSessionKey"]:
             return isinstance(msg, cls)
 
+    class DatabaseWipe(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DatabaseWipe"]:
+            return isinstance(msg, cls)
+
+    class DatabaseWipeResponse(protobuf.MessageType):
+        identifier: "bytes | None"
+        signature: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            identifier: "bytes | None" = None,
+            signature: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DatabaseWipeResponse"]:
+            return isinstance(msg, cls)
+
+    class DatabaseModifyKey(protobuf.MessageType):
+        database_time: "bytes | None"
+        database_signature: "bytes | None"
+        key: "str | None"
+        value: "str | None"
+        proof: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            database_time: "bytes | None" = None,
+            database_signature: "bytes | None" = None,
+            key: "str | None" = None,
+            value: "str | None" = None,
+            proof: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DatabaseModifyKey"]:
+            return isinstance(msg, cls)
+
+    class DatabaseModifyKeyResponse(protobuf.MessageType):
+        database_signature: "bytes | None"
+        update_signature: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            database_signature: "bytes | None" = None,
+            update_signature: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DatabaseModifyKeyResponse"]:
+            return isinstance(msg, cls)
+
+    class DatabaseProveMembership(protobuf.MessageType):
+        database_time: "bytes | None"
+        database_signature: "bytes | None"
+        key: "str | None"
+        proof: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            database_time: "bytes | None" = None,
+            database_signature: "bytes | None" = None,
+            key: "str | None" = None,
+            proof: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DatabaseProveMembership"]:
+            return isinstance(msg, cls)
+
+    class DatabaseMerge(protobuf.MessageType):
+        database_time: "bytes | None"
+        database_signature: "bytes | None"
+        key: "str | None"
+        value: "str | None"
+        proof: "bytes | None"
+        update_identifier: "bytes | None"
+        update_time: "bytes | None"
+        update_signature: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            database_time: "bytes | None" = None,
+            database_signature: "bytes | None" = None,
+            key: "str | None" = None,
+            value: "str | None" = None,
+            proof: "bytes | None" = None,
+            update_identifier: "bytes | None" = None,
+            update_time: "bytes | None" = None,
+            update_signature: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DatabaseMerge"]:
+            return isinstance(msg, cls)
+
+    class DatabaseMergeResponse(protobuf.MessageType):
+        database_signature: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            database_signature: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DatabaseMergeResponse"]:
+            return isinstance(msg, cls)
+
     class Initialize(protobuf.MessageType):
         session_id: "bytes | None"
         derive_cardano: "bool | None"

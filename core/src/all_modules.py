@@ -89,6 +89,14 @@ trezor.crypto.scripts
 import trezor.crypto.scripts
 trezor.crypto.slip39
 import trezor.crypto.slip39
+trezor.database.cache
+import trezor.database.cache
+trezor.database.database_context
+import trezor.database.database_context
+trezor.database.storage
+import trezor.database.storage
+trezor.database.storage_database_context
+import trezor.database.storage_database_context
 trezor.enums.AmountUnit
 import trezor.enums.AmountUnit
 trezor.enums.BackupAvailability
@@ -319,6 +327,14 @@ apps.common.signverify
 import apps.common.signverify
 apps.common.writers
 import apps.common.writers
+apps.database.merge
+import apps.database.merge
+apps.database.modify_key
+import apps.database.modify_key
+apps.database.prove_membership
+import apps.database.prove_membership
+apps.database.wipe
+import apps.database.wipe
 apps.debug
 import apps.debug
 apps.debug.load_device
