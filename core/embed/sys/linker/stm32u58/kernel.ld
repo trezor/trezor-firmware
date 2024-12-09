@@ -4,22 +4,20 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = KERNEL_MAXSIZE
-  SRAM1  (wal) : ORIGIN = MCU_SRAM2, LENGTH = 0K
-  BOOT_ARGS  (wal) : ORIGIN = MCU_SRAM2 - BOOTARGS_SIZE, LENGTH = BOOTARGS_SIZE
-  SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  KERNEL_SRAM2_SIZE
-  SRAM2_U  (wal) : ORIGIN = MCU_SRAM2 + KERNEL_SRAM2_SIZE, LENGTH = KERNEL_U_RAM_SIZE
-  SRAM3  (wal) : ORIGIN = MCU_SRAM3 + MCU_SRAM3_SIZE - FRAMEBUFFER_SRAM_SIZE, LENGTH = FRAMEBUFFER_SRAM_SIZE
-  SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  0K  /* SRAM5 is not available */
-  SRAM6  (wal) : ORIGIN = MCU_SRAM6, LENGTH =  0K  /* SRAM6 is not available */
-  SRAM4  (wal) : ORIGIN = MCU_SRAM4, LENGTH =  MCU_SRAM4_SIZE
+
+  MAIN_RAM (wal) : ORIGIN = MAIN_RAM_START, LENGTH = MAIN_RAM_SIZE
+  BOOT_ARGS (wal) : ORIGIN = BOOTARGS_START, LENGTH = BOOTARGS_SIZE
+  SAES_RAM (wal) : ORIGIN = SAES_RAM_START, LENGTH = SAES_RAM_SIZE
+  FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
+  FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
 }
 
-main_stack_base = ORIGIN(SRAM2) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ORIGIN(SRAM2);
+main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+_sstack = ADDR(.stack);
 _estack = main_stack_base;
 
-ustack_base = ORIGIN(SRAM2_U) + 512;
-_sustack = ORIGIN(SRAM2_U) + 256;
+ustack_base = ADDR(.udata) + 512;
+_sustack = ADDR(.udata) + 256;
 _eustack = ustack_base;
 
 /* used by the startup code to populate variables used by the C code */
@@ -38,7 +36,7 @@ confidential_size = SIZEOF(.confidential);
 _startup_clear_ram_0_start = MCU_SRAM1;
 _startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE;
 _startup_clear_ram_1_start = MCU_SRAM2;
-_startup_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_startup_clear_ram_1_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
 _startup_clear_ram_2_start = MCU_SRAM4;
 _startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
@@ -46,32 +44,19 @@ _startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 _handoff_clear_ram_0_start = MCU_SRAM1;
 _handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - 512;
 _handoff_clear_ram_1_start = MCU_SRAM2;
-_handoff_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_handoff_clear_ram_1_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
 _handoff_clear_ram_2_start = MCU_SRAM4;
 _handoff_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 /* used by the shutdown code to wipe memory */
 _shutdown_clear_ram_0_start = MCU_SRAM1;
-_shutdown_clear_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_shutdown_clear_ram_0_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
 _shutdown_clear_ram_1_start = MCU_SRAM4;
 _shutdown_clear_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 _shutdown_clear_ram_2_start = 0;
 _shutdown_clear_ram_2_end = 0;
 _shutdown_clear_ram_3_start = 0;
 _shutdown_clear_ram_3_end = 0;
-
-/* used by applet cleaning code */
-_coreapp_clear_ram_0_start = MCU_SRAM1;
-_coreapp_clear_ram_0_size = MCU_SRAM1_SIZE - 512;
-_coreapp_clear_ram_1_start = MCU_SRAM2 + KERNEL_SRAM2_SIZE + KERNEL_U_RAM_SIZE;
-_coreapp_clear_ram_1_size = MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE + MCU_SRAM3_SIZE - FRAMEBUFFER_SRAM_SIZE;
-
-sram_u_start = ORIGIN(SRAM2_U);
-sram_u_end = ORIGIN(SRAM2_U) + LENGTH(SRAM2_U);
-
-/* reserve 256 bytes for bootloader arguments */
-boot_args_start = ORIGIN(BOOT_ARGS);
-boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
 
 _codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash)  + SIZEOF(.uflash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
@@ -104,12 +89,12 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 6K; /* Overflow causes UsageFault */
-  } >SRAM2
+  } >MAIN_RAM
 
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >SRAM2 AT>FLASH
+  } >MAIN_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -120,33 +105,34 @@ SECTIONS {
     *(.buf*);
     *(.bss*);
     . = ALIGN(4);
-  } >SRAM2
+  } >MAIN_RAM
 
   /* unprivileged data and stack for SAES */
   .udata : ALIGN(512) {
     *(.udata*);
     . = ALIGN(256);
     . = 256; /* Overflow causes UsageFault */
-  } >SRAM2_U
+  } >SAES_RAM
 
   .confidential : ALIGN(512) {
     *(.confidential*);
     . = ALIGN(CODE_ALIGNMENT);
-  } >SRAM2 AT>FLASH
+  } >MAIN_RAM AT>FLASH
 
   .uflash : ALIGN(512) {
     *(.uflash*);
     . = ALIGN(COREAPP_ALIGNMENT);
   } >FLASH AT>FLASH
 
-  .fb : ALIGN(4) {
-   __fb_start = .;
+  .fb1 : ALIGN(4) {
     *(.fb1*);
-    *(.fb2*);
-   __fb_end = .;
     . = ALIGN(4);
-  } >SRAM3
+  } >FB1_RAM
 
+  .fb2 : ALIGN(4) {
+    *(.fb2*);
+    . = ALIGN(4);
+  } >FB2_RAM
 
   .boot_args : ALIGN(8) {
     *(.boot_command*);
