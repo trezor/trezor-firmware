@@ -9,6 +9,7 @@
 #define SECRET_HEADER_LEN 16
 #define SECRET_OPTIGA_KEY_OFFSET 16
 #define SECRET_OPTIGA_KEY_LEN 32
+#define SECRET_TROPIC_KEY_LEN 32
 
 #define SECRET_MONOTONIC_COUNTER_OFFSET 48
 #define SECRET_MONOTONIC_COUNTER_LEN 1024
@@ -56,6 +57,8 @@ secbool secret_optiga_writable(void);
 
 // Erases optiga pairing secret from the secret storage
 void secret_optiga_erase(void);
+
+secbool secret_tropic_get(uint8_t dest[SECRET_TROPIC_KEY_LEN]);
 
 // Regenerates the BHK and writes it to the secret storage
 void secret_bhk_regenerate(void);

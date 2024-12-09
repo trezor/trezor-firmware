@@ -7,6 +7,11 @@
 
 #ifdef KERNEL_MODE
 
+static uint8_t SECRET_TROPIC_PRIVKEY_BYTES[] =                                                \
+  {0xf0, 0xc4, 0xaa, 0x04, 0x8f, 0x00, 0x13, 0xa0, 0x96, 0x84, 0xdf, \
+   0x05, 0xe8, 0xa2, 0x2e, 0xf7, 0x21, 0x38, 0x98, 0x28, 0x2b, 0xa9, \
+   0x43, 0x12, 0xf3, 0x13, 0xdf, 0x2d, 0xce, 0x8d, 0x41, 0x64};
+
 static secbool bootloader_locked_set = secfalse;
 static secbool bootloader_locked = secfalse;
 
@@ -122,6 +127,11 @@ secbool secret_optiga_present(void) {
 secbool secret_optiga_writable(void) { return secret_wiped(); }
 
 void secret_optiga_erase(void) { secret_erase(); }
+
+secbool secret_tropic_get(uint8_t dest[SECRET_TROPIC_KEY_LEN]) {
+  memcpy(dest, &SECRET_TROPIC_PRIVKEY_BYTES, SECRET_TROPIC_KEY_LEN);
+  return sectrue;
+}
 
 void secret_prepare_fw(secbool allow_run_with_secret, secbool _trust_all) {
 #ifdef USE_OPTIGA

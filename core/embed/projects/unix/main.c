@@ -37,6 +37,7 @@
 #include <unistd.h>
 
 #include <io/display.h>
+#include <sec/secret.h>
 #include <sys/system.h>
 #include <sys/systimer.h>
 #include <util/flash.h>
@@ -47,6 +48,7 @@
 #include "extmod/vfs_posix.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
+#include "memzero.h"
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -54,6 +56,10 @@
 
 #ifdef USE_TOUCH
 #include <io/touch.h>
+#endif
+
+#ifdef USE_TROPIC
+#include <sec/tropic_transport.h>
 #endif
 
 #include "py/builtin.h"
@@ -498,6 +504,21 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
   return 1;
 }
 
+void drivers_init() {
+#ifdef USE_TROPIC
+  uint8_t tropic_secret[SECRET_TROPIC_KEY_LEN] = {0};
+  secbool tropic_secret_ok = secret_tropic_get(tropic_secret);
+
+  tropic_init();
+  if (sectrue == tropic_secret_ok) {
+    if (tropic_handshake(tropic_secret) != TROPIC_SUCCESS) {
+      // ??
+    }
+  }
+  memzero(tropic_secret, sizeof(tropic_secret));
+#endif
+}
+
 MP_NOINLINE int main_(int argc, char **argv) {
 #ifdef SIGPIPE
   // Do not raise SIGPIPE, instead return EPIPE. Otherwise, e.g. writing
@@ -518,6 +539,8 @@ MP_NOINLINE int main_(int argc, char **argv) {
   pre_process_options(argc, argv);
 
   system_init(&rsod_panic_handler);
+
+  drivers_init();
 
   SDL_SetEventFilter(sdl_event_filter, NULL);
 
