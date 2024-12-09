@@ -134,7 +134,7 @@ impl From<Font> for i32 {
 impl Font {
     /// Supports UTF8 characters
     pub fn text_width(self, text: &str) -> i16 {
-        text.chars().fold(0, |acc, c| acc + self.get_glyph(c).adv)
+        text.chars().fold(0, |acc, c| acc + self.char_width(c))
     }
 
     /// Supports UTF8 characters
@@ -207,9 +207,7 @@ impl Font {
     }
 
     pub fn char_width(self, ch: char) -> i16 {
-        let mut buf = [0u8; 4];
-        let encoding = ch.encode_utf8(&mut buf);
-        self.text_width(encoding)
+        self.get_glyph(ch).adv
     }
 
     pub fn text_height(self) -> i16 {
