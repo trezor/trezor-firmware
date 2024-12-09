@@ -259,6 +259,8 @@ static secbool copy_sdcard(void) {
 int main(void) {
   system_init(&rsod_panic_handler);
 
+  reset_flags_reset();
+
   if (sectrue != flash_configure_option_bytes()) {
     // display is not initialized so don't call ensure
     erase_storage(NULL);
@@ -270,8 +272,6 @@ int main(void) {
 #endif
 
   drivers_init();
-
-  reset_flags_reset();
 
 #ifdef USE_SD_CARD
   // If the bootloader is being updated from SD card, we need to preserve the
