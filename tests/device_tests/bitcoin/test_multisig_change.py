@@ -83,6 +83,30 @@ multisig_in3 = messages.MultisigRedeemScriptType(
     m=2,
 )
 
+multisig_in4 = messages.MultisigRedeemScriptType(
+    nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
+    address_n=[0, 0],
+    signatures=[b"", b"", b""],
+    m=2,
+    pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
+)
+
+multisig_in5 = messages.MultisigRedeemScriptType(
+    nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
+    address_n=[0, 1],
+    signatures=[b"", b"", b""],
+    m=2,
+    pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
+)
+
+multisig_in6 = messages.MultisigRedeemScriptType(
+    nodes=[NODE_EXT1, NODE_EXT3, NODE_INT],
+    address_n=[0, 1],
+    signatures=[b"", b"", b""],
+    m=2,
+    pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
+)
+
 prev_hash_1, prev_tx_1 = forge_prevtx(
     [("3Ltgk5WPUMLcT2QvwRXKj9CWsYuAKqeHJ8", 50_000_000)]
 )
@@ -119,7 +143,51 @@ INP3 = messages.TxInputType(
     multisig=multisig_in3,
 )
 
-TX_API = {prev_hash_1: prev_tx_1, prev_hash_2: prev_tx_2, prev_hash_3: prev_tx_3}
+prev_hash_4, prev_tx_4 = forge_prevtx(
+    [("3HwrvQEfYw4wUvGHpGmixWB15HPgqrvTh1", 50_000_000)]
+)
+INP4 = messages.TxInputType(
+    address_n=[H_(45), 0, 0, 0],
+    amount=50_000_000,
+    prev_hash=prev_hash_4,
+    prev_index=0,
+    script_type=messages.InputScriptType.SPENDMULTISIG,
+    multisig=multisig_in4,
+)
+
+prev_hash_5, prev_tx_5 = forge_prevtx(
+    [("3Md42fbNjSH3qwnj5jDvT6CSzJKVXHiXSc", 34_500_000)]
+)
+INP5 = messages.TxInputType(
+    address_n=[H_(45), 0, 0, 1],
+    amount=34_500_000,
+    prev_hash=prev_hash_5,
+    prev_index=0,
+    script_type=messages.InputScriptType.SPENDMULTISIG,
+    multisig=multisig_in5,
+)
+
+prev_hash_6, prev_tx_6 = forge_prevtx(
+    [("35PBSvszuvxhEDypGYcUhEQDigvKY8C5Rc", 55_500_000)]
+)
+INP6 = messages.TxInputType(
+    address_n=[H_(45), 0, 0, 1],
+    amount=55_500_000,
+    prev_hash=prev_hash_6,
+    prev_index=0,
+    script_type=messages.InputScriptType.SPENDMULTISIG,
+    multisig=multisig_in6,
+)
+
+
+TX_API = {
+    prev_hash_1: prev_tx_1,
+    prev_hash_2: prev_tx_2,
+    prev_hash_3: prev_tx_3,
+    prev_hash_4: prev_tx_4,
+    prev_hash_5: prev_tx_5,
+    prev_hash_6: prev_tx_6,
+}
 
 
 def _responses(
@@ -226,7 +294,7 @@ def test_external_internal(client: Client):
                 client,
                 INP1,
                 INP2,
-                change_indices=[] if is_core(client) else [2],
+                change_indices=[],
                 foreign_indices=[2],
             )
         )
@@ -262,7 +330,7 @@ def test_internal_external(client: Client):
                 client,
                 INP1,
                 INP2,
-                change_indices=[] if is_core(client) else [1],
+                change_indices=[],
                 foreign_indices=[1],
             )
         )
@@ -373,10 +441,46 @@ def test_multisig_change_match_second(client: Client):
         )
 
 
-# inputs match, change mismatches (second tries to be change but isn't)
+# inputs match, change matches (first is change)
+def test_sorted_multisig_change_match_first(client: Client):
+    multisig_out1 = messages.MultisigRedeemScriptType(
+        nodes=[NODE_EXT1, NODE_INT, NODE_EXT2],
+        address_n=[1, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    out1 = messages.TxOutputType(
+        address_n=[H_(45), 0, 1, 0],
+        multisig=multisig_out1,
+        amount=40_000_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+    )
+
+    out2 = messages.TxOutputType(
+        address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
+        amount=44_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with client:
+        client.set_expected_responses(
+            _responses(client, INP4, INP5, change_indices=[1])
+        )
+        btc.sign_tx(
+            client,
+            "Bitcoin",
+            [INP4, INP5],
+            [out1, out2],
+            prev_txes=TX_API,
+        )
+
+
+# inputs match, change mismatches (second tries to be change but isn't because the pubkeys are in different order)
 def test_multisig_mismatch_multisig_change(client: Client):
     multisig_out2 = messages.MultisigRedeemScriptType(
-        nodes=[NODE_EXT1, NODE_INT, NODE_EXT3],
+        nodes=[NODE_EXT1, NODE_INT, NODE_EXT2],
         address_n=[1, 0],
         signatures=[b"", b"", b""],
         m=2,
@@ -406,8 +510,40 @@ def test_multisig_mismatch_multisig_change(client: Client):
         )
 
 
-# inputs match, change mismatches (second tries to be change but isn't)
-@pytest.mark.models(skip="legacy", reason="Not fixed")
+# inputs match, change mismatches (second tries to be change but isn't because the pubkeys are different)
+def test_sorted_multisig_mismatch_multisig_change(client: Client):
+    multisig_out2 = messages.MultisigRedeemScriptType(
+        nodes=[NODE_EXT1, NODE_INT, NODE_EXT3],
+        address_n=[1, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+    )
+
+    out1 = messages.TxOutputType(
+        address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
+        amount=40_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    out2 = messages.TxOutputType(
+        address_n=[H_(45), 0, 1, 0],
+        multisig=multisig_out2,
+        amount=44_000_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+    )
+
+    with client:
+        client.set_expected_responses(_responses(client, INP4, INP5))
+        btc.sign_tx(
+            client,
+            "Bitcoin",
+            [INP4, INP5],
+            [out1, out2],
+            prev_txes=TX_API,
+        )
+
+
+# inputs match, change mismatches (second tries to be change but isn't because is uses per-node paths)
 def test_multisig_mismatch_multisig_change_different_paths(client: Client):
     multisig_out2 = messages.MultisigRedeemScriptType(
         pubkeys=[
@@ -443,10 +579,10 @@ def test_multisig_mismatch_multisig_change_different_paths(client: Client):
         )
 
 
-# inputs mismatch, change matches with first input
+# inputs mismatch because the pubkeys are different, change matches with first input
 def test_multisig_mismatch_inputs(client: Client):
     multisig_out1 = messages.MultisigRedeemScriptType(
-        nodes=[NODE_EXT2, NODE_EXT1, NODE_INT],
+        nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
         address_n=[1, 0],
         signatures=[b"", b"", b""],
         m=2,
@@ -471,6 +607,40 @@ def test_multisig_mismatch_inputs(client: Client):
             client,
             "Bitcoin",
             [INP1, INP3],
+            [out1, out2],
+            prev_txes=TX_API,
+        )
+
+
+# inputs mismatch because the pubkeys are different, change matches with first input
+def test_sorted_multisig_mismatch_inputs(client: Client):
+    multisig_out1 = messages.MultisigRedeemScriptType(
+        nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
+        address_n=[1, 0],
+        signatures=[b"", b"", b""],
+        m=2,
+        pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
+    )
+
+    out1 = messages.TxOutputType(
+        address_n=[H_(45), 0, 1, 0],
+        multisig=multisig_out1,
+        amount=40_000_000,
+        script_type=messages.OutputScriptType.PAYTOMULTISIG,
+    )
+
+    out2 = messages.TxOutputType(
+        address="3PkXLsY7AUZCrCKGvX8FfP2EawowUBMbcg",
+        amount=65_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with client:
+        client.set_expected_responses(_responses(client, INP4, INP6))
+        btc.sign_tx(
+            client,
+            "Bitcoin",
+            [INP4, INP6],
             [out1, out2],
             prev_txes=TX_API,
         )

@@ -124,6 +124,8 @@ typedef struct {
   bool multisig_fp_set;
   bool multisig_fp_mismatch;
   uint8_t multisig_fp[32];
+  bool is_multisig;
+  MatchState is_multisig_state;
   uint32_t in_address_n[8];
   size_t in_address_n_count;
   InputScriptType in_script_type;
@@ -978,12 +980,34 @@ static bool extract_input_multisig_fp(TxInfo *tx_info,
   return true;
 }
 
+static void extract_is_multisig(TxInfo *tx_info, const TxInputType *txinput) {
+  switch (tx_info->is_multisig_state) {
+    case MatchState_MISMATCH:
+      return;
+    case MatchState_UNDEFINED:
+      tx_info->is_multisig_state = MatchState_MATCH;
+      tx_info->is_multisig = txinput->has_multisig;
+      return;
+    case MatchState_MATCH:
+      if (txinput->has_multisig != tx_info->is_multisig) {
+        tx_info->is_multisig_state = MatchState_MISMATCH;
+      }
+      return;
+  }
+}
+
 bool check_change_multisig_fp(const TxInfo *tx_info,
                               const TxOutputType *txoutput) {
   uint8_t h[32] = {0};
   return tx_info->multisig_fp_set && !tx_info->multisig_fp_mismatch &&
          cryptoMultisigFingerprint(&(txoutput->multisig), h) &&
          memcmp(tx_info->multisig_fp, h, 32) == 0;
+}
+
+bool check_change_is_multisig(const TxInfo *tx_info,
+                              const TxOutputType *txoutput) {
+  return tx_info->is_multisig_state == MatchState_MATCH &&
+         tx_info->is_multisig == txoutput->has_multisig;
 }
 
 static InputScriptType simple_script_type(InputScriptType script_type) {
@@ -1245,6 +1269,7 @@ static bool tx_info_init(TxInfo *tx_info, uint32_t inputs_count,
   tx_info->min_sequence = SEQUENCE_FINAL;
   tx_info->multisig_fp_set = false;
   tx_info->multisig_fp_mismatch = false;
+  tx_info->is_multisig_state = MatchState_UNDEFINED;
   tx_info->in_address_n_count = 0;
   tx_info->in_script_type = 0;
   tx_info->in_script_type_state = MatchState_UNDEFINED;
@@ -1711,6 +1736,10 @@ static bool tx_info_add_input(TxInfo *tx_info, const TxInputType *txinput) {
       return false;
     }
 
+    // Remember whether all inputs are singlesig or all inputs are multisig.
+    // Change-outputs must be of the same type.
+    extract_is_multisig(tx_info, txinput);
+
     // Remember the input's script type. Change-outputs must use the same script
     // type as all inputs.
     extract_input_script_type(tx_info, txinput);
@@ -2069,15 +2098,25 @@ static bool is_change_output(const TxInfo *tx_info,
     return false;
   }
 
-  /*
-   * Check the multisig fingerprint only for multisig outputs. This means that
-   * a transfer from a multisig account to a singlesig account is treated as a
-   * change-output as long as all other change-output conditions are satisfied.
-   * This goes a bit against the concept of a multisig account, but the other
-   * cosigners will notice that they are relinquishing control of the funds, so
-   * there is no security risk.
-   */
-  if (txoutput->has_multisig && !check_change_multisig_fp(tx_info, txoutput)) {
+  if (txoutput->has_multisig) {
+    if (!check_change_multisig_fp(tx_info, txoutput)) {
+      return false;
+    }
+    if (!multisig_uses_single_path(&(txoutput->multisig))) {
+      // An address that uses different derivation paths for different xpubs
+      // could be difficult to discover if the user did not note all the paths.
+      // The reason is that each path ends with an address index, which can have
+      // 1,000,000 possible values. If the address is a t-out-of-n multisig, the
+      // total number of possible paths is 1,000,000^n. This can be exploited by
+      // an attacker who has compromised the user's computer. The attacker could
+      // randomize the address indices and then demand a ransom from the user to
+      // reveal the paths. To prevent this, we require that all xpubs use the
+      // same derivation path.
+      return false;
+    }
+  }
+
+  if (!check_change_is_multisig(tx_info, txoutput)) {
     return false;
   }
 
