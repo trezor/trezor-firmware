@@ -273,19 +273,13 @@ class TrezorClient(Generic[UI]):
         """Update internal fields based on passed-in Features message."""
 
         if not self.model:
-            # Trezor Model One bootloader 1.8.0 or older does not send model name
-            model = models.by_internal_name(features.internal_model)
-            if model is None:
-                model = models.by_name(features.model or "1")
-            if model is None:
-                raise RuntimeError(
-                    "Unsupported Trezor model"
-                    f" (internal_model: {features.internal_model}, model: {features.model})"
-                )
-            self.model = model
+            if features.internal_model is not None:
+                self.model = models.by_internal_name(features.internal_model)
+            else:
+                self.model = models.by_name(features.model)
 
         if features.vendor not in self.model.vendors:
-            raise RuntimeError("Unsupported device")
+            raise exceptions.TrezorException(f"Unrecognized vendor: {features.vendor}")
 
         self.features = features
         self.version = (

@@ -234,7 +234,9 @@ class ModelsFilter:
             assert isinstance(marker, str)
             if marker in cls.MODEL_SHORTCUTS:
                 selected_models |= cls.MODEL_SHORTCUTS[marker]
-            elif (model := models.by_internal_name(marker.upper())) is not None:
+            elif (
+                model := models.by_internal_name(marker.upper())
+            ) is not models.UNKNOWN_MODEL:
                 selected_models.add(model)
             else:
                 raise ValueError(f"Unknown model: {marker}")
