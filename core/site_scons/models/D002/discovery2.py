@@ -39,9 +39,12 @@ def configure(
     ]
 
     sources += [
-        "embed/io/display/stm32u5a9j-dk/display_driver.c",
-        "embed/io/display/stm32u5a9j-dk/display_fb.c",
-        "embed/io/display/stm32u5a9j-dk/display_ltdc_dsi.c",
+        "embed/io/display/ltdc_dsi/display_driver.c",
+        "embed/io/display/ltdc_dsi/panels/stm32u5a9j-dk/stm32u5a9j-dk.c",
+        "embed/io/display/ltdc_dsi/display_fb.c",
+        "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
+        "embed/io/display/ltdc_dsi/display_gfxmmu.c",
+        "embed/io/display/fb_queue/fb_queue.c",
     ]
     paths += ["embed/io/display/inc"]
 

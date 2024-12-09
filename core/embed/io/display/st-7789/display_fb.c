@@ -120,13 +120,7 @@ void display_physical_fb_clear(void) {
 static void bg_copy_callback(void) {
   display_driver_t *drv = &g_display_driver;
 
-  if (drv->queue.rix >= FRAME_BUFFER_COUNT) {
-    // This is an invalid state and we should never get here
-    return;
-  }
-
-  drv->queue.entry[drv->queue.rix] = FB_STATE_EMPTY;
-  drv->queue.rix = (drv->queue.rix + 1) % FRAME_BUFFER_COUNT;
+  fb_queue_set_done(&drv->queue);
 }
 
 // Interrupt routing handling TE signal
@@ -135,37 +129,13 @@ static void display_te_interrupt_handler(void) {
 
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
 
-  if (drv->queue.rix >= FRAME_BUFFER_COUNT) {
-    // This is an invalid state and we should never get here
-    return;
-  }
+  int16_t fb_idx = fb_queue_get_for_transfer(&drv->queue);
 
-  switch (drv->queue.entry[drv->queue.rix]) {
-    case FB_STATE_EMPTY:
-    case FB_STATE_PREPARING:
-      // No new frame queued
-      break;
-
-    case FB_STATE_COPYING:
-      // Currently we are copying a data to the display.
-      // We need to wait for the next TE interrupt.
-      break;
-
-    case FB_STATE_READY:
-      // Now it's proper time to copy the data to the display
-      drv->queue.entry[drv->queue.rix] = FB_STATE_COPYING;
-      display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
-      bg_copy_start_const_out_8(get_fb_ptr(drv->queue.rix),
-                                (uint8_t *)DISPLAY_DATA_ADDRESS,
-                                PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
-
-      // NOTE: when copying is done, this queue slot is marked empty
-      // (see bg_copy_callback())
-      break;
-
-    default:
-      // This is an invalid state and we should never get here
-      break;
+  if (fb_idx >= 0) {
+    display_panel_set_window(0, 0, DISPLAY_RESX - 1, DISPLAY_RESY - 1);
+    bg_copy_start_const_out_8(get_fb_ptr(fb_idx),
+                              (uint8_t *)DISPLAY_DATA_ADDRESS,
+                              PHYSICAL_FRAME_BUFFER_SIZE, bg_copy_callback);
   }
 }
 
@@ -187,17 +157,9 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
     return false;
   }
 
-  frame_buffer_state_t state;
+  uint8_t fb_idx = fb_queue_get_for_write(&drv->queue);
 
-  // We have to wait if the buffer was passed for copying
-  // to the interrupt handler
-  do {
-    state = drv->queue.entry[drv->queue.wix];
-  } while (state == FB_STATE_READY || state == FB_STATE_COPYING);
-
-  drv->queue.entry[drv->queue.wix] = FB_STATE_PREPARING;
-
-  fb->ptr = get_fb_ptr(drv->queue.wix);
+  fb->ptr = get_fb_ptr(fb_idx);
   fb->stride = DISPLAY_RESX * sizeof(uint16_t);
   // Enable access to the frame buffer from the unprivileged code
   mpu_set_active_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
@@ -236,7 +198,9 @@ void display_refresh(void) {
     return;
   }
 
-  if (drv->queue.entry[drv->queue.wix] != FB_STATE_PREPARING) {
+  int16_t fb_idx = fb_queue_get_for_copy(&drv->queue);
+
+  if (fb_idx < 0) {
     // No refresh needed as the frame buffer is not in
     // the state to be copied to the display
     return;
@@ -255,26 +219,26 @@ void display_refresh(void) {
     // Stop any background copying even if it is not finished yet
     bg_copy_abort();
     // Copy the frame buffer to the display manually
-    copy_fb_to_display(drv->queue.wix);
+    copy_fb_to_display(fb_idx);
     // Reset the buffer queue so we can eventually continue
     // safely in thread mode
-    drv->queue.wix = 0;
-    drv->queue.rix = 0;
-    for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
-      drv->queue.entry[i] = FB_STATE_EMPTY;
-    }
+    fb_queue_reset(&drv->queue);
+
     // Enable normal processing again
     NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
   } else {
     // Mark the buffer ready to switch to
-    drv->queue.entry[drv->queue.wix] = FB_STATE_READY;
-    drv->queue.wix = (drv->queue.wix + 1) % FRAME_BUFFER_COUNT;
+    fb_queue_set_ready_for_transfer(&drv->queue);
   }
 
 #else  // BOARDLOADER
   wait_for_te_signal();
-  copy_fb_to_display(drv->queue.wix);
-  drv->queue.entry[drv->queue.wix] = FB_STATE_EMPTY;
+  fb_queue_set_ready_for_transfer(&drv->queue);
+  fb_idx = fb_queue_get_for_transfer(&drv->queue);
+  if (fb_idx >= 0) {
+    copy_fb_to_display(fb_idx);
+    fb_queue_set_done(&drv->queue);
+  }
 #endif
 }
 
@@ -293,14 +257,7 @@ void display_ensure_refreshed(void) {
     //  so we can be sure there's not scheduled or pending
     // background copying
     do {
-      copy_pending = false;
-      for (int i = 0; i < FRAME_BUFFER_COUNT; i++) {
-        frame_buffer_state_t state = drv->queue.entry[i];
-        if (state == FB_STATE_READY || state == FB_STATE_COPYING) {
-          copy_pending = true;
-          break;
-        }
-      }
+      copy_pending = !fb_queue_is_processed(&drv->queue);
       __WFI();
     } while (copy_pending);
 
