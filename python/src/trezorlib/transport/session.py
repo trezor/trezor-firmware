@@ -181,18 +181,20 @@ class SessionV2(Session):
 
     @classmethod
     def new(
-        cls, client: TrezorClient, passphrase: str | None, derive_cardano: bool
+        cls,
+        client: TrezorClient,
+        passphrase: str | None,
+        derive_cardano: bool,
+        session_id: int = 0,
     ) -> SessionV2:
         assert isinstance(client.protocol, ProtocolV2)
-        session = cls(client, b"\x00")
-        new_session = session.call(
+        session = cls(client, session_id.to_bytes(1, "big"))
+        session.call(
             messages.ThpCreateNewSession(
                 passphrase=passphrase, derive_cardano=derive_cardano
             ),
-            expect=messages.ThpNewSession,
+            expect=messages.Success,
         )
-        assert new_session.new_session_id is not None
-        session_id = new_session.new_session_id
         session.update_id_and_sid(session_id.to_bytes(1, "big"))
         return session
 

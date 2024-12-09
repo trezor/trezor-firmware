@@ -49,11 +49,15 @@ class TestStorageCache(unittest.TestCase):
             self.assertEqual(len(channel.sessions), 0)
 
             cid_1 = channel.channel_id
-            session_cache_1 = cache_thp.get_new_session(channel.channel_cache)
+            session_cache_1 = cache_thp._deprecated_get_new_session(
+                channel.channel_cache
+            )
             session_1 = SessionContext(channel, session_cache_1)
             self.assertEqual(session_1.channel_id, cid_1)
 
-            session_cache_2 = cache_thp.get_new_session(channel.channel_cache)
+            session_cache_2 = cache_thp._deprecated_get_new_session(
+                channel.channel_cache
+            )
             session_2 = SessionContext(channel, session_cache_2)
             self.assertEqual(session_2.channel_id, cid_1)
             self.assertEqual(session_1.channel_id, session_2.channel_id)
@@ -63,7 +67,9 @@ class TestStorageCache(unittest.TestCase):
             cid_2 = channel_2.channel_id
             self.assertNotEqual(cid_1, cid_2)
 
-            session_cache_3 = cache_thp.get_new_session(channel_2.channel_cache)
+            session_cache_3 = cache_thp._deprecated_get_new_session(
+                channel_2.channel_cache
+            )
             session_3 = SessionContext(channel_2, session_cache_3)
             self.assertEqual(session_3.channel_id, cid_2)
 
@@ -137,13 +143,15 @@ class TestStorageCache(unittest.TestCase):
             cid = []
             sid = []
             for i in range(3):
-                sesions_A.append(cache_thp.get_new_session(channel_cache_A))
+                sesions_A.append(cache_thp._deprecated_get_new_session(channel_cache_A))
                 cid.append(sesions_A[i].channel_id)
                 sid.append(sesions_A[i].session_id)
 
             sessions_B = []
             for i in range(cache_thp._MAX_SESSIONS_COUNT - 3):
-                sessions_B.append(cache_thp.get_new_session(channel_cache_B))
+                sessions_B.append(
+                    cache_thp._deprecated_get_new_session(channel_cache_B)
+                )
 
             for i in range(3):
                 self.assertEqual(sesions_A[i], cache_thp._SESSIONS[i])
@@ -153,7 +161,7 @@ class TestStorageCache(unittest.TestCase):
                 self.assertEqual(sessions_B[i - 3], cache_thp._SESSIONS[i])
 
             # Assert that new session replaces the oldest (least used) one (_SESSOIONS[0])
-            new_session = cache_thp.get_new_session(channel_cache_B)
+            new_session = cache_thp._deprecated_get_new_session(channel_cache_B)
             self.assertEqual(new_session, cache_thp._SESSIONS[0])
             self.assertNotEqual(new_session.channel_id, cid[0])
             self.assertNotEqual(new_session.session_id, sid[0])
@@ -166,7 +174,7 @@ class TestStorageCache(unittest.TestCase):
             )
             self.assertTrue(channel_cache_A.last_usage > channel_cache_B.last_usage)
 
-            new_new_session = cache_thp.get_new_session(channel_cache_B)
+            new_new_session = cache_thp._deprecated_get_new_session(channel_cache_B)
 
             # Assert that creating a new session on channel B shifts the "last usage" again
             # and that _SESSIONS[1] was not replaced, but that _SESSIONS[2] was replaced
@@ -183,8 +191,12 @@ class TestStorageCache(unittest.TestCase):
             sessions = []
 
             for i in range(3):
-                sessions.append(cache_thp.get_new_session(channel_A.channel_cache))
-                sessions.append(cache_thp.get_new_session(channel_B.channel_cache))
+                sessions.append(
+                    cache_thp._deprecated_get_new_session(channel_A.channel_cache)
+                )
+                sessions.append(
+                    cache_thp._deprecated_get_new_session(channel_B.channel_cache)
+                )
 
                 self.assertEqual(cache_thp._SESSIONS[2 * i].channel_id, cid_A)
                 self.assertNotEqual(cache_thp._SESSIONS[2 * i].last_usage, 0)
@@ -225,11 +237,11 @@ class TestStorageCache(unittest.TestCase):
         def test_get_set(self):
             channel = thp_common.get_new_channel(self.interface)
 
-            session_1 = cache_thp.get_new_session(channel.channel_cache)
+            session_1 = cache_thp._deprecated_get_new_session(channel.channel_cache)
             session_1.set(KEY, b"hello")
             self.assertEqual(session_1.get(KEY), b"hello")
 
-            session_2 = cache_thp.get_new_session(channel.channel_cache)
+            session_2 = cache_thp._deprecated_get_new_session(channel.channel_cache)
             session_2.set(KEY, b"world")
             self.assertEqual(session_2.get(KEY), b"world")
 
@@ -242,12 +254,12 @@ class TestStorageCache(unittest.TestCase):
         def test_get_set_int(self):
             channel = thp_common.get_new_channel(self.interface)
 
-            session_1 = cache_thp.get_new_session(channel.channel_cache)
+            session_1 = cache_thp._deprecated_get_new_session(channel.channel_cache)
             session_1.set_int(KEY, 1234)
 
             self.assertEqual(session_1.get_int(KEY), 1234)
 
-            session_2 = cache_thp.get_new_session(channel.channel_cache)
+            session_2 = cache_thp._deprecated_get_new_session(channel.channel_cache)
             session_2.set_int(KEY, 5678)
             self.assertEqual(session_2.get_int(KEY), 5678)
 
@@ -260,7 +272,7 @@ class TestStorageCache(unittest.TestCase):
         def test_get_set_bool(self):
             channel = thp_common.get_new_channel(self.interface)
 
-            session_1 = cache_thp.get_new_session(channel.channel_cache)
+            session_1 = cache_thp._deprecated_get_new_session(channel.channel_cache)
             with self.assertRaises(AssertionError):
                 session_1.set_bool(KEY, True)
 
@@ -271,7 +283,7 @@ class TestStorageCache(unittest.TestCase):
             session_1.set_bool(KEY, True)
             self.assertEqual(session_1.get_bool(KEY), True)
 
-            session_2 = cache_thp.get_new_session(channel.channel_cache)
+            session_2 = cache_thp._deprecated_get_new_session(channel.channel_cache)
             session_2.fields = session_2.fields = (0,) + session_2.fields[1:]
             session_2.set_bool(KEY, False)
             self.assertEqual(session_2.get_bool(KEY), False)
@@ -286,7 +298,7 @@ class TestStorageCache(unittest.TestCase):
 
         def test_delete(self):
             channel = thp_common.get_new_channel(self.interface)
-            session_1 = cache_thp.get_new_session(channel.channel_cache)
+            session_1 = cache_thp._deprecated_get_new_session(channel.channel_cache)
 
             self.assertIsNone(session_1.get(KEY))
             session_1.set(KEY, b"hello")
@@ -295,7 +307,7 @@ class TestStorageCache(unittest.TestCase):
             self.assertIsNone(session_1.get(KEY))
 
             session_1.set(KEY, b"hello")
-            session_2 = cache_thp.get_new_session(channel.channel_cache)
+            session_2 = cache_thp._deprecated_get_new_session(channel.channel_cache)
 
             self.assertIsNone(session_2.get(KEY))
             session_2.set(KEY, b"hello")

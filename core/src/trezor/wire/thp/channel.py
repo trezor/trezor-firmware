@@ -23,9 +23,9 @@ from . import (
 from .checksum import CHECKSUM_LENGTH
 from .transmission_loop import TransmissionLoop
 from .writer import (
-    PACKET_LENGTH,
     CONT_HEADER_LENGTH,
     INIT_HEADER_LENGTH,
+    PACKET_LENGTH,
     write_payload_to_wire_and_add_checksum,
 )
 

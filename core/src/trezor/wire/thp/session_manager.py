@@ -4,7 +4,7 @@ from storage import cache_thp
 
 from .session_context import (
     GenericSessionContext,
-    ManagementSessionContext,
+    SeedlessSessionContext,
     SessionContext,
 )
 
@@ -12,25 +12,26 @@ if TYPE_CHECKING:
     from .channel import Channel
 
 
-def create_new_session(channel_ctx: Channel) -> SessionContext:
-    """
-    Creates new `SessionContext` backed by cache.
-    """
-    session_cache = cache_thp.get_new_session(channel_ctx.channel_cache)
+def get_new_session_context(
+    channel_ctx: Channel,
+    session_id: int,
+) -> SessionContext:
+    session_cache = cache_thp.create_or_replace_session(
+        channel=channel_ctx.channel_cache,
+        session_id=session_id.to_bytes(1, "big"),
+    )
     return SessionContext(channel_ctx, session_cache)
 
 
-def create_new_management_session(
-    channel_ctx: Channel, session_id: int = cache_thp.MANAGEMENT_SESSION_ID
-) -> ManagementSessionContext:
+def get_new_management_session_ctx(
+    channel_ctx: Channel, session_id: int
+) -> SeedlessSessionContext:
     """
-    Creates new `ManagementSessionContext` that is not backed by cache entry.
+    Creates new `ManagementSessionContext` that is not backed by a cache entry.
 
     Seed cannot be derived with this type of session.
     """
-    if session_id != cache_thp.MANAGEMENT_SESSION_ID:
-        cache_thp.get_new_session(channel_ctx.channel_cache, management=True)
-    return ManagementSessionContext(channel_ctx, session_id)
+    return SeedlessSessionContext(channel_ctx, session_id)
 
 
 def get_session_from_cache(
@@ -46,5 +47,5 @@ def get_session_from_cache(
     if session_cache is None:
         return None
     elif cache_thp.is_management_session(session_cache):
-        return ManagementSessionContext(channel_ctx, session_id)
+        return SeedlessSessionContext(channel_ctx, session_id)
     return SessionContext(channel_ctx, session_cache)
