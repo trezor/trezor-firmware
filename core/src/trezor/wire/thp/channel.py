@@ -226,12 +226,11 @@ class Channel:
 
     # WRITE and ENCRYPT
 
-    async def write(
+    def write(
         self,
         msg: protobuf.MessageType,
         session_id: int = 0,
-        force: bool = False,
-    ) -> None:
+    ) -> Awaitable[None]:
         if __debug__ and utils.EMULATOR:
             self._log(f"write message: {msg.MESSAGE_NAME}\n", utils.dump_protobuf(msg))
 
@@ -239,9 +238,7 @@ class Channel:
         noise_payload_len = memory_manager.encode_into_buffer(
             self.buffer, msg, session_id
         )
-        task = self._write_and_encrypt(self.buffer[:noise_payload_len], force)
-        if task is not None:
-            await task
+        return self._write_and_encrypt(self.buffer[:noise_payload_len])
 
     def write_error(self, err_type: int) -> Awaitable[None]:
         msg_data = err_type.to_bytes(1, "big")
@@ -255,9 +252,7 @@ class Channel:
             self._write_encrypted_payload_loop(ctrl_byte, payload)
         )
 
-    def _write_and_encrypt(
-        self, payload: bytes, force: bool = False
-    ) -> Awaitable[None] | None:
+    def _write_and_encrypt(self, payload: bytes) -> Awaitable[None]:
         payload_length = len(payload)
         self._encrypt(self.buffer, payload_length)
         payload_length = payload_length + TAG_LENGTH
@@ -266,19 +261,12 @@ class Channel:
             self.write_task_spawn.close()  # UPS TODO might break something
             print("\nCLOSED\n")
         self._prepare_write()
-        if force:
-            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-                self._log("Writing FORCE message (without async or retransmission).")
-
-            return self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(self.buffer[:payload_length])
-            )
         self.write_task_spawn = loop.spawn(
             self._write_encrypted_payload_loop(
                 ENCRYPTED, memoryview(self.buffer[:payload_length])
             )
         )
-        return None
+        return self.write_task_spawn
 
     def _prepare_write(self) -> None:
         # TODO add condition that disallows to write when can_send_message is false
@@ -333,6 +321,7 @@ class Channel:
         buffer[noise_payload_len : noise_payload_len + TAG_LENGTH] = tag
 
     def _can_clear_loop(self) -> bool:
+        return False  # TODO
         return (
             not workflow.tasks
         ) and self.get_channel_state() is ChannelState.ENCRYPTED_TRANSPORT

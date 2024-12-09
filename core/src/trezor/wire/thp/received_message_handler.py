@@ -180,7 +180,7 @@ async def _handle_ack(ctx: Channel, ack_bit: int) -> None:
 
     ABP.set_sending_allowed(ctx.channel_cache, True)
 
-    if ctx.write_task_spawn is not None:
+    if ctx.write_task_spawn is not None and ctx.write_task_spawn.is_running():
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, 'Control to "write_encrypted_payload_loop" task')
         await ctx.write_task_spawn

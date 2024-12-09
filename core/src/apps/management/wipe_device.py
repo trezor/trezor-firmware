@@ -49,7 +49,7 @@ async def wipe_device(msg: WipeDevice) -> NoReturn:
     translations.deinit()
     translations.erase()
 
-    await get_context().write_force(Success(message="Device wiped"))
+    await get_context().write(Success(message="Device wiped"))
     storage.wipe_cache()
 
     # reload settings
