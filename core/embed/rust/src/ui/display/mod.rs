@@ -77,7 +77,7 @@ impl TextOverlay {
             area,
             text: text.into(),
             font,
-            max_height: font.max_height(),
+            max_height: font.text_max_height(),
             baseline: font.text_baseline(),
         }
     }

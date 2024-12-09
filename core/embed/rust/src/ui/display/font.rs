@@ -1,5 +1,7 @@
+use spin::RwLockReadGuard;
+
 use crate::{
-    trezorhal::display,
+    trezorhal::display::{self},
     ui::{
         constant,
         geometry::Offset,
@@ -8,10 +10,15 @@ use crate::{
 };
 use core::slice;
 
+#[cfg(feature = "translations")]
+use crate::translations::flash;
+#[cfg(feature = "translations")]
+use crate::translations::Translations;
+
 /// Representation of a single glyph.
 /// We use standard typographic terms. For a nice explanation, see, e.g.,
 /// the FreeType docs at https://www.freetype.org/freetype2/docs/glyphs/glyphs-3.html
-pub struct Glyph {
+pub struct Glyph<'a> {
     /// Total width of the glyph itself
     pub width: i16,
     /// Total height of the glyph itself
@@ -22,10 +29,10 @@ pub struct Glyph {
     pub bearing_x: i16,
     /// Top-side vertical bearing
     pub bearing_y: i16,
-    data: &'static [u8],
+    data: &'a [u8],
 }
 
-impl Glyph {
+impl<'a> Glyph<'a> {
     /// Construct a `Glyph` from a raw pointer.
     ///
     /// # Safety
@@ -85,7 +92,7 @@ impl Glyph {
         c_data >> 4
     }
 
-    pub fn bitmap(&self) -> Bitmap<'static> {
+    pub fn bitmap(&self) -> Bitmap<'a> {
         match constant::FONT_BPP {
             1 => unwrap!(Bitmap::new(
                 BitmapFormat::MONO1P,
@@ -106,7 +113,80 @@ impl Glyph {
     }
 }
 
-/// Font constants. Keep in sync with FONT_ definitions in
+/// A provider of font glyphs and their metadata.
+///
+/// Manages access to font resources and handles UTF-8 character glyphs
+///
+/// The provider holds necessary lock for accessing translation data
+/// and is typically used through the `Font::with_glyph_data` method
+/// to ensure proper resource cleanup.
+///
+/// # Example
+/// ```
+/// let font = Font::NORMAL;
+/// font.with_glyph_data(|data| {
+///     let glyph = data.get_glyph('A');
+///     // use glyph...
+/// });
+/// ```
+pub struct GlyphData {
+    font: Font,
+    #[cfg(feature = "translations")]
+    translations_guard: Option<RwLockReadGuard<'static, Option<Translations<'static>>>>,
+}
+
+impl GlyphData {
+    fn new(font: Font) -> Self {
+        #[cfg(feature = "translations")]
+        let translations_guard = flash::get().ok();
+
+        Self {
+            font,
+            #[cfg(feature = "translations")]
+            translations_guard,
+        }
+    }
+
+    pub fn get_glyph(&self, ch: char) -> Glyph<'_> {
+        let ch = match ch {
+            '\u{00a0}' => '\u{0020}',
+            c => c,
+        };
+        let gl_data = self.get_glyph_data(ch as u16);
+
+        ensure!(!gl_data.is_null(), "Failed to load glyph");
+        // SAFETY: Glyph::load is valid for data returned by get_char_glyph
+        unsafe { Glyph::load(gl_data) }
+    }
+
+    fn get_glyph_data(&self, codepoint: u16) -> *const u8 {
+        display::get_font_info(self.font.into()).map_or(core::ptr::null(), |font_info| {
+            if codepoint >= ' ' as u16 && codepoint < 0x7F {
+                // ASCII character
+                unsafe {
+                    *font_info
+                        .glyph_data
+                        .offset((codepoint - ' ' as u16) as isize)
+                }
+            } else {
+                #[cfg(feature = "translations")]
+                {
+                    if codepoint >= 0x7F {
+                        // UTF8 character from embedded blob
+                        if let Some(guard) = &self.translations_guard {
+                            if let Some(translations) = guard.as_ref() {
+                                return translations.get_utf8_glyph(codepoint, self.font as u16);
+                            }
+                        }
+                    }
+                }
+                font_info.glyph_nonprintable
+            }
+        })
+    }
+}
+
+/// Font constants. Keep in sync with `font_id_t` definition in
 /// `core/embed/gfx/fonts/fonts.h`.
 #[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
 #[repr(u8)]
@@ -129,18 +209,9 @@ impl From<Font> for i32 {
 }
 
 impl Font {
+    /// Supports UTF8 characters
     pub fn text_width(self, text: &str) -> i16 {
-        display::text_width(text, self.into())
-    }
-
-    /// Supports UTF8 characters
-    fn get_first_glyph_from_text(self, text: &str) -> Option<Glyph> {
-        text.chars().next().map(|c| self.get_glyph(c))
-    }
-
-    /// Supports UTF8 characters
-    fn get_last_glyph_from_text(self, text: &str) -> Option<Glyph> {
-        text.chars().next_back().map(|c| self.get_glyph(c))
+        text.chars().fold(0, |acc, c| acc + self.char_width(c))
     }
 
     /// Width of the text that is visible.
@@ -151,17 +222,17 @@ impl Font {
             return 0;
         }
 
-        let first_char_bearing = if let Some(glyph) = self.get_first_glyph_from_text(text) {
-            glyph.bearing_x
-        } else {
-            0
-        };
-
-        let last_char_bearing = if let Some(glyph) = self.get_last_glyph_from_text(text) {
-            glyph.right_side_bearing()
-        } else {
-            0
-        };
+        let (first_char_bearing, last_char_bearing) = self.with_glyph_data(|data| {
+            let first = text
+                .chars()
+                .next()
+                .map_or(0, |c| data.get_glyph(c).bearing_x);
+            let last = text
+                .chars()
+                .next_back()
+                .map_or(0, |c| data.get_glyph(c).right_side_bearing());
+            (first, last)
+        });
 
         // Strip leftmost and rightmost spaces/bearings/margins.
         self.text_width(text) - first_char_bearing - last_char_bearing
@@ -174,11 +245,13 @@ impl Font {
     /// the glyphs representing the characters in the provided text.
     pub fn visible_text_height(self, text: &str) -> i16 {
         let (mut ascent, mut descent) = (0, 0);
-        for c in text.chars() {
-            let glyph = self.get_glyph(c);
-            ascent = ascent.max(glyph.bearing_y);
-            descent = descent.max(glyph.height - glyph.bearing_y);
-        }
+        self.with_glyph_data(|data| {
+            for c in text.chars() {
+                let glyph = data.get_glyph(c);
+                ascent = ascent.max(glyph.bearing_y);
+                descent = descent.max(glyph.height - glyph.bearing_y);
+            }
+        });
         ascent + descent
     }
 
@@ -198,31 +271,27 @@ impl Font {
             return 0;
         }
 
-        if let Some(glyph) = self.get_first_glyph_from_text(text) {
-            glyph.bearing_x
-        } else {
-            0
-        }
+        text.chars().next().map_or(0, |c| {
+            self.with_glyph_data(|data| data.get_glyph(c).bearing_x)
+        })
     }
 
     pub fn char_width(self, ch: char) -> i16 {
-        display::char_width(ch, self.into())
+        self.with_glyph_data(|data| data.get_glyph(ch).adv)
     }
 
     pub fn text_height(self) -> i16 {
-        display::text_height(self.into())
+        display::get_font_info(self.into()).map_or(i16::MAX, |font| font.height.try_into().unwrap())
     }
 
     pub fn text_max_height(self) -> i16 {
-        display::text_max_height(self.into())
+        display::get_font_info(self.into())
+            .map_or(i16::MAX, |font| font.max_height.try_into().unwrap())
     }
 
     pub fn text_baseline(self) -> i16 {
-        display::text_baseline(self.into())
-    }
-
-    pub fn max_height(self) -> i16 {
-        display::text_max_height(self.into())
+        display::get_font_info(self.into())
+            .map_or(i16::MAX, |font| font.baseline.try_into().unwrap())
     }
 
     pub fn line_height(self) -> i16 {
@@ -248,18 +317,16 @@ impl Font {
         (start + end + self.visible_text_height(text)) / 2
     }
 
-    pub fn get_glyph(self, ch: char) -> Glyph {
-        /* have the non-breaking space counted for width but not counted as a
-         * breaking point */
-        let ch = match ch {
-            '\u{00a0}' => '\u{0020}',
-            c => c,
-        };
-        let gl_data = display::get_char_glyph(ch as u16, self.into());
-
-        ensure!(!gl_data.is_null(), "Failed to load glyph");
-        // SAFETY: Glyph::load is valid for data returned by get_char_glyph
-        unsafe { Glyph::load(gl_data) }
+    /// Safely manages temporary access to glyph data without risking
+    /// translation lock deadlocks. See `GlyphData` for more details.
+    pub fn with_glyph_data<T, F>(&self, f: F) -> T
+    where
+        F: FnOnce(&GlyphData) -> T,
+    {
+        // Create a new GlyphData instance that will be dropped at the end of this
+        // function, releasing any translations lock
+        let glyph_data = GlyphData::new(*self);
+        f(&glyph_data)
     }
 
     /// Get the longest prefix of a given `text` (breaking at word boundaries)
@@ -300,12 +367,14 @@ impl Font {
 
     pub fn visible_text_height_ex(&self, text: &str) -> (i16, i16) {
         let (mut ascent, mut descent) = (0, 0);
-        for c in text.chars() {
-            let glyph = self.get_glyph(c);
-            ascent = ascent.max(glyph.bearing_y);
-            descent = descent.max(glyph.height - glyph.bearing_y);
-        }
-        (ascent, descent)
+        self.with_glyph_data(|data| {
+            for c in text.chars() {
+                let glyph = data.get_glyph(c);
+                ascent = ascent.max(glyph.bearing_y);
+                descent = descent.max(glyph.height - glyph.bearing_y);
+            }
+            (ascent, descent)
+        })
     }
 }
 
