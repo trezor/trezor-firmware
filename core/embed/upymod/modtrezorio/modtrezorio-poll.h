@@ -33,13 +33,12 @@
 #include "SDL.h"
 #endif
 
-#define USB_DATA_IFACE (253)
+#define USB_EVENT_IFACE (253)
 #define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
 
-extern bool usb_connected_previously;
 extern uint32_t last_touch_sample_time;
 
 /// package: trezorio.__init__
@@ -138,12 +137,12 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         }
       }
 #endif
-      else if (iface == USB_DATA_IFACE) {
-        bool usb_connected = usb_configured() == sectrue ? true : false;
-        if (usb_connected != usb_connected_previously) {
-          usb_connected_previously = usb_connected;
+      else if (iface == USB_EVENT_IFACE) {
+        usb_event_t event = usb_get_event();
+
+        if (event != USB_EVENT_NONE) {
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = usb_connected ? mp_const_true : mp_const_false;
+          ret->items[1] = MP_OBJ_NEW_SMALL_INT((int32_t)event);
           return mp_const_true;
         }
       }

@@ -84,6 +84,9 @@ typedef struct {
   // Set to `sectrue` if the USB stack was ready sinced the last start
   secbool was_ready;
 
+  // Current state of USB configuration
+  secbool configured;
+
 } usb_driver_t;
 
 // USB driver instance
@@ -169,6 +172,8 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
       0x80;  // 0x80 = bus powered; 0xC0 = self powered
   drv->config_desc->bMaxPower = 0x32;  // Maximum Power Consumption in 2mA units
 
+  drv->configured =
+      sectrue;  // starting with this flag set, to avoid false warnings
   drv->initialized = sectrue;
 
   return sectrue;
@@ -241,7 +246,7 @@ void usb_stop(void) {
   memset(&drv->dev_handle, 0, sizeof(drv->dev_handle));
 }
 
-secbool usb_configured(void) {
+static secbool usb_configured(void) {
   usb_driver_t *drv = &g_usb_driver;
 
   if (drv->initialized != sectrue) {
@@ -293,6 +298,42 @@ secbool usb_configured(void) {
   }
 
   return ready;
+}
+
+usb_event_t usb_get_event(void) {
+  usb_driver_t *drv = &g_usb_driver;
+
+  if (drv->initialized != sectrue) {
+    // The driver is not initialized
+    return false;
+  }
+
+  secbool configured = usb_configured();
+  if (configured != drv->configured) {
+    drv->configured = configured;
+    if (configured == sectrue) {
+      return USB_EVENT_CONFIGURED;
+    } else {
+      return USB_EVENT_DECONFIGURED;
+    }
+  }
+
+  return USB_EVENT_NONE;
+}
+
+void usb_get_state(usb_state_t *state) {
+  usb_driver_t *drv = &g_usb_driver;
+
+  if (drv->initialized != sectrue) {
+    // The driver is not initialized
+    return;
+  }
+
+  usb_state_t s = {0};
+
+  s.configured = drv->configured == sectrue;
+
+  *state = s;
 }
 
 // ==========================================================================
