@@ -589,6 +589,13 @@ if TYPE_CHECKING:
         SolanaAddress = 903
         SolanaSignTx = 904
         SolanaTxSignature = 905
+        DatabaseWipe = 1100
+        DatabaseWipeResponse = 1101
+        DatabaseModifyKey = 1102
+        DatabaseModifyKeyResponse = 1103
+        DatabaseProveMembership = 1104
+        DatabaseMerge = 1105
+        DatabaseMergeResponse = 1106
         BenchmarkListNames = 9100
         BenchmarkNames = 9101
         BenchmarkRun = 9102
