@@ -249,19 +249,23 @@ impl Font {
         (start + end + self.visible_text_height(text)) / 2
     }
 
-    fn get_glyph_data(&self, c: u16) -> *const u8 {
+    fn get_glyph_data(&self, codepoint: u16) -> *const u8 {
         display::get_font_info((*self).into()).map_or(core::ptr::null(), |font_info| {
             #[cfg(feature = "translations")]
             {
-                if c >= 0x7F {
+                if codepoint >= 0x7F {
                     // UTF8 character from embedded blob
-                    return unsafe { get_utf8_glyph(c, *self) };
+                    return unsafe { get_utf8_glyph(codepoint, *self) };
                 }
             }
 
-            if c >= ' ' as u16 && c < 0x7F {
+            if codepoint >= ' ' as u16 && codepoint < 0x7F {
                 // ASCII character
-                unsafe { *font_info.glyph_data.offset((c - ' ' as u16) as isize) }
+                unsafe {
+                    *font_info
+                        .glyph_data
+                        .offset((codepoint - ' ' as u16) as isize)
+                }
             } else {
                 font_info.glyph_nonprintable
             }
