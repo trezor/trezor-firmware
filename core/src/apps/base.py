@@ -220,13 +220,15 @@ if utils.USE_THP:
         """
         from trezor import log, loop
         from trezor.enums import FailureType
-        from trezor.messages import Failure, ThpNewSession
+        from trezor.messages import Failure
         from trezor.wire import NotInitialized
         from trezor.wire.context import get_context
         from trezor.wire.errors import ActionCancelled, DataError
-        from trezor.wire.thp import SessionState
         from trezor.wire.thp.session_context import GenericSessionContext
-        from trezor.wire.thp.session_manager import create_new_session
+        from trezor.wire.thp.session_manager import (
+            get_new_management_session_ctx,
+            get_new_session_context,
+        )
 
         from apps.common.seed import derive_and_store_roots
 
@@ -236,11 +238,38 @@ if utils.USE_THP:
         assert isinstance(ctx, GenericSessionContext)
 
         channel = ctx.channel
+        session_id = ctx.session_id
 
         # Do not use `ctx` beyond this point, as it is techically
         # allowed to change in between await statements
-        if message.session_id is None:
-            new_session = create_new_session(channel)
+
+        is_management = (
+            message.passphrase is None
+            and message.on_device is not True
+            and message.derive_cardano is not True
+        )
+
+        if not 0 <= session_id <= 255:
+            return Failure(
+                code=FailureType.DataError,
+                message="Invalid session_id for session creation.",
+            )
+
+        if is_management:
+            # TODO this block is completely useless and will be removed - or will result in session.clear
+            new_session = get_new_management_session_ctx(
+                channel_ctx=channel, session_id=session_id
+            )
+            succ_message = "New management session created."
+
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                log.debug(
+                    __name__, "New management session with sid %d created.", session_id
+                )
+        else:
+            new_session = get_new_session_context(
+                channel_ctx=channel, session_id=session_id
+            )
             try:
                 await unlock_device()
                 await derive_and_store_roots(new_session, message)
@@ -252,23 +281,20 @@ if utils.USE_THP:
                 return Failure(code=FailureType.NotInitialized, message=e.message)
             # TODO handle other errors (`Exception` when "Cardano icarus secret is already set!")
 
-            new_session.set_session_state(SessionState.ALLOCATED)
-            channel.sessions[new_session.session_id] = new_session
-            loop.schedule(new_session.handle())
-            new_session_id: int = new_session.session_id
-        else:
-            # HMMMMMMMMMMMMMMMMMM
-            pass
-        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-            log.debug(
-                __name__,
-                "create_new_session - new session created. Passphrase: %s, Session id: %d\n%s",
-                message.passphrase if message.passphrase is not None else "",
-                new_session.session_id,
-                str(channel.sessions),
-            )
+            succ_message = "New session created."
 
-        return ThpNewSession(new_session_id=new_session_id)
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                log.debug(
+                    __name__,
+                    "New session with sid %d and passphrase %s created.",
+                    session_id,
+                    message.passphrase if message.passphrase is not None else "",
+                )
+
+        channel.sessions[new_session.session_id] = new_session
+        loop.schedule(new_session.handle())
+
+        return Success(message=succ_message)
 
 else:
 
