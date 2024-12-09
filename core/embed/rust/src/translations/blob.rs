@@ -240,7 +240,7 @@ impl<'a> Translations<'a> {
     /// translations object. This is to facilitate safe interface to
     /// flash-based translations. See docs for `flash::get` for details.
     #[allow(clippy::needless_lifetimes)]
-    pub fn font<'b>(&'b self, index: u16) -> Option<Table<'b>> {
+    fn font<'b>(&'b self, index: u16) -> Option<Table<'b>> {
         self.fonts
             .get(index)
             .and_then(|data| Table::new(InputStream::new(data)).ok())
@@ -257,6 +257,20 @@ impl<'a> Translations<'a> {
     #[allow(clippy::needless_lifetimes)]
     pub fn header<'b>(&'b self) -> &'b TranslationsHeader<'b> {
         &self.header
+    }
+
+    /// Returns a byte slice of the glyph data for the given UTF-8 codepoint in
+    /// the specified font.
+    ///
+    /// SAFETY: Do not mess with the lifetimes in this signature.
+    ///
+    /// The lifetimes are a useful lie that bind the lifetime of the returned
+    /// string not to the underlying data, but to the _reference_ to the
+    /// translations object. This is to facilitate safe interface to
+    /// flash-based translations. See docs for `flash::get` for details.
+    #[allow(clippy::needless_lifetimes)]
+    pub fn get_utf8_glyph<'b>(&'b self, codepoint: u16, font_index: u16) -> Option<&'b [u8]> {
+        self.font(font_index).and_then(|t| t.get(codepoint))
     }
 }
 
