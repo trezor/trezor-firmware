@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-import trezorui2
+import trezorui_api
 from trezor import TR, ui
 from trezor.enums import ButtonRequestType
 
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
     count = await interact(
-        trezorui2.select_word_count(recovery_type=recovery_type),
+        trezorui_api.select_word_count(recovery_type=recovery_type),
         "recovery_word_count",
         ButtonRequestType.MnemonicWordCount,
     )
@@ -33,12 +33,12 @@ async def request_word(
     prompt = TR.recovery__type_word_x_of_y_template.format(word_index + 1, word_count)
     can_go_back = word_index > 0
     if is_slip39:
-        keyboard = trezorui2.request_slip39(
+        keyboard = trezorui_api.request_slip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
     else:
-        keyboard = trezorui2.request_bip39(
+        keyboard = trezorui_api.request_bip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
@@ -50,13 +50,13 @@ async def request_word(
     return word
 
 
-def show_remaining_shares(
-    groups: set[tuple[str, ...]],
-    shares_remaining: list[int],
-    group_threshold: int,
-) -> Awaitable[trezorui2.UiResult]:
+def format_remaining_shares_info(
+    remaining_shares_info: "RemainingSharesInfo",
+) -> list[tuple[str, str]]:
     from trezor import strings
     from trezor.crypto.slip39 import MAX_SHARE_COUNT
+
+    groups, shares_remaining, group_threshold = remaining_shares_info
 
     pages: list[tuple[str, str]] = []
     completed_groups = shares_remaining.count(0)
@@ -80,8 +80,14 @@ def show_remaining_shares(
             words = "\n".join(group)
             pages.append((title, words))
 
+    return pages
+
+
+def show_remaining_shares(
+    pages: list[tuple[str, str]],
+) -> Awaitable[trezorui_api.UiResult]:
     return interact(
-        trezorui2.show_remaining_shares(pages=pages),
+        trezorui_api.show_remaining_shares(pages=pages),
         "show_shares",
         ButtonRequestType.Other,
     )
@@ -91,7 +97,7 @@ def show_group_share_success(
     share_index: int, group_index: int
 ) -> Awaitable[ui.UiResult]:
     return interact(
-        trezorui2.show_group_share_success(
+        trezorui_api.show_group_share_success(
             lines=[
                 TR.recovery__you_have_entered,
                 TR.recovery__share_num_template.format(share_index + 1),
@@ -145,12 +151,17 @@ async def continue_recovery(
     else:
         description = subtext or ""
 
-    homepage = trezorui2.confirm_recovery(
-        title=text,
-        description=description,
+    remaining_shares = (
+        format_remaining_shares_info(remaining_shares_info)
+        if remaining_shares_info
+        else None
+    )
+    homepage = trezorui_api.continue_recovery_homepage(
+        text=text,
+        subtext=description,
         button=button_label,
         recovery_type=recovery_type,
-        info_button=remaining_shares_info is not None,
+        remaining_shares=remaining_shares,
     )
 
     while True:
@@ -161,10 +172,10 @@ async def continue_recovery(
             raise_on_cancel=None,
         )
 
-        if result is trezorui2.CONFIRMED:
+        if result is trezorui_api.CONFIRMED:
             return True
-        elif result is trezorui2.INFO and remaining_shares_info is not None:
-            await show_remaining_shares(*remaining_shares_info)
+        elif result is trezorui_api.INFO and remaining_shares is not None:
+            await show_remaining_shares(remaining_shares)
         else:
             try:
                 await _confirm_abort(recovery_type != RecoveryType.NormalRecovery)
@@ -184,7 +195,7 @@ def show_recovery_warning(
     button = button or TR.buttons__try_again  # def_arg
 
     return interact(
-        trezorui2.show_warning(
+        trezorui_api.show_warning(
             title=content,
             description=subheader or "",
             button=button,

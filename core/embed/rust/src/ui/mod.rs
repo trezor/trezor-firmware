@@ -23,6 +23,9 @@ pub mod model_mercury;
 pub mod model_tr;
 #[cfg(feature = "model_tt")]
 pub mod model_tt;
+
 pub mod ui_features;
+#[cfg(feature = "micropython")]
+pub mod ui_features_fw;
 
 pub use ui_features::UIFeaturesCommon;

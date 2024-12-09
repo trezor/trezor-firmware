@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
 
-import trezorui2
+import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
 
 from ..common import interact, raise_if_not_confirmed
 from . import confirm_action, show_success, show_warning
 
-CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
+CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
 if TYPE_CHECKING:
     from typing import Awaitable, Sequence
@@ -49,8 +49,9 @@ async def show_share_words(
         )
 
         result = await interact(
-            trezorui2.show_share_words(  # type: ignore [Arguments missing for parameters]
-                share_words=share_words,  # type: ignore [No parameter named "share_words"]
+            trezorui_api.show_share_words(
+                words=share_words,
+                title=None,
             ),
             br_name,
             br_code,
@@ -87,7 +88,7 @@ async def select_word(
 
     word_ordinal = format_ordinal(checked_index + 1)
     result = await interact(
-        trezorui2.select_word(
+        trezorui_api.select_word(
             title="",
             description=TR.reset__select_word_template.format(word_ordinal),
             words=(words[0].lower(), words[1].lower(), words[2].lower()),
@@ -121,7 +122,7 @@ def slip39_show_checklist(
     )
 
     return raise_if_not_confirmed(
-        trezorui2.show_checklist(
+        trezorui_api.show_checklist(
             title=TR.reset__slip39_checklist_title,
             button=TR.buttons__continue,
             active=step,
@@ -139,7 +140,7 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = trezorui2.request_number(
+    num_input = trezorui_api.request_number(
         title=title,
         count=count,
         min_count=min_count,
@@ -268,7 +269,7 @@ def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable
     )
 
 
-def show_warning_backup() -> Awaitable[trezorui2.UiResult]:
+def show_warning_backup() -> Awaitable[trezorui_api.UiResult]:
     return show_warning(
         "backup_warning",
         TR.words__title_remember,
@@ -295,7 +296,7 @@ def show_reset_warning(
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[trezorui2.UiResult]:
+) -> Awaitable[trezorui_api.UiResult]:
     button = button or TR.buttons__try_again  # def_arg
 
     return show_warning(

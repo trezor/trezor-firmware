@@ -164,7 +164,7 @@
 #define MICROPY_PY_TREZORUTILS      (1)
 #define MICROPY_PY_TREZORPROTO      (1)
 #define MICROPY_PY_TREZORTRANSLATE  (1)
-#define MICROPY_PY_TREZORUI2        (1)
+#define MICROPY_PY_TREZORUI_API     (1)
 
 #ifdef SYSTEM_VIEW
 #define MP_PLAT_PRINT_STRN(str, len) segger_print(str, len)

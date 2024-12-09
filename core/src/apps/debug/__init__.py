@@ -8,7 +8,7 @@ if __debug__:
     from micropython import const
     from typing import TYPE_CHECKING
 
-    import trezorui2
+    import trezorui_api
     from storage import debug as storage
     from trezor import io, log, loop, ui, utils, wire, workflow
     from trezor.enums import DebugWaitType, MessageType
@@ -195,11 +195,11 @@ if __debug__:
 
         assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
         if button == DebugButton.NO:
-            ui.CURRENT_LAYOUT._emit_message(trezorui2.CANCELLED)
+            ui.CURRENT_LAYOUT._emit_message(trezorui_api.CANCELLED)
         elif button == DebugButton.YES:
-            ui.CURRENT_LAYOUT._emit_message(trezorui2.CONFIRMED)
+            ui.CURRENT_LAYOUT._emit_message(trezorui_api.CONFIRMED)
         elif button == DebugButton.INFO:
-            ui.CURRENT_LAYOUT._emit_message(trezorui2.INFO)
+            ui.CURRENT_LAYOUT._emit_message(trezorui_api.INFO)
         else:
             raise RuntimeError("Invalid DebugButton")
 

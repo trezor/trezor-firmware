@@ -1,36 +1,12 @@
 from typing import Awaitable, Callable, Sequence
 
-import trezorui2
+import trezorui_api
 from trezor import TR
 from trezor.enums import ButtonRequestType
 
 from ..common import interact, raise_if_not_confirmed
 
-CONFIRMED = trezorui2.CONFIRMED  # global_import_cache
-
-
-def _split_share_into_pages(share_words: Sequence[str], per_page: int = 4) -> list[str]:
-    pages: list[str] = []
-    current = ""
-    fill = 2
-
-    for i, word in enumerate(share_words):
-        if i % per_page == 0:
-            if i != 0:
-                pages.append(current)
-            current = ""
-
-            # Align numbers to the right.
-            lastnum = i + per_page + 1
-            fill = 1 if lastnum < 10 else 2
-        else:
-            current += "\n"
-        current += f"{i + 1:>{fill}}. {word}"
-
-    if current:
-        pages.append(current)
-
-    return pages
+CONFIRMED = trezorui_api.CONFIRMED  # global_import_cache
 
 
 def show_share_words(
@@ -47,12 +23,10 @@ def show_share_words(
             group_index + 1, share_index + 1
         )
 
-    pages = _split_share_into_pages(share_words)
-
     return raise_if_not_confirmed(
-        trezorui2.show_share_words(
+        trezorui_api.show_share_words(
+            words=share_words,
             title=title,
-            pages=pages,
         ),
         "backup_words",
         ButtonRequestType.ResetDevice,
@@ -83,7 +57,7 @@ async def select_word(
         words.append(words[-1])
 
     result = await interact(
-        trezorui2.select_word(
+        trezorui_api.select_word(
             title=title,
             description=TR.reset__select_word_x_of_y_template.format(
                 checked_index + 1, count
@@ -119,7 +93,7 @@ def slip39_show_checklist(
     )
 
     return raise_if_not_confirmed(
-        trezorui2.show_checklist(
+        trezorui_api.show_checklist(
             title=TR.reset__slip39_checklist_title,
             button=TR.buttons__continue,
             active=step,
@@ -139,12 +113,13 @@ async def _prompt_number(
     max_count: int,
     br_name: str,
 ) -> int:
-    num_input = trezorui2.request_number(
+    num_input = trezorui_api.request_number(
         title=title,
-        description=description,
         count=count,
         min_count=min_count,
         max_count=max_count,
+        description=None,
+        more_info_callback=description,
     )
 
     while True:
@@ -166,9 +141,9 @@ async def _prompt_number(
             return value
 
         await interact(
-            trezorui2.show_simple(
+            trezorui_api.show_simple(
                 title=None,
-                description=info(value),
+                text=info(value),
                 button=TR.buttons__ok_i_understand,
             ),
             None,
@@ -312,23 +287,22 @@ def show_intro_backup(single_share: bool, num_of_words: int | None) -> Awaitable
         description = TR.backup__info_multi_share_backup
 
     return raise_if_not_confirmed(
-        trezorui2.show_info(
+        trezorui_api.show_info(
             title="",
-            button=TR.buttons__continue,
             description=description,
-            allow_cancel=False,
+            button=TR.buttons__continue,
         ),
         "backup_intro",
         ButtonRequestType.ResetDevice,
     )
 
 
-def show_warning_backup() -> Awaitable[trezorui2.UiResult]:
+def show_warning_backup() -> Awaitable[trezorui_api.UiResult]:
     return interact(
-        trezorui2.show_info(
+        trezorui_api.show_info(
             title=TR.reset__never_make_digital_copy,
+            description="",
             button=TR.buttons__ok_i_understand,
-            allow_cancel=False,
         ),
         "backup_warning",
         ButtonRequestType.ResetDevice,
@@ -351,10 +325,10 @@ def show_reset_warning(
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
-) -> Awaitable[trezorui2.UiResult]:
+) -> Awaitable[trezorui_api.UiResult]:
     button = button or TR.buttons__try_again  # def_arg
     return interact(
-        trezorui2.show_warning(
+        trezorui_api.show_warning(
             title=subheader or "",
             description=content,
             button=button,
