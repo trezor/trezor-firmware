@@ -147,6 +147,8 @@ def configure(
         ("USE_RESET_TO_BOOT", "1"),
     ]
 
+    sources += ["embed/sys/powerctl/npm1300/npm1300.c"]
+
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
     defs = env.get("CPPDEFINES_IMPLICIT")
