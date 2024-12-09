@@ -72,7 +72,7 @@ class ChannelState(IntEnum):
 class SessionState(IntEnum):
     UNALLOCATED = 0
     ALLOCATED = 1
-    MANAGEMENT = 2
+    SEEDLESS = 2
 
 
 class PacketHeader:

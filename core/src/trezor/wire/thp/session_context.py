@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from storage import cache_thp
-from storage.cache_thp import MANAGEMENT_SESSION_ID, SessionThpCache
+from storage.cache_thp import SessionThpCache
 from trezor import log, loop, protobuf, utils
 from trezor.wire import message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
@@ -128,23 +128,13 @@ class GenericSessionContext(Context):
     def get_session_state(self) -> SessionState: ...
 
 
-class ManagementSessionContext(GenericSessionContext):
+class SeedlessSessionContext(GenericSessionContext):
 
-    def __init__(
-        self,
-        channel_ctx: Channel,
-        session_id: int = MANAGEMENT_SESSION_ID,
-        session_cache: SessionThpCache | None = None,
-    ) -> None:
-        self.session_cache = session_cache
+    def __init__(self, channel_ctx: Channel, session_id: int) -> None:
         super().__init__(channel_ctx, session_id)
 
     def get_session_state(self) -> SessionState:
-        return SessionState.MANAGEMENT
-
-    def release(self) -> None:
-        if self.session_cache is not None:
-            cache_thp.clear_session(self.session_cache)
+        return SessionState.SEEDLESS
 
 
 class SessionContext(GenericSessionContext):

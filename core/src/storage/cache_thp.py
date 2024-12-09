@@ -24,7 +24,8 @@ BROADCAST_CHANNEL_ID = const(0xFFFF)
 KEY_LENGTH = const(32)
 TAG_LENGTH = const(16)
 _UNALLOCATED_STATE = const(0)
-_MANAGEMENT_STATE = const(2)
+_ALLOCATED_STATE = const(1)
+_SEEDLESS_STATE = const(2)
 MANAGEMENT_SESSION_ID = const(0)
 
 
@@ -176,28 +177,35 @@ def get_all_allocated_channels() -> list[ChannelCache]:
 def get_allocated_session(
     channel_id: bytes, session_id: bytes
 ) -> SessionThpCache | None:
+    index = get_allocated_session_index(channel_id, session_id)
+    if index is None:
+        return index
+    return _SESSIONS[index]
+
+
+def get_allocated_session_index(channel_id: bytes, session_id: bytes) -> int | None:
     """
-    Finds and returns the first allocated session matching the given `channel_id` and `session_id`,
-    or `None` if no match is found.
+    Finds and returns index of the first allocated session matching the given `channel_id`
+    and `session_id`, or `None` if no match is found.
 
     Raises `Exception` if either channel_id or session_id has an invalid length.
     """
     if len(channel_id) != _CHANNEL_ID_LENGTH or len(session_id) != SESSION_ID_LENGTH:
         raise Exception("At least one of arguments has invalid length")
 
-    for session in _SESSIONS:
-        if _get_session_state(session) == _UNALLOCATED_STATE:
+    for i in range(_MAX_SESSIONS_COUNT):
+        if _get_session_state(_SESSIONS[i]) == _UNALLOCATED_STATE:
             continue
-        if session.channel_id != channel_id:
+        if _SESSIONS[i].channel_id != channel_id:
             continue
-        if session.session_id != session_id:
+        if _SESSIONS[i].session_id != session_id:
             continue
-        return session
+        return i
     return None
 
 
 def is_management_session(session_cache: SessionThpCache) -> bool:
-    return _get_session_state(session_cache) == _MANAGEMENT_STATE
+    return _get_session_state(session_cache) == _SEEDLESS_STATE
 
 
 def set_channel_host_ephemeral_key(channel: ChannelCache, key: bytearray) -> None:
@@ -206,26 +214,24 @@ def set_channel_host_ephemeral_key(channel: ChannelCache, key: bytearray) -> Non
     channel.host_ephemeral_pubkey = key
 
 
-def get_new_session(channel: ChannelCache, management: bool = False) -> SessionThpCache:
-    new_sid = get_next_session_id(channel)
-    index = _get_next_session_index()
+def create_or_replace_session(
+    channel: ChannelCache, session_id: bytes
+) -> SessionThpCache:
+    index = get_allocated_session_index(channel.channel_id, session_id)
+    if index is None:
+        index = _get_next_session_index()
 
     _SESSIONS[index] = SessionThpCache()
     _SESSIONS[index].channel_id[:] = channel.channel_id
-    _SESSIONS[index].session_id[:] = new_sid
+    _SESSIONS[index].session_id[:] = session_id
     _SESSIONS[index].last_usage = _get_usage_counter_and_increment()
     channel.last_usage = (
         _get_usage_counter_and_increment()
     )  # increment also use of the channel so it does not get replaced
 
-    if management:
-        _SESSIONS[index].state[:] = bytearray(
-            _MANAGEMENT_STATE.to_bytes(_SESSION_STATE_LENGTH, "big")
-        )
-    else:
-        _SESSIONS[index].state[:] = bytearray(
-            _UNALLOCATED_STATE.to_bytes(_SESSION_STATE_LENGTH, "big")
-        )
+    _SESSIONS[index].state[:] = bytearray(
+        _ALLOCATED_STATE.to_bytes(_SESSION_STATE_LENGTH, "big")
+    )
     return _SESSIONS[index]
 
 
@@ -239,14 +245,14 @@ def _get_next_channel_index() -> int:
     idx = _get_unallocated_channel_index()
     if idx is not None:
         return idx
-    return get_least_recently_used_item(_CHANNELS, max_count=_MAX_CHANNELS_COUNT)
+    return _get_least_recently_used_item(_CHANNELS, max_count=_MAX_CHANNELS_COUNT)
 
 
 def _get_next_session_index() -> int:
     idx = _get_unallocated_session_index()
     if idx is not None:
         return idx
-    return get_least_recently_used_item(_SESSIONS, max_count=_MAX_SESSIONS_COUNT)
+    return _get_least_recently_used_item(_SESSIONS, max_count=_MAX_SESSIONS_COUNT)
 
 
 def _get_unallocated_channel_index() -> int | None:
@@ -282,19 +288,19 @@ def get_next_channel_id() -> bytes:
     return cid_counter.to_bytes(_CHANNEL_ID_LENGTH, "big")
 
 
-def get_next_session_id(channel: ChannelCache) -> bytes:
+def _deprecated_get_next_session_id(channel: ChannelCache) -> bytes:
     while True:
         if channel.session_id_counter >= 255:
             channel.session_id_counter = 1
         else:
             channel.session_id_counter += 1
-        if _is_session_id_unique(channel):
+        if _deprecated_is_session_id_unique(channel):
             break
     new_sid = channel.session_id_counter
     return new_sid.to_bytes(SESSION_ID_LENGTH, "big")
 
 
-def _is_session_id_unique(channel: ChannelCache) -> bool:
+def _deprecated_is_session_id_unique(channel: ChannelCache) -> bool:
     for session in _SESSIONS:
         if session.channel_id == channel.channel_id:
             if session.session_id == channel.session_id_counter:
@@ -311,7 +317,7 @@ def _is_cid_unique() -> bool:
     return True
 
 
-def get_least_recently_used_item(
+def _get_least_recently_used_item(
     list: list[ChannelCache] | list[SessionThpCache], max_count: int
 ) -> int:
     global _usage_counter
@@ -366,6 +372,6 @@ def clear_all_except_one_session_keys(excluded: Tuple[bytes, bytes]) -> None:
             s_last_usage = session.last_usage
             session.clear()
             session.last_usage = s_last_usage
-            session.state = bytearray(_MANAGEMENT_STATE.to_bytes(1, "big"))
+            session.state = bytearray(_SEEDLESS_STATE.to_bytes(1, "big"))
             session.session_id[:] = bytearray(sid)
             session.channel_id[:] = bytearray(cid)

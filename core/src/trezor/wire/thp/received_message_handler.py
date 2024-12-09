@@ -10,7 +10,6 @@ from storage.cache_common import (
 )
 from storage.cache_thp import (
     KEY_LENGTH,
-    MANAGEMENT_SESSION_ID,
     SESSION_ID_LENGTH,
     TAG_LENGTH,
     update_channel_last_used,
@@ -46,6 +45,7 @@ from . import (
 )
 from .checksum import CHECKSUM_LENGTH
 from .crypto import PUBKEY_LENGTH, Handshake
+from .session_context import SeedlessSessionContext
 from .writer import (
     INIT_HEADER_LENGTH,
     MESSAGE_TYPE_LENGTH,
@@ -353,23 +353,18 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
         ">BH", memoryview(ctx.buffer)[INIT_HEADER_LENGTH:]
     )
     if session_id not in ctx.sessions:
-        if session_id == MANAGEMENT_SESSION_ID:
-            s = session_manager.create_new_management_session(ctx)
-        else:
-            s = session_manager.get_session_from_cache(ctx, session_id)
+
+        s = session_manager.get_session_from_cache(ctx, session_id)
 
         if s is None:
-            assert session_id != MANAGEMENT_SESSION_ID
-
-            # Create management session backed by cache (non-trivial session_id)
-            s = session_manager.create_new_management_session(ctx, session_id)
+            s = SeedlessSessionContext(ctx, session_id)
 
         ctx.sessions[session_id] = s
         loop.schedule(s.handle())
 
     elif ctx.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
-        # TODO what should happen here? Should I create a new management session?
+        # TODO what should happen here? Should I create a new seedless session?
 
     s = ctx.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
