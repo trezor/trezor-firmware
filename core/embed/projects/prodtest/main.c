@@ -79,6 +79,7 @@
 
 #ifdef USE_POWERCTL
 #include "../../sys/powerctl/npm1300/npm1300.h"
+#include "../../sys/powerctl/stwlc38/stwlc38.h"
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -942,6 +943,77 @@ void test_pmic(const char *args) {
 }
 #endif  // USE_POWERCTL
 
+#ifdef USE_POWERCTL
+void test_wpc(const char *args) {
+  stwlc38_init();
+
+  if (strcmp(args, "EN") == 0) {
+    if (!stwlc38_enable(true)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else if (strcmp(args, "DIS") == 0) {
+    if (!stwlc38_enable(false)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else if (strcmp(args, "VEN") == 0) {
+    if (!stwlc38_enable_vout(true)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else if (strcmp(args, "VDIS") == 0) {
+    if (!stwlc38_enable_vout(false)) {
+      vcp_println("ERROR # STWLC38 not initialized");
+      return;
+    }
+    vcp_println("OK");
+  } else if (strncmp(args, "MEASURE", 7) == 0) {
+    stwlc38_report_t report;
+
+    int seconds = atoi(&args[7]);
+    uint32_t ticks = hal_ticks_ms();
+
+    vcp_println(
+        "time; ready; vout_ready; vrect; vout; icur; tmeas; opfreq; ntc");
+    do {
+      if (!stwlc38_get_report(&report)) {
+        vcp_println("ERROR # STWLC38 not initialized");
+        return;
+      } else {
+        vcp_print("%09d; ", ticks);
+        vcp_print("%d; ", report.ready ? 1 : 0);
+        vcp_print("%d; ", report.vout_ready ? 1 : 0);
+        vcp_print("%d.%03d; ", (int)report.vrect,
+                  (int)abs(report.vrect * 1000) % 1000);
+        vcp_print("%d.%03d; ", (int)report.vout,
+                  (int)(report.vout * 1000) % 1000);
+        vcp_print("%d.%03d; ", (int)report.icur,
+                  (int)abs(report.icur * 1000) % 1000);
+        vcp_print("%d.%03d; ", (int)report.tmeas,
+                  (int)abs(report.tmeas * 1000) % 1000);
+        vcp_print("%d; ", report.opfreq);
+        vcp_print("%d.%03d; ", (int)report.ntc,
+                  (int)abs(report.ntc * 1000) % 1000);
+
+        vcp_println("");
+      }
+
+      while (!ticks_expired(ticks + 1000)) {
+      };
+
+      ticks += 1000;
+
+    } while (seconds-- > 0);
+
+    vcp_println("OK # Measurement finished");
+  }
+}
+#endif  // USE_POWERCTL
+
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
@@ -1111,6 +1183,8 @@ int main(void) {
 #ifdef USE_POWERCTL
     } else if (startswith(line, "PMIC ")) {
       test_pmic(line + 5);
+    } else if (startswith(line, "WPC ")) {
+      test_wpc(line + 4);
 #endif
     } else {
       vcp_println("UNKNOWN");
