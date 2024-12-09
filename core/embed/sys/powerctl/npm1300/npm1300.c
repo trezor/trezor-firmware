@@ -541,6 +541,10 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   bool ibat_discharging = ((r->adc_ibat_meas_status >> 2) & 0x03) == 1;
   bool ibat_charging = ((r->adc_ibat_meas_status >> 2) & 0x03) == 3;
 
+  // Calculate the battery current based on the ADC reading and operating state.
+  // If discharging, use the discharge current limit (i_limit).
+  // If charging, use the charge current limit (i_charge).
+  // See the NPM1300 datasheet for details.
   if (ibat_discharging) {
     report->ibat = ((int)ibat_adc * drv->i_limit) / 1250.0;
   } else if (ibat_charging) {
@@ -549,13 +553,28 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
     report->ibat = 0;
   }
 
+  // Calculate the battery voltage (VBAT) from the ADC value.
+  // VBAT is scaled by the voltage divider ratio and ADC resolution.
   report->vbat = (vbat_adc * 5.0) / 1023.0;
+
+  // Calculate the temperature from the NTC (thermistor).
+  // Beta value for the thermistor is specified as 3380.
+  // The equation is derived from the NPM1300 datasheet.
   float beta = 3380;
   report->ntc_temp =
       1 / (1 / 298.15 - (1 / beta) * logf(1024.0 / ntc_adc - 1)) - 298.15 +
       25.0;
+
+  // Calculate the die temperature from the die ADC reading.
+  // The equation is derived from the NPM1300 datasheet.
   report->die_temp = 394.67 - 0.7926 * die_adc;
+
+  // Calculate the system voltage (VSYS) from the ADC value.
+  // VSYS is scaled based on the system voltage divider ratio and ADC
+  // resolution.
   report->vsys = (vsys_adc * 6.375) / 1023.0;
+
+  // Populate measurement and status flags from the raw data
   report->ibat_meas_status = r->adc_ibat_meas_status;
   report->buck_status = r->buck_status;
 }
