@@ -19,15 +19,24 @@ import pytest
 from trezorlib import misc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
+from ... import translations as TR
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 @pytest.mark.models("core")
 def test_encrypt(client: Client):
-    misc.encrypt_keyvalue(
-        client,
-        [],
-        "Enable labeling?",
-        b"",
-    )
+    def input_flow():
+        assert (yield).name == "cipher_key_value"
+        assert client.debug.read_layout().text_content() == TR.misc__enable_labeling
+        client.debug.swipe_up()
+        client.debug.press_yes()
+
+    with client:
+        client.set_input_flow(input_flow())
+        misc.encrypt_keyvalue(
+            client,
+            [],
+            "Enable labeling?",
+            b"",
+        )
