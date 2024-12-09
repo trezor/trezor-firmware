@@ -1453,10 +1453,11 @@ class TrezorClientDebugLink(TrezorClient):
         self,
         passphrase: str | object | None = "",
         derive_cardano: bool = False,
+        session_id: int = 0,
     ) -> Session:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
-        return super().get_session(passphrase, derive_cardano)
+        return super().get_session(passphrase, derive_cardano, session_id)
 
     def set_filter(
         self,
