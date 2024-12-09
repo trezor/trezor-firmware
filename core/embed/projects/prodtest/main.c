@@ -78,6 +78,7 @@
 #include "memzero.h"
 
 #ifdef USE_POWERCTL
+#include <sys/powerctl.h>
 #include "../../sys/powerctl/npm1300/npm1300.h"
 #include "../../sys/powerctl/stwlc38/stwlc38.h"
 #endif
@@ -1014,6 +1015,18 @@ void test_wpc(const char *args) {
 }
 #endif  // USE_POWERCTL
 
+#ifdef USE_POWERCTL
+void test_suspend(void) {
+  vcp_println("# Going to suspend mode (press power button to resume)");
+  systick_delay_ms(500);
+
+  powerctl_suspend();
+
+  systick_delay_ms(1500);
+  vcp_println("OK # Resumed");
+}
+#endif  // USE_POWERCTL
+
 #define BACKLIGHT_NORMAL 150
 
 int main(void) {
@@ -1185,6 +1198,8 @@ int main(void) {
       test_pmic(line + 5);
     } else if (startswith(line, "WPC ")) {
       test_wpc(line + 4);
+    } else if (startswith(line, "SUSPEND")) {
+      test_suspend();
 #endif
     } else {
       vcp_println("UNKNOWN");
