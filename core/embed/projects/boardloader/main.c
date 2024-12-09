@@ -74,6 +74,33 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 #endif
 };
 
+static void drivers_init(void) {
+#ifdef USE_PVD
+  pvd_init();
+#endif
+#ifdef USE_TAMPER
+  tamper_init();
+#endif
+  secret_init();
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
+  gfx_bitblt_init();
+  display_init(DISPLAY_RESET_CONTENT);
+#ifdef USE_SD_CARD
+  sdcard_init();
+#endif
+}
+
+static void drivers_deinit(void) {
+#ifdef FIXED_HW_DEINIT
+  // TODO
+#endif
+
+  display_deinit(DISPLAY_JUMP_BEHAVIOR);
+  ensure_compatible_settings();
+}
+
 static uint8_t get_bootloader_min_version(void) {
   uint8_t version = 0;
   ensure(monoctr_read(MONOCTR_BOOTLOADER_VERSION, &version), "monoctr read");
@@ -232,42 +259,21 @@ static secbool copy_sdcard(void) {
 int main(void) {
   system_init(&rsod_panic_handler);
 
-  reset_flags_reset();
-
-#ifdef USE_PVD
-  pvd_init();
-#endif
-
   if (sectrue != flash_configure_option_bytes()) {
     // display is not initialized so don't call ensure
     erase_storage(NULL);
     return 2;
   }
 
-#ifdef USE_TAMPER
-  tamper_init();
-#endif
-
 #ifdef USE_TRUSTZONE
   tz_init_boardloader();
 #endif
 
-  secret_init();
+  drivers_init();
 
-#ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
-#endif
+  reset_flags_reset();
 
-  gfx_bitblt_init();
-
-  display_init(DISPLAY_RESET_CONTENT);
-
-  gfx_clear();
-  display_refresh();
-
-#if defined USE_SD_CARD
-  sdcard_init();
-
+#ifdef USE_SD_CARD
   // If the bootloader is being updated from SD card, we need to preserve the
   // monotonic counter from the old bootloader. This is in case that the old
   // bootloader did not have the chance yet to write its monotonic counter to
@@ -311,11 +317,9 @@ int main(void) {
   // This includes the version of bootloader potentially updated from SD card.
   write_bootloader_min_version(hdr->monotonic);
 
-  display_deinit(DISPLAY_JUMP_BEHAVIOR);
+  drivers_deinit();
 
-  ensure_compatible_settings();
-
-  mpu_reconfig(MPU_MODE_DISABLED);
+  system_deinit();
 
   // g_boot_command is preserved on STM32U5
   jump_to(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));
