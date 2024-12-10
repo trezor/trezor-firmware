@@ -196,6 +196,8 @@ class BasicApprover(Approver):
         master_node = keychain_testnet.derive(FIRST_TESTNET_ADDRESS_PATH)
         master_pk = master_node.public_key()
 
+        if not txo.address:
+            raise DataError("Missing address, cannot use label.")
         if not txo.label or not txo.label_sig:
             raise DataError("Missing label or label signature.")
 
