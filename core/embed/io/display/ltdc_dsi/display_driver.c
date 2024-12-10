@@ -21,7 +21,7 @@ display_driver_t g_display_driver = {
     .initialized = false,
 };
 
-static void display_pll_init(void) {
+static bool display_pll_init(void) {
   RCC_PeriphCLKInitTypeDef PLL3InitPeriph = {0};
 
   /* Start and configure PLL3 */
@@ -46,10 +46,10 @@ static void display_pll_init(void) {
   PLL3InitPeriph.PLL3.PLL3RGE = RCC_PLLVCIRANGE_0;
   PLL3InitPeriph.PLL3.PLL3ClockOut = RCC_PLL3_DIVR | RCC_PLL3_DIVP;
   PLL3InitPeriph.PLL3.PLL3Source = RCC_PLLSOURCE_HSE;
-  (void)HAL_RCCEx_PeriphCLKConfig(&PLL3InitPeriph);
+  return HAL_RCCEx_PeriphCLKConfig(&PLL3InitPeriph) == HAL_OK;
 }
 
-static void display_dsi_init(void) {
+static bool display_dsi_init(void) {
   display_driver_t *drv = &g_display_driver;
 
   RCC_PeriphCLKInitTypeDef DSIPHYInitPeriph = {0};
@@ -83,7 +83,9 @@ static void display_dsi_init(void) {
   DSIPHYInitPeriph.PeriphClockSelection = RCC_PERIPHCLK_DSI;
   DSIPHYInitPeriph.DsiClockSelection = RCC_DSICLKSOURCE_DSIPHY;
 
-  (void)HAL_RCCEx_PeriphCLKConfig(&DSIPHYInitPeriph);
+  if (HAL_RCCEx_PeriphCLKConfig(&DSIPHYInitPeriph) != HAL_OK) {
+    return false;
+  }
 
   /* Reset the TX escape clock division factor */
   drv->hlcd_dsi.Instance->CCR &= ~DSI_CCR_TXECKDIV;
@@ -116,8 +118,12 @@ static void display_dsi_init(void) {
   PLLInit.PLLChargePump = DSI_PLL_CHARGE_PUMP_2000HZ_4400HZ;
   PLLInit.PLLTuning = DSI_PLL_LOOP_FILTER_2000HZ_4400HZ;
 
-  HAL_DSI_Init(&drv->hlcd_dsi, &PLLInit);
-  HAL_DSI_SetGenericVCID(&drv->hlcd_dsi, 0);
+  if (HAL_DSI_Init(&drv->hlcd_dsi, &PLLInit) != HAL_OK) {
+    return false;
+  }
+  if (HAL_DSI_SetGenericVCID(&drv->hlcd_dsi, 0) != HAL_OK) {
+    return false;
+  }
 
   /* Configure the DSI for Video mode */
   drv->DSIVidCfg.VirtualChannelID = 0;
@@ -150,7 +156,9 @@ static void display_dsi_init(void) {
   drv->DSIVidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
 
   /* Drive the display */
-  HAL_DSI_ConfigVideoMode(&drv->hlcd_dsi, &drv->DSIVidCfg);
+  if (HAL_DSI_ConfigVideoMode(&drv->hlcd_dsi, &drv->DSIVidCfg) != HAL_OK) {
+    return false;
+  }
 
   /*********************/
   /* LCD configuration */
@@ -162,7 +170,9 @@ static void display_dsi_init(void) {
   PhyTimers.DataLaneMaxReadTime = 0;
   PhyTimers.StopWaitTime = 7;
 
-  HAL_DSI_ConfigPhyTimer(&drv->hlcd_dsi, &PhyTimers);
+  if (HAL_DSI_ConfigPhyTimer(&drv->hlcd_dsi, &PhyTimers)) {
+    return false;
+  }
 
   HostTimeouts.TimeoutCkdiv = 1;
   HostTimeouts.HighSpeedTransmissionTimeout = 0;
@@ -174,14 +184,22 @@ static void display_dsi_init(void) {
   HostTimeouts.LowPowerWriteTimeout = 0;
   HostTimeouts.BTATimeout = 0;
 
-  HAL_DSI_ConfigHostTimeouts(&drv->hlcd_dsi, &HostTimeouts);
-  HAL_DSI_ConfigFlowControl(&drv->hlcd_dsi, DSI_FLOW_CONTROL_BTA);
+  if (HAL_DSI_ConfigHostTimeouts(&drv->hlcd_dsi, &HostTimeouts) != HAL_OK) {
+    return false;
+  }
+
+  if (HAL_DSI_ConfigFlowControl(&drv->hlcd_dsi, DSI_FLOW_CONTROL_BTA) !=
+      HAL_OK) {
+    return false;
+  }
 
   /* Enable the DSI host */
   __HAL_DSI_ENABLE(&drv->hlcd_dsi);
+
+  return true;
 }
 
-static void display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
+static bool display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
                                       uint32_t fb_addr) {
   LTDC_LayerCfgTypeDef LayerCfg = {0};
 
@@ -206,10 +224,10 @@ static void display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
   LayerCfg.Backcolor.Green = 0; /* Not Used: default value */
   LayerCfg.Backcolor.Blue = 0;  /* Not Used: default value */
   LayerCfg.Backcolor.Reserved = 0xFF;
-  HAL_LTDC_ConfigLayer(hltdc, &LayerCfg, LTDC_LAYER_1);
+  return HAL_LTDC_ConfigLayer(hltdc, &LayerCfg, LTDC_LAYER_1) == HAL_OK;
 }
 
-static void display_ltdc_init(void) {
+static bool display_ltdc_init(void) {
   display_driver_t *drv = &g_display_driver;
 
   __HAL_RCC_LTDC_CLK_ENABLE();
@@ -229,16 +247,22 @@ static void display_ltdc_init(void) {
   drv->hlcd_ltdc.Init.Backcolor.Blue = 0;  /* Not used default value */
   drv->hlcd_ltdc.Init.Backcolor.Reserved = 0xFF;
 
-  HAL_LTDCEx_StructInitFromVideoConfig(&drv->hlcd_ltdc, &drv->DSIVidCfg);
+  if (HAL_LTDCEx_StructInitFromVideoConfig(&drv->hlcd_ltdc, &drv->DSIVidCfg) !=
+      HAL_OK) {
+    return false;
+  }
 
-  HAL_LTDC_Init(&drv->hlcd_ltdc);
+  if (HAL_LTDC_Init(&drv->hlcd_ltdc) != HAL_OK) {
+    return false;
+  }
 
-  display_ltdc_config_layer(&drv->hlcd_ltdc, display_fb_get_initial_addr());
+  return display_ltdc_config_layer(&drv->hlcd_ltdc,
+                                   display_fb_get_initial_addr());
 }
 
-void display_set_fb(uint32_t fb_addr) {
+bool display_set_fb(uint32_t fb_addr) {
   display_driver_t *drv = &g_display_driver;
-  display_ltdc_config_layer(&drv->hlcd_ltdc, fb_addr);
+  return display_ltdc_config_layer(&drv->hlcd_ltdc, fb_addr);
 }
 
 // Fully initializes the display controller.
@@ -297,16 +321,28 @@ void display_init(display_content_mode_t mode) {
   display_gfxmmu_init(drv);
 #endif
 
-  display_pll_init();
-  display_dsi_init();
-  display_ltdc_init();
+  if (!display_pll_init()) {
+    goto cleanup;
+  }
+  if (!display_dsi_init()) {
+    goto cleanup;
+  }
+  if (!display_ltdc_init()) {
+    goto cleanup;
+  }
 
   /* Start DSI */
-  HAL_DSI_Start(&drv->hlcd_dsi);
+  if (HAL_DSI_Start(&drv->hlcd_dsi) != HAL_OK) {
+    goto cleanup;
+  }
 
-  panel_init(drv);
+  if (!panel_init(drv)) {
+    goto cleanup;
+  }
 
-  HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LCD_HEIGHT);
+  if (HAL_LTDC_ProgramLineEvent(&drv->hlcd_ltdc, LCD_HEIGHT) != HAL_OK) {
+    goto cleanup;
+  }
 
   /* Enable LTDC interrupt */
   NVIC_SetPriority(LTDC_IRQn, IRQ_PRI_NORMAL);
@@ -318,6 +354,24 @@ void display_init(display_content_mode_t mode) {
   __HAL_LTDC_ENABLE_IT(&drv->hlcd_ltdc, LTDC_IT_LI | LTDC_IT_FU | LTDC_IT_TE);
 
   drv->initialized = true;
+  return;
+
+cleanup:
+  NVIC_DisableIRQ(LTDC_IRQn);
+  NVIC_DisableIRQ(LTDC_ER_IRQn);
+
+  __HAL_RCC_DSI_FORCE_RESET();
+  __HAL_RCC_LTDC_FORCE_RESET();
+
+  __HAL_RCC_LTDC_RELEASE_RESET();
+  __HAL_RCC_DSI_RELEASE_RESET();
+
+#ifdef DISPLAY_GFXMMU
+  __HAL_RCC_GFXMMU_FORCE_RESET();
+  __HAL_RCC_GFXMMU_RELEASE_RESET();
+#endif
+
+  drv->initialized = false;
 }
 
 int display_set_backlight(int level) {
