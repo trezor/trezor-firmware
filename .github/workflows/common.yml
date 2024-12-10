@@ -90,7 +90,8 @@ jobs:
       # See also:
       # https://github.com/NixOS/nixpkgs/blob/b00c7c2d1d905eb63c81a0917f1a94b763a7843b/pkgs/development/interpreters/python/cpython/default.nix#L103
       # https://github.com/NixOS/nixpkgs/pull/98915
-      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd python && poetry run tox"
+      # LD_LIBRARY_PATH workaround: https://discourse.nixos.org/t/nixpkgs-nixos-unstable-many-package-fail-with-glibc-2-38-not-found/35078 https://github.com/NixOS/nixpkgs/issues/287764
+      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && unset LD_LIBRARY_PATH && cd python && poetry run tox"
 
   python_support_test:
     name: Python support test
