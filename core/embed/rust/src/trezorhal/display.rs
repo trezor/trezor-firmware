@@ -55,13 +55,17 @@ pub fn refresh() {
 }
 
 #[cfg(feature = "framebuffer")]
-pub fn get_frame_buffer() -> (&'static mut [u8], usize) {
+pub fn get_frame_buffer() -> Option<(&'static mut [u8], usize)> {
     let mut fb_info = ffi::display_fb_info_t {
         ptr: ptr::null_mut(),
         stride: 0,
     };
 
     unsafe { ffi::display_get_frame_buffer(&mut fb_info) };
+
+    if fb_info.ptr.is_null() {
+        return None;
+    }
 
     let fb = unsafe {
         core::slice::from_raw_parts_mut(
@@ -70,5 +74,5 @@ pub fn get_frame_buffer() -> (&'static mut [u8], usize) {
         )
     };
 
-    (fb, fb_info.stride)
+    Some((fb, fb_info.stride))
 }
