@@ -57,6 +57,13 @@ void system_init(systask_error_handler_t error_handler) {
   systimer_init();
 }
 
+void system_deinit(void) {
+#ifdef FIXED_HW_DEINIT
+  systick_deinit();
+#endif
+  mpu_reconfig(MPU_MODE_DISABLED);
+}
+
 void system_exit(int exitcode) { systask_exit(NULL, exitcode); }
 
 void system_exit_error_ex(const char* title, size_t title_len,

@@ -114,7 +114,7 @@ env.Replace(
     '-fstack-protector-strong '
     + env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS="-T build/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common  -Wl,--print-memory-usage",
+    LINKFLAGS="-T build/boardloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/boardloader/boardloader.map -Wl,--warn-common -Wl,--undefined=__errno -Wl,--print-memory-usage",
     CPPPATH=[
         'embed/projects/boardloader',
         'embed/rtl/inc',
@@ -169,7 +169,7 @@ program_elf = env.Command(
     target='boardloader.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lm -lgcc',
 )
 
 env.Depends(program_elf, linkerscript_gen)
