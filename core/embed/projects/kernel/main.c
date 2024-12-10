@@ -55,6 +55,10 @@
 #include <sec/optiga_transport.h>
 #endif
 
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>
+#endif
+
 #ifdef USE_PVD
 #include <sys/pvd.h>
 #endif
@@ -104,6 +108,10 @@ static void optiga_log_hex(const char *prefix, const uint8_t *data,
 #endif
 
 void drivers_init() {
+#ifdef USE_POWERCTL
+  powerctl_init();
+#endif
+
 #ifdef USE_TAMPER
   tamper_init();
 #endif
