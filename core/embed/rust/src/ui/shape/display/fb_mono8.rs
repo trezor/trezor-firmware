@@ -39,7 +39,13 @@ where
 
         let cache = DrawingCache::new(bump, bump);
 
-        let (fb, fb_stride) = display::get_frame_buffer();
+        let fb_info = display::get_frame_buffer();
+
+        if fb_info.is_none() {
+            return;
+        }
+
+        let (fb, fb_stride) = fb_info.unwrap();
 
         let mut canvas = unwrap!(Mono8Canvas::new(
             Offset::new(width, height),
