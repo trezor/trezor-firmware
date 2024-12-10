@@ -48,10 +48,8 @@ def configure(
     defines += [("USE_BACKLIGHT", "1")]
 
     if "input" in features_wanted:
-        sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/io/touch/ft6x36/ft6x36.c"]
         sources += ["embed/io/touch/ft6x36/panels/lhs200kb-if21.c"]
-        paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         sources += ["embed/io/button/stm32/button.c"]
@@ -59,9 +57,12 @@ def configure(
         features_available.append("button")
         defines += [
             ("USE_TOUCH", "1"),
-            ("USE_I2C", "1"),
             ("USE_BUTTON", "1"),
         ]
+
+    sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
+    paths += ["embed/io/i2c_bus/inc"]
+    defines += [("USE_I2C", "1")]
 
     if "haptic" in features_wanted:
         sources += [
