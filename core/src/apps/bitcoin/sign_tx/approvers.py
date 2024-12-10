@@ -181,6 +181,41 @@ class BasicApprover(Approver):
 
         await super()._add_output(txo, script_pubkey)
 
+    async def confirm_output_label(self, txo: TxOutput) -> None:
+        from trezor.crypto.curve import secp256k1
+        from apps.common.signverify import message_digest
+        from apps.bitcoin.addresses import address_pkh
+        from apps.bitcoin.keychain import get_keychain_for_coin
+        from apps.common import coins
+
+        coin_testnet = coins.by_name("Testnet")
+
+        # Derive master public key
+        FIRST_TESTNET_ADDRESS_PATH = [2147483692, 2147483649, 2147483648, 0, 0]
+        keychain_testnet = await get_keychain_for_coin(coin_testnet)
+        master_node = keychain_testnet.derive(FIRST_TESTNET_ADDRESS_PATH)
+        master_pk = master_node.public_key()
+
+        if not txo.label or not txo.label_sig:
+            raise DataError("Missing label or label signature.")
+
+        # Verify that txo.label_sig matches label_message signed by my master key
+        label_message = txo.label + "/" + (txo.label_pk or txo.address)
+        label_message_digest = message_digest(coin_testnet, label_message.encode())
+        if not secp256k1.verify(master_pk, txo.label_sig, label_message_digest):
+            raise DataError("Invalid signature of label.")
+        
+        # Verify that txo.address_pk_sig matches txo.address signed by txo.label_pk
+        if txo.label_pk and txo.address_pk_sig:
+            address_digest = message_digest(self.coin, txo.address.encode())
+            address_pk_sig_rec = secp256k1.verify_recover(txo.address_pk_sig, address_digest)
+            if txo.label_pk != address_pkh(address_pk_sig_rec, coin_testnet):
+                raise DataError("Invalid signature of address.")
+        elif not txo.label_pk and not txo.address_pk_sig:
+            pass
+        else:
+            raise DataError("Both label public key and address public key signature must be present.")
+
     async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         await super().add_change_output(txo, script_pubkey)
         self.change_count += 1
@@ -195,6 +230,9 @@ class BasicApprover(Approver):
         from trezor.enums import OutputScriptType
 
         await super().add_external_output(txo, script_pubkey, tx_info, orig_txo)
+
+        if txo.label:
+            await self.confirm_output_label(txo)
 
         if orig_txo:
             if txo.amount < orig_txo.amount:

@@ -96,7 +96,9 @@ async def confirm_output(
             title = None
 
         address_label = None
-        if output.address_n and not output.multisig:
+        if output.label:
+            address_label = output.label
+        elif output.address_n and not output.multisig:
             from trezor import utils
 
             # Showing the account string only for model_tr layout

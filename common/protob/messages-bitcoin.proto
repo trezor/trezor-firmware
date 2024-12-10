@@ -356,6 +356,10 @@ message TxAck {
             optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
             optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
             optional uint32 payment_req_index = 12 [(experimental_field)=true]; // index of the PaymentRequest containing this output
+            optional string label = 13;                     // label stored in Suite
+            optional bytes label_sig = 14;                  // sig(label|label_pk) stored in Suite, previously computed by Trezor
+            optional string label_pk = 15;                  // pubkey of the contact corresponding to the label
+            optional bytes address_pk_sig = 16;             // signature of the address (signed by the receiver)
         }
     }
 }
