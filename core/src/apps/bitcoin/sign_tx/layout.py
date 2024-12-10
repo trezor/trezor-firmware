@@ -127,6 +127,7 @@ async def confirm_output(
             chunkify=chunkify,
             source_account=account_label(coin, address_n),
             source_account_path=address_n_to_str(address_n) if address_n else None,
+            contact_label=output.label,
         )
 
     await layout
