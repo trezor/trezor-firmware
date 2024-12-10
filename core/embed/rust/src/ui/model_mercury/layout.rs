@@ -622,6 +622,42 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_confirm_output_contact(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let contact_label: TString = kwargs.get(Qstr::MP_QSTR_contact_label)?.try_into()?;
+        let address: TString = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
+        let amount: Obj = kwargs.get(Qstr::MP_QSTR_amount)?;
+        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, true)?;
+
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_SUB_GREY, "Contact"),
+            Paragraph::new(&theme::TEXT_SUPER, contact_label),
+        ]);
+
+        let amount_params = ConfirmBlobParams::new(TR::words__amount.into(), amount, None)
+            .with_menu_button()
+            .with_footer(TR::instructions__swipe_up.into(), None)
+            .with_text_mono(true)
+            .with_swipe_up()
+            .with_swipe_down();
+
+        let mut address_params = ShowInfoParams::new(TR::words__address.into())
+            .with_cancel_button()
+            .with_chunkify(chunkify);
+        address_params = unwrap!(address_params.add(TR::words__address.into(), address));
+
+        let flow = flow::new_confirm_output_contact(
+            paragraphs,
+            title,
+            address_params,
+            amount_params,
+        )?;
+        Ok(LayoutObj::new_root(flow)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let amount: TString = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
@@ -1983,6 +2019,17 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
     Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, new_confirm_output).as_obj(),
+
+    /// def flow_confirm_output_contact(
+    ///     *,
+    ///     title: str,
+    ///     contact_label: str,
+    ///     address: str,
+    ///     amount: str,
+    ///     chunkify: bool = True,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Confirm the transaction output for labeled contact."""
+    Qstr::MP_QSTR_flow_confirm_output_contact => obj_fn_kw!(0, new_confirm_output_contact).as_obj(),
 
     /// def confirm_summary(
     ///     *,

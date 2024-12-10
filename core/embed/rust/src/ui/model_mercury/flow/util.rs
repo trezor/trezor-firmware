@@ -343,6 +343,11 @@ impl ShowInfoParams {
         self.items.is_empty()
     }
 
+    pub const fn with_chunkify(mut self, chunkify: bool) -> Self {
+        self.chunkify = chunkify;
+        self
+    }
+
     #[inline(never)]
     pub const fn with_subtitle(mut self, subtitle: Option<TString<'static>>) -> Self {
         self.subtitle = subtitle;

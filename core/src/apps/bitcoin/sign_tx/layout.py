@@ -96,9 +96,7 @@ async def confirm_output(
             title = None
 
         address_label = None
-        if output.label:
-            address_label = output.label
-        elif output.address_n and not output.multisig:
+        if output.address_n and not output.multisig:
             from trezor import utils
 
             # Showing the account string only for model_tr layout
@@ -129,6 +127,7 @@ async def confirm_output(
             chunkify=chunkify,
             source_account=account_label(coin, address_n),
             source_account_path=address_n_to_str(address_n) if address_n else None,
+            contact_label=output.label,
         )
 
     await layout
