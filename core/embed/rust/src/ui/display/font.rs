@@ -144,7 +144,7 @@ impl GlyphData {
         };
         let gl_data = self.get_glyph_data(ch as u16);
 
-        ensure!(!gl_data.is_none(), "Failed to load glyph");
+        ensure!(gl_data.is_some(), "Failed to load glyph");
         Glyph::load(gl_data.unwrap())
     }
 
