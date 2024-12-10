@@ -162,11 +162,13 @@ impl Homescreen {
             Event::BLE(BLEEvent::Connected) | Event::BLE(BLEEvent::Disconnected) => {
                 self.paint_notification_only = true;
                 ctx.request_paint();
+                #[cfg(feature = "rgb_led")]
                 set_color(0);
             }
             Event::BLE(BLEEvent::PairingCanceled) => {
                 self.pairing = false;
                 self.pairing_dialog = None;
+                #[cfg(feature = "rgb_led")]
                 set_color(0);
                 ctx.request_paint();
             }
@@ -279,24 +281,27 @@ impl Component for Homescreen {
                         ble::reject_pairing();
                         self.pairing = false;
                         ctx.request_paint();
+                        #[cfg(feature = "rgb_led")]
                         set_color(0);
                     }
                     ConfirmMsg::Confirm => {
                         ble::allow_pairing();
                         self.pairing = false;
                         ctx.request_paint();
+                        #[cfg(feature = "rgb_led")]
                         set_color(0);
                     }
                 }
             }
         }
 
-
         if let Event::Attach(_) = event {
+            #[cfg(feature = "rgb_led")]
             set_color(0);
         }
 
         if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
+            #[cfg(feature = "rgb_led")]
             set_color(0xff);
             pairing_mode();
             None
@@ -307,7 +312,7 @@ impl Component for Homescreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-                self.pad.render(target);
+        self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else if self.pairing() {
