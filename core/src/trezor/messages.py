@@ -780,7 +780,8 @@ if TYPE_CHECKING:
         payment_req_index: "int | None"
         label: "str | None"
         label_sig: "bytes | None"
-        label_pk: "bytes | None"
+        label_pk: "str | None"
+        address_pk_sig: "bytes | None"
 
         def __init__(
             self,
@@ -796,7 +797,8 @@ if TYPE_CHECKING:
             payment_req_index: "int | None" = None,
             label: "str | None" = None,
             label_sig: "bytes | None" = None,
-            label_pk: "bytes | None" = None,
+            label_pk: "str | None" = None,
+            address_pk_sig: "bytes | None" = None,
         ) -> None:
             pass
 

@@ -1499,7 +1499,8 @@ class TxOutput(protobuf.MessageType):
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
         13: protobuf.Field("label", "string", repeated=False, required=False, default=None),
         14: protobuf.Field("label_sig", "bytes", repeated=False, required=False, default=None),
-        15: protobuf.Field("label_pk", "bytes", repeated=False, required=False, default=None),
+        15: protobuf.Field("label_pk", "string", repeated=False, required=False, default=None),
+        16: protobuf.Field("address_pk_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1516,7 +1517,8 @@ class TxOutput(protobuf.MessageType):
         payment_req_index: Optional["int"] = None,
         label: Optional["str"] = None,
         label_sig: Optional["bytes"] = None,
-        label_pk: Optional["bytes"] = None,
+        label_pk: Optional["str"] = None,
+        address_pk_sig: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1530,6 +1532,7 @@ class TxOutput(protobuf.MessageType):
         self.label = label
         self.label_sig = label_sig
         self.label_pk = label_pk
+        self.address_pk_sig = address_pk_sig
 
 
 class PrevTx(protobuf.MessageType):
