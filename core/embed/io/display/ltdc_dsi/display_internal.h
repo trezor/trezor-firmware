@@ -60,7 +60,7 @@ typedef struct {
 
 extern display_driver_t g_display_driver;
 
-void display_set_fb(uint32_t fb_addr);
+bool display_set_fb(uint32_t fb_addr);
 
 void display_fb_clear(void);
 
@@ -74,10 +74,10 @@ static inline uint32_t is_mode_exception(void) {
 
 void display_ensure_refreshed(void);
 
-void panel_init(display_driver_t *drv);
+bool panel_init(display_driver_t *drv);
 
 #ifdef DISPLAY_GFXMMU
-void display_gfxmmu_init(display_driver_t *drv);
+bool display_gfxmmu_init(display_driver_t *drv);
 #endif
 
 #endif  // TREZOR_HAL_DISPLAY_INTERNAL_H

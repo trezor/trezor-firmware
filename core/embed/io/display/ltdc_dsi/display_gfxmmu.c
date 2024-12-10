@@ -10,7 +10,7 @@ extern uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 
 extern const uint32_t gfxmmu_lut_config[2 * GFXMMU_LUT_SIZE];
 
-void display_gfxmmu_init(display_driver_t *drv) {
+bool display_gfxmmu_init(display_driver_t *drv) {
   __HAL_RCC_GFXMMU_FORCE_RESET();
   __HAL_RCC_GFXMMU_RELEASE_RESET();
 
@@ -50,12 +50,21 @@ void display_gfxmmu_init(display_driver_t *drv) {
   drv->hlcd_gfxmmu.Init.Interrupts.Activation = DISABLE;
   drv->hlcd_gfxmmu.Init.Interrupts.UsedInterrupts =
       GFXMMU_AHB_MASTER_ERROR_IT; /* NU */
-  HAL_GFXMMU_Init(&drv->hlcd_gfxmmu);
+  if (HAL_GFXMMU_Init(&drv->hlcd_gfxmmu) != HAL_OK) {
+    return false;
+  }
 
   /* Initialize LUT */
-  HAL_GFXMMU_ConfigLut(&drv->hlcd_gfxmmu, 0, LCD_HEIGHT,
-                       (uint32_t)&gfxmmu_lut_config);
+  if (HAL_GFXMMU_ConfigLut(&drv->hlcd_gfxmmu, 0, LCD_HEIGHT,
+                           (uint32_t)&gfxmmu_lut_config) != HAL_OK) {
+    return false;
+  }
 
-  HAL_GFXMMU_DisableLutLines(&drv->hlcd_gfxmmu, LCD_HEIGHT, 1024 - LCD_HEIGHT);
+  if (HAL_GFXMMU_DisableLutLines(&drv->hlcd_gfxmmu, LCD_HEIGHT,
+                                 1024 - LCD_HEIGHT) != HAL_OK) {
+    return false;
+  }
+
+  return true;
 }
 #endif
