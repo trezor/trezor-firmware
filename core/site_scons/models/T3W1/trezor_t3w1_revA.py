@@ -39,7 +39,11 @@ def configure(
     ]
 
     sources += [
-        "embed/io/display/st7785ma/display_driver.c",
+        "embed/io/display/ltdc_dsi/display_driver.c",
+        "embed/io/display/ltdc_dsi/panels/lx200d2406a/lx200d2406a.c",
+        "embed/io/display/ltdc_dsi/display_fb.c",
+        "embed/io/display/ltdc_dsi/display_fb_rgb565.c",
+        "embed/io/display/fb_queue/fb_queue.c",
         "embed/io/display/backlight/stm32/backlight_pwm.c",
     ]
 
