@@ -368,9 +368,8 @@ impl Font {
                 }
                 text_width += c_width;
             }
-        });
-
-        text // the whole text fits
+            text // the whole text fits
+        })
     }
 
     /// Get the length of the longest suffix from a given `text`
@@ -387,9 +386,8 @@ impl Font {
                 }
                 text_width += char_width;
             }
-        });
-
-        text.len() // it fits in its entirety
+            text.len() // it fits in its entirety
+        })
     }
 
     pub fn visible_text_height_ex(&self, text: &str) -> (i16, i16) {
