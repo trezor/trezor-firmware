@@ -181,7 +181,8 @@ static void display_dsi_init(void) {
   __HAL_DSI_ENABLE(&drv->hlcd_dsi);
 }
 
-void display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc, uint32_t fb_addr) {
+static void display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
+                                      uint32_t fb_addr) {
   LTDC_LayerCfgTypeDef LayerCfg = {0};
 
   /* LTDC layer configuration */
@@ -208,7 +209,7 @@ void display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc, uint32_t fb_addr) {
   HAL_LTDC_ConfigLayer(hltdc, &LayerCfg, LTDC_LAYER_1);
 }
 
-void display_ltdc_init(void) {
+static void display_ltdc_init(void) {
   display_driver_t *drv = &g_display_driver;
 
   __HAL_RCC_LTDC_CLK_ENABLE();
