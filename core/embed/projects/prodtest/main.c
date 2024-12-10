@@ -893,11 +893,33 @@ void test_pmic(const char *args) {
         vcp_println("ERROR # I/O error");
       }
     }
+  } else if (strcmp(args, "BUCK PWM") == 0) {
+    bool ok = npm1300_set_buck_mode(NPM1300_BUCK_MODE_PWM);
+    if (ok) {
+      vcp_println("OK # PWM mode set");
+    } else {
+      vcp_println("ERROR # I/O error");
+    }
+  } else if (strcmp(args, "BUCK PFM") == 0) {
+    bool ok = npm1300_set_buck_mode(NPM1300_BUCK_MODE_PFM);
+    if (ok) {
+      vcp_println("OK # PFM mode set");
+    } else {
+      vcp_println("ERROR # I/O error");
+    }
+  } else if (strcmp(args, "BUCK AUTO") == 0) {
+    bool ok = npm1300_set_buck_mode(NPM1300_BUCK_MODE_AUTO);
+    if (ok) {
+      vcp_println("OK # AUTO mode set");
+    } else {
+      vcp_println("ERROR # I/O error");
+    }
   } else if (strncmp(args, "MEASURE", 7) == 0) {
     int seconds = atoi(&args[7]);
     uint32_t ticks = hal_ticks_ms();
     vcp_println(
-        "time; vbat; ibat; ntc_temp; vsys; die_temp; iba_meas_status; mode");
+        "time; vbat; ibat; ntc_temp; vsys; die_temp; iba_meas_status; "
+        "buck_status; mode");
     do {
       npm1300_report_t report;
       bool ok = npm1300_measure_sync(&report);
@@ -918,6 +940,7 @@ void test_pmic(const char *args) {
       vcp_print("%d.%03d; ", (int)report.die_temp,
                 (int)abs(report.die_temp * 1000) % 1000);
       vcp_print("%02X; ", report.ibat_meas_status);
+      vcp_print("%02X; ", report.buck_status);
 
       bool ibat_discharging = ((report.ibat_meas_status >> 2) & 0x03) == 1;
       bool ibat_charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
