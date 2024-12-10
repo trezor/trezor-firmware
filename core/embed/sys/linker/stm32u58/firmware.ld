@@ -4,16 +4,12 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = FIRMWARE_MAXSIZE
-  SRAM1  (wal) : ORIGIN = MCU_SRAM1, LENGTH =  MCU_SRAM1_SIZE - 512
-  SRAM2  (wal) : ORIGIN = MCU_SRAM2 + KERNEL_SRAM2_SIZE + KERNEL_U_RAM_SIZE, LENGTH =  MCU_SRAM2_SIZE - KERNEL_SRAM2_SIZE - KERNEL_U_RAM_SIZE
-  SRAM3  (wal) : ORIGIN = MCU_SRAM3, LENGTH =  MCU_SRAM3_SIZE - FRAMEBUFFER_SRAM_SIZE
-  SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  0K  /* SRAM5 is not available */
-  SRAM6  (wal) : ORIGIN = MCU_SRAM6, LENGTH =  0K  /* SRAM6 is not available */
-  SRAM4  (wal) : ORIGIN = MCU_SRAM4, LENGTH =  0K  /* not allocated to coreapp */
+  AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
+  AUX2_RAM (wal) : ORIGIN = AUX2_RAM_START, LENGTH = AUX2_RAM_SIZE
 }
 
-main_stack_base = ORIGIN(SRAM2) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ORIGIN(SRAM2);
+main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+_sstack = ADDR(.stack);
 _estack = main_stack_base;
 _stack_size = SIZEOF(.stack);
 
@@ -59,7 +55,7 @@ SECTIONS {
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >SRAM1 AT>FLASH
+  } >AUX1_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -69,24 +65,24 @@ SECTIONS {
     *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
-  } >SRAM1
+  } >AUX1_RAM
 
   .stack : ALIGN(8) {
     . = 32K; /* Overflow causes UsageFault */
-  } >SRAM2
+  } >AUX2_RAM
 
   .confidential : ALIGN(512) {
     *(.confidential*);
     . = ALIGN(512);
-  } >SRAM2 AT>FLASH
+  } >AUX2_RAM AT>FLASH
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >SRAM3
+  } >AUX2_RAM
 
   .heap : ALIGN(4) {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
-    . = ABSOLUTE(ORIGIN(SRAM3) + LENGTH(SRAM3)); /* this explicitly sets the end of the heap */
-  } >SRAM3
+    . = ABSOLUTE(ORIGIN(AUX2_RAM) + LENGTH(AUX2_RAM)); /* this explicitly sets the end of the heap */
+  } >AUX2_RAM
 }

@@ -94,13 +94,40 @@
 #define FIRMWARE_P2_SECTOR_START 17
 #define FIRMWARE_P2_SECTOR_END 23
 
-// RAM layout
-#define KERNEL_STACK_SIZE (8 * 1024)
-#define KERNEL_CCMRAM_SIZE (16 * 1024)
-#define KERNEL_FRAMEBUFFER_SIZE (8 * 1024)
-#define KERNEL_SRAM_SIZE (1 * 1024)
+// Ram layout - shared boardloader, bootloader, prodtest
+#define S_MAIN_STACK_START 0x10000000
+#define S_MAIN_STACK_SIZE (16 * 1024)
 
+#define S_FB1_RAM_START 0x10004000
+#define S_FB1_RAM_SIZE (8 * 1024)
+
+#define S_MAIN_RAM_START 0x10006000
+#define S_MAIN_RAM_SIZE (40 * 1024 - 0x100)
+
+// RAM layout - kernel
+#define K_MAIN_STACK_START 0x10000000
+#define K_MAIN_STACK_SIZE (8 * 1024)
+
+#define K_AUX2_RAM_START 0x10002000
+#define K_AUX2_RAM_SIZE (32 * 1024)
+
+#define K_FB1_RAM_START 0x1000A000
+#define K_FB1_RAM_SIZE (8 * 1024)
+
+#define K_MAIN_RAM_START 0x1000C000
+#define K_MAIN_RAM_SIZE (16 * 1024 - 0x100)
+
+// RAM layout - common
+#define BOOTARGS_START 0x1000FF00
 #define BOOTARGS_SIZE 0x100
+
+#define DMABUF_RAM_START 0x20000000
+#define DMABUF_RAM_SIZE (1 * 1024)
+
+#define AUX1_RAM_START (0x20000400)
+#define AUX1_RAM_SIZE (191 * 1024)
+
+// misc
 #define CODE_ALIGNMENT 0x200
 #define COREAPP_ALIGNMENT 0x200
 

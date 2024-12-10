@@ -4,16 +4,11 @@ ENTRY(reset_handler)
 
 MEMORY {
   FLASH  (rx)  : ORIGIN = KERNEL_START, LENGTH = FIRMWARE_MAXSIZE
-  SRAM1  (wal) : ORIGIN = MCU_SRAM1, LENGTH =  0K  /* not allocated to coreapp */
-  SRAM2  (wal) : ORIGIN = MCU_SRAM2, LENGTH =  0K  /* not allocated to coreapp */
-  SRAM3  (wal) : ORIGIN = MCU_SRAM3, LENGTH =   0K  /* not allocated to coreapp */
-  SRAM5  (wal) : ORIGIN = MCU_SRAM5, LENGTH =  MCU_SRAM5_SIZE
-  SRAM6  (wal) : ORIGIN = MCU_SRAM6, LENGTH =  0K  /* not allocated to coreapp */
-  SRAM4  (wal) : ORIGIN = MCU_SRAM4, LENGTH =  0K  /* not allocated to coreapp */
+  AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
-main_stack_base = ORIGIN(SRAM5) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ORIGIN(SRAM5);
+main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
+_sstack = ADDR(.stack);
 _estack = main_stack_base;
 _stack_size = SIZEOF(.stack);
 
@@ -57,12 +52,12 @@ SECTIONS {
 
   .stack : ALIGN(8) {
     . = 32K; /* Overflow causes UsageFault */
-  } >SRAM5
+  } >AUX1_RAM
 
   .data : ALIGN(4) {
     *(.data*);
     . = ALIGN(512);
-  } >SRAM5 AT>FLASH
+  } >AUX1_RAM AT>FLASH
 
   /DISCARD/ : {
     *(.ARM.exidx*);
@@ -72,21 +67,21 @@ SECTIONS {
     *(.no_dma_buffers*);
     *(.bss*);
     . = ALIGN(4);
-  } >SRAM5
+  } >AUX1_RAM
 
   .confidential : ALIGN(512) {
     *(.confidential*);
     . = ALIGN(512);
-  } >SRAM5 AT>FLASH
+  } >AUX1_RAM AT>FLASH
 
   .buf : ALIGN(4) {
     *(.buf*);
     . = ALIGN(4);
-  } >SRAM5
+  } >AUX1_RAM
 
   .heap : ALIGN(4) {
     . = 37K; /* this acts as a build time assertion that at least this much memory is available for heap use */
-    . = ABSOLUTE(ORIGIN(SRAM5) + LENGTH(SRAM5)); /* this explicitly sets the end of the heap */
-  } >SRAM5
+    . = ABSOLUTE(ORIGIN(AUX1_RAM) + LENGTH(AUX1_RAM)); /* this explicitly sets the end of the heap */
+  } >AUX1_RAM
 
 }
