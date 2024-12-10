@@ -268,12 +268,8 @@ impl<'a> Translations<'a> {
     /// translations object. This is to facilitate safe interface to
     /// flash-based translations. See docs for `flash::get` for details.
     #[allow(clippy::needless_lifetimes)]
-    pub fn get_utf8_glyph<'b>(&'b self, codepoint: u16, font_index: u16) -> *const u8 {
-        if let Some(glyph) = self.font(font_index).and_then(|t| t.get(codepoint)) {
-            glyph.as_ptr()
-        } else {
-            core::ptr::null()
-        }
+    pub fn get_utf8_glyph<'b>(&'b self, codepoint: u16, font_index: u16) -> Option<&'b [u8]> {
+        self.font(font_index).and_then(|t| t.get(codepoint))
     }
 }
 

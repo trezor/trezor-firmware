@@ -33,36 +33,26 @@ pub struct Glyph<'a> {
 }
 
 impl<'a> Glyph<'a> {
-    /// Construct a `Glyph` from a raw pointer.
+    /// Creates a new `Glyph` from a byte slice containing font data.
     ///
-    /// # Safety
-    ///
-    /// This function is unsafe because the caller has to guarantee that `data`
-    /// is pointing to a memory containing a valid glyph data, that is:
-    /// - contains valid glyph metadata
-    /// - data has appropriate size
-    /// - data must have static lifetime
-    pub unsafe fn load(data: *const u8) -> Self {
-        unsafe {
-            let width = *data.offset(0) as i16;
-            let height = *data.offset(1) as i16;
+    /// Expected data format (bytes):
+    /// - 0: glyph width
+    /// - 1: glyph height
+    /// - 2: advance width
+    /// - 3: x-bearing
+    /// - 4: y-bearing
+    /// - 5...: bitmap data, packed according to FONT_BPP (bits per pixel)
+    pub fn load(data: &'a [u8]) -> Self {
+        let width = data[0] as i16;
+        let height = data[1] as i16;
 
-            let data_bytes = match constant::FONT_BPP {
-                1 => (width * height + 7) / 8, // packed bits
-                2 => (width * height + 3) / 4, // packed bits
-                4 => (width + 1) / 2 * height, // row aligned to bytes
-                8 => width * height,
-                _ => fatal_error!("Unsupported font bpp"),
-            };
-
-            Glyph {
-                width,
-                height,
-                adv: *data.offset(2) as i16,
-                bearing_x: *data.offset(3) as i16,
-                bearing_y: *data.offset(4) as i16,
-                data: slice::from_raw_parts(data.offset(5), data_bytes as usize),
-            }
+        Glyph {
+            width,
+            height,
+            adv: data[2] as i16,
+            bearing_x: data[3] as i16,
+            bearing_y: data[4] as i16,
+            data: &data[5..],
         }
     }
 
@@ -154,19 +144,36 @@ impl GlyphData {
         };
         let gl_data = self.get_glyph_data(ch as u16);
 
-        ensure!(!gl_data.is_null(), "Failed to load glyph");
-        // SAFETY: Glyph::load is valid for data returned by get_char_glyph
-        unsafe { Glyph::load(gl_data) }
+        ensure!(!gl_data.is_none(), "Failed to load glyph");
+        Glyph::load(gl_data.unwrap())
     }
 
-    fn get_glyph_data(&self, codepoint: u16) -> *const u8 {
-        display::get_font_info(self.font.into()).map_or(core::ptr::null(), |font_info| {
+    fn calculate_glyph_size(header: &[u8]) -> usize {
+        let width = header[0] as i16;
+        let height = header[1] as i16;
+
+        let data_bytes = match constant::FONT_BPP {
+            1 => (width * height + 7) / 8, // packed bits
+            2 => (width * height + 3) / 4, // packed bits
+            4 => (width + 1) / 2 * height, // row aligned to bytes
+            8 => width * height,
+            _ => fatal_error!("Unsupported font bpp"),
+        };
+
+        5 + data_bytes as usize // header (5 bytes) + bitmap data
+    }
+
+    fn get_glyph_data(&self, codepoint: u16) -> Option<&[u8]> {
+        display::get_font_info(self.font.into()).map(|font_info| {
             if codepoint >= ' ' as u16 && codepoint < 0x7F {
                 // ASCII character
                 unsafe {
-                    *font_info
+                    let ptr = *font_info
                         .glyph_data
-                        .offset((codepoint - ' ' as u16) as isize)
+                        .offset((codepoint - ' ' as u16) as isize);
+                    let header = slice::from_raw_parts(ptr, 2);
+                    let full_size = Self::calculate_glyph_size(header);
+                    slice::from_raw_parts(ptr, full_size)
                 }
             } else {
                 #[cfg(feature = "translations")]
@@ -175,12 +182,21 @@ impl GlyphData {
                         // UTF8 character from embedded blob
                         if let Some(guard) = &self.translations_guard {
                             if let Some(translations) = guard.as_ref() {
-                                return translations.get_utf8_glyph(codepoint, self.font as u16);
+                                if let Some(glyph) =
+                                    translations.get_utf8_glyph(codepoint, self.font as u16)
+                                {
+                                    return glyph;
+                                }
                             }
                         }
                     }
                 }
-                font_info.glyph_nonprintable
+                unsafe {
+                    let ptr = font_info.glyph_nonprintable;
+                    let header = slice::from_raw_parts(ptr, 2);
+                    let full_size = Self::calculate_glyph_size(header);
+                    slice::from_raw_parts(ptr, full_size)
+                }
             }
         })
     }
