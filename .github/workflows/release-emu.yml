@@ -1,0 +1,203 @@
+name: "[Release] emulators for trezor-user-env"
+
+on:
+  push:
+    tags:
+      - 'core/v*'
+      - 'legacy/v*'
+  workflow_dispatch:
+
+permissions:
+  id-token: write       # for fetching the OIDC token
+  contents: read        # for actions/checkout
+
+jobs:
+  get_models:
+    name: Get models
+    runs-on: ubuntu-latest
+    outputs:
+      models: ${{ steps.get_models.outputs.models }}
+      version: ${{ steps.get_models.outputs.version }}
+    steps:
+      - name: Get models from releases.json
+        id: get_models
+        run: |
+          if [[ $GITHUB_REF == refs/tags/core/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/core/v}
+            MODELS=$(jq -r --arg version "$VERSION" '.firmware[$version] | join(",")' common/releases.json)
+          elif [[ $GITHUB_REF == refs/tags/legacy/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/legacy/v}
+            MODELS=$(jq -r --arg version "$VERSION" '.firmware[$version] | join(",")' common/releases.json)
+          fi
+          echo "models=$MODELS" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+  core_emu:
+    if: startsWith(github.ref, 'refs/tags/core/v')
+    name: Build emu
+    needs: get_models
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJson(needs.get_models.outputs.models) }}
+        coins: [universal]
+        type: [debuglink]
+        asan: [noasan]
+        exclude:
+          - type: normal
+            asan: asan
+    env:
+      TREZOR_MODEL: ${{ matrix.model }}
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
+      ADDRESS_SANITIZER: "0"
+      LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+        if: matrix.coins == 'universal'
+      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-west-1
+        continue-on-error: true
+
+      - name: Upload emulator binaries
+        run: |
+            aws s3 mv core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }} s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
+          path: |
+            core/build/unix/trezor-emu-core*
+            core/build/bootloader_emu/bootloader.elf
+          retention-days: 7
+
+  core_emu_arm:
+    if: startsWith(github.ref, 'refs/tags/core/v')
+    name: Build core emu arm
+    needs: get_models
+    runs-on: ubuntu-latest-arm64
+    strategy:
+      fail-fast: false
+      matrix:
+        model: ${{ fromJson(needs.get_models.outputs.models) }}
+        coins: [universal]
+        type: [debuglink]
+        asan: [noasan]
+        exclude:
+          - type: normal
+            asan: asan
+    env:
+      TREZOR_MODEL: ${{ matrix.model }}
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+      LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run make -C core build_bootloader_emu"
+        if: matrix.coins == 'universal'
+      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: mv core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-west-1
+        continue-on-error: true
+
+      - name: Upload emulator binaries
+        run: |
+            aws s3 cp core/build/unix/trezor-emu-core-${{ matrix.model }}-v${{ needs.get_models.outputs.version }}-arm s3://data.trezor.io/dev/firmware/releases/emulators-new/${{ matrix.model}}/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
+          path: |
+            core/build/unix/trezor-emu-core*
+            core/build/bootloader_emu/bootloader.elf
+          retention-days: 7
+
+  legacy_emu:
+    if: startsWith(github.ref, 'refs/tags/legacy/v')
+    name: Build legacy emu
+    needs: get_models
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        coins: [universal]
+        type: [debuglink]
+        arch: [x86_64]
+        asan: [noasan]
+    env:
+      EMULATOR: 1
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }}
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-west-1
+        continue-on-error: true
+
+      - name: Upload emulator binaries
+        run: |
+            aws s3 cp legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }} s3://data.trezor.io/dev/firmware/releases/emulators-new/T1B1/
+
+
+  legacy_emu_arm:
+    if: startsWith(github.ref, 'refs/tags/legacy/v')
+    name: Build legacy emu arm
+    needs: get_models
+    runs-on: ubuntu-latest-arm64
+    strategy:
+      matrix:
+        coins: [universal]
+        type: [debuglink]
+        asan: [noasan]
+    env:
+      EMULATOR: 1
+      BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
+      ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: ./.github/actions/environment
+      - run: nix-shell --run "poetry run legacy/script/cibuild"
+      - run: mv legacy/firmware/trezor.elf legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }}-arm
+
+      - name: Configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
+          aws-region: eu-west-1
+        continue-on-error: true
+
+      - name: Upload emulator binaries
+        run: |
+            aws s3 cp legacy/firmware/trezor-emu-legacy-T1B1-v${{ needs.get_models.outputs.version }}-arm s3://data.trezor.io/dev/firmware/releases/emulators-new/T1B1/
