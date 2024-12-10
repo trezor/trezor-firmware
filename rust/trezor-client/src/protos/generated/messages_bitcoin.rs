@@ -1439,6 +1439,8 @@ pub struct Address {
     pub address: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Address.mac)
     pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.Address.signature)
+    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.Address.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1527,8 +1529,44 @@ impl Address {
         self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes signature = 3;
+
+    pub fn signature(&self) -> &[u8] {
+        match self.signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature(&mut self) {
+        self.signature = ::std::option::Option::None;
+    }
+
+    pub fn has_signature(&self) -> bool {
+        self.signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature.is_none() {
+            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "address",
@@ -1539,6 +1577,11 @@ impl Address {
             "mac",
             |m: &Address| { &m.mac },
             |m: &mut Address| { &mut m.mac },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature",
+            |m: &Address| { &m.signature },
+            |m: &mut Address| { &mut m.signature },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<Address>(
             "Address",
@@ -1567,6 +1610,9 @@ impl ::protobuf::Message for Address {
                 18 => {
                     self.mac = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                26 => {
+                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1585,6 +1631,9 @@ impl ::protobuf::Message for Address {
         if let Some(v) = self.mac.as_ref() {
             my_size += ::protobuf::rt::bytes_size(2, &v);
         }
+        if let Some(v) = self.signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1596,6 +1645,9 @@ impl ::protobuf::Message for Address {
         }
         if let Some(v) = self.mac.as_ref() {
             os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.signature.as_ref() {
+            os.write_bytes(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1616,6 +1668,7 @@ impl ::protobuf::Message for Address {
     fn clear(&mut self) {
         self.address = ::std::option::Option::None;
         self.mac = ::std::option::Option::None;
+        self.signature = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1623,6 +1676,7 @@ impl ::protobuf::Message for Address {
         static instance: Address = Address {
             address: ::std::option::Option::None,
             mac: ::std::option::Option::None,
+            signature: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -7918,6 +7972,12 @@ pub struct TxOutput {
     pub orig_index: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxOutput.payment_req_index)
     pub payment_req_index: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxOutput.label)
+    pub label: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxOutput.label_sig)
+    pub label_sig: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.TxOutput.label_pk)
+    pub label_pk: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.TxOutput.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -8121,8 +8181,116 @@ impl TxOutput {
         self.payment_req_index = ::std::option::Option::Some(v);
     }
 
+    // optional string label = 13;
+
+    pub fn label(&self) -> &str {
+        match self.label.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_label(&mut self) {
+        self.label = ::std::option::Option::None;
+    }
+
+    pub fn has_label(&self) -> bool {
+        self.label.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_label(&mut self, v: ::std::string::String) {
+        self.label = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_label(&mut self) -> &mut ::std::string::String {
+        if self.label.is_none() {
+            self.label = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.label.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_label(&mut self) -> ::std::string::String {
+        self.label.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional bytes label_sig = 14;
+
+    pub fn label_sig(&self) -> &[u8] {
+        match self.label_sig.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_label_sig(&mut self) {
+        self.label_sig = ::std::option::Option::None;
+    }
+
+    pub fn has_label_sig(&self) -> bool {
+        self.label_sig.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_label_sig(&mut self, v: ::std::vec::Vec<u8>) {
+        self.label_sig = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_label_sig(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.label_sig.is_none() {
+            self.label_sig = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.label_sig.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_label_sig(&mut self) -> ::std::vec::Vec<u8> {
+        self.label_sig.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes label_pk = 15;
+
+    pub fn label_pk(&self) -> &[u8] {
+        match self.label_pk.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_label_pk(&mut self) {
+        self.label_pk = ::std::option::Option::None;
+    }
+
+    pub fn has_label_pk(&self) -> bool {
+        self.label_pk.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_label_pk(&mut self, v: ::std::vec::Vec<u8>) {
+        self.label_pk = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_label_pk(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.label_pk.is_none() {
+            self.label_pk = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.label_pk.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_label_pk(&mut self) -> ::std::vec::Vec<u8> {
+        self.label_pk.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(9);
+        let mut fields = ::std::vec::Vec::with_capacity(12);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "address",
@@ -8168,6 +8336,21 @@ impl TxOutput {
             "payment_req_index",
             |m: &TxOutput| { &m.payment_req_index },
             |m: &mut TxOutput| { &mut m.payment_req_index },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "label",
+            |m: &TxOutput| { &m.label },
+            |m: &mut TxOutput| { &mut m.label },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "label_sig",
+            |m: &TxOutput| { &m.label_sig },
+            |m: &mut TxOutput| { &mut m.label_sig },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "label_pk",
+            |m: &TxOutput| { &m.label_pk },
+            |m: &mut TxOutput| { &mut m.label_pk },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TxOutput>(
             "TxOutput",
@@ -8225,6 +8408,15 @@ impl ::protobuf::Message for TxOutput {
                 96 => {
                     self.payment_req_index = ::std::option::Option::Some(is.read_uint32()?);
                 },
+                106 => {
+                    self.label = ::std::option::Option::Some(is.read_string()?);
+                },
+                114 => {
+                    self.label_sig = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                122 => {
+                    self.label_pk = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -8265,6 +8457,15 @@ impl ::protobuf::Message for TxOutput {
         if let Some(v) = self.payment_req_index {
             my_size += ::protobuf::rt::uint32_size(12, v);
         }
+        if let Some(v) = self.label.as_ref() {
+            my_size += ::protobuf::rt::string_size(13, &v);
+        }
+        if let Some(v) = self.label_sig.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(14, &v);
+        }
+        if let Some(v) = self.label_pk.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(15, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -8298,6 +8499,15 @@ impl ::protobuf::Message for TxOutput {
         if let Some(v) = self.payment_req_index {
             os.write_uint32(12, v)?;
         }
+        if let Some(v) = self.label.as_ref() {
+            os.write_string(13, v)?;
+        }
+        if let Some(v) = self.label_sig.as_ref() {
+            os.write_bytes(14, v)?;
+        }
+        if let Some(v) = self.label_pk.as_ref() {
+            os.write_bytes(15, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -8324,6 +8534,9 @@ impl ::protobuf::Message for TxOutput {
         self.orig_hash = ::std::option::Option::None;
         self.orig_index = ::std::option::Option::None;
         self.payment_req_index = ::std::option::Option::None;
+        self.label = ::std::option::Option::None;
+        self.label_sig = ::std::option::Option::None;
+        self.label_pk = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -8338,6 +8551,9 @@ impl ::protobuf::Message for TxOutput {
             orig_hash: ::std::option::Option::None,
             orig_index: ::std::option::Option::None,
             payment_req_index: ::std::option::Option::None,
+            label: ::std::option::Option::None,
+            label_sig: ::std::option::Option::None,
+            label_pk: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13475,37 +13691,38 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ltisigRedeemScriptTypeR\x08multisig\x12Z\n\x0bscript_type\x18\x05\x20\
     \x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\
     \nscriptType\x12*\n\x11ignore_xpub_magic\x18\x06\x20\x01(\x08R\x0fignore\
-    XpubMagic\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"5\n\
+    XpubMagic\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\"S\n\
     \x07Address\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\
-    \n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\x81\x02\n\x0eGetOwnershipId\x12\
-    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\
-    \x02\x20\x01(\t:\x07BitcoinR\x08coinName\x12P\n\x08multisig\x18\x03\x20\
-    \x01(\x0b24.hw.trezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08mult\
-    isig\x12Z\n\x0bscript_type\x18\x04\x20\x01(\x0e2+.hw.trezor.messages.bit\
-    coin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\"0\n\x0bOwnershipId\
-    \x12!\n\x0cownership_id\x18\x01\x20\x02(\x0cR\x0bownershipId\"\x88\x02\n\
-    \x0bSignMessage\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\
-    \x18\n\x07message\x18\x02\x20\x02(\x0cR\x07message\x12$\n\tcoin_name\x18\
-    \x03\x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\x04\
-    \x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDR\
-    ESSR\nscriptType\x12$\n\x0eno_script_type\x18\x05\x20\x01(\x08R\x0cnoScr\
-    iptType\x12\x1a\n\x08chunkify\x18\x06\x20\x01(\x08R\x08chunkify\"J\n\x10\
-    MessageSignature\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\
-    \x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\xa3\x01\n\rVerifyMe\
-    ssage\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1c\n\tsig\
-    nature\x18\x02\x20\x02(\x0cR\tsignature\x12\x18\n\x07message\x18\x03\x20\
-    \x02(\x0cR\x07message\x12$\n\tcoin_name\x18\x04\x20\x01(\t:\x07BitcoinR\
-    \x08coinName\x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"\
-    \xd9\x06\n\x06SignTx\x12#\n\routputs_count\x18\x01\x20\x02(\rR\x0coutput\
-    sCount\x12!\n\x0cinputs_count\x18\x02\x20\x02(\rR\x0binputsCount\x12$\n\
-    \tcoin_name\x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName\x12\x1b\n\x07ver\
-    sion\x18\x04\x20\x01(\r:\x011R\x07version\x12\x1e\n\tlock_time\x18\x05\
-    \x20\x01(\r:\x010R\x08lockTime\x12\x16\n\x06expiry\x18\x06\x20\x01(\rR\
-    \x06expiry\x12&\n\x0coverwintered\x18\x07\x20\x01(\x08R\x0coverwinteredB\
-    \x02\x18\x01\x12(\n\x10version_group_id\x18\x08\x20\x01(\rR\x0eversionGr\
-    oupId\x12\x1c\n\ttimestamp\x18\t\x20\x01(\rR\ttimestamp\x12\x1b\n\tbranc\
-    h_id\x18\n\x20\x01(\rR\x08branchId\x12P\n\x0bamount_unit\x18\x0b\x20\x01\
-    (\x0e2&.hw.trezor.messages.bitcoin.AmountUnit:\x07BITCOINR\namountUnit\
+    \n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\x12\x1c\n\tsignature\x18\x03\x20\
+    \x01(\x0cR\tsignature\"\x81\x02\n\x0eGetOwnershipId\x12\x1b\n\taddress_n\
+    \x18\x01\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x02\x20\x01(\t:\
+    \x07BitcoinR\x08coinName\x12P\n\x08multisig\x18\x03\x20\x01(\x0b24.hw.tr\
+    ezor.messages.bitcoin.MultisigRedeemScriptTypeR\x08multisig\x12Z\n\x0bsc\
+    ript_type\x18\x04\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptT\
+    ype:\x0cSPENDADDRESSR\nscriptType\"0\n\x0bOwnershipId\x12!\n\x0cownershi\
+    p_id\x18\x01\x20\x02(\x0cR\x0bownershipId\"\x88\x02\n\x0bSignMessage\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\n\x07message\
+    \x18\x02\x20\x02(\x0cR\x07message\x12$\n\tcoin_name\x18\x03\x20\x01(\t:\
+    \x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\x04\x20\x01(\x0e2+.hw\
+    .trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\nscriptType\
+    \x12$\n\x0eno_script_type\x18\x05\x20\x01(\x08R\x0cnoScriptType\x12\x1a\
+    \n\x08chunkify\x18\x06\x20\x01(\x08R\x08chunkify\"J\n\x10MessageSignatur\
+    e\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x1c\n\tsignatu\
+    re\x18\x02\x20\x02(\x0cR\tsignature\"\xa3\x01\n\rVerifyMessage\x12\x18\n\
+    \x07address\x18\x01\x20\x02(\tR\x07address\x12\x1c\n\tsignature\x18\x02\
+    \x20\x02(\x0cR\tsignature\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07\
+    message\x12$\n\tcoin_name\x18\x04\x20\x01(\t:\x07BitcoinR\x08coinName\
+    \x12\x1a\n\x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"\xd9\x06\n\x06\
+    SignTx\x12#\n\routputs_count\x18\x01\x20\x02(\rR\x0coutputsCount\x12!\n\
+    \x0cinputs_count\x18\x02\x20\x02(\rR\x0binputsCount\x12$\n\tcoin_name\
+    \x18\x03\x20\x01(\t:\x07BitcoinR\x08coinName\x12\x1b\n\x07version\x18\
+    \x04\x20\x01(\r:\x011R\x07version\x12\x1e\n\tlock_time\x18\x05\x20\x01(\
+    \r:\x010R\x08lockTime\x12\x16\n\x06expiry\x18\x06\x20\x01(\rR\x06expiry\
+    \x12&\n\x0coverwintered\x18\x07\x20\x01(\x08R\x0coverwinteredB\x02\x18\
+    \x01\x12(\n\x10version_group_id\x18\x08\x20\x01(\rR\x0eversionGroupId\
+    \x12\x1c\n\ttimestamp\x18\t\x20\x01(\rR\ttimestamp\x12\x1b\n\tbranch_id\
+    \x18\n\x20\x01(\rR\x08branchId\x12P\n\x0bamount_unit\x18\x0b\x20\x01(\
+    \x0e2&.hw.trezor.messages.bitcoin.AmountUnit:\x07BITCOINR\namountUnit\
     \x129\n\x15decred_staking_ticket\x18\x0c\x20\x01(\x08:\x05falseR\x13decr\
     edStakingTicket\x12\"\n\tserialize\x18\r\x20\x01(\x08:\x04trueR\tseriali\
     ze\x12]\n\x10coinjoin_request\x18\x0e\x20\x01(\x0b22.hw.trezor.messages.\
@@ -13593,7 +13810,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     in.DecredStakingSpendTypeR\x12decredStakingSpend\x12#\n\rscript_pubkey\
     \x18\x13\x20\x01(\x0cR\x0cscriptPubkey\x12(\n\x0ecoinjoin_flags\x18\x14\
     \x20\x01(\r:\x010R\rcoinjoinFlagsJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\
-    \x0cJ\x04\x08\x0c\x10\r\"\xae\x03\n\x08TxOutput\x12\x18\n\x07address\x18\
+    \x0cJ\x04\x08\x0c\x10\r\"\xfc\x03\n\x08TxOutput\x12\x18\n\x07address\x18\
     \x01\x20\x01(\tR\x07address\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08\
     addressN\x12\x16\n\x06amount\x18\x03\x20\x02(\x04R\x06amount\x12[\n\x0bs\
     cript_type\x18\x04\x20\x01(\x0e2,.hw.trezor.messages.bitcoin.OutputScrip\
@@ -13602,44 +13819,46 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12$\n\x0eop_return_data\x18\x06\x20\x01(\x0cR\x0copReturnData\x12\x1b\
     \n\torig_hash\x18\n\x20\x01(\x0cR\x08origHash\x12\x1d\n\norig_index\x18\
     \x0b\x20\x01(\rR\torigIndex\x120\n\x11payment_req_index\x18\x0c\x20\x01(\
-    \rR\x0fpaymentReqIndexB\x04\xc8\xf0\x19\x01J\x04\x08\x07\x10\x08J\x04\
-    \x08\x08\x10\tJ\x04\x08\t\x10\n\"\xcb\x02\n\x06PrevTx\x12\x18\n\x07versi\
-    on\x18\x01\x20\x02(\rR\x07version\x12\x1b\n\tlock_time\x18\x04\x20\x02(\
-    \rR\x08lockTime\x12!\n\x0cinputs_count\x18\x06\x20\x02(\rR\x0binputsCoun\
-    t\x12#\n\routputs_count\x18\x07\x20\x02(\rR\x0coutputsCount\x12'\n\x0eex\
-    tra_data_len\x18\t\x20\x01(\r:\x010R\x0cextraDataLen\x12\x16\n\x06expiry\
-    \x18\n\x20\x01(\rR\x06expiry\x12(\n\x10version_group_id\x18\x0c\x20\x01(\
-    \rR\x0eversionGroupId\x12\x1c\n\ttimestamp\x18\r\x20\x01(\rR\ttimestamp\
-    \x12\x1b\n\tbranch_id\x18\x0e\x20\x01(\rR\x08branchIdJ\x04\x08\x02\x10\
-    \x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06J\x04\x08\x08\x10\tJ\x04\
-    \x08\x0b\x10\x0c\"\xf7\x01\n\tPrevInput\x12\x1b\n\tprev_hash\x18\x02\x20\
-    \x02(\x0cR\x08prevHash\x12\x1d\n\nprev_index\x18\x03\x20\x02(\rR\tprevIn\
-    dex\x12\x1d\n\nscript_sig\x18\x04\x20\x02(\x0cR\tscriptSig\x12\x1a\n\x08\
-    sequence\x18\x05\x20\x02(\rR\x08sequence\x12\x1f\n\x0bdecred_tree\x18\t\
-    \x20\x01(\rR\ndecredTreeJ\x04\x08\x01\x10\x02J\x04\x08\x06\x10\x07J\x04\
-    \x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\n\x10\x0bJ\x04\x08\x0b\x10\
-    \x0cJ\x04\x08\x0c\x10\rJ\x04\x08\r\x10\x0eJ\x04\x08\x0e\x10\x0fJ\x04\x08\
-    \x0f\x10\x10J\x04\x08\x10\x10\x11J\x04\x08\x11\x10\x12J\x04\x08\x12\x10\
-    \x13J\x04\x08\x13\x10\x14\"}\n\nPrevOutput\x12\x16\n\x06amount\x18\x01\
-    \x20\x02(\x04R\x06amount\x12#\n\rscript_pubkey\x18\x02\x20\x02(\x0cR\x0c\
-    scriptPubkey\x122\n\x15decred_script_version\x18\x03\x20\x01(\rR\x13decr\
-    edScriptVersion\"\xf2\x05\n\x13TxAckPaymentRequest\x12\x14\n\x05nonce\
-    \x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0erecipient_name\x18\x02\x20\x02\
-    (\tR\rrecipientName\x12X\n\x05memos\x18\x03\x20\x03(\x0b2B.hw.trezor.mes\
-    sages.bitcoin.TxAckPaymentRequest.PaymentRequestMemoR\x05memos\x12\x16\n\
-    \x06amount\x18\x04\x20\x01(\x04R\x06amount\x12\x1c\n\tsignature\x18\x05\
-    \x20\x02(\x0cR\tsignature\x1a\xb8\x02\n\x12PaymentRequestMemo\x12U\n\tte\
-    xt_memo\x18\x01\x20\x01(\x0b28.hw.trezor.messages.bitcoin.TxAckPaymentRe\
-    quest.TextMemoR\x08textMemo\x12[\n\x0brefund_memo\x18\x02\x20\x01(\x0b2:\
-    .hw.trezor.messages.bitcoin.TxAckPaymentRequest.RefundMemoR\nrefundMemo\
-    \x12n\n\x12coin_purchase_memo\x18\x03\x20\x01(\x0b2@.hw.trezor.messages.\
-    bitcoin.TxAckPaymentRequest.CoinPurchaseMemoR\x10coinPurchaseMemo\x1a\
-    \x1e\n\x08TextMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\x1a8\n\
-    \nRefundMemo\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\
-    \n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\x1as\n\x10CoinPurchaseMemo\x12\
-    \x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\x12\x16\n\x06amount\
-    \x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\x18\x03\x20\x02(\tR\
-    \x07address\x12\x10\n\x03mac\x18\x04\x20\x02(\x0cR\x03mac:\x04\x88\xb2\
+    \rR\x0fpaymentReqIndexB\x04\xc8\xf0\x19\x01\x12\x14\n\x05label\x18\r\x20\
+    \x01(\tR\x05label\x12\x1b\n\tlabel_sig\x18\x0e\x20\x01(\x0cR\x08labelSig\
+    \x12\x19\n\x08label_pk\x18\x0f\x20\x01(\x0cR\x07labelPkJ\x04\x08\x07\x10\
+    \x08J\x04\x08\x08\x10\tJ\x04\x08\t\x10\n\"\xcb\x02\n\x06PrevTx\x12\x18\n\
+    \x07version\x18\x01\x20\x02(\rR\x07version\x12\x1b\n\tlock_time\x18\x04\
+    \x20\x02(\rR\x08lockTime\x12!\n\x0cinputs_count\x18\x06\x20\x02(\rR\x0bi\
+    nputsCount\x12#\n\routputs_count\x18\x07\x20\x02(\rR\x0coutputsCount\x12\
+    '\n\x0eextra_data_len\x18\t\x20\x01(\r:\x010R\x0cextraDataLen\x12\x16\n\
+    \x06expiry\x18\n\x20\x01(\rR\x06expiry\x12(\n\x10version_group_id\x18\
+    \x0c\x20\x01(\rR\x0eversionGroupId\x12\x1c\n\ttimestamp\x18\r\x20\x01(\r\
+    R\ttimestamp\x12\x1b\n\tbranch_id\x18\x0e\x20\x01(\rR\x08branchIdJ\x04\
+    \x08\x02\x10\x03J\x04\x08\x03\x10\x04J\x04\x08\x05\x10\x06J\x04\x08\x08\
+    \x10\tJ\x04\x08\x0b\x10\x0c\"\xf7\x01\n\tPrevInput\x12\x1b\n\tprev_hash\
+    \x18\x02\x20\x02(\x0cR\x08prevHash\x12\x1d\n\nprev_index\x18\x03\x20\x02\
+    (\rR\tprevIndex\x12\x1d\n\nscript_sig\x18\x04\x20\x02(\x0cR\tscriptSig\
+    \x12\x1a\n\x08sequence\x18\x05\x20\x02(\rR\x08sequence\x12\x1f\n\x0bdecr\
+    ed_tree\x18\t\x20\x01(\rR\ndecredTreeJ\x04\x08\x01\x10\x02J\x04\x08\x06\
+    \x10\x07J\x04\x08\x07\x10\x08J\x04\x08\x08\x10\tJ\x04\x08\n\x10\x0bJ\x04\
+    \x08\x0b\x10\x0cJ\x04\x08\x0c\x10\rJ\x04\x08\r\x10\x0eJ\x04\x08\x0e\x10\
+    \x0fJ\x04\x08\x0f\x10\x10J\x04\x08\x10\x10\x11J\x04\x08\x11\x10\x12J\x04\
+    \x08\x12\x10\x13J\x04\x08\x13\x10\x14\"}\n\nPrevOutput\x12\x16\n\x06amou\
+    nt\x18\x01\x20\x02(\x04R\x06amount\x12#\n\rscript_pubkey\x18\x02\x20\x02\
+    (\x0cR\x0cscriptPubkey\x122\n\x15decred_script_version\x18\x03\x20\x01(\
+    \rR\x13decredScriptVersion\"\xf2\x05\n\x13TxAckPaymentRequest\x12\x14\n\
+    \x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0erecipient_name\x18\
+    \x02\x20\x02(\tR\rrecipientName\x12X\n\x05memos\x18\x03\x20\x03(\x0b2B.h\
+    w.trezor.messages.bitcoin.TxAckPaymentRequest.PaymentRequestMemoR\x05mem\
+    os\x12\x16\n\x06amount\x18\x04\x20\x01(\x04R\x06amount\x12\x1c\n\tsignat\
+    ure\x18\x05\x20\x02(\x0cR\tsignature\x1a\xb8\x02\n\x12PaymentRequestMemo\
+    \x12U\n\ttext_memo\x18\x01\x20\x01(\x0b28.hw.trezor.messages.bitcoin.TxA\
+    ckPaymentRequest.TextMemoR\x08textMemo\x12[\n\x0brefund_memo\x18\x02\x20\
+    \x01(\x0b2:.hw.trezor.messages.bitcoin.TxAckPaymentRequest.RefundMemoR\n\
+    refundMemo\x12n\n\x12coin_purchase_memo\x18\x03\x20\x01(\x0b2@.hw.trezor\
+    .messages.bitcoin.TxAckPaymentRequest.CoinPurchaseMemoR\x10coinPurchaseM\
+    emo\x1a\x1e\n\x08TextMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\
+    \x1a8\n\nRefundMemo\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\
+    \x12\x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\x1as\n\x10CoinPurchaseMem\
+    o\x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\x12\x16\n\x06amou\
+    nt\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\x18\x03\x20\x02(\t\
+    R\x07address\x12\x10\n\x03mac\x18\x04\x20\x02(\x0cR\x03mac:\x04\x88\xb2\
     \x19\x01\"\xac\x01\n\nTxAckInput\x12H\n\x02tx\x18\x01\x20\x02(\x0b28.hw.\
     trezor.messages.bitcoin.TxAckInput.TxAckInputWrapperR\x02tx\x1aN\n\x11Tx\
     AckInputWrapper\x129\n\x05input\x18\x02\x20\x02(\x0b2#.hw.trezor.message\

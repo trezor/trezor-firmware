@@ -553,12 +553,14 @@ if TYPE_CHECKING:
     class Address(protobuf.MessageType):
         address: "str"
         mac: "bytes | None"
+        signature: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
             mac: "bytes | None" = None,
+            signature: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -776,6 +778,9 @@ if TYPE_CHECKING:
         orig_hash: "bytes | None"
         orig_index: "int | None"
         payment_req_index: "int | None"
+        label: "str | None"
+        label_sig: "bytes | None"
+        label_pk: "bytes | None"
 
         def __init__(
             self,
@@ -789,6 +794,9 @@ if TYPE_CHECKING:
             orig_hash: "bytes | None" = None,
             orig_index: "int | None" = None,
             payment_req_index: "int | None" = None,
+            label: "str | None" = None,
+            label_sig: "bytes | None" = None,
+            label_pk: "bytes | None" = None,
         ) -> None:
             pass
 

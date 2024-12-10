@@ -127,6 +127,7 @@ message GetAddress {
 message Address {
     required string address = 1;    // Coin address in Base58 encoding
     optional bytes mac = 2;         // Address authentication code
+    optional bytes signature = 3;
 }
 
 /**
@@ -400,6 +401,9 @@ message TxOutput {
     optional bytes orig_hash = 10;                  // tx_hash of the original transaction where this output was present (used when creating a replacement transaction)
     optional uint32 orig_index = 11;                // index of the output in the original transaction (used when creating a replacement transaction)
     optional uint32 payment_req_index = 12 [(experimental_field)=true]; // index of the PaymentRequest containing this output
+    optional string label = 13;
+    optional bytes label_sig = 14;
+    optional bytes label_pk = 15;
 }
 
 /** Data type for metadata about previous transaction which contains the UTXO being spent.

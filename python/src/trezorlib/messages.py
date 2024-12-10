@@ -1209,6 +1209,7 @@ class Address(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1216,9 +1217,11 @@ class Address(protobuf.MessageType):
         *,
         address: "str",
         mac: Optional["bytes"] = None,
+        signature: Optional["bytes"] = None,
     ) -> None:
         self.address = address
         self.mac = mac
+        self.signature = signature
 
 
 class GetOwnershipId(protobuf.MessageType):
@@ -1494,6 +1497,9 @@ class TxOutput(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
+        13: protobuf.Field("label", "string", repeated=False, required=False, default=None),
+        14: protobuf.Field("label_sig", "bytes", repeated=False, required=False, default=None),
+        15: protobuf.Field("label_pk", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1508,6 +1514,9 @@ class TxOutput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
+        label: Optional["str"] = None,
+        label_sig: Optional["bytes"] = None,
+        label_pk: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1518,6 +1527,9 @@ class TxOutput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.label = label
+        self.label_sig = label_sig
+        self.label_pk = label_pk
 
 
 class PrevTx(protobuf.MessageType):
