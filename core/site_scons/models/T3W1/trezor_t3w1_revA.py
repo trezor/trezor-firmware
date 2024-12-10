@@ -36,6 +36,7 @@ def configure(
         ("HW_REVISION", str(hw_revision)),
         ("HSE_VALUE", "32000000"),
         ("USE_HSE", "1"),
+        ("FIXED_HW_DEINIT", "1"),
     ]
 
     sources += [

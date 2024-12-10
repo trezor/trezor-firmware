@@ -31,6 +31,10 @@
 //                 with an error
 void system_init(systask_error_handler_t error_handler);
 
+// Deinitializes the system services before handover
+// to next booting stage.
+void system_deinit(void);
+
 // Calls the error handler in the emergency mode.
 //
 // This function is called when the system encounters a critical error
