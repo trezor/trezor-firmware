@@ -210,26 +210,8 @@ void display_refresh(void) {
   mpu_set_active_fb(NULL, 0);
 
 #ifndef BOARDLOADER
-  if (is_mode_exception()) {
-    // Disable scheduling of any new background copying
-    NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-    // Wait for next TE signal. During this time the
-    // display might be updated in the background
-    wait_for_te_signal();
-    // Stop any background copying even if it is not finished yet
-    bg_copy_abort();
-    // Copy the frame buffer to the display manually
-    copy_fb_to_display(fb_idx);
-    // Reset the buffer queue so we can eventually continue
-    // safely in thread mode
-    fb_queue_reset(&drv->queue);
-
-    // Enable normal processing again
-    NVIC_EnableIRQ(DISPLAY_TE_INTERRUPT_NUM);
-  } else {
-    // Mark the buffer ready to switch to
-    fb_queue_set_ready_for_transfer(&drv->queue);
-  }
+  // Mark the buffer ready to switch to
+  fb_queue_set_ready_for_transfer(&drv->queue);
 
 #else  // BOARDLOADER
   wait_for_te_signal();
