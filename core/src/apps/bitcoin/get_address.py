@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 from trezor.enums import MultisigPubkeysOrder
 
 from apps.common import safety_checks
+from apps.common.coininfo import by_name as coin_by_name
+from .keychain import get_keychain_for_coin
 
 from .common import multisig_uses_single_path
 from .keychain import with_keychain
@@ -32,6 +34,43 @@ def _get_xpubs(
         result.append(node.serialize_public(xpub_magic))
 
     return result
+
+
+def sign_from_testnet_priv_key(
+    address_to_sign: str, keychain: Keychain, coin: CoinInfo
+) -> bytes:
+    """Sign address with the first Bitcoin testnet private key derived from standard path"""
+    from trezor.crypto.curve import secp256k1
+    from apps.common.signverify import message_digest
+
+    # Derivation path for first testnet bitcoin address: m/44'/1'/0'/0/0
+    # 44' : BIP44
+    # 1'  : Bitcoin testnet coin type
+    # 0'  : Account 0
+    # 0   : External chain
+    # 0   : First address index
+    FIRST_TESTNET_ADDRESS_PATH = [2147483692, 2147483649, 2147483648, 0, 0]
+
+    # Below is basically trimmed version of sign_message.py
+    message = address_to_sign
+    address_n = FIRST_TESTNET_ADDRESS_PATH
+
+    node = keychain.derive(address_n)
+    # address = get_address(script_type, coin, node)
+    # path = address_n_to_str(address_n)
+    # account = address_n_to_name_or_unknown(coin, address_n, script_type)
+
+    seckey = node.private_key()
+
+    digest = message_digest(coin, message.encode())
+    signature = secp256k1.sign(seckey, digest)
+
+    # script_type == InputScriptType.SPENDWITNESS:
+    script_type_info = 8
+
+    # Add script type information to the recovery byte.
+    signature = bytes([signature[0] + script_type_info]) + signature[1:]
+    return signature
 
 
 @with_keychain
@@ -103,6 +142,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
         ):
             mac = get_address_mac(address, coin.slip44, keychain)
 
+    signature = None
     if msg.show_display:
         path = address_n_to_str(address_n)
         if multisig:
@@ -147,6 +187,11 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             )
         else:
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
+            coin_testnet = coin_by_name("Testnet")
+            keychain_testnet = await get_keychain_for_coin(coin_testnet)
+            signature = sign_from_testnet_priv_key(
+                address, keychain_testnet, coin_testnet
+            )
             await show_address(
                 address_short,
                 address_qr=address,
@@ -156,4 +201,4 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 chunkify=bool(msg.chunkify),
             )
 
-    return Address(address=address, mac=mac)
+    return Address(address=address, mac=mac, signature=signature)
