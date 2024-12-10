@@ -45,6 +45,9 @@ typedef struct {
   // IBAT_MEAS_STATUS register value
   // (for debugging purposes, see the NPM1300 datasheet)
   uint8_t ibat_meas_status;
+  // BUCKSTATUS register value
+  // (for debugging purposes, see the NPM1300 datasheet)
+  uint8_t buck_status;
 
 } npm1300_report_t;
 
@@ -61,7 +64,7 @@ void npm1300_deinit(void);
 uint8_t npm1300_restart_cause(void);
 
 // Switches the device to the ship mode
-bool npm1300_shipmode(void);
+bool npm1300_enter_shipmode(void);
 
 // Starts the asynchronous measurement
 //
@@ -97,5 +100,14 @@ bool npm1300_set_charging_limit(int i_charge);
 
 // Gets the charging current limit [mA].
 int npm1300_get_charging_limit(void);
+
+typedef enum {
+  NPM1300_BUCK_MODE_AUTO,
+  NPM1300_BUCK_MODE_PWM,
+  NPM1300_BUCK_MODE_PFM,
+} npm1300_buck_mode_t;
+
+// Set the buck voltage regulator mode
+bool npm1300_set_buck_mode(npm1300_buck_mode_t buck_mode);
 
 #endif  // TREZORHAL_NPM1300_H
