@@ -55,6 +55,10 @@
 #include <sec/optiga_transport.h>
 #endif
 
+#ifdef USE_TROPIC
+#include <sec/tropic_transport.h>
+#endif
+
 #ifdef USE_PVD
 #include <sys/pvd.h>
 #endif
@@ -143,8 +147,13 @@ void drivers_init() {
 #endif
 
 #ifdef USE_OPTIGA
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok = secret_optiga_get(secret);
+  uint8_t optiga_secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  secbool optiga_secret_ok = secret_optiga_get(optiga_secret);
+#endif
+
+#ifdef USE_TROPIC
+  uint8_t tropic_secret[SECRET_TROPIC_KEY_LEN] = {0};
+  secbool tropic_secret_ok = secret_tropic_get(tropic_secret);
 #endif
 
   entropy_init();
@@ -187,17 +196,29 @@ void drivers_init() {
 #endif
 
   optiga_init();
-  if (sectrue == secret_ok) {
+  if (sectrue == optiga_secret_ok) {
     // If the shielded connection cannot be established, reset Optiga and
     // continue without it. In this case, OID_KEY_FIDO and OID_KEY_DEV cannot be
     // used, which means device and FIDO attestation will not work.
-    if (optiga_sec_chan_handshake(secret, sizeof(secret)) != OPTIGA_SUCCESS) {
+    if (optiga_sec_chan_handshake(optiga_secret, sizeof(optiga_secret)) != OPTIGA_SUCCESS) {
       optiga_soft_reset();
     }
   }
-  memzero(secret, sizeof(secret));
+  memzero(optiga_secret, sizeof(optiga_secret));
   ensure(sectrue * (optiga_open_application() == OPTIGA_SUCCESS),
          "Cannot initialize optiga.");
+
+#endif
+
+#ifdef USE_TROPIC
+
+  tropic_init();
+  if (sectrue == tropic_secret_ok) {
+    if (tropic_handshake(tropic_secret) != TROPIC_SUCCESS) {
+      // ??
+    }
+  }
+  memzero(tropic_secret, sizeof(tropic_secret));
 
 #endif
 }
