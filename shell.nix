@@ -4,39 +4,27 @@
  }:
 
 let
-  # the last commit from master as of 2024-01-22
+  # the last commit from master as of 2024-11-21
   rustOverlay = import (builtins.fetchTarball {
-    url = "https://github.com/oxalica/rust-overlay/archive/e36f66bb10b09f5189dc3b1706948eaeb9a1c555.tar.gz";
-    sha256 = "1vivsmqmqajbvv7181y7mfl48fxmm75hq2c8rj6h1l2ymq28zcpg";
+    url = "https://github.com/oxalica/rust-overlay/archive/2d484c7a0db32f2700e253160bcd2aaa6cdca3ba.tar.gz";
+    sha256 = "17b32lz7kc12l8fwg8kc7ma83b51105z0xp2j0lfnsjr9qqc5r2y";
   });
   # define this variable and devTools if you want nrf{util,connect}
   acceptJlink = builtins.getEnv "TREZOR_FIRMWARE_ACCEPT_JLINK_LICENSE" == "yes";
-  # the last successful build of nixpkgs-unstable as of 2023-04-14
+  # the last successful build of nixpkgs-unstable as of 2024-11-21
   nixpkgs = import (builtins.fetchTarball {
+    url = "https://github.com/NixOS/nixpkgs/archive/5083ec887760adfe12af64830a66807423a859a7.tar.gz";
+    sha256 = "0sr45csfh2ff8w7jpnkkgl22aa89sza4jlhs6wq0368dpmklsl8g";
+  }) {
+    config = {
+      allowUnfree = acceptJlink;
+      segger-jlink.acceptLicense = acceptJlink;
+    };
+    overlays = [ rustOverlay ];
+  };
+  oldNixpkgs = import (builtins.fetchTarball {
     url = "https://github.com/NixOS/nixpkgs/archive/c58e6fbf258df1572b535ac1868ec42faf7675dd.tar.gz";
     sha256 = "18pna0yinvdprhhcmhyanlgrmgf81nwpc0j2z9fy9mc8cqkx3937";
-  }) {
-    config = {
-      allowUnfree = acceptJlink;
-      segger-jlink.acceptLicense = acceptJlink;
-    };
-    overlays = [ rustOverlay ];
-  };
-  # 23.11 from 15. 4. 2024
-  newNixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/53a2c32bc66f5ae41a28d7a9a49d321172af621e.tar.gz";
-    sha256 = "0yqbwqbripb1bbhlwjfbqmg9qb0lai2fc0k1vfh674d6rrc8igwv";
-  }) {
-    config = {
-      allowUnfree = acceptJlink;
-      segger-jlink.acceptLicense = acceptJlink;
-    };
-    overlays = [ rustOverlay ];
-  };
-  # commit before python36 was removed
-  oldPythonNixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
-    sha256 = "02s3qkb6kz3ndyx7rfndjbvp4vlwiqc42fxypn3g6jnc0v5jyz95";
   }) { };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.18.1.1-dev-tests-u18.04-02/trezor_tests";
@@ -70,33 +58,19 @@ let
     # to use official binary, remove rustfmt from buildInputs and add it to extensions:
     extensions = [ "rust-src" "clippy" "rustfmt" ];
   };
-  openocd-stm = (newNixpkgs.openocd.overrideAttrs (oldAttrs: {
-    src = newNixpkgs.fetchFromGitHub {
+  openocd-stm = (nixpkgs.openocd.overrideAttrs (oldAttrs: {
+    src = nixpkgs.fetchFromGitHub {
       owner = "STMicroelectronics";
       repo = "OpenOCD";
       rev = "openocd-cubeide-v1.13.0";
       sha256 = "a811402e19f0bfe496f6eecdc05ecea57f79a323879a810efaaff101cb0f420f";
     };
     version = "stm-cubeide-v1.13.0";
-    nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ newNixpkgs.autoreconfHook ];
+    nativeBuildInputs = oldAttrs.nativeBuildInputs ++ [ nixpkgs.autoreconfHook ];
   }));
-  # backport https://github.com/NixOS/nixpkgs/pull/229537
-  # remove after nixpkgs bump
-  gcc-arm-embedded-gdbfix = (nixpkgs.gcc-arm-embedded.overrideAttrs (oldAttrs: {
-    postFixup = ''
-      mv $out/bin/arm-none-eabi-gdb $out/bin/arm-none-eabi-gdb-unwrapped
-      cat <<EOF > $out/bin/arm-none-eabi-gdb
-      #!${nixpkgs.runtimeShell}
-      export PYTHONPATH=${nixpkgs.python38}/lib/python3.8
-      export PYTHONHOME=${nixpkgs.python38}/bin/python3.8
-      exec $out/bin/arm-none-eabi-gdb-unwrapped "\$@"
-      EOF
-      chmod +x $out/bin/arm-none-eabi-gdb
-    '';
-  }));
-  llvmPackages = nixpkgs.llvmPackages_14;
+  llvmPackages = nixpkgs.llvmPackages_17;
   # see pyright/README.md for update procedure
-  pyright = nixpkgs.callPackage ./ci/pyright {};
+  pyright = oldNixpkgs.callPackage ./ci/pyright {};
 in
 with nixpkgs;
 stdenvNoCC.mkDerivation ({
@@ -109,9 +83,7 @@ stdenvNoCC.mkDerivation ({
     python311
     python310
     python39
-    python38
-    oldPythonNixpkgs.python37
-    oldPythonNixpkgs.python36
+    oldNixpkgs.python38
   ] ++ [
     SDL2
     SDL2_image
@@ -121,7 +93,12 @@ stdenvNoCC.mkDerivation ({
     crowdin-cli  # for translations
     curl  # for connect tests
     editorconfig-checker
-    (if devTools then gcc-arm-embedded-gdbfix else gcc-arm-embedded)
+    gcc-arm-embedded
+    # GCC <14 seems to have broken varargs handling on arm64-darwin which makes micropython crash.
+    # GCC 14 causes crypto tests to fail in CI due to emitting non-constant-time instructions,
+    # and it's probably a good idea to keep it the same version as gcc-arm-embedded anyway
+    # https://github.com/trezor/trezor-firmware/issues/4393
+    (if stdenv.isDarwin then gcc14 else gcc12)
     git
     gitAndTools.git-subrepo
     gnumake
@@ -129,11 +106,11 @@ stdenvNoCC.mkDerivation ({
     libffi
     libjpeg
     libusb1
-    newNixpkgs.llvmPackages_17.clang
+    llvmPackages.clang
     openssl
-    pkgconfig
+    pkg-config
     poetry
-    protobuf3_19
+    oldNixpkgs.protobuf3_19
     pyright
     (mkBinOnlyWrapper rustNightly)
     wget
@@ -141,7 +118,6 @@ stdenvNoCC.mkDerivation ({
     moreutils
   ] ++ lib.optionals (!stdenv.isDarwin) [
     autoPatchelfHook
-    gcc12
     procps
     valgrind
   ] ++ lib.optionals (stdenv.isDarwin) [
