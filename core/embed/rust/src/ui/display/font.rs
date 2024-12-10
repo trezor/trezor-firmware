@@ -227,7 +227,12 @@ impl From<Font> for i32 {
 impl Font {
     /// Supports UTF8 characters
     pub fn text_width(self, text: &str) -> i16 {
-        text.chars().fold(0, |acc, c| acc + self.char_width(c))
+        self.with_glyph_data(|data| {
+            text.chars().fold(0, |acc, c| {
+                let char_width = data.get_glyph(c).adv;
+                acc + char_width
+            })
+        })
     }
 
     /// Width of the text that is visible.
@@ -350,17 +355,20 @@ impl Font {
     pub fn longest_prefix(self, width: i16, text: &str) -> &str {
         let mut prev_word_boundary = 0;
         let mut text_width = 0;
-        for (i, c) in text.char_indices() {
-            let c_width = self.char_width(c);
-            if text_width + c_width > width {
-                // Another character would not fit => split at the previous word boundary
-                return &text[0..prev_word_boundary];
+        self.with_glyph_data(|data| {
+            for (i, c) in text.char_indices() {
+                let char_width = data.get_glyph(c).adv;
+                let c_width = char_width;
+                if text_width + c_width > width {
+                    // Another character would not fit => split at the previous word boundary
+                    return &text[0..prev_word_boundary];
+                }
+                if c == ' ' {
+                    prev_word_boundary = i;
+                }
+                text_width += c_width;
             }
-            if c == ' ' {
-                prev_word_boundary = i;
-            }
-            text_width += c_width;
-        }
+        });
 
         text // the whole text fits
     }
@@ -369,14 +377,17 @@ impl Font {
     /// that will fit into the area `width` pixels wide.
     pub fn longest_suffix(self, width: i16, text: &str) -> usize {
         let mut text_width = 0;
-        for (chars_from_right, c) in text.chars().rev().enumerate() {
-            let c_width = self.char_width(c);
-            if text_width + c_width > width {
-                // Another character cannot be fitted, we're done.
-                return chars_from_right;
+
+        self.with_glyph_data(|data| {
+            for (chars_from_right, c) in text.chars().rev().enumerate() {
+                let char_width = data.get_glyph(c).adv;
+                if text_width + char_width > width {
+                    // Another character cannot be fitted, we're done.
+                    return chars_from_right;
+                }
+                text_width += char_width;
             }
-            text_width += c_width;
-        }
+        });
 
         text.len() // it fits in its entirety
     }
