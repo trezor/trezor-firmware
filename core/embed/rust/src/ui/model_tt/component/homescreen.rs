@@ -6,6 +6,7 @@ use crate::{
     trezorhal::{
         ble,
         ble::{connected, pairing_mode},
+        rgb_led::set_color,
         usb::usb_configured,
     },
     ui::{
@@ -30,7 +31,6 @@ use crate::{
         shape::{self, Renderer},
     },
 };
-use crate::trezorhal::rgb_led::set_color;
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
@@ -293,7 +293,6 @@ impl Component for Homescreen {
             }
         }
 
-
         if let Event::Attach(_) = event {
             set_color(0);
         }
@@ -309,7 +308,7 @@ impl Component for Homescreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-                self.pad.render(target);
+        self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
         } else if self.pairing() {
