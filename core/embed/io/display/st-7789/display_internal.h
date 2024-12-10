@@ -19,7 +19,7 @@ typedef struct {
   // Framebuffer queue
   // (accessed & updated in the context of the main thread
   // and the interrupt context)
-  volatile frame_buffer_queue_t queue;
+  frame_buffer_queue_t queue;
 #endif
 
   // Current display orientation (0, 90, 180, 270)

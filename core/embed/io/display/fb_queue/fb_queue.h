@@ -43,7 +43,7 @@ typedef enum {
 
 typedef struct {
   // Queue entries
-  volatile frame_buffer_state_t entry[FRAME_BUFFER_COUNT];
+  frame_buffer_state_t entry[FRAME_BUFFER_COUNT];
   // Active index
   // (accessed & updated in the context of the interrupt handlers
   int16_t aix;
@@ -56,18 +56,29 @@ typedef struct {
 
 } frame_buffer_queue_t;
 
-int16_t fb_queue_get_for_copy(volatile frame_buffer_queue_t *queue);
+// Get the frame buffer index for copying to display
+// Call from main thread only
+int16_t fb_queue_get_for_copy(frame_buffer_queue_t *queue);
 
-int16_t fb_queue_get_for_write(volatile frame_buffer_queue_t *queue);
+// Get the frame buffer index for writing
+// Call from main thread only
+int16_t fb_queue_get_for_write(frame_buffer_queue_t *queue);
 
-int16_t fb_queue_get_for_transfer(volatile frame_buffer_queue_t *queue);
+// Get the frame buffer index for transfer
+int16_t fb_queue_get_for_transfer(frame_buffer_queue_t *queue);
 
-bool fb_queue_set_done(volatile frame_buffer_queue_t *queue);
+// Mark the frame buffer as done, thus no longer used
+bool fb_queue_set_done(frame_buffer_queue_t *queue);
 
-bool fb_queue_set_switched(volatile frame_buffer_queue_t *queue);
+// Mark the frame buffer as switched, thus actively used by display
+bool fb_queue_set_switched(frame_buffer_queue_t *queue);
 
-bool fb_queue_set_ready_for_transfer(volatile frame_buffer_queue_t *queue);
+// Mark the frame buffer as ready to be copied to the display
+// Call from main thread only
+bool fb_queue_set_ready_for_transfer(frame_buffer_queue_t *queue);
 
-void fb_queue_reset(volatile frame_buffer_queue_t *queue);
+// Reset the queue state
+void fb_queue_reset(frame_buffer_queue_t *queue);
 
-bool fb_queue_is_processed(volatile frame_buffer_queue_t *queue);
+// Check if all frame buffers are processed
+bool fb_queue_is_processed(frame_buffer_queue_t *queue);
