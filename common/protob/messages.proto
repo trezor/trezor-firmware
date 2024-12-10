@@ -105,6 +105,9 @@ enum MessageType {
     MessageType_OwnershipProof = 50 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_AuthorizeCoinJoin = 51 [(bitcoin_only) = true, (wire_in) = true];
 
+    MessageType_NostrSignEvent = 2001 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_NostrEventSignature = 2002 [(bitcoin_only) = true, (wire_out) = true];
+
     // Crypto
     MessageType_CipherKeyValue = 23 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_CipheredKeyValue = 48 [(bitcoin_only) = true, (wire_out) = true];

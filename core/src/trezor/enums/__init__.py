@@ -423,6 +423,8 @@ if TYPE_CHECKING:
         GetOwnershipProof = 49
         OwnershipProof = 50
         AuthorizeCoinJoin = 51
+        NostrSignEvent = 2001
+        NostrEventSignature = 2002
         CipherKeyValue = 23
         CipheredKeyValue = 48
         SignIdentity = 53
