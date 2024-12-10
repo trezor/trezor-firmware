@@ -167,6 +167,7 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
   return true;
 }
 
+#ifdef BOARDLOADER
 // Copies the frame buffer with the given index to the display
 static void copy_fb_to_display(uint8_t index) {
   uint16_t *fb = (uint16_t *)get_fb_ptr(index);
@@ -190,6 +191,7 @@ static void wait_for_te_signal(void) {
   while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
   }
 }
+#endif
 
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
