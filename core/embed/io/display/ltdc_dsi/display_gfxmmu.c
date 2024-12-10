@@ -17,10 +17,6 @@ bool display_gfxmmu_init(display_driver_t *drv) {
   /* GFXMMU clock enable */
   __HAL_RCC_GFXMMU_CLK_ENABLE();
 
-  /* Enable GFXMMU interrupt */
-  NVIC_SetPriority(GFXMMU_IRQn, IRQ_PRI_NORMAL);
-  NVIC_EnableIRQ(GFXMMU_IRQn);
-
   /* GFXMMU peripheral initialization */
   drv->hlcd_gfxmmu.Instance = GFXMMU;
   drv->hlcd_gfxmmu.Init.BlocksPerLine = GFXMMU_192BLOCKS;
