@@ -38,7 +38,7 @@
 #define NPM1300_I2C_ERROR_LIMIT 3
 
 // Delay inserted between the ADC trigger and the readout [ms]
-#define NPM1300_ADC_READOUT_DELAY 300
+#define NPM1300_ADC_READOUT_DELAY 80
 
 // NPM1300 FSM states
 typedef enum {
@@ -46,6 +46,8 @@ typedef enum {
   NPM1300_STATE_CHARGING_ENABLE,
   NPM1300_STATE_CHARGING_DISABLE,
   NPM1300_STATE_CHARGING_LIMIT,
+  NPM1300_STATE_BUCK_MODE_SET,
+  NPM1300_STATE_ENTER_SHIPMODE,
   NPM1300_STATE_ADC_TRIGGER,
   NPM1300_STATE_ADC_WAIT,
   NPM1300_STATE_ADC_READOUT,
@@ -60,6 +62,7 @@ typedef struct {
   uint8_t adc_gp1_result_lsbs;
   uint8_t adc_vbat2_result_msb;
   uint8_t adc_ibat_meas_status;
+  uint8_t buck_status;
 
 } npm1300_adc_regs_t;
 
@@ -106,6 +109,14 @@ typedef struct {
   // Set if the charging is enabled
   bool charging;
   bool charging_requested;
+
+  // Buck voltage regulator mode
+  npm1300_buck_mode_t buck_mode;            // written value
+  npm1300_buck_mode_t buck_mode_requested;  // requested value
+  npm1300_buck_mode_t buck_mode_set;        // value beeing written
+
+  // Enter ship mode
+  bool shipmode_requested;
 
   // Request flags for ADC measurements
   bool adc_trigger_requested;
@@ -215,6 +226,12 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       {NPM1300_TASKLDSW1CLR, 0x01},
       {NPM1300_TASKLDSW2CLR, 0x01},
       // BUCK regulators
+      // 2.7V, use sw settigns
+      {NPM1300_BUCK1NORMVOUT, 17},
+      {NPM1300_BUCKSWCTRLSEL, 1},
+      // Buck auto mode, Pull downs disabled
+      {NPM1300_BUCKCTRL0, 0},  // Auto mode
+      //
       //   TODO
       // ADC settings
       {NPM1300_ADCNTCRSEL, NPM1300_ADCNTCRSEL_10K},
@@ -293,6 +310,10 @@ bool npm1300_init(void) {
   drv->i_charge_set = drv->i_charge;
   drv->i_charge_requested = drv->i_charge;
 
+  drv->buck_mode_requested = NPM1300_BUCK_MODE_AUTO;
+  drv->buck_mode_set = NPM1300_BUCK_MODE_AUTO;
+  drv->buck_mode = NPM1300_BUCK_MODE_AUTO;
+
   drv->i2c_bus = i2c_bus_open(NPM1300_I2C_INSTANCE);
   if (drv->i2c_bus == NULL) {
     goto cleanup;
@@ -329,14 +350,17 @@ void npm1300_deinit(void) {
   memset(drv, 0, sizeof(npm1300_driver_t));
 }
 
-bool npm1300_shipmode(void) {
+bool npm1300_enter_shipmode(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
     return false;
   }
 
-  // TODO
+  irq_key_t irq_key = irq_lock();
+  drv->shipmode_requested = true;
+  npm1300_fsm_continue(drv);
+  irq_unlock(irq_key);
 
   return true;
 }
@@ -381,6 +405,21 @@ bool npm1300_set_charging(bool enable) {
 
   irq_key_t irq_key = irq_lock();
   drv->charging_requested = enable;
+  npm1300_fsm_continue(drv);
+  irq_unlock(irq_key);
+
+  return true;
+}
+
+bool npm1300_set_buck_mode(npm1300_buck_mode_t buck_mode) {
+  npm1300_driver_t* drv = &g_npm1300_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  drv->buck_mode_requested = buck_mode;
   npm1300_fsm_continue(drv);
   irq_unlock(irq_key);
 
@@ -537,6 +576,7 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
 
   // Populate measurement and status flags from the raw data
   report->ibat_meas_status = r->adc_ibat_meas_status;
+  report->buck_status = r->buck_status;
 }
 
 // I2C operation for writing constant value to the npm1300 register
@@ -587,6 +627,25 @@ static const i2c_op_t npm1300_ops_charging_limit[] = {
     NPM_WRITE_FIELD(NPM1300_BCHGISETLSB, chlimit_regs.bchg_iset_lsb),
 };
 
+static const i2c_op_t npm1300_ops_buck_auto[] = {
+    NPM_WRITE_CONST(NPM1300_BUCKCTRL0, 0),
+    NPM_WRITE_CONST(NPM1300_BUCK1PWMCLR, 1),
+};
+
+static const i2c_op_t npm1300_ops_buck_pwm[] = {
+    NPM_WRITE_CONST(NPM1300_BUCKCTRL0, 0),
+    NPM_WRITE_CONST(NPM1300_BUCK1PWMSET, 1),
+};
+
+static const i2c_op_t npm1300_ops_buck_pfm[] = {
+    NPM_WRITE_CONST(NPM1300_BUCK1PWMCLR, 1),
+    NPM_WRITE_CONST(NPM1300_BUCKCTRL0, 1),  // Auto mode
+};
+
+static const i2c_op_t npm1300_ops_enter_shipmode[] = {
+    NPM_WRITE_CONST(NPM1300_TASKENTERSHIPMODE, 1),
+};
+
 // I2C operations for setting of the charging limit from
 // `g_npm1300_driver.chlimit_regs` structure together with
 // disabling and re-enabling of the charging
@@ -608,8 +667,6 @@ static const i2c_op_t npm1300_ops_adc_trigger[] = {
 // I2C operations for readout of the ADC values into the
 // `g_npm1300_driver.adc_regs` structure
 static const i2c_op_t npm1300_ops_adc_readout[] = {
-    NPM_WRITE_CONST(NPM1300_TASKUPDATEILIMSW,
-                    NPM1300_TASKUPDATEILIM_SELVBUSILIM0),
     NPM_READ_FIELD(NPM1300_ADCGP0RESULTLSBS, adc_regs.adc_gp0_result_lsbs),
     NPM_READ_FIELD(NPM1300_ADCVBATRESULTMSB, adc_regs.adc_vbat_result_msb),
     NPM_READ_FIELD(NPM1300_ADCNTCRESULTMSB, adc_regs.adc_nt_result_msb),
@@ -618,6 +675,7 @@ static const i2c_op_t npm1300_ops_adc_readout[] = {
     NPM_READ_FIELD(NPM1300_ADCGP1RESULTLSBS, adc_regs.adc_gp1_result_lsbs),
     NPM_READ_FIELD(NPM1300_ADCVBAT2RESULTMSB, adc_regs.adc_vbat2_result_msb),
     NPM_READ_FIELD(NPM1300_ADCIBATMEASSTATUS, adc_regs.adc_ibat_meas_status),
+    NPM_READ_FIELD(NPM1300_BUCKSTATUS, adc_regs.buck_status),
 };
 
 #define npm1300_i2c_submit(drv, ops) \
@@ -707,6 +765,15 @@ static void npm1300_i2c_callback(void* context, i2c_packet_t* packet) {
       drv->state = NPM1300_STATE_IDLE;
       break;
 
+    case NPM1300_STATE_BUCK_MODE_SET:
+      drv->buck_mode = drv->buck_mode_set;
+      drv->state = NPM1300_STATE_IDLE;
+      break;
+
+    case NPM1300_STATE_ENTER_SHIPMODE:
+      drv->state = NPM1300_STATE_IDLE;
+      break;
+
     case NPM1300_STATE_ADC_TRIGGER:
       drv->adc_trigger_requested = false;
       systimer_set(drv->timer, NPM1300_ADC_READOUT_DELAY);
@@ -778,6 +845,16 @@ static void npm1300_fsm_continue(npm1300_driver_t* drv) {
       npm1300_i2c_submit(drv, npm1300_ops_charging_disable);
       drv->state = NPM1300_STATE_CHARGING_DISABLE;
     }
+  } else if (drv->buck_mode != drv->buck_mode_requested) {
+    drv->buck_mode_set = drv->buck_mode_requested;
+    if (drv->buck_mode_set == NPM1300_BUCK_MODE_PWM) {
+      npm1300_i2c_submit(drv, npm1300_ops_buck_pwm);
+    } else if (drv->buck_mode_set == NPM1300_BUCK_MODE_PFM) {
+      npm1300_i2c_submit(drv, npm1300_ops_buck_pfm);
+    } else {
+      npm1300_i2c_submit(drv, npm1300_ops_buck_auto);
+    }
+    drv->state = NPM1300_STATE_BUCK_MODE_SET;
   } else if (drv->adc_readout_requested) {
     // Read ADC values
     npm1300_i2c_submit(drv, npm1300_ops_adc_readout);
@@ -786,6 +863,10 @@ static void npm1300_fsm_continue(npm1300_driver_t* drv) {
     // Trigger ADC conversion
     npm1300_i2c_submit(drv, npm1300_ops_adc_trigger);
     drv->state = NPM1300_STATE_ADC_TRIGGER;
+  } else if (drv->shipmode_requested) {
+    npm1300_i2c_submit(drv, npm1300_ops_enter_shipmode);
+    drv->shipmode_requested = false;
+    drv->state = NPM1300_STATE_ENTER_SHIPMODE;
   }
 }
 
