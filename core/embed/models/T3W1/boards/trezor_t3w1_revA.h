@@ -23,6 +23,8 @@
 
 #define NPM1300_I2C_INSTANCE 0
 
+#define STWLC38_I2C_INSTANCE 1
+
 #define I2C_COUNT 4
 
 #define I2C_INSTANCE_0 I2C1

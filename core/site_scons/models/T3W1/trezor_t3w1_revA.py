@@ -147,7 +147,10 @@ def configure(
         ("USE_RESET_TO_BOOT", "1"),
     ]
 
-    sources += ["embed/sys/powerctl/npm1300/npm1300.c"]
+    sources += [
+        "embed/sys/powerctl/npm1300/npm1300.c",
+        "embed/sys/powerctl/stwlc38/stwlc38.c"
+    ]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
