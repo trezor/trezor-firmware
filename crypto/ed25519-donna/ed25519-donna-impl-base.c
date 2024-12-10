@@ -389,8 +389,8 @@ void ge25519_double_scalarmult_vartime2(ge25519 *r, const ge25519 *p1, const big
  * cause the code to not generate conditional moves.  Don't use any -march=
  * with less than i686 on x86
  */
-static void ge25519_cmove_stride4(long * r, long * p, long * pos, long * n, int stride) {
-  long x0=r[0], x1=r[1], x2=r[2], x3=r[3], y0 = 0, y1 = 0, y2 = 0, y3 = 0;
+static void ge25519_cmove_stride4(unsigned long * r, unsigned long * p, unsigned long * pos, unsigned long * n, int stride) {
+  unsigned long x0=r[0], x1=r[1], x2=r[2], x3=r[3], y0 = 0, y1 = 0, y2 = 0, y3 = 0;
   for(; p<n; p+=stride) {
     volatile int flag=(p==pos);
     y0 = p[0];
@@ -398,8 +398,8 @@ static void ge25519_cmove_stride4(long * r, long * p, long * pos, long * n, int 
     y2 = p[2];
     y3 = p[3];
     
-    const long mask_y = -flag;
-    const long mask_x = ~mask_y;
+    const unsigned long mask_y = -flag;
+    const unsigned long mask_x = ~mask_y;
     
     // x = flag ? y : x
     x0 = (y0 & mask_y) | (x0 & mask_x);
@@ -414,8 +414,8 @@ static void ge25519_cmove_stride4(long * r, long * p, long * pos, long * n, int 
 }
 #define HAS_CMOVE_STRIDE4
 
-static void ge25519_cmove_stride4b(long * r, long * p, long * pos, long * n, int stride) {
-  long x0=p[0], x1=p[1], x2=p[2], x3=p[3], y0 = 0, y1 = 0, y2 = 0, y3 = 0;
+static void ge25519_cmove_stride4b(unsigned long * r, unsigned long * p, unsigned long * pos, unsigned long * n, int stride) {
+  unsigned long x0=p[0], x1=p[1], x2=p[2], x3=p[3], y0 = 0, y1 = 0, y2 = 0, y3 = 0;
   for(p+=stride; p<n; p+=stride) {
     volatile int flag=(p==pos);
     y0 = p[0];
@@ -423,8 +423,8 @@ static void ge25519_cmove_stride4b(long * r, long * p, long * pos, long * n, int
     y2 = p[2];
     y3 = p[3];
     
-    const long mask_y = -flag;
-    const long mask_x = ~mask_y;
+    const unsigned long mask_y = -flag;
+    const unsigned long mask_x = ~mask_y;
     
     // x = flag ? y : x
     x0 = (y0 & mask_y) | (x0 & mask_x);
@@ -442,12 +442,12 @@ static void ge25519_cmove_stride4b(long * r, long * p, long * pos, long * n, int
 void ge25519_move_conditional_pniels_array(ge25519_pniels * r, const ge25519_pniels * p, int pos, int n) {
 #ifdef HAS_CMOVE_STRIDE4B
   size_t i = 0;
-  for(i=0; i<sizeof(ge25519_pniels)/sizeof(long); i+=4) {
-    ge25519_cmove_stride4b(((long*)r)+i,
-			   ((long*)p)+i,
-			   ((long*)(p+pos))+i,
-			   ((long*)(p+n))+i,
-			   sizeof(ge25519_pniels)/sizeof(long));
+  for(i=0; i<sizeof(ge25519_pniels)/sizeof(unsigned long); i+=4) {
+    ge25519_cmove_stride4b(((unsigned long*)r)+i,
+			   ((unsigned long*)p)+i,
+			   ((unsigned long*)(p+pos))+i,
+			   ((unsigned long*)(p+n))+i,
+			   sizeof(ge25519_pniels)/sizeof(unsigned long));
   }
 #else
   size_t i = 0;
@@ -459,12 +459,12 @@ void ge25519_move_conditional_pniels_array(ge25519_pniels * r, const ge25519_pni
 
 void ge25519_move_conditional_niels_array(ge25519_niels * r, const uint8_t p[8][96], int pos, int n) {
   size_t i = 0;
-  for(i=0; i<96/sizeof(long); i+=4) {
-    ge25519_cmove_stride4(((long*)r)+i,
-			  ((long*)p)+i,
-			  ((long*)(p+pos))+i,
-			  ((long*)(p+n))+i,
-			  96/sizeof(long));
+  for(i=0; i<96/sizeof(unsigned long); i+=4) {
+    ge25519_cmove_stride4(((unsigned long*)r)+i,
+			  ((unsigned long*)p)+i,
+			  ((unsigned long*)(p+pos))+i,
+			  ((unsigned long*)(p+n))+i,
+			  96/sizeof(unsigned long));
   }
 }
 
