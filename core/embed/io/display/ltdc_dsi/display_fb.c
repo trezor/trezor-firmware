@@ -154,24 +154,8 @@ void display_refresh(void) {
     return;
   }
 
-  if (is_mode_exception()) {
-    // Disable scheduling of any new background copying
-    HAL_NVIC_DisableIRQ(LTDC_IRQn);
-    HAL_NVIC_DisableIRQ(LTDC_ER_IRQn);
-
-    display_set_fb((uint32_t)get_fb_ptr(fb_idx));
-
-    // Reset the buffer queue so we can eventually continue
-    // safely in thread mode
-    fb_queue_reset(&drv->queue);
-
-    // Enable normal processing again
-    HAL_NVIC_EnableIRQ(LTDC_IRQn);
-    HAL_NVIC_EnableIRQ(LTDC_ER_IRQn);
-  } else {
-    // Mark the buffer ready to switch to
-    fb_queue_set_ready_for_transfer(&drv->queue);
-  }
+  // Mark the buffer ready to switch to
+  fb_queue_set_ready_for_transfer(&drv->queue);
 }
 
 void display_ensure_refreshed(void) {
