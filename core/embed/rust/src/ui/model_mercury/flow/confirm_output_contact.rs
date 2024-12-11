@@ -68,8 +68,9 @@ impl FlowController for ConfirmOutputContact {
     }
 }
 pub fn new_confirm_output_contact(
-    paragraphs: ParagraphVecShort<'static>,
     title: TString<'static>,
+    subtitle: TString<'static>,
+    paragraphs: ParagraphVecShort<'static>,
     address_params: ShowInfoParams,
     amount_params: ConfirmBlobParams,
 ) -> Result<SwipeFlow, error::Error> {
@@ -81,6 +82,7 @@ pub fn new_confirm_output_contact(
     let content_contact = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
+        .with_subtitle(subtitle)
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
         .map(move |msg| match msg {

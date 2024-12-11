@@ -389,7 +389,8 @@ async def confirm_output(
     if contact_label:
         await raise_if_not_confirmed(
             trezorui2.flow_confirm_output_contact(
-                title = "Send",
+                title="Contact",
+                subtitle=title,
                 contact_label=contact_label,
                 address=address,
                 amount=amount,

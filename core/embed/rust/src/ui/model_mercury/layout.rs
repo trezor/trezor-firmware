@@ -625,17 +625,17 @@ extern "C" fn new_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut M
 extern "C" fn new_confirm_output_contact(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let subtitle: TString = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into()?;
         let contact_label: TString = kwargs.get(Qstr::MP_QSTR_contact_label)?.try_into()?;
         let address: TString = kwargs.get(Qstr::MP_QSTR_address)?.try_into()?;
         let amount: Obj = kwargs.get(Qstr::MP_QSTR_amount)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, true)?;
 
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_SUB_GREY, "Contact"),
-            Paragraph::new(&theme::TEXT_SUPER, contact_label),
-        ]);
+        let paragraphs =
+            ParagraphVecShort::from_iter([Paragraph::new(&theme::TEXT_SUPER, contact_label)]);
 
         let amount_params = ConfirmBlobParams::new(TR::words__amount.into(), amount, None)
+            .with_subtitle(Some(subtitle))
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
             .with_text_mono(true)
@@ -643,13 +643,15 @@ extern "C" fn new_confirm_output_contact(n_args: usize, args: *const Obj, kwargs
             .with_swipe_down();
 
         let mut address_params = ShowInfoParams::new(TR::words__address.into())
+            .with_subtitle(Some(subtitle))
             .with_cancel_button()
             .with_chunkify(chunkify);
-        address_params = unwrap!(address_params.add(TR::words__address.into(), address));
+        address_params = unwrap!(address_params.add(TString::empty(), address));
 
         let flow = flow::new_confirm_output_contact(
-            paragraphs,
             title,
+            subtitle,
+            paragraphs,
             address_params,
             amount_params,
         )?;
@@ -2023,6 +2025,7 @@ pub static mp_module_trezorui2: Module = obj_module! {
     /// def flow_confirm_output_contact(
     ///     *,
     ///     title: str,
+    ///     subtitle: str,
     ///     contact_label: str,
     ///     address: str,
     ///     amount: str,
