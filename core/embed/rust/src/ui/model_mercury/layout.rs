@@ -810,6 +810,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             .with_text_mono(text_mono)
             .with_prompt(hold)
             .with_hold(hold)
+            .with_description_font(&theme::TEXT_SUB_GREY)
             .into_flow()
             .and_then(LayoutObj::new_root)
             .map(Into::into)

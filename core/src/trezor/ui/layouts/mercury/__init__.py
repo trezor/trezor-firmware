@@ -148,6 +148,42 @@ def confirm_multisig_different_paths_warning() -> Awaitable[None]:
     )
 
 
+async def confirm_new_contact(
+    label: str,
+    contact_id: str,
+    path: str | None = None,
+    account: str | None = None,
+    chunkify: bool = True,
+) -> None:
+    info_items = []
+    if path:
+        info_items.append(("Path", path))
+    if account:
+        info_items.append(("Account", account))
+    await confirm_value(
+        title="New contact",
+        value=contact_id,
+        description="NPub",
+        br_name="confirm_new_contact",
+        value_text_mono=True,
+        info_items=info_items or None,
+        info_title=TR.buttons__more_info,
+        verb=TR.buttons__confirm,
+        chunkify=chunkify,
+    )
+    await confirm_value(
+        title="New contact",
+        value=label,
+        description="Contact label",
+        br_name="confirm_new_contact",
+        value_text_mono=False,
+        info_items=info_items or None,
+        info_title=TR.buttons__more_info,
+        hold=True,
+        chunkify=False,
+    )
+
+
 def confirm_homescreen(
     image: bytes,
 ) -> Awaitable[None]:

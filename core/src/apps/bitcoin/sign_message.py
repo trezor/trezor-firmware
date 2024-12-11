@@ -17,7 +17,7 @@ async def sign_message(
     from trezor.crypto.curve import secp256k1
     from trezor.enums import InputScriptType
     from trezor.messages import MessageSignature
-    from trezor.ui.layouts import confirm_signverify
+    from trezor.ui.layouts import confirm_signverify, confirm_new_contact
 
     from apps.common.paths import address_n_to_str, validate_path
     from apps.common.signverify import decode_message, message_digest
@@ -40,14 +40,26 @@ async def sign_message(
     address = get_address(script_type, coin, node)
     path = address_n_to_str(address_n)
     account = address_n_to_name_or_unknown(coin, address_n, script_type)
-    await confirm_signverify(
-        decode_message(message),
-        address_short(coin, address),
-        verify=False,
-        account=account,
-        path=path,
-        chunkify=bool(msg.chunkify),
-    )
+    message_decoded = decode_message(message)
+    if "/" in message_decoded:
+        # message will have format <label>/<npub>
+        # hackathon simplification
+        await confirm_new_contact(
+            label=message_decoded,
+            contact_id=address,
+            account=account,
+            path=path,
+            chunkify=bool(msg.chunkify),
+        )
+    else:
+        await confirm_signverify(
+            message_decoded,
+            address_short(coin, address),
+            verify=False,
+            account=account,
+            path=path,
+            chunkify=bool(msg.chunkify),
+        )
 
     seckey = node.private_key()
 
