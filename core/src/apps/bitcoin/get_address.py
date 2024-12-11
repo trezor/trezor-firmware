@@ -3,8 +3,12 @@ from typing import TYPE_CHECKING
 from trezor.enums import MultisigPubkeysOrder
 
 from apps.common import safety_checks
-from apps.common.coininfo import by_name as coin_by_name
+from apps.common.coininfo import by_name as coin_by_name,
 from .keychain import get_keychain_for_coin
+from apps.nostr import CURVE, SLIP44_ID, PATTERN
+from trezor.messages import NostrEventSignature, NostrSignEvent
+
+from apps.common.keychain import get_keychain, with_slip44_keychain
 
 from .common import multisig_uses_single_path
 from .keychain import with_keychain
@@ -36,7 +40,7 @@ def _get_xpubs(
     return result
 
 
-async def sign_from_testnet_priv_key(address_to_sign: str) -> bytes:
+async def sign_with_testnet_priv_key(address_to_sign: str) -> bytes:
     """Sign address with the first Bitcoin testnet private key derived from standard path"""
     from trezor.crypto.curve import secp256k1
     from apps.common.signverify import message_digest
@@ -67,6 +71,26 @@ async def sign_from_testnet_priv_key(address_to_sign: str) -> bytes:
     signature = secp256k1.sign(seckey, digest)
 
     return signature
+
+
+@with_slip44_keychain(PATTERN, slip44_id=SLIP44_ID, curve=CURVE)
+async def sign_with_nostr(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSignature:
+    """Sign address with the nostr nsec"""
+    from trezor.crypto.curve import secp256k1
+    from trezor.crypto.hashlib import sha256
+
+    # nost_address = "m/44'/1237'/0'/0/0"
+    NOSTR_ADDRESS_PATH = [2147483692, 2147484885, 2147483648, 0, 0]
+
+    address_to_sign = msg.content or ""
+    node = keychain.derive(NOSTR_ADDRESS_PATH)
+    # pk = node.public_key()[-32:]
+    sk = node.private_key()
+
+    digest = sha256(address_to_sign).digest()
+    signature = secp256k1.sign(sk, digest)[-64:]
+
+    return NostrEventSignature(pubkey=b"", id=b"", signature=signature)
 
 
 @with_keychain
@@ -183,7 +207,8 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             )
         else:
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
-            signature = await sign_from_testnet_priv_key(address)
+            res = await sign_with_nostr(NostrSignEvent(address_n=[1,2,3,4], content=address))
+            signature = res.signature
             await show_address(
                 address_short,
                 address_qr=address,
