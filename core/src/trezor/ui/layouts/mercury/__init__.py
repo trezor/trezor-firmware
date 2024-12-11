@@ -160,10 +160,14 @@ async def confirm_new_contact(
         info_items.append(("Path", path))
     if account:
         info_items.append(("Account", account))
+    subtitle = "New contact"
+
     await confirm_value(
-        title="New contact",
+        title="npub",
+        subtitle=subtitle,
         value=contact_id,
-        description="NPub",
+        # description="NPub",
+        description="",
         br_name="confirm_new_contact",
         value_text_mono=True,
         info_items=info_items or None,
@@ -172,9 +176,10 @@ async def confirm_new_contact(
         chunkify=chunkify,
     )
     await confirm_value(
-        title="New contact",
+        title="Label",
+        subtitle=subtitle,
         value=label,
-        description="Contact label",
+        description="",
         br_name="confirm_new_contact",
         value_text_mono=False,
         info_items=info_items or None,
