@@ -244,7 +244,7 @@ def test_show_multisig_taproot_3(client: Client):
                 multisig2,
                 script_type=messages.InputScriptType.SPENDTAPROOT,
             )
-            == "tb1p8wk2er5shm22z5mqy3qn2al7gz62csw75uh4ag8wluzptgr387tqeynquu"
+            == "tb1p8ukpttduk5snkw86cgny72vtex0qdg0met7hkmv5343dkukkzdwqxfwf0s"
         )
         assert (
             btc.get_address(
@@ -255,7 +255,7 @@ def test_show_multisig_taproot_3(client: Client):
                 multisig1,
                 script_type=messages.InputScriptType.SPENDTAPROOT,
             )
-            == "tb1ph9e923j4w40nhr4v9fqz4pdn09tphdagrcx997qhe2fezgs2dqlqv9r8hl"
+            == "tb1pkr6ylx0tfepgu2fdlhcus4c0tetzever9r8h2dsczetywxexwtjsd5j5jf"
         )
 
 
