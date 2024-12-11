@@ -25,6 +25,7 @@
 #include <io/nrf.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/systick.h>
 #include <util/tsqueue.h>
 
 #include "../crc8.h"
@@ -115,6 +116,26 @@ static void nrf_start(void) {
   nrf_signal_running();
 }
 
+static void nrf_flush_queue(nrf_driver_t *drv) {
+  bool aborted = false;
+  nrf_uart_tx_data_t sent;
+  if (tsqueue_process_done(&drv->urt_tx_queue, (uint8_t *)&sent, sizeof(sent),
+                           NULL, &aborted)) {
+    if (!aborted && sent.callback != NULL) {
+      sent.callback(NRF_STATUS_ERROR, sent.context);
+    }
+  }
+
+  while (
+      tsqueue_read(&drv->urt_tx_queue, (uint8_t *)&sent, sizeof(sent), NULL)) {
+    if (sent.callback != NULL) {
+      sent.callback(NRF_STATUS_ERROR, sent.context);
+    }
+  }
+
+  tsqueue_reset(&drv->urt_tx_queue);
+}
+
 static void nrf_stop(void) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
@@ -125,8 +146,7 @@ static void nrf_stop(void) {
   irq_key_t key = irq_lock();
   drv->comm_running = false;
   HAL_SPI_DMAStop(&drv->spi);
-  // todo notify listeners
-  tsqueue_reset(&drv->urt_tx_queue);
+  nrf_flush_queue(drv);
   irq_unlock(key);
 }
 
@@ -153,12 +173,16 @@ void nrf_init(void) {
 
   // synchronization signals
   NRF_RESET_CLK_ENA();
-  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_RESET);
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_PULLDOWN;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Pin = NRF_RESET_PIN;
   HAL_GPIO_Init(NRF_RESET_PORT, &GPIO_InitStructure);
+
+  systick_delay_ms(10);
+
+  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_SET);
 
   NRF_GPIO0_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
@@ -536,9 +560,7 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
     HAL_UART_AbortReceive(urt);
     HAL_UART_AbortTransmit(urt);
 
-    // todo senders notify about error
-
-    tsqueue_reset(&drv->urt_tx_queue);
+    nrf_flush_queue(drv);
 
     drv->urt_rx_idx = 0;
     drv->urt_rx_len = 0;

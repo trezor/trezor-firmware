@@ -274,6 +274,31 @@ void display_init(display_content_mode_t mode) {
   __HAL_RCC_DSI_FORCE_RESET();
   __HAL_RCC_LTDC_FORCE_RESET();
 
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+  GPIO_InitStructure.Pin = GPIO_PIN_10;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+
+  HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
+  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+  GPIO_InitStructure.Pin = GPIO_PIN_7;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStructure);
+
+
+  while (true) {
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_7, GPIO_PIN_SET);
+  }
+
+
 #ifdef DISPLAY_PWREN_PIN
   DISPLAY_PWREN_CLK_ENA();
   HAL_GPIO_WritePin(DISPLAY_PWREN_PORT, DISPLAY_PWREN_PIN, GPIO_PIN_RESET);
