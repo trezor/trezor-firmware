@@ -196,7 +196,8 @@ bool compute_address(const CoinInfo *coin, InputScriptType script_type,
       return 0;
     }
     uint8_t tweaked_pubkey[32];
-    zkp_bip340_tweak_public_key(node->public_key + 1, NULL, tweaked_pubkey);
+    zkp_bip340_tweak_public_key(node->public_key + 1, NULL, tweaked_pubkey,
+                                NULL);
     if (!segwit_addr_encode(address, coin->bech32_prefix, SEGWIT_VERSION_1,
                             tweaked_pubkey, 32)) {
       return 0;
