@@ -25,6 +25,7 @@ typedef struct {
 
   // Current display orientation (0, 90, 180, 270)
   int orientation_angle;
+  int update_pending;
 
 } display_driver_t;
 

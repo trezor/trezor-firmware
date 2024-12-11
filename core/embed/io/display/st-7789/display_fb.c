@@ -135,6 +135,8 @@ void display_fb_clear(void) {
 static void bg_copy_callback(void) {
   display_driver_t *drv = &g_display_driver;
 
+  drv->update_pending = 1;
+
   fb_queue_put(&drv->empty_frames, fb_queue_take(&drv->ready_frames));
 }
 
@@ -143,6 +145,10 @@ static void display_te_interrupt_handler(void) {
   display_driver_t *drv = &g_display_driver;
 
   __HAL_GPIO_EXTI_CLEAR_FLAG(DISPLAY_TE_PIN);
+
+  if (drv->update_pending > 0) {
+    drv->update_pending--;
+  }
 
   if (!fb_queue_peeked(&drv->ready_frames)) {
     int16_t fb_idx = fb_queue_peek(&drv->ready_frames);
@@ -256,7 +262,9 @@ void display_ensure_refreshed(void) {
     //  so we can be sure there's not scheduled or pending
     // background copying
     do {
-      copy_pending = !fb_queue_empty(&drv->ready_frames);
+      irq_key_t irq_key = irq_lock();
+      copy_pending = !fb_queue_empty(&drv->ready_frames) || drv->update_pending;
+      irq_unlock(irq_key);
       __WFI();
     } while (copy_pending);
 
