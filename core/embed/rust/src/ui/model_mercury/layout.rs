@@ -1177,6 +1177,7 @@ extern "C" fn new_get_address(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let account: Option<TString> = kwargs.get(Qstr::MP_QSTR_account)?.try_into_option()?;
         let path: Option<TString> = kwargs.get(Qstr::MP_QSTR_path)?.try_into_option()?;
         let xpubs: Obj = kwargs.get(Qstr::MP_QSTR_xpubs)?;
+        let title_success: TString = kwargs.get(Qstr::MP_QSTR_title_success)?.try_into()?;
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
 
@@ -1191,6 +1192,7 @@ extern "C" fn new_get_address(n_args: usize, args: *const Obj, kwargs: *mut Map)
             account,
             path,
             xpubs,
+            title_success,
             br_code,
             br_name,
         )?;

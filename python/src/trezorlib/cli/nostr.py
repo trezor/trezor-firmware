@@ -33,10 +33,12 @@ def cli() -> None:
 
 @cli.command()
 @click.option("-n", "--address", default="m/44'/1237'/0'/0/0", help="BIP-32 path")
+@click.option("-d", "--show-display", is_flag=True)
 @with_client
 def get_pubkey(
     client: "TrezorClient",
     address: str,
+    show_display: bool,
 ) -> Dict[str, str]:
     """Derive the pubkey from the seed."""
 
@@ -45,6 +47,7 @@ def get_pubkey(
     res = nostr.get_pubkey(
         client,
         address_n,
+        show_display=show_display,
     )
 
     return {

@@ -96,6 +96,7 @@ pub fn new_get_address(
     account: Option<TString<'static>>,
     path: Option<TString<'static>>,
     xpubs: Obj, // TODO: get rid of Obj
+    title_success: TString<'static>,
     br_code: u16,
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
@@ -141,7 +142,7 @@ pub fn new_get_address(
 
     let content_confirmed = Frame::left_aligned(
         TR::words__title_success.into(),
-        StatusScreen::new_success_timeout(TR::address__confirmed.into()),
+        StatusScreen::new_success_timeout(title_success),
     )
     .with_footer(TR::instructions__continue_in_app.into(), None)
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
@@ -156,7 +157,7 @@ pub fn new_get_address(
                 theme::ICON_CHEVRON_RIGHT,
                 TR::address_details__account_info.into(),
             )
-            .danger(theme::ICON_CANCEL, TR::address__cancel_receive.into()),
+            .danger(theme::ICON_CANCEL, TR::buttons__cancel.into()),
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())

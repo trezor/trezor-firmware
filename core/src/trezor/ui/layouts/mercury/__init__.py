@@ -275,11 +275,12 @@ async def show_address(
         )
         return result
 
-    title_success = (
-        TR.address__public_key_confirmed
-        if title in ("XPUB", TR.address__public_key)
-        else TR.address__confirmed
-    )
+    if title in ("XPUB", TR.address__public_key):
+        title_success="address__public_key_confirmed"
+    elif title in ("npub", ):
+        title_success = "npub confirmed"
+    else:
+        title_success = TR.address__confirmed
 
     await raise_if_not_confirmed(
         trezorui2.flow_get_address(
