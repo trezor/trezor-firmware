@@ -8,7 +8,12 @@ from storage.cache_common import (
     CHANNEL_NONCE_RECEIVE,
     CHANNEL_NONCE_SEND,
 )
-from storage.cache_thp import TAG_LENGTH, ChannelCache, clear_sessions_with_channel_id
+from storage.cache_thp import (
+    SESSION_ID_LENGTH,
+    TAG_LENGTH,
+    ChannelCache,
+    clear_sessions_with_channel_id,
+)
 from trezor import log, loop, protobuf, utils, workflow
 
 from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
@@ -25,6 +30,7 @@ from .transmission_loop import TransmissionLoop
 from .writer import (
     CONT_HEADER_LENGTH,
     INIT_HEADER_LENGTH,
+    MESSAGE_TYPE_LENGTH,
     PACKET_LENGTH,
     write_payload_to_wire_and_add_checksum,
 )
@@ -58,6 +64,7 @@ class Channel:
 
         # Shared variables
         self.buffer: utils.BufferType = bytearray(PACKET_LENGTH)
+        self.fallback_decrypt: bool = False
         self.bytes_read: int = 0
         self.expected_payload_length: int = 0
         self.is_cont_packet_expected: bool = False
@@ -97,24 +104,25 @@ class Channel:
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("set_channel_state: ", state_to_str(state))
 
-    def set_buffer(self, buffer: utils.BufferType) -> None:
-        self.buffer = buffer
-        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-            self._log("set_buffer: ", str(type(self.buffer)))
-
     # READ and DECRYPT
 
     def receive_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("receive packet")
+
         self._handle_received_packet(packet)
 
+        try:
+            buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
+        except BufferError:
+            pass  # TODO ??
+
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-            self._log("self.buffer: ", get_bytes_as_str(self.buffer))
+            self._log("self.buffer: ", get_bytes_as_str(buffer))
 
         if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
             self._finish_message()
-            return received_message_handler.handle_received_message(self, self.buffer)
+            return received_message_handler.handle_received_message(self, buffer)
         elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
             self.is_cont_packet_expected = True
         else:
@@ -136,7 +144,9 @@ class Channel:
         # ctrl_byte, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet) # TODO use this with single packet decryption
         _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
         self.expected_payload_length = payload_length
-        packet_payload = memoryview(packet)[INIT_HEADER_LENGTH:]
+
+        # packet_payload = memoryview(packet)[INIT_HEADER_LENGTH:]
+        # The above could be used for single packet decryption
 
         # If the channel does not "own" the buffer lock, decrypt first packet
         # TODO do it only when needed!
@@ -147,18 +157,22 @@ class Channel:
         # if control_byte.is_encrypted_transport(ctrl_byte):
         #   packet_payload = self._decrypt_single_packet_payload(packet_payload)
 
-        self.buffer = memory_manager.select_buffer(
-            self.get_channel_state(),
-            self.buffer,
-            packet_payload,
-            payload_length,
-        )
+        cid = self.get_channel_id_int()
+        length = payload_length + INIT_HEADER_LENGTH
+        try:
+            buffer = memory_manager.get_new_read_buffer(cid, length)
+        except BufferError:
+            self.fallback_decrypt = True
+            # TODO decrypt packet by packet, keep track of length, at the end call _finish_message to clear mess
+
+        # if buffer is BufferError:
+        # pass  # TODO handle deviceBUSY
 
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("handle_init_packet - payload len: ", str(payload_length))
-            self._log("handle_init_packet - buffer len: ", str(len(self.buffer)))
+            self._log("handle_init_packet - buffer len: ", str(len(buffer)))
 
-        return self._buffer_packet_data(self.buffer, packet, 0)
+        self._buffer_packet_data(buffer, packet, 0)
 
     def _handle_cont_packet(self, packet: utils.BufferType) -> None:
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
@@ -166,7 +180,12 @@ class Channel:
 
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
-        return self._buffer_packet_data(self.buffer, packet, CONT_HEADER_LENGTH)
+
+        try:
+            buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
+        except BufferError:
+            pass  # TODO handle device busy, channel kaput
+        return self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
 
     def _buffer_packet_data(
         self, payload_buffer: utils.BufferType, packet: utils.BufferType, offset: int
@@ -174,6 +193,7 @@ class Channel:
         self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
 
     def _finish_message(self) -> None:
+        self.fallback_decrypt = False
         self.bytes_read = 0
         self.expected_payload_length = 0
         self.is_cont_packet_expected = False
@@ -187,15 +207,19 @@ class Channel:
     def decrypt_buffer(
         self, message_length: int, offset: int = INIT_HEADER_LENGTH
     ) -> None:
-        noise_buffer = memoryview(self.buffer)[
+        buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
+        # if buffer is BufferError:
+        # pass  # TODO handle deviceBUSY
+        noise_buffer = memoryview(buffer)[
             offset : message_length - CHECKSUM_LENGTH - TAG_LENGTH
         ]
-        tag = self.buffer[
+        tag = buffer[
             message_length
             - CHECKSUM_LENGTH
             - TAG_LENGTH : message_length
             - CHECKSUM_LENGTH
         ]
+
         if utils.DISABLE_ENCRYPTION:
             is_tag_valid = tag == crypto.DUMMY_TAG
         else:
@@ -234,11 +258,33 @@ class Channel:
         if __debug__ and utils.EMULATOR:
             self._log(f"write message: {msg.MESSAGE_NAME}\n", utils.dump_protobuf(msg))
 
-        self.buffer = memory_manager.get_write_buffer(self.buffer, msg)
-        noise_payload_len = memory_manager.encode_into_buffer(
-            self.buffer, msg, session_id
-        )
-        return self._write_and_encrypt(self.buffer[:noise_payload_len])
+        cid = self.get_channel_id_int()
+        msg_size = protobuf.encoded_length(msg)
+        payload_size = SESSION_ID_LENGTH + MESSAGE_TYPE_LENGTH + msg_size
+        length = payload_size + CHECKSUM_LENGTH + TAG_LENGTH + INIT_HEADER_LENGTH
+        try:
+            buffer = memory_manager.get_new_write_buffer(cid, length)
+            noise_payload_len = memory_manager.encode_into_buffer(
+                buffer, msg, session_id
+            )
+        except BufferError:
+            from trezor.messages import Failure, FailureType
+
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                self._log("Failed to get write buffer, killing channel.")
+
+                noise_payload_len = memory_manager.encode_into_buffer(
+                    self.buffer,
+                    Failure(
+                        code=FailureType.FirmwareError,
+                        message="Failed to obtain write buffer.",
+                    ),
+                    session_id,
+                )
+                self.set_channel_state(ChannelState.INVALIDATED)
+                return self._write_and_encrypt(buffer[:noise_payload_len])
+
+        return self._write_and_encrypt(buffer[:noise_payload_len])
 
     def write_error(self, err_type: int) -> Awaitable[None]:
         msg_data = err_type.to_bytes(1, "big")
@@ -254,7 +300,11 @@ class Channel:
 
     def _write_and_encrypt(self, payload: bytes) -> Awaitable[None]:
         payload_length = len(payload)
-        self._encrypt(self.buffer, payload_length)
+        buffer = memory_manager.get_existing_write_buffer(self.get_channel_id_int())
+        # if buffer is BufferError:
+        # pass  # TODO handle deviceBUSY
+
+        self._encrypt(buffer, payload_length)
         payload_length = payload_length + TAG_LENGTH
 
         if self.write_task_spawn is not None:
@@ -263,7 +313,7 @@ class Channel:
         self._prepare_write()
         self.write_task_spawn = loop.spawn(
             self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(self.buffer[:payload_length])
+                ENCRYPTED, memoryview(buffer[:payload_length])
             )
         )
         return self.write_task_spawn

@@ -67,6 +67,7 @@ class ChannelState(IntEnum):
     TP4 = 6
     TC1 = 7
     ENCRYPTED_TRANSPORT = 8
+    INVALIDATED = 9
 
 
 class SessionState(IntEnum):

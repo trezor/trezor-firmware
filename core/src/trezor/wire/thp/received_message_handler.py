@@ -18,6 +18,7 @@ from storage.cache_thp import (
 from trezor import log, loop, protobuf, utils
 from trezor.enums import FailureType
 from trezor.messages import Failure
+from trezor.wire.thp import memory_manager
 
 from .. import message_handler
 from ..errors import DataError
@@ -227,8 +228,12 @@ async def _handle_state_TH1(
 
     ctx.handshake = Handshake()
 
+    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
+    # if buffer is BufferError:
+    # pass  # TODO buffer is gone :/
+
     host_ephemeral_pubkey = bytearray(
-        ctx.buffer[INIT_HEADER_LENGTH : message_length - CHECKSUM_LENGTH]
+        buffer[INIT_HEADER_LENGTH : message_length - CHECKSUM_LENGTH]
     )
     trezor_ephemeral_pubkey, encrypted_trezor_static_pubkey, tag = (
         ctx.handshake.handle_th1_crypto(
@@ -267,10 +272,13 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
     if ctx.handshake is None:
         raise Exception("Handshake object is not prepared. Retry handshake.")
 
-    host_encrypted_static_pubkey = memoryview(ctx.buffer)[
+    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
+    # if buffer is BufferError:
+    # pass  # TODO handle
+    host_encrypted_static_pubkey = buffer[
         INIT_HEADER_LENGTH : INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH
     ]
-    handshake_completion_request_noise_payload = memoryview(ctx.buffer)[
+    handshake_completion_request_noise_payload = buffer[
         INIT_HEADER_LENGTH + KEY_LENGTH + TAG_LENGTH : message_length - CHECKSUM_LENGTH
     ]
 
@@ -285,7 +293,7 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
     ctx.channel_cache.set_int(CHANNEL_NONCE_SEND, 1)
 
     noise_payload = _decode_message(
-        ctx.buffer[
+        buffer[
             INIT_HEADER_LENGTH
             + KEY_LENGTH
             + TAG_LENGTH : message_length
@@ -349,8 +357,12 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
         log.debug(__name__, "handle_state_ENCRYPTED_TRANSPORT")
 
     ctx.decrypt_buffer(message_length)
+
+    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
+    # if buffer is BufferError:
+    # pass  # TODO handle
     session_id, message_type = ustruct.unpack(
-        ">BH", memoryview(ctx.buffer)[INIT_HEADER_LENGTH:]
+        ">BH", memoryview(buffer)[INIT_HEADER_LENGTH:]
     )
     if session_id not in ctx.sessions:
 
@@ -372,7 +384,7 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
     s.incoming_message.put(
         Message(
             message_type,
-            ctx.buffer[
+            buffer[
                 INIT_HEADER_LENGTH
                 + MESSAGE_TYPE_LENGTH
                 + SESSION_ID_LENGTH : message_length
@@ -391,14 +403,17 @@ async def _handle_pairing(ctx: Channel, message_length: int) -> None:
         loop.schedule(ctx.connection_context.handle())
 
     ctx.decrypt_buffer(message_length)
+    buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
+    # if buffer is BufferError:
+    # pass  # TODO handle
     message_type = ustruct.unpack(
-        ">H", ctx.buffer[INIT_HEADER_LENGTH + SESSION_ID_LENGTH :]
+        ">H", buffer[INIT_HEADER_LENGTH + SESSION_ID_LENGTH :]
     )[0]
 
     ctx.connection_context.incoming_message.put(
         Message(
             message_type,
-            ctx.buffer[
+            buffer[
                 INIT_HEADER_LENGTH
                 + MESSAGE_TYPE_LENGTH
                 + SESSION_ID_LENGTH : message_length
