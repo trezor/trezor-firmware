@@ -59,6 +59,15 @@ def validate_multisig(multisig: MultisigRedeemScriptType) -> None:
 
 def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> int:
     validate_multisig(multisig)
+    pubkeys = multisig_get_pubkeys(multisig)
+    try:
+        return pubkeys.index(pubkey)
+    except ValueError:
+        raise DataError("Pubkey not found in multisig script")
+
+
+def multisig_xpub_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> int:
+    validate_multisig(multisig)
     if multisig.nodes:
         for i, hd_node in enumerate(multisig.nodes):
             if multisig_get_pubkey(hd_node, multisig.address_n) == pubkey:
@@ -67,7 +76,7 @@ def multisig_pubkey_index(multisig: MultisigRedeemScriptType, pubkey: bytes) -> 
         for i, hd in enumerate(multisig.pubkeys):
             if multisig_get_pubkey(hd.node, hd.address_n) == pubkey:
                 return i
-    raise DataError("Pubkey not found in multisig script")
+    raise DataError("XPUB not found in multisig script")
 
 
 def multisig_get_pubkey(n: HDNodeType, p: paths.Bip32Path) -> bytes:
