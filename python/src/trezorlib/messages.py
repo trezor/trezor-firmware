@@ -6771,26 +6771,14 @@ class NostrGetPubkey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2001
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        2: protobuf.Field("created_at", "uint32", repeated=False, required=False, default=None),
-        3: protobuf.Field("kind", "uint32", repeated=False, required=False, default=None),
-        4: protobuf.Field("tags", "string", repeated=True, required=False, default=None),
-        5: protobuf.Field("content", "string", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address_n: Optional[Sequence["int"]] = None,
-        tags: Optional[Sequence["str"]] = None,
-        created_at: Optional["int"] = None,
-        kind: Optional["int"] = None,
-        content: Optional["str"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.tags: Sequence["str"] = tags if tags is not None else []
-        self.created_at = created_at
-        self.kind = kind
-        self.content = content
 
 
 class NostrPubkey(protobuf.MessageType):

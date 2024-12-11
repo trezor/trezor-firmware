@@ -16,10 +16,6 @@ option (include_in_bitcoin_only) = true;
  */
  message NostrGetPubkey {
     repeated uint32 address_n = 1; // used to derive the key
-    optional uint32 created_at = 2;
-    optional uint32 kind = 3;
-    repeated string tags = 4;
-    optional string content = 5;
 }
 
 /**
