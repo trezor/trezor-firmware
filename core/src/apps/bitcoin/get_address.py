@@ -66,11 +66,6 @@ async def sign_from_testnet_priv_key(address_to_sign: str) -> bytes:
     digest = message_digest(coin_testnet, message.encode())
     signature = secp256k1.sign(seckey, digest)
 
-    # script_type == InputScriptType.SPENDWITNESS:
-    script_type_info = 8
-
-    # Add script type information to the recovery byte.
-    signature = bytes([signature[0] + script_type_info]) + signature[1:]
     return signature
 
 
