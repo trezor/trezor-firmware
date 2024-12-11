@@ -136,7 +136,6 @@ jobs:
           retention-days: 7
 
   core_emu_arm:
-    if: github.event_name == 'schedule'
     name: Build emu arm
     runs-on: ubuntu-latest-arm64
     needs: param
