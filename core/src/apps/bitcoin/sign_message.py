@@ -44,9 +44,10 @@ async def sign_message(
     if "/" in message_decoded:
         # message will have format <label>/<npub>
         # hackathon simplification
+        label, contact_id = message_decoded.split('/')
         await confirm_new_contact(
-            label=message_decoded,
-            contact_id=address,
+            label=label,
+            contact_id=contact_id,
             account=account,
             path=path,
             chunkify=bool(msg.chunkify),

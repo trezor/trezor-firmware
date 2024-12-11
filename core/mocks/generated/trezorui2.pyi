@@ -526,6 +526,7 @@ def flow_confirm_output(
 def flow_confirm_output_contact(
     *,
     title: str,
+    subtitle: str,
     contact_label: str,
     address: str,
     amount: str,
