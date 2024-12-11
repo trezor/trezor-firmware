@@ -744,6 +744,7 @@ jobs:
     needs:
       # Do not include ARM, they are only built on nightly
       - core_emu
+      - core_emu_arm
     steps:
       - uses: actions/download-artifact@v4
         with:
