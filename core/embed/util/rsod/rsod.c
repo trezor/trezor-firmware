@@ -57,9 +57,15 @@ void rsod_terminal(const systask_postmortem_t* pminfo) {
       message = message_buf;
       break;
     case TASK_TERM_REASON_ERROR:
-      title = pminfo->error.title;
-      message = pminfo->error.message;
-      footer = pminfo->error.footer;
+      if (pminfo->error.title[0] != '\0') {
+        title = pminfo->error.title;
+      }
+      if (pminfo->error.message[0] != '\0') {
+        message = pminfo->error.message;
+      }
+      if (pminfo->error.footer[0] != '\0') {
+        footer = pminfo->error.footer;
+      }
       break;
     case TASK_TERM_REASON_FATAL:
       message = pminfo->fatal.expr;
@@ -116,9 +122,15 @@ void rsod_gui(const systask_postmortem_t* pminfo) {
       break;
 
     case TASK_TERM_REASON_ERROR:
-      title = pminfo->error.title;
-      message = pminfo->error.message;
-      footer = pminfo->error.footer;
+      if (pminfo->error.title[0] != '\0') {
+        title = pminfo->error.title;
+      }
+      if (pminfo->error.message[0] != '\0') {
+        message = pminfo->error.message;
+      }
+      if (pminfo->error.footer[0] != '\0') {
+        footer = pminfo->error.footer;
+      }
       break;
 
     case TASK_TERM_REASON_FATAL:
