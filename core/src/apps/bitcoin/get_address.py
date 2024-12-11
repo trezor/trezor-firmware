@@ -36,12 +36,13 @@ def _get_xpubs(
     return result
 
 
-def sign_from_testnet_priv_key(
-    address_to_sign: str, keychain: Keychain, coin: CoinInfo
-) -> bytes:
+async def sign_from_testnet_priv_key(address_to_sign: str) -> bytes:
     """Sign address with the first Bitcoin testnet private key derived from standard path"""
     from trezor.crypto.curve import secp256k1
     from apps.common.signverify import message_digest
+
+    coin_testnet = coin_by_name("Testnet")
+    keychain_testent = await get_keychain_for_coin(coin_testnet)
 
     # Derivation path for first testnet bitcoin address: m/44'/1'/0'/0/0
     # 44' : BIP44
@@ -55,14 +56,14 @@ def sign_from_testnet_priv_key(
     message = address_to_sign
     address_n = FIRST_TESTNET_ADDRESS_PATH
 
-    node = keychain.derive(address_n)
+    node = keychain_testent.derive(address_n)
     # address = get_address(script_type, coin, node)
     # path = address_n_to_str(address_n)
     # account = address_n_to_name_or_unknown(coin, address_n, script_type)
 
     seckey = node.private_key()
 
-    digest = message_digest(coin, message.encode())
+    digest = message_digest(coin_testnet, message.encode())
     signature = secp256k1.sign(seckey, digest)
 
     # script_type == InputScriptType.SPENDWITNESS:
@@ -187,11 +188,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             )
         else:
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
-            coin_testnet = coin_by_name("Testnet")
-            keychain_testnet = await get_keychain_for_coin(coin_testnet)
-            signature = sign_from_testnet_priv_key(
-                address, keychain_testnet, coin_testnet
-            )
+            signature = await sign_from_testnet_priv_key(address)
             await show_address(
                 address_short,
                 address_qr=address,
