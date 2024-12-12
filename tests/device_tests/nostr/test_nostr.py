@@ -60,7 +60,7 @@ def test_get_pubkey_what_bleak(client: Client):
 def _test_get_pubkey(client, expected_pk):
     response = nostr.get_pubkey(
         client,
-        n=parse_path("m/44'/1237'/0'/0/0"),
+        n=parse_path("m/44h/1237h/0h/0/0"),
     )
 
     assert response.pubkey == bytes.fromhex(expected_pk)
@@ -77,7 +77,7 @@ def _test_sign_event(client, expected_pk):
         event=json.dumps(
             {"created_at": created_at, "kind": kind, "tags": tags, "content": content}
         ),
-        n=parse_path("m/44'/1237'/0'/0/0"),
+        n=parse_path("m/44h/1237h/0h/0/0"),
     )
 
     assert response.pubkey == bytes.fromhex(expected_pk)
@@ -85,7 +85,7 @@ def _test_sign_event(client, expected_pk):
     expected_id = sha256(
         json.dumps(
             [0, expected_pk, created_at, kind, tags, content], separators=(",", ":")
-        ).encode("utf-8")
+        ).encode()
     ).digest()
 
     assert response.id == expected_id

@@ -476,10 +476,6 @@ class MessageType(IntEnum):
     GetOwnershipProof = 49
     OwnershipProof = 50
     AuthorizeCoinJoin = 51
-    NostrGetPubkey = 2001
-    NostrPubkey = 2002
-    NostrSignEvent = 2003
-    NostrEventSignature = 2004
     CipherKeyValue = 23
     CipheredKeyValue = 48
     SignIdentity = 53
@@ -646,6 +642,10 @@ class MessageType(IntEnum):
     SolanaAddress = 903
     SolanaSignTx = 904
     SolanaTxSignature = 905
+    NostrGetPubkey = 2001
+    NostrPubkey = 2002
+    NostrSignEvent = 2003
+    NostrEventSignature = 2004
     BenchmarkListNames = 9100
     BenchmarkNames = 9101
     BenchmarkRun = 9102

@@ -32,15 +32,15 @@ def cli() -> None:
 
 
 @cli.command()
-@click.option("-n", "--address", default="m/44'/1237'/0'/0/0", help="BIP-32 path")
+@click.option("-a", "--account", default=0, help="Account index")
 @with_client
 def get_pubkey(
     client: "TrezorClient",
-    address: str,
+    account: str,
 ) -> Dict[str, str]:
     """Derive the pubkey from the seed."""
 
-    address_n = tools.parse_path(address)
+    address_n = tools.parse_path(f"m/44h/1237h/{account}h/0/0")
 
     res = nostr.get_pubkey(
         client,
@@ -53,19 +53,19 @@ def get_pubkey(
 
 
 @cli.command()
-@click.option("-n", "--address", default="m/44'/1237'/0'/0/0", help="BIP-32 path")
+@click.option("-a", "--account", default=0, help="Account index")
 @click.argument("event")
 @with_client
 def sign_event(
     client: "TrezorClient",
-    address: str,
+    account: str,
     event: str,
 ) -> Dict[str, str]:
     """Sign an event using address of given path."""
 
     event_json = json.loads(event)
 
-    address_n = tools.parse_path(address)
+    address_n = tools.parse_path(f"m/44h/1237h/{account}h/0/0")
 
     res = nostr.sign_event(
         client,
