@@ -207,8 +207,6 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             )
         else:
             account = address_n_to_name_or_unknown(coin, address_n, script_type)
-            res = await sign_with_nostr(NostrSignEvent(address_n=[1,2,3,4], content=address))
-            signature = res.signature
             await show_address(
                 address_short,
                 address_qr=address,
@@ -217,5 +215,9 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 account=account,
                 chunkify=bool(msg.chunkify),
             )
+
+    if not multisig:
+        res = await sign_with_nostr(NostrSignEvent(address_n=[1,2,3,4], content=address))
+        signature = res.signature
 
     return Address(address=address, mac=mac, signature=signature)
