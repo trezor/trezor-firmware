@@ -88,6 +88,10 @@ int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
                               const MultisigRedeemScriptType *multisig,
                               const uint8_t *pubkey);
 
+int cryptoMultisigXpubIndex(const CoinInfo *coin,
+                            const MultisigRedeemScriptType *multisig,
+                            const uint8_t *pubkey);
+
 uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
                                const MultisigRedeemScriptType *multisig,
                                uint8_t *pubkeys);

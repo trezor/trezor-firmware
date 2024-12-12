@@ -401,6 +401,24 @@ uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
 int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
                               const MultisigRedeemScriptType *multisig,
                               const uint8_t *pubkey) {
+  uint32_t n = cryptoMultisigPubkeyCount(multisig);
+
+  uint8_t pubkeys[33 * n];
+  if (!cryptoMultisigPubkeys(coin, multisig, pubkeys)) {
+    return -1;
+  }
+
+  for (size_t i = 0; i < n; i++) {
+    if (memcmp(pubkeys + i * 33, pubkey, 33) == 0) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int cryptoMultisigXpubIndex(const CoinInfo *coin,
+                            const MultisigRedeemScriptType *multisig,
+                            const uint8_t *pubkey) {
   for (size_t i = 0; i < cryptoMultisigPubkeyCount(multisig); i++) {
     const HDNode *pubnode = cryptoMultisigPubkey(coin, multisig, i);
     if (pubnode && memcmp(pubnode->public_key, pubkey, 33) == 0) {

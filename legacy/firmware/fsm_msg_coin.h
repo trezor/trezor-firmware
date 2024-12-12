@@ -333,7 +333,7 @@ void fsm_msgGetAddress(const GetAddress *msg) {
       desc[15] = (n < 10) ? ' ' : ('0' + (n / 10));
       desc[16] = '0' + (n % 10);
       multisig_index =
-          cryptoMultisigPubkeyIndex(coin, &(msg->multisig), node->public_key);
+          cryptoMultisigXpubIndex(coin, &(msg->multisig), node->public_key);
     } else {
       strlcpy(desc, _("Address:"), sizeof(desc));
     }
