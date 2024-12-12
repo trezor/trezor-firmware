@@ -88,7 +88,7 @@ async def sign_with_nostr(msg: NostrSignEvent, keychain: Keychain) -> NostrEvent
     sk = node.private_key()
 
     digest = sha256(address_to_sign).digest()
-    signature = secp256k1.sign(sk, digest)[-64:]
+    signature = secp256k1.sign(sk, digest)
 
     return NostrEventSignature(pubkey=b"", id=b"", signature=signature)
 

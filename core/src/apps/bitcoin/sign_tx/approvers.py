@@ -181,20 +181,29 @@ class BasicApprover(Approver):
 
         await super()._add_output(txo, script_pubkey)
 
-    async def confirm_output_label(self, txo: TxOutput) -> None:
-        from trezor.crypto.curve import secp256k1
-        from apps.common.signverify import message_digest
-        from apps.bitcoin.addresses import address_pkh
-        from apps.bitcoin.keychain import get_keychain_for_coin
-        from apps.common import coins
+    async def get_default_nostr_keychain(self) -> Keychain:
+        from apps.common.keychain import get_keychain
+        from apps.common import paths
+        from apps.nostr import CURVE, SLIP44_ID, PATTERN
 
-        coin_testnet = coins.by_name("Testnet")
+        slip_44_ids = (SLIP44_ID, 1)  # 1 to allow testnet
+        schemas = []
+        schemas.append(paths.PathSchema.parse(PATTERN, slip_44_ids))
+        schemas = [s.copy() for s in schemas]
+        keychain = await get_keychain(CURVE, schemas)
+        return keychain
+
+    async def confirm_output_label(self, txo: TxOutput) -> None:
+        from ubinascii import hexlify
+        from trezor.crypto.curve import secp256k1
+        from trezor.crypto.hashlib import sha256
 
         # Derive master public key
-        FIRST_TESTNET_ADDRESS_PATH = [2147483692, 2147483649, 2147483648, 0, 0]
-        keychain_testnet = await get_keychain_for_coin(coin_testnet)
-        master_node = keychain_testnet.derive(FIRST_TESTNET_ADDRESS_PATH)
-        master_pk = master_node.public_key()
+        # nost_address = "m/44'/1237'/0'/0/0"
+        NOSTR_ADDRESS_PATH = [2147483692, 2147484885, 2147483648, 0, 0]
+        keychain_nostr = await self.get_default_nostr_keychain()
+        master_node = keychain_nostr.derive(NOSTR_ADDRESS_PATH)
+        master_pk = master_node.public_key()[-32:]
 
         if not txo.address:
             raise DataError("Missing address, cannot use label.")
@@ -203,20 +212,27 @@ class BasicApprover(Approver):
 
         # Verify that txo.label_sig matches label_message signed by my master key
         label_message = txo.label + "/" + (txo.label_pk or txo.address)
-        label_message_digest = message_digest(coin_testnet, label_message.encode())
+        label_message_as_signed = (
+            f'[0,"{hexlify(master_pk).decode()}",{0},{27922},{[]},"{label_message}"]'
+        )
+        label_message_digest = sha256(label_message_as_signed.encode()).digest()
         if not secp256k1.verify(master_pk, txo.label_sig, label_message_digest):
             raise DataError("Invalid signature of label.")
         
         # Verify that txo.address_pk_sig matches txo.address signed by txo.label_pk
         if txo.label_pk and txo.address_pk_sig:
-            address_digest = message_digest(self.coin, txo.address.encode())
-            address_pk_sig_rec = secp256k1.verify_recover(txo.address_pk_sig, address_digest)
-            if txo.label_pk != address_pkh(address_pk_sig_rec, coin_testnet):
+            address_digest = sha256(txo.address.encode()).digest()
+            address_pk_sig_rec = secp256k1.verify_recover(
+                txo.address_pk_sig, address_digest
+            )
+            if txo.label_pk != address_pk_sig_rec:
                 raise DataError("Invalid signature of address.")
         elif not txo.label_pk and not txo.address_pk_sig:
             pass
         else:
-            raise DataError("Both label public key and address public key signature must be present.")
+            raise DataError(
+                "Both label public key and address public key signature must be present."
+            )
 
     async def add_change_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
         await super().add_change_output(txo, script_pubkey)
