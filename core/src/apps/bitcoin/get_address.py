@@ -5,7 +5,6 @@ from trezor.enums import MultisigPubkeysOrder
 from apps.common import safety_checks
 from apps.common.coininfo import by_name as coin_by_name,
 from .keychain import get_keychain_for_coin
-from apps.nostr import CURVE, SLIP44_ID, PATTERN
 from trezor.messages import NostrEventSignature, NostrSignEvent
 
 from apps.common.keychain import get_keychain, with_slip44_keychain
@@ -73,7 +72,8 @@ async def sign_with_testnet_priv_key(address_to_sign: str) -> bytes:
     return signature
 
 
-@with_slip44_keychain(PATTERN, slip44_id=SLIP44_ID, curve=CURVE)
+from apps.common.paths import PATTERN_BIP44
+@with_slip44_keychain(PATTERN_BIP44, slip44_id=1237, curve="secp256k1")
 async def sign_with_nostr(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSignature:
     """Sign address with the nostr nsec"""
     from trezor.crypto.curve import secp256k1
