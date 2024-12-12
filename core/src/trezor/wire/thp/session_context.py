@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from storage import cache_thp
+from storage.cache_common import InvalidSessionError
 from storage.cache_thp import SessionThpCache
 from trezor import log, loop, protobuf, utils
 from trezor.wire import message_handler, protocol_common
@@ -135,6 +136,10 @@ class SeedlessSessionContext(GenericSessionContext):
 
     def get_session_state(self) -> SessionState:
         return SessionState.SEEDLESS
+
+    @property
+    def cache(self) -> DataCache:
+        raise InvalidSessionError
 
 
 class SessionContext(GenericSessionContext):
