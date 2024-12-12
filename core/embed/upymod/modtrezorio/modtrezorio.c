@@ -37,9 +37,6 @@
 
 #include <io/usb.h>
 
-// Whether USB data pins were connected on last check (USB configured)
-bool usb_connected_previously = true;
-
 uint32_t last_touch_sample_time = 0;
 
 #define CHECK_PARAM_RANGE(value, minimum, maximum)  \
@@ -79,7 +76,7 @@ uint32_t last_touch_sample_time = 0;
 /// BUTTON_LEFT: int  # button number of left button
 /// BUTTON_RIGHT: int  # button number of right button
 
-/// USB_CHECK: int # interface id for check of USB data connection
+/// USB_EVENT: int # interface id for USB events
 
 /// WireInterface = Union[HID, WebUSB]
 
@@ -120,7 +117,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_POLL_READ), MP_ROM_INT(POLL_READ)},
     {MP_ROM_QSTR(MP_QSTR_POLL_WRITE), MP_ROM_INT(POLL_WRITE)},
 
-    {MP_ROM_QSTR(MP_QSTR_USB_CHECK), MP_ROM_INT(USB_DATA_IFACE)},
+    {MP_ROM_QSTR(MP_QSTR_USB_EVENT), MP_ROM_INT(USB_EVENT_IFACE)},
 };
 
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorio_globals,
