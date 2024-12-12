@@ -104,12 +104,6 @@ enum MessageType {
     MessageType_OwnershipProof = 50 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_AuthorizeCoinJoin = 51 [(bitcoin_only) = true, (wire_in) = true];
 
-    // Nostr
-    MessageType_NostrGetPubkey = 2001 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_NostrPubkey = 2002 [(bitcoin_only) = true, (wire_out) = true];
-    MessageType_NostrSignEvent = 2003 [(bitcoin_only) = true, (wire_in) = true];
-    MessageType_NostrEventSignature = 2004 [(bitcoin_only) = true, (wire_out) = true];
-
     // Crypto
     MessageType_CipherKeyValue = 23 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_CipheredKeyValue = 48 [(bitcoin_only) = true, (wire_out) = true];
@@ -326,6 +320,12 @@ enum MessageType {
 
     // THP
     reserved 1000 to 1099; // See messages-thp.proto
+
+    // Nostr
+    MessageType_NostrGetPubkey = 2001 [(wire_in) = true];
+    MessageType_NostrPubkey = 2002 [(wire_out) = true];
+    MessageType_NostrSignEvent = 2003 [(wire_in) = true];
+    MessageType_NostrEventSignature = 2004 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
