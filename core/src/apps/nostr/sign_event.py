@@ -40,8 +40,7 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
         )
 
     node = keychain.derive(address_n)
-    # pk = node.public_key()[-32:]
-    pk = node.public_key()
+    pk = node.public_key()[-32:]
     sk = node.private_key()
 
     serialized_event = (

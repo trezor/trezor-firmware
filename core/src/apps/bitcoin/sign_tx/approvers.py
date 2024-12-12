@@ -216,7 +216,8 @@ class BasicApprover(Approver):
             f'[0,"{hexlify(master_pk).decode()}",{0},{27922},{[]},"{label_message}"]'
         )
         label_message_digest = sha256(label_message_as_signed.encode()).digest()
-        if not secp256k1.verify(master_pk, txo.label_sig, label_message_digest):
+        master_pk_with_3 = b'\x03' + master_pk
+        if not secp256k1.verify(master_pk_with_3, txo.label_sig, label_message_digest):
             raise DataError("Invalid signature of label.")
         
         # Verify that txo.address_pk_sig matches txo.address signed by txo.label_pk
@@ -225,7 +226,8 @@ class BasicApprover(Approver):
             address_pk_sig_rec = secp256k1.verify_recover(
                 txo.address_pk_sig, address_digest
             )
-            if txo.label_pk != address_pk_sig_rec:
+            address_pk_sig_rec_hex = hexlify(address_pk_sig_rec[-32:]).decode()
+            if txo.label_pk != address_pk_sig_rec_hex:
                 raise DataError("Invalid signature of address.")
         elif not txo.label_pk and not txo.address_pk_sig:
             pass
