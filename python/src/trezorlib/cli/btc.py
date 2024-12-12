@@ -174,6 +174,7 @@ def cli() -> None:
     help="Sort pubkeys lexicographically using BIP-67",
 )
 @click.option("-C", "--chunkify", is_flag=True)
+@click.option("-S", "--with-signature", is_flag=True)
 @with_client
 def get_address(
     client: "TrezorClient",
@@ -186,6 +187,7 @@ def get_address(
     multisig_suffix_length: int,
     multisig_sort_pubkeys: bool,
     chunkify: bool,
+    with_signature: bool = False,
 ) -> str:
     """Get address for specified path.
 
@@ -234,7 +236,7 @@ def get_address(
     else:
         multisig = None
 
-    return btc.get_address(
+    response = btc.get_authenticated_address(
         client,
         coin,
         address_n,
@@ -245,6 +247,10 @@ def get_address(
         chunkify=chunkify,
     )
 
+    if with_signature:
+        return "Address: " + response.address + "\n" + "Signature: " + response.signature.hex()
+    else:
+        return response.address
 
 @cli.command()
 @click.option("-c", "--coin", default=DEFAULT_COIN)
