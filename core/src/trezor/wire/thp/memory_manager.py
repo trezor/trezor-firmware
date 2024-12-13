@@ -11,6 +11,7 @@ from .writer import MAX_PAYLOAD_LEN, MESSAGE_TYPE_LENGTH
 _PROTOBUF_BUFFER_SIZE = 8192
 READ_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
 WRITE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
+LOCK_TIMEOUT = 200  # miliseconds
 
 
 lock_owner_cid: int | None = None
@@ -106,7 +107,7 @@ def is_locked() -> bool:
     global lock_time
 
     time_diff = utime.ticks_diff(utime.ticks_ms(), lock_time)
-    return lock_owner_cid is not None and time_diff < 200
+    return lock_owner_cid is not None and time_diff < LOCK_TIMEOUT
 
 
 def is_owner(channel_id: int) -> bool:
