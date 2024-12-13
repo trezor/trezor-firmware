@@ -14,16 +14,18 @@ if utils.DISABLE_ENCRYPTION:
     DUMMY_TAG = b"\xA0\xA1\xA2\xA3\xA4\xA5\xA6\xA7\xA8\xA9\xB0\xB1\xB2\xB3\xB4\xB5"
 
 if __debug__:
-    from ubinascii import hexlify
+    from trezor.utils import get_bytes_as_str
 
 
-def enc(buffer: utils.BufferType, key: bytes, nonce: int, auth_data: bytes) -> bytes:
+def enc(
+    buffer: utils.BufferType, key: bytes, nonce: int, auth_data: bytes = b""
+) -> bytes:
     """
     Encrypts the provided `buffer` with AES-GCM (in place).
     Returns a 16-byte long encryption tag.
     """
     if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-        log.debug(__name__, "enc (key: %s, nonce: %d)", hexlify(key), nonce)
+        log.debug(__name__, "enc (key: %s, nonce: %d)", get_bytes_as_str(key), nonce)
     iv = _get_iv_from_nonce(nonce)
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)
@@ -32,7 +34,7 @@ def enc(buffer: utils.BufferType, key: bytes, nonce: int, auth_data: bytes) -> b
 
 
 def dec(
-    buffer: utils.BufferType, tag: bytes, key: bytes, nonce: int, auth_data: bytes
+    buffer: utils.BufferType, tag: bytes, key: bytes, nonce: int, auth_data: bytes = b""
 ) -> bool:
     """
     Decrypts the provided buffer (in place). Returns `True` if the provided authentication `tag` is the same as
@@ -40,7 +42,7 @@ def dec(
     """
     iv = _get_iv_from_nonce(nonce)
     if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-        log.debug(__name__, "dec (key: %s, nonce: %d)", hexlify(key), nonce)
+        log.debug(__name__, "dec (key: %s, nonce: %d)", get_bytes_as_str(key), nonce)
     aes_ctx = aesgcm(key, iv)
     aes_ctx.auth(auth_data)
     aes_ctx.decrypt_in_place(buffer)
@@ -49,7 +51,8 @@ def dec(
 
 
 class BusyDecoder:
-    def __init__(self, key: bytes, nonce: int, auth_data: bytes) -> None:
+
+    def __init__(self, key: bytes, nonce: int, auth_data: bytes = b"") -> None:
         iv = _get_iv_from_nonce(nonce)
         self.aes_ctx = aesgcm(key, iv)
         self.aes_ctx.auth(auth_data)
@@ -105,7 +108,9 @@ class Handshake:
         aes_ctx = aesgcm(self.k, IV_1)
         encrypted_trezor_static_pubkey = aes_ctx.encrypt(trezor_masked_static_pubkey)
         if __debug__:
-            log.debug(__name__, "th1 - enc (key: %s, nonce: %d)", hexlify(self.k), 0)
+            log.debug(
+                __name__, "th1 - enc (key: %s, nonce: %d)", get_bytes_as_str(self.k), 0
+            )
         aes_ctx.auth(self.h)
         tag_to_encrypted_key = aes_ctx.finish()
         encrypted_trezor_static_pubkey = (
@@ -137,7 +142,9 @@ class Handshake:
             memoryview(encrypted_host_static_pubkey)[:PUBKEY_LENGTH]
         )
         if __debug__:
-            log.debug(__name__, "th2 - dec (key: %s, nonce: %d)", hexlify(self.k), 1)
+            log.debug(
+                __name__, "th2 - dec (key: %s, nonce: %d)", get_bytes_as_str(self.k), 1
+            )
         host_static_pubkey = memoryview(encrypted_host_static_pubkey)[:PUBKEY_LENGTH]
         tag = aes_ctx.finish()
         if tag != encrypted_host_static_pubkey[-16:]:
@@ -151,7 +158,9 @@ class Handshake:
         aes_ctx.auth(self.h)
         aes_ctx.decrypt_in_place(memoryview(encrypted_payload)[:-16])
         if __debug__:
-            log.debug(__name__, "th2 - dec (key: %s, nonce: %d)", hexlify(self.k), 0)
+            log.debug(
+                __name__, "th2 - dec (key: %s, nonce: %d)", get_bytes_as_str(self.k), 0
+            )
         tag = aes_ctx.finish()
         if tag != encrypted_payload[-16:]:
             raise ThpDecryptionError()
@@ -162,8 +171,8 @@ class Handshake:
             log.debug(
                 __name__,
                 "(key_receive: %s, key_send: %s)",
-                hexlify(self.key_receive),
-                hexlify(self.key_send),
+                get_bytes_as_str(self.key_receive),
+                get_bytes_as_str(self.key_send),
             )
 
     def get_handshake_completion_response(self, trezor_state: bytes) -> bytes:
