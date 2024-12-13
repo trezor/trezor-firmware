@@ -19,6 +19,7 @@ from trezor import log, loop, protobuf, utils, workflow
 from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
 from . import alternating_bit_protocol as ABP
 from . import (
+    checksum,
     control_byte,
     crypto,
     interface_manager,
@@ -75,9 +76,13 @@ class Channel:
         self.transmission_loop: TransmissionLoop | None = None
         self.write_task_spawn: loop.spawn | None = None
 
-        # Temporary objects for handshake and pairing
+        # Temporary objects
         self.handshake: crypto.Handshake | None = None
         self.connection_context: PairingContext | None = None
+        self.busy_decoder: crypto.BusyDecoder | None = None
+        self.temp_crc: int | None = None
+        self.temp_crc_compare: bytes | None = None
+        self.temp_tag: bytes | None = None
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
@@ -134,14 +139,18 @@ class Channel:
     def _handle_received_packet(self, packet: utils.BufferType) -> None:
         ctrl_byte = packet[0]
         if control_byte.is_continuation(ctrl_byte):
-            return self._handle_cont_packet(packet)
-        return self._handle_init_packet(packet)
+            self._handle_cont_packet(packet)
+            return
+        self._handle_init_packet(packet)
 
     def _handle_init_packet(self, packet: utils.BufferType) -> None:
+        self.fallback_decrypt = False
+        self.bytes_read = 0
+        self.expected_payload_length = 0
+
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("handle_init_packet")
 
-        # ctrl_byte, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet) # TODO use this with single packet decryption
         _, _, payload_length = ustruct.unpack(PacketHeader.format_str_init, packet)
         self.expected_payload_length = payload_length
 
@@ -162,11 +171,66 @@ class Channel:
         try:
             buffer = memory_manager.get_new_read_buffer(cid, length)
         except BufferError:
-            self.fallback_decrypt = True
-            # TODO decrypt packet by packet, keep track of length, at the end call _finish_message to clear mess
+            # TODO handle not encrypted/(short??), eg. ACK
 
-        # if buffer is BufferError:
-        # pass  # TODO handle deviceBUSY
+            self.fallback_decrypt = True
+            self._prepare_busy_decoder()
+
+            to_read_len = min(len(packet) - INIT_HEADER_LENGTH, payload_length)
+            buf = memoryview(self.buffer)[:to_read_len]
+            self.temp_crc = checksum.compute_int(data=packet[:INIT_HEADER_LENGTH])
+            self.temp_crc_compare = bytearray(4)
+            self.temp_tag = bytearray(16)
+            utils.memcpy(buf, 0, packet, INIT_HEADER_LENGTH)
+
+            # TODO handle: CRC in init packet, CRC partially in init packet, CRC in some cont packet
+            # instead of whole buf use only part without CRC
+            #
+            # bytes_read=0, buffer_len, payload_len
+            # crc:
+            # 1) payload_len >=  buffer_len + CHKSUM_LEN -> return buffer_len
+            # 2) payload_len == buffer_len -> return payload_len - CHKSUM_LEN
+            # 3) payload_len >  buffer_len -> return payload_len - CHKSUM_LEN
+            #
+            # noise tag:
+            # 1) payload_len >=  buffer_len + TAG_LEN  + CHKSUM_LEN -> return buffer_len
+            # 2) payload_len == buffer_len -> return payload_len - TAG_LEN - CHKSUM_LEN
+            # 3) payload_len >  buffer_len -> return payload_len - TAG_LEN - CHKSUM_LEN
+            #
+
+            # CRC CHECK
+            crc_copy_len: int = 0
+            if payload_length > len(buf) + CHECKSUM_LENGTH:
+                crc_copy_len = len(buf)
+            elif payload_length == len(buf):
+                crc_copy_len = payload_length - CHECKSUM_LENGTH
+                crc_checksum_last_part = buf[-CHECKSUM_LENGTH:]
+                offset = CHECKSUM_LENGTH - len(crc_checksum_last_part)
+                utils.memcpy(self.temp_crc_compare, offset, crc_checksum_last_part, 0)
+            elif payload_length > len(buf):
+                crc_copy_len = payload_length - CHECKSUM_LENGTH
+                crc_checksum_first_part = buf[
+                    -CHECKSUM_LENGTH + payload_length - len(buf)
+                ]
+                utils.memcpy(self.temp_crc_compare, 0, crc_checksum_first_part, 0)
+            else:
+                raise Exception("Buffer should not be bigger than payload")
+            self.temp_crc = checksum.compute_int(buf[:crc_copy_len], self.temp_crc)
+
+            # TAG CHECK
+            assert self.busy_decoder is not None
+
+            if payload_length > len(buf) + TAG_LENGTH + CHECKSUM_LENGTH:
+                self.busy_decoder.decrypt_part(buf)
+            elif payload_length > len(buf):
+                self.busy_decoder.decrypt_part(
+                    buf[: payload_length - TAG_LENGTH - CHECKSUM_LENGTH]
+                )
+                # TODO add part of the "tag from message" to compare
+            else:
+                raise Exception("Buffer should not be bigger than payload")
+
+            # TODO decrypt packet by packet, keep track of length, at the end call _finish_message to clear mess
 
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("handle_init_packet - payload len: ", str(payload_length))
@@ -174,18 +238,65 @@ class Channel:
 
         self._buffer_packet_data(buffer, packet, 0)
 
+    def _handle_fallback_crc(self, payload_length: int, buf: memoryview):
+        if payload_length > len(buf) + self.bytes_read + CHECKSUM_LENGTH:
+            # The CRC checksum is not in this packet, compute crc over whole buffer
+            self.temp_crc = checksum.compute_int(buf, self.temp_crc)
+        elif payload_length >= len(buf) + self.bytes_read:
+            # At least a part of the CRC checksum is in this packet, compute CRC over
+            # first (max(0, crc_copy_len)) bytes and add the rest of the bytes
+            # as the checksum from message into temp_crc_compare
+            crc_copy_len = payload_length - self.bytes_read - CHECKSUM_LENGTH
+            self.temp_crc = checksum.compute_int(buf[:crc_copy_len], self.temp_crc)
+
+            crc_checksum = buf[
+                payload_length - CHECKSUM_LENGTH - len(buf) - self.bytes_read :
+            ]
+            offset = CHECKSUM_LENGTH - len(buf[-CHECKSUM_LENGTH:])
+            utils.memcpy(self.temp_crc_compare, offset, crc_checksum, 0)
+        else:
+            raise Exception("Buffer (+bytes_read) should not be bigger than payload")
+
+    def _handle_fallback_decryption(self, payload_length: int, buf: memoryview):
+        if payload_length > len(buf) + self.bytes_read + CHECKSUM_LENGTH + TAG_LENGTH:
+            # The noise tag is not in this packet, decrypt the whole buffer
+            self.busy_decoder.decrypt_part(buf)
+        elif payload_length >= len(buf) + self.bytes_read:
+            # At least a part of the CRC checksum is in this packet, compute CRC over
+            # first (max(0, crc_copy_len)) bytes and add the rest of the bytes
+            # as the checksum from message into temp_crc_compare
+            dec_len = payload_length - self.bytes_read - TAG_LENGTH - CHECKSUM_LENGTH
+            self.busy_decoder.decrypt_part(buf[:dec_len])
+
+            noise_tag = buf[
+                payload_length
+                - CHECKSUM_LENGTH
+                - TAG_LENGTH
+                - len(buf)
+                - self.bytes_read :
+            ]
+            offset = (
+                TAG_LENGTH + CHECKSUM_LENGTH - len(buf[-CHECKSUM_LENGTH - TAG_LENGTH :])
+            )
+            utils.memcpy(self.temp_tag, offset, noise_tag, 0)
+        else:
+            raise Exception("Buffer (+bytes_read) should not be bigger than payload")
+
     def _handle_cont_packet(self, packet: utils.BufferType) -> None:
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("handle_cont_packet")
 
         if not self.is_cont_packet_expected:
             raise ThpError("Continuation packet is not expected, ignoring")
-
+        if self.fallback_decrypt:
+            pass  # TODO
+            return
         try:
             buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
         except BufferError:
+            self.set_channel_state(ChannelState.INVALIDATED)
             pass  # TODO handle device busy, channel kaput
-        return self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
+        self._buffer_packet_data(buffer, packet, CONT_HEADER_LENGTH)
 
     def _buffer_packet_data(
         self, payload_buffer: utils.BufferType, packet: utils.BufferType, offset: int
@@ -193,16 +304,27 @@ class Channel:
         self.bytes_read += utils.memcpy(payload_buffer, self.bytes_read, packet, offset)
 
     def _finish_message(self) -> None:
-        self.fallback_decrypt = False
         self.bytes_read = 0
         self.expected_payload_length = 0
         self.is_cont_packet_expected = False
+
+        self.fallback_decrypt = False
+        self.busy_decoder = None
 
     def _decrypt_single_packet_payload(
         self, payload: utils.BufferType
     ) -> utils.BufferType:
         # crypto.decrypt(b"\x00", b"\x00", payload_buffer, INIT_DATA_OFFSET, len(payload))
         return payload
+
+    def _prepare_busy_decoder(self) -> None:
+        key_receive = self.channel_cache.get(CHANNEL_KEY_RECEIVE)
+        nonce_receive = self.channel_cache.get_int(CHANNEL_NONCE_RECEIVE)
+
+        assert key_receive is not None
+        assert nonce_receive is not None
+
+        self.busy_decoder = crypto.BusyDecoder(key_receive, nonce_receive)
 
     def decrypt_buffer(
         self, message_length: int, offset: int = INIT_HEADER_LENGTH
@@ -232,9 +354,7 @@ class Channel:
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 self._log("Buffer before decryption: ", get_bytes_as_str(noise_buffer))
 
-            is_tag_valid = crypto.dec(
-                noise_buffer, tag, key_receive, nonce_receive, b""
-            )
+            is_tag_valid = crypto.dec(noise_buffer, tag, key_receive, nonce_receive)
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 self._log("Buffer after decryption: ", get_bytes_as_str(noise_buffer))
 
@@ -372,7 +492,7 @@ class Channel:
             assert key_send is not None
             assert nonce_send is not None
 
-            tag = crypto.enc(noise_buffer, key_send, nonce_send, b"")
+            tag = crypto.enc(noise_buffer, key_send, nonce_send)
 
             self.channel_cache.set_int(CHANNEL_NONCE_SEND, nonce_send + 1)
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
