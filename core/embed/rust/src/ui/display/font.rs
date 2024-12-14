@@ -47,7 +47,9 @@ impl<'a> Glyph<'a> {
         let height = data[1] as i16;
 
         let size = calculate_glyph_size(data);
-        ensure!(data.len() == size, "Invalid glyph data size");
+        // This should check for equality but due to a previous bug in font generator,
+        // some glyphs in older translation blobs might have a trailing zero byte.
+        ensure!(data.len() >= size, "Invalid glyph data size");
         Glyph {
             width,
             height,
