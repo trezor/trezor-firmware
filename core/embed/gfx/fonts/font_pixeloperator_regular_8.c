@@ -43,7 +43,7 @@
 /* = */ static const uint8_t Font_PixelOperator_Regular_8_glyph_61[] = { 4, 3, 5, 0, 5, 240, 240 };
 /* > */ static const uint8_t Font_PixelOperator_Regular_8_glyph_62[] = { 3, 5, 4, 0, 6, 136, 168 };
 /* ? */ static const uint8_t Font_PixelOperator_Regular_8_glyph_63[] = { 5, 7, 6, 0, 7, 116, 66, 34, 0, 128 };
-/* @ */ static const uint8_t Font_PixelOperator_Regular_8_glyph_64[] = { 7, 8, 8, 0, 7, 125, 6, 109, 90, 179, 160, 62, 0 };
+/* @ */ static const uint8_t Font_PixelOperator_Regular_8_glyph_64[] = { 7, 8, 8, 0, 7, 125, 6, 109, 90, 179, 160, 62 };
 /* A */ static const uint8_t Font_PixelOperator_Regular_8_glyph_65[] = { 5, 7, 6, 0, 7, 116, 99, 31, 198, 32 };
 /* B */ static const uint8_t Font_PixelOperator_Regular_8_glyph_66[] = { 5, 7, 6, 0, 7, 244, 99, 232, 199, 192 };
 /* C */ static const uint8_t Font_PixelOperator_Regular_8_glyph_67[] = { 5, 7, 6, 0, 7, 116, 97, 8, 69, 192 };
@@ -85,7 +85,7 @@
 /* g */ static const uint8_t Font_PixelOperator_Regular_8_glyph_103[] = { 5, 6, 6, 0, 5, 124, 98, 240, 184 };
 /* h */ static const uint8_t Font_PixelOperator_Regular_8_glyph_104[] = { 5, 7, 6, 0, 7, 132, 61, 24, 198, 32 };
 /* i */ static const uint8_t Font_PixelOperator_Regular_8_glyph_105[] = { 1, 7, 4, 1, 7, 190 };
-/* j */ static const uint8_t Font_PixelOperator_Regular_8_glyph_106[] = { 5, 8, 6, 0, 7, 8, 2, 16, 134, 46, 0 };
+/* j */ static const uint8_t Font_PixelOperator_Regular_8_glyph_106[] = { 5, 8, 6, 0, 7, 8, 2, 16, 134, 46 };
 /* k */ static const uint8_t Font_PixelOperator_Regular_8_glyph_107[] = { 5, 7, 6, 0, 7, 132, 37, 78, 74, 32 };
 /* l */ static const uint8_t Font_PixelOperator_Regular_8_glyph_108[] = { 2, 7, 4, 1, 7, 170, 164 };
 /* m */ static const uint8_t Font_PixelOperator_Regular_8_glyph_109[] = { 7, 5, 8, 0, 5, 237, 38, 76, 24, 32 };
@@ -95,7 +95,7 @@
 /* q */ static const uint8_t Font_PixelOperator_Regular_8_glyph_113[] = { 5, 6, 6, 0, 5, 124, 98, 240, 132 };
 /* r */ static const uint8_t Font_PixelOperator_Regular_8_glyph_114[] = { 5, 5, 6, 0, 5, 157, 49, 8, 0 };
 /* s */ static const uint8_t Font_PixelOperator_Regular_8_glyph_115[] = { 5, 5, 6, 0, 5, 116, 28, 31, 0 };
-/* t */ static const uint8_t Font_PixelOperator_Regular_8_glyph_116[] = { 4, 6, 5, 0, 6, 79, 68, 67, 0 };
+/* t */ static const uint8_t Font_PixelOperator_Regular_8_glyph_116[] = { 4, 6, 5, 0, 6, 79, 68, 67 };
 /* u */ static const uint8_t Font_PixelOperator_Regular_8_glyph_117[] = { 5, 5, 6, 0, 5, 140, 99, 23, 0 };
 /* v */ static const uint8_t Font_PixelOperator_Regular_8_glyph_118[] = { 5, 5, 6, 0, 5, 140, 98, 162, 0 };
 /* w */ static const uint8_t Font_PixelOperator_Regular_8_glyph_119[] = { 7, 5, 8, 0, 5, 131, 6, 76, 150, 192 };

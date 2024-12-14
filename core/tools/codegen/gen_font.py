@@ -76,8 +76,10 @@ def process_bitmap_buffer(
 ) -> list[int]:
     res = buf[:]
     if bpp == 1:
-        for _ in range(8 - len(res) % 8):
-            res.append(0)
+        if len(res) % 8 != 0:
+            # add padding if needed
+            for _ in range(8 - len(res) % 8):
+                res.append(0)
         res = [
             (
                 (a & 0x80)
@@ -94,8 +96,10 @@ def process_bitmap_buffer(
             ]
         ]
     elif bpp == 2:
-        for _ in range(4 - len(res) % 4):
-            res.append(0)
+        if len(res) % 4 != 0:
+            # add padding if needed
+            for _ in range(4 - len(res) % 4):
+                res.append(0)
         res = [
             ((a & 0xC0) | ((b & 0xC0) >> 2) | ((c & 0xC0) >> 4) | ((d & 0xC0) >> 6))
             for a, b, c, d in [res[i : i + 4] for i in range(0, len(res), 4)]
