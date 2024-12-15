@@ -11,3 +11,12 @@ __pycache__/
 proto.gv*
 .DS_Store
 crypto/tests/libtrezor-crypto.so.dSYM/
+/west/.west/
+/west/bootloader/
+/west/modules/
+/west/nrf/
+/west/nrfxlib/
+/west/test/
+/west/tools/
+/west/zephyr/
+/west/trezor/build/

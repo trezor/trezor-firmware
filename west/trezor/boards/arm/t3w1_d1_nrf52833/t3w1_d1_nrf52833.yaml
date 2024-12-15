@@ -1,0 +1,16 @@
+identifier: t3w1_d1_nrf52833
+name: tw31-d1-NRF52833
+type: mcu
+arch: arm
+ram: 128
+flash: 512
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - usb_device
+  - ble
+  - gpio
+  - watchdog
+  - counter

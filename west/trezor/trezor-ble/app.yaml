@@ -1,0 +1,16 @@
+# This file is provided so that the application can be compiled using Twister,
+# the Zephyr testing tool. In this file, multiple combinations can be specified,
+# so that you can easily test all of them locally or in CI.
+sample:
+  description: Trezor BLE gateway
+  name: W001
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - t3w1_d1_nrf52833, t3w1_revA_nrf52832
+tests:
+  app.default: {}
+  app.debug:
+    extra_overlay_confs:
+      - debug.conf

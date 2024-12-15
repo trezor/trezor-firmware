@@ -1,0 +1,23 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+  An example sensor that reads the GPIO level defined in input-gpios. The
+  purpose of this sensor is to demonstrate how to create out-of-tree drivers.
+
+  Example definition in devicetree:
+
+    example-sensor {
+        compatible = "zephyr,example-sensor";
+        input-gpios = <&gpio0 0 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+    };
+
+compatible: "zephyr,example-sensor"
+
+include: base.yaml
+
+properties:
+  input-gpios:
+    type: phandle-array
+    required: true
+    description: Input GPIO to be sensed.
