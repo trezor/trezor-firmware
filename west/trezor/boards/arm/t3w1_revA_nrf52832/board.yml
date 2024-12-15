@@ -1,0 +1,8 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+board:
+  name: t3w1_revA_nrf52832
+  vendor: vendor
+  socs:
+    - name: nrf52832
