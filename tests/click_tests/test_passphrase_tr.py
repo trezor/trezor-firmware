@@ -278,6 +278,6 @@ def test_last_char_timeout(device_handler: "BackgroundDeviceHandler"):
             input_passphrase(debug, character)
             # wait until the last character is hidden
             time.sleep(DELAY_S)
-            # show the entire passphrase
-            show_passphrase(debug)
+        # show the entire passphrase
+        show_passphrase(debug)
         enter_passphrase(debug)
