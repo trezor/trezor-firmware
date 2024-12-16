@@ -523,6 +523,19 @@ def flow_confirm_output(
 
 
 # rust/src/ui/model_mercury/layout.rs
+def flow_confirm_output_contact(
+    *,
+    title: str,
+    subtitle: str,
+    contact_label: str,
+    address: str,
+    amount: str,
+    chunkify: bool = True,
+) -> LayoutObj[UiResult]:
+    """Confirm the transaction output for labeled contact."""
+
+
+# rust/src/ui/model_mercury/layout.rs
 def confirm_summary(
     *,
     amount: str,

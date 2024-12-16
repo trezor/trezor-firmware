@@ -91,6 +91,9 @@ SLIP44_BITCOIN = const(0)
 # SLIP-44 coin type for all Testnet coins
 SLIP44_TESTNET = const(1)
 
+# SLIP-44 "coin type" for Nostr
+SLIP44_NOSTR = const(1237)
+
 
 def validate_path_against_script_type(
     coin: coininfo.CoinInfo,
@@ -263,7 +266,7 @@ def _get_coin_by_name(coin_name: str | None) -> coininfo.CoinInfo:
         raise wire.DataError("Unsupported coin type")
 
 
-async def _get_keychain_for_coin(
+async def get_keychain_for_coin(
     coin: coininfo.CoinInfo,
     unlock_schemas: Iterable[PathSchema] = (),
 ) -> Keychain:
@@ -321,7 +324,7 @@ def with_keychain(func: HandlerWithCoinInfo[MsgOut]) -> Handler[MsgIn, MsgOut]:
     ) -> MsgOut:
         coin = _get_coin_by_name(msg.coin_name)
         unlock_schemas = _get_unlock_schemas(msg, auth_msg, coin)
-        keychain = await _get_keychain_for_coin(coin, unlock_schemas)
+        keychain = await get_keychain_for_coin(coin, unlock_schemas)
         if AuthorizeCoinJoin.is_type_of(auth_msg):
             auth_obj = authorization.from_cached_message(auth_msg)
             return await func(msg, keychain, coin, auth_obj)

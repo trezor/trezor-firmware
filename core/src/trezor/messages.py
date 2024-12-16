@@ -553,12 +553,14 @@ if TYPE_CHECKING:
     class Address(protobuf.MessageType):
         address: "str"
         mac: "bytes | None"
+        signature: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
             mac: "bytes | None" = None,
+            signature: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -776,6 +778,10 @@ if TYPE_CHECKING:
         orig_hash: "bytes | None"
         orig_index: "int | None"
         payment_req_index: "int | None"
+        label: "str | None"
+        label_sig: "bytes | None"
+        label_pk: "str | None"
+        address_pk_sig: "bytes | None"
 
         def __init__(
             self,
@@ -789,6 +795,10 @@ if TYPE_CHECKING:
             orig_hash: "bytes | None" = None,
             orig_index: "int | None" = None,
             payment_req_index: "int | None" = None,
+            label: "str | None" = None,
+            label_sig: "bytes | None" = None,
+            label_pk: "str | None" = None,
+            address_pk_sig: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -5180,6 +5190,76 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["NEMCosignatoryModification"]:
+            return isinstance(msg, cls)
+
+    class NostrGetPubkey(protobuf.MessageType):
+        address_n: "list[int]"
+        show_display: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            show_display: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NostrGetPubkey"]:
+            return isinstance(msg, cls)
+
+    class NostrPubkey(protobuf.MessageType):
+        pubkey: "bytes"
+
+        def __init__(
+            self,
+            *,
+            pubkey: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NostrPubkey"]:
+            return isinstance(msg, cls)
+
+    class NostrSignEvent(protobuf.MessageType):
+        address_n: "list[int]"
+        created_at: "int | None"
+        kind: "int | None"
+        tags: "list[str]"
+        content: "str | None"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            tags: "list[str] | None" = None,
+            created_at: "int | None" = None,
+            kind: "int | None" = None,
+            content: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NostrSignEvent"]:
+            return isinstance(msg, cls)
+
+    class NostrEventSignature(protobuf.MessageType):
+        pubkey: "bytes"
+        id: "bytes"
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            pubkey: "bytes",
+            id: "bytes",
+            signature: "bytes",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NostrEventSignature"]:
             return isinstance(msg, cls)
 
     class RippleGetAddress(protobuf.MessageType):

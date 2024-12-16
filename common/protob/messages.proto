@@ -77,7 +77,6 @@ enum MessageType {
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
 
     // Deprecated messages, kept for protobuf compatibility.
-    // Both are marked wire_out so that we don't need to implement incoming handler for legacy
     MessageType_Deprecated_PassphraseStateRequest = 77 [deprecated = true];
     MessageType_Deprecated_PassphraseStateAck = 78 [deprecated = true];
 
@@ -104,6 +103,12 @@ enum MessageType {
     MessageType_GetOwnershipProof = 49 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_OwnershipProof = 50 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_AuthorizeCoinJoin = 51 [(bitcoin_only) = true, (wire_in) = true];
+
+    // Nostr
+    MessageType_NostrGetPubkey = 2001 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_NostrPubkey = 2002 [(bitcoin_only) = true, (wire_out) = true];
+    MessageType_NostrSignEvent = 2003 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_NostrEventSignature = 2004 [(bitcoin_only) = true, (wire_out) = true];
 
     // Crypto
     MessageType_CipherKeyValue = 23 [(bitcoin_only) = true, (wire_in) = true];

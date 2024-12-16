@@ -212,6 +212,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_total__title_sending_from;
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_contact_label;
   MP_QSTR_count;
   MP_QSTR_current;
   MP_QSTR_danger;
@@ -248,6 +249,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_firmware_update__title_fingerprint;
   MP_QSTR_first_screen;
   MP_QSTR_flow_confirm_output;
+  MP_QSTR_flow_confirm_output_contact;
   MP_QSTR_flow_confirm_reset;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_continue_recovery;
@@ -688,6 +690,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_time_ms;
   MP_QSTR_timer;
   MP_QSTR_title;
+  MP_QSTR_title_success;
   MP_QSTR_total_amount;
   MP_QSTR_total_fee_new;
   MP_QSTR_total_len;

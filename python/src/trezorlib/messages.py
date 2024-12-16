@@ -476,6 +476,10 @@ class MessageType(IntEnum):
     GetOwnershipProof = 49
     OwnershipProof = 50
     AuthorizeCoinJoin = 51
+    NostrGetPubkey = 2001
+    NostrPubkey = 2002
+    NostrSignEvent = 2003
+    NostrEventSignature = 2004
     CipherKeyValue = 23
     CipheredKeyValue = 48
     SignIdentity = 53
@@ -1209,6 +1213,7 @@ class Address(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
         2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("signature", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1216,9 +1221,11 @@ class Address(protobuf.MessageType):
         *,
         address: "str",
         mac: Optional["bytes"] = None,
+        signature: Optional["bytes"] = None,
     ) -> None:
         self.address = address
         self.mac = mac
+        self.signature = signature
 
 
 class GetOwnershipId(protobuf.MessageType):
@@ -1494,6 +1501,10 @@ class TxOutput(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
+        13: protobuf.Field("label", "string", repeated=False, required=False, default=None),
+        14: protobuf.Field("label_sig", "bytes", repeated=False, required=False, default=None),
+        15: protobuf.Field("label_pk", "string", repeated=False, required=False, default=None),
+        16: protobuf.Field("address_pk_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1508,6 +1519,10 @@ class TxOutput(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
+        label: Optional["str"] = None,
+        label_sig: Optional["bytes"] = None,
+        label_pk: Optional["str"] = None,
+        address_pk_sig: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -1518,6 +1533,10 @@ class TxOutput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.label = label
+        self.label_sig = label_sig
+        self.label_pk = label_pk
+        self.address_pk_sig = address_pk_sig
 
 
 class PrevTx(protobuf.MessageType):
@@ -2031,6 +2050,10 @@ class TxOutputType(protobuf.MessageType):
         10: protobuf.Field("orig_hash", "bytes", repeated=False, required=False, default=None),
         11: protobuf.Field("orig_index", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("payment_req_index", "uint32", repeated=False, required=False, default=None),
+        13: protobuf.Field("label", "string", repeated=False, required=False, default=None),
+        14: protobuf.Field("label_sig", "bytes", repeated=False, required=False, default=None),
+        15: protobuf.Field("label_pk", "string", repeated=False, required=False, default=None),
+        16: protobuf.Field("address_pk_sig", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -2045,6 +2068,10 @@ class TxOutputType(protobuf.MessageType):
         orig_hash: Optional["bytes"] = None,
         orig_index: Optional["int"] = None,
         payment_req_index: Optional["int"] = None,
+        label: Optional["str"] = None,
+        label_sig: Optional["bytes"] = None,
+        label_pk: Optional["str"] = None,
+        address_pk_sig: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.amount = amount
@@ -2055,6 +2082,10 @@ class TxOutputType(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+        self.label = label
+        self.label_sig = label_sig
+        self.label_pk = label_pk
+        self.address_pk_sig = address_pk_sig
 
 
 class PaymentRequestMemo(protobuf.MessageType):
@@ -6734,6 +6765,83 @@ class NEMCosignatoryModification(protobuf.MessageType):
     ) -> None:
         self.type = type
         self.public_key = public_key
+
+
+class NostrGetPubkey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2001
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.show_display = show_display
+
+
+class NostrPubkey(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2002
+    FIELDS = {
+        1: protobuf.Field("pubkey", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        pubkey: "bytes",
+    ) -> None:
+        self.pubkey = pubkey
+
+
+class NostrSignEvent(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2003
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("created_at", "uint32", repeated=False, required=False, default=None),
+        3: protobuf.Field("kind", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("tags", "string", repeated=True, required=False, default=None),
+        5: protobuf.Field("content", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        address_n: Optional[Sequence["int"]] = None,
+        tags: Optional[Sequence["str"]] = None,
+        created_at: Optional["int"] = None,
+        kind: Optional["int"] = None,
+        content: Optional["str"] = None,
+    ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.tags: Sequence["str"] = tags if tags is not None else []
+        self.created_at = created_at
+        self.kind = kind
+        self.content = content
+
+
+class NostrEventSignature(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2004
+    FIELDS = {
+        1: protobuf.Field("pubkey", "bytes", repeated=False, required=True),
+        2: protobuf.Field("id", "bytes", repeated=False, required=True),
+        3: protobuf.Field("signature", "bytes", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        pubkey: "bytes",
+        id: "bytes",
+        signature: "bytes",
+    ) -> None:
+        self.pubkey = pubkey
+        self.id = id
+        self.signature = signature
 
 
 class RippleGetAddress(protobuf.MessageType):

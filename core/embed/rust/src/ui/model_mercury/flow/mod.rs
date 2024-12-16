@@ -3,6 +3,7 @@ pub mod confirm_action;
 pub mod confirm_fido;
 pub mod confirm_firmware_update;
 pub mod confirm_output;
+pub mod confirm_output_contact;
 pub mod confirm_reset;
 pub mod confirm_set_new_pin;
 pub mod confirm_summary;
@@ -25,6 +26,7 @@ pub use confirm_action::{
 pub use confirm_fido::new_confirm_fido;
 pub use confirm_firmware_update::new_confirm_firmware_update;
 pub use confirm_output::new_confirm_output;
+pub use confirm_output_contact::new_confirm_output_contact;
 pub use confirm_reset::new_confirm_reset;
 pub use confirm_set_new_pin::SetNewPin;
 pub use confirm_summary::new_confirm_summary;

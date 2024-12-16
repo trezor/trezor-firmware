@@ -727,6 +727,9 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/solana/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Solana*.py'))
 
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nostr/*.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nostr/*/*.py'))
+
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/stellar/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Stellar*.py'))

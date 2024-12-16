@@ -148,6 +148,47 @@ def confirm_multisig_different_paths_warning() -> Awaitable[None]:
     )
 
 
+async def confirm_new_contact(
+    label: str,
+    contact_id: str,
+    path: str | None = None,
+    account: str | None = None,
+    chunkify: bool = True,
+) -> None:
+    info_items = []
+    if path:
+        info_items.append(("Path", path))
+    if account:
+        info_items.append(("Account", account))
+    subtitle = "New contact"
+
+    await confirm_value(
+        title="npub",
+        subtitle=subtitle,
+        value=contact_id,
+        # description="NPub",
+        description="",
+        br_name="confirm_new_contact",
+        value_text_mono=True,
+        info_items=info_items or None,
+        info_title=TR.buttons__more_info,
+        verb=TR.buttons__confirm,
+        chunkify=chunkify,
+    )
+    await confirm_value(
+        title="Label",
+        subtitle=subtitle,
+        value=label,
+        description="",
+        br_name="confirm_new_contact",
+        value_text_mono=False,
+        info_items=info_items or None,
+        info_title=TR.buttons__more_info,
+        hold=True,
+        chunkify=False,
+    )
+
+
 def confirm_homescreen(
     image: bytes,
 ) -> Awaitable[None]:
@@ -234,11 +275,12 @@ async def show_address(
         )
         return result
 
-    title_success = (
-        TR.address__public_key_confirmed
-        if title in ("XPUB", TR.address__public_key)
-        else TR.address__confirmed
-    )
+    if title in ("XPUB", TR.address__public_key):
+        title_success="address__public_key_confirmed"
+    elif title in ("npub", ):
+        title_success = "npub confirmed"
+    else:
+        title_success = TR.address__confirmed
 
     await raise_if_not_confirmed(
         trezorui2.flow_get_address(
@@ -375,6 +417,7 @@ async def confirm_output(
     source_account: str | None = None,
     source_account_path: str | None = None,
     cancel_text: str | None = None,
+    contact_label: str | None = None,
 ) -> None:
     if address_label is not None:
         title = address_label
@@ -385,29 +428,42 @@ async def confirm_output(
     else:
         title = TR.send__title_sending_to
 
-    await raise_if_not_confirmed(
-        trezorui2.flow_confirm_output(
-            title=TR.words__address,
-            subtitle=title,
-            message=address,
-            amount=amount,
-            chunkify=chunkify,
-            text_mono=True,
-            account=source_account,
-            account_path=source_account_path,
-            address=None,
-            address_title=None,
-            br_code=br_code,
-            br_name="confirm_output",
-            summary_items=None,
-            fee_items=None,
-            summary_title=None,
-            summary_br_name=None,
-            summary_br_code=None,
-            cancel_text=cancel_text,
-        ),
-        br_name=None,
-    )
+    if contact_label:
+        await raise_if_not_confirmed(
+            trezorui2.flow_confirm_output_contact(
+                title="Contact",
+                subtitle=title,
+                contact_label=contact_label,
+                address=address,
+                amount=amount,
+                chunkify=chunkify,
+            ),
+            br_name=None,
+        )
+    else:
+        await raise_if_not_confirmed(
+            trezorui2.flow_confirm_output(
+                title=TR.words__address,
+                subtitle=title,
+                message=address,
+                amount=amount,
+                chunkify=chunkify,
+                text_mono=True,
+                account=source_account,
+                account_path=source_account_path,
+                address=None,
+                address_title=None,
+                br_code=br_code,
+                br_name="confirm_output",
+                summary_items=None,
+                fee_items=None,
+                summary_title=None,
+                summary_br_name=None,
+                summary_br_code=None,
+                cancel_text=cancel_text,
+            ),
+            br_name=None,
+        )
 
 
 async def should_show_payment_request_details(

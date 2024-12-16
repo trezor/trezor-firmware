@@ -415,6 +415,12 @@ apps.misc.get_firmware_hash
 import apps.misc.get_firmware_hash
 apps.misc.sign_identity
 import apps.misc.sign_identity
+apps.nostr
+import apps.nostr
+apps.nostr.get_pubkey
+import apps.nostr.get_pubkey
+apps.nostr.sign_event
+import apps.nostr.sign_event
 apps.workflow_handlers
 import apps.workflow_handlers
 

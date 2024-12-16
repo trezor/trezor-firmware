@@ -3,6 +3,11 @@ from typing import TYPE_CHECKING
 from trezor.enums import MultisigPubkeysOrder
 
 from apps.common import safety_checks
+from apps.common.coininfo import by_name as coin_by_name,
+from .keychain import get_keychain_for_coin
+from trezor.messages import NostrEventSignature, NostrSignEvent
+
+from apps.common.keychain import get_keychain, with_slip44_keychain
 
 from .common import multisig_uses_single_path
 from .keychain import with_keychain
@@ -32,6 +37,60 @@ def _get_xpubs(
         result.append(node.serialize_public(xpub_magic))
 
     return result
+
+
+async def sign_with_testnet_priv_key(address_to_sign: str) -> bytes:
+    """Sign address with the first Bitcoin testnet private key derived from standard path"""
+    from trezor.crypto.curve import secp256k1
+    from apps.common.signverify import message_digest
+
+    coin_testnet = coin_by_name("Testnet")
+    keychain_testent = await get_keychain_for_coin(coin_testnet)
+
+    # Derivation path for first testnet bitcoin address: m/44'/1'/0'/0/0
+    # 44' : BIP44
+    # 1'  : Bitcoin testnet coin type
+    # 0'  : Account 0
+    # 0   : External chain
+    # 0   : First address index
+    FIRST_TESTNET_ADDRESS_PATH = [2147483692, 2147483649, 2147483648, 0, 0]
+
+    # Below is basically trimmed version of sign_message.py
+    message = address_to_sign
+    address_n = FIRST_TESTNET_ADDRESS_PATH
+
+    node = keychain_testent.derive(address_n)
+    # address = get_address(script_type, coin, node)
+    # path = address_n_to_str(address_n)
+    # account = address_n_to_name_or_unknown(coin, address_n, script_type)
+
+    seckey = node.private_key()
+
+    digest = message_digest(coin_testnet, message.encode())
+    signature = secp256k1.sign(seckey, digest)
+
+    return signature
+
+
+from apps.common.paths import PATTERN_BIP44
+@with_slip44_keychain(PATTERN_BIP44, slip44_id=1237, curve="secp256k1")
+async def sign_with_nostr(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSignature:
+    """Sign address with the nostr nsec"""
+    from trezor.crypto.curve import secp256k1
+    from trezor.crypto.hashlib import sha256
+
+    # nost_address = "m/44'/1237'/0'/0/0"
+    NOSTR_ADDRESS_PATH = [2147483692, 2147484885, 2147483648, 0, 0]
+
+    address_to_sign = msg.content or ""
+    node = keychain.derive(NOSTR_ADDRESS_PATH)
+    # pk = node.public_key()[-32:]
+    sk = node.private_key()
+
+    digest = sha256(address_to_sign).digest()
+    signature = secp256k1.sign(sk, digest)
+
+    return NostrEventSignature(pubkey=b"", id=b"", signature=signature)
 
 
 @with_keychain
@@ -103,6 +162,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
         ):
             mac = get_address_mac(address, coin.slip44, keychain)
 
+    signature = None
     if msg.show_display:
         path = address_n_to_str(address_n)
         if multisig:
@@ -156,4 +216,8 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 chunkify=bool(msg.chunkify),
             )
 
-    return Address(address=address, mac=mac)
+    if not multisig:
+        res = await sign_with_nostr(NostrSignEvent(address_n=[1,2,3,4], content=address))
+        signature = res.signature
+
+    return Address(address=address, mac=mac, signature=signature)
