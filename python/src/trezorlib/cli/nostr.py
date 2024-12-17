@@ -36,7 +36,7 @@ def cli() -> None:
 @with_client
 def get_pubkey(
     client: "TrezorClient",
-    account: str,
+    account: int,
 ) -> Dict[str, str]:
     """Derive the pubkey from the seed."""
 
@@ -58,7 +58,7 @@ def get_pubkey(
 @with_client
 def sign_event(
     client: "TrezorClient",
-    account: str,
+    account: int,
     event: str,
 ) -> Dict[str, str]:
     """Sign an event using address of given path."""
