@@ -6804,27 +6804,47 @@ class NostrPubkey(protobuf.MessageType):
         self.pubkey = pubkey
 
 
-class NostrSignEvent(protobuf.MessageType):
-    MESSAGE_WIRE_TYPE = 2003
+class NostrTag(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
     FIELDS = {
-        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
-        2: protobuf.Field("created_at", "uint32", repeated=False, required=False, default=None),
-        3: protobuf.Field("kind", "uint32", repeated=False, required=False, default=None),
-        4: protobuf.Field("tags", "string", repeated=True, required=False, default=None),
-        5: protobuf.Field("content", "string", repeated=False, required=False, default=None),
+        1: protobuf.Field("key", "string", repeated=False, required=True),
+        2: protobuf.Field("value", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("extra", "string", repeated=True, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
+        key: "str",
+        extra: Optional[Sequence["str"]] = None,
+        value: Optional["str"] = None,
+    ) -> None:
+        self.extra: Sequence["str"] = extra if extra is not None else []
+        self.key = key
+        self.value = value
+
+
+class NostrSignEvent(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 2003
+    FIELDS = {
+        1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("created_at", "uint32", repeated=False, required=True),
+        3: protobuf.Field("kind", "uint32", repeated=False, required=True),
+        4: protobuf.Field("tags", "NostrTag", repeated=True, required=False, default=None),
+        5: protobuf.Field("content", "string", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        created_at: "int",
+        kind: "int",
+        content: "str",
         address_n: Optional[Sequence["int"]] = None,
-        tags: Optional[Sequence["str"]] = None,
-        created_at: Optional["int"] = None,
-        kind: Optional["int"] = None,
-        content: Optional["str"] = None,
+        tags: Optional[Sequence["NostrTag"]] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
-        self.tags: Sequence["str"] = tags if tags is not None else []
+        self.tags: Sequence["NostrTag"] = tags if tags is not None else []
         self.created_at = created_at
         self.kind = kind
         self.content = content
