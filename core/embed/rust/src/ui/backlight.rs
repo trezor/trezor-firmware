@@ -3,7 +3,7 @@ use crate::{
     micropython::{
         ffi, macros::obj_type, obj::Obj, qstr::Qstr, simple_type::SimpleTypeObj, typ::Type, util,
     },
-    ui::{ui_features::ModelUI, UIFeaturesCommon},
+    ui::{CommonUI, ModelUI},
 };
 
 /*

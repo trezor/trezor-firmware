@@ -4,4 +4,4 @@ pub mod common_c;
 pub mod bootloader_c;
 
 #[cfg(feature = "micropython")]
-pub mod firmware_upy;
+pub mod firmware_micropython;

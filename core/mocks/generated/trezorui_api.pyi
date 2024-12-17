@@ -3,7 +3,7 @@ from trezor import utils
 T = TypeVar("T")
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 class LayoutObj(Generic[T]):
     """Representation of a Rust-based layout object.
     see `trezor::ui::layout::obj::LayoutObj`.
@@ -61,7 +61,7 @@ class LayoutObj(Generic[T]):
         """Calls drop on contents of the root component."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 class UiResult:
     """Result of a UI operation."""
     pass
@@ -70,17 +70,17 @@ CANCELLED: UiResult
 INFO: UiResult
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def check_homescreen_format(data: bytes) -> bool:
     """Check homescreen format and dimensions."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def disable_animation(disable: bool) -> None:
     """Disable animations, debug builds only."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_action(
     *,
     title: str,
@@ -98,7 +98,7 @@ def confirm_action(
     """Confirm action."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_address(
     *,
     title: str,
@@ -111,7 +111,7 @@ def confirm_address(
     """Confirm address."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_blob(
     *,
     title: str,
@@ -133,7 +133,7 @@ def confirm_blob(
     """Confirm byte sequence data."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_blob_intro(
     *,
     title: str,
@@ -148,7 +148,7 @@ def confirm_blob_intro(
     which can then be confirmed using confirm_blob."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_coinjoin(
     *,
     max_rounds: str,
@@ -157,7 +157,7 @@ def confirm_coinjoin(
     """Confirm coinjoin authorization."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_emphasized(
     *,
     title: str,
@@ -168,7 +168,7 @@ def confirm_emphasized(
     the first component is a bool indicating whether this part is emphasized."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_fido(
     *,
     title: str,
@@ -181,7 +181,7 @@ def confirm_fido(
     """
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_firmware_update(
     *,
     description: str,
@@ -190,7 +190,7 @@ def confirm_firmware_update(
     """Ask whether to update firmware, optionally show fingerprint."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_homescreen(
     *,
     title: str,
@@ -199,7 +199,7 @@ def confirm_homescreen(
     """Confirm homescreen."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_modify_fee(
     *,
     title: str,
@@ -211,7 +211,7 @@ def confirm_modify_fee(
     """Decrease or increase transaction fee."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_modify_output(
     *,
     sign: int,
@@ -221,7 +221,7 @@ def confirm_modify_output(
     """Decrease or increase output amount."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_more(
     *,
     title: str,
@@ -233,7 +233,7 @@ def confirm_more(
     Meant to be used with confirm_with_info on model TT and TR."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_properties(
     *,
     title: str,
@@ -244,12 +244,12 @@ def confirm_properties(
     the value is to be rendered as binary with monospace font, False otherwise."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_reset_device(recovery: bool) -> LayoutObj[UiResult]:
     """Confirm TOS before creating wallet creation or wallet recovery."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_summary(
     *,
     amount: str,
@@ -265,7 +265,7 @@ def confirm_summary(
     """Confirm summary of a transaction."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_value(
     *,
     title: str,
@@ -283,7 +283,7 @@ def confirm_value(
     """Confirm value. Merge of confirm_total and confirm_output."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_with_info(
     *,
     title: str,
@@ -297,7 +297,7 @@ def confirm_with_info(
     context menu."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def continue_recovery_homepage(
     *,
     text: str,
@@ -310,7 +310,7 @@ def continue_recovery_homepage(
     """Device recovery homescreen."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def flow_confirm_output(
     *,
     title: str | None,
@@ -335,7 +335,7 @@ def flow_confirm_output(
     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def flow_confirm_set_new_pin(
     *,
     title: str,
@@ -344,7 +344,7 @@ def flow_confirm_set_new_pin(
     """Confirm new PIN setup with an option to cancel action."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def flow_get_address(
     *,
     address: str | bytes,
@@ -364,7 +364,7 @@ def flow_get_address(
     """Get address / receive funds."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def multiple_pages_texts(
     *,
     title: str,
@@ -374,12 +374,12 @@ def multiple_pages_texts(
     """Show multiple texts, each on its own page. TR specific."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def prompt_backup() -> LayoutObj[UiResult]:
     """Strongly recommend user to do a backup."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def request_bip39(
     *,
     prompt: str,
@@ -389,7 +389,7 @@ def request_bip39(
     """BIP39 word input keyboard."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def request_slip39(
     *,
     prompt: str,
@@ -399,7 +399,7 @@ def request_slip39(
     """SLIP39 word input keyboard."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def request_number(
     *,
     title: str,
@@ -413,7 +413,7 @@ def request_number(
     description."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def request_pin(
     *,
     prompt: str,
@@ -424,7 +424,7 @@ def request_pin(
     """Request pin on device."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def request_passphrase(
     *,
     prompt: str,
@@ -433,7 +433,7 @@ def request_passphrase(
     """Passphrase input keyboard."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def select_word(
     *,
     title: str,
@@ -444,7 +444,7 @@ def select_word(
     iterable must be of exact size. Returns index in range `0..3`."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def select_word_count(
     *,
     recovery_type: RecoveryType,
@@ -453,12 +453,12 @@ def select_word_count(
     For unlocking a repeated backup, select from 20 or 33."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def set_brightness(*, current: int | None = None) -> LayoutObj[UiResult]:
     """Show the brightness configuration dialog."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_address_details(
     *,
     qr_title: str,
@@ -472,7 +472,7 @@ def show_address_details(
     """Show address details - QR code, account, path, cosigner xpubs."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_checklist(
     *,
     title: str,
@@ -484,7 +484,7 @@ def show_checklist(
     mark next to them. Limited to 3 items."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_danger(
     *,
     title: str,
@@ -495,7 +495,7 @@ def show_danger(
     """Warning modal that makes it easier to cancel than to continue."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_error(
     *,
     title: str,
@@ -507,7 +507,7 @@ def show_error(
     """Error modal. No buttons shown when `button` is empty string."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_group_share_success(
     *,
     lines: Iterable[str],
@@ -515,7 +515,7 @@ def show_group_share_success(
     """Shown after successfully finishing a group."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_homescreen(
     *,
     label: str | None,
@@ -527,7 +527,7 @@ def show_homescreen(
     """Idle homescreen."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_info(
     *,
     title: str,
@@ -538,7 +538,7 @@ def show_info(
     """Info screen."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_info_with_cancel(
     *,
     title: str,
@@ -549,7 +549,7 @@ def show_info_with_cancel(
     """Show metadata for outgoing transaction."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_lockscreen(
     *,
     label: str | None,
@@ -560,12 +560,12 @@ def show_lockscreen(
     """Homescreen for locked device."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_mismatch(*, title: str) -> LayoutObj[UiResult]:
     """Warning of receiving address mismatch."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_progress(
     *,
     description: str,
@@ -577,7 +577,7 @@ def show_progress(
     make sure the initial description has at least that amount of lines."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_progress_coinjoin(
     *,
     title: str,
@@ -589,7 +589,7 @@ def show_progress_coinjoin(
     time_ms timeout is passed."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_remaining_shares(
     *,
     pages: Iterable[tuple[str, str]],
@@ -597,7 +597,7 @@ def show_remaining_shares(
     """Shows SLIP39 state after info button is pressed on `confirm_recovery`."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_share_words(
     *,
     words: Iterable[str],
@@ -606,7 +606,7 @@ def show_share_words(
     """Show mnemonic for backup."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_share_words_mercury(
     *,
     words: Iterable[str],
@@ -619,7 +619,7 @@ def show_share_words_mercury(
     confirmation screen."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_simple(
     *,
     text: str,
@@ -629,7 +629,7 @@ def show_simple(
     """Simple dialog with text. TT: optional button."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_success(
     *,
     title: str,
@@ -641,12 +641,12 @@ def show_success(
     """Success modal. No buttons shown when `button` is empty string."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_wait_text(message: str, /) -> LayoutObj[None]:
     """Show single-line text in the middle of the screen."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def show_warning(
     *,
     title: str,
@@ -659,12 +659,12 @@ def show_warning(
     """Warning modal. TT: No buttons shown when `button` is empty string. TR: middle button and centered text."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 def tutorial() -> LayoutObj[UiResult]:
     """Show user how to interact with the device."""
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 class BacklightLevels:
     """Backlight levels. Values dynamically update based on user settings."""
     MAX: ClassVar[int]
@@ -674,7 +674,7 @@ class BacklightLevels:
     NONE: ClassVar[int]
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 class AttachType:
     INITIAL: ClassVar[int]
     RESUME: ClassVar[int]
@@ -684,7 +684,7 @@ class AttachType:
     SWIPE_RIGHT: ClassVar[int]
 
 
-# rust/src/ui/api/firmware_upy.rs
+# rust/src/ui/api/firmware_micropython.rs
 class LayoutState:
     """Layout state."""
     INITIAL: "ClassVar[LayoutState]"

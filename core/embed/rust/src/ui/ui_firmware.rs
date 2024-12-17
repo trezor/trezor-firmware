@@ -15,7 +15,7 @@ pub const MAX_CHECKLIST_ITEMS: usize = 3;
 pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
 pub const MAX_GROUP_SHARE_LINES: usize = 4;
 
-pub trait UIFeaturesFirmware {
+pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(
         title: TString<'static>,

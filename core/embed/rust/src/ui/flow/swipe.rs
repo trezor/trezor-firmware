@@ -16,9 +16,8 @@ use crate::{
         geometry::{Direction, Rect},
         layout::base::{Layout, LayoutState},
         shape::{render_on_display, ConcreteRenderer, Renderer, ScopedRenderer},
-        ui_features::ModelUI,
         util::animation_disabled,
-        UIFeaturesCommon,
+        CommonUI, ModelUI,
     },
 };
 

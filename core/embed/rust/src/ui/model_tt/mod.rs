@@ -1,4 +1,4 @@
-use super::{geometry::Rect, UIFeaturesCommon};
+use super::{geometry::Rect, CommonUI};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -9,21 +9,21 @@ pub mod theme;
 #[cfg(feature = "backlight")]
 use crate::ui::model_tt::theme::backlight;
 
-pub mod cshape;
 #[cfg(feature = "micropython")]
-pub mod layout;
+pub mod component_msg_obj;
+pub mod cshape;
 
 use crate::ui::{
     layout::simplified::show,
     model_tt::component::{ErrorScreen, WelcomeScreen},
 };
 
-pub struct ModelTTFeatures;
+pub struct UIModelTT;
 
 #[cfg(feature = "micropython")]
-pub mod ui_features_fw;
+pub mod ui_firmware;
 
-impl UIFeaturesCommon for ModelTTFeatures {
+impl CommonUI for UIModelTT {
     #[cfg(feature = "backlight")]
     fn fadein() {
         crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);

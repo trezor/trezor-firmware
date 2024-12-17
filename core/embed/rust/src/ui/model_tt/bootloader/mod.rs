@@ -26,10 +26,10 @@ use super::{
         },
         FG,
     },
-    ModelTTFeatures,
+    UIModelTT,
 };
 
-use crate::ui::{ui_features::UIFeaturesBootloader, UIFeaturesCommon};
+use crate::ui::{ui_bootloader::BootloaderUI, CommonUI};
 
 use crate::ui::{
     display::toif::Toif,
@@ -56,9 +56,9 @@ pub type BootloaderString = String<128>;
 
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 
-const SCREEN: Rect = ModelTTFeatures::SCREEN;
+const SCREEN: Rect = UIModelTT::SCREEN;
 
-impl ModelTTFeatures {
+impl UIModelTT {
     fn screen_progress(
         text: &str,
         progress: u16,
@@ -133,7 +133,7 @@ impl ModelTTFeatures {
     }
 }
 
-impl UIFeaturesBootloader for ModelTTFeatures {
+impl BootloaderUI for UIModelTT {
     fn screen_welcome() {
         let mut frame = Welcome::new();
         show(&mut frame, true);

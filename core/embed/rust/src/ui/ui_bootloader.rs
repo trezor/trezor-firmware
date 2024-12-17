@@ -1,38 +1,8 @@
-use crate::ui::geometry::Rect;
-
 #[cfg(feature = "bootloader")]
 use crate::trezorhal::secbool::secbool;
 
-pub trait UIFeaturesCommon {
-    fn fadein() {}
-    fn fadeout() {}
-    fn backlight_on() {}
-
-    fn get_backlight_none() -> u8 {
-        0
-    }
-    fn get_backlight_normal() -> u8 {
-        0
-    }
-    fn get_backlight_low() -> u8 {
-        0
-    }
-    fn get_backlight_dim() -> u8 {
-        0
-    }
-    fn get_backlight_max() -> u8 {
-        0
-    }
-
-    const SCREEN: Rect;
-
-    fn screen_fatal_error(title: &str, msg: &str, footer: &str);
-
-    fn screen_boot_stage_2();
-}
-
 #[cfg(feature = "bootloader")]
-pub trait UIFeaturesBootloader {
+pub trait BootloaderUI {
     fn screen_welcome();
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool);
@@ -79,16 +49,3 @@ pub trait UIFeaturesBootloader {
         wait: i32,
     );
 }
-
-#[cfg(all(
-    feature = "model_mercury",
-    not(feature = "model_tr"),
-    not(feature = "model_tt")
-))]
-pub type ModelUI = crate::ui::model_mercury::ModelMercuryFeatures;
-
-#[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
-pub type ModelUI = crate::ui::model_tr::ModelTRFeatures;
-
-#[cfg(feature = "model_tt")]
-pub type ModelUI = crate::ui::model_tt::ModelTTFeatures;
