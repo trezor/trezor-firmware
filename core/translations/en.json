@@ -499,6 +499,7 @@
     "nem__under_namespace": "under namespace",
     "nem__unencrypted": "Unencrypted",
     "nem__unknown_mosaic": "Unknown mosaic!",
+    "nostr__event_kind_template": "Event kind: {0}",
     "passphrase__access_wallet": "Access passphrase wallet?",
     "passphrase__always_on_device": "Always enter your passphrase on Trezor?",
     "passphrase__continue_with_empty_passphrase": "Continue with empty passphrase?",

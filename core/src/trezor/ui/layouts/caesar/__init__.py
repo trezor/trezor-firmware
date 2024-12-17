@@ -771,16 +771,16 @@ async def confirm_value(
     else:
         info_items_list = list(info_items)
         if len(info_items_list) > 1:
+            # TODO: Support more than one info item!
             raise NotImplementedError("Only one info item is supported")
 
         send_button_request = True
         while True:
             result = await interact(
-                trezorui_api.confirm_with_info(
+                trezorui_api.confirm_with_info(  # type: ignore [Argument missing for parameter "info_button"]
                     title=title,
                     items=((ui.NORMAL, value),),
                     button=verb or TR.buttons__confirm,
-                    info_button=TR.buttons__info,
                 ),
                 br_name if send_button_request else None,
                 br_code,

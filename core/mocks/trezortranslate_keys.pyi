@@ -497,6 +497,7 @@ class TR:
     nem__under_namespace: str = "under namespace"
     nem__unencrypted: str = "Unencrypted"
     nem__unknown_mosaic: str = "Unknown mosaic!"
+    nostr__event_kind_template: str = "Event kind: {0}"
     passphrase__access_wallet: str = "Access passphrase wallet?"
     passphrase__always_on_device: str = "Always enter your passphrase on Trezor?"
     passphrase__continue_with_empty_passphrase: str = "Continue with empty passphrase?"
