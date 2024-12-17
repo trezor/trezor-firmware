@@ -1402,6 +1402,8 @@ pub enum TranslatedString {
     solana__stake_on_question = 989,  // "Stake SOL on {0}?"
     sign_message__confirm_without_review = 990,  // "Confirm without review"
     instructions__tap_to_continue = 991,  // "Tap to continue"
+    #[cfg(feature = "universal_fw")]
+    nostr__event_kind_template = 992,  // "Event kind: {0}"
 }
 
 impl TranslatedString {
@@ -2800,6 +2802,8 @@ impl TranslatedString {
             Self::solana__stake_on_question => "Stake SOL on {0}?",
             Self::sign_message__confirm_without_review => "Confirm without review",
             Self::instructions__tap_to_continue => "Tap to continue",
+            #[cfg(feature = "universal_fw")]
+            Self::nostr__event_kind_template => "Event kind: {0}",
         }
     }
 
@@ -4197,6 +4201,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_solana__stake_on_question => Some(Self::solana__stake_on_question),
             Qstr::MP_QSTR_sign_message__confirm_without_review => Some(Self::sign_message__confirm_without_review),
             Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_nostr__event_kind_template => Some(Self::nostr__event_kind_template),
             _ => None,
         }
     }
