@@ -12,9 +12,11 @@ if TYPE_CHECKING:
 async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSignature:
     from ubinascii import hexlify
 
+    from trezor import TR
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
     from trezor.messages import NostrEventSignature
+    from trezor.ui.layouts import confirm_value
 
     address_n = msg.address_n
     created_at = msg.created_at
@@ -26,6 +28,18 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     pk = node.public_key()[-32:]
     sk = node.private_key()
 
+    title = TR.nostr__event_kind_template.format(kind)
+
+    # confirm_value on TR only accepts one single info item
+    # which is why we concatenate all of them here.
+    # This is not great, but it gets the job done for now.
+    tags_str = f"created_at: {created_at}"
+    for t in tags:
+        tags_str += f"\n\n{t[0]}: " + (f" {' '.join(t[1:])}" if len(t) > 1 else "")
+
+    await confirm_value(
+        title, content, "", "nostr_sign_event", info_items=[("", tags_str)]
+    )
     serialized_tags = ",".join(
         ["[" + ",".join(f'"{t}"' for t in tag) + "]" for tag in tags]
     )
