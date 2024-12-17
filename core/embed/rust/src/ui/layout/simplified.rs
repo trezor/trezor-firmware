@@ -8,9 +8,7 @@ use crate::ui::event::ButtonEvent;
 use crate::ui::event::TouchEvent;
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    display,
-    ui_features::ModelUI,
-    UIFeaturesCommon,
+    display, CommonUI, ModelUI,
 };
 
 use num_traits::ToPrimitive;

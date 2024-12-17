@@ -30,10 +30,10 @@ use crate::{
             component::{ButtonActions, ButtonLayout, Page},
             constant,
         },
-        ui_features::ModelUI,
-        ui_features_fw::{
-            UIFeaturesFirmware, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+        ui_firmware::{
+            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
         },
+        ModelUI,
     },
 };
 
@@ -43,12 +43,12 @@ use super::{
         FlowPages, Frame, Homescreen, Lockscreen, NumberInput, PassphraseEntry, PinEntry, Progress,
         ScrollableFrame, ShareWords, ShowMore, SimpleChoice, WordlistEntry, WordlistType,
     },
-    theme, ModelTRFeatures,
+    theme, UIModelTR,
 };
 
 use heapless::Vec;
 
-impl UIFeaturesFirmware for ModelTRFeatures {
+impl FirmwareUI for UIModelTR {
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,

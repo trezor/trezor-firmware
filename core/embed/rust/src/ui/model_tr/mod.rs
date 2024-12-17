@@ -1,22 +1,22 @@
-use super::{geometry::Rect, UIFeaturesCommon};
+use super::{geometry::Rect, CommonUI};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
 pub mod common_messages;
 pub mod component;
+#[cfg(feature = "micropython")]
+pub mod component_msg_obj;
 pub mod constant;
 pub mod cshape;
-#[cfg(feature = "micropython")]
-pub mod layout;
 mod screens;
 pub mod theme;
 
-pub struct ModelTRFeatures {}
+pub struct UIModelTR {}
 
 #[cfg(feature = "micropython")]
-pub mod ui_features_fw;
+pub mod ui_firmware;
 
-impl UIFeaturesCommon for ModelTRFeatures {
+impl CommonUI for UIModelTR {
     const SCREEN: Rect = constant::SCREEN;
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str) {

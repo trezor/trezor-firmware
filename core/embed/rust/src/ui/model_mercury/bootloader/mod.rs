@@ -26,10 +26,10 @@ use super::{
         },
         GREEN_LIGHT, GREY,
     },
-    ModelMercuryFeatures,
+    UIMercury,
 };
 
-use crate::ui::{ui_features::UIFeaturesBootloader, UIFeaturesCommon};
+use crate::ui::{ui_bootloader::BootloaderUI, CommonUI};
 
 use crate::ui::{
     display::{toif::Toif, LOADER_MAX},
@@ -53,10 +53,10 @@ pub type BootloaderString = String<128>;
 
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 
-const SCREEN: Rect = ModelMercuryFeatures::SCREEN;
+const SCREEN: Rect = UIMercury::SCREEN;
 const PROGRESS_TEXT_ORIGIN: Point = Point::new(2, 28);
 
-impl ModelMercuryFeatures {
+impl UIMercury {
     fn screen_progress(
         text: &str,
         progress: u16,
@@ -122,7 +122,7 @@ impl ModelMercuryFeatures {
     }
 }
 
-impl UIFeaturesBootloader for ModelMercuryFeatures {
+impl BootloaderUI for UIMercury {
     fn screen_welcome() {
         let mut frame = Welcome::new();
         show(&mut frame, true);

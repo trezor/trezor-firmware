@@ -25,10 +25,10 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{PropsList, RecoveryType},
         },
-        ui_features::ModelUI,
-        ui_features_fw::{
-            UIFeaturesFirmware, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+        ui_firmware::{
+            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
         },
+        ModelUI,
     },
 };
 
@@ -42,10 +42,10 @@ use super::{
         self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
         ConfirmActionStrings, ConfirmBlobParams, ShowInfoParams,
     },
-    theme, ModelMercuryFeatures,
+    theme, UIMercury,
 };
 
-impl UIFeaturesFirmware for ModelMercuryFeatures {
+impl FirmwareUI for UIMercury {
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,

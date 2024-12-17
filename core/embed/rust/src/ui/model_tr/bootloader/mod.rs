@@ -21,7 +21,7 @@ use super::{
         bootloader::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS},
         ICON_ARM_LEFT, ICON_ARM_RIGHT, TEXT_BOLD, TEXT_NORMAL,
     },
-    ModelTRFeatures,
+    UIModelTR,
 };
 
 use crate::ui::{
@@ -34,7 +34,7 @@ mod intro;
 mod menu;
 mod welcome;
 
-use crate::ui::ui_features::UIFeaturesBootloader;
+use crate::ui::ui_bootloader::BootloaderUI;
 use intro::Intro;
 use menu::Menu;
 use welcome::Welcome;
@@ -47,7 +47,7 @@ impl ReturnToC for ConfirmMsg {
     }
 }
 
-impl ModelTRFeatures {
+impl UIModelTR {
     fn screen_progress(
         text: &str,
         text2: &str,
@@ -92,7 +92,7 @@ impl ModelTRFeatures {
     }
 }
 
-impl UIFeaturesBootloader for ModelTRFeatures {
+impl BootloaderUI for UIModelTR {
     fn screen_welcome() {
         let mut frame = Welcome::new();
         show(&mut frame, true);

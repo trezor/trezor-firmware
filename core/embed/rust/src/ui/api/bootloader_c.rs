@@ -2,8 +2,9 @@ use crate::{
     strutil::hexlify,
     trezorhal::secbool::secbool,
     ui::{
-        ui_features::{ModelUI, UIFeaturesBootloader},
+        ui_bootloader::BootloaderUI,
         util::{from_c_array, from_c_str},
+        ModelUI,
     },
 };
 

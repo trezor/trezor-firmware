@@ -1,4 +1,4 @@
-use super::{geometry::Rect, UIFeaturesCommon};
+use super::{geometry::Rect, CommonUI};
 use crate::ui::model_mercury::theme::backlight;
 
 #[cfg(feature = "bootloader")]
@@ -7,18 +7,18 @@ pub mod component;
 pub mod constant;
 pub mod theme;
 
+#[cfg(feature = "micropython")]
+pub mod component_msg_obj;
 pub mod cshape;
 #[cfg(feature = "micropython")]
 pub mod flow;
-#[cfg(feature = "micropython")]
-pub mod layout;
 pub mod screens;
 #[cfg(feature = "micropython")]
-pub mod ui_features_fw;
+pub mod ui_firmware;
 
-pub struct ModelMercuryFeatures;
+pub struct UIMercury;
 
-impl UIFeaturesCommon for ModelMercuryFeatures {
+impl CommonUI for UIMercury {
     #[cfg(feature = "backlight")]
     fn fadein() {
         crate::ui::display::fade_backlight_duration(backlight::get_backlight_normal(), 150);

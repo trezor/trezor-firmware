@@ -25,10 +25,10 @@ use crate::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmBlob, PropsList, RecoveryType},
         },
-        ui_features::ModelUI,
-        ui_features_fw::{
-            UIFeaturesFirmware, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+        ui_firmware::{
+            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
         },
+        ModelUI,
     },
 };
 
@@ -40,10 +40,10 @@ use super::{
         PassphraseKeyboard, PinKeyboard, Progress, SelectWordCount, SetBrightnessDialog,
         ShareWords, SimplePage, Slip39Input,
     },
-    theme, ModelTTFeatures,
+    theme, UIModelTT,
 };
 
-impl UIFeaturesFirmware for ModelTTFeatures {
+impl FirmwareUI for UIModelTT {
     fn confirm_action(
         title: TString<'static>,
         action: Option<TString<'static>>,

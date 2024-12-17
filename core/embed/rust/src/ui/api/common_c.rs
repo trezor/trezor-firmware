@@ -1,7 +1,7 @@
 //! Reexporting the `screens` module according to the
 //! current feature (Trezor model)
 
-use crate::ui::ui_features::{ModelUI, UIFeaturesCommon};
+use crate::ui::{CommonUI, ModelUI};
 
 use crate::ui::shape;
 
