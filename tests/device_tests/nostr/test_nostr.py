@@ -69,7 +69,20 @@ def _test_get_pubkey(client, expected_pk):
 def _test_sign_event(client, expected_pk):
     created_at = int(time.time())
     kind = 1
-    tags = []
+    tags = [
+        [
+            "e",
+            "5c83da77af1dec6d7289834998ad7aafbd9e2191396d75ec3cc27f5a77226f36",
+            "wss://nostr.example.com",
+        ],
+        ["p", "f7234bd4c1394dda46d09f35bd384dd30cc552ad5541990f98844fb06676e9ca"],
+        [
+            "a",
+            "30023:f7234bd4c1394dda46d09f35bd384dd30cc552ad5541990f98844fb06676e9ca:abcd",
+            "wss://nostr.example.com",
+        ],
+        ["alt", "reply"],
+    ]
     content = "Hello, world!"
 
     response = nostr.sign_event(

@@ -51,7 +51,7 @@ def sign_event(
             address_n=n,
             created_at=event_json["created_at"],
             kind=event_json["kind"],
-            tags=event_json["tags"],
+            tags=[messages.NostrTag(t[0], t[1] if len(t) > 1 else None, t[2:]) for t in event_json["tags"]],
             content=event_json["content"],
         )
     )

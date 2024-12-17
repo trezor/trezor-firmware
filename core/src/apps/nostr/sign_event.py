@@ -19,16 +19,17 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     address_n = msg.address_n
     created_at = msg.created_at
     kind = msg.kind
-    tags = msg.tags
+    tags = [[t.key] + ([t.value] if t.value else []) + t.extra for t in msg.tags]
     content = msg.content
 
     node = keychain.derive(address_n)
     pk = node.public_key()[-32:]
     sk = node.private_key()
 
-    serialized_event = (
-        f'[0,"{hexlify(pk).decode()}",{created_at},{kind},{tags},"{content}"]'
+    serialized_tags = ",".join(
+        ["[" + ",".join(f'"{t}"' for t in tag) + "]" for tag in tags]
     )
+    serialized_event = f'[0,"{hexlify(pk).decode()}",{created_at},{kind},[{serialized_tags}],"{content}"]'
     event_id = sha256(serialized_event).digest()
     signature = secp256k1.sign(sk, event_id)[-64:]
 

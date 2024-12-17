@@ -5242,21 +5242,39 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["NostrPubkey"]:
             return isinstance(msg, cls)
 
-    class NostrSignEvent(protobuf.MessageType):
-        address_n: "list[int]"
-        created_at: "int | None"
-        kind: "int | None"
-        tags: "list[str]"
-        content: "str | None"
+    class NostrTag(protobuf.MessageType):
+        key: "str"
+        value: "str | None"
+        extra: "list[str]"
 
         def __init__(
             self,
             *,
+            key: "str",
+            extra: "list[str] | None" = None,
+            value: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["NostrTag"]:
+            return isinstance(msg, cls)
+
+    class NostrSignEvent(protobuf.MessageType):
+        address_n: "list[int]"
+        created_at: "int"
+        kind: "int"
+        tags: "list[NostrTag]"
+        content: "str"
+
+        def __init__(
+            self,
+            *,
+            created_at: "int",
+            kind: "int",
+            content: "str",
             address_n: "list[int] | None" = None,
-            tags: "list[str] | None" = None,
-            created_at: "int | None" = None,
-            kind: "int | None" = None,
-            content: "str | None" = None,
+            tags: "list[NostrTag] | None" = None,
         ) -> None:
             pass
 
