@@ -6744,14 +6744,17 @@ class NostrGetPubkey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2001
     FIELDS = {
         1: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        2: protobuf.Field("show_display", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address_n: Optional[Sequence["int"]] = None,
+        show_display: Optional["bool"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
+        self.show_display = show_display
 
 
 class NostrPubkey(protobuf.MessageType):

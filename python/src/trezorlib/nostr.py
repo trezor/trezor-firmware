@@ -31,10 +31,12 @@ if TYPE_CHECKING:
 def get_pubkey(
     client: "TrezorClient",
     n: "Address",
+    show_display: bool = False,
 ) -> "MessageType":
     return client.call(
         messages.NostrGetPubkey(
             address_n=n,
+            show_display=show_display,
         )
     )
 

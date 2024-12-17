@@ -5184,11 +5184,13 @@ if TYPE_CHECKING:
 
     class NostrGetPubkey(protobuf.MessageType):
         address_n: "list[int]"
+        show_display: "bool | None"
 
         def __init__(
             self,
             *,
             address_n: "list[int] | None" = None,
+            show_display: "bool | None" = None,
         ) -> None:
             pass
 
