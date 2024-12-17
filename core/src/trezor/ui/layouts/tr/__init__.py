@@ -741,9 +741,6 @@ async def confirm_value(
 ) -> None:
     """General confirmation dialog, used by many other confirm_* functions."""
 
-    if not verb and not hold:
-        raise ValueError("Either verb or hold=True must be set")
-
     if info_items is None:
         return await raise_if_not_confirmed(
             trezorui_api.confirm_value(  # type: ignore [Argument missing for parameter "subtitle"]
@@ -761,16 +758,16 @@ async def confirm_value(
     else:
         info_items_list = list(info_items)
         if len(info_items_list) > 1:
+            # TODO: Support more than one info item!
             raise NotImplementedError("Only one info item is supported")
 
         send_button_request = True
         while True:
             result = await interact(
-                trezorui_api.confirm_with_info(
+                trezorui_api.confirm_with_info(  # type: ignore [Argument missing for parameter "info_button"]
                     title=title,
                     items=((ui.NORMAL, value),),
                     button=verb or TR.buttons__confirm,
-                    info_button=TR.buttons__info,
                 ),
                 br_name if send_button_request else None,
                 br_code,
