@@ -339,6 +339,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_modify_fee__transaction_fee;
   MP_QSTR_more_info_callback;
   MP_QSTR_multiple_pages_texts;
+  MP_QSTR_nostr__event_kind_template;
   MP_QSTR_notification;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;

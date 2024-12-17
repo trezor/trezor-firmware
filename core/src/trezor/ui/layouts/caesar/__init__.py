@@ -792,6 +792,7 @@ async def confirm_value(
     else:
         info_items_list = list(info_items)
         if len(info_items_list) > 1:
+            # TODO: Support more than one info item!
             raise NotImplementedError("Only one info item is supported")
 
         send_button_request = True
