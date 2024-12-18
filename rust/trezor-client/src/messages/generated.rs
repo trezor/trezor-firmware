@@ -82,10 +82,6 @@ trezor_message_impl! {
     DebugLinkWatchLayout => MessageType_DebugLinkWatchLayout,
     DebugLinkResetDebugEvents => MessageType_DebugLinkResetDebugEvents,
     DebugLinkOptigaSetSecMax => MessageType_DebugLinkOptigaSetSecMax,
-    NostrGetPubkey => MessageType_NostrGetPubkey,
-    NostrPubkey => MessageType_NostrPubkey,
-    NostrSignEvent => MessageType_NostrSignEvent,
-    NostrEventSignature => MessageType_NostrEventSignature,
     BenchmarkListNames => MessageType_BenchmarkListNames,
     BenchmarkNames => MessageType_BenchmarkNames,
     BenchmarkRun => MessageType_BenchmarkRun,
@@ -239,6 +235,14 @@ trezor_message_impl! {
     NEMSignedTx => MessageType_NEMSignedTx,
     NEMDecryptMessage => MessageType_NEMDecryptMessage,
     NEMDecryptedMessage => MessageType_NEMDecryptedMessage,
+}
+
+#[cfg(feature = "nostr")]
+trezor_message_impl! {
+    NostrGetPubkey => MessageType_NostrGetPubkey,
+    NostrPubkey => MessageType_NostrPubkey,
+    NostrSignEvent => MessageType_NostrSignEvent,
+    NostrEventSignature => MessageType_NostrEventSignature,
 }
 
 #[cfg(feature = "ripple")]
