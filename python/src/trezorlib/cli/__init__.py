@@ -262,17 +262,23 @@ def with_session(
         def function_with_session(
             obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
         ) -> "R":
-            if management:
-                session = obj.get_management_session()
-            else:
-                # TODO try (sys.exit ve finally)
-                session = obj.get_session(
-                    derive_cardano=derive_cardano,
-                    empty_passphrase=empty_passphrase,
-                    must_resume=must_resume,
-                )
             try:
+                if management:
+                    session = obj.get_management_session()
+                else:
+                    # TODO try (sys.exit ve finally)
+                    session = obj.get_session(
+                        derive_cardano=derive_cardano,
+                        empty_passphrase=empty_passphrase,
+                        must_resume=must_resume,
+                    )
+
                 return func(session, *args, **kwargs)
+            except exceptions.DeviceLockedException:
+                click.echo(
+                    "Device is locked, enter a pin on the device.",
+                    err=True,
+                )
             finally:
                 pass
                 # TODO try end session if not resumed

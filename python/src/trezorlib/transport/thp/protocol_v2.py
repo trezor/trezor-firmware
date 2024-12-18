@@ -173,7 +173,13 @@ class ProtocolV2(ProtocolAndChannel):
         header, payload = self._read_until_valid_crc_check()
         self._send_ack_0()
 
+        if header.ctrl_byte == 0x42:
+            if payload == b"\x05":
+                raise exceptions.DeviceLockedException()
+
         if not header.is_handshake_init_response():
+            LOG.debug("Received message is not a valid handshake init response message")
+
             click.echo(
                 "Received message is not a valid handshake init response message",
                 err=True,
