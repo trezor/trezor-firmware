@@ -111,8 +111,19 @@ def flow_confirm_set_new_pin(
     *,
     title: str,
     description: str,
+    cancel_title: str,
 ) -> LayoutObj[UiResult]:
     """Confirm new PIN setup with an option to cancel action."""
+
+
+# rust/src/ui/model_mercury/layout.rs
+def flow_confirm_set_new_wipe_code(
+    *,
+    title: str,
+    description: str,
+    cancel_title: str,
+) -> LayoutObj[UiResult]:
+    """Confirm new wipe code setup with an option to cancel action."""
 
 
 # rust/src/ui/model_mercury/layout.rs

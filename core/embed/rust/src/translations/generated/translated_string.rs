@@ -741,7 +741,7 @@ pub enum TranslatedString {
     pin__enter = 453,  // "Enter PIN"
     pin__enter_new = 454,  // "Enter new PIN"
     pin__entered_not_valid = 455,  // "The PIN you have entered is not valid."
-    pin__info = 456,  // "PIN will be required to access this device."
+    pin__info = 456,  // "The PIN will be required to access this device."
     pin__invalid_pin = 457,  // "Invalid PIN"
     pin__last_attempt = 458,  // "Last attempt"
     pin__mismatch = 459,  // "Entered PINs do not match!"
@@ -751,7 +751,7 @@ pub enum TranslatedString {
     pin__reenter_to_confirm = 463,  // "Please re-enter PIN to confirm."
     pin__should_be_long = 464,  // "PIN should be 4-50 digits long."
     pin__title_check_pin = 465,  // "Check PIN"
-    pin__title_settings = 466,  // "PIN settings"
+    pin__title_settings = 466,  // "PIN"
     pin__title_wrong_pin = 467,  // "Wrong PIN"
     pin__tries_left = 468,  // "tries left"
     pin__turn_off = 469,  // "Are you sure you want to turn off PIN protection?"
@@ -1161,8 +1161,8 @@ pub enum TranslatedString {
     wipe_code__change = 774,  // "Change wipe code?"
     wipe_code__changed = 775,  // "Wipe code changed."
     wipe_code__diff_from_pin = 776,  // "The wipe code must be different from your PIN."
-    wipe_code__disabled = 777,  // "Wipe code disabled."
-    wipe_code__enabled = 778,  // "Wipe code enabled."
+    wipe_code__disabled = 777,  // "Wipe code protection turned off."
+    wipe_code__enabled = 778,  // "Wipe code protection turned on."
     wipe_code__enter_new = 779,  // "Enter new wipe code"
     wipe_code__info = 780,  // "Wipe code can be used to erase all data from this device."
     wipe_code__invalid = 781,  // "Invalid wipe code"
@@ -1171,7 +1171,7 @@ pub enum TranslatedString {
     wipe_code__reenter_to_confirm = 784,  // "Please re-enter wipe code to confirm."
     wipe_code__title_check = 785,  // "Check wipe code"
     wipe_code__title_invalid = 786,  // "Invalid wipe code"
-    wipe_code__title_settings = 787,  // "Wipe code settings"
+    wipe_code__title_settings = 787,  // "Wipe code"
     wipe_code__turn_off = 788,  // "Turn off wipe code protection?"
     wipe_code__turn_on = 789,  // "Turn on wipe code protection?"
     wipe_code__wipe_code_mismatch = 790,  // "Wipe code mismatch"
@@ -2117,7 +2117,7 @@ impl TranslatedString {
             Self::pin__enter => "Enter PIN",
             Self::pin__enter_new => "Enter new PIN",
             Self::pin__entered_not_valid => "The PIN you have entered is not valid.",
-            Self::pin__info => "PIN will be required to access this device.",
+            Self::pin__info => "The PIN will be required to access this device.",
             Self::pin__invalid_pin => "Invalid PIN",
             Self::pin__last_attempt => "Last attempt",
             Self::pin__mismatch => "Entered PINs do not match!",
@@ -2127,7 +2127,7 @@ impl TranslatedString {
             Self::pin__reenter_to_confirm => "Please re-enter PIN to confirm.",
             Self::pin__should_be_long => "PIN should be 4-50 digits long.",
             Self::pin__title_check_pin => "Check PIN",
-            Self::pin__title_settings => "PIN settings",
+            Self::pin__title_settings => "PIN",
             Self::pin__title_wrong_pin => "Wrong PIN",
             Self::pin__tries_left => "tries left",
             Self::pin__turn_off => "Are you sure you want to turn off PIN protection?",
@@ -2537,8 +2537,8 @@ impl TranslatedString {
             Self::wipe_code__change => "Change wipe code?",
             Self::wipe_code__changed => "Wipe code changed.",
             Self::wipe_code__diff_from_pin => "The wipe code must be different from your PIN.",
-            Self::wipe_code__disabled => "Wipe code disabled.",
-            Self::wipe_code__enabled => "Wipe code enabled.",
+            Self::wipe_code__disabled => "Wipe code protection turned off.",
+            Self::wipe_code__enabled => "Wipe code protection turned on.",
             Self::wipe_code__enter_new => "Enter new wipe code",
             Self::wipe_code__info => "Wipe code can be used to erase all data from this device.",
             Self::wipe_code__invalid => "Invalid wipe code",
@@ -2547,7 +2547,7 @@ impl TranslatedString {
             Self::wipe_code__reenter_to_confirm => "Please re-enter wipe code to confirm.",
             Self::wipe_code__title_check => "Check wipe code",
             Self::wipe_code__title_invalid => "Invalid wipe code",
-            Self::wipe_code__title_settings => "Wipe code settings",
+            Self::wipe_code__title_settings => "Wipe code",
             Self::wipe_code__turn_off => "Turn off wipe code protection?",
             Self::wipe_code__turn_on => "Turn on wipe code protection?",
             Self::wipe_code__wipe_code_mismatch => "Wipe code mismatch",

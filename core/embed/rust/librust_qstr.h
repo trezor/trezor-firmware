@@ -173,6 +173,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
   MP_QSTR_cancel_text;
+  MP_QSTR_cancel_title;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
@@ -250,6 +251,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_reset;
   MP_QSTR_flow_confirm_set_new_pin;
+  MP_QSTR_flow_confirm_set_new_wipe_code;
   MP_QSTR_flow_continue_recovery;
   MP_QSTR_flow_get_address;
   MP_QSTR_flow_prompt_backup;
