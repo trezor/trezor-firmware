@@ -7,8 +7,6 @@ option java_outer_classname = "TrezorMessageNostr";
 
 import "options.proto";
 
-option (include_in_bitcoin_only) = true;
-
 /**
  * Request: Ask the device for the Nostr public key
  * @start
