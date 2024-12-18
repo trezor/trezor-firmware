@@ -89,23 +89,21 @@ extern "C" fn new_confirm_action(n_args: usize, args: *const Obj, kwargs: *mut M
 extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
-        let description: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_description)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-        let extra: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_extra)
+        let address: Obj = kwargs.get(Qstr::MP_QSTR_address)?;
+        let address_label: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_address_label)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let verb: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
+        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
-        let layout = ModelUI::confirm_address(title, data, description, extra, verb, chunkify)?;
-        Ok(LayoutObj::new_root(layout)?.into())
+        let layout_obj =
+            ModelUI::confirm_address(title, address, address_label, verb, info_button, chunkify)?;
+        Ok(layout_obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1163,10 +1161,10 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def confirm_address(
     ///     *,
     ///     title: str,
-    ///     data: str | bytes,
-    ///     description: str | None,
-    ///     extra: str | None,
+    ///     address: str | bytes,
+    ///     address_label: str | None = None,
     ///     verb: str | None = None,
+    ///     info_button: bool = False,
     ///     chunkify: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm address."""

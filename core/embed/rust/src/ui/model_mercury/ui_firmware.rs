@@ -75,16 +75,14 @@ impl FirmwareUI for UIMercury {
 
     fn confirm_address(
         _title: TString<'static>,
-        _data: Obj,
-        _description: Option<TString<'static>>,
-        _extra: Option<TString<'static>>,
+        _address: Obj,
+        _address_label: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
+        _info_button: bool,
         _chunkify: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    ) -> Result<Gc<LayoutObj>, Error> {
         // confirm_value is used instead
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"confirm_address not implemented",
-        ))
+        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_address not implemented"))
     }
 
     fn confirm_blob(

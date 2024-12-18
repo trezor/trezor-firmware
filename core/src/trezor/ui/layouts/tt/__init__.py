@@ -243,9 +243,9 @@ async def show_address(
         result = await interact(
             trezorui_api.confirm_address(
                 title=title,
-                data=address,
-                description=network or "",
-                extra=None,
+                address=address,
+                address_label=network or None,
+                info_button=True,
                 chunkify=chunkify,
             ),
             br_name if send_button_request else None,
@@ -427,13 +427,11 @@ async def confirm_output(
     while True:
         # if the user cancels here, raise ActionCancelled (by default)
         await interact(
-            trezorui_api.confirm_value(
+            trezorui_api.confirm_address(
                 title=recipient_title,
-                subtitle=address_label,
-                description=None,
-                value=address,
+                address=address,
+                address_label=address_label,
                 verb=TR.buttons__continue,
-                hold=False,
                 info_button=False,
                 chunkify=chunkify,
             ),
@@ -1105,10 +1103,10 @@ async def confirm_signverify(
 
     address_layout = trezorui_api.confirm_address(
         title=address_title,
-        data=address,
-        description="",
+        address=address,
+        address_label=None,
         verb=TR.buttons__continue,
-        extra=None,
+        info_button=True,
         chunkify=chunkify,
     )
 

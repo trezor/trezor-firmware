@@ -87,41 +87,18 @@ impl FirmwareUI for UIModelTT {
 
     fn confirm_address(
         title: TString<'static>,
-        data: Obj,
-        description: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
+        address: Obj,
+        address_label: Option<TString<'static>>,
         verb: Option<TString<'static>>,
+        info_button: bool,
         chunkify: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    ) -> Result<Gc<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        let data_style = if chunkify {
-            let address: TString = data.try_into()?;
-            theme::get_chunkified_text_style(address.len())
-        } else {
-            &theme::TEXT_MONO
-        };
-
-        let paragraphs = ConfirmBlob {
-            description: description.unwrap_or("".into()),
-            extra: extra.unwrap_or("".into()),
-            data: data.try_into()?,
-            description_font: &theme::TEXT_NORMAL,
-            extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: data_style,
-        }
-        .into_paragraphs();
-
-        let layout = RootComponent::new(
-            Frame::left_aligned(
-                theme::label_title(),
-                title,
-                ButtonPage::new(paragraphs, theme::BG)
-                    .with_swipe_left()
-                    .with_cancel_confirm(None, Some(verb)),
-            )
-            .with_info_button(),
-        );
-        Ok(layout)
+        ConfirmBlobParams::new(title, address, None, Some(verb), None, false)
+            .with_subtitle(address_label)
+            .with_info_button(info_button)
+            .with_chunkify(chunkify)
+            .into_layout()
     }
 
     fn confirm_blob(
