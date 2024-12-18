@@ -537,7 +537,6 @@ class TR:
     pin__should_be_long: str = "PIN should be 4-50 digits long."
     pin__title_check_pin: str = "Check PIN"
     pin__title_settings: str = "PIN"
-    pin__title_setup: str = "Set PIN"
     pin__title_wrong_pin: str = "Wrong PIN"
     pin__tries_left: str = "tries left"
     pin__turn_off: str = "Are you sure you want to turn off PIN protection?"

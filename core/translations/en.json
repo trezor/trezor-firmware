@@ -539,7 +539,6 @@
     "pin__should_be_long": "PIN should be 4-50 digits long.",
     "pin__title_check_pin": "Check PIN",
     "pin__title_settings": "PIN",
-    "pin__title_setup": "Set PIN",
     "pin__title_wrong_pin": "Wrong PIN",
     "pin__tries_left": "tries left",
     "pin__turn_off": "Are you sure you want to turn off PIN protection?",
