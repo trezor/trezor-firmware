@@ -18,11 +18,15 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     from trezor.messages import NostrEventSignature
     from trezor.ui.layouts import confirm_value
 
+    from apps.common import paths
+
     address_n = msg.address_n
     created_at = msg.created_at
     kind = msg.kind
     tags = [[t.key] + ([t.value] if t.value else []) + t.extra for t in msg.tags]
     content = msg.content
+
+    await paths.validate_path(keychain, address_n)
 
     node = keychain.derive(address_n)
     pk = node.public_key()[-32:]
