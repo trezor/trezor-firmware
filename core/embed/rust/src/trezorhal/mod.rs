@@ -1,4 +1,6 @@
 pub mod bip39;
+#[cfg(feature = "ble")]
+pub mod ble;
 #[macro_use]
 #[allow(unused_macros)]
 pub mod fatal_error;

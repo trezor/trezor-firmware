@@ -32,6 +32,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/util/flash/inc",
         "embed/util/fwutils/inc",
         "embed/util/option_bytes/inc",
+        "embed/util/tsqueue/inc",
         "embed/util/unit_properties/inc",
         "vendor/stm32u5xx_hal_driver/Inc",
         "vendor/cmsis_device_u5/Include",
@@ -106,6 +107,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/util/flash/stm32u5/flash_otp.c",
         "embed/util/fwutils/fwutils.c",
         "embed/util/option_bytes/stm32u5/option_bytes.c",
+        "embed/util/tsqueue/tsqueue.c",
         "embed/util/unit_properties/stm32/unit_properties.c",
     ]
 
