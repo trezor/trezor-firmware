@@ -3,6 +3,7 @@ from micropython import const
 
 from storage.cache_thp import SESSION_ID_LENGTH
 from trezor import protobuf, utils
+from trezor.wire.errors import WireBufferError
 from trezor.wire.message_handler import get_msg_type
 
 from . import ThpError
@@ -48,7 +49,7 @@ def get_existing_write_buffer(channel_id: int) -> memoryview:
 def _get_new_buffer(buffer_type: int, channel_id: int, length: int) -> memoryview:
     if is_locked():
         if not is_owner(channel_id):
-            raise BufferError
+            raise WireBufferError
         update_lock_time()
     else:
         update_lock(channel_id)
@@ -80,19 +81,19 @@ def _get_new_buffer(buffer_type: int, channel_id: int, length: int) -> memoryvie
 
 def _get_existing_buffer(buffer_type: int, channel_id: int) -> memoryview:
     if not is_owner(channel_id):
-        raise BufferError
+        raise WireBufferError
     update_lock_time()
 
     if buffer_type == _READ:
         global READ_BUFFER_SLICE
         if READ_BUFFER_SLICE is None:
-            raise BufferError
+            raise WireBufferError
         return READ_BUFFER_SLICE
 
     if buffer_type == _WRITE:
         global WRITE_BUFFER_SLICE
         if WRITE_BUFFER_SLICE is None:
-            raise BufferError
+            raise WireBufferError
         return WRITE_BUFFER_SLICE
 
     raise Exception("Invalid buffer_type")
