@@ -15,7 +15,7 @@ from storage.cache_thp import (
     update_channel_last_used,
     update_session_last_used,
 )
-from trezor import log, loop, protobuf, utils
+from trezor import config, log, loop, protobuf, utils
 from trezor.enums import FailureType
 from trezor.messages import Failure
 from trezor.wire.thp import memory_manager
@@ -35,6 +35,7 @@ from . import (
     ThpErrorType,
     ThpInvalidDataError,
     ThpUnallocatedSessionError,
+    ThpDeviceLockedError,
 )
 from . import alternating_bit_protocol as ABP
 from . import (
@@ -139,6 +140,9 @@ async def handle_received_message(
     except ThpInvalidDataError:
         await ctx.write_error(ThpErrorType.INVALID_DATA)
         ctx.clear()
+    except ThpDeviceLockedError:
+        await ctx.write_error(ThpErrorType.DEVICE_LOCKED)
+
     if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "handle_received_message - end")
 
@@ -226,6 +230,9 @@ async def _handle_state_TH1(
     if not payload_length == PUBKEY_LENGTH + CHECKSUM_LENGTH:
         raise ThpError("Message received is not a valid handshake init request!")
 
+    if not config.is_unlocked():
+        raise ThpDeviceLockedError
+
     ctx.handshake = Handshake()
 
     buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
@@ -271,6 +278,9 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
         raise ThpError("Message received is not a handshake completion request!")
     if ctx.handshake is None:
         raise Exception("Handshake object is not prepared. Retry handshake.")
+
+    if not config.is_unlocked():
+        raise ThpDeviceLockedError
 
     buffer = memory_manager.get_existing_read_buffer(ctx.get_channel_id_int())
     # if buffer is BufferError:

@@ -44,6 +44,10 @@ class ThpInvalidDataError(ThpError):
     pass
 
 
+class ThpDeviceLockedError(ThpError):
+    pass
+
+
 class ThpUnallocatedSessionError(ThpError):
 
     def __init__(self, session_id: int) -> None:
@@ -55,6 +59,7 @@ class ThpErrorType(IntEnum):
     UNALLOCATED_CHANNEL = 2
     DECRYPTION_FAILED = 3
     INVALID_DATA = 4
+    DEVICE_LOCKED = 5
 
 
 class ChannelState(IntEnum):
