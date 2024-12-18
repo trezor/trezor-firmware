@@ -63,6 +63,9 @@ DA_51_ADDRESS = DA_50_ADDRESS
 assert len(DA_51) == 51
 assert DA_51_ADDRESS == DA_50_ADDRESS
 
+# pending + entered character is shown for 1 + 1 seconds, so the delay must be grater
+DELAY_S = 2.1
+
 
 @contextmanager
 def prepare_passphrase_dialogue(
@@ -143,6 +146,11 @@ def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     coords = buttons.pin_passphrase_grid(11)
     debug.click(coords)
+
+
+def show_passphrase(debug: "DebugLink") -> None:
+    """See the passphrase"""
+    debug.click(buttons.TOP_ROW)
 
 
 def delete_char(debug: "DebugLink") -> None:
@@ -295,4 +303,17 @@ def test_cycle_through_last_character(
     with prepare_passphrase_dialogue(device_handler) as debug:
         passphrase = DA_49 + "i"  # for i we need to cycle through "ghi" three times
         input_passphrase(debug, passphrase)
+        enter_passphrase(debug)
+
+
+@pytest.mark.setup_client(passphrase=True)
+def test_last_char_timeout(device_handler: "BackgroundDeviceHandler"):
+    with prepare_passphrase_dialogue(device_handler) as debug:
+        for character in CommonPass.MULTI_CATEGORY:
+            # insert a character
+            input_passphrase(debug, character)
+            # wait until the last character is hidden
+            time.sleep(DELAY_S)
+        # show the entire passphrase
+        show_passphrase(debug)
         enter_passphrase(debug)
