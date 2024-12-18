@@ -26,6 +26,8 @@ from trezorlib import nostr
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
+pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]
+
 # test data from NIP-06: https://github.com/nostr-protocol/nips/blob/master/06.md
 
 LEAD_MONKEY_MNEMONIC = (
