@@ -26,6 +26,9 @@ message NostrPubkey {
     required bytes pubkey = 1;      // pubkey derived from the seed
 }
 
+/**
+ * @embed
+ */
 message NostrTag {
     // Nostr tags consist of at least one string (the key)
     // followed by an arbitrary number of strings,
