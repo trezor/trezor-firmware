@@ -15,7 +15,3 @@ manifest:
       repo-path: sdk-nrf
       revision: v2.7.0
       import: true
-    - name: mcuboot
-      url: https://github.com/hiviah/mcuboot
-      path: bootloader/mcuboot
-      revision: edfe1e1465dbc698bf9a195816247913490ab391
