@@ -58,7 +58,7 @@ typedef struct {
   tsqueue_t data_queue;
 
   uint8_t send_buffer[NRF_MAX_TX_DATA_SIZE];
-  tsqueue_entry_t send_queue_entries[DATA_QUEUE_LEN];
+  tsqueue_entry_t send_queue_entries[SEND_QUEUE_LEN];
   tsqueue_t send_queue;
 
   uint16_t ping_cntr;
@@ -244,12 +244,12 @@ static void ble_loop(void *context) {
   }
 
   if (nrf_is_running()) {
-    if (!drv->status_valid) {
+    if (drv->ping_cntr == 0) {
       ble_send_state_request();
     }
 
-    if (drv->ping_cntr++ > (PING_PERIOD / LOOP_PERIOD_MS)) {
-      ble_send_state_request();
+    drv->ping_cntr++;
+    if (drv->ping_cntr >= PING_PERIOD / LOOP_PERIOD_MS) {
       drv->ping_cntr = 0;
     }
 

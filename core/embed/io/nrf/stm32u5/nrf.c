@@ -25,6 +25,7 @@
 #include <io/nrf.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/systick.h>
 #include <util/tsqueue.h>
 
 #include "../crc8.h"
@@ -117,6 +118,30 @@ static void nrf_start(void) {
   nrf_signal_running();
 }
 
+static void nrf_abort_urt_comm(nrf_driver_t *drv) {
+  HAL_UART_AbortReceive(&drv->urt);
+  HAL_UART_AbortTransmit(&drv->urt);
+
+  if (drv->urt_sending.callback != NULL) {
+    drv->urt_sending.callback(NRF_STATUS_ERROR, drv->urt_sending.context);
+  }
+
+  drv->urt_rx_idx = 0;
+  drv->urt_rx_len = 0;
+  drv->urt_tx_msg_id = -1;
+  drv->urt_tx_running = false;
+
+  while (tsqueue_dequeue(&drv->urt_tx_queue, (uint8_t *)&drv->urt_sending,
+                         sizeof(nrf_uart_tx_data_t), NULL,
+                         &drv->urt_tx_msg_id)) {
+    drv->urt_sending.callback(NRF_STATUS_ERROR, drv->urt_sending.context);
+  }
+
+  memset(&drv->urt_sending, 0, sizeof(nrf_uart_tx_data_t));
+
+  tsqueue_reset(&drv->urt_tx_queue);
+}
+
 static void nrf_stop(void) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
@@ -127,8 +152,7 @@ static void nrf_stop(void) {
   irq_key_t key = irq_lock();
   drv->comm_running = false;
   HAL_SPI_DMAStop(&drv->spi);
-  // todo notify listeners
-  tsqueue_reset(&drv->urt_tx_queue);
+  nrf_abort_urt_comm(drv);
   irq_unlock(key);
 }
 
@@ -154,41 +178,41 @@ void nrf_init(void) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
   // synchronization signals
-  NRF_RESET_CLK_ENA();
-  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_SET);
+  NRF_OUT_RESET_CLK_ENA();
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_PULLDOWN;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = NRF_RESET_PIN;
-  HAL_GPIO_Init(NRF_RESET_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_OUT_RESET_PIN;
+  HAL_GPIO_Init(NRF_OUT_RESET_PORT, &GPIO_InitStructure);
 
-  NRF_GPIO0_CLK_ENA();
+  NRF_IN_GPIO0_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_PULLDOWN;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = NRF_GPIO0_PIN;
-  HAL_GPIO_Init(NRF_GPIO0_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_IN_GPIO0_PIN;
+  HAL_GPIO_Init(NRF_IN_GPIO0_PORT, &GPIO_InitStructure);
 
-  NRF_GPIO1_CLK_ENA();
+  NRF_IN_FW_RUNNING_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_PULLDOWN;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = NRF_GPIO1_PIN;
-  HAL_GPIO_Init(NRF_GPIO1_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_IN_FW_RUNNING_PIN;
+  HAL_GPIO_Init(NRF_IN_FW_RUNNING_PORT, &GPIO_InitStructure);
 
-  NRF_GPIO2_CLK_ENA();
+  NRF_OUT_STAY_IN_BLD_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = NRF_GPIO2_PIN;
-  HAL_GPIO_Init(NRF_GPIO2_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_OUT_STAY_IN_BLD_PIN;
+  HAL_GPIO_Init(NRF_OUT_STAY_IN_BLD_PORT, &GPIO_InitStructure);
 
-  NRF_GPIO3_CLK_ENA();
+  NRF_OUT_FW_RUNNING_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = NRF_GPIO3_PIN;
-  HAL_GPIO_Init(NRF_GPIO3_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_OUT_FW_RUNNING_PIN;
+  HAL_GPIO_Init(NRF_OUT_FW_RUNNING_PORT, &GPIO_InitStructure);
 
   // UART PINS
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
@@ -539,15 +563,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
-    HAL_UART_AbortReceive(urt);
-    HAL_UART_AbortTransmit(urt);
-
-    // todo senders notify about error
-
-    tsqueue_reset(&drv->urt_tx_queue);
-
-    drv->urt_rx_idx = 0;
-    drv->urt_rx_len = 0;
+    nrf_abort_urt_comm(drv);
 
     HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
   }
@@ -559,6 +575,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
     if (drv->urt_tx_msg_id >= 0 && (drv->urt_sending.callback != NULL)) {
       drv->urt_sending.callback(NRF_STATUS_OK, drv->urt_sending.context);
       drv->urt_tx_msg_id = -1;
+      memset(&drv->urt_sending, 0, sizeof(nrf_uart_tx_data_t));
     }
 
     bool msg =
@@ -683,46 +700,41 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
 /// ---------------------------------------------------------
 
 bool nrf_reboot_to_bootloader(void) {
-  // uint32_t tick_start = 0;
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
 
-  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_SET);
-  // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-  //
-  // HAL_Delay(10);
-  // HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
-  //
-  // tick_start = HAL_GetTick();
-  //
-  // while (HAL_GPIO_ReadPin(GPIO_1_PORT, GPIO_1_PIN) == GPIO_PIN_RESET) {
-  //   if (HAL_GetTick() - tick_start > 4000) {
-  //     return false;
-  //   }
-  // }
+  HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
+                    GPIO_PIN_SET);
 
-  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_RESET);
+  systick_delay_ms(50);
 
-  HAL_Delay(1000);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
+
+  systick_delay_ms(1000);
 
   return true;
 }
 
 bool nrf_reboot(void) {
-  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_SET);
-  HAL_Delay(50);
-  HAL_GPIO_WritePin(NRF_RESET_PORT, NRF_RESET_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
+                    GPIO_PIN_RESET);
+  systick_delay_ms(50);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
   return true;
 }
 
 void nrf_signal_running(void) {
-  HAL_GPIO_WritePin(NRF_GPIO3_PORT, NRF_GPIO3_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NRF_OUT_FW_RUNNING_PORT, NRF_OUT_FW_RUNNING_PIN,
+                    GPIO_PIN_SET);
 }
 
 void nrf_signal_off(void) {
-  HAL_GPIO_WritePin(NRF_GPIO3_PORT, NRF_GPIO3_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(NRF_OUT_FW_RUNNING_PORT, NRF_OUT_FW_RUNNING_PIN,
+                    GPIO_PIN_RESET);
 }
 
 bool nrf_firmware_running(void) {
-  return HAL_GPIO_ReadPin(NRF_GPIO0_PORT, NRF_GPIO0_PIN) != 0;
+  return HAL_GPIO_ReadPin(NRF_IN_FW_RUNNING_PORT, NRF_IN_FW_RUNNING_PIN) != 0;
 }
 
 bool nrf_is_running(void) {
