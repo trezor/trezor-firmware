@@ -27,28 +27,24 @@
 	leds {
 		compatible = "gpio-leds";
 		led0: led_0 {
-			gpios = <&gpio0 12 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
 			label = "Green LED 0";
 		};
 		led1: led_1 {
-			gpios = <&gpio0 14 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
 			label = "Green LED 1";
-		};
-		out0: out_0 {
-			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
-			label = "FW Running";
 		};
 	};
 
 	buttons {
 		compatible = "gpio-keys";
 		button0: button_0 {
-			gpios = <&gpio0 27 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			gpios = <&gpio0 14 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
 			label = "Push button switch 0";
 			zephyr,code = <INPUT_KEY_0>;
 		};
 		trezor_ready: trezor_ready {
-			gpios = <&gpio0 29 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+			gpios = <&gpio0 29 ( GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
 			label = "Trezor ready";
 			zephyr,code = <INPUT_KEY_1>;
 		};
@@ -59,9 +55,8 @@
 		led0 = &led0;
 		led1 = &led1;
 		sw0 = &button0;
-		bootloader-led0 = &led0;
+		bootloader-botton0 = &button0;
 		mcuboot-button0 = &button0;
-		mcuboot-led0 = &led0;
 		watchdog0 = &wdt0;
 	};
 };
@@ -118,11 +113,7 @@
 		};
 		slot0_partition: partition@c000 {
 			label = "image-0";
-			reg = <0x0000C000 0x37000>;
-		};
-		slot1_partition: partition@43000 {
-			label = "image-1";
-			reg = <0x00043000 0x37000>;
+			reg = <0x0000C000 0x7A000>;
 		};
 		storage_partition: partition@7a000 {
 			label = "storage";
