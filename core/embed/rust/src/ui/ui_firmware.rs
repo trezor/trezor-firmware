@@ -33,12 +33,12 @@ pub trait FirmwareUI {
 
     fn confirm_address(
         title: TString<'static>,
-        data: Obj, // TODO: replace Obj
-        description: Option<TString<'static>>,
-        extra: Option<TString<'static>>,
+        address: Obj, // TODO: replace Obj
+        address_label: Option<TString<'static>>,
         verb: Option<TString<'static>>,
+        info_button: bool,
         chunkify: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error>;
+    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     #[allow(clippy::too_many_arguments)]
     fn confirm_blob(

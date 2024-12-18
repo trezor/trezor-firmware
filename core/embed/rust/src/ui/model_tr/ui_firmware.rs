@@ -89,34 +89,50 @@ impl FirmwareUI for UIModelTR {
 
     fn confirm_address(
         title: TString<'static>,
-        data: Obj,
-        _description: Option<TString<'static>>,
-        _extra: Option<TString<'static>>,
+        address: Obj,
+        address_label: Option<TString<'static>>,
         verb: Option<TString<'static>>,
+        info_button: bool,
         chunkify: bool,
-    ) -> Result<impl LayoutMaybeTrace, Error> {
+    ) -> Result<Gc<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        let address: TString = data.try_into()?;
+        let address: TString = address.try_into()?;
 
         let get_page = move |page_index| {
             assert!(page_index == 0);
-
-            let btn_layout = ButtonLayout::cancel_armed_info(verb);
-            let btn_actions = ButtonActions::cancel_confirm_info();
-            let style = if chunkify {
-                // Chunkifying the address into smaller pieces when requested
-                theme::TEXT_MONO_ADDRESS_CHUNKS
+            let (btn_layout, btn_actions) = if info_button {
+                (
+                    ButtonLayout::cancel_armed_info(verb),
+                    ButtonActions::cancel_confirm_info(),
+                )
             } else {
-                theme::TEXT_MONO_DATA
+                (
+                    ButtonLayout::cancel_none_text(verb),
+                    ButtonActions::cancel_none_confirm(),
+                )
             };
-            let ops = OpTextLayout::new(style).text_mono(address);
+            let mut ops = OpTextLayout::new(theme::TEXT_MONO_DATA);
+            if let Some(label) = address_label {
+                // NOTE: need to explicitly turn off the chunkification before rendering the
+                // address label (for some reason it does not help to turn it off after
+                // rendering the chunks)
+                if chunkify {
+                    ops = ops.chunkify_text(None);
+                }
+                ops = ops.text_normal(label).newline();
+            }
+            if chunkify {
+                // Chunkifying the address into smaller pieces when requested
+                ops = ops.chunkify_text(Some((theme::MONO_CHUNKS, 2)));
+            }
+            ops = ops.text_mono(address);
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted).with_title(title)
         };
         let pages = FlowPages::new(get_page, 1);
 
-        let layout = RootComponent::new(Flow::new(pages));
-        Ok(layout)
+        let obj = LayoutObj::new(Flow::new(pages))?;
+        Ok(obj)
     }
 
     fn confirm_blob(

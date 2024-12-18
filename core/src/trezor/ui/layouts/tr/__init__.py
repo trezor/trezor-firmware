@@ -257,9 +257,9 @@ async def show_address(
         result = await interact(
             trezorui_api.confirm_address(
                 title=title,
-                data=address,
-                description="",  # unused on TR
-                extra=None,  # unused on TR
+                address=address,
+                address_label=None,
+                info_button=True,
                 chunkify=chunkify,
             ),
             br_name if send_button_request else None,
@@ -485,13 +485,12 @@ async def confirm_output(
 
     while True:
         await interact(
-            trezorui_api.confirm_blob(
+            trezorui_api.confirm_address(
                 title=address_title,
-                data=address,
-                description=address_label or "",
-                subtitle=None,
+                address=address,
+                address_label=address_label or None,
                 verb=TR.buttons__continue,
-                verb_cancel="",
+                info_button=False,
                 chunkify=chunkify,
             ),
             "confirm_output",
@@ -500,9 +499,9 @@ async def confirm_output(
 
         try:
             await interact(
-                trezorui_api.confirm_blob(
+                trezorui_api.confirm_value(
                     title=amount_title,
-                    data=amount,
+                    value=amount,
                     description=None,
                     subtitle=None,
                     verb_cancel="^",

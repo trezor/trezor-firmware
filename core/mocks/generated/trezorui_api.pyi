@@ -102,10 +102,10 @@ def confirm_action(
 def confirm_address(
     *,
     title: str,
-    data: str | bytes,
-    description: str | None,
-    extra: str | None,
+    address: str | bytes,
+    address_label: str | None = None,
     verb: str | None = None,
+    info_button: bool = False,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm address."""

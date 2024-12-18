@@ -63,6 +63,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_details__derivation_path_colon;
   MP_QSTR_address_details__title_receive_address;
   MP_QSTR_address_details__title_receiving_to;
+  MP_QSTR_address_label;
   MP_QSTR_address_qr;
   MP_QSTR_address_title;
   MP_QSTR_allow_cancel;
