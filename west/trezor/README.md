@@ -61,7 +61,7 @@ west update
 Build the application for the t3w1_revA_nrf52832 board:
 ```sh
 cd trezor
-west build ./trezor-ble -b t3w1_revA_nrf52832
+west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild
 ```
 
 
