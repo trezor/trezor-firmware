@@ -26,6 +26,9 @@ if TYPE_CHECKING:
     from ..client import TrezorClient
 
 
+PATH_TEMPLATE = "m/44h/1237h/{}h/0/0"
+
+
 @click.group(name="nostr")
 def cli() -> None:
     pass
@@ -40,7 +43,7 @@ def get_pubkey(
 ) -> Dict[str, str]:
     """Derive the pubkey from the seed."""
 
-    address_n = tools.parse_path(f"m/44h/1237h/{account}h/0/0")
+    address_n = tools.parse_path(PATH_TEMPLATE.format(account))
 
     res = nostr.get_pubkey(
         client,
@@ -65,7 +68,7 @@ def sign_event(
 
     event_json = json.loads(event)
 
-    address_n = tools.parse_path(f"m/44h/1237h/{account}h/0/0")
+    address_n = tools.parse_path(PATH_TEMPLATE.format(account))
 
     res = nostr.sign_event(
         client,
