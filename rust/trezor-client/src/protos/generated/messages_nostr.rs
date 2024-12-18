@@ -1118,8 +1118,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     agR\x04tags\x12\x18\n\x07content\x18\x05\x20\x02(\tR\x07content\"[\n\x13\
     NostrEventSignature\x12\x16\n\x06pubkey\x18\x01\x20\x02(\x0cR\x06pubkey\
     \x12\x0e\n\x02id\x18\x02\x20\x02(\x0cR\x02id\x12\x1c\n\tsignature\x18\
-    \x03\x20\x02(\x0cR\tsignatureB=\n#com.satoshilabs.trezor.lib.protobufB\
-    \x12TrezorMessageNostr\x80\xa6\x1d\x01\
+    \x03\x20\x02(\x0cR\tsignatureB9\n#com.satoshilabs.trezor.lib.protobufB\
+    \x12TrezorMessageNostr\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
