@@ -1,0 +1,7 @@
+# Copyright (c) 2021 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+#
+# This Kconfig file is picked by the Zephyr build system because it is defined
+# as the module Kconfig entry point (see zephyr/module.yml). You can browse
+# module options by going to Zephyr -> Modules in Kconfig.
+
