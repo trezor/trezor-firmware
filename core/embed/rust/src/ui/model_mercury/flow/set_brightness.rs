@@ -64,17 +64,7 @@ impl FlowController for SetBrightness {
 
 static BRIGHTNESS: AtomicU8 = AtomicU8::new(0);
 
-pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
-    let brightness = brightness
-        .map(|value| {
-            // If brightness value is provided, set display brightness to that value
-            display::backlight(value as _);
-            BRIGHTNESS.store(value as u8, Ordering::Relaxed);
-            let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));
-            value
-        })
-        .unwrap_or_else(|| theme::backlight::get_backlight_normal() as _);
-
+pub fn new_set_brightness(brightness: u8) -> Result<SwipeFlow, Error> {
     let content_slider = Frame::left_aligned(
         TR::brightness__title.into(),
         NumberInputSliderDialog::new(
