@@ -95,6 +95,8 @@ class LayoutType(Enum):
             return cls.Eckhart
         if model in (models.T1B1,):
             return cls.T1
+        if model in (models.T3W1,):
+            return cls.Eckhart
         raise ValueError(f"Unknown model: {model}")
 
 
