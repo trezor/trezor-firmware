@@ -82,6 +82,7 @@ bool panel_init(display_driver_t *drv);
 
 #ifdef DISPLAY_GFXMMU
 bool display_gfxmmu_init(display_driver_t *drv);
+void display_gfxmmu_deinit(display_driver_t *drv);
 #endif
 
 #endif  // TREZOR_HAL_DISPLAY_INTERNAL_H
