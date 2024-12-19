@@ -54,7 +54,9 @@ void powerctl_suspend(void) {
 
   // Deinitialize all drivers that are not required in low-power mode
   // (e.g., USB, display, touch, haptic, etc.).
+#ifdef USE_USB
   usb_stop();
+#endif
 #ifdef USE_HAPTIC
   haptic_deinit();
 #endif
@@ -93,6 +95,10 @@ void powerctl_suspend(void) {
       // immediately after exiting STOP2 mode.
       irq_key_t irq_key = irq_lock();
 
+      // Enable PWR peripheral clock
+      // (required by the following HAL_PWREx_EnterSTOP2Mode)
+      __HAL_RCC_PWR_CLK_ENABLE();
+
       // Enter STOP2 mode
       HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
 
@@ -118,7 +124,9 @@ void powerctl_suspend(void) {
 #ifdef USE_HAPTIC
   haptic_init();
 #endif
+#ifdef USE_USB
   usb_start();
+#endif
 }
 
 #endif  // KERNEL_MODE

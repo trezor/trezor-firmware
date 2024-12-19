@@ -21,6 +21,10 @@ void optiga_hal_init(void) {
   // nothing to do
 }
 
+void optiga_hal_deinit(void) {
+  // nothing to do
+}
+
 void optiga_reset(void) {
   // nothing to do
 }
