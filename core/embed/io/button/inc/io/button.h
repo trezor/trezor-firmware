@@ -49,6 +49,9 @@ typedef enum {
 // Returns true in case of success, false otherwise
 bool button_init(void);
 
+// Deinitializes button driver
+void button_deinit(void);
+
 #endif  // KERNEL_MODE
 
 // Get the last button event
