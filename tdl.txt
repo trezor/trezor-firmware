@@ -1,0 +1,141 @@
+
+> Sharing:
+> - <file>/home/obrusvit/repos/trezor-firmware/core/embed/rust/src/ui/component/text/formatted.rs</file>
+> - <file>/home/obrusvit/repos/trezor-firmware/core/embed/rust/src/ui/component/text/op.rs</file>
+> - <file>/home/obrusvit/repos/trezor-firmware/core/embed/rust/src/ui/component/text/paragraphs.rs</file>
+> - <file>/home/obrusvit/repos/trezor-firmware/core/embed/rust/src/ui/component/text/common.rs</file>
+> - <file>/home/obrusvit/repos/trezor-firmware/core/embed/rust/src/ui/component/text/mod.rs</file>
+> - <file>/home/obrusvit/repos/trezor-firmware/core/embed/rust/src/ui/component/text/layout.rs</file>
+> - core/embed/rust/src/ui/layout_bolt/ui_firmware.rs
+
+use crate::ui::{
+    component::text::{
+        layout::{LayoutSink, TextLayout},
+        LineBreaking, TextStyle,
+    },
+    geometry::{Point, Rect},
+    shape::Renderer,
+};
+
+/// A specialized formatter that renders text directly through a LayoutSink
+pub struct TextFormatter<'s, S: LayoutSink> {
+    sink: &'s mut S,
+    cursor: Point,
+    layout: &'s TextLayout,
+}
+
+impl<'s, S: LayoutSink> TextFormatter<'s, S> {
+    pub fn new(sink: &'s mut S, cursor: Point, layout: &'s TextLayout) -> Self {
+        Self {
+            sink,
+            cursor,
+            layout,
+        }
+    }
+
+    /// Format and render a pattern string with arguments
+    pub fn format(&mut self, pattern: &str, args: &[&dyn FormatArg]) {
+        let mut arg_idx = 0;
+        let mut start = 0;
+
+        // Find placeholders {} and render text in between
+        while let Some(placeholder_start) = pattern[start..].find('{') {
+            let abs_start = start + placeholder_start;
+
+            // Render text before placeholder
+            if start < abs_start {
+                self.sink.text(self.cursor, self.layout, &pattern[start..abs_start]);
+                self.cursor.x += self.layout.style.text_font.text_width(&pattern[start..abs_start]);
+            }
+
+            // Check for proper placeholder
+            if pattern.get(abs_start + 1) == Some(&'}') {
+                // Found {} - render argument
+                if let Some(arg) = args.get(arg_idx) {
+                    arg.render(self.sink, self.cursor, self.layout);
+                    self.cursor.x += arg.width(self.layout.style.text_font);
+                }
+                arg_idx += 1;
+                start = abs_start + 2;
+            } else {
+                // Not a proper placeholder, render { and continue
+                self.sink.text(self.cursor, self.layout, "{");
+                self.cursor.x += self.layout.style.text_font.text_width("{");
+                start = abs_start + 1;
+            }
+        }
+
+        // Render remaining text after last placeholder
+        if start < pattern.len() {
+            self.sink.text(self.cursor, self.layout, &pattern[start..]);
+        }
+    }
+}
+
+/// Trait for formattable arguments
+pub trait FormatArg {
+    fn render<S: LayoutSink>(&self, sink: &mut S, cursor: Point, layout: &TextLayout);
+    fn width(&self, font: impl GlyphMetrics) -> i16;
+}
+
+// Implementations for common types
+impl FormatArg for i32 {
+    fn render<S: LayoutSink>(&self, sink: &mut S, cursor: Point, layout: &TextLayout) {
+        let text = self.to_string();
+        sink.text(cursor, layout, &text)
+    }
+
+    fn width(&self, font: impl GlyphMetrics) -> i16 {
+        font.text_width(&self.to_string())
+    }
+}
+
+impl FormatArg for &str {
+    fn render<S: LayoutSink>(&self, sink: &mut S, cursor: Point, layout: &TextLayout) {
+        sink.text(cursor, layout, self)
+    }
+
+    fn width(&self, font: impl GlyphMetrics) -> i16 {
+        font.text_width(self)
+    }
+}
+
+// Example usage in FormattedText:
+impl FormattedText {
+    pub fn format_into<S: LayoutSink>(
+        &self,
+        pattern: &str,
+        args: &[&dyn FormatArg],
+        sink: &mut S,
+    ) -> LayoutFit {
+        let cursor = &mut self.initial_cursor();
+        let mut formatter = TextFormatter::new(sink, *cursor, &self.layout);
+        formatter.format(pattern, args);
+
+        LayoutFit::Fitting {
+            processed_chars: pattern.len(),
+            height: self.layout.layout_height(*cursor, formatter.cursor),
+        }
+    }
+}
+
+// Usage example:
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_direct_formatting() {
+        let mut formatted = FormattedText::new(TextLayout::new(theme::TEXT_NORMAL));
+        formatted.place(Rect::new(0, 0, 128, 64));
+
+        let result = formatted.format_into(
+            "Value: {} units",
+            &[&42],
+            &mut TextRenderer::new(display)
+        );
+
+        // This would render "Value: 42 units" directly to the display
+        // without creating any intermediate strings
+    }
+}

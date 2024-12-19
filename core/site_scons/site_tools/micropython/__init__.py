@@ -49,6 +49,7 @@ def generate(env):
         layout_bolt = env["ui_layout"] == "UI_LAYOUT_BOLT"
         layout_samson = env["ui_layout"] == "UI_LAYOUT_SAMSON"
         layout_quicksilver = env["ui_layout"] == "UI_LAYOUT_QUICKSILVER"
+        layout_jefferson = env["ui_layout"] == "UI_LAYOUT_JEFFERSON"
         thp = env["thp"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = [
@@ -58,6 +59,7 @@ def generate(env):
             rf"-e 's/utils\.UI_LAYOUT == \"BOLT\"/{layout_bolt}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"SAMSON\"/{layout_samson}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"QUICKSILVER\"/{layout_quicksilver}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"JEFFERSON\"/{layout_jefferson}/g'",
             rf"-e 's/utils\.USE_BUTTON/{button}/g'",
             rf"-e 's/utils\.USE_TOUCH/{touch}/g'",
             rf"-e 's/utils\.USE_THP/{thp}/g'",

@@ -1,0 +1,40 @@
+
+> Sharing:
+> - <file>core/embed/rust/src/ui/component/base.rs</file>
+> - <file>core/embed/rust/src/ui/layout_jefferson/component/action_bar.rs</file>
+> - <file>core/embed/rust/src/ui/layout_bolt/component/page.rs</file>
+> - <file>core/embed/rust/src/ui/layout_jefferson/component/button.rs</file>
+> - <file>core/embed/rust/src/ui/layout_jefferson/theme/mod.rs</file>
+> - <buf>core/embed/rust/src/ui/layout_jefferson/component/action_bar.rs</buf>
+
+
+
+    fn confirm_action(
+        title: TString<'static>,
+        action: Option<TString<'static>>,
+        description: Option<TString<'static>>,
+        _subtitle: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
+        _verb_cancel: Option<TString<'static>>,
+        hold: bool,
+        _hold_danger: bool,
+        _reverse: bool,
+        _prompt_screen: bool,
+        _prompt_title: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let action = action.unwrap_or("".into());
+        let description = description.unwrap_or("".into());
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_NORMAL, description),
+            Paragraph::new(&theme::TEXT_NORMAL, action),
+        ])
+        .into_paragraphs();
+
+        let page = Frame::new(paragraphs)
+            .with_title(title, theme::label_title_main())
+            .with_cancel_button()
+            .with_hint(verb.unwrap_or("This is a nice hint"))
+            .with_hold(hold);
+        let layout = RootComponent::new(page);
+        Ok(layout)
+    }

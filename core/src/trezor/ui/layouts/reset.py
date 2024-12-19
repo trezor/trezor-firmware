@@ -6,3 +6,5 @@ elif utils.UI_LAYOUT == "SAMSON":
     from .samson.reset import *  # noqa: F401,F403
 elif utils.UI_LAYOUT == "QUICKSILVER":
     from .quicksilver.reset import *  # noqa: F401,F403
+elif utils.UI_LAYOUT == "JEFFERSON":
+    from .jefferson.reset import *  # noqa: F401,F403

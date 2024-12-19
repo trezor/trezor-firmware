@@ -19,6 +19,8 @@ mod api;
 
 #[cfg(feature = "layout_bolt")]
 pub mod layout_bolt;
+#[cfg(feature = "layout_jefferson")]
+pub mod layout_jefferson;
 #[cfg(feature = "layout_quicksilver")]
 pub mod layout_quicksilver;
 #[cfg(feature = "layout_samson")]
@@ -31,6 +33,14 @@ pub mod ui_common;
 pub mod ui_firmware;
 
 pub use ui_common::CommonUI;
+
+#[cfg(all(
+    feature = "layout_jefferson",
+    not(feature = "layout_quicksilver"),
+    not(feature = "layout_samson"),
+    not(feature = "layout_bolt")
+))]
+pub type ModelUI = crate::ui::layout_jefferson::UIJefferson;
 
 #[cfg(all(
     feature = "layout_quicksilver",

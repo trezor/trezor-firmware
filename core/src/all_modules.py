@@ -181,6 +181,14 @@ trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen
 import trezor.ui.layouts.homescreen
+trezor.ui.layouts.jefferson
+import trezor.ui.layouts.jefferson
+trezor.ui.layouts.jefferson.fido
+import trezor.ui.layouts.jefferson.fido
+trezor.ui.layouts.jefferson.recovery
+import trezor.ui.layouts.jefferson.recovery
+trezor.ui.layouts.jefferson.reset
+import trezor.ui.layouts.jefferson.reset
 trezor.ui.layouts.progress
 import trezor.ui.layouts.progress
 trezor.ui.layouts.quicksilver
