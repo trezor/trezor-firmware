@@ -1,0 +1,1 @@
+Calling `models.by_internal_name(None)` is deprecated -- check the presence of `internal_model` explicitly before passing it in.
