@@ -95,6 +95,10 @@ void powerctl_suspend(void) {
       // immediately after exiting STOP2 mode.
       irq_key_t irq_key = irq_lock();
 
+      // Enable PWR peripheral clock
+      // (required by the following HAL_PWREx_EnterSTOP2Mode)
+      __HAL_RCC_PWR_CLK_ENABLE();
+
       // Enter STOP2 mode
       HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
 
