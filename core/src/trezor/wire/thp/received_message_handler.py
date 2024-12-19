@@ -386,7 +386,6 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
 
     elif ctx.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
-        # TODO what should happen here? Should I create a new seedless session?
 
     s = ctx.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
