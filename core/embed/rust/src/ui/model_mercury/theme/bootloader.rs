@@ -57,18 +57,18 @@ pub const BUTTON_AREA_START: i16 = HEIGHT - 56;
 pub const BUTTON_HEIGHT: i16 = 50;
 
 // BLD icons
-pub const X24: &[u8] = include_res!("model_mercury/res/x24.toif");
-pub const X32: &[u8] = include_res!("model_mercury/res/x32.toif");
-pub const FIRE24: &[u8] = include_res!("model_mercury/res/fire24.toif");
-pub const FIRE32: &[u8] = include_res!("model_mercury/res/fire32.toif");
-pub const FIRE40: &[u8] = include_res!("model_mercury/res/fire40.toif");
-pub const REFRESH24: &[u8] = include_res!("model_mercury/res/refresh24.toif");
-pub const MENU32: &[u8] = include_res!("model_mercury/res/menu32.toif");
-pub const INFO32: &[u8] = include_res!("model_mercury/res/info32.toif");
-pub const DOWNLOAD24: &[u8] = include_res!("model_mercury/res/download24.toif");
-pub const WARNING40: &[u8] = include_res!("model_mercury/res/warning40.toif");
-pub const CHECK24: &[u8] = include_res!("model_mercury/res/check24.toif");
-pub const CHECK40: &[u8] = include_res!("model_mercury/res/check40.toif");
+pub const X24: &[u8] = include_res!("model_lincoln/res/bootloader/x24.toif");
+pub const X32: &[u8] = include_res!("model_lincoln/res/bootloader/x32.toif");
+pub const FIRE24: &[u8] = include_res!("model_lincoln/res/bootloader/fire24.toif");
+pub const FIRE32: &[u8] = include_res!("model_lincoln/res/bootloader/fire32.toif");
+pub const FIRE40: &[u8] = include_res!("model_lincoln/res/bootloader/fire40.toif");
+pub const REFRESH24: &[u8] = include_res!("model_lincoln/res/bootloader/refresh24.toif");
+pub const MENU32: &[u8] = include_res!("model_lincoln/res/bootloader/menu32.toif");
+pub const INFO32: &[u8] = include_res!("model_lincoln/res/bootloader/info32.toif");
+pub const DOWNLOAD24: &[u8] = include_res!("model_lincoln/res/bootloader/download24.toif");
+pub const WARNING40: &[u8] = include_res!("model_lincoln/res/bootloader/warning40.toif");
+pub const CHECK24: &[u8] = include_res!("model_lincoln/res/bootloader/check24.toif");
+pub const CHECK40: &[u8] = include_res!("model_lincoln/res/bootloader/check40.toif");
 
 pub fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {

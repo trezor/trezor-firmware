@@ -173,6 +173,14 @@ trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen
 import trezor.ui.layouts.homescreen
+trezor.ui.layouts.lincoln
+import trezor.ui.layouts.lincoln
+trezor.ui.layouts.lincoln.fido
+import trezor.ui.layouts.lincoln.fido
+trezor.ui.layouts.lincoln.recovery
+import trezor.ui.layouts.lincoln.recovery
+trezor.ui.layouts.lincoln.reset
+import trezor.ui.layouts.lincoln.reset
 trezor.ui.layouts.mercury
 import trezor.ui.layouts.mercury
 trezor.ui.layouts.mercury.fido

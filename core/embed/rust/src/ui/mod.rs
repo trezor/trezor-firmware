@@ -17,6 +17,8 @@ pub mod layout;
 
 mod api;
 
+#[cfg(feature = "model_lincoln")]
+pub mod model_lincoln;
 #[cfg(feature = "model_mercury")]
 pub mod model_mercury;
 #[cfg(feature = "model_tr")]
@@ -33,9 +35,14 @@ pub mod ui_firmware;
 pub use ui_common::CommonUI;
 
 #[cfg(all(
+    feature = "model_lincoln",
+    not(any(feature = "model_mercury", feature = "model_tr", feature = "model_tt"))
+))]
+pub type ModelUI = crate::ui::model_lincoln::UILincoln;
+
+#[cfg(all(
     feature = "model_mercury",
-    not(feature = "model_tr"),
-    not(feature = "model_tt")
+    not(any(feature = "model_tr", feature = "model_tt"))
 ))]
 pub type ModelUI = crate::ui::model_mercury::UIMercury;
 

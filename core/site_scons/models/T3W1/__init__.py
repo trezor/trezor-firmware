@@ -31,6 +31,9 @@ def configure_board(
 
 
 def get_model_ui() -> str:
+    from SCons.Script import ARGUMENTS
+    if ARGUMENTS.get('UI_LINCOLN_DEV', '0') == '1':
+        return "lincoln"
     return "tt"
 
 
