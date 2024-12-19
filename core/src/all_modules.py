@@ -195,6 +195,14 @@ trezor.ui.layouts.delizia.recovery
 import trezor.ui.layouts.delizia.recovery
 trezor.ui.layouts.delizia.reset
 import trezor.ui.layouts.delizia.reset
+trezor.ui.layouts.eckhart
+import trezor.ui.layouts.eckhart
+trezor.ui.layouts.eckhart.fido
+import trezor.ui.layouts.eckhart.fido
+trezor.ui.layouts.eckhart.recovery
+import trezor.ui.layouts.eckhart.recovery
+trezor.ui.layouts.eckhart.reset
+import trezor.ui.layouts.eckhart.reset
 trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen

@@ -23,6 +23,8 @@ pub mod layout_bolt;
 pub mod layout_caesar;
 #[cfg(feature = "layout_delizia")]
 pub mod layout_delizia;
+#[cfg(feature = "layout_eckhart")]
+pub mod layout_eckhart;
 
 #[cfg(feature = "bootloader")]
 pub mod ui_bootloader;
@@ -33,14 +35,19 @@ pub mod ui_firmware;
 pub use ui_common::CommonUI;
 
 #[cfg(all(
-    feature = "layout_delizia",
+    feature = "layout_bolt",
     not(feature = "layout_caesar"),
-    not(feature = "layout_bolt")
+    not(feature = "layout_delizia"),
+    not(feature = "layout_eckhart")
 ))]
-pub type ModelUI = crate::ui::layout_delizia::UIDelizia;
-
-#[cfg(all(feature = "layout_caesar", not(feature = "layout_bolt")))]
-pub type ModelUI = crate::ui::layout_caesar::UICaesar;
-
-#[cfg(feature = "layout_bolt")]
 pub type ModelUI = crate::ui::layout_bolt::UIBolt;
+#[cfg(all(
+    feature = "layout_caesar",
+    not(feature = "layout_delizia"),
+    not(feature = "layout_eckhart")
+))]
+pub type ModelUI = crate::ui::layout_caesar::UICaesar;
+#[cfg(all(feature = "layout_delizia", not(feature = "layout_eckhart")))]
+pub type ModelUI = crate::ui::layout_delizia::UIDelizia;
+#[cfg(feature = "layout_eckhart")]
+pub type ModelUI = crate::ui::layout_eckhart::UIEckhart;
