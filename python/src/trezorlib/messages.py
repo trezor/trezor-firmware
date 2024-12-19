@@ -45,6 +45,8 @@ class FailureType(IntEnum):
     InvalidSession = 14
     ThpUnallocatedSession = 15
     InvalidProtocol = 16
+    BufferError = 17
+    DeviceIsBusy = 18
     FirmwareError = 99
 
 
