@@ -31,11 +31,11 @@ from . import (
     PacketHeader,
     SessionState,
     ThpDecryptionError,
+    ThpDeviceLockedError,
     ThpError,
     ThpErrorType,
     ThpInvalidDataError,
     ThpUnallocatedSessionError,
-    ThpDeviceLockedError,
 )
 from . import alternating_bit_protocol as ABP
 from . import (
