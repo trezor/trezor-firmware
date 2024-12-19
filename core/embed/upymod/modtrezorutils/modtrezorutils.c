@@ -642,6 +642,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_CAESAR)},
 #elif UI_LAYOUT_DELIZIA
     {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_DELIZIA)},
+#elif UI_LAYOUT_ECKHART
+    {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_ECKHART)},
 #else
 #error Unknown layout
 #endif
