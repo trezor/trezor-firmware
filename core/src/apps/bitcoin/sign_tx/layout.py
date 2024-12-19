@@ -265,7 +265,7 @@ async def confirm_feeoverthreshold(
     await layouts.show_warning(
         "fee_over_threshold",
         TR.bitcoin__unusually_high_fee,
-        fee_amount,
+        subheader=fee_amount,
         br_code=ButtonRequestType.FeeOverThreshold,
     )
 
@@ -274,7 +274,7 @@ async def confirm_change_count_over_threshold(change_count: int) -> None:
     await layouts.show_warning(
         "change_count_over_threshold",
         TR.bitcoin__lot_of_change_outputs,
-        f"{str(change_count)} {TR.words__outputs}",
+        subheader=f"{str(change_count)} {TR.words__outputs}",
         br_code=ButtonRequestType.SignTx,
     )
 
@@ -283,7 +283,7 @@ async def confirm_unverified_external_input() -> None:
     await layouts.show_warning(
         "unverified_external_input",
         TR.bitcoin__unverified_external_inputs,
-        TR.words__continue_anyway_question,
+        subheader=TR.words__continue_anyway_question,
         button=TR.buttons__continue,
         br_code=ButtonRequestType.SignTx,
     )
@@ -293,7 +293,7 @@ async def confirm_multiple_accounts() -> None:
     await layouts.show_warning(
         "sending_from_multiple_accounts",
         TR.send__from_multiple_accounts,
-        TR.words__continue_anyway_question,
+        subheader=TR.words__continue_anyway_question,
         button=TR.buttons__continue,
         br_code=ButtonRequestType.SignTx,
     )
@@ -306,7 +306,7 @@ async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) 
         await layouts.show_warning(
             "nondefault_locktime",
             TR.bitcoin__locktime_no_effect,
-            TR.words__continue_anyway_question,
+            subheader=TR.words__continue_anyway_question,
             button=TR.buttons__continue,
             br_code=ButtonRequestType.SignTx,
         )

@@ -724,6 +724,8 @@ impl FirmwareUI for UIModelTR {
     fn flow_confirm_set_new_pin(
         _title: TString<'static>,
         _description: TString<'static>,
+        _cancel_title: TString<'static>,
+        _is_wipe_code: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"flow_confirm_set_new_pin not supported",

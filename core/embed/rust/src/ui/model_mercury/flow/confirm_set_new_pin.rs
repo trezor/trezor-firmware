@@ -65,13 +65,14 @@ impl FlowController for SetNewPin {
 pub fn new_set_new_pin(
     title: TString<'static>,
     description: TString<'static>,
+    cancel_title: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
-    // TODO: supply more arguments for Wipe code setting when figma done
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_subtitle(TR::words__settings.into())
         .with_swipe(Direction::Left, SwipeSettings::default())
         .map(|msg| match msg {
             FrameMsg::Button(bm) => Some(bm),
@@ -80,7 +81,7 @@ pub fn new_set_new_pin(
 
     let content_menu = Frame::left_aligned(
         "".into(),
-        VerticalMenu::empty().danger(theme::ICON_CANCEL, TR::pin__cancel_setup.into()),
+        VerticalMenu::empty().danger(theme::ICON_CANCEL, cancel_title),
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
@@ -95,24 +96,22 @@ pub fn new_set_new_pin(
         Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, TR::pin__cancel_info),
     ])
     .into_paragraphs();
-    let content_cancel_intro = Frame::left_aligned(
-        TR::pin__cancel_setup.into(),
-        SwipeContent::new(paragraphs_cancel_intro),
-    )
-    .with_cancel_button()
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::pin__cancel_description.into()),
-    )
-    .with_swipe(Direction::Up, SwipeSettings::default())
-    .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Button(bm) => Some(bm),
-        _ => None,
-    });
+    let content_cancel_intro =
+        Frame::left_aligned(cancel_title, SwipeContent::new(paragraphs_cancel_intro))
+            .with_cancel_button()
+            .with_footer(
+                TR::instructions__swipe_up.into(),
+                Some(TR::pin__cancel_description.into()),
+            )
+            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipe(Direction::Right, SwipeSettings::immediate())
+            .map(|msg| match msg {
+                FrameMsg::Button(bm) => Some(bm),
+                _ => None,
+            });
 
     let content_cancel_confirm = Frame::left_aligned(
-        TR::pin__cancel_setup.into(),
+        cancel_title,
         SwipeContent::new(PromptScreen::new_tap_to_cancel()),
     )
     .with_cancel_button()
