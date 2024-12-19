@@ -68,11 +68,9 @@ void backlight_pwm_init(backlight_action_t action) {
     }
   }
 
-  // Enable peripheral clocks
-  BACKLIGHT_PWM_PORT_CLK_EN();
-  BACKLIGHT_PWM_TIM_CLK_EN();
-
   // Initialize PWM GPIO
+  BACKLIGHT_PWM_PORT_CLK_EN();
+
   GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
@@ -82,6 +80,9 @@ void backlight_pwm_init(backlight_action_t action) {
   HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
 
   // Initialize PWM timer
+  BACKLIGHT_PWM_TIM_FORCE_RESET();
+  BACKLIGHT_PWM_TIM_RELEASE_RESET();
+  BACKLIGHT_PWM_TIM_CLK_EN();
 
   uint32_t tmpcr1 = 0;
 
@@ -220,8 +221,19 @@ void backlight_pwm_deinit(backlight_action_t action) {
 
 #else
   if (action == BACKLIGHT_RESET) {
-    // TODO: reset TIMER and GPIO
-    BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;
+    // Deinitialize PWM GPIO
+    GPIO_InitTypeDef GPIO_InitStructure = {0};
+    GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStructure.Pin = BACKLIGHT_PWM_PIN;
+    HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
+
+    // Deinitialize PWM timer
+    BACKLIGHT_PWM_TIM_FORCE_RESET();
+    BACKLIGHT_PWM_TIM_RELEASE_RESET();
+    BACKLIGHT_PWM_TIM_CLK_DIS();
+
   } else {  // action == BACKLIGHT_RETAIN
     BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR =
         (LED_PWM_TIM_PERIOD * drv->current_level) / 255;
