@@ -41,6 +41,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
         models.T3B1: 500,
         models.T2T1: 1000,
         models.T3T1: 1000,
+        models.T3W1: 1000,
     }[debug.model]
     lock_duration = {
         models.T1B1: 1200,
@@ -48,6 +49,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
         models.T3B1: 1200,
         models.T2T1: 3500,
         models.T3T1: 3500,
+        models.T3W1: 3500,
     }[debug.model]
 
     def hold(duration: int) -> None:
