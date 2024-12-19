@@ -12,6 +12,7 @@ FIRMWARE_LENGTHS = {
     models.T2B1: 13 * 128 * 1024,
     models.T3T1: 208 * 8 * 1024,
     models.T3B1: 208 * 8 * 1024,
+    models.T3W1: 208 * 8 * 1024,  # FIXME: fill in the correct value
 }
 
 
