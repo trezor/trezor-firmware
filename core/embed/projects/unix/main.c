@@ -509,12 +509,21 @@ void drivers_init() {
   uint8_t tropic_secret[SECRET_TROPIC_KEY_LEN] = {0};
   secbool tropic_secret_ok = secret_tropic_get(tropic_secret);
 
-  tropic_init();
-  if (sectrue == tropic_secret_ok) {
-    if (tropic_handshake(tropic_secret) != TROPIC_SUCCESS) {
-      // ??
-    }
+  if (sectrue != tropic_secret_ok) {
+    memzero(tropic_secret, sizeof(tropic_secret));
+    ensure(false, "secret_tropic_get failed");
   }
+
+  if (tropic_init() != TROPIC_SUCCESS) {
+    memzero(tropic_secret, sizeof(tropic_secret));
+    ensure(false, "tropic_init failed");
+  }
+
+  if (tropic_handshake(tropic_secret) != TROPIC_SUCCESS) {
+    memzero(tropic_secret, sizeof(tropic_secret));
+    ensure(false, "tropic_handshake failed");
+  }
+
   memzero(tropic_secret, sizeof(tropic_secret));
 #endif
 }
