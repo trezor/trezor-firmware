@@ -44,11 +44,17 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     await confirm_value(
         title, content, "", "nostr_sign_event", info_items=[("", tags_str)]
     )
+
+    # The event ID is obtained by serializing the event in a specific way:
+    # "[0,pubkey,created_at,kind,tags,content]"
+    # See NIP-01: https://github.com/nostr-protocol/nips/blob/master/01.md
     serialized_tags = ",".join(
         ["[" + ",".join(f'"{t}"' for t in tag) + "]" for tag in tags]
     )
     serialized_event = f'[0,"{hexlify(pk).decode()}",{created_at},{kind},[{serialized_tags}],"{content}"]'
     event_id = sha256(serialized_event).digest()
+
+    # The event signature is basically the signature of the event ID computed above
     signature = secp256k1.sign(sk, event_id)[-64:]
 
     return NostrEventSignature(pubkey=pk, id=event_id, signature=signature)
