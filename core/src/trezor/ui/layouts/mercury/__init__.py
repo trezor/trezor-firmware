@@ -623,9 +623,6 @@ def confirm_value(
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
 
-    if not verb and not hold:
-        raise ValueError("Either verb or hold=True must be set")
-
     info_items = info_items or []
     info_layout = trezorui_api.show_info_with_cancel(
         title=info_title if info_title else TR.words__title_information,
