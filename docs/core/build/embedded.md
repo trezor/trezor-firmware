@@ -1,38 +1,44 @@
 # Build instructions for Embedded (ARM port)
 
-First clone, initialize submodules and install Poetry as defined [here](index.md).
-**Do not forget you need to be in a `poetry shell` environment!**
+
+First, clone the repository and initialize the submodules as defined [here](index.md).
+
+Then, you need to install all necessary requirements.
 
 ## Requirements
 
-You will need the GCC ARM toolchain for building and OpenOCD for flashing to a device.
-You will also need Python dependencies for signing.
+The recommended way to control the requirements across all systems is to install **nix-shell**, which automatically installs all requirements in an isolated environment using the `shell.nix` configuration file located in the repository root.
 
-### Debian/Ubuntu
+To install nix-shell, follow the instructions [here](https://nix.dev/manual/nix/2.18/installation/installing-binary).
 
-```sh
-sudo apt-get install scons gcc-arm-none-eabi libnewlib-arm-none-eabi llvm-dev libclang-dev clang
-```
-
-### NixOS
-
-There is a `shell.nix` file in the root of the project. Just run the following
-**before** entering the `core` directory:
+Once nix-shell is installed, go to the **repository root** and run:
 
 ```sh
 nix-shell
 ```
 
-### OS X
+### Working with Developer Tools
 
-_Consider using [Nix](https://nixos.org/download.html). With Nix all you need to do is `nix-shell`._
+If you need to work with embedded development tools such as OpenOCD, gcc-arm-embedded, gdb, etc., you can run nix-shell with the following argument to enable additional development tools:
 
-For other users:
+```sh
+nix-shell --arg devTools true
+```
 
-1. Download [gcc-arm-none-eabi](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads)
-2. Follow the [install instructions](https://launchpadlibrarian.net/287100883/readme.txt)
-3. To install OpenOCD, run `brew install open-ocd`
-4. Run `make vendor build_boardloader build_bootloader build_firmware`
+### Manual Requirements Installation
+
+If you prefer to install the requirements manually, look into the shell.nix file where you can find a list of requirements with versions.
+
+## Python Dependencies
+
+All Python dependencies and packages are handled with Poetry. If you work in nix-shell, Poetry will be installed automatically. Then, you can install the dependencies and run the Poetry shell in the repository root.
+
+```sh
+poetry install
+poetry shell
+```
+
+**Note: The recommended way of initializing your environment is to first run nix-shell and then initialize the Poetry shell within it.**
 
 ## Protobuf Compiler
 
