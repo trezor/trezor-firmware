@@ -1211,26 +1211,16 @@ def confirm_set_new_pin(
     is_wipe_code: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
-    if is_wipe_code:
-        return raise_if_not_confirmed(
-            trezorui_api.flow_confirm_set_new_wipe_code(
-                title=title,
-                description=description + "\n" + information,
-                cancel_title=cancel_title,
-            ),
-            br_name,
-            br_code,
-        )
-    else:
-        return raise_if_not_confirmed(
-            trezorui_api.flow_confirm_set_new_pin(
-                title=title,
-                description=description + "\n" + information,
-                cancel_title=cancel_title,
-            ),
-            br_name,
-            br_code,
-        )
+    return raise_if_not_confirmed(
+        trezorui_api.flow_confirm_set_new_pin(
+            title=title,
+            description=description + "\n" + information,
+            cancel_title=cancel_title,
+            is_wipe_code=is_wipe_code,
+        ),
+        br_name,
+        br_code,
+    )
 
 
 def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:

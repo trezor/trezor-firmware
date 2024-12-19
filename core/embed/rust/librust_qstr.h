@@ -244,7 +244,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_firmware_update__title_fingerprint;
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_set_new_pin;
-  MP_QSTR_flow_confirm_set_new_wipe_code;
   MP_QSTR_flow_get_address;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
@@ -301,6 +300,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__tap_to_start;
   MP_QSTR_instructions__view_all_data;
   MP_QSTR_is_type_of;
+  MP_QSTR_is_wipe_code;
   MP_QSTR_items;
   MP_QSTR_joint__title;
   MP_QSTR_joint__to_the_total_amount;

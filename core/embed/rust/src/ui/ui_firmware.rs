@@ -198,12 +198,7 @@ pub trait FirmwareUI {
         title: TString<'static>,
         description: TString<'static>,
         cancel_title: TString<'static>,
-    ) -> Result<impl LayoutMaybeTrace, Error>;
-
-    fn flow_confirm_set_new_wipe_code(
-        title: TString<'static>,
-        description: TString<'static>,
-        cancel_title: TString<'static>,
+        is_wipe_code: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     #[allow(clippy::too_many_arguments)]
