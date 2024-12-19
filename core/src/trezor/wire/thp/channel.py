@@ -202,8 +202,8 @@ class Channel:
             self.temp_crc = checksum.compute_int(buf, self.temp_crc)
         elif self.expected_payload_length >= len(buf) + self.bytes_read:
             # At least a part of the CRC checksum is in this packet, compute CRC over
-            # first (max(0, crc_copy_len)) bytes and add the rest of the bytes (max 4)
-            # as the checksum from message into temp_crc_compare
+            # the first (max(0, crc_copy_len)) bytes and add the rest of the bytes
+            # (max 4) as the checksum from message into temp_crc_compare
             crc_copy_len = (
                 self.expected_payload_length - self.bytes_read - CHECKSUM_LENGTH
             )
@@ -230,9 +230,9 @@ class Channel:
             # The noise tag is not in this packet, decrypt the whole buffer
             self.busy_decoder.decrypt_part(buf)
         elif self.expected_payload_length >= len(buf) + self.bytes_read:
-            # At least a part of the CRC checksum is in this packet, compute CRC over
-            # first (max(0, crc_copy_len)) bytes and add the rest of the bytes
-            # as the checksum from message into temp_crc_compare
+            # At least a part of the noise tag is in this packet, decrypt
+            # the first (max(0, dec_len)) bytes and add the rest of the bytes
+            # as the noise_tag from message into temp_tag
             dec_len = (
                 self.expected_payload_length
                 - self.bytes_read
