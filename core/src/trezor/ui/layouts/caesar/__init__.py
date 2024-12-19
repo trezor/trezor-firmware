@@ -777,10 +777,11 @@ async def confirm_value(
         send_button_request = True
         while True:
             result = await interact(
-                trezorui_api.confirm_with_info(  # type: ignore [Argument missing for parameter "info_button"]
+                trezorui_api.confirm_with_info(
                     title=title,
                     items=((ui.NORMAL, value),),
                     button=verb or TR.buttons__confirm,
+                    info_button=TR.buttons__info,  # this is not used on TR, but required
                 ),
                 br_name if send_button_request else None,
                 br_code,
