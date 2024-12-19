@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from site_scons import models
 
-from . import mercury, tr, tt
+from . import lincoln, mercury, tr, tt
 
 
 def get_ui_module(model: str):
     ui_modules = {
+        "lincoln": lincoln,
         "mercury": mercury,
         "tr": tr,
         "tt": tt,

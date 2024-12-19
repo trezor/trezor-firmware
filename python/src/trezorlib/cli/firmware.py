@@ -49,6 +49,7 @@ MODEL_CHOICE = ChoiceType(
         "T2T1": models.T2T1,
         "T2B1": models.T2B1,
         "T3T1": models.T3T1,
+        "T3W1": models.T3W1,
         # aliases
         "1": models.T1B1,
         "one": models.T1B1,

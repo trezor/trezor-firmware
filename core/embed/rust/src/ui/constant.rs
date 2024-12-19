@@ -2,9 +2,13 @@
 //! current feature (Trezor model)
 
 #[cfg(all(
+    feature = "model_lincoln",
+    not(any(feature = "model_mercury", feature = "model_tr", feature = "model_tt"))
+))]
+pub use super::model_lincoln::constant::*;
+#[cfg(all(
     feature = "model_mercury",
-    not(feature = "model_tr"),
-    not(feature = "model_tt")
+    not(any(feature = "model_tr", feature = "model_tt"),)
 ))]
 pub use super::model_mercury::constant::*;
 #[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
