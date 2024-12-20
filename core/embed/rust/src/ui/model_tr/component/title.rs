@@ -98,13 +98,11 @@ impl Component for Title {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if self.needs_marquee {
-            if !self.marquee.is_animating() {
-                if matches!(Event::RequestPaint, _event) {
-                    return None;
-                }
+            if matches!(event, Event::Attach(_)) {
                 self.marquee.start(ctx, Instant::now());
+            } else {
+                return self.marquee.event(ctx, event);
             }
-            return self.marquee.event(ctx, event);
         }
         None
     }
