@@ -14,10 +14,11 @@ if utils.USE_THP:
     _PROTOCOL_CACHE = cache_thp
 
 else:
+    from mock_storage import mock_storage
     from storage import cache, cache_codec
     from trezor.messages import EndSession, Initialize
+
     from apps.base import handle_EndSession
-    from mock_storage import mock_storage
 
     _PROTOCOL_CACHE = cache_codec
 
@@ -319,8 +320,8 @@ class TestStorageCache(unittest.TestCase):
     else:
 
         def setUpClass(self):
-            from trezor.wire.codec.codec_context import CodecContext
             from trezor.wire import context
+            from trezor.wire.codec.codec_context import CodecContext
 
             context.CURRENT_CONTEXT = CodecContext(None, bytearray(64))
 
@@ -377,7 +378,7 @@ class TestStorageCache(unittest.TestCase):
             session_id = cache_codec.start_session()
             self.assertEqual(cache_codec.start_session(session_id), session_id)
             get_active_session().set(KEY, b"A")
-            for i in range(_PROTOCOL_CACHE._MAX_SESSIONS_COUNT):
+            for _ in range(_PROTOCOL_CACHE._MAX_SESSIONS_COUNT):
                 cache_codec.start_session()
             self.assertNotEqual(cache_codec.start_session(session_id), session_id)
             self.assertIsNone(get_active_session().get(KEY))

@@ -1,13 +1,12 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 from typing import Any, Awaitable
 
-
 if utils.USE_THP:
     import thp_common
     from mock_wire_interface import MockHID
-    from trezor.wire.thp import writer
-    from trezor.wire.thp import ENCRYPTED, PacketHeader
+    from trezor.wire.thp import ENCRYPTED, PacketHeader, writer
 
 
 @unittest.skipUnless(utils.USE_THP, "only needed for THP")

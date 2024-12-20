@@ -132,7 +132,7 @@ class Channel:
                 # TODO Check CRC and if valid, check tag, if valid update nonces
                 self._finish_fallback()
                 # TODO self.write() failure device is busy - use channel buffer to send this failure message!!
-                return
+                return None
             return received_message_handler.handle_received_message(self, buffer)
         elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
             self.is_cont_packet_expected = True

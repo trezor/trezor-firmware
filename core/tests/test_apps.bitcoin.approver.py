@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 
 import storage.cache_codec
@@ -12,13 +13,13 @@ from trezor.messages import (
     TxOutput,
 )
 from trezor.wire import context
+from trezor.wire.codec.codec_context import CodecContext
 
 from apps.bitcoin.authorization import FEE_RATE_DECIMALS, CoinJoinAuthorization
 from apps.bitcoin.sign_tx.approvers import CoinJoinApprover
 from apps.bitcoin.sign_tx.bitcoin import Bitcoin
 from apps.bitcoin.sign_tx.tx_info import TxInfo
 from apps.common import coins
-from trezor.wire.codec.codec_context import CodecContext
 
 if utils.USE_THP:
     import thp_common
