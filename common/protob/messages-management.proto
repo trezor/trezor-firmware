@@ -423,6 +423,7 @@ message ResetDevice {
     optional bool skip_backup = 8;                          // postpone seed backup to BackupDevice workflow
     optional bool no_backup = 9;                            // indicate that no backup is going to be made
     optional BackupType backup_type = 10 [default=Bip39];   // type of the mnemonic backup
+    optional bool entropy_check = 11;                       // run with entropy check protocol
 }
 
 /**
@@ -444,6 +445,8 @@ message BackupDevice {
  * @next EntropyAck
  */
 message EntropyRequest {
+    optional bytes entropy_commitment = 1;  // HMAC-SHA256 of Trezor's internal entropy used in entropy check.
+    optional bytes prev_entropy = 2;        // Trezor's internal entropy from the previous round of entropy check.
 }
 
 /**
@@ -451,7 +454,22 @@ message EntropyRequest {
  * @next Success
  */
 message EntropyAck {
-    required bytes entropy = 1;     // 256 bits (32 bytes) of random data
+    required bytes entropy = 1;     // 256 bits (32 bytes) of the host's random data
+}
+
+/**
+ * Request: Ask Trezor to reveal its internal entropy.
+ * @next EntropyAck
+ */
+message ResetDeviceContinue {
+}
+
+/**
+ * Request: Last step in the entropy check protocol. Stores the generated seed.
+ * @start
+ * @next Success
+ */
+message ResetDeviceFinish {
 }
 
 /**

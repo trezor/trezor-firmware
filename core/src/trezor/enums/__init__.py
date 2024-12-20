@@ -373,6 +373,8 @@ if TYPE_CHECKING:
         BackupDevice = 34
         EntropyRequest = 35
         EntropyAck = 36
+        ResetDeviceContinue = 994
+        ResetDeviceFinish = 995
         PassphraseRequest = 41
         PassphraseAck = 42
         RecoveryDevice = 45

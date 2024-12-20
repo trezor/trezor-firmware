@@ -426,6 +426,8 @@ class MessageType(IntEnum):
     BackupDevice = 34
     EntropyRequest = 35
     EntropyAck = 36
+    ResetDeviceContinue = 994
+    ResetDeviceFinish = 995
     PassphraseRequest = 41
     PassphraseAck = 42
     RecoveryDevice = 45
@@ -3735,6 +3737,7 @@ class ResetDevice(protobuf.MessageType):
         8: protobuf.Field("skip_backup", "bool", repeated=False, required=False, default=None),
         9: protobuf.Field("no_backup", "bool", repeated=False, required=False, default=None),
         10: protobuf.Field("backup_type", "BackupType", repeated=False, required=False, default=BackupType.Bip39),
+        11: protobuf.Field("entropy_check", "bool", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3749,6 +3752,7 @@ class ResetDevice(protobuf.MessageType):
         skip_backup: Optional["bool"] = None,
         no_backup: Optional["bool"] = None,
         backup_type: Optional["BackupType"] = BackupType.Bip39,
+        entropy_check: Optional["bool"] = None,
     ) -> None:
         self.strength = strength
         self.passphrase_protection = passphrase_protection
@@ -3759,6 +3763,7 @@ class ResetDevice(protobuf.MessageType):
         self.skip_backup = skip_backup
         self.no_backup = no_backup
         self.backup_type = backup_type
+        self.entropy_check = entropy_check
 
 
 class BackupDevice(protobuf.MessageType):
@@ -3780,6 +3785,19 @@ class BackupDevice(protobuf.MessageType):
 
 class EntropyRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 35
+    FIELDS = {
+        1: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("prev_entropy", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entropy_commitment: Optional["bytes"] = None,
+        prev_entropy: Optional["bytes"] = None,
+    ) -> None:
+        self.entropy_commitment = entropy_commitment
+        self.prev_entropy = prev_entropy
 
 
 class EntropyAck(protobuf.MessageType):
@@ -3794,6 +3812,14 @@ class EntropyAck(protobuf.MessageType):
         entropy: "bytes",
     ) -> None:
         self.entropy = entropy
+
+
+class ResetDeviceContinue(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 994
+
+
+class ResetDeviceFinish(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 995
 
 
 class RecoveryDevice(protobuf.MessageType):

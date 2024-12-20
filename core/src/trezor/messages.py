@@ -2535,6 +2535,7 @@ if TYPE_CHECKING:
         skip_backup: "bool | None"
         no_backup: "bool | None"
         backup_type: "BackupType"
+        entropy_check: "bool | None"
 
         def __init__(
             self,
@@ -2547,6 +2548,7 @@ if TYPE_CHECKING:
             skip_backup: "bool | None" = None,
             no_backup: "bool | None" = None,
             backup_type: "BackupType | None" = None,
+            entropy_check: "bool | None" = None,
         ) -> None:
             pass
 
@@ -2571,6 +2573,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class EntropyRequest(protobuf.MessageType):
+        entropy_commitment: "bytes | None"
+        prev_entropy: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            entropy_commitment: "bytes | None" = None,
+            prev_entropy: "bytes | None" = None,
+        ) -> None:
+            pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EntropyRequest"]:
@@ -2588,6 +2600,18 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["EntropyAck"]:
+            return isinstance(msg, cls)
+
+    class ResetDeviceContinue(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ResetDeviceContinue"]:
+            return isinstance(msg, cls)
+
+    class ResetDeviceFinish(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["ResetDeviceFinish"]:
             return isinstance(msg, cls)
 
     class RecoveryDevice(protobuf.MessageType):

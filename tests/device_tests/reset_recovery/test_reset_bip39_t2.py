@@ -18,6 +18,7 @@ import pytest
 from mnemonic import Mnemonic
 
 from trezorlib import device, messages
+from trezorlib.btc import get_public_node
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
@@ -108,6 +109,46 @@ def test_reset_device_pin(client: Client):
     assert resp.backup_availability == messages.BackupAvailability.NotAvailable
     assert resp.pin_protection is True
     assert resp.passphrase_protection is True
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_reset_entropy_check(client: Client):
+    strength = 128  # 12 words
+
+    with WITH_MOCK_URANDOM, client:
+        IF = InputFlowBip39ResetBackup(client)
+        client.set_input_flow(IF.get())
+
+        # No PIN, no passphrase
+        _, path_xpubs = device.reset_entropy_check(
+            client,
+            strength=strength,
+            passphrase_protection=False,
+            pin_protection=False,
+            label="test",
+            entropy_check_count=2,
+        )
+
+    # Generate the mnemonic locally.
+    internal_entropy = client.debug.state().reset_entropy
+    entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
+    expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
+
+    # Check that the device generated the correct mnemonic for the given entropies.
+    assert IF.mnemonic == expected_mnemonic
+
+    # Check that the device is properly initialized.
+    resp = client.call_raw(messages.Initialize())
+    assert resp.initialized is True
+    assert resp.backup_availability == messages.BackupAvailability.NotAvailable
+    assert resp.pin_protection is False
+    assert resp.passphrase_protection is False
+    assert resp.backup_type is messages.BackupType.Bip39
+
+    # Check that the XPUBs are the same as those from the entropy check.
+    for path, xpub in path_xpubs:
+        res = get_public_node(client, path)
+        assert res.xpub == xpub
 
 
 @pytest.mark.setup_client(uninitialized=True)

@@ -178,13 +178,11 @@ def set_homescreen(homescreen: bytes) -> None:
 
 def store_mnemonic_secret(
     secret: bytes,
-    backup_type: BackupType,
     needs_backup: bool = False,
     no_backup: bool = False,
 ) -> None:
     set_version(common.STORAGE_VERSION_CURRENT)
     common.set(_NAMESPACE, _MNEMONIC_SECRET, secret)
-    common.set_uint8(_NAMESPACE, _BACKUP_TYPE, backup_type)
     common.set_true_or_delete(_NAMESPACE, _NO_BACKUP, no_backup)
     common.set_bool(_NAMESPACE, INITIALIZED, True, public=True)
     if not no_backup:

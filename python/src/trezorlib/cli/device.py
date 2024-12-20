@@ -24,6 +24,7 @@ import click
 import requests
 
 from .. import debuglink, device, exceptions, messages, ui
+from ..tools import format_path
 from . import ChoiceType, with_client
 
 if t.TYPE_CHECKING:
@@ -222,6 +223,7 @@ def recover(
 @click.option("-s", "--skip-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
 @click.option("-b", "--backup-type", type=ChoiceType(BACKUP_TYPE))
+@click.option("-e", "--entropy-check-count", type=click.IntRange(0))
 @with_client
 def setup(
     client: "TrezorClient",
@@ -233,6 +235,7 @@ def setup(
     skip_backup: bool,
     no_backup: bool,
     backup_type: messages.BackupType | None,
+    entropy_check_count: int | None,
 ) -> str:
     """Perform device setup and generate new seed."""
     if strength:
@@ -261,7 +264,7 @@ def setup(
             "backup type. Traditional BIP39 backup may be generated instead."
         )
 
-    return device.reset(
+    resp, path_xpubs = device.reset_entropy_check(
         client,
         strength=strength,
         passphrase_protection=passphrase_protection,
@@ -271,7 +274,16 @@ def setup(
         skip_backup=skip_backup,
         no_backup=no_backup,
         backup_type=backup_type,
+        entropy_check_count=entropy_check_count,
     )
+
+    if isinstance(resp, messages.Success):
+        click.echo("XPUBs for the generated seed")
+        for path, xpub in path_xpubs:
+            click.echo(f"{format_path(path)}: {xpub}")
+        return resp.message or ""
+    else:
+        raise RuntimeError(f"Received {resp.__class__}")
 
 
 @cli.command()
