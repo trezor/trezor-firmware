@@ -243,11 +243,11 @@ static void display_sync_with_fb(display_driver_t *drv) {
   HAL_GPIO_WritePin(OLED_DC_PORT, OLED_DC_PIN, GPIO_PIN_RESET);
 }
 
-void display_init(display_content_mode_t mode) {
+bool display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   if (drv->initialized) {
-    return;
+    return true;
   }
 
   memset(drv, 0, sizeof(display_driver_t));
@@ -319,6 +319,7 @@ void display_init(display_content_mode_t mode) {
   }
 
   drv->initialized = true;
+  return true;
 }
 
 void display_deinit(display_content_mode_t mode) {

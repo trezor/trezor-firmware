@@ -115,7 +115,7 @@ bool haptic_init(void) {
 #ifdef DRV2625_RESET_PIN
   DRV2625_RESET_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Pin = DRV2625_RESET_PIN;
   HAL_GPIO_WritePin(DRV2625_RESET_PORT, DRV2625_RESET_PIN, GPIO_PIN_RESET);
@@ -170,7 +170,10 @@ bool haptic_init(void) {
     goto cleanup;
   }
 
+  DRV2625_TRIG_TIM_FORCE_RESET();
+  DRV2625_TRIG_TIM_RELEASE_RESET();
   DRV2625_TRIG_TIM_CLK_ENA();
+
   TIM_HandleTypeDef TIM_Handle = {0};
   TIM_Handle.State = HAL_TIM_STATE_RESET;
   TIM_Handle.Instance = DRV2625_TRIG_TIM;
@@ -199,24 +202,36 @@ bool haptic_init(void) {
   return true;
 
 cleanup:
-  i2c_bus_close(driver->i2c_bus);
-  memset(driver, 0, sizeof(haptic_driver_t));
-#ifdef DRV2625_RESET_PIN
-  HAL_GPIO_WritePin(DRV2625_RESET_PORT, DRV2625_RESET_PIN, GPIO_PIN_RESET);
-#endif
+  haptic_deinit();
   return false;
 }
 
 void haptic_deinit(void) {
   haptic_driver_t *driver = &g_haptic_driver;
 
-  if (!driver->initialized) {
-    return;
-  }
-
   i2c_bus_close(driver->i2c_bus);
 
-  // TODO: deinitialize GPIOs and the TIMER
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+#ifdef DRV2625_RESET_PIN
+  // External pull-down on NRST pin ensures that the DRV2625 goes into
+  // shutdown mode when the reset GPIO is deinitialized.
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = DRV2625_RESET_PIN;
+  HAL_GPIO_Init(DRV2625_RESET_PORT, &GPIO_InitStructure);
+#endif
+
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = DRV2625_TRIG_PIN;
+  HAL_GPIO_Init(DRV2625_TRIG_PORT, &GPIO_InitStructure);
+
+  DRV2625_TRIG_TIM_FORCE_RESET();
+  DRV2625_TRIG_TIM_RELEASE_RESET();
+  DRV2625_TRIG_TIM_CLK_DIS();
 
   memset(driver, 0, sizeof(haptic_driver_t));
 }
