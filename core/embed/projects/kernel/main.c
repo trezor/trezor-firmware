@@ -151,8 +151,8 @@ void drivers_init() {
 #endif
 
 #ifdef USE_OPTIGA
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok = secret_optiga_get(secret);
+  uint8_t optiga_secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  secbool optiga_secret_ok = secret_optiga_get(optiga_secret);
 #endif
 
   entropy_init();
@@ -195,19 +195,20 @@ void drivers_init() {
 #endif
 
   optiga_init();
-  if (sectrue == secret_ok) {
+  if (sectrue == optiga_secret_ok) {
     // If the shielded connection cannot be established, reset Optiga and
     // continue without it. In this case, OID_KEY_FIDO and OID_KEY_DEV cannot be
     // used, which means device and FIDO attestation will not work.
-    if (optiga_sec_chan_handshake(secret, sizeof(secret)) != OPTIGA_SUCCESS) {
+    if (optiga_sec_chan_handshake(optiga_secret, sizeof(optiga_secret)) != OPTIGA_SUCCESS) {
       optiga_soft_reset();
     }
   }
-  memzero(secret, sizeof(secret));
+  memzero(optiga_secret, sizeof(optiga_secret));
   ensure(sectrue * (optiga_open_application() == OPTIGA_SUCCESS),
          "Cannot initialize optiga.");
 
 #endif
+
 }
 
 // defined in linker script
