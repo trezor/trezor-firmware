@@ -1,3 +1,5 @@
+from trezor.wire import message_handler
+
 if not __debug__:
     from trezor.utils import halt
 
@@ -29,13 +31,14 @@ if __debug__:
             DebugLinkState,
         )
         from trezor.ui import Layout
-        from trezor.wire import WireInterface, context
+        from trezor.wire import WireInterface
+        from trezor.wire.protocol_common import Context
 
         Handler = Callable[[Any], Awaitable[Any]]
 
     layout_change_box = loop.mailbox()
 
-    DEBUG_CONTEXT: context.Context | None = None
+    DEBUG_CONTEXT: Context | None = None
 
     REFRESH_INDEX = 0
 
@@ -70,9 +73,7 @@ if __debug__:
                     "layout deadlock detected (did you send a ButtonAck?)"
                 )
 
-    async def return_layout_change(
-        ctx: wire.protocol_common.Context, detect_deadlock: bool = False
-    ) -> None:
+    async def return_layout_change(ctx: Context, detect_deadlock: bool = False) -> None:
         # set up the wait
         storage.layout_watcher = True
 
@@ -212,12 +213,12 @@ if __debug__:
 
         x = msg.x  # local_cache_attribute
         y = msg.y  # local_cache_attribute
-
         await wait_until_layout_is_running()
         assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
         layout_change_box.clear()
 
         try:
+
             # click on specific coordinates, with possible hold
             if x is not None and y is not None:
                 await _layout_click(x, y, msg.hold_ms or 0)
@@ -229,7 +230,11 @@ if __debug__:
             elif msg.button is not None:
                 await _layout_event(msg.button)
             elif msg.input is not None:
-                ui.CURRENT_LAYOUT._emit_message(msg.input)
+                try:
+                    ui.CURRENT_LAYOUT._emit_message(msg.input)
+                except Exception as e:
+                    print(type(e))
+
             else:
                 raise RuntimeError("Invalid DebugLinkDecision message")
 
@@ -244,7 +249,11 @@ if __debug__:
         # If no exception was raised, the layout did not shut down. That means that it
         # just updated itself. The update is already live for the caller to retrieve.
 
-    def _state() -> DebugLinkState:
+    def _state(
+        thp_pairing_code_entry_code: int | None = None,
+        thp_pairing_code_qr_code: bytes | None = None,
+        thp_pairing_code_nfc_unidirectional: bytes | None = None,
+    ) -> DebugLinkState:
         from trezor.messages import DebugLinkState
 
         from apps.common import mnemonic, passphrase
@@ -263,13 +272,45 @@ if __debug__:
             passphrase_protection=passphrase.is_enabled(),
             reset_entropy=storage.reset_internal_entropy,
             tokens=tokens,
+            thp_pairing_code_entry_code=thp_pairing_code_entry_code,
+            thp_pairing_code_qr_code=thp_pairing_code_qr_code,
+            thp_pairing_code_nfc_unidirectional=thp_pairing_code_nfc_unidirectional,
         )
 
     async def dispatch_DebugLinkGetState(
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
+
+        thp_pairing_code_entry_code: int | None = None
+        thp_pairing_code_qr_code: bytes | None = None
+        thp_pairing_code_nfc_unidirectional: bytes | None = None
+        if utils.USE_THP and msg.thp_channel_id is not None:
+            channel_id = int.from_bytes(msg.thp_channel_id, "big")
+
+            from trezor.wire.thp.channel import Channel
+            from trezor.wire.thp.pairing_context import PairingContext
+            from trezor.wire.thp.thp_main import _CHANNELS
+
+            channel: Channel | None = None
+            ctx: PairingContext | None = None
+            try:
+                channel = _CHANNELS[channel_id]
+                ctx = channel.connection_context
+            except KeyError:
+                pass
+            if ctx is not None and isinstance(ctx, PairingContext):
+                thp_pairing_code_entry_code = ctx.display_data.code_code_entry
+                thp_pairing_code_qr_code = ctx.display_data.code_qr_code
+                thp_pairing_code_nfc_unidirectional = (
+                    ctx.display_data.code_nfc_unidirectional
+                )
+
         if msg.wait_layout == DebugWaitType.IMMEDIATE:
-            return _state()
+            return _state(
+                thp_pairing_code_entry_code,
+                thp_pairing_code_qr_code,
+                thp_pairing_code_nfc_unidirectional,
+            )
 
         assert DEBUG_CONTEXT is not None
         if msg.wait_layout == DebugWaitType.NEXT_LAYOUT:
@@ -280,7 +321,11 @@ if __debug__:
         if not layout_is_ready():
             return await return_layout_change(DEBUG_CONTEXT, detect_deadlock=True)
         else:
-            return _state()
+            return _state(
+                thp_pairing_code_entry_code,
+                thp_pairing_code_qr_code,
+                thp_pairing_code_nfc_unidirectional,
+            )
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
         if msg.target_directory:
@@ -390,7 +435,6 @@ if __debug__:
                     ctx.iface.iface_num(),
                     msg_type,
                 )
-
                 if msg.type not in WORKFLOW_HANDLERS:
                     await ctx.write(wire.message_handler.unexpected_message())
                     continue
@@ -403,7 +447,7 @@ if __debug__:
                     await ctx.write(Success())
                     continue
 
-                req_msg = wire.message_handler.wrap_protobuf_load(msg.data, req_type)
+                req_msg = message_handler.wrap_protobuf_load(msg.data, req_type)
                 try:
                     res_msg = await WORKFLOW_HANDLERS[msg.type](req_msg)
                 except Exception as exc:
