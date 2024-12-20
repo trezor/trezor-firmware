@@ -389,6 +389,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__tries_left;
   MP_QSTR_pin__turn_off;
   MP_QSTR_pin__turn_on;
+  MP_QSTR_pin__wipe_code_exists_description;
+  MP_QSTR_pin__wipe_code_exists_title;
   MP_QSTR_pin__wrong_pin;
   MP_QSTR_plurals__contains_x_keys;
   MP_QSTR_plurals__lock_after_x_hours;
@@ -739,6 +741,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_wipe_code__info;
   MP_QSTR_wipe_code__invalid;
   MP_QSTR_wipe_code__mismatch;
+  MP_QSTR_wipe_code__pin_not_set_description;
   MP_QSTR_wipe_code__reenter;
   MP_QSTR_wipe_code__reenter_to_confirm;
   MP_QSTR_wipe_code__title_check;

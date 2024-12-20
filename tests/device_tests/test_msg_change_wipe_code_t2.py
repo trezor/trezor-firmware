@@ -20,7 +20,7 @@ from trezorlib import btc, device, messages
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import TrezorFailure
+from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ..input_flows import InputFlowNewCodeMismatch
 
@@ -167,3 +167,36 @@ def test_set_pin_to_wipe_code(client: Client):
         )
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         device.change_pin(client)
+
+
+def test_set_wipe_code_without_pin(client: Client):
+    # Make sure that both PIN and wipe code are not set.
+    assert client.features.pin_protection is False
+    assert client.features.wipe_code_protection is False
+    # Expect an error when trying to set the wipe code without a PIN being turned on.
+    with pytest.raises(Cancelled):
+        device.change_wipe_code(client)
+
+
+@pytest.mark.setup_client(pin=PIN4)
+def test_set_remove_pin_without_removing_wipe_code(client: Client):
+    _ensure_unlocked(client, PIN4)
+    # Make sure the PIN is set.
+    assert client.features.pin_protection is True
+    # Make sure the wipe code is not set.
+    assert client.features.wipe_code_protection is False
+
+    # Set wipe code
+    with client:
+        client.use_pin_sequence([PIN4, WIPE_CODE4, WIPE_CODE4])
+        device.change_wipe_code(client)
+
+    client.init_device()
+    # Make sure the wipe code is set.
+    assert client.features.wipe_code_protection is True
+
+    # Remove PIN without wipe code being turned off.
+    with client:
+        # Expect an error when trying to remove PIN with enabled wipe code.
+        with pytest.raises(Cancelled):
+            device.change_pin(client, remove=True)
