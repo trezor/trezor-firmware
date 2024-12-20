@@ -52,7 +52,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
         address_n_to_name_or_unknown,
         validate_path_against_script_type,
     )
-    from .multisig import multisig_pubkey_index
+    from .multisig import multisig_xpub_index
 
     multisig = msg.multisig  # local_cache_attribute
     address_n = msg.address_n  # local_cache_attribute
@@ -110,7 +110,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 pubnodes = multisig.nodes
             else:
                 pubnodes = [hd.node for hd in multisig.pubkeys]
-            multisig_index = multisig_pubkey_index(multisig, node.public_key())
+            multisig_index = multisig_xpub_index(multisig, node.public_key())
 
             await confirm_multisig_warning()
 

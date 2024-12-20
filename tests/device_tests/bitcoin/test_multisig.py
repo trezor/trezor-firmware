@@ -171,10 +171,13 @@ def test_pubkeys_order(client: Client):
         client, parse_path("m/45h/1"), coin_name="Bitcoin"
     ).node
 
+    # A dummy signature is used to ensure that the signatures are serialized in the correct order
+    dummy_signature = bytes(71)
+
     multisig_unsorted_1 = messages.MultisigRedeemScriptType(
         nodes=[node_internal, node_external],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[b"", dummy_signature],
         m=1,
         pubkeys_order=messages.MultisigPubkeysOrder.PRESERVED,
     )
@@ -182,7 +185,7 @@ def test_pubkeys_order(client: Client):
     multisig_unsorted_2 = messages.MultisigRedeemScriptType(
         nodes=[node_external, node_internal],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[dummy_signature, b""],
         m=1,
         pubkeys_order=messages.MultisigPubkeysOrder.PRESERVED,
     )
@@ -190,7 +193,7 @@ def test_pubkeys_order(client: Client):
     multisig_sorted_1 = messages.MultisigRedeemScriptType(
         nodes=[node_internal, node_external],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[b"", dummy_signature],
         m=1,
         pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
     )
@@ -198,7 +201,7 @@ def test_pubkeys_order(client: Client):
     multisig_sorted_2 = messages.MultisigRedeemScriptType(
         nodes=[node_external, node_internal],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[b"", dummy_signature],
         m=1,
         pubkeys_order=messages.MultisigPubkeysOrder.LEXICOGRAPHIC,
     )
@@ -209,6 +212,16 @@ def test_pubkeys_order(client: Client):
     address_unsorted_2 = btc.get_address(
         client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_2
     )
+
+    pubkey_internal = btc.get_public_node(
+        client, parse_path("m/45h/0/0/0"), coin_name="Bitcoin"
+    ).node.public_key
+    pubkey_external = btc.get_public_node(
+        client, parse_path("m/45h/1/0/0"), coin_name="Bitcoin"
+    ).node.public_key
+
+    # This assertion implies that script pubkey of multisig_sorted_1, multisig_sorted_2 and multisig_unsorted_1 are the same
+    assert pubkey_internal < pubkey_external
 
     prev_hash, prev_tx = forge_prevtx(
         [(address_unsorted_1, 1_000_000), (address_unsorted_2, 1_000_000)]
@@ -278,9 +291,9 @@ def test_pubkeys_order(client: Client):
         multisig=multisig_sorted_2,
     )
 
-    tx_unsorted_1 = "0100000001637ffac0d4fbd8a6c02b114e36b079615ec3e4bdf09b769c7bf8b5fd6f8e7817000000009200483045022100f062d71445509d84a5769f219f4f0158dc7ff4351d671e6fa6bfdb171435064802206e1104f1d14f010bcc166cca6a9bd24b4a497475f8e23167858b4a3e92ac6a67014751210262e9ac5bea4c84c7dea650424ed768cf123af9e447eef3c63d37c41d1f825e49210369b79f2094a6eb89e7aff0e012a5699f7272968a341e48e99e64a54312f2932b52aeffffffff01301b0f000000000017a91440bfd8ae9d806d5bd7cf475ce6a80535836285148700000000"
+    tx_unsorted_1 = "0100000001637ffac0d4fbd8a6c02b114e36b079615ec3e4bdf09b769c7bf8b5fd6f8e781700000000db00483045022100f062d71445509d84a5769f219f4f0158dc7ff4351d671e6fa6bfdb171435064802206e1104f1d14f010bcc166cca6a9bd24b4a497475f8e23167858b4a3e92ac6a6701480000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000014751210262e9ac5bea4c84c7dea650424ed768cf123af9e447eef3c63d37c41d1f825e49210369b79f2094a6eb89e7aff0e012a5699f7272968a341e48e99e64a54312f2932b52aeffffffff01301b0f000000000017a91440bfd8ae9d806d5bd7cf475ce6a80535836285148700000000"
 
-    tx_unsorted_2 = "0100000001637ffac0d4fbd8a6c02b114e36b079615ec3e4bdf09b769c7bf8b5fd6f8e781701000000910047304402204914036468434698e2d87985007a66691f170195e4a16507bbb86b4c00da5fde02200a788312d447b3796ee5288ce9e9c0247896debfa473339302bc928da6dd78cb014751210369b79f2094a6eb89e7aff0e012a5699f7272968a341e48e99e64a54312f2932b210262e9ac5bea4c84c7dea650424ed768cf123af9e447eef3c63d37c41d1f825e4952aeffffffff01301b0f000000000017a914320ad0ff0f1b605ab1fa8e29b70d22827cf45a9f8700000000"
+    tx_unsorted_2 = "0100000001637ffac0d4fbd8a6c02b114e36b079615ec3e4bdf09b769c7bf8b5fd6f8e781701000000da004800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000147304402204914036468434698e2d87985007a66691f170195e4a16507bbb86b4c00da5fde02200a788312d447b3796ee5288ce9e9c0247896debfa473339302bc928da6dd78cb014751210369b79f2094a6eb89e7aff0e012a5699f7272968a341e48e99e64a54312f2932b210262e9ac5bea4c84c7dea650424ed768cf123af9e447eef3c63d37c41d1f825e4952aeffffffff01301b0f000000000017a914320ad0ff0f1b605ab1fa8e29b70d22827cf45a9f8700000000"
 
     _, tx = btc.sign_tx(
         client,
