@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 from trezorcrypto import aesgcm, curve25519
 
@@ -101,8 +102,8 @@ class TestTrezorHostProtocolCrypto(unittest.TestCase):
 
     def test_iv_from_nonce(self):
         for v in self.vectors_iv:
-            x = v[0]
-            y = x.to_bytes(8, "big")
+            # x = v[0]
+            # y = x.to_bytes(8, "big")
             iv = crypto._get_iv_from_nonce(v[0])
             self.assertEqual(iv, v[1])
         with self.assertRaises(AssertionError) as e:
