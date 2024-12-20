@@ -25,6 +25,6 @@
 #include "libtropic.h"
 
 tropic_result tropic_init(void);
-tropic_result tropic_handshake(const uint8_t *trezor_privkey);
+tropic_result tropic_handshake(const uint8_t *trezor_privkey, const uint8_t *tropic_pubkey);
 
 #endif

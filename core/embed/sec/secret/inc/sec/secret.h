@@ -58,7 +58,9 @@ secbool secret_optiga_writable(void);
 // Erases optiga pairing secret from the secret storage
 void secret_optiga_erase(void);
 
-secbool secret_tropic_get(uint8_t dest[SECRET_TROPIC_KEY_LEN]);
+secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]);
+
+secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]);
 
 // Regenerates the BHK and writes it to the secret storage
 void secret_bhk_regenerate(void);

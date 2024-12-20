@@ -23,8 +23,6 @@
 typedef enum _tropic_result {
   TROPIC_SUCCESS = 0,     // Operation completed successfully.
   TROPIC_ERR_INIT,
-  TROPIC_ERR_GET_INFO_CERT,
-  TROPIC_ERR_CERT_VERIFY_AND_PARSE,
   TROPIC_ERR_SESSION_START,
 } tropic_result;
 
