@@ -129,7 +129,7 @@ async def _prepare_pairing(ctx: PairingContext) -> None:
 async def show_display_data(
     ctx: PairingContext, expected_types: Container[int] = ()
 ) -> type[protobuf.MessageType]:
-    from trezorui2 import CANCELLED
+    from trezorui_api import CANCELLED
 
     read_task = ctx.read(expected_types)
     cancel_task = ctx.display_data.get_display_layout()

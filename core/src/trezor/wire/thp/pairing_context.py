@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-import trezorui2
+import trezorui_api
 from trezor import loop, protobuf, workflow
 from trezor.crypto import random
 from trezor.wire import context, message_handler, protocol_common
@@ -42,7 +42,7 @@ class PairingDisplayData:
             code_str = self._get_code_code_entry_str()
 
         return ui.Layout(
-            trezorui2.show_address_details(  # noqa
+            trezorui_api.show_address_details(  # noqa
                 qr_title="Scan QR code to pair",
                 address=qr_str,
                 case_sensitive=True,

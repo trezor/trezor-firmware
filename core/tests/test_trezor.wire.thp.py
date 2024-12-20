@@ -1,3 +1,4 @@
+# flake8: noqa: F403,F405
 from common import *  # isort:skip
 from mock_wire_interface import MockHID
 from trezor import config, io, protobuf
@@ -28,8 +29,13 @@ if utils.USE_THP:
         ThpEndRequest,
         ThpStartPairingRequest,
     )
-    from trezor.wire.thp import thp_main, memory_manager
-    from trezor.wire.thp import ChannelState, checksum, interface_manager
+    from trezor.wire.thp import (
+        ChannelState,
+        checksum,
+        interface_manager,
+        memory_manager,
+        thp_main,
+    )
     from trezor.wire.thp.crypto import Handshake
     from trezor.wire.thp.pairing_context import PairingContext
 
@@ -251,7 +257,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
         # test invalid tag in handshake phase
         cid_2 = get_channel_id_from_response(expected_response_1)
-        cid_2_bytes = cid_2.to_bytes(2, "big")
+        # cid_2_bytes = cid_2.to_bytes(2, "big")
         channel = thp_main._CHANNELS[cid_2]
         channel.iface = self.interface
 
