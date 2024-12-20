@@ -236,6 +236,55 @@ class TrezorConnection:
             raise click.ClickException(str(e)) from e
             # other exceptions may cause a traceback
 
+    @contextmanager
+    def session_context(
+        self,
+        empty_passphrase: bool = False,
+        derive_cardano: bool = False,
+        management: bool = False,
+        must_resume: bool = False,
+    ):
+        """Get a session instance as a context manager. Handle errors in a manner
+        appropriate for end-users.
+
+        Usage:
+        >>> with obj.session_context() as session:
+        >>>     do_your_actions_here()
+        """
+        try:
+            if management:
+                session = self.get_management_session()
+            else:
+                session = self.get_session(
+                    derive_cardano=derive_cardano,
+                    empty_passphrase=empty_passphrase,
+                    must_resume=must_resume,
+                )
+        except exceptions.DeviceLockedException:
+            click.echo(
+                "Device is locked, enter a pin on the device.",
+                err=True,
+            )
+        except transport.DeviceIsBusy:
+            click.echo("Device is in use by another process.")
+            sys.exit(1)
+        except Exception:
+            click.echo("Failed to find a Trezor device.")
+            if self.path is not None:
+                click.echo(f"Using path: {self.path}")
+            sys.exit(1)
+
+        try:
+            yield session
+        except exceptions.Cancelled:
+            # handle cancel action
+            click.echo("Action was cancelled.")
+            sys.exit(1)
+        except exceptions.TrezorException as e:
+            # handle any Trezor-sent exceptions as user-readable
+            raise click.ClickException(str(e)) from e
+            # other exceptions may cause a traceback
+
 
 def with_session(
     func: "t.Callable[Concatenate[Session, P], R]|None" = None,
@@ -262,26 +311,18 @@ def with_session(
         def function_with_session(
             obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
         ) -> "R":
-            try:
-                if management:
-                    session = obj.get_management_session()
-                else:
-                    # TODO try (sys.exit ve finally)
-                    session = obj.get_session(
-                        derive_cardano=derive_cardano,
-                        empty_passphrase=empty_passphrase,
-                        must_resume=must_resume,
-                    )
+            with obj.session_context(
+                empty_passphrase=empty_passphrase,
+                derive_cardano=derive_cardano,
+                management=management,
+                must_resume=must_resume,
+            ) as session:
+                try:
+                    return func(session, *args, **kwargs)
 
-                return func(session, *args, **kwargs)
-            except exceptions.DeviceLockedException:
-                click.echo(
-                    "Device is locked, enter a pin on the device.",
-                    err=True,
-                )
-            finally:
-                pass
-                # TODO try end session if not resumed
+                finally:
+                    pass
+                    # TODO try end session if not resumed
 
         return function_with_session
 
