@@ -378,7 +378,7 @@ class TestStorageCache(unittest.TestCase):
             session_id = cache_codec.start_session()
             self.assertEqual(cache_codec.start_session(session_id), session_id)
             get_active_session().set(KEY, b"A")
-            for i in range(_PROTOCOL_CACHE._MAX_SESSIONS_COUNT):
+            for _ in range(_PROTOCOL_CACHE._MAX_SESSIONS_COUNT):
                 cache_codec.start_session()
             self.assertNotEqual(cache_codec.start_session(session_id), session_id)
             self.assertIsNone(get_active_session().get(KEY))
