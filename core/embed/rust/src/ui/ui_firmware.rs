@@ -197,6 +197,8 @@ pub trait FirmwareUI {
     fn flow_confirm_set_new_pin(
         title: TString<'static>,
         description: TString<'static>,
+        cancel_title: TString<'static>,
+        is_wipe_code: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     #[allow(clippy::too_many_arguments)]

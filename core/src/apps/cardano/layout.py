@@ -486,7 +486,7 @@ async def warn_unknown_total_collateral() -> None:
     await layouts.show_warning(
         "confirm_unknown_total_collateral",
         TR.cardano__unknown_collateral_amount,
-        TR.cardano__check_all_items,
+        subheader=TR.cardano__check_all_items,
         br_code=BRT_Other,
     )
 
