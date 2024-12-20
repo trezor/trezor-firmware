@@ -35,25 +35,13 @@ tropic_result tropic_init(void) {
   return TROPIC_SUCCESS;
 }
 
-tropic_result tropic_handshake(const uint8_t *trezor_privkey) {
+tropic_result tropic_handshake(const uint8_t *trezor_privkey, const uint8_t *tropic_pubkey) {
   lt_ret_t ret = LT_FAIL;
 
-  uint8_t X509_cert[LT_L2_GET_INFO_REQ_CERT_SIZE] = {0};
-  ret = lt_get_info_cert(&lt_handle, X509_cert, LT_L2_GET_INFO_REQ_CERT_SIZE);
-  if (ret != LT_OK) {
-    return TROPIC_ERR_GET_INFO_CERT;
-  }
+  uint8_t trezor_pubkey[SECRET_TROPIC_KEY_LEN] = {};
+  curve25519_scalarmult_basepoint(trezor_pubkey, trezor_privkey);
 
-  uint8_t stpub[32] = {0};
-  ret = lt_cert_verify_and_parse(X509_cert, 512, stpub);
-  if (ret != LT_OK) {
-    return TROPIC_ERR_CERT_VERIFY_AND_PARSE;
-  }
-
-  uint8_t shipub[SECRET_TROPIC_KEY_LEN] = {};
-  curve25519_scalarmult_basepoint(shipub, trezor_privkey);
-
-  ret = lt_session_start(&lt_handle, stpub, PKEY_INDEX_BYTE, trezor_privkey, shipub);
+  ret = lt_session_start(&lt_handle, tropic_pubkey, PKEY_INDEX_BYTE, trezor_privkey, trezor_pubkey);
   if (ret != LT_OK) {
     return TROPIC_ERR_SESSION_START;
   }
