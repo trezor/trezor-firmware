@@ -124,7 +124,10 @@ class Channel:
             pass  # TODO ??
 
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-            self._log("self.buffer: ", get_bytes_as_str(buffer))
+            try:
+                self._log("self.buffer: ", get_bytes_as_str(buffer))
+            except Exception:
+                pass  # TODO handle nicer - happens in fallback_decrypt
 
         if self.expected_payload_length + INIT_HEADER_LENGTH == self.bytes_read:
             self._finish_message()
@@ -223,7 +226,9 @@ class Channel:
             offset = CHECKSUM_LENGTH - len(buf[-CHECKSUM_LENGTH:])
             utils.memcpy(self.temp_crc_compare, offset, crc_checksum, 0)
         else:
-            raise Exception("Buffer (+bytes_read) should not be bigger than payload")
+            raise Exception(
+                f"Buffer (+bytes_read) ({len(buf)}+{self.bytes_read})should not be bigger than payload{self.expected_payload_length}"
+            )
 
     def _handle_fallback_decryption(self, buf: memoryview) -> None:
         assert self.busy_decoder is not None
@@ -324,7 +329,7 @@ class Channel:
         self.temp_crc = 0
         self.temp_crc_compare = bytearray(4)
         self.temp_tag = bytearray(16)
-        self.bytes_read = INIT_HEADER_LENGTH
+        # self.bytes_read = INIT_HEADER_LENGTH
 
     def decrypt_buffer(
         self, message_length: int, offset: int = INIT_HEADER_LENGTH
