@@ -32,7 +32,9 @@ if utils.USE_THP:
 
     def prepare_context() -> None:
         channel = get_new_channel()
-        session_cache = cache_thp._deprecated_get_new_session(channel.channel_cache)
+        session_cache = cache_thp.create_or_replace_session(
+            channel.channel_cache, session_id=b"\x01"
+        )
         session_ctx = SessionContext(channel, session_cache)
         context.CURRENT_CONTEXT = session_ctx
 
