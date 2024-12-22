@@ -37,10 +37,6 @@ SECTIONS {
 
   .flash2 : ALIGN(CODE_ALIGNMENT) {
     build/firmware/frozen_mpy.o(.rodata*);
-    build/firmware/vendor/secp256k1-zkp/src/secp256k1.o(.rodata*);
-    build/firmware/vendor/secp256k1-zkp/src/precomputed_ecmult.o(.rodata*);
-    build/firmware/vendor/secp256k1-zkp/src/precomputed_ecmult_gen.o(.rodata*);
-    build/firmware/vendor/trezor-crypto/aes/aestab.o(.rodata*);
     . = ALIGN(4);
     */libtrezor_lib.a:(.text*);
     . = ALIGN(4);
