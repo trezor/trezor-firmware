@@ -4,7 +4,11 @@ pub mod backlight;
 
 use crate::{
     time::Duration,
-    ui::{display::{Color, Font}, util::include_icon},
+    ui::{
+        component::text::TextStyle,
+        display::{Color, Font},
+        util::include_icon,
+    },
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet, ResultStyle};
@@ -76,6 +80,30 @@ include_icon!(
 include_icon!(ICON_LOGO, "layout_eckhart/res/lock_full.toif");
 // Homescreen notifications.
 include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
+
+// TODO: text styles
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+// TT Satoshi Extra Light - 72 (PIN keyboard, Wallet backup / word)
+// TT Satoshi Extra LIght - 46 (Char keyboard, Backup check)
+// TT Satoshi Regular - 38 (Screen text, Menu item label)
+// TT Satoshi Medium - 26 (Screen text, Button label, Input value)
+// TT Satoshi Regular - 20 (Screen title, Hint, PageCounter, Currency/Secondary info)
+// Roboto Mono Medium - 38 (Number value)
+pub const TEXT_MONO_MEDIUM: TextStyle = TextStyle::new(
+    Font::NORMAL, // FIXME: font
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
+// Roboto Mono Light - 30 (Address, data)
+pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
+    Font::NORMAL, // FIXME: font
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
 
 // TODO: button styles
 pub const fn button_default() -> ButtonStyleSheet {
