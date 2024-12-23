@@ -40,6 +40,15 @@ pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // UI icons (white color).
 // TODO: icons
+include_icon!(ICON_ASTERISK, "model_lincoln/res/asterisk20.toif");
+include_icon!(ICON_CHECKMARK, "model_lincoln/res/checkmark24.toif");
+include_icon!(ICON_CHEVRON_DOWN, "model_lincoln/res/chevron_down24.toif");
+include_icon!(ICON_CHEVRON_LEFT, "model_lincoln/res/chevron_left24.toif");
+include_icon!(ICON_CHEVRON_RIGHT, "model_lincoln/res/chevron_right24.toif");
+include_icon!(ICON_CHEVRON_UP, "model_lincoln/res/chevron_up24.toif");
+include_icon!(ICON_CROSS, "model_lincoln/res/cross24.toif");
+include_icon!(ICON_DELETE, "model_lincoln/res/delete28.toif");
+include_icon!(ICON_SPECIAL_CHARS, "model_lincoln/res/special_chars_group.toif");
 
 // Welcome screen.
 include_icon!(ICON_LOGO, "model_lincoln/res/lock_full.toif");
