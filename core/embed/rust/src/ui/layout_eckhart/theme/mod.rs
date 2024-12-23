@@ -4,10 +4,13 @@ pub mod backlight;
 
 use crate::{
     time::Duration,
-    ui::{display::{Color, Font}, util::include_icon},
+    ui::{component::text::TextStyle, display::Color, util::include_icon},
 };
 
-use super::component::{ButtonStyle, ButtonStyleSheet, ResultStyle};
+use super::{
+    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
+    fonts,
+};
 
 pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
 
@@ -76,6 +79,62 @@ include_icon!(
 include_icon!(ICON_LOGO, "layout_eckhart/res/lock_full.toif");
 // Homescreen notifications.
 include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
+
+// Text styles
+/// Alias for use with copied code, might be deleted later
+pub const TEXT_NORMAL: TextStyle = TEXT_MEDIUM;
+/// TT Satoshi Extra Light - 72 (PIN keyboard, Wallet backup / word)
+pub const TEXT_SUPER_BIG: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_EXTRALIGHT_72,
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
+/// TT Satoshi Extra Light - 46 (Char keyboard, Backup check)
+pub const TEXT_BIG: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_EXTRALIGHT_46,
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
+/// TT Satoshi Regular - 38 (Screen text, Menu item label)
+pub const TEXT_REGULAR: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_38,
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
+/// TT Satoshi Medium - 26 (Screen text, Button label, Input value)
+pub const TEXT_MEDIUM: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
+    GREY_LIGHT,
+    BG,
+    GREY_LIGHT,
+    GREY_LIGHT,
+);
+/// TT Satoshi Regular - 22 (Screen title, Hint, PageCounter, Secondary info)
+/// with negative line spacing to make it more compact
+pub const TEXT_SMALL: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY).with_line_spacing(-4);
+/// Roboto Mono Medium - 38 (Number value)
+pub const TEXT_MONO_MEDIUM: TextStyle = TextStyle::new(
+    fonts::FONT_MONO_MEDIUM_38,
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
+/// Roboto Mono Light - 30 (Address, data)
+pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
+    fonts::FONT_MONO_LIGHT_30,
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
 
 // TODO: button styles
 pub const fn button_default() -> ButtonStyleSheet {
