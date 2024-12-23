@@ -1,13 +1,20 @@
 use crate::{
     error::Error,
     io::BinaryData,
-    micropython::{gc::Gc, list::List, obj::Obj},
+    micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     strutil::TString,
+    translations::TR,
     ui::{
-        component::Empty,
+        component::{
+            text::{
+                op::OpTextLayout,
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
+            },
+            Empty, FormattedText,
+        },
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::RecoveryType,
+            util::{ConfirmValueParams, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
@@ -17,25 +24,60 @@ use crate::{
 };
 
 use super::{
-    component::{ActionBar, Button, GenericScreen, Header, Hint},
-    theme, UIEckhart,
+    component::{ActionBar, Button, Header, HeaderMsg, Hint, TextScreen},
+    fonts, theme, UIEckhart,
 };
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
-        _title: TString<'static>,
-        _action: Option<TString<'static>>,
-        _description: Option<TString<'static>>,
+        title: TString<'static>,
+        action: Option<TString<'static>>,
+        description: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
-        _verb: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
-        _hold: bool,
+        hold: bool,
         _hold_danger: bool,
-        _reverse: bool,
+        reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let action = action.unwrap_or("".into());
+        let description = description.unwrap_or("".into());
+        let formatted_text = {
+            let ops = if !reverse {
+                OpTextLayout::new(theme::TEXT_NORMAL)
+                    .color(theme::GREY_LIGHT)
+                    .text(action, fonts::FONT_SATOSHI_REGULAR_38)
+                    .newline()
+                    .color(theme::GREY)
+                    .text(description, fonts::FONT_SATOSHI_REGULAR_22)
+            } else {
+                OpTextLayout::new(theme::TEXT_NORMAL)
+                    .color(theme::GREY)
+                    .text(description, fonts::FONT_SATOSHI_REGULAR_22)
+                    .newline()
+                    .color(theme::GREY_LIGHT)
+                    .text(action, fonts::FONT_SATOSHI_REGULAR_38)
+            };
+            FormattedText::new(ops).vertically_centered()
+        };
+
+        let verb = verb.unwrap_or(TR::buttons__confirm.into());
+        let right_button = if hold {
+            Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
+        } else {
+            Button::with_text(verb)
+        };
+        let screen = TextScreen::new(formatted_text)
+            .with_header(Header::new(title).with_menu_button())
+            .with_hint(Hint::new_instruction(description, None))
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                right_button,
+            ));
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn confirm_address(
@@ -146,22 +188,65 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_value(
-        _title: TString<'static>,
-        _value: Obj,
-        _description: Option<TString<'static>>,
-        _is_data: bool,
-        _extra: Option<TString<'static>>,
+        title: TString<'static>,
+        value: Obj,
+        description: Option<TString<'static>>,
+        is_data: bool,
+        extra: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
-        _verb: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
-        _info: bool,
-        _hold: bool,
-        _chunkify: bool,
-        _page_counter: bool,
+        info: bool,
+        hold: bool,
+        chunkify: bool,
+        page_counter: bool,
         _prompt_screen: bool,
-        _cancel: bool,
+        cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ConfirmValueParams {
+            description: description.unwrap_or("".into()),
+            extra: extra.unwrap_or("".into()),
+            value: if value != Obj::const_none() {
+                value.try_into()?
+            } else {
+                StrOrBytes::Str("".into())
+            },
+            font: if chunkify {
+                let value: TString = value.try_into()?;
+                theme::get_chunkified_text_style(value.len())
+            } else if is_data {
+                &theme::TEXT_MONO_MEDIUM
+            } else {
+                &theme::TEXT_MEDIUM
+            },
+            description_font: &theme::TEXT_SMALL,
+            extra_font: &theme::TEXT_SMALL,
+        }
+        .into_paragraphs();
+
+        let verb = verb.unwrap_or(TR::buttons__confirm.into());
+        let right_button = if hold {
+            Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
+        } else {
+            Button::with_text(verb)
+        };
+        let header = if info {
+            Header::new(title)
+                .with_right_button(Button::with_icon(theme::ICON_INFO), HeaderMsg::Menu)
+        } else {
+            Header::new(title)
+        };
+
+        let mut screen = TextScreen::new(paragraphs)
+            .with_header(header)
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                right_button,
+            ));
+        if page_counter {
+            screen = screen.with_hint(Hint::new_page_counter());
+        }
+        LayoutObj::new(screen)
     }
 
     fn confirm_value_intro(
@@ -369,12 +454,22 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_homescreen(
-        _label: TString<'static>,
+        label: TString<'static>,
         _hold: bool,
-        _notification: Option<TString<'static>>,
+        notification: Option<TString<'static>>,
         _notification_level: u8,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_NORMAL, label),
+            Paragraph::new(
+                &theme::TEXT_NORMAL,
+                notification.unwrap_or(TString::empty()),
+            ),
+        ])
+        .into_paragraphs();
+
+        let layout = RootComponent::new(paragraphs);
+        Ok(layout)
     }
 
     fn show_info(
@@ -387,12 +482,31 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_info_with_cancel(
-        _title: TString<'static>,
-        _items: Obj,
+        title: TString<'static>,
+        items: Obj,
         _horizontal: bool,
-        _chunkify: bool,
+        chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let mut paragraphs = ParagraphVecShort::new();
+        for para in IterBuf::new().try_iterate(items)? {
+            let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
+            let key: TString = key.try_into()?;
+            let value: TString = value.try_into()?;
+            paragraphs.add(Paragraph::new(&theme::TEXT_MEDIUM, key).no_break());
+            if chunkify {
+                paragraphs.add(Paragraph::new(
+                    theme::get_chunkified_text_style(value.len()),
+                    value,
+                ));
+            } else {
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_MEDIUM, value));
+            }
+        }
+
+        let screen = TextScreen::new(paragraphs.into_paragraphs())
+            .with_header(Header::new(title).with_close_button());
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn show_lockscreen(
@@ -403,8 +517,22 @@ impl FirmwareUI for UIEckhart {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
     }
 
-    fn show_mismatch(_title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+    fn show_mismatch(title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        let description: TString = TR::addr_mismatch__contact_support_at.into();
+        let url: TString = TR::addr_mismatch__support_url.into();
+        let button: TString = TR::buttons__quit.into();
+
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_REGULAR, description).centered(),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM, url).centered(),
+        ])
+        .into_paragraphs();
+        let screen = TextScreen::new(paragraphs)
+            .with_header(Header::new(title))
+            .with_action_bar(ActionBar::new_single(Button::with_text(button)));
+
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn show_progress(
@@ -447,35 +575,82 @@ impl FirmwareUI for UIEckhart {
 
     fn show_simple(
         text: TString<'static>,
-        _title: Option<TString<'static>>,
-        _button: Option<TString<'static>>,
+        title: Option<TString<'static>>,
+        button: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text).into_paragraphs();
+
+        let mut screen = TextScreen::new(paragraphs);
+        if let Some(title) = title {
+            screen = screen.with_header(Header::new(title));
+        }
+        if let Some(button) = button {
+            screen = screen.with_action_bar(ActionBar::new_single(Button::with_text(button)));
+        }
+
+        let obj = LayoutObj::new(screen)?;
+        Ok(obj)
     }
 
     fn show_success(
-        _title: TString<'static>,
-        _button: TString<'static>,
-        _description: TString<'static>,
-        _allow_cancel: bool,
+        title: TString<'static>,
+        button: TString<'static>,
+        description: TString<'static>,
+        allow_cancel: bool,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description).into_paragraphs();
+        let header = Header::new(title).with_icon(theme::ICON_DONE, theme::GREEN_LIGHT);
+        let action_bar = if allow_cancel {
+            ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                Button::with_text(button),
+            )
+        } else {
+            ActionBar::new_single(Button::with_text(button))
+        };
+        let screen = TextScreen::new(paragraphs)
+            .with_header(header)
+            .with_action_bar(action_bar);
+        let layout = LayoutObj::new(screen)?;
+        Ok(layout)
     }
 
-    fn show_wait_text(_text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+    fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text).into_paragraphs();
+        let screen = TextScreen::new(paragraphs);
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn show_warning(
-        _title: TString<'static>,
-        _button: TString<'static>,
-        _value: TString<'static>,
-        _description: TString<'static>,
-        _allow_cancel: bool,
-        _danger: bool,
+        title: TString<'static>,
+        button: TString<'static>,
+        value: TString<'static>,
+        description: TString<'static>,
+        allow_cancel: bool,
+        danger: bool, // TODO: review if `danger` needed in all layouts since we have show_danger
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_SMALL, description),
+            Paragraph::new(&theme::TEXT_REGULAR, value),
+        ])
+        .into_paragraphs();
+
+        let header = Header::new(title).with_icon(theme::ICON_INFO, theme::GREEN_LIGHT);
+        let action_bar = if allow_cancel {
+            ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                Button::with_text(button),
+            )
+        } else {
+            ActionBar::new_single(Button::with_text(button))
+        };
+        let screen = TextScreen::new(paragraphs)
+            .with_header(header)
+            .with_action_bar(action_bar);
+        let layout = LayoutObj::new(screen)?;
+        Ok(layout)
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {

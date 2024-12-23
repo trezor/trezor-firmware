@@ -12,6 +12,7 @@ use super::{
     fonts,
 };
 
+pub const CONFIRM_HOLD_DURATION: Duration = Duration::from_millis(1500);
 pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
 
 // Color palette.
@@ -136,6 +137,12 @@ pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     GREY_EXTRA_LIGHT,
 );
 
+/// Decide the text style of chunkified text according to its length.
+pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
+    // TODO: implement properly for Eckhart, see Delizia implemenation
+    &TEXT_MONO_MEDIUM
+}
+
 pub const fn label_title_main() -> TextStyle {
     TEXT_SMALL
 }
@@ -147,7 +154,7 @@ pub const fn button_default() -> ButtonStyleSheet {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
             button_color: BG,
-            icon_color: FG,
+            icon_color: GREY_LIGHT,
             background_color: BG,
         },
         active: &ButtonStyle {
@@ -155,6 +162,32 @@ pub const fn button_default() -> ButtonStyleSheet {
             text_color: GREY_LIGHT,
             button_color: GREY_SUPER_DARK,
             icon_color: GREY_LIGHT,
+            background_color: BG,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
+            background_color: GREY_DARK,
+        },
+    }
+}
+
+pub const fn button_confirm() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREEN_LIGHT,
+            button_color: BG,
+            icon_color: GREEN_LIGHT,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREEN,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREEN,
             background_color: BG,
         },
         disabled: &ButtonStyle {
