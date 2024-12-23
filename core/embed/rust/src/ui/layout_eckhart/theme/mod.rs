@@ -40,13 +40,42 @@ pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // UI icons (white color).
-// TODO: icons
-
+include_icon!(ICON_CHEVRON_DOWN, "layout_eckhart/res/chevron_down.toif");
+include_icon!(
+    ICON_CHEVRON_DOWN_MINI,
+    "layout_eckhart/res/chevron_down_mini.toif"
+);
+include_icon!(ICON_CHEVRON_LEFT, "layout_eckhart/res/chevron_left.toif");
+include_icon!(ICON_CHEVRON_RIGHT, "layout_eckhart/res/chevron_right.toif");
+include_icon!(ICON_CHEVRON_UP, "layout_eckhart/res/chevron_up.toif");
+include_icon!(ICON_CLOSE, "layout_eckhart/res/close.toif");
+include_icon!(ICON_DONE, "layout_eckhart/res/done.toif");
+include_icon!(ICON_FORESLASH, "layout_eckhart/res/foreslash.toif");
+include_icon!(ICON_INFO, "layout_eckhart/res/info.toif");
+include_icon!(ICON_MENU, "layout_eckhart/res/menu.toif");
+include_icon!(ICON_WARNING, "layout_eckhart/res/warning.toif");
+// Keyboard icons
+include_icon!(ICON_ASTERISK, "layout_eckhart/res/keyboard/asterisk.toif");
+include_icon!(ICON_CHECKMARK, "layout_eckhart/res/keyboard/checkmark.toif");
+include_icon!(ICON_CROSS, "layout_eckhart/res/keyboard/cross.toif");
+include_icon!(
+    ICON_DASH_HORIZONTAL,
+    "layout_eckhart/res/keyboard/dash_horizontal.toif"
+);
+include_icon!(
+    ICON_DASH_VERTICAL,
+    "layout_eckhart/res/keyboard/dash_vertical.toif"
+);
+include_icon!(ICON_DELETE, "layout_eckhart/res/keyboard/delete.toif");
+include_icon!(ICON_SPACE, "layout_eckhart/res/keyboard/space.toif");
+include_icon!(
+    ICON_SPECIAL_CHARS,
+    "layout_eckhart/res/keyboard/special_chars_group.toif"
+);
 // Welcome screen.
-include_icon!(ICON_LOGO, "layout_jefferson/res/lock_full.toif");
-
+include_icon!(ICON_LOGO, "layout_eckhart/res/lock_full.toif");
 // Homescreen notifications.
-include_icon!(ICON_WARNING40, "model_jefferson/res/warning40.toif");
+include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
 
 // TODO: button styles
 pub const fn button_default() -> ButtonStyleSheet {
