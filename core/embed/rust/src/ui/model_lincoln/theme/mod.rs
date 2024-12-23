@@ -4,7 +4,11 @@ pub mod backlight;
 
 use crate::{
     time::Duration,
-    ui::{display::{Color, Font}, util::include_icon},
+    ui::{
+        component::text::TextStyle,
+        display::{Color, Font},
+        util::include_icon,
+    },
 };
 
 use super::component::{ButtonStyle, ButtonStyleSheet, ResultStyle};
@@ -47,6 +51,9 @@ include_icon!(ICON_LOGO, "model_lincoln/res/lock_full.toif");
 
 // Homescreen notifications.
 include_icon!(ICON_WARNING40, "model_lincoln/res/warning40.toif");
+
+// TODO: text styles
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 
 // TODO: button styles
 pub const fn button_default() -> ButtonStyleSheet {
