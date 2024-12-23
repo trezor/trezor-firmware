@@ -44,13 +44,48 @@ pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // UI icons (white color).
-// TODO: icons
-
+include_icon!(ICON_CHEVRON_DOWN, "layout_jefferson/res/chevron_down.toif");
+include_icon!(
+    ICON_CHEVRON_DOWN_MINI,
+    "layout_jefferson/res/chevron_down_mini.toif"
+);
+include_icon!(ICON_CHEVRON_LEFT, "layout_jefferson/res/chevron_left.toif");
+include_icon!(
+    ICON_CHEVRON_RIGHT,
+    "layout_jefferson/res/chevron_right.toif"
+);
+include_icon!(ICON_CHEVRON_UP, "layout_jefferson/res/chevron_up.toif");
+include_icon!(ICON_CLOSE, "layout_jefferson/res/close.toif");
+include_icon!(ICON_DONE, "layout_jefferson/res/done.toif");
+include_icon!(ICON_FORESLASH, "layout_jefferson/res/foreslash.toif");
+include_icon!(ICON_INFO, "layout_jefferson/res/info.toif");
+include_icon!(ICON_MENU, "layout_jefferson/res/menu.toif");
+include_icon!(ICON_WARNING, "layout_jefferson/res/warning.toif");
+// Keyboard icons
+include_icon!(ICON_ASTERISK, "layout_jefferson/res/keyboard/asterisk.toif");
+include_icon!(
+    ICON_CHECKMARK,
+    "layout_jefferson/res/keyboard/checkmark.toif"
+);
+include_icon!(ICON_CROSS, "layout_jefferson/res/keyboard/cross.toif");
+include_icon!(
+    ICON_DASH_HORIZONTAL,
+    "layout_jefferson/res/keyboard/dash_horizontal.toif"
+);
+include_icon!(
+    ICON_DASH_VERTICAL,
+    "layout_jefferson/res/keyboard/dash_vertical.toif"
+);
+include_icon!(ICON_DELETE, "layout_jefferson/res/keyboard/delete.toif");
+include_icon!(ICON_SPACE, "layout_jefferson/res/keyboard/space.toif");
+include_icon!(
+    ICON_SPECIAL_CHARS,
+    "layout_jefferson/res/keyboard/special_chars_group.toif"
+);
 // Welcome screen.
 include_icon!(ICON_LOGO, "layout_jefferson/res/lock_full.toif");
-
 // Homescreen notifications.
-include_icon!(ICON_WARNING40, "model_jefferson/res/warning40.toif");
+include_icon!(ICON_WARNING40, "layout_jefferson/res/warning40.toif");
 
 // TODO: text styles
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
