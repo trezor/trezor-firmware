@@ -44,11 +44,25 @@ pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // UI icons (white color).
-// TODO: icons
-
+include_icon!(ICON_CHEVRON_DOWN, "model_lincoln/res/chevron_down.toif");
+include_icon!(ICON_CHEVRON_LEFT, "model_lincoln/res/chevron_left.toif");
+include_icon!(ICON_CHEVRON_RIGHT, "model_lincoln/res/chevron_right.toif");
+include_icon!(ICON_CHEVRON_UP, "model_lincoln/res/chevron_up.toif");
+include_icon!(ICON_CLOSE, "model_lincoln/res/close.toif");
+include_icon!(ICON_DONE, "model_lincoln/res/done.toif");
+include_icon!(ICON_FORESLASH, "model_lincoln/res/foreslash.toif");
+include_icon!(ICON_INFO, "model_lincoln/res/info.toif");
+include_icon!(ICON_MENU, "model_lincoln/res/menu.toif");
+include_icon!(ICON_WARNING, "model_lincoln/res/warning.toif");
+// Keyboard icons
+include_icon!(ICON_ASTERISK, "model_lincoln/res/keyboard/asterisk.toif");
+include_icon!(ICON_CHECKMARK, "model_lincoln/res/keyboard/checkmark.toif");
+include_icon!(ICON_CROSS, "model_lincoln/res/keyboard/cross.toif");
+include_icon!(ICON_DELETE, "model_lincoln/res/keyboard/delete.toif");
+include_icon!(ICON_SPACE, "model_lincoln/res/keyboard/space.toif");
+include_icon!(ICON_SPECIAL_CHARS, "model_lincoln/res/keyboard/special_chars_group.toif");
 // Welcome screen.
 include_icon!(ICON_LOGO, "model_lincoln/res/lock_full.toif");
-
 // Homescreen notifications.
 include_icon!(ICON_WARNING40, "model_lincoln/res/warning40.toif");
 
