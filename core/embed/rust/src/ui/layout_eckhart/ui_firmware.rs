@@ -4,7 +4,10 @@ use crate::{
     micropython::{gc::Gc, list::List, obj::Obj},
     strutil::TString,
     ui::{
-        component::Empty,
+        component::{
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
+            Empty,
+        },
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::RecoveryType,
@@ -369,12 +372,22 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_homescreen(
-        _label: TString<'static>,
+        label: TString<'static>,
         _hold: bool,
-        _notification: Option<TString<'static>>,
+        notification: Option<TString<'static>>,
         _notification_level: u8,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_NORMAL, label),
+            Paragraph::new(
+                &theme::TEXT_NORMAL,
+                notification.unwrap_or(TString::empty()),
+            ),
+        ])
+        .into_paragraphs();
+
+        let layout = RootComponent::new(paragraphs);
+        Ok(layout)
     }
 
     fn show_info(
