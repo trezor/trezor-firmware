@@ -94,7 +94,7 @@ def _from_pil_grayscale(
     data = bytearray()
 
     for y in range(0, height):
-        for x in range(0, width & (width - 1), 2):
+        for x in range(0, width & ~1, 2):
             i = y * width + x
 
             left, right = pixels[i], pixels[i + 1]
@@ -121,7 +121,7 @@ def _from_pil_grayscale_alpha(
 ) -> bytes:
     data = bytearray()
     for y in range(0, height):
-        for x in range(0, width & (width - 1), 2):
+        for x in range(0, width & ~1, 2):
             i = y * width + x
             left_w_alpha, right_w_alpha = pixels[i], pixels[i + 1]
             left = int((left_w_alpha[0] * left_w_alpha[1]) / 255)
