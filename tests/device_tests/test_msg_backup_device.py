@@ -95,7 +95,7 @@ def test_backup_slip39_basic(session: Session, click_info: bool):
 def test_backup_slip39_single(session: Session):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with session, session.client as client:
+    with session.client as client:
         IF = InputFlowBip39Backup(
             client, confirm_success=(client.layout_type is not LayoutType.Delizia)
         )
