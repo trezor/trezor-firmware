@@ -92,25 +92,25 @@ def test_backup_slip39_basic(session: Session, click_info: bool):
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-def test_backup_slip39_single(client: Client):
-    assert client.features.backup_availability == messages.BackupAvailability.Required
+def test_backup_slip39_single(session: Session):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with client:
+    with session.client as client:
         IF = InputFlowBip39Backup(
             client, confirm_success=(client.layout_type is not LayoutType.Quicksilver)
         )
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
-    client.init_device()
-    assert client.features.initialized is True
+    session.refresh_features()
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
 
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
-    assert client.features.backup_type is messages.BackupType.Slip39_Single_Extendable
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Single_Extendable
     assert shamir.combine_mnemonics([IF.mnemonic]) == shamir.combine_mnemonics(
         MNEMONIC_SLIP39_SINGLE_EXT_20
     )
