@@ -142,7 +142,6 @@ def test_set_failed(session: Session):
         device.change_pin(session)
 
     # Check that there's still no PIN protection now
-    # TODO change session.init_device()
     session.refresh_features()
     assert session.features.pin_protection is False
     _check_no_pin(session)
