@@ -4,23 +4,25 @@ use core::{
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
+
+#[cfg(feature = "touch")]
+use crate::ui::{event::TouchEvent, geometry::Direction};
 #[cfg(feature = "touch")]
 use num_traits::{FromPrimitive, ToPrimitive};
 
 #[cfg(feature = "ble")]
+use crate::micropython::buffer::get_buffer;
+#[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
+
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 
-use crate::ui::{display::Color, shape::render_on_display};
-
-#[cfg(feature = "touch")]
-use crate::ui::{event::TouchEvent, geometry::Direction};
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
     micropython::{
-        buffer::{get_buffer, StrBuffer},
+        buffer::StrBuffer,
         gc::{self, Gc, GcBox},
         macros::{obj_dict, obj_fn_1, obj_fn_2, obj_fn_3, obj_fn_var, obj_map, obj_type},
         map::Map,
@@ -37,8 +39,9 @@ use crate::{
             base::{AttachType, TimerToken},
             Component, Event, EventCtx, Never,
         },
-        display,
+        display::{self, Color},
         event::USBEvent,
+        shape::render_on_display,
         ui_features::ModelUI,
         UIFeaturesCommon,
     },
@@ -533,9 +536,8 @@ extern "C" fn ui_layout_ble_event(n_args: usize, args: *const Obj) -> Obj {
             return Err(Error::TypeError);
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
-        let data: Obj = args[2].try_into()?;
 
-        let data = unsafe { get_buffer(data) };
+        let data = unsafe { get_buffer(args[2]) };
 
         let data = unwrap!(data);
 
