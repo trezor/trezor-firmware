@@ -27,6 +27,8 @@
 
 #ifdef DISPLAY_PANEL_LX200D2406A
 #include "panels/lx200d2406a/lx200d2406a.h"
+#elif defined DISPLAY_PANEL_LX250A2401A
+#include "panels/lx250a2401a/lx250a2401a.h"
 #elif defined DISPLAY_PANEL_STM32U5A9J_DK
 #include "panels/stm32u5a9j-dk/stm32u5a9j-dk.h"
 #endif
