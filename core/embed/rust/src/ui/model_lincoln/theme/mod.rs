@@ -86,6 +86,8 @@ pub const fn button_default() -> ButtonStyleSheet {
     }
 }
 
+pub const HEADER_HEIGHT: i16 = 96;
+
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
 pub const RESULT_FOOTER_HEIGHT: i16 = 62;

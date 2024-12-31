@@ -6,14 +6,13 @@ use crate::{
         display::{Color, Icon},
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         lerp::Lerp,
-        model_mercury::{
-            component::{Button, ButtonMsg, ButtonStyleSheet},
-            theme::{self, HEADER_HEIGHT},
-        },
         shape::{self, Renderer},
         util::animation_disabled,
     },
 };
+
+use super::super::theme::{self, HEADER_HEIGHT};
+use super::button::{Button, ButtonMsg, ButtonStyleSheet};
 
 const ANIMATION_TIME_MS: u32 = 1000;
 

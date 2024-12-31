@@ -13,7 +13,7 @@ use crate::{
         event::SwipeEvent,
         geometry::{Alignment, Direction, Insets, Point, Rect},
         lerp::Lerp,
-        model_mercury::theme::TITLE_HEIGHT,
+        model_mercury::theme::HEADER_HEIGHT,
         shape::{self, Renderer},
     },
 };
@@ -361,7 +361,7 @@ fn frame_place(
     bounds: Rect,
     margin: usize,
 ) -> Rect {
-    let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
+    let (mut header_area, mut content_area) = bounds.split_top(HEADER_HEIGHT);
     content_area = content_area
         .inset(Insets::top(theme::SPACING))
         .inset(Insets::top(margin as i16));
