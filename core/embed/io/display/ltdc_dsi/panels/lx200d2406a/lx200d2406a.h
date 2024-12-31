@@ -47,3 +47,6 @@
 
 // Pitch (in pixels) of the virtual frame buffer
 #define FRAME_BUFFER_PIXELS_PER_LINE 240
+
+#define PANEL_USED_AREA_OFFSET_X 0
+#define PANEL_USED_AREA_OFFSET_Y 0

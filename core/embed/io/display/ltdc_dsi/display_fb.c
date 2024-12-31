@@ -126,15 +126,18 @@ bool display_get_frame_buffer(display_fb_info_t *fb_dest) {
   uint32_t fb_stride = FRAME_BUFFER_PIXELS_PER_LINE * FB_PIXEL_SIZE;
 
   // We may not utilize whole area of the display
-  addr += (LCD_HEIGHT - DISPLAY_RESY) / 2 * FB_PIXEL_SIZE;
-  addr += (LCD_WIDTH - DISPLAY_RESX) / 2 * fb_stride;
+  addr += PANEL_USED_AREA_OFFSET_X * FB_PIXEL_SIZE;
+  addr += PANEL_USED_AREA_OFFSET_Y * fb_stride;
 
   display_fb_info_t fb = {
       .ptr = (void *)addr,
       .stride = fb_stride,
   };
 
-  mpu_set_active_fb((void *)addr, VIRTUAL_FRAME_BUFFER_SIZE);
+  size_t fb_size = fb_stride * (DISPLAY_RESY - 1) * FB_PIXEL_SIZE +
+                   DISPLAY_RESX * FB_PIXEL_SIZE;
+
+  mpu_set_active_fb((void *)addr, fb_size);
 
   memcpy(fb_dest, &fb, sizeof(display_fb_info_t));
 

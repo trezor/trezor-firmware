@@ -53,3 +53,6 @@
 // Size of the virtual frame buffer in bytes
 #define VIRTUAL_FRAME_BUFFER_SIZE \
   (FRAME_BUFFER_PIXELS_PER_LINE * LCD_HEIGHT * 4)
+
+#define PANEL_USED_AREA_OFFSET_X 120
+#define PANEL_USED_AREA_OFFSET_Y 120
