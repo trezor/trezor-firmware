@@ -966,6 +966,8 @@ const uint32_t gfxmmu_lut_config[2 * GFXMMU_LUT_SIZE] = {
     0x000B2ED0   // GFXMMU_LUT479H
 };
 
+const uint32_t* panel_lut_get(void) { return gfxmmu_lut_config; }
+
 bool panel_init(display_driver_t* drv) {
   HAL_StatusTypeDef ret;
   /* CMD Mode */

@@ -81,6 +81,8 @@ void display_ensure_refreshed(void);
 bool panel_init(display_driver_t *drv);
 
 #ifdef DISPLAY_GFXMMU
+const uint32_t *panel_lut_get(void);
+
 bool display_gfxmmu_init(display_driver_t *drv);
 #endif
 
