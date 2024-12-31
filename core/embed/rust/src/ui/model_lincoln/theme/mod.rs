@@ -69,6 +69,10 @@ include_icon!(ICON_WARNING40, "model_lincoln/res/warning40.toif");
 // TODO: text styles
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 
+pub const fn label_title_main() -> TextStyle {
+    TEXT_NORMAL
+}
+
 // TODO: button styles
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -95,6 +99,9 @@ pub const fn button_default() -> ButtonStyleSheet {
         },
     }
 }
+
+pub const HEADER_HEIGHT: i16 = 96;
+pub const HEADER_BUTTON_WIDTH: i16 = 80;
 
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
