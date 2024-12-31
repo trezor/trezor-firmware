@@ -153,8 +153,8 @@ impl JpegInfo {
             ofs += match marker {
                 M_SOI => 0,
                 M_SOF0 => {
-                    let w = image.read_u16_be(ofs + 3)? as i16;
-                    let h = image.read_u16_be(ofs + 5)? as i16;
+                    let h = image.read_u16_be(ofs + 3)? as i16;
+                    let w = image.read_u16_be(ofs + 5)? as i16;
                     // Number of components
                     let nc = image.read_u8(ofs + 7)?;
                     if (nc != 1) && (nc != 3) {
