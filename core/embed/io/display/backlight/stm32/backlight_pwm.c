@@ -280,7 +280,11 @@ int backlight_pwm_set(int level) {
       backlight_pwm_wakeup_pulse();
     }
 
-    BACKLIGHT_PWM_TIM->CCR1 = (LED_PWM_TIM_PERIOD * level) / 255;
+    if (level > 64) {
+      BACKLIGHT_PWM_TIM->CCR1 = (LED_PWM_TIM_PERIOD * 64) / 255;
+    } else {
+      BACKLIGHT_PWM_TIM->CCR1 = (LED_PWM_TIM_PERIOD * level) / 255;
+    }
 
     drv->current_level = level;
   }
