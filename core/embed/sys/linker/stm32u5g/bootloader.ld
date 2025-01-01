@@ -30,8 +30,8 @@ confidential_vma = ADDR(.confidential);
 confidential_size = SIZEOF(.confidential);
 
 /* used by the startup code to wipe memory */
-_startup_clear_ram_0_start = MCU_SRAM1;
-_startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
+_startup_clear_ram_0_start = MCU_SRAM1 + BOOTARGS_SIZE;
+_startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE;
 _startup_clear_ram_1_start = MCU_SRAM2;
 _startup_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
 _startup_clear_ram_2_start = MCU_SRAM4;
