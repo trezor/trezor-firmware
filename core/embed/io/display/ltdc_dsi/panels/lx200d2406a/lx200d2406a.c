@@ -8,8 +8,6 @@
 
 #include "../../display_internal.h"
 
-#pragma GCC optimize("-O0")
-
 // todo static assert resolution
 
 bool panel_init(display_driver_t *drv) {
