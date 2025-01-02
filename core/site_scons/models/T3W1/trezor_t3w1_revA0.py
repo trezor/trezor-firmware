@@ -12,7 +12,7 @@ def configure(
     paths: list[str],
 ) -> list[str]:
     features_available: list[str] = []
-    board = "T3W1/boards/trezor_t3w1_revA.h"
+    board = "T3W1/boards/trezor_t3w1_revA0.h"
     hw_model = get_hw_model_as_number("T3W1")
     hw_revision = 0
 
@@ -41,10 +41,9 @@ def configure(
 
     sources += [
         "embed/io/display/ltdc_dsi/display_driver.c",
-        "embed/io/display/ltdc_dsi/panels/lx250a2401a/lx250a2401a.c",
+        "embed/io/display/ltdc_dsi/panels/lx200d2406a/lx200d2406a.c",
         "embed/io/display/ltdc_dsi/display_fb.c",
-        "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
-        "embed/io/display/ltdc_dsi/display_gfxmmu.c",
+        "embed/io/display/ltdc_dsi/display_fb_rgb565.c",
         "embed/io/display/fb_queue/fb_queue.c",
         "embed/io/display/backlight/stm32/backlight_pwm.c",
     ]
@@ -133,15 +132,13 @@ def configure(
 
     defines += [
         "FRAMEBUFFER",
-        "DISPLAY_RGBA8888",
-        ("UI_COLOR_32BIT", "1"),
+        "DISPLAY_RGB565",
         ("USE_RGB_COLORS", "1"),
-        ("DISPLAY_RESX", "380"),
-        ("DISPLAY_RESY", "520"),
+        ("DISPLAY_RESX", "240"),
+        ("DISPLAY_RESY", "320"),
     ]
-    features_available.append("ui_color_32bit")
     features_available.append("framebuffer")
-    features_available.append("display_rgba8888")
+    features_available.append("display_rgb565")
 
     defines += [
         "USE_DMA2D",
