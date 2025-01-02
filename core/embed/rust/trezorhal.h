@@ -1,3 +1,5 @@
+
+
 #include <trezor_model.h>
 
 #include <gfx/fonts.h>
@@ -32,3 +34,7 @@
 #include "slip39.h"
 
 #include "uzlib.h"
+
+// force bindgen to include these constants
+const uint32_t DISPLAY_RESX_ = DISPLAY_RESX;
+const uint32_t DISPLAY_RESY_ = DISPLAY_RESY;
