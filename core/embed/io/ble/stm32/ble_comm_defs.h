@@ -44,7 +44,7 @@ typedef enum {
   INTERNAL_EVENT_STATUS = 0x01,
   INTERNAL_EVENT_PAIRING_REQUEST = 0x04,
   INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
-} InternalEvent_t;
+} internal_event_t;
 
 typedef enum {
   INTERNAL_CMD_PING = 0x00,
@@ -55,5 +55,5 @@ typedef enum {
   INTERNAL_CMD_ACK = 0x05,
   INTERNAL_CMD_ALLOW_PAIRING = 0x06,
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
-} InternalCmd_t;
+} internal_cmd_t;
 #endif

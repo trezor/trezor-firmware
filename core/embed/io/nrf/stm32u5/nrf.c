@@ -66,7 +66,7 @@ typedef struct {
 typedef struct {
   uint8_t data[UART_PACKET_SIZE];
   uint8_t len;
-  void (*callback)(nrf_status_t status, void *context);
+  nrf_tx_callback_t callback;
   void *context;
 } nrf_uart_tx_data_t;
 
@@ -74,28 +74,25 @@ typedef struct {
   UART_HandleTypeDef urt;
   DMA_HandleTypeDef urt_tx_dma;
 
-  uint8_t urt_tx_buffers[UART_QUEUE_SIZE][sizeof(nrf_uart_tx_data_t)];
-  tsqueue_entry_t urt_tx_queue_entries[UART_QUEUE_SIZE];
-  tsqueue_t urt_tx_queue;
-  nrf_uart_tx_data_t urt_sending;
+  uint8_t tx_buffers[UART_QUEUE_SIZE][sizeof(nrf_uart_tx_data_t)];
+  tsqueue_entry_t tx_queue_entries[UART_QUEUE_SIZE];
+  tsqueue_t tx_queue;
+  nrf_uart_tx_data_t tx_data;
+  int32_t tx_msg_id;
 
-  uint8_t urt_rx_buf[UART_PACKET_SIZE];
-  uint8_t urt_rx_len;
-  uint8_t urt_rx_byte;
-  uint16_t urt_rx_idx;
+  uint8_t rx_buffer[UART_PACKET_SIZE];
+  uint8_t rx_len;
+  uint8_t rx_byte;
+  uint16_t rx_idx;
 
   SPI_HandleTypeDef spi;
   DMA_HandleTypeDef spi_dma;
-  uint8_t spi_buffer[SPI_PACKET_SIZE];
+  uint8_t long_rx_buffer[SPI_PACKET_SIZE];
 
-  int32_t urt_tx_msg_id;
-  bool urt_tx_running;
-  bool spi_rx_running;
   bool comm_running;
-
   bool initialized;
 
-  void (*service_listeners[NRF_SERVICE_CNT])(const uint8_t *data, uint32_t len);
+  nrf_rx_callback_t service_listeners[NRF_SERVICE_CNT];
 
 } nrf_driver_t;
 
@@ -107,12 +104,11 @@ static void nrf_start(void) {
     return;
   }
 
-  HAL_SPI_Receive_DMA(&drv->spi, drv->spi_buffer, SPI_PACKET_SIZE);
+  HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
 
-  tsqueue_reset(&drv->urt_tx_queue);
-  HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
+  tsqueue_reset(&drv->tx_queue);
+  HAL_UART_Receive_IT(&drv->urt, &drv->rx_byte, 1);
 
-  drv->spi_rx_running = true;
   drv->comm_running = true;
 
   nrf_signal_running();
@@ -122,24 +118,24 @@ static void nrf_abort_urt_comm(nrf_driver_t *drv) {
   HAL_UART_AbortReceive(&drv->urt);
   HAL_UART_AbortTransmit(&drv->urt);
 
-  if (drv->urt_sending.callback != NULL) {
-    drv->urt_sending.callback(NRF_STATUS_ERROR, drv->urt_sending.context);
+  if (drv->tx_data.callback != NULL) {
+    drv->tx_data.callback(NRF_STATUS_ERROR, drv->tx_data.context);
   }
 
-  drv->urt_rx_idx = 0;
-  drv->urt_rx_len = 0;
-  drv->urt_tx_msg_id = -1;
-  drv->urt_tx_running = false;
+  drv->rx_idx = 0;
+  drv->rx_len = 0;
+  drv->tx_msg_id = -1;
 
-  while (tsqueue_dequeue(&drv->urt_tx_queue, (uint8_t *)&drv->urt_sending,
-                         sizeof(nrf_uart_tx_data_t), NULL,
-                         &drv->urt_tx_msg_id)) {
-    drv->urt_sending.callback(NRF_STATUS_ERROR, drv->urt_sending.context);
+  while (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_data,
+                         sizeof(nrf_uart_tx_data_t), NULL, &drv->tx_msg_id)) {
+    if (drv->tx_data.callback != NULL) {
+      drv->tx_data.callback(NRF_STATUS_ERROR, drv->tx_data.context);
+    }
   }
 
-  memset(&drv->urt_sending, 0, sizeof(nrf_uart_tx_data_t));
+  memset(&drv->tx_data, 0, sizeof(nrf_uart_tx_data_t));
 
-  tsqueue_reset(&drv->urt_tx_queue);
+  tsqueue_reset(&drv->tx_queue);
 }
 
 static void nrf_stop(void) {
@@ -171,8 +167,8 @@ void nrf_init(void) {
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   memset(drv, 0, sizeof(*drv));
-  tsqueue_init(&drv->urt_tx_queue, drv->urt_tx_queue_entries,
-               (uint8_t *)drv->urt_tx_buffers, sizeof(nrf_uart_tx_data_t),
+  tsqueue_init(&drv->tx_queue, drv->tx_queue_entries,
+               (uint8_t *)drv->tx_buffers, sizeof(nrf_uart_tx_data_t),
                UART_QUEUE_SIZE);
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -331,20 +327,38 @@ void nrf_deinit(void) {
 
   nrf_stop();
 
+  NVIC_DisableIRQ(GPDMA1_Channel2_IRQn);
+  NVIC_DisableIRQ(SPI1_IRQn);
+
+  __HAL_RCC_SPI1_FORCE_RESET();
+  __HAL_RCC_SPI1_RELEASE_RESET();
+
+  __HAL_RCC_USART1_FORCE_RESET();
+  __HAL_RCC_USART1_RELEASE_RESET();
+
   drv->initialized = false;
 }
 
-void nrf_register_listener(nrf_service_id_t service,
-                           void (*listener)(const uint8_t *data,
-                                            uint32_t len)) {
+bool nrf_register_listener(nrf_service_id_t service,
+                           nrf_rx_callback_t callback) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
-    return;
+    return false;
   }
 
-  if (service < NRF_SERVICE_CNT) {
-    drv->service_listeners[service] = listener;
+  if (service >= NRF_SERVICE_CNT) {
+    return false;
   }
+
+  if (drv->service_listeners[service] != NULL) {
+    return false;
+  }
+
+  irq_key_t key = irq_lock();
+  drv->service_listeners[service] = callback;
+  irq_unlock(key);
+
+  return true;
 }
 
 void nrf_unregister_listener(nrf_service_id_t service) {
@@ -353,9 +367,13 @@ void nrf_unregister_listener(nrf_service_id_t service) {
     return;
   }
 
-  if (service < NRF_SERVICE_CNT) {
-    drv->service_listeners[service] = NULL;
+  if (service >= NRF_SERVICE_CNT) {
+    return;
   }
+
+  irq_key_t key = irq_lock();
+  drv->service_listeners[service] = NULL;
+  irq_unlock(key);
 }
 
 static void nrf_process_msg(nrf_driver_t *drv, const uint8_t *data,
@@ -407,9 +425,7 @@ uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len) {
 /// ---------------------------------------------------------
 
 int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
-                     uint32_t len,
-                     void (*callback)(nrf_status_t status, void *context),
-                     void *context) {
+                     uint32_t len, nrf_tx_callback_t callback, void *context) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
     return -1;
@@ -444,20 +460,18 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
   };
   memcpy(&buffer.data[UART_HEADER_SIZE + len], &footer, UART_FOOTER_SIZE);
 
-  if (!tsqueue_enqueue(&drv->urt_tx_queue, (uint8_t *)&buffer,
+  if (!tsqueue_enqueue(&drv->tx_queue, (uint8_t *)&buffer,
                        sizeof(nrf_uart_tx_data_t), &id)) {
     return -1;
   }
 
   irq_key_t key = irq_lock();
-  if (!drv->urt_tx_running) {
+  if (drv->tx_msg_id < 0) {
     int32_t tx_id = 0;
-    if (tsqueue_dequeue(&drv->urt_tx_queue, (uint8_t *)&drv->urt_sending,
+    if (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_data,
                         sizeof(nrf_uart_tx_data_t), NULL, &tx_id)) {
-      HAL_UART_Transmit_DMA(&drv->urt, drv->urt_sending.data,
-                            drv->urt_sending.len);
-      drv->urt_tx_msg_id = tx_id;
-      drv->urt_tx_running = true;
+      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_data.data, drv->tx_data.len);
+      drv->tx_msg_id = tx_id;
     }
   }
   irq_unlock(key);
@@ -471,14 +485,14 @@ bool nrf_abort_msg(int32_t id) {
     return false;
   }
 
-  bool aborted = tsqueue_abort(&drv->urt_tx_queue, id, NULL, 0, NULL);
+  bool aborted = tsqueue_abort(&drv->tx_queue, id, NULL, 0, NULL);
 
   if (aborted) {
     return true;
   }
 
-  if (drv->urt_tx_msg_id == id) {
-    drv->urt_tx_msg_id = -1;
+  if (drv->tx_msg_id == id) {
+    drv->tx_msg_id = -1;
     return true;
   }
 
@@ -500,64 +514,63 @@ static bool nrf_is_valid_startbyte(uint8_t val) {
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
-    if (drv->urt_rx_idx == 0) {
+    if (drv->rx_idx == 0) {
       // received first byte: START BYTE
-      if (nrf_is_valid_startbyte(drv->urt_rx_byte)) {
-        drv->urt_rx_buf[0] = drv->urt_rx_byte;
-        drv->urt_rx_idx++;
+      if (nrf_is_valid_startbyte(drv->rx_byte)) {
+        drv->rx_buffer[0] = drv->rx_byte;
+        drv->rx_idx++;
       } else {
         // bad message, flush the line
-        drv->urt_rx_idx = 0;
+        drv->rx_idx = 0;
       }
-    } else if (drv->urt_rx_idx == 1) {
+    } else if (drv->rx_idx == 1) {
       // received second byte: LEN
 
-      drv->urt_rx_buf[1] = drv->urt_rx_byte;
-      drv->urt_rx_len = drv->urt_rx_byte;
+      drv->rx_buffer[1] = drv->rx_byte;
+      drv->rx_len = drv->rx_byte;
 
-      if (drv->urt_rx_len > UART_PACKET_SIZE) {
-        drv->urt_rx_len = 0;
+      if (drv->rx_len > UART_PACKET_SIZE) {
+        drv->rx_len = 0;
       } else {
-        drv->urt_rx_idx++;
+        drv->rx_idx++;
       }
-    } else if (drv->urt_rx_idx >= UART_HEADER_SIZE &&
-               drv->urt_rx_idx < (drv->urt_rx_len - 1)) {
+    } else if (drv->rx_idx >= UART_HEADER_SIZE &&
+               drv->rx_idx < (drv->rx_len - 1)) {
       // receive the rest of the message
 
-      drv->urt_rx_buf[drv->urt_rx_idx] = drv->urt_rx_byte;
-      drv->urt_rx_idx++;
+      drv->rx_buffer[drv->rx_idx] = drv->rx_byte;
+      drv->rx_idx++;
 
-      if (drv->urt_rx_idx >= NRF_MAX_TX_DATA_SIZE) {
+      if (drv->rx_idx >= NRF_MAX_TX_DATA_SIZE) {
         // message is too long, flush the line
-        drv->urt_rx_idx = 0;
-        drv->urt_rx_len = 0;
+        drv->rx_idx = 0;
+        drv->rx_len = 0;
       }
 
-    } else if (drv->urt_rx_idx == (drv->urt_rx_len - 1)) {
+    } else if (drv->rx_idx == (drv->rx_len - 1)) {
       // received last byte: CRC
 
-      uint8_t crc =
-          crc8(drv->urt_rx_buf, drv->urt_rx_len - 1, 0x07, 0x00, false);
+      uint8_t crc = crc8(drv->rx_buffer, drv->rx_len - 1, 0x07, 0x00, false);
 
-      if (drv->urt_rx_byte == crc) {
-        uart_header_t *header = (uart_header_t *)drv->urt_rx_buf;
-        nrf_process_msg(drv, drv->urt_rx_buf, drv->urt_rx_len,
+      if (drv->rx_byte == crc) {
+        uart_header_t *header = (uart_header_t *)drv->rx_buffer;
+        nrf_process_msg(drv, drv->rx_buffer, drv->rx_len,
                         header->service_id & 0x0F, UART_HEADER_SIZE,
                         UART_OVERHEAD_SIZE);
       }
 
-      drv->urt_rx_idx = 0;
-      drv->urt_rx_len = 0;
+      drv->rx_idx = 0;
+      drv->rx_len = 0;
 
     } else {
       // bad message, flush the line
-      drv->urt_rx_idx = 0;
-      drv->urt_rx_len = 0;
+      drv->rx_idx = 0;
+      drv->rx_len = 0;
     }
   }
 
   // receive the rest of the message, or new message in any case.
-  HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
+  HAL_UART_Receive_IT(&drv->urt, &drv->rx_byte, 1);
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
@@ -565,28 +578,24 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
   if (drv->initialized && urt == &drv->urt) {
     nrf_abort_urt_comm(drv);
 
-    HAL_UART_Receive_IT(&drv->urt, &drv->urt_rx_byte, 1);
+    HAL_UART_Receive_IT(&drv->urt, &drv->rx_byte, 1);
   }
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
-    if (drv->urt_tx_msg_id >= 0 && (drv->urt_sending.callback != NULL)) {
-      drv->urt_sending.callback(NRF_STATUS_OK, drv->urt_sending.context);
-      drv->urt_tx_msg_id = -1;
-      memset(&drv->urt_sending, 0, sizeof(nrf_uart_tx_data_t));
+    if (drv->tx_msg_id >= 0 && (drv->tx_data.callback != NULL)) {
+      drv->tx_data.callback(NRF_STATUS_OK, drv->tx_data.context);
+      drv->tx_msg_id = -1;
+      memset(&drv->tx_data, 0, sizeof(nrf_uart_tx_data_t));
     }
 
     bool msg =
-        tsqueue_dequeue(&drv->urt_tx_queue, (uint8_t *)&drv->urt_sending,
-                        sizeof(nrf_uart_tx_data_t), NULL, &drv->urt_tx_msg_id);
+        tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_data,
+                        sizeof(nrf_uart_tx_data_t), NULL, &drv->tx_msg_id);
     if (msg) {
-      HAL_UART_Transmit_DMA(&drv->urt, drv->urt_sending.data,
-                            drv->urt_sending.len);
-      drv->urt_tx_running = true;
-    } else {
-      drv->urt_tx_running = false;
+      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_data.data, drv->tx_data.len);
     }
   }
 }
@@ -629,8 +638,7 @@ static bool start_spi_dma(nrf_driver_t *drv) {
     return false;
   }
 
-  HAL_SPI_Receive_DMA(&drv->spi, drv->spi_buffer, SPI_PACKET_SIZE);
-  drv->spi_rx_running = true;
+  HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
 
   return true;
 }
@@ -676,23 +684,22 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
     return;
   }
 
-  spi_header_t *header = (spi_header_t *)drv->spi_buffer;
+  spi_header_t *header = (spi_header_t *)drv->long_rx_buffer;
   spi_footer_t *footer =
-      (spi_footer_t *)(drv->spi_buffer + SPI_PACKET_SIZE - SPI_FOOTER_SIZE);
+      (spi_footer_t *)(drv->long_rx_buffer + SPI_PACKET_SIZE - SPI_FOOTER_SIZE);
 
-  uint8_t crc = crc8(drv->spi_buffer, SPI_PACKET_SIZE - SPI_FOOTER_SIZE, 0x07,
-                     0x00, false);
+  uint8_t crc = crc8(drv->long_rx_buffer, SPI_PACKET_SIZE - SPI_FOOTER_SIZE,
+                     0x07, 0x00, false);
 
   if ((header->service_id & 0xF0) != START_BYTE || footer->crc != crc) {
     HAL_SPI_Abort(&drv->spi);
-    HAL_SPI_Receive_DMA(&drv->spi, drv->spi_buffer, SPI_PACKET_SIZE);
+    HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
     return;
   }
 
-  nrf_process_msg(drv, drv->spi_buffer, SPI_PACKET_SIZE,
+  nrf_process_msg(drv, drv->long_rx_buffer, SPI_PACKET_SIZE,
                   header->service_id & 0x0F, SPI_HEADER_SIZE,
                   SPI_OVERHEAD_SIZE);
-  drv->spi_rx_running = false;
   start_spi_dma(drv);
 }
 

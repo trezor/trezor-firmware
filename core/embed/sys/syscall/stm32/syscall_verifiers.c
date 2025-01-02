@@ -723,7 +723,9 @@ void ble_get_state__verified(ble_state_t *state) {
     goto access_violation;
   }
 
-  ble_get_state(state);
+  ble_state_t state_copy = {0};
+  ble_get_state(&state_copy);
+  *state = state_copy;
   return;
 
 access_violation:
