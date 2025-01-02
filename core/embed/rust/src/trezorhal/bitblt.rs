@@ -6,6 +6,8 @@ use crate::ui::{
     shape::{Bitmap, BitmapFormat, BitmapView},
 };
 
+use crate::trezorhal::display::{DISPLAY_RESX, DISPLAY_RESY};
+
 /// Waits for the DMA2D peripheral transfer to complete.
 pub fn wait_for_transfer() {
     // SAFETY:
@@ -203,8 +205,8 @@ impl BitBltFill {
 
     /// Fills a rectangle on the display with the specified color.
     pub fn display_fill(&self) {
-        assert!(self.bitblt.dst_x + self.bitblt.width <= ffi::DISPLAY_RESX as u16);
-        assert!(self.bitblt.dst_y + self.bitblt.height <= ffi::DISPLAY_RESY as u16);
+        assert!(self.bitblt.dst_x + self.bitblt.width <= DISPLAY_RESX as u16);
+        assert!(self.bitblt.dst_y + self.bitblt.height <= DISPLAY_RESY as u16);
         // SAFETY:
         // - The destination rectangle is completely inside the display.
         unsafe { ffi::display_fill(&self.bitblt) };
@@ -423,8 +425,8 @@ impl<'a> BitBltCopy<'a> {
     ///
     /// - The source bitmap uses the RGB565 format.
     pub fn display_copy(&self) {
-        assert!(self.bitblt.dst_x + self.bitblt.width <= ffi::DISPLAY_RESX as u16);
-        assert!(self.bitblt.dst_y + self.bitblt.height <= ffi::DISPLAY_RESY as u16);
+        assert!(self.bitblt.dst_x + self.bitblt.width <= DISPLAY_RESX as u16);
+        assert!(self.bitblt.dst_y + self.bitblt.height <= DISPLAY_RESY as u16);
 
         // SAFETY:
         // - The source bitmap is in the correct formats.

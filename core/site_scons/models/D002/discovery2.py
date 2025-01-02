@@ -75,20 +75,20 @@ def configure(
         paths += ["embed/io/usb/inc"]
 
     defines += [
-        "USE_DMA2D",
+        "FRAMEBUFFER",
+        "DISPLAY_RGBA8888",
         ("UI_COLOR_32BIT", "1"),
         ("USE_RGB_COLORS", "1"),
+        ("DISPLAY_RESX", "240"),
+        ("DISPLAY_RESY", "240"),
     ]
-
-    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
-
-    features_available.append("dma2d")
-    features_available.append("ui_color_32bit")
-
-    defines += ["FRAMEBUFFER"]
-    defines += ["DISPLAY_RGBA8888"]
     features_available.append("framebuffer")
     features_available.append("display_rgba8888")
+    features_available.append("ui_color_32bit")
+
+    defines += (["USE_DMA2D"],)
+    features_available.append("dma2d")
+    sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
     defines += [
         "USE_HASH_PROCESSOR=1",

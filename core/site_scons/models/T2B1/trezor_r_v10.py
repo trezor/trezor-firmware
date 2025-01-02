@@ -16,7 +16,11 @@ def configure(
     hw_revision = 10
     board = "T2B1/boards/trezor_r_v10.h"
 
-    defines += ["FRAMEBUFFER"]
+    defines += [
+        "FRAMEBUFFER",
+        ("DISPLAY_RESX", "128"),
+        ("DISPLAY_RESY", "64"),
+    ]
     features_available.append("framebuffer")
     features_available.append("display_mono")
 

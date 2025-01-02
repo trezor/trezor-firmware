@@ -53,11 +53,15 @@ def configure(
         "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
     ]
     defines += ["USE_DMA2D"]
-    defines += [("USE_RGB_COLORS", "1")]
     features_available.append("dma2d")
 
-    defines += ["FRAMEBUFFER"]
-    defines += ["DISPLAY_RGB565"]
+    defines += [
+        "FRAMEBUFFER",
+        "DISPLAY_RGB565",
+        ("USE_RGB_COLORS", "1"),
+        ("DISPLAY_RESX", "240"),
+        ("DISPLAY_RESY", "320"),
+    ]
     features_available.append("framebuffer")
     features_available.append("display_rgb565")
 
