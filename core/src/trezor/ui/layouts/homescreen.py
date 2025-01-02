@@ -6,9 +6,36 @@ from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
 from trezor import TR, ui
 
 if TYPE_CHECKING:
-    from typing import Any, Iterator
+    from typing import Any, Callable, Iterator, ParamSpec, TypeVar
 
     from trezor import loop
+
+    P = ParamSpec("P")
+    R = TypeVar("R")
+
+
+def _retry_with_gc(layout: Callable[P, R], *args: P.args, **kwargs: P.kwargs) -> R:
+    """Retry creating the layout after garbage collection.
+
+    For reasons unknown, a previous homescreen layout may survive an unimport, and still
+    exists in the GC arena. At the time a new one is instantiated, the old one still
+    holds a lock on the JPEG buffer, and creating a new layout will fail with a
+    MemoryError.
+
+    It seems that the previous layout's survival is a glitch, and at a later time it is
+    still in memory but not held anymore. We assume that triggering a GC cycle will
+    correctly throw it away, and we will be able to create the new layout.
+
+    We only try this once because if it didn't help, the above assumption is wrong, so
+    no point in trying again.
+    """
+    try:
+        return layout(*args, **kwargs)
+    except MemoryError:
+        import gc
+
+        gc.collect()
+        return layout(*args, **kwargs)
 
 
 class HomescreenBase(ui.Layout):
@@ -56,7 +83,8 @@ class Homescreen(HomescreenBase):
                 level = 0
 
         super().__init__(
-            layout=trezorui_api.show_homescreen(
+            layout=_retry_with_gc(
+                trezorui_api.show_homescreen,
                 label=label,
                 notification=notification,
                 notification_level=level,
@@ -96,7 +124,8 @@ class Lockscreen(HomescreenBase):
             not bootscreen and storage_cache.homescreen_shown is self.RENDER_INDICATOR
         )
         super().__init__(
-            layout=trezorui_api.show_lockscreen(
+            layout=_retry_with_gc(
+                trezorui_api.show_lockscreen,
                 label=label,
                 bootscreen=bootscreen,
                 skip_first_paint=skip,
@@ -117,7 +146,8 @@ class Busyscreen(HomescreenBase):
 
     def __init__(self, delay_ms: int) -> None:
         super().__init__(
-            layout=trezorui_api.show_progress_coinjoin(
+            layout=_retry_with_gc(
+                trezorui_api.show_progress_coinjoin,
                 title=TR.coinjoin__waiting_for_others,
                 indeterminate=True,
                 time_ms=delay_ms,
