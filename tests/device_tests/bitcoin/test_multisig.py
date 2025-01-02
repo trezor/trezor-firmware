@@ -214,10 +214,10 @@ def test_pubkeys_order(session: Session):
     )
 
     pubkey_internal = btc.get_public_node(
-        client, parse_path("m/45h/0/0/0"), coin_name="Bitcoin"
+        session, parse_path("m/45h/0/0/0"), coin_name="Bitcoin"
     ).node.public_key
     pubkey_external = btc.get_public_node(
-        client, parse_path("m/45h/1/0/0"), coin_name="Bitcoin"
+        session, parse_path("m/45h/1/0/0"), coin_name="Bitcoin"
     ).node.public_key
 
     # This assertion implies that script pubkey of multisig_sorted_1, multisig_sorted_2 and multisig_unsorted_1 are the same
