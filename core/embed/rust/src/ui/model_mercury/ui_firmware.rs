@@ -182,7 +182,7 @@ impl FirmwareUI for UIMercury {
                 return Err(value_error!(c"Invalid image."));
             };
 
-            flow::confirm_homescreen::new_confirm_homescreen(title, CachedJpeg::new(image, 1))?
+            flow::confirm_homescreen::new_confirm_homescreen(title, CachedJpeg::new(image, 1)?)?
         };
         Ok(layout)
     }
@@ -904,7 +904,7 @@ impl FirmwareUI for UIMercury {
         notification_level: u8,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let notification = notification.map(|w| (w, notification_level));
-        let layout = RootComponent::new(Homescreen::new(label, notification, hold));
+        let layout = RootComponent::new(Homescreen::new(label, notification, hold)?);
         Ok(layout)
     }
 
@@ -958,7 +958,7 @@ impl FirmwareUI for UIMercury {
         bootscreen: bool,
         coinjoin_authorized: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(Lockscreen::new(label, bootscreen, coinjoin_authorized));
+        let layout = RootComponent::new(Lockscreen::new(label, bootscreen, coinjoin_authorized)?);
         Ok(layout)
     }
 

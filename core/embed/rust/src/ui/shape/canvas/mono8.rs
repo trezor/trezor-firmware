@@ -1,4 +1,5 @@
 use crate::{
+    error::Error,
     trezorhal::bitblt::{BitBltCopy, BitBltFill},
     ui::{
         display::Color,
@@ -32,10 +33,10 @@ impl<'a> Mono8Canvas<'a> {
         stride: Option<usize>,
         min_height: Option<i16>,
         buff: &'a mut [u8],
-    ) -> Option<Self> {
+    ) -> Result<Self, Error> {
         let bitmap = Bitmap::new_mut(BitmapFormat::MONO8, stride, size, min_height, buff)?;
         let viewport = Viewport::from_size(bitmap.size());
-        Some(Self { bitmap, viewport })
+        Ok(Self { bitmap, viewport })
     }
 
     /// Returns the specified row as a mutable slice.

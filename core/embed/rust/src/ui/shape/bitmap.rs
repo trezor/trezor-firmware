@@ -1,4 +1,4 @@
-use crate::trezorhal::bitblt;
+use crate::{error::Error, trezorhal::bitblt};
 
 use crate::ui::{display::Color, geometry::Offset};
 
@@ -61,10 +61,8 @@ impl<'a> Bitmap<'a> {
         mut size: Offset,
         min_height: Option<i16>,
         buff: &'a [u8],
-    ) -> Option<Self> {
-        if size.x < 0 && size.y < 0 {
-            return None;
-        }
+    ) -> Result<Self, Error> {
+        assert!(size.x >= 0 && size.y >= 0);
 
         let min_stride = match format {
             BitmapFormat::MONO1 => (size.x + 7) / 8,
@@ -101,14 +99,14 @@ impl<'a> Bitmap<'a> {
                 if max_height >= min_height as usize {
                     size.y = max_height as i16;
                 } else {
-                    return None;
+                    return Err(Error::ValueError(c"Buffer too small."));
                 }
             } else {
-                return None;
+                return Err(Error::ValueError(c"Buffer too small."));
             }
         }
 
-        Some(Self {
+        Ok(Self {
             ptr: buff.as_ptr() as *mut u8,
             stride,
             size,
@@ -134,10 +132,10 @@ impl<'a> Bitmap<'a> {
         size: Offset,
         min_height: Option<i16>,
         buff: &'a mut [u8],
-    ) -> Option<Self> {
+    ) -> Result<Self, Error> {
         let mut bitmap = Self::new(format, stride, size, min_height, buff)?;
         bitmap.mutable = true;
-        Some(bitmap)
+        Ok(bitmap)
     }
 
     /// Returns bitmap width in pixels.

@@ -1,11 +1,11 @@
 use crate::{
+    error::Error,
     io::BinaryData,
     ui::{
         component::{Component, Event, EventCtx, Never},
         display::image::ImageInfo,
         geometry::{Offset, Point, Rect},
-        shape,
-        shape::{render_on_canvas, ImageBuffer, Renderer, Rgb565Canvas},
+        shape::{self, render_on_canvas, ImageBuffer, Renderer, Rgb565Canvas},
     },
 };
 
@@ -17,7 +17,7 @@ pub struct CachedJpeg {
 }
 
 impl CachedJpeg {
-    pub fn new(image: BinaryData<'static>, scale: u8) -> Self {
+    pub fn new(image: BinaryData<'static>, scale: u8) -> Result<Self, Error> {
         let size = match ImageInfo::parse(image) {
             ImageInfo::Jpeg(info) => {
                 if info.mcu_height() > 16 {
@@ -29,7 +29,7 @@ impl CachedJpeg {
             _ => Offset::zero(),
         };
 
-        let mut buf = unwrap!(ImageBuffer::new(size), "no image buf");
+        let mut buf = ImageBuffer::new(size)?;
 
         render_on_canvas(buf.canvas(), None, |target| {
             shape::JpegImage::new_image(Point::zero(), image)
@@ -37,12 +37,12 @@ impl CachedJpeg {
                 .render(target);
         });
 
-        Self {
+        Ok(Self {
             area: Rect::zero(),
             image_size: size,
             jpeg: buf,
             scale,
-        }
+        })
     }
 }
 
