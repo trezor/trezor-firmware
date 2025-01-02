@@ -19,6 +19,7 @@ from mnemonic import Mnemonic
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
@@ -124,6 +125,7 @@ def test_reset_device_pin(session: Session):
     assert resp.passphrase_protection is True
 
 
+@pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.uninitialized_session
 def test_reset_entropy_check(session: Session):
     strength = 128  # 12 words
@@ -154,19 +156,26 @@ def test_reset_entropy_check(session: Session):
     assert IF.mnemonic == expected_mnemonic
 
     # Check that the device is properly initialized.
-    resp = session.call_raw(messages.GetFeatures())
-    assert resp.initialized is True
-    assert resp.backup_availability == messages.BackupAvailability.NotAvailable
-    assert resp.pin_protection is False
-    assert resp.passphrase_protection is False
-    assert resp.backup_type is messages.BackupType.Bip39
+    if client.protocol_version is ProtocolVersion.PROTOCOL_V1:
+        features = session.call_raw(messages.Initialize())
+    else:
+        session.refresh_features()
+        features = session.features
+
+    assert features.initialized is True
+    assert features.backup_availability == messages.BackupAvailability.NotAvailable
+    assert features.pin_protection is False
+    assert features.passphrase_protection is False
+    assert features.backup_type is messages.BackupType.Bip39
 
     # Check that the XPUBs are the same as those from the entropy check.
+    session = session.client.get_session()
     for path, xpub in path_xpubs:
-        res = get_public_node(client, path)
+        res = get_public_node(session, path)
         assert res.xpub == xpub
 
 
+@pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.uninitialized_session
 def test_reset_failed_check(session: Session):
     debug = session.client.debug
