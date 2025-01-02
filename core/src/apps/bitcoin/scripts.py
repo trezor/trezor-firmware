@@ -9,8 +9,19 @@ from apps.common.readers import read_compact_size
 from apps.common.writers import write_compact_size
 
 from . import common
-from .common import SigHashType
-from .multisig import multisig_get_pubkeys, multisig_pubkey_index
+from .common import (
+    LEAF_VERSION,
+    OP_CHECKSIG,
+    OP_CHECKSIGADD,
+    OP_NUMEQUAL,
+    SigHashType,
+    p2tr_multisig_tweaked_pubkey,
+)
+from .multisig import (
+    multisig_get_dummy_pubkey,
+    multisig_get_pubkeys,
+    multisig_pubkey_index,
+)
 from .readers import read_memoryview_prefixed, read_op_push
 from .writers import (
     write_bytes_fixed,
@@ -589,6 +600,81 @@ def parse_output_script_multisig(script: bytes) -> tuple[list[memoryview], int]:
         raise DataError("Invalid multisig script")
 
     return public_keys, threshold
+
+
+# Taproot Multisig
+# ===
+
+
+def write_witness_multisig_taproot(
+    w: Writer,
+    multisig: MultisigRedeemScriptType,
+    signature: bytes,
+    signature_index: int,
+    sighash_type: SigHashType,
+) -> None:
+    from .multisig import multisig_get_pubkey_count
+
+    # get other signatures, stretch with empty bytes to the number of the pubkeys
+    signatures = multisig.signatures + [b""] * (
+        multisig_get_pubkey_count(multisig) - len(multisig.signatures)
+    )
+
+    # fill in our signature
+    if signatures[signature_index]:
+        raise DataError("Invalid multisig parameters")
+    signatures[signature_index] = signature
+
+    # signatures + redeem script + control block
+    num_of_witness_items = len(signatures) + 1 + 1
+    write_compact_size(w, num_of_witness_items)
+
+    for s in reversed(signatures):
+        if s:
+            write_signature_prefixed(w, s, sighash_type)  # size of the witness included
+        else:
+            w.append(0x00)
+
+    # redeem script
+    pubkeys = multisig_get_pubkeys(multisig)
+    write_output_script_multisig_taproot(w, pubkeys, multisig.m)
+
+    # control block
+    dummy_pubkey = multisig_get_dummy_pubkey(multisig)
+    write_compact_size(w, len(dummy_pubkey[1:]) + 1)
+    parity, _ = p2tr_multisig_tweaked_pubkey(pubkeys, dummy_pubkey, multisig.m)
+    w.append(LEAF_VERSION + parity)
+    w.extend(dummy_pubkey[1:])
+
+
+def write_output_script_multisig_taproot(
+    w: Writer,
+    pubkeys: Sequence[bytes | memoryview],
+    m: int,
+) -> None:
+    n = len(pubkeys)
+    if n < 1 or n > 15 or m < 1 or m > 15 or m > n:
+        raise DataError("Invalid multisig parameters")
+    for pubkey in pubkeys:
+        if len(pubkey) != 33:
+            raise DataError("Invalid multisig parameters")
+
+    write_compact_size(w, output_script_multisig_taproot_length(pubkeys))
+
+    iterator = iter(pubkeys)
+    append_pubkey(w, next(iterator)[1:])
+    w.append(OP_CHECKSIG)
+    for p in iterator:
+        append_pubkey(w, p[1:])
+        w.append(OP_CHECKSIGADD)
+    w.append(0x50 + m)  # numbers 1 to 16 are pushed as 0x50 + value
+    w.append(OP_NUMEQUAL)
+
+
+def output_script_multisig_taproot_length(pubkeys: Sequence[bytes | memoryview]) -> int:
+    return (
+        len(pubkeys) * (1 + 32 + 1) + 1 + 1
+    )  # see write_output_script_multisig_taproot
 
 
 # OP_RETURN

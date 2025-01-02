@@ -2834,7 +2834,7 @@ static bool signing_verify_orig_nonlegacy_input(TxInputType *orig_input) {
     signing_hash_bip341(&orig_info, idx1, hash_type & 0xff, hash);
     uint8_t output_public_key[32] = {0};
     valid = (zkp_bip340_tweak_public_key(node.public_key + 1, NULL,
-                                         output_public_key) == 0) &&
+                                         output_public_key, NULL) == 0) &&
             (zkp_bip340_verify_digest(output_public_key, sig, hash) == 0);
   } else {
 #if !BITCOIN_ONLY

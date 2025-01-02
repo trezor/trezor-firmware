@@ -279,7 +279,7 @@ class TestSegwitBip341P2TR(unittest.TestCase):
 
             for sh in tx["signature_hashes"]:
                 txi = tx["inputs"][sh["index"]]
-                result = hasher.hash341(sh["index"], tx["sign_tx"], sh["hash_type"])
+                result = hasher.hash341(sh["index"], tx["sign_tx"], sh["hash_type"], None)
                 self.assertEqual(
                     result, sh["result"], f"signature_hash tx {i} input {sh['index']}"
                 )
