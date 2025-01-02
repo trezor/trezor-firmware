@@ -14,10 +14,13 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .messages import Failure
+    from .protobuf import MessageType
 
 
 class TrezorException(Exception):
@@ -25,7 +28,7 @@ class TrezorException(Exception):
 
 
 class TrezorFailure(TrezorException):
-    def __init__(self, failure: "Failure") -> None:
+    def __init__(self, failure: Failure) -> None:
         self.failure = failure
         self.code = failure.code
         self.message = failure.message
@@ -55,3 +58,10 @@ class Cancelled(TrezorException):
 
 class OutdatedFirmwareError(TrezorException):
     pass
+
+
+class UnexpectedMessageError(TrezorException):
+    def __init__(self, expected: type[MessageType], actual: MessageType) -> None:
+        self.expected = expected
+        self.actual = actual
+        super().__init__(f"Expected {expected.__name__} but Trezor sent {actual}")

@@ -154,7 +154,6 @@ if TYPE_CHECKING:
     from .protobuf import MessageType
 
 
-@expect(messages.HelloWorldResponse, field="text", ret_type=str)
 def say_hello(
     client: "TrezorClient",
     name: str,
@@ -166,8 +165,9 @@ def say_hello(
             name=name,
             amount=amount,
             show_display=show_display,
-        )
-    )
+        ),
+        expect=messages.HelloWorldResponse,
+    ).text
 ```
 
 Code above is sending `HelloWorldRequest` into Trezor and is expecting to get `HelloWorldResponse` back (from which it extracts the `text` string as a response).
