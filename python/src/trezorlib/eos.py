@@ -18,12 +18,12 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List, Tuple
 
 from . import exceptions, messages
-from .tools import b58decode, expect, session
+from .tools import b58decode, expect
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .protobuf import MessageType
     from .tools import Address
+    from .transport.session import Session
 
 
 def name_to_number(name: str) -> int:
@@ -321,17 +321,16 @@ def parse_transaction_json(
 
 @expect(messages.EosPublicKey)
 def get_public_key(
-    client: "TrezorClient", n: "Address", show_display: bool = False
+    session: "Session", n: "Address", show_display: bool = False
 ) -> "MessageType":
-    response = client.call(
+    response = session.call(
         messages.EosGetPublicKey(address_n=n, show_display=show_display)
     )
     return response
 
 
-@session
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     address: "Address",
     transaction: dict,
     chain_id: str,
@@ -347,11 +346,11 @@ def sign_tx(
         chunkify=chunkify,
     )
 
-    response = client.call(msg)
+    response = session.call(msg)
 
     try:
         while isinstance(response, messages.EosTxActionRequest):
-            response = client.call(actions.pop(0))
+            response = session.call(actions.pop(0))
     except IndexError:
         # pop from empty list
         raise exceptions.TrezorException(

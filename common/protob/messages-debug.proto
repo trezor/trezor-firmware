@@ -110,6 +110,8 @@ message DebugLinkGetState {
     // trezor-core only - wait until current layout changes
     // changed in 2.6.4: multiple wait types instead of true/false.
     optional DebugWaitType wait_layout = 3 [default=IMMEDIATE];
+    // THP only - it is used to get information from specified channel
+    optional bytes thp_channel_id=4;
 }
 
 /**
@@ -130,6 +132,9 @@ message DebugLinkState {
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
     optional management.BackupType mnemonic_type = 12;      // current mnemonic type (BIP-39/SLIP-39)
     repeated string tokens = 13;                            // current layout represented as a list of string tokens
+    optional uint32 thp_pairing_code_entry_code = 14;
+    optional bytes thp_pairing_code_qr_code = 15;
+    optional bytes thp_pairing_code_nfc_unidirectional = 16;
 }
 
 /**

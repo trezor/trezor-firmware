@@ -38,7 +38,7 @@ async def reset_device(msg: ResetDevice) -> Success:
         prompt_backup,
         show_wallet_created_success,
     )
-    from trezor.wire.context import call
+    from trezor.wire.context import call, try_get_ctx_ids
 
     from apps.common.request_pin import request_pin_confirm
 
@@ -60,8 +60,8 @@ async def reset_device(msg: ResetDevice) -> Success:
     # Rendering empty loader so users do not feel a freezing screen
     render_empty_loader(config.StorageMessage.PROCESSING_MSG)
 
-    # wipe storage to make sure the device is in a clear state
-    storage.reset()
+    # wipe storage to make sure the device is in a clear state (except protocol cache)
+    storage.reset(excluded=try_get_ctx_ids())
 
     # request and set new PIN
     if msg.pin_protection:
@@ -121,7 +121,7 @@ async def reset_device(msg: ResetDevice) -> Success:
     if perform_backup:
         await layout.show_backup_success()
 
-    return Success(message="Initialized")
+    return Success(message="Initialized")  # TODO: Why "Initialized?"
 
 
 async def _backup_bip39(mnemonic: str) -> None:
