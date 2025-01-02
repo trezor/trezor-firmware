@@ -156,6 +156,7 @@ def configure(
     sources += [
         "embed/sys/powerctl/npm1300/npm1300.c",
         "embed/sys/powerctl/stwlc38/stwlc38.c",
+        "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
         "embed/sys/powerctl/stm32u5/powerctl.c",
         "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
         "embed/sys/powerctl/wakeup_flags.c",
