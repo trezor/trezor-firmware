@@ -1,4 +1,5 @@
 use crate::{
+    error::Error,
     io::BinaryData,
     strutil::TString,
     time::{Duration, Instant, Stopwatch},
@@ -432,12 +433,12 @@ impl Homescreen {
         label: TString<'static>,
         notification: Option<(TString<'static>, u8)>,
         hold_to_lock: bool,
-    ) -> Self {
+    ) -> Result<Self, Error> {
         let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
         let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
 
         let image = get_homescreen_image();
-        let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
+        let mut buf = ImageBuffer::new(AREA.size())?;
 
         render_on_canvas(buf.canvas(), None, |target| {
             if let Some(image) = image {
@@ -447,7 +448,7 @@ impl Homescreen {
             }
         });
 
-        Self {
+        Ok(Self {
             label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD).vertically_centered(),
             label_width,
             label_height,
@@ -459,7 +460,7 @@ impl Homescreen {
             delay: Timer::new(),
             attach_animation: AttachAnimation::default(),
             label_anim: HideLabelAnimation::new(label_width),
-        }
+        })
     }
 
     fn level_to_style(level: u8) -> (Color, Color) {
@@ -724,9 +725,13 @@ pub struct Lockscreen {
 }
 
 impl Lockscreen {
-    pub fn new(label: TString<'static>, bootscreen: bool, coinjoin_authorized: bool) -> Self {
+    pub fn new(
+        label: TString<'static>,
+        bootscreen: bool,
+        coinjoin_authorized: bool,
+    ) -> Result<Self, Error> {
         let image = get_homescreen_image();
-        let mut buf = unwrap!(ImageBuffer::new(AREA.size()), "no image buf");
+        let mut buf = ImageBuffer::new(AREA.size())?;
 
         render_on_canvas(buf.canvas(), None, |target| {
             if let Some(image) = image {
@@ -748,7 +753,7 @@ impl Lockscreen {
 
         let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
 
-        Lockscreen {
+        Ok(Self {
             anim: LockscreenAnim::default(),
             attach_animation: AttachAnimation::default(),
             label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD),
@@ -760,7 +765,7 @@ impl Lockscreen {
             coinjoin_authorized,
             bg_image: buf,
             label_anim: HideLabelAnimation::new(label_width),
-        }
+        })
     }
 }
 

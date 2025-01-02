@@ -1,6 +1,9 @@
-use crate::ui::{
-    geometry::Offset,
-    shape::{Bitmap, BitmapView, Canvas, CanvasBuilder},
+use crate::{
+    error::Error,
+    ui::{
+        geometry::Offset,
+        shape::{Bitmap, BitmapView, Canvas, CanvasBuilder},
+    },
 };
 
 /// Size of image buffer in bytes
@@ -48,7 +51,7 @@ where
     ///
     /// Returns `None` if the buffer is already in use or the
     /// buffer is not big enough to hold the image.
-    pub fn new(size: Offset) -> Option<Self> {
+    pub fn new(size: Offset) -> Result<Self, Error> {
         // SAFETY:
         // It's safe to read/modify mutable static variable as
         // whole app is single-threaded.
@@ -58,7 +61,7 @@ where
         // to prevent that.
         unsafe {
             if IMAGE_BUFFER_LOCKED {
-                return None;
+                return Err(Error::AllocationFailed);
             }
 
             let bitmap =
@@ -66,7 +69,7 @@ where
 
             IMAGE_BUFFER_LOCKED = true;
 
-            Some(Self {
+            Ok(Self {
                 canvas: T::from_bitmap(bitmap),
             })
         }
