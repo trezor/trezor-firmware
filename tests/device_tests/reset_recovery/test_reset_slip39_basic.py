@@ -116,7 +116,7 @@ def test_reset_entropy_check(session: Session):
 
     # Check that the XPUBs are the same as those from the entropy check.
     for path, xpub in path_xpubs:
-        res = get_public_node(client, path)
+        res = get_public_node(session, path)
         assert res.xpub == xpub
 
 
