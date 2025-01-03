@@ -25,6 +25,12 @@ void gfx_bitblt_init(void) {
 #endif
 }
 
+void gfx_bitblt_deinit(void) {
+#if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
+  dma2d_deinit();
+#endif
+}
+
 void gfx_bitblt_wait(void) {
 #if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
   dma2d_wait();

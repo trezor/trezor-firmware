@@ -27,6 +27,10 @@
 #include <io/button.h>
 #endif
 
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>  // --- experimental ---
+#endif
+
 #include "embed/upymod/trezorobj.h"
 
 #ifdef TREZOR_EMULATOR
@@ -150,6 +154,15 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 #if USE_BUTTON
       else if (iface == BUTTON_IFACE) {
         const uint32_t evt = button_get_event();
+
+        // --- experimental ---
+#ifdef USE_POWERCTL
+        if (((evt & 0xFFFF) == BTN_POWER) && ((evt & BTN_EVT_UP) != 0)) {
+          powerctl_suspend();
+        }
+#endif  // USE_POWERCTL
+        // ----
+
         if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
           uint32_t etype = (evt >> 24) & 0x3U;  // button down/up

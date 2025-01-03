@@ -22,6 +22,7 @@
 
 #include <io/button.h>
 #include <sys/irq.h>
+#include <sys/mpu.h>
 
 #ifdef USE_POWERCTL
 #include <sys/wakeup_flags.h>
@@ -103,6 +104,12 @@ bool button_init(void) {
   return true;
 }
 
+void button_deinit(void) {
+#ifdef BTN_EXIT_INTERRUPT_HANDLER
+  NVIC_DisableIRQ(BTN_EXTI_INTERRUPT_NUM);
+#endif
+}
+
 uint32_t button_get_event(void) {
   button_driver_t *drv = &g_button_driver;
 
@@ -182,6 +189,9 @@ bool button_is_down(button_t button) {
 
 #ifdef BTN_EXTI_INTERRUPT_HANDLER
 void BTN_EXTI_INTERRUPT_HANDLER(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+
   // button_driver_t *drv = &g_button_driver;
 
   // Clear the EXTI line pending bit
@@ -191,6 +201,9 @@ void BTN_EXTI_INTERRUPT_HANDLER(void) {
   // Inform the powerctl module about button press
   wakeup_flags_set(WAKEUP_FLAG_BUTTON);
 #endif
+
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
 }
 #endif
 

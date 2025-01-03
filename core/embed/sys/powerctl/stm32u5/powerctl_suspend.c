@@ -25,6 +25,10 @@
 #include <sys/irq.h>
 #include <sys/wakeup_flags.h>
 
+#ifdef USE_OPTIGA
+#include <sec/optiga_hal.h>
+#endif
+
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
@@ -47,6 +51,49 @@ static bool background_tasks_suspended(void) { return true; }
 
 static void background_tasks_resume(void) {}
 
+
+void extra_powerdown() {
+  __HAL_RCC_I2C1_CLK_DISABLE();
+  __HAL_RCC_I2C2_CLK_DISABLE();
+  __HAL_RCC_I2C3_CLK_DISABLE();
+  __HAL_RCC_I2C4_CLK_DISABLE();
+
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+  // Configure SDA and SCL as open-drain output
+  // and connect to the I2C peripheral
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+
+  GPIO_InitStructure.Pin = I2C_INSTANCE_1_SDA_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_1_SDA_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = I2C_INSTANCE_1_SCL_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_1_SCL_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = I2C_INSTANCE_2_SDA_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_2_SDA_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = I2C_INSTANCE_2_SCL_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_2_SCL_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = I2C_INSTANCE_3_SDA_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_3_SDA_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = I2C_INSTANCE_3_SCL_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_3_SCL_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = I2C_INSTANCE_0_SDA_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_0_SDA_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = I2C_INSTANCE_0_SCL_PIN;
+  HAL_GPIO_Init(I2C_INSTANCE_0_SCL_PORT, &GPIO_InitStructure);
+
+  // GPIO_InitStructure.Pin = BTN_POWER_PIN;
+  //HAL_GPIO_Init(BTN_POWER_PORT, &GPIO_InitStructure);
+
+  __HAL_RCC_GTZC1_CLK_DISABLE();
+  __HAL_RCC_GTZC2_CLK_DISABLE();
+
+}
+
 void powerctl_suspend(void) {
   // Clear all wakeup flags. From this point, any wakeup event that
   // sets a wakeup flag causes this function to return.
@@ -54,7 +101,9 @@ void powerctl_suspend(void) {
 
   // Deinitialize all drivers that are not required in low-power mode
   // (e.g., USB, display, touch, haptic, etc.).
+#ifdef USE_USB
   usb_stop();
+#endif
 #ifdef USE_HAPTIC
   haptic_deinit();
 #endif
@@ -63,6 +112,12 @@ void powerctl_suspend(void) {
 #endif
   int backlight_level = display_get_backlight();
   display_deinit(DISPLAY_RESET_CONTENT);
+
+#ifdef USE_OPTIGA
+  optiga_hal_deinit();
+#endif  
+
+  //extra_powerdown();
 
   // In the following loop, the system will attempt to enter low-power mode.
   // Low-power mode may be exited for various reasons, but the loop will
@@ -93,6 +148,10 @@ void powerctl_suspend(void) {
       // immediately after exiting STOP2 mode.
       irq_key_t irq_key = irq_lock();
 
+      // Enable PWR peripheral clock
+      // (required by the following HAL_PWREx_EnterSTOP2Mode)
+      __HAL_RCC_PWR_CLK_ENABLE();
+
       // Enter STOP2 mode
       HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
 
@@ -118,7 +177,9 @@ void powerctl_suspend(void) {
 #ifdef USE_HAPTIC
   haptic_init();
 #endif
+#ifdef USE_USB
   usb_start();
+#endif
 }
 
 #endif  // KERNEL_MODE
