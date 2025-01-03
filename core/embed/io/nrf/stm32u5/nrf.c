@@ -59,7 +59,7 @@ typedef struct {
 #define UART_FOOTER_SIZE (sizeof(uart_footer_t))
 #define UART_OVERHEAD_SIZE (UART_HEADER_SIZE + UART_FOOTER_SIZE)
 #define UART_PACKET_SIZE (NRF_MAX_TX_DATA_SIZE + UART_OVERHEAD_SIZE)
-#define UART_QUEUE_SIZE (8)
+#define TX_QUEUE_SIZE (8)
 
 #define START_BYTE (0xA0)
 
@@ -68,17 +68,17 @@ typedef struct {
   uint8_t len;
   nrf_tx_callback_t callback;
   void *context;
-} nrf_uart_tx_data_t;
+} nrf_tx_request_t;
 
 typedef struct {
   UART_HandleTypeDef urt;
   DMA_HandleTypeDef urt_tx_dma;
 
-  uint8_t tx_buffers[UART_QUEUE_SIZE][sizeof(nrf_uart_tx_data_t)];
-  tsqueue_entry_t tx_queue_entries[UART_QUEUE_SIZE];
+  uint8_t tx_buffers[TX_QUEUE_SIZE][sizeof(nrf_tx_request_t)];
+  tsqueue_entry_t tx_queue_entries[TX_QUEUE_SIZE];
   tsqueue_t tx_queue;
-  nrf_uart_tx_data_t tx_data;
-  int32_t tx_msg_id;
+  nrf_tx_request_t tx_request;
+  int32_t tx_request_id;
 
   uint8_t rx_buffer[UART_PACKET_SIZE];
   uint8_t rx_len;
@@ -118,22 +118,22 @@ static void nrf_abort_urt_comm(nrf_driver_t *drv) {
   HAL_UART_AbortReceive(&drv->urt);
   HAL_UART_AbortTransmit(&drv->urt);
 
-  if (drv->tx_data.callback != NULL) {
-    drv->tx_data.callback(NRF_STATUS_ERROR, drv->tx_data.context);
+  if (drv->tx_request.callback != NULL) {
+    drv->tx_request.callback(NRF_STATUS_ERROR, drv->tx_request.context);
   }
 
   drv->rx_idx = 0;
   drv->rx_len = 0;
-  drv->tx_msg_id = -1;
+  drv->tx_request_id = -1;
 
-  while (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_data,
-                         sizeof(nrf_uart_tx_data_t), NULL, &drv->tx_msg_id)) {
-    if (drv->tx_data.callback != NULL) {
-      drv->tx_data.callback(NRF_STATUS_ERROR, drv->tx_data.context);
+  while (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
+                         sizeof(nrf_tx_request_t), NULL, &drv->tx_request_id)) {
+    if (drv->tx_request.callback != NULL) {
+      drv->tx_request.callback(NRF_STATUS_ERROR, drv->tx_request.context);
     }
   }
 
-  memset(&drv->tx_data, 0, sizeof(nrf_uart_tx_data_t));
+  memset(&drv->tx_request, 0, sizeof(nrf_tx_request_t));
 
   tsqueue_reset(&drv->tx_queue);
 }
@@ -168,8 +168,8 @@ void nrf_init(void) {
 
   memset(drv, 0, sizeof(*drv));
   tsqueue_init(&drv->tx_queue, drv->tx_queue_entries,
-               (uint8_t *)drv->tx_buffers, sizeof(nrf_uart_tx_data_t),
-               UART_QUEUE_SIZE);
+               (uint8_t *)drv->tx_buffers, sizeof(nrf_tx_request_t),
+               TX_QUEUE_SIZE);
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -445,7 +445,7 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
 
   int32_t id = 0;
 
-  nrf_uart_tx_data_t buffer;
+  nrf_tx_request_t buffer;
 
   buffer.callback = callback;
   buffer.context = context;
@@ -465,17 +465,18 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
   memcpy(&buffer.data[UART_HEADER_SIZE + len], &footer, UART_FOOTER_SIZE);
 
   if (!tsqueue_enqueue(&drv->tx_queue, (uint8_t *)&buffer,
-                       sizeof(nrf_uart_tx_data_t), &id)) {
+                       sizeof(nrf_tx_request_t), &id)) {
     return -1;
   }
 
   irq_key_t key = irq_lock();
-  if (drv->tx_msg_id < 0) {
+  if (drv->tx_request_id < 0) {
     int32_t tx_id = 0;
-    if (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_data,
-                        sizeof(nrf_uart_tx_data_t), NULL, &tx_id)) {
-      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_data.data, drv->tx_data.len);
-      drv->tx_msg_id = tx_id;
+    if (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
+                        sizeof(nrf_tx_request_t), NULL, &tx_id)) {
+      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_request.data,
+                            drv->tx_request.len);
+      drv->tx_request_id = tx_id;
     }
   }
   irq_unlock(key);
@@ -496,8 +497,8 @@ bool nrf_abort_msg(int32_t id) {
   }
 
   irq_key_t key = irq_lock();
-  if (drv->tx_msg_id == id) {
-    drv->tx_msg_id = -1;
+  if (drv->tx_request_id == id) {
+    drv->tx_request_id = -1;
     irq_unlock(key);
     return true;
   }
@@ -592,17 +593,18 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
-    if (drv->tx_msg_id >= 0 && (drv->tx_data.callback != NULL)) {
-      drv->tx_data.callback(NRF_STATUS_OK, drv->tx_data.context);
-      drv->tx_msg_id = -1;
-      memset(&drv->tx_data, 0, sizeof(nrf_uart_tx_data_t));
+    if (drv->tx_request_id >= 0 && (drv->tx_request.callback != NULL)) {
+      drv->tx_request.callback(NRF_STATUS_OK, drv->tx_request.context);
+      drv->tx_request_id = -1;
+      memset(&drv->tx_request, 0, sizeof(nrf_tx_request_t));
     }
 
     bool msg =
-        tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_data,
-                        sizeof(nrf_uart_tx_data_t), NULL, &drv->tx_msg_id);
+        tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
+                        sizeof(nrf_tx_request_t), NULL, &drv->tx_request_id);
     if (msg) {
-      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_data.data, drv->tx_data.len);
+      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_request.data,
+                            drv->tx_request.len);
     }
   }
 }
