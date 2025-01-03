@@ -14,42 +14,45 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING, List
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Sequence
 
 from . import messages
-from .tools import expect
+from .tools import _return_success
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
 
 
-@expect(
-    messages.WebAuthnCredentials,
-    field="credentials",
-    ret_type=List[messages.WebAuthnCredential],
-)
-def list_credentials(client: "TrezorClient") -> "MessageType":
-    return client.call(messages.WebAuthnListResidentCredentials())
-
-
-@expect(messages.Success, field="message", ret_type=str)
-def add_credential(client: "TrezorClient", credential_id: bytes) -> "MessageType":
+def list_credentials(client: "TrezorClient") -> Sequence[messages.WebAuthnCredential]:
     return client.call(
-        messages.WebAuthnAddResidentCredential(credential_id=credential_id)
+        messages.WebAuthnListResidentCredentials(), expect=messages.WebAuthnCredentials
+    ).credentials
+
+
+def add_credential(client: "TrezorClient", credential_id: bytes) -> str | None:
+    ret = client.call(
+        messages.WebAuthnAddResidentCredential(credential_id=credential_id),
+        expect=messages.Success,
     )
+    return _return_success(ret)
 
 
-@expect(messages.Success, field="message", ret_type=str)
-def remove_credential(client: "TrezorClient", index: int) -> "MessageType":
-    return client.call(messages.WebAuthnRemoveResidentCredential(index=index))
+def remove_credential(client: "TrezorClient", index: int) -> str | None:
+    ret = client.call(
+        messages.WebAuthnRemoveResidentCredential(index=index), expect=messages.Success
+    )
+    return _return_success(ret)
 
 
-@expect(messages.Success, field="message", ret_type=str)
-def set_counter(client: "TrezorClient", u2f_counter: int) -> "MessageType":
-    return client.call(messages.SetU2FCounter(u2f_counter=u2f_counter))
+def set_counter(client: "TrezorClient", u2f_counter: int) -> str | None:
+    ret = client.call(
+        messages.SetU2FCounter(u2f_counter=u2f_counter), expect=messages.Success
+    )
+    return _return_success(ret)
 
 
-@expect(messages.NextU2FCounter, field="u2f_counter", ret_type=int)
-def get_next_counter(client: "TrezorClient") -> "MessageType":
-    return client.call(messages.GetNextU2FCounter())
+def get_next_counter(client: "TrezorClient") -> int:
+    ret = client.call(messages.GetNextU2FCounter(), expect=messages.NextU2FCounter)
+    return ret.u2f_counter

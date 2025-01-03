@@ -18,11 +18,9 @@ import json
 from typing import TYPE_CHECKING
 
 from . import exceptions, messages
-from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
 TYPE_TRANSACTION_TRANSFER = 0x0101
@@ -196,25 +194,24 @@ def create_sign_tx(transaction: dict, chunkify: bool = False) -> messages.NEMSig
 # ====== Client functions ====== #
 
 
-@expect(messages.NEMAddress, field="address", ret_type=str)
 def get_address(
     client: "TrezorClient",
     n: "Address",
     network: int,
     show_display: bool = False,
     chunkify: bool = False,
-) -> "MessageType":
+) -> str:
     return client.call(
         messages.NEMGetAddress(
             address_n=n, network=network, show_display=show_display, chunkify=chunkify
-        )
-    )
+        ),
+        expect=messages.NEMAddress,
+    ).address
 
 
-@expect(messages.NEMSignedTx)
 def sign_tx(
     client: "TrezorClient", n: "Address", transaction: dict, chunkify: bool = False
-) -> "MessageType":
+) -> messages.NEMSignedTx:
     try:
         msg = create_sign_tx(transaction, chunkify=chunkify)
     except ValueError as e:
@@ -222,4 +219,4 @@ def sign_tx(
 
     assert msg.transaction is not None
     msg.transaction.address_n = n
-    return client.call(msg)
+    return client.call(msg, expect=messages.NEMSignedTx)

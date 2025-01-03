@@ -26,7 +26,7 @@ def get_public_key(
     client: "TrezorClient",
     address: str,
     show_display: bool,
-) -> messages.SolanaPublicKey:
+) -> bytes:
     """Get Solana public key."""
     address_n = tools.parse_path(address)
     return solana.get_public_key(client, address_n, show_display)
@@ -42,7 +42,7 @@ def get_address(
     address: str,
     show_display: bool,
     chunkify: bool,
-) -> messages.SolanaAddress:
+) -> str:
     """Get Solana address."""
     address_n = tools.parse_path(address)
     return solana.get_address(client, address_n, show_display, chunkify)
@@ -58,7 +58,7 @@ def sign_tx(
     address: str,
     serialized_tx: str,
     additional_information_file: Optional[TextIO],
-) -> messages.SolanaTxSignature:
+) -> bytes:
     """Sign Solana transaction."""
     address_n = tools.parse_path(address)
 

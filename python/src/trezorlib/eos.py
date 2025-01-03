@@ -18,11 +18,10 @@ from datetime import datetime
 from typing import TYPE_CHECKING, List, Tuple
 
 from . import exceptions, messages
-from .tools import b58decode, expect, session
+from .tools import b58decode, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
 
@@ -319,14 +318,13 @@ def parse_transaction_json(
 # ====== Client functions ====== #
 
 
-@expect(messages.EosPublicKey)
 def get_public_key(
     client: "TrezorClient", n: "Address", show_display: bool = False
-) -> "MessageType":
-    response = client.call(
-        messages.EosGetPublicKey(address_n=n, show_display=show_display)
+) -> messages.EosPublicKey:
+    return client.call(
+        messages.EosGetPublicKey(address_n=n, show_display=show_display),
+        expect=messages.EosPublicKey,
     )
-    return response
 
 
 @session

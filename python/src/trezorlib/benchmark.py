@@ -17,20 +17,18 @@
 from typing import TYPE_CHECKING
 
 from . import messages
-from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
 
 
-@expect(messages.BenchmarkNames)
 def list_names(
     client: "TrezorClient",
-) -> "MessageType":
-    return client.call(messages.BenchmarkListNames())
+) -> messages.BenchmarkNames:
+    return client.call(messages.BenchmarkListNames(), expect=messages.BenchmarkNames)
 
 
-@expect(messages.BenchmarkResult)
-def run(client: "TrezorClient", name: str) -> "MessageType":
-    return client.call(messages.BenchmarkRun(name=name))
+def run(client: "TrezorClient", name: str) -> messages.BenchmarkResult:
+    return client.call(
+        messages.BenchmarkRun(name=name), expect=messages.BenchmarkResult
+    )

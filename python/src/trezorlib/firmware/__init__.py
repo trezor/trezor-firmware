@@ -20,7 +20,7 @@ from hashlib import blake2s
 from typing_extensions import Protocol, TypeGuard
 
 from .. import messages
-from ..tools import expect, session
+from ..tools import session
 from .core import VendorFirmware
 from .legacy import LegacyFirmware, LegacyV2Firmware
 
@@ -106,6 +106,7 @@ def update(
         raise RuntimeError(f"Unexpected message {resp}")
 
 
-@expect(messages.FirmwareHash, field="hash", ret_type=bytes)
-def get_hash(client: "TrezorClient", challenge: t.Optional[bytes]):
-    return client.call(messages.GetFirmwareHash(challenge=challenge))
+def get_hash(client: "TrezorClient", challenge: t.Optional[bytes]) -> bytes:
+    return client.call(
+        messages.GetFirmwareHash(challenge=challenge), expect=messages.FirmwareHash
+    ).hash
