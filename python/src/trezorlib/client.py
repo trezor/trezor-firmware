@@ -27,7 +27,7 @@ from . import exceptions, mapping, messages, models
 from .log import DUMP_BYTES
 from .messages import Capability
 from .protobuf import MessageType
-from .tools import expect, parse_path, session
+from .tools import parse_path, session
 
 if TYPE_CHECKING:
     from .transport import Transport
@@ -397,12 +397,7 @@ class TrezorClient(Generic[UI]):
             else:
                 raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
 
-    @expect(messages.Success, field="message", ret_type=str)
-    def ping(
-        self,
-        msg: str,
-        button_protection: bool = False,
-    ) -> MessageType:
+    def ping(self, msg: str, button_protection: bool = False) -> str:
         # We would like ping to work on any valid TrezorClient instance, but
         # due to the protection modes, we need to go through self.call, and that will
         # raise an exception if the firmware is too old.
@@ -416,13 +411,18 @@ class TrezorClient(Generic[UI]):
                     # device is PIN-locked.
                     # respond and hope for the best
                     resp = self._callback_button(resp)
-                return resp
+                resp = messages.Success.ensure_isinstance(resp)
+                assert resp.message is not None
+                return resp.message
             finally:
                 self.close()
 
-        return self.call(
-            messages.Ping(message=msg, button_protection=button_protection)
+        resp = self.call(
+            messages.Ping(message=msg, button_protection=button_protection),
+            expect=messages.Success,
         )
+        assert resp.message is not None
+        return resp.message
 
     def get_device_id(self) -> Optional[str]:
         return self.features.device_id

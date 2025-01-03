@@ -44,10 +44,9 @@ from mnemonic import Mnemonic
 
 from . import mapping, messages, models, protobuf
 from .client import TrezorClient
-from .exceptions import TrezorFailure
+from .exceptions import TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
 from .messages import DebugWaitType
-from .tools import expect
 
 if TYPE_CHECKING:
     from typing_extensions import Protocol
@@ -775,9 +774,10 @@ class DebugLink:
         else:
             self.t1_take_screenshots = False
 
-    @expect(messages.DebugLinkMemory, field="memory", ret_type=bytes)
-    def memory_read(self, address: int, length: int) -> protobuf.MessageType:
-        return self._call(messages.DebugLinkMemoryRead(address=address, length=length))
+    def memory_read(self, address: int, length: int) -> bytes:
+        return self._call(
+            messages.DebugLinkMemoryRead(address=address, length=length)
+        ).memory
 
     def memory_write(self, address: int, memory: bytes, flash: bool = False) -> None:
         self._write(
@@ -787,9 +787,11 @@ class DebugLink:
     def flash_erase(self, sector: int) -> None:
         self._write(messages.DebugLinkFlashErase(sector=sector))
 
-    @expect(messages.Success)
     def erase_sd_card(self, format: bool = True) -> messages.Success:
-        return self._call(messages.DebugLinkEraseSdCard(format=format))
+        res = self._call(messages.DebugLinkEraseSdCard(format=format))
+        if not isinstance(res, messages.Success):
+            raise UnexpectedMessageError(messages.Success, res)
+        return res
 
     def snapshot_legacy(self) -> None:
         """Snapshot the current state of the device."""
@@ -1350,7 +1352,6 @@ class TrezorClientDebugLink(TrezorClient):
         raise RuntimeError("Unexpected call")
 
 
-@expect(messages.Success, field="message", ret_type=str)
 def load_device(
     client: "TrezorClient",
     mnemonic: Union[str, Iterable[str]],
@@ -1360,7 +1361,7 @@ def load_device(
     skip_checksum: bool = False,
     needs_backup: bool = False,
     no_backup: bool = False,
-) -> protobuf.MessageType:
+) -> None:
     if isinstance(mnemonic, str):
         mnemonic = [mnemonic]
 
@@ -1371,7 +1372,7 @@ def load_device(
             "Device is initialized already. Call device.wipe() and try again."
         )
 
-    resp = client.call(
+    client.call(
         messages.LoadDevice(
             mnemonics=mnemonics,
             pin=pin,
@@ -1380,25 +1381,25 @@ def load_device(
             skip_checksum=skip_checksum,
             needs_backup=needs_backup,
             no_backup=no_backup,
-        )
+        ),
+        expect=messages.Success,
     )
     client.init_device()
-    return resp
 
 
 # keep the old name for compatibility
 load_device_by_mnemonic = load_device
 
 
-@expect(messages.Success, field="message", ret_type=str)
-def prodtest_t1(client: "TrezorClient") -> protobuf.MessageType:
+def prodtest_t1(client: "TrezorClient") -> None:
     if client.features.bootloader_mode is not True:
         raise RuntimeError("Device must be in bootloader mode")
 
-    return client.call(
+    client.call(
         messages.ProdTestT1(
             payload=b"\x00\xFF\x55\xAA\x66\x99\x33\xCCABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\x00\xFF\x55\xAA\x66\x99\x33\xCC"
-        )
+        ),
+        expect=messages.Success,
     )
 
 
@@ -1450,6 +1451,5 @@ def _is_emulator(debug_client: "TrezorClientDebugLink") -> bool:
     return debug_client.features.fw_vendor == "EMULATOR"
 
 
-@expect(messages.Success, field="message", ret_type=str)
-def optiga_set_sec_max(client: "TrezorClient") -> protobuf.MessageType:
-    return client.call(messages.DebugLinkOptigaSetSecMax())
+def optiga_set_sec_max(client: "TrezorClient") -> None:
+    client.call(messages.DebugLinkOptigaSetSecMax(), expect=messages.Success)

@@ -18,35 +18,34 @@ from typing import TYPE_CHECKING
 
 from . import messages
 from .protobuf import dict_to_proto
-from .tools import expect, session
+from .tools import session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
 
-@expect(messages.BinanceAddress, field="address", ret_type=str)
 def get_address(
     client: "TrezorClient",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
-) -> "MessageType":
+) -> str:
     return client.call(
         messages.BinanceGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
-        )
-    )
+        ),
+        expect=messages.BinanceAddress,
+    ).address
 
 
-@expect(messages.BinancePublicKey, field="public_key", ret_type=bytes)
 def get_public_key(
     client: "TrezorClient", address_n: "Address", show_display: bool = False
-) -> "MessageType":
+) -> bytes:
     return client.call(
-        messages.BinanceGetPublicKey(address_n=address_n, show_display=show_display)
-    )
+        messages.BinanceGetPublicKey(address_n=address_n, show_display=show_display),
+        expect=messages.BinancePublicKey,
+    ).public_key
 
 
 @session
@@ -60,13 +59,7 @@ def sign_tx(
     tx_msg["chunkify"] = chunkify
     envelope = dict_to_proto(messages.BinanceSignTx, tx_msg)
 
-    response = client.call(envelope)
-
-    if not isinstance(response, messages.BinanceTxRequest):
-        raise RuntimeError(
-            "Invalid response, expected BinanceTxRequest, received "
-            + type(response).__name__
-        )
+    client.call(envelope, expect=messages.BinanceTxRequest)
 
     if "refid" in msg:
         msg = dict_to_proto(messages.BinanceCancelMsg, msg)
@@ -77,12 +70,4 @@ def sign_tx(
     else:
         raise ValueError("can not determine msg type")
 
-    response = client.call(msg)
-
-    if not isinstance(response, messages.BinanceSignedTx):
-        raise RuntimeError(
-            "Invalid response, expected BinanceSignedTx, received "
-            + type(response).__name__
-        )
-
-    return response
+    return client.call(msg, expect=messages.BinanceSignedTx)

@@ -18,41 +18,39 @@ from typing import TYPE_CHECKING
 
 from . import messages
 from .protobuf import dict_to_proto
-from .tools import dict_from_camelcase, expect
+from .tools import dict_from_camelcase
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
 REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
 
 
-@expect(messages.RippleAddress, field="address", ret_type=str)
 def get_address(
     client: "TrezorClient",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
-) -> "MessageType":
+) -> str:
     return client.call(
         messages.RippleGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
-        )
-    )
+        ),
+        expect=messages.RippleAddress,
+    ).address
 
 
-@expect(messages.RippleSignedTx)
 def sign_tx(
     client: "TrezorClient",
     address_n: "Address",
     msg: messages.RippleSignTx,
     chunkify: bool = False,
-) -> "MessageType":
+) -> messages.RippleSignedTx:
     msg.address_n = address_n
     msg.chunkify = chunkify
-    return client.call(msg)
+    return client.call(msg, expect=messages.RippleSignedTx)
 
 
 def create_sign_tx_msg(transaction: dict) -> messages.RippleSignTx:

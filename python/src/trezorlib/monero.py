@@ -17,11 +17,9 @@
 from typing import TYPE_CHECKING
 
 from . import messages
-from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
 
@@ -31,30 +29,30 @@ if TYPE_CHECKING:
 # FAKECHAIN = 3
 
 
-@expect(messages.MoneroAddress, field="address", ret_type=bytes)
 def get_address(
     client: "TrezorClient",
     n: "Address",
     show_display: bool = False,
     network_type: messages.MoneroNetworkType = messages.MoneroNetworkType.MAINNET,
     chunkify: bool = False,
-) -> "MessageType":
+) -> bytes:
     return client.call(
         messages.MoneroGetAddress(
             address_n=n,
             show_display=show_display,
             network_type=network_type,
             chunkify=chunkify,
-        )
-    )
+        ),
+        expect=messages.MoneroAddress,
+    ).address
 
 
-@expect(messages.MoneroWatchKey)
 def get_watch_key(
     client: "TrezorClient",
     n: "Address",
     network_type: messages.MoneroNetworkType = messages.MoneroNetworkType.MAINNET,
-) -> "MessageType":
+) -> messages.MoneroWatchKey:
     return client.call(
-        messages.MoneroGetWatchKey(address_n=n, network_type=network_type)
+        messages.MoneroGetWatchKey(address_n=n, network_type=network_type),
+        expect=messages.MoneroWatchKey,
     )

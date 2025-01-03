@@ -35,6 +35,8 @@ from itertools import zip_longest
 
 import typing_extensions as tx
 
+from .exceptions import UnexpectedMessageError
+
 if t.TYPE_CHECKING:
     from IPython.lib.pretty import RepresentationPrinter  # noqa: I900
 
@@ -311,6 +313,27 @@ class MessageType:
         data = BytesIO()
         dump_message(data, self)
         return len(data.getvalue())
+
+    @classmethod
+    def ensure_isinstance(cls, msg: t.Any) -> tx.Self:
+        """Ensure that the received `msg` is an instance of this class.
+
+        If `msg` is not an instance of this class, raise an `UnexpectedMessageError`.
+        otherwise, return it. This is useful for type-checking like so:
+
+        >>> msg = client.call(SomeMessage())
+        >>> if isinstance(msg, Foo):
+        >>>     return msg.foo_attr  # attribute of Foo, type-checks OK
+        >>> else:
+        >>>     msg = Bar.ensure_isinstance(msg)  # raises if msg is something else
+        >>>     return msg.bar_attr  # attribute of Bar, type-checks OK
+
+        If there is just one expected message, you should use the `expect` parameter of
+        `Client.call` instead.
+        """
+        if not isinstance(msg, cls):
+            raise UnexpectedMessageError(cls, msg)
+        return msg
 
 
 class LimitedReader:

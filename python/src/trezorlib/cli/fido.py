@@ -80,12 +80,12 @@ def credentials_list(client: "TrezorClient") -> None:
 @credentials.command(name="add")
 @click.argument("hex_credential_id")
 @with_client
-def credentials_add(client: "TrezorClient", hex_credential_id: str) -> str:
+def credentials_add(client: "TrezorClient", hex_credential_id: str) -> None:
     """Add the credential with the given ID as a resident credential.
 
     HEX_CREDENTIAL_ID is the credential ID as a hexadecimal string.
     """
-    return fido.add_credential(client, bytes.fromhex(hex_credential_id))
+    fido.add_credential(client, bytes.fromhex(hex_credential_id))
 
 
 @credentials.command(name="remove")
@@ -93,9 +93,9 @@ def credentials_add(client: "TrezorClient", hex_credential_id: str) -> str:
     "-i", "--index", required=True, type=click.IntRange(0, 99), help="Credential index."
 )
 @with_client
-def credentials_remove(client: "TrezorClient", index: int) -> str:
+def credentials_remove(client: "TrezorClient", index: int) -> None:
     """Remove the resident credential at the given index."""
-    return fido.remove_credential(client, index)
+    fido.remove_credential(client, index)
 
 
 #
@@ -111,9 +111,9 @@ def counter() -> None:
 @counter.command(name="set")
 @click.argument("counter", type=int)
 @with_client
-def counter_set(client: "TrezorClient", counter: int) -> str:
+def counter_set(client: "TrezorClient", counter: int) -> None:
     """Set FIDO/U2F counter value."""
-    return fido.set_counter(client, counter)
+    fido.set_counter(client, counter)
 
 
 @counter.command(name="get-next")

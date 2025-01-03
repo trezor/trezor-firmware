@@ -18,11 +18,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, List, Tuple, Union
 
 from . import exceptions, messages
-from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
     StellarMessageType = Union[
@@ -323,18 +321,18 @@ def _read_asset(asset: "Asset") -> messages.StellarAsset:
 # ====== Client functions ====== #
 
 
-@expect(messages.StellarAddress, field="address", ret_type=str)
 def get_address(
     client: "TrezorClient",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
-) -> "MessageType":
+) -> str:
     return client.call(
         messages.StellarGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
-        )
-    )
+        ),
+        expect=messages.StellarAddress,
+    ).address
 
 
 def sign_tx(
@@ -364,10 +362,7 @@ def sign_tx(
             "Reached end of operations without a signature."
         ) from None
 
-    if not isinstance(resp, messages.StellarSignedTx):
-        raise exceptions.TrezorException(
-            f"Unexpected message: {resp.__class__.__name__}"
-        )
+    resp = messages.StellarSignedTx.ensure_isinstance(resp)
 
     if operations:
         raise exceptions.TrezorException(

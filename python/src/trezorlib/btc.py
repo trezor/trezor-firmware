@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import warnings
 from copy import copy
 from decimal import Decimal
@@ -23,11 +25,10 @@ from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
 from typing_extensions import Protocol, TypedDict
 
 from . import exceptions, messages
-from .tools import expect, prepare_message_bytes, session
+from .tools import _return_success, prepare_message_bytes, session
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
     class ScriptSig(TypedDict):
@@ -103,7 +104,6 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
     )
 
 
-@expect(messages.PublicKey)
 def get_public_node(
     client: "TrezorClient",
     n: "Address",
@@ -114,13 +114,12 @@ def get_public_node(
     ignore_xpub_magic: bool = False,
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
-) -> "MessageType":
+) -> messages.PublicKey:
     if unlock_path:
-        res = client.call(
-            messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac)
+        client.call(
+            messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
+            expect=messages.UnlockedPathRequest,
         )
-        if not isinstance(res, messages.UnlockedPathRequest):
-            raise exceptions.TrezorException("Unexpected message")
 
     return client.call(
         messages.GetPublicKey(
@@ -130,16 +129,15 @@ def get_public_node(
             coin_name=coin_name,
             script_type=script_type,
             ignore_xpub_magic=ignore_xpub_magic,
-        )
+        ),
+        expect=messages.PublicKey,
     )
 
 
-@expect(messages.Address, field="address", ret_type=str)
-def get_address(*args: Any, **kwargs: Any):
-    return get_authenticated_address(*args, **kwargs)
+def get_address(*args: Any, **kwargs: Any) -> str:
+    return get_authenticated_address(*args, **kwargs).address
 
 
-@expect(messages.Address)
 def get_authenticated_address(
     client: "TrezorClient",
     coin_name: str,
@@ -151,13 +149,12 @@ def get_authenticated_address(
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,
     chunkify: bool = False,
-) -> "MessageType":
+) -> messages.Address:
     if unlock_path:
-        res = client.call(
-            messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac)
+        client.call(
+            messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
+            expect=messages.UnlockedPathRequest,
         )
-        if not isinstance(res, messages.UnlockedPathRequest):
-            raise exceptions.TrezorException("Unexpected message")
 
     return client.call(
         messages.GetAddress(
@@ -168,26 +165,27 @@ def get_authenticated_address(
             script_type=script_type,
             ignore_xpub_magic=ignore_xpub_magic,
             chunkify=chunkify,
-        )
+        ),
+        expect=messages.Address,
     )
 
 
-@expect(messages.OwnershipId, field="ownership_id", ret_type=bytes)
 def get_ownership_id(
     client: "TrezorClient",
     coin_name: str,
     n: "Address",
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
-) -> "MessageType":
+) -> bytes:
     return client.call(
         messages.GetOwnershipId(
             address_n=n,
             coin_name=coin_name,
             multisig=multisig,
             script_type=script_type,
-        )
-    )
+        ),
+        expect=messages.OwnershipId,
+    ).ownership_id
 
 
 def get_ownership_proof(
@@ -202,9 +200,7 @@ def get_ownership_proof(
     preauthorized: bool = False,
 ) -> Tuple[bytes, bytes]:
     if preauthorized:
-        res = client.call(messages.DoPreauthorized())
-        if not isinstance(res, messages.PreauthorizedRequest):
-            raise exceptions.TrezorException("Unexpected message")
+        client.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
     res = client.call(
         messages.GetOwnershipProof(
@@ -215,16 +211,13 @@ def get_ownership_proof(
             user_confirmation=user_confirmation,
             ownership_ids=ownership_ids,
             commitment_data=commitment_data,
-        )
+        ),
+        expect=messages.OwnershipProof,
     )
-
-    if not isinstance(res, messages.OwnershipProof):
-        raise exceptions.TrezorException("Unexpected message")
 
     return res.ownership_proof, res.signature
 
 
-@expect(messages.MessageSignature)
 def sign_message(
     client: "TrezorClient",
     coin_name: str,
@@ -233,7 +226,7 @@ def sign_message(
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     no_script_type: bool = False,
     chunkify: bool = False,
-) -> "MessageType":
+) -> messages.MessageSignature:
     return client.call(
         messages.SignMessage(
             coin_name=coin_name,
@@ -242,7 +235,8 @@ def sign_message(
             script_type=script_type,
             no_script_type=no_script_type,
             chunkify=chunkify,
-        )
+        ),
+        expect=messages.MessageSignature,
     )
 
 
@@ -255,18 +249,19 @@ def verify_message(
     chunkify: bool = False,
 ) -> bool:
     try:
-        resp = client.call(
+        client.call(
             messages.VerifyMessage(
                 address=address,
                 signature=signature,
                 message=prepare_message_bytes(message),
                 coin_name=coin_name,
                 chunkify=chunkify,
-            )
+            ),
+            expect=messages.Success,
         )
+        return True
     except exceptions.TrezorFailure:
         return False
-    return isinstance(resp, messages.Success)
 
 
 @session
@@ -319,17 +314,14 @@ def sign_tx(
                 setattr(signtx, name, value)
 
     if unlock_path:
-        res = client.call(
-            messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac)
+        client.call(
+            messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
+            expect=messages.UnlockedPathRequest,
         )
-        if not isinstance(res, messages.UnlockedPathRequest):
-            raise exceptions.TrezorException("Unexpected message")
     elif preauthorized:
-        res = client.call(messages.DoPreauthorized())
-        if not isinstance(res, messages.PreauthorizedRequest):
-            raise exceptions.TrezorException("Unexpected message")
+        client.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
-    res = client.call(signtx)
+    res = client.call(signtx, expect=messages.TxRequest)
 
     # Prepare structure for signatures
     signatures: List[Optional[bytes]] = [None] * len(inputs)
@@ -357,7 +349,7 @@ def sign_tx(
     )
 
     R = messages.RequestType
-    while isinstance(res, messages.TxRequest):
+    while True:
         # If there's some part of signed transaction, let's add it
         if res.serialized:
             if res.serialized.serialized_tx:
@@ -388,7 +380,7 @@ def sign_tx(
         if res.request_type == R.TXPAYMENTREQ:
             assert res.details.request_index is not None
             msg = payment_reqs[res.details.request_index]
-            res = client.call(msg)
+            res = client.call(msg, expect=messages.TxRequest)
         else:
             msg = messages.TransactionType()
             if res.request_type == R.TXMETA:
@@ -418,10 +410,7 @@ def sign_tx(
                     f"Unknown request type - {res.request_type}."
                 )
 
-            res = client.call(messages.TxAck(tx=msg))
-
-    if not isinstance(res, messages.TxRequest):
-        raise exceptions.TrezorException("Unexpected message")
+            res = client.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
 
     for i, sig in zip(inputs, signatures):
         if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
@@ -430,7 +419,6 @@ def sign_tx(
     return signatures, serialized_tx
 
 
-@expect(messages.Success, field="message", ret_type=str)
 def authorize_coinjoin(
     client: "TrezorClient",
     coordinator: str,
@@ -440,8 +428,8 @@ def authorize_coinjoin(
     n: "Address",
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
-) -> "MessageType":
-    return client.call(
+) -> str | None:
+    resp = client.call(
         messages.AuthorizeCoinJoin(
             coordinator=coordinator,
             max_rounds=max_rounds,
@@ -450,5 +438,7 @@ def authorize_coinjoin(
             address_n=n,
             coin_name=coin_name,
             script_type=script_type,
-        )
+        ),
+        expect=messages.Success,
     )
+    return _return_success(resp)

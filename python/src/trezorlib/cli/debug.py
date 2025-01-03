@@ -107,16 +107,16 @@ def record_screen_from_connection(
 
 @cli.command()
 @with_client
-def prodtest_t1(client: "TrezorClient") -> str:
+def prodtest_t1(client: "TrezorClient") -> None:
     """Perform a prodtest on Model One.
 
     Only available on PRODTEST firmware and on T1B1. Formerly named self-test.
     """
-    return debuglink_prodtest_t1(client)
+    debuglink_prodtest_t1(client)
 
 
 @cli.command()
 @with_client
-def optiga_set_sec_max(client: "TrezorClient") -> str:
+def optiga_set_sec_max(client: "TrezorClient") -> None:
     """Set Optiga's security event counter to maximum."""
-    return debuglink_optiga_set_sec_max(client)
+    debuglink_optiga_set_sec_max(client)
