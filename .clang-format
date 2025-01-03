@@ -6,3 +6,5 @@ ColumnLimit: 80
 # This setting differs between clang-format 7 and 9.
 # Let's set it explicitly to v7 value
 IncludeBlocks: Preserve
+# Insert New line at EOF if missing
+InsertNewlineAtEOF: true
