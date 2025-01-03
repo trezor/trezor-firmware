@@ -117,7 +117,7 @@ void display_init(display_content_mode_t mode) {
 #ifdef TREZOR_EMULATOR_RASPI
                        SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN
 #else
-                       SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI
+                       SDL_WINDOW_SHOWN
 #endif
       );
   free(window_title_alloc);
