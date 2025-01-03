@@ -19,8 +19,8 @@ use constants::{DEFAULT_DEBUG_PORT, DEFAULT_HOST, DEFAULT_PORT, LOCAL_LISTENER};
 /// The chunk size for the serial protocol.
 const CHUNK_SIZE: usize = 64;
 
-const READ_TIMEOUT_MS: u64 = 100000;
-const WRITE_TIMEOUT_MS: u64 = 100000;
+const READ_TIMEOUT_MS: u64 = 0;
+const WRITE_TIMEOUT_MS: u64 = 1000;
 
 /// An available transport for connecting with a device.
 #[derive(Debug)]
