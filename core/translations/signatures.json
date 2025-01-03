@@ -6,6 +6,20 @@
   },
   "history": [
     {
+      "signature": "03e05044e713084d2649c21449fbcc7d278781a16026eb9e24646a9ed6e47d1c0f58be62d9541da5c2594a8638bfb9a8457a8f3ba76f005bf8f4e1e2100b7a0401",
+      "version": "2.8.6.1",
+      "merkle_root": "fc821c85ebb534793a67c75579cb629dd90fedc233aff05094e0f8fbccae28f1",
+      "datetime": "2024-12-09T11:09:11.271641",
+      "commit": "17f2a3256b2631823c2bad1855fab61b27985fd2"
+    },
+    {
+      "signature": "036d039cc9c8e026499c7f57769c527d2e005eecf967c0a6cbe38a81a6df00a8cf956a42c8053a80f2b770f3ae09fec79564ffcfde116909a4b6c5d3d06bc4bd05",
+      "version": "2.8.6.0",
+      "merkle_root": "468d0a76a8d7a1319bb68955a02621c903ce948abb823774fef394659498adbe",
+      "datetime": "2024-12-05T11:46:35.955981",
+      "commit": "2625facf1fe9b71db120439853ceca0a61bb8396"
+    },
+    {
       "signature": "038e53755061a45698db059c7447fb11785a39fa744dcba557b1f15e51bbb6295602d06e4365dea99bfbd72fd259e982b431f842a06b59bc9cd69f4473e1fad708",
       "version": "2.8.5.0",
       "merkle_root": "0b23f6277b51bf2a80fd6d10b8d3c5dc5cb9808db808cd18669315e7ce733c6b",
