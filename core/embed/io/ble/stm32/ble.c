@@ -35,9 +35,11 @@ typedef enum {
   BLE_MODE_DFU,
 } ble_mode_t;
 
+// changing value of TX_QUEUE_LEN is not allowed
+// as it might result in order of messages being changed
+#define TX_QUEUE_LEN 1
 #define EVENT_QUEUE_LEN 4
-#define DATA_QUEUE_LEN 16
-#define SEND_QUEUE_LEN 1
+#define RX_QUEUE_LEN 16
 #define LOOP_PERIOD_MS 20
 #define PING_PERIOD 100
 
@@ -49,17 +51,17 @@ typedef struct {
   bool initialized;
   bool status_valid;
   bool accept_msgs;
-  ble_event_t event_buffers[EVENT_QUEUE_LEN];
+  ble_event_t event_queue_buffers[EVENT_QUEUE_LEN];
   tsqueue_entry_t event_queue_entries[EVENT_QUEUE_LEN];
   tsqueue_t event_queue;
 
-  uint8_t data_buffers[DATA_QUEUE_LEN][BLE_RX_PACKET_SIZE];
-  tsqueue_entry_t data_queue_entries[DATA_QUEUE_LEN];
-  tsqueue_t data_queue;
+  uint8_t rx_queue_buffers[RX_QUEUE_LEN][BLE_RX_PACKET_SIZE];
+  tsqueue_entry_t rx_queue_entries[RX_QUEUE_LEN];
+  tsqueue_t rx_queue;
 
-  uint8_t send_buffer[SEND_QUEUE_LEN][NRF_MAX_TX_DATA_SIZE];
-  tsqueue_entry_t send_queue_entries[SEND_QUEUE_LEN];
-  tsqueue_t send_queue;
+  uint8_t tx_queue_buffers[TX_QUEUE_LEN][NRF_MAX_TX_DATA_SIZE];
+  tsqueue_entry_t ts_queue_entries[TX_QUEUE_LEN];
+  tsqueue_t tx_queue;
 
   systimer_t *timer;
   uint16_t ping_cntr;
@@ -230,7 +232,7 @@ static void ble_process_data(const uint8_t *data, uint32_t len) {
     return;
   }
 
-  tsqueue_enqueue(&drv->data_queue, data, len, NULL);
+  tsqueue_enqueue(&drv->rx_queue, data, len, NULL);
 }
 
 // background loop, called from systimer every 10ms
@@ -253,11 +255,11 @@ static void ble_loop(void *context) {
     }
 
     uint8_t data[NRF_MAX_TX_DATA_SIZE] = {0};
-    if (tsqueue_dequeue(&drv->send_queue, data, NRF_MAX_TX_DATA_SIZE, NULL,
+    if (tsqueue_dequeue(&drv->tx_queue, data, NRF_MAX_TX_DATA_SIZE, NULL,
                         NULL)) {
       if (!nrf_send_msg(NRF_SERVICE_BLE, data, NRF_MAX_TX_DATA_SIZE, NULL,
                         NULL)) {
-        tsqueue_enqueue(&drv->send_queue, data, NRF_MAX_TX_DATA_SIZE, NULL);
+        tsqueue_enqueue(&drv->tx_queue, data, NRF_MAX_TX_DATA_SIZE, NULL);
       }
     }
 
@@ -288,16 +290,16 @@ void ble_init(void) {
   memset(drv, 0, sizeof(ble_driver_t));
 
   tsqueue_init(&drv->event_queue, drv->event_queue_entries,
-               (uint8_t *)drv->event_buffers, sizeof(ble_event_t),
+               (uint8_t *)drv->event_queue_buffers, sizeof(ble_event_t),
                EVENT_QUEUE_LEN);
 
-  tsqueue_init(&drv->data_queue, drv->data_queue_entries,
-               (uint8_t *)drv->data_buffers, BLE_RX_PACKET_SIZE,
-               DATA_QUEUE_LEN);
+  tsqueue_init(&drv->rx_queue, drv->rx_queue_entries,
+               (uint8_t *)drv->rx_queue_buffers, BLE_RX_PACKET_SIZE,
+               RX_QUEUE_LEN);
 
-  tsqueue_init(&drv->send_queue, drv->send_queue_entries,
-               (uint8_t *)drv->send_buffer, NRF_MAX_TX_DATA_SIZE,
-               SEND_QUEUE_LEN);
+  tsqueue_init(&drv->tx_queue, drv->ts_queue_entries,
+               (uint8_t *)drv->tx_queue_buffers, NRF_MAX_TX_DATA_SIZE,
+               TX_QUEUE_LEN);
 
   drv->timer = systimer_create(ble_loop, NULL);
 
@@ -320,8 +322,8 @@ void ble_deinit(void) {
   systimer_delete(drv->timer);
 
   tsqueue_reset(&drv->event_queue);
-  tsqueue_reset(&drv->data_queue);
-  tsqueue_reset(&drv->send_queue);
+  tsqueue_reset(&drv->rx_queue);
+  tsqueue_reset(&drv->tx_queue);
 
   nrf_unregister_listener(NRF_SERVICE_BLE);
   nrf_unregister_listener(NRF_SERVICE_BLE_MANAGER);
@@ -357,7 +359,7 @@ void ble_stop(void) {
   }
 
   drv->accept_msgs = false;
-  tsqueue_reset(&drv->data_queue);
+  tsqueue_reset(&drv->rx_queue);
 }
 
 bool ble_can_write(void) {
@@ -371,7 +373,7 @@ bool ble_can_write(void) {
     return false;
   }
 
-  return !tsqueue_full(&drv->send_queue);
+  return !tsqueue_full(&drv->tx_queue);
 }
 
 bool ble_write(const uint8_t *data, uint16_t len) {
@@ -388,7 +390,7 @@ bool ble_write(const uint8_t *data, uint16_t len) {
   bool sent = nrf_send_msg(NRF_SERVICE_BLE, data, len, NULL, NULL);
 
   if (!sent) {
-    bool queued = tsqueue_enqueue(&drv->send_queue, data, len, NULL);
+    bool queued = tsqueue_enqueue(&drv->tx_queue, data, len, NULL);
     return queued;
   }
 
@@ -402,7 +404,7 @@ bool ble_can_read(void) {
     return false;
   }
 
-  return !tsqueue_empty(&drv->data_queue);
+  return !tsqueue_empty(&drv->rx_queue);
 }
 
 uint32_t ble_read(uint8_t *data, uint16_t max_len) {
@@ -412,17 +414,13 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
     return 0;
   }
 
-  tsqueue_t *queue = &drv->data_queue;
+  tsqueue_t *queue = &drv->rx_queue;
 
   uint16_t read_len = 0;
 
-  bool received = tsqueue_dequeue(queue, data, max_len, &read_len, NULL);
+  tsqueue_dequeue(queue, data, max_len, &read_len, NULL);
 
-  if (!received) {
-    return 0;
-  }
-
-  return max_len;
+  return read_len;
 }
 
 bool ble_issue_command(ble_command_t command) {
@@ -469,30 +467,12 @@ bool ble_get_event(ble_event_t *event) {
     return false;
   }
 
-  ble_event_t tmp_event = {0};
-  uint16_t len = 0;
-  bool read = tsqueue_dequeue(&drv->event_queue, (uint8_t *)&tmp_event,
-                              sizeof(tmp_event), &len, NULL);
-
-  if (!read) {
-    return false;
-  }
-
-  if (len != sizeof(ble_event_t)) {
-    return false;
-  }
-
-  memcpy(event, &tmp_event, sizeof(ble_event_t));
-
-  return true;
+  return tsqueue_dequeue(&drv->event_queue, (uint8_t *)event, sizeof(*event),
+                         NULL, NULL);
 }
 
 void ble_get_state(ble_state_t *state) {
   const ble_driver_t *drv = &g_ble_driver;
-
-  if (state == NULL) {
-    return;
-  }
 
   if (!drv->initialized) {
     memset(state, 0, sizeof(ble_state_t));

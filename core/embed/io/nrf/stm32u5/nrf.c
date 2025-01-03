@@ -495,11 +495,14 @@ bool nrf_abort_msg(int32_t id) {
     return true;
   }
 
+  irq_key_t key = irq_lock();
   if (drv->tx_msg_id == id) {
     drv->tx_msg_id = -1;
+    irq_unlock(key);
     return true;
   }
 
+  irq_unlock(key);
   return false;
 }
 
