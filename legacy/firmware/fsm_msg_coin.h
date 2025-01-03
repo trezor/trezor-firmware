@@ -862,7 +862,6 @@ void fsm_msgUnlockPath(const UnlockPath *msg) {
 
   unlock_path = msg->address_n[0];
   resp->mac.size = SHA256_DIGEST_LENGTH;
-  resp->has_mac = true;
   msg_write(MessageType_MessageType_UnlockedPathRequest, resp);
   layoutHome();
 }
