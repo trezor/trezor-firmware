@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - Simplify UI of Cardano transactions initiated by Trezor Suite.  [#4284]
+- [T2T1,T2B1] Included bootloader 2.1.8.
 - [T3T1] Included bootloader 2.1.9.
 - Improve UI synchronization, ordering, and responsiveness (Global Layout project).  [#2299]
 - Improve device responsiveness by removing unnecessary screen refreshes.  [#3633]
