@@ -305,6 +305,7 @@ void nrf_init(void) {
   NVIC_SetPriority(SPI1_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(SPI1_IRQn);
 
+  drv->tx_request_id = -1;
   drv->initialized = true;
 
   nrf_start();
@@ -451,7 +452,7 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
   }
 
   irq_key_t key = irq_lock();
-  if (drv->tx_request_id < 0) {
+  if (drv->tx_request_id <= 0) {
     int32_t tx_id = 0;
     if (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
                         sizeof(nrf_tx_request_t), NULL, &tx_id)) {
@@ -575,11 +576,12 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *urt) {
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (drv->initialized && urt == &drv->urt) {
-    if (drv->tx_request_id >= 0 && (drv->tx_request.callback != NULL)) {
+
+    if (drv->tx_request.callback != NULL) {
       drv->tx_request.callback(NRF_STATUS_OK, drv->tx_request.context);
-      drv->tx_request_id = -1;
-      memset(&drv->tx_request, 0, sizeof(nrf_tx_request_t));
     }
+    drv->tx_request_id = -1;
+    memset(&drv->tx_request, 0, sizeof(nrf_tx_request_t));
 
     bool msg =
         tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
