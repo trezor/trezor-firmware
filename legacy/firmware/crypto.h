@@ -88,6 +88,14 @@ int cryptoMultisigPubkeyIndex(const CoinInfo *coin,
                               const MultisigRedeemScriptType *multisig,
                               const uint8_t *pubkey);
 
+int cryptoMultisigXpubIndex(const CoinInfo *coin,
+                            const MultisigRedeemScriptType *multisig,
+                            const uint8_t *pubkey);
+
+uint32_t cryptoMultisigPubkeys(const CoinInfo *coin,
+                               const MultisigRedeemScriptType *multisig,
+                               uint8_t *pubkeys);
+
 int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
                               uint8_t *hash);
 
@@ -115,5 +123,6 @@ void slip21_from_seed(const uint8_t *seed, int seed_len, Slip21Node *out);
 void slip21_derive_path(Slip21Node *inout, const uint8_t *label,
                         size_t label_len);
 const uint8_t *slip21_key(const Slip21Node *node);
+bool multisig_uses_single_path(const MultisigRedeemScriptType *multisig);
 
 #endif

@@ -296,10 +296,36 @@ void fsm_msgGetAddress(const GetAddress *msg) {
   }
 
   if (msg->has_show_display && msg->show_display) {
-    char desc[20] = {0};
+    char desc[29] = {0};
     int multisig_index = 0;
     if (msg->has_multisig) {
-      strlcpy(desc, "Multisig __ of __:", sizeof(desc));
+      if (!multisig_uses_single_path(&(msg->multisig))) {
+        // An address that uses different derivation paths for different xpubs
+        // could be difficult to discover if the user did not note all the
+        // paths. The reason is that each path ends with an address index, which
+        // can have 1,000,000 possible values. If the address is a t-out-of-n
+        // multisig, the total number of possible paths is 1,000,000^n. This can
+        // be exploited by an attacker who has compromised the user's computer.
+        // The attacker could randomize the address indices and then demand a
+        // ransom from the user to reveal the paths. To prevent this, we require
+        // that all xpubs use the same derivation path.
+        if (config_getSafetyCheckLevel() == SafetyCheckLevel_Strict) {
+          fsm_sendFailure(
+              FailureType_Failure_DataError,
+              _("Using different paths for different xpubs is not allowed"
+
+                ));
+          layoutHome();
+          return;
+        }
+        fsm_layoutDifferentPathsWarning();
+      }
+      if (msg->multisig.has_pubkeys_order &&
+          msg->multisig.pubkeys_order == MultisigPubkeysOrder_LEXICOGRAPHIC) {
+        strlcpy(desc, "Multisig __ of __ (sorted):", sizeof(desc));
+      } else {
+        strlcpy(desc, "Multisig __ of __:", sizeof(desc));
+      }
       const uint32_t m = msg->multisig.m;
       const uint32_t n = cryptoMultisigPubkeyCount(&(msg->multisig));
       desc[9] = (m < 10) ? ' ' : ('0' + (m / 10));
@@ -307,7 +333,7 @@ void fsm_msgGetAddress(const GetAddress *msg) {
       desc[15] = (n < 10) ? ' ' : ('0' + (n / 10));
       desc[16] = '0' + (n % 10);
       multisig_index =
-          cryptoMultisigPubkeyIndex(coin, &(msg->multisig), node->public_key);
+          cryptoMultisigXpubIndex(coin, &(msg->multisig), node->public_key);
     } else {
       strlcpy(desc, _("Address:"), sizeof(desc));
     }

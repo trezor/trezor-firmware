@@ -442,6 +442,17 @@ bool fsm_layoutPathWarning(void) {
   return true;
 }
 
+bool fsm_layoutDifferentPathsWarning(void) {
+  layoutDialogSwipe(&bmp_icon_warning, _("Abort"), _("Continue"), NULL,
+                    _("Ussing different paths"), _("for different XPUBs."),
+                    NULL, _("Continue at your"), _("own risk!"), NULL);
+  if (!protectButton(ButtonRequestType_ButtonRequest_Warning, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+    return false;
+  }
+  return true;
+}
+
 #include "fsm_msg_coin.h"
 #include "fsm_msg_common.h"
 #include "fsm_msg_crypto.h"
