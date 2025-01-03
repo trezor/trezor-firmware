@@ -35,16 +35,9 @@
 
 typedef struct {
   uint8_t service_id;
-} spi_header_t;
-
-typedef struct {
+  uint8_t data[MAX_SPI_DATA_SIZE];
   uint8_t crc;
-} spi_footer_t;
-
-#define SPI_HEADER_SIZE (sizeof(spi_header_t))
-#define SPI_FOOTER_SIZE (sizeof(spi_footer_t))
-#define SPI_OVERHEAD_SIZE (SPI_HEADER_SIZE + SPI_FOOTER_SIZE)
-#define SPI_PACKET_SIZE (MAX_SPI_DATA_SIZE + SPI_OVERHEAD_SIZE)
+} spi_packet_t;
 
 typedef struct {
   uint8_t service_id;
@@ -87,7 +80,7 @@ typedef struct {
 
   SPI_HandleTypeDef spi;
   DMA_HandleTypeDef spi_dma;
-  uint8_t long_rx_buffer[SPI_PACKET_SIZE];
+  spi_packet_t long_rx_buffer;
 
   bool comm_running;
   bool initialized;
@@ -104,7 +97,8 @@ static void nrf_start(void) {
     return;
   }
 
-  HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
+  HAL_SPI_Receive_DMA(&drv->spi, (uint8_t *)&drv->long_rx_buffer,
+                      sizeof(spi_packet_t));
 
   tsqueue_reset(&drv->tx_queue);
   HAL_UART_Receive_IT(&drv->urt, &drv->rx_byte, 1);
@@ -377,12 +371,9 @@ void nrf_unregister_listener(nrf_service_id_t service) {
 }
 
 static void nrf_process_msg(nrf_driver_t *drv, const uint8_t *data,
-                            uint32_t len, nrf_service_id_t service,
-                            uint8_t header_size, uint8_t overhead_size) {
-  const uint8_t *service_data = data + header_size;
-  uint32_t service_data_len = len - overhead_size;
+                            uint32_t len, nrf_service_id_t service) {
   if (drv->service_listeners[service] != NULL) {
-    drv->service_listeners[service](service_data, service_data_len);
+    drv->service_listeners[service](data, len);
   }
 }
 
@@ -562,9 +553,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
 
       if (drv->rx_byte == crc) {
         uart_header_t *header = (uart_header_t *)drv->rx_buffer;
-        nrf_process_msg(drv, drv->rx_buffer, drv->rx_len,
-                        header->service_id & 0x0F, UART_HEADER_SIZE,
-                        UART_OVERHEAD_SIZE);
+        nrf_process_msg(drv, drv->rx_buffer + UART_HEADER_SIZE,
+                        drv->rx_len - UART_OVERHEAD_SIZE,
+                        header->service_id & 0x0F);
       }
 
       drv->rx_idx = 0;
@@ -683,24 +674,24 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
     return;
   }
 
-  spi_header_t *header = (spi_header_t *)drv->long_rx_buffer;
-  spi_footer_t *footer =
-      (spi_footer_t *)(drv->long_rx_buffer + SPI_PACKET_SIZE - SPI_FOOTER_SIZE);
+  spi_packet_t *packet = &drv->long_rx_buffer;
 
-  uint8_t crc = crc8(drv->long_rx_buffer, SPI_PACKET_SIZE - SPI_FOOTER_SIZE,
+  uint8_t crc = crc8((uint8_t *)&drv->long_rx_buffer, sizeof(spi_packet_t) - 1,
                      0x07, 0x00, false);
 
-  if ((header->service_id & 0xF0) != START_BYTE || footer->crc != crc) {
+  if ((packet->service_id & 0xF0) != START_BYTE || packet->crc != crc) {
     HAL_SPI_Abort(&drv->spi);
-    HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
+    HAL_SPI_Receive_DMA(&drv->spi, (uint8_t *)&drv->long_rx_buffer,
+                        sizeof(spi_packet_t));
+    ;
     return;
   }
 
-  nrf_process_msg(drv, drv->long_rx_buffer, SPI_PACKET_SIZE,
-                  header->service_id & 0x0F, SPI_HEADER_SIZE,
-                  SPI_OVERHEAD_SIZE);
+  nrf_process_msg(drv, drv->long_rx_buffer.data, sizeof(packet->data),
+                  packet->service_id & 0x0F);
 
-  HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
+  HAL_SPI_Receive_DMA(&drv->spi, (uint8_t *)&drv->long_rx_buffer,
+                      sizeof(spi_packet_t));
 }
 
 /// GPIO communication
