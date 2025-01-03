@@ -1,4 +1,12 @@
 
+## 0.2.12 [22th January 2025]
+
+### Changed
+- Changed resolution of TOUCH_POWER command parameter to milliseconds.  [#4407]
+
+### Fixed
+- Fix BOOTLOADER VERSION command.  [#4405]
+
 ## 0.2.11 [20th November 2024]
 
 ### Fixed
@@ -92,3 +100,5 @@
 [#4252]: https://github.com/trezor/trezor-firmware/pull/4252
 [#4310]: https://github.com/trezor/trezor-firmware/pull/4310
 [#4313]: https://github.com/trezor/trezor-firmware/pull/4313
+[#4405]: https://github.com/trezor/trezor-firmware/pull/4405
+[#4407]: https://github.com/trezor/trezor-firmware/pull/4407
