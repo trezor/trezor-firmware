@@ -98,7 +98,7 @@ message MoneroGetAddress {
  * @end
  */
 message MoneroAddress {
-    optional bytes address = 1;
+    required bytes address = 1;
 }
 
 /**
@@ -117,8 +117,8 @@ message MoneroGetWatchKey {
  * @end
  */
 message MoneroWatchKey {
-    optional bytes watch_key = 1;
-    optional bytes address = 2;
+    required bytes watch_key = 1;
+    required bytes address = 2;
 }
 
 /**

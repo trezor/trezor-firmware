@@ -651,7 +651,7 @@ message UnlockPath {
  * @next GetAddress
  */
 message UnlockedPathRequest {
-    optional bytes mac = 1;            // authentication code for future UnlockPath calls
+    required bytes mac = 1;            // authentication code for future UnlockPath calls
 }
 
 /**

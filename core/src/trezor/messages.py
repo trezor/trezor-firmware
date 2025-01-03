@@ -2785,12 +2785,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class UnlockedPathRequest(protobuf.MessageType):
-        mac: "bytes | None"
+        mac: "bytes"
 
         def __init__(
             self,
             *,
-            mac: "bytes | None" = None,
+            mac: "bytes",
         ) -> None:
             pass
 
@@ -4141,12 +4141,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MoneroAddress(protobuf.MessageType):
-        address: "bytes | None"
+        address: "bytes"
 
         def __init__(
             self,
             *,
-            address: "bytes | None" = None,
+            address: "bytes",
         ) -> None:
             pass
 
@@ -4171,14 +4171,14 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class MoneroWatchKey(protobuf.MessageType):
-        watch_key: "bytes | None"
-        address: "bytes | None"
+        watch_key: "bytes"
+        address: "bytes"
 
         def __init__(
             self,
             *,
-            watch_key: "bytes | None" = None,
-            address: "bytes | None" = None,
+            watch_key: "bytes",
+            address: "bytes",
         ) -> None:
             pass
 

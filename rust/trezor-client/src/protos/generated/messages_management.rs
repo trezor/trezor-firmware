@@ -10709,7 +10709,7 @@ impl UnlockedPathRequest {
         ::std::default::Default::default()
     }
 
-    // optional bytes mac = 1;
+    // required bytes mac = 1;
 
     pub fn mac(&self) -> &[u8] {
         match self.mac.as_ref() {
@@ -10765,6 +10765,9 @@ impl ::protobuf::Message for UnlockedPathRequest {
     const NAME: &'static str = "UnlockedPathRequest";
 
     fn is_initialized(&self) -> bool {
+        if self.mac.is_none() {
+            return false;
+        }
         true
     }
 
@@ -11724,7 +11727,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x05Nonce\x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce:\x04\x88\
     \xb2\x19\x01\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
     \x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13Unloc\
-    kedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x01(\x0cR\x03mac\"\x14\n\x12\
+    kedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12\
     ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\rSetBrightness\x12\
     \x14\n\x05value\x18\x01\x20\x01(\rR\x05value*\x99\x01\n\nBackupType\x12\
     \t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip3\

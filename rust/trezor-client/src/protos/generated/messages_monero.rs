@@ -2451,7 +2451,7 @@ impl MoneroAddress {
         ::std::default::Default::default()
     }
 
-    // optional bytes address = 1;
+    // required bytes address = 1;
 
     pub fn address(&self) -> &[u8] {
         match self.address.as_ref() {
@@ -2507,6 +2507,9 @@ impl ::protobuf::Message for MoneroAddress {
     const NAME: &'static str = "MoneroAddress";
 
     fn is_initialized(&self) -> bool {
+        if self.address.is_none() {
+            return false;
+        }
         true
     }
 
@@ -2776,7 +2779,7 @@ impl MoneroWatchKey {
         ::std::default::Default::default()
     }
 
-    // optional bytes watch_key = 1;
+    // required bytes watch_key = 1;
 
     pub fn watch_key(&self) -> &[u8] {
         match self.watch_key.as_ref() {
@@ -2812,7 +2815,7 @@ impl MoneroWatchKey {
         self.watch_key.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bytes address = 2;
+    // required bytes address = 2;
 
     pub fn address(&self) -> &[u8] {
         match self.address.as_ref() {
@@ -2873,6 +2876,12 @@ impl ::protobuf::Message for MoneroWatchKey {
     const NAME: &'static str = "MoneroWatchKey";
 
     fn is_initialized(&self) -> bool {
+        if self.watch_key.is_none() {
+            return false;
+        }
+        if self.address.is_none() {
+            return false;
+        }
         true
     }
 
@@ -11845,11 +11854,11 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     unt\x12\x14\n\x05minor\x18\x05\x20\x01(\rR\x05minor\x12\x1d\n\npayment_i\
     d\x18\x06\x20\x01(\x0cR\tpaymentId\x12\x1a\n\x08chunkify\x18\x07\x20\x01\
     (\x08R\x08chunkify\")\n\rMoneroAddress\x12\x18\n\x07address\x18\x01\x20\
-    \x01(\x0cR\x07address\"\x8a\x01\n\x11MoneroGetWatchKey\x12\x1b\n\taddres\
+    \x02(\x0cR\x07address\"\x8a\x01\n\x11MoneroGetWatchKey\x12\x1b\n\taddres\
     s_n\x18\x01\x20\x03(\rR\x08addressN\x12X\n\x0cnetwork_type\x18\x02\x20\
     \x01(\x0e2,.hw.trezor.messages.monero.MoneroNetworkType:\x07MAINNETR\x0b\
-    networkType\"G\n\x0eMoneroWatchKey\x12\x1b\n\twatch_key\x18\x01\x20\x01(\
-    \x0cR\x08watchKey\x12\x18\n\x07address\x18\x02\x20\x01(\x0cR\x07address\
+    networkType\"G\n\x0eMoneroWatchKey\x12\x1b\n\twatch_key\x18\x01\x20\x02(\
+    \x0cR\x08watchKey\x12\x18\n\x07address\x18\x02\x20\x02(\x0cR\x07address\
     \"\xd1\x07\n\x1cMoneroTransactionInitRequest\x12\x18\n\x07version\x18\
     \x01\x20\x01(\rR\x07version\x12\x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08\
     addressN\x12X\n\x0cnetwork_type\x18\x03\x20\x01(\x0e2,.hw.trezor.message\
