@@ -137,3 +137,13 @@ pub fn render_pending_marker<'s>(
         shape::Bar::new(marker_rect).with_bg(color).render(target);
     }
 }
+
+/// `DisplayStyle` isused to determine whether the text is fully hidden, fully
+/// shown, or partially visible.
+#[derive(PartialEq, Debug, Copy, Clone)]
+#[cfg_attr(feature = "ui_debug", derive(ufmt::derive::uDebug))]
+pub(crate) enum DisplayStyle {
+    Hidden,
+    Shown,
+    LastOnly,
+}
