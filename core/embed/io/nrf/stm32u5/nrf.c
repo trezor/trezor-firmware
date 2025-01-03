@@ -42,22 +42,19 @@ typedef struct {
 typedef struct {
   uint8_t service_id;
   uint8_t msg_len;
-} uart_header_t;
+  uint8_t data[NRF_MAX_TX_DATA_SIZE + 1];
+  // uint8_t crc; part of data, as it has variable position
+} uart_packet_t;
 
-typedef struct {
-  uint8_t crc;
-} uart_footer_t;
+#define UART_OVERHEAD_SIZE (sizeof(uart_packet_t) - NRF_MAX_TX_DATA_SIZE)
+#define UART_HEADER_SIZE (UART_OVERHEAD_SIZE - 1)
 
-#define UART_HEADER_SIZE (sizeof(uart_header_t))
-#define UART_FOOTER_SIZE (sizeof(uart_footer_t))
-#define UART_OVERHEAD_SIZE (UART_HEADER_SIZE + UART_FOOTER_SIZE)
-#define UART_PACKET_SIZE (NRF_MAX_TX_DATA_SIZE + UART_OVERHEAD_SIZE)
 #define TX_QUEUE_SIZE (8)
 
 #define START_BYTE (0xA0)
 
 typedef struct {
-  uint8_t data[UART_PACKET_SIZE];
+  uart_packet_t packet;
   uint8_t len;
   nrf_tx_callback_t callback;
   void *context;
@@ -73,7 +70,7 @@ typedef struct {
   nrf_tx_request_t tx_request;
   int32_t tx_request_id;
 
-  uint8_t rx_buffer[UART_PACKET_SIZE];
+  uart_packet_t rx_buffer;
   uint8_t rx_len;
   uint8_t rx_byte;
   uint16_t rx_idx;
@@ -441,19 +438,12 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
   buffer.callback = callback;
   buffer.context = context;
   buffer.len = len + UART_OVERHEAD_SIZE;
-
-  uart_header_t header = {
-      .service_id = 0xA0 | (uint8_t)service,
-      .msg_len = len + UART_OVERHEAD_SIZE,
-  };
-  memcpy(buffer.data, &header, UART_HEADER_SIZE);
-
-  memcpy(&buffer.data[UART_HEADER_SIZE], data, len);
-
-  uart_footer_t footer = {
-      .crc = crc8(buffer.data, len + UART_HEADER_SIZE, 0x07, 0x00, false),
-  };
-  memcpy(&buffer.data[UART_HEADER_SIZE + len], &footer, UART_FOOTER_SIZE);
+  buffer.packet.service_id = 0xA0 | (uint8_t)service;
+  buffer.packet.msg_len = len + UART_OVERHEAD_SIZE;
+  memcpy(&buffer.packet.data, data, len);
+  buffer.packet.data[len] =
+      crc8((uint8_t *)&buffer.packet, len + UART_OVERHEAD_SIZE - 1, 0x07, 0x00,
+           false);
 
   if (!tsqueue_enqueue(&drv->tx_queue, (uint8_t *)&buffer,
                        sizeof(nrf_tx_request_t), &id)) {
@@ -465,7 +455,7 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
     int32_t tx_id = 0;
     if (tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
                         sizeof(nrf_tx_request_t), NULL, &tx_id)) {
-      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_request.data,
+      HAL_UART_Transmit_DMA(&drv->urt, (uint8_t *)&drv->tx_request.packet,
                             drv->tx_request.len);
       drv->tx_request_id = tx_id;
     }
@@ -516,7 +506,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
     if (drv->rx_idx == 0) {
       // received first byte: START BYTE
       if (nrf_is_valid_startbyte(drv->rx_byte)) {
-        drv->rx_buffer[0] = drv->rx_byte;
+        drv->rx_buffer.service_id = drv->rx_byte;
         drv->rx_idx++;
       } else {
         // bad message, flush the line
@@ -525,10 +515,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
     } else if (drv->rx_idx == 1) {
       // received second byte: LEN
 
-      drv->rx_buffer[1] = drv->rx_byte;
+      drv->rx_buffer.msg_len = drv->rx_byte;
       drv->rx_len = drv->rx_byte;
 
-      if (drv->rx_len > UART_PACKET_SIZE) {
+      if (drv->rx_len > sizeof(uart_packet_t)) {
         drv->rx_len = 0;
       } else {
         drv->rx_idx++;
@@ -537,7 +527,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
                drv->rx_idx < (drv->rx_len - 1)) {
       // receive the rest of the message
 
-      drv->rx_buffer[drv->rx_idx] = drv->rx_byte;
+      drv->rx_buffer.data[drv->rx_idx - UART_HEADER_SIZE] = drv->rx_byte;
       drv->rx_idx++;
 
       if (drv->rx_idx >= NRF_MAX_TX_DATA_SIZE) {
@@ -549,13 +539,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
     } else if (drv->rx_idx == (drv->rx_len - 1)) {
       // received last byte: CRC
 
-      uint8_t crc = crc8(drv->rx_buffer, drv->rx_len - 1, 0x07, 0x00, false);
+      uint8_t crc =
+          crc8((uint8_t *)&drv->rx_buffer, drv->rx_len - 1, 0x07, 0x00, false);
 
       if (drv->rx_byte == crc) {
-        uart_header_t *header = (uart_header_t *)drv->rx_buffer;
-        nrf_process_msg(drv, drv->rx_buffer + UART_HEADER_SIZE,
+        uart_packet_t *packet = &drv->rx_buffer;
+        nrf_process_msg(drv, drv->rx_buffer.data,
                         drv->rx_len - UART_OVERHEAD_SIZE,
-                        header->service_id & 0x0F);
+                        packet->service_id & 0x0F);
       }
 
       drv->rx_idx = 0;
@@ -594,7 +585,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *urt) {
         tsqueue_dequeue(&drv->tx_queue, (uint8_t *)&drv->tx_request,
                         sizeof(nrf_tx_request_t), NULL, &drv->tx_request_id);
     if (msg) {
-      HAL_UART_Transmit_DMA(&drv->urt, drv->tx_request.data,
+      HAL_UART_Transmit_DMA(&drv->urt, (uint8_t *)&drv->tx_request.packet,
                             drv->tx_request.len);
     }
   }
