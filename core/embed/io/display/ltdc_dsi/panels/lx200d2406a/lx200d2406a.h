@@ -32,6 +32,7 @@
 #define LCD_WIDTH 240
 #define LCD_HEIGHT 320
 
+#define LCD_X_OFFSET 0
 #define LCD_Y_OFFSET 0
 
 #define PANEL_DSI_MODE DSI_VID_MODE_NB_PULSES
@@ -47,6 +48,3 @@
 
 // Pitch (in pixels) of the virtual frame buffer
 #define FRAME_BUFFER_PIXELS_PER_LINE 240
-
-#define PANEL_USED_AREA_OFFSET_X 0
-#define PANEL_USED_AREA_OFFSET_Y 0

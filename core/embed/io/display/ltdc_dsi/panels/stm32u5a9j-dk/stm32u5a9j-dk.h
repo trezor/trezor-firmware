@@ -30,7 +30,8 @@
 #define LCD_WIDTH 480
 #define LCD_HEIGHT 480
 
-#define LCD_Y_OFFSET 1
+#define LCD_X_OFFSET 120
+#define LCD_Y_OFFSET 121
 
 #define GFXMMU_FB_SIZE 733936
 #define GFXMMU_LUT_FIRST 0
@@ -42,17 +43,10 @@
 #define PANEL_LTDC_PIXEL_FORMAT LTDC_PIXEL_FORMAT_ARGB8888
 
 // Size of the physical frame buffer in bytes
-//
-// It's smaller than size of the virtual frame buffer
-// due to used GFXMMU settings
-#define PHYSICAL_FRAME_BUFFER_SIZE (184320 * 4)
+#define PHYSICAL_FRAME_BUFFER_SIZE (240 * 240 * 4)
 
-// Pitch (in pixels) of the virtual frame buffer
-#define FRAME_BUFFER_PIXELS_PER_LINE 768
+// // Pitch (in pixels) of the virtual frame buffer
+#define FRAME_BUFFER_PIXELS_PER_LINE 240
 
 // Size of the virtual frame buffer in bytes
-#define VIRTUAL_FRAME_BUFFER_SIZE \
-  (FRAME_BUFFER_PIXELS_PER_LINE * LCD_HEIGHT * 4)
-
-#define PANEL_USED_AREA_OFFSET_X 120
-#define PANEL_USED_AREA_OFFSET_Y 120
+#define VIRTUAL_FRAME_BUFFER_SIZE PHYSICAL_FRAME_BUFFER_SIZE

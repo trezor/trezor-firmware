@@ -204,10 +204,10 @@ static bool display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
   LTDC_LayerCfgTypeDef LayerCfg = {0};
 
   /* LTDC layer configuration */
-  LayerCfg.WindowX0 = 0;
-  LayerCfg.WindowX1 = LCD_WIDTH;
+  LayerCfg.WindowX0 = LCD_X_OFFSET;
+  LayerCfg.WindowX1 = DISPLAY_RESX + LCD_X_OFFSET;
   LayerCfg.WindowY0 = LCD_Y_OFFSET;
-  LayerCfg.WindowY1 = LCD_HEIGHT + LCD_Y_OFFSET;
+  LayerCfg.WindowY1 = DISPLAY_RESY + LCD_Y_OFFSET;
   LayerCfg.PixelFormat = PANEL_LTDC_PIXEL_FORMAT;
   LayerCfg.Alpha = 0xFF; /* NU default value */
   LayerCfg.Alpha0 = 0;   /* NU default value */

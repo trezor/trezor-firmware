@@ -41,9 +41,8 @@ static uint32_t gfxmmu_lut_config[2 * GFXMMU_LUT_SIZE] = {0};
 static uint32_t lut_add_line(uint32_t line, uint32_t offset,
                              uint32_t first_pixel) {
   uint32_t pixel_cut = first_pixel - 1;
-  uint32_t offset_px = PANEL_USED_AREA_OFFSET_X;
-  uint32_t first_block = (pixel_cut + offset_px) >> 2;
-  uint32_t last_block = (DISPLAY_RESX - 1 + offset_px - pixel_cut) >> 2;
+  uint32_t first_block = pixel_cut >> 2;
+  uint32_t last_block = (DISPLAY_RESX - 1 - pixel_cut) >> 2;
 
   gfxmmu_lut_config[line * 2] = GFXMMU_LINE_L(offset, first_block, last_block);
   gfxmmu_lut_config[line * 2 + 1] =
@@ -59,8 +58,8 @@ const uint32_t *panel_lut_get(void) {
   const lut_def_t lut[] = {
       {1, 13}, {1, 11}, {1, 9},   {1, 8},  {1, 6},  {2, 5},  {1, 4},  {2, 3},
       {2, 2},  {4, 1},  {411, 1}, {12, 1}, {7, 2},  {6, 3},  {5, 4},  {4, 5},
-      {4, 6},  {3, 7},  {3, 8},   {3, 9},  {4, 10}, {2, 11}, {3, 12}, {2, 13},
-      {3, 14}, {2, 15}, {2, 16},  {2, 17}, {3, 18}, {1, 19}, {2, 20}, {2, 21},
+      {4, 6},  {3, 7},  {4, 8},   {2, 9},  {4, 10}, {2, 11}, {3, 12}, {2, 13},
+      {3, 14}, {2, 15}, {2, 16},  {2, 17}, {3, 18}, {1, 19}, {3, 20}, {1, 21},
       {2, 22}, {2, 23}, {2, 24},  {1, 25}, {2, 26}, {2, 27}, {1, 28}, {2, 29},
       {1, 30}, {1, 32}, {1, 33},  {1, 36},
   };

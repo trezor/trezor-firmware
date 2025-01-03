@@ -43,7 +43,7 @@ def configure(
         "embed/io/display/ltdc_dsi/panels/stm32u5a9j-dk/stm32u5a9j-dk.c",
         "embed/io/display/ltdc_dsi/display_fb.c",
         "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
-        "embed/io/display/ltdc_dsi/display_gfxmmu.c",
+        # "embed/io/display/ltdc_dsi/display_gfxmmu.c",
         "embed/io/display/fb_queue/fb_queue.c",
     ]
     paths += ["embed/io/display/inc"]
@@ -86,7 +86,7 @@ def configure(
     features_available.append("display_rgba8888")
     features_available.append("ui_color_32bit")
 
-    defines += (["USE_DMA2D"],)
+    defines += ["USE_DMA2D"]
     features_available.append("dma2d")
     sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
 
