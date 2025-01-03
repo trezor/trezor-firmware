@@ -18,9 +18,13 @@ def configure(
 
     features_available.append("framebuffer")
     features_available.append("display_rgb565")
-    defines += [("DISPLAY_RGB565", "1")]
-    defines += [("FRAMEBUFFER", "1")]
-    defines += [("USE_RGB_COLORS", "1")]
+    defines += [
+        ("DISPLAY_RGB565", "1"),
+        ("FRAMEBUFFER", "1"),
+        ("USE_RGB_COLORS", "1"),
+        ("DISPLAY_RESX", "240"),
+        ("DISPLAY_RESY", "240"),
+    ]
 
     mcu = "STM32U585xx"
     linker_script = """embed/sys/linker/stm32u58/{target}.ld"""

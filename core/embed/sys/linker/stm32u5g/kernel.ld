@@ -41,8 +41,8 @@ _startup_clear_ram_2_start = MCU_SRAM4;
 _startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 /* used by the jump code to wipe memory */
-_handoff_clear_ram_0_start = MCU_SRAM1;
-_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
+_handoff_clear_ram_0_start = MCU_SRAM1 + BOOTARGS_SIZE;
+_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE;
 _handoff_clear_ram_1_start = MCU_SRAM2;
 _handoff_clear_ram_1_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
 _handoff_clear_ram_2_start = MCU_SRAM4;

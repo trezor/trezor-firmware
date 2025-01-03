@@ -17,11 +17,17 @@ def configure(
     hw_revision = 0
     mcu = "STM32U5G9xx"
 
-    defines += ["FRAMEBUFFER", "DISPLAY_RGBA8888", "UI_COLOR_32BIT"]
+    defines += [
+        "FRAMEBUFFER",
+        ("USE_RGB_COLORS", "1"),
+        "DISPLAY_RGBA8888",
+        "UI_COLOR_32BIT",
+        ("DISPLAY_RESX", "380"),
+        ("DISPLAY_RESY", "520"),
+    ]
     features_available.append("framebuffer")
     features_available.append("display_rgba8888")
     features_available.append("ui_color_32bit")
-    defines += [("USE_RGB_COLORS", "1")]
 
     defines += [
         mcu,

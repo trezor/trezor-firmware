@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from . import emulator, trezor_t3w1_revA
+from . import emulator, trezor_t3w1_revA, trezor_t3w1_revA0
 
 
 def configure_board(
@@ -19,6 +19,7 @@ def configure_board(
     # Mapping of revisions to their respective configurations
     revision_map = {
         "emulator": emulator,
+        "A0": trezor_t3w1_revA0,
         "A": trezor_t3w1_revA,
     }
 

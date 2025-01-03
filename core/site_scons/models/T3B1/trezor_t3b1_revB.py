@@ -16,7 +16,11 @@ def configure(
     hw_model = get_hw_model_as_number("T3B1")
     hw_revision = ord("B")
 
-    defines += ["FRAMEBUFFER"]
+    defines += [
+        "FRAMEBUFFER",
+        ("DISPLAY_RESX", "128"),
+        ("DISPLAY_RESY", "64"),
+    ]
     features_available.append("framebuffer")
     features_available.append("display_mono")
 

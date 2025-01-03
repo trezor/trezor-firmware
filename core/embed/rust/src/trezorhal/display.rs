@@ -3,7 +3,10 @@ use super::ffi;
 #[cfg(feature = "framebuffer")]
 use core::ptr;
 
-pub use ffi::{DISPLAY_RESX, DISPLAY_RESY};
+use ffi::{DISPLAY_RESX_, DISPLAY_RESY_};
+
+pub const DISPLAY_RESX: u32 = DISPLAY_RESX_;
+pub const DISPLAY_RESY: u32 = DISPLAY_RESY_;
 
 pub type FontInfo = ffi::font_info_t;
 

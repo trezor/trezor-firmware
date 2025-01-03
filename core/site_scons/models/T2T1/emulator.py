@@ -17,9 +17,13 @@ def configure(
     hw_revision = 0
     mcu = "STM32F427xx"
 
-    defines += ["DISPLAY_RGB565"]
     features_available.append("display_rgb565")
-    defines += [("USE_RGB_COLORS", "1")]
+    defines += [
+        "DISPLAY_RGB565",
+        ("USE_RGB_COLORS", "1"),
+        ("DISPLAY_RESX", "240"),
+        ("DISPLAY_RESY", "240"),
+    ]
 
     defines += [
         mcu,

@@ -59,6 +59,8 @@ const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
     "-DTREZOR_MODEL_T",
     "-DFLASH_BIT_ACCESS=1",
     "-DFLASH_BLOCK_WORDS=1",
+    "-DDISPLAY_RESX=240",
+    "-DDISPLAY_RESY=240",
     "-DTREZOR_BOARD=\"T2T1/boards/t2t1-unix.h\"",
 ];
 #[cfg(not(feature = "model_tt"))]
@@ -70,6 +72,8 @@ const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
     "-DTREZOR_MODEL_R",
     "-DFLASH_BIT_ACCESS=1",
     "-DFLASH_BLOCK_WORDS=1",
+    "-DDISPLAY_RESX=128",
+    "-DDISPLAY_RESY=64",
     "-DTREZOR_BOARD=\"T2B1/boards/t2b1-unix.h\"",
 ];
 #[cfg(not(feature = "model_tr"))]
@@ -81,6 +85,8 @@ const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[
     "-DTREZOR_MODEL_T3T1",
     "-DFLASH_BIT_ACCESS=0",
     "-DFLASH_BLOCK_WORDS=4",
+    "-DDISPLAY_RESX=240",
+    "-DDISPLAY_RESY=240",
     "-DTREZOR_BOARD=\"T3T1/boards/t3t1-unix.h\"",
 ];
 #[cfg(not(feature = "model_mercury"))]
@@ -353,8 +359,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("display_set_backlight")
         .allowlist_function("display_get_backlight")
         .allowlist_function("display_wait_for_sync")
-        .allowlist_var("DISPLAY_RESX")
-        .allowlist_var("DISPLAY_RESY")
+        .allowlist_var("DISPLAY_RESX_")
+        .allowlist_var("DISPLAY_RESY_")
         .allowlist_type("display_fb_info_t")
         .allowlist_function("display_get_frame_buffer")
         .allowlist_function("display_fill")

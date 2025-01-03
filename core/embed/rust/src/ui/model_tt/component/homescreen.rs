@@ -218,7 +218,10 @@ impl Component for Homescreen {
             }
 
             self.label.map(|t| {
-                let r = Rect::new(Point::new(6, 198), Point::new(234, 233));
+                let r = Rect::new(
+                    Point::new(6, LABEL_Y - 24),
+                    Point::new(WIDTH - 6, LABEL_Y + 11),
+                );
                 shape::Bar::new(r)
                     .with_bg(Color::black())
                     .with_alpha(89)

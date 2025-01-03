@@ -131,6 +131,13 @@ void term_print(const char *text, int textlen) {
   }
 
   term_redraw_rows(0, TERMINAL_ROWS);
+
+  // redraw residual area of the display
+  gfx_draw_bar(gfx_rect(0, TERMINAL_ROWS * 8, DISPLAY_RESX, DISPLAY_RESY),
+               terminal_bgcolor);
+  gfx_draw_bar(gfx_rect(TERMINAL_COLS * 6, 0, DISPLAY_RESX, DISPLAY_RESY),
+               terminal_bgcolor);
+
   display_refresh();
 }
 

@@ -19,34 +19,38 @@
 
 #pragma once
 
-#define VSYNC 1
-#define VBP 12
-#define VFP 50
-#define VACT 481
-#define HSYNC 2
-#define HBP 1
-#define HFP 1
+#include <trezor_types.h>
+
+#define VSYNC 2
+#define VBP 26
+#define VFP 16
+#define VACT 520
+#define HSYNC 6  // 16
+#define HBP 2    // 32
+#define HFP 6    // 26
 #define HACT 480
 #define LCD_WIDTH 480
-#define LCD_HEIGHT 480
+#define LCD_HEIGHT 520
 
-#define LCD_X_OFFSET 120
-#define LCD_Y_OFFSET 121
+#define LCD_Y_OFFSET 0
+#define LCD_X_OFFSET 50
 
-#define GFXMMU_FB_SIZE 733936
 #define GFXMMU_LUT_FIRST 0
-#define GFXMMU_LUT_LAST 479
-#define GFXMMU_LUT_SIZE 480
+#define GFXMMU_LUT_LAST 519
+#define GFXMMU_LUT_SIZE 520
 
 #define PANEL_DSI_MODE DSI_VID_MODE_BURST
 #define PANEL_DSI_LANES DSI_TWO_DATA_LANES
 #define PANEL_LTDC_PIXEL_FORMAT LTDC_PIXEL_FORMAT_ARGB8888
 
 // Size of the physical frame buffer in bytes
-#define PHYSICAL_FRAME_BUFFER_SIZE (240 * 240 * 4)
+//
+// It's smaller than size of the virtual frame buffer
+// due to used GFXMMU settings
+#define PHYSICAL_FRAME_BUFFER_SIZE (765 * 1024)
 
-// // Pitch (in pixels) of the virtual frame buffer
-#define FRAME_BUFFER_PIXELS_PER_LINE 240
+// Pitch (in pixels) of the virtual frame buffer
+#define FRAME_BUFFER_PIXELS_PER_LINE 768
 
-// Size of the virtual frame buffer in bytes
-#define VIRTUAL_FRAME_BUFFER_SIZE PHYSICAL_FRAME_BUFFER_SIZE
+#define VIRTUAL_FRAME_BUFFER_SIZE \
+  (FRAME_BUFFER_PIXELS_PER_LINE * LCD_HEIGHT * 4)

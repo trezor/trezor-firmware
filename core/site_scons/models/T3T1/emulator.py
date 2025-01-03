@@ -17,10 +17,15 @@ def configure(
     hw_revision = 0
     mcu = "STM32U585xx"
 
-    defines += ["FRAMEBUFFER", "DISPLAY_RGB565"]
     features_available.append("framebuffer")
     features_available.append("display_rgb565")
-    defines += [("USE_RGB_COLORS", "1")]
+    defines += [
+        "FRAMEBUFFER",
+        "DISPLAY_RGB565",
+        ("USE_RGB_COLORS", "1"),
+        ("DISPLAY_RESX", "240"),
+        ("DISPLAY_RESY", "240"),
+    ]
 
     defines += [
         mcu,

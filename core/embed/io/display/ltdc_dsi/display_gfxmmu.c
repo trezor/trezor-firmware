@@ -8,8 +8,6 @@
 extern uint8_t physical_frame_buffer_0[PHYSICAL_FRAME_BUFFER_SIZE];
 extern uint8_t physical_frame_buffer_1[PHYSICAL_FRAME_BUFFER_SIZE];
 
-extern const uint32_t gfxmmu_lut_config[2 * GFXMMU_LUT_SIZE];
-
 bool display_gfxmmu_init(display_driver_t *drv) {
   __HAL_RCC_GFXMMU_FORCE_RESET();
   __HAL_RCC_GFXMMU_RELEASE_RESET();
@@ -52,7 +50,7 @@ bool display_gfxmmu_init(display_driver_t *drv) {
 
   /* Initialize LUT */
   if (HAL_GFXMMU_ConfigLut(&drv->hlcd_gfxmmu, 0, LCD_HEIGHT,
-                           (uint32_t)&gfxmmu_lut_config) != HAL_OK) {
+                           (uint32_t)panel_lut_get()) != HAL_OK) {
     return false;
   }
 
