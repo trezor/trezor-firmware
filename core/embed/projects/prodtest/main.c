@@ -556,7 +556,7 @@ static void test_touch_power(const char *args) {
 
   touch_power_set(true);
 
-  systick_delay_ms(timeout * 1000);
+  systick_delay_ms(timeout);
 
   vcp_println("OK");
 
