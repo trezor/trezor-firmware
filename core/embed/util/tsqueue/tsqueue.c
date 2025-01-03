@@ -71,7 +71,7 @@ static int32_t get_next_id(tsqueue_t *queue) {
     val = queue->next_id;
     queue->next_id++;
   } else {
-    queue->next_id = 1;
+    queue->next_id = 2;
   }
   return val;
 }

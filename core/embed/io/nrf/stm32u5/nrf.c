@@ -439,6 +439,10 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
     return -1;
   }
 
+  if (!nrf_is_running()) {
+    return -1;
+  }
+
   int32_t id = 0;
 
   nrf_uart_tx_data_t buffer;

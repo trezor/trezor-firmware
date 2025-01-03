@@ -57,10 +57,11 @@ typedef struct {
   tsqueue_entry_t data_queue_entries[DATA_QUEUE_LEN];
   tsqueue_t data_queue;
 
-  uint8_t send_buffer[NRF_MAX_TX_DATA_SIZE];
+  uint8_t send_buffer[SEND_QUEUE_LEN][NRF_MAX_TX_DATA_SIZE];
   tsqueue_entry_t send_queue_entries[SEND_QUEUE_LEN];
   tsqueue_t send_queue;
 
+  systimer_t *timer;
   uint16_t ping_cntr;
 } ble_driver_t;
 
@@ -84,9 +85,6 @@ static void ble_send_advertising_off(void) {
 }
 
 static bool ble_send_erase_bonds(void) {
-  if (!nrf_is_running()) {
-    return false;
-  }
   uint8_t cmd = INTERNAL_CMD_ERASE_BONDS;
   nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 
@@ -94,9 +92,6 @@ static bool ble_send_erase_bonds(void) {
 }
 
 static bool ble_send_disconnect(void) {
-  if (!nrf_is_running()) {
-    return false;
-  }
   uint8_t cmd = INTERNAL_CMD_DISCONNECT;
   nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 
@@ -205,6 +200,10 @@ static void ble_process_rx_msg_pairing_cancelled(const uint8_t *data,
 }
 
 static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
+  if (len < 1) {
+    return;
+  }
+
   switch (data[0]) {
     case INTERNAL_EVENT_STATUS:
       ble_process_rx_msg_status(data, len);
@@ -300,14 +299,14 @@ void ble_init(void) {
                (uint8_t *)drv->send_buffer, NRF_MAX_TX_DATA_SIZE,
                SEND_QUEUE_LEN);
 
-  systimer_t *timer = systimer_create(ble_loop, NULL);
+  drv->timer = systimer_create(ble_loop, NULL);
 
-  systimer_set_periodic(timer, LOOP_PERIOD_MS);
+  systimer_set_periodic(drv->timer, LOOP_PERIOD_MS);
 
   nrf_init();
   nrf_register_listener(NRF_SERVICE_BLE_MANAGER, ble_process_rx_msg);
   nrf_register_listener(NRF_SERVICE_BLE, ble_process_data);
-
+  ;
   drv->initialized = true;
 }
 
@@ -317,6 +316,8 @@ void ble_deinit(void) {
   if (!drv->initialized) {
     return;
   }
+
+  systimer_delete(drv->timer);
 
   tsqueue_reset(&drv->event_queue);
   tsqueue_reset(&drv->data_queue);
