@@ -125,17 +125,12 @@ bool display_get_frame_buffer(display_fb_info_t *fb_dest) {
 
   uint32_t fb_stride = FRAME_BUFFER_PIXELS_PER_LINE * FB_PIXEL_SIZE;
 
-  // We may not utilize whole area of the display
-  addr += PANEL_USED_AREA_OFFSET_X * FB_PIXEL_SIZE;
-  addr += PANEL_USED_AREA_OFFSET_Y * fb_stride;
-
   display_fb_info_t fb = {
       .ptr = (void *)addr,
       .stride = fb_stride,
   };
 
-  size_t fb_size = fb_stride * (DISPLAY_RESY - 1) * FB_PIXEL_SIZE +
-                   DISPLAY_RESX * FB_PIXEL_SIZE;
+  size_t fb_size = fb_stride * DISPLAY_RESY;
 
   mpu_set_active_fb((void *)addr, fb_size);
 

@@ -33,6 +33,7 @@
 #define LCD_HEIGHT 520
 
 #define LCD_Y_OFFSET 0
+#define LCD_X_OFFSET 50
 
 #define GFXMMU_LUT_FIRST 0
 #define GFXMMU_LUT_LAST 519
@@ -46,13 +47,10 @@
 //
 // It's smaller than size of the virtual frame buffer
 // due to used GFXMMU settings
-#define PHYSICAL_FRAME_BUFFER_SIZE (772 * 1024)
+#define PHYSICAL_FRAME_BUFFER_SIZE (765 * 1024)
 
 // Pitch (in pixels) of the virtual frame buffer
 #define FRAME_BUFFER_PIXELS_PER_LINE 768
 
 #define VIRTUAL_FRAME_BUFFER_SIZE \
   (FRAME_BUFFER_PIXELS_PER_LINE * LCD_HEIGHT * 4)
-
-#define PANEL_USED_AREA_OFFSET_X 50
-#define PANEL_USED_AREA_OFFSET_Y 0
