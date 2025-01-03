@@ -1382,6 +1382,9 @@ pub enum TranslatedString {
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
+    wipe_code__pin_not_set_description = 975,  // "PIN must be set before enabling wipe code."
+    pin__wipe_code_exists_description = 976,  // "Wipe code must be turned off before turnig off PIN protection."
+    pin__wipe_code_exists_title = 977,  // "Wipe code set"
 }
 
 impl TranslatedString {
@@ -2758,6 +2761,9 @@ impl TranslatedString {
             Self::misc__enable_labeling => "Enable labeling?",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
+            Self::wipe_code__pin_not_set_description => "PIN must be set before enabling wipe code.",
+            Self::pin__wipe_code_exists_description => "Wipe code must be turned off before turnig off PIN protection.",
+            Self::pin__wipe_code_exists_title => "Wipe code set",
         }
     }
 
@@ -4135,6 +4141,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
+            Qstr::MP_QSTR_wipe_code__pin_not_set_description => Some(Self::wipe_code__pin_not_set_description),
+            Qstr::MP_QSTR_pin__wipe_code_exists_description => Some(Self::pin__wipe_code_exists_description),
+            Qstr::MP_QSTR_pin__wipe_code_exists_title => Some(Self::pin__wipe_code_exists_title),
             _ => None,
         }
     }
