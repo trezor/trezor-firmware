@@ -14,11 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import functools
 import hashlib
 import re
 import struct
 import unicodedata
+import warnings
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -279,10 +282,16 @@ def expect(
     ret_type: "Optional[Type[R]]" = None,
 ) -> "Callable[[Callable[P, MessageType]], Callable[P, Union[MT, R]]]":
     """
-    Decorator checks if the method
-    returned one of expected protobuf messages
-    or raises an exception
+    Decorator checks if the method returned one of expected protobuf messages or raises
+    an exception.
+
+    Deprecated. Use `client.call(msg, expect=expected)` instead.
     """
+    warnings.warn(
+        "Use `client.call(msg, expect=expected)` instead",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     def decorator(f: "Callable[P, MessageType]") -> "Callable[P, Union[MT, R]]":
         @functools.wraps(f)
