@@ -640,16 +640,6 @@ void GPDMA1_Channel1_IRQHandler(void) {
 /// SPI communication
 /// ----------------------------------------------------------
 
-static bool start_spi_dma(nrf_driver_t *drv) {
-  if (!drv->comm_running) {
-    return false;
-  }
-
-  HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
-
-  return true;
-}
-
 void GPDMA1_Channel2_IRQHandler(void) {
   IRQ_LOG_ENTER();
 
@@ -707,7 +697,8 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef *hspi) {
   nrf_process_msg(drv, drv->long_rx_buffer, SPI_PACKET_SIZE,
                   header->service_id & 0x0F, SPI_HEADER_SIZE,
                   SPI_OVERHEAD_SIZE);
-  start_spi_dma(drv);
+
+  HAL_SPI_Receive_DMA(&drv->spi, drv->long_rx_buffer, SPI_PACKET_SIZE);
 }
 
 /// GPIO communication
