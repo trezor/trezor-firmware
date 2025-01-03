@@ -1,6 +1,6 @@
 [package]
 name = "trezor-client"
-version = "0.1.4"
+version = "0.1.5"
 authors = [
     "Piyush Kumar <piyushkumar2k02@kgpian.iitkgp.ac.in>",
     "joshieDo <ranriver@protonmail.com>",
