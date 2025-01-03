@@ -152,11 +152,11 @@ OK
 The `TOUCH_POWER` command tests the functionality of touch layer power supply
 
 The command requires one input parameter:
-* The timeout in seconds
+* The timeout in milliseconds
 
 The powers up the touch layer and waits for a specific time period so that measurement can be done by test equipment.
 
-Example - wait ten seconds for touch power measurement:
+Example - wait ten milliseconds for touch power measurement:
 ```
 TOUCH_POWER 10
 OK
