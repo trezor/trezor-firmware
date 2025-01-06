@@ -34,6 +34,7 @@ class GenericSessionContext(Context):
         self.channel: Channel = channel
         self.session_id: int = session_id
         self.incoming_message = loop.mailbox()
+        self.handle_spawn: loop.spawn | None = None
 
     async def handle(self) -> None:
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
@@ -51,7 +52,8 @@ class GenericSessionContext(Context):
             next_message = None
             try:
                 if await self._handle_message(message):
-                    loop.schedule(self.handle())
+                    self.handle_spawn = loop.spawn(self.handle())
+                    loop.schedule(self.handle_spawn)
                     return
             except UnexpectedMessageException as unexpected:
                 # The workflow was interrupted by an unexpected message. We need to

@@ -382,7 +382,8 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
             s = SeedlessSessionContext(ctx, session_id)
 
         ctx.sessions[session_id] = s
-        loop.schedule(s.handle())
+        s.handle_spawn = loop.spawn(s.handle())
+        loop.schedule(s.handle_spawn)
 
     elif ctx.sessions[session_id].get_session_state() is SessionState.UNALLOCATED:
         raise ThpUnallocatedSessionError(session_id)
@@ -390,18 +391,20 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
     s = ctx.sessions[session_id]
     update_session_last_used(s.channel_id, (s.session_id).to_bytes(1, "big"))
 
-    s.incoming_message.put(
-        Message(
-            message_type,
-            buffer[
-                INIT_HEADER_LENGTH
-                + MESSAGE_TYPE_LENGTH
-                + SESSION_ID_LENGTH : message_length
-                - CHECKSUM_LENGTH
-                - TAG_LENGTH
-            ],
-        )
+    message = Message(
+        message_type,
+        buffer[
+            INIT_HEADER_LENGTH
+            + MESSAGE_TYPE_LENGTH
+            + SESSION_ID_LENGTH : message_length
+            - CHECKSUM_LENGTH
+            - TAG_LENGTH
+        ],
     )
+    if not s.incoming_message.is_empty():
+        await s.handle_spawn
+        s.incoming_message.clear()
+    s.incoming_message.put(message)
 
 
 async def _handle_pairing(ctx: Channel, message_length: int) -> None:
