@@ -16,7 +16,9 @@ use super::theme;
 /// Component showing a task instruction, e.g. "Swipe up", and an optional
 /// content consisting of one of these:
 ///     - a task description e.g. "Confirm transaction", or
-///     - a page counter e.g. "1 / 3", meaning the first screen of three total.
+///     - a page counter e.g. "1 / 3", meaning the first screen of three total,
+///       or
+///     - a page hint e.g. "Go back" if you are on the last page.
 /// A host of this component is responsible of providing the exact area
 /// considering also the spacing. The height must be 18px (only instruction) or
 /// 37px (instruction and description/position).
@@ -314,7 +316,6 @@ impl<'a> FooterContent<'a> {
 #[derive(Clone)]
 struct PageCounter {
     pub instruction: TString<'static>,
-    font: Font,
     page_curr: u8,
     page_max: u8,
 }
@@ -325,7 +326,6 @@ impl PageCounter {
             instruction,
             page_curr: 0,
             page_max: 0,
-            font: Font::SUB,
         }
     }
 
@@ -345,6 +345,7 @@ impl PageCounter {
 
 impl PageCounter {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
+        let font = Font::SUB;
         let color = if self.is_last_page() {
             theme::GREEN_LIGHT
         } else {
@@ -356,14 +357,14 @@ impl PageCounter {
 
         // center the whole counter "x / yz"
         let offset_x = Offset::x(4); // spacing between foreslash and numbers
-        let width_num_curr = self.font.text_width(&string_curr);
+        let width_num_curr = font.text_width(&string_curr);
         let width_foreslash = theme::ICON_FORESLASH.toif.width();
-        let width_num_max = self.font.text_width(&string_max);
+        let width_num_max = font.text_width(&string_max);
         let width_total = width_num_curr + width_foreslash + width_num_max + 2 * offset_x.x;
 
         let counter_area = area.split_top(Footer::HEIGHT_SIMPLE).0;
         let center_x = counter_area.center().x;
-        let counter_y = self.font.vert_center(counter_area.y0, counter_area.y1, "0");
+        let counter_y = font.vert_center(counter_area.y0, counter_area.y1, "0");
         let counter_start_x = center_x - width_total / 2;
         let counter_end_x = center_x + width_total / 2;
         let base_num_curr = Point::new(counter_start_x, counter_y);
@@ -373,7 +374,7 @@ impl PageCounter {
         Text::new(base_num_curr, &string_curr)
             .with_align(Alignment::Start)
             .with_fg(color)
-            .with_font(self.font)
+            .with_font(font)
             .render(target);
         shape::ToifImage::new(base_foreslash, theme::ICON_FORESLASH.toif)
             .with_align(Alignment2D::BOTTOM_LEFT)
@@ -382,7 +383,7 @@ impl PageCounter {
         Text::new(base_num_max, &string_max)
             .with_align(Alignment::End)
             .with_fg(color)
-            .with_font(self.font)
+            .with_font(font)
             .render(target);
 
         FooterContent::render_instruction(target, area, &self.instruction);
