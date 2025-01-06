@@ -269,7 +269,8 @@ if utils.USE_THP:
             )
 
         channel.sessions[new_session.session_id] = new_session
-        loop.schedule(new_session.handle())
+        new_session.handle_spawn = loop.spawn(new_session.handle())
+        loop.schedule(new_session.handle_spawn)
 
         return Success(message="New session created.")
 
