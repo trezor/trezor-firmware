@@ -309,14 +309,16 @@ async def show_error_and_raise(
 def show_warning(
     br_name: str,
     content: str,
+    title: str | None = None,
     subheader: str | None = None,
     button: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
+    title = title or TR.words__important
     return raise_if_not_confirmed(
         trezorui_api.show_warning(
-            title=TR.words__important,
+            title=title,
             value=content,
             button=subheader or TR.words__continue_anyway_question,
             danger=True,
@@ -1173,31 +1175,30 @@ async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
     pass
 
 
-def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:
-    title = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
+def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[None]:
+    content = TR.wipe_code__mismatch if is_wipe_code else TR.pin__mismatch
     description = TR.wipe_code__enter_new if is_wipe_code else TR.pin__reenter_new
     br_name = "wipe_code_mismatch" if is_wipe_code else "pin_mismatch"
 
-    return interact(
-        error_popup(
-            title,
-            description,
-            button=TR.buttons__try_again,
-        ),
+    return show_warning(
         br_name,
-        BR_CODE_OTHER,
+        content=content,
+        title=TR.words__warning,
+        subheader=description,
+        button="button",
+        br_code=BR_CODE_OTHER,
     )
 
 
-def wipe_code_same_as_pin_popup() -> Awaitable[ui.UiResult]:
-    return interact(
-        error_popup(
-            TR.wipe_code__invalid,
-            TR.wipe_code__diff_from_pin,
-            button=TR.buttons__try_again,
-        ),
+def wipe_code_same_as_pin_popup() -> Awaitable[None]:
+
+    return show_warning(
         "wipe_code_same_as_pin",
-        BR_CODE_OTHER,
+        content=TR.wipe_code__diff_from_pin,
+        title=TR.words__warning,
+        subheader=TR.wipe_code__enter_new,
+        button="button",
+        br_code=BR_CODE_OTHER,
     )
 
 
@@ -1205,11 +1206,18 @@ def confirm_set_new_pin(
     br_name: str,
     title: str,
     description: str,
+    cancel_title: str,
     information: str,
+    is_wipe_code: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(
-        trezorui_api.flow_confirm_set_new_pin(title=title, description=description),
+        trezorui_api.flow_confirm_set_new_pin(
+            title=title,
+            description=description + "\n" + information,
+            cancel_title=cancel_title,
+            is_wipe_code=is_wipe_code,
+        ),
         br_name,
         br_code,
     )

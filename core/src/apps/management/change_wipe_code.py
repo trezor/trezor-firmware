@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import TR
+from trezor import TR, utils
 
 if TYPE_CHECKING:
     from typing import Awaitable
@@ -62,10 +62,16 @@ def _require_confirm_action(
     from trezor.ui.layouts import confirm_action, confirm_set_new_pin
     from trezor.wire import ProcessError
 
+    if utils.UI_LAYOUT == "MERCURY":
+        title = TR.wipe_code__title_settings
+    else:
+        title = TR.wipe_code__title_settings + " " + TR.words__settings
+
     if msg.remove and has_wipe_code:
         return confirm_action(
             "disable_wipe_code",
-            TR.wipe_code__title_settings,
+            title,
+            subtitle=TR.words__settings,
             description=TR.wipe_code__turn_off,
             verb=TR.buttons__turn_off,
             prompt_screen=True,
@@ -74,7 +80,8 @@ def _require_confirm_action(
     if not msg.remove and has_wipe_code:
         return confirm_action(
             "change_wipe_code",
-            TR.wipe_code__title_settings,
+            title,
+            subtitle=TR.words__settings,
             description=TR.wipe_code__change,
             verb=TR.buttons__change,
         )
@@ -82,9 +89,11 @@ def _require_confirm_action(
     if not msg.remove and not has_wipe_code:
         return confirm_set_new_pin(
             "set_wipe_code",
-            TR.wipe_code__title_settings,
+            title,
             TR.wipe_code__turn_on,
+            TR.buttons__cancel,
             TR.wipe_code__info,
+            is_wipe_code=True,
         )
 
     # Removing non-existing wipe code.

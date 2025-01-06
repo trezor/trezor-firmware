@@ -172,6 +172,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_can_go_back;
   MP_QSTR_cancel;
   MP_QSTR_cancel_text;
+  MP_QSTR_cancel_title;
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
@@ -299,6 +300,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__tap_to_start;
   MP_QSTR_instructions__view_all_data;
   MP_QSTR_is_type_of;
+  MP_QSTR_is_wipe_code;
   MP_QSTR_items;
   MP_QSTR_joint__title;
   MP_QSTR_joint__to_the_total_amount;
