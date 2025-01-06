@@ -940,8 +940,8 @@ if not utils.BITCOIN_ONLY:
     async def confirm_ethereum_tx(
         recipient: str | None,
         total_amount: str,
-        _account: str | None,
-        _account_path: str | None,
+        account: str | None,
+        account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
         is_contract_interaction: bool,
@@ -949,13 +949,18 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
+        extra_items = (
+            [(f"{k}:", v) for (k, v) in fee_info_items]
+            + [(f"{TR.words__account}:", account)]
+            + [(f"{TR.address_details__derivation_path}:", account_path)]
+        )
         summary_layout = trezorui_api.confirm_summary(
             amount=total_amount,
             amount_label=f"{TR.words__amount}:",
             fee=maximum_fee,
             fee_label=f"{TR.send__maximum_fee}:",
-            extra_items=[(f"{k}:", v) for (k, v) in fee_info_items],
-            extra_title=TR.confirm_total__title_fee,
+            extra_items=extra_items,
+            extra_title=TR.words__title_information,
         )
 
         if not is_contract_interaction:
