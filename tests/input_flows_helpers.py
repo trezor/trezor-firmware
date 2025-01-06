@@ -398,6 +398,14 @@ class EthereumFlow:
         if cancel:
             self.debug.press_no()
             return
+        if info:
+            self.debug.press_info()
+            assert TR.words__account in self.debug.read_layout().text_content()
+            assert (
+                TR.address_details__derivation_path
+                in self.debug.read_layout().text_content()
+            )
+            self.debug.press_no()
 
         self.debug.press_yes()
         assert (yield).name == "confirm_ethereum_tx"

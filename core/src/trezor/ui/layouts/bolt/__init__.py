@@ -815,8 +815,8 @@ if not utils.BITCOIN_ONLY:
     async def confirm_ethereum_tx(
         recipient: str | None,
         total_amount: str,
-        _account: str | None,
-        _account_path: str | None,
+        account: str | None,
+        account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
         is_contract_interaction: bool,
@@ -824,41 +824,54 @@ if not utils.BITCOIN_ONLY:
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        # NOTE: fee_info used so that info button is shown
+        if not is_contract_interaction:
+            description = f"{TR.words__recipient}:"
+        else:
+            description = f"{TR.ethereum__interaction_contract}:" if recipient else None
+
+        address_layout = trezorui_api.confirm_value(
+            title=TR.words__address,
+            description=description,
+            value=recipient or TR.ethereum__new_contract,
+            verb=TR.buttons__continue,
+            verb_cancel=None,
+            info=True,
+            chunkify=(chunkify if recipient else False),
+        )
+
+        account_info_layout = trezorui_api.show_info_with_cancel(
+            title=TR.send__send_from,
+            items=[
+                (f"{TR.words__account}:", account or ""),
+                (f"{TR.address_details__derivation_path}:", account_path or ""),
+            ],
+        )
+
         total_layout = trezorui_api.confirm_summary(
             amount=total_amount,
             amount_label=f"{TR.words__amount}:",
             fee=maximum_fee,
             fee_label=f"{TR.send__maximum_fee}:",
             title=TR.words__title_summary,
-            extra_items=fee_info_items,
+            extra_items=fee_info_items,  # used so that info button is shown
             extra_title=TR.confirm_total__title_fee,
             verb_cancel="^",
         )
-        info_layout = trezorui_api.show_info_with_cancel(
+
+        fee_info_layout = trezorui_api.show_info_with_cancel(
             title=TR.confirm_total__title_fee,
             items=[(f"{k}:", v) for (k, v) in fee_info_items],
         )
 
-        if not is_contract_interaction:
-            description = TR.words__recipient
-        else:
-            description = TR.ethereum__interaction_contract if recipient else None
-
         while True:
-            # Allowing going back and forth between recipient and summary/details
-            await confirm_blob(
-                br_name,
-                TR.words__address,
-                recipient or TR.ethereum__new_contract,
-                description=description,
-                verb=TR.buttons__continue,
-                chunkify=(chunkify if recipient else False),
+            await with_info(
+                address_layout, account_info_layout, br_name, ButtonRequestType.Other
             )
 
             try:
-                await with_info(total_layout, info_layout, br_name, br_code)
+                await with_info(total_layout, fee_info_layout, br_name, br_code)
             except ActionCancelled:
+                # Allowing going back and forth between recipient and summary
                 continue
             else:
                 break
