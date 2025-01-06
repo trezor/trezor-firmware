@@ -214,7 +214,7 @@ if utils.USE_THP:
     ) -> ThpNewSession | Failure:
         """
         Creates a new `ThpSession` based on the provided parameters and returns a
-        `ThpNewSession` message containing the new session ID.
+        `Success` message on success.
 
         Returns an appropriate `Failure` message if session creation fails.
         """
