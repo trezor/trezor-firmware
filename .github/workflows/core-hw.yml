@@ -36,6 +36,8 @@ jobs:
       PYTEST_TIMEOUT: 1200
       PYOPT: 0
       DISABLE_OPTIGA: 1
+      TREZOR_DISABLE_ANIMATION: 1
+      STORAGE_INSECURE_TESTING_MODE: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
       TESTOPTS: "-k 'not authenticate and not recovery and not lots'"
       TT_UHUB_PORT: 1
