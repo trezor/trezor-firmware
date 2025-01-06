@@ -71,6 +71,10 @@
 #include <io/haptic.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 #ifdef USE_HASH_PROCESSOR
 #include <sec/hash_processor.h>
 #endif
@@ -731,6 +735,33 @@ static void test_haptic(const char *args) {
 }
 #endif
 
+#ifdef USE_RGB_LED
+static void test_rgb_led(const char *args) {
+  static const int expected_params = 3;
+
+  int params[expected_params];
+  int num_params = 0;
+
+  extract_params(args, params, &num_params, expected_params);
+
+  if (num_params != expected_params) {
+    vcp_println("ERROR PARAM");
+    return;
+  }
+
+  if (params[0] > 255 || params[1] > 255 || params[2] > 255) {
+    vcp_println("ERROR RGB VALUE");
+    return;
+  }
+
+  uint32_t color = params[0] << 16 | params[1] << 8 | params[2];
+
+  rgb_led_set_color(color);
+
+  vcp_println("OK");
+}
+#endif
+
 static void test_otp_read(void) {
   uint8_t data[FLASH_OTP_BLOCK_SIZE + 1];
   memzero(data, sizeof(data));
@@ -1130,6 +1161,10 @@ int main(void) {
 #ifdef USE_HAPTIC
   haptic_init();
 #endif
+#ifdef USE_RGB_LED
+  rgb_led_init();
+#endif
+
   usb_init_all();
 
   uint32_t bootloader_version = read_bootloader_version();
@@ -1215,6 +1250,10 @@ int main(void) {
 #ifdef USE_HAPTIC
     } else if (startswith(line, "HAPTIC ")) {
       test_haptic(line + 7);
+#endif
+#ifdef USE_RGB_LED
+    } else if (startswith(line, "RGB_LED ")) {
+      test_rgb_led(line + 8);
 #endif
 #ifdef USE_OPTIGA
     } else if (startswith(line, "OPTIGAID READ")) {

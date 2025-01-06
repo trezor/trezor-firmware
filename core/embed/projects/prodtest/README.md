@@ -243,6 +243,19 @@ HAPTIC 3000
 OK
 ```
 
+### RGB_LED
+The `RGB_LED` command allows you to test the functionality of the device's RGB LED.
+It takes three input parameters, representing the intensity of the red, green, and blue color components.
+Each component is a decimal value between 0 and 255.
+
+Example:
+```
+// sets the RGB LED to red
+
+RGB_LED 255 0 0
+OK
+```
+
 ### OTP READ
 The `OTP READ` command is utilized to retrieve a string parameter from the device's OTP memory.
 This string typically contains information identifying the model and production batch of the device.
