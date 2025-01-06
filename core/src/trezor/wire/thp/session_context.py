@@ -37,7 +37,12 @@ class GenericSessionContext(Context):
 
     async def handle(self) -> None:
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-            self._handle_debug()
+            log.debug(
+                __name__,
+                "handle - start (channel_id (bytes): %s, session_id: %d)",
+                get_bytes_as_str(self.channel_id),
+                self.session_id,
+            )
 
         next_message: Message | None = None
 
@@ -57,14 +62,6 @@ class GenericSessionContext(Context):
                 # Log and try again.
                 if __debug__:
                     log.exception(__name__, exc)
-
-    def _handle_debug(self) -> None:
-        log.debug(
-            __name__,
-            "handle - start (channel_id (bytes): %s, session_id: %d)",
-            get_bytes_as_str(self.channel_id),
-            self.session_id,
-        )
 
     async def _handle_message(
         self,
