@@ -897,7 +897,7 @@ impl FirmwareUI for UIModelTT {
         horizontal: bool,
         chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecShort::new();
+        let mut paragraphs = ParagraphVecLong::new();
 
         for para in IterBuf::new().try_iterate(items)? {
             let [key, value]: [Obj; 2] = util::iter_into_array(para)?;

@@ -810,8 +810,8 @@ if not utils.BITCOIN_ONLY:
     async def confirm_ethereum_tx(
         recipient: str | None,
         total_amount: str,
-        _account: str | None,
-        _account_path: str | None,
+        account: str | None,
+        account_path: str | None,
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
         is_contract_interaction: bool,
@@ -827,12 +827,19 @@ if not utils.BITCOIN_ONLY:
             fee_label=f"{TR.send__maximum_fee}:",
             title=TR.words__title_summary,
             extra_items=fee_info_items,
-            extra_title=TR.confirm_total__title_fee,
+            extra_title=TR.words__title_information,
             verb_cancel="^",
         )
+
+        info_items = (
+            [(f"{k}:", v) for (k, v) in fee_info_items]
+            + [(f"{TR.words__account}:", account)]
+            + [(f"{TR.address_details__derivation_path}:", account_path)]
+        )
         info_layout = trezorui_api.show_info_with_cancel(
-            title=TR.confirm_total__title_fee,
-            items=[(f"{k}:", v) for (k, v) in fee_info_items],
+            title=TR.words__title_information,
+            items=info_items,
+            horizontal=True,
         )
 
         if not is_contract_interaction:
