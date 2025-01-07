@@ -18,19 +18,29 @@
  */
 
 
+#include <trezor_rtl.h>
 #include <sec/tropic_transport.h>
 #include <sec/secret.h>
 #include "ed25519-donna/ed25519.h"
+#include "memzero.h"
 
 #define PKEY_INDEX_BYTE PAIRING_KEY_SLOT_INDEX_0
 
 STATIC lt_handle_t lt_handle = {0};
 
 tropic_result tropic_init(void) {
-  lt_ret_t ret = lt_init(&lt_handle);
-  if (ret != LT_OK) {
-    return TROPIC_ERR_INIT;
-  }
+  uint8_t tropic_secret_tropic_pubkey[SECRET_TROPIC_KEY_LEN] = {0};
+  uint8_t tropic_secret_trezor_privkey[SECRET_TROPIC_KEY_LEN] = {0};
+
+  ensure((lt_init(&lt_handle) == LT_OK) * sectrue, "lt_init failed");
+  ensure(secret_tropic_get_tropic_pubkey(tropic_secret_tropic_pubkey), "secret_tropic_get_tropic_pubkey failed");
+  ensure(secret_tropic_get_trezor_privkey(tropic_secret_trezor_privkey), "secret_tropic_get_trezor_privkey failed");
+
+  tropic_result result = tropic_handshake(tropic_secret_trezor_privkey, tropic_secret_tropic_pubkey);
+
+  memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
+
+  ensure((result == TROPIC_SUCCESS) * sectrue, "tropic_handshake failed");
 
   return TROPIC_SUCCESS;
 }

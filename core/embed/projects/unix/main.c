@@ -48,7 +48,6 @@
 #include "extmod/vfs_posix.h"
 #include "genhdr/mpversion.h"
 #include "input.h"
-#include "memzero.h"
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -506,34 +505,7 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
 
 void drivers_init() {
 #ifdef USE_TROPIC
-  uint8_t tropic_secret_trezor_privkey[SECRET_TROPIC_KEY_LEN] = {0};
-  uint8_t tropic_secret_tropic_pubkey[SECRET_TROPIC_KEY_LEN] = {0};
-
-  if (sectrue != secret_tropic_get_trezor_privkey(tropic_secret_trezor_privkey)) {
-    memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
-    ensure(false, "secret_tropic_get_trezor_privkey failed");
-  }
-
-  if (sectrue != secret_tropic_get_tropic_pubkey(tropic_secret_tropic_pubkey)) {
-    memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
-    memzero(tropic_secret_tropic_pubkey, sizeof(tropic_secret_tropic_pubkey));
-    ensure(false, "secret_tropic_get_tropic_pubkey failed");
-  }
-
-  if (tropic_init() != TROPIC_SUCCESS) {
-    memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
-    memzero(tropic_secret_tropic_pubkey, sizeof(tropic_secret_tropic_pubkey));
-    ensure(false, "tropic_init failed");
-  }
-
-  if (tropic_handshake(tropic_secret_trezor_privkey, tropic_secret_tropic_pubkey) != TROPIC_SUCCESS) {
-    memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
-    memzero(tropic_secret_tropic_pubkey, sizeof(tropic_secret_tropic_pubkey));
-    ensure(false, "tropic_handshake failed");
-  }
-
-  memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
-  memzero(tropic_secret_tropic_pubkey, sizeof(tropic_secret_tropic_pubkey));
+    tropic_init();
 #endif
 }
 
