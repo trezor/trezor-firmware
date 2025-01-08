@@ -23,7 +23,7 @@ use super::{
         },
         theme,
     },
-    util::{ConfirmBlobParams, ShowInfoParams},
+    util::{ConfirmValue, ShowInfoParams},
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -214,13 +214,13 @@ fn get_cancel_page(
 
 #[allow(clippy::too_many_arguments)]
 pub fn new_confirm_output(
-    main_params: ConfirmBlobParams,
+    confirm_main: ConfirmValue,
     account: Option<TString<'static>>,
     account_path: Option<TString<'static>>,
     br_name: TString<'static>,
     br_code: u16,
-    content_amount_params: Option<ConfirmBlobParams>,
-    address_params: Option<ConfirmBlobParams>,
+    confirm_amount: Option<ConfirmValue>,
+    confirm_address: Option<ConfirmValue>,
     address_title: TString<'static>,
     summary_items_params: Option<ShowInfoParams>,
     fee_items_params: ShowInfoParams,
@@ -229,14 +229,14 @@ pub fn new_confirm_output(
     cancel_text: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     // Main
-    let main_content = main_params
+    let main_content = confirm_main
         .into_layout()?
         .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // MainMenu
     let mut main_menu = VerticalMenu::empty();
     let mut main_menu_items = Vec::<usize, 3>::new();
-    if address_params.is_some() {
+    if confirm_address.is_some() {
         main_menu = main_menu.item(theme::ICON_CHEVRON_RIGHT, address_title);
         unwrap!(main_menu_items.push(MENU_ITEM_ADDRESS_INFO));
     }
@@ -267,14 +267,14 @@ pub fn new_confirm_output(
     let ac = AddressDetails::new(TR::send__send_from.into(), account, account_path)?;
     let account_content = ac.map(|_| Some(FlowMsg::Cancelled));
 
-    let res = if let Some(content_amount_params) = content_amount_params {
-        let content_amount = content_amount_params
+    let res = if let Some(confirm_amount) = confirm_amount {
+        let confirm_amount = confirm_amount
             .into_layout()?
             .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         SwipeFlow::new(&ConfirmOutputWithAmount::Address)?
             .with_page(&ConfirmOutputWithAmount::Address, main_content)?
-            .with_page(&ConfirmOutputWithAmount::Amount, content_amount)?
+            .with_page(&ConfirmOutputWithAmount::Amount, confirm_amount)?
             .with_page(&ConfirmOutputWithAmount::Menu, content_main_menu)?
             .with_page(&ConfirmOutputWithAmount::AccountInfo, account_content)?
             .with_page(&ConfirmOutputWithAmount::CancelTap, get_cancel_page())?
@@ -352,8 +352,8 @@ pub fn new_confirm_output(
             .with_page(&ConfirmOutputWithSummary::Main, main_content)?
             .with_page(&ConfirmOutputWithSummary::MainMenu, content_main_menu)?
             .with_page(&ConfirmOutputWithSummary::MainMenuCancel, get_cancel_page())?;
-        if let Some(address_params) = address_params {
-            let address_content = address_params.into_layout()?;
+        if let Some(confirm_address) = confirm_address {
+            let address_content = confirm_address.into_layout()?;
             flow = flow.with_page(&ConfirmOutputWithSummary::AddressInfo, address_content)?;
         } else {
             // dummy page - this will never be shown since there is no menu item pointing to

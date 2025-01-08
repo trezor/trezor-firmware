@@ -484,7 +484,6 @@ def confirm_blob(
     title: str,
     data: bytes | str,
     description: str | None = None,
-    text_mono: bool = True,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
@@ -496,17 +495,17 @@ def confirm_blob(
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
     if ask_pagination:
-        main_layout = trezorui_api.confirm_blob_intro(
+        main_layout = trezorui_api.confirm_value_intro(
             title=title,
-            data=data,
+            value=data,
             subtitle=description,
             verb=verb,
             verb_cancel=verb_cancel,
             chunkify=chunkify,
         )
-        info_layout = trezorui_api.confirm_blob(
+        info_layout = trezorui_api.confirm_value(
             title=title,
-            data=data,
+            value=data,
             subtitle=description,
             description=None,
             verb=None,
@@ -528,11 +527,10 @@ def confirm_blob(
             info_layout_can_confirm=True,
         )
     else:
-        layout = trezorui_api.confirm_blob(
+        layout = trezorui_api.confirm_value(
             title=title,
-            data=data,
+            value=data,
             description=description,
-            text_mono=text_mono,
             subtitle=subtitle,
             verb=verb,
             verb_cancel=verb_cancel,
@@ -615,7 +613,7 @@ def confirm_value(
     verb: str | None = None,
     subtitle: str | None = None,
     hold: bool = False,
-    value_text_mono: bool = True,
+    is_data: bool = True,
     chunkify: bool = False,
     info_items: Iterable[tuple[str, str]] | None = None,
     info_title: str | None = None,
@@ -636,14 +634,14 @@ def confirm_value(
     return with_info(
         trezorui_api.confirm_value(
             title=title,
-            subtitle=subtitle,
-            description=description,
             value=value,
+            is_data=is_data,
+            description=description,
+            subtitle=subtitle,
             verb=verb,
+            info=bool(info_items),
             hold=hold,
-            info_button=bool(info_items),
             chunkify=chunkify,
-            text_mono=value_text_mono,
         ),
         info_layout,
         br_name,
@@ -936,9 +934,9 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    address_layout = trezorui_api.confirm_blob(
+    address_layout = trezorui_api.confirm_value(
         title=TR.modify_amount__title,
-        data=address,
+        value=address,
         verb=TR.buttons__continue,
         verb_cancel=None,
         description=f"{TR.words__address}:",
@@ -1033,12 +1031,10 @@ async def confirm_signverify(
 
     address_layout = trezorui_api.confirm_value(
         title=address_title,
-        subtitle=None,
-        description="",
         value=address,
+        description="",
         verb=TR.buttons__continue,
-        verb_info=TR.buttons__more_info,
-        info_button=True,
+        info=True,
         chunkify=chunkify,
     )
 
@@ -1060,10 +1056,10 @@ async def confirm_signverify(
         horizontal=True,
     )
 
-    message_layout = trezorui_api.confirm_blob(
+    message_layout = trezorui_api.confirm_value(
         title=TR.sign_message__confirm_message,
         description=None,
-        data=message,
+        value=message,
         extra=None,
         prompt_screen=True,
         hold=not verify,

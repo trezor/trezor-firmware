@@ -24,7 +24,7 @@ use crate::{
         geometry,
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmBlob, RecoveryType},
+            util::{ConfirmValueParams, RecoveryType},
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
@@ -132,16 +132,15 @@ impl FirmwareUI for UICaesar {
         Ok(obj)
     }
 
-    fn confirm_blob(
+    fn confirm_value(
         title: TString<'static>,
-        data: Obj,
+        value: Obj,
         description: Option<TString<'static>>,
-        _text_mono: bool,
+        is_data: bool,
         extra: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        _verb_info: Option<TString<'static>>,
         _info: bool,
         hold: bool,
         chunkify: bool,
@@ -149,20 +148,20 @@ impl FirmwareUI for UICaesar {
         _prompt_screen: bool,
         _cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let style = if chunkify {
-            // Chunkifying the address into smaller pieces when requested
-            &theme::TEXT_MONO_ADDRESS_CHUNKS
-        } else {
-            &theme::TEXT_MONO_DATA
-        };
-
-        let paragraphs = ConfirmBlob {
+        let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
             extra: extra.unwrap_or("".into()),
-            data: data.try_into()?,
+            value: value.try_into()?,
+            font: if chunkify {
+                // Chunkifying the address into smaller pieces when requested
+                &theme::TEXT_MONO_ADDRESS_CHUNKS
+            } else if is_data {
+                &theme::TEXT_MONO_DATA
+            } else {
+                &theme::TEXT_NORMAL
+            },
             description_font: &theme::TEXT_BOLD,
             extra_font: &theme::TEXT_NORMAL,
-            data_font: style,
         }
         .into_paragraphs();
 
@@ -176,15 +175,15 @@ impl FirmwareUI for UICaesar {
         LayoutObj::new_root(layout)
     }
 
-    fn confirm_blob_intro(
+    fn confirm_value_intro(
         _title: TString<'static>,
-        _data: Obj,
+        _value: Obj,
         _subtitle: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_blob_intro not implemented"))
+        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
     }
 
     fn confirm_homescreen(
@@ -588,36 +587,6 @@ impl FirmwareUI for UICaesar {
 
         let layout = RootComponent::new(Flow::new(pages).with_scrollbar(false));
         Ok(layout)
-    }
-
-    fn confirm_value(
-        title: TString<'static>,
-        value: Obj,
-        description: Option<TString<'static>>,
-        _subtitle: Option<TString<'static>>,
-        verb: Option<TString<'static>>,
-        _verb_info: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
-        _info_button: bool,
-        hold: bool,
-        _chunkify: bool,
-        _text_mono: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        let value: TString = value.try_into()?;
-        let description = description.unwrap_or("".into());
-        let paragraphs = Paragraphs::new([
-            Paragraph::new(&theme::TEXT_BOLD, description),
-            Paragraph::new(&theme::TEXT_MONO, value),
-        ]);
-
-        let layout = content_in_button_page(
-            title,
-            paragraphs,
-            verb.unwrap_or(TR::buttons__confirm.into()),
-            verb_cancel,
-            hold,
-        )?;
-        LayoutObj::new_root(layout)
     }
 
     fn confirm_with_info(
