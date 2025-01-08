@@ -408,7 +408,7 @@ class Channel:
                     session_id,
                 )
                 self.set_channel_state(ChannelState.INVALIDATED)
-        task = self._write_and_encrypt(self.buffer[:noise_payload_len], force)
+        task = self._write_and_encrypt(buffer, noise_payload_len, force)
         if task is not None:
             await task
 
@@ -425,15 +425,14 @@ class Channel:
         )
 
     def _write_and_encrypt(
-        self, payload: bytes, force: bool = False
+        self, payload: bytes, noise_payload_len: int, force: bool = False
     ) -> Awaitable[None] | None:
-        payload_length = len(payload)
         buffer = memory_manager.get_existing_write_buffer(self.get_channel_id_int())
         # if buffer is WireBufferError:
         # pass  # TODO handle deviceBUSY
 
-        self._encrypt(buffer, payload_length)
-        payload_length = payload_length + TAG_LENGTH
+        self._encrypt(buffer, noise_payload_len)
+        payload_length = noise_payload_len + TAG_LENGTH
 
         if self.write_task_spawn is not None:
             self.write_task_spawn.close()  # UPS TODO might break something
@@ -444,7 +443,7 @@ class Channel:
                 self._log("Writing FORCE message (without async or retransmission).")
 
             return self._write_encrypted_payload_loop(
-                ENCRYPTED, memoryview(self.buffer[:payload_length])
+                ENCRYPTED, memoryview(buffer[:payload_length])
             )
         self.write_task_spawn = loop.spawn(
             self._write_encrypted_payload_loop(
