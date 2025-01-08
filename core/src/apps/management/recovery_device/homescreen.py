@@ -96,9 +96,9 @@ async def _continue_recovery_process() -> Success:
         if is_first_step:
             # If we are starting recovery, ask for word count first...
             # _request_word_count
-            # For others than model_tr, just continue straight to word count keyboard
+            # For others than samson, just continue straight to word count keyboard
             # pylint: disable-next=consider-using-in
-            if utils.INTERNAL_MODEL == "T2B1" or utils.INTERNAL_MODEL == "T3B1":
+            if utils.UI_LAYOUT == "SAMSON":
                 await layout.homescreen_dialog(
                     TR.buttons__continue, TR.recovery__num_of_words
                 )

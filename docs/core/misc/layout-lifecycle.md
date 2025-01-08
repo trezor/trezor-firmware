@@ -139,7 +139,7 @@ which essentially _simulates_ the layout lifecycle, in the following manner:
 
 ### Flows
 
-Flow layouts in `mercury` are implemented as a `SwipeFlow` struct, which implements
+Flow layouts in `Quicksilver` are implemented as a `SwipeFlow` struct, which implements
 `Layout` directly.
 
 A flow lifecycle works like this:

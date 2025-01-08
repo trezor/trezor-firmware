@@ -40,7 +40,7 @@ message DebugLinkDecision {
     }
 
     /**
-    * Structure representing model R button presses
+    * Structure representing button presses of UI samson
     */
     // TODO: probably delete the middle_btn as it is not a physical one
     enum DebugPhysicalButton {

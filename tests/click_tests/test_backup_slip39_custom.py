@@ -103,9 +103,9 @@ def test_backup_slip39_custom(
         all_words.append(" ".join(words))
 
     # confirm backup done
-    if debug.layout_type is LayoutType.Mercury and share_count > 1:
+    if debug.layout_type is LayoutType.Quicksilver and share_count > 1:
         reset.confirm_read(debug)
-    elif debug.layout_type is not LayoutType.Mercury:
+    elif debug.layout_type is not LayoutType.Quicksilver:
         reset.confirm_read(debug)
 
     # generate secret locally

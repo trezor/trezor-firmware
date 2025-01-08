@@ -70,7 +70,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     )
 
     layout = go_next(debug)
-    if debug.layout_type is LayoutType.Mercury:
+    if debug.layout_type is LayoutType.Quicksilver:
         layout = tap_to_confirm(debug)
     assert layout.main_component() == "Homescreen"
     assert device_handler.result() == "Settings applied"
@@ -104,17 +104,17 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         in debug.read_layout().text_content().replace(" ", "")
     )
 
-    if debug.layout_type is LayoutType.TT:
+    if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
         layout = debug.click(buttons.OK)
         assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
-    elif debug.layout_type is LayoutType.Mercury:
+    elif debug.layout_type is LayoutType.Quicksilver:
         debug.swipe_up()
         layout = debug.swipe_up()
         assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         debug.press_right()
         layout = debug.press_right()
         assert TR.send__total_amount in layout.text_content()
@@ -156,18 +156,18 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         in debug.read_layout().text_content().replace(" ", "")
     )
 
-    if debug.layout_type is LayoutType.TT:
+    if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
         layout = debug.click(buttons.OK)
         assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
-    elif debug.layout_type is LayoutType.Mercury:
+    elif debug.layout_type is LayoutType.Quicksilver:
         debug.swipe_up()
         layout = debug.swipe_up()
         assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
         debug.swipe_up()
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         debug.press_right()
         layout = debug.press_right()
         assert TR.send__total_amount in layout.text_content()
@@ -186,11 +186,11 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         # `sleepy_filter` delays the response by 10 secs while the layout deadlock
         # timeout is 3. In this test we don't need the result of the input event so
         # waiting for it is not necessary.
-        if debug.layout_type is LayoutType.TT:
+        if debug.layout_type is LayoutType.Bolt:
             debug.click(buttons.OK, wait=False)
-        elif debug.layout_type is LayoutType.Mercury:
+        elif debug.layout_type is LayoutType.Quicksilver:
             debug.click(buttons.TAP_TO_CONFIRM, wait=False)
-        elif debug.layout_type is LayoutType.TR:
+        elif debug.layout_type is LayoutType.Samson:
             debug.press_middle(wait=False)
 
         signatures, tx = device_handler.result()
@@ -210,20 +210,20 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
 
     assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
-    if debug.layout_type is LayoutType.TR:
+    if debug.layout_type is LayoutType.Samson:
         # Going into the selected character category
         debug.press_middle()
 
     # enter passphrase - slowly
     # keep clicking for long enough to trigger the autolock if it incorrectly ignored key presses
     for _ in range(math.ceil(11 / 1.5)):
-        if debug.layout_type is LayoutType.TT:
+        if debug.layout_type is LayoutType.Bolt:
             # click at "j"
             debug.click(CENTER_BUTTON)
-        elif debug.layout_type is LayoutType.Mercury:
+        elif debug.layout_type is LayoutType.Quicksilver:
             # click at "j"
             debug.click((20, 120))
-        elif debug.layout_type is LayoutType.TR:
+        elif debug.layout_type is LayoutType.Samson:
             # just go right
             # NOTE: because of passphrase randomization it would be a pain to input
             # a specific passphrase, which is not in scope for this test.
@@ -231,11 +231,11 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
         time.sleep(1.5)
 
     # Send the passphrase to the client (TT has it clicked already, TR needs to input it)
-    if debug.layout_type is LayoutType.TT:
+    if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
-    elif debug.layout_type is LayoutType.Mercury:
+    elif debug.layout_type is LayoutType.Quicksilver:
         debug.click(buttons.CORNER_BUTTON)
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         debug.input("j" * 8)
 
     # address corresponding to "jjjjjjjj" passphrase
@@ -252,16 +252,16 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
 
     assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
-    if debug.layout_type is LayoutType.TR:
+    if debug.layout_type is LayoutType.Samson:
         # Going into the selected character category
         debug.press_middle()
 
     # enter passphrase - slowly
     # autolock must activate even if we pressed some buttons
     for _ in range(math.ceil(6 / 1.5)):
-        if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
+        if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
             debug.click(CENTER_BUTTON)
-        elif debug.layout_type is LayoutType.TR:
+        elif debug.layout_type is LayoutType.Samson:
             debug.press_middle()
         time.sleep(1.5)
 
@@ -292,7 +292,7 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
     layout = unlock_dry_run(debug)
     assert TR.recovery__num_of_words in debug.read_layout().text_content()
 
-    if debug.layout_type is LayoutType.TR:
+    if debug.layout_type is LayoutType.Samson:
         debug.press_right()
 
     # wait for autolock to trigger
@@ -326,10 +326,10 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
         layout = go_next(debug)
         assert layout.main_component() == "MnemonicKeyboard"
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         layout = debug.press_right()
         assert "MnemonicKeyboard" in layout.all_components()
 
@@ -352,7 +352,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.layout_type is LayoutType.TT:
+    if debug.layout_type is LayoutType.Bolt:
         layout = debug.click(buttons.OK)
         assert layout.main_component() == "MnemonicKeyboard"
 
@@ -364,7 +364,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         # should not have locked, even though we took 9 seconds to type each letter
         assert layout.main_component() == "MnemonicKeyboard"
 
-    elif debug.layout_type is LayoutType.Mercury:
+    elif debug.layout_type is LayoutType.Quicksilver:
         layout = debug.swipe_up()
         assert layout.main_component() == "MnemonicKeyboard"
 
@@ -376,7 +376,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
         # should not have locked, even though we took 9 seconds to type each letter
         assert layout.main_component() == "MnemonicKeyboard"
 
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         layout = debug.press_right()
         assert "MnemonicKeyboard" in layout.all_components()
 

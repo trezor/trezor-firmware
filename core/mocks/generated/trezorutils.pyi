@@ -149,7 +149,7 @@ EMULATOR: bool
 BITCOIN_ONLY: bool
 """Whether the firmware is Bitcoin-only."""
 UI_LAYOUT: str
-"""UI layout identifier ("tt" for model T, "tr" for models One and R)."""
+"""UI layout identifier ("bolt"-T, "samson"-TS3, "quicksilver"-TS5)."""
 USE_THP: bool
 """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 if __debug__:

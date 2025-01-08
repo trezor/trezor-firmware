@@ -2,12 +2,12 @@
 //! current feature (Trezor model)
 
 #[cfg(all(
-    feature = "model_mercury",
-    not(feature = "model_tr"),
-    not(feature = "model_tt")
+    feature = "layout_bolt",
+    not(feature = "layout_quicksilver"),
+    not(feature = "layout_samson")
 ))]
-pub use super::model_mercury::constant::*;
-#[cfg(all(feature = "model_tr", not(feature = "model_tt")))]
-pub use super::model_tr::constant::*;
-#[cfg(feature = "model_tt")]
-pub use super::model_tt::constant::*;
+pub use super::layout_bolt::constant::*;
+#[cfg(all(feature = "layout_quicksilver", not(feature = "layout_bolt")))]
+pub use super::layout_quicksilver::constant::*;
+#[cfg(feature = "layout_samson")]
+pub use super::layout_samson::constant::*;

@@ -202,7 +202,7 @@ def test_failed_pin(client: Client):
     ret = client.call_raw(messages.ButtonAck())
 
     # Re-enter PIN for TR
-    if client.layout_type is LayoutType.TR:
+    if client.layout_type is LayoutType.Samson:
         assert isinstance(ret, messages.ButtonRequest)
         client.debug.press_yes()
         ret = client.call_raw(messages.ButtonAck())

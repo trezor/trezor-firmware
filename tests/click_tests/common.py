@@ -48,31 +48,31 @@ def get_char_category(char: str) -> PassphraseCategory:
 
 
 def go_next(debug: "DebugLink") -> LayoutContent:
-    if debug.layout_type is LayoutType.TT:
+    if debug.layout_type is LayoutType.Bolt:
         return debug.click(buttons.OK)
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         return debug.press_right()
-    elif debug.layout_type is LayoutType.Mercury:
+    elif debug.layout_type is LayoutType.Quicksilver:
         return debug.swipe_up()
     else:
         raise RuntimeError("Unknown model")
 
 
 def tap_to_confirm(debug: "DebugLink") -> LayoutContent:
-    if debug.layout_type is LayoutType.TT:
+    if debug.layout_type is LayoutType.Bolt:
         return debug.read_layout()
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         return debug.read_layout()
-    elif debug.layout_type is LayoutType.Mercury:
+    elif debug.layout_type is LayoutType.Quicksilver:
         return debug.click(buttons.TAP_TO_CONFIRM)
     else:
         raise RuntimeError("Unknown model")
 
 
 def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
-    if debug.layout_type in (LayoutType.TT, LayoutType.Mercury):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
         return debug.click(buttons.CANCEL)
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         if r_middle:
             return debug.press_middle()
         else:
@@ -124,11 +124,11 @@ def _carousel_steps(current_index: int, wanted_index: int, length: int) -> int:
 
 
 def unlock_gesture(debug: "DebugLink") -> LayoutContent:
-    if debug.layout_type is LayoutType.TT:
+    if debug.layout_type is LayoutType.Bolt:
         return debug.click(buttons.OK)
-    elif debug.layout_type is LayoutType.TR:
+    elif debug.layout_type is LayoutType.Samson:
         return debug.press_right()
-    elif debug.layout_type is LayoutType.Mercury:
+    elif debug.layout_type is LayoutType.Quicksilver:
         return debug.click(buttons.TAP_TO_CONFIRM)
     else:
         raise RuntimeError("Unknown model")

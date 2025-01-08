@@ -91,8 +91,8 @@ def test_reset_slip39_advanced(
     #     debug.read_layout().text_content(),
     #     [
     #         "reset__slip39_checklist_set_threshold",  # basic
-    #         "reset__slip39_checklist_set_num_shares",  # advanced (model_tt, mercury)
-    #         "reset__slip39_checklist_num_shares",  # advanced (model_tr)
+    #         "reset__slip39_checklist_set_num_shares",  # advanced (UI bolt and quicksilver)
+    #         "reset__slip39_checklist_num_shares",  # advanced (UI samson)
     #     ],
     # )
     reset.confirm_read(debug)

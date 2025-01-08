@@ -184,7 +184,7 @@ class ModelsFilter:
         "safe": {models.T2B1, models.T3T1, models.T3B1},
         "safe3": {models.T2B1, models.T3B1},
         "safe5": {models.T3T1},
-        "mercury": {models.T3T1},
+        "quicksilver": {models.T3T1},
     }
 
     def __init__(self, node: Node) -> None:
