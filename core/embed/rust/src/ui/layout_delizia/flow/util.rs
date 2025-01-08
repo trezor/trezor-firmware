@@ -16,7 +16,7 @@ use crate::{
         },
         flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
         geometry::Direction,
-        layout::util::{ConfirmBlob, StrOrBytes},
+        layout::util::{ConfirmValueParams, StrOrBytes},
     },
 };
 use heapless::Vec;
@@ -29,12 +29,12 @@ use super::{
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
 };
 
-pub struct ConfirmBlobParams {
+pub struct ConfirmValue {
     title: TString<'static>,
     subtitle: Option<TString<'static>>,
     footer_instruction: Option<TString<'static>>,
     footer_description: Option<TString<'static>>,
-    data: Obj,
+    value: Obj,
     description: Option<TString<'static>>,
     description_font: &'static TextStyle,
     extra: Option<TString<'static>>,
@@ -56,14 +56,14 @@ pub struct ConfirmBlobParams {
     cancel: bool,
 }
 
-impl ConfirmBlobParams {
-    pub fn new(title: TString<'static>, data: Obj, description: Option<TString<'static>>) -> Self {
+impl ConfirmValue {
+    pub fn new(title: TString<'static>, value: Obj, description: Option<TString<'static>>) -> Self {
         Self {
             title,
             subtitle: None,
             footer_instruction: None,
             footer_description: None,
-            data,
+            value,
             description,
             description_font: &theme::TEXT_NORMAL,
             extra: None,
@@ -202,24 +202,24 @@ impl ConfirmBlobParams {
     pub fn into_layout(
         self,
     ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
-        let paragraphs = ConfirmBlob {
+        let paragraphs = ConfirmValueParams {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
-            data: if self.data != Obj::const_none() {
-                self.data.try_into()?
+            value: if self.value != Obj::const_none() {
+                self.value.try_into()?
             } else {
                 StrOrBytes::Str("".into())
             },
-            description_font: &theme::TEXT_NORMAL,
-            extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: if self.chunkify {
-                let data: TString = self.data.try_into()?;
-                theme::get_chunkified_text_style(data.len())
+            font: if self.chunkify {
+                let value: TString = self.value.try_into()?;
+                theme::get_chunkified_text_style(value.len())
             } else if self.text_mono {
                 &theme::TEXT_MONO
             } else {
                 &theme::TEXT_NORMAL
             },
+            description_font: &theme::TEXT_NORMAL,
+            extra_font: &theme::TEXT_DEMIBOLD,
         }
         .into_paragraphs();
 
@@ -257,20 +257,20 @@ impl ConfirmBlobParams {
     }
 
     pub fn into_flow(self) -> Result<SwipeFlow, Error> {
-        let paragraphs = ConfirmBlob {
+        let paragraphs = ConfirmValueParams {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
-            data: self.data.try_into()?,
-            description_font: self.description_font,
-            extra_font: &theme::TEXT_DEMIBOLD,
-            data_font: if self.chunkify {
-                let data: TString = self.data.try_into()?;
-                theme::get_chunkified_text_style(data.len())
+            value: self.value.try_into()?,
+            font: if self.chunkify {
+                let value: TString = self.value.try_into()?;
+                theme::get_chunkified_text_style(value.len())
             } else if self.text_mono {
                 &theme::TEXT_MONO
             } else {
                 &theme::TEXT_NORMAL
             },
+            description_font: self.description_font,
+            extra_font: &theme::TEXT_DEMIBOLD,
         }
         .into_paragraphs();
 

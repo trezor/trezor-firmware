@@ -112,17 +112,16 @@ def confirm_address(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def confirm_blob(
+def confirm_value(
     *,
     title: str,
-    data: str | bytes,
+    value: str | bytes,
     description: str | None,
-    text_mono: bool = True,
+    is_data: bool = True,
     extra: str | None = None,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    verb_info: str | None = None,
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
@@ -130,22 +129,27 @@ def confirm_blob(
     prompt_screen: bool = False,
     cancel: bool = False,
 ) -> LayoutObj[UiResult]:
-    """Confirm byte sequence data."""
+    """Confirm a generic piece of information on the screen.
+    The value can either be human readable text (`is_data=False`)
+    or something else - like an address or a blob of data.
+    The difference between the two kinds of values
+    is both in the font and in the linebreak strategy."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def confirm_blob_intro(
+def confirm_value_intro(
     *,
     title: str,
-    data: str | bytes,
+    value: str | bytes,
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
-    """Confirm byte sequence data by showing only the first page of the data
-    and instructing the user to access the menu in order to view all the data,
-    which can then be confirmed using confirm_blob."""
+    """Similar to `confirm_value`, but only the first page is shown.
+    This function is intended as a building block for a higher level `confirm_blob`
+    abstraction which can paginate the blob, show just the first page
+    and instruct the user to view the complete blob if they wish."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -263,24 +267,6 @@ def confirm_summary(
     verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm summary of a transaction."""
-
-
-# rust/src/ui/api/firmware_micropython.rs
-def confirm_value(
-    *,
-    title: str,
-    value: str,
-    description: str | None,
-    subtitle: str | None,
-    verb: str | None = None,
-    verb_info: str | None = None,
-    verb_cancel: str | None = None,
-    info_button: bool = False,
-    hold: bool = False,
-    chunkify: bool = False,
-    text_mono: bool = True,
-) -> LayoutObj[UiResult]:
-    """Confirm value. Merge of confirm_total and confirm_output."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

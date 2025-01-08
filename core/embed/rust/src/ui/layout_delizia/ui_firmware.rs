@@ -40,7 +40,7 @@ use super::{
     },
     flow::{
         self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
-        ConfirmActionStrings, ConfirmBlobParams, ShowInfoParams,
+        ConfirmActionStrings, ConfirmValue, ShowInfoParams,
     },
     theme, UIDelizia,
 };
@@ -85,16 +85,15 @@ impl FirmwareUI for UIDelizia {
         Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_address not implemented"))
     }
 
-    fn confirm_blob(
+    fn confirm_value(
         title: TString<'static>,
-        data: Obj,
+        value: Obj,
         description: Option<TString<'static>>,
-        text_mono: bool,
+        is_data: bool,
         extra: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        verb_info: Option<TString<'static>>,
         info: bool,
         hold: bool,
         chunkify: bool,
@@ -102,14 +101,14 @@ impl FirmwareUI for UIDelizia {
         prompt_screen: bool,
         cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        ConfirmBlobParams::new(title, data, description)
+        ConfirmValue::new(title, value, description)
             .with_description_font(&theme::TEXT_SUB_GREY)
-            .with_text_mono(text_mono)
+            .with_text_mono(is_data)
             .with_subtitle(subtitle)
             .with_verb(verb)
             .with_verb_cancel(verb_cancel)
             .with_verb_info(if info {
-                Some(verb_info.unwrap_or(TR::words__title_information.into()))
+                Some(TR::buttons__more_info.into())
             } else {
                 None
             })
@@ -124,16 +123,16 @@ impl FirmwareUI for UIDelizia {
             .map(Into::into)
     }
 
-    fn confirm_blob_intro(
+    fn confirm_value_intro(
         title: TString<'static>,
-        data: Obj,
+        value: Obj,
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        const CONFIRM_BLOB_INTRO_MARGIN: usize = 24;
-        ConfirmBlobParams::new(title, data, Some(TR::instructions__view_all_data.into()))
+        const CONFIRM_VALUE_INTRO_MARGIN: usize = 24;
+        ConfirmValue::new(title, value, Some(TR::instructions__view_all_data.into()))
             .with_verb(verb)
             .with_verb_info(Some(TR::buttons__view_all_data.into()))
             .with_description_font(&theme::TEXT_SUB_GREEN_LIME)
@@ -144,7 +143,7 @@ impl FirmwareUI for UIDelizia {
             ))
             .with_chunkify(chunkify)
             .with_page_limit(Some(1))
-            .with_frame_margin(CONFIRM_BLOB_INTRO_MARGIN)
+            .with_frame_margin(CONFIRM_VALUE_INTRO_MARGIN)
             .into_flow()
             .and_then(LayoutObj::new_root)
             .map(Into::into)
@@ -438,37 +437,6 @@ impl FirmwareUI for UIDelizia {
         Ok(flow)
     }
 
-    fn confirm_value(
-        title: TString<'static>,
-        value: Obj,
-        description: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
-        verb: Option<TString<'static>>,
-        verb_info: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
-        info_button: bool,
-        hold: bool,
-        chunkify: bool,
-        text_mono: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        ConfirmBlobParams::new(title, value, description)
-            .with_subtitle(subtitle)
-            .with_verb(verb)
-            .with_verb_cancel(verb_cancel)
-            .with_verb_info(if info_button {
-                Some(verb_info.unwrap_or(TR::words__title_information.into()))
-            } else {
-                None
-            })
-            .with_chunkify(chunkify)
-            .with_text_mono(text_mono)
-            .with_prompt(hold)
-            .with_hold(hold)
-            .into_flow()
-            .and_then(LayoutObj::new_root)
-            .map(Into::into)
-    }
-
     fn confirm_with_info(
         title: TString<'static>,
         button: TString<'static>,
@@ -559,7 +527,7 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let address_title = address_title.unwrap_or(TR::words__address.into());
 
-        let main_params = ConfirmBlobParams::new(title.unwrap_or(TString::empty()), message, None)
+        let confirm_main = ConfirmValue::new(title.unwrap_or(TString::empty()), message, None)
             .with_subtitle(subtitle)
             .with_menu_button()
             .with_footer(TR::instructions__swipe_up.into(), None)
@@ -567,8 +535,8 @@ impl FirmwareUI for UIDelizia {
             .with_text_mono(text_mono)
             .with_swipe_up();
 
-        let content_amount_params = amount.map(|amount| {
-            ConfirmBlobParams::new(TR::words__amount.into(), amount, None)
+        let confirm_amount = amount.map(|amount| {
+            ConfirmValue::new(TR::words__amount.into(), amount, None)
                 .with_subtitle(subtitle)
                 .with_menu_button()
                 .with_footer(TR::instructions__swipe_up.into(), None)
@@ -577,8 +545,8 @@ impl FirmwareUI for UIDelizia {
                 .with_swipe_down()
         });
 
-        let address_params = address.map(|address| {
-            ConfirmBlobParams::new(address_title, address, None)
+        let confirm_value = address.map(|address| {
+            ConfirmValue::new(address_title, address, None)
                 .with_cancel_button()
                 .with_chunkify(true)
                 .with_text_mono(true)
@@ -611,13 +579,13 @@ impl FirmwareUI for UIDelizia {
         };
 
         let flow = flow::confirm_output::new_confirm_output(
-            main_params,
+            confirm_main,
             account,
             account_path,
             br_name,
             br_code,
-            content_amount_params,
-            address_params,
+            confirm_amount,
+            confirm_value,
             address_title,
             summary_items_params,
             fee_items_params,

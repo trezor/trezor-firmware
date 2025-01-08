@@ -187,8 +187,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_coinjoin_authorized;
   MP_QSTR_confirm_action;
   MP_QSTR_confirm_address;
-  MP_QSTR_confirm_blob;
-  MP_QSTR_confirm_blob_intro;
   MP_QSTR_confirm_coinjoin;
   MP_QSTR_confirm_emphasized;
   MP_QSTR_confirm_fido;
@@ -206,12 +204,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_total__title_fee;
   MP_QSTR_confirm_total__title_sending_from;
   MP_QSTR_confirm_value;
+  MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
   MP_QSTR_current;
   MP_QSTR_danger;
-  MP_QSTR_data;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
   MP_QSTR_debug__loading_seed;
@@ -299,6 +297,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_instructions__tap_to_start;
   MP_QSTR_instructions__view_all_data;
+  MP_QSTR_is_data;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
   MP_QSTR_joint__title;
@@ -725,7 +724,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_value;
   MP_QSTR_verb;
   MP_QSTR_verb_cancel;
-  MP_QSTR_verb_info;
   MP_QSTR_verify;
   MP_QSTR_version;
   MP_QSTR_wipe__info;

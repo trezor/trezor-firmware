@@ -41,16 +41,15 @@ pub trait FirmwareUI {
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     #[allow(clippy::too_many_arguments)]
-    fn confirm_blob(
+    fn confirm_value(
         title: TString<'static>,
-        data: Obj, // TODO: replace Obj
+        value: Obj, // TODO: replace Obj
         description: Option<TString<'static>>,
-        text_mono: bool,
+        is_data: bool,
         extra: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        verb_info: Option<TString<'static>>,
         info: bool,
         hold: bool,
         chunkify: bool,
@@ -59,9 +58,9 @@ pub trait FirmwareUI {
         cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
-    fn confirm_blob_intro(
+    fn confirm_value_intro(
         title: TString<'static>,
-        data: Obj, // TODO: replace Obj
+        value: Obj, // TODO: replace Obj
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
@@ -137,21 +136,6 @@ pub trait FirmwareUI {
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
-
-    #[allow(clippy::too_many_arguments)]
-    fn confirm_value(
-        title: TString<'static>,
-        value: Obj, // TODO: replace Obj
-        description: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
-        verb: Option<TString<'static>>,
-        verb_info: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
-        info_button: bool,
-        hold: bool,
-        chunkify: bool,
-        text_mono: bool,
-    ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_with_info(
         title: TString<'static>,

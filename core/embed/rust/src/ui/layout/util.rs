@@ -57,21 +57,21 @@ impl TryFrom<Obj> for StrOrBytes {
 }
 
 #[derive(Clone)]
-pub struct ConfirmBlob {
+pub struct ConfirmValueParams {
     pub description: TString<'static>,
     pub extra: TString<'static>,
-    pub data: StrOrBytes,
+    pub value: StrOrBytes,
+    pub font: &'static TextStyle,
     pub description_font: &'static TextStyle,
     pub extra_font: &'static TextStyle,
-    pub data_font: &'static TextStyle,
 }
 
-impl ParagraphSource<'static> for ConfirmBlob {
+impl ParagraphSource<'static> for ConfirmValueParams {
     fn at(&self, index: usize, offset: usize) -> Paragraph<'static> {
         match index {
             0 => Paragraph::new(self.description_font, self.description.skip_prefix(offset)),
             1 => Paragraph::new(self.extra_font, self.extra.skip_prefix(offset)),
-            2 => Paragraph::new(self.data_font, self.data.as_str_offset(offset)),
+            2 => Paragraph::new(self.font, self.value.as_str_offset(offset)),
             _ => unreachable!(),
         }
     }

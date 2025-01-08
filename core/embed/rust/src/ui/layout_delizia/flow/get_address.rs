@@ -15,7 +15,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
-        layout::util::ConfirmBlob,
+        layout::util::ConfirmValueParams,
     },
 };
 
@@ -101,19 +101,18 @@ pub fn new_get_address(
     br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     // Address
-    let data_style = if chunkify {
-        let address: TString = address.try_into()?;
-        theme::get_chunkified_text_style(address.len())
-    } else {
-        &theme::TEXT_MONO
-    };
-    let paragraphs = ConfirmBlob {
+    let paragraphs = ConfirmValueParams {
         description: description.unwrap_or_else(|| "".into()),
         extra: extra.unwrap_or_else(|| "".into()),
-        data: address.try_into()?,
+        value: address.try_into()?,
+        font: if chunkify {
+            let address: TString = address.try_into()?;
+            theme::get_chunkified_text_style(address.len())
+        } else {
+            &theme::TEXT_MONO
+        },
         description_font: &theme::TEXT_NORMAL,
         extra_font: &theme::TEXT_DEMIBOLD,
-        data_font: data_style,
     }
     .into_paragraphs();
     let content_address =
