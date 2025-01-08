@@ -114,13 +114,16 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   }
 
   if (msg->has_show_display && msg->show_display) {
-    for (int page = 0; page < 2; page++) {
-      layoutXPUB(resp->xpub, page);
-      if (!protectButton(ButtonRequestType_ButtonRequest_PublicKey, true)) {
-        memzero(resp, sizeof(PublicKey));
-        fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
-        layoutHome();
-        return;
+    int page = 0;
+    bool qrcode = false;
+
+    while (page < 2) {
+      layoutXPUB(resp->xpub, page, qrcode);
+      if (protectButton(ButtonRequestType_ButtonRequest_PublicKey, false)) {
+        page += 1;       // advance to the next page
+        qrcode = false;  // switch to XPUB text
+      } else {
+        qrcode = !qrcode;  // switch to and from QR
       }
     }
   }
