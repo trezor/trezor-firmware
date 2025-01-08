@@ -65,7 +65,7 @@ def _assert_protection(
         if session.protocol_version == ProtocolVersion.PROTOCOL_V2:
             new_session = session.client.get_session()
         session.lock()
-        session.end()
+        # session.end()
     if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
         new_session = session.client.get_session()
     return Session(new_session)
