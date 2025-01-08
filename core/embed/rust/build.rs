@@ -437,6 +437,7 @@ fn generate_trezorhal_bindings() {
         .unwrap();
 }
 
+#[cfg(feature = "crypto")]
 fn generate_crypto_bindings() {
     let out_path = env::var("OUT_DIR").unwrap();
 

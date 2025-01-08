@@ -11,6 +11,7 @@ use crate::{
 use super::super::theme;
 
 use heapless::Vec;
+#[cfg(feature = "ui_debug")]
 use ufmt::uwrite;
 
 const WORDS_PER_PAGE: usize = 4;
