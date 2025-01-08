@@ -408,7 +408,7 @@ class Channel:
                     session_id,
                 )
                 self.set_channel_state(ChannelState.INVALIDATED)
-        task = self._write_and_encrypt(buffer, noise_payload_len, force)
+        task = self._write_and_encrypt(noise_payload_len, force)
         if task is not None:
             await task
 
@@ -425,7 +425,7 @@ class Channel:
         )
 
     def _write_and_encrypt(
-        self, payload: bytes, noise_payload_len: int, force: bool = False
+        self, noise_payload_len: int, force: bool = False
     ) -> Awaitable[None] | None:
         buffer = memory_manager.get_existing_write_buffer(self.get_channel_id_int())
         # if buffer is WireBufferError:
