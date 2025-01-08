@@ -17,46 +17,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
 #include <zephyr/types.h>
 
-#include <soc.h>
-#include <zephyr/device.h>
-#include <zephyr/devicetree.h>
-
 #include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/bluetooth/conn.h>
-#include <zephyr/bluetooth/gatt.h>
-#include <zephyr/bluetooth/hci.h>
-#include <zephyr/bluetooth/uuid.h>
-
-#include <dk_buttons_and_leds.h>
-
-#include <zephyr/settings/settings.h>
 
 #include <zephyr/logging/log.h>
 
-#include <ble/ble.h>
-#include <signals/signals.h>
-#include <trz_comm/trz_comm.h>
+#include "ble_internal.h"
 
-#define LOG_MODULE_NAME main
+#define LOG_MODULE_NAME ble_bonds
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-int main(void) {
-  LOG_INF("Initializing");
+#include "ble_internal.h"
 
-  signals_init();
 
-  trz_comm_init();
 
-  ble_init();
-
-  signals_fw_running(true);
-
-  for (;;) {
-    k_sleep(K_FOREVER);
+bool bonds_erase_all(void) {
+  int err = bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
+  if (err) {
+    LOG_INF("Cannot delete bonds (err: %d)\n", err);
+    return false;
+  } else {
+    bt_le_filter_accept_list_clear();
+    LOG_INF("Bonds deleted successfully \n");
+    return true;
   }
+}
+
+static void count_bonds(const struct bt_bond_info *info, void *user_data) {
+  int *bond_cnt = (int *)user_data;
+  *bond_cnt += 1;
+}
+
+int bonds_get_count(void) {
+  int bond_cnt = 0;
+
+  bt_foreach_bond(BT_ID_DEFAULT, count_bonds, &bond_cnt);
+
+  return bond_cnt;
 }

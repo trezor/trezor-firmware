@@ -10,16 +10,23 @@ project(NONE)
 
 # NORDIC SDK APP START
 target_sources(app PRIVATE
-    src/main.c
-    src/connection.c
-    src/advertising.c
-    src/events.c
-    src/uart.c
-    src/spi.c
-    src/int_comm.c
-    src/trz_nus.c
+        src/main.c
+        src/ble/connection.c
+        src/ble/advertising.c
+        src/ble/management.c
+        src/ble/service.c
+        src/ble/bonds.c
+        src/ble/pairing.c
+        src/ble/ble.c
+        src/trz_comm/uart.c
+        src/trz_comm/spi.c
+        src/trz_comm/trz_comm.c
+        src/signals/signals.c
 )
 
+include_directories(src/signals/inc)
+include_directories(src/trz_comm/inc)
+include_directories(src/ble/inc)
 
 # NORDIC SDK APP END
 

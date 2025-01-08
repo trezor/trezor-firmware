@@ -1,43 +1,28 @@
-#
-# Copyright (c) 2018 Nordic Semiconductor
-#
-# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
-#
+#  * This file is part of the Trezor project, https://trezor.io/
+#  *
+#  * Copyright (c) SatoshiLabs
+#  *
+#  * This program is free software: you can redistribute it and/or modify
+#  * it under the terms of the GNU General Public License as published by
+#  * the Free Software Foundation, either version 3 of the License, or
+#  * (at your option) any later version.
+#  *
+#  * This program is distributed in the hope that it will be useful,
+#  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  * GNU General Public License for more details.
+#  *
+#  * You should have received a copy of the GNU General Public License
+#  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 source "Kconfig.zephyr"
 
-menu "Nordic UART BLE GATT service sample"
+menu "Trezor BLE gateway configuration"
 
-config BT_NUS_THREAD_STACK_SIZE
+config DEFAULT_THREAD_STACK_SIZE
 	int "Thread stack size"
 	default 1024
 	help
-	  Stack size used in each of the two threads
-
-config BT_NUS_UART_BUFFER_SIZE
-	int "UART payload buffer element size"
-	default 40
-	help
-	  Size of the payload buffer in each RX and TX FIFO element
-
-config BT_NUS_SECURITY_ENABLED
-	bool "Enable security"
-	default y
-	select BT_SMP
-	help
-	  "Enable BLE security for the UART service"
-
-config BT_NUS_UART_RX_WAIT_TIME
-	int "Timeout for UART RX complete event"
-	default 50000
-	help
-	  Wait for RX complete event time in microseconds
-
-config BT_NUS_UART_ASYNC_ADAPTER
-	bool "Enable UART async adapter"
-	select SERIAL_SUPPORT_ASYNC
-	help
-	  Enables asynchronous adapter for UART drives that supports only
-	  IRQ interface.
+	  Common stack size used
 
 endmenu
