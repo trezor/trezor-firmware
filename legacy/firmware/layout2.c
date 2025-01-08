@@ -876,6 +876,40 @@ void layoutResetWord(const char *word, int pass, int word_pos, bool last) {
 
 #define QR_MAX_VERSION 9
 
+static void renderQR(const char *text) {
+  uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
+  uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
+
+  int side = 0;
+  if (qrcodegen_encodeText(text, tempdata, codedata, qrcodegen_Ecc_LOW,
+                           qrcodegen_VERSION_MIN, QR_MAX_VERSION,
+                           qrcodegen_Mask_AUTO, true)) {
+    side = qrcodegen_getSize(codedata);
+  }
+
+  oledInvert(0, 0, 63, 63);
+  if (side > 0 && side <= 29) {
+    int offset = 32 - side;
+    for (int i = 0; i < side; i++) {
+      for (int j = 0; j < side; j++) {
+        if (qrcodegen_getModule(codedata, i, j)) {
+          oledBox(offset + i * 2, offset + j * 2, offset + 1 + i * 2,
+                  offset + 1 + j * 2, false);
+        }
+      }
+    }
+  } else if (side > 0 && side <= 60) {
+    int offset = 32 - (side / 2);
+    for (int i = 0; i < side; i++) {
+      for (int j = 0; j < side; j++) {
+        if (qrcodegen_getModule(codedata, i, j)) {
+          oledClearPixel(offset + i, offset + j);
+        }
+      }
+    }
+  }
+}
+
 void layoutAddress(const char *address, const char *desc, bool qrcode,
                    bool ignorecase, const uint32_t *address_n,
                    size_t address_n_count, bool address_is_account) {
@@ -897,37 +931,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
                                 : address[i];
       }
     }
-    uint8_t codedata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
-    uint8_t tempdata[qrcodegen_BUFFER_LEN_FOR_VERSION(QR_MAX_VERSION)] = {0};
-
-    int side = 0;
-    if (qrcodegen_encodeText(ignorecase ? address_upcase : address, tempdata,
-                             codedata, qrcodegen_Ecc_LOW, qrcodegen_VERSION_MIN,
-                             QR_MAX_VERSION, qrcodegen_Mask_AUTO, true)) {
-      side = qrcodegen_getSize(codedata);
-    }
-
-    oledInvert(0, 0, 63, 63);
-    if (side > 0 && side <= 29) {
-      int offset = 32 - side;
-      for (int i = 0; i < side; i++) {
-        for (int j = 0; j < side; j++) {
-          if (qrcodegen_getModule(codedata, i, j)) {
-            oledBox(offset + i * 2, offset + j * 2, offset + 1 + i * 2,
-                    offset + 1 + j * 2, false);
-          }
-        }
-      }
-    } else if (side > 0 && side <= 60) {
-      int offset = 32 - (side / 2);
-      for (int i = 0; i < side; i++) {
-        for (int j = 0; j < side; j++) {
-          if (qrcodegen_getModule(codedata, i, j)) {
-            oledClearPixel(offset + i, offset + j);
-          }
-        }
-      }
-    }
+    renderQR(ignorecase ? address_upcase : address);
   } else {
     if (desc) {
       oledDrawString(0, 0 * 9, desc, FONT_STANDARD);
