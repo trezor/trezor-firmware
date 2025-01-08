@@ -15,7 +15,7 @@
 By default the scripts uses the `[1, 2]` sigindices, you can modify `sig_indices`
 inside to have different order or different keys (1 <= index <= 3 )
 
-Update FW on T1 either via `trezorctl device firmware-update` or
+Update FW on T1 either via `trezorctl device firmware update` or
 `make flash_firmware_jlink`.
 
 ## Signing with the v2 method (called "new" for confusing historical reasons)

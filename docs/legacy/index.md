@@ -92,7 +92,7 @@ You can use `TREZOR_OLED_SCALE` environment variable to make emulator screen big
 2. Download it: `wget -O trezor.signed.bin https://data.trezor.io/firmware/1/trezor-1.9.4.bin`
 3. Use `trezorctl` dry-run mode to get the firmware fingerprint:
    ```sh
-   trezorctl firmware-update -n -f trezor.signed.bin
+   trezorctl firmware update -n -f trezor.signed.bin
    ```
 
 Step 3 should produce the same fingerprint like your local build (for the same version tag).
@@ -105,7 +105,7 @@ Build with `PRODUCTION=0` or you will get a hard fault on your device.
 
 Switch your device to bootloader mode, then execute:
 ```sh
-trezorctl firmware-update -f build/legacy/firmware/firmware.bin
+trezorctl firmware update -f build/legacy/firmware/firmware.bin
 ```
 
 ## Combining bootloader and firmware with various `PRODUCTION` settings, signed/unsigned
