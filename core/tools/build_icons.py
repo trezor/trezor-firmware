@@ -11,9 +11,11 @@ from trezorlib import toif
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
+L_BOLT = "layout_bolt"
+L_QS = "layout_quicksilver"
 DESTINATIONS = {
-    ROOT / "core" / "embed" / "rust" / "src" / "ui" / "model_tt" / "res" / "fido": 64,
-    ROOT / "core" / "embed" / "rust" / "src" / "ui" / "model_mercury" / "res" / "fido": 32,
+    ROOT / "core" / "embed" / "rust" / "src" / "ui" / L_BOLT / "res" / "fido": 64,
+    ROOT / "core" / "embed" / "rust" / "src" / "ui" / L_QS / "res" / "fido": 32,
 }
 EXCLUDE = {"icon_webauthn"}
 

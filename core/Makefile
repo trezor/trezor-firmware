@@ -53,23 +53,23 @@ OPENOCD_TRANSPORT ?= hla_swd
 ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
-MODEL_FEATURE = model_tt
+LAYOUT_FEATURE = layout_bolt
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),R))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
-MODEL_FEATURE = model_tr
+LAYOUT_FEATURE = layout_samson
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3T1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-MODEL_FEATURE = model_mercury
+LAYOUT_FEATURE = layout_quicksilver
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3B1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-MODEL_FEATURE = model_tr
+LAYOUT_FEATURE = layout_samson
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3W1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-MODEL_FEATURE = model_tt
+LAYOUT_FEATURE = layout_bolt
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
@@ -188,7 +188,7 @@ test: ## run unit tests
 test_rust: ## run rs unit tests
 	export BUILD_DIR=$(abspath $(UNIX_BUILD_DIR)) ; \
 	cd embed/rust ; cargo test $(TESTOPTS) --target=$(RUST_TARGET) \
-		--no-default-features --features $(MODEL_FEATURE),test \
+		--no-default-features --features $(LAYOUT_FEATURE),test \
 		-- --test-threads=1 --nocapture
 
 test_emu: ## run selected device tests from python-trezor

@@ -44,20 +44,20 @@ def generate(env):
         btc_only = env["bitcoin_only"] == "1"
         backlight = env["backlight"]
         optiga = env["optiga"]
-        layout_tt = env["ui_layout"] == "UI_LAYOUT_TT"
-        layout_tr = env["ui_layout"] == "UI_LAYOUT_TR"
         touch = env["use_touch"]
         button = env["use_button"]
-        layout_mercury = env["ui_layout"] == "UI_LAYOUT_MERCURY"
+        layout_bolt = env["ui_layout"] == "UI_LAYOUT_BOLT"
+        layout_samson = env["ui_layout"] == "UI_LAYOUT_SAMSON"
+        layout_quicksilver = env["ui_layout"] == "UI_LAYOUT_QUICKSILVER"
         thp = env["thp"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = [
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
             rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
             rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
-            rf"-e 's/utils\.UI_LAYOUT == \"TT\"/{layout_tt}/g'",
-            rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
-            rf"-e 's/utils\.UI_LAYOUT == \"MERCURY\"/{layout_mercury}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"BOLT\"/{layout_bolt}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"SAMSON\"/{layout_samson}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"QUICKSILVER\"/{layout_quicksilver}/g'",
             rf"-e 's/utils\.USE_BUTTON/{button}/g'",
             rf"-e 's/utils\.USE_TOUCH/{touch}/g'",
             rf"-e 's/utils\.USE_THP/{thp}/g'",

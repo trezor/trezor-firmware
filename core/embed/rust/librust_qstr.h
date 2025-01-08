@@ -648,7 +648,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
-  MP_QSTR_show_share_words_mercury;
+  MP_QSTR_show_share_words_quicksilver;
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
   MP_QSTR_show_wait_text;

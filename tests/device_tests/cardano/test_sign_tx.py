@@ -34,14 +34,14 @@ pytestmark = [
 def show_details_input_flow(client: Client):
     yield
     client.debug.read_layout()
-    if client.layout_type is LayoutType.TT:
+    if client.layout_type is LayoutType.Bolt:
         SHOW_ALL_BUTTON_POSITION = (143, 167)
         client.debug.click(SHOW_ALL_BUTTON_POSITION)
-    elif client.layout_type is LayoutType.TR:
-        # model R - right button for "Show all"
+    elif client.layout_type is LayoutType.Samson:
+        # samson - right button for "Show all"
         client.debug.press_yes()
-    elif client.layout_type is LayoutType.Mercury:
-        # mercury - "Show all" button from context menu
+    elif client.layout_type is LayoutType.Quicksilver:
+        # quicksilver - "Show all" button from context menu
         client.debug.click(buttons.CORNER_BUTTON)
         client.debug.click(buttons.VERTICAL_MENU[0])
     else:

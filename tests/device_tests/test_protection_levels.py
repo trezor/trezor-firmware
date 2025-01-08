@@ -140,7 +140,7 @@ def test_change_pin_t2(client: Client):
                 messages.ButtonRequest,
                 _pin_request(client),
                 _pin_request(client),
-                (client.layout_type is LayoutType.TR, messages.ButtonRequest),
+                (client.layout_type is LayoutType.Samson, messages.ButtonRequest),
                 _pin_request(client),
                 messages.ButtonRequest,
                 messages.Success,

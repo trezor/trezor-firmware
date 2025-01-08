@@ -230,7 +230,7 @@ def confirm_more(
     items: Iterable[tuple[int, str | bytes]],
 ) -> LayoutObj[UiResult]:
     """Confirm long content with the possibility to go back from any page.
-    Meant to be used with confirm_with_info on model TT and TR."""
+    Meant to be used with confirm_with_info on UI bolt and samson."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -293,7 +293,7 @@ def confirm_with_info(
     items: Iterable[tuple[int, str | bytes]],
 ) -> LayoutObj[UiResult]:
     """Confirm given items but with third button. Always single page
-    without scrolling. In mercury, the button is placed in
+    without scrolling. In Quicksilver, the button is placed in
     context menu."""
 
 
@@ -304,7 +304,7 @@ def continue_recovery_homepage(
     subtext: str | None,
     button: str | None,
     recovery_type: RecoveryType,
-    show_instructions: bool = False,  # unused on TT
+    show_instructions: bool = False,  # unused on bolt
     remaining_shares: Iterable[tuple[str, str]] | None = None,
 ) -> LayoutObj[UiResult]:
     """Device recovery homescreen."""
@@ -607,7 +607,7 @@ def show_share_words(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_share_words_mercury(
+def show_share_words_quicksilver(
     *,
     words: Iterable[str],
     subtitle: str | None,
@@ -654,9 +654,9 @@ def show_warning(
     value: str = "",
     description: str = "",
     allow_cancel: bool = True,
-    danger: bool = False,  # unused on TT
+    danger: bool = False,  # unused on bolt
 ) -> LayoutObj[UiResult]:
-    """Warning modal. TT: No buttons shown when `button` is empty string. TR: middle button and centered text."""
+    """Warning modal. bolt: No buttons shown when `button` is empty string. samson: middle button and centered text."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

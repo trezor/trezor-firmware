@@ -1615,8 +1615,8 @@ def test_information_cancel(client: Client):
 
 @pytest.mark.models(
     "core",
-    skip="mercury",
-    reason="Cannot test layouts on T1, not implemented in mercury UI",
+    skip="quicksilver",
+    reason="Cannot test layouts on T1, not implemented in Quicksilver UI",
 )
 def test_information_replacement(client: Client):
     # Use the change output and an external output to bump the fee.

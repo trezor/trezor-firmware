@@ -66,7 +66,7 @@ def test_backup_bip39(client: Client):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_basic(client: Client, click_info: bool):
-    if click_info and client.layout_type is LayoutType.TR:
+    if click_info and client.layout_type is LayoutType.Samson:
         pytest.skip("click_info not implemented on T2B1")
 
     assert client.features.backup_availability == messages.BackupAvailability.Required
@@ -97,7 +97,7 @@ def test_backup_slip39_single(client: Client):
 
     with client:
         IF = InputFlowBip39Backup(
-            client, confirm_success=(client.layout_type is not LayoutType.Mercury)
+            client, confirm_success=(client.layout_type is not LayoutType.Quicksilver)
         )
         client.set_input_flow(IF.get())
         device.backup(client)
@@ -122,7 +122,7 @@ def test_backup_slip39_single(client: Client):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(client: Client, click_info: bool):
-    if click_info and client.layout_type is LayoutType.TR:
+    if click_info and client.layout_type is LayoutType.Samson:
         pytest.skip("click_info not implemented on T2B1")
 
     assert client.features.backup_availability == messages.BackupAvailability.Required
