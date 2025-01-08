@@ -235,7 +235,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         channel.channel_cache.set_int(CHANNEL_NONCE_RECEIVE, 0)
 
         cid_1_bytes = int.to_bytes(cid_1, 2, "big")
-        expected_ack_on_received_message = get_ack(cid_1_bytes)
+        # expected_ack_on_received_message = get_ack(cid_1_bytes)
 
         gen.send(message_with_invalid_tag)
         # gen.send(None)
