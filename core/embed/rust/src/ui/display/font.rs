@@ -1,3 +1,4 @@
+#[cfg(feature = "translations")]
 use spin::RwLockReadGuard;
 
 use crate::{
