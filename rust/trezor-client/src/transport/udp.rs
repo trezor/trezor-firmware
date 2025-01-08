@@ -19,8 +19,8 @@ use constants::{DEFAULT_DEBUG_PORT, DEFAULT_HOST, DEFAULT_PORT, LOCAL_LISTENER};
 /// The chunk size for the serial protocol.
 const CHUNK_SIZE: usize = 64;
 
-const READ_TIMEOUT_MS: u64 = 0;
-const WRITE_TIMEOUT_MS: u64 = 1000;
+const READ_TIMEOUT: Option<Duration> = None;
+const WRITE_TIMEOUT: Option<Duration> = Some(Duration::from_secs(1));
 
 /// An available transport for connecting with a device.
 #[derive(Debug)]
@@ -45,8 +45,7 @@ struct UdpLink {
 impl Link for UdpLink {
     fn write_chunk(&mut self, chunk: Vec<u8>) -> Result<(), Error> {
         debug_assert_eq!(CHUNK_SIZE, chunk.len());
-        let timeout = Duration::from_millis(WRITE_TIMEOUT_MS);
-        self.socket.set_write_timeout(Some(timeout))?;
+        self.socket.set_write_timeout(WRITE_TIMEOUT)?;
         if let Err(e) = self.socket.send(&chunk) {
             return Err(e.into());
         }
@@ -55,8 +54,7 @@ impl Link for UdpLink {
 
     fn read_chunk(&mut self) -> Result<Vec<u8>, Error> {
         let mut chunk = vec![0; CHUNK_SIZE];
-        let timeout = Duration::from_millis(READ_TIMEOUT_MS);
-        self.socket.set_read_timeout(Some(timeout))?;
+        self.socket.set_read_timeout(READ_TIMEOUT)?;
 
         let n = self.socket.recv(&mut chunk)?;
         if n == CHUNK_SIZE {

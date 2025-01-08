@@ -26,8 +26,8 @@ mod constants {
 /// The chunk size for the serial protocol.
 const CHUNK_SIZE: usize = 64;
 
-const READ_TIMEOUT_MS: u64 = 0;
-const WRITE_TIMEOUT_MS: u64 = 1000;
+const READ_TIMEOUT: Duration = Duration::from_secs(0);
+const WRITE_TIMEOUT: Duration = Duration::from_secs(1);
 
 /// An available transport for connecting with a device.
 #[derive(Debug)]
@@ -51,8 +51,7 @@ pub struct WebUsbLink {
 impl Link for WebUsbLink {
     fn write_chunk(&mut self, chunk: Vec<u8>) -> Result<(), Error> {
         debug_assert_eq!(CHUNK_SIZE, chunk.len());
-        let timeout = Duration::from_millis(WRITE_TIMEOUT_MS);
-        if let Err(e) = self.handle.write_interrupt(self.endpoint, &chunk, timeout) {
+        if let Err(e) = self.handle.write_interrupt(self.endpoint, &chunk, WRITE_TIMEOUT) {
             return Err(e.into());
         }
         Ok(())
@@ -61,9 +60,8 @@ impl Link for WebUsbLink {
     fn read_chunk(&mut self) -> Result<Vec<u8>, Error> {
         let mut chunk = vec![0; CHUNK_SIZE];
         let endpoint = constants::READ_ENDPOINT_MASK | self.endpoint;
-        let timeout = Duration::from_millis(READ_TIMEOUT_MS);
 
-        let n = self.handle.read_interrupt(endpoint, &mut chunk, timeout)?;
+        let n = self.handle.read_interrupt(endpoint, &mut chunk, READ_TIMEOUT)?;
         if n == CHUNK_SIZE {
             Ok(chunk)
         } else {
