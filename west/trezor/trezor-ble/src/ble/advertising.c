@@ -1,3 +1,21 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <zephyr/kernel.h>
 #include <zephyr/types.h>
@@ -6,11 +24,9 @@
 
 #include <zephyr/logging/log.h>
 
-#include "connection.h"
-#include "int_comm.h"
-#include "trz_nus.h"
+#include "ble_internal.h"
 
-#define LOG_MODULE_NAME fw_int_advertising
+#define LOG_MODULE_NAME ble_advertising
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define DEVICE_NAME CONFIG_BT_DEVICE_NAME
@@ -18,8 +34,6 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 bool advertising = false;
 bool advertising_wl = false;
-int bond_cnt = 0;
-int bond_cnt_tmp = 0;
 
 uint8_t manufacturer_data[8] = {0xff, 0xff, 0, 3, 'T', '3', 'W', '1'};
 
@@ -29,7 +43,7 @@ static const struct bt_data advertising_data[] = {
 };
 
 static const struct bt_data scan_response_data[] = {
-    BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
+    BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_TRZ_VAL),
     BT_DATA(BT_DATA_MANUFACTURER_DATA, manufacturer_data, 8),
 };
 
@@ -43,15 +57,11 @@ static void add_to_whitelist(const struct bt_bond_info *info, void *user_data) {
   } else {
     LOG_INF("whitelist add: %s\n", addr);
   }
-
-  bond_cnt_tmp++;
 }
 
 void advertising_setup_wl(void) {
   bt_le_filter_accept_list_clear();
-  bond_cnt_tmp = 0;
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
-  bond_cnt = bond_cnt_tmp;
 }
 
 void advertising_start(bool wl) {
@@ -62,7 +72,7 @@ void advertising_start(bool wl) {
     } else {
       LOG_WRN("Already advertising");
 
-      send_status_event();
+      management_send_status_event();
       return;
     }
   }
@@ -97,54 +107,39 @@ void advertising_start(bool wl) {
   }
   if (err) {
     LOG_ERR("Advertising failed to start (err %d)", err);
-    send_status_event();
+    management_send_status_event();
     return;
   }
   advertising = true;
   advertising_wl = wl;
 
-  //  oob_fetch_addr();
-
-  send_status_event();
+  management_send_status_event();
 }
 
 void advertising_stop(void) {
   if (!advertising) {
     LOG_WRN("Not advertising");
 
-    send_status_event();
+    management_send_status_event();
     return;
   }
 
   int err = bt_le_adv_stop();
   if (err) {
     LOG_ERR("Advertising failed to stop (err %d)", err);
-    send_status_event();
+    management_send_status_event();
     return;
   }
   advertising = false;
   advertising_wl = false;
-  send_status_event();
+  management_send_status_event();
 }
 
-bool is_advertising(void) { return advertising; }
+bool advertising_is_advertising(void) { return advertising; }
 
-bool is_advertising_whitelist(void) { return advertising_wl; }
+bool advertising_is_advertising_whitelist(void) { return advertising_wl; }
 
 void advertising_init(void) {
   LOG_INF("Advertising init");
   advertising_setup_wl();
 }
-
-void erase_bonds(void) {
-  int err = bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
-  if (err) {
-    LOG_INF("Cannot delete bonds (err: %d)\n", err);
-  } else {
-    bt_le_filter_accept_list_clear();
-    bond_cnt = 0;
-    LOG_INF("Bonds deleted successfully \n");
-  }
-}
-
-int advertising_get_bond_count(void) { return bond_cnt; }
