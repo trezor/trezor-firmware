@@ -3,4 +3,4 @@
 ^\./crypto/
 ^\./legacy/
 ^\./storage/
-^\./west/workspace/
+^\./west/trezor

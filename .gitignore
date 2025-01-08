@@ -20,3 +20,4 @@ crypto/tests/libtrezor-crypto.so.dSYM/
 /west/tools/
 /west/zephyr/
 /west/trezor/build/
+/west/trezor/trezor-ble/build/
