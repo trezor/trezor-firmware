@@ -129,6 +129,10 @@ impl Button {
         )
     }
 
+    pub fn is_long_press(&self) -> bool {
+        self.long_press.is_some()
+    }
+
     pub fn is_disabled(&self) -> bool {
         matches!(self.state, State::Disabled)
     }
@@ -143,10 +147,9 @@ impl Button {
         &self.content
     }
 
-    pub fn set_stylesheet(&mut self, ctx: &mut EventCtx, styles: ButtonStyleSheet) {
+    pub fn set_stylesheet(&mut self, styles: ButtonStyleSheet) {
         if self.styles != styles {
             self.styles = styles;
-            ctx.request_paint();
         }
     }
 
@@ -156,6 +159,10 @@ impl Button {
             State::Pressed => self.styles.active,
             State::Disabled => self.styles.disabled,
         }
+    }
+
+    pub fn style_sheet(&self) -> &ButtonStyleSheet {
+        &self.styles
     }
 
     pub fn area(&self) -> Rect {
