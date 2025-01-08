@@ -17,46 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <zephyr/drivers/gpio.h>
-#include <zephyr/drivers/uart.h>
-#include <zephyr/kernel.h>
-#include <zephyr/types.h>
+#pragma once
 
-#include <soc.h>
-#include <zephyr/device.h>
-#include <zephyr/devicetree.h>
+#include <stdint.h>
 
-#include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/bluetooth/conn.h>
-#include <zephyr/bluetooth/gatt.h>
-#include <zephyr/bluetooth/hci.h>
-#include <zephyr/bluetooth/uuid.h>
-
-#include <dk_buttons_and_leds.h>
-
-#include <zephyr/settings/settings.h>
-
-#include <zephyr/logging/log.h>
-
-#include <ble/ble.h>
-#include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
 
-#define LOG_MODULE_NAME main
-LOG_MODULE_REGISTER(LOG_MODULE_NAME);
+#define SPI_TX_DATA_LEN 244
+#define MAX_UART_DATA_SIZE 64
 
-int main(void) {
-  LOG_INF("Initializing");
+void spi_init(void);
 
-  signals_init();
+int uart_init(void);
 
-  trz_comm_init();
+bool spi_send(uint8_t service_id, const uint8_t *data, uint32_t len);
 
-  ble_init();
+bool uart_send(uint8_t service_id, const uint8_t *tx_data, uint8_t len);
 
-  signals_fw_running(true);
-
-  for (;;) {
-    k_sleep(K_FOREVER);
-  }
-}
+void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len);

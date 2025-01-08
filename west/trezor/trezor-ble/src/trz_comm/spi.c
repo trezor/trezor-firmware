@@ -1,31 +1,43 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <stdbool.h>
-#include <stdint.h>
-
-#include <zephyr/types.h>
-
-#include <zephyr/kernel.h>
-
-#include <zephyr/drivers/spi.h>
-#include <zephyr/logging/log.h>
 
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
+#include <zephyr/drivers/spi.h>
+#include <zephyr/kernel.h>
+#include <zephyr/logging/log.h>
 #include <zephyr/sys/crc.h>
+#include <zephyr/types.h>
 
-#include "int_comm_defs.h"
-#include "spi.h"
+#include <trz_comm/trz_comm.h>
+
+#include "trz_comm_internal.h"
+
+#define LOG_MODULE_NAME trz_comm_spi
+LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define MY_SPI_MASTER DT_NODELABEL(spi0)
 
 static K_SEM_DEFINE(spi_comm_ok, 0, 1);
 static K_FIFO_DEFINE(fifo_spi_tx_data);
-
-typedef struct {
-  void *fifo_reserved;
-  uint8_t data[BLE_PACKET_SIZE + 2];
-  uint16_t len;
-} spi_data_t;
 
 const struct device *spi_dev;
 static struct k_poll_signal spi_done_sig =
@@ -59,27 +71,29 @@ void spi_init(void) {
   k_sem_give(&spi_comm_ok);
 }
 
-void spi_send(const uint8_t *data, uint32_t len) {
+bool spi_send(uint8_t service_id, const uint8_t *data, uint32_t len) {
   if (len != 244) {
     // unexpected length
-    return;
+    return false;
   }
 
-  spi_data_t *tx = k_malloc(sizeof(*tx));
+  trz_packet_t *tx = k_malloc(sizeof(*tx));
 
   if (!tx) {
     printk("Not able to allocate SPI send data buffer\n");
-    return;
+    return false;
   }
 
   tx->len = len + 2;
-  tx->data[0] = EXTERNAL_MESSAGE;
+  tx->data[0] = 0xA0 | service_id;
   memcpy(&tx->data[1], data, len);
 
   uint8_t crc = crc8(tx->data, len + 1, 0x07, 0x00, false);
   tx->data[len + 1] = crc;
 
   k_fifo_put(&fifo_spi_tx_data, tx);
+
+  return true;
 }
 
 void spi_thread(void) {
@@ -88,7 +102,7 @@ void spi_thread(void) {
 
   for (;;) {
     /* Wait indefinitely for data to process */
-    spi_data_t *buf = k_fifo_get(&fifo_spi_tx_data, K_FOREVER);
+    trz_packet_t *buf = k_fifo_get(&fifo_spi_tx_data, K_FOREVER);
 
     const struct spi_buf tx_buf = {
         .buf = buf->data,
@@ -104,5 +118,5 @@ void spi_thread(void) {
   }
 }
 
-K_THREAD_DEFINE(spi_thread_id, CONFIG_BT_NUS_THREAD_STACK_SIZE, spi_thread,
+K_THREAD_DEFINE(spi_thread_id, CONFIG_DEFAULT_THREAD_STACK_SIZE, spi_thread,
                 NULL, NULL, NULL, 7, 0, 0);

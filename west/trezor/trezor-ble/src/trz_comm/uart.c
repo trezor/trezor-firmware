@@ -1,22 +1,36 @@
-#include <zephyr/drivers/uart.h>
-#include <zephyr/kernel.h>
-#include <zephyr/types.h>
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <zephyr/device.h>
 #include <zephyr/devicetree.h>
-
-#include <dk_buttons_and_leds.h>
-
+#include <zephyr/drivers/uart.h>
+#include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/crc.h>
+#include <zephyr/types.h>
 
-#include "events.h"
-#include "int_comm.h"
-#include "int_comm_defs.h"
-#include "uart.h"
+#include <trz_comm/trz_comm.h>
 
-#define LOG_MODULE_NAME fw_uart
+#include "trz_comm_internal.h"
+
+#define LOG_MODULE_NAME trz_comm_uart
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)
@@ -25,19 +39,33 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(nordic_nus_uart));
 
 static K_FIFO_DEFINE(fifo_uart_tx_data);
-static K_FIFO_DEFINE(fifo_uart_rx_data);
-static K_FIFO_DEFINE(fifo_uart_rx_data_int);
+
+#define COMM_HEADER_SIZE (2)
+#define COMM_FOOTER_SIZE (1)
+#define OVERHEAD_SIZE (COMM_HEADER_SIZE + COMM_FOOTER_SIZE)
 
 static struct k_work_delayable uart_work;
 
 static volatile bool g_uart_rx_running = false;
+
+static bool nrf_is_valid_startbyte(uint8_t val) {
+  if ((val & 0xF0) != 0xA0) {
+    return false;
+  }
+
+  if ((val & 0x0F) >= NRF_SERVICE_CNT) {
+    return false;
+  }
+
+  return true;
+}
 
 static void uart_cb(const struct device *dev, struct uart_event *evt,
                     void *user_data) {
   ARG_UNUSED(dev);
 
   static size_t aborted_len;
-  uart_data_t *buf;
+  trz_packet_t *buf;
   static uint8_t *aborted_buf;
   static bool disable_req;
   static uint8_t rx_phase = 0;
@@ -55,7 +83,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       }
 
       if (evt->data.tx.len == 0) {
-        buf = CONTAINER_OF(evt->data.tx.buf, uart_data_t, data[0]);
+        buf = CONTAINER_OF(evt->data.tx.buf, trz_packet_t, data[0]);
 
         LOG_DBG("Free uart data");
         k_free(buf);
@@ -63,11 +91,11 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       }
 
       if (aborted_buf) {
-        buf = CONTAINER_OF(aborted_buf, uart_data_t, data[0]);
+        buf = CONTAINER_OF(aborted_buf, trz_packet_t, data[0]);
         aborted_buf = NULL;
         aborted_len = 0;
       } else {
-        buf = CONTAINER_OF(evt->data.tx.buf, uart_data_t, data[0]);
+        buf = CONTAINER_OF(evt->data.tx.buf, trz_packet_t, data[0]);
       }
 
       LOG_DBG("Free uart data");
@@ -86,13 +114,12 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 
     case UART_RX_RDY:
       //      LOG_WRN("UART_RX_RDY");
-      buf = CONTAINER_OF(evt->data.rx.buf, uart_data_t, data[0]);
+      buf = CONTAINER_OF(evt->data.rx.buf, trz_packet_t, data[0]);
       buf->len += evt->data.rx.len;
 
       switch (rx_phase) {
         case 0:
-          if (buf->len == 1 && (buf->data[0] == INTERNAL_EVENT ||
-                                buf->data[0] == EXTERNAL_MESSAGE)) {
+          if (buf->len == 1 && nrf_is_valid_startbyte(buf->data[0])) {
             rx_phase = 1;
             rx_msg_type = buf->data[0];
             crc = crc8(buf->data, buf->len, 0x07, 0x00, false);
@@ -215,25 +242,20 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 
     case UART_RX_BUF_RELEASED:
       LOG_DBG("UART_RX_BUF_RELEASED");
-      buf = CONTAINER_OF(evt->data.rx_buf.buf, uart_data_t, data[0]);
+      buf = CONTAINER_OF(evt->data.rx_buf.buf, trz_packet_t, data[0]);
 
       if (rx_phase == 3 && buf->len > 0) {
         buf->len -= COMM_FOOTER_SIZE;
-        if (rx_msg_type == EXTERNAL_MESSAGE) {
-          k_fifo_put(&fifo_uart_rx_data, buf);
-        } else if (rx_msg_type == INTERNAL_EVENT) {
-          k_fifo_put(&fifo_uart_rx_data_int, buf);
-        } else {
-          // LOG_WRN("UART_RX BAD MASSAGE TYPE");
-          k_free(buf);
-        }
+
+        process_rx_msg(rx_msg_type & 0x0F, buf->data,
+                       rx_data_len - OVERHEAD_SIZE);
+
         rx_data_len = 0;
         rx_len = 0;
         rx_msg_type = 0;
         rx_phase = 0;
-      } else {
-        k_free(buf);
       }
+      k_free(buf);
       break;
     case UART_RX_STOPPED:
       LOG_DBG("UART_RX_STOPPED");
@@ -252,7 +274,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       }
 
       aborted_len += evt->data.tx.len;
-      buf = CONTAINER_OF(aborted_buf, uart_data_t, data[0]);
+      buf = CONTAINER_OF(aborted_buf, trz_packet_t, data[0]);
 
       uart_tx(uart, &buf->data[aborted_len], buf->len - aborted_len,
               SYS_FOREVER_MS);
@@ -266,9 +288,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
 
 int uart_start_rx(void) {
   int err;
-  uart_data_t *rx;
-
-  rx = k_malloc(sizeof(*rx));
+  trz_packet_t *rx = k_malloc(sizeof(*rx));
   if (rx) {
     rx->len = 0;
   } else {
@@ -290,7 +310,7 @@ int uart_start_rx(void) {
 }
 
 static void uart_work_handler(struct k_work *item) {
-  uart_data_t *buf;
+  trz_packet_t *buf;
 
   buf = k_malloc(sizeof(*buf));
   if (buf) {
@@ -333,28 +353,29 @@ int uart_init(void) {
   return uart_start_rx();
 }
 
-void uart_send_ext(uart_data_t *tx) { k_fifo_put(&fifo_uart_rx_data, tx); }
+bool uart_send(uint8_t service_id, const uint8_t *tx_data, uint8_t len) {
+  trz_packet_t *tx = k_malloc(sizeof(*tx));
 
-uart_data_t *uart_get_data_ext(void) {
-  return k_fifo_get(&fifo_uart_rx_data, K_FOREVER);
-}
+  if (tx == NULL) {
+    LOG_WRN("Not able to allocate UART send data buffer");
+    return false;
+  }
 
-uart_data_t *uart_get_data_int(void) {
-  return k_fifo_get(&fifo_uart_rx_data_int, K_FOREVER);
-}
-//
-// uart_data_t *uart_get_data_pb(void)
-//{
-//  return k_fifo_get(&fifo_uart_rx_data_pb, K_MSEC(100));
-//}
-//
-// void uart_data_pb_flush(void){
-//  while(uart_get_data_pb() != NULL);
-//}
+  LOG_DBG("ALLOC: Sending UART data");
 
-void uart_send(uart_data_t *tx) {
+  tx->len = len + OVERHEAD_SIZE;
+
+  tx->data[0] = 0xA0 | service_id;
+  tx->data[1] = tx->len;
+  memcpy(&tx->data[COMM_HEADER_SIZE], tx_data, len);
+
+  uint8_t crc = crc8(tx->data, tx->len - 1, 0x07, 0x00, false);
+
+  tx->data[tx->len - 1] = crc;
+
   int err = uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
   if (err) {
     k_fifo_put(&fifo_uart_tx_data, tx);
   }
+  return true;
 }
