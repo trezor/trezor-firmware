@@ -92,7 +92,7 @@ void layoutAddress(const char *address, const char *desc, bool qrcode,
                    bool ignorecase, const uint32_t *address_n,
                    size_t address_n_count, bool address_is_account);
 void layoutPublicKey(const uint8_t *pubkey);
-void layoutXPUB(const char *xpub, int page);
+void layoutXPUB(const char *xpub, int page, bool qrcode);
 void layoutXPUBMultisig(const char *xpub, int index, int page, bool ours);
 void layoutSignIdentity(const IdentityType *identity, const char *challenge);
 void layoutDecryptIdentity(const IdentityType *identity);

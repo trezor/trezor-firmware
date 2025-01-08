@@ -985,17 +985,21 @@ static void _layout_xpub(const char *xpub, const char *desc, int page) {
   }
 }
 
-void layoutXPUB(const char *xpub, int page) {
+void layoutXPUB(const char *xpub, int page, bool qrcode) {
   if (layoutLast != layoutAddress && layoutLast != layoutXPUB) {
     layoutSwipe();
   } else {
     oledClear();
   }
   layoutLast = layoutXPUB;
-  char desc[] = "XPUB _/2";
-  desc[5] = '1' + page;
-  _layout_xpub(xpub, desc, page);
-  layoutButtonNo(_("Cancel"), &bmp_btn_cancel);
+  if (qrcode) {
+    renderQR(xpub);
+  } else {
+    char desc[] = "XPUB _/2";
+    desc[5] = '1' + page;
+    _layout_xpub(xpub, desc, page);
+    layoutButtonNo(_("QR Code"), NULL);
+  }
   layoutButtonYes(_("Confirm"), &bmp_btn_confirm);
   oledRefresh();
 }
