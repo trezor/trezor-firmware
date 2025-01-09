@@ -56,7 +56,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
 #[cfg(feature = "layout_bolt")]
 const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
     "-DSTM32F427",
-    "-DTREZOR_MODEL_T",
+    "-DTREZOR_MODEL_T2T1",
     "-DFLASH_BIT_ACCESS=1",
     "-DFLASH_BLOCK_WORDS=1",
     "-DDISPLAY_RESX=240",
@@ -69,7 +69,7 @@ const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[];
 #[cfg(feature = "layout_samson")]
 const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
     "-DSTM32F427",
-    "-DTREZOR_MODEL_R",
+    "-DTREZOR_MODEL_T2B1",
     "-DFLASH_BIT_ACCESS=1",
     "-DFLASH_BLOCK_WORDS=1",
     "-DDISPLAY_RESX=128",

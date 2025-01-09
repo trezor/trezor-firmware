@@ -26,7 +26,7 @@
 #include "rand.h"
 #include "storage.h"
 
-#if defined(TREZOR_MODEL_R)
+#if defined(TREZOR_MODEL_T2B1)
 #include "certs/T2B1.h"
 #define DEVICE_CERT_CHAIN T2B1_der
 #elif defined(TREZOR_MODEL_T3T1)

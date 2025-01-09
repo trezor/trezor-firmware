@@ -17,39 +17,22 @@ def configure_board(
     sources: list[str],
     paths: list[str],
 ) -> list[str]:
-    imported_module = importlib.import_module("models." + get_model_identifier(model))
+    imported_module = importlib.import_module(f"models.{model}")
     return imported_module.configure_board(
         revision, features_wanted, env, defines, sources, paths
     )
 
 
-def get_model_identifier(model: str) -> str:
-    if model == "T":
-        return "T2T1"
-    elif model == "R":
-        return "T2B1"
-    elif model == "T3T1":
-        return "T3T1"
-    elif model == "T3B1":
-        return "T3B1"
-    elif model == "DISC1":
-        return "D001"
-    elif model == "DISC2":
-        return "D002"
-    else:
-        return model
-
-
 def has_emulator(model: str) -> bool:
-    imported_module = importlib.import_module("models." + get_model_identifier(model))
+    imported_module = importlib.import_module(f"models.{model}")
     return hasattr(imported_module, "emulator")
 
 
 def get_model_ui(model: str) -> str:
-    imported_module = importlib.import_module("models." + get_model_identifier(model))
+    imported_module = importlib.import_module(f"models.{model}")
     return imported_module.get_model_ui()
 
 
 def get_model_ui_conf(model: str) -> str:
-    imported_module = importlib.import_module("models." + get_model_identifier(model))
+    imported_module = importlib.import_module(f"models.{model}")
     return imported_module.get_model_ui_conf()

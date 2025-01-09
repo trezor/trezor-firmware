@@ -55,7 +55,7 @@ class TestUtils(unittest.TestCase):
 
     def test_firmware_hash(self):
         if utils.INTERNAL_MODEL in (  # pylint: disable=internal-model-tuple-comparison
-            "DISC2",
+            "D002",
             "T3W1",
         ):
             self.assertEqual(

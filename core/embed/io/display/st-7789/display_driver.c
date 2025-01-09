@@ -108,7 +108,7 @@ void display_deinit(display_content_mode_t mode) {
   backlight_pwm_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET
                                                      : BACKLIGHT_RETAIN);
 
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   // This ensures backward compatibility with legacy bootloader/firmware
   // that relies on this hardware settings from the previous boot stage
   if (mode == DISPLAY_RESET_CONTENT) {

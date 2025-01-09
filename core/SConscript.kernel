@@ -9,7 +9,7 @@ PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
-TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
@@ -77,8 +77,8 @@ CPPDEFINES_MOD += [
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
     ('USE_MONERO', '1' if EVERYTHING else '0'),
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
-    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
-    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
+    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
+    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
 ]
 SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/address.c',
@@ -354,8 +354,7 @@ cmake_gen = env.Command(
     action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
 )
 
-MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
-BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
+BOOTLOADER_SUFFIX = TREZOR_MODEL
 if BOOTLOADER_QA:
     BOOTLOADER_SUFFIX += '_qa'
 
@@ -365,14 +364,14 @@ if BOOTLOADER_QA or BOOTLOADER_DEVEL:
 elif not PRODUCTION:
     vendor = "unsafe_signed_prod"
 else:
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T2T1',):
         vendor = "satoshilabs_signed_prod"
     elif BITCOIN_ONLY == '1':
         vendor = "trezor_btconly_signed_prod"
     else:
         vendor = "trezor_signed_prod"
 
-VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_{vendor}.bin'
+VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_{vendor}.bin'
 
 
 obj_program.extend(
@@ -388,14 +387,14 @@ tools.embed_compressed_binary(
         env,
         'bootloader',
         'embed/projects/bootloaders/bootloader.o',
-        f'embed/models/{MODEL_IDENTIFIER}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
+        f'embed/models/{TREZOR_MODEL}/bootloaders/bootloader_{BOOTLOADER_SUFFIX}.bin',
         'kernel',
         'bootloader',
         )
 
 linkerscript_gen = env.Command(
     target='memory.ld',
-    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
+    source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
     action='$CAT $SOURCES > $TARGET',
 )
 
@@ -411,7 +410,7 @@ env.Depends(program_elf, linkerscript_gen)
 if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
 
-BINARY_NAME = f"build/kernel/kernel-{models.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME = f"build/kernel/kernel-{TREZOR_MODEL}"
 if not EVERYTHING:
     BINARY_NAME += "-btconly"
 BINARY_NAME += "-" + tools.get_version('embed/projects/kernel/version.h')

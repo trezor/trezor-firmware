@@ -54,7 +54,7 @@ function help_and_die() {
   echo "  --skip-legacy - do not build legacy"
   echo "  --repository path/to/repo - checkout the repository from the given path/url"
   echo "  --no-init - do not recreate docker environments"
-  echo "  --models - comma-separated list of models. default: --models R,T"
+  echo "  --models - comma-separated list of models. default: --models T2B1,T2T1,T3T1"
   echo "  --targets - comma-separated list of targets for core build. default: --targets boardloader,bootloader,firmware"
   echo "  --help"
   echo
@@ -69,7 +69,7 @@ OPT_BUILD_LEGACY=1
 OPT_BUILD_NORMAL=1
 OPT_BUILD_BITCOINONLY=1
 INIT=1
-MODELS=(R T T3T1)
+MODELS=(T2B1 T2T1 T3T1)
 CORE_TARGETS=(boardloader bootloader firmware)
 
 REPOSITORY="file:///local"
@@ -324,6 +324,7 @@ for BITCOIN_ONLY in ${VARIANTS_legacy[@]}; do
 
   DIRSUFFIX=${BITCOIN_ONLY/1/-bitcoinonly}
   DIRSUFFIX=${DIRSUFFIX/0/}
+  DIRSUFFIX="-T1B1${DIRSUFFIX}"
 
   SCRIPT_NAME=".build_legacy_$BITCOIN_ONLY.sh"
   cat <<EOF > "build/$SCRIPT_NAME"

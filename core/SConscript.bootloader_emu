@@ -4,7 +4,7 @@ import os
 import shlex
 import tools, models, ui
 
-TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = 'emulator'
 
@@ -151,8 +151,7 @@ env.Replace(
     PYTHON='python',
     MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py', )
 
-MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
-MODEL_AS_NUMBER = str(models.get_hw_model_as_number(MODEL_IDENTIFIER))
+MODEL_AS_NUMBER = str(models.get_hw_model_as_number(TREZOR_MODEL))
 
 ALLPATHS = ['embed/rust',
            'embed/projects/bootloader',
