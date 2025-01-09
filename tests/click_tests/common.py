@@ -27,6 +27,8 @@ class CommonPass:
 
     EMPTY_ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
 
+    MULTI_CATEGORY = "as12 *&_N"
+
 
 class PassphraseCategory(Enum):
     MENU = "MENU"

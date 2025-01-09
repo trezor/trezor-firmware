@@ -136,6 +136,10 @@ pub const fn label_keyboard() -> TextStyle {
     TextStyle::new(Font::DEMIBOLD, GREY_EXTRA_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
+pub const fn label_keyboard_mono() -> TextStyle {
+    TextStyle::new(Font::MONO, GREY_EXTRA_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+}
+
 pub const fn label_keyboard_prompt() -> TextStyle {
     TextStyle::new(Font::DEMIBOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }

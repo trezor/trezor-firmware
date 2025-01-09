@@ -1,9 +1,12 @@
 use crate::{
     strutil::{ShortString, TString},
+    time::Duration,
     translations::TR,
     trezorhal::random,
     ui::{
-        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        component::{
+            text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx, Timer,
+        },
         display::Icon,
         geometry::Rect,
         shape::Renderer,
@@ -42,6 +45,8 @@ const UPPERCASE_INDEX: usize = 4;
 const DIGITS_INDEX: usize = 5;
 const SPECIAL_INDEX: usize = 6;
 const SPACE_INDEX: usize = 7;
+
+const LAST_DIGIT_TIMEOUT_S: u32 = 1;
 
 #[derive(Clone)]
 struct MenuItem {
@@ -273,6 +278,7 @@ pub struct PassphraseEntry {
     show_last_digit: bool,
     textbox: TextBox,
     current_category: ChoiceCategory,
+    last_char_timer: Timer,
 }
 
 impl PassphraseEntry {
@@ -281,11 +287,14 @@ impl PassphraseEntry {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
                 .with_carousel(true)
                 .with_initial_page_counter(random_menu_position()),
-            passphrase_dots: Child::new(ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH)),
+            passphrase_dots: Child::new(
+                ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH).without_ellipsis(),
+            ),
             show_plain_passphrase: false,
             show_last_digit: false,
             textbox: TextBox::empty(MAX_PASSPHRASE_LENGTH),
             current_category: ChoiceCategory::Menu,
+            last_char_timer: Timer::new(),
         }
     }
 
@@ -383,17 +392,22 @@ impl Component for PassphraseEntry {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Any non-timer event when showing real passphrase should hide it
-        // Same with showing last digit
-        if !matches!(event, Event::Timer(_)) {
-            if self.show_plain_passphrase {
+        match event {
+            // Timeout for showing the last digit.
+            Event::Timer(_) if self.last_char_timer.expire(event) => {
+                if self.show_last_digit {
+                    self.show_last_digit = false;
+                    self.update_passphrase_dots(ctx);
+                }
+            }
+            // Other timers are ignored.
+            Event::Timer(_) => {}
+            // Any non-timer event when showing plain passphrase should hide it
+            _ if self.show_plain_passphrase => {
                 self.show_plain_passphrase = false;
                 self.update_passphrase_dots(ctx);
             }
-            if self.show_last_digit {
-                self.show_last_digit = false;
-                self.update_passphrase_dots(ctx);
-            }
+            _ => {}
         }
 
         if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
@@ -437,6 +451,8 @@ impl Component for PassphraseEntry {
                 PassphraseAction::Character(ch) if !self.is_full() => {
                     self.append_char(ctx, ch);
                     self.show_last_digit = true;
+                    self.last_char_timer
+                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
                     self.update_passphrase_dots(ctx);
                     self.randomize_category_position(ctx);
                     ctx.request_paint();
