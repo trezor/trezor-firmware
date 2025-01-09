@@ -514,6 +514,14 @@ pub enum MessageType {
     MessageType_SolanaSignTx = 904,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SolanaTxSignature)
     MessageType_SolanaTxSignature = 905,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrGetPubkey)
+    MessageType_NostrGetPubkey = 2001,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrPubkey)
+    MessageType_NostrPubkey = 2002,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrSignEvent)
+    MessageType_NostrSignEvent = 2003,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_NostrEventSignature)
+    MessageType_NostrEventSignature = 2004,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkListNames)
     MessageType_BenchmarkListNames = 9100,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BenchmarkNames)
@@ -776,6 +784,10 @@ impl ::protobuf::Enum for MessageType {
             903 => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             904 => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             905 => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
+            2001 => ::std::option::Option::Some(MessageType::MessageType_NostrGetPubkey),
+            2002 => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
+            2003 => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
+            2004 => ::std::option::Option::Some(MessageType::MessageType_NostrEventSignature),
             9100 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             9101 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             9102 => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1029,6 +1041,10 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_SolanaAddress" => ::std::option::Option::Some(MessageType::MessageType_SolanaAddress),
             "MessageType_SolanaSignTx" => ::std::option::Option::Some(MessageType::MessageType_SolanaSignTx),
             "MessageType_SolanaTxSignature" => ::std::option::Option::Some(MessageType::MessageType_SolanaTxSignature),
+            "MessageType_NostrGetPubkey" => ::std::option::Option::Some(MessageType::MessageType_NostrGetPubkey),
+            "MessageType_NostrPubkey" => ::std::option::Option::Some(MessageType::MessageType_NostrPubkey),
+            "MessageType_NostrSignEvent" => ::std::option::Option::Some(MessageType::MessageType_NostrSignEvent),
+            "MessageType_NostrEventSignature" => ::std::option::Option::Some(MessageType::MessageType_NostrEventSignature),
             "MessageType_BenchmarkListNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkListNames),
             "MessageType_BenchmarkNames" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkNames),
             "MessageType_BenchmarkRun" => ::std::option::Option::Some(MessageType::MessageType_BenchmarkRun),
@@ -1281,6 +1297,10 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_SolanaAddress,
         MessageType::MessageType_SolanaSignTx,
         MessageType::MessageType_SolanaTxSignature,
+        MessageType::MessageType_NostrGetPubkey,
+        MessageType::MessageType_NostrPubkey,
+        MessageType::MessageType_NostrSignEvent,
+        MessageType::MessageType_NostrEventSignature,
         MessageType::MessageType_BenchmarkListNames,
         MessageType::MessageType_BenchmarkNames,
         MessageType::MessageType_BenchmarkRun,
@@ -1539,10 +1559,14 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_SolanaAddress => 240,
             MessageType::MessageType_SolanaSignTx => 241,
             MessageType::MessageType_SolanaTxSignature => 242,
-            MessageType::MessageType_BenchmarkListNames => 243,
-            MessageType::MessageType_BenchmarkNames => 244,
-            MessageType::MessageType_BenchmarkRun => 245,
-            MessageType::MessageType_BenchmarkResult => 246,
+            MessageType::MessageType_NostrGetPubkey => 243,
+            MessageType::MessageType_NostrPubkey => 244,
+            MessageType::MessageType_NostrSignEvent => 245,
+            MessageType::MessageType_NostrEventSignature => 246,
+            MessageType::MessageType_BenchmarkListNames => 247,
+            MessageType::MessageType_BenchmarkNames => 248,
+            MessageType::MessageType_BenchmarkRun => 249,
+            MessageType::MessageType_BenchmarkResult => 250,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1561,7 +1585,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xe8U\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x86W\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1838,15 +1862,19 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x01\x12$\n\x19MessageType_SolanaAddress\x10\x87\x07\x1a\x04\x98\xb5\
     \x18\x01\x12#\n\x18MessageType_SolanaSignTx\x10\x88\x07\x1a\x04\x90\xb5\
     \x18\x01\x12(\n\x1dMessageType_SolanaTxSignature\x10\x89\x07\x1a\x04\x98\
-    \xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\x10\x8cG\x1a\x04\
-    \x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\x10\x8dG\x1a\x04\
-    \x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\x8eG\x1a\x04\x80\
-    \xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\x8fG\x1a\x04\x80\
-    \xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\\\"\x04\x08G\x10J\"\
-    \x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\xe0\x01\x10\xe0\
-    \x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\xb8\x02\"\x06\
-    \x08\xe8\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezo\
-    rMessage\x80\xa6\x1d\x01\
+    \xb5\x18\x01\x12%\n\x1aMessageType_NostrGetPubkey\x10\xd1\x0f\x1a\x04\
+    \x90\xb5\x18\x01\x12\"\n\x17MessageType_NostrPubkey\x10\xd2\x0f\x1a\x04\
+    \x98\xb5\x18\x01\x12%\n\x1aMessageType_NostrSignEvent\x10\xd3\x0f\x1a\
+    \x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_NostrEventSignature\x10\xd4\
+    \x0f\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\
+    \x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\
+    \x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\
+    \x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\
+    \x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\\\"\
+    \x04\x08G\x10J\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\
+    \xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\
+    \xb8\x02\"\x06\x08\xe8\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.pr\
+    otobufB\rTrezorMessage\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
