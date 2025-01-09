@@ -12,7 +12,7 @@ input flow details.
 from __future__ import annotations
 
 import time
-from typing import Callable, Generator
+from typing import Callable, Generator, Sequence
 
 from trezorlib import messages
 from trezorlib.debuglink import DebugLink, LayoutContent, LayoutType
@@ -2049,7 +2049,7 @@ class InputFlowSlip39BasicRecoveryDryRun(InputFlowBase):
 
 
 class InputFlowSlip39BasicRecovery(InputFlowBase):
-    def __init__(self, client: Client, shares: list[str], pin: str | None = None):
+    def __init__(self, client: Client, shares: Sequence[str], pin: str | None = None):
         super().__init__(client)
         self.shares = shares
         self.pin = pin

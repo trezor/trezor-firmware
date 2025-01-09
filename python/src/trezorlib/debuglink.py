@@ -67,6 +67,8 @@ if TYPE_CHECKING:
             wait: bool | None = None,
         ) -> "LayoutContent": ...
 
+    InputFlowType = Generator[None, messages.ButtonRequest, None]
+
 
 EXPECTED_RESPONSES_CONTEXT_LINES = 3
 
@@ -1108,7 +1110,7 @@ class TrezorClientDebugLink(TrezorClient):
             return msg
 
     def set_input_flow(
-        self, input_flow: Generator[None, messages.ButtonRequest | None, None]
+        self, input_flow: InputFlowType | Callable[[], InputFlowType]
     ) -> None:
         """Configure a sequence of input events for the current with-block.
 
@@ -1142,7 +1144,7 @@ class TrezorClientDebugLink(TrezorClient):
         if not hasattr(input_flow, "send"):
             raise RuntimeError("input_flow should be a generator function")
         self.ui.input_flow = input_flow
-        input_flow.send(None)  # start the generator
+        next(input_flow)  # start the generator
 
     def watch_layout(self, watch: bool = True) -> None:
         """Enable or disable watching layout changes.
@@ -1190,7 +1192,8 @@ class TrezorClientDebugLink(TrezorClient):
             input_flow.throw(exc_type, value, traceback)
 
     def set_expected_responses(
-        self, expected: list[Union["ExpectedMessage", Tuple[bool, "ExpectedMessage"]]]
+        self,
+        expected: Sequence[Union["ExpectedMessage", Tuple[bool, "ExpectedMessage"]]],
     ) -> None:
         """Set a sequence of expected responses to client calls.
 
