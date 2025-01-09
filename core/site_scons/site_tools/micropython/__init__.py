@@ -44,6 +44,7 @@ def generate(env):
         btc_only = env["bitcoin_only"] == "1"
         backlight = env["backlight"]
         optiga = env["optiga"]
+        tropic = env["tropic"]
         layout_tt = env["ui_layout"] == "UI_LAYOUT_TT"
         layout_tr = env["ui_layout"] == "UI_LAYOUT_TR"
         touch = env["use_touch"]
@@ -55,6 +56,7 @@ def generate(env):
             rf"-e 's/utils\.BITCOIN_ONLY/{btc_only}/g'",
             rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
             rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
+            rf"-e 's/utils\.USE_TROPIC/{tropic}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"TT\"/{layout_tt}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"TR\"/{layout_tr}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"MERCURY\"/{layout_mercury}/g'",
