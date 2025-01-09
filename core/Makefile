@@ -32,7 +32,7 @@ BITCOIN_ONLY ?= 0
 BOOTLOADER_QA ?= 0
 BOOTLOADER_DEVEL ?= 0
 DISABLE_OPTIGA ?= 0
-TREZOR_MODEL ?= T
+TREZOR_MODEL ?= T2T1
 TREZOR_MEMPERF ?= 0
 ADDRESS_SANITIZER ?= 0
 CMAKELISTS ?= 0
@@ -50,11 +50,11 @@ OPENOCD_INTERFACE ?= stlink
 # OpenOCD transport default. Alternative: jtag
 OPENOCD_TRANSPORT ?= hla_swd
 
-ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T))
+ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T2T1))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
 LAYOUT_FEATURE = layout_bolt
-else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),R))
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T2B1))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
 LAYOUT_FEATURE = layout_samson
@@ -70,10 +70,10 @@ else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3W1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
 LAYOUT_FEATURE = layout_bolt
-else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC1))
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),D001))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
-else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),DISC2))
+else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),D002))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
 else

@@ -25,7 +25,7 @@
 #include "display_panel.h"
 #include "display_io.h"
 
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
 #include "panels/154a.h"
 #include "panels/lx154a2411.h"
 #include "panels/lx154a2422.h"
@@ -211,7 +211,7 @@ void display_panel_init(void) {
   HAL_Delay(120);
 
   // identify the controller we will communicate with
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   uint32_t id = display_panel_identify();
   if (id == DISPLAY_ID_GC9307) {
     tf15411a_init_seq();
@@ -234,7 +234,7 @@ void display_panel_init(void) {
 void display_panel_reinit(void) {
   // reinitialization is needed due to original sequence is unchangable in
   // boardloader
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   // model TT has new gamma settings
   uint32_t id = display_panel_identify();
   if (id == DISPLAY_ID_ST7789V && display_panel_is_inverted()) {
@@ -243,14 +243,14 @@ void display_panel_reinit(void) {
   } else if (id == DISPLAY_ID_ST7789V) {
     lx154a2411_gamma();
   }
-#elif defined TREZOR_MODEL_T3T1
+#elif defined TREZOR_MODEL_T2T13T1
   // reduced touch-display interference in T3T1
   lx154a2482_init_seq();
 #endif
 }
 
 void display_panel_rotate(int angle) {
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   uint32_t id = display_panel_identify();
   if (id == DISPLAY_ID_GC9307) {
     tf15411a_rotate(angle, &g_window_padding);

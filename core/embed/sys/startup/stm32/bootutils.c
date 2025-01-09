@@ -28,7 +28,7 @@
 #include <sys/mpu.h>
 #include <util/image.h>
 
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
 #include "../stm32f4/startup_init.h"
 #endif
 
@@ -212,7 +212,7 @@ void __attribute__((noreturn)) secure_shutdown(void) {
 }
 
 void ensure_compatible_settings(void) {
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   // Early version of bootloader on T2T1 expects 168 MHz core clock.
   // So we need to set it here before handover to the bootloader.
   set_core_clock(CLOCK_168_MHZ);

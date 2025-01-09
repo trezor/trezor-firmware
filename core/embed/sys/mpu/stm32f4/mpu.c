@@ -340,7 +340,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   // clang-format off
   switch (mode) {
-#ifdef TREZOR_MODEL_DISC1
+#ifdef TREZOR_MODEL_D001
     default:
       // All Peripherals (Unprivileged, Read-Write, Non-Executable)
       // SDRAM

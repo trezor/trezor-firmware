@@ -3,7 +3,7 @@ CC = cc
 CFLAGS = -Wall -Wshadow -Wextra -Wpedantic -Werror -Wno-missing-braces
 CFLAGS += -fPIC
 CFALGS += -fsanitize=address,undefined
-CFLAGS += -DTREZOR_MODEL_T
+CFLAGS += -DTREZOR_MODEL_T2T1
 CFLAGS += -DUSE_INSECURE_PRNG
 
 LIBS =

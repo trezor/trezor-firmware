@@ -93,7 +93,7 @@
 #include "stm32f4xx_ll_utils.h"
 #endif
 
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
 #define MODEL_IDENTIFIER "TREZOR2-"
 #else
 #define MODEL_IDENTIFIER MODEL_INTERNAL_NAME "-"
@@ -232,7 +232,7 @@ static void draw_border(int width, int padding) {
 }
 
 static void draw_welcome_screen(void) {
-#if defined TREZOR_MODEL_R || defined TREZOR_MODEL_T3B1
+#if defined TREZOR_MODEL_T2B1 || defined TREZOR_MODEL_T3B1
   gfx_draw_bar(gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY), COLOR_WHITE);
   display_refresh();
 #else

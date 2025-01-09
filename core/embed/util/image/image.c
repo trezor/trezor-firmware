@@ -96,7 +96,7 @@ const image_header *read_image_header(const uint8_t *const data,
 secbool check_image_model(const image_header *const hdr) {
   // abusing expiry field to break compatibility of non-TT images with existing
   // bootloaders/boardloaders
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   if (hdr->expiry == 0 && hdr->hw_model == 0 && hdr->hw_revision == 0) {
     // images for model TT older than this check
     return sectrue;
@@ -195,7 +195,7 @@ secbool __wur read_vendor_header(const uint8_t *const data,
 }
 
 secbool check_vendor_header_model(const vendor_header *const vhdr) {
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   if (vhdr->hw_model == 0) {
     // vendor headers for model T have this field set to 0
     return sectrue;

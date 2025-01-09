@@ -65,7 +65,7 @@ jobs:
           - model: T3W1
             type: production
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model == 'D001' && 'DISC1' || matrix.model }}
+      TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
@@ -116,7 +116,7 @@ jobs:
           - type: normal
             asan: asan
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model }}
+      TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
@@ -154,7 +154,7 @@ jobs:
           - type: normal
             asan: asan
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model }}
+      TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
@@ -186,7 +186,7 @@ jobs:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model }}
+      TREZOR_MODEL: ${{ matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
     steps:
@@ -209,7 +209,7 @@ jobs:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model }}
+      TREZOR_MODEL: ${{ matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
@@ -262,7 +262,7 @@ jobs:
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || matrix.model }}
+      TREZOR_MODEL: ${{ matrix.model }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
@@ -451,7 +451,7 @@ jobs:
     if: false  # NOTE manual job, comment out to run
     runs-on: ubuntu-latest
     env:
-      TREZOR_MODEL: T
+      TREZOR_MODEL: T2T1
       TREZOR_MEMPERF: 1
       PYOPT: 0
       PYTEST_TIMEOUT: 900

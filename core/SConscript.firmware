@@ -11,14 +11,13 @@ PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 EVERYTHING = BITCOIN_ONLY != '1'
-TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PYOPT = ARGUMENTS.get('PYOPT', '1')
 DISABLE_OPTIGA = ARGUMENTS.get('DISABLE_OPTIGA', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
-MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 
@@ -79,8 +78,8 @@ CPPDEFINES_MOD += [
     ('USE_ETHEREUM', '1' if EVERYTHING else '0'),
     ('USE_MONERO', '1' if EVERYTHING else '0'),
     ('USE_CARDANO', '1' if EVERYTHING else '0'),
-    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
-    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T") else '0'),
+    ('USE_NEM', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
+    ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
     ('DISABLE_ANIMATION', '1' if DISABLE_ANIMATION else '0'),
 ]
 SOURCE_MOD += [
@@ -647,7 +646,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/cardano/*/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Cardano*.py'))
 
-        if TREZOR_MODEL == "T":
+        if TREZOR_MODEL == "T2T1":
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/eos/*/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Eos*.py'))
@@ -661,7 +660,7 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Monero*.py'))
 
-        if TREZOR_MODEL == "T":
+        if TREZOR_MODEL == "T2T1":
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/nem/*/*.py'))
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/NEM*.py'))
@@ -684,7 +683,7 @@ if FROZEN:
 
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/webauthn/*.py'))
 
-        if TREZOR_MODEL == "T":
+        if TREZOR_MODEL == "T2T1":
             SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/decred.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/bitcoinlike.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/sign_tx/zcash_v4.py'))
@@ -807,8 +806,7 @@ env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
 env.Append(LINKFLAGS=f' -l{RUST_LIB}')
 
 
-MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
-BOOTLOADER_SUFFIX = MODEL_IDENTIFIER
+BOOTLOADER_SUFFIX = TREZOR_MODEL
 if BOOTLOADER_QA or BOOTLOADER_DEVEL:
     BOOTLOADER_SUFFIX += '_qa'
 
@@ -818,14 +816,14 @@ if BOOTLOADER_QA or BOOTLOADER_DEVEL:
 elif not PRODUCTION:
     vendor = "unsafe_signed_prod"
 else:
-    if TREZOR_MODEL in ('T',):
+    if TREZOR_MODEL in ('T2T1',):
         vendor = "satoshilabs_signed_prod"
     elif BITCOIN_ONLY == '1':
         vendor = "trezor_btconly_signed_prod"
     else:
         vendor = "trezor_signed_prod"
 
-VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_{vendor}.bin'
+VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_{vendor}.bin'
 
 tools.embed_raw_binary(
         obj_program,
@@ -849,7 +847,7 @@ env.Depends(obj_program, qstr_generated)
 
 linkerscript_gen = env.Command(
     target='memory.ld',
-    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld',  env.get('ENV')['LINKER_SCRIPT'].format(target='firmware')],
+    source=[f'embed/models/{TREZOR_MODEL}/memory.ld',  env.get('ENV')['LINKER_SCRIPT'].format(target='firmware')],
     action='$CAT $SOURCES > $TARGET',
 )
 
@@ -866,7 +864,7 @@ if CMAKELISTS != 0:
     env.Depends(program_elf, cmake_gen)
 env.Depends(program_elf, rust)
 
-BINARY_NAME = f"build/firmware/firmware-{MODEL_IDENTIFIER}"
+BINARY_NAME = f"build/firmware/firmware-{TREZOR_MODEL}"
 if not EVERYTHING:
     BINARY_NAME += "-btconly"
 BINARY_NAME += "-" + tools.get_version('embed/projects/firmware/version.h')

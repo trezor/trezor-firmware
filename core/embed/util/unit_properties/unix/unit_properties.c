@@ -47,7 +47,7 @@ bool unit_properties_init(void) {
   memset(drv, 0, sizeof(unit_properties_driver_t));
 
   drv->cache.sd_hotswap_enabled = true;
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   drv->cache.sd_hotswap_enabled = false;
 #endif
 

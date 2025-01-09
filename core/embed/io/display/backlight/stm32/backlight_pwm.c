@@ -196,7 +196,7 @@ void backlight_pwm_deinit(backlight_action_t action) {
     return;
   }
 
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   // This code is for backward compatibility with the older
   // bootloader/firmware on model T that used different
   // PWM settings and relies on proper settings from the

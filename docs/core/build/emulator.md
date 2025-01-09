@@ -79,7 +79,7 @@ Run the build with:
 
 ```sh
 make build_unix                     # default
-make build_unix TREZOR_MODEL=R      # different model
+make build_unix TREZOR_MODEL=T2B1   # different model
 ```
 
 ## Run

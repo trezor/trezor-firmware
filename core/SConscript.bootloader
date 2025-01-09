@@ -4,12 +4,11 @@ import os
 import shlex
 import tools, models, ui
 
-TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 BOOTLOADER_QA = ARGUMENTS.get('BOOTLOADER_QA', '0') == '1'
 PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d"]
 
@@ -246,7 +245,7 @@ obj_program += env.Object(source=SOURCE_HAL)
 
 linkerscript_gen = env.Command(
     target='memory.ld',
-    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='bootloader')],
+    source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='bootloader')],
     action='$CAT $SOURCES > $TARGET',
 )
 
@@ -262,7 +261,7 @@ env.Depends(program_elf, rust)
 
 SUFFIX = '_qa' if BOOTLOADER_QA else ''
 
-BINARY_NAME = f"build/bootloader/bootloader-{models.get_model_identifier(TREZOR_MODEL)}{SUFFIX}"
+BINARY_NAME = f"build/bootloader/bootloader-{TREZOR_MODEL}{SUFFIX}"
 BINARY_NAME += "-" + tools.get_version('embed/projects/bootloader/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""

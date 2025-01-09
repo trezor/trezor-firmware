@@ -31,7 +31,7 @@
 #include <sys/sdram.h>
 #endif
 
-#if defined(TREZOR_MODEL_T) && (!defined(BOARDLOADER))
+#if defined(TREZOR_MODEL_T2T1) && (!defined(BOARDLOADER))
 #include "../stm32f4/startup_init.h"
 #endif
 
@@ -42,7 +42,7 @@
 #ifdef KERNEL_MODE
 
 void system_init(systask_error_handler_t error_handler) {
-#if defined(TREZOR_MODEL_T) && (!defined(BOARDLOADER))
+#if defined(TREZOR_MODEL_T2T1) && (!defined(BOARDLOADER))
   // Early boardloader versions on Model T initialized the CPU clock to 168MHz.
   // We need to set it to the STM32F429's maximum - 180MHz.
   set_core_clock(CLOCK_180_MHZ);

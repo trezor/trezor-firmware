@@ -166,8 +166,8 @@ stm32lib):
 
               -DSTM32_HAL_H=<stm32f4xx.h>
 
-              -DTREZOR_MODEL=T
-              -DTREZOR_MODEL_T=1
+              -DTREZOR_MODEL=T2T1
+              -DTREZOR_MODEL_T2T1=1
               -DSTM32F427xx
               -DUSE_HAL_DRIVER
               -DSTM32_HAL_H="<stm32f4xx.h>"

@@ -40,7 +40,7 @@ static unit_properties_driver_t g_unit_properties_driver = {
     .initialized = false,
 };
 
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
 
 // Parse two digit number from the string.
 //
@@ -83,7 +83,7 @@ static bool get_production_date(int* year) {
   return true;
 }
 
-#endif  // TREZOR_MODEL_T
+#endif  // TREZOR_MODEL_T2T1
 
 // Reads and parses the unit properties from the OTP block.
 //
@@ -120,7 +120,7 @@ static bool detect_properties(unit_properties_t* props) {
   }
 
   props->sd_hotswap_enabled = true;
-#ifdef TREZOR_MODEL_T
+#ifdef TREZOR_MODEL_T2T1
   // Early produced TTs have a HW bug that prevents hotswapping of the SD card,
   // lets check the build data and decide based on that.
   int production_year;

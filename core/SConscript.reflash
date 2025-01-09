@@ -3,11 +3,11 @@
 import os
 import tools, models, ui
 
-TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
-if TREZOR_MODEL in ('DISC1', 'DISC2'):
+if TREZOR_MODEL in ('D001', 'D002'):
     # skip reflash build
     env = Environment()
     def build_reflash(target,source,env):
@@ -160,9 +160,7 @@ obj_program += env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-
 obj_program += env.Object(source=SOURCE_REFLASH)
 obj_program += env.Object(source=SOURCE_HAL)
 
-MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
-
-VENDORHEADER = f'embed/models/{MODEL_IDENTIFIER}/vendorheader/vendorheader_' + ('unsafe_signed_dev.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
+VENDORHEADER = f'embed/models/{TREZOR_MODEL}/vendorheader/vendorheader_' + ('unsafe_signed_dev.bin' if ARGUMENTS.get('PRODUCTION', '0') == '0' else 'satoshilabs_signed_prod.bin')
 
 tools.embed_raw_binary(
         obj_program,
@@ -174,7 +172,7 @@ tools.embed_raw_binary(
 
 linkerscript_gen = env.Command(
     target='memory.ld',
-    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld',  env.get('ENV')['LINKER_SCRIPT'].format(target='prodtest')],
+    source=[f'embed/models/{TREZOR_MODEL}/memory.ld',  env.get('ENV')['LINKER_SCRIPT'].format(target='prodtest')],
     action='$CAT $SOURCES > $TARGET',
 )
 
@@ -187,7 +185,7 @@ program_elf = env.Command(
 
 env.Depends(program_elf, linkerscript_gen)
 
-BINARY_NAME = f"build/reflash/reflash-{models.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME = f"build/reflash/reflash-{TREZOR_MODEL}"
 BINARY_NAME += "-" + tools.get_version('embed/projects/reflash/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""

@@ -31,7 +31,7 @@ jobs:
         model: [T2T1, T2B1]
         coins: [universal, btconly]
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_MODEL: ${{ matrix.model }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       PYTEST_TIMEOUT: 1200
       PYOPT: 0
@@ -74,7 +74,7 @@ jobs:
       matrix:
         model: [T2T1, T2B1]
     env:
-      TREZOR_MODEL: ${{ matrix.model == 'T2T1' && 'T' || 'R' }}
+      TREZOR_MODEL: ${{ matrix.model }}
       PYTEST_TIMEOUT: 1200
       PYOPT: 0
       DISABLE_OPTIGA: 1

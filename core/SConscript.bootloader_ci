@@ -3,10 +3,9 @@
 import os
 import tools, models, ui
 
-TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T')
+TREZOR_MODEL = ARGUMENTS.get('TREZOR_MODEL', 'T2T1')
 CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-MODEL_IDENTIFIER = models.get_model_identifier(TREZOR_MODEL)
 
 FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga"]
 
@@ -190,7 +189,7 @@ obj_program += env.Object(source=SOURCE_HAL)
 
 linkerscript_gen = env.Command(
     target='memory.ld',
-    source=[f'embed/models/{MODEL_IDENTIFIER}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='bootloader')],
+    source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='bootloader')],
     action='$CAT $SOURCES > $TARGET',
 )
 
@@ -203,7 +202,7 @@ program_elf = env.Command(
 
 env.Depends(program_elf, linkerscript_gen)
 
-BINARY_NAME = f"build/bootloader_ci/bootloader_ci-{models.get_model_identifier(TREZOR_MODEL)}"
+BINARY_NAME = f"build/bootloader_ci/bootloader_ci-{TREZOR_MODEL}"
 BINARY_NAME += "-" + tools.get_version('embed/projects/bootloader_ci/version.h')
 BINARY_NAME += "-" + tools.get_git_revision_short_hash()
 BINARY_NAME += "-dirty" if tools.get_git_modified() else ""
