@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import tools
+from trezorlib import messages, tools
 
 VECTORS = (  # descriptor, checksum
     (
@@ -87,3 +87,50 @@ def test_b58encode(data_hex, encoding_b58):
 @pytest.mark.parametrize("data_hex,encoding_b58", BASE58_VECTORS)
 def test_b58decode(data_hex, encoding_b58):
     assert tools.b58decode(encoding_b58).hex() == data_hex
+
+
+def test_return_success_deprecation(recwarn):
+    def mkfoo() -> str:
+        ret = tools._return_success(messages.Success(message="foo"))
+        assert ret is not None  # too bad we can't hook "is None" check
+        return ret
+
+    # check that just returning success will not cause a warning
+    mkfoo()
+    assert len(recwarn) == 0
+
+    with pytest.deprecated_call():
+        # equality is deprecated
+        assert mkfoo() == "foo"
+    with pytest.deprecated_call():
+        # comparison is deprecated
+        assert mkfoo() < "fooa"
+    with pytest.deprecated_call():
+        # truthiness is deprecated
+        assert mkfoo()
+    with pytest.deprecated_call():
+        # addition is deprecated (and hopefully all other operators)
+        assert mkfoo() + "a" == "fooa"
+    with pytest.deprecated_call():
+        # indexing is deprecated
+        assert mkfoo()[0] == "f"
+    with pytest.deprecated_call():
+        # methods are deprecated
+        assert mkfoo().startswith("f")
+
+
+def test_deprecation_helper(recwarn):
+    def mkfoo() -> messages.Success:
+        return tools._deprecation_retval_helper(messages.Success(message="foo"))
+
+    # check that just returning success will not cause a warning
+    mkfoo()
+    assert len(recwarn) == 0
+
+    with pytest.deprecated_call():
+        # attributes are deprecated
+        assert mkfoo().message == "foo"
+
+    with pytest.deprecated_call():
+        # equality is deprecated (along with other operators hopefully)
+        assert mkfoo() != "foo"
