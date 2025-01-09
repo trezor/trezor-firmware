@@ -246,33 +246,48 @@ static void test_border(void) {
 }
 
 static void test_display(const char *colors) {
-  gfx_clear();
 
-  size_t l = strlen(colors);
-  size_t w = DISPLAY_RESX / l;
+  if(strncmp(colors, "TEXT", 4) == 0){
 
-  for (size_t i = 0; i < l; i++) {
-    gfx_color_t c = COLOR_BLACK;  // black
-    switch (colors[i]) {
-      case 'R':
-        c = gfx_color_rgb(255, 0, 0);
-        break;
-      case 'G':
-        c = gfx_color_rgb(0, 255, 0);
-        break;
-      case 'B':
-        c = gfx_color_rgb(0, 0, 255);
-        break;
-      case 'W':
-        c = COLOR_WHITE;
-        break;
-    }
+    gfx_clear();
+    gfx_offset_t pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
+    gfx_draw_text(pos, "Example TEXT", -1, &bold, GFX_ALIGN_CENTER);
+    display_refresh();
+
+    vcp_println("OK");
+    return;
+  }else{
+
+    gfx_clear();
+
+    size_t l = strlen(colors);
+    size_t w = DISPLAY_RESX / l;
+
+    for (size_t i = 0; i < l; i++) {
+      gfx_color_t c = COLOR_BLACK;  // black
+      switch (colors[i]) {
+        case 'R':
+          c = gfx_color_rgb(255, 0, 0);
+          break;
+        case 'G':
+          c = gfx_color_rgb(0, 255, 0);
+          break;
+        case 'B':
+          c = gfx_color_rgb(0, 0, 255);
+          break;
+        case 'W':
+          c = COLOR_WHITE;
+          break;
+      }
 
     gfx_rect_t r = gfx_rect_wh(i * w, 0, i * w + w, DISPLAY_RESY);
     gfx_draw_bar(r, c);
-  }
+    }
   display_refresh();
   vcp_println("OK");
+
+  }
+
 }
 
 #ifdef USE_BUTTON
@@ -600,12 +615,37 @@ static void touch_version(void) {
 }
 #endif
 
-static void test_pwm(const char *args) {
-  int v = atoi(args);
+static void test_bl(const char *args) {
 
-  display_set_backlight(v);
-  display_refresh();
-  vcp_println("OK");
+  if (strncmp(args, "SET", 3) == 0) {
+
+    int v = atoi(&args[3]);
+
+    display_set_backlight(v);
+    display_refresh();
+    vcp_println("OK");
+
+  } else if (strncmp(args, "FADE", 4) == 0) {
+
+    int step_ms = atoi(&args[4]);
+
+    for(int i = 0; i < 3; i++){
+
+      display_fade_backlight(0, step_ms);
+
+      while(display_fade_in_progress());
+
+      display_fade_backlight(32, step_ms);
+
+      while(display_fade_in_progress());
+
+    }
+
+    display_refresh();
+    vcp_println("OK");
+
+  }
+
 }
 
 #ifdef USE_SD_CARD
@@ -1202,8 +1242,8 @@ int main(void) {
       test_sensitivity(line + 5);
 
 #endif
-    } else if (startswith(line, "PWM ")) {
-      test_pwm(line + 4);
+    } else if (startswith(line, "BL ")) {
+      test_bl(line + 3);
 #ifdef USE_SD_CARD
     } else if (startswith(line, "SD")) {
       test_sd();

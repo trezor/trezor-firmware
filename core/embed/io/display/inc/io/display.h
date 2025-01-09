@@ -88,6 +88,12 @@ int display_set_backlight(int level);
 // Gets current display level ranging from 0 (off)..255 (maximum).
 int display_get_backlight(void);
 
+// Fade display backlight to desired value.
+void display_fade_backlight(int val, int step_ms);
+
+bool display_fade_in_progress(void);
+
+
 // Sets the display orientation.
 //
 // May accept one of following values: 0, 90, 180, 270

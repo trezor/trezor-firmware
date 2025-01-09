@@ -12,7 +12,7 @@
 #include <sys/systick.h>
 
 #ifdef USE_BACKLIGHT
-#include "../backlight/backlight_pwm.h"
+#include "../backlight_tps61062/backlight_tps61062.h"
 #endif
 
 #include "display_internal.h"
@@ -308,7 +308,7 @@ void display_init(display_content_mode_t mode) {
 #endif
 
 #ifdef USE_BACKLIGHT
-  backlight_pwm_init(BACKLIGHT_RESET);
+  backlight_init(BACKLIGHT_RESET);
 #endif
 
   uint32_t fb_addr = display_fb_init();
@@ -381,11 +381,11 @@ int display_set_backlight(int level) {
   }
 
 #ifdef USE_BACKLIGHT
-  if (level > backlight_pwm_get()) {
-    display_ensure_refreshed();
-  }
+  // if (level > backlight_pwm_get()) {
+  //   display_ensure_refreshed();
+  // }
 
-  return backlight_pwm_set(level);
+  return backlight_set_level(level);
 #else
   // Just emulation, not doing anything
   drv->backlight_level = level;
@@ -400,11 +400,36 @@ int display_get_backlight(void) {
     return 0;
   }
 #ifdef USE_BACKLIGHT
-  return backlight_pwm_get();
+  return backlight_get_level();
 #else
   return drv->backlight_level;
 #endif
 }
+
+#ifdef USE_BACKLIGHT
+
+void display_fade_backlight(int level, int step_ms) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  backlight_fade(level, step_ms);
+
+}
+
+bool display_fade_in_progress(void) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  return backlight_fade_in_progress();
+}
+
+#endif
 
 int display_set_orientation(int angle) { return angle; }
 
