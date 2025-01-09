@@ -24,7 +24,6 @@ pub struct ErrorScreen<'a> {
     title: Child<Label<'a>>,
     message: Child<Label<'a>>,
     footer: Child<Label<'a>>,
-    area: Rect,
 }
 
 impl<'a> ErrorScreen<'a> {
@@ -39,7 +38,6 @@ impl<'a> ErrorScreen<'a> {
             title: Child::new(title),
             message: Child::new(message),
             footer: Child::new(footer),
-            area: Rect::zero(),
         }
     }
 }
@@ -47,7 +45,7 @@ impl<'a> ErrorScreen<'a> {
 impl Component for ErrorScreen<'_> {
     type Msg = Never;
 
-    fn place(&mut self, bounds: Rect) -> Rect {
+    fn place(&mut self, _bounds: Rect) -> Rect {
         self.bg.place(screen());
 
         let title_area = Rect::new(screen().top_left(), screen().top_right() + Offset::y(11));
@@ -77,7 +75,6 @@ impl Component for ErrorScreen<'_> {
         );
         self.footer.place(footer_area);
 
-        self.area = bounds;
         screen()
     }
 
