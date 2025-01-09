@@ -51,15 +51,13 @@ def _test_secret(
     with client:
         IF = InputFlowSlip39AdvancedRecovery(client, shares, click_info=click_info)
         client.set_input_flow(IF.get())
-        ret = device.recover(
+        device.recover(
             client,
             pin_protection=False,
             passphrase_protection=False,
             label="label",
         )
 
-    # Workflow succesfully ended
-    assert ret == messages.Success(message="Device recovered")
     assert client.features.initialized is True
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False

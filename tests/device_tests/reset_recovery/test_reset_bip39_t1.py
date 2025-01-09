@@ -209,7 +209,7 @@ def test_failed_pin(client: Client):
 
 def test_already_initialized(client: Client):
     with pytest.raises(Exception):
-        device.reset(
+        device.setup(
             client,
             strength=128,
             passphrase_protection=True,

@@ -21,7 +21,7 @@ import pytest
 from trezorlib import device, messages
 
 from .. import translations as TR
-from ..common import WITH_MOCK_URANDOM
+from ..common import MOCK_GET_ENTROPY
 from . import reset
 from .common import go_next
 
@@ -33,7 +33,6 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@WITH_MOCK_URANDOM
 def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     features = device_handler.features()
     debug = device_handler.debuglink()
@@ -41,10 +40,13 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     assert features.initialized is False
 
     device_handler.run(
-        device.reset,
+        device.setup,
         strength=128,
         backup_type=messages.BackupType.Bip39,
         pin_protection=False,
+        passphrase_protection=False,
+        entropy_check_count=0,
+        _get_entropy=MOCK_GET_ENTROPY,
     )
 
     # confirm new wallet
@@ -82,7 +84,9 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
 
     # TODO: some validation of the generated secret?
 
-    assert device_handler.result() == "Initialized"
+    # retrieve the result to check that it's not a TrezorFailure exception
+    device_handler.result()
+
     features = device_handler.features()
     assert features.initialized is True
     assert features.backup_availability == messages.BackupAvailability.NotAvailable

@@ -25,7 +25,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
 
-from ...common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
+from ...common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from ...input_flows import InputFlowSlip39BasicResetRecovery
 
 pytestmark = pytest.mark.models("core")
@@ -34,22 +34,25 @@ pytestmark = pytest.mark.models("core")
 def reset_device(client: Client, strength: int):
     member_threshold = 3
 
-    with WITH_MOCK_URANDOM, client:
+    with client:
         IF = InputFlowSlip39BasicResetRecovery(client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
-        device.reset(
+        device.setup(
             client,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Basic,
+            entropy_check_count=0,
+            _get_entropy=MOCK_GET_ENTROPY,
         )
 
     # generate secret locally
     internal_entropy = client.debug.state().reset_entropy
+    assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
@@ -83,12 +86,12 @@ def test_reset_entropy_check(client: Client):
 
     strength = 128  # 20 words
 
-    with WITH_MOCK_URANDOM, client:
+    with client:
         IF = InputFlowSlip39BasicResetRecovery(client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase.
-        _, path_xpubs = device.reset_entropy_check(
+        path_xpubs = device.setup(
             client,
             strength=strength,
             passphrase_protection=False,
@@ -96,10 +99,12 @@ def test_reset_entropy_check(client: Client):
             label="test",
             backup_type=BackupType.Slip39_Basic,
             entropy_check_count=3,
+            _get_entropy=MOCK_GET_ENTROPY,
         )
 
     # Generate the master secret locally.
     internal_entropy = client.debug.state().reset_entropy
+    assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # Check that all combinations will result in the correct master secret.

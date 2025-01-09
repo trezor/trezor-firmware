@@ -44,7 +44,8 @@ def prepare_recovery_and_evaluate(
 
     yield debug
 
-    assert isinstance(device_handler.result(), messages.Success)
+    device_handler.result()
+
     features = device_handler.features()
     assert features.initialized is True
     assert features.recovery_status == messages.RecoveryStatus.Nothing

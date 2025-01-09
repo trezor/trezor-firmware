@@ -426,11 +426,4 @@ def test_label_too_long(client: Client):
 @pytest.mark.models(skip=["legacy", "safe3"])
 @pytest.mark.setup_client(pin=None)
 def test_set_brightness(client: Client):
-    with client:
-        assert (
-            device.set_brightness(
-                client,
-                None,
-            )
-            == "Settings applied"
-        )
+    device.set_brightness(client, None)

@@ -21,7 +21,7 @@ import pytest
 from trezorlib import device, messages
 
 from .. import buttons
-from ..common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
+from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from . import reset
 
 if TYPE_CHECKING:
@@ -39,7 +39,6 @@ pytestmark = pytest.mark.models("core")
     ],
 )
 @pytest.mark.setup_client(uninitialized=True)
-@WITH_MOCK_URANDOM
 def test_reset_slip39_basic(
     device_handler: "BackgroundDeviceHandler", num_of_shares: int, threshold: int
 ):
@@ -49,10 +48,13 @@ def test_reset_slip39_basic(
     assert features.initialized is False
 
     device_handler.run(
-        device.reset,
+        device.setup,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
         pin_protection=False,
+        passphrase_protection=False,
+        entropy_check_count=0,
+        _get_entropy=MOCK_GET_ENTROPY,
     )
 
     # confirm new wallet
@@ -137,7 +139,9 @@ def test_reset_slip39_basic(
     # validate that all combinations will result in the correct master secret
     reset.validate_mnemonics(all_words, secret)
 
-    assert device_handler.result() == "Initialized"
+    # retrieve the result to check that it's not a TrezorFailure exception
+    device_handler.result()
+
     features = device_handler.features()
     assert features.initialized is True
     assert features.backup_availability == messages.BackupAvailability.NotAvailable

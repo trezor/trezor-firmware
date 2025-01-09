@@ -37,4 +37,4 @@ def test_solana_get_public_key(client: Client, parameters, result):
         client, address_n=parse_path(parameters["path"]), show_display=True
     )
 
-    assert actual_result.public_key.hex() == result["expected_public_key"]
+    assert actual_result.hex() == result["expected_public_key"]
