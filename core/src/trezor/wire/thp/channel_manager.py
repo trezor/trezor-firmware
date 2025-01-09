@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 def create_new_channel(iface: WireInterface) -> Channel:
     """
-    Creates a new channel for the interface `iface` with the buffer `buffer`.
+    Creates a new channel for the interface `iface`.
     """
     channel_cache = cache_thp.get_new_channel(interface_manager.encode_iface(iface))
     channel = Channel(channel_cache)
