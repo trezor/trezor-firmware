@@ -16,8 +16,10 @@
 
 from __future__ import annotations
 
+import copy
 import functools
 import hashlib
+import inspect
 import re
 import struct
 import unicodedata
@@ -46,6 +48,7 @@ if TYPE_CHECKING:
     from typing_extensions import Concatenate, ParamSpec
 
     from . import client
+    from .messages import Success
     from .protobuf import MessageType
 
     MT = TypeVar("MT", bound=MessageType)
@@ -308,6 +311,82 @@ def expect(
         return wrapped_f
 
     return decorator
+
+
+def _deprecation_retval_helper(value: Any, stacklevel: int = 0) -> Any:
+    stack = inspect.stack()
+    func_name = stack[stacklevel + 1].function
+
+    warning_text = (
+        f"The return value {value!r} of function {func_name}() "
+        "is deprecated and it will be removed in a future version."
+    )
+
+    # start with warnings disabled, otherwise we emit a lot of warnings while still
+    # constructing the deprecation warnings helper
+    warning_enabled = False
+
+    def deprecation_warning_wrapper(orig_value: Callable[P, R]) -> Callable[P, R]:
+        def emit(*args: P.args, **kwargs: P.kwargs) -> R:
+            nonlocal warning_enabled
+
+            if warning_enabled:
+                warnings.warn(warning_text, DeprecationWarning, stacklevel=2)
+                # only warn once per use
+                warning_enabled = False
+            return orig_value(*args, **kwargs)
+
+        return emit
+
+    # Deprecation wrapper class.
+    # Defined as empty at start.
+    class Deprecated(value.__class__):
+        pass
+
+    # Here we install the deprecation_warning_wrapper for all dunder methods.
+    # This implicitly includes __getattribute__, which causes all non-dunder attribute
+    # accesses to also raise the warning.
+    for key in dir(value.__class__):
+        if not key.startswith("__"):
+            # skip non-dunder methods
+            continue
+        if key in ("__new__", "__init__", "__class__"):
+            # skip some problematic items
+            continue
+        orig_value = getattr(value.__class__, key)
+        if not callable(orig_value):
+            # skip non-functions
+            continue
+        # replace the method with a wrapper that emits a warning
+        setattr(Deprecated, key, deprecation_warning_wrapper(orig_value))
+
+    from .protobuf import MessageType
+
+    # construct an instance:
+    if isinstance(value, str):
+        # for str, invoke the copy constructor
+        ret = Deprecated(value)
+    elif isinstance(value, MessageType):
+        # MessageTypes don't have a copy constructor, so
+        # 1. we make an explicit copy
+        value = copy.copy(value)
+        # 2. we change the class of the copy
+        value.__class__ = Deprecated
+        # note: we don't need deep copy because all accesses to inner objects already
+        # trigger the warning via __getattribute__
+        ret = value
+    else:
+        # we don't support other types currently
+        raise NotImplementedError
+
+    # enable warnings
+    warning_enabled = True
+
+    return ret
+
+
+def _return_success(msg: "Success") -> str | None:
+    return _deprecation_retval_helper(msg.message, stacklevel=1)
 
 
 def session(
