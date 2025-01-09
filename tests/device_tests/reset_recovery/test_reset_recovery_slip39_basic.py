@@ -15,6 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import itertools
+import typing as t
 
 import pytest
 
@@ -23,7 +24,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType
 from trezorlib.tools import parse_path
 
-from ...common import WITH_MOCK_URANDOM
+from ...common import MOCK_GET_ENTROPY
 from ...input_flows import (
     InputFlowSlip39BasicRecovery,
     InputFlowSlip39BasicResetRecovery,
@@ -33,7 +34,6 @@ from ...translations import set_language
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
-@WITH_MOCK_URANDOM
 def test_reset_recovery(client: Client):
     mnemonics = reset(client)
     address_before = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
@@ -56,13 +56,15 @@ def reset(client: Client, strength: int = 128) -> list[str]:
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
-        device.reset(
+        device.setup(
             client,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Basic,
+            entropy_check_count=0,
+            _get_entropy=MOCK_GET_ENTROPY,
         )
 
     # Check if device is properly initialized
@@ -77,14 +79,12 @@ def reset(client: Client, strength: int = 128) -> list[str]:
     return IF.mnemonics
 
 
-def recover(client: Client, shares: list[str]):
+def recover(client: Client, shares: t.Sequence[str]):
     with client:
         IF = InputFlowSlip39BasicRecovery(client, shares)
         client.set_input_flow(IF.get())
-        ret = device.recover(client, pin_protection=False, label="label")
+        device.recover(client, pin_protection=False, label="label")
 
-    # Workflow successfully ended
-    assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
     assert client.features.backup_type is BackupType.Slip39_Basic_Extendable

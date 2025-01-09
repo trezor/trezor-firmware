@@ -25,7 +25,6 @@ from .. import translations as TR
 from ..common import (
     MNEMONIC_SLIP39_SINGLE_EXT_20,
     TEST_ADDRESS_N,
-    WITH_MOCK_URANDOM,
     MNEMONIC_SLIP39_BASIC_20_3of6,
 )
 from ..input_flows import InputFlowSlip39BasicBackup, InputFlowSlip39BasicRecoveryDryRun
@@ -34,7 +33,6 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-@WITH_MOCK_URANDOM
 def test_repeated_backup(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
     assert client.features.recovery_status == messages.RecoveryStatus.Nothing
@@ -63,8 +61,7 @@ def test_repeated_backup(client: Client):
             client, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
-        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
-        assert ret == messages.Success(message="Backup unlocked")
+        device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             client.features.backup_availability == messages.BackupAvailability.Available
         )
@@ -86,7 +83,6 @@ def test_repeated_backup(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-@WITH_MOCK_URANDOM
 def test_repeated_backup_upgrade_single(client: Client):
     assert (
         client.features.backup_availability == messages.BackupAvailability.NotAvailable
@@ -100,8 +96,7 @@ def test_repeated_backup_upgrade_single(client: Client):
             client, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
-        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
-        assert ret == messages.Success(message="Backup unlocked")
+        device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             client.features.backup_availability == messages.BackupAvailability.Available
         )
@@ -125,7 +120,6 @@ def test_repeated_backup_upgrade_single(client: Client):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-@WITH_MOCK_URANDOM
 def test_repeated_backup_cancel(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
     assert client.features.recovery_status == messages.RecoveryStatus.Nothing
@@ -154,8 +148,7 @@ def test_repeated_backup_cancel(client: Client):
             client, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
-        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
-        assert ret == messages.Success(message="Backup unlocked")
+        device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             client.features.backup_availability == messages.BackupAvailability.Available
         )
@@ -181,7 +174,6 @@ def test_repeated_backup_cancel(client: Client):
 
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
-@WITH_MOCK_URANDOM
 def test_repeated_backup_send_disallowed_message(client: Client):
     assert client.features.backup_availability == messages.BackupAvailability.Required
     assert client.features.recovery_status == messages.RecoveryStatus.Nothing
@@ -210,8 +202,7 @@ def test_repeated_backup_send_disallowed_message(client: Client):
             client, mnemonics[:3], unlock_repeated_backup=True
         )
         client.set_input_flow(IF.get())
-        ret = device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
-        assert ret == messages.Success(message="Backup unlocked")
+        device.recover(client, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             client.features.backup_availability == messages.BackupAvailability.Available
         )

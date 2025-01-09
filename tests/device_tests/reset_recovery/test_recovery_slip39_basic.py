@@ -75,10 +75,9 @@ def test_secret(
     with client:
         IF = InputFlowSlip39BasicRecovery(client, shares)
         client.set_input_flow(IF.get())
-        ret = device.recover(client, pin_protection=False, label="label")
+        device.recover(client, pin_protection=False, label="label")
 
     # Workflow successfully ended
-    assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
     assert client.features.backup_type is backup_type
@@ -94,7 +93,7 @@ def test_recover_with_pin_passphrase(client: Client):
             client, MNEMONIC_SLIP39_BASIC_20_3of6, pin="654"
         )
         client.set_input_flow(IF.get())
-        ret = device.recover(
+        device.recover(
             client,
             pin_protection=True,
             passphrase_protection=True,
@@ -102,7 +101,6 @@ def test_recover_with_pin_passphrase(client: Client):
         )
 
     # Workflow successfully ended
-    assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is True
     assert client.features.passphrase_protection is True
     assert client.features.backup_type is messages.BackupType.Slip39_Basic
@@ -194,7 +192,7 @@ def test_1of1(client: Client):
     with client:
         IF = InputFlowSlip39BasicRecovery(client, MNEMONIC_SLIP39_BASIC_20_1of1)
         client.set_input_flow(IF.get())
-        ret = device.recover(
+        device.recover(
             client,
             pin_protection=False,
             passphrase_protection=False,
@@ -202,7 +200,6 @@ def test_1of1(client: Client):
         )
 
     # Workflow successfully ended
-    assert ret == messages.Success(message="Device recovered")
     assert client.features.initialized is True
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False

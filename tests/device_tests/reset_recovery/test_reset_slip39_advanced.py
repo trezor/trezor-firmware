@@ -22,7 +22,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
 
-from ...common import EXTERNAL_ENTROPY, WITH_MOCK_URANDOM, generate_entropy
+from ...common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from ...input_flows import InputFlowSlip39AdvancedResetRecovery
 
 pytestmark = pytest.mark.models("core")
@@ -34,22 +34,25 @@ def test_reset_device_slip39_advanced(client: Client):
     strength = 128
     member_threshold = 3
 
-    with WITH_MOCK_URANDOM, client:
+    with client:
         IF = InputFlowSlip39AdvancedResetRecovery(client, False)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
-        device.reset(
+        device.setup(
             client,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Advanced,
+            entropy_check_count=0,
+            _get_entropy=MOCK_GET_ENTROPY,
         )
 
     # generate secret locally
     internal_entropy = client.debug.state().reset_entropy
+    assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
@@ -68,7 +71,7 @@ def test_reset_device_slip39_advanced(client: Client):
 
 
 def validate_mnemonics(
-    mnemonics: list[list[str]], threshold: int, expected_ems: bytes
+    mnemonics: list[str], threshold: int, expected_ems: bytes
 ) -> None:
     # 3of5 shares 3of5 groups
     # TODO: test all possible group+share combinations?

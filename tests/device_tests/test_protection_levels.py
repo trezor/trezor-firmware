@@ -22,7 +22,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ..common import MNEMONIC12, WITH_MOCK_URANDOM, get_test_address, is_core
+from ..common import MNEMONIC12, MOCK_GET_ENTROPY, get_test_address, is_core
 from ..tx_cache import TxCache
 from .bitcoin.signtx import (
     request_finished,
@@ -214,24 +214,26 @@ def test_wipe_device(client: Client):
 def test_reset_device(client: Client):
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
-    with WITH_MOCK_URANDOM, client:
+    with client:
         client.set_expected_responses(
             [messages.ButtonRequest]
             + [messages.EntropyRequest]
             + [messages.ButtonRequest] * 24
             + [messages.Success, messages.Features]
         )
-        device.reset(
+        device.setup(
             client,
             strength=128,
             passphrase_protection=True,
             pin_protection=False,
             label="label",
+            entropy_check_count=0,
+            _get_entropy=MOCK_GET_ENTROPY,
         )
 
     with pytest.raises(TrezorFailure):
         # This must fail, because device is already initialized
-        # Using direct call because `device.reset` has its own check
+        # Using direct call because `device.setup` has its own check
         client.call(
             messages.ResetDevice(
                 strength=128,

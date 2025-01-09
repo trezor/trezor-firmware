@@ -21,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import BackupType
 from trezorlib.tools import parse_path
 
-from ...common import WITH_MOCK_URANDOM
+from ...common import MOCK_GET_ENTROPY
 from ...input_flows import (
     InputFlowSlip39AdvancedRecovery,
     InputFlowSlip39AdvancedResetRecovery,
@@ -62,18 +62,20 @@ def test_reset_recovery(client: Client):
 
 
 def reset(client: Client, strength: int = 128) -> list[str]:
-    with WITH_MOCK_URANDOM, client:
+    with client:
         IF = InputFlowSlip39AdvancedResetRecovery(client, False)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
-        device.reset(
+        device.setup(
             client,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
             label="test",
             backup_type=BackupType.Slip39_Advanced,
+            entropy_check_count=0,
+            _get_entropy=MOCK_GET_ENTROPY,
         )
 
     # Check if device is properly initialized
@@ -92,10 +94,8 @@ def recover(client: Client, shares: list[str]):
     with client:
         IF = InputFlowSlip39AdvancedRecovery(client, shares, False)
         client.set_input_flow(IF.get())
-        ret = device.recover(client, pin_protection=False, label="label")
+        device.recover(client, pin_protection=False, label="label")
 
-    # Workflow successfully ended
-    assert ret == messages.Success(message="Device recovered")
     assert client.features.pin_protection is False
     assert client.features.passphrase_protection is False
     assert client.features.backup_type is BackupType.Slip39_Advanced_Extendable

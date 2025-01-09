@@ -73,7 +73,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     if debug.layout_type is LayoutType.Quicksilver:
         layout = tap_to_confirm(debug)
     assert layout.main_component() == "Homescreen"
-    assert device_handler.result() == "Settings applied"
+    device_handler.result()
 
 
 @pytest.mark.setup_client(pin=PIN4)

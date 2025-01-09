@@ -21,7 +21,7 @@ import pytest
 from trezorlib import device, messages
 
 from .. import buttons
-from ..common import WITH_MOCK_URANDOM
+from ..common import MOCK_GET_ENTROPY
 from . import recovery, reset
 from .common import go_next
 
@@ -33,7 +33,6 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@WITH_MOCK_URANDOM
 def test_repeated_backup(
     device_handler: "BackgroundDeviceHandler",
 ):
@@ -43,10 +42,13 @@ def test_repeated_backup(
     assert features.initialized is False
 
     device_handler.run(
-        device.reset,
+        device.setup,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
         pin_protection=False,
+        passphrase_protection=False,
+        entropy_check_count=0,
+        _get_entropy=MOCK_GET_ENTROPY,
     )
 
     # confirm new wallet
@@ -84,8 +86,9 @@ def test_repeated_backup(
     # Your backup is done
     go_next(debug)
 
+    # retrieve the result to check that it does not raise a failure
+    device_handler.result()
     # great ... device is initialized, backup done, and we are not in recovery mode!
-    assert device_handler.result() == "Initialized"
     features = device_handler.features()
     assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
     assert features.initialized is True
@@ -109,8 +112,8 @@ def test_repeated_backup(
         "recovery__unlock_repeated_backup",
     )
 
-    # backup is enabled
-    assert device_handler.result().message == "Backup unlocked"
+    # check non-exception result
+    device_handler.result()
 
     # we are now in recovery mode
     features = device_handler.features()
@@ -178,7 +181,8 @@ def test_repeated_backup(
         "recovery__unlock_repeated_backup",
     )
 
-    assert device_handler.result().message == "Backup unlocked"
+    # check non-exception result
+    device_handler.result()
 
     # we are now in recovery mode again!
     features = device_handler.features()

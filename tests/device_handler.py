@@ -1,17 +1,21 @@
 from __future__ import annotations
 
+import typing as t
 from concurrent.futures import ThreadPoolExecutor
-from typing import TYPE_CHECKING, Any, Callable
+
+import typing_extensions as tx
 
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.messages import DebugWaitType
 from trezorlib.transport import udp
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from trezorlib._internal.emulator import Emulator
     from trezorlib.debuglink import DebugLink
     from trezorlib.debuglink import TrezorClientDebugLink as Client
     from trezorlib.messages import Features
+
+    P = tx.ParamSpec("P")
 
 
 udp.SOCKET_TIMEOUT = 0.1
@@ -48,7 +52,12 @@ class BackgroundDeviceHandler:
         self.client.watch_layout(True)
         self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
-    def run(self, function: Callable[..., Any], *args: Any, **kwargs: Any) -> None:
+    def run(
+        self,
+        function: t.Callable[tx.Concatenate["Client", P], t.Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> None:
         """Runs some function that interacts with a device.
 
         Makes sure the UI is updated before returning.
@@ -79,7 +88,7 @@ class BackgroundDeviceHandler:
         emulator.restart()
         self._configure_client(emulator.client)  # type: ignore [client cannot be None]
 
-    def result(self, timeout: float | None = None) -> Any:
+    def result(self, timeout: float | None = None) -> t.Any:
         if self.task is None:
             raise RuntimeError("No task running")
         try:

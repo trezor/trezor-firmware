@@ -208,12 +208,14 @@ def test_upgrade_reset(gen: str, tag: str):
         assert not client.features.no_backup
 
     with EmulatorWrapper(gen, tag) as emu:
-        device.reset(
+        device.setup(
             emu.client,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
             label=LABEL,
+            entropy_check_count=0,
+            backup_type=BackupType.Bip39,
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
@@ -238,13 +240,15 @@ def test_upgrade_reset_skip_backup(gen: str, tag: str):
         assert not client.features.no_backup
 
     with EmulatorWrapper(gen, tag) as emu:
-        device.reset(
+        device.setup(
             emu.client,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
             label=LABEL,
             skip_backup=True,
+            entropy_check_count=0,
+            backup_type=BackupType.Bip39,
         )
         device_id = emu.client.features.device_id
         asserts(emu.client)
@@ -269,14 +273,17 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
         assert client.features.no_backup
 
     with EmulatorWrapper(gen, tag) as emu:
-        device.reset(
+        device.setup(
             emu.client,
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
             label=LABEL,
             no_backup=True,
+            entropy_check_count=0,
+            backup_type=BackupType.Bip39,
         )
+
         device_id = emu.client.features.device_id
         asserts(emu.client)
         address = btc.get_address(emu.client, "Bitcoin", PATH)
@@ -344,11 +351,12 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
     with EmulatorWrapper(gen, tag) as emu:
         # Generate a new encrypted master secret and record it.
-        device.reset(
+        device.setup(
             emu.client,
             pin_protection=False,
             skip_backup=True,
             backup_type=BackupType.Slip39_Basic,
+            entropy_check_count=0,
         )
         device_id = emu.client.features.device_id
         backup_type = emu.client.features.backup_type
@@ -414,8 +422,7 @@ def test_upgrade_u2f(gen: str, tag: str):
             label=LABEL,
         )
 
-        success = fido.set_counter(emu.client, 10)
-        assert "U2F counter set" in success
+        fido.set_counter(emu.client, 10)
 
         counter = fido.get_next_counter(emu.client)
         assert counter == 11

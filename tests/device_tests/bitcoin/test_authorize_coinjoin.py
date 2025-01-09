@@ -457,7 +457,7 @@ def test_sign_tx_spend(client: Client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
-                messages.UnlockedPathRequest(),
+                messages.UnlockedPathRequest,
                 request_input(0),
                 request_output(0),
                 request_output(1),
@@ -531,7 +531,7 @@ def test_sign_tx_migration(client: Client):
         client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
-                messages.UnlockedPathRequest(),
+                messages.UnlockedPathRequest,
                 request_input(0),
                 request_input(1),
                 request_output(0),

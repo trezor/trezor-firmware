@@ -83,8 +83,7 @@ COMMON_FIXTURES_DIR = (
 )
 
 # So that all the random things are consistent
-MOCK_OS_URANDOM = mock.Mock(return_value=EXTERNAL_ENTROPY)
-WITH_MOCK_URANDOM = mock.patch("os.urandom", MOCK_OS_URANDOM)
+MOCK_GET_ENTROPY = mock.Mock(return_value=EXTERNAL_ENTROPY)
 
 
 def parametrize_using_common_fixtures(*paths: str) -> "MarkDecorator":
