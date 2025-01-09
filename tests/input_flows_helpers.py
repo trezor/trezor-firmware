@@ -301,7 +301,7 @@ class RecoveryFlow:
 
     def input_all_slip39_shares(
         self,
-        shares: list[str],
+        shares: t.Sequence[str],
         has_groups: bool = False,
         click_info: bool = False,
     ) -> BRGeneratorType:
