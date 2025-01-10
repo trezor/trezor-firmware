@@ -614,13 +614,13 @@ if FROZEN:
         )
     ))
 
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
     SOURCE_PY_DEBUG_ENUMS = [SOURCE_PY_DIR + 'trezor/enums/Debug*.py']
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/enums/Binance*.py',
             SOURCE_PY_DIR + 'trezor/enums/Cardano*.py',
             SOURCE_PY_DIR + 'trezor/enums/DebugMonero*.py',
+            SOURCE_PY_DIR + 'trezor/enums/DefinitionType.py',
             SOURCE_PY_DIR + 'trezor/enums/Eos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Ethereum*.py',
             SOURCE_PY_DIR + 'trezor/enums/Monero*.py',
@@ -636,8 +636,11 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/*.py',
         exclude=[
-            SOURCE_PY_DIR + 'apps/common/sdcard.py',
-        ] if not SDCARD else []
+            SOURCE_PY_DIR + 'apps/common/definitions.py',
+            SOURCE_PY_DIR + 'apps/common/definitions_constants.py',
+        ] + (
+            [SOURCE_PY_DIR + 'apps/common/sdcard.py'] if not SDCARD else []
+        )
     ))
     if PYOPT == '0':
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
@@ -669,6 +672,10 @@ if FROZEN:
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/thp/*.py'))
 
     if EVERYTHING:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/definitions.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/common/definitions_constants.py'))
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/DefinitionType.py'))
+
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/binance/*.py'))
         SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/Binance*.py'))
 

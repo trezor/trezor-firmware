@@ -9,11 +9,12 @@ from trezor import utils, wire
 if not utils.BITCOIN_ONLY:
 
     from ethereum_common import *
-    from trezor.enums import EthereumDefinitionType
+    from trezor.enums import DefinitionType
     from trezor.messages import EthereumNetworkInfo, EthereumTokenInfo
 
+    from apps.common.definitions import decode_definition
     from apps.ethereum import networks, tokens
-    from apps.ethereum.definitions import Definitions, decode_definition
+    from apps.ethereum.definitions import Definitions
 
     TETHER_ADDRESS = b"\xda\xc1\x7f\x95\x8d\x2e\xe5\x23\xa2\x20\x62\x06\x99\x45\x97\xc1\x3d\x83\x1e\xc7"
 
@@ -92,7 +93,7 @@ class TestDecodeDefinition(unittest.TestCase):
 
     def test_bad_type(self):
         payload = make_payload(
-            data_type=EthereumDefinitionType.TOKEN, message=make_token()
+            data_type=DefinitionType.ETHEREUM_TOKEN, message=make_token()
         )
         proof, signature = sign_payload(payload, [])
         self.assertFailed(payload + proof + signature)
@@ -109,13 +110,13 @@ class TestDecodeDefinition(unittest.TestCase):
 
     def test_protobuf_mismatch(self):
         payload = make_payload(
-            data_type=EthereumDefinitionType.NETWORK, message=make_token()
+            data_type=DefinitionType.ETHEREUM_NETWORK, message=make_token()
         )
         proof, signature = sign_payload(payload, [])
         self.assertFailed(payload + proof + signature)
 
         payload = make_payload(
-            data_type=EthereumDefinitionType.TOKEN, message=make_network()
+            data_type=DefinitionType.ETHEREUM_TOKEN, message=make_network()
         )
         proof, signature = sign_payload(payload, [])
         self.assertFailed(payload + proof + signature)

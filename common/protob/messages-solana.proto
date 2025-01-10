@@ -55,6 +55,7 @@ message SolanaTxTokenAccountInfo {
  */
 message SolanaTxAdditionalInfo {
     repeated SolanaTxTokenAccountInfo token_accounts_infos = 1;
+    optional bytes encoded_token = 2;
 }
 
 /**

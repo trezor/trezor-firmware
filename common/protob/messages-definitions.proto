@@ -1,0 +1,61 @@
+syntax = "proto2";
+package hw.trezor.messages.definitions;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageDefinitions";
+
+/**
+ * Definitions type enum.
+ * Used to check the encoded EthereumNetworkInfo/EthereumTokenInfo/SolanaTokenInfo message.
+ */
+enum DefinitionType {
+    ETHEREUM_NETWORK = 0;
+    ETHEREUM_TOKEN = 1;
+    SOLANA_TOKEN = 2;
+}
+
+// ****** CROSS-PARSEABILITY NOTE ******
+//
+// Neither definition type should be cross-parseable with any other definition type.
+// That is, any parser shoud *fail to parse* a data blob of, e.g., EthereumNetworkInfo,
+// as a different definition type, e.g., SolanaTokenInfo.
+//
+// To achieve that, we vary the wire types of the fields in order:
+//
+// * EthereumNetworkInfo: varint, length-delimited, ...
+// * EthereumTokenInfo: length-delimited, varint, ...
+// * SolanaTokenInfo: length-delimited, length-delimited, ...
+
+/**
+ * Ethereum network definition.
+ * @embed
+ */
+message EthereumNetworkInfo {
+    required uint64 chain_id = 1;
+    required string symbol = 2;
+    required uint32 slip44 = 3;
+    required string name = 4;
+}
+
+/**
+ * Ethereum token definition.
+ * @embed
+ */
+message EthereumTokenInfo {
+    required bytes address = 1;
+    required uint64 chain_id = 2;
+    required string symbol = 3;
+    required uint32 decimals = 4;
+    required string name = 5;
+}
+
+/**
+ * Solana token definition.
+ * @embed
+ */
+message SolanaTokenInfo {
+    required bytes mint = 1;         // token mint - unique token id
+    required string symbol = 2;
+    required string name = 3;
+}

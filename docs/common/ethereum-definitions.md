@@ -89,7 +89,7 @@ Each definition is encoded as a protobuf message `EthereumNetworkInfo` or
 All numbers are unsigned little endian.
 
 1. magic string `trzd1` (5 bytes)
-2. definition type according to `EthereumDefinitionType` enum (1 byte)
+2. definition type according to `DefinitionType` enum (1 byte)
 3. data version of the definition (4 bytes)
 4. protobuf payload length (2 bytes)
 5. protobuf payload (N bytes)
