@@ -1,0 +1,1 @@
+Introduced `device.setup()` as a cleaner upgrade to `device.reset()`.
