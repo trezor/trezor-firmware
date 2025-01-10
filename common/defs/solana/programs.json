@@ -1623,7 +1623,8 @@
             {
               "name": "mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "account_to_mint",
@@ -1676,7 +1677,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "owner",
@@ -1754,7 +1756,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "freeze_authority",
@@ -1791,7 +1794,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "freeze_authority",
@@ -1839,7 +1843,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "destination_account",
@@ -1900,7 +1905,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "delegate",
@@ -1956,7 +1962,8 @@
             {
               "name": "mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "account_to_mint",
@@ -2013,7 +2020,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "owner",
@@ -2430,7 +2438,8 @@
             {
               "name": "mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "account_to_mint",
@@ -2483,7 +2492,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "owner",
@@ -2561,7 +2571,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "freeze_authority",
@@ -2598,7 +2609,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "freeze_authority",
@@ -2646,7 +2658,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "destination_account",
@@ -2707,7 +2720,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "delegate",
@@ -2763,7 +2777,8 @@
             {
               "name": "mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "account_to_mint",
@@ -2820,7 +2835,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "owner",
@@ -2997,7 +3013,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "system_program",
@@ -3059,7 +3076,8 @@
             {
               "name": "token_mint",
               "is_authority": false,
-              "optional": false
+              "optional": false,
+              "is_token_mint": true
             },
             {
               "name": "system_program",

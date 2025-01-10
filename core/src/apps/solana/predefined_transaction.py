@@ -11,7 +11,7 @@ from .transaction.instructions import (
 )
 
 if TYPE_CHECKING:
-    from trezor.messages import SolanaTxAdditionalInfo
+    from .types import AdditionalTxInfo
 
     TransferTokenInstruction = (
         TokenProgramTransferCheckedInstruction
@@ -117,7 +117,7 @@ async def try_confirm_token_transfer_transaction(
     fee: int,
     signer_path: list[int],
     blockhash: bytes,
-    additional_info: SolanaTxAdditionalInfo | None = None,
+    additional_info: AdditionalTxInfo | None = None,
 ) -> bool:
     from .layout import confirm_token_transfer
     from .token_account import try_get_token_account_base_address
@@ -154,10 +154,15 @@ async def try_confirm_token_transfer_transaction(
         ]
     )
 
+    token_ticker = "[UNKN]"
+    if additional_info and additional_info.definitions:
+        token_ticker = additional_info.definitions.get_token(token_mint).ticker
+
     await confirm_token_transfer(
         token_account if base_address is None else base_address,
         token_account,
         token_mint,
+        token_ticker,
         total_token_amount,
         transfer_token_instructions[0].decimals,
         fee,
@@ -172,7 +177,7 @@ async def try_confirm_predefined_transaction(
     fee: int,
     signer_path: list[int],
     blockhash: bytes,
-    additional_info: SolanaTxAdditionalInfo | None = None,
+    additional_info: AdditionalTxInfo | None = None,
 ) -> bool:
     from .layout import confirm_system_transfer
     from .transaction.instructions import SystemProgramTransferInstruction

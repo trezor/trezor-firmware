@@ -1,18 +1,18 @@
 syntax = "proto2";
-package hw.trezor.messages.ethereum_definitions;
+package hw.trezor.messages.definitions;
 
 // Sugar for easier handling in Java
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
-option java_outer_classname = "TrezorMessageEthereumDefinitions";
-
+option java_outer_classname = "TrezorMessageDefinitions";
 
 /**
- * Ethereum definitions type enum.
- * Used to check the encoded EthereumNetworkInfo or EthereumTokenInfo message.
+ * Definitions type enum.
+ * Used to check the encoded EthereumNetworkInfo/EthereumTokenInfo/SolanaTokenInfo message.
  */
- enum EthereumDefinitionType {
-    NETWORK = 0;
-    TOKEN = 1;
+enum DefinitionType {
+    ETHEREUM_NETWORK = 0;
+    ETHEREUM_TOKEN = 1;
+    SOLANA_TOKEN = 2;
 }
 
 /**
@@ -51,10 +51,16 @@ message EthereumTokenInfo {
 }
 
 /**
- * Contains an encoded Ethereum network and/or token definition. See ethereum-definitions.md for details.
+ * Solana token definition. Used to (de)serialize the definition.
+ *
+ * Definition types should not be cross-parseable, i.e., it should not be possible to
+ * incorrectly parse different Solana definitions as each other.
+ *
  * @embed
  */
-message EthereumDefinitions {
-    optional bytes encoded_network = 1; // encoded Ethereum network
-    optional bytes encoded_token = 2;   // encoded Ethereum token
+message SolanaTokenInfo {
+    required bytes mint = 1;         // token mint - unique token id
+    required string program_id = 2;  // token program id, e.g. token program, token22 program
+    required string name = 3;
+    required string ticker = 4;
 }

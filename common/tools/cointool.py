@@ -142,7 +142,6 @@ def render_file(
     src: Path, dst: Path, coins: CoinsInfo, support_info: SupportInfo, models: list[str]
 ) -> None:
     """Renders `src` template into `dst`.
-
     `src` is a filename, `dst` is an open file object.
     """
     template = mako.template.Template(filename=str(src.resolve()))
@@ -150,10 +149,11 @@ def render_file(
         DEFINITIONS_TIMESTAMP_PATH.read_text().strip()
     )
     this_file = Path(src)
+    # REVIEW/TODO: adapt for solana?
     result = template.render(
         support_info=support_info,
         supported_on=make_support_filter(support_info),
-        ethereum_defs_timestamp=int(eth_defs_date.timestamp()),
+        defs_timestamp=int(eth_defs_date.timestamp()),
         THIS_FILE=this_file,
         ROOT=ROOT,
         **coins,

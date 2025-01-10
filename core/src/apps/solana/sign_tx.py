@@ -5,7 +5,9 @@ from trezor.wire import DataError
 from apps.common.keychain import with_slip44_keychain
 
 from . import CURVE, PATTERNS, SLIP44_ID
+from .definitions import Definitions
 from .transaction import Transaction
+from .types import AdditionalTxInfo
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaTxSignature
@@ -58,10 +60,16 @@ async def sign_tx(
 
     fee = calculate_fee(transaction)
 
+    additional_tx_info = AdditionalTxInfo.from_solana_tx_additional_info(
+        msg.additional_info
+    )
+
     if not await try_confirm_predefined_transaction(
-        transaction, fee, address_n, transaction.blockhash, msg.additional_info
+        transaction, fee, address_n, transaction.blockhash, additional_tx_info
     ):
-        await confirm_instructions(address_n, signer_public_key, transaction)
+        await confirm_instructions(
+            address_n, signer_public_key, transaction, additional_tx_info
+        )
         await confirm_transaction(
             address_n,
             transaction.blockhash,
@@ -74,8 +82,14 @@ async def sign_tx(
 
 
 async def confirm_instructions(
-    signer_path: list[int], signer_public_key: bytes, transaction: Transaction
+    signer_path: list[int],
+    signer_public_key: bytes,
+    transaction: Transaction,
+    additional_info: AdditionalTxInfo | None,
 ) -> None:
+    definitions: Definitions | None = (
+        additional_info.definitions if additional_info else None
+    )
 
     visible_instructions = transaction.get_visible_instructions()
     instructions_count = len(visible_instructions)
@@ -109,6 +123,7 @@ async def confirm_instructions(
                 instruction_index,
                 signer_path,
                 signer_public_key,
+                definitions,
             )
 
 

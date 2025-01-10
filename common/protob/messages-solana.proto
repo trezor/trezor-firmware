@@ -55,6 +55,7 @@ message SolanaTxTokenAccountInfo {
  */
 message SolanaTxAdditionalInfo {
     repeated SolanaTxTokenAccountInfo token_accounts_infos = 1;
+    optional SolanaDefinitions definitions = 2;                  // token definition
 }
 
 /**
@@ -75,4 +76,12 @@ message SolanaSignTx {
  */
 message SolanaTxSignature {
     required bytes signature = 1;   // tx signature
+}
+
+/**
+ * Contains an encoded token definition. See solana-definitions.md for details.
+ * @embed
+ */
+message SolanaDefinitions {
+    optional bytes encoded_token = 1;     // encoded solana token
 }
