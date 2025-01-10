@@ -34,6 +34,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 static K_FIFO_DEFINE(fifo_uart_rx_ble);
 static K_FIFO_DEFINE(fifo_uart_rx_ble_manager);
+static K_FIFO_DEFINE(fifo_uart_rx_power_management);
 
 void trz_comm_init(void) {
   spi_init();
@@ -65,6 +66,8 @@ void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len) {
     k_fifo_put(&fifo_uart_rx_ble, buf);
   } else if (service_id == NRF_SERVICE_BLE_MANAGER) {
     k_fifo_put(&fifo_uart_rx_ble_manager, buf);
+  } else if (service_id == NRF_SERVICE_POWER_MANAGEMENT) {
+    k_fifo_put(&fifo_uart_rx_power_management, buf);
   } else {
     LOG_WRN("UART_RX unknown service");
     k_free(buf);
@@ -77,6 +80,8 @@ trz_packet_t *trz_comm_poll_data(nrf_service_id_t service) {
       return k_fifo_get(&fifo_uart_rx_ble, K_FOREVER);
     case NRF_SERVICE_BLE_MANAGER:
       return k_fifo_get(&fifo_uart_rx_ble_manager, K_FOREVER);
+    case NRF_SERVICE_POWER_MANAGEMENT:
+      return k_fifo_get(&fifo_uart_rx_power_management, K_FOREVER);
     default:
       LOG_WRN("UART_RX unknown service");
       return NULL;
