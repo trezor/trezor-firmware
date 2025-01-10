@@ -249,3 +249,66 @@ def test_already_initialized(client: Client):
             pin_protection=True,
             label="label",
         )
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_entropy_check(client: Client):
+    with client:
+        quicksilver = client.debug.layout_type is LayoutType.Quicksilver
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(name="setup_device"),
+                (quicksilver, messages.ButtonRequest(name="confirm_setup_device")),
+                messages.EntropyRequest,
+                messages.EntropyCheckReady,
+                messages.PublicKey,
+                messages.PublicKey,
+                messages.EntropyRequest,
+                messages.EntropyCheckReady,
+                messages.PublicKey,
+                messages.PublicKey,
+                messages.EntropyRequest,
+                messages.EntropyCheckReady,
+                messages.PublicKey,
+                messages.PublicKey,
+                (quicksilver, messages.ButtonRequest(name="backup_device")),
+                messages.Success,
+                messages.Features,
+            ]
+        )
+        device.setup(
+            client,
+            strength=128,
+            entropy_check_count=2,
+            backup_type=messages.BackupType.Bip39,
+            skip_backup=True,
+            pin_protection=False,
+            passphrase_protection=False,
+            _get_entropy=MOCK_GET_ENTROPY,
+        )
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_no_entropy_check(client: Client):
+    with client:
+        quicksilver = client.debug.layout_type is LayoutType.Quicksilver
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(name="setup_device"),
+                (quicksilver, messages.ButtonRequest(name="confirm_setup_device")),
+                messages.EntropyRequest,
+                (quicksilver, messages.ButtonRequest(name="backup_device")),
+                messages.Success,
+                messages.Features,
+            ]
+        )
+        device.setup(
+            client,
+            strength=128,
+            entropy_check_count=0,
+            backup_type=messages.BackupType.Bip39,
+            skip_backup=True,
+            pin_protection=False,
+            passphrase_protection=False,
+            _get_entropy=MOCK_GET_ENTROPY,
+        )
