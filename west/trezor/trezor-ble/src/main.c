@@ -39,6 +39,7 @@
 #include <zephyr/logging/log.h>
 
 #include <ble/ble.h>
+#include <power_management/power_management.h>
 #include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
 
@@ -53,6 +54,8 @@ int main(void) {
   trz_comm_init();
 
   ble_init();
+
+  power_management_init();
 
   signals_fw_running(true);
 

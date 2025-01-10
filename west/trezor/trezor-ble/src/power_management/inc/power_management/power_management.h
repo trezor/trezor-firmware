@@ -19,31 +19,5 @@
 
 #pragma once
 
-#include <stdbool.h>
-#include <zephyr/types.h>
-
-#define PACKET_DATA_SIZE 246
-
-typedef enum {
-  NRF_SERVICE_BLE = 0,
-  NRF_SERVICE_BLE_MANAGER = 1,
-  NRF_SERVICE_POWER_MANAGEMENT = 2,
-
-  NRF_SERVICE_CNT  // Number of services
-} nrf_service_id_t;
-
-typedef struct {
-  void *fifo_reserved;
-  uint8_t data[PACKET_DATA_SIZE];
-  uint16_t len;
-} trz_packet_t;
-
-// Initialized the communication module
-void trz_comm_init(void);
-
-// Sends a message to the specified service over fitting communication channel
-bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
-                       uint32_t len);
-
-// Polls for incoming data from the specified service
-trz_packet_t *trz_comm_poll_data(nrf_service_id_t service);
+// Initialize the power management module
+void power_management_init(void);
