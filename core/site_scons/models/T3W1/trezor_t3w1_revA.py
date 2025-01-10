@@ -46,7 +46,7 @@ def configure(
         "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
         "embed/io/display/ltdc_dsi/display_gfxmmu.c",
         "embed/io/display/fb_queue/fb_queue.c",
-        "embed/io/display/backlight/stm32/backlight_pwm.c",
+        "embed/io/display/backlight_tps61062/backlight_tps61062.c",
     ]
 
     paths += ["embed/io/display/inc"]
