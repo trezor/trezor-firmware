@@ -156,10 +156,10 @@ else
 fi
 
 # check alpine checksum
-if command -v sha256sum &> /dev/null ; then
-    echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | sha256sum -c
-else
+if command -v shasum &> /dev/null ; then
     echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | shasum -a 256 -c
+else
+    echo "${ALPINE_CHECKSUM}  ci/${ALPINE_TARBALL}" | sha256sum -c
 fi
 
 tag_clean="${TAG//[^a-zA-Z0-9]/_}"
