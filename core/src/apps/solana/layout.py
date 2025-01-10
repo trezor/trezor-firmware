@@ -21,6 +21,7 @@ from .types import AddressType
 if TYPE_CHECKING:
     from typing import Sequence
 
+    from .definitions import Definitions
     from .transaction import Fee
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
     from .types import AddressReference
@@ -55,6 +56,7 @@ async def confirm_instruction(
     instruction_index: int,
     signer_path: list[int],
     signer_public_key: bytes,
+    definitions: Definitions,
 ) -> None:
     instruction_title = (
         f"{instruction_index}/{instructions_count}: {instruction.ui_name}"
@@ -114,17 +116,17 @@ async def confirm_instruction(
                     continue
 
             account_data: list[tuple[str, str]] = []
+            # account included in the transaction directly
             if len(account_value) == 2:
-                signer_suffix = ""
-                if account_value[0] == signer_public_key:
-                    signer_suffix = f" ({TR.words__signer})"
+                account_description = f"{base58.encode(account_value[0])}"
+                if account_template.is_token_mint:
+                    token = definitions.get_token(account_value[0])
+                    account_description = f"{token.symbol}\n{account_description}"
+                elif account_value[0] == signer_public_key:
+                    account_description = f"{account_description} ({TR.words__signer})"
 
-                account_data.append(
-                    (
-                        ui_property.display_name,
-                        f"{base58.encode(account_value[0])}{signer_suffix}",
-                    )
-                )
+                account_data.append((ui_property.display_name, account_description))
+            # lookup table address reference
             elif len(account_value) == 3:
                 account_data += _get_address_reference_props(
                     account_value, ui_property.display_name
@@ -295,6 +297,7 @@ async def confirm_token_transfer(
     destination_account: bytes,
     token_account: bytes,
     token_mint: bytes,
+    token_symbol: str,
     amount: int,
     decimals: int,
     fee: Fee,
@@ -327,7 +330,7 @@ async def confirm_token_transfer(
     await confirm_custom_transaction(
         amount,
         decimals,
-        "[TOKEN]",
+        token_symbol,
         fee,
         signer_path,
         blockhash,

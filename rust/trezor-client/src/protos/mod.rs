@@ -21,6 +21,7 @@ mod generated {
         messages_common
         messages_crypto
         messages_debug
+        messages_definitions
         messages_management
         messages_benchmark
         options
@@ -28,7 +29,6 @@ mod generated {
         "bitcoin" => messages_bitcoin
         "ethereum" => messages_ethereum
         "ethereum" => messages_ethereum_eip712
-        "ethereum" => messages_ethereum_definitions
         "binance" => messages_binance
         "cardano" => messages_cardano
         "eos" => messages_eos

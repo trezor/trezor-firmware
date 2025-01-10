@@ -8,7 +8,7 @@ import requests
 from construct_classes import Struct, subcon
 
 from . import cosi, merkle_tree
-from .messages import EthereumDefinitionType
+from .messages import DefinitionType
 from .tools import EnumAdapter
 
 LOG = logging.getLogger(__name__)
@@ -38,13 +38,13 @@ ProofFormat = c.PrefixedArray(c.Int8ul, c.Bytes(32))
 
 class DefinitionPayload(Struct):
     magic: bytes
-    data_type: EthereumDefinitionType
+    data_type: DefinitionType
     timestamp: int
     data: bytes
 
     SUBCON = c.Struct(
         "magic" / c.Const(FORMAT_MAGIC),
-        "data_type" / EnumAdapter(c.Int8ul, EthereumDefinitionType),
+        "data_type" / EnumAdapter(c.Int8ul, DefinitionType),
         "timestamp" / c.Int32ul,
         "data" / c.Prefixed(c.Int16ul, c.GreedyBytes),
     )

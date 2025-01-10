@@ -1,10 +1,14 @@
 from typing import TYPE_CHECKING
 
+from .definitions import Definitions
+
 if TYPE_CHECKING:
     from enum import IntEnum
     from typing import Any, Callable, Generic, TypeVar
 
+    from trezor.messages import SolanaTxAdditionalInfo, SolanaTxTokenAccountInfo
     from trezor.utils import BufferReader
+    from typing_extensions import Self
 
     from .transaction import Instruction
 
@@ -51,10 +55,13 @@ class PropertyTemplate(Generic[T]):
 
 
 class AccountTemplate:
-    def __init__(self, name: str, is_authority: bool, optional: bool) -> None:
+    def __init__(
+        self, name: str, is_authority: bool, optional: bool, is_token_mint: bool
+    ) -> None:
         self.name = name
         self.is_authority = is_authority
         self.optional = optional
+        self.is_token_mint = is_token_mint
 
 
 class UIProperty:
@@ -71,3 +78,26 @@ class UIProperty:
         self.display_name = display_name
         self.is_authority = is_authority
         self.default_value_to_hide = default_value_to_hide
+
+
+class AdditionalTxInfo:
+    def __init__(
+        self,
+        token_accounts_infos: list[SolanaTxTokenAccountInfo],
+        definitions: Definitions,
+    ) -> None:
+        self.token_accounts_infos = token_accounts_infos
+        self.definitions = definitions
+
+    @classmethod
+    def from_solana_tx_additional_info(
+        cls,
+        additional_info: SolanaTxAdditionalInfo | None,
+    ) -> Self:
+        if not additional_info:
+            return cls(token_accounts_infos=[], definitions=Definitions())
+
+        return cls(
+            token_accounts_infos=additional_info.token_accounts_infos,
+            definitions=Definitions.from_encoded(additional_info.encoded_token),
+        )

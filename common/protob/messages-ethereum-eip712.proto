@@ -5,7 +5,7 @@ package hw.trezor.messages.ethereum_eip712;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageEthereumEIP712";
 
-import "messages-ethereum-definitions.proto";
+import "messages-ethereum.proto";
 
 
 // Separated from messages-ethereum.proto as it is not implemented on T1 side
@@ -22,10 +22,10 @@ import "messages-ethereum-definitions.proto";
  * @next Failure
  */
 message EthereumSignTypedData {
-    repeated uint32 address_n = 1;                                      // BIP-32 path to derive the key from master node
-    required string primary_type = 2;                                   // name of the root message struct
-    optional bool metamask_v4_compat = 3 [default=true];                // use MetaMask v4 (see https://github.com/MetaMask/eth-sig-util/issues/106)
-    optional ethereum_definitions.EthereumDefinitions definitions = 4;  // network and/or token definitions
+    repeated uint32 address_n = 1;                             // BIP-32 path to derive the key from master node
+    required string primary_type = 2;                          // name of the root message struct
+    optional bool metamask_v4_compat = 3 [default=true];       // use MetaMask v4 (see https://github.com/MetaMask/eth-sig-util/issues/106)
+    optional ethereum.EthereumDefinitions definitions = 4;     // network and/or token definitions
 }
 
 /**

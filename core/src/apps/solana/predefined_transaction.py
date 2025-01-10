@@ -14,9 +14,8 @@ from .transaction.instructions import (
 if TYPE_CHECKING:
     from typing import Type
 
-    from trezor.messages import SolanaTxAdditionalInfo
-
     from .transaction import Fee
+    from .types import AdditionalTxInfo
 
     TransferTokenInstruction = (
         TokenProgramTransferCheckedInstruction
@@ -122,7 +121,7 @@ async def try_confirm_token_transfer_transaction(
     fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
-    additional_info: SolanaTxAdditionalInfo | None = None,
+    additional_info: AdditionalTxInfo,
 ) -> bool:
     from .layout import confirm_token_transfer
     from .token_account import try_get_token_account_base_address
@@ -141,15 +140,11 @@ async def try_confirm_token_transfer_transaction(
     token_mint = transfer_token_instructions[0].token_mint[0]
     token_account = transfer_token_instructions[0].destination_account[0]
 
-    base_address = (
-        try_get_token_account_base_address(
-            token_account,
-            token_program,
-            token_mint,
-            additional_info.token_accounts_infos,
-        )
-        if additional_info is not None
-        else None
+    base_address = try_get_token_account_base_address(
+        token_account,
+        token_program,
+        token_mint,
+        additional_info.token_accounts_infos,
     )
 
     total_token_amount = sum(
@@ -159,10 +154,16 @@ async def try_confirm_token_transfer_transaction(
         ]
     )
 
+    token_symbol = "[UNKN]"
+    token = additional_info.definitions.get_token(token_mint)
+    if token is not None:
+        token_symbol = token.symbol
+
     await confirm_token_transfer(
         token_account if base_address is None else base_address,
         token_account,
         token_mint,
+        token_symbol,
         total_token_amount,
         transfer_token_instructions[0].decimals,
         fee,
@@ -178,7 +179,7 @@ async def try_confirm_predefined_transaction(
     signer_path: list[int],
     signer_public_key: bytes,
     blockhash: bytes,
-    additional_info: SolanaTxAdditionalInfo | None = None,
+    additional_info: AdditionalTxInfo,
 ) -> bool:
     from .layout import confirm_system_transfer
     from .transaction.instructions import SystemProgramTransferInstruction
