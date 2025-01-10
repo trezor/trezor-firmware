@@ -18,6 +18,7 @@ target_sources(app PRIVATE
         src/ble/bonds.c
         src/ble/pairing.c
         src/ble/ble.c
+        src/power_management/power_management.c
         src/trz_comm/uart.c
         src/trz_comm/spi.c
         src/trz_comm/trz_comm.c
@@ -27,6 +28,7 @@ target_sources(app PRIVATE
 include_directories(src/signals/inc)
 include_directories(src/trz_comm/inc)
 include_directories(src/ble/inc)
+include_directories(src/power_management/inc)
 
 # NORDIC SDK APP END
 
