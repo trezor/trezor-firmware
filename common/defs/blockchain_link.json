@@ -137,8 +137,7 @@
   "bitcoin:TEST": {
     "type": "blockbook",
     "url": [
-      "https://tbtc1.trezor.io",
-      "https://tbtc2.trezor.io"
+      "https://tbtc4-1.trezor.io"
     ]
   },
   "bitcoin:VIPS": {
