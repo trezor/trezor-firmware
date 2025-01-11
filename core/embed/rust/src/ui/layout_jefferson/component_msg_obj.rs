@@ -3,12 +3,15 @@ use crate::{
     micropython::obj::Obj,
     ui::{
         component::{
+            base,
             text::paragraphs::{ParagraphSource, Paragraphs},
             Component, Timeout,
         },
         layout::{obj::ComponentMsgObj, result::CANCELLED},
     },
 };
+
+use super::component::GenericScreen;
 
 // Clippy/compiler complains about conflicting implementations
 // TODO move the common impls to a common module
@@ -30,5 +33,11 @@ where
 {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
+    }
+}
+
+impl ComponentMsgObj for GenericScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        msg.try_into()
     }
 }
