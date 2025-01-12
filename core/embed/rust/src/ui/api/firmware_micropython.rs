@@ -29,6 +29,9 @@ use crate::{
 };
 use heapless::Vec;
 
+#[cfg(feature = "backlight")]
+use crate::ui::display::{fade_backlight_duration, set_backlight};
+
 /// Dummy implementation so that we can use `Empty` in a return type of
 /// unimplemented trait function
 impl ComponentMsgObj for Empty {
@@ -983,6 +986,24 @@ pub extern "C" fn upy_check_homescreen_format(data: Obj) -> Obj {
     unsafe { util::try_or_raise(block) }
 }
 
+pub extern "C" fn upy_backlight_set(_level: Obj) -> Obj {
+    let block = || {
+        #[cfg(feature = "backlight")]
+        set_backlight(_level.try_into()?);
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
+pub extern "C" fn upy_backlight_fade(_level: Obj) -> Obj {
+    let block = || {
+        #[cfg(feature = "backlight")]
+        fade_backlight_duration(_level.try_into()?, 150);
+        Ok(Obj::const_none())
+    };
+    unsafe { util::try_or_raise(block) }
+}
+
 #[no_mangle]
 pub static mp_module_trezorui_api: Module = obj_module! {
     /// from trezor import utils
@@ -1088,6 +1109,14 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def disable_animation(disable: bool) -> None:
     ///     """Disable animations, debug builds only."""
     Qstr::MP_QSTR_disable_animation => obj_fn_1!(upy_disable_animation).as_obj(),
+
+    /// def backlight_set(level: int) -> None:
+    ///     """Set backlight to desired level."""
+    Qstr::MP_QSTR_backlight_set => obj_fn_1!(upy_backlight_set).as_obj(),
+
+    /// def backlight_fade(level: int) -> None:
+    ///     """Fade backlight to desired level."""
+    Qstr::MP_QSTR_backlight_fade => obj_fn_1!(upy_backlight_fade).as_obj(),
 
     /// def confirm_action(
     ///     *,

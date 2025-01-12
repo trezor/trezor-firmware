@@ -81,6 +81,16 @@ def disable_animation(disable: bool) -> None:
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def backlight_set(level: int) -> None:
+    """Set backlight to desired level."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def backlight_fade(level: int) -> None:
+    """Fade backlight to desired level."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def confirm_action(
     *,
     title: str,

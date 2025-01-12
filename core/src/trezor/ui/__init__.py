@@ -8,7 +8,13 @@ from trezor import io, log, loop, utils, wire, workflow
 from trezor.messages import ButtonAck, ButtonRequest
 from trezor.wire import context
 from trezor.wire.protocol_common import Context
-from trezorui_api import AttachType, BacklightLevels, LayoutState
+from trezorui_api import (
+    AttachType,
+    BacklightLevels,
+    LayoutState,
+    backlight_fade,
+    backlight_set,
+)
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Generator, Generic, Iterator, TypeVar
@@ -67,12 +73,12 @@ async def _alert(count: int) -> None:
     long_sleep = loop.sleep(80)
     for i in range(count * 2):
         if i % 2 == 0:
-            display.backlight(BacklightLevels.MAX)
+            backlight_set(BacklightLevels.MAX)
             await short_sleep
         else:
-            display.backlight(BacklightLevels.DIM)
+            backlight_set(BacklightLevels.DIM)
             await long_sleep
-    display.backlight(BacklightLevels.NORMAL)
+    backlight_set(BacklightLevels.NORMAL)
     global _alert_in_progress
     _alert_in_progress = False
 
@@ -85,24 +91,6 @@ def alert(count: int = 3) -> None:
 
         _alert_in_progress = True
         loop.schedule(_alert(count))
-
-
-def backlight_fade(val: int, delay: int = 14000, step: int = 15) -> None:
-    if utils.USE_BACKLIGHT:
-        if __debug__:
-            if utils.DISABLE_ANIMATION:
-                display.backlight(val)
-                return
-        current = display.backlight()
-        if current < 0:
-            display.backlight(val)
-            return
-        elif current > val:
-            step = -step
-        for i in range(current, val, step):
-            display.backlight(i)
-            utime.sleep_us(delay)
-        display.backlight(val)
 
 
 class Shutdown(Exception):
@@ -526,9 +514,9 @@ class ProgressLayout:
 
         self.layout.request_complete_repaint()
         painted = self.layout.paint()
-        backlight_fade(BacklightLevels.NORMAL)
         if painted:
             refresh()
+        backlight_fade(BacklightLevels.NORMAL)
 
     def stop(self) -> None:
         global CURRENT_LAYOUT
