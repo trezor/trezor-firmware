@@ -13,6 +13,9 @@ use crate::{strutil::TString, trezorhal::display};
 #[cfg(feature = "backlight")]
 use crate::ui::lerp::Lerp;
 
+#[cfg(feature = "backlight")]
+use crate::{time::Instant, ui::util::animation_disabled};
+
 // Reexports
 pub use crate::ui::display::toif::Icon;
 pub use color::Color;
@@ -42,7 +45,19 @@ pub fn fade_backlight_duration(target: u8, duration_ms: u32) {
     let duration_ms = duration_ms as i32;
     let current = backlight() as i32;
 
-    for i in 0..duration_ms {
+    if animation_disabled() {
+        set_backlight(target as u8);
+        return;
+    }
+
+    let start = Instant::now();
+    let end = unwrap!(start.checked_add(Duration::from_millis(duration_ms as _)));
+
+    while Instant::now() < end {
+        let i = Instant::now()
+            .checked_duration_since(start)
+            .unwrap()
+            .to_millis();
         let val = i32::lerp(current, target, i as f32 / duration_ms as f32);
         set_backlight(val as u8);
         time::sleep(Duration::from_millis(1));
