@@ -47,14 +47,26 @@
 
 #ifdef KERNEL_MODE
 
+#ifdef TREZOR_MODEL_T2T1
+#ifdef BOARDLOADER
 // using const volatile instead of #define results in binaries that change
 // only in 1-byte when the flag changes.
 // using #define leads compiler to over-optimize the code leading to bigger
-// differencies in the resulting binaries.
+// differences in the resulting binaries.
 const volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS2 = 1;
 
+#else
+
+volatile uint8_t DISPLAY_ST7789V_INVERT_COLORS2 = 0;
+
+void display_panel_preserve_inversion(void) {
+  DISPLAY_ST7789V_INVERT_COLORS2 = display_panel_is_inverted();
+}
+#endif
+#endif
+
 // Window padding (correction) when using 90dg or 270dg orientation
-// (internally the display is 240x320 but we use only 240x240)
+// (internally the display is 240x320, but we use only 240x240)
 static display_padding_t g_window_padding;
 
 #ifdef DISPLAY_IDENTIFY
@@ -232,7 +244,7 @@ void display_panel_init(void) {
 }
 
 void display_panel_reinit(void) {
-  // reinitialization is needed due to original sequence is unchangable in
+  // reinitialization is needed due to original sequence is unchangeable in
   // boardloader
 #ifdef TREZOR_MODEL_T2T1
   // model TT has new gamma settings

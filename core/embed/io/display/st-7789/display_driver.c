@@ -61,6 +61,12 @@ void display_init(display_content_mode_t mode) {
 #endif
 
   if (mode == DISPLAY_RESET_CONTENT) {
+#if defined TREZOR_MODEL_T2T1 && !defined BOARDLOADER
+    // This is required for the model T to work correctly.
+    // Boardloader does this by constant in binary, other stages need to read
+    // this from the display
+    display_panel_preserve_inversion();
+#endif
     display_io_init_gpio();
     display_io_init_fmc();
     display_panel_init();
