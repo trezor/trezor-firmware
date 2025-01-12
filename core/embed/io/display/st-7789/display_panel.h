@@ -55,4 +55,8 @@ void display_panel_set_window(uint16_t x0, uint16_t y0, uint16_t x1,
                               uint16_t y1);
 void display_panel_rotate(int angle);
 
+#if defined TREZOR_MODEL_T2T1 && !defined BOARDLOADER
+void display_panel_preserve_inversion(void);
+#endif
+
 #endif  // TREZORHAL_ST7789_PANEL_H
