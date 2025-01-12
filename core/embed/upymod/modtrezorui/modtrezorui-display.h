@@ -103,29 +103,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_orientation_obj,
                                            1, 2,
                                            mod_trezorui_Display_orientation);
 
-/// def backlight(self, val: int | None = None) -> int:
-///     """
-///     Sets backlight intensity to the value specified in val.
-///     Call without the val parameter to just perform the read of the value.
-///     """
-STATIC mp_obj_t mod_trezorui_Display_backlight(size_t n_args,
-                                               const mp_obj_t *args) {
-  mp_int_t val;
-  if (n_args > 1) {
-    val = mp_obj_get_int(args[1]);
-    if (val < 0 || val > 255) {
-      mp_raise_ValueError("Value must be between 0 and 255");
-    }
-    val = display_set_backlight(val);
-  } else {
-    val = display_get_backlight();
-  }
-  return MP_OBJ_NEW_SMALL_INT(val);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorui_Display_backlight_obj,
-                                           1, 2,
-                                           mod_trezorui_Display_backlight);
-
 /// def save(self, prefix: str) -> None:
 ///     """
 ///     Saves current display contents to PNG file with given prefix.
@@ -162,8 +139,6 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_bar), MP_ROM_PTR(&mod_trezorui_Display_bar_obj)},
     {MP_ROM_QSTR(MP_QSTR_orientation),
      MP_ROM_PTR(&mod_trezorui_Display_orientation_obj)},
-    {MP_ROM_QSTR(MP_QSTR_backlight),
-     MP_ROM_PTR(&mod_trezorui_Display_backlight_obj)},
     {MP_ROM_QSTR(MP_QSTR_save), MP_ROM_PTR(&mod_trezorui_Display_save_obj)},
     {MP_ROM_QSTR(MP_QSTR_clear_save),
      MP_ROM_PTR(&mod_trezorui_Display_clear_save_obj)},

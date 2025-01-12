@@ -135,7 +135,7 @@ void display_fb_clear(void) {
 static void bg_copy_callback(void) {
   display_driver_t *drv = &g_display_driver;
 
-  drv->update_pending = 1;
+  drv->update_pending = 2;
 
   fb_queue_put(&drv->empty_frames, fb_queue_take(&drv->ready_frames));
 }
@@ -267,13 +267,6 @@ void display_ensure_refreshed(void) {
       irq_unlock(irq_key);
       __WFI();
     } while (copy_pending);
-
-    // Wait until the display is fully refreshed
-    // (TE signal is low when the display is updating)
-    while (GPIO_PIN_RESET ==
-           HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN)) {
-      __WFI();
-    }
   }
 #endif
 }
