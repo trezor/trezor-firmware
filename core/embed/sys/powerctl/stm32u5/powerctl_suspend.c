@@ -95,8 +95,15 @@ void powerctl_suspend(void) {
       // immediately after exiting STOP2 mode.
       irq_key_t irq_key = irq_lock();
 
-      // Enter STOP2 mode
+      // The PWR clock is disabled after system initialization.
+      // Re-enable it before writing to PWR registers.
+      __HAL_RCC_PWR_CLK_ENABLE();
+
+      // Enter STOP2 low-power mode
       HAL_PWREx_EnterSTOP2Mode(PWR_STOPENTRY_WFI);
+
+      // Disable PWR clock after use
+      __HAL_RCC_PWR_CLK_DISABLE();
 
       // Recover system clock
       SystemInit();
