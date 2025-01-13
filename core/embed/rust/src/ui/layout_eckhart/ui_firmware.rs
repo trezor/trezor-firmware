@@ -3,14 +3,18 @@ use crate::{
     io::BinaryData,
     micropython::{gc::Gc, list::List, obj::Obj},
     strutil::TString,
+    translations::TR,
     ui::{
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
-            Empty,
+            text::{
+                op::OpTextLayout,
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
+            },
+            Empty, FormattedText,
         },
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::RecoveryType,
+            util::{ConfirmValueParams, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
@@ -20,25 +24,60 @@ use crate::{
 };
 
 use super::{
-    component::{ActionBar, Button, GenericScreen, Header, Hint},
-    theme, UIEckhart,
+    component::{ActionBar, Button, Header, Hint, TextScreen},
+    fonts, theme, UIEckhart,
 };
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
-        _title: TString<'static>,
-        _action: Option<TString<'static>>,
-        _description: Option<TString<'static>>,
+        title: TString<'static>,
+        action: Option<TString<'static>>,
+        description: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
-        _verb: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
-        _hold: bool,
+        hold: bool,
         _hold_danger: bool,
-        _reverse: bool,
+        reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let action = action.unwrap_or("".into());
+        let description = description.unwrap_or("".into());
+        let formatted_text = {
+            let ops = if !reverse {
+                OpTextLayout::new(theme::TEXT_NORMAL)
+                    .color(theme::GREY_LIGHT)
+                    .text(action, fonts::FONT_SATOSHI_REGULAR_38)
+                    .newline()
+                    .color(theme::GREY)
+                    .text(description, fonts::FONT_SATOSHI_REGULAR_22)
+            } else {
+                OpTextLayout::new(theme::TEXT_NORMAL)
+                    .color(theme::GREY)
+                    .text(description, fonts::FONT_SATOSHI_REGULAR_22)
+                    .newline()
+                    .color(theme::GREY_LIGHT)
+                    .text(action, fonts::FONT_SATOSHI_REGULAR_38)
+            };
+            FormattedText::new(ops).vertically_centered()
+        };
+
+        let verb = verb.unwrap_or(TR::buttons__confirm.into());
+        let right_button = if hold {
+            Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
+        } else {
+            Button::with_text(verb)
+        };
+        let screen = TextScreen::new(formatted_text)
+            .with_header(Header::new(title).with_menu_button())
+            .with_hint(Hint::new_instruction(description, None))
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                right_button,
+            ));
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn confirm_address(
