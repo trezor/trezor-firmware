@@ -82,6 +82,7 @@ def configure(
         ]
         features_available.append("usb")
         paths += ["embed/io/usb/inc"]
+        defines += [("USE_USB", "1")]
 
     if "optiga" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]

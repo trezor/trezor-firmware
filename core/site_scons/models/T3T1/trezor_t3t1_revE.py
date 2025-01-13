@@ -110,6 +110,7 @@ def configure(
         ]
         features_available.append("usb")
         paths += ["embed/io/usb/inc"]
+        defines += [("USE_USB", "1")]
 
     if "dma2d" in features_wanted:
         defines += [("USE_DMA2D", "1")]
