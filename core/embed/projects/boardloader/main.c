@@ -103,6 +103,7 @@ static void drivers_deinit(void) {
 #ifdef FIXED_HW_DEINIT
   // TODO
 #endif
+  gfx_bitblt_deinit();
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 #ifdef USE_POWERCTL
   powerctl_deinit();
