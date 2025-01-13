@@ -50,11 +50,11 @@ static display_driver_t g_display_driver = {
     .initialized = false,
 };
 
-void display_init(display_content_mode_t mode) {
+bool display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   if (drv->initialized) {
-    return;
+    return true;
   }
 
   memset(drv, 0, sizeof(display_driver_t));
@@ -68,6 +68,7 @@ void display_init(display_content_mode_t mode) {
   }
 
   drv->initialized = true;
+  return true;
 }
 
 void display_deinit(display_content_mode_t mode) {
