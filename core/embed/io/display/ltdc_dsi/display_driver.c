@@ -1,3 +1,21 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <trezor_bsp.h>
 #include <trezor_model.h>
@@ -20,6 +38,8 @@
 display_driver_t g_display_driver = {
     .initialized = false,
 };
+
+static void display_pll_deinit(void) { __HAL_RCC_PLL3_DISABLE(); }
 
 static bool display_pll_init(void) {
   RCC_PeriphCLKInitTypeDef PLL3InitPeriph = {0};
@@ -46,16 +66,33 @@ static bool display_pll_init(void) {
   PLL3InitPeriph.PLL3.PLL3RGE = RCC_PLLVCIRANGE_0;
   PLL3InitPeriph.PLL3.PLL3ClockOut = RCC_PLL3_DIVR | RCC_PLL3_DIVP;
   PLL3InitPeriph.PLL3.PLL3Source = RCC_PLLSOURCE_HSE;
-  return HAL_RCCEx_PeriphCLKConfig(&PLL3InitPeriph) == HAL_OK;
+
+  if (HAL_RCCEx_PeriphCLKConfig(&PLL3InitPeriph) != HAL_OK) {
+    goto cleanup;
+  }
+
+  return true;
+
+cleanup:
+  display_pll_deinit();
+  return false;
 }
 
-static bool display_dsi_init(void) {
-  display_driver_t *drv = &g_display_driver;
+static void display_dsi_deinit(display_driver_t *drv) {
+  __HAL_RCC_DSI_CLK_DISABLE();
+  __HAL_RCC_DSI_FORCE_RESET();
+  __HAL_RCC_DSI_RELEASE_RESET();
+  memset(&drv->hlcd_dsi, 0, sizeof(drv->hlcd_dsi));
+}
 
+static bool display_dsi_init(display_driver_t *drv) {
   RCC_PeriphCLKInitTypeDef DSIPHYInitPeriph = {0};
   DSI_PLLInitTypeDef PLLInit = {0};
   DSI_PHY_TimerTypeDef PhyTimers = {0};
   DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
+
+  __HAL_RCC_DSI_FORCE_RESET();
+  __HAL_RCC_DSI_RELEASE_RESET();
 
   /* Enable DSI clock */
   __HAL_RCC_DSI_CLK_ENABLE();
@@ -84,7 +121,7 @@ static bool display_dsi_init(void) {
   DSIPHYInitPeriph.DsiClockSelection = RCC_DSICLKSOURCE_DSIPHY;
 
   if (HAL_RCCEx_PeriphCLKConfig(&DSIPHYInitPeriph) != HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
   /* Reset the TX escape clock division factor */
@@ -119,10 +156,10 @@ static bool display_dsi_init(void) {
   PLLInit.PLLTuning = DSI_PLL_LOOP_FILTER_2000HZ_4400HZ;
 
   if (HAL_DSI_Init(&drv->hlcd_dsi, &PLLInit) != HAL_OK) {
-    return false;
+    goto cleanup;
   }
   if (HAL_DSI_SetGenericVCID(&drv->hlcd_dsi, 0) != HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
   /* Configure the DSI for Video mode */
@@ -157,7 +194,7 @@ static bool display_dsi_init(void) {
 
   /* Drive the display */
   if (HAL_DSI_ConfigVideoMode(&drv->hlcd_dsi, &drv->DSIVidCfg) != HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
   /*********************/
@@ -171,7 +208,7 @@ static bool display_dsi_init(void) {
   PhyTimers.StopWaitTime = 7;
 
   if (HAL_DSI_ConfigPhyTimer(&drv->hlcd_dsi, &PhyTimers)) {
-    return false;
+    goto cleanup;
   }
 
   HostTimeouts.TimeoutCkdiv = 1;
@@ -185,18 +222,22 @@ static bool display_dsi_init(void) {
   HostTimeouts.BTATimeout = 0;
 
   if (HAL_DSI_ConfigHostTimeouts(&drv->hlcd_dsi, &HostTimeouts) != HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
   if (HAL_DSI_ConfigFlowControl(&drv->hlcd_dsi, DSI_FLOW_CONTROL_BTA) !=
       HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
   /* Enable the DSI host */
   __HAL_DSI_ENABLE(&drv->hlcd_dsi);
 
   return true;
+
+cleanup:
+  display_dsi_deinit(drv);
+  return false;
 }
 
 static bool display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
@@ -227,8 +268,15 @@ static bool display_ltdc_config_layer(LTDC_HandleTypeDef *hltdc,
   return HAL_LTDC_ConfigLayer(hltdc, &LayerCfg, LTDC_LAYER_1) == HAL_OK;
 }
 
-static bool display_ltdc_init(uint32_t fb_addr) {
-  display_driver_t *drv = &g_display_driver;
+void display_ltdc_deinit(display_driver_t *drv) {
+  __HAL_RCC_LTDC_CLK_DISABLE();
+  __HAL_RCC_LTDC_FORCE_RESET();
+  __HAL_RCC_LTDC_RELEASE_RESET();
+}
+
+static bool display_ltdc_init(display_driver_t *drv, uint32_t fb_addr) {
+  __HAL_RCC_LTDC_FORCE_RESET();
+  __HAL_RCC_LTDC_RELEASE_RESET();
 
   __HAL_RCC_LTDC_CLK_ENABLE();
 
@@ -249,14 +297,22 @@ static bool display_ltdc_init(uint32_t fb_addr) {
 
   if (HAL_LTDCEx_StructInitFromVideoConfig(&drv->hlcd_ltdc, &drv->DSIVidCfg) !=
       HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
   if (HAL_LTDC_Init(&drv->hlcd_ltdc) != HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
-  return display_ltdc_config_layer(&drv->hlcd_ltdc, fb_addr);
+  if (!display_ltdc_config_layer(&drv->hlcd_ltdc, fb_addr)) {
+    goto cleanup;
+  }
+
+  return true;
+
+cleanup:
+  display_ltdc_deinit(drv);
+  return false;
 }
 
 bool display_set_fb(uint32_t fb_addr) {
@@ -264,7 +320,8 @@ bool display_set_fb(uint32_t fb_addr) {
   return display_ltdc_config_layer(&drv->hlcd_ltdc, fb_addr);
 }
 
-// Fully initializes the display controller.
+// This implementation does not support `mode` parameter, it
+// behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
 bool display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
@@ -273,9 +330,6 @@ bool display_init(display_content_mode_t mode) {
   }
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
-
-  __HAL_RCC_DSI_FORCE_RESET();
-  __HAL_RCC_LTDC_FORCE_RESET();
 
 #ifdef DISPLAY_PWREN_PIN
   DISPLAY_PWREN_CLK_ENA();
@@ -317,9 +371,6 @@ bool display_init(display_content_mode_t mode) {
 
   uint32_t fb_addr = display_fb_init();
 
-  __HAL_RCC_LTDC_RELEASE_RESET();
-  __HAL_RCC_DSI_RELEASE_RESET();
-
 #ifdef DISPLAY_GFXMMU
   display_gfxmmu_init(drv);
 #endif
@@ -327,10 +378,10 @@ bool display_init(display_content_mode_t mode) {
   if (!display_pll_init()) {
     goto cleanup;
   }
-  if (!display_dsi_init()) {
+  if (!display_dsi_init(drv)) {
     goto cleanup;
   }
-  if (!display_ltdc_init(fb_addr)) {
+  if (!display_ltdc_init(drv, fb_addr)) {
     goto cleanup;
   }
 
@@ -360,22 +411,67 @@ bool display_init(display_content_mode_t mode) {
   return true;
 
 cleanup:
+  display_deinit(DISPLAY_RESET_CONTENT);
+  return false;
+}
+
+// This implementation does not support `mode` parameter, it
+// behaves as if `mode` is always `DISPLAY_RESET_CONTENT`.
+void display_deinit(display_content_mode_t mode) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (mode == DISPLAY_RETAIN_CONTENT) {
+    // This is a temporary workaround for T3W1 to avoid clearing
+    // the display after drawing RSOD screen in `secure_shutdown()`
+    // function. The workaround should be removed once we have
+    // proper replacement for `secure_shutdown()` that resets the
+    // device instead of waiting for manual power off.
+    return;
+  }
+
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
   NVIC_DisableIRQ(LTDC_IRQn);
   NVIC_DisableIRQ(LTDC_ER_IRQn);
 
-  __HAL_RCC_DSI_FORCE_RESET();
-  __HAL_RCC_LTDC_FORCE_RESET();
-
-  __HAL_RCC_LTDC_RELEASE_RESET();
-  __HAL_RCC_DSI_RELEASE_RESET();
-
-#ifdef DISPLAY_GFXMMU
-  __HAL_RCC_GFXMMU_FORCE_RESET();
-  __HAL_RCC_GFXMMU_RELEASE_RESET();
+#ifdef DISPLAY_BACKLIGHT_PIN
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+  GPIO_InitStructure.Pin = DISPLAY_BACKLIGHT_PIN;
+  HAL_GPIO_Init(DISPLAY_BACKLIGHT_PORT, &GPIO_InitStructure);
 #endif
 
-  drv->initialized = false;
-  return false;
+#ifdef USE_BACKLIGHT
+  backlight_pwm_deinit(BACKLIGHT_RESET);
+#endif
+
+  display_dsi_deinit(drv);
+  display_ltdc_deinit(drv);
+#ifdef DISPLAY_GFXMMU
+  display_gfxmmu_deinit(drv);
+#endif
+  display_pll_deinit();
+
+#ifdef DISPLAY_PWREN_PIN
+  // Release PWREN pin and switch display power off
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+  GPIO_InitStructure.Pin = DISPLAY_PWREN_PIN;
+  HAL_GPIO_Init(DISPLAY_PWREN_PORT, &GPIO_InitStructure);
+#endif
+
+#ifdef DISPLAY_RESET_PIN
+  // Release the RESET pin
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
+  GPIO_InitStructure.Pin = DISPLAY_RESET_PIN;
+  HAL_GPIO_Init(DISPLAY_RESET_PORT, &GPIO_InitStructure);
+#endif
+
+  memset(drv, 0, sizeof(display_driver_t));
 }
 
 int display_set_backlight(int level) {
@@ -445,19 +541,6 @@ void LTDC_ER_IRQHandler(void) {
 
   mpu_restore(mode);
   IRQ_LOG_EXIT();
-}
-
-void display_deinit(display_content_mode_t mode) {
-  display_driver_t *drv = &g_display_driver;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  // todo
-
-  NVIC_DisableIRQ(LTDC_IRQn);
-  NVIC_DisableIRQ(LTDC_ER_IRQn);
 }
 
 #endif
