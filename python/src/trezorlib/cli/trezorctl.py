@@ -24,9 +24,12 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, ca
 
 import click
 
-from .. import __version__, log, messages, protobuf, ui
-from ..client import TrezorClient
+from .. import __version__, log, messages, protobuf
+from ..client import ProtocolVersion, TrezorClient
 from ..transport import DeviceIsBusy, enumerate_devices
+from ..transport.session import Session
+from ..transport.thp import channel_database
+from ..transport.thp.channel_database import get_channel_db
 from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
@@ -50,6 +53,7 @@ from . import (
     stellar,
     tezos,
     with_client,
+    with_session,
 )
 
 F = TypeVar("F", bound=Callable)
@@ -193,6 +197,13 @@ def configure_logging(verbose: int) -> None:
     "--record",
     help="Record screen changes into a specified directory.",
 )
+@click.option(
+    "-n",
+    "--no-store",
+    is_flag=True,
+    help="Do not store channels data between commands.",
+    default=False,
+)
 @click.version_option(version=__version__)
 @click.pass_context
 def cli_main(
@@ -204,9 +215,10 @@ def cli_main(
     script: bool,
     session_id: Optional[str],
     record: Optional[str],
+    no_store: bool,
 ) -> None:
     configure_logging(verbose)
-
+    channel_database.set_channel_database(should_not_store=no_store)
     bytes_session_id: Optional[bytes] = None
     if session_id is not None:
         try:
@@ -214,6 +226,7 @@ def cli_main(
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
+    # ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
     ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
 
     # Optionally record the screen into a specified directory.
@@ -285,18 +298,23 @@ def format_device_name(features: messages.Features) -> str:
 def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
     if no_resolve:
-        return enumerate_devices()
+        for d in enumerate_devices():
+            print(d.get_path())
+        return
+
+    from . import get_client
 
     for transport in enumerate_devices():
         try:
-            client = TrezorClient(transport, ui=ui.ClickUI())
+            client = get_client(transport)
             description = format_device_name(client.features)
-            client.end_session()
+            if client.protocol_version == ProtocolVersion.PROTOCOL_V2:
+                get_channel_db().save_channel(client.protocol)
         except DeviceIsBusy:
             description = "Device is in use by another process"
-        except Exception:
-            description = "Failed to read details"
-        click.echo(f"{transport} - {description}")
+        except Exception as e:
+            description = "Failed to read details " + str(type(e))
+        click.echo(f"{transport.get_path()} - {description}")
     return None
 
 
@@ -314,15 +332,19 @@ def version() -> str:
 @cli.command()
 @click.argument("message")
 @click.option("-b", "--button-protection", is_flag=True)
-@with_client
-def ping(client: "TrezorClient", message: str, button_protection: bool) -> str:
+@with_session(empty_passphrase=True)
+def ping(session: "Session", message: str, button_protection: bool) -> str:
     """Send ping message."""
-    return client.ping(message, button_protection=button_protection)
+
+    # TODO return short-circuit from old client for old Trezors
+    return session.ping(message, button_protection)
 
 
 @cli.command()
 @click.pass_obj
-def get_session(obj: TrezorConnection) -> str:
+def get_session(
+    obj: TrezorConnection, passphrase: str = "", derive_cardano: bool = False
+) -> str:
     """Get a session ID for subsequent commands.
 
     Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
@@ -336,23 +358,44 @@ def get_session(obj: TrezorConnection) -> str:
     obj.session_id = None
 
     with obj.client_context() as client:
+
         if client.features.model == "1" and client.version < (1, 9, 0):
             raise click.ClickException(
                 "Upgrade your firmware to enable session support."
             )
 
-        client.ensure_unlocked()
-        if client.session_id is None:
+        # client.ensure_unlocked()
+        session = client.get_session(
+            passphrase=passphrase, derive_cardano=derive_cardano
+        )
+        if session.id is None:
             raise click.ClickException("Passphrase not enabled or firmware too old.")
         else:
-            return client.session_id.hex()
+            return session.id.hex()
 
 
 @cli.command()
-@with_client
-def clear_session(client: "TrezorClient") -> None:
+@with_session(must_resume=True, empty_passphrase=True)
+def clear_session(session: "Session") -> None:
     """Clear session (remove cached PIN, passphrase, etc.)."""
-    return client.clear_session()
+    if session is None:
+        click.echo("Cannot clear session as it was not properly resumed.")
+        return
+    session.call(messages.LockDevice())
+    session.end()
+    # TODO different behaviour than main, not sure if ok
+
+
+@cli.command()
+def delete_channels() -> None:
+    """
+    Delete cached channels.
+
+    Do not use together with the `-n` (`--no-store`) flag,
+    as the JSON database will not be deleted in that case.
+    """
+    get_channel_db().clear_stored_channels()
+    click.echo("Deleted stored channels")
 
 
 @cli.command()

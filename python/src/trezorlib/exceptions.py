@@ -55,3 +55,7 @@ class Cancelled(TrezorException):
 
 class OutdatedFirmwareError(TrezorException):
     pass
+
+
+class DeviceLockedException(TrezorException):
+    pass

@@ -39,7 +39,7 @@ def prepare_tutorial_and_cancel_after_it(
     device_handler: "BackgroundDeviceHandler", cancelled: bool = False
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial)
 
     yield debug
 
