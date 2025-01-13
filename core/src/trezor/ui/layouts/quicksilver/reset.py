@@ -372,7 +372,7 @@ async def show_share_confirmation_success(
                 )
             )
 
-    await show_success("success_recovery", title, subheader=footer_description)
+    await show_success("success_share_confirm", title, subheader=footer_description)
 
 
 def show_share_confirmation_failure() -> Awaitable[None]:
