@@ -243,7 +243,7 @@ void display_panel_reinit(void) {
   } else if (id == DISPLAY_ID_ST7789V) {
     lx154a2411_gamma();
   }
-#elif defined TREZOR_MODEL_T2T13T1
+#elif defined TREZOR_MODEL_T3T1
   // reduced touch-display interference in T3T1
   lx154a2482_init_seq();
 #endif
