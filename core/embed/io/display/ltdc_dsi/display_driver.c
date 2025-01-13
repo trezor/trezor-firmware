@@ -230,6 +230,11 @@ static bool display_dsi_init(display_driver_t *drv) {
     goto cleanup;
   }
 
+  // The LTDC clock must be disabled before enabling the DSI host.
+  // If the LTDC clock remains enabled, the display colors may appear
+  // incorrectly or randomly swapped.
+  __HAL_RCC_LTDC_CLK_DISABLE();
+
   /* Enable the DSI host */
   __HAL_DSI_ENABLE(&drv->hlcd_dsi);
 

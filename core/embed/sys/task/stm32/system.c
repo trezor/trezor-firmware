@@ -79,7 +79,49 @@ void system_exit_fatal_ex(const char* message, size_t message_len,
 }
 
 __attribute__((used)) static void emergency_reset(void) {
-  // TODO: reset peripherals (at least DMA, DMA2D)
+  // Reset peripherals
+
+#ifdef __HAL_RCC_DMA2D_FORCE_RESET
+  __HAL_RCC_DMA2D_CLK_DISABLE();
+  __HAL_RCC_DMA2D_FORCE_RESET();
+  __HAL_RCC_DMA2D_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_DSI_FORCE_RESET
+  __HAL_RCC_DSI_CLK_DISABLE();
+  __HAL_RCC_DSI_FORCE_RESET();
+  __HAL_RCC_DSI_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_GFXMMU_FORCE_RESET
+  __HAL_RCC_GFXMMU_CLK_DISABLE();
+  __HAL_RCC_GFXMMU_FORCE_RESET();
+  __HAL_RCC_GFXMMU_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_LTDC_FORCE_RESET
+  __HAL_RCC_LTDC_CLK_DISABLE();
+  __HAL_RCC_LTDC_FORCE_RESET();
+  __HAL_RCC_LTDC_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_GPDMA1_FORCE_RESET
+  __HAL_RCC_GPDMA1_CLK_DISABLE();
+  __HAL_RCC_GPDMA1_FORCE_RESET();
+  __HAL_RCC_GPDMA1_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_DMA1_FORCE_RESET
+  __HAL_RCC_DMA1_CLK_DISABLE();
+  __HAL_RCC_DMA1_FORCE_RESET();
+  __HAL_RCC_DMA1_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_DMA2_FORCE_RESET
+  __HAL_RCC_DMA2_CLK_DISABLE();
+  __HAL_RCC_DMA2_FORCE_RESET();
+  __HAL_RCC_DMA2_RELEASE_RESET();
+#endif
 
   // Disable all NVIC interrupts and clear pending flags
   // so later the global interrupt can be re-enabled without
@@ -270,7 +312,7 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       "STR     R0, [SP, #8]        \n"  // future R2 = 0
       "STR     R0, [SP, #12]       \n"  // future R3 = 0
       "STR     R0, [SP, #16]       \n"  // future R12 = 0
-      "LDR     R1, =secure_shutdown\n"
+      "LDR     R0, =secure_shutdown\n"
       "STR     R0, [SP, #20]       \n"  // future LR = secure_shutdown()
       "BIC     R6, R6, #1          \n"
       "STR     R6, [SP, #24]       \n"  // return address = error_handler()
