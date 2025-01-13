@@ -51,6 +51,10 @@
 #include <sec/optiga.h>
 #endif
 
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>
+#endif
+
 #ifdef USE_RGB_LED
 #include <io/rgb_led.h>
 #endif
@@ -672,6 +676,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
           challenge, challenge_len, hash, hash_len,
           firmware_hash_callback_wrapper, callback_context);
     } break;
+
+#ifdef USE_POWERCTL
+    case SYSCALL_POWERCTL_SUSPEND: {
+      powerctl_suspend();
+    } break;
+#endif
 
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);
