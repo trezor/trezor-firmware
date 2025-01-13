@@ -674,7 +674,7 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     default:
-      args[0] = 0xffffffff;
+      system_exit_fatal("Invalid syscall", __FILE__, __LINE__);
       break;
   }
 }
