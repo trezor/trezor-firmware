@@ -3,10 +3,14 @@ use crate::{
     io::BinaryData,
     micropython::{gc::Gc, list::List, obj::Obj},
     strutil::TString,
+    translations::TR,
     ui::{
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
-            Empty,
+            text::{
+                op::OpTextLayout,
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
+            },
+            Empty, FormattedText,
         },
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
@@ -20,25 +24,59 @@ use crate::{
 };
 
 use super::{
-    component::{ActionBar, Button, GenericScreen, Header, Hint},
+    component::{ActionBar, Button, FormattedPage, Header, Hint},
     theme, UIEckhart,
 };
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
-        _title: TString<'static>,
-        _action: Option<TString<'static>>,
-        _description: Option<TString<'static>>,
+        title: TString<'static>,
+        action: Option<TString<'static>>,
+        description: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
-        _verb: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
-        _hold: bool,
+        hold: bool,
         _hold_danger: bool,
-        _reverse: bool,
+        reverse: bool,
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let action = action.unwrap_or("".into());
+        let description = description.unwrap_or("".into());
+        let formatted_text = {
+            let ops = if !reverse {
+                let mut ops_text = OpTextLayout::new(theme::TEXT_NORMAL);
+                OpTextLayout::new(theme::TEXT_NORMAL)
+                    .text_normal(action)
+                    .newline()
+                    .text_normal(description)
+            } else {
+                OpTextLayout::new(theme::TEXT_NORMAL)
+                    .text_normal(description)
+                    .newline()
+                    .text_demibold(action)
+            };
+
+            FormattedText::new(ops).vertically_centered()
+        };
+
+        let verb = verb.unwrap_or(TR::buttons__confirm.into());
+        let right_button = if hold {
+            Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
+        } else {
+            Button::with_text(verb)
+        };
+        let screen = FormattedPage::new(formatted_text)
+            .with_header(Header::new(title))
+            // .with_hint(Hint::new_instruction(description, None))
+            .with_hint(Hint::new_page_counter())
+            .with_action_bar(ActionBar::new_paginate(
+                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                right_button,
+            ));
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn confirm_address(
