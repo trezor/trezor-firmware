@@ -17,7 +17,6 @@ from trezor.pin import (
     show_pin_timeout,
 )
 from trezor.ui.layouts.homescreen import Lockscreen
-from trezorui_api import backlight_fade
 
 from apps.common.request_pin import can_lock_device, verify_user_pin
 
@@ -62,7 +61,7 @@ async def bootscreen() -> None:
             if can_lock_device():
                 enforce_welcome_screen_duration()
                 if utils.INTERNAL_MODEL == "T2T1":
-                    backlight_fade(ui.BacklightLevels.NONE)
+                    ui.backlight_fade(ui.BacklightLevels.NONE)
                 ui.display.orientation(storage.device.get_rotation())
                 if utils.USE_HAPTIC:
                     io.haptic.haptic_set_enabled(storage.device.get_haptic_feedback())
@@ -89,7 +88,7 @@ async def bootscreen() -> None:
                     # there is a slight delay before next screen is shown,
                     # so we don't fade unless there is a change of orientation
                     if utils.INTERNAL_MODEL == "T2T1":
-                        backlight_fade(ui.BacklightLevels.NONE)
+                        ui.backlight_fade(ui.BacklightLevels.NONE)
                     ui.display.orientation(rotation)
                 allow_all_loader_messages()
                 return

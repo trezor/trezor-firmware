@@ -8,7 +8,6 @@ from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
 from trezor.wire import context
 from trezor.wire.message_handler import filters, remove_filter
-from trezorui_api import backlight_fade
 
 from . import workflow_handlers
 
@@ -455,7 +454,7 @@ def reload_settings_from_storage() -> None:
         storage_device.get_experimental_features()
     )
     if ui.display.orientation() != storage_device.get_rotation():
-        backlight_fade(ui.BacklightLevels.DIM)
+        ui.backlight_fade(ui.BacklightLevels.DIM)
         ui.display.orientation(storage_device.get_rotation())
 
 
