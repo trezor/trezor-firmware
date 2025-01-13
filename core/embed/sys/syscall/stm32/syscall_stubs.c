@@ -645,4 +645,16 @@ secbool firmware_calc_hash(const uint8_t *challenge, size_t challenge_len,
                          SYSCALL_FIRMWARE_CALC_HASH);
 }
 
+// =============================================================================
+// powerctl.h
+// =============================================================================
+
+#ifdef USE_POWERCTL
+
+#include <sys/powerctl.h>
+
+void powerctl_suspend(void) { syscall_invoke0(SYSCALL_POWERCTL_SUSPEND); }
+
+#endif  // USE_POWERCTL
+
 #endif  // KERNEL_MODE

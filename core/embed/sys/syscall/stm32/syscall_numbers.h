@@ -139,6 +139,8 @@ typedef enum {
   SYSCALL_FIRMWARE_GET_VENDOR,
   SYSCALL_FIRMWARE_CALC_HASH,
 
+  SYSCALL_POWERCTL_SUSPEND,
+
 } syscall_number_t;
 
 #endif  // SYSCALL_NUMBERS_H
