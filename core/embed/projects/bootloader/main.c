@@ -134,7 +134,9 @@ static void drivers_init(secbool *touch_initialized) {
 
 static void drivers_deinit(void) {
 #ifdef FIXED_HW_DEINIT
-  // TODO
+#ifdef USE_BUTTON
+  button_deinit();
+#endif
 #endif
   gfx_bitblt_deinit();
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
