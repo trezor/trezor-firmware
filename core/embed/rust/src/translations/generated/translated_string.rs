@@ -1385,6 +1385,8 @@ pub enum TranslatedString {
 }
 
 impl TranslatedString {
+    // Allow building with `--all-features` (enabling all layouts results in duplicate match keys) for clippy
+    #[allow(unreachable_patterns)]
     pub fn untranslated(self) -> &'static str {
         match self {
             Self::addr_mismatch__contact_support_at => "Please contact Trezor support at",
