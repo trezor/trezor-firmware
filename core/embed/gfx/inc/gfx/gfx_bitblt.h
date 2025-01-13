@@ -78,6 +78,9 @@ typedef struct {
 // Initializes bitblt operations
 void gfx_bitblt_init(void);
 
+// Deinitializes bitblt operations
+void gfx_bitblt_deinit(void);
+
 // If the bitblt operation is asynchronous, waits until it's finished
 void gfx_bitblt_wait(void);
 

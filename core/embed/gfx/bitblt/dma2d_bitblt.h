@@ -25,6 +25,9 @@
 // Initializes DMA2D peripheral
 void dma2d_init(void);
 
+// Deinitializes DMA2D peripheral
+void dma2d_deinit(void);
+
 // Waits until any pending DMA2D operation is finished
 void dma2d_wait(void);
 
