@@ -81,6 +81,7 @@ typedef enum {
   INTERNAL_CMD_ACK = 0x05,
   INTERNAL_CMD_ALLOW_PAIRING = 0x06,
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
+  INTERNAL_CMD_UNPAIR = 0x08,
 } internal_cmd_t;
 
 // BLE management functions
@@ -98,6 +99,8 @@ void management_send_pairing_cancelled_event(void);
 bool bonds_erase_all(void);
 // Get number of bonded devices
 int bonds_get_count(void);
+// Erase current bond
+bool bonds_erase_current(void);
 
 // Advertising functions
 // Initialization
