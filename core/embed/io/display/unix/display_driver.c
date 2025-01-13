@@ -89,11 +89,11 @@ static void display_exit_handler(void) {
   display_deinit(DISPLAY_RESET_CONTENT);
 }
 
-void display_init(display_content_mode_t mode) {
+bool display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   if (drv->initialized) {
-    return;
+    return true;
   }
 
   if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -179,6 +179,7 @@ void display_init(display_content_mode_t mode) {
   drv->orientation_angle = 0;
 #endif
   drv->initialized = true;
+  return true;
 }
 
 void display_deinit(display_content_mode_t mode) {

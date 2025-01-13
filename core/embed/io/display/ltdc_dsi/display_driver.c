@@ -265,8 +265,12 @@ bool display_set_fb(uint32_t fb_addr) {
 }
 
 // Fully initializes the display controller.
-void display_init(display_content_mode_t mode) {
+bool display_init(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
+
+  if (drv->initialized) {
+    return true;
+  }
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -353,7 +357,7 @@ void display_init(display_content_mode_t mode) {
   __HAL_LTDC_ENABLE_IT(&drv->hlcd_ltdc, LTDC_IT_LI | LTDC_IT_FU | LTDC_IT_TE);
 
   drv->initialized = true;
-  return;
+  return true;
 
 cleanup:
   NVIC_DisableIRQ(LTDC_IRQn);
@@ -371,6 +375,7 @@ cleanup:
 #endif
 
   drv->initialized = false;
+  return false;
 }
 
 int display_set_backlight(int level) {
