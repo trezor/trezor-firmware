@@ -98,6 +98,8 @@ void management_send_pairing_cancelled_event(void);
 bool bonds_erase_all(void);
 // Get number of bonded devices
 int bonds_get_count(void);
+// Erase current bond
+bool bonds_erase_current(void);
 
 // Advertising functions
 // Initialization
