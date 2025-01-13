@@ -54,7 +54,9 @@ void powerctl_suspend(void) {
 
   // Deinitialize all drivers that are not required in low-power mode
   // (e.g., USB, display, touch, haptic, etc.).
+#ifdef USE_USB
   usb_stop();
+#endif
 #ifdef USE_HAPTIC
   haptic_deinit();
 #endif
@@ -118,7 +120,9 @@ void powerctl_suspend(void) {
 #ifdef USE_HAPTIC
   haptic_init();
 #endif
+#ifdef USE_USB
   usb_start();
+#endif
 }
 
 #endif  // KERNEL_MODE

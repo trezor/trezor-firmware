@@ -130,6 +130,7 @@ def configure(
         ]
         features_available.append("usb")
         paths += ["embed/io/usb/inc"]
+        defines += [("USE_USB", "1")]
 
     defines += [
         "FRAMEBUFFER",
