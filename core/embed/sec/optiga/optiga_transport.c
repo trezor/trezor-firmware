@@ -200,6 +200,25 @@ optiga_result optiga_init(void) {
   return optiga_set_data_reg_len(OPTIGA_DATA_REG_LEN);
 }
 
+void optiga_deinit(void) {
+  i2c_bus_close(i2c_bus);
+  i2c_bus = NULL;
+
+  frame_num_out = 0xff;
+  frame_num_in = 0xff;
+  memzero(frame_buffer, sizeof(frame_buffer));
+
+  sec_chan_established = false;
+  memzero(&sec_chan_encr_ctx, sizeof(sec_chan_encr_ctx));
+  memzero(&sec_chan_decr_ctx, sizeof(sec_chan_decr_ctx));
+  memzero(sec_chan_encr_nonce, sizeof(sec_chan_encr_nonce));
+  memzero(sec_chan_decr_nonce, sizeof(sec_chan_decr_nonce));
+  memzero(sec_chan_buffer, sizeof(sec_chan_buffer));
+  sec_chan_size = 0;
+
+  optiga_hal_deinit();
+}
+
 static optiga_result optiga_i2c_write(const uint8_t *data, uint16_t data_size) {
   OPTIGA_LOG(">>>", data, data_size)
 

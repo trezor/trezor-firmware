@@ -38,6 +38,24 @@ void optiga_hal_init(void) {
   hal_delay(20);
 }
 
+void optiga_hal_deinit(void) {
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = OPTIGA_RST_PIN;
+  HAL_GPIO_Init(OPTIGA_RST_PORT, &GPIO_InitStructure);
+
+#ifdef OPTIGA_PWR_PIN
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = OPTIGA_PWR_PIN;
+  HAL_GPIO_Init(OPTIGA_PWR_PORT, &GPIO_InitStructure);
+#endif
+}
+
 void optiga_reset(void) {
   HAL_GPIO_WritePin(OPTIGA_RST_PORT, OPTIGA_RST_PIN, GPIO_PIN_RESET);
   hal_delay(10);

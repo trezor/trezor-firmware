@@ -31,6 +31,8 @@
 #define OPTIGA_MAX_APDU_SIZE 1557
 
 optiga_result optiga_init(void);
+void optiga_deinit(void);
+
 optiga_result optiga_sec_chan_handshake(const uint8_t *secret,
                                         size_t secret_size);
 optiga_result optiga_execute_command(const uint8_t *command_data,
