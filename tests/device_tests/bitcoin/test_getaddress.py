@@ -200,12 +200,12 @@ def test_altcoin_address_mac(client: Client):
 @pytest.mark.models(skip="legacy", reason="Sortedmulti is not supported")
 def test_multisig_pubkeys_order(client: Client):
     xpub_internal = btc.get_public_node(client, parse_path("m/45h/0")).xpub
-    xpub_external = btc.get_public_node(client, parse_path("m/44h/1")).xpub
+    xpub_external = btc.get_public_node(client, parse_path("m/45h/1")).xpub
 
     multisig_unsorted_1 = messages.MultisigRedeemScriptType(
-        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_internal]],
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_external, xpub_internal]],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[b"", b""],
         m=2,
         pubkeys_order=MultisigPubkeysOrder.PRESERVED,
     )
@@ -213,29 +213,29 @@ def test_multisig_pubkeys_order(client: Client):
     multisig_unsorted_2 = messages.MultisigRedeemScriptType(
         nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_external]],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[b"", b""],
         m=2,
         pubkeys_order=MultisigPubkeysOrder.PRESERVED,
     )
 
     multisig_sorted_1 = messages.MultisigRedeemScriptType(
-        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_external]],
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_external, xpub_internal]],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[b"", b""],
         m=2,
         pubkeys_order=MultisigPubkeysOrder.LEXICOGRAPHIC,
     )
 
     multisig_sorted_2 = messages.MultisigRedeemScriptType(
-        nodes=[bip32.deserialize(xpub) for xpub in [xpub_external, xpub_internal]],
+        nodes=[bip32.deserialize(xpub) for xpub in [xpub_internal, xpub_external]],
         address_n=[0, 0],
-        signatures=[b"", b"", b""],
+        signatures=[b"", b""],
         m=2,
         pubkeys_order=MultisigPubkeysOrder.LEXICOGRAPHIC,
     )
 
-    address_unsorted_1 = "3JpFrKHq9F2R3Kr65pXMe8M8vy4dwJj7Ci"
-    address_unsorted_2 = "3HnEADzLm88XUugzXmfkfC5Ed6PXK9AXQh"
+    address_unsorted_1 = "3DpiomhFpTzGJZNksqn67pW5AUV1xHBMG1"
+    address_unsorted_2 = "3DKeup4KhFpvJPpqnPRdZMte73YZC3v8dS"
 
     assert (
         btc.get_address(
