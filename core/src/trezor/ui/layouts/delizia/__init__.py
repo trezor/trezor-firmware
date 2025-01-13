@@ -1009,7 +1009,7 @@ def confirm_sign_identity(
         "sign_identity",
         f"{TR.words__sign} {proto}",
         identity,
-        challenge_visual + "\n" if challenge_visual else "",
+        challenge_visual,
         br_code=BR_CODE_OTHER,
     )
 

@@ -30,7 +30,7 @@ async def require_confirm_origination(address: str) -> None:
     await confirm_address(
         TR.tezos__confirm_origination,
         address,
-        description=f"{TR.words__address}:",
+        description=TR.words__address,
         br_name="confirm_origination",
         br_code=BR_SIGN_TX,
     )

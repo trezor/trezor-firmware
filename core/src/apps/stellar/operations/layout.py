@@ -283,7 +283,7 @@ async def confirm_set_options_op(op: StellarSetOptionsOp) -> None:
             title = TR.stellar__remove_signer
         data: str | bytes = ""
         if signer_type == StellarSignerType.ACCOUNT:
-            description = f"{TR.words__account}:"
+            description = TR.words__account
             data = helpers.address_from_public_key(signer_key)
         elif signer_type == StellarSignerType.PRE_AUTH:
             description = TR.stellar__preauth_transaction
