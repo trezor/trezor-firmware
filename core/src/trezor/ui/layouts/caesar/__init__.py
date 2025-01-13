@@ -672,6 +672,9 @@ def confirm_text(
     description: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
+    if description and data:
+        description += ":"
+
     return _placeholder_confirm(
         br_name,
         title,
@@ -742,6 +745,9 @@ async def confirm_value(
     chunkify_info: bool = False,
 ) -> None:
     """General confirmation dialog, used by many other confirm_* functions."""
+
+    if description and value:
+        description += ":"
 
     if not verb and not hold:
         raise ValueError("Either verb or hold=True must be set")

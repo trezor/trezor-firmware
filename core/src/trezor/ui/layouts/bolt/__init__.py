@@ -579,9 +579,13 @@ def confirm_blob(
     chunkify: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
+    if description and ":" not in description:
+        description += ":"
+
     verb = verb or TR.buttons__confirm  # def_arg
     layout = trezorui_api.confirm_value(
         title=title,
+        subtitle=subtitle,
         description=description,
         value=data,
         hold=hold,
@@ -673,6 +677,9 @@ def confirm_value(
     chunkify_info: bool = False,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
+
+    if description and value:
+        description += ":"
 
     if not verb and not hold:
         raise ValueError("Either verb or hold=True must be set")
@@ -1080,7 +1087,7 @@ def confirm_sign_identity(
         "sign_identity",
         f"{TR.words__sign} {proto}",
         identity,
-        challenge_visual + "\n" if challenge_visual else "",
+        challenge_visual,
         br_code=BR_CODE_OTHER,
     )
 
