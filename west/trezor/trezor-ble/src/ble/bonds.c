@@ -21,6 +21,7 @@
 #include <zephyr/types.h>
 
 #include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/conn.h>
 
 #include <zephyr/logging/log.h>
 
@@ -30,8 +31,6 @@
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #include "ble_internal.h"
-
-
 
 bool bonds_erase_all(void) {
   int err = bt_unpair(BT_ID_DEFAULT, BT_ADDR_LE_ANY);
@@ -56,4 +55,25 @@ int bonds_get_count(void) {
   bt_foreach_bond(BT_ID_DEFAULT, count_bonds, &bond_cnt);
 
   return bond_cnt;
+}
+
+bool bonds_erase_current(void) {
+  int err;
+  struct bt_conn *current = connection_get_current();
+
+  if (current == NULL) {
+    return false;
+  }
+
+  struct bt_conn_info info;
+
+  err = bt_conn_get_info(current, &info);
+  if (err) {
+    LOG_ERR("Failed to get connection info (err %d)", err);
+    return false;
+  }
+
+  err = bt_unpair(BT_ID_DEFAULT, info.le.dst);
+
+  return err == 0;
 }
