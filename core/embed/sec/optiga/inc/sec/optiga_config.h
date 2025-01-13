@@ -17,14 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-void optiga_hal_init(void) {
-  // nothing to do
-}
+#pragma once
 
-void optiga_hal_deinit(void) {
-  // nothing to do
-}
+#ifdef KERNEL_MODE
 
-void optiga_reset(void) {
-  // nothing to do
-}
+// Initializes the optiga driver, establishes a secure channel by providing
+// a shared secret and finally opens the application.
+void optiga_init_and_configure(void);
+
+#endif  // KERNEL_MODE

@@ -25,6 +25,11 @@
 #include <sys/irq.h>
 #include <sys/wakeup_flags.h>
 
+#ifdef USE_OPTIGA
+#include <sec/optiga_config.h>
+#include <sec/optiga_transport.h>
+#endif
+
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
@@ -54,6 +59,9 @@ void powerctl_suspend(void) {
 
   // Deinitialize all drivers that are not required in low-power mode
   // (e.g., USB, display, touch, haptic, etc.).
+#ifdef USE_OPTIGA
+  optiga_deinit();
+#endif
 #ifdef USE_USB
   usb_stop();
 #endif
@@ -129,6 +137,9 @@ void powerctl_suspend(void) {
 #endif
 #ifdef USE_USB
   usb_start();
+#endif
+#ifdef USE_OPTIGA
+  optiga_init_and_configure();
 #endif
 }
 

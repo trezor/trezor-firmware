@@ -36,7 +36,6 @@
 #include <util/option_bytes.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
-#include "memzero.h"
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -51,8 +50,7 @@
 #endif
 
 #ifdef USE_OPTIGA
-#include <sec/optiga_commands.h>
-#include <sec/optiga_transport.h>
+#include <sec/optiga_config.h>
 #endif
 
 #ifdef USE_POWERCTL
@@ -85,26 +83,6 @@
 
 #ifdef USE_TRUSTZONE
 #include <sys/trustzone.h>
-#endif
-
-#ifdef USE_OPTIGA
-#if !PYOPT
-#include <inttypes.h>
-#if 1  // color log
-#define OPTIGA_LOG_FORMAT \
-  "%" PRIu32 " \x1b[35moptiga\x1b[0m \x1b[32mDEBUG\x1b[0m %s: "
-#else
-#define OPTIGA_LOG_FORMAT "%" PRIu32 " optiga DEBUG %s: "
-#endif
-static void optiga_log_hex(const char *prefix, const uint8_t *data,
-                           size_t data_size) {
-  printf(OPTIGA_LOG_FORMAT, hal_ticks_ms() * 1000, prefix);
-  for (size_t i = 0; i < data_size; i++) {
-    printf("%02x", data[i]);
-  }
-  printf("\n");
-}
-#endif
 #endif
 
 void drivers_init() {
@@ -150,11 +128,6 @@ void drivers_init() {
   secure_aes_init();
 #endif
 
-#ifdef USE_OPTIGA
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
-  secbool secret_ok = secret_optiga_get(secret);
-#endif
-
   entropy_init();
 
 #if PRODUCTION || BOOTLOADER_QA
@@ -186,27 +159,7 @@ void drivers_init() {
 #endif
 
 #ifdef USE_OPTIGA
-
-#if !PYOPT
-  // command log is relatively quiet so we enable it in debug builds
-  optiga_command_set_log_hex(optiga_log_hex);
-  // transport log can be spammy, uncomment if you want it:
-  // optiga_transport_set_log_hex(optiga_log_hex);
-#endif
-
-  optiga_init();
-  if (sectrue == secret_ok) {
-    // If the shielded connection cannot be established, reset Optiga and
-    // continue without it. In this case, OID_KEY_FIDO and OID_KEY_DEV cannot be
-    // used, which means device and FIDO attestation will not work.
-    if (optiga_sec_chan_handshake(secret, sizeof(secret)) != OPTIGA_SUCCESS) {
-      optiga_soft_reset();
-    }
-  }
-  memzero(secret, sizeof(secret));
-  ensure(sectrue * (optiga_open_application() == OPTIGA_SUCCESS),
-         "Cannot initialize optiga.");
-
+  optiga_init_and_configure();
 #endif
 }
 
