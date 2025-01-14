@@ -33,6 +33,7 @@ class Model(Enum):
     T1B1 = b"T1B1"
     T2B1 = b"T2B1"
     T2T1 = b"T2T1"
+    T2W1 = b"T2W1"
     T3B1 = b"T3B1"
     T3T1 = b"T3T1"
     T3W1 = b"T3W1"
@@ -155,6 +156,31 @@ LEGACY_V3_DEV = ModelKeys(
 )
 
 T2T1 = ModelKeys(
+    production=True,
+    boardloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "0eb9856be9ba7e972c7f34eac1ed9b6fd0efd172ec00faf0c589759da4ddfba0",
+            "ac8ab40b32c98655798fd5da5e192be27a22306ea05c6d277cdff4a3f4125cd8",
+            "ce0fcd12543ef5936cf2804982136707863d17295faced72af171d6e6513ff06",
+        )
+    ],
+    boardloader_sigs_needed=2,
+    bootloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "c2c87a49c5a3460977fbb2ec9dfe60f06bd694db8244bd4981fe3b7a26307f3f",
+            "80d036b08739b846f4cb77593078deb25dc9487aedcf52e30b4fb7cd7024178a",
+            "b8307a71f552c60a4cbb317ff48b82cdbf6b6bb5f04c920fec7badf017883751",
+        )
+    ],
+    bootloader_sigs_needed=2,
+    firmware_keys=(),
+    firmware_sigs_needed=-1,
+)
+
+
+T2W1 = ModelKeys(
     production=True,
     boardloader_keys=[
         bytes.fromhex(key)
@@ -310,6 +336,12 @@ T2T1_HASH_PARAMS = FirmwareHashParameters(
     padding_byte=None,
 )
 
+T2W1_HASH_PARAMS = FirmwareHashParameters(
+    hash_function=hashlib.blake2s,
+    chunk_size=1024 * 128,
+    padding_byte=None,
+)
+
 T3T1_HASH_PARAMS = FirmwareHashParameters(
     hash_function=hashlib.sha256,
     chunk_size=1024 * 128,
@@ -337,6 +369,7 @@ D002_HASH_PARAMS = FirmwareHashParameters(
 MODEL_MAP = {
     Model.T1B1: LEGACY_V3,
     Model.T2T1: T2T1,
+    Model.T2W1: T2W1,
     Model.T2B1: T2B1,
     Model.T3T1: T3T1,
     Model.T3B1: T3B1,
@@ -348,6 +381,7 @@ MODEL_MAP = {
 MODEL_MAP_DEV = {
     Model.T1B1: LEGACY_V3_DEV,
     Model.T2T1: TREZOR_CORE_DEV,
+    Model.T2W1: TREZOR_CORE_DEV,
     Model.T2B1: TREZOR_CORE_DEV,
     Model.T3T1: TREZOR_CORE_DEV,
     Model.T3B1: TREZOR_CORE_DEV,
@@ -359,6 +393,7 @@ MODEL_MAP_DEV = {
 MODEL_HASH_PARAMS_MAP = {
     Model.T1B1: LEGACY_HASH_PARAMS,
     Model.T2T1: T2T1_HASH_PARAMS,
+    Model.T2W1: T2W1_HASH_PARAMS,
     Model.T2B1: T2T1_HASH_PARAMS,
     Model.T3T1: T3T1_HASH_PARAMS,
     Model.T3B1: T3B1_HASH_PARAMS,
