@@ -1638,8 +1638,12 @@
           ],
           "ui_properties": [
             {
+              "account": "mint",
+              "display_name": "Mint token"
+            },
+            {
               "parameter": "amount",
-              "display_name": "Mint tokens"
+              "display_name": "Mint amount"
             },
             {
               "account": "account_to_mint",
@@ -1682,8 +1686,12 @@
           ],
           "ui_properties": [
             {
+              "account": "token_mint",
+              "display_name": "Burn token"
+            },
+            {
               "parameter": "amount",
-              "display_name": "Burn tokens"
+              "display_name": "Burn amount"
             },
             {
               "account": "account_to_burn_from",
@@ -1760,6 +1768,10 @@
               "display_name": "Freeze account"
             },
             {
+              "account": "token_mint",
+              "display_name": "Token"
+            },
+            {
               "account": "freeze_authority",
               "display_name": "Owner"
             }
@@ -1791,6 +1803,10 @@
             {
               "account": "account_to_freeze",
               "display_name": "Thaw account"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token"
             },
             {
               "account": "freeze_authority",
@@ -2429,8 +2445,12 @@
           ],
           "ui_properties": [
             {
+              "account": "mint",
+              "display_name": "Mint token"
+            },
+            {
               "parameter": "amount",
-              "display_name": "Mint tokens"
+              "display_name": "Mint amount"
             },
             {
               "account": "account_to_mint",
@@ -2473,8 +2493,12 @@
           ],
           "ui_properties": [
             {
+              "account": "token_mint",
+              "display_name": "Burn token"
+            },
+            {
               "parameter": "amount",
-              "display_name": "Burn tokens"
+              "display_name": "Burn amount"
             },
             {
               "account": "account_to_burn_from",
@@ -2551,6 +2575,10 @@
               "display_name": "Freeze account"
             },
             {
+              "account": "token_mint",
+              "display_name": "Token"
+            },
+            {
               "account": "freeze_authority",
               "display_name": "Owner"
             }
@@ -2582,6 +2610,10 @@
             {
               "account": "account_to_freeze",
               "display_name": "Thaw account"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "Token"
             },
             {
               "account": "freeze_authority",

@@ -3230,9 +3230,16 @@ def get_instruction(
                 ],
                 [
                     UIProperty(
+                        None,
+                        "mint",
+                        "Mint token",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
                         "amount",
                         None,
-                        "Mint tokens",
+                        "Mint amount",
                         False,
                         None,
                     ),
@@ -3292,9 +3299,16 @@ def get_instruction(
                 ],
                 [
                     UIProperty(
+                        None,
+                        "token_mint",
+                        "Burn token",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
                         "amount",
                         None,
-                        "Burn tokens",
+                        "Burn amount",
                         False,
                         None,
                     ),
@@ -3408,6 +3422,13 @@ def get_instruction(
                     ),
                     UIProperty(
                         None,
+                        "token_mint",
+                        "Token",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
                         "freeze_authority",
                         "Owner",
                         False,
@@ -3450,6 +3471,13 @@ def get_instruction(
                         None,
                         "account_to_freeze",
                         "Thaw account",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "token_mint",
+                        "Token",
                         False,
                         None,
                     ),
@@ -4382,9 +4410,16 @@ def get_instruction(
                 ],
                 [
                     UIProperty(
+                        None,
+                        "mint",
+                        "Mint token",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
                         "amount",
                         None,
-                        "Mint tokens",
+                        "Mint amount",
                         False,
                         None,
                     ),
@@ -4444,9 +4479,16 @@ def get_instruction(
                 ],
                 [
                     UIProperty(
+                        None,
+                        "token_mint",
+                        "Burn token",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
                         "amount",
                         None,
-                        "Burn tokens",
+                        "Burn amount",
                         False,
                         None,
                     ),
@@ -4560,6 +4602,13 @@ def get_instruction(
                     ),
                     UIProperty(
                         None,
+                        "token_mint",
+                        "Token",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
                         "freeze_authority",
                         "Owner",
                         False,
@@ -4602,6 +4651,13 @@ def get_instruction(
                         None,
                         "account_to_freeze",
                         "Thaw account",
+                        False,
+                        None,
+                    ),
+                    UIProperty(
+                        None,
+                        "token_mint",
+                        "Token",
                         False,
                         None,
                     ),
