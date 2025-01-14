@@ -80,6 +80,7 @@ class LayoutType(Enum):
     Bolt = auto()
     Caesar = auto()
     Delizia = auto()
+    Eckhart = auto()
 
     @classmethod
     def from_model(cls, model: models.TrezorModel) -> "LayoutType":
@@ -89,6 +90,8 @@ class LayoutType(Enum):
             return cls.Caesar
         if model in (models.T3T1,):
             return cls.Delizia
+        if model in (models.T3W1,):
+            return cls.Eckhart
         if model in (models.T1B1,):
             return cls.T1
         raise ValueError(f"Unknown model: {model}")
