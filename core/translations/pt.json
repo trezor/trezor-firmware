@@ -1,6 +1,6 @@
 {
   "fonts": {
-    "##Safe3": {
+    "Caesar": {
       "1_FONT_NORMAL": "font_pixeloperator_regular_8_pt.json",
       "2_FONT_BOLD": "font_pixeloperator_bold_8_pt.json",
       "3_FONT_MONO": "font_pixeloperatormono_regular_8_pt.json",
@@ -10,7 +10,7 @@
       "7_FONT_BOLD_UPPER": "font_pixeloperator_bold_8_upper_pt.json",
       "8_FONT_SUB": null
     },
-    "T2T1": {
+    "Bolt": {
       "1_FONT_NORMAL": "font_tthoves_regular_21_pt.json",
       "2_FONT_BOLD": null,
       "3_FONT_MONO": "font_robotomono_medium_20_pt.json",
@@ -20,7 +20,7 @@
       "7_FONT_BOLD_UPPER": "font_tthoves_bold_17_upper_pt.json",
       "8_FONT_SUB": null
     },
-    "T3T1": {
+    "Delizia": {
       "1_FONT_NORMAL": "font_ttsatoshi_demibold_21_pt.json",
       "2_FONT_BOLD": "font_ttsatoshi_demibold_21_pt.json",
       "3_FONT_MONO": "font_robotomono_medium_21_pt.json",
@@ -30,7 +30,7 @@
       "7_FONT_BOLD_UPPER": null,
       "8_FONT_SUB": "font_ttsatoshi_demibold_18_pt.json"
     },
-    "T3W1": {
+    "Eckhart": {
       "1_FONT_NORMAL": "font_ttsatoshi_demibold_21_pt.json",
       "2_FONT_BOLD": "font_ttsatoshi_demibold_21_pt.json",
       "3_FONT_MONO": "font_robotomono_medium_21_pt.json",

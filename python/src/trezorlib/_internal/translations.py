@@ -313,12 +313,12 @@ def blob_from_defs(
 
     translations = TranslatedStrings.from_items(translations_ordered)
 
-    if model.internal_name not in lang_data["fonts"]:
+    if layout_type.name not in lang_data["fonts"]:
         raise ValueError(
-            f"Model {model.internal_name} not found in header for {json_header['language']} v{json_header['version']}"
+            f"Model {layout_type.name} not found in header for {json_header['language']} v{json_header['version']}"
         )
 
-    model_fonts = lang_data["fonts"][model.internal_name]
+    model_fonts = lang_data["fonts"][layout_type.name]
     fonts = FontsTable.from_dir(model_fonts, fonts_dir)
 
     translations_bytes = translations.build()
