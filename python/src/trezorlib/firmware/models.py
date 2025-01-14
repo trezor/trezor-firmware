@@ -387,7 +387,7 @@ MODEL_CODE_ALIGNMENT_MAP = {
     Model.T2B1: 0x200,
     Model.T3T1: 0x200,
     Model.T3B1: 0x200,
-    Model.T3W1: 0x200,
+    Model.T3W1: 0x400,
     Model.D001: 0x200,
     Model.D002: 0x400,
 }
