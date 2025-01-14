@@ -377,7 +377,7 @@ class TR:
     homescreen__title_no_usb_connection: str = "No USB connection"
     homescreen__title_pin_not_set: str = "PIN not set"
     homescreen__title_seedless: str = "Seedless"
-    homescreen__title_set: str = "Change wallpaper"
+    homescreen__title_set: str = "Change wallpaper?"
     inputs__back: str = "BACK"
     inputs__cancel: str = "CANCEL"
     inputs__delete: str = "DELETE"

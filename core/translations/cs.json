@@ -421,7 +421,7 @@
     "homescreen__title_no_usb_connection": "Žádné připojení usb",
     "homescreen__title_pin_not_set": "Není nastaven PIN",
     "homescreen__title_seedless": "Bez seedu",
-    "homescreen__title_set": "Změnit domov. obr.?",
+    "homescreen__title_set": {"Bolt": "Změnit domov. obr.?", "Samson": "Změnit domov. obr.?", "Quicksilver": "Změnit domovskou obrazovku?", "LayoutTBD": "Změnit domovskou obrazovku?"},
     "inputs__back": "ZPĚT",
     "inputs__cancel": "ZRUŠIT",
     "inputs__delete": "ODSTRANIT",
