@@ -66,6 +66,10 @@ where
     pub fn inner_mut(&mut self) -> &mut T {
         &mut self.inner
     }
+
+    pub fn is_visible(&self) -> bool {
+        self.visible
+    }
 }
 
 impl<T> Component for Maybe<T>
