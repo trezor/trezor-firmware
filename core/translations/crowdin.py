@@ -1,55 +1,83 @@
-import subprocess
-import tempfile
+from __future__ import annotations
+
 from pathlib import Path
+import collections
 import json
-import sys
-import os
+
+import click
+
+from cli import TranslationsDir
+from trezorlib._internal import translations
+from trezorlib.debuglink import LayoutType
+
 
 HERE = Path(__file__).parent
 
+# staging directory for layout-specific translation JSON files
+CROWDIN_DIR = HERE / "crowdin"
 
-def download() -> None:
-    with tempfile.TemporaryDirectory() as temp_dir:
-        command = f"crowdin download --all --verbose --token $CROWDIN_TOKEN --base-path={temp_dir}"
-        print("command", command)
-
-        subprocess.run(command, shell=True, check=True)
-
-        for directory in Path(temp_dir).iterdir():
-            print("directory", directory)
-            lang_name = directory.name
-            en_file = directory / "en.json"
-            if not en_file.exists():
-                print("Skipping - no en.json inside", lang_name)
-                continue
-            print("Processing", lang_name)
-            data = json.loads(en_file.read_text())
-            lang_file = HERE / f"{lang_name}.json"
-            if not lang_file.exists():
-                print("Skipping - no lang_file on our side", lang_name)
-                continue
-            lang_file_data = json.loads(lang_file.read_text())
-            lang_file_data["translations"] = data["translations"]
-            lang_file.write_text(json.dumps(lang_file_data, indent=2, sort_keys=True, ensure_ascii=False)  + "\n")
-            print("Translations updated", lang_name)
+# layouts with translation support
+ALL_LAYOUTS = frozenset(LayoutType) - {LayoutType.T1}
 
 
-def upload() -> None:
-    command = "crowdin upload sources --token $CROWDIN_TOKEN"
-    print("command", command)
+@click.group()
+def cli() -> None:
+    pass
 
-    subprocess.run(command, shell=True, check=True)
+
+@cli.command()
+def split() -> None:
+    """Split translation files for Crowdin upload.
+
+    Create a separate JSON file for each language and layout.
+    """
+    tdir = TranslationsDir()
+
+    for lang in tdir.all_languages():
+        blob_json = tdir.load_lang(lang)
+        for layout_type in ALL_LAYOUTS:
+            # extract translations specific to this layout
+            layout_specific_translations = {
+                key: translations.get_translation(blob_json, key, layout_type)
+                for key in blob_json["translations"].keys()
+            }
+            # create a JSON file with only the "translations" item
+            result = {"translations": layout_specific_translations}
+            with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "w") as f:
+                json.dump(result, f, indent=2, ensure_ascii=False)
+
+    click.echo(f"Successfully generated layout-specific translation files in '{CROWDIN_DIR}'")
+
+
+@cli.command()
+def merge() -> None:
+    """Merge back translation files downloaded from Crowdin."""
+    tdir = TranslationsDir()
+
+    for lang in sorted(tdir.all_languages()):
+        merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(dict)
+        for layout_type in ALL_LAYOUTS:
+            with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "r") as f:
+                blob_json = json.load(f)
+
+            # mapping string name to its translation (for the current layout)
+            layout_specific_translations: dict[str, str] = blob_json["translations"]
+            for key, value in layout_specific_translations.items():
+                merged_translations[key][layout_type.name] = value
+
+        for key in merged_translations.keys():
+            # deduplicate entries if all translations are the same
+            unique_translations = set(merged_translations[key].values())
+            if len(unique_translations) == 1:
+                merged_translations[key] = unique_translations.pop()
+
+        blob_json = tdir.load_lang(lang)
+        blob_json["translations"] = merged_translations
+        tdir.save_lang(lang, blob_json)
+        click.echo(f"Updated {lang}")
+
+    click.echo(f"Successfully merged back layout-specific translation files from '{CROWDIN_DIR}'")
 
 
 if __name__ == "__main__":
-    if not os.environ.get("CROWDIN_TOKEN"):
-        print("CROWDIN_TOKEN env variable not set")
-        sys.exit(1)
-
-    if "download" in sys.argv:
-        download()
-    elif "upload" in sys.argv:
-        upload()
-    else:
-        print("Usage: python crowdin.py [download|upload]")
-        sys.exit(1)
+    cli()
