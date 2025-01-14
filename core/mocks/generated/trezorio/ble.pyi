@@ -9,7 +9,7 @@ def write(msg: bytes) -> int:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def read(buf: bytes, offset: int = 0) -> int
+def read(buf: bytearray, offset: int = 0) -> int:
     """
     Reads message using BLE (device).
     """
@@ -48,3 +48,7 @@ def disconnect() -> None:
     """
     Disconnect BLE
     """
+RX_PACKET_LEN: ClassVar[int]
+"""Length of one BLE RX packet."""
+TX_PACKET_LEN: ClassVar[int]
+"""Length of one BLE TX packet."""
