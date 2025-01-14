@@ -198,8 +198,11 @@ STATIC mp_obj_t mod_trezorio_HID_write_blocking(mp_obj_t self, mp_obj_t msg,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorio_HID_write_blocking_obj,
                                  mod_trezorio_HID_write_blocking);
 
-/// PACKET_LEN: ClassVar[int]
-/// """Length of one USB packet."""
+/// RX_PACKET_LEN: ClassVar[int]
+/// """Length of one USB RX packet."""
+
+/// TX_PACKET_LEN: ClassVar[int]
+/// """Length of one USB TX packet."""
 
 STATIC const mp_rom_map_elem_t mod_trezorio_HID_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_iface_num),
@@ -208,7 +211,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_HID_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_HID_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_write_blocking),
      MP_ROM_PTR(&mod_trezorio_HID_write_blocking_obj)},
-    {MP_ROM_QSTR(MP_QSTR_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
+    {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
+    {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_HID_locals_dict,
                             mod_trezorio_HID_locals_dict_table);

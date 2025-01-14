@@ -10,15 +10,19 @@ from trezor.wire.codec import codec_v1
 
 
 class MockHID:
+
+    TX_PACKET_LEN = 64
+    RX_PACKET_LEN = 64
+
     def __init__(self, num):
         self.num = num
         self.data = []
         self.packet = None
 
     def pad_packet(self, data):
-        if len(data) > 64:
+        if len(data) > self.RX_PACKET_LEN:
             raise Exception("Too long packet")
-        padding_length = 64 - len(data)
+        padding_length = self.RX_PACKET_LEN - len(data)
         return data + b"\x00" * padding_length
 
     def iface_num(self):
@@ -30,7 +34,7 @@ class MockHID:
 
     def mock_read(self, packet, gen):
         self.packet = self.pad_packet(packet)
-        return gen.send(64)
+        return gen.send(self.RX_PACKET_LEN)
 
     def read(self, buffer, offset=0):
         if self.packet is None:
@@ -56,7 +60,7 @@ class MockHID:
 
 MESSAGE_TYPE = 0x4242
 
-HEADER_PAYLOAD_LENGTH = codec_v1._REP_LEN - 3 - ustruct.calcsize(">HL")
+HEADER_PAYLOAD_LENGTH = MockHID.RX_PACKET_LEN - 3 - ustruct.calcsize(">HL")
 
 
 def make_header(mtype, length):
@@ -96,7 +100,9 @@ class TestWireCodecV1(unittest.TestCase):
         # other packets are "?" + 63 bytes of data
         packets = [header + message[:HEADER_PAYLOAD_LENGTH]] + [
             b"?" + chunk
-            for chunk in chunks(message[HEADER_PAYLOAD_LENGTH:], codec_v1._REP_LEN - 1)
+            for chunk in chunks(
+                message[HEADER_PAYLOAD_LENGTH:], MockHID.RX_PACKET_LEN - 1
+            )
         ]
 
         buffer = bytearray(256)
@@ -124,7 +130,7 @@ class TestWireCodecV1(unittest.TestCase):
 
         packet = header + message
         # make sure we fit into one packet, to make this easier
-        self.assertTrue(len(packet) <= codec_v1._REP_LEN)
+        self.assertTrue(len(packet) <= MockHID.RX_PACKET_LEN)
 
         buffer = bytearray(1)
         self.assertTrue(len(buffer) <= len(packet))
@@ -164,7 +170,9 @@ class TestWireCodecV1(unittest.TestCase):
         # other packets are "?" + 63 bytes of data
         packets = [header + message[:HEADER_PAYLOAD_LENGTH]] + [
             b"?" + chunk
-            for chunk in chunks(message[HEADER_PAYLOAD_LENGTH:], codec_v1._REP_LEN - 1)
+            for chunk in chunks(
+                message[HEADER_PAYLOAD_LENGTH:], MockHID.RX_PACKET_LEN - 1
+            )
         ]
 
         for _ in packets:

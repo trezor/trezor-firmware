@@ -191,8 +191,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
 #ifdef USE_BLE
       else if (iface == BLE_IFACE) {
         if (mode == POLL_READ) {
-          int len = ble_can_read();
-          if (len > 0) {
+          if (ble_can_read()) {
             ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
             ret->items[1] = MP_OBJ_NEW_SMALL_INT(BLE_RX_PACKET_SIZE);
             return mp_const_true;
