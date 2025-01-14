@@ -10,6 +10,7 @@ from pathlib import Path
 import click
 
 from trezorlib import cosi, models, merkle_tree
+from trezorlib.debuglink import LayoutType
 from trezorlib._internal import translations
 from trezorlib._internal.translations import VersionTuple
 
@@ -17,6 +18,12 @@ HERE = Path(__file__).parent.resolve()
 LOG = logging.getLogger(__name__)
 
 ALL_MODELS = {models.T2B1, models.T2T1, models.T3T1, models.T3B1, models.T3W1}
+ALL_LAYOUTS = {
+    LayoutType.Bolt,
+    LayoutType.Samson,
+    LayoutType.Quicksilver,
+    LayoutType.LayoutTBD,
+}
 
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
@@ -30,6 +37,9 @@ PUBLIC_KEYS_PROD = [
 
 VERSION_H = HERE.parent / "embed" / "projects" / "firmware" / "version.h"
 SIGNATURES_JSON = HERE / "signatures.json"
+
+# a staging directory for per-layout translation JSON files
+CROWDIN_DIR = HERE / "crowdin"
 
 
 class SignedInfo(t.TypedDict):
@@ -431,6 +441,38 @@ def lowercase(lang_file: Path) -> None:
     data["translations"] = new_translations
     with open(lang_file, "w") as fh:
         json.dump(data, fh, indent=2, ensure_ascii=False)
+
+
+@cli.group()
+def crowdin() -> None:
+    """Crowdin-related commands."""
+    pass
+
+
+@crowdin.command()
+def prepare() -> None:
+    """Prepare translations for upload to Crowdin.
+
+    Split each language file by layout name and write as separate files.
+    """
+    tdir = TranslationsDir()
+
+    for lang in tdir.all_languages():
+        # load translations' blob to be processed
+        blob_json = tdir.load_lang(lang)
+        for layout_type in ALL_LAYOUTS:
+            # extract specific strings for this layout
+            layout_specific_translations = {
+                key: translations.get_translation(blob_json, key, layout_type)
+                for key in blob_json["translations"].keys()
+            }
+            # keep only "translations" item for Crowdin upload
+            output_dict = {"translations": layout_specific_translations}
+            with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "w") as f:
+                json.dump(output_dict, f, indent=2, ensure_ascii=False)
+
+    click.echo(f"Generated per-layout translation files at {CROWDIN_DIR}")
+
 
 if __name__ == "__main__":
     cli()
