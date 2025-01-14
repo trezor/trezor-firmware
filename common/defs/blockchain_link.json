@@ -234,10 +234,10 @@
   "misc:SOL": {
     "type": "solana",
     "url": [
-      "https://solana1.trezor.io",
-      "https://solana2.trezor.io",
-      "https://solana3.trezor.io",
-      "https://solana4.trezor.io"
+      "https://sol1.trezor.io",
+      "https://sol2.trezor.io",
+      "https://sol3.trezor.io",
+      "https://sol4.trezor.io"
   ]
   },
   "misc:DSOL": {
