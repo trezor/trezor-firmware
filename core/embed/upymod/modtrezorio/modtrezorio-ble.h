@@ -90,7 +90,7 @@ STATIC mp_obj_t mod_trezorio_BLE_write(mp_obj_t msg) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_write_obj,
                                  mod_trezorio_BLE_write);
 
-/// def read(buf: bytes, offset: int = 0) -> int
+/// def read(buf: bytearray, offset: int = 0) -> int:
 ///     """
 ///     Reads message using BLE (device).
 ///     """
@@ -105,6 +105,10 @@ STATIC mp_obj_t mod_trezorio_BLE_read(size_t n_args, const mp_obj_t *args) {
 
   if (offset < 0) {
     mp_raise_ValueError("Negative offset not allowed");
+  }
+
+  if (offset > buf.len) {
+    mp_raise_ValueError("Offset out of bounds");
   }
 
   uint32_t buffer_space = buf.len - offset;
@@ -216,6 +220,12 @@ STATIC mp_obj_t mod_trezorio_BLE_peer_count(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_peer_count_obj,
                                  mod_trezorio_BLE_peer_count);
 
+/// RX_PACKET_LEN: int
+/// """Length of one BLE RX packet."""
+
+/// TX_PACKET_LEN: int
+/// """Length of one BLE TX packet."""
+
 STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ble)},
     // {MP_ROM_QSTR(MP_QSTR_update_init),
@@ -236,6 +246,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_BLE_disconnect_obj)},
     {MP_ROM_QSTR(MP_QSTR_peer_count),
      MP_ROM_PTR(&mod_trezorio_BLE_peer_count_obj)},
+    {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(BLE_RX_PACKET_SIZE)},
+    {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(BLE_TX_PACKET_SIZE)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_BLE_globals,
                             mod_trezorio_BLE_globals_table);

@@ -9,7 +9,7 @@ def write(msg: bytes) -> int:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def read(buf: bytes, offset: int = 0) -> int
+def read(buf: bytearray, offset: int = 0) -> int:
     """
     Reads message using BLE (device).
     """
@@ -55,3 +55,7 @@ def peer_count() -> int:
     """
     Get peer count (number of bonded devices)
     """
+RX_PACKET_LEN: int
+"""Length of one BLE RX packet."""
+TX_PACKET_LEN: int
+"""Length of one BLE TX packet."""
