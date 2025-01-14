@@ -79,6 +79,7 @@ class LayoutType(Enum):
     Bolt = auto()
     Samson = auto()
     Quicksilver = auto()
+    LayoutTBD = auto()
 
     @classmethod
     def from_model(cls, model: models.TrezorModel) -> "LayoutType":
@@ -88,6 +89,8 @@ class LayoutType(Enum):
             return cls.Samson
         if model in (models.T3T1,):
             return cls.Quicksilver
+        if model in (models.T3W1,):
+            return cls.LayoutTBD  # TODO: use correct layout for T3W1
         if model in (models.T1B1,):
             return cls.T1
         raise ValueError(f"Unknown model: {model}")
