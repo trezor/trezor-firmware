@@ -12,8 +12,8 @@ use crate::{
 };
 
 use super::{
-    super::theme::{self, HEADER_HEIGHT},
     button::{Button, ButtonMsg, ButtonStyleSheet},
+    theme,
 };
 
 const ANIMATION_TIME_MS: u32 = 1000;
@@ -61,10 +61,12 @@ impl AttachAnimation {
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
 
+/// Component for the header of a screen. Jeffersion UI shows the title (can be two lines), optional
+/// icon on the left, and optional button (typically for menu) on the right. Color is shared for
+/// title and icon.
 pub struct Header {
     area: Rect,
     title: Label<'static>,
-    subtitle: Option<Label<'static>>,
     button: Option<Button>,
     anim: Option<AttachAnimation>,
     icon: Option<Icon>,
@@ -74,11 +76,14 @@ pub struct Header {
 }
 
 impl Header {
-    pub const fn new(alignment: Alignment, title: TString<'static>) -> Self {
+    pub const HEADER_HEIGHT: i16 = 96; // [px]
+    pub const HEADER_BUTTON_WIDTH: i16 = 80; // [px]
+
+    pub const fn new(title: TString<'static>) -> Self {
         Self {
             area: Rect::zero(),
-            title: Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
-            subtitle: None,
+            title: Label::new(title, Alignment::Start, theme::label_title_main())
+                .vertically_centered(),
             button: None,
             anim: None,
             icon: None,
@@ -89,52 +94,10 @@ impl Header {
     }
 
     #[inline(never)]
-    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
-        let style = theme::TEXT_SUB_GREY;
-        self.title = self.title.top_aligned();
-        self.subtitle = Some(Label::new(subtitle, self.title.alignment(), style));
-        self
-    }
-
-    #[inline(never)]
-    pub fn styled(mut self, style: TextStyle) -> Self {
+    pub fn with_text_style(mut self, style: TextStyle) -> Self {
         self.title_style = style;
         self.title = self.title.styled(style);
         self
-    }
-
-    #[inline(never)]
-    pub fn subtitle_styled(mut self, style: TextStyle) -> Self {
-        if let Some(subtitle) = self.subtitle.take() {
-            self.subtitle = Some(subtitle.styled(style))
-        }
-        self
-    }
-
-    #[inline(never)]
-    pub fn update_title(&mut self, ctx: &mut EventCtx, title: TString<'static>) {
-        self.title.set_text(title);
-        ctx.request_paint();
-    }
-
-    #[inline(never)]
-    pub fn update_subtitle(
-        &mut self,
-        ctx: &mut EventCtx,
-        new_subtitle: TString<'static>,
-        new_style: Option<TextStyle>,
-    ) {
-        let style = new_style.unwrap_or(theme::TEXT_SUB_GREY);
-        match &mut self.subtitle {
-            Some(subtitle) => {
-                subtitle.set_style(style);
-                subtitle.set_text(new_subtitle);
-            }
-            None => {
-                self.subtitle = Some(Label::new(new_subtitle, self.title.alignment(), style));
-            }
-        }
-        ctx.request_paint();
     }
 
     #[inline(never)]
@@ -151,7 +114,7 @@ impl Header {
     }
 
     #[inline(never)]
-    pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
+    pub fn with_button_style(mut self, style: ButtonStyleSheet) -> Self {
         if self.button.is_some() {
             self.button = Some(self.button.unwrap().styled(style));
         }
@@ -165,7 +128,13 @@ impl Header {
         self.color = Some(color);
         let mut title_style = self.title_style;
         title_style.text_color = color;
-        self.styled(title_style)
+        self.with_text_style(title_style)
+    }
+
+    #[inline(never)]
+    pub fn update_title(&mut self, ctx: &mut EventCtx, title: TString<'static>) {
+        self.title.set_text(title);
+        ctx.request_paint();
     }
 }
 
@@ -173,29 +142,22 @@ impl Component for Header {
     type Msg = FlowMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let header_area = if let Some(b) = &mut self.button {
-            let (rest, button_area) = bounds.split_right(HEADER_HEIGHT);
+        debug_assert_eq!(bounds.height(), Self::HEADER_HEIGHT);
+        let title_area = if let Some(b) = &mut self.button {
+            let (rest, button_area) = bounds.split_right(Self::HEADER_BUTTON_WIDTH);
             b.place(button_area);
             rest
         } else {
             bounds
         };
 
-        if self.subtitle.is_some() {
-            let title_area = self.title.place(header_area);
-            let remaining = header_area.inset(Insets::top(title_area.height()));
-            let _subtitle_area = self.subtitle.place(remaining);
-        } else {
-            self.title.place(header_area);
-        }
-
+        self.title.place(title_area);
         self.area = bounds;
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.title.event(ctx, event);
-        self.subtitle.event(ctx, event);
 
         if let Some(anim) = &mut self.anim {
             if let Event::Attach(_) = event {
@@ -239,7 +201,6 @@ impl Component for Header {
 
         target.with_origin(offset, &|target| {
             self.title.render(target);
-            self.subtitle.render(target);
         });
     }
 }
@@ -249,10 +210,6 @@ impl crate::trace::Trace for Header {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Header");
         t.child("title", &self.title);
-        if let Some(subtitle) = &self.subtitle {
-            t.child("subtitle", subtitle);
-        }
-
         if let Some(button) = &self.button {
             t.child("button", button);
         }

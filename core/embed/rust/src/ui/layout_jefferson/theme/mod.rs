@@ -90,6 +90,10 @@ include_icon!(ICON_WARNING40, "layout_jefferson/res/warning40.toif");
 // TODO: text styles
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 
+pub const fn label_title_main() -> TextStyle {
+    TEXT_NORMAL
+}
+
 // TODO: button styles
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {

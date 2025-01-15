@@ -22,7 +22,7 @@ use crate::{
         component::Label,
         constant::screen,
         geometry::{Alignment, Point},
-        layout_quicksilver::theme::TITLE_HEIGHT,
+        layout_quicksilver::theme::HEADER_HEIGHT,
     },
 };
 use pareen;
@@ -208,7 +208,7 @@ impl Component for HoldToConfirm {
             Offset::uniform(80),
             Alignment2D::CENTER,
         ));
-        self.title.place(screen().split_top(TITLE_HEIGHT).0);
+        self.title.place(screen().split_top(HEADER_HEIGHT).0);
         bounds
     }
 
