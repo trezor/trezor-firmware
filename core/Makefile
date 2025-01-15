@@ -53,6 +53,10 @@ OPENOCD_TRANSPORT ?= hla_swd
 # Include the device-specific definitions.
 include embed/models/$(TREZOR_MODEL)/config.mk
 
+# Get bindgen macros for rust tests
+TEST_BINDGEN_MACROS := $(shell tr -d '\n' < embed/models/$(TREZOR_MODEL)/test_bindgen_macros.txt)
+export TEST_BINDGEN_MACROS
+
 
 FLASH_START		         = $(shell layout_parser ${TREZOR_MODEL} FLASH_START)
 BOARDLOADER_START        = $(shell layout_parser ${TREZOR_MODEL} BOARDLOADER_START)
