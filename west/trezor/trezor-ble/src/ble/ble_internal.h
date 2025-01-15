@@ -106,7 +106,7 @@ bool bonds_erase_current(void);
 // Initialization
 void advertising_init(void);
 // Start advertising, with or without whitelist
-void advertising_start(bool wl);
+void advertising_start(bool wl, uint8_t color, char*name, int name_len);
 // Stop advertising
 void advertising_stop(void);
 // Check if advertising is active

@@ -106,7 +106,12 @@ static void process_command(uint8_t *data, uint16_t len) {
       management_send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_ON:
-      advertising_start(data[1] != 0);
+      {
+        uint8_t color = data[2];
+        char * name = &data[3];
+        int name_len = strnlen(name, 20);
+        advertising_start(data[1] != 0, color, name, name_len);
+      }
       break;
     case INTERNAL_CMD_ADVERTISING_OFF:
       advertising_stop();
