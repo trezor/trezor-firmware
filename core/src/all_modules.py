@@ -373,6 +373,8 @@ apps.management.ble.disconnect
 import apps.management.ble.disconnect
 apps.management.ble.erase_bonds
 import apps.management.ble.erase_bonds
+apps.management.ble.unpair
+import apps.management.ble.unpair
 apps.management.change_language
 import apps.management.change_language
 apps.management.change_pin

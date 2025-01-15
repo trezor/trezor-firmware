@@ -62,8 +62,15 @@ void management_send_status_event(void) {
 
 void management_send_success_event(void) {
   uint8_t tx_data[] = {
-      INTERNAL_EVENT_SUCCESS,
-  };
+    INTERNAL_EVENT_SUCCESS,
+};
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
+}
+
+void management_send_failure_event(void) {
+  uint8_t tx_data[] = {
+    INTERNAL_EVENT_FAILURE,
+};
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
@@ -91,8 +98,11 @@ void management_send_pairing_request_event(uint8_t *data, uint16_t len) {
 
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
+  bool success = true;
+  bool send_respons = true;
   switch (cmd) {
     case INTERNAL_CMD_SEND_STATE:
+      send_respons = false;
       management_send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_ON:
@@ -103,24 +113,31 @@ static void process_command(uint8_t *data, uint16_t len) {
       break;
     case INTERNAL_CMD_ERASE_BONDS:
       bonds_erase_all();
-      management_send_success_event();
       break;
     case INTERNAL_CMD_DISCONNECT:
       connection_disconnect();
-      management_send_success_event();
     case INTERNAL_CMD_ACK:
       // pb_msg_ack();
       break;
     case INTERNAL_CMD_ALLOW_PAIRING:
       pairing_num_comp_reply(true);
-      management_send_success_event();
-      break;
+    break;
     case INTERNAL_CMD_REJECT_PAIRING:
       pairing_num_comp_reply(false);
-      management_send_success_event();
-      break;
+    break;
+    case INTERNAL_CMD_UNPAIR:
+      success = bonds_erase_current();
+    break;
     default:
       break;
+  }
+
+  if (send_respons) {
+    if (success) {
+      management_send_success_event();
+    } else {
+      management_send_failure_event();
+    }
   }
 }
 

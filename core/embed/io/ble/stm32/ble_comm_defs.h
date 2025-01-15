@@ -55,5 +55,6 @@ typedef enum {
   INTERNAL_CMD_ACK = 0x05,
   INTERNAL_CMD_ALLOW_PAIRING = 0x06,
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
+  INTERNAL_CMD_UNPAIR = 0x08,
 } internal_cmd_t;
 #endif
