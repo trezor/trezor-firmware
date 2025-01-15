@@ -307,7 +307,7 @@ impl Component for Homescreen {
         if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
             #[cfg(feature = "rgb_led")]
             set_color(0xff);
-            pairing_mode();
+            self.label.map(|t| pairing_mode(t));
             None
             //Some(HomescreenMsg::Dismissed)
         } else {
