@@ -55,55 +55,19 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_BLE",
 ];
 
-#[cfg(feature = "layout_bolt")]
-const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
-    "-DSTM32F427",
-    "-DTREZOR_MODEL_T2T1",
-    "-DFLASH_BIT_ACCESS=1",
-    "-DFLASH_BLOCK_WORDS=1",
-    "-DDISPLAY_RESX=240",
-    "-DDISPLAY_RESY=240",
-    "-DTREZOR_BOARD=\"T2T1/boards/t2t1-unix.h\"",
-];
-#[cfg(not(feature = "layout_bolt"))]
-const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[];
-
-#[cfg(feature = "layout_caesar")]
-const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
-    "-DSTM32F427",
-    "-DTREZOR_MODEL_T2B1",
-    "-DFLASH_BIT_ACCESS=1",
-    "-DFLASH_BLOCK_WORDS=1",
-    "-DDISPLAY_RESX=128",
-    "-DDISPLAY_RESY=64",
-    "-DTREZOR_BOARD=\"T2B1/boards/t2b1-unix.h\"",
-];
-#[cfg(not(feature = "layout_caesar"))]
-const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[];
-
-#[cfg(feature = "layout_delizia")]
-const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[
-    "-DSTM32U5",
-    "-DTREZOR_MODEL_T3T1",
-    "-DFLASH_BIT_ACCESS=0",
-    "-DFLASH_BLOCK_WORDS=4",
-    "-DDISPLAY_RESX=240",
-    "-DDISPLAY_RESY=240",
-    "-DTREZOR_BOARD=\"T3T1/boards/t3t1-unix.h\"",
-];
-#[cfg(not(feature = "layout_delizia"))]
-const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[];
-
-fn add_bindgen_macros<'a>(clang_args: &mut Vec<&'a str>, envvar: Option<&'a str>) {
-    let default_macros = DEFAULT_BINDGEN_MACROS_COMMON
-        .iter()
-        .chain(DEFAULT_BINDGEN_MACROS_T2T1)
-        .chain(DEFAULT_BINDGEN_MACROS_T2B1)
-        .chain(DEFAULT_BINDGEN_MACROS_T3T1);
-
+fn add_bindgen_macros<'a>(
+    clang_args: &mut Vec<&'a str>,
+    envvar: Option<&'a str>,
+    test_envvar: Option<&'a str>,
+) {
     match envvar {
         Some(envvar) => clang_args.extend(envvar.split(',')),
-        None => clang_args.extend(default_macros),
+        None => {
+            println!("{}", test_envvar.unwrap());
+            let test_macros_env = test_envvar.unwrap().split(',');
+            clang_args.extend(DEFAULT_BINDGEN_MACROS_COMMON.iter());
+            clang_args.extend(test_macros_env);
+        }
     }
 }
 
@@ -156,7 +120,12 @@ fn prepare_bindings() -> bindgen::Builder {
     let mut clang_args: Vec<&str> = Vec::new();
 
     let bindgen_macros_env = env::var("BINDGEN_MACROS").ok();
-    add_bindgen_macros(&mut clang_args, bindgen_macros_env.as_deref());
+    let test_macros_env = env::var("TEST_BINDGEN_MACROS").ok();
+    add_bindgen_macros(
+        &mut clang_args,
+        bindgen_macros_env.as_deref(),
+        test_macros_env.as_deref(),
+    );
 
     #[cfg(feature = "framebuffer")]
     {
