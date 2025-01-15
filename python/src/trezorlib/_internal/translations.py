@@ -40,7 +40,7 @@ class JsonHeader(TypedDict):
 
 class JsonDef(TypedDict):
     header: JsonHeader
-    translations: dict[str, str]
+    translations: dict[str, str | dict[str, str]]
     fonts: dict[str, JsonFontInfo]
 
 
