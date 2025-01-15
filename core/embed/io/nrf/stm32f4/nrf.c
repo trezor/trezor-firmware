@@ -85,7 +85,7 @@ typedef struct {
 
 } nrf_driver_t;
 
-__attribute__((section(".buf")))  static nrf_driver_t g_nrf_driver = {0};
+__attribute__((section(".buf"))) static nrf_driver_t g_nrf_driver = {0};
 
 static void nrf_start(void) {
   nrf_driver_t *drv = &g_nrf_driver;
@@ -718,12 +718,20 @@ void nrf_signal_off(void) {
 }
 
 bool nrf_firmware_running(void) {
-  return true;
-  //return HAL_GPIO_ReadPin(NRF_IN_FW_RUNNING_PORT, NRF_IN_FW_RUNNING_PIN) != 0;
+  return HAL_GPIO_ReadPin(NRF_IN_FW_RUNNING_PORT, NRF_IN_FW_RUNNING_PIN) != 0;
 }
 
 bool nrf_is_running(void) {
-  return true;
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  if (!nrf_firmware_running()) {
+    return false;
+  }
+
+  return drv->comm_running;
 }
 
 void nrf_set_dfu_mode(void) {
