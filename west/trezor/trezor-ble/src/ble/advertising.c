@@ -37,10 +37,7 @@ bool advertising_wl = false;
 
 uint8_t manufacturer_data[8] = {0xff, 0xff, 0, 0, 'T', '3', 'W', '1'};
 
-static const struct bt_data advertising_data[] = {
-    BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-    BT_DATA(BT_DATA_NAME_COMPLETE, DEVICE_NAME, DEVICE_NAME_LEN),
-};
+static struct bt_data advertising_data[2];
 
 static const struct bt_data scan_response_data[] = {
     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_TRZ_VAL),
@@ -64,22 +61,29 @@ void advertising_setup_wl(void) {
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
 }
 
-void advertising_start(bool wl) {
+void advertising_start(bool wl, uint8_t color, char *name, int name_len) {
   if (advertising) {
-    if (wl != advertising_wl) {
-      LOG_WRN("Restarting advertising");
-      bt_le_adv_stop();
-    } else {
-      LOG_WRN("Already advertising");
-
-      management_send_status_event();
-      return;
-    }
+    LOG_WRN("Restarting advertising");
+    bt_le_adv_stop();
   }
-
   int err;
 
-  manufacturer_data[3] = 0x03;  // todo color
+  manufacturer_data[3] = color;
+
+  advertising_data[0].type = BT_DATA_FLAGS;
+  advertising_data[0].data_len = 1;
+  static const uint8_t flags = (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR);
+  advertising_data[0].data = &flags;
+
+  /* Fill second element for the name */
+  advertising_data[1].type = BT_DATA_NAME_COMPLETE;
+  advertising_data[1].data_len = name_len;
+  advertising_data[1].data = (const uint8_t *)name;
+
+  char gap_name[21] = {0};
+  memcpy(gap_name, name, name_len);
+
+  bt_set_name(gap_name);
 
   if (wl) {
     advertising_setup_wl();
