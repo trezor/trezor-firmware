@@ -105,6 +105,10 @@ pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     GREY_EXTRA_LIGHT,
 );
 
+pub const fn label_title_main() -> TextStyle {
+    TEXT_NORMAL
+}
+
 // TODO: button styles
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {

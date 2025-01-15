@@ -783,7 +783,7 @@ pub const TEXT_CHECKLIST_DONE: TextStyle = TextStyle::new(Font::SUB, GREY, BG, G
 /// the header. [px]
 pub const SPACING: i16 = 2;
 
-pub const TITLE_HEIGHT: i16 = 42;
+pub const HEADER_HEIGHT: i16 = 42;
 pub const CONTENT_BORDER: i16 = 0;
 pub const BUTTON_HEIGHT: i16 = 62;
 pub const BUTTON_WIDTH: i16 = 78;
