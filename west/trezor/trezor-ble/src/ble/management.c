@@ -62,15 +62,15 @@ void management_send_status_event(void) {
 
 void management_send_success_event(void) {
   uint8_t tx_data[] = {
-    INTERNAL_EVENT_SUCCESS,
-};
+      INTERNAL_EVENT_SUCCESS,
+  };
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
 void management_send_failure_event(void) {
   uint8_t tx_data[] = {
-    INTERNAL_EVENT_FAILURE,
-};
+      INTERNAL_EVENT_FAILURE,
+  };
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
@@ -105,9 +105,12 @@ static void process_command(uint8_t *data, uint16_t len) {
       send_respons = false;
       management_send_status_event();
       break;
-    case INTERNAL_CMD_ADVERTISING_ON:
-      advertising_start(data[1] != 0);
-      break;
+    case INTERNAL_CMD_ADVERTISING_ON: {
+      uint8_t color = data[2];
+      char *name = &data[3];
+      int name_len = strnlen(name, 20);
+      advertising_start(data[1] != 0, color, name, name_len);
+    } break;
     case INTERNAL_CMD_ADVERTISING_OFF:
       advertising_stop();
       break;
@@ -121,13 +124,13 @@ static void process_command(uint8_t *data, uint16_t len) {
       break;
     case INTERNAL_CMD_ALLOW_PAIRING:
       pairing_num_comp_reply(true);
-    break;
+      break;
     case INTERNAL_CMD_REJECT_PAIRING:
       pairing_num_comp_reply(false);
-    break;
+      break;
     case INTERNAL_CMD_UNPAIR:
       success = bonds_erase_current();
-    break;
+      break;
     default:
       break;
   }

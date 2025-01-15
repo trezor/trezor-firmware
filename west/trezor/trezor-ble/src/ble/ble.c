@@ -73,8 +73,6 @@ bool ble_init(void) {
     return 0;
   }
 
-  bt_set_name("TrezorGAP");
-
   advertising_init();
   management_init();
 
