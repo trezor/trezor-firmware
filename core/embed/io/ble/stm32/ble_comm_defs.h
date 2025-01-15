@@ -17,10 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_BLE_COMM_DEFS_H_
-#define TREZORHAL_BLE_COMM_DEFS_H_
+#pragma once
 
 #include <trezor_types.h>
+
+#include <io/ble.h>
 
 typedef struct {
   uint8_t msg_id;
@@ -56,4 +57,10 @@ typedef enum {
   INTERNAL_CMD_ALLOW_PAIRING = 0x06,
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
 } internal_cmd_t;
-#endif
+
+typedef struct {
+  uint8_t cmd_id;
+  uint8_t whitelist;
+  uint8_t color;
+  uint8_t name[BLE_ADV_NAME_LEN];
+} cmd_advertising_on_t;
