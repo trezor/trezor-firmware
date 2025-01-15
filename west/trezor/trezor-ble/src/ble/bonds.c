@@ -73,7 +73,7 @@ bool bonds_erase_current(void) {
     return false;
   }
 
-  err = bt_unpair(BT_ID_DEFAULT, &info.le.dst);
+  err = bt_unpair(BT_ID_DEFAULT, info.le.dst);
 
   return err == 0;
 }
