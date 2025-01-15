@@ -179,9 +179,11 @@ where
                         // Clicked BACK. Scroll up.
                         self.go_to_previous_page();
                         self.change_page(ctx);
-                    } else {
+                    } else if self.cancel_btn_details.is_some() {
                         // Clicked CANCEL. Send result.
                         return Some(PageMsg::Cancelled);
+                    } else {
+                        return None;
                     }
                 }
                 ButtonPos::Right => {

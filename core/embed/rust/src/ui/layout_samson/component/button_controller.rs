@@ -489,7 +489,11 @@ impl Component for ButtonController {
                             } else {
                                 (
                                     ButtonState::OneReleased(b),
-                                    Some(ButtonControllerMsg::Triggered(b.into(), false)),
+                                    match b {
+                                        PhysicalButton::Left => self.left_btn.maybe_trigger(ctx),
+                                        PhysicalButton::Right => self.right_btn.maybe_trigger(ctx),
+                                        _ => None,
+                                    },
                                 )
                             }
                         }
