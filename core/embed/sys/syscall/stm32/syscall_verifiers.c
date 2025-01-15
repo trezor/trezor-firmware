@@ -718,6 +718,18 @@ access_violation:
 // ---------------------------------------------------------------------
 
 #ifdef USE_BLE
+bool ble_issue_command__verified(ble_command_t * command) {
+  if (!probe_read_access(command, sizeof(*command))) {
+    goto access_violation;
+  }
+
+  return ble_issue_command(command);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
 void ble_get_state__verified(ble_state_t *state) {
   if (!probe_write_access(state, sizeof(*state))) {
     goto access_violation;

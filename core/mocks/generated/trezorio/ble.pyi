@@ -37,7 +37,7 @@ def start_comm() -> None:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def start_advertising(whitelist: bool) -> None:
+def start_advertising(whitelist: bool, name: str | None) -> None:
     """
     Start advertising
     """
@@ -54,6 +54,13 @@ def stop_advertising(whitelist: bool) -> None:
 def disconnect() -> None:
     """
     Disconnect BLE
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+def peer_count() -> int:
+    """
+    Get peer count (number of bonded devices)
     """
 RX_PACKET_LEN: ClassVar[int]
 """Length of one BLE RX packet."""

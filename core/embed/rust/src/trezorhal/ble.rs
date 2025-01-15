@@ -15,20 +15,52 @@ pub fn connected() -> bool {
     }
 }
 
-pub fn pairing_mode() {
+pub fn pairing_mode(name: &str) {
     unsafe {
-        ffi::ble_issue_command(ffi::ble_command_t_BLE_PAIRING_MODE);
+        let mut cmd = ffi::ble_command_t {
+            cmd_type: ffi::ble_command_type_t_BLE_PAIRING_MODE,
+            connection_id: 0,
+            data_len: 0,
+            data: ffi::ble_command_data_t {
+                raw: [0; 32],
+            },
+        };
+
+        let bytes = name.as_bytes();
+
+        // Determine how many bytes we can copy (min of buffer size and string length).
+        let len = bytes.len().min(cmd.data.name.len());
+
+        cmd.data.name[..len].copy_from_slice(&bytes[..len]);
+
+        ffi::ble_issue_command(&mut cmd as _);
     }
 }
 
 pub fn allow_pairing() {
     unsafe {
-        ffi::ble_issue_command(ffi::ble_command_t_BLE_ALLOW_PAIRING);
+        let mut cmd = ffi::ble_command_t {
+            cmd_type: ffi::ble_command_type_t_BLE_ALLOW_PAIRING,
+            connection_id: 0,
+            data_len: 0,
+            data: ffi::ble_command_data_t {
+                raw: [0; 32],
+            },
+        };
+        ffi::ble_issue_command(&mut cmd as _);
     }
 }
 
 pub fn reject_pairing() {
     unsafe {
-        ffi::ble_issue_command(ffi::ble_command_t_BLE_REJECT_PAIRING);
+        let mut cmd = ffi::ble_command_t {
+            cmd_type: ffi::ble_command_type_t_BLE_REJECT_PAIRING,
+            connection_id: 0,
+            data_len: 0,
+            data: ffi::ble_command_data_t {
+                raw: [0; 32],
+            },
+        };
+        ffi::ble_issue_command(&mut cmd as _);
     }
 }

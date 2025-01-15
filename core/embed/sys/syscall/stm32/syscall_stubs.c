@@ -655,7 +655,7 @@ secbool firmware_calc_hash(const uint8_t *challenge, size_t challenge_len,
 
 void ble_start(void) { syscall_invoke0(SYSCALL_BLE_START); }
 
-bool ble_issue_command(ble_command_t command) {
+bool ble_issue_command(ble_command_t * command) {
   return (bool)syscall_invoke1((uint32_t)command, SYSCALL_BLE_ISSUE_COMMAND);
 }
 

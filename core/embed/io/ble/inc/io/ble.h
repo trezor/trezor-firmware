@@ -29,6 +29,8 @@
 #define BLE_RX_PACKET_SIZE 244
 #define BLE_TX_PACKET_SIZE 64
 
+#define BLE_ADV_NAME_LEN 20
+
 typedef enum {
   BLE_SWITCH_OFF = 0,      // Turn off BLE advertising, disconnect
   BLE_SWITCH_ON = 1,       // Turn on BLE advertising
@@ -38,6 +40,19 @@ typedef enum {
   BLE_ALLOW_PAIRING = 5,   // Accept pairing request
   BLE_REJECT_PAIRING = 6,  // Reject pairing request
   BLE_UNPAIR = 7,          // Erase bond for currently connected device
+}ble_command_type_t;
+
+typedef union {
+  uint8_t raw[32];
+  char name[BLE_ADV_NAME_LEN];
+
+}ble_command_data_t;
+
+typedef struct {
+  ble_command_type_t cmd_type;
+  int connection_id;
+  uint8_t data_len;
+  ble_command_data_t data;
 } ble_command_t;
 
 typedef enum {
@@ -92,7 +107,7 @@ void ble_stop(void);
 // Sends a specific command to the BLE module for execution.
 //
 // Returns `true` if the command was successfully issued.
-bool ble_issue_command(ble_command_t command);
+bool ble_issue_command(ble_command_t * command);
 
 // Reads an event from the BLE module
 //
