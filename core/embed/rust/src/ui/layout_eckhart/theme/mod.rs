@@ -136,7 +136,11 @@ pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     GREY_EXTRA_LIGHT,
 );
 
-// TODO: button styles
+pub const fn label_title_main() -> TextStyle {
+    TEXT_SMALL
+}
+
+// Button styles
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
@@ -164,6 +168,33 @@ pub const fn button_default() -> ButtonStyleSheet {
 }
 
 
+pub const fn button_header() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREY_LIGHT,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_LIGHT,
+            background_color: BG,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: BG,
+            icon_color: GREY_LIGHT,
+            background_color: BG,
+        },
+    }
+}
+
+// Result  constants
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
 pub const RESULT_FOOTER_HEIGHT: i16 = 62;
