@@ -137,3 +137,20 @@ def erase_bonds(
     except exceptions.TrezorException as e:
         click.echo(f"Erase bonds failed: {e}")
         sys.exit(3)
+
+
+@cli.command()
+@with_client
+def unpair(
+    client: "TrezorClient",
+) -> None:
+    """Erase bond of currently connected device. (on device side)"""
+
+    try:
+        ble.unpair(client)
+        click.echo("Unpair successful.")
+    except exceptions.Cancelled:
+        click.echo("Unapair aborted on device.")
+    except exceptions.TrezorException as e:
+        click.echo(f"Unpair failed: {e}")
+        sys.exit(3)

@@ -23,6 +23,13 @@ def erase_bonds() -> bool:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
+def unpair() -> None:
+    """
+    Erases bond for current connection, if any
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
 def start_comm() -> bool:
     """
     Start communication with BLE chip

@@ -81,6 +81,8 @@ def _find_message_handler_module(msg_type: int) -> str:
             return "apps.management.ble.erase_bonds"
         if msg_type == MessageType.Disconnect:
             return "apps.management.ble.disconnect"
+        if msg_type == MessageType.Unpair:
+            return "apps.management.ble.unpair"
 
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:

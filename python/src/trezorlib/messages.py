@@ -192,6 +192,7 @@ class MessageType(IntEnum):
     UploadBLEFirmwareChunk = 8002
     EraseBonds = 8006
     Disconnect = 8007
+    Unpair = 8008
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -2256,6 +2257,10 @@ class UploadBLEFirmwareChunk(protobuf.MessageType):
 
 class EraseBonds(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 8006
+
+
+class Unpair(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8008
 
 
 class Disconnect(protobuf.MessageType):

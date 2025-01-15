@@ -111,6 +111,13 @@ static bool ble_send_erase_bonds(ble_driver_t *drv) {
          0;
 }
 
+static bool ble_send_unpair(ble_driver_t *drv) {
+  (void)drv;
+  uint8_t cmd = INTERNAL_CMD_UNPAIR;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
+         0;
+}
+
 static bool ble_send_disconnect(ble_driver_t *drv) {
   (void)drv;
   uint8_t cmd = INTERNAL_CMD_DISCONNECT;
@@ -540,10 +547,13 @@ bool ble_issue_command(ble_command_t *command) {
       break;
     case BLE_ALLOW_PAIRING:
       result = ble_send_pairing_accept(drv);
-      break;
+    break;
     case BLE_REJECT_PAIRING:
       result = ble_send_pairing_reject(drv);
-      break;
+    break;
+    case BLE_UNPAIR:
+      result = ble_send_unpair(drv);
+    break;
     default:
       break;
   }
