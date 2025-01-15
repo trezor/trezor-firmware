@@ -528,7 +528,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     fido__title_u2f_auth = 314,  // "U2F authenticate"
     #[cfg(feature = "universal_fw")]
-    fido__title_u2f_register = 315,  // {"Bolt": "U2F register", "Samson": "U2F register", "Quicksilver": "U2F register"}
+    fido__title_u2f_register = 315,  // {"Bolt": "U2F register", "Quicksilver": "U2F register", "Samson": "U2F register"}
     #[cfg(feature = "universal_fw")]
     fido__title_verify_user = 316,  // "FIDO2 verify user"
     #[cfg(feature = "universal_fw")]
@@ -546,7 +546,7 @@ pub enum TranslatedString {
     homescreen__title_no_usb_connection = 327,  // "No USB connection"
     homescreen__title_pin_not_set = 328,  // "PIN not set"
     homescreen__title_seedless = 329,  // "Seedless"
-    homescreen__title_set = 330,  // {"Bolt": "Change wallpaper?", "Samson": "Change wallpaper?", "Quicksilver": "Change wallpaper?"}
+    homescreen__title_set = 330,  // {"Bolt": "Change wallpaper?", "Quicksilver": "Change wallpaper?", "Samson": "Change wallpaper?"}
     inputs__back = 331,  // "BACK"
     inputs__cancel = 332,  // "CANCEL"
     inputs__delete = 333,  // "DELETE"
@@ -1909,10 +1909,10 @@ impl TranslatedString {
             #[cfg(feature = "layout_bolt")]
             Self::fido__title_u2f_register => "U2F register",
             #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_samson")]
+            #[cfg(feature = "layout_quicksilver")]
             Self::fido__title_u2f_register => "U2F register",
             #[cfg(feature = "universal_fw")]
-            #[cfg(feature = "layout_quicksilver")]
+            #[cfg(feature = "layout_samson")]
             Self::fido__title_u2f_register => "U2F register",
             #[cfg(feature = "universal_fw")]
             Self::fido__title_verify_user => "FIDO2 verify user",
@@ -1933,9 +1933,9 @@ impl TranslatedString {
             Self::homescreen__title_seedless => "Seedless",
             #[cfg(feature = "layout_bolt")]
             Self::homescreen__title_set => "Change wallpaper?",
-            #[cfg(feature = "layout_samson")]
-            Self::homescreen__title_set => "Change wallpaper?",
             #[cfg(feature = "layout_quicksilver")]
+            Self::homescreen__title_set => "Change wallpaper?",
+            #[cfg(feature = "layout_samson")]
             Self::homescreen__title_set => "Change wallpaper?",
             Self::inputs__back => "BACK",
             Self::inputs__cancel => "CANCEL",
