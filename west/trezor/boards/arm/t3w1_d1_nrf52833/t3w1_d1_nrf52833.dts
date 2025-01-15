@@ -31,13 +31,13 @@
 			gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
 			label = "Green LED 0";
 		};
-		led1: led_1 {
-			gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
-			label = "Green LED 1";
-		};
 		out0: out_0 {
 			gpios = <&gpio0 29 GPIO_ACTIVE_HIGH>;
 			label = "FW Running";
+		};
+		led1: led_1 {
+			gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
+			label = "Green LED 1";
 		};
 	};
 
