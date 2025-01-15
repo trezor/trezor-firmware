@@ -28,7 +28,9 @@ def configure_board(
     module = revision_map.get(revision)
 
     if module:
-        return module.configure(env, features_wanted, defines, sources, paths)
+        features = module.configure(env, features_wanted, defines, sources, paths)
+        features.append("model_t3b1")
+        return features
 
     raise Exception("Unknown T3B1 revision")
 

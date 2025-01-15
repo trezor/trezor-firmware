@@ -16,7 +16,9 @@ def configure_board(
 
     defines += (("MODEL_HEADER", '"D001/model_D001.h"'),)
     defines += (("VERSIONS_HEADER", '"D001/versions.h"'),)
-    return configure(env, features_wanted, defines, sources, paths)
+    features = configure(env, features_wanted, defines, sources, paths)
+    features.append("model_d001")
+    return features
 
 
 def get_model_ui() -> str:

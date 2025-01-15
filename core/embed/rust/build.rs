@@ -55,7 +55,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_BLE",
 ];
 
-#[cfg(feature = "layout_bolt")]
+#[cfg(feature = "model_t2t1")]
 const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
     "-DSTM32F427",
     "-DTREZOR_MODEL_T2T1",
@@ -64,11 +64,12 @@ const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
     "-DDISPLAY_RESX=240",
     "-DDISPLAY_RESY=240",
     "-DTREZOR_BOARD=\"T2T1/boards/t2t1-unix.h\"",
+    "-DMODEL_HEADER=\"T2T1/model_T2T1.h\"",
 ];
-#[cfg(not(feature = "layout_bolt"))]
+#[cfg(not(feature = "model_t2t1"))]
 const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[];
 
-#[cfg(feature = "layout_samson")]
+#[cfg(feature = "model_t2b1")]
 const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
     "-DSTM32F427",
     "-DTREZOR_MODEL_T2B1",
@@ -77,11 +78,26 @@ const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
     "-DDISPLAY_RESX=128",
     "-DDISPLAY_RESY=64",
     "-DTREZOR_BOARD=\"T2B1/boards/t2b1-unix.h\"",
+    "-DMODEL_HEADER=\"T2B1/model_T2B1.h\"",
 ];
-#[cfg(not(feature = "layout_samson"))]
+#[cfg(not(feature = "model_t2b1"))]
 const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[];
 
-#[cfg(feature = "layout_quicksilver")]
+#[cfg(feature = "model_t3b1")]
+const DEFAULT_BINDGEN_MACROS_T3B1: &[&str] = &[
+    "-DSTM32U5",
+    "-DTREZOR_MODEL_T3B1",
+    "-DFLASH_BIT_ACCESS=0",
+    "-DFLASH_BLOCK_WORDS=4",
+    "-DDISPLAY_RESX=128",
+    "-DDISPLAY_RESY=64",
+    "-DTREZOR_BOARD=\"T3B1/boards/t3b1-unix.h\"",
+    "-DMODEL_HEADER=\"T3B1/model_T3B1.h\"",
+];
+#[cfg(not(feature = "model_t3b1"))]
+const DEFAULT_BINDGEN_MACROS_T3B1: &[&str] = &[];
+
+#[cfg(feature = "model_t3t1")]
 const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[
     "-DSTM32U5",
     "-DTREZOR_MODEL_T3T1",
@@ -90,16 +106,63 @@ const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[
     "-DDISPLAY_RESX=240",
     "-DDISPLAY_RESY=240",
     "-DTREZOR_BOARD=\"T3T1/boards/t3t1-unix.h\"",
+    "-DMODEL_HEADER=\"T3T1/model_T3T1.h\"",
 ];
-#[cfg(not(feature = "layout_quicksilver"))]
+#[cfg(not(feature = "model_t3t1"))]
 const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[];
+
+#[cfg(feature = "model_t3w1")]
+const DEFAULT_BINDGEN_MACROS_T3W1: &[&str] = &[
+    "-DSTM32U5",
+    "-DTREZOR_MODEL_T3W1",
+    "-DFLASH_BIT_ACCESS=0",
+    "-DFLASH_BLOCK_WORDS=4",
+    "-DDISPLAY_RESX=380",
+    "-DDISPLAY_RESY=520",
+    "-DTREZOR_BOARD=\"T3W1/boards/t3w1-unix.h\"",
+    "-DMODEL_HEADER=\"T3W1/model_T3W1.h\"",
+];
+#[cfg(not(feature = "model_t3w1"))]
+const DEFAULT_BINDGEN_MACROS_T3W1: &[&str] = &[];
+
+#[cfg(feature = "model_d001")]
+const DEFAULT_BINDGEN_MACROS_D001: &[&str] = &[
+    "-DSTM32F429",
+    "-DTREZOR_MODEL_D001",
+    "-DFLASH_BIT_ACCESS=1",
+    "-DFLASH_BLOCK_WORDS=1",
+    "-DDISPLAY_RESX=240",
+    "-DDISPLAY_RESY=320",
+    "-DTREZOR_BOARD=\"D001/boards/stm32f429i-disc1.h\"",
+    "-DMODEL_HEADER=\"D001/model_D001.h\"",
+];
+#[cfg(not(feature = "model_d001"))]
+const DEFAULT_BINDGEN_MACROS_D001: &[&str] = &[];
+
+#[cfg(feature = "model_d002")]
+const DEFAULT_BINDGEN_MACROS_D002: &[&str] = &[
+    "-DSTM32U5",
+    "-DTREZOR_MODEL_T3W1",
+    "-DFLASH_BIT_ACCESS=0",
+    "-DFLASH_BLOCK_WORDS=4",
+    "-DDISPLAY_RESX=380",
+    "-DDISPLAY_RESY=520",
+    "-DTREZOR_BOARD=\"D002/boards/stm32u5g9j-dk.h\"",
+    "-DMODEL_HEADER=\"D002/model_D002.h\"",
+];
+#[cfg(not(feature = "model_d002"))]
+const DEFAULT_BINDGEN_MACROS_D002: &[&str] = &[];
 
 fn add_bindgen_macros<'a>(clang_args: &mut Vec<&'a str>, envvar: Option<&'a str>) {
     let default_macros = DEFAULT_BINDGEN_MACROS_COMMON
         .iter()
         .chain(DEFAULT_BINDGEN_MACROS_T2T1)
         .chain(DEFAULT_BINDGEN_MACROS_T2B1)
-        .chain(DEFAULT_BINDGEN_MACROS_T3T1);
+        .chain(DEFAULT_BINDGEN_MACROS_T3B1)
+        .chain(DEFAULT_BINDGEN_MACROS_T3T1)
+        .chain(DEFAULT_BINDGEN_MACROS_T3W1)
+        .chain(DEFAULT_BINDGEN_MACROS_D001)
+        .chain(DEFAULT_BINDGEN_MACROS_D002);
 
     match envvar {
         Some(envvar) => clang_args.extend(envvar.split(',')),

@@ -1,2 +1,3 @@
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
+MODEL_FEATURE = model_d001

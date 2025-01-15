@@ -18,9 +18,11 @@ def configure_board(
     defines += (("VERSIONS_HEADER", '"T2T1/versions.h"'),)
 
     if revision == "emulator":
-        return emul(env, features_wanted, defines, sources, paths)
+        features = emul(env, features_wanted, defines, sources, paths)
     else:
-        return configure(env, features_wanted, defines, sources, paths)
+        features = configure(env, features_wanted, defines, sources, paths)
+    features.append("model_t2t1")
+    return features
 
 
 def get_model_ui() -> str:

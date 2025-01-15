@@ -7,6 +7,13 @@ build = "build.rs"
 
 [features]
 default = ["layout_bolt"]
+model_d001 = []
+model_d002 = []
+model_t2t1 = []
+model_t2b1 = []
+model_t3b1 = []
+model_t3t1 = []
+model_t3w1 = []
 crypto = ["zeroize"]
 layout_bolt = ["jpeg"]
 layout_samson = []
