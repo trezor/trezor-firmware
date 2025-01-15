@@ -13,6 +13,9 @@ def configure_board(
     sources: list[str],
     paths: list[str],
 ):
+    defines += (("MODEL_HEADER", '"T2B1/model_T2B1.h"'),)
+    defines += (("VERSIONS_HEADER", '"T2B1/versions.h"'),)
+
     # Set default revision if None
     revision = revision or 10
 
