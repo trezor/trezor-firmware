@@ -13,6 +13,8 @@ def configure_board(
     sources: list[str],
     paths: list[str],
 ):
+    defines += (("MODEL_HEADER", '"D002/model_D002.h"'),)
+    defines += (("VERSIONS_HEADER", '"D002/versions.h"'),)
     return configure(env, features_wanted, defines, sources, paths)
 
 
