@@ -357,7 +357,11 @@
     "fido__title_reset": "FIDO2 reset",
     "fido__title_select_credential": "Select credential",
     "fido__title_u2f_auth": "U2F authenticate",
-    "fido__title_u2f_register": {"Bolt": "U2F register", "Samson": "U2F register", "Quicksilver": "U2F register"},
+    "fido__title_u2f_register": {
+      "Bolt": "U2F register",
+      "Quicksilver": "U2F register",
+      "Samson": "U2F register"
+    },
     "fido__title_verify_user": "FIDO2 verify user",
     "fido__unable_to_verify_user": "Unable to verify user.",
     "fido__wanna_erase_credentials": "Do you really want to erase all credentials?",
@@ -379,7 +383,11 @@
     "homescreen__title_no_usb_connection": "No USB connection",
     "homescreen__title_pin_not_set": "PIN not set",
     "homescreen__title_seedless": "Seedless",
-    "homescreen__title_set": {"Bolt": "Change wallpaper?", "Samson": "Change wallpaper?", "Quicksilver": "Change wallpaper?"},
+    "homescreen__title_set": {
+      "Bolt": "Change wallpaper?",
+      "Quicksilver": "Change wallpaper?",
+      "Samson": "Change wallpaper?"
+    },
     "inputs__back": "BACK",
     "inputs__cancel": "CANCEL",
     "inputs__delete": "DELETE",
