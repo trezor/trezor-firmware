@@ -687,8 +687,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_BLE_ISSUE_COMMAND: {
-      ble_command_t command = args[0];
-      ble_issue_command(command);
+      ble_command_t *command = (ble_command_t *)args[0];
+      args[0] = ble_issue_command__verified(command);
     } break;
 
     case SYSCALL_BLE_GET_STATE: {
