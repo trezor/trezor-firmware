@@ -16,35 +16,42 @@ def read(buf: bytes, offset: int = 0) -> int
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def erase_bonds() -> None:
+def erase_bonds() -> bool:
     """
     Erases all BLE bonds
     """
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def start_comm() -> None:
+def start_comm() -> bool:
     """
     Start communication with BLE chip
     """
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def start_advertising(whitelist: bool) -> None:
+def start_advertising(whitelist: bool, name: str | None) -> bool:
     """
     Start advertising
     """
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def stop_advertising(whitelist: bool) -> None:
+def stop_advertising(whitelist: bool) -> bool:
     """
     Stop advertising
     """
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def disconnect() -> None:
+def disconnect() -> bool:
     """
     Disconnect BLE
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+def peer_count() -> int:
+    """
+    Get peer count (number of bonded devices)
     """
