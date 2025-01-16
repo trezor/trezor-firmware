@@ -43,6 +43,12 @@ typedef union {
 
 } boot_args_t;
 
+// Initialize bootargs module after bootloader startup
+//
+// r11_register is the value of the r11 register at bootloader entry.
+// This value is used only on STM32F4 platform. On STM32U5, it is ignored.
+void bootargs_init(uint32_t r11_register);
+
 // Configures the boot command and associated arguments for the next reboot.
 // The arguments must adhere to the boot_args_t structure layout.
 void bootargs_set(boot_command_t command, const void* args, size_t args_size);

@@ -79,10 +79,7 @@ env = Environment(ENV=os.environ,
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
-FILE_SUFFIX= env.get('ENV')['SUFFIX']
-
 SOURCE_BOARDLOADER = [
-    f"embed/sys/startup/{FILE_SUFFIX}/startup_stage_0.s",
     'embed/projects/boardloader/main.c',
 ]
 

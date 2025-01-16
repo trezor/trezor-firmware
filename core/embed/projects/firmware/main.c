@@ -32,6 +32,7 @@
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
 
+#include <sys/linker_utils.h>
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <util/rsod.h>
@@ -111,3 +112,22 @@ mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
   return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+
+// `reset_handler` is the application entry point (first routine called
+// from kernel)
+__attribute((no_stack_protector)) void reset_handler(uint32_t cmd, void *arg,
+                                                     uint32_t random_value) {
+  // Initialize linker script defined sections (.bss, .data, ...)
+  init_linker_sections();
+
+  // Initialize stack protector
+  extern uint32_t __stack_chk_guard;
+  __stack_chk_guard = random_value;
+
+  // Now everything is perfectly initialized and we can do anything
+  // in C code
+
+  int main_result = main(cmd, arg);
+
+  system_exit(main_result);
+}
