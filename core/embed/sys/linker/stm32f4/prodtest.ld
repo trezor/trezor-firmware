@@ -33,28 +33,6 @@ _accessible_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-/* used by the startup code to wipe memory */
-_startup_clear_ram_0_start = MCU_CCMRAM;
-_startup_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_startup_clear_ram_1_start = MCU_SRAM;
-_startup_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
-
-/* used by the startup/jump code to wipe memory */
-_handoff_clear_ram_0_start = MCU_CCMRAM;
-_handoff_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE;
-_handoff_clear_ram_1_start = MCU_SRAM;
-_handoff_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
-
-/* used by the shutdown code to wipe memory */
-_shutdown_clear_ram_0_start = MCU_CCMRAM;
-_shutdown_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_shutdown_clear_ram_1_start = MCU_SRAM;
-_shutdown_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
-
-/* reserve 256 bytes for bootloader arguments */
-boot_args_start = ORIGIN(BOOT_ARGS);
-boot_args_end = ORIGIN(BOOT_ARGS) + LENGTH(BOOT_ARGS);
-
 _codelen = SIZEOF(.flash) + SIZEOF(.data);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
