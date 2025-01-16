@@ -512,3 +512,11 @@ if __name__ == "__main__":
     FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf").write_files()
     FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf").write_files()
     FaceProcessor("RobotoMono", "Medium", 21).write_files()
+    # layout eckhart
+    FaceProcessor("TTSatoshi", "ExtraLight", 72, ext="otf").write_files()
+    FaceProcessor("TTSatoshi", "ExtraLight", 46, ext="otf").write_files()
+    FaceProcessor("TTSatoshi", "Regular", 38, ext="otf").write_files()
+    FaceProcessor("TTSatoshi", "Medium", 26, ext="otf").write_files()
+    FaceProcessor("TTSatoshi", "Regular", 20, ext="otf").write_files()
+    FaceProcessor("RobotoMono", "Medium", 38).write_files()
+    FaceProcessor("RobotoMono", "Light", 30).write_files()
