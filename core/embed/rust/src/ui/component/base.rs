@@ -1,7 +1,7 @@
-use heapless::Vec;
+use heapless::{String, Vec};
 
 use crate::{
-    strutil::{ShortString, TString},
+    strutil::TString,
     time::Duration,
     ui::{
         button_request::{ButtonRequest, ButtonRequestCode},
@@ -592,6 +592,8 @@ impl EventCtx {
     }
 }
 
+pub type FlowMsgText = String<128>;
+
 /// Component::Msg for component parts of a swipe flow. Converting results of
 /// different screens to a shared type makes things easier to work with.
 ///
@@ -603,7 +605,7 @@ pub enum FlowMsg {
     Cancelled,
     Info,
     Choice(usize),
-    Text(ShortString),
+    Text(FlowMsgText),
 }
 
 #[cfg(feature = "micropython")]

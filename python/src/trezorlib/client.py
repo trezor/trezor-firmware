@@ -38,7 +38,7 @@ MT = TypeVar("MT", bound=MessageType)
 
 LOG = logging.getLogger(__name__)
 
-MAX_PASSPHRASE_LENGTH = 50
+MAX_PASSPHRASE_LENGTH = 128
 MAX_PIN_LENGTH = 50
 
 PASSPHRASE_ON_DEVICE = object()

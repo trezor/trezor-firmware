@@ -1,10 +1,12 @@
 use crate::{
-    strutil::{ShortString, TString},
+    strutil::TString,
     translations::TR,
     ui::{
         component::{
-            base::ComponentExt, swipe_detect::SwipeConfig, text::common::TextBox, Component, Event,
-            EventCtx, Label, Maybe, Never, Swipe,
+            base::{ComponentExt, FlowMsgText},
+            swipe_detect::SwipeConfig,
+            text::common::TextBox,
+            Component, Event, EventCtx, Label, Maybe, Never, Swipe,
         },
         display,
         geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
@@ -27,7 +29,7 @@ use core::cell::Cell;
 use num_traits::ToPrimitive;
 
 pub enum PassphraseKeyboardMsg {
-    Confirmed(ShortString),
+    Confirmed(FlowMsgText),
     Cancelled,
 }
 
@@ -101,7 +103,7 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
 
-const MAX_LENGTH: usize = 50;
+const MAX_LENGTH: usize = 128;
 
 const CONFIRM_BTN_INSETS: Insets = Insets::new(5, 0, 5, 0);
 const CONFIRM_EMPTY_BTN_MARGIN_RIGHT: i16 = 7;
@@ -338,12 +340,12 @@ impl Component for PassphraseKeyboard {
         // Confirm button was clicked, we're done.
         if let Some(ButtonMsg::Clicked) = self.confirm_empty_btn.event(ctx, event) {
             return Some(PassphraseKeyboardMsg::Confirmed(unwrap!(
-                ShortString::try_from(self.passphrase())
+                FlowMsgText::try_from(self.passphrase())
             )));
         }
         if let Some(ButtonMsg::Clicked) = self.confirm_btn.event(ctx, event) {
             return Some(PassphraseKeyboardMsg::Confirmed(unwrap!(
-                ShortString::try_from(self.passphrase())
+                FlowMsgText::try_from(self.passphrase())
             )));
         }
         if let Some(ButtonMsg::Clicked) = self.cancel_btn.event(ctx, event) {

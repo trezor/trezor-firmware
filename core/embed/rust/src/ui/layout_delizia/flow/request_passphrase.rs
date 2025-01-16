@@ -1,9 +1,8 @@
 use crate::{
     error,
-    strutil::ShortString,
     translations::TR,
     ui::{
-        component::ComponentExt,
+        component::{base::FlowMsgText, ComponentExt},
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
@@ -44,7 +43,7 @@ impl FlowController for RequestPassphrase {
             (Self::Keypad, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
             (Self::ConfirmEmpty, FlowMsg::Cancelled) => Self::Keypad.goto(),
             (Self::ConfirmEmpty, FlowMsg::Confirmed) => {
-                self.return_msg(FlowMsg::Text(ShortString::new()))
+                self.return_msg(FlowMsg::Text(FlowMsgText::new()))
             }
             _ => self.do_nothing(),
         }

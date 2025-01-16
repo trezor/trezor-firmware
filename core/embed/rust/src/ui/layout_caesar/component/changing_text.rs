@@ -1,12 +1,9 @@
-use crate::{
-    strutil::ShortString,
-    ui::{
-        component::{Component, Event, EventCtx, Never, Pad},
-        display::Font,
-        geometry::{Alignment, Point, Rect},
-        shape::{self, Renderer},
-        util::long_line_content_with_ellipsis,
-    },
+use crate::ui::{
+    component::{base::FlowMsgText, Component, Event, EventCtx, Never, Pad},
+    display::Font,
+    geometry::{Alignment, Point, Rect},
+    shape::{self, Renderer},
+    util::long_line_content_with_ellipsis,
 };
 
 use super::theme;
@@ -16,7 +13,7 @@ use super::theme;
 /// and without being affected by other components.
 pub struct ChangingTextLine {
     pad: Pad,
-    text: ShortString,
+    text: FlowMsgText,
     font: Font,
     /// Whether to show the text. Can be disabled.
     show_content: bool,
@@ -29,7 +26,7 @@ pub struct ChangingTextLine {
 
 impl ChangingTextLine {
     pub fn new(text: &str, font: Font, alignment: Alignment, max_len: usize) -> Self {
-        let text = unwrap!(ShortString::try_from(text));
+        let text = unwrap!(FlowMsgText::try_from(text));
         debug_assert!(text.capacity() >= max_len);
         Self {
             pad: Pad::with_background(theme::BG),

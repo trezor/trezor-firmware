@@ -1,9 +1,12 @@
 use crate::{
-    strutil::{ShortString, TString},
+    strutil::TString,
     translations::TR,
     trezorhal::random,
     ui::{
-        component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        component::{
+            base::FlowMsgText, text::common::TextBox, Child, Component, ComponentExt, Event,
+            EventCtx,
+        },
         display::Icon,
         geometry::Rect,
         shape::Renderer,
@@ -26,7 +29,7 @@ enum ChoiceCategory {
     SpecialSymbol,
 }
 
-const MAX_PASSPHRASE_LENGTH: usize = 50;
+const MAX_PASSPHRASE_LENGTH: usize = 128;
 
 const DIGITS: &str = "0123456789";
 const LOWERCASE_LETTERS: &str = "abcdefghijklmnopqrstuvwxyz";
@@ -291,17 +294,17 @@ impl PassphraseEntry {
 
     fn update_passphrase_dots(&mut self, ctx: &mut EventCtx) {
         debug_assert!({
-            let s = ShortString::new();
+            let s = FlowMsgText::new();
             s.capacity() >= MAX_PASSPHRASE_LENGTH
         });
 
         let text_to_show = if self.show_plain_passphrase {
-            unwrap!(ShortString::try_from(self.passphrase()))
+            unwrap!(FlowMsgText::try_from(self.passphrase()))
         } else if self.is_empty() {
-            unwrap!(ShortString::try_from(""))
+            unwrap!(FlowMsgText::try_from(""))
         } else {
             // Showing asterisks and possibly the last digit.
-            let mut dots = ShortString::new();
+            let mut dots = FlowMsgText::new();
             for _ in 0..self.textbox.len() - 1 {
                 unwrap!(dots.push('*'));
             }
