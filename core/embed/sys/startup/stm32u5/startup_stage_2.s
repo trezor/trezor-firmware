@@ -23,15 +23,17 @@ reset_handler:
   bl memset_reg
 
   // copy data in from flash
-  ldr r0, =data_vma     // dst addr
-  ldr r1, =data_lma     // src addr
-  ldr r2, =data_size    // size in bytes
+  ldr r0, =_data_section_start     // dst addr
+  ldr r1, =_data_section_loadaddr  // src addr
+  ldr r2, =_data_section_end       // size in bytes
+  sub r2, r2, r0
   bl memcpy
 
   // copy confidential data in from flash
-  ldr r0, =confidential_vma     // dst addr
-  ldr r1, =confidential_lma     // src addr
-  ldr r2, =confidential_size    // size in bytes
+  ldr r0, =_confidential_section_start // dst addr
+  ldr r1, =_confidential_section_loadaddr      // src addr
+  ldr r2, =_confidential_section_end   // size in bytes
+  sub r2, r2, r0
   bl memcpy
 
   // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value

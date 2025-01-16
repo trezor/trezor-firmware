@@ -14,12 +14,16 @@ MEMORY {
 _stack_section_start = ADDR(.stack);
 _stack_section_end = ADDR(.stack) + SIZEOF(.stack);
 
-/* used by the startup code to populate variables used by the C code */
-data_lma = LOADADDR(.data);
-data_vma = ADDR(.data);
-data_size = SIZEOF(.data);
-bss_start = ADDR(.bss);
-bss_end = ADDR(.bss) + SIZEOF(.bss);
+_data_section_loadaddr = LOADADDR(.data);
+_data_section_start = ADDR(.data);
+_data_section_end = ADDR(.data) + SIZEOF(.data);
+
+_bss_section_start = ADDR(.bss);
+_bss_section_end = ADDR(.bss) + SIZEOF(.bss);
+
+_confidential_section_loadaddr = 0;
+_confidential_section_start = 0;
+_confidential_section_end = 0;
 
 /* used by the startup code to wipe memory */
 _startup_clear_ram_0_start = MCU_CCMRAM;

@@ -12,22 +12,24 @@ reset_handler:
   ldr r0, = __stack_chk_guard
   str r2, [r0]
 
-  ldr r0, =bss_start
+  ldr r0, =_bss_section_start
   ldr r1, =0
-  ldr r2, =bss_end
+  ldr r2, =_bss_section_end
   sub r2, r2, r0
   bl memset
 
   // copy data in from flash
-  ldr r0, =data_vma
-  ldr r1, =data_lma
-  ldr r2, =data_size
+  ldr r0, =_data_section_start     // dst addr
+  ldr r1, =_data_section_loadaddr  // src addr
+  ldr r2, =_data_section_end       // size in bytes
+  sub r2, r2, r0
   bl memcpy
 
   // copy confidential data in from flash
-  ldr r0, =confidential_vma
-  ldr r1, =confidential_lma
-  ldr r2, =confidential_size
+  ldr r0, =_confidential_section_start     // dst addr
+  ldr r1, =_confidential_section_loadaddr  // src addr
+  ldr r2, =_confidential_section_end       // size in bytes
+  sub r2, r2, r0
   bl memcpy
 
   pop {r0, r1}
