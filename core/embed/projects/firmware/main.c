@@ -41,6 +41,10 @@
 #include "zkp_context.h"
 #endif
 
+// symbols defined in the linker script
+extern uint8_t _stack_section_start;
+extern uint8_t _stack_section_end;
+
 int main(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
@@ -57,8 +61,9 @@ int main(uint32_t cmd, void *arg) {
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.
-  mp_stack_set_top(&_estack);
-  mp_stack_set_limit((char *)&_estack - (char *)&_sstack - 1024);
+  mp_stack_set_top(&_stack_section_end);
+  mp_stack_set_limit((char *)&_stack_section_end -
+                     (char *)&_stack_section_start - 1024);
 
 #if MICROPY_ENABLE_PYSTACK
   static mp_obj_t pystack[1024];

@@ -41,6 +41,10 @@
 
 #ifdef KERNEL_MODE
 
+// Kernel stack base pointer defined in linker script
+extern uint8_t _stack_section_start;
+extern uint8_t _stack_section_end;
+
 void system_init(systask_error_handler_t error_handler) {
 #if defined(TREZOR_MODEL_T2T1) && (!defined(BOARDLOADER))
   // Early boardloader versions on Model T initialized the CPU clock to 168MHz.
@@ -198,10 +202,10 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       // Setup new stack
       // --------------------------------------------------------------
 
-      "LDR     R0, =_estack        \n"  // Setup new stack
+      "LDR     R0, =%[estack]      \n"  // Setup new stack
       "MSR     MSP, R0             \n"  // Set MSP
 #if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
-      "LDR     R0, =_sstack        \n"
+      "LDR     R0, =%[sstack]      \n"
       "ADD     R0, R0, #256        \n"  // Add safety margin
       "MSR     MSPLIM, R0          \n"  // Set MSPLIM
 #endif
@@ -331,7 +335,8 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       "BX      LR                  \n"
       :  // no output
       : [PMINFO_SIZE] "i"(sizeof(systask_postmortem_t)),
-        [STK_GUARD] "i"(&__stack_chk_guard)
+        [STK_GUARD] "i"(&__stack_chk_guard), [estack] "i"(&_stack_section_end),
+        [sstack] "i"((uint32_t)&_stack_section_start)
       :  // no clobber
   );
 }

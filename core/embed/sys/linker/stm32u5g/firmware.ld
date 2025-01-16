@@ -7,10 +7,9 @@ MEMORY {
   AUX1_RAM (wal) : ORIGIN = AUX1_RAM_START, LENGTH = AUX1_RAM_SIZE
 }
 
-main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ADDR(.stack);
-_estack = main_stack_base;
-_stack_size = SIZEOF(.stack);
+_stack_section_start = ADDR(.stack);
+_stack_section_end = ADDR(.stack) + SIZEOF(.stack);
+_stack_section_size = SIZEOF(.stack);
 
 /* used by the startup code to populate variables used by the C code */
 data_lma = LOADADDR(.data);
