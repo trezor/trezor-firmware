@@ -39,7 +39,8 @@ Changelog](https://keepachangelog.com/en/1.0.0/) format:
 * `incompatible` (for backwards incompatible changes)
 
 Entries are added by creating files in the `.changelog.d` directory where the
-file name is `<number>.<type>` and contains single line describing the change.
+file name is `<number>.<type>` and contains single line describing the change,
+ending with a period.
 As an example, an entry describing bug fix for issue 1234 in Trezor T firmware
 is added by creating file `core/.changelog.d/1234.fixed`. The file can be
 formatted with markdown. If more entries are desired for single issue number and

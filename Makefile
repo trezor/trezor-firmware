@@ -56,6 +56,7 @@ changelog_check: ## check changelog format
 	./tools/generate-changelog.py --check core/embed/projects/boardloader
 	./tools/generate-changelog.py --check core/embed/projects/bootloader
 	./tools/generate-changelog.py --check core/embed/projects/bootloader_ci
+	./tools/generate-changelog.py --check core/embed/projects/prodtest
 	./tools/generate-changelog.py --check legacy/bootloader
 	./tools/generate-changelog.py --check legacy/firmware
 	./tools/generate-changelog.py --check legacy/intermediate_fw

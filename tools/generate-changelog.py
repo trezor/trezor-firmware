@@ -17,6 +17,8 @@ MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
 INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
 
+IGNORED_FILES = ('.gitignore', '.keep')
+
 
 def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
     links = {}
@@ -116,6 +118,23 @@ def filter_changelog(changelog_file: Path, internal_name: str):
                 destination.write(res)
 
 
+def check_style(project: Path):
+    success = True
+    fragements_dir = project / ".changelog.d"
+    for fragment in fragements_dir.iterdir():
+        if fragment.name in IGNORED_FILES:
+            continue
+        fragment_text = fragment.read_text().rstrip()
+        if not fragment_text.endswith("."):
+            click.echo(f"Fragment '{fragment}' must end with a period.")
+            success = False
+
+    if not success:
+        raise click.ClickException("Fragment style check failed.")
+    else:
+        click.echo("Fragment style check passed.")
+
+
 def generate_filtered(project: Path, changelog: Path):
     if project.parts[-1] != "core":
         return
@@ -153,6 +172,8 @@ def cli(project, version, date, check, only_models):
     - Tell git to stage changed files.
     """
     project = Path(project)
+    check_style(project)
+
     changelog = project / "CHANGELOG.md"
 
     if not changelog.exists():
