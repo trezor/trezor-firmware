@@ -71,6 +71,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/sys/mpu/stm32f4/mpu.c",
         "embed/sys/pvd/stm32/pvd.c",
         "embed/sys/startup/stm32/bootutils.c",
+        "embed/sys/startup/stm32/sysutils.c",
         "embed/sys/startup/stm32f4/reset_flags.c",
         "embed/sys/startup/stm32f4/startup_init.c",
         "embed/sys/startup/stm32f4/vectortable.S",
