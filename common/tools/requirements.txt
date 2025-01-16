@@ -1,0 +1,5 @@
+click>=8,<9
+requests>=2.32,<3.0
+termcolor
+Pillow>=10.0.1
+typing-extensions>=4.12.2,<5.0
