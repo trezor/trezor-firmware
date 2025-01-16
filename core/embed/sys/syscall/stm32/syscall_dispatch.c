@@ -141,10 +141,6 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[1] = cycles >> 32;
     } break;
 
-    case SYSCALL_SECURE_SHUTDOWN: {
-      secure_shutdown();
-    } break;
-
     case SYSCALL_REBOOT_DEVICE: {
       reboot_device();
     } break;
