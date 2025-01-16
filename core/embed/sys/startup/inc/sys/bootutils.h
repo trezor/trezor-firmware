@@ -46,11 +46,11 @@ void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 void __attribute__((noreturn)) secure_shutdown(void);
 
 // Jumps to the next booting stage (e.g. bootloader to firmware).
-// `address` points to the flash at the vector table of the next stage.
+// `vectbl_address` points to the flash at the vector table of the next stage.
 //
 // Before jumping, the function disables all interrupts and clears the
 // memory and registers that could contain sensitive information.
-void jump_to(uint32_t address);
+void jump_to_next_stage(uint32_t vectbl_address);
 
 // Ensure compatible hardware settings before jumping to
 // the different booting stage. This function is used to
