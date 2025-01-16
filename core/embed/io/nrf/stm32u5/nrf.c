@@ -87,6 +87,9 @@ typedef struct {
 
 static nrf_driver_t g_nrf_driver = {0};
 
+
+
+bool nrf_reboot(void);
 static void nrf_start(void) {
   nrf_driver_t *drv = &g_nrf_driver;
   if (!drv->initialized) {
@@ -192,6 +195,8 @@ void nrf_init(void) {
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Pin = NRF_OUT_STAY_IN_BLD_PIN;
   HAL_GPIO_Init(NRF_OUT_STAY_IN_BLD_PORT, &GPIO_InitStructure);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
+
 
   NRF_OUT_FW_RUNNING_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
@@ -306,6 +311,9 @@ void nrf_init(void) {
 
   drv->tx_request_id = -1;
   drv->initialized = true;
+
+
+  nrf_reboot();
 
   nrf_start();
 }
@@ -701,11 +709,11 @@ bool nrf_reboot_to_bootloader(void) {
 }
 
 bool nrf_reboot(void) {
-  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
                     GPIO_PIN_RESET);
   systick_delay_ms(50);
-  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
   return true;
 }
 
