@@ -12,8 +12,10 @@ pub enum ButtonEvent {
     /// Button released up.
     /// ▲ * | * ▲
     ButtonReleased(PhysicalButton),
+
     HoldStarted,
     HoldEnded,
+    HoldCanceled,
 }
 
 impl ButtonEvent {

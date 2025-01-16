@@ -105,6 +105,9 @@ impl Component for HoldToConfirm {
                     self.loader.start_shrinking(ctx, Instant::now());
                 }
             }
+            Event::Button(ButtonEvent::HoldCanceled) => {
+                self.loader.shrink_completely(ctx, Instant::now());
+            }
             _ => {}
         };
 

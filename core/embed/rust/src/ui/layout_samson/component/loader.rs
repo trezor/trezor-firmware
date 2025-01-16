@@ -107,13 +107,13 @@ impl Loader {
         ctx.request_paint();
     }
 
-    pub fn start_shrinking(&mut self, ctx: &mut EventCtx, now: Instant) {
-        let mut anim = Animation::new(
-            display::LOADER_MAX,
-            display::LOADER_MIN,
-            self.shrinking_duration,
-            now,
-        );
+    fn start_shrinking_with_duration(
+        &mut self,
+        ctx: &mut EventCtx,
+        now: Instant,
+        duration: Duration,
+    ) {
+        let mut anim = Animation::new(display::LOADER_MAX, display::LOADER_MIN, duration, now);
         if let State::Growing(growing) = &self.state {
             anim.seek_to_value(display::LOADER_MAX - growing.value(now));
         }
@@ -123,6 +123,14 @@ impl Loader {
         // to request another animation frames, but we should request to get painted
         // after this event pass.
         ctx.request_paint();
+    }
+
+    pub fn start_shrinking(&mut self, ctx: &mut EventCtx, now: Instant) {
+        self.start_shrinking_with_duration(ctx, now, self.shrinking_duration);
+    }
+
+    pub fn shrink_completely(&mut self, ctx: &mut EventCtx, now: Instant) {
+        self.start_shrinking_with_duration(ctx, now, Duration::from_millis(0));
     }
 
     pub fn reset(&mut self) {
