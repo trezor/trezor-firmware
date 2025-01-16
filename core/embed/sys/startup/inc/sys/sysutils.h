@@ -49,7 +49,16 @@ void ensure_thread_mode(void);
 void ensure_compatible_settings(void);
 
 // Clears USB peripheral fifo memory
+//
+// Used to wipe sensitive data from USB peripheral memory.
 void clear_otg_hs_memory(void);
+
+// Resets critical peripherals, disables all interrupts, and clears
+// pending interrupts in the NVIC controller.
+//
+// This function is used to stop pending DMA transfers and interrupts,
+// ensuring it is safe to jump to the next stage or initiate rescue mode.
+void reset_peripherals_and_interrupts(void);
 
 // Jumps to the binary using its vector table.
 //
