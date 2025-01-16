@@ -28,6 +28,14 @@ _confidential_section_loadaddr = LOADADDR(.confidential);
 _confidential_section_start = ADDR(.confidential);
 _confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 
+_accessible_ram_0_start = MCU_SRAM1;
+_accessible_ram_0_end = MCU_SRAM6 + MCU_SRAM6_SIZE;
+_accessible_ram_1_start = MCU_SRAM4;
+_accessible_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+
+_bootargs_ram_start = BOOTARGS_START;
+_bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
+
 /* used by the startup code to wipe memory */
 _startup_clear_ram_0_start = MCU_SRAM1 + BOOTARGS_SIZE;
 _startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE;
