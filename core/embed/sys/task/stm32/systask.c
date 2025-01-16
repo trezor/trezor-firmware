@@ -635,4 +635,6 @@ void NMI_Handler(void) {
   mpu_restore(mpu_mode);
 }
 
+void Default_IRQHandler(void) { error_shutdown("Unhandled IRQ"); }
+
 #endif  // KERNEL_MODE
