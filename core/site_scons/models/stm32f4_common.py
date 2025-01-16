@@ -95,17 +95,5 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/util/unit_properties/stm32/unit_properties.c",
     ]
 
-    # boardloader needs separate assembler for some function unencumbered by various FW+bootloader hacks
-    # this helps to prevent making a bug in boardloader which may be hard to fix since it's locked with write-protect
-    env_constraints = env.get("CONSTRAINTS")
-    if env_constraints and "limited_util_s" in env_constraints:
-        sources += [
-            "embed/sys/startup/stm32f4/limited_util.S",
-        ]
-    else:
-        sources += [
-            "embed/sys/startup/stm32f4/util.S",
-        ]
-
     env.get("ENV")["SUFFIX"] = "stm32f4"
     env.get("ENV")["LINKER_SCRIPT"] = """embed/sys/linker/stm32f4/{target}.ld"""

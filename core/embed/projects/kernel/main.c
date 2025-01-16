@@ -222,8 +222,8 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
     applet_run(&coreapp);
 
     if (coreapp.task.pminfo.reason == TASK_TERM_REASON_EXIT) {
-      // If the RSOD was shown successfully, proceed to shutdown
-      secure_shutdown();
+      // RSOD was shown successfully
+      return;
     }
   }
 #endif
@@ -245,8 +245,9 @@ static void init_and_show_rsod(const systask_postmortem_t *pminfo) {
   // Show RSOD
   show_rsod(pminfo);
 
-  // Wait for the user to manually power off the device
-  secure_shutdown();
+  // Wait for the user to read the RSOD and then reboots
+  // (or enters an infinite loop if RSOD_INFINITE_LOOP is defined)
+  reboot_after_rsod();
 }
 
 // Kernel panic handler
@@ -285,8 +286,9 @@ int main(void) {
   // Coreapp crashed, show RSOD
   show_rsod(&coreapp.task.pminfo);
 
-  // Wait for the user to manually power off the device
-  secure_shutdown();
+  // Wait for the user to read the RSOD and then reboots
+  // (or enters an infinite loop if RSOD_INFINITE_LOOP is defined)
+  reboot_after_rsod();
 
   return 0;
 }

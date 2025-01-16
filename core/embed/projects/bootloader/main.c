@@ -140,7 +140,6 @@ static void drivers_deinit(void) {
 #endif
   gfx_bitblt_deinit();
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
-  ensure_compatible_settings();
 }
 
 static void usb_init_all(secbool usb21_landing) {
