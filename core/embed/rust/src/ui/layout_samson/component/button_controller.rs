@@ -215,17 +215,24 @@ impl ButtonContainer {
         self.long_pressed_timer.expire(event)
     }
 
-    /// Registering hold event.
+    /// Registering the hold event
     pub fn hold_started(&mut self, ctx: &mut EventCtx) {
         if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
             htc.event(ctx, Event::Button(ButtonEvent::HoldStarted));
         }
     }
 
-    /// Cancelling hold event.
+    /// Ending the hold event by releasing the button held
     pub fn hold_ended(&mut self, ctx: &mut EventCtx) {
         if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
             htc.event(ctx, Event::Button(ButtonEvent::HoldEnded));
+        }
+    }
+
+    /// Canceling the hold event
+    pub fn hold_canceled(&mut self, ctx: &mut EventCtx) {
+        if let ButtonType::HoldToConfirm(htc) = &mut self.button_type {
+            htc.event(ctx, Event::Button(ButtonEvent::HoldCanceled));
         }
     }
 }
@@ -469,11 +476,19 @@ impl Component for ButtonController {
                                     Some(ButtonControllerMsg::Pressed(ButtonPos::Middle)),
                                 )
                             } else {
-                                self.got_pressed(ctx, b.into());
-                                (
-                                    ButtonState::BothDown,
-                                    Some(ButtonControllerMsg::Pressed(b.into())),
-                                )
+                                // When a button gets pressed while another one is being held,
+                                // cancel the hold and do not register the press.
+                                match which_down {
+                                    PhysicalButton::Left => {
+                                        self.left_btn.hold_canceled(ctx);
+                                    }
+                                    PhysicalButton::Right => {
+                                        self.right_btn.hold_canceled(ctx);
+                                    }
+                                    _ => {}
+                                }
+
+                                return None;
                             }
                         }
                         _ => (self.state, None),
