@@ -102,11 +102,11 @@ void display_deinit(display_content_mode_t mode) {
     return;
   }
 
-#ifdef FRAMEBUFFER
 #ifndef BOARDLOADER
-  // Ensure that the ready frame buffer is transfered to
+  // Ensure that the ready frame buffer is transferred to
   // the display controller
   display_ensure_refreshed();
+#ifdef FRAMEBUFFER
   // Disable periodical interrupt
   NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 #endif
@@ -138,13 +138,11 @@ int display_set_backlight(int level) {
     return 0;
   }
 
-#ifdef FRAMEBUFFER
 #ifndef BOARDLOADER
   // if turning on the backlight, wait until the panel is refreshed
   if (backlight_pwm_get() < level && !is_mode_exception()) {
     display_ensure_refreshed();
   }
-#endif
 #endif
 
   return backlight_pwm_set(level);
