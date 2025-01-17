@@ -86,14 +86,15 @@ static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
   unit_properties_t props;
   unit_properties_get(&props);
 
-  uint8_t data[2 + BLE_ADV_NAME_LEN] = {0};
-  data[0] = INTERNAL_CMD_ADVERTISING_ON;
-  data[1] = whitelist ? 1 : 0;
-  data[2] = props.color;
-  memcpy(&data[3], drv->adv_name, BLE_ADV_NAME_LEN);
+  cmd_advertising_on_t data = {
+      .cmd_id = INTERNAL_CMD_ADVERTISING_ON,
+      .whitelist = whitelist ? 1 : 0,
+      .color = props.color,
+  };
+  memcpy(data.name, drv->adv_name, BLE_ADV_NAME_LEN);
 
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, data, sizeof(data), NULL,
-                      NULL) >= 0;
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&data, sizeof(data),
+                      NULL, NULL) >= 0;
 }
 
 static bool ble_send_advertising_off(ble_driver_t *drv) {
