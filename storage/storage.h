@@ -44,7 +44,7 @@ extern const uint8_t *PIN_EMPTY;
 // Maximum number of failed unlock attempts.
 // NOTE: The PIN counter logic relies on this constant being less than or equal
 // to 16.
-#define PIN_MAX_TRIES 16
+#define PIN_MAX_TRIES 3
 
 // The length of the random salt in bytes.
 #if USE_OPTIGA
