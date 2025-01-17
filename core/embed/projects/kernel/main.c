@@ -116,8 +116,6 @@ void drivers_init() {
   hash_processor_init();
 #endif
 
-  gfx_bitblt_init();
-
   display_init(DISPLAY_JUMP_BEHAVIOR);
 
 #ifdef USE_OEM_KEYS_CHECK

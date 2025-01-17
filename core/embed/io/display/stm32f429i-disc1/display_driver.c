@@ -67,12 +67,16 @@ bool display_init(display_content_mode_t mode) {
     ili9341_init();
   }
 
+  gfx_bitblt_init();
+
   drv->initialized = true;
   return true;
 }
 
 void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
+
+  gfx_bitblt_deinit();
 
   mpu_set_active_fb(NULL, 0);
 
