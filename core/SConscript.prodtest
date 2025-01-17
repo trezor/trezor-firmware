@@ -9,7 +9,7 @@ PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "ble", "tropic"]
+FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "ble", "tropic"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
