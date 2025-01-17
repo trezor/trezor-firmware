@@ -38,4 +38,6 @@ static inline uint32_t is_mode_exception(void) {
   return (isr_number != 0) && (isr_number != 11);
 }
 
+void display_ensure_refreshed(void);
+
 #endif  // TREZORHAL_DISPLAY_INTERNAL_H

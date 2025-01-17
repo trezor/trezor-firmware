@@ -29,8 +29,6 @@ void display_fb_init(void);
 // Clears both physical frame buffers
 void display_fb_clear(void);
 
-void display_ensure_refreshed(void);
-
 #endif  // FRAMEBUFFER
 
 #endif  // TREZORHAL_DISPLAY_FB_H
