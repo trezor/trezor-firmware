@@ -73,6 +73,8 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   mpu_restore(mode);
 }
 
+boot_args_t* bootargs_ptr(void) { return &g_boot_args; }
+
 #ifdef BOOTLOADER
 // Contains the current boot command saved during bootloader startup.
 boot_command_t g_boot_command_saved;

@@ -20,6 +20,7 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/linker_utils.h>
 #include <sys/mpu.h>
@@ -83,14 +84,13 @@ void system_exit_fatal_ex(const char* message, size_t message_len,
 __attribute((noreturn, no_stack_protector)) static void
 system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   systask_error_handler_t error_handler = (systask_error_handler_t)arg1;
-  systask_postmortem_t* _pminfo = (systask_postmortem_t*)arg2;
 
   // Reset peripherals (so we are sure that no DMA is pending)
   reset_peripherals_and_interrupts();
 
-  // Copy pminfo to our stack (_pminfo will be rewritten soon)
-  systask_postmortem_t pminfo;
-  memcpy(&pminfo, _pminfo, sizeof(pminfo));
+  // Copy pminfo from to our stack
+  // MPU is now disable, we have full access to bootargs.
+  systask_postmortem_t pminfo = bootargs_ptr()->pminfo;
 
   // Clear unused part of our stack
   clear_unused_stack();
@@ -99,7 +99,9 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   extern uint32_t __stack_chk_guard;
   uint32_t stack_chk_guard = __stack_chk_guard;
 
-  // Clear all memory except our stack
+  // Clear all memory except our stack.
+  // NOTE: This also clear bootargs, so we don't pass pminfo structure
+  // to the bootloader for now.
   memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
   MEMREGION_DEL_SECTION(&region, _stack_section);
   memregion_fill(&region, 0);
@@ -130,7 +132,10 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
 
 __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
     systask_error_handler_t error_handler, const systask_postmortem_t* pminfo) {
-  call_with_new_stack((uint32_t)error_handler, (uint32_t)pminfo,
+  // Save `pminfo` to bootargs so it isn't overwritten by succesive call
+  bootargs_set(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
+
+  call_with_new_stack((uint32_t)error_handler, 0,
                       system_emergency_rescue_phase_2);
 }
 
