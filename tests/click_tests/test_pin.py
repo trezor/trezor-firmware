@@ -106,9 +106,9 @@ def prepare(
             TR.pin__turn_on in debug.read_layout().text_content()
             or TR.pin__info in debug.read_layout().text_content()
         )
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
             go_next(debug)
-        elif debug.layout_type is LayoutType.Samson:
+        elif debug.layout_type is LayoutType.Caesar:
             go_next(debug)
             go_next(debug)
             go_next(debug)
@@ -127,7 +127,7 @@ def prepare(
             _input_see_confirm(debug, old_pin)
         assert TR.wipe_code__turn_on in debug.read_layout().text_content()
         go_next(debug)
-        if debug.layout_type is LayoutType.Samson:
+        if debug.layout_type is LayoutType.Caesar:
             go_next(debug)
             go_next(debug)
             go_next(debug)
@@ -137,7 +137,7 @@ def prepare(
     _assert_pin_entry(debug)
     yield debug
 
-    if debug.layout_type is LayoutType.Quicksilver and tap:
+    if debug.layout_type is LayoutType.Delizia and tap:
         go_next(debug)
         debug.click(buttons.TAP_TO_CONFIRM)
     else:
@@ -155,13 +155,13 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
     if check:
         before = debug.read_layout().pin()
 
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         digits_order = debug.read_layout().tt_pin_digits_order()
         for digit in pin:
             digit_index = digits_order.index(digit)
             coords = buttons.pin_passphrase_index(digit_index)
             debug.click(coords)
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
 
@@ -172,9 +172,9 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         debug.click(buttons.TOP_ROW)
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
 
 
@@ -184,9 +184,9 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
         before = debug.read_layout().pin()
 
     for _ in range(digits_to_delete):
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
             debug.click(buttons.pin_passphrase_grid(9))
-        elif debug.layout_type is LayoutType.Samson:
+        elif debug.layout_type is LayoutType.Caesar:
             navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS)
 
     if check:
@@ -196,9 +196,9 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 
 def _delete_all(debug: "DebugLink", check: bool = True) -> None:
     """Navigate to "DELETE" and hold it until all digits are deleted"""
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         debug.click(buttons.pin_passphrase_grid(9), hold_ms=1500)
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS, hold_ms=1000)
 
     if check:
@@ -215,9 +215,9 @@ def _cancel_pin(debug: "DebugLink") -> None:
 
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         debug.click(buttons.pin_passphrase_grid(11))
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, ENTER, TR_PIN_ACTIONS)
 
 
@@ -230,7 +230,7 @@ def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
 def _enter_two_times(debug: "DebugLink", pin1: str, pin2: str) -> None:
     _input_see_confirm(debug, pin1)
 
-    if debug.layout_type is LayoutType.Samson:
+    if debug.layout_type is LayoutType.Caesar:
         # Please re-enter
         go_next(debug)
 
@@ -323,10 +323,10 @@ def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
         if debug.layout_type is LayoutType.Bolt:
             go_next(debug)
             _cancel_pin(debug)
-        elif debug.layout_type is LayoutType.Samson:
+        elif debug.layout_type is LayoutType.Caesar:
             debug.press_middle()
             debug.press_no()
-        elif debug.layout_type is LayoutType.Quicksilver:
+        elif debug.layout_type is LayoutType.Delizia:
             go_next(debug)
             _cancel_pin(debug)
 

@@ -146,7 +146,7 @@ def change_icon_format():
     reformat_c_icons(CORE_DIR / "embed/projects/bootloader_ci")
 
     # rust icons
-    reformat_toif_icons(CORE_DIR / "embed/rust/src/ui/layout_samson/res")
+    reformat_toif_icons(CORE_DIR / "embed/rust/src/ui/layout_caesar/res")
     reformat_toif_icons(CORE_DIR / "embed/rust/src/ui/layout_bolt/res")
 
     # python icons

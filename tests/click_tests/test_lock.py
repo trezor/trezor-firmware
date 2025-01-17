@@ -51,7 +51,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     }[debug.model]
 
     def hold(duration: int) -> None:
-        if debug.layout_type is LayoutType.Samson:
+        if debug.layout_type is LayoutType.Caesar:
             debug.press_right(hold_ms=duration)
         else:
             debug.click((13, 37), hold_ms=duration)
@@ -78,7 +78,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     assert device_handler.features().unlocked is False
 
     # unlock by touching
-    if debug.layout_type is LayoutType.Samson:
+    if debug.layout_type is LayoutType.Caesar:
         layout = debug.press_right()
     else:
         layout = debug.click(buttons.INFO)

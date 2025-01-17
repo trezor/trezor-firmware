@@ -3,11 +3,12 @@ use crate::ui::{
     constant::{HEIGHT, WIDTH},
     display::{Color, Font},
     geometry::{Offset, Point, Rect},
-    layout_bolt::{
-        component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
-        theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
-    },
     util::include_res,
+};
+
+use super::super::{
+    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
+    theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
 };
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x1E, 0xAD);

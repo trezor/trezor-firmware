@@ -47,8 +47,8 @@ def generate(env):
         touch = env["use_touch"]
         button = env["use_button"]
         layout_bolt = env["ui_layout"] == "UI_LAYOUT_BOLT"
-        layout_samson = env["ui_layout"] == "UI_LAYOUT_SAMSON"
-        layout_quicksilver = env["ui_layout"] == "UI_LAYOUT_QUICKSILVER"
+        layout_caesar = env["ui_layout"] == "UI_LAYOUT_CAESAR"
+        layout_delizia = env["ui_layout"] == "UI_LAYOUT_DELIZIA"
         thp = env["thp"]
         interim = f"{target[:-4]}.i"  # replace .mpy with .i
         sed_scripts = [
@@ -56,8 +56,8 @@ def generate(env):
             rf"-e 's/utils\.USE_BACKLIGHT/{backlight}/g'",
             rf"-e 's/utils\.USE_OPTIGA/{optiga}/g'",
             rf"-e 's/utils\.UI_LAYOUT == \"BOLT\"/{layout_bolt}/g'",
-            rf"-e 's/utils\.UI_LAYOUT == \"SAMSON\"/{layout_samson}/g'",
-            rf"-e 's/utils\.UI_LAYOUT == \"QUICKSILVER\"/{layout_quicksilver}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"CAESAR\"/{layout_caesar}/g'",
+            rf"-e 's/utils\.UI_LAYOUT == \"DELIZIA\"/{layout_delizia}/g'",
             rf"-e 's/utils\.USE_BUTTON/{button}/g'",
             rf"-e 's/utils\.USE_TOUCH/{touch}/g'",
             rf"-e 's/utils\.USE_THP/{thp}/g'",

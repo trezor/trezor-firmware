@@ -208,10 +208,10 @@ def read_and_confirm_mnemonic(
     """
     if debug.layout_type is LayoutType.Bolt:
         mnemonic = yield from read_mnemonic_from_screen_bolt(debug)
-    elif debug.layout_type is LayoutType.Samson:
-        mnemonic = yield from read_mnemonic_from_screen_samson(debug)
-    elif debug.layout_type is LayoutType.Quicksilver:
-        mnemonic = yield from read_mnemonic_from_screen_quicksilver(debug)
+    elif debug.layout_type is LayoutType.Caesar:
+        mnemonic = yield from read_mnemonic_from_screen_caesar(debug)
+    elif debug.layout_type is LayoutType.Delizia:
+        mnemonic = yield from read_mnemonic_from_screen_delizia(debug)
     else:
         raise ValueError(f"Unknown model: {debug.layout_type}")
 
@@ -238,7 +238,7 @@ def read_mnemonic_from_screen_bolt(
     return mnemonic
 
 
-def read_mnemonic_from_screen_samson(
+def read_mnemonic_from_screen_caesar(
     debug: "DebugLink",
 ) -> Generator[None, "ButtonRequest", list[str]]:
     mnemonic: list[str] = []
@@ -258,7 +258,7 @@ def read_mnemonic_from_screen_samson(
     return mnemonic
 
 
-def read_mnemonic_from_screen_quicksilver(
+def read_mnemonic_from_screen_delizia(
     debug: "DebugLink",
 ) -> Generator[None, "ButtonRequest", list[str]]:
     mnemonic: list[str] = []
@@ -293,10 +293,10 @@ def check_share(
             word_pos_match = re.search(
                 re_num_of_word, debug.read_layout().text_content()
             )
-        elif debug.layout_type is LayoutType.Samson:
+        elif debug.layout_type is LayoutType.Caesar:
             # other models have the instruction in the title/subtitle
             word_pos_match = re.search(re_num_of_word, debug.read_layout().title())
-        elif debug.layout_type is LayoutType.Quicksilver:
+        elif debug.layout_type is LayoutType.Delizia:
             word_pos_match = re.search(re_num_of_word, debug.read_layout().subtitle())
         else:
             word_pos_match = None
@@ -321,7 +321,7 @@ def click_info_button_bolt(debug: "DebugLink") -> Generator[Any, Any, ButtonRequ
     return (yield)
 
 
-def click_info_button_quicksilver(debug: "DebugLink"):
+def click_info_button_delizia(debug: "DebugLink"):
     """Click Shamir backup info button and return back."""
     layout = debug.click(buttons.CORNER_BUTTON)
     assert "VerticalMenu" in layout.all_components()

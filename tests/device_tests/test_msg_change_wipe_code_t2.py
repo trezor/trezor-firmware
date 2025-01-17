@@ -39,7 +39,7 @@ def _check_wipe_code(client: Client, pin: str, wipe_code: str):
     # Try to change the PIN to the current wipe code value. The operation should fail.
     with client, pytest.raises(TrezorFailure):
         client.use_pin_sequence([pin, wipe_code, wipe_code])
-        if client.layout_type is LayoutType.Samson:
+        if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 5
@@ -66,7 +66,7 @@ def test_set_remove_wipe_code(client: Client):
     _ensure_unlocked(client, PIN4)
     assert client.features.wipe_code_protection is False
 
-    if client.layout_type is LayoutType.Samson:
+    if client.layout_type is LayoutType.Caesar:
         br_count = 6
     else:
         br_count = 5
@@ -125,7 +125,7 @@ def test_set_wipe_code_to_pin(client: Client):
     _ensure_unlocked(client, PIN4)
 
     with client:
-        if client.layout_type is LayoutType.Samson:
+        if client.layout_type is LayoutType.Caesar:
             br_count = 8
         else:
             br_count = 7
@@ -144,7 +144,7 @@ def test_set_wipe_code_to_pin(client: Client):
 def test_set_pin_to_wipe_code(client: Client):
     # Set wipe code.
     with client:
-        if client.layout_type is LayoutType.Samson:
+        if client.layout_type is LayoutType.Caesar:
             br_count = 5
         else:
             br_count = 4
@@ -157,7 +157,7 @@ def test_set_pin_to_wipe_code(client: Client):
 
     # Try to set the PIN to the current wipe code value.
     with client, pytest.raises(TrezorFailure):
-        if client.layout_type is LayoutType.Samson:
+        if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 4

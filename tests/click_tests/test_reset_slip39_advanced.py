@@ -93,8 +93,8 @@ def test_reset_slip39_advanced(
     #     debug.read_layout().text_content(),
     #     [
     #         "reset__slip39_checklist_set_threshold",  # basic
-    #         "reset__slip39_checklist_set_num_shares",  # advanced (UI bolt and quicksilver)
-    #         "reset__slip39_checklist_num_shares",  # advanced (UI samson)
+    #         "reset__slip39_checklist_set_num_shares",  # advanced (UI bolt and delizia)
+    #         "reset__slip39_checklist_num_shares",  # advanced (UI caesar)
     #     ],
     # )
     reset.confirm_read(debug)

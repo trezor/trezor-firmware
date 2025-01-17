@@ -12,10 +12,10 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 
 L_BOLT = "layout_bolt"
-L_QS = "layout_quicksilver"
+L_DELIZIA = "layout_delizia"
 DESTINATIONS = {
     ROOT / "core" / "embed" / "rust" / "src" / "ui" / L_BOLT / "res" / "fido": 64,
-    ROOT / "core" / "embed" / "rust" / "src" / "ui" / L_QS / "res" / "fido": 32,
+    ROOT / "core" / "embed" / "rust" / "src" / "ui" / L_DELIZIA / "res" / "fido": 32,
 }
 EXCLUDE = {"icon_webauthn"}
 

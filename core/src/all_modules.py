@@ -175,34 +175,34 @@ trezor.ui.layouts.bolt.recovery
 import trezor.ui.layouts.bolt.recovery
 trezor.ui.layouts.bolt.reset
 import trezor.ui.layouts.bolt.reset
+trezor.ui.layouts.caesar
+import trezor.ui.layouts.caesar
+trezor.ui.layouts.caesar.fido
+import trezor.ui.layouts.caesar.fido
+trezor.ui.layouts.caesar.recovery
+import trezor.ui.layouts.caesar.recovery
+trezor.ui.layouts.caesar.reset
+import trezor.ui.layouts.caesar.reset
 trezor.ui.layouts.common
 import trezor.ui.layouts.common
+trezor.ui.layouts.delizia
+import trezor.ui.layouts.delizia
+trezor.ui.layouts.delizia.fido
+import trezor.ui.layouts.delizia.fido
+trezor.ui.layouts.delizia.recovery
+import trezor.ui.layouts.delizia.recovery
+trezor.ui.layouts.delizia.reset
+import trezor.ui.layouts.delizia.reset
 trezor.ui.layouts.fido
 import trezor.ui.layouts.fido
 trezor.ui.layouts.homescreen
 import trezor.ui.layouts.homescreen
 trezor.ui.layouts.progress
 import trezor.ui.layouts.progress
-trezor.ui.layouts.quicksilver
-import trezor.ui.layouts.quicksilver
-trezor.ui.layouts.quicksilver.fido
-import trezor.ui.layouts.quicksilver.fido
-trezor.ui.layouts.quicksilver.recovery
-import trezor.ui.layouts.quicksilver.recovery
-trezor.ui.layouts.quicksilver.reset
-import trezor.ui.layouts.quicksilver.reset
 trezor.ui.layouts.recovery
 import trezor.ui.layouts.recovery
 trezor.ui.layouts.reset
 import trezor.ui.layouts.reset
-trezor.ui.layouts.samson
-import trezor.ui.layouts.samson
-trezor.ui.layouts.samson.fido
-import trezor.ui.layouts.samson.fido
-trezor.ui.layouts.samson.recovery
-import trezor.ui.layouts.samson.recovery
-trezor.ui.layouts.samson.reset
-import trezor.ui.layouts.samson.reset
 trezor.utils
 import trezor.utils
 trezor.wire

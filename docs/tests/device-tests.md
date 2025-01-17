@@ -119,14 +119,14 @@ Arguments can be a list of internal model names, or one of the following shortcu
 * `legacy` - just Trezor One
 * `safe` - Trezor Safe family
 * `safe3` - Trezor Safe 3 (covers T2B1 and T2T1)
-* `quicksilver` - covers the `quicksilver` UI (currently T3T1 only)
+* `delizia` - covers the `delizia` UI (currently T3T1 only)
 
 You can specify a list as positional arguments, and exclude from it via `skip` keyword argument.
 
 You can provide a list of strings, a list of `TrezorModel` instances, or a
 comma-separated string of model names or shortcuts.
 
-You can specify a skip reason as `reason="TODO implement for Quicksilver too"`.
+You can specify a skip reason as `reason="TODO implement for Delizia too"`.
 
 [pytest-random-order]: https://pypi.org/project/pytest-random-order/
 

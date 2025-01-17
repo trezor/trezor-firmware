@@ -19,10 +19,10 @@ mod api;
 
 #[cfg(feature = "layout_bolt")]
 pub mod layout_bolt;
-#[cfg(feature = "layout_quicksilver")]
-pub mod layout_quicksilver;
-#[cfg(feature = "layout_samson")]
-pub mod layout_samson;
+#[cfg(feature = "layout_caesar")]
+pub mod layout_caesar;
+#[cfg(feature = "layout_delizia")]
+pub mod layout_delizia;
 
 #[cfg(feature = "bootloader")]
 pub mod ui_bootloader;
@@ -33,14 +33,14 @@ pub mod ui_firmware;
 pub use ui_common::CommonUI;
 
 #[cfg(all(
-    feature = "layout_quicksilver",
-    not(feature = "layout_samson"),
+    feature = "layout_delizia",
+    not(feature = "layout_caesar"),
     not(feature = "layout_bolt")
 ))]
-pub type ModelUI = crate::ui::layout_quicksilver::UIQuicksilver;
+pub type ModelUI = crate::ui::layout_delizia::UIDelizia;
 
-#[cfg(all(feature = "layout_samson", not(feature = "layout_bolt")))]
-pub type ModelUI = crate::ui::layout_samson::UISamson;
+#[cfg(all(feature = "layout_caesar", not(feature = "layout_bolt")))]
+pub type ModelUI = crate::ui::layout_caesar::UICaesar;
 
 #[cfg(feature = "layout_bolt")]
 pub type ModelUI = crate::ui::layout_bolt::UIBolt;

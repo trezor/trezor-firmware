@@ -40,7 +40,7 @@ def test_abort(core_emulator: Emulator):
     debug = device_handler.debuglink()
     features = device_handler.features()
 
-    if debug.layout_type is LayoutType.Quicksilver:
+    if debug.layout_type is LayoutType.Delizia:
         pytest.skip("abort not supported on T3T1")
 
     assert features.recovery_status == RecoveryStatus.Nothing
@@ -115,8 +115,8 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
 
     def assert_mnemonic_keyboard(debug: DebugLink) -> None:
         layout = debug.read_layout()
-        if debug.layout_type == LayoutType.Samson:
-            # UI Samson (TS3) has the keyboard wrapped in a Frame
+        if debug.layout_type == LayoutType.Caesar:
+            # UI Caesar (TS3) has the keyboard wrapped in a Frame
             assert "MnemonicKeyboard" in layout.all_components()
         else:
             assert layout.main_component() == "MnemonicKeyboard"
@@ -187,7 +187,7 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
         shares = MNEMONIC_SLIP39_ADVANCED_20
         layout = debug.read_layout()
         expected_text = "Enter any share"
-        if debug.layout_type == LayoutType.Quicksilver:
+        if debug.layout_type == LayoutType.Delizia:
             expected_text = "Enter each word"
         remaining = len(shares)
         for share in shares:

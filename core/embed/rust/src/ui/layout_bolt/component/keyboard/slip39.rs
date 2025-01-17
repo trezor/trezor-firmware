@@ -9,19 +9,18 @@ use crate::{
             Component, Event, EventCtx,
         },
         geometry::{Alignment2D, Offset, Rect},
-        layout_bolt::{
-            component::{
-                keyboard::{
-                    common::{render_pending_marker, MultiTapKeyboard},
-                    mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
-                },
-                Button, ButtonContent, ButtonMsg,
-            },
-            theme,
-        },
         shape::{self, Renderer},
         util::ResultExt,
     },
+};
+
+use super::super::{
+    super::theme,
+    keyboard::{
+        common::{render_pending_marker, MultiTapKeyboard},
+        mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
+    },
+    Button, ButtonContent, ButtonMsg,
 };
 
 const MAX_LENGTH: usize = 8;

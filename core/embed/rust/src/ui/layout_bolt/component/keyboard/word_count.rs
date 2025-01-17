@@ -1,12 +1,14 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     geometry::{Grid, GridCellSpan, Rect},
-    layout_bolt::{
-        component::button::{Button, ButtonMsg},
-        theme,
-    },
     shape::Renderer,
 };
+
+use super::super::{
+    super::theme,
+    button::{Button, ButtonMsg},
+};
+
 use heapless::Vec;
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]

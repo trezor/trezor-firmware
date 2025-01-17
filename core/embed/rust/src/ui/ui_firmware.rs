@@ -356,8 +356,8 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     // TODO: merge with `show_share_words` instead of having specific version for
-    // quicksilver UI
-    fn show_share_words_quicksilver(
+    // Delizia UI
+    fn show_share_words_delizia(
         words: Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,                     // TODO: replace Obj

@@ -45,8 +45,8 @@ CORNER_BUTTON = (215, 25)
 CONFIRM_WORD = (MID, TOP)
 TOP_ROW = (MID, TOP)
 
-YES_UI_QUICKSILVER = grid34(2, 2)
-NO_UI_QUICKSILVER = grid34(0, 2)
+YES_UI_DELIZIA = grid34(2, 2)
+NO_UI_DELIZIA = grid34(0, 2)
 
 
 def reset_minus(model_internal_name: str) -> Coords:

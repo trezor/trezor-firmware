@@ -230,7 +230,7 @@ def confirm_more(
     items: Iterable[tuple[int, str | bytes]],
 ) -> LayoutObj[UiResult]:
     """Confirm long content with the possibility to go back from any page.
-    Meant to be used with confirm_with_info on UI bolt and samson."""
+    Meant to be used with confirm_with_info on UI Bolt and Caesar."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -293,7 +293,7 @@ def confirm_with_info(
     items: Iterable[tuple[int, str | bytes]],
 ) -> LayoutObj[UiResult]:
     """Confirm given items but with third button. Always single page
-    without scrolling. In Quicksilver, the button is placed in
+    without scrolling. In Delizia, the button is placed in
     context menu."""
 
 
@@ -607,7 +607,7 @@ def show_share_words(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_share_words_quicksilver(
+def show_share_words_delizia(
     *,
     words: Iterable[str],
     subtitle: str | None,
@@ -656,7 +656,7 @@ def show_warning(
     allow_cancel: bool = True,
     danger: bool = False,  # unused on bolt
 ) -> LayoutObj[UiResult]:
-    """Warning modal. bolt: No buttons shown when `button` is empty string. samson: middle button and centered text."""
+    """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

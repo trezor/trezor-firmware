@@ -12,15 +12,16 @@ use crate::{
         display::Font,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
-        layout_bolt::component::{
-            button::{
-                Button, ButtonContent,
-                ButtonMsg::{self, Clicked},
-            },
-            theme,
-        },
         shape::{self, Renderer},
     },
+};
+
+use super::super::{
+    button::{
+        Button, ButtonContent,
+        ButtonMsg::{self, Clicked},
+    },
+    theme,
 };
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
