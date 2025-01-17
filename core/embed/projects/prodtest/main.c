@@ -58,6 +58,10 @@
 #include <io/haptic.h>
 #endif
 
+#ifdef USE_NFC
+#include <io/nfc.h>
+#endif
+
 #ifdef USE_RGB_LED
 #include <io/rgb_led.h>
 #endif
