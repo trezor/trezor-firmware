@@ -318,6 +318,8 @@ bool display_init(display_content_mode_t mode) {
     display_init_spi(drv);
   }
 
+  gfx_bitblt_init();
+
   drv->initialized = true;
   return true;
 }
@@ -326,6 +328,8 @@ void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
   mpu_set_active_fb(NULL, 0);
+
+  gfx_bitblt_deinit();
 
   drv->initialized = false;
 }
