@@ -98,7 +98,6 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
-  gfx_bitblt_init();
   display_init(DISPLAY_JUMP_BEHAVIOR);
   unit_properties_init();
 
@@ -138,7 +137,6 @@ static void drivers_deinit(void) {
   button_deinit();
 #endif
 #endif
-  gfx_bitblt_deinit();
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
   ensure_compatible_settings();
 }
