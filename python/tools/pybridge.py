@@ -104,9 +104,7 @@ class Transport:
         self.transport = transport
 
         client = TrezorClient(transport, ui=SilentUI())
-        self.model = (
-            trezorlib.models.by_name(client.features.model) or trezorlib.models.TREZOR_T
-        )
+        self.model = client.model
         client.end_session()
 
     def acquire(self, sid: str) -> str:
