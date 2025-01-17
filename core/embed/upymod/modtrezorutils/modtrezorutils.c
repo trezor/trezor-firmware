@@ -410,7 +410,7 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// BITCOIN_ONLY: bool
 /// """Whether the firmware is Bitcoin-only."""
 /// UI_LAYOUT: str
-/// """UI layout identifier ("bolt"-T, "samson"-TS3, "quicksilver"-TS5)."""
+/// """UI layout identifier ("BOLT"-T, "CAESAR"-TS3, "DELIZIA"-TS5)."""
 /// USE_THP: bool
 /// """Whether the firmware supports Trezor-Host Protocol (version 2)."""
 /// if __debug__:
@@ -506,10 +506,10 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #endif
 #ifdef UI_LAYOUT_BOLT
     {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_BOLT)},
-#elif UI_LAYOUT_SAMSON
-    {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_SAMSON)},
-#elif UI_LAYOUT_QUICKSILVER
-    {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_QUICKSILVER)},
+#elif UI_LAYOUT_CAESAR
+    {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_CAESAR)},
+#elif UI_LAYOUT_DELIZIA
+    {MP_ROM_QSTR(MP_QSTR_UI_LAYOUT), MP_ROM_QSTR(MP_QSTR_DELIZIA)},
 #else
 #error Unknown layout
 #endif

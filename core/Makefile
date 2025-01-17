@@ -57,15 +57,15 @@ LAYOUT_FEATURE = layout_bolt
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T2B1))
 MCU = STM32F4
 OPENOCD_TARGET = target/stm32f4x.cfg
-LAYOUT_FEATURE = layout_samson
+LAYOUT_FEATURE = layout_caesar
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3T1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-LAYOUT_FEATURE = layout_quicksilver
+LAYOUT_FEATURE = layout_delizia
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3B1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg
-LAYOUT_FEATURE = layout_samson
+LAYOUT_FEATURE = layout_caesar
 else ifeq ($(TREZOR_MODEL),$(filter $(TREZOR_MODEL),T3W1))
 MCU = STM32U5
 OPENOCD_TARGET = target/stm32u5x.cfg

@@ -483,7 +483,7 @@ if __name__ == "__main__":
     ).write_files()
     FaceProcessor("RobotoMono", "Medium", 20).write_files()
 
-    # layout samson
+    # layout caesar
     FaceProcessor(
         "PixelOperator",
         "Regular",
@@ -507,7 +507,7 @@ if __name__ == "__main__":
     # NOTE: Unifont Bold does not seem to have czech characters
     FaceProcessor("Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf").write_files()
 
-    # layout quicksilver
+    # layout delizia
     FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf").write_files()
     FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf").write_files()
     FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf").write_files()

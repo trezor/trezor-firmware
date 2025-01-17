@@ -64,7 +64,7 @@ def test_set_pin(client: Client):
 
     # Let's set new PIN
     with client:
-        if client.layout_type is LayoutType.Samson:
+        if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 4
@@ -89,7 +89,7 @@ def test_change_pin(client: Client):
     # Let's change PIN
     with client:
         client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
-        if client.layout_type is LayoutType.Samson:
+        if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 5
@@ -182,7 +182,7 @@ def test_change_invalid_current(client: Client):
     _check_pin(client, PIN4)
 
 
-@pytest.mark.models("quicksilver")
+@pytest.mark.models("delizia")
 @pytest.mark.setup_client(pin=None)
 def test_pin_menu_cancel_setup(client: Client):
     def cancel_pin_setup_input_flow():

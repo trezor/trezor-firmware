@@ -31,7 +31,7 @@ def configure_board(
 
 
 def get_model_ui() -> str:
-    return "samson"
+    return "caesar"
 
 
 def get_model_ui_conf() -> list[str]:

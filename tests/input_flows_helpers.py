@@ -26,7 +26,7 @@ class PinFlow:
         assert (yield).name == "pin_device"  # Enter PIN
         assert "PinKeyboard" in self.debug.read_layout().all_components()
         self.debug.input(pin)
-        if self.client.layout_type is LayoutType.Samson:
+        if self.client.layout_type is LayoutType.Caesar:
             assert (yield).name == f"reenter_{what}"  # Reenter PIN
             assert (
                 TR.translate(f"{what}__reenter_to_confirm")
@@ -49,7 +49,7 @@ class BackupFlow:
     def confirm_new_wallet(self) -> BRGeneratorType:
         yield
         assert TR.reset__by_continuing in self.debug.read_layout().text_content()
-        if self.client.layout_type is LayoutType.Samson:
+        if self.client.layout_type is LayoutType.Caesar:
             self.debug.press_right()
         self.debug.press_yes()
 
@@ -66,7 +66,7 @@ class RecoveryFlow:
     def confirm_recovery(self) -> BRGeneratorType:
         assert (yield).name == "recover_device"
         assert TR.reset__by_continuing in self._text_content()
-        if self.client.layout_type is LayoutType.Samson:
+        if self.client.layout_type is LayoutType.Caesar:
             self.debug.press_right()
         self.debug.press_yes()
 
@@ -76,31 +76,31 @@ class RecoveryFlow:
         self.debug.press_yes()
 
     def setup_slip39_recovery(self, num_words: int) -> BRGeneratorType:
-        if self.client.layout_type is LayoutType.Samson:
-            yield from self.recovery_homescreen_samson()
+        if self.client.layout_type is LayoutType.Caesar:
+            yield from self.recovery_homescreen_caesar()
         yield from self.input_number_of_words(num_words)
         yield from self.enter_any_share()
 
     def setup_repeated_backup_recovery(self, num_words: int) -> BRGeneratorType:
-        if self.client.layout_type is LayoutType.Samson:
-            yield from self.recovery_homescreen_samson()
+        if self.client.layout_type is LayoutType.Caesar:
+            yield from self.recovery_homescreen_caesar()
         yield from self.input_number_of_words(num_words)
         yield from self.enter_your_backup()
 
     def setup_bip39_recovery(self, num_words: int) -> BRGeneratorType:
-        if self.client.layout_type is LayoutType.Samson:
-            yield from self.recovery_homescreen_samson()
+        if self.client.layout_type is LayoutType.Caesar:
+            yield from self.recovery_homescreen_caesar()
         yield from self.input_number_of_words(num_words)
         yield from self.enter_your_backup()
 
-    def recovery_homescreen_samson(self) -> BRGeneratorType:
+    def recovery_homescreen_caesar(self) -> BRGeneratorType:
         yield
         assert TR.recovery__num_of_words in self._text_content()
         self.debug.press_yes()
 
     def enter_your_backup(self) -> BRGeneratorType:
         assert (yield).name == "recovery"
-        if self.debug.layout_type is LayoutType.Quicksilver:
+        if self.debug.layout_type is LayoutType.Delizia:
             assert TR.recovery__enter_each_word in self._text_content()
         else:
             assert TR.recovery__enter_backup in self._text_content()
@@ -108,7 +108,7 @@ class RecoveryFlow:
             TR.recovery__title_dry_run.lower()
             in self.debug.read_layout().title().lower()
         )
-        if self.client.layout_type is LayoutType.Samson and not is_dry_run:
+        if self.client.layout_type is LayoutType.Caesar and not is_dry_run:
             # Normal recovery has extra info (not dry run)
             self.debug.press_right()
             self.debug.press_right()
@@ -124,7 +124,7 @@ class RecoveryFlow:
             TR.recovery__title_dry_run.lower()
             in self.debug.read_layout().title().lower()
         )
-        if self.client.layout_type is LayoutType.Samson and not is_dry_run:
+        if self.client.layout_type is LayoutType.Caesar and not is_dry_run:
             # Normal recovery has extra info (not dry run)
             self.debug.press_right()
             self.debug.press_right()
@@ -132,7 +132,7 @@ class RecoveryFlow:
 
     def abort_recovery(self, confirm: bool) -> BRGeneratorType:
         yield
-        if self.client.layout_type is LayoutType.Samson:
+        if self.client.layout_type is LayoutType.Caesar:
             assert TR.recovery__num_of_words in self._text_content()
             self.debug.press_no()
             yield
@@ -142,7 +142,7 @@ class RecoveryFlow:
                 self.debug.press_yes()
             else:
                 self.debug.press_no()
-        elif self.client.layout_type is LayoutType.Quicksilver:
+        elif self.client.layout_type is LayoutType.Delizia:
             assert TR.recovery__enter_each_word in self._text_content()
             self.debug.click(buttons.CORNER_BUTTON)
             self.debug.synchronize_at("VerticalMenu")
@@ -162,7 +162,7 @@ class RecoveryFlow:
 
     def abort_recovery_between_shares(self) -> BRGeneratorType:
         yield
-        if self.client.layout_type is LayoutType.Samson:
+        if self.client.layout_type is LayoutType.Caesar:
             assert TR.regexp("recovery__x_of_y_entered_template").search(
                 self._text_content()
             )
@@ -171,7 +171,7 @@ class RecoveryFlow:
             assert TR.recovery__wanna_cancel_recovery in self._text_content()
             self.debug.press_right()
             self.debug.press_yes()
-        elif self.client.layout_type is LayoutType.Quicksilver:
+        elif self.client.layout_type is LayoutType.Delizia:
             assert TR.regexp("recovery__x_of_y_entered_template").search(
                 self._text_content()
             )
@@ -195,7 +195,7 @@ class RecoveryFlow:
         br = yield
         assert br.code == B.MnemonicWordCount
         assert br.name == "recovery_word_count"
-        if self.client.layout_type is LayoutType.Samson:
+        if self.client.layout_type is LayoutType.Caesar:
             assert TR.word_count__title in self.debug.read_layout().title()
         else:
             assert TR.recovery__num_of_words in self._text_content()
@@ -249,7 +249,7 @@ class RecoveryFlow:
         assert br.code == B.Success
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page
-        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Quicksilver):
+        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Delizia):
             assert TR.recovery__dry_run_bip39_valid_match in text
         self.debug.press_yes()
 
@@ -258,7 +258,7 @@ class RecoveryFlow:
         assert br.code == B.Success
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page
-        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Quicksilver):
+        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Delizia):
             assert TR.recovery__dry_run_slip39_valid_match in text
         self.debug.press_yes()
 
@@ -267,7 +267,7 @@ class RecoveryFlow:
         assert br.code == B.Warning
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page on TT
-        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Quicksilver):
+        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Delizia):
             assert TR.recovery__dry_run_slip39_valid_mismatch in text
         self.debug.press_yes()
 
@@ -276,7 +276,7 @@ class RecoveryFlow:
         assert br.code == B.Warning
         text = get_text_possible_pagination(self.debug, br)
         # TODO: make sure the translations fit on one page
-        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Quicksilver):
+        if self.client.layout_type not in (LayoutType.Bolt, LayoutType.Delizia):
             assert TR.recovery__dry_run_bip39_valid_mismatch in text
         self.debug.press_yes()
 
@@ -317,8 +317,8 @@ class RecoveryFlow:
                 if click_info:
                     if self.client.layout_type is LayoutType.Bolt:
                         yield from self.click_info_bolt()
-                    elif self.client.layout_type is LayoutType.Quicksilver:
-                        yield from self.click_info_quicksilver()
+                    elif self.client.layout_type is LayoutType.Delizia:
+                        yield from self.click_info_delizia()
                     else:
                         raise ValueError("Unknown model!")
                     yield from self.success_more_shares_needed()
@@ -331,7 +331,7 @@ class RecoveryFlow:
             self.debug.swipe_up()
         self.debug.press_yes()
 
-    def click_info_quicksilver(self) -> BRGeneratorType:
+    def click_info_delizia(self) -> BRGeneratorType:
         # Moving through the menu into the show_shares screen
         self.debug.click(buttons.CORNER_BUTTON)
         self.debug.synchronize_at("VerticalMenu")
@@ -377,13 +377,13 @@ class EthereumFlow:
         assert br.pages is not None
         assert br.pages > 2
         assert self.debug.read_layout().title() == TR.ethereum__title_input_data
-        if self.client.layout_type is LayoutType.Samson:
+        if self.client.layout_type is LayoutType.Caesar:
             self.debug.press_right()
             self.debug.press_right()
             self.debug.press_left()
             self.debug.press_left()
             self.debug.press_left()
-        elif self.client.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+        elif self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
             self.debug.swipe_up()
             self.debug.swipe_up()
             self.debug.click(self.GO_BACK)
@@ -416,7 +416,7 @@ class EthereumFlow:
         self.debug.press_yes()
         assert (yield).name == "confirm_ethereum_tx"
 
-    def _confirm_tx_samson(
+    def _confirm_tx_caesar(
         self, cancel: bool, info: bool, go_back_from_summary: bool
     ) -> BRGeneratorType:
         assert (yield).name == "confirm_ethereum_tx"
@@ -445,7 +445,7 @@ class EthereumFlow:
         self.debug.press_middle()
         assert (yield).name == "confirm_ethereum_tx"
 
-    def _confirm_tx_quicksilver(
+    def _confirm_tx_delizia(
         self, cancel: bool, info: bool, go_back_from_summary: bool
     ) -> BRGeneratorType:
         assert (yield).name == "confirm_output"
@@ -489,10 +489,10 @@ class EthereumFlow:
     ) -> BRGeneratorType:
         if self.client.layout_type is LayoutType.Bolt:
             yield from self._confirm_tx_bolt(cancel, info, go_back_from_summary)
-        elif self.client.layout_type is LayoutType.Samson:
-            yield from self._confirm_tx_samson(cancel, info, go_back_from_summary)
-        elif self.client.layout_type is LayoutType.Quicksilver:
-            yield from self._confirm_tx_quicksilver(cancel, info, go_back_from_summary)
+        elif self.client.layout_type is LayoutType.Caesar:
+            yield from self._confirm_tx_caesar(cancel, info, go_back_from_summary)
+        elif self.client.layout_type is LayoutType.Delizia:
+            yield from self._confirm_tx_delizia(cancel, info, go_back_from_summary)
         else:
             raise ValueError("Unknown model!")
 
@@ -538,7 +538,7 @@ class EthereumFlow:
 
             self.debug.press_yes()
 
-        elif self.client.layout_type is LayoutType.Quicksilver:
+        elif self.client.layout_type is LayoutType.Delizia:
             # confirm intro
             if info:
                 self.debug.click(buttons.CORNER_BUTTON)
@@ -570,7 +570,7 @@ class EthereumFlow:
 
             self.debug.press_yes()
 
-        elif self.client.layout_type is LayoutType.Samson:
+        elif self.client.layout_type is LayoutType.Caesar:
             # confirm intro
             if info:
                 self.debug.press_right()

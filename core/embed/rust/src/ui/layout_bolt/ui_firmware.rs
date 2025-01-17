@@ -1024,7 +1024,7 @@ impl FirmwareUI for UIBolt {
         Ok(layout)
     }
 
-    fn show_share_words_quicksilver(
+    fn show_share_words_delizia(
         _words: heapless::Vec<TString<'static>, 33>,
         _subtitle: Option<TString<'static>>,
         _instructions: Obj,
