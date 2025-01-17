@@ -23,13 +23,13 @@ use crate::{
         },
         flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
         geometry::Direction,
-        layout::util::{ConfirmBlob, StrOrBytes},
+        layout::util::{ConfirmValueParams, StrOrBytes},
         layout_quicksilver::{component::SwipeContent, flow},
     },
 };
 use heapless::Vec;
 
-pub struct ConfirmBlobParams {
+pub struct ConfirmValue {
     title: TString<'static>,
     subtitle: Option<TString<'static>>,
     footer_instruction: Option<TString<'static>>,
@@ -56,7 +56,7 @@ pub struct ConfirmBlobParams {
     cancel: bool,
 }
 
-impl ConfirmBlobParams {
+impl ConfirmValue {
     pub fn new(title: TString<'static>, data: Obj, description: Option<TString<'static>>) -> Self {
         Self {
             title,
@@ -202,7 +202,7 @@ impl ConfirmBlobParams {
     pub fn into_layout(
         self,
     ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
-        let paragraphs = ConfirmBlob {
+        let paragraphs = ConfirmValueParams {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
             data: if self.data != Obj::const_none() {
@@ -257,7 +257,7 @@ impl ConfirmBlobParams {
     }
 
     pub fn into_flow(self) -> Result<SwipeFlow, Error> {
-        let paragraphs = ConfirmBlob {
+        let paragraphs = ConfirmValueParams {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
             data: self.data.try_into()?,

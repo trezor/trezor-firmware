@@ -310,14 +310,17 @@ async def confirm_nondefault_locktime(lock_time: int, lock_time_disabled: bool) 
         if lock_time < _LOCKTIME_TIMESTAMP_MIN_VALUE:
             text = TR.bitcoin__locktime_set_to_blockheight
             value = str(lock_time)
+            value_text_mono = True
         else:
             text = TR.bitcoin__locktime_set_to
             value = format_timestamp(lock_time)
+            value_text_mono = False
         await layouts.confirm_value(
             TR.bitcoin__confirm_locktime,
             value,
             text,
             "nondefault_locktime",
+            value_text_mono=value_text_mono,
             br_code=ButtonRequestType.SignTx,
             verb=TR.buttons__confirm,
         )

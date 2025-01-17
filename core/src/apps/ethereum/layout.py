@@ -180,7 +180,7 @@ def require_confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
         "confirm_data",
         TR.ethereum__title_input_data,
         data,
-        TR.ethereum__data_size_template.format(data_total),
+        description=TR.ethereum__data_size_template.format(data_total),
         verb=TR.buttons__confirm,
         verb_cancel=TR.send__cancel_sign,
         br_code=ButtonRequestType.SignTx,

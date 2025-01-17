@@ -23,7 +23,7 @@ use crate::{
         geometry,
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmBlob, PropsList, RecoveryType},
+            util::{ConfirmValueParams, PropsList, RecoveryType},
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
@@ -94,23 +94,22 @@ impl FirmwareUI for UIBolt {
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        ConfirmBlobParams::new(title, address, None, Some(verb), None, false)
+        ConfirmValue::new(title, address, None, Some(verb), None, false)
             .with_subtitle(address_label)
             .with_info_button(info_button)
             .with_chunkify(chunkify)
             .into_layout()
     }
 
-    fn confirm_blob(
+    fn confirm_value(
         title: TString<'static>,
         data: Obj,
         description: Option<TString<'static>>,
         text_mono: bool,
         extra: Option<TString<'static>>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
-        _verb_info: Option<TString<'static>>,
         info: bool,
         hold: bool,
         chunkify: bool,
@@ -118,15 +117,16 @@ impl FirmwareUI for UIBolt {
         _prompt_screen: bool,
         _cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        ConfirmBlobParams::new(title, data, description, verb, verb_cancel, hold)
+        ConfirmValue::new(title, data, description, verb, verb_cancel, hold)
             .with_text_mono(text_mono)
+            .with_subtitle(subtitle)
             .with_extra(extra)
             .with_chunkify(chunkify)
             .with_info_button(info)
             .into_layout()
     }
 
-    fn confirm_blob_intro(
+    fn confirm_value_intro(
         _title: TString<'static>,
         _data: Obj,
         _subtitle: Option<TString<'static>>,
@@ -134,7 +134,7 @@ impl FirmwareUI for UIBolt {
         _verb_cancel: Option<TString<'static>>,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_blob_intro not implemented"))
+        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
     }
 
     fn confirm_homescreen(
@@ -448,27 +448,6 @@ impl FirmwareUI for UIBolt {
         }
         let layout = RootComponent::new(frame);
         Ok(layout)
-    }
-
-    fn confirm_value(
-        title: TString<'static>,
-        value: Obj,
-        description: Option<TString<'static>>,
-        subtitle: Option<TString<'static>>,
-        verb: Option<TString<'static>>,
-        _verb_info: Option<TString<'static>>,
-        verb_cancel: Option<TString<'static>>,
-        info_button: bool,
-        hold: bool,
-        chunkify: bool,
-        text_mono: bool,
-    ) -> Result<Gc<LayoutObj>, Error> {
-        ConfirmBlobParams::new(title, value, description, verb, verb_cancel, hold)
-            .with_subtitle(subtitle)
-            .with_info_button(info_button)
-            .with_chunkify(chunkify)
-            .with_text_mono(text_mono)
-            .into_layout()
     }
 
     fn confirm_with_info(
@@ -1221,7 +1200,7 @@ fn new_show_modal(
 }
 
 // TODO: move to some util.rs?
-struct ConfirmBlobParams {
+struct ConfirmValue {
     title: TString<'static>,
     subtitle: Option<TString<'static>>,
     data: Obj,
@@ -1235,7 +1214,7 @@ struct ConfirmBlobParams {
     text_mono: bool,
 }
 
-impl ConfirmBlobParams {
+impl ConfirmValue {
     fn new(
         title: TString<'static>,
         data: Obj,
@@ -1285,7 +1264,7 @@ impl ConfirmBlobParams {
     }
 
     fn into_layout(self) -> Result<Gc<LayoutObj>, Error> {
-        let paragraphs = ConfirmBlob {
+        let paragraphs = ConfirmValueParams {
             description: self.description.unwrap_or("".into()),
             extra: self.extra.unwrap_or("".into()),
             data: self.data.try_into()?,

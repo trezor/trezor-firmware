@@ -39,4 +39,4 @@ pub use set_brightness::SetBrightness;
 pub use show_danger::ShowDanger;
 pub use show_share_words::ShowShareWords;
 pub use show_tutorial::ShowTutorial;
-pub use util::{ConfirmBlobParams, ShowInfoParams};
+pub use util::{ConfirmValue, ShowInfoParams};

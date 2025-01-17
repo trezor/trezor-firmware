@@ -112,7 +112,7 @@ def confirm_address(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def confirm_blob(
+def confirm_value(
     *,
     title: str,
     data: str | bytes,
@@ -122,7 +122,6 @@ def confirm_blob(
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
-    verb_info: str | None = None,
     info: bool = True,
     hold: bool = False,
     chunkify: bool = False,
@@ -134,7 +133,7 @@ def confirm_blob(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def confirm_blob_intro(
+def confirm_value_intro(
     *,
     title: str,
     data: str | bytes,
@@ -263,24 +262,6 @@ def confirm_summary(
     verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm summary of a transaction."""
-
-
-# rust/src/ui/api/firmware_micropython.rs
-def confirm_value(
-    *,
-    title: str,
-    value: str,
-    description: str | None,
-    subtitle: str | None,
-    verb: str | None = None,
-    verb_info: str | None = None,
-    verb_cancel: str | None = None,
-    info_button: bool = False,
-    hold: bool = False,
-    chunkify: bool = False,
-    text_mono: bool = True,
-) -> LayoutObj[UiResult]:
-    """Confirm value. Merge of confirm_total and confirm_output."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

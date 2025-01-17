@@ -15,7 +15,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow, SwipePage,
         },
         geometry::Direction,
-        layout::util::ConfirmBlob,
+        layout::util::ConfirmValueParams,
     },
 };
 
@@ -107,7 +107,7 @@ pub fn new_get_address(
     } else {
         &theme::TEXT_MONO
     };
-    let paragraphs = ConfirmBlob {
+    let paragraphs = ConfirmValueParams {
         description: description.unwrap_or_else(|| "".into()),
         extra: extra.unwrap_or_else(|| "".into()),
         data: address.try_into()?,

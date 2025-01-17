@@ -108,7 +108,7 @@ extern "C" fn new_confirm_address(n_args: usize, args: *const Obj, kwargs: *mut 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
@@ -133,10 +133,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
-        let verb_info: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_verb_info)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
         let info: bool = kwargs.get_or(Qstr::MP_QSTR_info, false)?;
         let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
@@ -144,7 +140,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, false)?;
         let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, false)?;
 
-        let layout_obj = ModelUI::confirm_blob(
+        let layout_obj = ModelUI::confirm_value(
             title,
             data,
             description,
@@ -153,7 +149,6 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
             subtitle,
             verb,
             verb_cancel,
-            verb_info,
             info,
             hold,
             chunkify,
@@ -166,7 +161,7 @@ extern "C" fn new_confirm_blob(n_args: usize, args: *const Obj, kwargs: *mut Map
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_confirm_blob_intro(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+extern "C" fn new_confirm_value_intro(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let data: Obj = kwargs.get(Qstr::MP_QSTR_data)?;
@@ -185,7 +180,7 @@ extern "C" fn new_confirm_blob_intro(n_args: usize, args: *const Obj, kwargs: *m
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
 
         let layout_obj =
-            ModelUI::confirm_blob_intro(title, data, subtitle, verb, verb_cancel, chunkify)?;
+            ModelUI::confirm_value_intro(title, data, subtitle, verb, verb_cancel, chunkify)?;
         Ok(layout_obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -369,53 +364,6 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             verb_cancel,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
-    };
-    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
-}
-
-extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
-    let block = move |_args: &[Obj], kwargs: &Map| {
-        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
-        let subtitle: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_subtitle)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-        let description: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_description)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-        let value: Obj = kwargs.get(Qstr::MP_QSTR_value)?;
-        let info_button: bool = kwargs.get_or(Qstr::MP_QSTR_info_button, false)?;
-        let verb: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_verb)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-        let verb_info: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_verb_info)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-        let verb_cancel: Option<TString> = kwargs
-            .get(Qstr::MP_QSTR_verb_cancel)
-            .unwrap_or_else(|_| Obj::const_none())
-            .try_into_option()?;
-        let hold: bool = kwargs.get_or(Qstr::MP_QSTR_hold, false)?;
-        let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
-        let text_mono: bool = kwargs.get_or(Qstr::MP_QSTR_text_mono, true)?;
-
-        let layout_obj = ModelUI::confirm_value(
-            title,
-            value,
-            description,
-            subtitle,
-            verb,
-            verb_info,
-            verb_cancel,
-            info_button,
-            hold,
-            chunkify,
-            text_mono,
-        )?;
-        Ok(layout_obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
@@ -1170,7 +1118,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Confirm address."""
     Qstr::MP_QSTR_confirm_address => obj_fn_kw!(0, new_confirm_address).as_obj(),
 
-    /// def confirm_blob(
+    /// def confirm_value(
     ///     *,
     ///     title: str,
     ///     data: str | bytes,
@@ -1180,7 +1128,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     subtitle: str | None = None,
     ///     verb: str | None = None,
     ///     verb_cancel: str | None = None,
-    ///     verb_info: str | None = None,
     ///     info: bool = True,
     ///     hold: bool = False,
     ///     chunkify: bool = False,
@@ -1189,9 +1136,9 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     cancel: bool = False,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm byte sequence data."""
-    Qstr::MP_QSTR_confirm_blob => obj_fn_kw!(0, new_confirm_blob).as_obj(),
+    Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
 
-    /// def confirm_blob_intro(
+    /// def confirm_value_intro(
     ///     *,
     ///     title: str,
     ///     data: str | bytes,
@@ -1203,7 +1150,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Confirm byte sequence data by showing only the first page of the data
     ///     and instructing the user to access the menu in order to view all the data,
     ///     which can then be confirmed using confirm_blob."""
-    Qstr::MP_QSTR_confirm_blob_intro => obj_fn_kw!(0, new_confirm_blob_intro).as_obj(),
+    Qstr::MP_QSTR_confirm_value_intro => obj_fn_kw!(0, new_confirm_value_intro).as_obj(),
 
     /// def confirm_coinjoin(
     ///     *,
@@ -1311,23 +1258,6 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm summary of a transaction."""
     Qstr::MP_QSTR_confirm_summary => obj_fn_kw!(0, new_confirm_summary).as_obj(),
-
-    /// def confirm_value(
-    ///     *,
-    ///     title: str,
-    ///     value: str,
-    ///     description: str | None,
-    ///     subtitle: str | None,
-    ///     verb: str | None = None,
-    ///     verb_info: str | None = None,
-    ///     verb_cancel: str | None = None,
-    ///     info_button: bool = False,
-    ///     hold: bool = False,
-    ///     chunkify: bool = False,
-    ///     text_mono: bool = True,
-    /// ) -> LayoutObj[UiResult]:
-    ///     """Confirm value. Merge of confirm_total and confirm_output."""
-    Qstr::MP_QSTR_confirm_value => obj_fn_kw!(0, new_confirm_value).as_obj(),
 
     /// def confirm_with_info(
     ///     *,
