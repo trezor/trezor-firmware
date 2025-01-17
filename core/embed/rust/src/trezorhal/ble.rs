@@ -19,7 +19,6 @@ pub fn pairing_mode(name: &str) {
     unsafe {
         let mut cmd = ffi::ble_command_t {
             cmd_type: ffi::ble_command_type_t_BLE_PAIRING_MODE,
-            connection_id: 0,
             data_len: 0,
             data: ffi::ble_command_data_t { raw: [0; 32] },
         };
@@ -39,7 +38,6 @@ pub fn allow_pairing() {
     unsafe {
         let mut cmd = ffi::ble_command_t {
             cmd_type: ffi::ble_command_type_t_BLE_ALLOW_PAIRING,
-            connection_id: 0,
             data_len: 0,
             data: ffi::ble_command_data_t { raw: [0; 32] },
         };
@@ -51,7 +49,6 @@ pub fn reject_pairing() {
     unsafe {
         let mut cmd = ffi::ble_command_t {
             cmd_type: ffi::ble_command_type_t_BLE_REJECT_PAIRING,
-            connection_id: 0,
             data_len: 0,
             data: ffi::ble_command_data_t { raw: [0; 32] },
         };
