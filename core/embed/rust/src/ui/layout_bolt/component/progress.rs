@@ -15,11 +15,12 @@ use crate::{
         },
         display::{Font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
-        layout_bolt::constant,
         shape::Renderer,
         util::animation_disabled,
     },
 };
+
+use super::super::constant;
 
 pub struct Progress {
     title: Child<Label<'static>>,

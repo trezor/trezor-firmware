@@ -40,7 +40,7 @@ message DebugLinkDecision {
     }
 
     /**
-    * Structure representing button presses of UI samson
+    * Structure representing button presses of UI Caesar
     */
     // TODO: probably delete the middle_btn as it is not a physical one
     enum DebugPhysicalButton {

@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from site_scons import models
 
-from . import ui_bolt, ui_quicksilver, ui_samson
+from . import ui_bolt, ui_caesar, ui_delizia
 
 
 def get_ui_module(layout: str):
     ui_modules = {
-        "quicksilver": ui_quicksilver,
-        "samson": ui_samson,
+        "delizia": ui_delizia,
+        "caesar": ui_caesar,
         "bolt": ui_bolt,
     }
 

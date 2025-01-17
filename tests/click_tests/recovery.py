@@ -16,19 +16,15 @@ DELETE_BTN_TEXTS = ("inputs__delete", "inputs__previous")
 def enter_word(
     debug: "DebugLink", word: str, is_slip39: bool = False
 ) -> "LayoutContent":
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Quicksilver):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         typed_word = word[:4]
         for coords in buttons.type_word(typed_word, is_slip39=is_slip39):
             debug.click(coords)
-        if (
-            debug.layout_type is LayoutType.Quicksilver
-            and not is_slip39
-            and len(word) > 4
-        ):
-            # T3T1 (quicksilver) BIP39 keyboard allows to "confirm" only if the word is fully written, you need to click the word to auto-complete
+        if debug.layout_type is LayoutType.Delizia and not is_slip39 and len(word) > 4:
+            # T3T1 (delizia) BIP39 keyboard allows to "confirm" only if the word is fully written, you need to click the word to auto-complete
             debug.click(buttons.CONFIRM_WORD)
         return debug.click(buttons.CONFIRM_WORD)
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         letter_index = 0
         layout = debug.read_layout()
 
@@ -55,9 +51,9 @@ def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None
     assert TR.translate(title) == layout.title()
     if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
-    elif debug.layout_type is LayoutType.Quicksilver:
+    elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         for _ in range(layout.page_count()):
             debug.press_right()
 
@@ -84,7 +80,7 @@ def select_number_of_words(
             raise ValueError("Invalid num_of_words")
         return debug.click(coords)
 
-    def select_samson() -> "LayoutContent":
+    def select_caesar() -> "LayoutContent":
         # navigate to the number and confirm it
         word_options = (20, 33) if unlock_repeated_backup else (12, 18, 20, 24, 33)
         index = word_options.index(num_of_words)
@@ -92,10 +88,10 @@ def select_number_of_words(
             debug.press_right()
         return debug.press_middle()
 
-    def select_quicksilver() -> "LayoutContent":
+    def select_delizia() -> "LayoutContent":
         # click the button from ValuePad
         if unlock_repeated_backup:
-            coords_map = {20: buttons.NO_UI_QUICKSILVER, 33: buttons.YES_UI_QUICKSILVER}
+            coords_map = {20: buttons.NO_UI_DELIZIA, 33: buttons.YES_UI_DELIZIA}
         else:
             coords_map = {
                 12: buttons.grid34(0, 1),
@@ -112,17 +108,17 @@ def select_number_of_words(
     if debug.layout_type is LayoutType.Bolt:
         assert debug.read_layout().text_content() == TR.recovery__num_of_words
         layout = select_bolt()
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         layout = debug.press_right()
         assert layout.title() == TR.word_count__title
-        layout = select_samson()
-    elif debug.layout_type is LayoutType.Quicksilver:
-        layout = select_quicksilver()
+        layout = select_caesar()
+    elif debug.layout_type is LayoutType.Delizia:
+        layout = select_delizia()
     else:
         raise ValueError("Unknown model")
 
     if unlock_repeated_backup:
-        if debug.layout_type is LayoutType.Samson:
+        if debug.layout_type is LayoutType.Caesar:
             assert TR.recovery__enter_backup in layout.text_content()
         else:
             assert (
@@ -150,12 +146,12 @@ def enter_share(
     is_first: bool = True,
     before_title: str = "recovery__title_recover",
 ) -> "LayoutContent":
-    if debug.layout_type is LayoutType.Samson:
+    if debug.layout_type is LayoutType.Caesar:
         assert TR.translate(before_title) in debug.read_layout().title()
         layout = debug.read_layout()
         for _ in range(layout.page_count()):
             layout = debug.press_right()
-    elif debug.layout_type is LayoutType.Quicksilver:
+    elif debug.layout_type is LayoutType.Delizia:
         layout = debug.swipe_up()
     else:
         assert TR.translate(before_title) in debug.read_layout().title()
@@ -236,7 +232,7 @@ def enter_seed_previous_correct(
                 debug.swipe_right()
                 for _ in range(len(bad_word)):
                     debug.click(buttons.RECOVERY_DELETE)
-            elif debug.layout_type is LayoutType.Samson:
+            elif debug.layout_type is LayoutType.Caesar:
                 layout = debug.read_layout()
 
                 while layout.get_middle_choice() not in DELETE_BTNS:
@@ -247,7 +243,7 @@ def enter_seed_previous_correct(
                     while layout.get_middle_choice() not in DELETE_BTNS:
                         layout = debug.press_left()
                     layout = debug.press_middle()
-            elif debug.layout_type is LayoutType.Quicksilver:
+            elif debug.layout_type is LayoutType.Delizia:
                 debug.click(buttons.RECOVERY_DELETE)  # Top-left
                 for _ in range(len(bad_word)):
                     debug.click(buttons.RECOVERY_DELETE)
@@ -276,10 +272,10 @@ def prepare_enter_seed(
     )
     if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
-    elif debug.layout_type is LayoutType.Quicksilver:
+    elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
         debug.swipe_up()
-    elif debug.layout_type is LayoutType.Samson:
+    elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         debug.press_right()
         layout = debug.press_right()

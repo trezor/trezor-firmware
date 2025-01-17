@@ -78,17 +78,17 @@ LOG = logging.getLogger(__name__)
 class LayoutType(Enum):
     T1 = auto()
     Bolt = auto()
-    Samson = auto()
-    Quicksilver = auto()
+    Caesar = auto()
+    Delizia = auto()
 
     @classmethod
     def from_model(cls, model: models.TrezorModel) -> "LayoutType":
         if model in (models.T2T1,):
             return cls.Bolt
         if model in (models.T2B1, models.T3B1):
-            return cls.Samson
+            return cls.Caesar
         if model in (models.T3T1,):
-            return cls.Quicksilver
+            return cls.Delizia
         if model in (models.T1B1,):
             return cls.T1
         raise ValueError(f"Unknown model: {model}")

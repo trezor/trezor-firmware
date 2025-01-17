@@ -4,17 +4,17 @@ use crate::{
         component::{image::Image, Child, Component, Event, EventCtx, Label},
         display,
         geometry::{Insets, Rect},
-        layout_bolt::component::{
-            fido_icons::get_fido_icon_data,
-            swipe::{Swipe, SwipeDirection},
-            theme, ScrollBar,
-        },
         shape,
         shape::Renderer,
     },
 };
 
-use super::CancelConfirmMsg;
+use super::{
+    fido_icons::get_fido_icon_data,
+    swipe::{Swipe, SwipeDirection},
+    theme, CancelConfirmMsg, ScrollBar,
+};
+
 use core::cell::Cell;
 
 const ICON_HEIGHT: i16 = 70;

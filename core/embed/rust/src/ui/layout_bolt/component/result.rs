@@ -5,15 +5,14 @@ use crate::{
         constant::screen,
         display::{Color, Font, Icon},
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        layout_bolt::theme::FG,
         shape,
         shape::Renderer,
     },
 };
 
-use crate::ui::layout_bolt::{
+use super::super::{
     constant::WIDTH,
-    theme::{RESULT_FOOTER_START, RESULT_PADDING},
+    theme::{FG, RESULT_FOOTER_START, RESULT_PADDING},
 };
 
 const MESSAGE_AREA_START: i16 = 97;

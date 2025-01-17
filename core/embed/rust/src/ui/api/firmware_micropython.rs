@@ -927,7 +927,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_share_words_quicksilver(
+extern "C" fn new_show_share_words_delizia(
     n_args: usize,
     args: *const Obj,
     kwargs: *mut Map,
@@ -947,7 +947,7 @@ extern "C" fn new_show_share_words_quicksilver(
 
         let words: Vec<TString, 33> = util::iter_into_vec(words)?;
 
-        let layout = ModelUI::show_share_words_quicksilver(
+        let layout = ModelUI::show_share_words_delizia(
             words,
             subtitle,
             instructions,
@@ -1280,7 +1280,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: Iterable[tuple[int, str | bytes]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm long content with the possibility to go back from any page.
-    ///     Meant to be used with confirm_with_info on UI bolt and samson."""
+    ///     Meant to be used with confirm_with_info on UI Bolt and Caesar."""
     Qstr::MP_QSTR_confirm_more => obj_fn_kw!(0, new_confirm_more).as_obj(),
 
     /// def confirm_properties(
@@ -1338,7 +1338,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     items: Iterable[tuple[int, str | bytes]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm given items but with third button. Always single page
-    ///     without scrolling. In Quicksilver, the button is placed in
+    ///     without scrolling. In Delizia, the button is placed in
     ///     context menu."""
     Qstr::MP_QSTR_confirm_with_info => obj_fn_kw!(0, new_confirm_with_info).as_obj(),
 
@@ -1378,7 +1378,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
     Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, new_flow_confirm_output).as_obj(),
 
-    // TODO: supply more arguments for Wipe code setting (quicksilver)
+    // TODO: supply more arguments for Wipe code setting (delizia)
     ///
     /// def flow_confirm_set_new_pin(
     ///     *,
@@ -1625,7 +1625,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Show mnemonic for backup."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
-    /// def show_share_words_quicksilver(
+    /// def show_share_words_delizia(
     ///     *,
     ///     words: Iterable[str],
     ///     subtitle: str | None,
@@ -1635,7 +1635,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     ///     confirmation screen."""
-    Qstr::MP_QSTR_show_share_words_quicksilver => obj_fn_kw!(0, new_show_share_words_quicksilver).as_obj(),
+    Qstr::MP_QSTR_show_share_words_delizia => obj_fn_kw!(0, new_show_share_words_delizia).as_obj(),
 
     /// def show_simple(
     ///     *,
@@ -1670,7 +1670,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     allow_cancel: bool = True,
     ///     danger: bool = False,  # unused on bolt
     /// ) -> LayoutObj[UiResult]:
-    ///     """Warning modal. bolt: No buttons shown when `button` is empty string. samson: middle button and centered text."""
+    ///     """Warning modal. Bolt: No buttons shown when `button` is empty string. Caesar: middle button and centered text."""
     Qstr::MP_QSTR_show_warning => obj_fn_kw!(0, new_show_warning).as_obj(),
 
     /// def tutorial() -> LayoutObj[UiResult]:

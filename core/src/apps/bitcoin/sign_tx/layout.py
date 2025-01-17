@@ -99,10 +99,10 @@ async def confirm_output(
         if output.address_n and not output.multisig:
             from trezor import utils
 
-            # Showing the account string only for layout samson (TS3)
+            # Showing the account string only for layout Caesar (TS3)
             # TODO expose layout_type so that we can check for it, instead of listing
             # all models that use the layout?
-            show_account_str = utils.UI_LAYOUT == "SAMSON"
+            show_account_str = utils.UI_LAYOUT == "CAESAR"
             script_type = CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[output.script_type]
             address_label = (
                 address_n_to_name(

@@ -68,7 +68,7 @@ const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[
 #[cfg(not(feature = "layout_bolt"))]
 const DEFAULT_BINDGEN_MACROS_T2T1: &[&str] = &[];
 
-#[cfg(feature = "layout_samson")]
+#[cfg(feature = "layout_caesar")]
 const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
     "-DSTM32F427",
     "-DTREZOR_MODEL_T2B1",
@@ -78,10 +78,10 @@ const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[
     "-DDISPLAY_RESY=64",
     "-DTREZOR_BOARD=\"T2B1/boards/t2b1-unix.h\"",
 ];
-#[cfg(not(feature = "layout_samson"))]
+#[cfg(not(feature = "layout_caesar"))]
 const DEFAULT_BINDGEN_MACROS_T2B1: &[&str] = &[];
 
-#[cfg(feature = "layout_quicksilver")]
+#[cfg(feature = "layout_delizia")]
 const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[
     "-DSTM32U5",
     "-DTREZOR_MODEL_T3T1",
@@ -91,7 +91,7 @@ const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[
     "-DDISPLAY_RESY=240",
     "-DTREZOR_BOARD=\"T3T1/boards/t3t1-unix.h\"",
 ];
-#[cfg(not(feature = "layout_quicksilver"))]
+#[cfg(not(feature = "layout_delizia"))]
 const DEFAULT_BINDGEN_MACROS_T3T1: &[&str] = &[];
 
 fn add_bindgen_macros<'a>(clang_args: &mut Vec<&'a str>, envvar: Option<&'a str>) {

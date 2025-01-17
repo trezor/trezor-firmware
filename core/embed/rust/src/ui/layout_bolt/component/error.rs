@@ -9,10 +9,14 @@ use crate::{
     },
 };
 
-use crate::ui::layout_bolt::{
-    component::{ResultFooter, ResultStyle},
-    constant::WIDTH,
-    theme::{FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE},
+use super::{
+    super::{
+        constant::WIDTH,
+        theme::{
+            self, FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE,
+        },
+    },
+    ResultFooter, ResultStyle,
 };
 
 const ICON_TOP: i16 = 23;
@@ -20,9 +24,9 @@ const TITLE_AREA_START: i16 = 70;
 const MESSAGE_AREA_START: i16 = 116;
 
 #[cfg(feature = "bootloader")]
-const STYLE: &ResultStyle = &crate::ui::layout_bolt::theme::bootloader::RESULT_WIPE;
+const STYLE: &ResultStyle = &theme::bootloader::RESULT_WIPE;
 #[cfg(not(feature = "bootloader"))]
-const STYLE: &ResultStyle = &super::theme::RESULT_ERROR;
+const STYLE: &ResultStyle = &theme::RESULT_ERROR;
 
 pub struct ErrorScreen<'a> {
     bg: Pad,
