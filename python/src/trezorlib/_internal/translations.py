@@ -10,6 +10,7 @@ import construct as c
 from construct_classes import Struct, subcon
 from typing_extensions import Self, TypedDict
 
+from ..debuglink import LayoutType
 from ..firmware.models import Model
 from ..models import TrezorModel
 from ..tools import EnumAdapter, TupleAdapter
@@ -39,7 +40,7 @@ class JsonHeader(TypedDict):
 
 class JsonDef(TypedDict):
     header: JsonHeader
-    translations: dict[str, str]
+    translations: dict[str, str | dict[str, str]]
     fonts: dict[str, JsonFontInfo]
 
 
@@ -297,6 +298,14 @@ def order_from_json(json_order: dict[str, str]) -> Order:
     return {int(k): v for k, v in json_order.items()}
 
 
+def get_translation(lang_data: JsonDef, key: str, layout_type: LayoutType) -> str:
+    item = lang_data["translations"].get(key, "")
+    if isinstance(item, dict):
+        return item.get(layout_type.name, "")
+
+    return item  # Same translation for all layouts
+
+
 def blob_from_defs(
     lang_data: JsonDef,
     order: Order,
@@ -305,10 +314,11 @@ def blob_from_defs(
     fonts_dir: Path,
 ) -> TranslationsBlob:
     json_header: JsonHeader = lang_data["header"]
+    layout_type = LayoutType.from_model(model)
 
     # order translations -- python dicts keep insertion order
     translations_ordered: list[str] = [
-        lang_data["translations"].get(key, "") for _, key in sorted(order.items())
+        get_translation(lang_data, key, layout_type) for _, key in sorted(order.items())
     ]
 
     translations = TranslatedStrings.from_items(translations_ordered)
