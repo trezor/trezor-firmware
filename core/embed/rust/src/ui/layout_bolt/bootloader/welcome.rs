@@ -3,12 +3,13 @@ use crate::ui::{
     constant::screen,
     display::{toif::Toif, Font},
     geometry::{Alignment, Alignment2D, Offset, Rect},
-    layout_bolt::theme::{
-        bootloader::{START_URL, WELCOME_COLOR},
-        GREY_MEDIUM, WHITE,
-    },
     shape,
     shape::Renderer,
+};
+
+use super::super::theme::{
+    bootloader::{START_URL, WELCOME_COLOR},
+    GREY_MEDIUM, WHITE,
 };
 
 pub struct Welcome {

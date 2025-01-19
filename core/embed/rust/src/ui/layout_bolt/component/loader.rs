@@ -11,11 +11,12 @@ use crate::{
         component::{Component, Event, EventCtx, Pad},
         display::{self, toif::Icon, Color, LOADER_MAX},
         geometry::{Alignment2D, Offset, Rect},
-        layout_bolt::constant,
         shape::{self, Renderer},
         util::animation_disabled,
     },
 };
+
+use super::super::constant;
 
 const GROWING_DURATION_MS: u32 = 1000;
 const SHRINKING_DURATION_MS: u32 = 500;

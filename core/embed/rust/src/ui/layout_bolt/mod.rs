@@ -7,16 +7,15 @@ pub mod constant;
 pub mod theme;
 
 #[cfg(feature = "backlight")]
-use crate::ui::layout_bolt::theme::backlight;
+use theme::backlight;
 
 #[cfg(feature = "micropython")]
 pub mod component_msg_obj;
 pub mod cshape;
 
-use crate::ui::{
-    layout::simplified::show,
-    layout_bolt::component::{ErrorScreen, WelcomeScreen},
-};
+use crate::ui::layout::simplified::show;
+
+use component::{ErrorScreen, WelcomeScreen};
 
 pub struct UIBolt;
 

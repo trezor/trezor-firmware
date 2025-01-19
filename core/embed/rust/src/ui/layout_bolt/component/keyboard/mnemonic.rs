@@ -3,13 +3,11 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Label, Maybe},
         geometry::{Alignment2D, Grid, Offset, Rect},
-        layout_bolt::{
-            component::{Button, ButtonMsg, Swipe, SwipeDirection},
-            theme,
-        },
         shape::Renderer,
     },
 };
+
+use super::super::{super::theme, Button, ButtonMsg, Swipe, SwipeDirection};
 
 pub const MNEMONIC_KEY_COUNT: usize = 9;
 

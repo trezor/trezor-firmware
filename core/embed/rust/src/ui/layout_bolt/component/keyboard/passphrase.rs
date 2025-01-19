@@ -6,16 +6,17 @@ use crate::{
         },
         display,
         geometry::{Grid, Offset, Rect},
-        layout_bolt::component::{
-            button::{Button, ButtonContent, ButtonMsg},
-            keyboard::common::{render_pending_marker, MultiTapKeyboard},
-            swipe::{Swipe, SwipeDirection},
-            theme, ScrollBar,
-        },
         shape,
         shape::Renderer,
         util::long_line_content_with_ellipsis,
     },
+};
+
+use super::super::{
+    button::{Button, ButtonContent, ButtonMsg},
+    keyboard::common::{render_pending_marker, MultiTapKeyboard},
+    swipe::{Swipe, SwipeDirection},
+    theme, ScrollBar,
 };
 
 use core::cell::Cell;

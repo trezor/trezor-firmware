@@ -6,21 +6,25 @@ use crate::{
         constant::screen,
         display::{Color, Icon},
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
-        layout_bolt::{
-            component::{Button, ButtonMsg::Clicked, ButtonStyleSheet},
-            constant::WIDTH,
-            theme::{
-                bootloader::{
-                    text_fingerprint, text_title, BUTTON_AREA_START, BUTTON_HEIGHT,
-                    CONTENT_PADDING, CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32,
-                    TITLE_AREA, X32,
-                },
-                WHITE,
-            },
-        },
         shape,
         shape::Renderer,
     },
+};
+
+use super::{
+    super::{
+        constant::WIDTH,
+        theme::{
+            bootloader::{
+                text_fingerprint, text_title, BUTTON_AREA_START, BUTTON_HEIGHT, CONTENT_PADDING,
+                CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, INFO32, TITLE_AREA, X32,
+            },
+            WHITE,
+        },
+    },
+    Button,
+    ButtonMsg::Clicked,
+    ButtonStyleSheet,
 };
 
 const ICON_TOP: i16 = 17;

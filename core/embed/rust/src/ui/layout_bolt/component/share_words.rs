@@ -4,10 +4,12 @@ use crate::{
         component::{Component, Event, EventCtx, Never, Paginate},
         display::Font,
         geometry::{Offset, Rect},
-        layout_bolt::theme,
         shape::{self, Renderer},
     },
 };
+
+use super::super::theme;
+
 use heapless::Vec;
 use ufmt::uwrite;
 

@@ -487,11 +487,10 @@ mod tests {
             component::text::paragraphs::{Paragraph, Paragraphs},
             event::TouchEvent,
             geometry::Point,
-            layout_bolt::constant,
         },
     };
 
-    use super::*;
+    use super::{super::super::constant, *};
 
     const SCREEN: Rect = constant::screen().inset(theme::borders());
 

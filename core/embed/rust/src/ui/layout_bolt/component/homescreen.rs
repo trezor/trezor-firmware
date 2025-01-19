@@ -14,14 +14,16 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
-        layout_bolt::{constant, theme::IMAGE_HOMESCREEN},
         shape::{self, Renderer},
     },
 };
 
 use crate::ui::constant::{HEIGHT, WIDTH};
 
-use super::{theme, Loader, LoaderMsg};
+use super::{
+    super::{constant, theme::IMAGE_HOMESCREEN},
+    theme, Loader, LoaderMsg,
+};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();

@@ -7,10 +7,11 @@ use crate::{
         },
         display::Icon,
         geometry::{Alignment, Insets, Offset, Rect},
-        layout_bolt::component::{Button, ButtonMsg, CancelInfoConfirmMsg},
         shape::Renderer,
     },
 };
+
+use super::{Button, ButtonMsg, CancelInfoConfirmMsg};
 
 pub struct Frame<T> {
     border: Insets,

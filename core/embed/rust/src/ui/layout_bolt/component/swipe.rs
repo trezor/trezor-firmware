@@ -3,9 +3,10 @@ use crate::ui::{
     display,
     event::TouchEvent,
     geometry::{Point, Rect},
-    layout_bolt::theme::backlight,
     shape::Renderer,
 };
+
+use super::super::theme::backlight;
 
 pub enum SwipeDirection {
     Up,

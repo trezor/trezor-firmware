@@ -1330,11 +1330,10 @@ mod tests {
         ui::{
             component::{text::op::OpTextLayout, Component},
             geometry::Rect,
-            layout_bolt::constant,
         },
     };
 
-    use super::*;
+    use super::{super::constant, *};
 
     const SCREEN: Rect = constant::screen().inset(theme::borders());
 

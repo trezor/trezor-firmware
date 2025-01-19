@@ -5,15 +5,16 @@ use crate::{
         constant::screen,
         display::Icon,
         geometry::{Alignment, Insets, Point, Rect},
-        layout_bolt::{
-            component::{Button, ButtonMsg::Clicked},
-            constant::WIDTH,
-            theme::bootloader::{
-                button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
-                CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
-            },
-        },
         shape::Renderer,
+    },
+};
+
+use super::super::{
+    component::{Button, ButtonMsg::Clicked},
+    constant::WIDTH,
+    theme::bootloader::{
+        button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_AREA_START, BUTTON_HEIGHT,
+        CONTENT_PADDING, CORNER_BUTTON_AREA, MENU32, TEXT_NORMAL, TEXT_WARNING, TITLE_AREA,
     },
 };
 
