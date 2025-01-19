@@ -1,15 +1,5 @@
 {
   "fonts": {
-    "Caesar": {
-      "1_FONT_NORMAL": "font_pixeloperator_regular_8_pt.json",
-      "2_FONT_BOLD": "font_pixeloperator_bold_8_pt.json",
-      "3_FONT_MONO": "font_pixeloperatormono_regular_8_pt.json",
-      "4_FONT_BIG": "font_unifont_regular_16_pt.json",
-      "5_FONT_DEMIBOLD": "font_unifont_bold_16_pt.json",
-      "6_FONT_NORMAL_UPPER": "font_pixeloperator_regular_8_upper_pt.json",
-      "7_FONT_BOLD_UPPER": "font_pixeloperator_bold_8_upper_pt.json",
-      "8_FONT_SUB": null
-    },
     "Bolt": {
       "1_FONT_NORMAL": "font_tthoves_regular_21_pt.json",
       "2_FONT_BOLD": null,
@@ -18,6 +8,16 @@
       "5_FONT_DEMIBOLD": "font_tthoves_demibold_21_pt.json",
       "6_FONT_NORMAL_UPPER": null,
       "7_FONT_BOLD_UPPER": "font_tthoves_bold_17_upper_pt.json",
+      "8_FONT_SUB": null
+    },
+    "Caesar": {
+      "1_FONT_NORMAL": "font_pixeloperator_regular_8_pt.json",
+      "2_FONT_BOLD": "font_pixeloperator_bold_8_pt.json",
+      "3_FONT_MONO": "font_pixeloperatormono_regular_8_pt.json",
+      "4_FONT_BIG": "font_unifont_regular_16_pt.json",
+      "5_FONT_DEMIBOLD": "font_unifont_bold_16_pt.json",
+      "6_FONT_NORMAL_UPPER": "font_pixeloperator_regular_8_upper_pt.json",
+      "7_FONT_BOLD_UPPER": "font_pixeloperator_bold_8_upper_pt.json",
       "8_FONT_SUB": null
     },
     "Delizia": {
