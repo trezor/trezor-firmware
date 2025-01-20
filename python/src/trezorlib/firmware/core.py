@@ -165,6 +165,11 @@ class FirmwareImage(Struct):
         header.v1_signatures = [b"\x00" * 64] * consts.V1_SIGNATURE_SLOTS
         return hash_params.hash_function(header.build()).digest()
 
+    def model(self) -> Model | None:
+        if isinstance(self.header.hw_model, Model):
+            return self.header.hw_model
+        return None
+
 
 class VendorFirmware(Struct):
     """Firmware image prefixed by a vendor header.
@@ -203,3 +208,6 @@ class VendorFirmware(Struct):
         # now = time.gmtime()
         # if time.gmtime(fw.vendor_header.expiry) < now:
         #     raise ValueError("Vendor header expired.")
+
+    def model(self) -> Model | None:
+        return self.firmware.model()

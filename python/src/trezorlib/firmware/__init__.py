@@ -21,6 +21,7 @@ from typing_extensions import Protocol, TypeGuard
 
 from .. import messages
 from ..tools import session
+from .models import Model
 from .core import VendorFirmware
 from .legacy import LegacyFirmware, LegacyV2Firmware
 
@@ -49,6 +50,8 @@ if t.TYPE_CHECKING:
         def verify(self, dev_keys: bool = False) -> None: ...
 
         def digest(self) -> bytes: ...
+
+        def model(self) -> Model | None: ...
 
 
 def parse(data: bytes) -> "FirmwareType":

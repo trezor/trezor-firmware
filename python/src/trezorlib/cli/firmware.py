@@ -95,9 +95,9 @@ def _print_firmware_model(hw_model: Union[bytes, fw_models.Model]) -> None:
         pass
 
     assert isinstance(hw_model, bytes)
-    if all(0x20 <= b < 0x80 for b in hw_model):  # isascii
+    if hw_model.isascii():
         model_name = hw_model.decode("ascii")
-        click.echo(f"Unknown hardware model: {model_name}")
+        click.echo(f"Unrecognized hardware model: {model_name}")
         return
 
     click.echo(f"Suspicious hardware model code: {hw_model.hex()} ({hw_model!r})")
@@ -404,7 +404,7 @@ def validate_firmware(
     fingerprint: Optional[str] = None,
     model: Optional[TrezorModel] = None,
     bootloader_onev2: Optional[bool] = None,
-    prompt_unsigned: bool = True,
+    verify_only: bool = False,
 ) -> None:
     """Validate the firmware through multiple tests.
 
@@ -419,8 +419,14 @@ def validate_firmware(
         sys.exit(2)
 
     print_firmware_version(fw)
+    if not fw.model():
+        click.echo("Cannot validate firmware for unrecognized model.")
+        if not verify_only:
+            click.echo("(Hint: use --skip-check to skip validation.)")
+        sys.exit(3)
+
     validate_fingerprint(fw, fingerprint)
-    validate_signatures(fw, prompt_unsigned=prompt_unsigned)
+    validate_signatures(fw, prompt_unsigned=not verify_only)
 
     if model is not None and bootloader_onev2 is not None:
         check_device_match(fw, model, bootloader_onev2)
@@ -548,7 +554,7 @@ def verify(
         fingerprint=fingerprint,
         bootloader_onev2=bootloader_onev2,
         model=model,
-        prompt_unsigned=False,
+        verify_only=True,
     )
 
 
