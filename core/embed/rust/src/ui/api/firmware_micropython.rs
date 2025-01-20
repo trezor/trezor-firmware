@@ -1258,7 +1258,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     button: str,
     ///     button_style_confirm: bool = False,
-    ///     items: Iterable[tuple[int, str | bytes]],
+    ///     items: Iterable[tuple[str | bytes, bool]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm long content with the possibility to go back from any page.
     ///     Meant to be used with confirm_with_info on UI Bolt and Caesar."""
@@ -1299,7 +1299,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     button: str,
     ///     info_button: str,
     ///     verb_cancel: str | None = None,
-    ///     items: Iterable[tuple[int, str | bytes]],
+    ///     items: Iterable[tuple[str | bytes, bool]],
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm given items but with third button. Always single page
     ///     without scrolling. In Delizia, the button is placed in

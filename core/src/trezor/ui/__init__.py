@@ -38,10 +38,6 @@ if __debug__:
 display = Display()
 
 # re-export constants from modtrezorui
-NORMAL: int = Display.FONT_NORMAL
-DEMIBOLD: int = Display.FONT_DEMIBOLD
-BOLD_UPPER: int = Display.FONT_BOLD_UPPER
-MONO: int = Display.FONT_MONO
 WIDTH: int = Display.WIDTH
 HEIGHT: int = Display.HEIGHT
 

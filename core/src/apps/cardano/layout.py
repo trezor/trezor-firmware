@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from trezor import TR, ui
+from trezor import TR
 from trezor.enums import (
     ButtonRequestType,
     CardanoAddressType,
@@ -189,11 +189,8 @@ async def show_tx_init(title: str) -> bool:
     should_show_details = await layouts.should_show_more(
         TR.cardano__confirm_transaction,
         (
-            (
-                ui.DEMIBOLD,
-                title,
-            ),
-            (ui.NORMAL, TR.cardano__choose_level_of_details),
+            (title, False),
+            (TR.cardano__choose_level_of_details, False),
         ),
         TR.buttons__show_all,
         confirm=TR.cardano__show_simple,

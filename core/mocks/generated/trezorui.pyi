@@ -8,10 +8,6 @@ class Display:
     """
     WIDTH: int  # display width in pixels
     HEIGHT: int  # display height in pixels
-    FONT_MONO: int  # id of monospace font
-    FONT_NORMAL: int  # id of normal-width font
-    FONT_DEMIBOLD: int  # id of demibold font
-    FONT_BOLD_UPPER: int # id of bold-width-uppercased font
 
     def __init__(self) -> None:
         """
