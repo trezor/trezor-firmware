@@ -1,0 +1,10 @@
+/nordic/.west/
+/nordic/bootloader/
+/nordic/modules/
+/nordic/nrf/
+/nordic/nrfxlib/
+/nordic/test/
+/nordic/tools/
+/nordic/zephyr/
+/nordic/trezor/build/
+/nordic/trezor/trezor-ble/build/
