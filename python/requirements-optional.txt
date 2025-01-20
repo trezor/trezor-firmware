@@ -2,4 +2,3 @@ hidapi>=0.7.99.post20
 web3>=5
 Pillow>=10
 stellar-sdk>=6
-cryptography>=41
