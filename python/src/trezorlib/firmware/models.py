@@ -275,6 +275,30 @@ T3B1 = ModelKeys(
     firmware_sigs_needed=-1,
 )
 
+T3W1 = ModelKeys(
+    production=True,
+    boardloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "e8912f81b3e780ee650ed3856db5326e0b9eff10364b339193e7a8f10f7621b9",
+            "bde70a38eee633d26f434eee2f536df457b8deb8bd988294f4a0c8d9054903d2",
+            "a85b601dfbda1d22ccb5dd492d26034d87f67f2a0b8584b7774439461fc471a9",
+        )
+    ],
+    boardloader_sigs_needed=2,
+    bootloader_keys=[
+        bytes.fromhex(key)
+        for key in (
+            "320e111e9dded5fe7f5d41fd372ef0e91b2dfa4c6cdc9fe5221bfb16aaf91775",
+            "2e349f8d06b2334262ecb603ed04cb5a7cc0b660ebe3cd5c2972b5cd1f38ef85",
+            "ab0d3f91a4adf744719dba661783ec549f73a4e45457cb6d02752a40fb63d3bf",
+        )
+    ],
+    bootloader_sigs_needed=2,
+    firmware_keys=(),
+    firmware_sigs_needed=-1,
+)
+
 LEGACY_HASH_PARAMS = FirmwareHashParameters(
     hash_function=hashlib.sha256,
     chunk_size=1024 * 64,
@@ -317,7 +341,7 @@ MODEL_MAP = {
     Model.T2B1: T2B1,
     Model.T3T1: T3T1,
     Model.T3B1: T3B1,
-    Model.T3W1: TREZOR_CORE_DEV,
+    Model.T3W1: T3W1,
     Model.D001: TREZOR_CORE_DEV,
     Model.D002: TREZOR_CORE_DEV,
 }
@@ -356,7 +380,7 @@ MODEL_CODE_ALIGNMENT_MAP = {
     Model.D002: 0x400,
 }
 
-# aliases
+# deprecated aliases -- don't add more
 
 TREZOR_ONE_V1V2 = LEGACY_V1V2
 TREZOR_ONE_V1V2_DEV = LEGACY_V1V2_DEV
