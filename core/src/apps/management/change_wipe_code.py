@@ -15,7 +15,11 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
     from trezor.ui.layouts import show_success
     from trezor.wire import NotInitialized
 
-    from apps.common.request_pin import error_pin_invalid, request_pin_and_sd_salt
+    from apps.common.request_pin import (
+        error_pin_invalid,
+        error_pin_not_set,
+        request_pin_and_sd_salt,
+    )
 
     if not is_initialized():
         raise NotInitialized("Device is not initialized")
@@ -23,6 +27,10 @@ async def change_wipe_code(msg: ChangeWipeCode) -> Success:
     # Confirm that user wants to set or remove the wipe code.
     has_wipe_code = config.has_wipe_code()
     await _require_confirm_action(msg, has_wipe_code)
+
+    # Do not allow to set the wipe code if the PIN is not set.
+    if not config.has_pin():
+        await error_pin_not_set()
 
     # Get the unlocking PIN.
     pin, salt = await request_pin_and_sd_salt(TR.pin__enter)
@@ -62,7 +70,7 @@ def _require_confirm_action(
     from trezor.ui.layouts import confirm_action, confirm_set_new_pin
     from trezor.wire import ProcessError
 
-    if msg.remove and has_wipe_code:
+    if msg.remove and has_wipe_code:  # removing wipe code
         return confirm_action(
             "disable_wipe_code",
             TR.wipe_code__title_settings,
@@ -71,7 +79,7 @@ def _require_confirm_action(
             prompt_screen=True,
         )
 
-    if not msg.remove and has_wipe_code:
+    if not msg.remove and has_wipe_code:  # changing wipe code
         return confirm_action(
             "change_wipe_code",
             TR.wipe_code__title_settings,
@@ -79,7 +87,7 @@ def _require_confirm_action(
             verb=TR.buttons__change,
         )
 
-    if not msg.remove and not has_wipe_code:
+    if not msg.remove and not has_wipe_code:  # setting new wipe code
         return confirm_set_new_pin(
             "set_wipe_code",
             TR.wipe_code__title_settings,
