@@ -29,9 +29,6 @@
 
 #ifdef KERNEL_MODE
 
-// from util.s
-extern void shutdown_privileged(void);
-
 #define DRBG_RESEED_INTERVAL_CALLS 1000
 #define DRBG_TRNG_ENTROPY_LENGTH 50
 _Static_assert(CHACHA_DRBG_OPTIMAL_RESEED_LENGTH(1) == DRBG_TRNG_ENTROPY_LENGTH,
@@ -192,14 +189,14 @@ void wait_random(void) {
   volatile int j = wait;
   while (i < wait) {
     if (i + j != wait) {
-      shutdown_privileged();
+      error_shutdown("(glitch)");
     }
     ++i;
     --j;
   }
   // Double-check loop completion.
   if (i != wait || j != 0) {
-    shutdown_privileged();
+    error_shutdown("(glitch)");
   }
 #endif
 }

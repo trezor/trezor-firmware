@@ -98,7 +98,6 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
-  gfx_bitblt_init();
   display_init(DISPLAY_JUMP_BEHAVIOR);
   unit_properties_init();
 
@@ -138,9 +137,7 @@ static void drivers_deinit(void) {
   button_deinit();
 #endif
 #endif
-  gfx_bitblt_deinit();
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
-  ensure_compatible_settings();
 }
 
 static void usb_init_all(secbool usb21_landing) {
@@ -381,7 +378,8 @@ void real_jump_to_firmware(void) {
 
   system_deinit();
 
-  jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
+  jump_to_next_stage(
+      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
 #ifdef USE_RESET_TO_BOOT

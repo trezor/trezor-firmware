@@ -14,48 +14,27 @@ MEMORY {
   FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
 }
 
-main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ADDR(.stack);
-_estack = main_stack_base;
+_stack_section_start = ADDR(.stack);
+_stack_section_end = ADDR(.stack) + SIZEOF(.stack);
 
-/* used by the startup code to populate variables used by the C code */
-data_lma = LOADADDR(.data);
-data_vma = ADDR(.data);
-data_size = SIZEOF(.data);
-bss_start = ADDR(.bss);
-bss_end = ADDR(.bss) + SIZEOF(.bss);
+_data_section_loadaddr = LOADADDR(.data);
+_data_section_start = ADDR(.data);
+_data_section_end = ADDR(.data) + SIZEOF(.data);
 
-/* used by the startup code to populate variables used by the C code */
-confidential_lma = LOADADDR(.confidential);
-confidential_vma = ADDR(.confidential);
-confidential_size = SIZEOF(.confidential);
+_bss_section_start = ADDR(.bss);
+_bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-/* used by the startup code to wipe memory */
-_startup_clear_ram_0_start = MCU_SRAM1;
-_startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
-_startup_clear_ram_1_start = MCU_SRAM2;
-_startup_clear_ram_1_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
-_startup_clear_ram_2_start = MCU_SRAM4;
-_startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_confidential_section_loadaddr = LOADADDR(.confidential);
+_confidential_section_start = ADDR(.confidential);
+_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 
-/* used by the jump code to wipe memory */
-_handoff_clear_ram_0_start = MCU_SRAM1;
-_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - BOOTARGS_SIZE;
-_handoff_clear_ram_1_start = MCU_SRAM2;
-_handoff_clear_ram_1_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
-_handoff_clear_ram_2_start = MCU_SRAM4;
-_handoff_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
+_accessible_ram_0_start = MCU_SRAM1;
+_accessible_ram_0_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
+_accessible_ram_1_start = MCU_SRAM4;
+_accessible_ram_1_end =  MCU_SRAM4 + MCU_SRAM4_SIZE;
 
-/* used by the shutdown code to wipe memory */
-_shutdown_clear_ram_0_start = MCU_SRAM1;
-_shutdown_clear_ram_0_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
-_shutdown_clear_ram_1_start = MCU_SRAM4;
-_shutdown_clear_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-_shutdown_clear_ram_2_start = 0;
-_shutdown_clear_ram_2_end = 0;
-_shutdown_clear_ram_3_start = 0;
-_shutdown_clear_ram_3_end = 0;
-
+_bootargs_ram_start = BOOTARGS_START;
+_bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
 SECTIONS {
   .vector_table : ALIGN(CODE_ALIGNMENT) {

@@ -7,6 +7,4 @@
 
 extern uint8_t *FIRMWARE_START;
 
-__attribute__((noreturn)) void jump_to(uint32_t address);
-
 #endif

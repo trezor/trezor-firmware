@@ -92,7 +92,6 @@ static void drivers_init(void) {
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
-  gfx_bitblt_init();
   display_init(DISPLAY_RESET_CONTENT);
 #ifdef USE_SD_CARD
   sdcard_init();
@@ -103,12 +102,10 @@ static void drivers_deinit(void) {
 #ifdef FIXED_HW_DEINIT
   // TODO
 #endif
-  gfx_bitblt_deinit();
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 #ifdef USE_POWERCTL
   powerctl_deinit();
 #endif
-  ensure_compatible_settings();
 }
 
 static uint8_t get_bootloader_min_version(void) {
@@ -332,7 +329,7 @@ int main(void) {
   system_deinit();
 
   // g_boot_command is preserved on STM32U5
-  jump_to(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));
+  jump_to_next_stage(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));
 
   return 0;
 }

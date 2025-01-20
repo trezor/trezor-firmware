@@ -32,6 +32,7 @@
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
 
+#include <sys/linker_utils.h>
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <util/rsod.h>
@@ -40,6 +41,10 @@
 #ifdef USE_SECP256K1_ZKP
 #include "zkp_context.h"
 #endif
+
+// symbols defined in the linker script
+extern uint8_t _stack_section_start;
+extern uint8_t _stack_section_end;
 
 int main(uint32_t cmd, void *arg) {
   if (cmd == 1) {
@@ -57,8 +62,9 @@ int main(uint32_t cmd, void *arg) {
   printf("CORE: Preparing stack\n");
   // Stack limit should be less than real stack size, so we have a chance
   // to recover from limit hit.
-  mp_stack_set_top(&_estack);
-  mp_stack_set_limit((char *)&_estack - (char *)&_sstack - 1024);
+  mp_stack_set_top(&_stack_section_end);
+  mp_stack_set_limit((char *)&_stack_section_end -
+                     (char *)&_stack_section_start - 1024);
 
 #if MICROPY_ENABLE_PYSTACK
   static mp_obj_t pystack[1024];
@@ -106,3 +112,22 @@ mp_obj_t mp_builtin_open(uint n_args, const mp_obj_t *args, mp_map_t *kwargs) {
   return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_KW(mp_builtin_open_obj, 1, mp_builtin_open);
+
+// `reset_handler` is the application entry point (first routine called
+// from kernel)
+__attribute((no_stack_protector)) void reset_handler(uint32_t cmd, void *arg,
+                                                     uint32_t random_value) {
+  // Initialize linker script defined sections (.bss, .data, ...)
+  init_linker_sections();
+
+  // Initialize stack protector
+  extern uint32_t __stack_chk_guard;
+  __stack_chk_guard = random_value;
+
+  // Now everything is perfectly initialized and we can do anything
+  // in C code
+
+  int main_result = main(cmd, arg);
+
+  system_exit(main_result);
+}

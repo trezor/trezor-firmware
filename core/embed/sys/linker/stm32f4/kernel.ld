@@ -11,34 +11,27 @@ MEMORY {
   DMABUF   (wal)  : ORIGIN = DMABUF_RAM_START, LENGTH = DMABUF_RAM_SIZE
 }
 
-main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ADDR(.stack);
-_estack = main_stack_base;
+_stack_section_start = ADDR(.stack);
+_stack_section_end = ADDR(.stack) + SIZEOF(.stack);
 
-/* used by the startup code to populate variables used by the C code */
-data_lma = LOADADDR(.data);
-data_vma = ADDR(.data);
-data_size = SIZEOF(.data);
-bss_start = ADDR(.bss);
-bss_end = ADDR(.bss) + SIZEOF(.bss);
+_data_section_loadaddr = LOADADDR(.data);
+_data_section_start = ADDR(.data);
+_data_section_end = ADDR(.data) + SIZEOF(.data);
 
-/* used by the startup code to wipe memory */
-_startup_clear_ram_0_start = MCU_CCMRAM;
-_startup_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_startup_clear_ram_1_start = MCU_SRAM;
-_startup_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_bss_section_start = ADDR(.bss);
+_bss_section_end = ADDR(.bss) + SIZEOF(.bss);
 
-/* used by the jump code to wipe memory */
-_handoff_clear_ram_0_start = MCU_CCMRAM;
-_handoff_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE - BOOTARGS_SIZE;
-_handoff_clear_ram_1_start = MCU_SRAM;
-_handoff_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_confidential_section_loadaddr = 0;
+_confidential_section_start = 0;
+_confidential_section_end = 0;
 
-/* used by the shutdown code to wipe memory */
-_shutdown_clear_ram_0_start = MCU_CCMRAM;
-_shutdown_clear_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
-_shutdown_clear_ram_1_start = MCU_SRAM;
-_shutdown_clear_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+_accessible_ram_0_start = MCU_CCMRAM;
+_accessible_ram_0_end = MCU_CCMRAM + MCU_CCMRAM_SIZE;
+_accessible_ram_1_start = MCU_SRAM;
+_accessible_ram_1_end = MCU_SRAM + MCU_SRAM_SIZE;
+
+_bootargs_ram_start = BOOTARGS_START;
+_bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
 _codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash) + SIZEOF(.data) ;
 

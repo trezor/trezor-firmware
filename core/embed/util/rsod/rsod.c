@@ -177,8 +177,9 @@ static void init_and_show_rsod(const systask_postmortem_t* pminfo) {
   rsod_terminal(pminfo);
 #endif
 
-  // Wait for the user to manually power off the device
-  secure_shutdown();
+  // Wait for the user to read the RSOD and then reboots
+  // (or enters an infinite loop if RSOD_INFINITE_LOOP is defined)
+  reboot_after_rsod();
 }
 
 // Universal panic handler

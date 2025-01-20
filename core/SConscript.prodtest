@@ -95,11 +95,7 @@ env = Environment(
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
 
-FILE_SUFFIX= env.get('ENV')['SUFFIX']
-
-
 SOURCE_PRODTEST = [
-    f'embed/sys/startup/{FILE_SUFFIX}/startup_stage_2.s',
     'embed/projects/prodtest/header.S',
     'embed/projects/prodtest/main.c',
     'embed/projects/prodtest/prodtest_common.c',

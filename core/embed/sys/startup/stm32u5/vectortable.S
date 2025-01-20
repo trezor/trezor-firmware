@@ -7,7 +7,7 @@
   .global default_handler
   .type default_handler, STT_FUNC
 default_handler:
-  b shutdown_privileged
+  b Default_IRQHandler
 
   .macro add_handler symbol_name:req
     .word \symbol_name
@@ -20,7 +20,7 @@ default_handler:
   // Section B1.5 - ARMv7-M Architecture Reference Manual
   .section .vector_table, "a"
 vector_table:
-  .word main_stack_base // defined in linker script
+  .word _stack_section_end // defined in linker script
   add_handler reset_handler
     add_handler	NMI_Handler
     add_handler	HardFault_Handler
@@ -180,8 +180,8 @@ vector_table:
 
   .section .vector_table, "a"
 vector_table:
-  .word _sstack
-  .word _stack_size
+  .word _stack_section_start
+  .word _stack_section_size
   .word reset_handler
 
 #endif
