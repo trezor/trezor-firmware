@@ -8,8 +8,6 @@ use crate::ui::{
     util::include_icon,
 };
 
-use num_traits::FromPrimitive;
-
 pub mod bootloader;
 
 // Color palette.
@@ -52,17 +50,6 @@ pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_DATA
 
 // Chunks for this model
 pub const MONO_CHUNKS: Chunks = Chunks::new(4, 4);
-
-/// Convert Python-side numeric id to a `TextStyle`.
-pub fn textstyle_number(num: i32) -> &'static TextStyle {
-    let font = Font::from_i32(-num);
-    match font {
-        Some(Font::BOLD) => &TEXT_BOLD,
-        Some(Font::DEMIBOLD) => &TEXT_BOLD,
-        Some(Font::NORMAL) => &TEXT_NORMAL,
-        _ => &TEXT_MONO_DATA,
-    }
-}
 
 // Firmware icons
 include_icon!(ICON_ARM_LEFT, "layout_caesar/res/arm_left.toif"); // 10*6

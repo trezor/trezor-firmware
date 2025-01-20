@@ -177,17 +177,16 @@ async def confirm_unsupported_instruction_details(
     signer_path: list[int],
     signer_public_key: bytes,
 ) -> None:
-    from trezor.ui import NORMAL
     from trezor.ui.layouts import confirm_properties, should_show_more
 
     should_show_instruction_details = await should_show_more(
         title,
         (
             (
-                NORMAL,
                 TR.solana__instruction_accounts_template.format(
                     len(instruction.accounts), len(instruction.instruction_data)
                 ),
+                False,
             ),
         ),
         TR.buttons__show_details,

@@ -16,8 +16,6 @@ use crate::{
 
 use super::component::{ButtonStyle, ButtonStyleSheet, LoaderStyle, LoaderStyleSheet, ResultStyle};
 
-use num_traits::FromPrimitive;
-
 pub const ERASE_HOLD_DURATION: Duration = Duration::from_millis(1500);
 
 // Color palette.
@@ -619,17 +617,6 @@ pub fn get_chunkified_text_style(character_length: usize) -> &'static TextStyle 
         &TEXT_MONO_ADDRESS_CHUNKS
     } else {
         &TEXT_MONO_ADDRESS_CHUNKS_SMALLER_X_OFFSET
-    }
-}
-
-/// Convert Python-side numeric id to a `TextStyle`.
-pub fn textstyle_number(num: i32) -> &'static TextStyle {
-    let font = Font::from_i32(-num);
-    match font {
-        Some(Font::DEMIBOLD) => &TEXT_DEMIBOLD,
-        Some(Font::BOLD_UPPER) => &TEXT_BOLD,
-        Some(Font::MONO) => &TEXT_MONO,
-        _ => &TEXT_NORMAL,
     }
 }
 

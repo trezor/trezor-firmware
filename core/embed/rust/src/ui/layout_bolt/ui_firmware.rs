@@ -340,8 +340,13 @@ impl FirmwareUI for UIBolt {
         let mut paragraphs = ParagraphVecLong::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
-            let style: &TextStyle = theme::textstyle_number(font.try_into()?);
+            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let is_data = is_data.try_into()?;
+            let style: &TextStyle = if is_data {
+                &theme::TEXT_MONO
+            } else {
+                &theme::TEXT_NORMAL
+            };
             let text: TString = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
         }
@@ -460,8 +465,13 @@ impl FirmwareUI for UIBolt {
         let mut paragraphs = ParagraphVecShort::new();
 
         for para in IterBuf::new().try_iterate(items)? {
-            let [font, text]: [Obj; 2] = util::iter_into_array(para)?;
-            let style: &TextStyle = theme::textstyle_number(font.try_into()?);
+            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let is_data = is_data.try_into()?;
+            let style: &TextStyle = if is_data {
+                &theme::TEXT_MONO
+            } else {
+                &theme::TEXT_NORMAL
+            };
             let text: TString = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
             if paragraphs.is_full() {

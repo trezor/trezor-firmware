@@ -538,7 +538,7 @@ async def should_show_payment_request_details(
 
 async def should_show_more(
     title: str,
-    para: Iterable[tuple[int, str]],
+    para: Iterable[tuple[str, bool]],
     button_text: str | None = None,
     br_name: str = "should_show_more",
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -625,13 +625,13 @@ async def _confirm_ask_pagination(
     confirm_more_layout = trezorui_api.confirm_more(
         title=title,
         button=TR.buttons__confirm,
-        items=[(ui.NORMAL, description), (ui.MONO, data)],
+        items=[(description, False), (data, True)],
     )
 
     while True:
         if not await should_show_more(
             title,
-            para=[(ui.NORMAL, description), (ui.MONO, data)],
+            para=[(description, False), (data, True)],
             verb_cancel=None,
             br_name=br_name,
             br_code=br_code,
@@ -778,7 +778,7 @@ async def confirm_value(
             result = await interact(
                 trezorui_api.confirm_with_info(
                     title=title,
-                    items=((ui.NORMAL, value),),
+                    items=((value, False),),
                     button=verb or TR.buttons__confirm,
                     info_button=TR.buttons__info,
                 ),
