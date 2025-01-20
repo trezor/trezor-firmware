@@ -89,6 +89,8 @@ bool display_init(display_content_mode_t mode) {
 #endif
 #endif
 
+  gfx_bitblt_init();
+
   drv->initialized = true;
   return true;
 }
@@ -109,6 +111,8 @@ void display_deinit(display_content_mode_t mode) {
   NVIC_DisableIRQ(DISPLAY_TE_INTERRUPT_NUM);
 #endif
 #endif
+
+  gfx_bitblt_deinit();
 
   mpu_set_active_fb(NULL, 0);
 

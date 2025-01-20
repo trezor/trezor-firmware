@@ -412,6 +412,8 @@ bool display_init(display_content_mode_t mode) {
 
   __HAL_LTDC_ENABLE_IT(&drv->hlcd_ltdc, LTDC_IT_LI | LTDC_IT_FU | LTDC_IT_TE);
 
+  gfx_bitblt_init();
+
   drv->initialized = true;
   return true;
 
@@ -435,6 +437,8 @@ void display_deinit(display_content_mode_t mode) {
   }
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+  gfx_bitblt_deinit();
 
   NVIC_DisableIRQ(LTDC_IRQn);
   NVIC_DisableIRQ(LTDC_ER_IRQn);

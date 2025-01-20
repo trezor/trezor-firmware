@@ -92,7 +92,6 @@ static void drivers_init(void) {
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
-  gfx_bitblt_init();
   display_init(DISPLAY_RESET_CONTENT);
 #ifdef USE_SD_CARD
   sdcard_init();
@@ -103,7 +102,6 @@ static void drivers_deinit(void) {
 #ifdef FIXED_HW_DEINIT
   // TODO
 #endif
-  gfx_bitblt_deinit();
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 #ifdef USE_POWERCTL
   powerctl_deinit();
