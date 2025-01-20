@@ -202,3 +202,6 @@ class LegacyFirmware(Struct):
 
         if self.embedded_v2:
             self.embedded_v2.verify()
+
+    def model(self) -> Model | None:
+        return Model.T1B1

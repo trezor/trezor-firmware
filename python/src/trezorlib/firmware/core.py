@@ -126,7 +126,10 @@ class FirmwareImage(Struct):
 
     @staticmethod
     def calc_padding(hw_model: bytes, len: int) -> int:
-        alignment = Model.from_hw_model(hw_model).code_alignment()
+        try:
+            alignment = Model.from_hw_model(hw_model).code_alignment()
+        except ValueError:
+            alignment = Model.T3W1.code_alignment()
         return ((len + alignment - 1) & ~(alignment - 1)) - len
 
     def get_hash_params(self) -> "util.FirmwareHashParameters":
@@ -176,6 +179,11 @@ class FirmwareImage(Struct):
         header.v1_signatures = [b"\x00" * 64] * consts.V1_SIGNATURE_SLOTS
         return hash_params.hash_function(header.build()).digest()
 
+    def model(self) -> Model | None:
+        if isinstance(self.header.hw_model, Model):
+            return self.header.hw_model
+        return None
+
 
 class VendorFirmware(Struct):
     """Firmware image prefixed by a vendor header.
@@ -214,3 +222,6 @@ class VendorFirmware(Struct):
         # now = time.gmtime()
         # if time.gmtime(fw.vendor_header.expiry) < now:
         #     raise ValueError("Vendor header expired.")
+
+    def model(self) -> Model | None:
+        return self.firmware.model()
