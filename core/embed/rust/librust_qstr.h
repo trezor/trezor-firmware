@@ -79,6 +79,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_auto_lock__change_template;
   MP_QSTR_auto_lock__title;
   MP_QSTR_auto_lock__turned_on;
+  MP_QSTR_backlight_fade;
+  MP_QSTR_backlight_set;
   MP_QSTR_backup__can_back_up_anytime;
   MP_QSTR_backup__create_backup_to_prevent_loss;
   MP_QSTR_backup__info_multi_share_backup;

@@ -199,7 +199,7 @@ impl Stopwatch {
     pub fn elapsed(&self) -> Duration {
         match *self {
             Self::Stopped(duration) => duration,
-            Self::Running(time) => Instant::now().checked_duration_since(time).unwrap(),
+            Self::Running(time) => unwrap!(Instant::now().checked_duration_since(time)),
         }
     }
 
