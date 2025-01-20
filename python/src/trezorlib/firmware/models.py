@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import hashlib
 import typing as t
 from dataclasses import dataclass
@@ -45,7 +47,7 @@ class Model(Enum):
     DISC2 = b"D002"
 
     @classmethod
-    def from_hw_model(cls, hw_model: t.Union["Self", bytes]) -> "Model":
+    def from_hw_model(cls, hw_model: Self | bytes) -> Model:
         if isinstance(hw_model, cls):
             return hw_model
         if hw_model == b"\x00\x00\x00\x00":
@@ -53,17 +55,17 @@ class Model(Enum):
         raise ValueError(f"Unknown hardware model: {hw_model}")
 
     @classmethod
-    def from_trezor_model(cls, trezor_model: "TrezorModel") -> "Self":
+    def from_trezor_model(cls, trezor_model: TrezorModel) -> Self:
         return cls(trezor_model.internal_name.encode("ascii"))
 
-    def model_keys(self, dev_keys: bool = False) -> "ModelKeys":
+    def model_keys(self, dev_keys: bool = False) -> ModelKeys:
         if dev_keys:
             model_map = MODEL_MAP_DEV
         else:
             model_map = MODEL_MAP
         return model_map[self]
 
-    def hash_params(self) -> "FirmwareHashParameters":
+    def hash_params(self) -> FirmwareHashParameters:
         return MODEL_HASH_PARAMS_MAP[self]
 
 

@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import hashlib
 import typing as t
 from dataclasses import field
@@ -101,7 +103,7 @@ class LegacyV2Firmware(FirmwareImage):
 
     V3_FIRST_VERSION = (1, 12, 0)
 
-    def get_hash_params(self) -> "util.FirmwareHashParameters":
+    def get_hash_params(self) -> util.FirmwareHashParameters:
         return Model.ONE.hash_params()
 
     def verify_v2(self, dev_keys: bool) -> None:
@@ -160,11 +162,11 @@ class LegacyFirmware(Struct):
     expected format of firmware binary for Trezor One version 1.8.0, which can be installed
     by both the older and the newer bootloader."""
 
-    key_indexes: t.List[int]
-    signatures: t.List[bytes]
+    key_indexes: list[int]
+    signatures: list[bytes]
     code: bytes
-    flags: t.Dict[str, t.Any] = field(default_factory=dict)
-    embedded_v2: t.Optional[LegacyV2Firmware] = subcon(LegacyV2Firmware, default=None)
+    flags: dict[str, t.Any] = field(default_factory=dict)
+    embedded_v2: LegacyV2Firmware | None = subcon(LegacyV2Firmware, default=None)
 
     # fmt: off
     SUBCON = c.Struct(

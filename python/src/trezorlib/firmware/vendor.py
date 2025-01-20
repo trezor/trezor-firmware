@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import hashlib
 import typing as t
 from copy import copy
@@ -85,13 +87,13 @@ class VendorTrust(Struct):
 class VendorHeader(Struct):
     header_len: int
     expiry: int
-    version: t.Tuple[int, int]
+    version: tuple[int, int]
     sig_m: int
     # sig_n: int
-    hw_model: t.Union[Model, bytes]
-    pubkeys: t.List[bytes]
+    hw_model: Model | bytes
+    pubkeys: list[bytes]
     text: str
-    image: t.Dict[str, t.Any]
+    image: dict[str, t.Any]
     sigmask: int
     signature: bytes
 
