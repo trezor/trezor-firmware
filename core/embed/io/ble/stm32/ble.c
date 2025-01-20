@@ -26,6 +26,7 @@
 #include <sys/irq.h>
 #include <sys/systimer.h>
 #include <util/tsqueue.h>
+#include <util/unit_properties.h>
 
 #include "ble_comm_defs.h"
 
@@ -65,6 +66,7 @@ typedef struct {
   tsqueue_entry_t ts_queue_entries[TX_QUEUE_LEN];
   tsqueue_t tx_queue;
 
+  char adv_name[BLE_ADV_NAME_LEN];
   systimer_t *timer;
   uint16_t ping_cntr;
 } ble_driver_t;
@@ -80,11 +82,19 @@ static bool ble_send_state_request(ble_driver_t *drv) {
 
 static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
   (void)drv;
-  uint8_t data[2];
-  data[0] = INTERNAL_CMD_ADVERTISING_ON;
-  data[1] = whitelist ? 1 : 0;
-  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, data, sizeof(data), NULL,
-                      NULL) >= 0;
+
+  unit_properties_t props;
+  unit_properties_get(&props);
+
+  cmd_advertising_on_t data = {
+      .cmd_id = INTERNAL_CMD_ADVERTISING_ON,
+      .whitelist = whitelist ? 1 : 0,
+      .color = props.color,
+  };
+  memcpy(data.name, drv->adv_name, BLE_ADV_NAME_LEN);
+
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&data, sizeof(data),
+                      NULL, NULL) >= 0;
 }
 
 static bool ble_send_advertising_off(ble_driver_t *drv) {
@@ -145,14 +155,6 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
 
   event_status_msg_t msg;
   memcpy(&msg, data, sizeof(event_status_msg_t));
-
-  if (!drv->status_valid) {
-    if (msg.peer_count > 0) {
-      drv->mode_requested = BLE_MODE_CONNECTABLE;
-    } else {
-      drv->mode_requested = BLE_MODE_OFF;
-    }
-  }
 
   if (drv->connected != msg.connected) {
     if (msg.connected) {
@@ -507,7 +509,7 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len) {
   return read_len;
 }
 
-bool ble_issue_command(ble_command_t command) {
+bool ble_issue_command(ble_command_t *command) {
   ble_driver_t *drv = &g_ble_driver;
 
   if (!drv->initialized) {
@@ -518,14 +520,16 @@ bool ble_issue_command(ble_command_t command) {
 
   bool result = false;
 
-  switch (command) {
+  switch (command->cmd_type) {
     case BLE_SWITCH_OFF:
       drv->mode_requested = BLE_MODE_OFF;
       break;
     case BLE_SWITCH_ON:
+      memcpy(drv->adv_name, command->data.name, sizeof(drv->adv_name));
       drv->mode_requested = BLE_MODE_CONNECTABLE;
       break;
     case BLE_PAIRING_MODE:
+      memcpy(drv->adv_name, command->data.name, sizeof(drv->adv_name));
       drv->mode_requested = BLE_MODE_PAIRING;
       break;
     case BLE_DISCONNECT:

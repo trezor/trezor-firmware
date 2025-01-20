@@ -124,18 +124,18 @@ STATIC mp_obj_t mod_trezorio_BLE_read(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_BLE_read_obj, 1, 2,
                                            mod_trezorio_BLE_read);
 
-/// def erase_bonds() -> None:
+/// def erase_bonds() -> bool:
 ///     """
 ///     Erases all BLE bonds
 ///     """
 STATIC mp_obj_t mod_trezorio_BLE_erase_bonds(void) {
-  ble_issue_command(BLE_ERASE_BONDS);
-  return mp_const_none;
+  ble_command_t cmd = {.cmd_type = BLE_ERASE_BONDS, .data_len = 0};
+  return mp_obj_new_bool(ble_issue_command(&cmd));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_erase_bonds_obj,
                                  mod_trezorio_BLE_erase_bonds);
 
-/// def start_comm() -> None:
+/// def start_comm() -> bool:
 ///     """
 ///     Start communication with BLE chip
 ///     """
@@ -146,40 +146,75 @@ STATIC mp_obj_t mod_trezorio_BLE_start_comm(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_start_comm_obj,
                                  mod_trezorio_BLE_start_comm);
 
-/// def start_advertising(whitelist: bool) -> None:
+/// def start_advertising(whitelist: bool, name: str | None) -> bool:
 ///     """
 ///     Start advertising
 ///     """
-STATIC mp_obj_t mod_trezorio_BLE_start_advertising(mp_obj_t whitelist) {
-  bool whitelist_bool = mp_obj_is_true(whitelist);
+STATIC mp_obj_t mod_trezorio_BLE_start_advertising(size_t n_args,
+                                                   const mp_obj_t *args) {
+  bool whitelist_bool = mp_obj_is_true(args[0]);
 
-  ble_issue_command(whitelist_bool ? BLE_SWITCH_ON : BLE_PAIRING_MODE);
-  return mp_const_none;
+  mp_buffer_info_t name = {0};
+
+  char *name_buf = NULL;
+  int name_len = 0;
+
+  if (n_args == 1 || !mp_get_buffer(args[1], &name, MP_BUFFER_READ)) {
+    name_buf = MODEL_FULL_NAME;
+    name_len = strlen(MODEL_FULL_NAME);
+  } else {
+    name_buf = name.buf;
+    name_len = name.len;
+  }
+
+  ble_command_t cmd = {
+      .cmd_type = whitelist_bool ? BLE_SWITCH_ON : BLE_PAIRING_MODE,
+      .data_len = name.len};
+
+  // get a minimum of the two lengths
+  int len = name_len < BLE_ADV_NAME_LEN ? name_len : BLE_ADV_NAME_LEN;
+
+  memcpy(cmd.data.name, name_buf, len);
+
+  return mp_obj_new_bool(ble_issue_command(&cmd));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_start_advertising_obj,
-                                 mod_trezorio_BLE_start_advertising);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorio_BLE_start_advertising_obj, 1, 2,
+    mod_trezorio_BLE_start_advertising);
 
-/// def stop_advertising(whitelist: bool) -> None:
+/// def stop_advertising(whitelist: bool) -> bool:
 ///     """
 ///     Stop advertising
 ///     """
 STATIC mp_obj_t mod_trezorio_BLE_stop_advertising(void) {
-  ble_issue_command(BLE_SWITCH_OFF);
-  return mp_const_none;
+  ble_command_t cmd = {.cmd_type = BLE_SWITCH_OFF, .data_len = 0};
+  return mp_obj_new_bool(ble_issue_command(&cmd));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_stop_advertising_obj,
                                  mod_trezorio_BLE_stop_advertising);
 
-/// def disconnect() -> None:
+/// def disconnect() -> bool:
 ///     """
 ///     Disconnect BLE
 ///     """
 STATIC mp_obj_t mod_trezorio_BLE_disconnect(void) {
-  ble_issue_command(BLE_DISCONNECT);
-  return mp_const_none;
+  ble_command_t cmd = {.cmd_type = BLE_DISCONNECT, .data_len = 0};
+  return mp_obj_new_bool(ble_issue_command(&cmd));
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_disconnect_obj,
                                  mod_trezorio_BLE_disconnect);
+
+/// def peer_count() -> int:
+///     """
+///     Get peer count (number of bonded devices)
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_peer_count(void) {
+  ble_state_t state;
+  ble_get_state(&state);
+  return MP_OBJ_NEW_SMALL_INT(state.peer_count);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_peer_count_obj,
+                                 mod_trezorio_BLE_peer_count);
 
 STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ble)},
@@ -199,6 +234,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_BLE_stop_advertising_obj)},
     {MP_ROM_QSTR(MP_QSTR_disconnect),
      MP_ROM_PTR(&mod_trezorio_BLE_disconnect_obj)},
+    {MP_ROM_QSTR(MP_QSTR_peer_count),
+     MP_ROM_PTR(&mod_trezorio_BLE_peer_count_obj)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_BLE_globals,
                             mod_trezorio_BLE_globals_table);
