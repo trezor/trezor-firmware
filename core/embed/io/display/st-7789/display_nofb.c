@@ -22,15 +22,26 @@
 
 #include <io/display.h>
 
+#include "display_internal.h"
 #include "display_io.h"
 #include "display_panel.h"
 
 #ifdef KERNEL_MODE
 
 void display_refresh(void) {
-  // If the framebuffer is not used the, we do not need
+  // If the framebuffer is not used then, we do not need
   // to refresh the display explicitly as we write the data
   // directly to the display internal RAM.
+
+  // but still, we will wait before raising backlight
+  // to make sure the display is showing new content
+  display_driver_t* drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  drv->update_pending = 2;
 }
 
 void display_wait_for_sync(void) {
@@ -44,6 +55,22 @@ void display_wait_for_sync(void) {
     while (GPIO_PIN_RESET == HAL_GPIO_ReadPin(DISPLAY_TE_PORT, DISPLAY_TE_PIN))
       ;
   }
+#endif
+}
+
+void display_ensure_refreshed(void) {
+#ifndef BOARDLOADER
+  display_driver_t* drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  while (drv->update_pending > 0) {
+    display_wait_for_sync();
+    drv->update_pending--;
+  }
+
 #endif
 }
 
