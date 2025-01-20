@@ -14,6 +14,9 @@ def configure_board(
     sources: list[str],
     paths: list[str],
 ):
+    defines += (("MODEL_HEADER", '"T2T1/model_T2T1.h"'),)
+    defines += (("VERSIONS_HEADER", '"T2T1/versions.h"'),)
+
     if revision == "emulator":
         return emul(env, features_wanted, defines, sources, paths)
     else:
