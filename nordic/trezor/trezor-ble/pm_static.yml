@@ -1,0 +1,26 @@
+mcuboot:
+  address: 0x0
+  size: 0xc000
+mcuboot_pad:
+  address: 0xc000
+  size: 0x200
+app:
+  address: 0x10200
+  size: 0x6de00
+mcuboot_primary:
+  orig_span: &id001
+  - mcuboot_pad
+  - app
+  span: *id001
+  address: 0xc000
+  size: 0x6e000
+mcuboot_primary_app:
+  orig_span: &id002
+  - app
+  span: *id002
+  address: 0x10200
+  size: 0x6de00
+settings_storage:
+  address: 0x7e000
+  size: 0x2000
+
