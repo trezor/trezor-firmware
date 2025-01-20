@@ -56,7 +56,7 @@ _shutdown_clear_ram_3_start = MCU_SRAM4;
 _shutdown_clear_ram_3_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 
@@ -67,6 +67,10 @@ SECTIONS {
 
   .header : ALIGN(4) {
     KEEP(*(.header));
+  } >FLASH AT>FLASH
+
+  .padding : ALIGN(4) {
+    . = ALIGN(4);
     . = ALIGN(CODE_ALIGNMENT);
   } >FLASH AT>FLASH
 
