@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import typing as t
 from hashlib import blake2s
 
@@ -21,9 +23,9 @@ from typing_extensions import Protocol, TypeGuard
 
 from .. import messages
 from ..tools import session
-from .models import Model
 from .core import VendorFirmware
 from .legacy import LegacyFirmware, LegacyV2Firmware
+from .models import Model
 
 # re-exports:
 if True:
@@ -45,7 +47,7 @@ if t.TYPE_CHECKING:
 
     class FirmwareType(Protocol):
         @classmethod
-        def parse(cls: t.Type[T], data: bytes) -> T: ...
+        def parse(cls: type[T], data: bytes) -> T: ...
 
         def verify(self, dev_keys: bool = False) -> None: ...
 
@@ -109,7 +111,7 @@ def update(
         raise RuntimeError(f"Unexpected message {resp}")
 
 
-def get_hash(client: "TrezorClient", challenge: t.Optional[bytes]) -> bytes:
+def get_hash(client: "TrezorClient", challenge: bytes | None) -> bytes:
     return client.call(
         messages.GetFirmwareHash(challenge=challenge), expect=messages.FirmwareHash
     ).hash
