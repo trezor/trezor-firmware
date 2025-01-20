@@ -14,7 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import typing as t
+from __future__ import annotations
+
 from copy import copy
 from enum import Enum
 
@@ -45,15 +46,15 @@ class FirmwareHeader(Struct):
     header_len: int
     expiry: int
     code_length: int
-    version: t.Tuple[int, int, int, int]
-    fix_version: t.Tuple[int, int, int, int]
-    hw_model: t.Union[Model, bytes]
+    version: tuple[int, int, int, int]
+    fix_version: tuple[int, int, int, int]
+    hw_model: Model | bytes
     hw_revision: int
     monotonic: int
-    hashes: t.List[bytes]
+    hashes: list[bytes]
 
-    v1_signatures: t.List[bytes]
-    v1_key_indexes: t.List[int]
+    v1_signatures: list[bytes]
+    v1_key_indexes: list[int]
 
     sigmask: int
     signature: bytes
@@ -126,13 +127,16 @@ class FirmwareImage(Struct):
 
     @staticmethod
     def calc_padding(hw_model: bytes, len: int) -> int:
-        alignment = Model.from_hw_model(hw_model).code_alignment()
+        try:
+            alignment = Model.from_hw_model(hw_model).code_alignment()
+        except ValueError:
+            alignment = Model.T3W1.code_alignment()
         return ((len + alignment - 1) & ~(alignment - 1)) - len
 
-    def get_hash_params(self) -> "util.FirmwareHashParameters":
+    def get_hash_params(self) -> util.FirmwareHashParameters:
         return Model.from_hw_model(self.header.hw_model).hash_params()
 
-    def code_hashes(self) -> t.List[bytes]:
+    def code_hashes(self) -> list[bytes]:
         """Calculate hashes of chunks of `code`.
 
         Assume that the first `code_offset` bytes of `code` are taken up by the header.
@@ -165,7 +169,6 @@ class FirmwareImage(Struct):
             raise util.FirmwareIntegrityError("Invalid firmware data.")
 
     def digest(self) -> bytes:
-
         hash_params = self.get_hash_params()
 
         header = copy(self.header)
@@ -175,6 +178,11 @@ class FirmwareImage(Struct):
         header.v1_key_indexes = [0] * consts.V1_SIGNATURE_SLOTS
         header.v1_signatures = [b"\x00" * 64] * consts.V1_SIGNATURE_SLOTS
         return hash_params.hash_function(header.build()).digest()
+
+    def model(self) -> Model | None:
+        if isinstance(self.header.hw_model, Model):
+            return self.header.hw_model
+        return None
 
 
 class VendorFirmware(Struct):
@@ -214,3 +222,6 @@ class VendorFirmware(Struct):
         # now = time.gmtime()
         # if time.gmtime(fw.vendor_header.expiry) < now:
         #     raise ValueError("Vendor header expired.")
+
+    def model(self) -> Model | None:
+        return self.firmware.model()
