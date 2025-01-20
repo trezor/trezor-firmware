@@ -9,7 +9,12 @@ en_data = json.loads(en_file.read_text())["translations"]
 
 %>\
 class TR:
-% for name, text in sorted(en_data.items()):
-    ${name}: str = ${json.dumps(text)}
+% for name, value in sorted(en_data.items()):
+<%
+    if isinstance(value, dict):
+        # For simplicity, use the first model's text for the stubs.
+        value, *_ = value.values()
+%>\
+    ${name}: str = ${json.dumps(value)}
 % endfor
 
