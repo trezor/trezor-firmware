@@ -167,15 +167,19 @@ STATIC mp_obj_t mod_trezorio_WebUSB_read(size_t n_args, const mp_obj_t *args) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_WebUSB_read_obj, 2, 3,
                                            mod_trezorio_WebUSB_read);
 
-/// PACKET_LEN: ClassVar[int]
-/// """Length of one USB packet."""
+/// RX_PACKET_LEN: ClassVar[int]
+/// """Length of one USB RX packet."""
+
+/// TX_PACKET_LEN: ClassVar[int]
+/// """Length of one USB TX packet."""
 
 STATIC const mp_rom_map_elem_t mod_trezorio_WebUSB_locals_dict_table[] = {
     {MP_ROM_QSTR(MP_QSTR_iface_num),
      MP_ROM_PTR(&mod_trezorio_WebUSB_iface_num_obj)},
     {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_WebUSB_write_obj)},
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_WebUSB_read_obj)},
-    {MP_ROM_QSTR(MP_QSTR_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
+    {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
+    {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(USB_PACKET_LEN)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_WebUSB_locals_dict,
                             mod_trezorio_WebUSB_locals_dict_table);

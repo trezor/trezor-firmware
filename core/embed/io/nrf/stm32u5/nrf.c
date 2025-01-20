@@ -315,6 +315,7 @@ void nrf_deinit(void) {
 
   nrf_stop();
 
+  NVIC_DisableIRQ(GPDMA1_Channel1_IRQn);
   NVIC_DisableIRQ(GPDMA1_Channel2_IRQn);
   NVIC_DisableIRQ(SPI1_IRQn);
 
