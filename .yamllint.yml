@@ -5,7 +5,7 @@ ignore: |
   vendor/
   /common/defs/ethereum/chains/
   /common/defs/ethereum/tokens/
-  /west/
+  /nordic/
 
 rules:
   # fix for truthy warning on github action files
