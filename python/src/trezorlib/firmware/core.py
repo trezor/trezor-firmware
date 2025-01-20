@@ -113,21 +113,10 @@ class FirmwareImage(Struct):
     SUBCON = c.Struct(
         "header" / FirmwareHeader.SUBCON,
         "_header_end" / c.Tell,
-        "padding"
-        / c.Padding(
-            lambda this: FirmwareImage.calc_padding(
-                this.header.hw_model, this._header_end
-            )
-        ),
         "_code_offset" / c.Tell,
         "code" / c.Bytes(c.this.header.code_length),
         c.Terminated,
     )
-
-    @staticmethod
-    def calc_padding(hw_model: bytes, len: int) -> int:
-        alignment = Model.from_hw_model(hw_model).code_alignment()
-        return ((len + alignment - 1) & ~(alignment - 1)) - len
 
     def get_hash_params(self) -> "util.FirmwareHashParameters":
         return Model.from_hw_model(self.header.hw_model).hash_params()

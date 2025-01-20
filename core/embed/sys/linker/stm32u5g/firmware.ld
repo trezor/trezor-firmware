@@ -24,7 +24,7 @@ confidential_lma = LOADADDR(.confidential);
 confidential_vma = ADDR(.confidential);
 confidential_size = SIZEOF(.confidential);
 
-_codelen = SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
+_codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
 _heap_start = ADDR(.heap);
@@ -37,6 +37,11 @@ SECTIONS {
 
   .header : ALIGN(4) {
     KEEP(*(.header));
+  } >FLASH AT>FLASH
+
+  .padding : ALIGN(4) {
+    . = ALIGN(4);
+    . = ALIGN(CODE_ALIGNMENT);
   } >FLASH AT>FLASH
 
   .flash : ALIGN(CODE_ALIGNMENT) {
