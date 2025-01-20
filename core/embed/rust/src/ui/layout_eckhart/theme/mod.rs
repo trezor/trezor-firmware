@@ -200,6 +200,31 @@ pub const fn button_confirm() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_warning_high() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: ORANGE,
+            button_color: BG,
+            icon_color: ORANGE,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: ORANGE,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREEN,
+            background_color: BG,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: ORANGE,
+            button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
+            background_color: GREY_DARK,
+        },
+    }
+}
 
 pub const fn button_header() -> ButtonStyleSheet {
     ButtonStyleSheet {
