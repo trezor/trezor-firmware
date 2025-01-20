@@ -8,7 +8,7 @@ ignore-paths=
     crypto,
     legacy,
     storage,
-    west,
+    nordic,
 fail-under=10.0
 jobs=0
 load-plugins=trezor_pylint_plugin
