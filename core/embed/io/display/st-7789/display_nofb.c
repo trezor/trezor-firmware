@@ -36,6 +36,11 @@ void display_refresh(void) {
   // but still, we will wait before raising backlight
   // to make sure the display is showing new content
   display_driver_t* drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
   drv->update_pending = 2;
 }
 
