@@ -163,6 +163,32 @@ pub const fn button_confirm() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_warning_high() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE,
+            button_color: BG,
+            icon_color: ORANGE,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREEN,
+            background_color: BG,
+        },
+        disabled: &ButtonStyle {
+            font: Font::DEMIBOLD,
+            text_color: ORANGE,
+            button_color: GREY_DARK,
+            icon_color: GREY_LIGHT,
+            background_color: GREY_DARK,
+        },
+    }
+}
+
 pub const RESULT_PADDING: i16 = 6;
 pub const RESULT_FOOTER_START: i16 = 171;
 pub const RESULT_FOOTER_HEIGHT: i16 = 62;
