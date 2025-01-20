@@ -92,18 +92,12 @@ def _print_firmware_model(hw_model: Union[bytes, fw_models.Model]) -> None:
         click.echo(f"{model_name} firmware image.")
         return
     except ValueError:
-        assert isinstance(hw_model, bytes)
-        if hw_model.isascii():
-            model_name = hw_model.decode("ascii")
-            click.echo(f"Unrecognized hardware model: {model_name}")
-            return
-        else:
-            click.echo(f"Invalid model field: {hw_model.hex()}")
+        pass
 
     assert isinstance(hw_model, bytes)
-    if all(0x20 <= b < 0x80 for b in hw_model):  # isascii
+    if hw_model.isascii():
         model_name = hw_model.decode("ascii")
-        click.echo(f"Unknown hardware model: {model_name}")
+        click.echo(f"Unrecognized hardware model: {model_name}")
         return
 
     click.echo(f"Suspicious hardware model code: {hw_model.hex()} ({hw_model!r})")
