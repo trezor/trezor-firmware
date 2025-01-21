@@ -25,26 +25,8 @@
 #ifdef TREZOR_FONT_NORMAL_ENABLE
 #include TREZOR_FONT_NORMAL_INCLUDE
 #endif
-#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
-#include TREZOR_FONT_DEMIBOLD_INCLUDE
-#endif
 #ifdef TREZOR_FONT_BOLD_ENABLE
 #include TREZOR_FONT_BOLD_INCLUDE
-#endif
-#ifdef TREZOR_FONT_NORMAL_UPPER_ENABLE
-#include TREZOR_FONT_NORMAL_UPPER_INCLUDE
-#endif
-#ifdef TREZOR_FONT_BOLD_UPPER_ENABLE
-#include TREZOR_FONT_BOLD_UPPER_INCLUDE
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-#include TREZOR_FONT_MONO_INCLUDE
-#endif
-#ifdef TREZOR_FONT_BIG_ENABLE
-#include TREZOR_FONT_BIG_INCLUDE
-#endif
-#ifdef TREZOR_FONT_SUB_ENABLE
-#include TREZOR_FONT_SUB_INCLUDE
 #endif
 
 #define PASTER(font_name) font_name##_info
@@ -59,30 +41,6 @@ const font_info_t *get_font_info(font_id_t font_id) {
 #ifdef TREZOR_FONT_BOLD_ENABLE
     case FONT_BOLD:
       return &FONT_INFO(TREZOR_FONT_BOLD_NAME);
-#endif
-#ifdef TREZOR_FONT_DEMIBOLD_ENABLE
-    case FONT_DEMIBOLD:
-      return &FONT_INFO(TREZOR_FONT_DEMIBOLD_NAME);
-#endif
-#ifdef TREZOR_FONT_MONO_ENABLE
-    case FONT_MONO:
-      return &FONT_INFO(TREZOR_FONT_MONO_NAME);
-#endif
-#ifdef TREZOR_FONT_BIG_ENABLE
-    case FONT_BIG:
-      return &FONT_INFO(TREZOR_FONT_BIG_NAME);
-#endif
-#ifdef TREZOR_FONT_NORMAL_UPPER_ENABLE
-    case FONT_NORMAL_UPPER:
-      return &FONT_INFO(TREZOR_FONT_NORMAL_UPPER_NAME);
-#endif
-#ifdef TREZOR_FONT_BOLD_UPPER_ENABLE
-    case FONT_BOLD_UPPER:
-      return &FONT_INFO(TREZOR_FONT_BOLD_UPPER_NAME);
-#endif
-#ifdef TREZOR_FONT_SUB_ENABLE
-    case FONT_SUB:
-      return &FONT_INFO(TREZOR_FONT_SUB_NAME);
 #endif
     default:
       return NULL;

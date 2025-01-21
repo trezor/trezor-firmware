@@ -30,6 +30,9 @@
 #endif
 
 /// Font information structure containing metadata and pointers to font data
+/// **This is now only used in `prodtest` and `bootloader_ci`**
+/// For the main `bootloader` and `firmware`, `FontInfo` is used defined in
+/// `core/embed/rust/src/ui/display/font.rs`
 typedef struct {
   int height;
   int max_height;
@@ -38,17 +41,10 @@ typedef struct {
   const uint8_t *glyph_nonprintable;
 } font_info_t;
 
-/// Font identifiers. Keep in sync with `enum font` definition in
-/// `core/embed/rust/src/ui/display/font.rs`.
+/// Font identifiers.
 typedef enum {
   FONT_NORMAL = -1,
   FONT_BOLD = -2,
-  FONT_MONO = -3,
-  FONT_BIG = -4,
-  FONT_DEMIBOLD = -5,
-  FONT_NORMAL_UPPER = -6,
-  FONT_BOLD_UPPER = -7,
-  FONT_SUB = -8,
 } font_id_t;
 
 const font_info_t *get_font_info(font_id_t font_id);
