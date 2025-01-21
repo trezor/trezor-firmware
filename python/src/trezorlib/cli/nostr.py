@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Dict
 
 import click
 
-from .. import nostr, tools
+from .. import messages, nostr, tools
 from . import with_client
 
 if TYPE_CHECKING:
@@ -41,18 +41,14 @@ def get_pubkey(
     client: "TrezorClient",
     account: int,
 ) -> Dict[str, str]:
-    """Derive the pubkey from the seed."""
+    """Return the pubkey derived by the given path."""
 
     address_n = tools.parse_path(PATH_TEMPLATE.format(account))
 
-    res = nostr.get_pubkey(
+    return nostr.get_pubkey(
         client,
         address_n,
     )
-
-    return {
-        "pubkey": res.pubkey.hex(),
-    }
 
 
 @cli.command()
@@ -64,7 +60,7 @@ def sign_event(
     account: int,
     event: str,
 ) -> Dict[str, str]:
-    """Sign an event using address of given path."""
+    """Sign an event using the key derived by the given path."""
 
     event_json = json.loads(event)
 
@@ -72,8 +68,18 @@ def sign_event(
 
     res = nostr.sign_event(
         client,
-        address_n,
-        event,
+        messages.NostrSignEvent(
+            address_n=address_n,
+            created_at=event_json["created_at"],
+            kind=event_json["kind"],
+            tags=[
+                messages.NostrTag(
+                    key=t[0], value=t[1] if len(t) > 1 else None, extra=t[2:]
+                )
+                for t in event_json["tags"]
+            ],
+            content=event_json["content"],
+        ),
     )
 
     event_json["id"] = res.id.hex()
@@ -81,5 +87,5 @@ def sign_event(
     event_json["sig"] = res.signature.hex()
 
     return {
-        "signed_event": json.dumps(event_json),
+        "signed_event": event_json,
     }

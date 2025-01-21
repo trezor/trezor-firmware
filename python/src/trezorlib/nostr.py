@@ -15,8 +15,7 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 
-import json
-from typing import TYPE_CHECKING, AnyStr
+from typing import TYPE_CHECKING
 
 from . import messages
 from .tools import expect
@@ -27,36 +26,20 @@ if TYPE_CHECKING:
     from .tools import Address
 
 
-@expect(messages.NostrPubkey)
 def get_pubkey(
     client: "TrezorClient",
     n: "Address",
-) -> "MessageType":
+) -> str:
     return client.call(
         messages.NostrGetPubkey(
             address_n=n,
         )
-    )
+    ).pubkey.hex()
 
 
 @expect(messages.NostrEventSignature)
 def sign_event(
     client: "TrezorClient",
-    n: "Address",
-    event: AnyStr,
+    sign_event: messages.NostrSignEvent,
 ) -> "MessageType":
-    event_json = json.loads(event)
-    return client.call(
-        messages.NostrSignEvent(
-            address_n=n,
-            created_at=event_json["created_at"],
-            kind=event_json["kind"],
-            tags=[
-                messages.NostrTag(
-                    key=t[0], value=t[1] if len(t) > 1 else None, extra=t[2:]
-                )
-                for t in event_json["tags"]
-            ],
-            content=event_json["content"],
-        )
-    )
+    return client.call(sign_event)
