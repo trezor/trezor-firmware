@@ -1180,7 +1180,7 @@ int main(void) {
   draw_welcome_screen();
 
   char dom[32];
-  // format: {MODEL_IDENTIFIER}-YYMMDD
+  // format: {MODEL_IDENTIFIER}YYMMDD
   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
       sectrue == startswith(dom, MODEL_IDENTIFIER) && dom[31] == 0) {
     gfx_offset_t pos;
@@ -1189,7 +1189,8 @@ int main(void) {
     gfx_draw_qrcode(pos, 4, dom);
 
     pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - 30);
-    gfx_draw_text(pos, dom + 8, -1, &bold, GFX_ALIGN_CENTER);
+    gfx_draw_text(pos, dom + sizeof(MODEL_IDENTIFIER) - 1, -1, &bold,
+                  GFX_ALIGN_CENTER);
 
     display_refresh();
   }
