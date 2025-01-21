@@ -53,7 +53,7 @@ if utils.USE_BLE:
     from trezorio import ble
     ble.start_comm()
     if ble.peer_count() > 0:
-        ble.start_advertising(False, storage.device.get_label())
+        ble.start_advertising(True, storage.device.get_label())
 
 
 # run the endless loop
