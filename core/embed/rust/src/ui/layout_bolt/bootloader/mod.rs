@@ -4,7 +4,7 @@ use crate::{
     trezorhal::secbool::secbool,
     ui::{
         component::{connect::Connect, Label},
-        display::{self, Color, Font, Icon},
+        display::{self, font, Color, Icon},
         geometry::{Point, Rect},
         layout::simplified::{run, show},
     },
@@ -75,7 +75,7 @@ impl UIBolt {
         render_on_display(None, Some(bg_color), |target| {
             shape::Text::new(Point::new(SCREEN.width() / 2, SCREEN.height() - 45), text)
                 .with_align(Alignment::Center)
-                .with_font(Font::NORMAL)
+                .with_font(font::FONT_NORMAL)
                 .with_fg(fg_color)
                 .render(target);
 
@@ -385,7 +385,7 @@ impl BootloaderUI for UIBolt {
                 let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 50);
                 shape::Text::new(pos, text)
                     .with_align(Alignment::Center)
-                    .with_font(Font::NORMAL)
+                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG) //COLOR_BL_BG
                     .render(target);
 
@@ -402,7 +402,7 @@ impl BootloaderUI for UIBolt {
 
                 shape::Text::new(pos, version_text.as_str())
                     .with_align(Alignment::Center)
-                    .with_font(Font::NORMAL)
+                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG)
                     .render(target);
             }
@@ -417,7 +417,7 @@ impl BootloaderUI for UIBolt {
                     let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
                     shape::Text::new(pos, text.as_str())
                         .with_align(Alignment::Center)
-                        .with_font(Font::NORMAL)
+                        .with_font(font::FONT_NORMAL)
                         .with_fg(BLD_FG)
                         .render(target);
                 }
@@ -425,7 +425,7 @@ impl BootloaderUI for UIBolt {
                     let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
                     shape::Text::new(pos, "click to continue ...")
                         .with_align(Alignment::Center)
-                        .with_font(Font::NORMAL)
+                        .with_font(font::FONT_NORMAL)
                         .with_fg(BLD_FG)
                         .render(target);
                 }

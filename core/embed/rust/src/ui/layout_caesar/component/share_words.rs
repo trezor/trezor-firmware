@@ -5,7 +5,7 @@ use crate::{
         component::{
             text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
         },
-        display::Font,
+        display::{font, Font},
         geometry::{Alignment, Offset, Rect},
         shape::{self, Renderer},
     },
@@ -21,8 +21,8 @@ const WORDS_PER_PAGE: usize = 3;
 const EXTRA_LINE_HEIGHT: i16 = -2;
 const NUMBER_X_OFFSET: i16 = 0;
 const WORD_X_OFFSET: i16 = 25;
-const NUMBER_FONT: Font = Font::DEMIBOLD;
-const WORD_FONT: Font = Font::BIG;
+const NUMBER_FONT: Font = font::FONT_DEMIBOLD;
+const WORD_FONT: Font = font::FONT_BIG;
 const INFO_TOP_OFFSET: i16 = 20;
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
@@ -81,7 +81,7 @@ impl<'a> ShareWords<'a> {
             target,
             self.area.split_top(INFO_TOP_OFFSET).1,
             final_text.as_str().into(),
-            Font::NORMAL,
+            font::FONT_NORMAL,
             theme::FG,
             theme::BG,
             Alignment::Start,

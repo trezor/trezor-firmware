@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::{toif::Toif, Font},
+    display::{font, toif::Toif},
     geometry::{Alignment, Alignment2D, Offset, Rect},
     shape,
     shape::Renderer,
@@ -41,13 +41,13 @@ impl Component for Welcome {
 
         shape::Text::new(screen().top_center() + Offset::y(102), "Get started with")
             .with_align(Alignment::Center)
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(GREY_MEDIUM)
             .render(target);
 
         shape::Text::new(screen().top_center() + Offset::y(126), "your Trezor at")
             .with_align(Alignment::Center)
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(GREY_MEDIUM)
             .render(target);
 

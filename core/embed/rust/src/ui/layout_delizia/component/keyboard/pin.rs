@@ -10,7 +10,7 @@ use crate::{
             text::TextStyle,
             Component, Event, EventCtx, Label, Never, Pad, Timer,
         },
-        display::Font,
+        display::font::FONT_MONO,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
@@ -605,20 +605,20 @@ impl PinDots {
     }
 
     fn render_digits<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
-        let left = area.left_center() + Offset::y(Font::MONO.visible_text_height("1") / 2);
+        let left = area.left_center() + Offset::y(FONT_MONO.visible_text_height("1") / 2);
         let digits = self.digits.len();
 
         if digits <= MAX_VISIBLE_DIGITS {
             shape::Text::new(left, &self.digits)
                 .with_align(Alignment::Start)
-                .with_font(Font::MONO)
+                .with_font(FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         } else {
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
             shape::Text::new(left, &self.digits[offset..])
                 .with_align(Alignment::Start)
-                .with_font(Font::MONO)
+                .with_font(FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         }
@@ -668,10 +668,10 @@ impl PinDots {
 
         if last_digit && digits > 0 {
             let last = &self.digits[(digits - 1)..digits];
-            cursor.y = area.left_center().y + (Font::MONO.visible_text_height("1") / 2);
+            cursor.y = area.left_center().y + (FONT_MONO.visible_text_height("1") / 2);
             shape::Text::new(cursor, last)
                 .with_align(Alignment::Start)
-                .with_font(Font::MONO)
+                .with_font(FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         } else {

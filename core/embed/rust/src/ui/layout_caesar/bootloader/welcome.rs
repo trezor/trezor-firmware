@@ -1,6 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
-    display::Font,
+    display::font,
     geometry::{Alignment, Offset, Rect},
     shape,
     shape::Renderer,
@@ -39,19 +39,19 @@ impl Component for Welcome {
 
         shape::Text::new(top_center + Offset::y(24), "Get started with")
             .with_align(Alignment::Center)
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(BLD_FG)
             .render(target);
 
         shape::Text::new(top_center + Offset::y(32), "your Trezor at")
             .with_align(Alignment::Center)
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(BLD_FG)
             .render(target);
 
         shape::Text::new(top_center + Offset::y(48), "trezor.io/start")
             .with_align(Alignment::Center)
-            .with_font(Font::BOLD)
+            .with_font(font::FONT_BOLD)
             .with_fg(BLD_FG)
             .render(target);
     }

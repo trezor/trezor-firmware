@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
-        display::Font,
+        display::{font, Font},
         geometry::{Offset, Rect},
         shape::{self, Renderer},
     },
@@ -16,7 +16,7 @@ use ufmt::uwrite;
 
 const WORDS_PER_PAGE: usize = 4;
 const TOP_PADDING_OFFSET: i16 = 13;
-const WORD_FONT: Font = Font::MONO;
+const WORD_FONT: Font = font::FONT_MONO;
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
 /// Showing the given share words.

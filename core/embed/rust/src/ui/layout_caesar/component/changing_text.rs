@@ -2,7 +2,7 @@ use crate::{
     strutil::ShortString,
     ui::{
         component::{Component, Event, EventCtx, Never, Pad},
-        display::Font,
+        display::{font, Font},
         geometry::{Alignment, Point, Rect},
         shape::{self, Renderer},
         util::long_line_content_with_ellipsis,
@@ -43,11 +43,11 @@ impl ChangingTextLine {
     }
 
     pub fn center_mono(text: &str, max_len: usize) -> Self {
-        Self::new(text, Font::MONO, Alignment::Center, max_len)
+        Self::new(text, font::FONT_MONO, Alignment::Center, max_len)
     }
 
     pub fn center_bold(text: &str, max_len: usize) -> Self {
-        Self::new(text, Font::BOLD_UPPER, Alignment::Center, max_len)
+        Self::new(text, font::FONT_BOLD_UPPER, Alignment::Center, max_len)
     }
 
     /// Not showing ellipsis at the beginning of longer texts.

@@ -20,7 +20,7 @@ use crate::{
             },
             Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
         },
-        display::Font,
+        display::font,
         geometry,
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
@@ -514,7 +514,7 @@ impl FirmwareUI for UICaesar {
             let right_btn = has_pages_after.then(|| {
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(Font::NORMAL)
+                    .with_font(font::FONT_NORMAL)
             });
             let middle_btn = Some(ButtonDetails::armed_text(TR::buttons__confirm.into()));
 

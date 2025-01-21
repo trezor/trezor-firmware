@@ -7,7 +7,7 @@ use crate::{
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, Timer},
-        display::{image::ImageInfo, Color, Font},
+        display::{font, image::ImageInfo, Color},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -493,7 +493,7 @@ impl Homescreen {
         TR::progress__locking_device.map_translated(|t| {
             shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t)
                 .with_align(Alignment::Center)
-                .with_font(Font::NORMAL)
+                .with_font(font::FONT_NORMAL)
                 .with_fg(theme::FG);
         });
         self.loader.render(target)

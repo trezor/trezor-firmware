@@ -8,7 +8,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx, Label, Never, Pad,
         },
-        display::{Font, LOADER_MAX},
+        display::{font, LOADER_MAX},
         geometry::{Insets, Offset, Rect},
         shape::Renderer,
         util::animation_disabled,
@@ -62,7 +62,7 @@ impl Component for Progress {
             .map(|t| t.chars().filter(|c| *c == '\n').count() as i16);
         let (title, rest) = Self::AREA.split_top(self.title.max_size().y);
         let (loader, description) =
-            rest.split_bottom(Font::NORMAL.line_height() * description_lines);
+            rest.split_bottom(font::FONT_NORMAL.line_height() * description_lines);
         let loader = loader.inset(Insets::top(theme::CONTENT_BORDER));
         self.title.place(title);
         self.loader_y_offset = loader.center().y - constant::screen().center().y;

@@ -4,10 +4,13 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
-        display::{toif::Icon, Color, Font},
+        display::{
+            font::{FONT_NORMAL, FONT_SUB},
+            toif::Icon,
+            Color,
+        },
         geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
     },
 };
 
@@ -626,7 +629,7 @@ where
             } else {
                 // current and future tasks - ordinal numbers or icon on current task
                 if self.show_numerals {
-                    let num_offset = Offset::new(4, Font::NORMAL.visible_text_height("1"));
+                    let num_offset = Offset::new(4, FONT_NORMAL.visible_text_height("1"));
                     self.render_numeral(base + num_offset, i, l.style.text_color, target);
                 } else if i == current_visible {
                     let color = l.style.text_color;
@@ -645,7 +648,7 @@ where
     ) {
         let numeral = uformat!("{}.", n + 1);
         shape::Text::new(base_point, numeral.as_str())
-            .with_font(Font::SUB)
+            .with_font(FONT_SUB)
             .with_fg(color)
             .render(target);
     }

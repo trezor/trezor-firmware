@@ -8,7 +8,7 @@ use crate::{
             text::{layout::Chunks, LineBreaking, PageBreaking, TextStyle},
             FixedHeightBar,
         },
-        display::{Color, Font},
+        display::{font, Color},
         geometry::{Insets, Offset},
         util::{include_icon, include_res},
     },
@@ -118,15 +118,15 @@ pub const fn label_default() -> TextStyle {
 }
 
 pub const fn label_keyboard() -> TextStyle {
-    TextStyle::new(Font::DEMIBOLD, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT)
+    TextStyle::new(font::FONT_DEMIBOLD, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_keyboard_prompt() -> TextStyle {
-    TextStyle::new(Font::DEMIBOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+    TextStyle::new(font::FONT_DEMIBOLD, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_keyboard_warning() -> TextStyle {
-    TextStyle::new(Font::DEMIBOLD, RED, BG, GREY_LIGHT, GREY_LIGHT)
+    TextStyle::new(font::FONT_DEMIBOLD, RED, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_keyboard_minor() -> TextStyle {
@@ -154,21 +154,27 @@ pub const fn label_progress() -> TextStyle {
 }
 
 pub const fn label_title() -> TextStyle {
-    TextStyle::new(Font::BOLD_UPPER, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+    TextStyle::new(
+        font::FONT_BOLD_UPPER,
+        GREY_LIGHT,
+        BG,
+        GREY_LIGHT,
+        GREY_LIGHT,
+    )
 }
 
 pub const fn label_subtitle() -> TextStyle {
-    TextStyle::new(Font::MONO, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
+    TextStyle::new(font::FONT_MONO, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT)
 }
 
 pub const fn label_coinjoin_progress() -> TextStyle {
-    TextStyle::new(Font::BOLD_UPPER, FG, YELLOW, FG, FG)
+    TextStyle::new(font::FONT_BOLD_UPPER, FG, YELLOW, FG, FG)
 }
 
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: GREY_DARK,
             background_color: BG,
@@ -177,7 +183,7 @@ pub const fn button_default() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: GREY_MEDIUM,
             background_color: BG,
@@ -186,7 +192,7 @@ pub const fn button_default() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
@@ -200,7 +206,7 @@ pub const fn button_default() -> ButtonStyleSheet {
 pub const fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: GREEN,
             background_color: BG,
@@ -209,7 +215,7 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: GREEN_DARK,
             background_color: BG,
@@ -218,7 +224,7 @@ pub const fn button_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: GREY_LIGHT,
             button_color: GREEN_DARK,
             background_color: BG,
@@ -232,7 +238,7 @@ pub const fn button_confirm() -> ButtonStyleSheet {
 pub const fn button_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: RED,
             background_color: BG,
@@ -241,7 +247,7 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: RED_DARK,
             background_color: BG,
@@ -250,7 +256,7 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: GREY_LIGHT,
             button_color: RED,
             background_color: BG,
@@ -268,7 +274,7 @@ pub const fn button_danger() -> ButtonStyleSheet {
 pub const fn button_reset() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: YELLOW,
             background_color: BG,
@@ -277,7 +283,7 @@ pub const fn button_reset() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: YELLOW_DARK,
             background_color: BG,
@@ -286,7 +292,7 @@ pub const fn button_reset() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: YELLOW,
             background_color: BG,
@@ -300,7 +306,7 @@ pub const fn button_reset() -> ButtonStyleSheet {
 pub const fn button_moreinfo() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: BG,
             background_color: BG,
@@ -309,7 +315,7 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
             border_width: 2,
         },
         active: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: BG,
             background_color: BG,
@@ -318,7 +324,7 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
             border_width: 2,
         },
         disabled: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: GREY_LIGHT,
             button_color: BG,
             background_color: BG,
@@ -332,7 +338,7 @@ pub const fn button_moreinfo() -> ButtonStyleSheet {
 pub const fn button_info() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: BLUE,
             background_color: BG,
@@ -341,7 +347,7 @@ pub const fn button_info() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: FG,
             button_color: BLUE_DARK,
             background_color: BG,
@@ -350,7 +356,7 @@ pub const fn button_info() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::BOLD_UPPER,
+            font: font::FONT_BOLD_UPPER,
             text_color: GREY_LIGHT,
             button_color: BLUE,
             background_color: BG,
@@ -364,7 +370,7 @@ pub const fn button_info() -> ButtonStyleSheet {
 pub const fn button_pin() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREY_DARK,
             background_color: BG,
@@ -373,7 +379,7 @@ pub const fn button_pin() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREY_MEDIUM,
             background_color: BG,
@@ -382,7 +388,7 @@ pub const fn button_pin() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: GREY_LIGHT,
             button_color: BG, // so there is no "button" itself, just the text
             background_color: BG,
@@ -396,7 +402,7 @@ pub const fn button_pin() -> ButtonStyleSheet {
 pub const fn button_pin_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREEN,
             background_color: BG,
@@ -405,7 +411,7 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREEN_DARK,
             background_color: BG,
@@ -414,7 +420,7 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
@@ -428,7 +434,7 @@ pub const fn button_pin_confirm() -> ButtonStyleSheet {
 pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREY_DARK, // same as PIN buttons
             background_color: BG,
@@ -437,7 +443,7 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREEN_DARK,
             background_color: BG,
@@ -446,7 +452,7 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: GREY_LIGHT,
             button_color: BG,
             background_color: BG,
@@ -460,7 +466,7 @@ pub const fn button_pin_autocomplete() -> ButtonStyleSheet {
 pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: GREEN_DARK,
             button_color: GREEN,
             background_color: BG,
@@ -469,7 +475,7 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREEN_DARK,
             background_color: BG,
@@ -478,7 +484,7 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
@@ -492,7 +498,7 @@ pub const fn button_suggestion_confirm() -> ButtonStyleSheet {
 pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK, // same as PIN buttons
             background_color: BG,
@@ -501,7 +507,7 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: FG,
             button_color: GREEN_DARK,
             background_color: BG,
@@ -510,7 +516,7 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::MONO,
+            font: font::FONT_MONO,
             text_color: GREY_LIGHT,
             button_color: BG,
             background_color: BG,
@@ -524,7 +530,7 @@ pub const fn button_suggestion_autocomplete() -> ButtonStyleSheet {
 pub const fn button_counter() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: Font::DEMIBOLD,
+            font: font::FONT_DEMIBOLD,
             text_color: FG,
             button_color: GREY_DARK,
             background_color: BG,
@@ -533,7 +539,7 @@ pub const fn button_counter() -> ButtonStyleSheet {
             border_width: 0,
         },
         active: &ButtonStyle {
-            font: Font::DEMIBOLD,
+            font: font::FONT_DEMIBOLD,
             text_color: FG,
             button_color: GREY_MEDIUM,
             background_color: BG,
@@ -542,7 +548,7 @@ pub const fn button_counter() -> ButtonStyleSheet {
             border_width: 0,
         },
         disabled: &ButtonStyle {
-            font: Font::DEMIBOLD,
+            font: font::FONT_DEMIBOLD,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             background_color: BG,
@@ -587,10 +593,13 @@ pub const fn loader_lock_icon() -> LoaderStyleSheet {
     }
 }
 
-pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD_UPPER, FG, BG, GREY_LIGHT, GREY_LIGHT);
-pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
+pub const TEXT_NORMAL: TextStyle =
+    TextStyle::new(font::FONT_NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_DEMIBOLD: TextStyle =
+    TextStyle::new(font::FONT_DEMIBOLD, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_BOLD: TextStyle =
+    TextStyle::new(font::FONT_BOLD_UPPER, FG, BG, GREY_LIGHT, GREY_LIGHT);
+pub const TEXT_MONO: TextStyle = TextStyle::new(font::FONT_MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
@@ -621,13 +630,13 @@ pub fn get_chunkified_text_style(character_length: usize) -> &'static TextStyle 
 }
 
 pub const TEXT_NORMAL_OFF_WHITE: TextStyle =
-    TextStyle::new(Font::NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);
+    TextStyle::new(font::FONT_NORMAL, OFF_WHITE, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_CHECKLIST_DEFAULT: TextStyle =
-    TextStyle::new(Font::NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
+    TextStyle::new(font::FONT_NORMAL, GREY_LIGHT, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_CHECKLIST_SELECTED: TextStyle =
-    TextStyle::new(Font::NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
+    TextStyle::new(font::FONT_NORMAL, FG, BG, GREY_LIGHT, GREY_LIGHT);
 pub const TEXT_CHECKLIST_DONE: TextStyle =
-    TextStyle::new(Font::NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
+    TextStyle::new(font::FONT_NORMAL, GREEN_DARK, BG, GREY_LIGHT, GREY_LIGHT);
 
 pub const CONTENT_BORDER: i16 = 0;
 pub const BUTTON_HEIGHT: i16 = 50;

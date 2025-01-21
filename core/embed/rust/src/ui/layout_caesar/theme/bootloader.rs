@@ -1,6 +1,6 @@
 use crate::ui::{
     component::text::TextStyle,
-    display::{Color, Font},
+    display::{font, Color},
     util::include_icon,
 };
 
@@ -16,5 +16,6 @@ include_icon!(ICON_SUCCESS, "layout_caesar/res/success.toif");
 include_icon!(ICON_REDO, "layout_caesar/res/redo.toif");
 include_icon!(ICON_EXIT, "layout_caesar/res/exit.toif");
 
-pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
-pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
+pub const TEXT_NORMAL: TextStyle =
+    TextStyle::new(font::FONT_NORMAL, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
+pub const TEXT_BOLD: TextStyle = TextStyle::new(font::FONT_BOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);

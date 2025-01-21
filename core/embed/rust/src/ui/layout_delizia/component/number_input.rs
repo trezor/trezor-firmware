@@ -6,7 +6,7 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx, Pad,
         },
-        display::Font,
+        display::font::FONT_DEMIBOLD,
         event::SwipeEvent,
         geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
@@ -152,7 +152,7 @@ impl Component for NumberInput {
         let mut buf = [0u8; 10];
 
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
-            let digit_font = Font::DEMIBOLD;
+            let digit_font = FONT_DEMIBOLD;
             let y_offset = digit_font.text_height() / 2;
 
             shape::Bar::new(self.area).with_bg(theme::BG).render(target);

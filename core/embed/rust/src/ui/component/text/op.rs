@@ -1,7 +1,10 @@
 use crate::{
     strutil::TString,
     ui::{
-        display::{Color, Font},
+        display::{
+            font::{FONT_BOLD, FONT_BOLD_UPPER, FONT_DEMIBOLD, FONT_MONO, FONT_NORMAL},
+            Color, Font,
+        },
         geometry::{Alignment, Offset, Rect},
         util::ResultExt,
     },
@@ -241,24 +244,26 @@ impl<'a> OpTextLayout<'a> {
 
 // Op-adding aggregation operations
 impl<'a> OpTextLayout<'a> {
+    // TODO: use TextStyle instead because we do not want e.g. BOLD_UPPER in all
+    // layouts
     pub fn text_normal(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(Font::NORMAL).text(text.into())
+        self.font(FONT_NORMAL).text(text.into())
     }
 
     pub fn text_mono(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(Font::MONO).text(text.into())
+        self.font(FONT_MONO).text(text.into())
     }
 
     pub fn text_bold(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(Font::BOLD).text(text.into())
+        self.font(FONT_BOLD).text(text.into())
     }
 
     pub fn text_bold_upper(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(Font::BOLD_UPPER).text(text.into())
+        self.font(FONT_BOLD_UPPER).text(text.into())
     }
 
     pub fn text_demibold(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(Font::DEMIBOLD).text(text.into())
+        self.font(FONT_DEMIBOLD).text(text.into())
     }
 
     pub fn chunkify_text(self, chunks: Option<(Chunks, i16)>) -> Self {

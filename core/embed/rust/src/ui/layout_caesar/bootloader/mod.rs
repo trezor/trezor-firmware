@@ -6,7 +6,7 @@ use crate::{
         component::{connect::Connect, Label, LineBreaking::BreakWordsNoHyphen},
         constant,
         constant::{HEIGHT, SCREEN},
-        display::{self, Color, Font, Icon},
+        display::{self, font, Color, Icon},
         geometry::{Alignment2D, Offset, Point},
         layout::simplified::{run, show, ReturnToC},
     },
@@ -76,13 +76,13 @@ impl UICaesar {
 
             shape::Text::new(SCREEN.center() + Offset::y(8), text)
                 .with_align(Alignment::Center)
-                .with_font(Font::BOLD)
+                .with_font(font::FONT_BOLD)
                 .with_fg(fg_color)
                 .render(target);
 
             shape::Text::new(SCREEN.center() + Offset::y(20), text2)
                 .with_align(Alignment::Center)
-                .with_font(Font::BOLD)
+                .with_font(font::FONT_BOLD)
                 .with_fg(fg_color)
                 .render(target);
         });
@@ -326,7 +326,7 @@ impl BootloaderUI for UICaesar {
                 let pos = Point::new(constant::WIDTH / 2, 36);
                 shape::Text::new(pos, text)
                     .with_align(Alignment::Center)
-                    .with_font(Font::NORMAL)
+                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG) //COLOR_BL_BG
                     .render(target);
 
@@ -343,7 +343,7 @@ impl BootloaderUI for UICaesar {
 
                 shape::Text::new(pos, version_text.as_str())
                     .with_align(Alignment::Center)
-                    .with_font(Font::NORMAL)
+                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG)
                     .render(target);
             }
@@ -358,7 +358,7 @@ impl BootloaderUI for UICaesar {
                     let pos = Point::new(constant::WIDTH / 2, HEIGHT - 5);
                     shape::Text::new(pos, text.as_str())
                         .with_align(Alignment::Center)
-                        .with_font(Font::NORMAL)
+                        .with_font(font::FONT_NORMAL)
                         .with_fg(BLD_FG)
                         .render(target);
                 }

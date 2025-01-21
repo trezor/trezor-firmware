@@ -7,9 +7,10 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Pad, Timer},
         display::{
+            font,
             image::{ImageInfo, ToifFormat},
             toif::Icon,
-            Color, Font,
+            Color,
         },
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
@@ -121,7 +122,7 @@ impl Homescreen {
         TR::progress__locking_device.map_translated(|t| {
             shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t)
                 .with_align(Alignment::Center)
-                .with_font(Font::NORMAL)
+                .with_font(font::FONT_NORMAL)
                 .with_fg(theme::FG);
         });
         self.loader.render(target)

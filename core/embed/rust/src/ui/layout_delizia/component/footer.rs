@@ -2,12 +2,11 @@ use crate::{
     strutil::TString,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Never},
-        display::{Color, Font},
+        display::{font::FONT_SUB, Color, Font},
         event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Direction, Offset, Point, Rect},
         lerp::Lerp,
-        shape,
-        shape::{Renderer, Text},
+        shape::{self, Renderer, Text},
     },
 };
 
@@ -325,7 +324,7 @@ impl PageCounter {
             instruction,
             page_curr: 0,
             page_max: 0,
-            font: Font::SUB,
+            font: FONT_SUB,
         }
     }
 

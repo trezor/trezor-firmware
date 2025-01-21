@@ -7,7 +7,7 @@ use crate::{
         component::{
             text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx, Timer,
         },
-        display::{Font, Icon},
+        display::{font, Icon},
         geometry::Rect,
         shape::Renderer,
     },
@@ -164,7 +164,7 @@ impl<'a> PinEntry<'a> {
         let mut pin_line = pin_line_content
             .map(|s| ChangingTextLine::center_bold(s, MAX_PIN_LENGTH).without_ellipsis());
         if show_subprompt {
-            pin_line.update_font(Font::NORMAL);
+            pin_line.update_font(font::FONT_NORMAL);
         }
 
         Self {
@@ -202,10 +202,10 @@ impl<'a> PinEntry<'a> {
             let s = ShortString::new();
             s.capacity() >= MAX_PIN_LENGTH
         });
-        let mut used_font = Font::BOLD;
+        let mut used_font = font::FONT_BOLD;
         let pin_line_text = if self.is_empty() && !self.subprompt.is_empty() {
             // Showing the subprompt in NORMAL font
-            used_font = Font::NORMAL;
+            used_font = font::FONT_NORMAL;
             self.subprompt.map(|s| unwrap!(ShortString::try_from(s)))
         } else if self.is_empty() {
             unwrap!(ShortString::try_from(EMPTY_PIN_STR))

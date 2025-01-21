@@ -14,12 +14,12 @@ use crate::ui::display::toif::Toif;
 const TEXT_BOTTOM_MARGIN: i16 = 24; // matching the homescreen label margin
 const ICON_TOP_MARGIN: i16 = 48;
 #[cfg(not(feature = "bootloader"))]
-const MODEL_NAME_FONT: display::Font = display::Font::DEMIBOLD;
-#[cfg(not(feature = "bootloader"))]
 use crate::{
     trezorhal::model,
     ui::{display, geometry::Alignment},
 };
+#[cfg(not(feature = "bootloader"))]
+const MODEL_NAME_FONT: display::Font = display::font::FONT_DEMIBOLD;
 
 pub struct WelcomeScreen {
     area: Rect,
