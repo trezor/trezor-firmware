@@ -21,7 +21,7 @@ import pytest
 from ecdsa import SECP256k1, VerifyingKey
 from six import b
 
-from trezorlib import nostr
+from trezorlib import messages, nostr
 from trezorlib.tools import parse_path
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]
@@ -77,15 +77,25 @@ def test_get_pubkey(client, pubkey_hex):
         n=parse_path("m/44h/1237h/0h/0/0"),
     )
 
-    assert response.pubkey == bytes.fromhex(pubkey_hex)
+    assert response == pubkey_hex
 
 
 @pytest.mark.parametrize("pubkey_hex", VECTORS)
 def test_sign_event(client, pubkey_hex):
     response = nostr.sign_event(
         client,
-        event=json.dumps(TEST_EVENT),
-        n=parse_path("m/44h/1237h/0h/0/0"),
+        messages.NostrSignEvent(
+            address_n=parse_path("m/44h/1237h/0h/0/0"),
+            created_at=TEST_EVENT["created_at"],
+            kind=TEST_EVENT["kind"],
+            content=TEST_EVENT["content"],
+            tags=[
+                messages.NostrTag(
+                    key=t[0], value=t[1] if len(t) > 1 else None, extra=t[2:]
+                )
+                for t in TEST_EVENT["tags"]
+            ],
+        ),
     )
 
     assert response.pubkey == bytes.fromhex(pubkey_hex)

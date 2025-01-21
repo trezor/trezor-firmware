@@ -40,7 +40,7 @@ def cli() -> None:
 def get_pubkey(
     client: "TrezorClient",
     account: int,
-) -> Dict[str, str]:
+) -> str:
     """Return the pubkey derived by the given path."""
 
     address_n = tools.parse_path(PATH_TEMPLATE.format(account))
