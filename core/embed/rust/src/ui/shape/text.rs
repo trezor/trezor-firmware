@@ -1,5 +1,5 @@
 use crate::ui::{
-    display::{Color, Font},
+    display::{font::FONT_NORMAL, Color, Font},
     geometry::{Alignment, Offset, Point, Rect},
 };
 
@@ -34,7 +34,7 @@ impl<'a> Text<'a> {
             text,
             color: Color::white(),
             alpha: 255,
-            font: Font::NORMAL,
+            font: FONT_NORMAL,
             align: Alignment::Start,
             bounds: Rect::zero(),
         }

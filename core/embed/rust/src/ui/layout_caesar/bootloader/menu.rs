@@ -5,7 +5,7 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Pad},
         constant::screen,
-        display::{Font, Icon},
+        display::{font, Icon},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::simplified::ReturnToC,
         shape,
@@ -60,13 +60,13 @@ impl Choice for MenuChoice {
 
         shape::Text::new(SCREEN_CENTER, self.first_line)
             .with_align(Alignment::Center)
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(BLD_FG)
             .render(target);
 
         shape::Text::new(SCREEN_CENTER + Offset::y(10), self.second_line)
             .with_align(Alignment::Center)
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(BLD_FG)
             .render(target);
     }

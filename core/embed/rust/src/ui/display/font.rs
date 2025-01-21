@@ -1,15 +1,11 @@
 #[cfg(feature = "translations")]
 use spin::RwLockReadGuard;
 
-use crate::{
-    trezorhal::display::{self},
-    ui::{
-        constant,
-        geometry::Offset,
-        shape::{Bitmap, BitmapFormat},
-    },
+use crate::ui::{
+    constant,
+    geometry::Offset,
+    shape::{Bitmap, BitmapFormat},
 };
-use core::slice;
 
 pub use super::super::fonts::*;
 
@@ -17,6 +13,21 @@ pub use super::super::fonts::*;
 use crate::translations::flash;
 #[cfg(feature = "translations")]
 use crate::translations::Translations;
+
+/// Font information structure containing metadata and pointers to font data
+#[derive(PartialEq, Eq)]
+pub struct FontInfo {
+    pub height: i16,
+    pub max_height: i16,
+    pub baseline: i16,
+    pub glyph_data: &'static [&'static [u8]],
+    pub glyph_nonprintable: &'static [u8],
+}
+/// Convenience type for font references defined in the `fonts` module.
+pub type Font = &'static FontInfo;
+
+// SAFETY: We are in a single-threaded environment.
+unsafe impl Sync for FontInfo {}
 
 /// Representation of a single glyph.
 /// We use standard typographic terms. For a nice explanation, see, e.g.,
@@ -115,12 +126,12 @@ impl<'a> Glyph<'a> {
 /// Manages access to font resources and handles UTF-8 character glyphs
 ///
 /// The provider holds necessary lock for accessing translation data
-/// and is typically used through the `Font::with_glyph_data` method
+/// and is typically used through the `FontInfo::with_glyph_data` method
 /// to ensure proper resource cleanup.
 ///
 /// # Example
 /// ```
-/// let font = Font::NORMAL;
+/// let font = FONT_NORMAL;
 /// font.with_glyph_data(|data| {
 ///     let glyph = data.get_glyph('A');
 ///     // use glyph...
@@ -150,56 +161,35 @@ impl GlyphData {
             c => c,
         };
         let gl_data = self.get_glyph_data(ch as u16);
-
-        Glyph::load(unwrap!(gl_data, "Failed to load glyph"))
+        Glyph::load(gl_data)
     }
 
-    fn get_glyph_data(&self, codepoint: u16) -> Option<&[u8]> {
-        display::get_font_info(self.font.into()).map(|font_info| {
-            if codepoint >= ' ' as u16 && codepoint < 0x7F {
-                // ASCII character
-                let offset = codepoint - ' ' as u16;
-                unsafe {
-                    let ptr = *font_info.glyph_data.offset(offset as isize);
-                    self.load_glyph_from_ptr(ptr)
-                }
-            } else {
-                #[cfg(feature = "translations")]
-                {
-                    if codepoint >= 0x7F {
-                        // UTF8 character from embedded blob
-                        if let Some(glyph) = self
-                            .translations_guard
-                            .as_ref()
-                            .and_then(|guard| guard.as_ref())
-                            .and_then(|translations| {
-                                translations.get_utf8_glyph(codepoint, self.font as u16)
-                            })
-                        {
-                            return glyph;
-                        }
+    fn get_glyph_data(&self, codepoint: u16) -> &[u8] {
+        if codepoint >= ' ' as u16 && codepoint < 0x7F {
+            // ASCII character
+            let offset = codepoint - ' ' as u16;
+            self.font.glyph_data[offset as usize]
+        } else {
+            #[cfg(feature = "translations")]
+            {
+                if codepoint >= 0x7F {
+                    // UTF8 character from embedded blob
+                    if let Some(glyph) = self
+                        .translations_guard
+                        .as_ref()
+                        .and_then(|guard| guard.as_ref())
+                        .and_then(|translations| {
+                            // let font_id = font_to_font_id(self.font);
+                            let font_id = 1;
+                            translations.get_utf8_glyph(codepoint, font_id)
+                        })
+                    {
+                        return glyph;
                     }
                 }
-                self.glyph_nonprintable()
             }
-        })
-    }
-
-    /// Returns glyph data slice from a raw pointer by reading the header and
-    /// calculating full size.
-    unsafe fn load_glyph_from_ptr(&self, ptr: *const u8) -> &[u8] {
-        unsafe {
-            let header = slice::from_raw_parts(ptr, 2);
-            let full_size = calculate_glyph_size(header);
-            slice::from_raw_parts(ptr, full_size)
+            self.font.glyph_nonprintable
         }
-    }
-
-    /// Returns glyph data slize for non-printable characters.
-    fn glyph_nonprintable(&self) -> &[u8] {
-        display::get_font_info(self.font.into())
-            .map(|font_info| unsafe { self.load_glyph_from_ptr(font_info.glyph_nonprintable) })
-            .unwrap()
     }
 }
 
@@ -218,31 +208,9 @@ fn calculate_glyph_size(header: &[u8]) -> usize {
     5 + data_bytes as usize // header (5 bytes) + bitmap data
 }
 
-/// Font constants. Keep in sync with `font_id_t` definition in
-/// `core/embed/gfx/fonts/fonts.h`.
-#[derive(Copy, Clone, PartialEq, Eq, FromPrimitive)]
-#[repr(u8)]
-#[allow(non_camel_case_types)]
-pub enum Font {
-    NORMAL = 1,
-    BOLD = 2,
-    MONO = 3,
-    BIG = 4,
-    DEMIBOLD = 5,
-    NORMAL_UPPER = 6,
-    BOLD_UPPER = 7,
-    SUB = 8,
-}
-
-impl From<Font> for i32 {
-    fn from(font: Font) -> i32 {
-        -(font as i32)
-    }
-}
-
-impl Font {
+impl FontInfo {
     /// Supports UTF8 characters
-    pub fn text_width(self, text: &str) -> i16 {
+    pub fn text_width(&'static self, text: &str) -> i16 {
         self.with_glyph_data(|data| {
             text.chars().fold(0, |acc, c| {
                 let char_width = data.get_glyph(c).adv;
@@ -253,7 +221,7 @@ impl Font {
 
     /// Width of the text that is visible.
     /// Not including the spaces before the first and after the last character.
-    pub fn visible_text_width(self, text: &str) -> i16 {
+    pub fn visible_text_width(&'static self, text: &str) -> i16 {
         if text.is_empty() {
             // No text, no width.
             return 0;
@@ -280,7 +248,7 @@ impl Font {
     /// It determines this height by finding the highest
     /// pixel above the baseline and the lowest pixel below the baseline among
     /// the glyphs representing the characters in the provided text.
-    pub fn visible_text_height(self, text: &str) -> i16 {
+    pub fn visible_text_height(&'static self, text: &str) -> i16 {
         let (mut ascent, mut descent) = (0, 0);
         self.with_glyph_data(|data| {
             for c in text.chars() {
@@ -297,13 +265,13 @@ impl Font {
     ///
     /// This function computes the height of a string containing both
     /// uppercase and lowercase characters of the given font.
-    pub fn allcase_text_height(self) -> i16 {
+    pub fn allcase_text_height(&'static self) -> i16 {
         self.visible_text_height("Ay")
     }
 
     /// Returning the x-bearing (offset) of the first character.
     /// Useful to enforce that the text is positioned correctly (e.g. centered).
-    pub fn start_x_bearing(self, text: &str) -> i16 {
+    pub fn start_x_bearing(&'static self, text: &str) -> i16 {
         if text.is_empty() {
             return 0;
         }
@@ -313,23 +281,23 @@ impl Font {
         })
     }
 
-    pub fn char_width(self, ch: char) -> i16 {
+    pub fn char_width(&'static self, ch: char) -> i16 {
         self.with_glyph_data(|data| data.get_glyph(ch).adv)
     }
 
-    pub fn text_height(self) -> i16 {
-        unwrap!(display::get_font_info(self.into())).height as i16
+    pub fn text_height(&'static self) -> i16 {
+        self.height
     }
 
-    pub fn text_max_height(self) -> i16 {
-        unwrap!(display::get_font_info(self.into())).max_height as i16
+    pub fn text_max_height(&'static self) -> i16 {
+        self.max_height
     }
 
-    pub fn text_baseline(self) -> i16 {
-        unwrap!(display::get_font_info(self.into())).baseline as i16
+    pub fn text_baseline(&'static self) -> i16 {
+        self.baseline
     }
 
-    pub fn line_height(self) -> i16 {
+    pub fn line_height(&'static self) -> i16 {
         constant::LINE_SPACE + self.text_height()
     }
 
@@ -339,7 +307,7 @@ impl Font {
     ///
     /// Returns x-coordinate of the centered text start (including left
     /// bearing).
-    pub fn horz_center(&self, start: i16, end: i16, text: &str) -> i16 {
+    pub fn horz_center(&'static self, start: i16, end: i16, text: &str) -> i16 {
         (start + end - self.visible_text_width(text)) / 2 - self.start_x_bearing(text)
     }
 
@@ -348,25 +316,25 @@ impl Font {
     /// The `text` is centered between `start` and `end`.
     ///
     /// Returns y-coordinate of the centered text baseline.
-    pub fn vert_center(&self, start: i16, end: i16, text: &str) -> i16 {
+    pub fn vert_center(&'static self, start: i16, end: i16, text: &str) -> i16 {
         (start + end + self.visible_text_height(text)) / 2
     }
 
     /// Safely manages temporary access to glyph data without risking
     /// translation lock deadlocks. See `GlyphData` for more details.
-    pub fn with_glyph_data<T, F>(&self, f: F) -> T
+    pub fn with_glyph_data<T, F>(&'static self, f: F) -> T
     where
         F: FnOnce(&GlyphData) -> T,
     {
         // Create a new GlyphData instance that will be dropped at the end of this
         // function, releasing any translations lock
-        let glyph_data = GlyphData::new(*self);
+        let glyph_data = GlyphData::new(self);
         f(&glyph_data)
     }
 
     /// Get the longest prefix of a given `text` (breaking at word boundaries)
     /// that will fit into the area `width` pixels wide.
-    pub fn longest_prefix(self, width: i16, text: &str) -> &str {
+    pub fn longest_prefix<'a>(&'static self, width: i16, text: &'a str) -> &'a str {
         let mut prev_word_boundary = 0;
         let mut text_width = 0;
         self.with_glyph_data(|data| {
@@ -388,7 +356,7 @@ impl Font {
 
     /// Get the length of the longest suffix from a given `text`
     /// that will fit into the area `width` pixels wide.
-    pub fn longest_suffix(self, width: i16, text: &str) -> usize {
+    pub fn longest_suffix(&'static self, width: i16, text: &str) -> usize {
         let mut text_width = 0;
 
         self.with_glyph_data(|data| {
@@ -404,7 +372,7 @@ impl Font {
         })
     }
 
-    pub fn visible_text_height_ex(&self, text: &str) -> (i16, i16) {
+    pub fn visible_text_height_ex(&'static self, text: &str) -> (i16, i16) {
         let (mut ascent, mut descent) = (0, 0);
         self.with_glyph_data(|data| {
             for c in text.chars() {
@@ -425,14 +393,14 @@ pub trait GlyphMetrics {
 
 impl GlyphMetrics for Font {
     fn char_width(&self, ch: char) -> i16 {
-        Font::char_width(*self, ch)
+        FontInfo::char_width(self, ch)
     }
 
     fn text_width(&self, text: &str) -> i16 {
-        Font::text_width(*self, text)
+        FontInfo::text_width(self, text)
     }
 
     fn line_height(&self) -> i16 {
-        Font::line_height(*self)
+        FontInfo::line_height(self)
     }
 }

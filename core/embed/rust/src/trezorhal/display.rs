@@ -8,23 +8,8 @@ use ffi::{DISPLAY_RESX_, DISPLAY_RESY_};
 pub const DISPLAY_RESX: u32 = DISPLAY_RESX_;
 pub const DISPLAY_RESY: u32 = DISPLAY_RESY_;
 
-pub type FontInfo = ffi::font_info_t;
-
 pub fn backlight(val: i32) -> i32 {
     unsafe { ffi::display_set_backlight(val) }
-}
-
-pub fn get_font_info(font: i32) -> Option<FontInfo> {
-    // SAFETY:
-    // - `ffi::get_font_info` returns either null (for invalid fonts) or a pointer
-    //   to a static font_info_t struct
-    // - The font_info_t data is in ROM, making it immutable and static
-    // - The font_info_t contains pointers to static glyph data arrays also in ROM
-    // - All font data is generated at compile time and included in the binary
-    unsafe {
-        let font = ffi::get_font_info(font as _);
-        Some(*font.as_ref()?)
-    }
 }
 
 pub fn sync() {

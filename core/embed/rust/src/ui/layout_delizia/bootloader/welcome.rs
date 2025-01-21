@@ -1,10 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::Font,
+    display::font,
     geometry::{Offset, Point, Rect},
-    shape,
-    shape::Renderer,
+    shape::{self, Renderer},
 };
 
 use super::super::theme::{BLACK, GREY, WHITE};
@@ -40,27 +39,27 @@ impl Component for Welcome {
         self.bg.render(target);
 
         shape::Text::new(TEXT_ORIGIN, "Get started")
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(GREY)
             .render(target);
 
         shape::Text::new(TEXT_ORIGIN + Offset::y(STRIDE), "with your Trezor")
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(GREY)
             .render(target);
 
         shape::Text::new(TEXT_ORIGIN + Offset::y(2 * STRIDE), "at")
-            .with_font(Font::NORMAL)
+            .with_font(font::FONT_NORMAL)
             .with_fg(GREY)
             .render(target);
 
-        let at_width = Font::NORMAL.text_width("at ");
+        let at_width = font::FONT_NORMAL.text_width("at ");
 
         shape::Text::new(
             TEXT_ORIGIN + Offset::new(at_width, 2 * STRIDE),
             "trezor.io/start",
         )
-        .with_font(Font::NORMAL)
+        .with_font(font::FONT_NORMAL)
         .with_fg(WHITE)
         .render(target);
     }

@@ -4,7 +4,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never},
         constant,
-        display::{Color, Font, Icon},
+        display::{font, Color, Font, Icon},
         event::PhysicalButton,
         geometry::{Alignment2D, Offset, Point, Rect},
         shape,
@@ -367,7 +367,7 @@ impl ButtonDetails {
     pub fn text(text: TString<'static>) -> Self {
         Self {
             content: ButtonContent::Text(text),
-            font: Font::NORMAL_UPPER,
+            font: font::FONT_NORMAL_UPPER,
             duration: None,
             with_outline: true,
             with_arms: false,
@@ -381,7 +381,7 @@ impl ButtonDetails {
     pub fn icon(icon: Icon) -> Self {
         Self {
             content: ButtonContent::Icon(icon),
-            font: Font::NORMAL_UPPER,
+            font: font::FONT_NORMAL_UPPER,
             duration: None,
             with_outline: false,
             with_arms: false,
@@ -561,7 +561,7 @@ impl ButtonLayout {
             Some(
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(Font::NORMAL),
+                    .with_font(font::FONT_NORMAL),
             ),
         )
     }
@@ -574,7 +574,7 @@ impl ButtonLayout {
             Some(
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(Font::NORMAL),
+                    .with_font(font::FONT_NORMAL),
             ),
         )
     }
@@ -695,7 +695,7 @@ impl ButtonLayout {
             Some(
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(Font::NORMAL),
+                    .with_font(font::FONT_NORMAL),
             ),
         )
     }

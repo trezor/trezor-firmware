@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Child, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
-        display::{Color, Font, Icon},
+        display::{font, Color, Icon},
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         shape,
         shape::Renderer,
@@ -34,11 +34,11 @@ impl ResultStyle {
     }
 
     pub const fn message_style(&self) -> TextStyle {
-        TextStyle::new(Font::NORMAL, self.fg_color, self.bg_color, FG, FG)
+        TextStyle::new(font::FONT_NORMAL, self.fg_color, self.bg_color, FG, FG)
     }
 
     pub const fn title_style(&self) -> TextStyle {
-        TextStyle::new(Font::BOLD_UPPER, self.fg_color, self.bg_color, FG, FG)
+        TextStyle::new(font::FONT_BOLD_UPPER, self.fg_color, self.bg_color, FG, FG)
     }
 }
 

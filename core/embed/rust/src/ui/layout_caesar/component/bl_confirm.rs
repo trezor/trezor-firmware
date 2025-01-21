@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
-        display::{Color, Font},
+        display::{font, Color},
         geometry::{Point, Rect},
         shape,
         shape::Renderer,
@@ -201,7 +201,7 @@ impl Component for Confirm<'_> {
         let mut display_top_left = |text: TString| {
             text.map(|t| {
                 shape::Text::new(Point::zero(), t)
-                    .with_font(Font::BOLD)
+                    .with_font(font::FONT_BOLD)
                     .with_fg(WHITE)
                     .render(target);
             });

@@ -3,7 +3,7 @@ use crate::ui::{
         text::{layout::Chunks, TextStyle},
         LineBreaking, PageBreaking,
     },
-    display::{Color, Font},
+    display::{font, Color, Font},
     geometry::Offset,
     util::include_icon,
 };
@@ -17,26 +17,26 @@ pub const FG: Color = WHITE; // Default foreground (text & icon) color.
 pub const BG: Color = BLACK; // Default background color.
 
 // Font constants.
-pub const FONT_BUTTON: Font = Font::NORMAL_UPPER;
-pub const FONT_HEADER: Font = Font::BOLD_UPPER;
-pub const FONT_CHOICE_ITEMS: Font = Font::BIG;
+pub const FONT_BUTTON: Font = font::FONT_NORMAL_UPPER;
+pub const FONT_HEADER: Font = font::FONT_BOLD_UPPER;
+pub const FONT_CHOICE_ITEMS: Font = font::FONT_BIG;
 
 // Text constants.
-pub const TEXT_NORMAL: TextStyle = TextStyle::new(Font::NORMAL, FG, BG, FG, FG)
+pub const TEXT_NORMAL: TextStyle = TextStyle::new(font::FONT_NORMAL, FG, BG, FG, FG)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
-pub const TEXT_BIG: TextStyle = TextStyle::new(Font::BIG, FG, BG, FG, FG);
-pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(Font::DEMIBOLD, FG, BG, FG, FG);
-pub const TEXT_BOLD: TextStyle = TextStyle::new(Font::BOLD, FG, BG, FG, FG)
+pub const TEXT_BIG: TextStyle = TextStyle::new(font::FONT_BIG, FG, BG, FG, FG);
+pub const TEXT_DEMIBOLD: TextStyle = TextStyle::new(font::FONT_DEMIBOLD, FG, BG, FG, FG);
+pub const TEXT_BOLD: TextStyle = TextStyle::new(font::FONT_BOLD, FG, BG, FG, FG)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
-pub const TEXT_BOLD_UPPER: TextStyle = TextStyle::new(Font::BOLD_UPPER, FG, BG, FG, FG)
+pub const TEXT_BOLD_UPPER: TextStyle = TextStyle::new(font::FONT_BOLD_UPPER, FG, BG, FG, FG)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
-pub const TEXT_MONO: TextStyle = TextStyle::new(Font::MONO, FG, BG, FG, FG)
+pub const TEXT_MONO: TextStyle = TextStyle::new(font::FONT_MONO, FG, BG, FG, FG)
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);

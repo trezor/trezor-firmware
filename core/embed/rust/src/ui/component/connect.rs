@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Component, Event, EventCtx, Never, Pad},
-        display::{Color, Font},
+        display::{font::FONT_NORMAL, Color},
         geometry::{Alignment, Offset, Rect},
         shape::{self, Renderer},
     },
@@ -43,7 +43,7 @@ impl Component for Connect {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let font = Font::NORMAL;
+        let font = FONT_NORMAL;
 
         self.bg.render(target);
 
