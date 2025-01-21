@@ -1,6 +1,0 @@
-west-commands:
-  - file: scripts/example_west_command.py
-    commands:
-      - name: example-west-command
-        class: ExampleWestCommand
-        help: an example west extension command

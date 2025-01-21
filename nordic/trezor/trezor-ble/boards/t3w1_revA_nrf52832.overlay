@@ -5,7 +5,7 @@
  */
 / {
 	chosen {
-		nordic,nus-uart = &uart0;
+		trezor,trz-uart = &uart0;
 	};
 };
 
