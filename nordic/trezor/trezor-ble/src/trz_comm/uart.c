@@ -36,7 +36,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define UART_WAIT_FOR_BUF_DELAY K_MSEC(50)
 #define UART_WAIT_FOR_RX CONFIG_BT_NUS_UART_RX_WAIT_TIME
 
-static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(nordic_nus_uart));
+static const struct device *uart = DEVICE_DT_GET(DT_CHOSEN(trezor_trz_uart));
 
 static K_FIFO_DEFINE(fifo_uart_tx_data);
 

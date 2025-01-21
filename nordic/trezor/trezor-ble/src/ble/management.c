@@ -99,10 +99,10 @@ void management_send_pairing_request_event(uint8_t *data, uint16_t len) {
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   bool success = true;
-  bool send_respons = true;
+  bool send_response = true;
   switch (cmd) {
     case INTERNAL_CMD_SEND_STATE:
-      send_respons = false;
+      send_response = false;
       management_send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_ON: {
@@ -135,7 +135,7 @@ static void process_command(uint8_t *data, uint16_t len) {
       break;
   }
 
-  if (send_respons) {
+  if (send_response) {
     if (success) {
       management_send_success_event();
     } else {
