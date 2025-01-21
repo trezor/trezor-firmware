@@ -7,6 +7,11 @@ def add_font(
     defines: list[str | tuple[str, str]],
     sources: list[str],
 ) -> None:
+    """Add font to the build.
+
+    This way is currently only used in `bootloader_ci` and `prodtest`.
+    The main `bootloader` and `firmware` both use font implementation in Rust.
+    """
     if font is not None:
         font_filename = font.replace("_upper", "").lower()
         defines += [
