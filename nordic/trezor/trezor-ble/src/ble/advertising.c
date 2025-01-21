@@ -68,6 +68,11 @@ void advertising_start(bool wl, uint8_t color, char *name, int name_len) {
   }
   int err;
 
+  if (name == NULL || name_len == 0) {
+    name = DEVICE_NAME;
+    name_len = DEVICE_NAME_LEN;
+  }
+
   manufacturer_data[3] = color;
 
   advertising_data[0].type = BT_DATA_FLAGS;

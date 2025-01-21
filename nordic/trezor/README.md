@@ -58,13 +58,14 @@ west update
 
 
 ### Building the Application
-Build the application for the t3w1_revA_nrf52832 board:
 ```sh
 cd trezor
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild
 ```
 
 Debug builds can be built using the debug overlay configuration:
+Build the application for the t3w1_revA_nrf52832 board:
+
 ```sh
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild -- -DOVERLAY_CONFIG=debug.conf
 ```
