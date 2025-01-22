@@ -14,8 +14,8 @@ async def erase_bonds(_msg: EraseBonds) -> Success:
 
     ctx = get_context()
 
-    await ctx.write(Success(message="Unpairing"))
+    await ctx.write(Success(message="Erasing"))
 
-    ble.unpair()
+    ble.erase_bonds()
 
     raise RuntimeError
