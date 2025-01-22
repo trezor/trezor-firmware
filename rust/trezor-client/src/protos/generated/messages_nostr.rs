@@ -155,7 +155,7 @@ impl ::protobuf::reflect::ProtobufValue for NostrGetPubkey {
 pub struct NostrPubkey {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.nostr.NostrPubkey.pubkey)
-    pub pubkey: ::std::option::Option<::std::vec::Vec<u8>>,
+    pub pubkey: ::std::option::Option<::std::string::String>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.nostr.NostrPubkey.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -172,12 +172,12 @@ impl NostrPubkey {
         ::std::default::Default::default()
     }
 
-    // required bytes pubkey = 1;
+    // required string pubkey = 1;
 
-    pub fn pubkey(&self) -> &[u8] {
+    pub fn pubkey(&self) -> &str {
         match self.pubkey.as_ref() {
             Some(v) => v,
-            None => &[],
+            None => "",
         }
     }
 
@@ -190,22 +190,22 @@ impl NostrPubkey {
     }
 
     // Param is passed by value, moved
-    pub fn set_pubkey(&mut self, v: ::std::vec::Vec<u8>) {
+    pub fn set_pubkey(&mut self, v: ::std::string::String) {
         self.pubkey = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_pubkey(&mut self) -> &mut ::std::vec::Vec<u8> {
+    pub fn mut_pubkey(&mut self) -> &mut ::std::string::String {
         if self.pubkey.is_none() {
-            self.pubkey = ::std::option::Option::Some(::std::vec::Vec::new());
+            self.pubkey = ::std::option::Option::Some(::std::string::String::new());
         }
         self.pubkey.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_pubkey(&mut self) -> ::std::vec::Vec<u8> {
-        self.pubkey.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_pubkey(&mut self) -> ::std::string::String {
+        self.pubkey.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -238,7 +238,7 @@ impl ::protobuf::Message for NostrPubkey {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.pubkey = ::std::option::Option::Some(is.read_bytes()?);
+                    self.pubkey = ::std::option::Option::Some(is.read_string()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -253,7 +253,7 @@ impl ::protobuf::Message for NostrPubkey {
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
         if let Some(v) = self.pubkey.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
+            my_size += ::protobuf::rt::string_size(1, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -262,7 +262,7 @@ impl ::protobuf::Message for NostrPubkey {
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.pubkey.as_ref() {
-            os.write_bytes(1, v)?;
+            os.write_string(1, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -835,11 +835,11 @@ impl ::protobuf::reflect::ProtobufValue for NostrSignEvent {
 pub struct NostrEventSignature {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.nostr.NostrEventSignature.pubkey)
-    pub pubkey: ::std::option::Option<::std::vec::Vec<u8>>,
+    pub pubkey: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.nostr.NostrEventSignature.id)
-    pub id: ::std::option::Option<::std::vec::Vec<u8>>,
+    pub id: ::std::option::Option<::std::string::String>,
     // @@protoc_insertion_point(field:hw.trezor.messages.nostr.NostrEventSignature.signature)
-    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    pub signature: ::std::option::Option<::std::string::String>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.nostr.NostrEventSignature.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -856,12 +856,12 @@ impl NostrEventSignature {
         ::std::default::Default::default()
     }
 
-    // required bytes pubkey = 1;
+    // required string pubkey = 1;
 
-    pub fn pubkey(&self) -> &[u8] {
+    pub fn pubkey(&self) -> &str {
         match self.pubkey.as_ref() {
             Some(v) => v,
-            None => &[],
+            None => "",
         }
     }
 
@@ -874,30 +874,30 @@ impl NostrEventSignature {
     }
 
     // Param is passed by value, moved
-    pub fn set_pubkey(&mut self, v: ::std::vec::Vec<u8>) {
+    pub fn set_pubkey(&mut self, v: ::std::string::String) {
         self.pubkey = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_pubkey(&mut self) -> &mut ::std::vec::Vec<u8> {
+    pub fn mut_pubkey(&mut self) -> &mut ::std::string::String {
         if self.pubkey.is_none() {
-            self.pubkey = ::std::option::Option::Some(::std::vec::Vec::new());
+            self.pubkey = ::std::option::Option::Some(::std::string::String::new());
         }
         self.pubkey.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_pubkey(&mut self) -> ::std::vec::Vec<u8> {
-        self.pubkey.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_pubkey(&mut self) -> ::std::string::String {
+        self.pubkey.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // required bytes id = 2;
+    // required string id = 2;
 
-    pub fn id(&self) -> &[u8] {
+    pub fn id(&self) -> &str {
         match self.id.as_ref() {
             Some(v) => v,
-            None => &[],
+            None => "",
         }
     }
 
@@ -910,30 +910,30 @@ impl NostrEventSignature {
     }
 
     // Param is passed by value, moved
-    pub fn set_id(&mut self, v: ::std::vec::Vec<u8>) {
+    pub fn set_id(&mut self, v: ::std::string::String) {
         self.id = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_id(&mut self) -> &mut ::std::vec::Vec<u8> {
+    pub fn mut_id(&mut self) -> &mut ::std::string::String {
         if self.id.is_none() {
-            self.id = ::std::option::Option::Some(::std::vec::Vec::new());
+            self.id = ::std::option::Option::Some(::std::string::String::new());
         }
         self.id.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_id(&mut self) -> ::std::vec::Vec<u8> {
-        self.id.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_id(&mut self) -> ::std::string::String {
+        self.id.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
-    // required bytes signature = 3;
+    // required string signature = 3;
 
-    pub fn signature(&self) -> &[u8] {
+    pub fn signature(&self) -> &str {
         match self.signature.as_ref() {
             Some(v) => v,
-            None => &[],
+            None => "",
         }
     }
 
@@ -946,22 +946,22 @@ impl NostrEventSignature {
     }
 
     // Param is passed by value, moved
-    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+    pub fn set_signature(&mut self, v: ::std::string::String) {
         self.signature = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+    pub fn mut_signature(&mut self) -> &mut ::std::string::String {
         if self.signature.is_none() {
-            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+            self.signature = ::std::option::Option::Some(::std::string::String::new());
         }
         self.signature.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
-        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_signature(&mut self) -> ::std::string::String {
+        self.signature.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -1010,13 +1010,13 @@ impl ::protobuf::Message for NostrEventSignature {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.pubkey = ::std::option::Option::Some(is.read_bytes()?);
+                    self.pubkey = ::std::option::Option::Some(is.read_string()?);
                 },
                 18 => {
-                    self.id = ::std::option::Option::Some(is.read_bytes()?);
+                    self.id = ::std::option::Option::Some(is.read_string()?);
                 },
                 26 => {
-                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                    self.signature = ::std::option::Option::Some(is.read_string()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -1031,13 +1031,13 @@ impl ::protobuf::Message for NostrEventSignature {
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
         if let Some(v) = self.pubkey.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(1, &v);
+            my_size += ::protobuf::rt::string_size(1, &v);
         }
         if let Some(v) = self.id.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
+            my_size += ::protobuf::rt::string_size(2, &v);
         }
         if let Some(v) = self.signature.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(3, &v);
+            my_size += ::protobuf::rt::string_size(3, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -1046,13 +1046,13 @@ impl ::protobuf::Message for NostrEventSignature {
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.pubkey.as_ref() {
-            os.write_bytes(1, v)?;
+            os.write_string(1, v)?;
         }
         if let Some(v) = self.id.as_ref() {
-            os.write_bytes(2, v)?;
+            os.write_string(2, v)?;
         }
         if let Some(v) = self.signature.as_ref() {
-            os.write_bytes(3, v)?;
+            os.write_string(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1108,18 +1108,18 @@ impl ::protobuf::reflect::ProtobufValue for NostrEventSignature {
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x14messages-nostr.proto\x12\x18hw.trezor.messages.nostr\x1a\roptions.\
     proto\"-\n\x0eNostrGetPubkey\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
-    \x08addressN\"%\n\x0bNostrPubkey\x12\x16\n\x06pubkey\x18\x01\x20\x02(\
-    \x0cR\x06pubkey\"H\n\x08NostrTag\x12\x10\n\x03key\x18\x01\x20\x02(\tR\
-    \x03key\x12\x14\n\x05value\x18\x02\x20\x01(\tR\x05value\x12\x14\n\x05ext\
-    ra\x18\x03\x20\x03(\tR\x05extra\"\xb2\x01\n\x0eNostrSignEvent\x12\x1b\n\
-    \taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x1d\n\ncreated_at\x18\
-    \x02\x20\x02(\rR\tcreatedAt\x12\x12\n\x04kind\x18\x03\x20\x02(\rR\x04kin\
-    d\x126\n\x04tags\x18\x04\x20\x03(\x0b2\".hw.trezor.messages.nostr.NostrT\
-    agR\x04tags\x12\x18\n\x07content\x18\x05\x20\x02(\tR\x07content\"[\n\x13\
-    NostrEventSignature\x12\x16\n\x06pubkey\x18\x01\x20\x02(\x0cR\x06pubkey\
-    \x12\x0e\n\x02id\x18\x02\x20\x02(\x0cR\x02id\x12\x1c\n\tsignature\x18\
-    \x03\x20\x02(\x0cR\tsignatureB9\n#com.satoshilabs.trezor.lib.protobufB\
-    \x12TrezorMessageNostr\
+    \x08addressN\"%\n\x0bNostrPubkey\x12\x16\n\x06pubkey\x18\x01\x20\x02(\tR\
+    \x06pubkey\"H\n\x08NostrTag\x12\x10\n\x03key\x18\x01\x20\x02(\tR\x03key\
+    \x12\x14\n\x05value\x18\x02\x20\x01(\tR\x05value\x12\x14\n\x05extra\x18\
+    \x03\x20\x03(\tR\x05extra\"\xb2\x01\n\x0eNostrSignEvent\x12\x1b\n\taddre\
+    ss_n\x18\x01\x20\x03(\rR\x08addressN\x12\x1d\n\ncreated_at\x18\x02\x20\
+    \x02(\rR\tcreatedAt\x12\x12\n\x04kind\x18\x03\x20\x02(\rR\x04kind\x126\n\
+    \x04tags\x18\x04\x20\x03(\x0b2\".hw.trezor.messages.nostr.NostrTagR\x04t\
+    ags\x12\x18\n\x07content\x18\x05\x20\x02(\tR\x07content\"[\n\x13NostrEve\
+    ntSignature\x12\x16\n\x06pubkey\x18\x01\x20\x02(\tR\x06pubkey\x12\x0e\n\
+    \x02id\x18\x02\x20\x02(\tR\x02id\x12\x1c\n\tsignature\x18\x03\x20\x02(\t\
+    R\tsignatureB9\n#com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageNo\
+    str\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

@@ -14,15 +14,17 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import json
-from typing import TYPE_CHECKING, Dict
+import typing as t
 
 import click
 
 from .. import messages, nostr, tools
 from . import with_client
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..client import TrezorClient
 
 
@@ -59,7 +61,7 @@ def sign_event(
     client: "TrezorClient",
     account: int,
     event: str,
-) -> Dict[str, str]:
+) -> dict[str, str]:
     """Sign an event using the key derived by the given path."""
 
     event_json = json.loads(event)
@@ -82,9 +84,9 @@ def sign_event(
         ),
     )
 
-    event_json["id"] = res.id.hex()
-    event_json["pubkey"] = res.pubkey.hex()
-    event_json["sig"] = res.signature.hex()
+    event_json["id"] = res.id
+    event_json["pubkey"] = res.pubkey
+    event_json["sig"] = res.signature
 
     return {
         "signed_event": event_json,

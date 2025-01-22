@@ -33,13 +33,13 @@ def get_pubkey(
     return client.call(
         messages.NostrGetPubkey(
             address_n=n,
-        )
-    ).pubkey.hex()
+        ),
+        expect=messages.NostrPubkey
+    ).pubkey
 
 
-@expect(messages.NostrEventSignature)
 def sign_event(
     client: "TrezorClient",
     sign_event: messages.NostrSignEvent,
 ) -> "MessageType":
-    return client.call(sign_event)
+    return client.call(sign_event, expect=messages.NostrEventSignature)

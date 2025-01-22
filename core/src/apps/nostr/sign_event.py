@@ -29,7 +29,7 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     await paths.validate_path(keychain, address_n)
 
     node = keychain.derive(address_n)
-    pk = node.public_key()[-32:]
+    hex_pk = hexlify(node.public_key()[-32:]).decode()
     sk = node.private_key()
 
     title = TR.nostr__event_kind_template.format(kind)
@@ -51,10 +51,16 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     serialized_tags = ",".join(
         ["[" + ",".join(f'"{t}"' for t in tag) + "]" for tag in tags]
     )
-    serialized_event = f'[0,"{hexlify(pk).decode()}",{created_at},{kind},[{serialized_tags}],"{content}"]'
+    serialized_event = (
+        f'[0,"{hex_pk}",{created_at},{kind},[{serialized_tags}],"{content}"]'
+    )
     event_id = sha256(serialized_event).digest()
 
     # The event signature is basically the signature of the event ID computed above
     signature = secp256k1.sign(sk, event_id)[-64:]
 
-    return NostrEventSignature(pubkey=pk, id=event_id, signature=signature)
+    return NostrEventSignature(
+        pubkey=hex_pk,
+        id=hexlify(event_id).decode(),
+        signature=hexlify(signature).decode(),
+    )

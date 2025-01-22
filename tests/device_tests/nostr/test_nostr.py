@@ -66,8 +66,19 @@ TEST_EVENT = {
         ],
         ["alt", "reply"],
     ],
-    "content": "Hello, world!",
+    "content": "Hello, world",
 }
+
+SIGN_TEST_EVENT = messages.NostrSignEvent(
+    address_n=parse_path("m/44h/1237h/0h/0/0"),
+    created_at=TEST_EVENT["created_at"],
+    kind=TEST_EVENT["kind"],
+    content=TEST_EVENT["content"],
+    tags=[
+        messages.NostrTag(key=t[0], value=t[1] if len(t) > 1 else None, extra=t[2:])
+        for t in TEST_EVENT["tags"]
+    ],
+)
 
 
 @pytest.mark.parametrize("pubkey_hex", VECTORS)
@@ -82,37 +93,27 @@ def test_get_pubkey(client, pubkey_hex):
 
 @pytest.mark.parametrize("pubkey_hex", VECTORS)
 def test_sign_event(client, pubkey_hex):
-    response = nostr.sign_event(
-        client,
-        messages.NostrSignEvent(
-            address_n=parse_path("m/44h/1237h/0h/0/0"),
-            created_at=TEST_EVENT["created_at"],
-            kind=TEST_EVENT["kind"],
-            content=TEST_EVENT["content"],
-            tags=[
-                messages.NostrTag(
-                    key=t[0], value=t[1] if len(t) > 1 else None, extra=t[2:]
-                )
-                for t in TEST_EVENT["tags"]
-            ],
-        ),
+    response = nostr.sign_event(client, SIGN_TEST_EVENT)
+
+    assert response.pubkey == pubkey_hex
+
+    expected_id = (
+        sha256(
+            json.dumps(
+                [
+                    0,
+                    pubkey_hex,
+                    TEST_EVENT["created_at"],
+                    TEST_EVENT["kind"],
+                    TEST_EVENT["tags"],
+                    TEST_EVENT["content"],
+                ],
+                separators=(",", ":"),
+            ).encode()
+        )
+        .digest()
+        .hex()
     )
-
-    assert response.pubkey == bytes.fromhex(pubkey_hex)
-
-    expected_id = sha256(
-        json.dumps(
-            [
-                0,
-                pubkey_hex,
-                TEST_EVENT["created_at"],
-                TEST_EVENT["kind"],
-                TEST_EVENT["tags"],
-                TEST_EVENT["content"],
-            ],
-            separators=(",", ":"),
-        ).encode()
-    ).digest()
 
     assert response.id == expected_id
 
@@ -125,4 +126,4 @@ def test_sign_event(client, pubkey_hex):
         hashfunc=lambda x: type("h", (), {"digest": lambda: x}),
     )
 
-    assert vk.verify(response.signature, response.id)
+    assert vk.verify(bytes.fromhex(response.signature), bytes.fromhex(response.id))

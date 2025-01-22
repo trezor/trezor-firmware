@@ -21,7 +21,7 @@ message NostrGetPubkey {
  * @end
  */
 message NostrPubkey {
-    required bytes pubkey = 1;      // pubkey derived from the seed
+    required string pubkey = 1;      // pubkey derived from the seed
 }
 
 /**
@@ -60,7 +60,7 @@ message NostrSignEvent {
  * @end
  */
 message NostrEventSignature {
-    required bytes pubkey = 1;      // pubkey used to sign the event
-    required bytes id = 2;          // ID of the event
-    required bytes signature = 3;   // signature of the event
+    required string pubkey = 1;      // pubkey used to sign the event
+    required string id = 2;          // ID of the event
+    required string signature = 3;   // signature of the event
 }
