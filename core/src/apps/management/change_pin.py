@@ -16,6 +16,7 @@ async def change_pin(msg: ChangePin) -> Success:
     from apps.common.request_pin import (
         error_pin_invalid,
         error_pin_matches_wipe_code,
+        error_wipe_code_exists,
         request_pin_and_sd_salt,
         request_pin_confirm,
     )
@@ -25,6 +26,10 @@ async def change_pin(msg: ChangePin) -> Success:
 
     # confirm that user wants to change the pin
     await _require_confirm_change_pin(msg)
+
+    # Do not allow to remove the PIN if the wipe code is set.
+    if msg.remove and config.has_wipe_code():
+        await error_wipe_code_exists()
 
     # get old pin
     curpin, salt = await request_pin_and_sd_salt(TR.pin__enter)

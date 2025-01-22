@@ -973,5 +973,8 @@
   "971": "instructions__view_all_data",
   "972": "ethereum__interaction_contract",
   "973": "misc__enable_labeling",
-  "974": "ethereum__unknown_contract_address_short"
+  "974": "ethereum__unknown_contract_address_short",
+  "975": "wipe_code__pin_not_set_description",
+  "976": "pin__wipe_code_exists_description",
+  "977": "pin__wipe_code_exists_title"
 }

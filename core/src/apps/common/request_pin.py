@@ -147,3 +147,23 @@ async def error_pin_matches_wipe_code() -> NoReturn:
         exc=wire.PinInvalid,
     )
     assert False
+
+
+async def error_pin_not_set() -> NoReturn:
+    await show_error_and_raise(
+        "warning_pin_not_set",
+        TR.wipe_code__pin_not_set_description,
+        TR.homescreen__title_pin_not_set,
+        exc=wire.ActionCancelled,
+    )
+    assert False
+
+
+async def error_wipe_code_exists() -> NoReturn:
+    await show_error_and_raise(
+        "wipe_code_exists",
+        TR.pin__wipe_code_exists_description,
+        TR.pin__wipe_code_exists_title,
+        exc=wire.ActionCancelled,
+    )
+    assert False
