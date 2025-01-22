@@ -4,8 +4,10 @@ set -e
 CWD=`dirname "$0"`
 RENDER="$CWD/../vendor/trezor-common/tools/cointool.py render -M T1B1"
 
-# Search both in `core/src` and `core/embed` - Solana templates are excluded since those are handled separately
-FIND_TEMPLATES="find $CWD/.. -name *.mako -not -name _proto* -not -path *solana*"
+# Search both in `core/src` and `core/embed`
+# - Solana templates are excluded since those are handled separately
+# - `gen_font.mako` is excluded as it's used from `gen_font.py`
+FIND_TEMPLATES="find $CWD/.. -name *.mako -not -name _proto* -not -path *solana* -not -name gen_font.mako"
 
 check_results() {
     CHECK_FAIL=0
