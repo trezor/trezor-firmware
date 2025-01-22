@@ -790,6 +790,10 @@ def cargo_build():
 
     env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
 
+    if ARGUMENTS.get('RUST_PRINT_TYPES_SIZES', '0') == '1':
+        # see https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
+        env.Append(ENV={'RUSTFLAGS': '-Z print-type-sizes'})
+
     bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
     build_dir = str(Dir('.').abspath)
 
