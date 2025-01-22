@@ -4,23 +4,34 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.8.6] (internal release)
+## [2.8.7] (22th January 2025)
 
 ### Added
 - Add benchmark application.  [#4101]
 - Show last typed PIN number for short period of time.  [#3863]
 - Add P2WSH support for Unchained BIP32 paths.  [#4271]
+- Entropy check workflow in ResetDevice.  [#4155]
+- Added support for lexicographic sorting of pubkeys in multisig.  [#4351]
 
 ### Changed
 - Simplify UI of Cardano transactions initiated by Trezor Suite.  [#4284]
+- Included bootloader 2.1.8.
 - Improve UI synchronization, ordering, and responsiveness (Global Layout project).  [#2299]
 - Improve device responsiveness by removing unnecessary screen refreshes.  [#3633]
+- Forbid multisig to singlesig change outputs.  [#4351]
+- Forbid per-node paths in multisig change outputs and multisig receive addresses.  [#4351]
+
+### Removed
+- Removed deprecated Unchained Capital's multisig path.  [#4351]
 
 ### Fixed
 - Fix ETH account number detection.  [#3627]
 - New EVM call contract flow UI.  [#4251]
 - Fix translation of the 'Enable labeling' screen.  [#3813]
 - Improve paginated blob display.  [#4302]
+- UI: Fix auto-mover hitting wall scenario.  [#3692]
+
+## [2.8.6] (internal release)
 
 ## [2.8.5] (internal release)
 
@@ -959,6 +970,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3633]: https://github.com/trezor/trezor-firmware/pull/3633
 [#3636]: https://github.com/trezor/trezor-firmware/pull/3636
 [#3640]: https://github.com/trezor/trezor-firmware/pull/3640
+[#3692]: https://github.com/trezor/trezor-firmware/pull/3692
 [#3728]: https://github.com/trezor/trezor-firmware/pull/3728
 [#3797]: https://github.com/trezor/trezor-firmware/pull/3797
 [#3813]: https://github.com/trezor/trezor-firmware/pull/3813
@@ -1001,6 +1013,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4119]: https://github.com/trezor/trezor-firmware/pull/4119
 [#4142]: https://github.com/trezor/trezor-firmware/pull/4142
 [#4151]: https://github.com/trezor/trezor-firmware/pull/4151
+[#4155]: https://github.com/trezor/trezor-firmware/pull/4155
 [#4161]: https://github.com/trezor/trezor-firmware/pull/4161
 [#4165]: https://github.com/trezor/trezor-firmware/pull/4165
 [#4167]: https://github.com/trezor/trezor-firmware/pull/4167
@@ -1014,3 +1027,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4302]: https://github.com/trezor/trezor-firmware/pull/4302
 [#4309]: https://github.com/trezor/trezor-firmware/pull/4309
 [#4326]: https://github.com/trezor/trezor-firmware/pull/4326
+[#4351]: https://github.com/trezor/trezor-firmware/pull/4351
+[#4402]: https://github.com/trezor/trezor-firmware/pull/4402
+[#4421]: https://github.com/trezor/trezor-firmware/pull/4421
+[#4462]: https://github.com/trezor/trezor-firmware/pull/4462
