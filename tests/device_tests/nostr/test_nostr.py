@@ -18,7 +18,6 @@ import json
 from hashlib import sha256
 
 import pytest
-from ecdsa import SECP256k1, VerifyingKey
 from six import b
 
 from trezorlib import messages, nostr
@@ -35,18 +34,21 @@ LEAD_MONKEY_PUBKEY_HEX = (
     "17162c921dc4d2518f9a101db33695df1afb56ab82f5ff3e5da6eec3ca5cd917"
 )
 
+LEAD_MONKEY_EXPECTED_SIG = "ec98aea4195b105a8a7ab995a336c8b18156b8734a788658ee6526e2e8d5d81b0edf22f2c8f023e4c23a80a57f9ad6e9dec1e31aea451634e160d4010e661f86"
+
 WHAT_BLEAK_MNEMONIC = "what bleak badge arrange retreat wolf trade produce cricket blur garlic valid proud rude strong choose busy staff weather area salt hollow arm fade"
 WHAT_BLEAK_PUBKEY_HEX = (
     "d41b22899549e1f3d335a31002cfd382174006e166d3e658e3a5eecdb6463573"
 )
 
+WHAT_BLEAK_EXPECTED_SIG = "da6546498b4e1a70218f2262fc3f6881e19d4efe54853753c56c75f8481ffce65a9f9737a451269c3adb6295d6873f7d4dc38e11ae85782a8b1a8f94bf06921d"
 
 pytestmark_lead_monkey = pytest.mark.setup_client(mnemonic=LEAD_MONKEY_MNEMONIC)
 pytestmark_what_bleak = pytest.mark.setup_client(mnemonic=WHAT_BLEAK_MNEMONIC)
 
 VECTORS = [
-    pytest.param(LEAD_MONKEY_PUBKEY_HEX, marks=pytestmark_lead_monkey),
-    pytest.param(WHAT_BLEAK_PUBKEY_HEX, marks=pytestmark_what_bleak),
+    pytest.param(LEAD_MONKEY_PUBKEY_HEX, LEAD_MONKEY_EXPECTED_SIG, marks=pytestmark_lead_monkey),
+    pytest.param(WHAT_BLEAK_PUBKEY_HEX, WHAT_BLEAK_EXPECTED_SIG, marks=pytestmark_what_bleak),
 ]
 
 TEST_EVENT = {
@@ -81,8 +83,8 @@ SIGN_TEST_EVENT = messages.NostrSignEvent(
 )
 
 
-@pytest.mark.parametrize("pubkey_hex", VECTORS)
-def test_get_pubkey(client, pubkey_hex):
+@pytest.mark.parametrize("pubkey_hex,_", VECTORS)
+def test_get_pubkey(client, pubkey_hex, _):
     response = nostr.get_pubkey(
         client,
         n=parse_path("m/44h/1237h/0h/0/0"),
@@ -91,8 +93,8 @@ def test_get_pubkey(client, pubkey_hex):
     assert response == pubkey_hex
 
 
-@pytest.mark.parametrize("pubkey_hex", VECTORS)
-def test_sign_event(client, pubkey_hex):
+@pytest.mark.parametrize("pubkey_hex,expected_sig", VECTORS)
+def test_sign_event(client, pubkey_hex,expected_sig):
     response = nostr.sign_event(client, SIGN_TEST_EVENT)
 
     assert response.pubkey == pubkey_hex
@@ -116,14 +118,4 @@ def test_sign_event(client, pubkey_hex):
     )
 
     assert response.id == expected_id
-
-    vk = VerifyingKey.from_string(
-        b("\x03") + bytes.fromhex(pubkey_hex),
-        curve=SECP256k1,
-        # this is a pretty silly way to tell VerifyingKey
-        # that we do not want the message to be hashed
-        # when verifying the signature!
-        hashfunc=lambda x: type("h", (), {"digest": lambda: x}),
-    )
-
-    assert vk.verify(bytes.fromhex(response.signature), bytes.fromhex(response.id))
+    assert response.signature == expected_sig
