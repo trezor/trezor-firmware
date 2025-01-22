@@ -8,8 +8,8 @@ import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TextIO
+import click
 import json
-import sys
 
 # pip install freetype-py
 import freetype
@@ -469,13 +469,9 @@ class FaceProcessor:
                 )
 
 
-if __name__ == "__main__":
-    if len(sys.argv) > 1 and "width" in sys.argv[1]:
-        WRITE_WIDTHS = True  # type: ignore
-
+def gen_layout_bolt():
     FaceProcessor("Roboto", "Regular", 20).write_files()
     FaceProcessor("Roboto", "Bold", 20).write_files()
-
     FaceProcessor("TTHoves", "Regular", 21, ext="otf").write_files()
     FaceProcessor("TTHoves", "DemiBold", 21, ext="otf").write_files()
     FaceProcessor(
@@ -483,7 +479,8 @@ if __name__ == "__main__":
     ).write_files()
     FaceProcessor("RobotoMono", "Medium", 20).write_files()
 
-    # layout caesar
+
+def gen_layout_caesar():
     FaceProcessor(
         "PixelOperator",
         "Regular",
@@ -507,8 +504,47 @@ if __name__ == "__main__":
     # NOTE: Unifont Bold does not seem to have czech characters
     FaceProcessor("Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf").write_files()
 
-    # layout delizia
+
+def gen_layout_delizia():
     FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf").write_files()
     FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf").write_files()
     FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf").write_files()
     FaceProcessor("RobotoMono", "Medium", 21).write_files()
+
+LAYOUTS = {
+    "bolt": gen_layout_bolt,
+    "caesar": gen_layout_caesar,
+    "delizia": gen_layout_delizia,
+}
+
+@click.command()
+@click.option(
+    "--layout",
+    "-l",
+    help="Generate fonts only for specified layout",
+    type=click.Choice(list(LAYOUTS.keys())),
+)
+@click.option(
+    "--write-widths",
+    "-w",
+    is_flag=True,
+    default=False,
+    help="Generate character width files",
+)
+def main(layout: str | None, write_widths: bool):
+    """Generate font files for Trezor firmware."""
+    global WRITE_WIDTHS
+    WRITE_WIDTHS = write_widths
+
+    if layout:
+        click.echo(f"Generating fonts for layout: {layout}")
+        LAYOUTS[layout]()
+    else:
+        click.echo("Generating all fonts")
+        for layout_name, layout_func in LAYOUTS.items():
+            click.echo(f"\nGenerating {layout_name} layout:")
+            layout_func()
+
+
+if __name__ == "__main__":
+    main()
