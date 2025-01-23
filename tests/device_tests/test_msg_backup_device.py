@@ -121,7 +121,7 @@ def test_backup_slip39_single(session: Session):
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
 def test_backup_slip39_advanced(session: Session, click_info: bool):
-    if click_info and session.client.layout_type is LayoutType.Samson:
+    if click_info and session.client.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
 
     assert session.features.backup_availability == messages.BackupAvailability.Required
