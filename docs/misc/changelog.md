@@ -66,12 +66,12 @@ message to exclude that commit from the check.
 ## Generating changelog at the time of release
 
 When it's time to release new version of a repository component the formatted
-changelog needs to be generated using the `tools/generate-changelog.py` script.
+changelog needs to be generated using the `tools/changelog.py generate` command.
 It accepts repo subdirectory and the version number as arguments and you can
 specify the release date if it's different from today's date:
 
 ```
-tools/generate-changelog.py --date "20th April 2021" legacy/firmware 1.10.0
+tools/changelog.py generate --date "20th April 2021" legacy/firmware 1.10.0
 ```
 
 ## Cherry-picking changes to release branch

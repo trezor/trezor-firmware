@@ -7,6 +7,8 @@ import subprocess
 
 import click
 
+from typing import Iterator
+
 LINK_RE = re.compile(r"\[#(\d+)\]")
 ISSUE_URL = "https://github.com/trezor/trezor-firmware/pull/{issue}"
 
@@ -16,6 +18,25 @@ DIFF_LINK = "[{new}]: https://github.com/trezor/trezor-firmware/compare/{tag_pre
 MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
 INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
+
+ROOT = Path(__file__).parent.parent
+
+# Source of truth for all managed changelogs in this repository.
+# Please extend it when adding a new project with a managed changelog.
+KNOWN_PROJECTS = (
+    ROOT / "core",
+    ROOT / "core/embed/projects/boardloader",
+    ROOT / "core/embed/projects/bootloader",
+    ROOT / "core/embed/projects/bootloader_ci",
+    ROOT / "core/embed/projects/prodtest",
+    ROOT / "legacy/bootloader",
+    ROOT / "legacy/firmware",
+    ROOT / "legacy/intermediate_fw",
+    ROOT / "python",
+)
+
+for project in KNOWN_PROJECTS:
+    assert project.is_dir(), f"Project {project} does not exist"
 
 IGNORED_FILES = ('.gitignore', '.keep')
 
@@ -118,21 +139,34 @@ def filter_changelog(changelog_file: Path, internal_name: str):
                 destination.write(res)
 
 
-def check_style(project: Path):
-    success = True
+def _iter_fragments(project: Path) -> Iterator[Path]:
     fragements_dir = project / ".changelog.d"
     for fragment in fragements_dir.iterdir():
         if fragment.name in IGNORED_FILES:
             continue
+        yield fragment
+
+
+def check_fragments_style(project: Path):
+    success = True
+    for fragment in _iter_fragments(project):
         fragment_text = fragment.read_text().rstrip()
         if not fragment_text.endswith("."):
-            click.echo(f"Fragment '{fragment}' must end with a period.")
+            click.echo(f"Changelog '{fragment}' must end with a period.")
             success = False
 
     if not success:
-        raise click.ClickException("Fragment style check failed.")
+        raise click.ClickException(f"Changelog style error: {project}")
     else:
-        click.echo("Fragment style check passed.")
+        click.echo(f"Changelog style OK: {project}")
+
+
+def fix_fragments_style(project: Path):
+    for fragment in _iter_fragments(project):
+        fragment_text = fragment.read_text().rstrip()
+        if not fragment_text.endswith("."):
+            fragment.write_text(fragment_text + ".\n")
+            click.echo(f"Changelog '{fragment}' style fixed.")
 
 
 def generate_filtered(project: Path, changelog: Path):
@@ -145,7 +179,26 @@ def generate_filtered(project: Path, changelog: Path):
         filter_changelog(changelog, internal_name)
 
 
-@click.command()
+@click.group()
+def cli():
+    pass
+
+
+@cli.command()
+def check():
+    """Check the style of all changelog fragments."""
+    for project in KNOWN_PROJECTS:
+        check_fragments_style(project)
+
+
+@cli.command()
+def style():
+    """Fix the style of all changelog fragments."""
+    for project in KNOWN_PROJECTS:
+        fix_fragments_style(project)
+
+
+@cli.command()
 @click.argument(
     "project",
     type=click.Path(exists=True, dir_okay=True, file_okay=False, resolve_path=True),
@@ -160,7 +213,7 @@ def generate_filtered(project: Path, changelog: Path):
     "--check", is_flag=True, help="Dry run, do not actually create changelog."
 )
 @click.option("--only-models", is_flag=True, help="Only regenerate the model-changelogs from the main one.")
-def cli(project, version, date, check, only_models):
+def generate(project, version, date, check, only_models):
     """Generate changelog for given project (core, python, legacy/firmware,
     legacy/bootloader).
 
@@ -172,7 +225,8 @@ def cli(project, version, date, check, only_models):
     - Tell git to stage changed files.
     """
     project = Path(project)
-    check_style(project)
+    if project not in KNOWN_PROJECTS:
+        raise click.ClickException(f"Please add '{project}' to `KNOWN_PROJECTS` to be part of our managed changelogs.")
 
     changelog = project / "CHANGELOG.md"
 
