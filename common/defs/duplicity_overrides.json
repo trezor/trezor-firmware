@@ -1,8 +1,5 @@
 {
     "erc20:eth:MATIC": false,
     "erc20:eth:USDT": false,
-    "eth:BNB:56": false,
-    "eth:MATIC:137": false,
-    "misc:BNB": false,
     "misc:USDT": false
 }
