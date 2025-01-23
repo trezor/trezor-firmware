@@ -207,27 +207,29 @@
   "misc:XRP": {
     "type": "ripple",
     "url": [
-      "wss://s1.ripple.com",
-      "wss://s-east.ripple.com",
-      "wss://s-west.ripple.com"
+      "wss://xrp1.trezor.io",
+      "wss://xrp2.trezor.io",
+      "wss://xrp3.trezor.io",
+      "wss://xrp4.trezor.io"
     ]
   },
   "misc:tXRP": {
     "type": "ripple",
     "url": [
-      "wss://s.altnet.rippletest.net"
+      "wss://txrp1.trezor.io"
     ]
   },
   "misc:ADA": {
     "type": "blockfrost",
     "url": [
-      "wss://trezor-cardano-mainnet.blockfrost.io"
+      "wss://ada1.trezor.io",
+      "wss://ada2.trezor.io"
     ]
   },
   "misc:tADA": {
     "type": "blockfrost",
     "url": [
-      "wss://trezor-cardano-preview.blockfrost.io"
+      "wss://tada1.trezor.io"
     ]
   },
   "misc:SOL": {
@@ -242,7 +244,7 @@
   "misc:DSOL": {
     "type": "solana",
     "url": [
-      "https://solana-dev.trezor.io"
+      "https://dsol1.trezor.io"
     ]
   },
   "eth:ETH:1": {
