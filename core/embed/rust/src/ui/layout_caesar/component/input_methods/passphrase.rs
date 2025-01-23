@@ -4,6 +4,7 @@ use crate::{
     trezorhal::random,
     ui::{
         component::{text::common::TextBox, Child, Component, ComponentExt, Event, EventCtx},
+        constant::MAX_PASSPHRASE_LENGTH,
         display::Icon,
         geometry::Rect,
         shape::Renderer,
@@ -25,8 +26,6 @@ enum ChoiceCategory {
     Digit,
     SpecialSymbol,
 }
-
-const MAX_PASSPHRASE_LENGTH: usize = 50;
 
 const DIGITS: &str = "0123456789";
 const LOWERCASE_LETTERS: &str = "abcdefghijklmnopqrstuvwxyz";

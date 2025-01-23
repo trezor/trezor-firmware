@@ -12,3 +12,5 @@ cfg_if::cfg_if! {
         pub use super::layout_eckhart::constant::*;
     }
 }
+
+pub const MAX_PASSPHRASE_LENGTH: usize = 50;
