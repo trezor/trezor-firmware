@@ -354,7 +354,11 @@ impl BootloaderUI for UIBolt {
         vendor_img: &'static [u8],
         wait: i32,
     ) {
-        let bg_color = if warning { BLD_WARN_COLOR } else { BLD_BG };
+        let bg_color = if warning {
+            BLD_WARN_COLOR
+        } else {
+            WELCOME_COLOR
+        };
 
         display::sync();
 
