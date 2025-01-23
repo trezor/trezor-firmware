@@ -11,7 +11,7 @@ C_FILES =  $(shell find . -type f -name '*.[ch]' | grep -f ./tools/style.c.inclu
 
 style_check: pystyle_check ruststyle_check cstyle_check changelog_check yaml_check docs_summary_check editor_check ## run all style checks
 
-style: pystyle ruststyle cstyle ## apply all code styles (C+Rust+Py)
+style: pystyle ruststyle cstyle changelog_style ## apply all code styles (C+Rust+Py+Changelog)
 
 pystyle_check: ## run code style check on application sources and tests
 	flake8 --version
@@ -52,15 +52,10 @@ pystyle: ## apply code style on application sources and tests
 	make -C python style
 
 changelog_check: ## check changelog format
-	./tools/generate-changelog.py --check core
-	./tools/generate-changelog.py --check core/embed/projects/boardloader
-	./tools/generate-changelog.py --check core/embed/projects/bootloader
-	./tools/generate-changelog.py --check core/embed/projects/bootloader_ci
-	./tools/generate-changelog.py --check core/embed/projects/prodtest
-	./tools/generate-changelog.py --check legacy/bootloader
-	./tools/generate-changelog.py --check legacy/firmware
-	./tools/generate-changelog.py --check legacy/intermediate_fw
-	./tools/generate-changelog.py --check python
+	./tools/changelog.py check
+
+changelog_style: ## fix changelog format
+	./tools/changelog.py style
 
 yaml_check: ## check yaml formatting
 	yamllint .
