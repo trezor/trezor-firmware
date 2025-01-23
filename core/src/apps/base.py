@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from trezor.wire import Handler, Msg
 
     if utils.USE_THP:
-        from trezor.messages import Failure, ThpCreateNewSession, ThpNewSession
+        from trezor.messages import Failure, ThpCreateNewSession
 
 
 _SCREENSAVER_IS_ON = False
@@ -211,7 +211,7 @@ if utils.USE_THP:
 
     async def handle_ThpCreateNewSession(
         message: ThpCreateNewSession,
-    ) -> ThpNewSession | Failure:
+    ) -> Success | Failure:
         """
         Creates a new `ThpSession` based on the provided parameters and returns a
         `Success` message on success.

@@ -8,7 +8,6 @@ from storage.cache_common import (
 )
 from trezor import utils, wire
 from trezor.crypto import cardano
-from trezor.wire import context
 
 from apps.common import mnemonic
 from apps.common.seed import get_seed
@@ -119,7 +118,7 @@ def is_minting_path(path: Bip32Path) -> bool:
 
 def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
     assert device.is_initialized()
-    assert context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
+    assert ctx.cache.get_bool(APP_COMMON_DERIVE_CARDANO)
 
     if not mnemonic.is_bip39():
         # nothing to do for SLIP-39, where we can derive the root from the main seed
@@ -139,8 +138,8 @@ def derive_and_store_secrets(ctx: Context, passphrase: str) -> None:
     else:
         icarus_trezor_secret = icarus_secret
 
-    context.cache_set(APP_CARDANO_ICARUS_SECRET, icarus_secret)
-    context.cache_set(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
+    ctx.cache.set(APP_CARDANO_ICARUS_SECRET, icarus_secret)
+    ctx.cache.set(APP_CARDANO_ICARUS_TREZOR_SECRET, icarus_trezor_secret)
 
 
 async def _get_keychain_bip39(derivation_type: CardanoDerivationType) -> Keychain:
