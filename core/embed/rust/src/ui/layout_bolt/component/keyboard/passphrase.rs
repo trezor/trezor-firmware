@@ -4,10 +4,10 @@ use crate::{
         component::{
             base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
         },
+        constant::MAX_PASSPHRASE_LENGTH,
         display,
         geometry::{Grid, Offset, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
         util::long_line_content_with_ellipsis,
     },
 };
@@ -48,7 +48,6 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
 
-const MAX_LENGTH: usize = 50;
 const INPUT_AREA_HEIGHT: i16 = ScrollBar::DOT_SIZE + 9;
 
 impl PassphraseKeyboard {
@@ -165,7 +164,7 @@ impl PassphraseKeyboard {
     /// We should disable the input when the passphrase has reached maximum
     /// length and we are not cycling through the characters.
     fn is_button_active(&self, key: usize) -> bool {
-        let textbox_not_full = self.input.inner().textbox.len() < MAX_LENGTH;
+        let textbox_not_full = self.input.inner().textbox.len() < MAX_PASSPHRASE_LENGTH;
         let key_is_pending = {
             if let Some(pending) = self.input.inner().multi_tap.pending_key() {
                 pending == key
@@ -320,7 +319,7 @@ impl Input {
     fn new() -> Self {
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(MAX_LENGTH),
+            textbox: TextBox::empty(MAX_PASSPHRASE_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
         }
     }
