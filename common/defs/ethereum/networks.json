@@ -6,6 +6,7 @@
         "is_testnet": false,
         "name": "Ethereum",
         "shortcut": "ETH",
+        "symbol": "ETH",
         "slip44": 60
     },
     {
@@ -14,6 +15,7 @@
         "is_testnet": true,
         "name": "Holesky",
         "shortcut": "tHOL",
+        "symbol": "tHOL",
         "slip44": 1
     },
     {
@@ -22,6 +24,7 @@
         "is_testnet": true,
         "name": "Sepolia",
         "shortcut": "tSEP",
+        "symbol": "tSEP",
         "slip44": 1
     },
     {
@@ -30,7 +33,8 @@
         "coingecko_id": "binance-smart-chain",
         "is_testnet": false,
         "name": "BNB Smart Chain",
-        "shortcut": "BNB",
+        "shortcut": "BSC",
+        "symbol": "BNB",
         "slip44": 714
     },
     {
@@ -40,6 +44,7 @@
         "is_testnet": false,
         "name": "Ethereum Classic",
         "shortcut": "ETC",
+        "symbol": "ETC",
         "slip44": 61
     },
     {
@@ -49,6 +54,7 @@
         "is_testnet": false,
         "name": "Polygon",
         "shortcut": "POL",
+        "symbol": "POL",
         "slip44": 966
     }
 ]
