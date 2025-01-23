@@ -255,6 +255,18 @@
     "type": "blockbook",
     "url": ["https://bsc1.trezor.io", "https://bsc2.trezor.io"]
   },
+  "eth:ARB:42161": {
+    "type": "blockbook",
+    "url": ["https://arb1.trezor.io", "https://arb2.trezor.io"]
+  },
+  "eth:BASE:8453": {
+    "type": "blockbook",
+    "url": ["https://base1.trezor.io", "https://base2.trezor.io"]
+  },
+  "eth:OP:10": {
+    "type": "blockbook",
+    "url": ["https://op1.trezor.io", "https://op2.trezor.io"]
+  },
   "eth:ETC:61": {
     "type": "blockbook",
     "url": ["https://etc1.trezor.io", "https://etc2.trezor.io"]
