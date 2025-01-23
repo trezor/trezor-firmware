@@ -124,6 +124,7 @@ def image_to_toif(filename: Path, width: int, height: int, greyscale: bool) -> b
 
 
 def image_to_jpeg(filename: Path, width: int, height: int, quality: int = 90) -> bytes:
+    needs_regeneration = False
     if filename.suffix in (".jpg", ".jpeg") and not PIL_AVAILABLE:
         click.echo("Warning: Image library is missing, skipping image validation.")
         return filename.read_bytes()
@@ -144,6 +145,7 @@ def image_to_jpeg(filename: Path, width: int, height: int, quality: int = 90) ->
             default=True,
         ):
             image = image.resize((width, height), Image.Resampling.LANCZOS)
+            needs_regeneration = True
         else:
             raise click.ClickException(
                 f"Wrong size of image - should be {width}x{height}"
@@ -151,10 +153,18 @@ def image_to_jpeg(filename: Path, width: int, height: int, quality: int = 90) ->
 
     if image.mode != "RGB":
         image = image.convert("RGB")
+        needs_regeneration = True
 
-    buf = io.BytesIO()
-    image.save(buf, format="jpeg", progressive=False, quality=quality)
-    return buf.getvalue()
+    if filename.suffix in (".jpg", ".jpeg"):
+        if image.info.get("progressive"):  # pyright: ignore[reportAttributeAccessIssue]
+            needs_regeneration = True
+
+    if needs_regeneration:
+        buf = io.BytesIO()
+        image.save(buf, format="jpeg", progressive=False, quality=quality)
+        return buf.getvalue()
+    else:
+        return filename.read_bytes()
 
 
 def _should_remove(enable: Optional[bool], remove: bool) -> bool:
