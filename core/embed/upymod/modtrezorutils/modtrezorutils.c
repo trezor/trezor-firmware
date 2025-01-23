@@ -405,6 +405,8 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
 /// """USB Product name."""
 /// INTERNAL_MODEL: str
 /// """Internal model code."""
+/// HOMESCREEN_MAXSIZE: int
+/// """Maximum size of user-uploaded homescreen in bytes."""
 /// EMULATOR: bool
 /// """Whether the firmware is running in the emulator."""
 /// BITCOIN_ONLY: bool
@@ -488,6 +490,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_model_usb_product_obj)},
     {MP_ROM_QSTR(MP_QSTR_INTERNAL_MODEL),
      MP_ROM_QSTR(MODEL_INTERNAL_NAME_QSTR)},
+    {MP_ROM_QSTR(MP_QSTR_HOMESCREEN_MAXSIZE),
+     MP_ROM_INT(MODEL_HOMESCREEN_MAXSIZE)},
 #ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true},
     MEMINFO_DICT_ENTRIES

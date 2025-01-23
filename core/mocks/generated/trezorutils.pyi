@@ -146,6 +146,8 @@ MODEL_USB_PRODUCT: str
 """USB Product name."""
 INTERNAL_MODEL: str
 """Internal model code."""
+HOMESCREEN_MAXSIZE: int
+"""Maximum size of user-uploaded homescreen in bytes."""
 EMULATOR: bool
 """Whether the firmware is running in the emulator."""
 BITCOIN_ONLY: bool

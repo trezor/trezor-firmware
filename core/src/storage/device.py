@@ -50,7 +50,6 @@ if TYPE_CHECKING:
     StorageSafetyCheckLevel = Literal[0, 1]
 # fmt: on
 
-HOMESCREEN_MAXSIZE = const(16384)
 LABEL_MAXLENGTH = const(32)
 
 if __debug__:
@@ -171,7 +170,7 @@ def set_passphrase_enabled(enable: bool) -> None:
 
 
 def set_homescreen(homescreen: bytes) -> None:
-    if len(homescreen) > HOMESCREEN_MAXSIZE:
+    if len(homescreen) > utils.HOMESCREEN_MAXSIZE:
         raise ValueError  # homescreen too large
     common.set(_NAMESPACE, _HOMESCREEN, homescreen, public=True)
 

@@ -3,6 +3,7 @@ import sys
 from trezorutils import (  # noqa: F401
     BITCOIN_ONLY,
     EMULATOR,
+    HOMESCREEN_MAXSIZE,
     INTERNAL_MODEL,
     MODEL,
     MODEL_FULL_NAME,

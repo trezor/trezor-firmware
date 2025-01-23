@@ -12,6 +12,7 @@
 #define MODEL_INTERNAL_NAME_QSTR MP_QSTR_D001
 #define MODEL_USB_MANUFACTURER "Trezor DIY"
 #define MODEL_USB_PRODUCT MODEL_FULL_NAME
+#define MODEL_HOMESCREEN_MAXSIZE 65536
 
 /*** Discovery uses DEV keys in any build variant ***/
 #define MODEL_BOARDLOADER_KEYS \
