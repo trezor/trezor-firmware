@@ -1,4 +1,4 @@
-use super::{theme, ButtonStyleSheet, Footer, Header};
+use super::{header::HeaderMsg, theme, ButtonStyleSheet, Footer, Header};
 use crate::{
     strutil::TString,
     ui::{
@@ -139,31 +139,31 @@ where
     }
 
     #[inline(never)]
-    fn with_button(mut self, icon: Icon, msg: FlowMsg, enabled: bool) -> Self {
+    fn with_button(mut self, icon: Icon, msg: HeaderMsg, enabled: bool) -> Self {
         self.header = self.header.with_button(icon, enabled, msg);
         self
     }
 
     pub fn with_cancel_button(self) -> Self {
-        self.with_button(theme::ICON_CLOSE, FlowMsg::Cancelled, true)
+        self.with_button(theme::ICON_CLOSE, HeaderMsg::Cancelled, true)
     }
 
     pub fn with_menu_button(self) -> Self {
-        self.with_button(theme::ICON_MENU, FlowMsg::Info, true)
+        self.with_button(theme::ICON_MENU, HeaderMsg::Info, true)
     }
 
     pub fn with_danger_menu_button(self) -> Self {
-        self.with_button(theme::ICON_MENU, FlowMsg::Info, true)
+        self.with_button(theme::ICON_MENU, HeaderMsg::Info, true)
             .button_styled(theme::button_warning_high())
     }
 
     pub fn with_warning_low_icon(self) -> Self {
-        self.with_button(theme::ICON_WARNING, FlowMsg::Info, false)
+        self.with_button(theme::ICON_WARNING, HeaderMsg::Info, false)
             .button_styled(theme::button_warning_low())
     }
 
     pub fn with_danger_icon(self) -> Self {
-        self.with_button(theme::ICON_WARNING, FlowMsg::Info, false)
+        self.with_button(theme::ICON_WARNING, HeaderMsg::Info, false)
             .button_styled(theme::button_danger())
     }
 
