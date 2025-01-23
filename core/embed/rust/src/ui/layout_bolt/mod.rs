@@ -4,6 +4,7 @@ use super::{geometry::Rect, CommonUI};
 pub mod bootloader;
 pub mod component;
 pub mod constant;
+pub mod fonts;
 pub mod theme;
 
 #[cfg(feature = "backlight")]

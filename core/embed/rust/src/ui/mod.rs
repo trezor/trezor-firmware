@@ -44,3 +44,16 @@ pub type ModelUI = crate::ui::layout_caesar::UICaesar;
 
 #[cfg(feature = "layout_bolt")]
 pub type ModelUI = crate::ui::layout_bolt::UIBolt;
+
+// Re-export fonts for each layout
+#[cfg(all(
+    feature = "layout_bolt",
+    not(feature = "layout_delizia"),
+    not(feature = "layout_caesar")
+))]
+#[cfg(feature = "layout_bolt")]
+pub use layout_bolt::fonts;
+#[cfg(all(feature = "layout_caesar", not(feature = "layout_delizia")))]
+pub use layout_caesar::fonts;
+#[cfg(feature = "layout_delizia")]
+pub use layout_delizia::fonts;
