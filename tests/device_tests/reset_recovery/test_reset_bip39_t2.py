@@ -274,6 +274,7 @@ def test_already_initialized(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.uninitialized_session
 def test_entropy_check(session: Session):
     with session:
         delizia = session.client.debug.layout_type is LayoutType.Delizia
@@ -295,7 +296,6 @@ def test_entropy_check(session: Session):
                 messages.PublicKey,
                 (delizia, messages.ButtonRequest(name="backup_device")),
                 messages.Success,
-                messages.Features,
             ]
         )
         device.setup(
@@ -311,6 +311,7 @@ def test_entropy_check(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.uninitialized_session
 def test_no_entropy_check(session: Session):
     with session:
         delizia = session.client.debug.layout_type is LayoutType.Delizia
@@ -321,7 +322,6 @@ def test_no_entropy_check(session: Session):
                 messages.EntropyRequest,
                 (delizia, messages.ButtonRequest(name="backup_device")),
                 messages.Success,
-                messages.Features,
             ]
         )
         device.setup(
