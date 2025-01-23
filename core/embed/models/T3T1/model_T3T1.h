@@ -12,6 +12,7 @@
 #define MODEL_INTERNAL_NAME_QSTR MP_QSTR_T3T1
 #define MODEL_USB_MANUFACTURER "Trezor Company"
 #define MODEL_USB_PRODUCT MODEL_FULL_NAME
+#define MODEL_HOMESCREEN_MAXSIZE 16384
 
 #define MODEL_BOARDLOADER_KEYS \
   (const uint8_t *)"\x76\xaf\x42\x6e\x61\x40\x6b\xad\x7c\x07\x7b\x40\x9c\x66\xfd\xe3\x9f\xb8\x17\x91\x93\x13\xae\x1e\x4c\x02\x53\x5c\x80\xbe\xed\x96", \
