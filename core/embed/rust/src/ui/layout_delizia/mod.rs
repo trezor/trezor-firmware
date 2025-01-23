@@ -12,6 +12,7 @@ pub mod component_msg_obj;
 pub mod cshape;
 #[cfg(feature = "micropython")]
 pub mod flow;
+pub mod fonts;
 pub mod screens;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;

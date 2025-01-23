@@ -11,6 +11,8 @@ use crate::{
 };
 use core::slice;
 
+pub use super::super::fonts::*;
+
 #[cfg(feature = "translations")]
 use crate::translations::flash;
 #[cfg(feature = "translations")]

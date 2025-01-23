@@ -8,6 +8,7 @@ pub mod component;
 pub mod component_msg_obj;
 pub mod constant;
 pub mod cshape;
+pub mod fonts;
 mod screens;
 pub mod theme;
 
