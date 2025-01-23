@@ -61,6 +61,22 @@ impl AttachAnimation {
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
 
+#[derive(Clone, Copy)]
+pub enum HeaderMsg {
+    // Note: other FlowMsg variants are not used, so the total enum size can be reduced.
+    Cancelled,
+    Info,
+}
+
+impl From<HeaderMsg> for FlowMsg {
+    fn from(msg: HeaderMsg) -> Self {
+        match msg {
+            HeaderMsg::Cancelled => FlowMsg::Cancelled,
+            HeaderMsg::Info => FlowMsg::Info,
+        }
+    }
+}
+
 pub struct Header {
     area: Rect,
     title: Label<'static>,
@@ -70,7 +86,7 @@ pub struct Header {
     icon: Option<Icon>,
     color: Option<Color>,
     title_style: TextStyle,
-    button_msg: FlowMsg,
+    button_msg: HeaderMsg,
 }
 
 impl Header {
@@ -84,7 +100,7 @@ impl Header {
             icon: None,
             color: None,
             title_style: theme::label_title_main(),
-            button_msg: FlowMsg::Cancelled,
+            button_msg: HeaderMsg::Cancelled,
         }
     }
     #[inline(never)]
@@ -133,7 +149,7 @@ impl Header {
     }
 
     #[inline(never)]
-    pub fn with_button(mut self, icon: Icon, enabled: bool, msg: FlowMsg) -> Self {
+    pub fn with_button(mut self, icon: Icon, enabled: bool, msg: HeaderMsg) -> Self {
         let touch_area = Insets::uniform(BUTTON_EXPAND_BORDER);
         self.button = Some(
             Button::with_icon(icon)
@@ -207,7 +223,7 @@ impl Component for Header {
         }
 
         if let Some(ButtonMsg::Clicked) = self.button.event(ctx, event) {
-            return Some(self.button_msg.clone());
+            return Some(self.button_msg.into());
         };
 
         None
