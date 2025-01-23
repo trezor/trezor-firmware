@@ -7,6 +7,7 @@ EXCEPTIONS+=( "omni" )  # OMNI is part of the bitcoin app
 EXCEPTIONS+=( "derive_cardano" )  # field name in Initialize message
 # BIP39 or SLIP39 words that have "dash" and "ripple" in them
 EXCEPTIONS+=( "dash" "ripple" )
+EXCEPTIONS+=( "base" ) # name EVM chain
 
 GREP_ARGS=()
 for exception in "${EXCEPTIONS[@]}"; do

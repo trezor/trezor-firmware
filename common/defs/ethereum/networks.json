@@ -56,5 +56,35 @@
         "shortcut": "POL",
         "symbol": "POL",
         "slip44": 966
+    },
+    {
+        "chain": "arb",
+        "chain_id": 42161,
+        "coingecko_id": "arbitrum-one",
+        "is_testnet": false,
+        "name": "Arbitrum One",
+        "shortcut": "ARB",
+        "symbol": "ETH",
+        "slip44": 9001
+    },
+    {
+        "chain": "base",
+        "chain_id": 8453,
+        "coingecko_id": "base",
+        "is_testnet": false,
+        "name": "Base",
+        "shortcut": "BASE",
+        "symbol": "ETH",
+        "slip44": 8453
+    },
+    {
+        "chain": "op",
+        "chain_id": 10,
+        "coingecko_id": "optimistic-ethereum",
+        "is_testnet": false,
+        "name": "Optimism",
+        "shortcut": "OP",
+        "symbol": "ETH",
+        "slip44": 614
     }
 ]
