@@ -16,14 +16,12 @@ BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
 
 def _validate_homescreen(homescreen: bytes) -> None:
-    import storage.device as storage_device
-
     if homescreen == b"":
         return
 
-    if len(homescreen) > storage_device.HOMESCREEN_MAXSIZE:
+    if len(homescreen) > utils.HOMESCREEN_MAXSIZE:
         raise DataError(
-            f"Homescreen is too large, maximum size is {storage_device.HOMESCREEN_MAXSIZE} bytes"
+            f"Homescreen is too large, maximum size is {utils.HOMESCREEN_MAXSIZE} bytes"
         )
     if not trezorui_api.check_homescreen_format(homescreen):
         raise DataError("Wrong homescreen format")

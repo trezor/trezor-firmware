@@ -12,6 +12,7 @@
 #define MODEL_INTERNAL_NAME_QSTR MP_QSTR_T3W1
 #define MODEL_USB_MANUFACTURER "Trezor Company"
 #define MODEL_USB_PRODUCT MODEL_FULL_NAME
+#define MODEL_HOMESCREEN_MAXSIZE 65536
 
 // todo replace dev keys with produciton ones
 #define MODEL_BOARDLOADER_KEYS \
