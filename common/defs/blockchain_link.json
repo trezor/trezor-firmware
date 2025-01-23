@@ -251,17 +251,17 @@
     "type": "blockbook",
     "url": ["https://eth1.trezor.io", "https://eth2.trezor.io"]
   },
-  "eth:BNB:56": {
+  "eth:BSC:56": {
     "type": "blockbook",
-    "url": ["https://bsc1.trezor.io"]
+    "url": ["https://bsc1.trezor.io", "https://bsc2.trezor.io"]
   },
   "eth:ETC:61": {
     "type": "blockbook",
     "url": ["https://etc1.trezor.io", "https://etc2.trezor.io"]
   },
-  "eth:MATIC:137": {
+  "eth:POL:137": {
     "type": "blockbook",
-    "url": ["https://matic1.trezor.io", "https://matic2.trezor.io"]
+    "url": ["https://pol1.trezor.io", "https://pol2.trezor.io"]
   },
   "eth:tHOL:17000": {
     "type": "blockbook",
