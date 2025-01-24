@@ -23,7 +23,6 @@ from .checksum import CHECKSUM_LENGTH
 from .writer import (
     INIT_HEADER_LENGTH,
     MAX_PAYLOAD_LEN,
-    PACKET_LENGTH,
     write_payload_to_wire_and_add_checksum,
 )
 
@@ -39,7 +38,7 @@ async def thp_main_loop(iface: WireInterface) -> None:
     _CHANNELS = channel_manager.load_cached_channels()
 
     read = loop.wait(iface.iface_num() | io.POLL_READ)
-    packet = bytearray(PACKET_LENGTH)
+    packet = bytearray(iface.RX_PACKET_LEN)
     while True:
         try:
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
@@ -141,17 +140,12 @@ def _get_buffer_for_payload(
     if payload_length > max_length:
         raise ThpError("Message too large")
     if payload_length > len(existing_buffer):
-        return _try_allocate_new_buffer(payload_length)
+        try:
+            new_buffer = bytearray(payload_length)
+        except MemoryError:
+            raise ThpError("Message too large")
+        return new_buffer
     return _reuse_existing_buffer(payload_length, existing_buffer)
-
-
-def _try_allocate_new_buffer(payload_length: int) -> utils.BufferType:
-    try:
-        payload: utils.BufferType = bytearray(payload_length)
-    except MemoryError:
-        payload = bytearray(PACKET_LENGTH)  # TODO ???
-        raise ThpError("Message too large")
-    return payload
 
 
 def _reuse_existing_buffer(

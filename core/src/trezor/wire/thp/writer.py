@@ -12,8 +12,6 @@ CHECKSUM_LENGTH = const(4)
 MAX_PAYLOAD_LEN = const(60000)
 MESSAGE_TYPE_LENGTH = const(2)
 
-PACKET_LENGTH = io.WebUSB.PACKET_LEN
-
 if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Awaitable, Sequence
@@ -39,7 +37,7 @@ async def write_payloads_to_wire(
     current_data_idx = 0
     current_data_offset = 0
 
-    packet = bytearray(PACKET_LENGTH)
+    packet = bytearray(iface.TX_PACKET_LEN)
     header.pack_to_init_buffer(packet)
     packet_offset: int = INIT_HEADER_LENGTH
     packet_number = 0
@@ -47,8 +45,8 @@ async def write_payloads_to_wire(
     while nwritten < total_length:
         if packet_number == 1:
             header.pack_to_cont_buffer(packet)
-        if packet_number >= 1 and nwritten >= total_length - PACKET_LENGTH:
-            packet[:] = bytearray(PACKET_LENGTH)
+        if packet_number >= 1 and nwritten >= total_length - iface.TX_PACKET_LEN:
+            packet[:] = bytearray(iface.TX_PACKET_LEN)
             header.pack_to_cont_buffer(packet)
         while True:
             n = utils.memcpy(
@@ -58,12 +56,12 @@ async def write_payloads_to_wire(
             current_data_offset += n
             nwritten += n
 
-            if packet_offset < PACKET_LENGTH:
+            if packet_offset < iface.TX_PACKET_LEN:
                 current_data_idx += 1
                 current_data_offset = 0
                 if current_data_idx >= n_of_data:
                     break
-            elif packet_offset == PACKET_LENGTH:
+            elif packet_offset == iface.TX_PACKET_LEN:
                 break
             else:
                 raise Exception("Should not happen!!!")

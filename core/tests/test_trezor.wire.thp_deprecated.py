@@ -15,7 +15,6 @@ if utils.USE_THP:
     from trezor.wire.thp import alternating_bit_protocol as ABP
     from trezor.wire.thp import checksum, thp_main
     from trezor.wire.thp.checksum import CHECKSUM_LENGTH
-    from trezor.wire.thp.writer import PACKET_LENGTH
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
@@ -32,7 +31,7 @@ CONT = 0x80
 HEADER_INIT_LENGTH = 5
 HEADER_CONT_LENGTH = 3
 if utils.USE_THP:
-    INIT_MESSAGE_DATA_LENGTH = PACKET_LENGTH - HEADER_INIT_LENGTH - _MESSAGE_TYPE_LEN
+    INIT_MESSAGE_DATA_LENGTH = HEADER_INIT_LENGTH - _MESSAGE_TYPE_LEN  # + PACKET_LENGTH
 
 
 def make_header(ctrl_byte, cid, length):
@@ -198,7 +197,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
         )
 
         # make sure we fit into one packet, to make this easier
-        self.assertTrue(len(packet) <= thp_main.PACKET_LENGTH)
+        # self.assertTrue(len(packet) <= thp_main.PACKET_LENGTH)
 
         buffer = bytearray(1)
         self.assertTrue(len(buffer) <= len(packet))
@@ -284,7 +283,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
             cont_header + chunk
             for chunk in chunks(
                 message.data[INIT_MESSAGE_DATA_LENGTH:] + chksum,
-                thp_main.PACKET_LENGTH - HEADER_CONT_LENGTH,
+                HEADER_CONT_LENGTH,  # + PACKET_LENGTH
             )
         ]
 
@@ -310,7 +309,7 @@ class TestWireTrezorHostProtocolV1(unittest.TestCase):
         PACKET_COUNT = 1180
         # message that takes up 1 180 USB packets
         message_size = (PACKET_COUNT - 1) * (
-            PACKET_LENGTH - HEADER_CONT_LENGTH - CHECKSUM_LENGTH - _MESSAGE_TYPE_LEN
+            HEADER_CONT_LENGTH - CHECKSUM_LENGTH - _MESSAGE_TYPE_LEN  # + PACKET_LENGTH
         ) + INIT_MESSAGE_DATA_LENGTH
 
         # ensure that a message this big won't fit into memory

@@ -33,7 +33,6 @@ from .writer import (
     CONT_HEADER_LENGTH,
     INIT_HEADER_LENGTH,
     MESSAGE_TYPE_LENGTH,
-    PACKET_LENGTH,
     write_payload_to_wire_and_add_checksum,
 )
 
@@ -65,7 +64,7 @@ class Channel:
         self.channel_id: bytes = channel_cache.channel_id
 
         # Shared variables
-        self.buffer: utils.BufferType = bytearray(PACKET_LENGTH)
+        self.buffer: utils.BufferType = bytearray(self.iface.TX_PACKET_LEN)
         self.fallback_decrypt: bool = False
         self.bytes_read: int = 0
         self.expected_payload_length: int = 0
