@@ -38,6 +38,10 @@
 #include <io/haptic.h>
 #endif
 
+#ifdef USE_RGB_LED
+#include <io/rgb_led.h>
+#endif
+
 #ifdef KERNEL_MODE
 
 static void background_tasks_suspend(void) {
@@ -67,6 +71,9 @@ void powerctl_suspend(void) {
 #endif
 #ifdef USE_HAPTIC
   haptic_deinit();
+#endif
+#ifdef USE_RGB_LED
+  rgb_led_deinit();
 #endif
 #ifdef USE_TOUCH
   touch_deinit();
@@ -134,6 +141,9 @@ void powerctl_suspend(void) {
 #endif
 #ifdef USE_HAPTIC
   haptic_init();
+#endif
+#ifdef USE_RGB_LED
+  rgb_led_init();
 #endif
 #ifdef USE_USB
   usb_start();

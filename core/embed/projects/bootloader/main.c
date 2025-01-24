@@ -136,6 +136,9 @@ static void drivers_deinit(void) {
 #ifdef USE_BUTTON
   button_deinit();
 #endif
+#ifdef USE_RGB_LED
+  rgb_led_deinit();
+#endif
 #endif
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
   ensure_compatible_settings();
