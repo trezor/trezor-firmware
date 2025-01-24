@@ -58,6 +58,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_i2c.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_i2c_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_icache.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_lptim.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_ltdc.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_ltdc_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pcd.c",
