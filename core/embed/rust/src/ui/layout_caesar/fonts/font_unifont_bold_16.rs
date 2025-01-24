@@ -397,6 +397,7 @@ const Font_Unifont_Bold_16: [&[u8]; 95] = [
 
 /// FontInfo struct for normal ASCII usage
 pub const Font_Unifont_Bold_16_info: FontInfo = FontInfo {
+    translation_blob_idx: 5,
     height: 16,
     max_height: 15,
     baseline: 2,

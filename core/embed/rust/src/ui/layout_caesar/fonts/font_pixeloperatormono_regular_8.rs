@@ -401,6 +401,7 @@ const Font_PixelOperatorMono_Regular_8: [&[u8]; 95] = [
 
 /// FontInfo struct for normal ASCII usage
 pub const Font_PixelOperatorMono_Regular_8_info: FontInfo = FontInfo {
+    translation_blob_idx: 3,
     height: 8,
     max_height: 8,
     baseline: 1,

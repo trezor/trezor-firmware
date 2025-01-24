@@ -397,6 +397,7 @@ const Font_TTHoves_Regular_21: [&[u8]; 95] = [
 
 /// FontInfo struct for normal ASCII usage
 pub const Font_TTHoves_Regular_21_info: FontInfo = FontInfo {
+    translation_blob_idx: 1,
     height: 21,
     max_height: 21,
     baseline: 4,

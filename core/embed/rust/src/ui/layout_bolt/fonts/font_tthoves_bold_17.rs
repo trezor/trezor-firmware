@@ -319,6 +319,7 @@ const Font_TTHoves_Bold_17_upper: [&[u8]; 95] = [
 
 /// FontInfo struct for forced uppercase usage
 pub const Font_TTHoves_Bold_17_upper_info: FontInfo = FontInfo {
+    translation_blob_idx: 7,
     height: 17,
     max_height: 18,
     baseline: 4,

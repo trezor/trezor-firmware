@@ -17,6 +17,7 @@ use crate::translations::Translations;
 /// Font information structure containing metadata and pointers to font data
 #[derive(PartialEq, Eq)]
 pub struct FontInfo {
+    pub translation_blob_idx: u16,
     pub height: i16,
     pub max_height: i16,
     pub baseline: i16,
@@ -179,9 +180,7 @@ impl GlyphData {
                         .as_ref()
                         .and_then(|guard| guard.as_ref())
                         .and_then(|translations| {
-                            // let font_id = font_to_font_id(self.font);
-                            let font_id = 1;
-                            translations.get_utf8_glyph(codepoint, font_id)
+                            translations.get_utf8_glyph(codepoint, self.font.translation_blob_idx)
                         })
                     {
                         return glyph;
