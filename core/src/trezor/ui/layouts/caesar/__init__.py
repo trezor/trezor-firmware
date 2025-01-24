@@ -967,6 +967,7 @@ if not utils.BITCOIN_ONLY:
             fee_label=f"{TR.send__maximum_fee}:",
             extra_items=[(f"{k}:", v) for (k, v) in fee_info_items],
             extra_title=TR.confirm_total__title_fee,
+            verb_cancel="<",
         )
 
         if not is_contract_interaction:
