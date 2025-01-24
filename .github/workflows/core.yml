@@ -420,7 +420,7 @@ jobs:
         # FIXME: T3T1 https://github.com/trezor/trezor-firmware/issues/3595
         model: [T2T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
-        protocol: [v1,v2]
+        protocol: [v1, v2]
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 400
