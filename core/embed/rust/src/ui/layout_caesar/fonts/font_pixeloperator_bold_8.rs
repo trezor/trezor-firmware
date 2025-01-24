@@ -8,6 +8,8 @@
 
 use crate::ui::display::font::FontInfo;
 
+// NOTE: hand-changed the width and advance of '_' to 5
+
 /// ' ' (ASCII 32)
 const Font_PixelOperator_Bold_8_glyph_32: [u8; 5] = [ 0, 0, 4, 0, 0 ];
 
@@ -198,7 +200,7 @@ const Font_PixelOperator_Bold_8_glyph_93: [u8; 9] = [ 4, 7, 6, 0, 7, 243, 51, 51
 const Font_PixelOperator_Bold_8_glyph_94: [u8; 8] = [ 6, 4, 7, 0, 7, 49, 236, 225 ];
 
 /// '_' (ASCII 95)
-const Font_PixelOperator_Bold_8_glyph_95: [u8; 6] = [ 4, 1, 4, 0, 0, 240 ];
+const Font_PixelOperator_Bold_8_glyph_95: [u8; 6] = [ 5, 1, 5, 0, 0, 248 ];  // width (1st), advance (3rd) changed to 5, last byte to 248
 
 /// '`' (ASCII 96)
 const Font_PixelOperator_Bold_8_glyph_96: [u8; 6] = [ 3, 2, 5, 0, 7, 204 ];

@@ -8,8 +8,12 @@
 
 use crate::ui::display::font::FontInfo;
 
+// NOTE: hand-changed all the advances with 8 to 7
+// NOTE: hand-changed the visuals of "m", "w", "M" and "W" to make it narrower
+
+
 /// ' ' (ASCII 32)
-const Font_PixelOperatorMono_Regular_8_glyph_32: [u8; 5] = [ 0, 0, 8, 0, 0 ];
+const Font_PixelOperatorMono_Regular_8_glyph_32: [u8; 5] = [ 0, 0, 7, 0, 0 ];  // width hand-changed from 8 to 7 to have 9px space between words
 
 /// '!' (ASCII 33)
 const Font_PixelOperatorMono_Regular_8_glyph_33: [u8; 6] = [ 1, 7, 7, 2, 7, 250 ];
@@ -24,7 +28,7 @@ const Font_PixelOperatorMono_Regular_8_glyph_35: [u8; 10] = [ 6, 6, 7, 0, 6, 75,
 const Font_PixelOperatorMono_Regular_8_glyph_36: [u8; 10] = [ 5, 7, 7, 0, 7, 35, 168, 226, 248, 128 ];
 
 /// '%' (ASCII 37)
-const Font_PixelOperatorMono_Regular_8_glyph_37: [u8; 11] = [ 6, 7, 7, 0, 7, 129, 37, 42, 86, 80, 128 ];
+const Font_PixelOperatorMono_Regular_8_glyph_37: [u8; 12] = [ 7, 7, 7, 0, 7, 65, 74, 162, 162, 169, 65, 0 ];
 
 /// '&' (ASCII 38)
 const Font_PixelOperatorMono_Regular_8_glyph_38: [u8; 10] = [ 5, 7, 7, 0, 7, 116, 96, 232, 197, 224 ];
@@ -105,7 +109,7 @@ const Font_PixelOperatorMono_Regular_8_glyph_62: [u8; 7] = [ 3, 5, 7, 1, 6, 136,
 const Font_PixelOperatorMono_Regular_8_glyph_63: [u8; 10] = [ 5, 7, 7, 0, 7, 116, 66, 34, 0, 128 ];
 
 /// '@' (ASCII 64)
-const Font_PixelOperatorMono_Regular_8_glyph_64: [u8; 11] = [ 6, 8, 7, 0, 7, 248, 19, 85, 84, 224, 62 ];
+const Font_PixelOperatorMono_Regular_8_glyph_64: [u8; 13] = [ 7, 8, 7, 0, 7, 125, 6, 109, 90, 179, 160, 62, 0 ];
 
 /// 'A' (ASCII 65)
 const Font_PixelOperatorMono_Regular_8_glyph_65: [u8; 10] = [ 5, 7, 7, 0, 7, 116, 99, 31, 198, 32 ];
@@ -144,7 +148,7 @@ const Font_PixelOperatorMono_Regular_8_glyph_75: [u8; 10] = [ 5, 7, 7, 0, 7, 140
 const Font_PixelOperatorMono_Regular_8_glyph_76: [u8; 10] = [ 5, 7, 7, 0, 7, 132, 33, 8, 67, 224 ];
 
 /// 'M' (ASCII 77)
-const Font_PixelOperatorMono_Regular_8_glyph_77: [u8; 11] = [ 6, 7, 7, 0, 7, 4, 24, 213, 36, 16, 64 ];
+const Font_PixelOperatorMono_Regular_8_glyph_77: [u8; 10] = [ 5, 7, 7, 0, 7, 142, 235, 24, 198, 32 ];
 
 /// 'N' (ASCII 78)
 const Font_PixelOperatorMono_Regular_8_glyph_78: [u8; 10] = [ 5, 7, 7, 0, 7, 140, 115, 89, 198, 32 ];
@@ -174,7 +178,7 @@ const Font_PixelOperatorMono_Regular_8_glyph_85: [u8; 10] = [ 5, 7, 7, 0, 7, 140
 const Font_PixelOperatorMono_Regular_8_glyph_86: [u8; 10] = [ 5, 7, 7, 0, 7, 140, 99, 24, 168, 128 ];
 
 /// 'W' (ASCII 87)
-const Font_PixelOperatorMono_Regular_8_glyph_87: [u8; 11] = [ 6, 7, 7, 0, 7, 4, 18, 73, 36, 157, 128 ];
+const Font_PixelOperatorMono_Regular_8_glyph_87: [u8; 10] = [ 5, 7, 7, 0, 7, 140, 107, 90, 213, 64 ];
 
 /// 'X' (ASCII 88)
 const Font_PixelOperatorMono_Regular_8_glyph_88: [u8; 10] = [ 5, 7, 7, 0, 7, 140, 84, 69, 70, 32 ];
@@ -240,7 +244,7 @@ const Font_PixelOperatorMono_Regular_8_glyph_107: [u8; 10] = [ 5, 7, 7, 0, 7, 13
 const Font_PixelOperatorMono_Regular_8_glyph_108: [u8; 10] = [ 5, 7, 7, 0, 7, 225, 8, 66, 19, 224 ];
 
 /// 'm' (ASCII 109)
-const Font_PixelOperatorMono_Regular_8_glyph_109: [u8; 9] = [ 6, 5, 7, 0, 5, 216, 146, 65, 4 ];
+const Font_PixelOperatorMono_Regular_8_glyph_109: [u8; 9] = [ 5, 5, 7, 0, 5, 213, 107, 24, 128 ];
 
 /// 'n' (ASCII 110)
 const Font_PixelOperatorMono_Regular_8_glyph_110: [u8; 9] = [ 5, 5, 7, 0, 5, 244, 99, 24, 128 ];
@@ -270,7 +274,7 @@ const Font_PixelOperatorMono_Regular_8_glyph_117: [u8; 9] = [ 5, 5, 7, 0, 5, 140
 const Font_PixelOperatorMono_Regular_8_glyph_118: [u8; 9] = [ 5, 5, 7, 0, 5, 140, 98, 162, 0 ];
 
 /// 'w' (ASCII 119)
-const Font_PixelOperatorMono_Regular_8_glyph_119: [u8; 9] = [ 6, 5, 7, 0, 5, 4, 18, 73, 216 ];
+const Font_PixelOperatorMono_Regular_8_glyph_119: [u8; 9] = [ 5, 5, 7, 0, 5, 140, 107, 85, 0 ];
 
 /// 'x' (ASCII 120)
 const Font_PixelOperatorMono_Regular_8_glyph_120: [u8; 9] = [ 5, 5, 7, 0, 5, 138, 136, 168, 128 ];
