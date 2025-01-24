@@ -49,7 +49,7 @@ typedef union {
 } ble_command_data_t;
 
 typedef struct {
-  ble_command_type_t cmd_type;
+  uint8_t cmd_type;
   uint8_t data_len;
   ble_command_data_t data;
 } ble_command_t;
