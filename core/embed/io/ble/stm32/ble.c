@@ -547,13 +547,13 @@ bool ble_issue_command(ble_command_t *command) {
       break;
     case BLE_ALLOW_PAIRING:
       result = ble_send_pairing_accept(drv);
-    break;
+      break;
     case BLE_REJECT_PAIRING:
       result = ble_send_pairing_reject(drv);
-    break;
+      break;
     case BLE_UNPAIR:
       result = ble_send_unpair(drv);
-    break;
+      break;
     default:
       break;
   }
