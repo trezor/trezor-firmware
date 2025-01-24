@@ -1,13 +1,13 @@
+use super::{
+    super::{constant, theme::IMAGE_HOMESCREEN},
+    theme, Button, Loader, LoaderMsg,
+};
 use crate::{
     io::BinaryData,
     strutil::TString,
     time::{Duration, Instant},
     translations::TR,
-    trezorhal::{
-        ble,
-        ble::{connected, pairing_mode},
-        usb::usb_configured,
-    },
+    trezorhal::usb::usb_configured,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Pad, Timer},
         constant::{HEIGHT, WIDTH},
@@ -16,19 +16,25 @@ use crate::{
             toif::Icon,
             Color, Font,
         },
-        event::{BLEEvent, ButtonEvent, PhysicalButton, TouchEvent},
+        event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
+        layout_bolt::component::bl_confirm::{Confirm, ConfirmMsg, ConfirmTitle},
         shape::{self, Renderer},
     },
 };
 
-use crate::ui::constant::{HEIGHT, WIDTH};
+#[cfg(feature = "ble")]
+use crate::trezorhal::ble::{self, connected, pairing_mode};
 
-use super::{
-    super::{constant, theme::IMAGE_HOMESCREEN},
-    theme, Loader, LoaderMsg,
-};
+#[cfg(feature = "ble")]
+use crate::ui::event::BLEEvent;
+
+#[cfg(feature = "rgb_led")]
+use crate::trezorhal::rgb_led::set_color;
+
+#[cfg(feature = "button")]
+use crate::ui::event::{ButtonEvent, PhysicalButton};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
