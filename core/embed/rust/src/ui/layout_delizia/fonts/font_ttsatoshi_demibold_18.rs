@@ -399,6 +399,7 @@ const Font_TTSatoshi_DemiBold_18: [&[u8]; 95] = [
 
 /// FontInfo struct for normal ASCII usage
 pub const Font_TTSatoshi_DemiBold_18_info: FontInfo = FontInfo {
+    translation_blob_idx: 8,
     height: 18,
     max_height: 19,
     baseline: 4,

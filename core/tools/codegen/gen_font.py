@@ -268,6 +268,8 @@ class FaceProcessor:
         ext: str = "ttf",
         gen_normal: bool = True,  # generate font with all the letters
         gen_upper: bool = False,  # generate font with only upper-cased letters
+        font_idx: int | None = None,  # idx to UTF-8 foreign chars data
+        font_idx_upper: int | None = None,  # idx to UTF-8 upper-cased foreign chars
     ):
         if gen_normal is False and gen_upper is False:
             raise ValueError(
@@ -277,6 +279,8 @@ class FaceProcessor:
         self.name = name
         self.style = style
         self.size = size
+        self.font_idx = font_idx
+        self.font_idx_upper = font_idx_upper
         self.bpp = bpp
         self.shaveX = shaveX
         self.ext = ext
@@ -563,8 +567,13 @@ class FaceProcessor:
         font_info = None
         font_info_upper = None
         if self.gen_normal:
+            if self.font_idx is None:
+                raise ValueError(
+                    f"font_idx must be set when generating FontInfo for {self._name_style_size}"
+                )
             font_info = {
                 "variant": "normal",
+                "translation_blob_idx": self.font_idx,
                 "height": self.size,
                 "max_height": self.font_ymax - self.font_ymin,
                 "baseline": -self.font_ymin,
@@ -572,8 +581,13 @@ class FaceProcessor:
                 "nonprintable": f"Font_{self._name_style_size}_glyph_nonprintable",
             }
         if self.gen_upper:
+            if self.font_idx_upper is None:
+                raise ValueError(
+                    f"font_idx_upper must be set when generating `only_upper` FontInfo for {self._name_style_size}"
+                )
             font_info_upper = {
                 "variant": "upper",
+                "translation_blob_idx": self.font_idx_upper,
                 "height": self.size,
                 "max_height": self.font_ymax - self.font_ymin,
                 "baseline": -self.font_ymin,
@@ -608,14 +622,18 @@ class FaceProcessor:
 def gen_layout_bolt(gen_c: bool = False):
     global LAYOUT_NAME
     LAYOUT_NAME = "bolt"
-    FaceProcessor("Roboto", "Regular", 20).write_files(gen_c)
-    FaceProcessor("Roboto", "Bold", 20).write_files(gen_c)
-    FaceProcessor("TTHoves", "Regular", 21, ext="otf").write_files(gen_c)
-    FaceProcessor("TTHoves", "DemiBold", 21, ext="otf").write_files(gen_c)
+    FaceProcessor("TTHoves", "Regular", 21, ext="otf", font_idx=1).write_files(gen_c)
+    FaceProcessor("TTHoves", "DemiBold", 21, ext="otf", font_idx=5).write_files(gen_c)
     FaceProcessor(
-        "TTHoves", "Bold", 17, ext="otf", gen_normal=False, gen_upper=True
+        "TTHoves",
+        "Bold",
+        17,
+        ext="otf",
+        gen_normal=False,
+        gen_upper=True,
+        font_idx_upper=7,
     ).write_files(gen_c)
-    FaceProcessor("RobotoMono", "Medium", 20).write_files(gen_c)
+    FaceProcessor("RobotoMono", "Medium", 20, font_idx=3).write_files(gen_c)
 
 
 def gen_layout_caesar(gen_c: bool = False):
@@ -629,6 +647,8 @@ def gen_layout_caesar(gen_c: bool = False):
         shaveX=1,
         gen_normal=True,
         gen_upper=True,
+        font_idx=1,
+        font_idx_upper=6,
     ).write_files(gen_c)
     FaceProcessor(
         "PixelOperator",
@@ -638,22 +658,29 @@ def gen_layout_caesar(gen_c: bool = False):
         shaveX=1,
         gen_normal=True,
         gen_upper=True,
+        font_idx=2,
+        font_idx_upper=7,
     ).write_files(gen_c)
-    FaceProcessor("PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1).write_files(gen_c)
-    FaceProcessor("Unifont", "Regular", 16, bpp=1, shaveX=1, ext="otf").write_files(
-        gen_c
-    )
+    FaceProcessor(
+        "PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1, font_idx=3
+    ).write_files(gen_c)
+    FaceProcessor(
+        "Unifont", "Regular", 16, bpp=1, shaveX=1, ext="otf", font_idx=4
+    ).write_files(gen_c)
     # NOTE: Unifont Bold does not seem to have czech characters
-    FaceProcessor("Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf").write_files(gen_c)
+    FaceProcessor(
+        "Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf", font_idx=5
+    ).write_files(gen_c)
 
 
 def gen_layout_delizia(gen_c: bool = False):
     global LAYOUT_NAME
     LAYOUT_NAME = "delizia"
-    FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf").write_files(gen_c)
-    FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf").write_files(gen_c)
-    FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf").write_files(gen_c)
-    FaceProcessor("RobotoMono", "Medium", 21).write_files(gen_c)
+    # FIXME: BIG font id not needed
+    FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf", font_idx=1).write_files(gen_c)
+    FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf", font_idx=1).write_files(gen_c)
+    FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf", font_idx=8).write_files(gen_c)
+    FaceProcessor("RobotoMono", "Medium", 21, font_idx=3).write_files(gen_c)
 
 
 LAYOUTS = {

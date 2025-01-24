@@ -498,6 +498,7 @@ const Font_PixelOperator_Regular_8_upper: [&[u8]; 95] = [
 
 /// FontInfo struct for normal ASCII usage
 pub const Font_PixelOperator_Regular_8_info: FontInfo = FontInfo {
+    translation_blob_idx: 1,
     height: 8,
     max_height: 8,
     baseline: 1,
@@ -507,6 +508,7 @@ pub const Font_PixelOperator_Regular_8_info: FontInfo = FontInfo {
 
 /// FontInfo struct for forced uppercase usage
 pub const Font_PixelOperator_Regular_8_upper_info: FontInfo = FontInfo {
+    translation_blob_idx: 6,
     height: 8,
     max_height: 8,
     baseline: 1,

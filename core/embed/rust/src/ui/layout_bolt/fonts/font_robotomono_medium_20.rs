@@ -397,6 +397,7 @@ const Font_RobotoMono_Medium_20: [&[u8]; 95] = [
 
 /// FontInfo struct for normal ASCII usage
 pub const Font_RobotoMono_Medium_20_info: FontInfo = FontInfo {
+    translation_blob_idx: 3,
     height: 20,
     max_height: 22,
     baseline: 5,
