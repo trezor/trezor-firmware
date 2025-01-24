@@ -163,13 +163,8 @@ class SessionV1(Session):
             messages.Initialize(session_id=session_id, derive_cardano=derive_cardano)
         )
         if isinstance(self.passphrase, str):
-            self.passphrase_callback = _send_passphrase
+            self.passphrase_callback = self.client.passphrase_callback
         self._id = resp.session_id
-
-
-def _send_passphrase(session: Session, resp: t.Any) -> None:
-    assert isinstance(session.passphrase, str)
-    session.call(messages.PassphraseAck(passphrase=session.passphrase))
 
 
 def _callback_button(session: Session, msg: t.Any) -> t.Any:

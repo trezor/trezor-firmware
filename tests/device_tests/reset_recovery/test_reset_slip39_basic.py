@@ -83,6 +83,7 @@ def test_reset_device_slip39_basic_256(session: Session):
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.uninitialized_session
 def test_reset_entropy_check(session: Session):
     member_threshold = 3
 
@@ -103,21 +104,23 @@ def test_reset_entropy_check(session: Session):
             entropy_check_count=3,
             _get_entropy=MOCK_GET_ENTROPY,
         )
-
     # Generate the master secret locally.
-    internal_entropy = client.debug.state().reset_entropy
+    internal_entropy = session.client.debug.state().reset_entropy
     assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # Check that all combinations will result in the correct master secret.
     validate_mnemonics(IF.mnemonics, member_threshold, secret)
 
+    # Create a session with cache backing
+    session = session.client.get_session()
+
     # Check that the device is properly initialized.
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.NotAvailable
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is BackupType.Slip39_Basic_Extendable
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.NotAvailable
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is BackupType.Slip39_Basic_Extendable
 
     # Check that the XPUBs are the same as those from the entropy check.
     for path, xpub in path_xpubs:

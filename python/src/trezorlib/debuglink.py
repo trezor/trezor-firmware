@@ -41,6 +41,7 @@ from .client import (
 from .exceptions import Cancelled, PinException, TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
 from .messages import Capability, DebugWaitType
+from .protobuf import MessageType
 from .tools import parse_path
 from .transport.session import Session, SessionV1
 from .transport.thp.protocol_v1 import ProtocolV1
@@ -1387,7 +1388,7 @@ class TrezorClientDebugLink(TrezorClient):
 
             def send_passphrase(
                 passphrase: str | None = None, on_device: bool | None = None
-            ) -> t.Any:
+            ) -> MessageType:
                 msg = messages.PassphraseAck(passphrase=passphrase, on_device=on_device)
                 resp = session.call_raw(msg)
                 if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
