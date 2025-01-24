@@ -51,7 +51,7 @@ if utils.USE_THP:
         return thp_common._MOCK_INTERFACE_HID
 
     def send_channel_allocation_request(
-        interface: WireInterface, nonce: bytes | None = None
+        interface: MockHID, nonce: bytes | None = None
     ) -> bytes:
         if nonce is None or len(nonce) != 8:
             nonce = b"\x00\x11\x22\x33\x44\x55\x66\x77"
@@ -61,7 +61,7 @@ if utils.USE_THP:
         gen = thp_main.thp_main_loop(interface)
         expected_channel_index = cache_thp._get_next_channel_index()
         gen.send(None)
-        gen.send(cid_req)
+        interface.mock_read(cid_req, gen)
         gen.send(None)
         model = bytes(utils.INTERNAL_MODEL, "big")
         response_data = (
@@ -114,7 +114,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
         # There should be a failiure response to received init packet (starts with "?##")
         test_codec_message = b"?## Some data"
-        gen.send(test_codec_message)
+        self.interface.mock_read(test_codec_message, gen)
         gen.send(None)
         self.assertEqual(len(self.interface.data), 1)
 
@@ -125,10 +125,11 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
         # There should be no response for continuation packet (starts with "?" only)
         test_codec_message_2 = b"? Cont packet"
-        gen.send(test_codec_message_2)
-        with self.assertRaises(TypeError) as e:
+        self.interface.mock_read(test_codec_message_2, gen)
+
+        # Check that sending None fails on AssertionError
+        with self.assertRaises(AssertionError):
             gen.send(None)
-        self.assertEqual(e.value.value, "object with buffer protocol required")
         self.assertEqual(len(self.interface.data), 1)
 
     def test_message_on_unallocated_channel(self):
@@ -138,7 +139,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         message_to_channel_789a = (
             b"\x04\x78\x9a\x00\x0c\x00\x11\x22\x33\x44\x55\x66\x77\x96\x64\x3c\x6c"
         )
-        gen.send(message_to_channel_789a)
+        self.interface.mock_read(message_to_channel_789a, gen)
         gen.send(None)
         unallocated_chanel_error_on_channel_789a = "42789a0005027b743563000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
         self.assertEqual(
@@ -191,7 +192,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         cid_1_bytes = int.to_bytes(cid_1, 2, "big")
         expected_ack_on_received_message = get_ack(cid_1_bytes)
 
-        gen.send(message_with_invalid_tag)
+        self.interface.mock_read(message_with_invalid_tag, gen)
         gen.send(None)
 
         self.assertEqual(
@@ -237,7 +238,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         cid_1_bytes = int.to_bytes(cid_1, 2, "big")
         # expected_ack_on_received_message = get_ack(cid_1_bytes)
 
-        gen.send(message_with_invalid_tag)
+        self.interface.mock_read(message_with_invalid_tag, gen)
         # gen.send(None)
 
         # self.assertEqual(
@@ -331,7 +332,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         buffer: bytearray = bytearray(protobuf.encoded_length(msg_code_entry))
         protobuf.encode(buffer, msg_code_entry)
         code_entry_challenge = Message(ThpMessageType.ThpCodeEntryChallenge, buffer)
-        gen.send(code_entry_challenge)
+        self.interface.mock_read(code_entry_challenge, gen)
 
         # tag_qrc = b"\x55\xdf\x6c\xba\x0b\xe9\x5e\xd1\x4b\x78\x61\xec\xfa\x07\x9b\x5d\x37\x60\xd8\x79\x9c\xd7\x89\xb4\x22\xc1\x6f\x39\xde\x8f\x3b\xc3"
         # tag_nfc = b"\x8f\xf0\xfa\x37\x0a\x5b\xdb\x29\x32\x21\xd8\x2f\x95\xdd\xb6\xb8\xee\xfd\x28\x6f\x56\x9f\xa9\x0b\x64\x8c\xfc\x62\x46\x5a\xdd\xd0"
@@ -350,7 +351,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
         protobuf.encode(buffer, msg)
         user_message = Message(ThpMessageType.ThpCodeEntryCpaceHost, buffer)
-        gen.send(user_message)
+        self.interface.mock_read(user_message, gen)
 
         tag_ent = b"\xd0\x15\xd6\x72\x7c\xa6\x9b\x2a\x07\xfa\x30\xee\x03\xf0\x2d\x04\xdc\x96\x06\x77\x0c\xbd\xb4\xaa\x77\xc7\x68\x6f\xae\xa9\xdd\x81"
         msg = ThpCodeEntryTag(tag=tag_ent)
@@ -359,14 +360,14 @@ class TestTrezorHostProtocol(unittest.TestCase):
 
         protobuf.encode(buffer, msg)
         user_message = Message(ThpMessageType.ThpCodeEntryTag, buffer)
-        gen.send(user_message)
+        self.interface.mock_read(user_message, gen)
 
         host_static_pubkey = b"\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77\x00\x11\x22\x33\x44\x55\x66\x77"
         msg = ThpCredentialRequest(host_static_pubkey=host_static_pubkey)
         buffer: bytearray = bytearray(protobuf.encoded_length(msg))
         protobuf.encode(buffer, msg)
         credential_request = Message(ThpMessageType.ThpCredentialRequest, buffer)
-        gen.send(credential_request)
+        self.interface.mock_read(credential_request, gen)
 
         msg = ThpEndRequest()
 
@@ -374,7 +375,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         protobuf.encode(buffer, msg)
         end_request = Message(1012, buffer)
         with self.assertRaises(StopIteration) as e:
-            gen.send(end_request)
+            self.interface.mock_read(end_request, gen)
         print("response message:", e.value.value.MESSAGE_NAME)
 
 
