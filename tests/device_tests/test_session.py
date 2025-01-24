@@ -18,7 +18,6 @@ import pytest
 
 from trezorlib import cardano, messages, models
 from trezorlib.btc import get_public_node
-from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
