@@ -32,11 +32,9 @@ XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7
 PIN4 = "1234"
 
 
+@pytest.mark.protocol("protocol_v2")
 def test_thp_end_session(client: Client):
     session = Session(client.get_session())
-    if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
-        # TODO: This test should be skipped on non-THP builds
-        return
 
     msg = session.call(messages.EndSession())
     assert isinstance(msg, messages.Success)
