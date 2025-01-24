@@ -222,7 +222,7 @@ enum {
 
 void msg_process(char type, uint16_t msg_id, const pb_msgdesc_t *fields,
                  uint8_t *msg_encoded, uint32_t msg_encoded_size) {
-  static uint8_t msg_decoded[MSG_IN_DECODED_SIZE];
+  static uint8_t msg_decoded[MSG_IN_DECODED_SIZE] __attribute__((aligned(8)));
   memzero(msg_decoded, sizeof(msg_decoded));
   pb_istream_t stream = pb_istream_from_buffer(msg_encoded, msg_encoded_size);
   bool status = pb_decode(&stream, fields, msg_decoded);
@@ -311,7 +311,7 @@ const uint8_t *msg_debug_out_data(void) {
 // msg_tiny needs to be large enough to hold the C struct decoded from a single
 // 64 byte USB packet. The decoded struct can be larger than the encoded
 // protobuf message. However, 128 bytes should be more than enough.
-CONFIDENTIAL uint8_t msg_tiny[128];
+CONFIDENTIAL uint8_t msg_tiny[128] __attribute__((aligned(8)));
 _Static_assert(sizeof(msg_tiny) >= sizeof(Cancel), "msg_tiny too tiny");
 _Static_assert(USB_PACKET_SIZE >= MSG_HEADER_SIZE + Cancel_size,
                "msg_tiny too tiny");
