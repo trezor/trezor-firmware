@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 import typing as t
 from enum import Enum
 
@@ -25,6 +26,32 @@ class CommonPass:
     WITH_SPACE_ADDRESS = "mvqzZUb9NaUc62Buk9WCP4L7hunsXFyamT"
 
     EMPTY_ADDRESS = "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
+
+    LONGEST = "".join(itertools.islice(itertools.cycle("1234567890"), 128))
+    LONGEST_ADDRESS = "msHs5d865WetSd7Uai8roAu2eCaZgx3oqg"
+
+    ALMOST_LONGEST = LONGEST[:-1]
+    ALMOST_LONGEST_ADDRESS = "mkRvtfidQoPhNQx1eesDNMXCRiZeUK5kLB"
+
+    TOO_LONG = LONGEST + "x"
+    TOO_LONG_ADDRESS = LONGEST_ADDRESS
+
+    VECTORS = (  # passphrase, address
+        (SHORT, SHORT_ADDRESS),
+        (WITH_SPACE, WITH_SPACE_ADDRESS),
+        (RANDOM_25, RANDOM_25_ADDRESS),
+        (ALMOST_LONGEST, ALMOST_LONGEST_ADDRESS),
+        (LONGEST, LONGEST_ADDRESS),
+    )
+
+
+assert len(CommonPass.LONGEST) == 128
+assert len(CommonPass.ALMOST_LONGEST) == 127
+assert len(CommonPass.TOO_LONG) == 129
+assert CommonPass.LONGEST_ADDRESS != CommonPass.ALMOST_LONGEST_ADDRESS
+assert CommonPass.LONGEST_ADDRESS == CommonPass.TOO_LONG_ADDRESS
+# TODO: show some UI message when length reaches the limit?
+# (it currently disabled typing and greys out the buttons)
 
 
 class PassphraseCategory(Enum):

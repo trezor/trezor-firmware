@@ -12,4 +12,4 @@ pub use super::layout_caesar::constant::*;
 #[cfg(feature = "layout_delizia")]
 pub use super::layout_delizia::constant::*;
 
-pub const MAX_PASSPHRASE_LENGTH: usize = 50;
+pub const MAX_PASSPHRASE_LENGTH: usize = 128;
