@@ -120,7 +120,7 @@ stdenvNoCC.mkDerivation ({
     check
     crowdin-cli  # for translations
     curl  # for connect tests
-    editorconfig-checker
+    newNixpkgs.editorconfig-checker
     (if devTools then gcc-arm-embedded-gdbfix else gcc-arm-embedded)
     git
     gitAndTools.git-subrepo
