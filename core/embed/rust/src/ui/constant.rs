@@ -13,4 +13,4 @@ cfg_if::cfg_if! {
     }
 }
 
-pub const MAX_PASSPHRASE_LENGTH: usize = 50;
+pub const MAX_PASSPHRASE_LENGTH: usize = 128;

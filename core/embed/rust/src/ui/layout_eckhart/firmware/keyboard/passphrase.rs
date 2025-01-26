@@ -12,6 +12,7 @@ use crate::{
             },
             Component, Event, EventCtx, Label, Swipe, TextLayout, Timer,
         },
+        constant::MAX_PASSPHRASE_LENGTH,
         display::Icon,
         event::TouchEvent,
         flow::Swipable,
@@ -104,7 +105,6 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
 
-const MAX_LENGTH: usize = 50; // max length of the passphrase
 const MAX_SHOWN_LEN: usize = 14; // max number of icons per line
 const LAST_DIGIT_TIMEOUT_S: u32 = 1;
 
@@ -214,7 +214,7 @@ impl PassphraseKeyboard {
                 }
             }
             _ => {
-                if self.passphrase().len() == MAX_LENGTH {
+                if self.passphrase().len() == MAX_PASSPHRASE_LENGTH {
                     if let Some(pending_key) = self.multi_tap.pending_key() {
                         // Disable all except of confirm, erase and the pending key
                         KeypadState {
@@ -450,7 +450,7 @@ impl PassphraseInput {
     fn new() -> Self {
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(MAX_LENGTH),
+            textbox: TextBox::empty(MAX_PASSPHRASE_LENGTH),
             display_style: DisplayStyle::LastOnly,
             marker: false,
             last_char_timer: Timer::new(),

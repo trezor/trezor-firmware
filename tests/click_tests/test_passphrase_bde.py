@@ -52,22 +52,6 @@ KEYBOARD_CATEGORIES_DE = [
 KEYBOARD_CATEGORY = PassphraseCategory.LOWERCASE
 COORDS_PREV: tuple[int, int] = (0, 0)
 
-# Testing the maximum length is really 50
-
-DA_50 = 25 * "da"
-DA_50_ADDRESS = "mg5L2i8HZKUvceK1sfmGHhE4gichFSsdvm"
-assert len(DA_50) == 50
-
-DA_49 = DA_50[:-1]
-DA_49_ADDRESS = "mxrB75ydMS3ZzqmYKK28fj4bNMEx7dDw6e"
-assert len(DA_49) == 49
-assert DA_49_ADDRESS != DA_50_ADDRESS
-
-DA_51 = DA_50 + "d"
-DA_51_ADDRESS = DA_50_ADDRESS
-assert len(DA_51) == 51
-assert DA_51_ADDRESS == DA_50_ADDRESS
-
 
 @contextmanager
 def prepare_passphrase_dialogue(
@@ -167,16 +151,7 @@ def delete_char(debug: "DebugLink") -> None:
     debug.click(debug.screen_buttons.pin_passphrase_erase())
 
 
-VECTORS = (  # passphrase, address
-    (CommonPass.SHORT, CommonPass.SHORT_ADDRESS),
-    (CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS),
-    (CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS),
-    (DA_49, DA_49_ADDRESS),
-    (DA_50, DA_50_ADDRESS),
-)
-
-
-@pytest.mark.parametrize("passphrase, address", VECTORS)
+@pytest.mark.parametrize("passphrase, address", CommonPass.VECTORS)
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input(
     device_handler: "BackgroundDeviceHandler", passphrase: str, address: str
@@ -187,10 +162,10 @@ def test_passphrase_input(
 
 
 @pytest.mark.setup_client(passphrase=True)
-def test_passphrase_input_over_50_chars(device_handler: "BackgroundDeviceHandler"):
-    with prepare_passphrase_dialogue(device_handler, DA_51_ADDRESS) as debug:  # type: ignore
-        input_passphrase(debug, DA_51, check=False)
-        assert debug.read_layout().passphrase() == DA_50
+def test_passphrase_input_over_max_length(device_handler: "BackgroundDeviceHandler"):
+    with prepare_passphrase_dialogue(device_handler, CommonPass.TOO_LONG_ADDRESS) as debug:  # type: ignore
+        input_passphrase(debug, CommonPass.TOO_LONG, check=False)
+        assert debug.read_layout().passphrase() == CommonPass.LONGEST
         enter_passphrase(debug)
 
 
@@ -308,9 +283,10 @@ def test_passphrase_dollar_sign_deletion(
 def test_cycle_through_last_character(
     device_handler: "BackgroundDeviceHandler",
 ):
-    # Checks that we can cycle through the last (50th) passphrase character
+    # Checks that we can cycle through the last (128th) passphrase character
     # (was a bug previously)
     with prepare_passphrase_dialogue(device_handler) as debug:
-        passphrase = DA_49 + "i"  # for i we need to cycle through "ghi" three times
+        # for "i" we need to cycle through "ghi" three times
+        passphrase = CommonPass.ALMOST_LONGEST + "i"
         input_passphrase(debug, passphrase)
         enter_passphrase(debug)
