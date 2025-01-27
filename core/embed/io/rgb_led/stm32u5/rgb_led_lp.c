@@ -6,8 +6,8 @@
 
 #include <io/rgb_led.h>
 
-#define LED_SWITCHING_FREQUENCY_HZ 200
-#define TIMER_PERIOD ((32768 * 2) / LED_SWITCHING_FREQUENCY_HZ)
+#define LED_SWITCHING_FREQUENCY_HZ 20000
+#define TIMER_PERIOD (16000000 / LED_SWITCHING_FREQUENCY_HZ)
 
 #define RGB_LED_RED_PIN GPIO_PIN_2
 #define RGB_LED_RED_PORT GPIOB
@@ -29,6 +29,22 @@ typedef struct {
 
 static rgb_led_t g_rgb_led = {0};
 
+static void rgb_led_set_default_pin_state(void) {
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+
+  GPIO_InitStructure.Pin = RGB_LED_RED_PIN;
+  HAL_GPIO_Init(RGB_LED_RED_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = RGB_LED_GREEN_PIN;
+  HAL_GPIO_Init(RGB_LED_GREEN_PORT, &GPIO_InitStructure);
+
+  GPIO_InitStructure.Pin = RGB_LED_BLUE_PIN;
+  HAL_GPIO_Init(RGB_LED_BLUE_PORT, &GPIO_InitStructure);
+}
+
 void rgb_led_init(void) {
   rgb_led_t* drv = &g_rgb_led;
   if (drv->initialized) {
@@ -37,10 +53,12 @@ void rgb_led_init(void) {
 
   memset(drv, 0, sizeof(*drv));
 
+  rgb_led_set_default_pin_state();
+
   // enable LSE clock
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
-  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
@@ -48,8 +66,8 @@ void rgb_led_init(void) {
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
   PeriphClkInitStruct.PeriphClockSelection =
       RCC_PERIPHCLK_LPTIM1 | RCC_PERIPHCLK_LPTIM34;
-  PeriphClkInitStruct.Lptim1ClockSelection = RCC_LPTIM1CLKSOURCE_LSE;
-  PeriphClkInitStruct.Lptim34ClockSelection = RCC_LPTIM34CLKSOURCE_LSE;
+  PeriphClkInitStruct.Lptim1ClockSelection = RCC_LPTIM1CLKSOURCE_HSI;
+  PeriphClkInitStruct.Lptim34ClockSelection = RCC_LPTIM34CLKSOURCE_HSI;
   HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
 
   __HAL_RCC_LPTIM1_CLK_ENABLE();
@@ -59,26 +77,6 @@ void rgb_led_init(void) {
   __HAL_RCC_LPTIM3_CLK_ENABLE();
   __HAL_RCC_LPTIM3_FORCE_RESET();
   __HAL_RCC_LPTIM3_RELEASE_RESET();
-
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-
-  RGB_LED_RED_CLK_ENA();
-  GPIO_InitStructure.Pin = RGB_LED_RED_PIN;
-  GPIO_InitStructure.Alternate = GPIO_AF1_LPTIM1;
-  HAL_GPIO_Init(RGB_LED_RED_PORT, &GPIO_InitStructure);
-
-  RGB_LED_GREEN_CLK_ENA();
-  GPIO_InitStructure.Pin = RGB_LED_GREEN_PIN;
-  GPIO_InitStructure.Alternate = GPIO_AF2_LPTIM3;
-  HAL_GPIO_Init(RGB_LED_GREEN_PORT, &GPIO_InitStructure);
-
-  RGB_LED_BLUE_CLK_ENA();
-  GPIO_InitStructure.Pin = RGB_LED_BLUE_PIN;
-  GPIO_InitStructure.Alternate = GPIO_AF4_LPTIM3;
-  HAL_GPIO_Init(RGB_LED_BLUE_PORT, &GPIO_InitStructure);
 
   drv->tim_1.State = HAL_LPTIM_STATE_RESET;
   drv->tim_1.Instance = LPTIM1;
@@ -114,9 +112,45 @@ void rgb_led_init(void) {
   HAL_LPTIM_Counter_Start(&drv->tim_1);
   HAL_LPTIM_Counter_Start(&drv->tim_3);
 
-  HAL_LPTIM_PWM_Start(&drv->tim_1, LPTIM_CHANNEL_1);
-  HAL_LPTIM_PWM_Start(&drv->tim_3, LPTIM_CHANNEL_1);
-  HAL_LPTIM_PWM_Start(&drv->tim_3, LPTIM_CHANNEL_2);
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_1, LPTIM_CHANNEL_1, TIMER_PERIOD);
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_1, TIMER_PERIOD);
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_2, TIMER_PERIOD);
+
+  // Enable the Peripheral
+  __HAL_LPTIM_ENABLE(&drv->tim_1);
+  __HAL_LPTIM_ENABLE(&drv->tim_3);
+
+  // Start timer in continuous mode
+  __HAL_LPTIM_START_CONTINUOUS(&drv->tim_1);
+  __HAL_LPTIM_START_CONTINUOUS(&drv->tim_3);
+
+  // Wait for reload before configuring the pins
+  __HAL_LPTIM_CLEAR_FLAG(&drv->tim_1, LPTIM_FLAG_UPDATE);
+  __HAL_LPTIM_CLEAR_FLAG(&drv->tim_3, LPTIM_FLAG_UPDATE);
+  while (__HAL_LPTIM_GET_FLAG(&drv->tim_1, LPTIM_FLAG_UPDATE) != true) {
+  }
+  while (__HAL_LPTIM_GET_FLAG(&drv->tim_3, LPTIM_FLAG_UPDATE) != true) {
+  }
+
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+
+  RGB_LED_RED_CLK_ENA();
+  GPIO_InitStructure.Pin = RGB_LED_RED_PIN;
+  GPIO_InitStructure.Alternate = GPIO_AF1_LPTIM1;
+  HAL_GPIO_Init(RGB_LED_RED_PORT, &GPIO_InitStructure);
+
+  RGB_LED_GREEN_CLK_ENA();
+  GPIO_InitStructure.Pin = RGB_LED_GREEN_PIN;
+  GPIO_InitStructure.Alternate = GPIO_AF2_LPTIM3;
+  HAL_GPIO_Init(RGB_LED_GREEN_PORT, &GPIO_InitStructure);
+
+  RGB_LED_BLUE_CLK_ENA();
+  GPIO_InitStructure.Pin = RGB_LED_BLUE_PIN;
+  GPIO_InitStructure.Alternate = GPIO_AF4_LPTIM3;
+  HAL_GPIO_Init(RGB_LED_BLUE_PORT, &GPIO_InitStructure);
 
   drv->initialized = true;
 }
@@ -126,6 +160,8 @@ void rgb_led_deinit(void) {
   if (!drv->initialized) {
     return;
   }
+
+  rgb_led_set_default_pin_state();
 
   HAL_LPTIM_PWM_Stop(&drv->tim_1, LPTIM_CHANNEL_1);
   HAL_LPTIM_PWM_Stop(&drv->tim_3, LPTIM_CHANNEL_1);
@@ -149,26 +185,29 @@ void rgb_led_set_color(uint32_t color) {
   uint32_t blue = color & 0xFF;
 
   if (red != 0) {
-    LPTIM1->CCMR1 |= LPTIM_CCMR1_CC1E;
+    __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_1, LPTIM_CHANNEL_1);
   } else {
-    LPTIM1->CCMR1 &= ~LPTIM_CCMR1_CC1E;
+    __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_1, LPTIM_CHANNEL_1);
   }
 
   if (green != 0) {
-    LPTIM3->CCMR1 |= LPTIM_CCMR1_CC2E;
+    __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_3, LPTIM_CHANNEL_2);
   } else {
-    LPTIM3->CCMR1 &= ~LPTIM_CCMR1_CC2E;
+    __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_3, LPTIM_CHANNEL_2);
   }
 
   if (blue != 0) {
-    LPTIM3->CCMR1 |= LPTIM_CCMR1_CC1E;
+    __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_3, LPTIM_CHANNEL_1);
   } else {
-    LPTIM3->CCMR1 &= ~LPTIM_CCMR1_CC1E;
+    __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_3, LPTIM_CHANNEL_1);
   }
 
-  LPTIM1->CCR1 = TIMER_PERIOD - (red * (TIMER_PERIOD) / 255);
-  LPTIM3->CCR2 = TIMER_PERIOD - (green * (TIMER_PERIOD) / 255);
-  LPTIM3->CCR1 = TIMER_PERIOD - (blue * (TIMER_PERIOD) / 255);
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_1, LPTIM_CHANNEL_1,
+                          TIMER_PERIOD - (red * (TIMER_PERIOD) / 255));
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_2,
+                          TIMER_PERIOD - (green * (TIMER_PERIOD) / 255));
+  __HAL_LPTIM_COMPARE_SET(&drv->tim_3, LPTIM_CHANNEL_1,
+                          TIMER_PERIOD - (blue * (TIMER_PERIOD) / 255));
 }
 
 #endif
