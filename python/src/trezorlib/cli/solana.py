@@ -52,12 +52,14 @@ def get_address(
 @click.argument("serialized_tx", type=str)
 @click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
 @click.option("-a", "--additional-information-file", type=click.File("r"))
+@click.option("-t", "--token", "encoded_token_hex", type=str)
 @with_client
 def sign_tx(
     client: "TrezorClient",
     address: str,
     serialized_tx: str,
     additional_information_file: Optional[TextIO],
+    encoded_token_hex: str | None,
 ) -> bytes:
     """Sign Solana transaction."""
     address_n = tools.parse_path(address)
@@ -65,6 +67,10 @@ def sign_tx(
     additional_information = None
     if additional_information_file:
         raw_additional_information = json.load(additional_information_file)
+
+        if not encoded_token_hex:
+            encoded_token_hex = raw_additional_information.get("token")
+
         additional_information = messages.SolanaTxAdditionalInfo(
             token_accounts_infos=[
                 messages.SolanaTxTokenAccountInfo(
@@ -74,7 +80,10 @@ def sign_tx(
                     token_account=token_account["token_account"],
                 )
                 for token_account in raw_additional_information["token_accounts_infos"]
-            ]
+            ],
+            encoded_token=(
+                bytes.fromhex(encoded_token_hex) if encoded_token_hex else None
+            ),
         )
 
     return solana.sign_tx(
