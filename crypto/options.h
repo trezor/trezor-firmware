@@ -102,6 +102,11 @@
 #define USE_KECCAK 1
 #endif
 
+// support eCash operations
+#ifndef USE_ECASH
+#define USE_ECASH 0
+#endif
+
 // add way how to mark confidential data
 #ifndef CONFIDENTIAL
 #define CONFIDENTIAL
