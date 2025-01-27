@@ -770,9 +770,6 @@ async def confirm_value(
     if description and value:
         description += ":"
 
-    if not verb and not hold:
-        raise ValueError("Either verb or hold=True must be set")
-
     if info_items is None:
         return await raise_if_not_confirmed(
             trezorui_api.confirm_value(
