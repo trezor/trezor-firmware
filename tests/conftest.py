@@ -338,6 +338,8 @@ def _client_unlocked(
 
     while True:
         try:
+            if _raw_client.is_invalidated:
+                _raw_client = _get_raw_client(request)
             session = _raw_client.get_management_session()
             wipe_device(session)
             sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
