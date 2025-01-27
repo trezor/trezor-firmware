@@ -65,6 +65,12 @@ def sign_tx(
     additional_information = None
     if additional_information_file:
         raw_additional_information = json.load(additional_information_file)
+
+        definitions: Optional[messages.SolanaDefinitions] = None
+        token = raw_additional_information.get("token", None)
+        if token:
+            definitions = messages.SolanaDefinitions(encoded_token=bytes.fromhex(token))
+
         additional_information = messages.SolanaTxAdditionalInfo(
             token_accounts_infos=[
                 messages.SolanaTxTokenAccountInfo(
@@ -74,7 +80,8 @@ def sign_tx(
                     token_account=token_account["token_account"],
                 )
                 for token_account in raw_additional_information["token_accounts_infos"]
-            ]
+            ],
+            definitions=definitions,
         )
 
     return solana.sign_tx(
