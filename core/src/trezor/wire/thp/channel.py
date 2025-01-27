@@ -69,7 +69,6 @@ class Channel:
         self.bytes_read: int = 0
         self.expected_payload_length: int = 0
         self.is_cont_packet_expected: bool = False
-        self.selected_pairing_methods = []
         self.sessions: dict[int, GenericSessionContext] = {}
 
         # Objects for writing a message to a wire

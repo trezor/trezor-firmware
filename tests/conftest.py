@@ -174,10 +174,7 @@ def _client_from_path(
 def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
     devices = enumerate_devices()
     for device in devices:
-        try:
-            return Client(device, auto_interact=not interact)
-        except Exception:
-            pass
+        return Client(device, auto_interact=not interact)
 
     request.session.shouldstop = "Failed to communicate with Trezor"
     raise RuntimeError("No debuggable device found")

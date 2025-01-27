@@ -194,6 +194,8 @@ class SessionV2(Session):
         return session
 
     def __init__(self, client: TrezorClient, id: bytes) -> None:
+        from ..debuglink import TrezorClientDebugLink
+
         super().__init__(client, id)
         assert isinstance(client.protocol, ProtocolV2)
 
@@ -201,7 +203,10 @@ class SessionV2(Session):
         self.button_callback = client.button_callback
         if self.button_callback is None:
             self.button_callback = _callback_button
-        self.channel: ProtocolV2 = client.protocol.get_channel()
+        helper_debug = None
+        if isinstance(client, TrezorClientDebugLink):
+            helper_debug = client.debug
+        self.channel: ProtocolV2 = client.protocol.get_channel(helper_debug)
         self.update_id_and_sid(id)
 
     def _write(self, msg: t.Any) -> None:

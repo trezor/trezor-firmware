@@ -102,7 +102,7 @@ class TrezorClient:
         if protobuf_mapping is None:
             protobuf_mapping = mapping.DEFAULT_MAPPING
         protocol_v1 = ProtocolV1(transport, protobuf_mapping)
-        if channel_data.protocol_version == 2:
+        if channel_data.protocol_version_major == 2:
             try:
                 protocol_v1.write(messages.Ping(message="Sanity check - to resume"))
             except Exception as e:

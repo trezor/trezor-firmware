@@ -252,7 +252,7 @@ if __debug__:
     def _state(
         thp_pairing_code_entry_code: int | None = None,
         thp_pairing_code_qr_code: bytes | None = None,
-        thp_pairing_code_nfc_unidirectional: bytes | None = None,
+        thp_pairing_code_nfc: bytes | None = None,
     ) -> DebugLinkState:
         from trezor.messages import DebugLinkState
 
@@ -274,7 +274,7 @@ if __debug__:
             tokens=tokens,
             thp_pairing_code_entry_code=thp_pairing_code_entry_code,
             thp_pairing_code_qr_code=thp_pairing_code_qr_code,
-            thp_pairing_code_nfc_unidirectional=thp_pairing_code_nfc_unidirectional,
+            thp_pairing_code_nfc=thp_pairing_code_nfc,
         )
 
     async def dispatch_DebugLinkGetState(
@@ -283,7 +283,7 @@ if __debug__:
 
         thp_pairing_code_entry_code: int | None = None
         thp_pairing_code_qr_code: bytes | None = None
-        thp_pairing_code_nfc_unidirectional: bytes | None = None
+        thp_pairing_code_nfc: bytes | None = None
         if utils.USE_THP and msg.thp_channel_id is not None:
             channel_id = int.from_bytes(msg.thp_channel_id, "big")
 
@@ -301,15 +301,15 @@ if __debug__:
             if ctx is not None and isinstance(ctx, PairingContext):
                 thp_pairing_code_entry_code = ctx.display_data.code_code_entry
                 thp_pairing_code_qr_code = ctx.display_data.code_qr_code
-                thp_pairing_code_nfc_unidirectional = (
-                    ctx.display_data.code_nfc_unidirectional
-                )
+                thp_pairing_code_nfc = ctx.display_data.code_nfc
+                # if msg.host_nfc_secret is not None:
+                #     ctx.host_nfc_secret = msg.host_nfc_secret
 
         if msg.wait_layout == DebugWaitType.IMMEDIATE:
             return _state(
                 thp_pairing_code_entry_code,
                 thp_pairing_code_qr_code,
-                thp_pairing_code_nfc_unidirectional,
+                thp_pairing_code_nfc,
             )
 
         assert DEBUG_CONTEXT is not None
@@ -324,7 +324,7 @@ if __debug__:
             return _state(
                 thp_pairing_code_entry_code,
                 thp_pairing_code_qr_code,
-                thp_pairing_code_nfc_unidirectional,
+                thp_pairing_code_nfc,
             )
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:

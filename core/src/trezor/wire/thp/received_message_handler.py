@@ -38,13 +38,7 @@ from . import (
     ThpUnallocatedSessionError,
 )
 from . import alternating_bit_protocol as ABP
-from . import (
-    checksum,
-    control_byte,
-    get_enabled_pairing_methods,
-    get_encoded_device_properties,
-    session_manager,
-)
+from . import checksum, control_byte, get_encoded_device_properties, session_manager
 from .checksum import CHECKSUM_LENGTH
 from .crypto import PUBKEY_LENGTH, Handshake
 from .session_context import SeedlessSessionContext
@@ -315,12 +309,7 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
     )
     if TYPE_CHECKING:
         assert ThpHandshakeCompletionReqNoisePayload.is_type_of(noise_payload)
-    enabled_methods = get_enabled_pairing_methods(ctx.iface)
-    for method in noise_payload.pairing_methods:
-        if method not in enabled_methods:
-            raise ThpInvalidDataError()
-        if method not in ctx.selected_pairing_methods:
-            ctx.selected_pairing_methods.append(method)
+
     if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
@@ -357,9 +346,9 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
     ctx.handshake = None
 
     if paired:
-        ctx.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
+        ctx.set_channel_state(ChannelState.TC1)
     else:
-        ctx.set_channel_state(ChannelState.TP1)
+        ctx.set_channel_state(ChannelState.TP0)
 
 
 async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -> None:
@@ -457,6 +446,7 @@ def _decode_message(
 
 def _is_channel_state_pairing(state: int) -> bool:
     if state in (
+        ChannelState.TP0,
         ChannelState.TP1,
         ChannelState.TP2,
         ChannelState.TP3,

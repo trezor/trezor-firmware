@@ -27,7 +27,7 @@ if utils.USE_THP:
         ThpCodeEntryTag,
         ThpCredentialRequest,
         ThpEndRequest,
-        ThpStartPairingRequest,
+        ThpPairingRequest,
     )
     from trezor.wire.thp import (
         ChannelState,
@@ -280,13 +280,13 @@ class TestTrezorHostProtocol(unittest.TestCase):
         config.wipe()
         channel = next(iter(thp_main._CHANNELS.values()))
         channel.selected_pairing_methods = [
-            ThpPairingMethod.NoMethod,
+            ThpPairingMethod.SkipPairing,
             ThpPairingMethod.CodeEntry,
             ThpPairingMethod.NFC_Unidirectional,
             ThpPairingMethod.QrCode,
         ]
         pairing_ctx = PairingContext(channel)
-        request_message = ThpStartPairingRequest()
+        request_message = ThpPairingRequest()
         channel.set_channel_state(ChannelState.TP1)
         gen = pairing.handle_pairing_request(pairing_ctx, request_message)
 
@@ -310,7 +310,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
             ThpPairingMethod.QrCode,
         ]
         pairing_ctx = PairingContext(channel)
-        request_message = ThpStartPairingRequest()
+        request_message = ThpPairingRequest()
         with self.assertRaises(UnexpectedMessage) as e:
             pairing.handle_pairing_request(pairing_ctx, request_message)
         print(e.value.message)
@@ -346,7 +346,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         msg = ThpCodeEntryCpaceHost(cpace_host_public_key=cpace_host_public_key)
 
         # msg = ThpQrCodeTag(tag=tag_qrc)
-        # msg = ThpNfcUnidirectionalTag(tag=tag_nfc)
+        # msg = ThpNfcTagHost(tag=tag_nfc)
         buffer: bytearray = bytearray(protobuf.encoded_length(msg))
 
         protobuf.encode(buffer, msg)

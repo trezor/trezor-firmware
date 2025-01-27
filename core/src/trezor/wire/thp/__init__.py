@@ -66,13 +66,14 @@ class ChannelState(IntEnum):
     UNALLOCATED = 0
     TH1 = 1
     TH2 = 2
-    TP1 = 3
-    TP2 = 4
-    TP3 = 5
-    TP4 = 6
-    TC1 = 7
-    ENCRYPTED_TRANSPORT = 8
-    INVALIDATED = 9
+    TP0 = 3
+    TP1 = 4
+    TP2 = 5
+    TP3 = 6
+    TP4 = 7
+    TC1 = 8
+    ENCRYPTED_TRANSPORT = 9
+    INVALIDATED = 10
 
 
 class SessionState(IntEnum):
@@ -134,7 +135,7 @@ class PacketHeader:
 _DEFAULT_ENABLED_PAIRING_METHODS = [
     ThpPairingMethod.CodeEntry,
     ThpPairingMethod.QrCode,
-    ThpPairingMethod.NFC_Unidirectional,
+    ThpPairingMethod.NFC,
 ]
 
 
@@ -149,7 +150,7 @@ def get_enabled_pairing_methods(
 
     methods = _DEFAULT_ENABLED_PAIRING_METHODS.copy()
     if iface is not None and iface is usb.iface_wire:
-        methods.append(ThpPairingMethod.NoMethod)
+        methods.append(ThpPairingMethod.SkipPairing)
     return methods
 
 
@@ -159,8 +160,8 @@ def _get_device_properties(iface: WireInterface) -> ThpDeviceProperties:
         pairing_methods=get_enabled_pairing_methods(iface),
         internal_model=utils.INTERNAL_MODEL,
         model_variant=0,
-        bootloader_mode=False,
-        protocol_version=2,
+        protocol_version_major=2,
+        protocol_version_minor=0,
     )
 
 

@@ -11,9 +11,8 @@ class Cpace:
     CPace, a balanced composable PAKE: https://datatracker.ietf.org/doc/draft-irtf-cfrg-cpace/
     """
 
-    def __init__(self, cpace_host_public_key: bytes, handshake_hash: bytes) -> None:
+    def __init__(self, handshake_hash: bytes) -> None:
         self.handshake_hash: bytes = handshake_hash
-        self.host_public_key: bytes = cpace_host_public_key
         self.shared_secret: bytes
         self.trezor_private_key: bytes
         self.trezor_public_key: bytes
@@ -31,6 +30,8 @@ class Cpace:
         generator = elligator2.map_to_curve25519(pregenerator)
         self.trezor_private_key = random.bytes(32)
         self.trezor_public_key = curve25519.multiply(self.trezor_private_key, generator)
+
+    def compute_shared_secret(self, host_public_key: bytes) -> None:
         self.shared_secret = curve25519.multiply(
-            self.trezor_private_key, self.host_public_key
+            self.trezor_private_key, host_public_key
         )

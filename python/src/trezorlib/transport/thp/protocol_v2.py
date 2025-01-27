@@ -26,6 +26,9 @@ LOG = logging.getLogger(__name__)
 
 MANAGEMENT_SESSION_ID: int = 0
 
+if t.TYPE_CHECKING:
+    from ...debuglink import DebugLink
+
 
 def _sha256_of_two(val_1: bytes, val_2: bytes) -> bytes:
     hash = hashlib.sha256(val_1)
@@ -77,16 +80,18 @@ class ProtocolV2(ProtocolAndChannel):
             self.nonce_response = channel_data.nonce_response
             self.sync_bit_receive = channel_data.sync_bit_receive
             self.sync_bit_send = channel_data.sync_bit_send
+            self.handshake_hash: bytes = b""
             self._has_valid_channel = True
 
-    def get_channel(self) -> ProtocolV2:
+    def get_channel(self, helper_debug: DebugLink | None = None) -> ProtocolV2:
         if not self._has_valid_channel:
-            self._establish_new_channel()
+            self._establish_new_channel(helper_debug)
         return self
 
     def get_channel_data(self) -> ChannelData:
         return ChannelData(
-            protocol_version=2,
+            protocol_version_major=2,
+            protocol_version_minor=2,
             transport_path=self.transport.get_path(),
             channel_id=self.channel_id,
             key_request=self.key_request,
@@ -95,6 +100,7 @@ class ProtocolV2(ProtocolAndChannel):
             nonce_response=self.nonce_response,
             sync_bit_receive=self.sync_bit_receive,
             sync_bit_send=self.sync_bit_send,
+            handshake_hash=self.handshake_hash,
         )
 
     def read(self, session_id: int) -> t.Any:
@@ -129,7 +135,7 @@ class ProtocolV2(ProtocolAndChannel):
             raise exceptions.TrezorException("Unexpected response to GetFeatures")
         self._features = features
 
-    def _establish_new_channel(self) -> None:
+    def _establish_new_channel(self, helper_debug: DebugLink | None = None) -> None:
         self.sync_bit_send = 0
         self.sync_bit_receive = 0
 
@@ -141,7 +147,7 @@ class ProtocolV2(ProtocolAndChannel):
 
         self._do_handshake(host_ephemeral_privkey, host_ephemeral_pubkey)
 
-        self._do_pairing()
+        self._do_pairing(helper_debug)
 
     def _do_channel_allocation(self) -> None:
         channel_allocation_nonce = os.urandom(8)
@@ -269,9 +275,6 @@ class ProtocolV2(ProtocolAndChannel):
         )
         msg_data = self.mapping.encode_without_wire_type(
             messages.ThpHandshakeCompletionReqNoisePayload(
-                pairing_methods=[
-                    messages.ThpPairingMethod.NoMethod,
-                ],
                 host_pairing_credential=credential,
             )
         )
@@ -279,7 +282,7 @@ class ProtocolV2(ProtocolAndChannel):
         aes_ctx = AESGCM(k)
 
         encrypted_payload = aes_ctx.encrypt(IV_1, msg_data, h)
-        h = _sha256_of_two(h, encrypted_payload)
+        h = _sha256_of_two(h, encrypted_payload[:-16])
         ha_completion_req_header = MessageHeader(
             0x12,
             self.channel_id,
@@ -292,6 +295,7 @@ class ProtocolV2(ProtocolAndChannel):
             ha_completion_req_header,
             encrypted_host_static_pubkey + encrypted_payload,
         )
+        self.handshake_hash = h
         return ck
 
     def _read_handshake_completion_response(self) -> None:
@@ -304,9 +308,9 @@ class ProtocolV2(ProtocolAndChannel):
             )
         self._send_ack_1()
 
-    def _do_pairing(self):
+    def _do_pairing(self, helper_debug: DebugLink | None):
         # Send StartPairingReqest message
-        message = messages.ThpStartPairingRequest()
+        message = messages.ThpPairingRequest()
         message_type, message_data = self.mapping.encode(message)
 
         self._encrypt_and_write(MANAGEMENT_SESSION_ID, message_type, message_data)
@@ -314,11 +318,41 @@ class ProtocolV2(ProtocolAndChannel):
         # Read ACK
         self._read_ack()
 
-        # Read ThpEndResponse
+        # Read button request
+        _, msg_type, msg_data = self.read_and_decrypt()
+        maaa = self.mapping.decode(msg_type, msg_data)
+        assert isinstance(maaa, messages.ButtonRequest)
+
+        # Send button ACK
+        message = messages.ButtonAck()
+        message_type, message_data = self.mapping.encode(message)
+
+        self._encrypt_and_write(MANAGEMENT_SESSION_ID, message_type, message_data)
+        self._read_ack()
+
+        if helper_debug is not None:
+            helper_debug.press_yes()
+
+        # Read PairingRequestApproved
         _, msg_type, msg_data = self.read_and_decrypt()
         maaa = self.mapping.decode(msg_type, msg_data)
 
+        assert isinstance(maaa, messages.ThpPairingRequestApproved)
+
+        message = messages.ThpSelectMethod(
+            selected_pairing_method=messages.ThpPairingMethod.SkipPairing
+        )
+        message_type, message_data = self.mapping.encode(message)
+
+        self._encrypt_and_write(MANAGEMENT_SESSION_ID, message_type, message_data)
+        # Read ACK
+        self._read_ack()
+
+        # Read ThpEndResponse
+        _, msg_type, msg_data = self.read_and_decrypt()
+        maaa = self.mapping.decode(msg_type, msg_data)
         assert isinstance(maaa, messages.ThpEndResponse)
+
         self._has_valid_channel = True
 
     def _read_ack(self):

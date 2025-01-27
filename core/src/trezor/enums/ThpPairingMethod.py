@@ -2,7 +2,7 @@
 # fmt: off
 # isort:skip_file
 
-NoMethod = 1
+SkipPairing = 1
 CodeEntry = 2
 QrCode = 3
-NFC_Unidirectional = 4
+NFC = 4

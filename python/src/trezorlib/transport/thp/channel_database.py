@@ -112,7 +112,8 @@ class JsonChannelDatabase(ChannelDatabase):
 
 def dict_to_channel_data(dict: t.Dict) -> ChannelData:
     return ChannelData(
-        protocol_version=dict["protocol_version"],
+        protocol_version_major=dict["protocol_version_minor"],
+        protocol_version_minor=dict["protocol_version_major"],
         transport_path=dict["transport_path"],
         channel_id=dict["channel_id"],
         key_request=bytes.fromhex(dict["key_request"]),
@@ -121,6 +122,7 @@ def dict_to_channel_data(dict: t.Dict) -> ChannelData:
         nonce_response=dict["nonce_response"],
         sync_bit_send=dict["sync_bit_send"],
         sync_bit_receive=dict["sync_bit_receive"],
+        handshake_hash=dict["handshake_hash"],
     )
 
 

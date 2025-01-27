@@ -353,8 +353,9 @@ if TYPE_CHECKING:
 
     class ThpMessageType(IntEnum):
         ThpCreateNewSession = 1000
-        ThpNewSession = 1001
-        ThpStartPairingRequest = 1008
+        ThpPairingRequest = 1006
+        ThpPairingRequestApproved = 1007
+        ThpSelectMethod = 1008
         ThpPairingPreparationsFinished = 1009
         ThpCredentialRequest = 1010
         ThpCredentialResponse = 1011
@@ -362,20 +363,19 @@ if TYPE_CHECKING:
         ThpEndResponse = 1013
         ThpCodeEntryCommitment = 1016
         ThpCodeEntryChallenge = 1017
-        ThpCodeEntryCpaceHost = 1018
-        ThpCodeEntryCpaceTrezor = 1019
-        ThpCodeEntryTag = 1020
-        ThpCodeEntrySecret = 1021
+        ThpCodeEntryCpaceTrezor = 1018
+        ThpCodeEntryCpaceHostTag = 1019
+        ThpCodeEntrySecret = 1020
         ThpQrCodeTag = 1024
         ThpQrCodeSecret = 1025
-        ThpNfcUnidirectionalTag = 1032
-        ThpNfcUnidirectionalSecret = 1033
+        ThpNfcTagHost = 1032
+        ThpNfcTagTrezor = 1033
 
     class ThpPairingMethod(IntEnum):
-        NoMethod = 1
+        SkipPairing = 1
         CodeEntry = 2
         QrCode = 3
-        NFC_Unidirectional = 4
+        NFC = 4
 
     class MessageType(IntEnum):
         Initialize = 0

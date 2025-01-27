@@ -134,7 +134,7 @@ message DebugLinkState {
     repeated string tokens = 13;                            // current layout represented as a list of string tokens
     optional uint32 thp_pairing_code_entry_code = 14;
     optional bytes thp_pairing_code_qr_code = 15;
-    optional bytes thp_pairing_code_nfc_unidirectional = 16;
+    optional bytes thp_pairing_code_nfc = 16;
 }
 
 /**

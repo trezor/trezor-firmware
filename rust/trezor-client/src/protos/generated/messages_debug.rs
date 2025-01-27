@@ -1494,8 +1494,8 @@ pub struct DebugLinkState {
     pub thp_pairing_code_entry_code: ::std::option::Option<u32>,
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_code_qr_code)
     pub thp_pairing_code_qr_code: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_code_nfc_unidirectional)
-    pub thp_pairing_code_nfc_unidirectional: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_code_nfc)
+    pub thp_pairing_code_nfc: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkState.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1898,40 +1898,40 @@ impl DebugLinkState {
         self.thp_pairing_code_qr_code.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bytes thp_pairing_code_nfc_unidirectional = 16;
+    // optional bytes thp_pairing_code_nfc = 16;
 
-    pub fn thp_pairing_code_nfc_unidirectional(&self) -> &[u8] {
-        match self.thp_pairing_code_nfc_unidirectional.as_ref() {
+    pub fn thp_pairing_code_nfc(&self) -> &[u8] {
+        match self.thp_pairing_code_nfc.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_thp_pairing_code_nfc_unidirectional(&mut self) {
-        self.thp_pairing_code_nfc_unidirectional = ::std::option::Option::None;
+    pub fn clear_thp_pairing_code_nfc(&mut self) {
+        self.thp_pairing_code_nfc = ::std::option::Option::None;
     }
 
-    pub fn has_thp_pairing_code_nfc_unidirectional(&self) -> bool {
-        self.thp_pairing_code_nfc_unidirectional.is_some()
+    pub fn has_thp_pairing_code_nfc(&self) -> bool {
+        self.thp_pairing_code_nfc.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_thp_pairing_code_nfc_unidirectional(&mut self, v: ::std::vec::Vec<u8>) {
-        self.thp_pairing_code_nfc_unidirectional = ::std::option::Option::Some(v);
+    pub fn set_thp_pairing_code_nfc(&mut self, v: ::std::vec::Vec<u8>) {
+        self.thp_pairing_code_nfc = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_thp_pairing_code_nfc_unidirectional(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.thp_pairing_code_nfc_unidirectional.is_none() {
-            self.thp_pairing_code_nfc_unidirectional = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_thp_pairing_code_nfc(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.thp_pairing_code_nfc.is_none() {
+            self.thp_pairing_code_nfc = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.thp_pairing_code_nfc_unidirectional.as_mut().unwrap()
+        self.thp_pairing_code_nfc.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_thp_pairing_code_nfc_unidirectional(&mut self) -> ::std::vec::Vec<u8> {
-        self.thp_pairing_code_nfc_unidirectional.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_thp_pairing_code_nfc(&mut self) -> ::std::vec::Vec<u8> {
+        self.thp_pairing_code_nfc.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
@@ -2013,9 +2013,9 @@ impl DebugLinkState {
             |m: &mut DebugLinkState| { &mut m.thp_pairing_code_qr_code },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "thp_pairing_code_nfc_unidirectional",
-            |m: &DebugLinkState| { &m.thp_pairing_code_nfc_unidirectional },
-            |m: &mut DebugLinkState| { &mut m.thp_pairing_code_nfc_unidirectional },
+            "thp_pairing_code_nfc",
+            |m: &DebugLinkState| { &m.thp_pairing_code_nfc },
+            |m: &mut DebugLinkState| { &mut m.thp_pairing_code_nfc },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkState>(
             "DebugLinkState",
@@ -2086,7 +2086,7 @@ impl ::protobuf::Message for DebugLinkState {
                     self.thp_pairing_code_qr_code = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 130 => {
-                    self.thp_pairing_code_nfc_unidirectional = ::std::option::Option::Some(is.read_bytes()?);
+                    self.thp_pairing_code_nfc = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -2146,7 +2146,7 @@ impl ::protobuf::Message for DebugLinkState {
         if let Some(v) = self.thp_pairing_code_qr_code.as_ref() {
             my_size += ::protobuf::rt::bytes_size(15, &v);
         }
-        if let Some(v) = self.thp_pairing_code_nfc_unidirectional.as_ref() {
+        if let Some(v) = self.thp_pairing_code_nfc.as_ref() {
             my_size += ::protobuf::rt::bytes_size(16, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
@@ -2200,7 +2200,7 @@ impl ::protobuf::Message for DebugLinkState {
         if let Some(v) = self.thp_pairing_code_qr_code.as_ref() {
             os.write_bytes(15, v)?;
         }
-        if let Some(v) = self.thp_pairing_code_nfc_unidirectional.as_ref() {
+        if let Some(v) = self.thp_pairing_code_nfc.as_ref() {
             os.write_bytes(16, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
@@ -2235,7 +2235,7 @@ impl ::protobuf::Message for DebugLinkState {
         self.tokens.clear();
         self.thp_pairing_code_entry_code = ::std::option::Option::None;
         self.thp_pairing_code_qr_code = ::std::option::Option::None;
-        self.thp_pairing_code_nfc_unidirectional = ::std::option::Option::None;
+        self.thp_pairing_code_nfc = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2256,7 +2256,7 @@ impl ::protobuf::Message for DebugLinkState {
             tokens: ::std::vec::Vec::new(),
             thp_pairing_code_entry_code: ::std::option::Option::None,
             thp_pairing_code_qr_code: ::std::option::Option::None,
-            thp_pairing_code_nfc_unidirectional: ::std::option::Option::None,
+            thp_pairing_code_nfc: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -3856,7 +3856,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     (\x0e29.hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType:\tIMMED\
     IATER\nwaitLayout\x12$\n\x0ethp_channel_id\x18\x04\x20\x01(\x0cR\x0cthpC\
     hannelId\"C\n\rDebugWaitType\x12\r\n\tIMMEDIATE\x10\0\x12\x0f\n\x0bNEXT_\
-    LAYOUT\x10\x01\x12\x12\n\x0eCURRENT_LAYOUT\x10\x02\"\xdb\x05\n\x0eDebugL\
+    LAYOUT\x10\x01\x12\x12\n\x0eCURRENT_LAYOUT\x10\x02\"\xbe\x05\n\x0eDebugL\
     inkState\x12\x16\n\x06layout\x18\x01\x20\x01(\x0cR\x06layout\x12\x10\n\
     \x03pin\x18\x02\x20\x01(\tR\x03pin\x12\x16\n\x06matrix\x18\x03\x20\x01(\
     \tR\x06matrix\x12'\n\x0fmnemonic_secret\x18\x04\x20\x01(\x0cR\x0emnemoni\
@@ -3871,22 +3871,22 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     monicType\x12\x16\n\x06tokens\x18\r\x20\x03(\tR\x06tokens\x12<\n\x1bthp_\
     pairing_code_entry_code\x18\x0e\x20\x01(\rR\x17thpPairingCodeEntryCode\
     \x126\n\x18thp_pairing_code_qr_code\x18\x0f\x20\x01(\x0cR\x14thpPairingC\
-    odeQrCode\x12L\n#thp_pairing_code_nfc_unidirectional\x18\x10\x20\x01(\
-    \x0cR\x1fthpPairingCodeNfcUnidirectional\"\x0f\n\rDebugLinkStop\"P\n\x0c\
-    DebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\rR\x05level\x12\x16\n\
-    \x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\x04text\x18\x03\x20\
-    \x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\n\x07address\x18\
-    \x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\x20\x01(\rR\x06l\
-    ength\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\x01\x20\x01(\x0cR\
-    \x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07address\x18\x01\x20\
-    \x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0cR\x06memory\
-    \x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13DebugLinkFlas\
-    hErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\x14DebugLi\
-    nkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06format\"0\n\
-    \x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\x08R\x05wat\
-    ch:\x02\x18\x01\"\x1f\n\x19DebugLinkResetDebugEvents:\x02\x18\x01\"\x1a\
-    \n\x18DebugLinkOptigaSetSecMaxB=\n#com.satoshilabs.trezor.lib.protobufB\
-    \x12TrezorMessageDebug\x80\xa6\x1d\x01\
+    odeQrCode\x12/\n\x14thp_pairing_code_nfc\x18\x10\x20\x01(\x0cR\x11thpPai\
+    ringCodeNfc\"\x0f\n\rDebugLinkStop\"P\n\x0cDebugLinkLog\x12\x14\n\x05lev\
+    el\x18\x01\x20\x01(\rR\x05level\x12\x16\n\x06bucket\x18\x02\x20\x01(\tR\
+    \x06bucket\x12\x12\n\x04text\x18\x03\x20\x01(\tR\x04text\"G\n\x13DebugLi\
+    nkMemoryRead\x12\x18\n\x07address\x18\x01\x20\x01(\rR\x07address\x12\x16\
+    \n\x06length\x18\x02\x20\x01(\rR\x06length\")\n\x0fDebugLinkMemory\x12\
+    \x16\n\x06memory\x18\x01\x20\x01(\x0cR\x06memory\"^\n\x14DebugLinkMemory\
+    Write\x12\x18\n\x07address\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06m\
+    emory\x18\x02\x20\x01(\x0cR\x06memory\x12\x14\n\x05flash\x18\x03\x20\x01\
+    (\x08R\x05flash\"-\n\x13DebugLinkFlashErase\x12\x16\n\x06sector\x18\x01\
+    \x20\x01(\rR\x06sector\".\n\x14DebugLinkEraseSdCard\x12\x16\n\x06format\
+    \x18\x01\x20\x01(\x08R\x06format\"0\n\x14DebugLinkWatchLayout\x12\x14\n\
+    \x05watch\x18\x01\x20\x01(\x08R\x05watch:\x02\x18\x01\"\x1f\n\x19DebugLi\
+    nkResetDebugEvents:\x02\x18\x01\"\x1a\n\x18DebugLinkOptigaSetSecMaxB=\n#\
+    com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\
+    \x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

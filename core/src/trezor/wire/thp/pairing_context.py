@@ -3,16 +3,19 @@ from ubinascii import hexlify
 
 import trezorui_api
 from trezor import loop, protobuf, workflow
-from trezor.crypto import random
+from trezor.enums import ButtonRequestType
 from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.errors import ActionCancelled, SilentError
 from trezor.wire.protocol_common import Context, Message
+from trezor.wire.thp import get_enabled_pairing_methods
 
 if TYPE_CHECKING:
-    from typing import Container
+    from typing import Awaitable, Container
 
     from trezor import ui
+    from trezor.enums import ThpPairingMethod
+    from trezorui_api import UiResult
 
     from .channel import Channel
     from .cpace import Cpace
@@ -28,7 +31,7 @@ class PairingDisplayData:
     def __init__(self) -> None:
         self.code_code_entry: int | None = None
         self.code_qr_code: bytes | None = None
-        self.code_nfc_unidirectional: bytes | None = None
+        self.code_nfc: bytes | None = None
 
     def get_display_layout(self) -> ui.Layout:
         from trezor import ui
@@ -37,9 +40,9 @@ class PairingDisplayData:
         qr_str = ""
         code_str = ""
         if self.code_qr_code is not None:
-            qr_str = self._get_code_qr_code_str()
+            qr_str = self.get_code_qr_code_str()
         if self.code_code_entry is not None:
-            code_str = self._get_code_code_entry_str()
+            code_str = self.get_code_code_entry_str()
 
         return ui.Layout(
             trezorui_api.show_address_details(  # noqa
@@ -53,7 +56,7 @@ class PairingDisplayData:
             )
         )
 
-    def _get_code_code_entry_str(self) -> str:
+    def get_code_code_entry_str(self) -> str:
         if self.code_code_entry is not None:
             code_str = f"{self.code_code_entry:06}"
             if __debug__:
@@ -62,7 +65,7 @@ class PairingDisplayData:
             return code_str[:3] + " " + code_str[3:]
         raise Exception("Code entry string is not available")
 
-    def _get_code_qr_code_str(self) -> str:
+    def get_code_qr_code_str(self) -> str:
         if self.code_qr_code is not None:
             code_str = (hexlify(self.code_qr_code)).decode("utf-8")
             if __debug__:
@@ -77,20 +80,16 @@ class PairingContext(Context):
         super().__init__(channel_ctx.iface, channel_ctx.channel_id)
         self.channel_ctx: Channel = channel_ctx
         self.incoming_message = loop.mailbox()
-        self.secret: bytes = random.bytes(16)
+        self.nfc_secret: bytes
+        self.qr_code_secret: bytes
+        self.code_entry_secret: bytes | None = None
+        self.selected_method: ThpPairingMethod
 
         self.display_data: PairingDisplayData = PairingDisplayData()
         self.cpace: Cpace
         self.host_name: str
 
-    async def handle(self, is_debug_session: bool = False) -> None:
-        # if __debug__:
-        #     log.debug(__name__, "handle - start")
-        #     if is_debug_session:
-        #         import apps.debug
-
-        #         apps.debug.DEBUG_CONTEXT = self
-
+    async def handle(self) -> None:
         next_message: Message | None = None
 
         while True:
@@ -168,12 +167,17 @@ class PairingContext(Context):
     async def write(self, msg: protobuf.MessageType) -> None:
         return await self.channel_ctx.write(msg)
 
+    def write_force(self, msg: protobuf.MessageType) -> Awaitable[None]:
+        return self.channel_ctx.write(msg, force=True)
+
     async def call(
         self, msg: protobuf.MessageType, expected_type: type[protobuf.MessageType]
     ) -> protobuf.MessageType:
-        expected_wire_type = message_handler.get_msg_type(expected_type.MESSAGE_NAME)
+        expected_wire_type = expected_type.MESSAGE_WIRE_TYPE
         if expected_wire_type is None:
-            expected_wire_type = expected_type.MESSAGE_WIRE_TYPE
+            expected_wire_type = message_handler.get_msg_type(
+                expected_type.MESSAGE_NAME
+            )
 
         assert expected_wire_type is not None
 
@@ -188,6 +192,71 @@ class PairingContext(Context):
         await self.write(msg)
         del msg
         return await self.read(expected_types)
+
+    def set_selected_method(self, selected_method: ThpPairingMethod) -> None:
+        if selected_method not in get_enabled_pairing_methods(self.iface):
+            raise Exception("Not allowed to set this method")
+        self.selected_method = selected_method
+
+    async def show_pairing_dialogue(self) -> None:
+        from trezor.messages import ThpPairingRequestApproved
+        from trezor.ui.layouts.common import interact
+
+        result = await interact(
+            trezorui_api.confirm_action(
+                title="Pairing dialogue",
+                action="Do you want to start pairing?",
+                description="Choose wisely!",
+            ),
+            br_name="pairing_request",
+            br_code=ButtonRequestType.Other,
+        )
+        if result == trezorui_api.CONFIRMED:
+            await self.write(ThpPairingRequestApproved())
+
+    async def show_pairing_method_screen(
+        self, selected_method: ThpPairingMethod | None = None
+    ) -> UiResult:
+        from trezor.enums import ThpPairingMethod
+        from trezor.ui.layouts.common import interact
+
+        if selected_method is None:
+            selected_method = self.selected_method
+        if selected_method is ThpPairingMethod.CodeEntry:
+            result = await interact(
+                trezorui_api.show_simple(
+                    title="Copy the following",
+                    text=self.display_data.get_code_code_entry_str(),
+                ),
+                br_name="pairing_code_entry",
+                br_code=ButtonRequestType.Other,
+            )
+        elif selected_method is ThpPairingMethod.QrCode:
+            result = await interact(
+                trezorui_api.show_address_details(  # noqa
+                    qr_title="Scan QR code to pair",
+                    address=self.display_data.get_code_qr_code_str(),
+                    case_sensitive=True,
+                    details_title="",
+                    account="",
+                    path="",
+                    xpubs=[],
+                ),
+                br_name="pairing_qr_code",
+                br_code=ButtonRequestType.Other,
+            )
+        elif selected_method is ThpPairingMethod.NFC:
+            result = await interact(
+                trezorui_api.show_simple(
+                    title="NFC Pairing",
+                    text="Move your device close to Trezor",
+                ),
+                br_name="pairing_nfc",
+                br_code=ButtonRequestType.Other,
+            )
+        else:
+            raise Exception("Unknown pairing method")
+        return result
 
 
 async def handle_pairing_request_message(

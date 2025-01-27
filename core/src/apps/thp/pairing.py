@@ -2,30 +2,33 @@ from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 from trezor import loop, protobuf
+from trezor.crypto import random
 from trezor.crypto.hashlib import sha256
 from trezor.enums import ThpMessageType, ThpPairingMethod
 from trezor.messages import (
     Cancel,
     ThpCodeEntryChallenge,
     ThpCodeEntryCommitment,
-    ThpCodeEntryCpaceHost,
+    ThpCodeEntryCpaceHostTag,
     ThpCodeEntryCpaceTrezor,
     ThpCodeEntrySecret,
-    ThpCodeEntryTag,
     ThpCredentialMetadata,
     ThpCredentialRequest,
     ThpCredentialResponse,
     ThpEndRequest,
     ThpEndResponse,
-    ThpNfcUnidirectionalSecret,
-    ThpNfcUnidirectionalTag,
+    ThpNfcTagHost,
+    ThpNfcTagTrezor,
     ThpPairingPreparationsFinished,
+    ThpPairingRequest,
     ThpQrCodeSecret,
     ThpQrCodeTag,
-    ThpStartPairingRequest,
+    ThpSelectMethod,
 )
+from trezor.wire import message_handler
+from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.errors import ActionCancelled, SilentError, UnexpectedMessage
-from trezor.wire.thp import ChannelState, ThpError, crypto
+from trezor.wire.thp import ChannelState, ThpError, crypto, get_enabled_pairing_methods
 from trezor.wire.thp.pairing_context import PairingContext
 
 from .credential_manager import issue_credential
@@ -64,12 +67,13 @@ def check_state_and_log(
     return decorator
 
 
-def check_method_is_allowed(
+def check_method_is_allowed_and_selected(
     pairing_method: ThpPairingMethod,
 ) -> Callable[[FuncWithContext], FuncWithContext]:
     def decorator(f: FuncWithContext) -> FuncWithContext:
         def inner(context: PairingContext, *args: P.args, **kwargs: P.kwargs) -> object:
             _check_method_is_allowed(context, pairing_method)
+            _check_method_is_selected(context, pairing_method)
             return f(context, *args, **kwargs)
 
         return inner
@@ -81,31 +85,58 @@ def check_method_is_allowed(
 # Pairing handlers
 
 
-@check_state_and_log(ChannelState.TP1)
+@check_state_and_log(ChannelState.TP0)
 async def handle_pairing_request(
     ctx: PairingContext, message: protobuf.MessageType
 ) -> ThpEndResponse:
 
-    if not ThpStartPairingRequest.is_type_of(message):
+    if not ThpPairingRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
 
     ctx.host_name = message.host_name or ""
 
-    skip_pairing = _is_method_included(ctx, ThpPairingMethod.NoMethod)
-    if skip_pairing:
-        return await _end_pairing(ctx)
-
-    await _prepare_pairing(ctx)
-    await ctx.write(ThpPairingPreparationsFinished())
-    ctx.channel_ctx.set_channel_state(ChannelState.TP3)
-    response = await show_display_data(
-        ctx, _get_possible_pairing_methods_and_cancel(ctx)
+    await ctx.show_pairing_dialogue()
+    assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
+    select_method_msg = await ctx.read(
+        [
+            ThpSelectMethod.MESSAGE_WIRE_TYPE,
+        ]
     )
 
-    if Cancel.is_type_of(response):
-        ctx.channel_ctx.clear()
-        raise SilentError("Action was cancelled by the Host")
-    # TODO disable NFC (if enabled)
+    assert ThpSelectMethod.is_type_of(select_method_msg)
+    assert select_method_msg.selected_pairing_method is not None
+
+    ctx.set_selected_method(select_method_msg.selected_pairing_method)
+
+    if ctx.selected_method == ThpPairingMethod.SkipPairing:
+        return await _end_pairing(ctx)
+
+    while True:
+        await _prepare_pairing(ctx)
+
+        ctx.channel_ctx.set_channel_state(ChannelState.TP3)
+        try:
+            response = await ctx.show_pairing_method_screen()
+        except UnexpectedMessageException as e:
+            raw_response = e.msg
+            name = message_handler.get_msg_name(raw_response.type)
+            if name is None:
+                req_type = protobuf.type_for_wire(raw_response.type)
+            else:
+                req_type = protobuf.type_for_name(name)
+            response = message_handler.wrap_protobuf_load(raw_response.data, req_type)
+
+        if Cancel.is_type_of(response):
+            ctx.channel_ctx.clear()
+            raise SilentError("Action was cancelled by the Host")
+
+        if ThpSelectMethod.is_type_of(response):
+            assert response.selected_pairing_method is not None
+            ctx.set_selected_method(response.selected_pairing_method)
+            ctx.channel_ctx.set_channel_state(ChannelState.TP1)
+        else:
+            break
+
     response = await _handle_different_pairing_methods(ctx, response)
 
     while ThpCredentialRequest.is_type_of(response):
@@ -115,15 +146,16 @@ async def handle_pairing_request(
 
 
 async def _prepare_pairing(ctx: PairingContext) -> None:
+    ctx.channel_ctx.set_channel_state(ChannelState.TP1)
 
-    if _is_method_included(ctx, ThpPairingMethod.CodeEntry):
-        await _handle_code_entry_is_included(ctx)
-
-    if _is_method_included(ctx, ThpPairingMethod.QrCode):
-        _handle_qr_code_is_included(ctx)
-
-    if _is_method_included(ctx, ThpPairingMethod.NFC_Unidirectional):
-        _handle_nfc_unidirectional_is_included(ctx)
+    if ctx.selected_method == ThpPairingMethod.CodeEntry:
+        await _handle_code_entry_is_selected(ctx)
+    elif ctx.selected_method == ThpPairingMethod.NFC:
+        await _handle_nfc_is_selected(ctx)
+    elif ctx.selected_method == ThpPairingMethod.QrCode:
+        await _handle_qr_code_is_selected(ctx)
+    else:
+        raise Exception()  # TODO unknown pairing method
 
 
 async def show_display_data(
@@ -143,10 +175,20 @@ async def show_display_data(
 
 
 @check_state_and_log(ChannelState.TP1)
-async def _handle_code_entry_is_included(ctx: PairingContext) -> None:
-    commitment = sha256(ctx.secret).digest()
+async def _handle_code_entry_is_selected(ctx: PairingContext) -> None:
+    if ctx.code_entry_secret is None:
+        await _handle_code_entry_is_selected_first_time(ctx)
+    else:
+        await ctx.write_force(ThpPairingPreparationsFinished())
 
-    challenge_message = await ctx.call(  # noqa: F841
+
+async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None:
+    from trezor.wire.thp.cpace import Cpace
+
+    ctx.code_entry_secret = random.bytes(16)
+    commitment = sha256(ctx.code_entry_secret).digest()
+
+    challenge_message = await ctx.call(
         ThpCodeEntryCommitment(commitment=commitment), ThpCodeEntryChallenge
     )
     ctx.channel_ctx.set_channel_state(ChannelState.TP2)
@@ -157,84 +199,76 @@ async def _handle_code_entry_is_included(ctx: PairingContext) -> None:
     if challenge_message.challenge is None:
         raise Exception("Invalid message")
     sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
-    sha_ctx.update(ctx.secret)
+    sha_ctx.update(ctx.code_entry_secret)
     sha_ctx.update(challenge_message.challenge)
     sha_ctx.update(bytes("PairingMethod_CodeEntry", "utf-8"))
     code_code_entry_hash = sha_ctx.digest()
     ctx.display_data.code_code_entry = (
         int.from_bytes(code_code_entry_hash, "big") % 1000000
     )
-
-
-@check_state_and_log(ChannelState.TP1, ChannelState.TP2)
-def _handle_qr_code_is_included(ctx: PairingContext) -> None:
-    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
-    sha_ctx.update(ctx.secret)
-    sha_ctx.update(bytes("PairingMethod_QrCode", "utf-8"))
-    ctx.display_data.code_qr_code = sha_ctx.digest()[:16]
-
-
-@check_state_and_log(ChannelState.TP1, ChannelState.TP2)
-def _handle_nfc_unidirectional_is_included(ctx: PairingContext) -> None:
-    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
-    sha_ctx.update(ctx.secret)
-    sha_ctx.update(bytes("PairingMethod_NfcUnidirectional", "utf-8"))
-    ctx.display_data.code_nfc_unidirectional = sha_ctx.digest()[:16]
-
-
-@check_state_and_log(ChannelState.TP3)
-async def _handle_different_pairing_methods(
-    ctx: PairingContext, response: protobuf.MessageType
-) -> protobuf.MessageType:
-    if ThpCodeEntryCpaceHost.is_type_of(response):
-        return await _handle_code_entry_cpace(ctx, response)
-    if ThpQrCodeTag.is_type_of(response):
-        return await _handle_qr_code_tag(ctx, response)
-    if ThpNfcUnidirectionalTag.is_type_of(response):
-        return await _handle_nfc_unidirectional_tag(ctx, response)
-    raise UnexpectedMessage("Unexpected message")
-
-
-@check_state_and_log(ChannelState.TP3)
-@check_method_is_allowed(ThpPairingMethod.CodeEntry)
-async def _handle_code_entry_cpace(
-    ctx: PairingContext, message: protobuf.MessageType
-) -> protobuf.MessageType:
-    from trezor.wire.thp.cpace import Cpace
-
-    # TODO check that ThpCodeEntryCpaceHost message is valid
-
-    if TYPE_CHECKING:
-        assert isinstance(message, ThpCodeEntryCpaceHost)
-    if message.cpace_host_public_key is None:
-        raise ThpError("Message ThpCodeEntryCpaceHost has no public key")
-
     ctx.cpace = Cpace(
-        message.cpace_host_public_key,
         ctx.channel_ctx.get_handshake_hash(),
     )
     assert ctx.display_data.code_code_entry is not None
     ctx.cpace.generate_keys_and_secret(
         ctx.display_data.code_code_entry.to_bytes(6, "big")
     )
-
-    ctx.channel_ctx.set_channel_state(ChannelState.TP4)
-    response = await ctx.call(
-        ThpCodeEntryCpaceTrezor(cpace_trezor_public_key=ctx.cpace.trezor_public_key),
-        ThpCodeEntryTag,
+    await ctx.write_force(
+        ThpCodeEntryCpaceTrezor(cpace_trezor_public_key=ctx.cpace.trezor_public_key)
     )
-    return await _handle_code_entry_tag(ctx, response)
 
 
-@check_state_and_log(ChannelState.TP4)
-@check_method_is_allowed(ThpPairingMethod.CodeEntry)
-async def _handle_code_entry_tag(
+@check_state_and_log(ChannelState.TP1)
+async def _handle_nfc_is_selected(ctx: PairingContext) -> None:
+    ctx.nfc_secret = random.bytes(16)
+    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx.update(ctx.nfc_secret)
+    sha_ctx.update(bytes("PairingMethod_NfcUnidirectional", "utf-8"))
+    ctx.display_data.code_nfc = sha_ctx.digest()[:16]
+    await ctx.write_force(ThpPairingPreparationsFinished())
+
+
+@check_state_and_log(ChannelState.TP1)
+async def _handle_qr_code_is_selected(ctx: PairingContext) -> None:
+    ctx.qr_code_secret = random.bytes(16)
+
+    sha_ctx = sha256(ThpPairingMethod.QrCode.to_bytes(1, "big"))
+    sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx.update(ctx.qr_code_secret)
+
+    ctx.display_data.code_qr_code = sha_ctx.digest()[:16]
+    await ctx.write_force(ThpPairingPreparationsFinished())
+
+
+@check_state_and_log(ChannelState.TP3)
+async def _handle_different_pairing_methods(
+    ctx: PairingContext, response: protobuf.MessageType
+) -> protobuf.MessageType:
+    if ThpCodeEntryCpaceHostTag.is_type_of(response):
+        return await _handle_code_entry_cpace(ctx, response)
+    if ThpQrCodeTag.is_type_of(response):
+        return await _handle_qr_code_tag(ctx, response)
+    if ThpNfcTagHost.is_type_of(response):
+        return await _handle_nfc_tag(ctx, response)
+    raise UnexpectedMessage("Unexpected message" + str(response))
+
+
+@check_state_and_log(ChannelState.TP3)
+@check_method_is_allowed_and_selected(ThpPairingMethod.CodeEntry)
+async def _handle_code_entry_cpace(
     ctx: PairingContext, message: protobuf.MessageType
 ) -> protobuf.MessageType:
 
     if TYPE_CHECKING:
-        assert isinstance(message, ThpCodeEntryTag)
+        assert ThpCodeEntryCpaceHostTag.is_type_of(message)
+    if message.cpace_host_public_key is None:
+        raise ThpError(
+            "Message ThpCodeEntryCpaceHostTag is missing cpace_host_public_key"
+        )
+    if message.tag is None:
+        raise ThpError("Message ThpCodeEntryCpaceHostTag is missing tag")
 
+    ctx.cpace.compute_shared_secret(message.cpace_host_public_key)
     expected_tag = sha256(ctx.cpace.shared_secret).digest()
     if expected_tag != message.tag:
         print(
@@ -248,56 +282,69 @@ async def _handle_code_entry_tag(
 
     return await _handle_secret_reveal(
         ctx,
-        msg=ThpCodeEntrySecret(secret=ctx.secret),
+        msg=ThpCodeEntrySecret(secret=ctx.code_entry_secret),
     )
 
 
 @check_state_and_log(ChannelState.TP3)
-@check_method_is_allowed(ThpPairingMethod.QrCode)
+@check_method_is_allowed_and_selected(ThpPairingMethod.QrCode)
 async def _handle_qr_code_tag(
     ctx: PairingContext, message: protobuf.MessageType
 ) -> protobuf.MessageType:
     if TYPE_CHECKING:
         assert isinstance(message, ThpQrCodeTag)
     assert ctx.display_data.code_qr_code is not None
-    expected_tag = sha256(ctx.display_data.code_qr_code).digest()
+    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx.update(ctx.display_data.code_qr_code)
+    expected_tag = sha_ctx.digest()
     if expected_tag != message.tag:
         print(
             "expected qr code tag:", hexlify(expected_tag).decode()
         )  # TODO remove after testing
         print(
-            "expected code qr code tag:",
+            "expected handshake hash:",
+            hexlify(ctx.channel_ctx.get_handshake_hash()).decode(),
+        )  # TODO remove after testing
+        print(
+            "expected code qr code:",
             hexlify(ctx.display_data.code_qr_code).decode(),
         )  # TODO remove after testing
         print(
-            "expected secret:", hexlify(ctx.secret).decode()
+            "expected secret:", hexlify(ctx.qr_code_secret).decode()
         )  # TODO remove after testing
         raise ThpError("Unexpected QR Code Tag")
 
     return await _handle_secret_reveal(
         ctx,
-        msg=ThpQrCodeSecret(secret=ctx.secret),
+        msg=ThpQrCodeSecret(secret=ctx.qr_code_secret),
     )
 
 
 @check_state_and_log(ChannelState.TP3)
-@check_method_is_allowed(ThpPairingMethod.NFC_Unidirectional)
-async def _handle_nfc_unidirectional_tag(
+@check_method_is_allowed_and_selected(ThpPairingMethod.NFC)
+async def _handle_nfc_tag(
     ctx: PairingContext, message: protobuf.MessageType
 ) -> protobuf.MessageType:
     if TYPE_CHECKING:
-        assert isinstance(message, ThpNfcUnidirectionalTag)
-
-    expected_tag = sha256(ctx.display_data.code_nfc_unidirectional).digest()
+        assert isinstance(message, ThpNfcTagHost)
+    sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
+    sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx.update(ctx.nfc_secret)
+    expected_tag = sha_ctx.digest()
     if expected_tag != message.tag:
         print(
             "expected nfc tag:", hexlify(expected_tag).decode()
         )  # TODO remove after testing
         raise ThpError("Unexpected NFC Unidirectional Tag")
 
+    sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
+    sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
+    # TODO add Host's secret from NFC message transferred over NFC
+    # sha_ctx.update(host's secret)
+    trezor_tag = sha_ctx.digest()
     return await _handle_secret_reveal(
         ctx,
-        msg=ThpNfcUnidirectionalSecret(secret=ctx.secret),
+        msg=ThpNfcTagTrezor(tag=trezor_tag),
     )
 
 
@@ -318,7 +365,6 @@ async def _handle_secret_reveal(
 async def _handle_credential_request(
     ctx: PairingContext, message: protobuf.MessageType
 ) -> protobuf.MessageType:
-    ctx.secret
 
     if not ThpCredentialRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
@@ -362,42 +408,43 @@ def _check_state(ctx: PairingContext, *allowed_states: ChannelState) -> None:
 
 
 def _check_method_is_allowed(ctx: PairingContext, method: ThpPairingMethod) -> None:
-    if not _is_method_included(ctx, method):
+    if method not in get_enabled_pairing_methods(ctx.iface):
         raise ThpError("Unexpected pairing method")
 
 
-def _is_method_included(ctx: PairingContext, method: ThpPairingMethod) -> bool:
-    return method in ctx.channel_ctx.selected_pairing_methods
+def _check_method_is_selected(ctx: PairingContext, method: ThpPairingMethod) -> None:
+    if method is not ctx.selected_method:
+        raise ThpError("Not selected pairing method")
 
 
 #
 # Helpers - getters
 
 
-def _get_possible_pairing_methods_and_cancel(ctx: PairingContext) -> Tuple[int, ...]:
+def _get_accepted_messages(ctx: PairingContext) -> Tuple[int, ...]:
     r = _get_possible_pairing_methods(ctx)
     mtype = Cancel.MESSAGE_WIRE_TYPE
-    return r + ((mtype,) if mtype is not None else ())
+    r += (mtype,) if mtype is not None else ()
+    mtype = ThpSelectMethod.MESSAGE_WIRE_TYPE
+    r += (mtype,) if mtype is not None else ()
+
+    return r
 
 
 def _get_possible_pairing_methods(ctx: PairingContext) -> Tuple[int, ...]:
     r = tuple(
-        _get_message_type_for_method(method)
-        for method in ctx.channel_ctx.selected_pairing_methods
+        [
+            _get_message_type_for_method(ctx.selected_method),
+        ]
     )
-    if __debug__:
-        from trezor.messages import DebugLinkGetState
-
-        mtype = DebugLinkGetState.MESSAGE_WIRE_TYPE
-        return r + ((mtype,) if mtype is not None else ())
     return r
 
 
 def _get_message_type_for_method(method: int) -> int:
     if method is ThpPairingMethod.CodeEntry:
-        return ThpMessageType.ThpCodeEntryCpaceHost
-    if method is ThpPairingMethod.NFC_Unidirectional:
-        return ThpMessageType.ThpNfcUnidirectionalTag
+        return ThpMessageType.ThpCodeEntryCpaceHostTag
+    if method is ThpPairingMethod.NFC:
+        return ThpMessageType.ThpNfcTagHost
     if method is ThpPairingMethod.QrCode:
         return ThpMessageType.ThpQrCodeTag
     raise ValueError("Unexpected pairing method - no message type available")
