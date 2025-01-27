@@ -33,6 +33,7 @@ async def request_word(
 ) -> str:
     prompt = TR.recovery__word_x_of_y_template.format(word_index + 1, word_count)
     can_go_back = word_index > 0
+
     if is_slip39:
         keyboard = trezorui_api.request_slip39(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
@@ -42,11 +43,14 @@ async def request_word(
             prompt=prompt, prefill_word=prefill_word, can_go_back=can_go_back
         )
 
-    word: str = await interact(
-        keyboard,
-        "mnemonic" if send_button_request else None,
-        ButtonRequestType.MnemonicInput,
-    )
+    try:
+        word: str = await interact(
+            keyboard,
+            "mnemonic" if send_button_request else None,
+            ButtonRequestType.MnemonicInput,
+        )
+    finally:
+        keyboard.__del__()
     return word
 
 
