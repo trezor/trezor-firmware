@@ -65,7 +65,7 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
         yield (
             ${n.chain_id},  # chain_id
             ${n.slip44},  # slip44
-            "${n.shortcut}",  # symbol
+            "${n.symbol}",  # symbol
             "${n.name}",  # name
         )
 % endfor
