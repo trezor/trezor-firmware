@@ -8,17 +8,12 @@ import click
 
 from cli import TranslationsDir
 from trezorlib._internal import translations
-from trezorlib.debuglink import LayoutType
 
 
 HERE = Path(__file__).parent
 
 # staging directory for layout-specific translation JSON files
 CROWDIN_DIR = HERE / "crowdin"
-
-# layouts with translation support
-ALL_LAYOUTS = frozenset(LayoutType) - {LayoutType.T1}
-
 
 @click.group()
 def cli() -> None:
@@ -35,7 +30,7 @@ def split() -> None:
 
     for lang in tdir.all_languages():
         blob_json = tdir.load_lang(lang)
-        for layout_type in ALL_LAYOUTS:
+        for layout_type in translations.ALL_LAYOUTS:
             # extract translations specific to this layout
             layout_specific_translations = {
                 key: translations.get_translation(blob_json, key, layout_type)
@@ -56,7 +51,7 @@ def merge() -> None:
 
     for lang in sorted(tdir.all_languages()):
         merged_translations: dict[str, str | dict[str, str]] = collections.defaultdict(dict)
-        for layout_type in ALL_LAYOUTS:
+        for layout_type in translations.ALL_LAYOUTS:
             with open(CROWDIN_DIR / f"{lang}_{layout_type.name}.json", "r") as f:
                 blob_json = json.load(f)
 
