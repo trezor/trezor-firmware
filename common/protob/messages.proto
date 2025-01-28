@@ -79,7 +79,6 @@ enum MessageType {
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
 
     // Deprecated messages, kept for protobuf compatibility.
-    // Both are marked wire_out so that we don't need to implement incoming handler for legacy
     MessageType_Deprecated_PassphraseStateRequest = 77 [deprecated = true];
     MessageType_Deprecated_PassphraseStateAck = 78 [deprecated = true];
 
@@ -323,6 +322,12 @@ enum MessageType {
 
     // THP
     reserved 1000 to 1099; // See messages-thp.proto
+
+    // Nostr
+    MessageType_NostrGetPubkey = 2001 [(wire_in) = true];
+    MessageType_NostrPubkey = 2002 [(wire_out) = true];
+    MessageType_NostrSignEvent = 2003 [(wire_in) = true];
+    MessageType_NostrEventSignature = 2004 [(wire_out) = true];
 
     // Benchmark
     MessageType_BenchmarkListNames = 9100 [(bitcoin_only) = true];
