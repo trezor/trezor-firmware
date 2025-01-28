@@ -387,7 +387,6 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("ble_get_state")
         .allowlist_function("ble_issue_command")
         .allowlist_type("ble_command_t")
-        .allowlist_type("ble_command_type_t")
         .allowlist_type("ble_state_t")
         // touch
         .allowlist_function("touch_get_event")
