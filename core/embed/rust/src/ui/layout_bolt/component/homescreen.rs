@@ -338,66 +338,66 @@ impl Component for Homescreen {
                 _ => {}
             }
 
-            self.label.map(|t| {
-                let r = Rect::new(
-                    Point::new(6, LABEL_Y - 24),
-                    Point::new(WIDTH - 6, LABEL_Y + 11),
-                );
-                shape::Bar::new(r)
-                    .with_bg(Color::black())
-                    .with_alpha(89)
-                    .with_radius(3)
-                    .render(target);
-
-                let style = theme::TEXT_DEMIBOLD;
-                let pos = Point::new(self.pad.area.center().x, LABEL_Y);
-                shape::Text::new(pos, t)
-                    .with_align(Alignment::Center)
-                    .with_font(style.text_font)
-                    .with_fg(theme::FG)
-                    .render(target);
-            });
-
-            if let Some(notif) = self.get_notification() {
-                const NOTIFICATION_HEIGHT: i16 = 36;
-                const NOTIFICATION_BORDER: i16 = 6;
-                const TEXT_ICON_SPACE: i16 = 8;
-
-                let banner = self
-                    .pad
-                    .area
-                    .inset(Insets::sides(NOTIFICATION_BORDER))
-                    .with_height(NOTIFICATION_HEIGHT)
-                    .translate(Offset::y(NOTIFICATION_BORDER));
-
-                shape::Bar::new(banner)
-                    .with_radius(2)
-                    .with_bg(notif.color)
-                    .render(target);
-
-                notif.text.map(|t| {
-                    let style = theme::TEXT_BOLD;
-                    let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
-                    let text_pos = Point::new(
-                        style
-                            .text_font
-                            .horz_center(banner.x0 + icon_width, banner.x1, t),
-                        style.text_font.vert_center(banner.y0, banner.y1, "A"),
-                    );
-
-                    shape::Text::new(text_pos, t)
-                        .with_font(style.text_font)
-                        .with_fg(style.text_color)
-                        .render(target);
-
-                    let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
-
-                    shape::ToifImage::new(icon_pos, notif.icon.toif)
-                        .with_fg(style.text_color)
-                        .with_align(Alignment2D::CENTER_LEFT)
-                        .render(target);
-                });
-            }
+            // self.label.map(|t| {
+            //     let r = Rect::new(
+            //         Point::new(6, LABEL_Y - 24),
+            //         Point::new(WIDTH - 6, LABEL_Y + 11),
+            //     );
+            //     shape::Bar::new(r)
+            //         .with_bg(Color::black())
+            //         .with_alpha(89)
+            //         .with_radius(3)
+            //         .render(target);
+            //
+            //     let style = theme::TEXT_DEMIBOLD;
+            //     let pos = Point::new(self.pad.area.center().x, LABEL_Y);
+            //     shape::Text::new(pos, t)
+            //         .with_align(Alignment::Center)
+            //         .with_font(style.text_font)
+            //         .with_fg(theme::FG)
+            //         .render(target);
+            // });
+            //
+            // if let Some(notif) = self.get_notification() {
+            //     const NOTIFICATION_HEIGHT: i16 = 36;
+            //     const NOTIFICATION_BORDER: i16 = 6;
+            //     const TEXT_ICON_SPACE: i16 = 8;
+            //
+            //     let banner = self
+            //         .pad
+            //         .area
+            //         .inset(Insets::sides(NOTIFICATION_BORDER))
+            //         .with_height(NOTIFICATION_HEIGHT)
+            //         .translate(Offset::y(NOTIFICATION_BORDER));
+            //
+            //     shape::Bar::new(banner)
+            //         .with_radius(2)
+            //         .with_bg(notif.color)
+            //         .render(target);
+            //
+            //     notif.text.map(|t| {
+            //         let style = theme::TEXT_BOLD;
+            //         let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
+            //         let text_pos = Point::new(
+            //             style
+            //                 .text_font
+            //                 .horz_center(banner.x0 + icon_width, banner.x1, t),
+            //             style.text_font.vert_center(banner.y0, banner.y1, "A"),
+            //         );
+            //
+            //         shape::Text::new(text_pos, t)
+            //             .with_font(style.text_font)
+            //             .with_fg(style.text_color)
+            //             .render(target);
+            //
+            //         let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
+            //
+            //         shape::ToifImage::new(icon_pos, notif.icon.toif)
+            //             .with_fg(style.text_color)
+            //             .with_align(Alignment2D::CENTER_LEFT)
+            //             .render(target);
+            //     });
+            // }
         }
     }
 }
