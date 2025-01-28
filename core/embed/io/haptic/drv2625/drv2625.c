@@ -150,10 +150,17 @@ bool haptic_init(void) {
     goto cleanup;
   }
 
+#ifdef ACTUATOR_OPEN_LOOP
   if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_OD_CLAMP,
                        ACTUATOR_OD_CLAMP)) {
     goto cleanup;
   }
+#elif defined ACTUATOR_CLOSED_LOOP
+  if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_RATED_VOLTAGE,
+                       ACTUATOR_RATED_VOLTAGE)) {
+    goto cleanup;
+  }
+#endif
 
   if (!drv2625_set_reg(driver->i2c_bus, DRV2625_REG_LRA_WAVE_SHAPE,
                        DRV2625_REG_LRA_WAVE_SHAPE_SINE)) {
