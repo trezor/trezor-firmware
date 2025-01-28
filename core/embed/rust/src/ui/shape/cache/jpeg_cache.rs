@@ -1,15 +1,12 @@
-use crate::{
-    io::BinaryData,
-    ui::{
-        geometry::{Offset, Point, Rect},
-        shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
-    },
-};
+use crate::{io::BinaryData, ui, ui::{
+    geometry::{Offset, Point, Rect},
+    shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
+}};
 
 use core::cell::UnsafeCell;
 use trezor_tjpgdec as tjpgd;
 use without_alloc::alloc::LocalAllocLeakExt;
-
+use crate::trezorhal::display::DISPLAY_RESX;
 // JDEC work buffer size
 //
 // number of quantization tables (n_qtbl) = 2..4 (typical 2)
@@ -38,7 +35,7 @@ const JPEG_SCRATCHPAD_SIZE: usize = 10500; // the same const > 10336 as in origi
 
 // Buffer for a cached row of JPEG MCUs (up to 240x16 RGB565 pixels)
 const ALIGN_PAD: usize = 8;
-const JPEG_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
+const JPEG_BUFF_SIZE: usize = (DISPLAY_RESX as usize * 2 * 16) + ALIGN_PAD;
 
 pub struct JpegCache<'a> {
     /// Reference to compressed data
