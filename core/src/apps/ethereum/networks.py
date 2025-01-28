@@ -67,6 +67,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
+            10,  # chain_id
+            614,  # slip44
+            "ETH",  # symbol
+            "Optimism",  # name
+        )
+        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
@@ -85,10 +91,22 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Polygon",  # name
         )
         yield (
+            8453,  # chain_id
+            8453,  # slip44
+            "ETH",  # symbol
+            "Base",  # name
+        )
+        yield (
             17000,  # chain_id
             1,  # slip44
             "tHOL",  # symbol
             "Holesky",  # name
+        )
+        yield (
+            42161,  # chain_id
+            9001,  # slip44
+            "ETH",  # symbol
+            "Arbitrum One",  # name
         )
         yield (
             11155111,  # chain_id
@@ -104,6 +122,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
+            10,  # chain_id
+            614,  # slip44
+            "ETH",  # symbol
+            "Optimism",  # name
+        )
+        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
@@ -122,10 +146,22 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Polygon",  # name
         )
         yield (
+            8453,  # chain_id
+            8453,  # slip44
+            "ETH",  # symbol
+            "Base",  # name
+        )
+        yield (
             17000,  # chain_id
             1,  # slip44
             "tHOL",  # symbol
             "Holesky",  # name
+        )
+        yield (
+            42161,  # chain_id
+            9001,  # slip44
+            "ETH",  # symbol
+            "Arbitrum One",  # name
         )
         yield (
             11155111,  # chain_id
@@ -141,6 +177,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
+            10,  # chain_id
+            614,  # slip44
+            "ETH",  # symbol
+            "Optimism",  # name
+        )
+        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
@@ -159,10 +201,22 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Polygon",  # name
         )
         yield (
+            8453,  # chain_id
+            8453,  # slip44
+            "ETH",  # symbol
+            "Base",  # name
+        )
+        yield (
             17000,  # chain_id
             1,  # slip44
             "tHOL",  # symbol
             "Holesky",  # name
+        )
+        yield (
+            42161,  # chain_id
+            9001,  # slip44
+            "ETH",  # symbol
+            "Arbitrum One",  # name
         )
         yield (
             11155111,  # chain_id
@@ -178,6 +232,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
+            10,  # chain_id
+            614,  # slip44
+            "ETH",  # symbol
+            "Optimism",  # name
+        )
+        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
@@ -196,10 +256,22 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Polygon",  # name
         )
         yield (
+            8453,  # chain_id
+            8453,  # slip44
+            "ETH",  # symbol
+            "Base",  # name
+        )
+        yield (
             17000,  # chain_id
             1,  # slip44
             "tHOL",  # symbol
             "Holesky",  # name
+        )
+        yield (
+            42161,  # chain_id
+            9001,  # slip44
+            "ETH",  # symbol
+            "Arbitrum One",  # name
         )
         yield (
             11155111,  # chain_id
@@ -215,6 +287,12 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Ethereum",  # name
         )
         yield (
+            10,  # chain_id
+            614,  # slip44
+            "ETH",  # symbol
+            "Optimism",  # name
+        )
+        yield (
             56,  # chain_id
             714,  # slip44
             "BNB",  # symbol
@@ -233,10 +311,22 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "Polygon",  # name
         )
         yield (
+            8453,  # chain_id
+            8453,  # slip44
+            "ETH",  # symbol
+            "Base",  # name
+        )
+        yield (
             17000,  # chain_id
             1,  # slip44
             "tHOL",  # symbol
             "Holesky",  # name
+        )
+        yield (
+            42161,  # chain_id
+            9001,  # slip44
+            "ETH",  # symbol
+            "Arbitrum One",  # name
         )
         yield (
             11155111,  # chain_id
