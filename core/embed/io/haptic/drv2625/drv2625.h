@@ -1,5 +1,23 @@
-#ifndef TREZOR_HAL_DRV_2625_H
-#define TREZOR_HAL_DRV_2625_H
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
 
 // I2C address of the DRV2625 on the I2C bus.
 #define DRV2625_I2C_ADDRESS 0x5A
@@ -47,6 +65,7 @@
 #define DRV2625_REG_GO_GO 0x01
 
 #define DRV2625_REG_OD_CLAMP 0x20
+#define DRV2625_REG_RATED_VOLTAGE 0x20
 
 #define DRV2625_REG_LRA_WAVE_SHAPE 0x2C
 #define DRV2625_REG_LRA_WAVE_SHAPE_SINE 0x01
@@ -183,5 +202,3 @@ typedef enum {
   SMOOTH_HUM_4_40 = 122,
   SMOOTH_HUM_5_20 = 123,
 } drv2625_lib_effect_t;
-
-#endif  // TREZOR_HAL_DRV_2625_H
