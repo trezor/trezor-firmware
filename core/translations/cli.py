@@ -159,11 +159,10 @@ class TranslationsDir:
 
     def generate_single_blob(
         self,
-        lang: str,
+        blob_json: translations.JsonDef,
         model: models.TrezorModel,
         version: VersionTuple | None,
     ) -> translations.TranslationsBlob:
-        blob_json = self.load_lang(lang)
         blob_version = translations.version_from_json(blob_json["header"]["version"])
         return translations.blob_from_defs(
             blob_json, self.order, model, version or blob_version, self.fonts_dir
@@ -179,9 +178,12 @@ class TranslationsDir:
             if lang == "en":
                 continue
 
+            blob_json = self.load_lang(lang)
+            translations.check_blob(blob_json)
+
             for model in ALL_MODELS:
                 try:
-                    blob = self.generate_single_blob(lang, model, version)
+                    blob = self.generate_single_blob(blob_json, model, version)
                     blob_version = blob.header.firmware_version
                     if common_version is None:
                         common_version = blob_version

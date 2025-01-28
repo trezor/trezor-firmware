@@ -293,6 +293,34 @@ class TranslationsBlob(Struct):
 
 # ====================
 
+# layouts with translation support
+ALL_LAYOUTS = frozenset(LayoutType) - {LayoutType.T1}
+ALL_LAYOUT_NAMES = frozenset(layout.name for layout in ALL_LAYOUTS)
+
+
+def check_blob(lang_data: JsonDef):
+    json_header: JsonHeader = lang_data["header"]
+    lang_version = f"{json_header['language']} v{json_header['version']}"
+
+    font_layout_names = set(lang_data["fonts"].keys())
+    if font_layout_names != ALL_LAYOUT_NAMES:
+        raise ValueError(
+            f"Invalid font layout names for {lang_version}: {font_layout_names}"
+        )
+
+    for key, item in lang_data["translations"].items():
+        if isinstance(item, dict):
+            item_layouts = set(item.keys())
+            unknown_layouts = item_layouts - ALL_LAYOUT_NAMES
+            missing_layouts = ALL_LAYOUT_NAMES - item_layouts
+
+            if unknown_layouts or missing_layouts:
+                raise ValueError(
+                    f"Invalid translation layouts for {lang_version}: {key}"
+                    f"\nUnknown layouts: {list(unknown_layouts)}"
+                    f"\nMissing layouts: {list(missing_layouts)}"
+                )
+
 
 def order_from_json(json_order: dict[str, str]) -> Order:
     return {int(k): v for k, v in json_order.items()}
