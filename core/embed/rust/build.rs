@@ -137,6 +137,7 @@ fn prepare_bindings() -> bindgen::Builder {
     // Pass in correct include paths and defines.
     if is_firmware() {
         clang_args.push("-nostdinc");
+        clang_args.push("-fshort-enums"); // Make sure enums use the same size as in C
 
         // Append gcc-arm-none-eabi's include paths.
         let cc_output = Command::new("arm-none-eabi-gcc")
@@ -158,6 +159,8 @@ fn prepare_bindings() -> bindgen::Builder {
             .map(|s| format!("-I{}", s.trim()));
 
         bindings = bindings.clang_args(include_args);
+    } else {
+        clang_args.push("-fno-short-enums");
     }
 
     bindings = bindings.clang_args(&clang_args);

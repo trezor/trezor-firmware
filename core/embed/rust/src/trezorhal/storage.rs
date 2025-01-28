@@ -50,7 +50,7 @@ unsafe extern "C" fn callback_wrapper(
                 c(
                     wait,
                     progress,
-                    PinCallbackMessage::from_u32(message).unwrap_or(PinCallbackMessage::None),
+                    PinCallbackMessage::from_u32(message as _).unwrap_or(PinCallbackMessage::None),
                 )
             })
             .unwrap_or(PinCallbackResult::Continue)

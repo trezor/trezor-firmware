@@ -76,7 +76,7 @@ impl<T> Gc<T> {
     /// Can only be used with Python objects that have a base as their
     /// first element
     pub unsafe fn new_with_custom_finaliser(v: T) -> Result<Self, Error> {
-        unsafe { Self::alloc(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER) }
+        unsafe { Self::alloc(v, ffi::GC_ALLOC_FLAG_HAS_FINALISER as _) }
     }
 }
 
