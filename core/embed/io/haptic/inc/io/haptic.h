@@ -17,15 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_HAPTIC_H
-#define TREZORHAL_HAPTIC_H
+#pragma once
 
 #include <trezor_types.h>
 
 typedef enum {
   // Effect at the start of a button press
   HAPTIC_BUTTON_PRESS = 0,
-  // Effect at the and of hold-to-confirm action
+  // Effect at the end of hold-to-confirm action
   HAPTIC_HOLD_TO_CONFIRM = 1,
 } haptic_effect_t;
 
@@ -86,5 +85,3 @@ bool haptic_play(haptic_effect_t effect);
 //
 // Returns `true` if the effect was successfully started.
 bool haptic_play_custom(int8_t amplitude_pct, uint16_t duration_ms);
-
-#endif  // TREZORHAL_HAPTIC_H

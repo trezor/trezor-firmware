@@ -20,7 +20,18 @@
 #pragma once
 
 #define ACTUATOR_LRA
-#define ACTUATOR_OPEN_LOOP
+#define ACTUATOR_CLOSED_LOOP
 
-#define ACTUATOR_LRA_PERIOD (239)
-#define ACTUATOR_OD_CLAMP (126)
+#define ACTUATOR_FREQUENCY (260)
+#define ACTUATOR_VOLTAGE (0.7)
+
+#define ACTUATOR_LRA_PERIOD ((int)((1000000 / ACTUATOR_FREQUENCY) / 24.615))
+
+// open-loop mode
+// V = 21.32 * 10^(-3) * OD_CLAMP * sqrt(1 - fLRA * 800 * 10^(-6))
+#define ACTUATOR_OD_CLAMP (37)
+
+// closed-loop mode
+// V = (20.58 * 10^(-3) * RATED_VOLTAGE) / sqrt (1 - (4 * tSAMPLE_TIME + 300 *
+// 10^(-6)) * fLRA) where tSAMPLE_TIME = 300us, by default
+#define ACTUATOR_RATED_VOLTAGE (27)
