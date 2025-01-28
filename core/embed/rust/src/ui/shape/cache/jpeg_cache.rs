@@ -1,6 +1,7 @@
 use crate::{
     io::BinaryData,
     ui::{
+        constant::WIDTH,
         geometry::{Offset, Point, Rect},
         shape::{BasicCanvas, Bitmap, BitmapFormat, BitmapView, Canvas, Rgb565Canvas},
     },
@@ -38,7 +39,7 @@ const JPEG_SCRATCHPAD_SIZE: usize = 10500; // the same const > 10336 as in origi
 
 // Buffer for a cached row of JPEG MCUs (up to 240x16 RGB565 pixels)
 const ALIGN_PAD: usize = 8;
-const JPEG_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
+const JPEG_BUFF_SIZE: usize = (WIDTH as usize * 2 * 16) + ALIGN_PAD;
 
 pub struct JpegCache<'a> {
     /// Reference to compressed data
