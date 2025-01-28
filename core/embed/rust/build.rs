@@ -277,6 +277,7 @@ fn generate_micropython_bindings() {
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
+        .clang_arg(short_enums()) // make sure enums use the same size as in C
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("micropython.rs"))
@@ -400,6 +401,7 @@ fn generate_trezorhal_bindings() {
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
+        .clang_arg(short_enums()) // make sure enums use the same size as in C
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("trezorhal.rs"))
@@ -432,6 +434,7 @@ fn generate_crypto_bindings() {
     // Write the bindings to a file in the OUR_DIR.
     bindings
         .clang_arg("-fgnuc-version=0") // avoid weirdness with ed25519.h CONST definition
+        .clang_arg(short_enums()) // make sure enums use the same size as in C
         .generate()
         .expect("Unable to generate bindings")
         .write_to_file(PathBuf::from(out_path).join("crypto.rs"))
@@ -441,6 +444,14 @@ fn generate_crypto_bindings() {
 fn is_firmware() -> bool {
     let target = env::var("TARGET").unwrap();
     target.starts_with("thumbv7") || target.starts_with("thumbv8")
+}
+
+fn short_enums() -> &'static str {
+    if is_firmware() {
+        "-fshort-enums"
+    } else {
+        "-fno-short-enums"
+    }
 }
 
 #[cfg(feature = "test")]
