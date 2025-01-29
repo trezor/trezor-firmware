@@ -115,16 +115,4 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/util/unit_properties/stm32/unit_properties.c",
     ]
 
-    # boardloader needs separate assembler for some function unencumbered by various FW+bootloader hacks
-    # this helps to prevent making a bug in boardloader which may be hard to fix since it's locked with write-protect
-    env_constraints = env.get("CONSTRAINTS")
-    if env_constraints and "limited_util_s" in env_constraints:
-        sources += [
-            "embed/sys/startup/stm32u5/limited_util.S",
-        ]
-    else:
-        sources += [
-            "embed/sys/startup/stm32u5/util.S",
-        ]
-
     env.get("ENV")["SUFFIX"] = "stm32u5"

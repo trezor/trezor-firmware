@@ -106,7 +106,6 @@ static void drivers_deinit(void) {
 #ifdef USE_POWERCTL
   powerctl_deinit();
 #endif
-  ensure_compatible_settings();
 }
 
 static uint8_t get_bootloader_min_version(void) {

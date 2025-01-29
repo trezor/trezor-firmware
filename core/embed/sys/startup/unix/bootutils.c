@@ -55,16 +55,18 @@ void bootargs_get_args(boot_args_t* dest) {
   memcpy(dest, &g_boot_args, sizeof(boot_args_t));
 }
 
-void __attribute__((noreturn)) secure_shutdown(void) {
-  printf("SHUTDOWN\n");
-
-  // Wait some time to let the user see the displayed
-  // message before shutting down
-  hal_delay(3000);
+__attribute__((noreturn)) void reboot_device(void) {
+  printf("reboot (normal)\n");
 
   exit(3);
 }
 
-void ensure_compatible_settings(void) {
-  // Left empty
+__attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
+  printf("reboot (with timeout)\n");
+
+  // Wait some time to let the user see the displayed
+  // message before shutting down
+  systick_delay_ms(3000);
+
+  exit(3);
 }

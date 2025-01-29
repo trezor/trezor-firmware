@@ -206,7 +206,10 @@ static void systask_kill(systask_t* task) {
     if (scheduler->error_handler != NULL) {
       scheduler->error_handler(&task->pminfo);
     }
-    secure_shutdown();
+
+    // We reach this point only if error_handler is NULL or
+    // if it returns. Neither is expected to happen.
+    reboot_device();
   } else if (task == scheduler->active_task) {
     // Switch to the kernel task
     systask_yield_to(&scheduler->kernel_task);

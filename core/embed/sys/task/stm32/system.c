@@ -222,7 +222,9 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
     error_handler(&pminfo);
   }
 
-  secure_shutdown();
+  // We reach this point only if error_handler is NULL or
+  // if it returns. Neither is expected to happen.
+  reboot_device();
 }
 
 __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
