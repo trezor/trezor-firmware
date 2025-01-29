@@ -43,8 +43,8 @@ where
     fn get_swipe_config(&self) -> SwipeConfig {
         self.inner.get_swipe_config()
     }
-    fn get_internal_page_count(&self) -> usize {
-        self.inner.get_internal_page_count()
+    fn get_pager(&self) -> crate::ui::util::Pager {
+        self.inner.get_pager()
     }
 }
 
@@ -109,7 +109,7 @@ where
     fn get_swipe_config(&self) -> SwipeConfig {
         self.inner.get_swipe_config()
     }
-    fn get_internal_page_count(&self) -> usize {
-        self.inner.get_internal_page_count()
+    fn get_pager(&self) -> crate::ui::util::Pager {
+        self.inner.get_pager()
     }
 }

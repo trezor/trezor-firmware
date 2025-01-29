@@ -12,6 +12,8 @@ use crate::{
     },
 };
 
+use super::paginated::SinglePage;
+
 const NVERSIONS: usize = 10; // range of versions (=capacities) that we support
 const THRESHOLDS_BINARY: [usize; NVERSIONS] = [14, 26, 42, 62, 84, 106, 122, 152, 180, 213];
 const THRESHOLDS_ALPHANUM: [usize; NVERSIONS] = [20, 38, 61, 90, 122, 154, 178, 221, 262, 311];
@@ -122,6 +124,8 @@ impl Component for Qr {
             .render(target);
     }
 }
+
+impl SinglePage for Qr {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Qr {

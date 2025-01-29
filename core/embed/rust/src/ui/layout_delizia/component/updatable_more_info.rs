@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            paginated::Paginate,
+            paginated::SinglePage,
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx, Never,
         },
@@ -65,6 +65,8 @@ where
         self.paragraphs.render(target);
     }
 }
+
+impl<F: Fn() -> TString<'static>> SinglePage for UpdatableMoreInfo<F> {}
 
 #[cfg(feature = "ui_debug")]
 impl<F> crate::trace::Trace for UpdatableMoreInfo<F>

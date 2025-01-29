@@ -11,6 +11,7 @@ use crate::{
     micropython::obj::Obj,
     ui::{
         component::{
+            paginated::PaginateFull,
             text::paragraphs::{ParagraphSource, Paragraphs},
             Component, Never, Timeout,
         },
@@ -72,7 +73,7 @@ where
 
 impl<T> ComponentMsgObj for Frame<T>
 where
-    T: ComponentMsgObj,
+    T: ComponentMsgObj + PaginateFull,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {

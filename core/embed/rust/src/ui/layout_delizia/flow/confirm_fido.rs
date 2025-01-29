@@ -5,6 +5,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{
+            paginated::PaginateFull as _,
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
             ComponentExt, EventCtx,
@@ -19,8 +20,8 @@ use crate::{
 
 use super::super::{
     component::{
-        FidoCredential, Footer, Frame, FrameMsg, InternallySwipable, PagedVerticalMenu, PromptMsg,
-        PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+        FidoCredential, Footer, Frame, FrameMsg, PagedVerticalMenu, PromptMsg, PromptScreen,
+        SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
     },
     theme,
 };
@@ -89,13 +90,11 @@ impl FlowController for ConfirmFido {
 }
 
 fn footer_update_fn(
-    content: &SwipeContent<SwipePage<PagedVerticalMenu<impl Fn(usize) -> TString<'static>>>>,
+    content: &SwipeContent<SwipePage<PagedVerticalMenu<impl Fn(u16) -> TString<'static>>>>,
     ctx: &mut EventCtx,
     footer: &mut Footer,
 ) {
-    let current_page = content.inner().inner().current_page();
-    let total_pages = content.inner().inner().num_pages();
-    footer.update_page_counter(ctx, current_page, total_pages);
+    footer.update_pager(ctx, content.inner().inner().pager());
 }
 
 fn single_cred() -> bool {
@@ -128,8 +127,8 @@ pub fn new_confirm_fido(
     // Closure to lazy-load the information on given page index.
     // Done like this to allow arbitrarily many pages without
     // the need of any allocation here in Rust.
-    let label_fn = move |page_index| {
-        let account = unwrap!(accounts.get(page_index));
+    let label_fn = move |page_index: u16| {
+        let account = unwrap!(accounts.get(page_index as usize));
         account
             .try_into()
             .unwrap_or_else(|_| TString::from_str("-"))
