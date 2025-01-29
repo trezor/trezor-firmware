@@ -39,11 +39,22 @@ def make_token(
     )
 
 
+def make_solana_token(
+    mint: bytes, program_id: str, name: str, ticker: str
+) -> messages.SolanaTokenInfo:
+    return messages.SolanaTokenInfo(
+        mint=mint, program_id=program_id, name=name, ticker=ticker
+    )
+
+
 def make_payload(
     data_type: messages.DefinitionType = messages.DefinitionType.ETHEREUM_NETWORK,
     timestamp: int = 0xFFFF_FFFF,
     message: (
-        messages.EthereumNetworkInfo | messages.EthereumTokenInfo | bytes
+        messages.EthereumNetworkInfo
+        | messages.EthereumTokenInfo
+        | messages.SolanaTokenInfo
+        | bytes
     ) = make_network(),
 ) -> bytes:
     if isinstance(message, bytes):
@@ -127,3 +138,49 @@ def make_defs(
         encoded_network=network,
         encoded_token=token,
     )
+
+
+def encode_solana_token(
+    token: messages.SolanaTokenInfo | None = None,
+    mint: t.AnyStr = b"",
+    program_id: str = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    name: str = "Fake Token",
+    ticker: str = "FakeTok",
+) -> bytes:
+    if token is None:
+        if isinstance(mint, str):
+            if mint.startswith("0x"):
+                mint = mint[2:]
+            mint = bytes.fromhex(mint)  # type: ignore (typechecker is lying)
+        token = make_solana_token(mint, program_id, name, ticker)  # type: ignore (typechecker is lying)
+    payload = make_payload(
+        data_type=messages.DefinitionType.SOLANA_TOKEN, message=token
+    )
+    proof, signature = sign_payload(payload, [])
+    return payload + proof + signature
+
+
+def make_solana_defs(token: bytes | None) -> messages.SolanaDefinitions:
+    return messages.SolanaDefinitions(encoded_token=token)
+
+
+def decode_base58(string: str) -> bytes:
+    """
+    Convert base58 encoded string to bytes.
+    """
+    alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
+    origlen = len(string)
+    string = string.lstrip(alphabet[0])
+    newlen = len(string)
+
+    p, acc = 1, 0
+    for c in reversed(string):
+        acc += p * alphabet.index(c)
+        p *= 58
+
+    result = []
+    while acc > 0:
+        acc, mod = divmod(acc, 256)
+        result.append(mod)
+
+    return bytes((b for b in reversed(result + [0] * (origlen - newlen))))

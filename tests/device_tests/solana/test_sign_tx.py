@@ -45,7 +45,7 @@ pytestmark = [
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
 
-    serialized_tx = _serialize_tx(parameters["construct"])
+    serialized_tx = serialize_tx(parameters["construct"])
 
     actual_result = sign_tx(
         client,
@@ -73,7 +73,7 @@ def test_solana_sign_tx(client: Client, parameters, result):
     assert actual_result == bytes.fromhex(result["expected_signature"])
 
 
-def _serialize_tx(tx_construct):
+def serialize_tx(tx_construct):
     serialized_instructions = []
     for instruction in tx_construct["instructions"]:
         program = tx_construct["accounts"][instruction["program_index"]]
