@@ -14,7 +14,7 @@ DebugLinkState.recovery_fake_word                     max_size:12
 DebugLinkState.tokens                                 type:FT_IGNORE
 DebugLinkState.thp_pairing_code_entry_code            type:FT_IGNORE
 DebugLinkState.thp_pairing_code_qr_code               type:FT_IGNORE
-DebugLinkState.thp_pairing_code_nfc_unidirectional    type:FT_IGNORE
+DebugLinkState.thp_pairing_code_nfc                   type:FT_IGNORE
 
 DebugLinkLog.bucket                     max_size:33
 DebugLinkLog.text                       max_size:256
