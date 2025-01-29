@@ -24,6 +24,18 @@
 #include <trezor_rtl.h>
 
 typedef enum {
+  NFC_CARD_EMU_TECH_A,
+  NFC_CARD_EMU_TECH_V,
+} nfc_card_emul_tech_t;
+
+typedef enum {
+  NFC_POLLER_TECH_A,
+  NFC_POLLER_TECH_B,
+  NFC_POLLER_TECH_F,
+  NFC_POLLER_TECH_V,
+} nfc_poller_tech_t;
+
+typedef enum {
   NFC_OK,
   NFC_ERROR,
   NFC_NOT_INITIALIZED,
@@ -35,6 +47,10 @@ nfc_status_t nfc_init();
 
 nfc_status_t nfc_deinit();
 
-void nfc_poll_type_A();
+nfc_status_t nfc_register_card_emu(nfc_card_emul_tech_t tech);
+
+nfc_status_t nfc_register_poller(nfc_poller_tech_t tech);
+
+nfc_status_t nfc_run_worker();
 
 #endif  // TREZORHAL_NFC_H
