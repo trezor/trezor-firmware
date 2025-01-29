@@ -42,6 +42,10 @@
 #include <sec/secret.h>
 #endif
 
+#if !PYOPT && !defined(TREZOR_EMULATOR)
+#include <sys/stack_utils.h>
+#endif
+
 static void ui_progress(void *context, uint32_t current, uint32_t total) {
   mp_obj_t ui_wait_callback = (mp_obj_t)context;
 
@@ -238,6 +242,40 @@ STATIC mp_obj_t mod_trezorutils_sd_hotswap_enabled(void) {
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_sd_hotswap_enabled_obj,
                                  mod_trezorutils_sd_hotswap_enabled);
+
+#if !PYOPT && !defined(TREZOR_EMULATOR)
+/// def zero_unused_stack() -> None:
+///     """
+///     Zero unused stack memory.
+///     """
+STATIC mp_obj_t mod_trezorutils_zero_unused_stack(void) {
+  clear_unused_stack();
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_zero_unused_stack_obj,
+                                 mod_trezorutils_zero_unused_stack);
+
+/// def estimate_unused_stack() -> int:
+///     """
+///     Estimate unused stack size.
+///     """
+STATIC mp_obj_t mod_trezorutils_estimate_unused_stack(void) {
+  const uint8_t *stack_top = (const uint8_t *)MP_STATE_THREAD(stack_top);
+  size_t stack_limit = MP_STATE_THREAD(stack_limit);
+
+  const uint8_t *stack = stack_top - stack_limit;
+  size_t offset = 0;
+  for (; offset < stack_limit; ++offset) {
+    if (stack[offset] != 0) {
+      break;
+    }
+  }
+  return mp_obj_new_int_from_uint(offset);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_estimate_unused_stack_obj,
+                                 mod_trezorutils_estimate_unused_stack);
+
+#endif  // !PYOPT && !defined(TREZOR_EMULATOR)
 
 /// def reboot_to_bootloader(
 ///     boot_command : int = 0,
@@ -440,6 +478,12 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_unit_packaging_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_btconly),
      MP_ROM_PTR(&mod_trezorutils_unit_btconly_obj)},
+#if !PYOPT && !defined(TREZOR_EMULATOR)
+    {MP_ROM_QSTR(MP_QSTR_zero_unused_stack),
+     MP_ROM_PTR(&mod_trezorutils_zero_unused_stack_obj)},
+    {MP_ROM_QSTR(MP_QSTR_estimate_unused_stack),
+     MP_ROM_PTR(&mod_trezorutils_estimate_unused_stack_obj)},
+#endif
     {MP_ROM_QSTR(MP_QSTR_sd_hotswap_enabled),
      MP_ROM_PTR(&mod_trezorutils_sd_hotswap_enabled_obj)},
     // various built-in constants

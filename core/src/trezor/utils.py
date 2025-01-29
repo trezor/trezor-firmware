@@ -42,7 +42,11 @@ if __debug__:
         DISABLE_ANIMATION = uos.getenv("TREZOR_DISABLE_ANIMATION") == "1"
         LOG_MEMORY = uos.getenv("TREZOR_LOG_MEMORY") == "1"
     else:
-        from trezorutils import DISABLE_ANIMATION  # noqa: F401
+        from trezorutils import (  # noqa: F401
+            DISABLE_ANIMATION,
+            estimate_unused_stack,
+            zero_unused_stack,
+        )
 
         LOG_MEMORY = 0
 
