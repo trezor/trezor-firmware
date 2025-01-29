@@ -38,32 +38,6 @@ _accessible_ram_1_end =  MCU_SRAM4 + MCU_SRAM4_SIZE;
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-/* used by the startup code to wipe memory */
-_startup_clear_ram_0_start = MCU_SRAM1;
-_startup_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE;
-_startup_clear_ram_1_start = MCU_SRAM2;
-_startup_clear_ram_1_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
-_startup_clear_ram_2_start = MCU_SRAM4;
-_startup_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-
-/* used by the jump code to wipe memory */
-_handoff_clear_ram_0_start = MCU_SRAM1;
-_handoff_clear_ram_0_end = MCU_SRAM1 + MCU_SRAM1_SIZE - 512;
-_handoff_clear_ram_1_start = MCU_SRAM2;
-_handoff_clear_ram_1_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
-_handoff_clear_ram_2_start = MCU_SRAM4;
-_handoff_clear_ram_2_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-
-/* used by the shutdown code to wipe memory */
-_shutdown_clear_ram_0_start = MCU_SRAM1;
-_shutdown_clear_ram_0_end = MCU_SRAM3 + MCU_SRAM3_SIZE;
-_shutdown_clear_ram_1_start = MCU_SRAM4;
-_shutdown_clear_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
-_shutdown_clear_ram_2_start = 0;
-_shutdown_clear_ram_2_end = 0;
-_shutdown_clear_ram_3_start = 0;
-_shutdown_clear_ram_3_end = 0;
-
 _codelen = SIZEOF(.vendorheader) + SIZEOF(.header) + SIZEOF(.flash)  + SIZEOF(.uflash) + SIZEOF(.data) + SIZEOF(.confidential);
 _flash_start = ORIGIN(FLASH);
 _flash_end = ORIGIN(FLASH) + LENGTH(FLASH);
