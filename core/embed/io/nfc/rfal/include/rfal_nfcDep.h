@@ -406,16 +406,16 @@ typedef union { /*  PRQA S 0750 # MISRA 19.2 - Both members of the union will
 
 /*! NFC-DEP device Info */
 typedef struct {
-  uint8_t GBLen;   /*!< General Bytes length                       */
-  uint8_t WT;      /*!< WT to be used (ignored in Listen Mode)     */
-  uint32_t FWT;    /*!< FWT to be used (1/fc)(ignored Listen Mode) */
-  uint32_t dFWT;   /*!< Delta FWT to be used (1/fc)                */
-  uint8_t LR;      /*!< Length Reduction coding the max payload    */
-  uint16_t FS;     /*!< Frame Size                                 */
-  rfalBitRate DSI; /*!< Bit Rate coding from Initiator  to Target  */
-  rfalBitRate DRI; /*!< Bit Rate coding from Target to Initiator   */
-  uint8_t DID;     /*!< Device ID (RFAL_NFCDEP_DID_NO if no DID)   */
-  uint8_t NAD;     /*!< Node ADdress (RFAL_NFCDEP_NAD_NO if no NAD)*/
+  uint8_t GBLen;       /*!< General Bytes length                       */
+  uint8_t WT;          /*!< WT to be used (ignored in Listen Mode)     */
+  uint32_t FWT;        /*!< FWT to be used (1/fc)(ignored Listen Mode) */
+  uint32_t dFWT;       /*!< Delta FWT to be used (1/fc)                */
+  uint8_t LR;          /*!< Length Reduction coding the max payload    */
+  uint16_t FS;         /*!< Frame Size                                 */
+  rfalBitRate DSI_dep; /*!< Bit Rate coding from Initiator  to Target  */
+  rfalBitRate DRI;     /*!< Bit Rate coding from Target to Initiator   */
+  uint8_t DID;         /*!< Device ID (RFAL_NFCDEP_DID_NO if no DID)   */
+  uint8_t NAD;         /*!< Node ADdress (RFAL_NFCDEP_NAD_NO if no NAD)*/
 } rfalNfcDepInfo;
 
 /*! NFC-DEP Device structure */

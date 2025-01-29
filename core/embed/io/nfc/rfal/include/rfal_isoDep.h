@@ -382,15 +382,16 @@ typedef union { /*  PRQA S 0750 # MISRA 19.2 - Both members of the union will
 
 /*! ISO-DEP device Info */
 typedef struct {
-  uint8_t FWI;     /*!< Frame Waiting Integer                                */
-  uint32_t FWT;    /*!< Frame Waiting Time (1/fc)                            */
-  uint32_t dFWT;   /*!< Delta Frame Waiting Time (1/fc)                      */
-  uint32_t SFGI;   /*!< Start-up Frame Guard time Integer                    */
-  uint32_t SFGT;   /*!< Start-up Frame Guard Time (ms)                       */
-  uint8_t FSxI;    /*!< Frame Size Device/Card Integer (FSDI or FSCI)        */
-  uint16_t FSx;    /*!< Frame Size Device/Card (FSD or FSC)                  */
-  uint32_t MBL;    /*!< Maximum Buffer Length (optional for NFC-B)           */
-  rfalBitRate DSI; /*!< Bit Rate coding from Listener (PICC) to Poller (PCD) */
+  uint8_t FWI;   /*!< Frame Waiting Integer                                */
+  uint32_t FWT;  /*!< Frame Waiting Time (1/fc)                            */
+  uint32_t dFWT; /*!< Delta Frame Waiting Time (1/fc)                      */
+  uint32_t SFGI; /*!< Start-up Frame Guard time Integer                    */
+  uint32_t SFGT; /*!< Start-up Frame Guard Time (ms)                       */
+  uint8_t FSxI;  /*!< Frame Size Device/Card Integer (FSDI or FSCI)        */
+  uint16_t FSx;  /*!< Frame Size Device/Card (FSD or FSC)                  */
+  uint32_t MBL;  /*!< Maximum Buffer Length (optional for NFC-B)           */
+  rfalBitRate
+      DSI_dep;     /*!< Bit Rate coding from Listener (PICC) to Poller (PCD) */
   rfalBitRate DRI; /*!< Bit Rate coding from Poller (PCD) to Listener (PICC) */
   uint8_t DID;     /*!< Device ID                                            */
   uint8_t NAD;     /*!< Node ADdress                                         */
@@ -803,7 +804,7 @@ ReturnCode rfalIsoDepRATS(rfalIsoDepFSxI FSDI, uint8_t DID, rfalIsoDepAts *ats,
  *  \return RFAL_ERR_NONE         : No error, PPS Response received
  *****************************************************************************
  */
-ReturnCode rfalIsoDepPPS(uint8_t DID, rfalBitRate DSI, rfalBitRate DRI,
+ReturnCode rfalIsoDepPPS(uint8_t DID, rfalBitRate DSI_dep, rfalBitRate DRI,
                          rfalIsoDepPpsRes *ppsRes);
 
 /*!
@@ -838,7 +839,7 @@ ReturnCode rfalIsoDepPPS(uint8_t DID, rfalBitRate DSI, rfalBitRate DRI,
  *****************************************************************************
  */
 ReturnCode rfalIsoDepATTRIB(const uint8_t *nfcid0, uint8_t PARAM1,
-                            rfalBitRate DSI, rfalBitRate DRI,
+                            rfalBitRate DSI_dep, rfalBitRate DRI,
                             rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID,
                             const uint8_t *HLInfo, uint8_t HLInfoLen,
                             uint32_t fwt, rfalIsoDepAttribRes *attribRes,

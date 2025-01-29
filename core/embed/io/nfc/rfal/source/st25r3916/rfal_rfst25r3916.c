@@ -2939,7 +2939,7 @@ static void rfalTransceiveRx(void) {
         gRFAL.TxRx.status = RFAL_ERR_SYSTEM;
       }
 
-#if 0 /* Debug purposes */ 
+#if 0 /* Debug purposes */
                 rfalLogD( "RFAL: curSt: %d  Error: %d \r\n", gRFAL.TxRx.state, gRFAL.TxRx.status );
 #endif
 
