@@ -24,6 +24,10 @@
 #include <sys/irq.h>
 #include <sys/mpu.h>
 
+#ifdef USE_BACKLIGHT
+#include <io/backlight.h>
+#endif
+
 #if defined(KERNEL_MODE) && defined(USE_PVD)
 
 void pvd_init(void) {
@@ -52,10 +56,11 @@ void PVD_PVM_IRQHandler(void) {
 void PVD_IRQHandler(void) {
 #endif
   mpu_reconfig(MPU_MODE_DEFAULT);
-#ifdef TPS61043_TIM
-  // Turn off display backlight
-  TPS61043_TIM->TPS61043_TIM_CCR = 0;
+
+#ifdef USE_BACKLIGHT
+  backlight_set(0);
 #endif
+
   error_shutdown("PVD IRQ");
 }
 
