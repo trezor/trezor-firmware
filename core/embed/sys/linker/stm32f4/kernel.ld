@@ -11,9 +11,8 @@ MEMORY {
   DMABUF   (wal)  : ORIGIN = DMABUF_RAM_START, LENGTH = DMABUF_RAM_SIZE
 }
 
-main_stack_base = ADDR(.stack) + SIZEOF(.stack); /* 8-byte aligned full descending stack */
-_sstack = ADDR(.stack);
-_estack = main_stack_base;
+_stack_section_start = ADDR(.stack);
+_stack_section_end = ADDR(.stack) + SIZEOF(.stack);
 
 /* used by the startup code to populate variables used by the C code */
 data_lma = LOADADDR(.data);
