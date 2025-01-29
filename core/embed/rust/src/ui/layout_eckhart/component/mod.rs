@@ -22,9 +22,11 @@ pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;
 #[cfg(feature = "translations")]
 pub use keyboard::{
+    bip39::Bip39Input,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
     passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
     pin::{PinKeyboard, PinKeyboardMsg},
+    slip39::Slip39Input,
 };
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
