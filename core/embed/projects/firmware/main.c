@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include "py/builtin.h"
@@ -32,6 +33,7 @@
 #include "ports/stm32/gccollect.h"
 #include "ports/stm32/pendsv.h"
 
+#include <io/display.h>
 #include <sys/linker_utils.h>
 #include <sys/systask.h>
 #include <sys/system.h>
@@ -49,7 +51,7 @@ int main(uint32_t cmd, void *arg) {
     system_exit(0);
   }
 
-  screen_boot_stage_2();
+  screen_boot_stage_2(DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT);
 
 #ifdef USE_SECP256K1_ZKP
   ensure(sectrue * (zkp_context_init() == 0), NULL);

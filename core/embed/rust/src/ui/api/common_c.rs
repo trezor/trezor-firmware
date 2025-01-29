@@ -29,6 +29,6 @@ extern "C" fn display_rsod_rust(
 }
 
 #[no_mangle]
-extern "C" fn screen_boot_stage_2() {
-    ModelUI::screen_boot_stage_2();
+extern "C" fn screen_boot_stage_2(fade_in: bool) {
+    ModelUI::screen_boot_stage_2(fade_in);
 }

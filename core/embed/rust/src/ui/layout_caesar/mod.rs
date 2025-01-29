@@ -23,7 +23,7 @@ impl CommonUI for UICaesar {
         screens::screen_fatal_error(title, msg, footer);
     }
 
-    fn screen_boot_stage_2() {
-        screens::screen_boot_stage_2();
+    fn screen_boot_stage_2(fade_in: bool) {
+        screens::screen_boot_stage_2(fade_in);
     }
 }
