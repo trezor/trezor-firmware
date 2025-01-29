@@ -55,8 +55,6 @@ void init_linker_sections(void) {
 }
 
 __attribute((naked, no_stack_protector)) void clear_unused_stack(void) {
-  extern uint32_t _stack_section_start;
-
   __asm__ volatile(
       "    MOV     R0, #0              \n"
       "    LDR     R1, =%[sstack]      \n"

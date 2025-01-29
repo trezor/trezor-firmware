@@ -26,6 +26,8 @@
 #include <sys/linker_utils.h>
 #include <sys/system.h>
 #include <sys/systick.h>
+#include <sys/sysutils.h>
+
 #include "startup_init.h"
 
 #ifdef KERNEL_MODE

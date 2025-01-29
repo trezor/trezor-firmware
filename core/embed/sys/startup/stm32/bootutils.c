@@ -26,6 +26,7 @@
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/sysutils.h>
 #include <util/image.h>
 
 #ifdef TREZOR_MODEL_T2T1
@@ -68,6 +69,8 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   mpu_restore(mode);
 }
 
+boot_args_t* bootargs_ptr(void) { return &g_boot_args; }
+
 #ifdef BOOTLOADER
 // Contains the current boot command saved during bootloader startup.
 boot_command_t g_boot_command_saved;
@@ -104,65 +107,6 @@ static inline void __attribute__((always_inline)) delete_secrets(void) {
   TAMP->CR2 |= TAMP_CR2_BKERASE;
 }
 #endif  // STM32U5
-
-#ifdef STM32F4
-// Ensure that we are running in privileged thread mode.
-//
-// This function is used only on STM32F4, where a direct jump to the
-// bootloader is performed. It checks if we are in handler mode, and
-// if so, it switches to privileged thread mode.
-__attribute((naked, no_stack_protector)) static void ensure_thread_mode(void) {
-  __asm__ volatile(
-      // --------------------------------------------------------------
-      // Check if we are in handler mode
-      // --------------------------------------------------------------
-
-      "LDR      R1, =0x1FF         \n"  // Get lower 9 bits of IPSR
-      "MRS      R0, IPSR           \n"
-      "ANDS     R0, R0, R1         \n"
-      "CMP      R0, #0             \n"  // == 0 if in thread mode
-      "IT       EQ                 \n"
-      "BXEQ     LR                 \n"  // return if in thread mode
-
-      // --------------------------------------------------------------
-      // Disable FP registers lazy stacking
-      // --------------------------------------------------------------
-
-      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPCCR
-      "LDR     R0, [R1]            \n"
-      "BIC     R0, R0, #1          \n"  // Clear LSPACT to suppress lazy
-                                        // stacking
-      "STR     R0, [R1]            \n"
-
-      // --------------------------------------------------------------
-      // Exit handler mode, enter thread mode
-      // --------------------------------------------------------------
-
-      "MOV     R0, SP              \n"  // Align stack pointer to 8 bytes
-      "AND     R0, R0, #~7         \n"
-      "MOV     SP, R0              \n"
-      "SUB     SP, SP, #32         \n"  // Allocate space for the stack frame
-
-      "MOV     R0, #0              \n"
-      "STR     R0, [SP, #0]        \n"  // future R0 = 0
-      "STR     R0, [SP, #4]        \n"  // future R1 = 0
-      "STR     R0, [SP, #8]        \n"  // future R2 = 0
-      "STR     R0, [SP, #12]       \n"  // future R3 = 0
-      "STR     R12, [SP, #16]      \n"  // future R12 = R12
-      "STR     LR, [SP, #20]       \n"  // future LR = LR
-      "BIC     LR, LR, #1          \n"
-      "STR     LR, [SP, #24]       \n"  // return address = LR
-      "LDR     R0, = 0x01000000    \n"  // THUMB bit set
-      "STR     R0, [SP, #28]       \n"  // future xPSR
-
-      "MRS     R0, CONTROL         \n"  // Clear SPSEL to use MSP for thread
-      "BIC     R0, R0, #3          \n"  // Clear nPRIV to run in privileged mode
-      "MSR     CONTROL, R0         \n"
-
-      "LDR     LR, = 0xFFFFFFF9    \n"  // Return to Secure Thread mode, use MSP
-      "BX      LR                  \n");
-}
-#endif  // STM32F4
 
 // Reboots the device with the given boot command and arguments
 static void __attribute__((noreturn))

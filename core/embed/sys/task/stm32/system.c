@@ -20,12 +20,15 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/linker_utils.h>
 #include <sys/mpu.h>
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
+#include <sys/sysutils.h>
 
 #ifdef USE_SDRAM
 #include <sys/sdram.h>
@@ -40,10 +43,6 @@
 #endif
 
 #ifdef KERNEL_MODE
-
-// Kernel stack base pointer defined in linker script
-extern uint8_t _stack_section_start;
-extern uint8_t _stack_section_end;
 
 void system_init(systask_error_handler_t error_handler) {
 #if defined(TREZOR_MODEL_T2T1) && (!defined(BOARDLOADER))
@@ -179,168 +178,60 @@ __attribute__((used)) static void emergency_reset(void) {
   SCB->SHCSR &= ~(cleared_flags & ~preserved_flag);
 }
 
-__attribute((naked, no_stack_protector)) void system_emergency_rescue(
-    systask_error_handler_t error_handler, const systask_postmortem_t* pminfo) {
+__attribute((noreturn, no_stack_protector)) static void
+system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
+  systask_error_handler_t error_handler = (systask_error_handler_t)arg1;
+
+  // Reset peripherals (so we are sure that no DMA is pending)
+  emergency_reset();
+
+  // Copy pminfo from to our stack
+  // MPU is now disable, we have full access to bootargs.
+  systask_postmortem_t pminfo = bootargs_ptr()->pminfo;
+
+  // Clear unused part of our stack
+  clear_unused_stack();
+
+  // Save stack protector guard for later
   extern uint32_t __stack_chk_guard;
+  uint32_t stack_chk_guard = __stack_chk_guard;
 
-  __asm__ volatile(
-      "MOV     R5, R1              \n"  // R5 = pminfo
-      "MOV     R6, R0              \n"  // R6 = error_handler
+  // Clear all memory except our stack.
+  // NOTE: This also clear bootargs, so we don't pass pminfo structure
+  // to the bootloader for now.
+  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  MEMREGION_DEL_SECTION(&region, _stack_section);
+  memregion_fill(&region, 0);
 
-      "CPSID   I                   \n"  // Disable interrupts
+  // Reinitialize .bss, .data, ...
+  init_linker_sections();
 
-      // --------------------------------------------------------------
-      // Disable MPU
-      // --------------------------------------------------------------
+  // Reinitialize stack protector guard
+  __stack_chk_guard = stack_chk_guard;
 
-      "DMB     0xF                 \n"  // Data memory barrier
-      "LDR     R0, =0xE000ED94     \n"  // MPU->CTRL
-      "MOV     R1, #0              \n"
-      "STR     R1, [R0]            \n"  // Disable MPU
+  // Now we can safely enable interrupts again
+  __enable_fault_irq();
 
-      // --------------------------------------------------------------
-      // Setup new stack
-      // --------------------------------------------------------------
+  // Ensure we are in thread mode
+  ensure_thread_mode();
 
-      "LDR     R0, =%[estack]      \n"  // Setup new stack
-      "MSR     MSP, R0             \n"  // Set MSP
-#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
-      "LDR     R0, =%[sstack]      \n"
-      "ADD     R0, R0, #256        \n"  // Add safety margin
-      "MSR     MSPLIM, R0          \n"  // Set MSPLIM
-#endif
+  // Now everything is perfectly initialized and we can do anything
+  // in C code
 
-      // --------------------------------------------------------------
-      // Copy pminfo to new stack
-      // --------------------------------------------------------------
+  if (error_handler != NULL) {
+    error_handler(&pminfo);
+  }
 
-      "LDR     R2, =%[PMINFO_SIZE] \n"  // Copy pminfo to new stack
-      "SUB     SP, R2              \n"  // Allocate space for pminfo
-      "MOV     R0, SP              \n"  // Destination
-      "MOV     R1, R5              \n"  // Source
-      "MOV     R5, R0              \n"  // R5 = pminfo on the new stack
-      "BL      memcpy              \n"
+  secure_shutdown();
+}
 
-      // --------------------------------------------------------------
-      // Save stack protector guard
-      // --------------------------------------------------------------
+__attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
+    systask_error_handler_t error_handler, const systask_postmortem_t* pminfo) {
+  // Save `pminfo` to bootargs so it isn't overwritten by succesive call
+  bootargs_set(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
 
-      "LDR     R0, =%[STK_GUARD]   \n"  // Save stack protector guard
-      "LDR     R7, [R0]            \n"  // R7 = __stack_chk_guard
-
-      // --------------------------------------------------------------
-      // Clear .bss, initialize .data, ...
-      // --------------------------------------------------------------
-
-      "LDR     R0, =_bss_section_start \n"  // Clear .bss
-      "MOV     R1, #0              \n"
-      "LDR     R2, =_bss_section_end \n"
-      "SUB     R2, R2, R0          \n"
-      "BL      memset              \n"
-
-      "LDR     R0, =_data_section_start \n"  // Initialize .data
-      "LDR     R1, =_data_section_loadaddr \n"
-      "LDR     R2, =_data_section_end \n"
-      "SUB     R2, R2, R0          \n"
-      "BL      memcpy              \n"
-
-#ifdef STM32U5
-      "LDR     R0, =_confidential_section_start \n"  // Initialize .confidental
-      "LDR     R1, =_confidential_section_loadaddr \n"
-      "LDR     R2, =_confidential_section_end \n"
-      "SUB     R2, R2, R0          \n"
-      "BL      memcpy              \n"
-#endif
-
-      // --------------------------------------------------------------
-      // Restore stack protector guard
-      // --------------------------------------------------------------
-
-      "LDR     R0, =%[STK_GUARD]   \n"  // Restore stack protector guard
-      "STR     R7, [R0]            \n"
-
-      // --------------------------------------------------------------
-      // Reset critical hardware so we can safely enable interrupts
-      // --------------------------------------------------------------
-
-      "BL      emergency_reset     \n"
-
-      "CPSIE   I                   \n"  // Re-enable interrupts
-
-      // --------------------------------------------------------------
-      // Clear all VFP registers
-      // --------------------------------------------------------------
-
-      "LDR     R1, = 0xE000EF34    \n"  // FPU->FPCCR
-      "LDR     R0, [R1]            \n"
-      "BIC     R0, R0, #1          \n"  // Clear LSPACT to suppress lazy
-                                        // stacking
-      "STR     R0, [R1]            \n"
-
-      // TODO: clear VFP registers (maybe for ARMV7-M only)
-
-      // --------------------------------------------------------------
-      // Clear R7-R11 registers
-      // --------------------------------------------------------------
-
-      "MOV     R0, #0              \n"
-      "MOV     R7, R0              \n"
-      "MOV     R8, R0              \n"
-      "MOV     R9, R0              \n"
-      "MOV     R10, R0             \n"
-      "MOV     R11, R0             \n"
-
-      // --------------------------------------------------------------
-      // Check if we are in thread mode and if yes, jump to error_handler
-      // --------------------------------------------------------------
-
-      "LDR      R1, =0x1FF         \n"  // Get lower 9 bits of IPSR
-      "MRS      R0, IPSR           \n"
-      "ANDS     R0, R0, R1         \n"
-      "CMP      R0, #0             \n"  // == 0 if in thread mode
-      "ITTT     EQ                 \n"
-      "MOVEQ    R0, R5             \n"  // R0 = pminfo
-      "LDREQ    LR, =secure_shutdown\n"
-      "BXEQ     R6                 \n"  // jump to error_handler directly
-
-      // --------------------------------------------------------------
-      // Return from exception to thread mode
-      // --------------------------------------------------------------
-
-      "MOV     R0, SP              \n"  // Align stack pointer to 8 bytes
-      "AND     R0, R0, #~7         \n"
-      "MOV     SP, R0              \n"
-      "SUB     SP, SP, #32         \n"  // Allocate space for the stack frame
-
-      "MOV     R0, #0              \n"
-      "STR     R5, [SP, #0]        \n"  // future R0 = pminfo
-      "STR     R0, [SP, #4]        \n"  // future R1 = 0
-      "STR     R0, [SP, #8]        \n"  // future R2 = 0
-      "STR     R0, [SP, #12]       \n"  // future R3 = 0
-      "STR     R0, [SP, #16]       \n"  // future R12 = 0
-      "LDR     R0, =secure_shutdown\n"
-      "STR     R0, [SP, #20]       \n"  // future LR = secure_shutdown()
-      "BIC     R6, R6, #1          \n"
-      "STR     R6, [SP, #24]       \n"  // return address = error_handler()
-      "LDR     R1, = 0x01000000    \n"  // THUMB bit set
-      "STR     R1, [SP, #28]       \n"  // future xPSR
-
-      "MOV     R4, R0              \n"  // Clear registers R4-R6
-      "MOV     R5, R0              \n"  // (R7-R11 are already cleared)
-      "MOV     R6, R0              \n"
-
-      "MRS     R0, CONTROL         \n"  // Clear SPSEL to use MSP for thread
-      "BIC     R0, R0, #3          \n"  // Clear nPRIV to run in privileged mode
-      "MSR     CONTROL, R1         \n"
-
-      "LDR     LR, = 0xFFFFFFF9    \n"  // Return to Secure Thread mode, use MSP
-      "BX      LR                  \n"
-      :  // no output
-      : [PMINFO_SIZE] "i"(sizeof(systask_postmortem_t)),
-        [STK_GUARD] "i"(&__stack_chk_guard), [estack] "i"(&_stack_section_end),
-        [sstack] "i"((uint32_t)&_stack_section_start)
-      :  // no clobber
-  );
+  call_with_new_stack((uint32_t)error_handler, 0,
+                      system_emergency_rescue_phase_2);
 }
 
 #endif  // KERNEL_MODE
