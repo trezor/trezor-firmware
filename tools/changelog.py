@@ -142,8 +142,8 @@ def filter_changelog(changelog_file: Path, internal_name: str):
 
 
 def _iter_fragments(project: Path) -> Iterator[Path]:
-    fragements_dir = project / ".changelog.d"
-    for fragment in fragements_dir.iterdir():
+    fragments_dir = project / ".changelog.d"
+    for fragment in fragments_dir.iterdir():
         if fragment.name in IGNORED_FILES:
             continue
         yield fragment
@@ -152,9 +152,12 @@ def _iter_fragments(project: Path) -> Iterator[Path]:
 def check_fragments_style(project: Path):
     success = True
     for fragment in _iter_fragments(project):
-        fragment_text = fragment.read_text().rstrip()
+        fragment_text = fragment.read_text().strip()
         if not fragment_text.endswith("."):
             click.echo(f"Changelog '{fragment}' must end with a period.")
+            success = False
+        if fragment_text.startswith("[") and not MODELS_RE.search(fragment_text):
+            click.echo(f"Wrong model specifier in '{fragment}'")
             success = False
 
     if not success:
