@@ -81,6 +81,15 @@ void bootargs_get_args(boot_args_t* dest) {
 
   mpu_restore(mode);
 }
+
+void bootargs_init(uint32_t r11_register) {
+#ifdef STM32U5
+  g_boot_command_saved = g_boot_command;
+  g_boot_command = BOOT_COMMAND_NONE;
+#else
+  g_boot_command_saved = r11_register;
+#endif
+}
 #endif
 
 // Deletes all secrets and SRAM2 where stack is located

@@ -21,6 +21,9 @@
 #include <trezor_rtl.h>
 
 #include <sec/rng.h>
+#include <sys/bootargs.h>
+#include <sys/linker_utils.h>
+#include <sys/system.h>
 
 #ifdef KERNEL_MODE
 
@@ -186,9 +189,6 @@ void SystemInit(void) {
 
   // TODO turn off MSI?
 
-  // init the TRNG peripheral
-  rng_init();
-
   // set CP10 and CP11 to enable full access to the fpu coprocessor;
   SCB->CPACR |=
       ((3UL << 20U) | (3UL << 22U)); /* set CP10 and CP11 Full Access */
@@ -218,6 +218,63 @@ void SystemInit(void) {
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+}
+
+__attribute((no_stack_protector)) void reset_handler(void) {
+  // Set stack pointer limit for checking stack overflow
+  extern uint8_t _stack_section_start;
+  __set_MSPLIM((uintptr_t)&_stack_section_start + 128);
+
+  // Now .bss, .data are not initialized yet - we need to be
+  // careful with global variables. They are not initialized,
+  // contain random values and will be rewritten in the succesive
+  // code
+
+  // Initialize system clocks
+  SystemInit();
+
+  // Clear unused part of stack
+  clear_unused_stack();
+
+  // Initialize random number generator
+  rng_init();
+
+  // Clear all memory except stack.
+  // Keep also bootargs in bootloader and boardloader.
+  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+
+  MEMREGION_DEL_SECTION(&region, _stack_section);
+#if defined BOARDLOADER || defined BOOTLOADER
+  MEMREGION_DEL_SECTION(&region, _bootargs_ram);
+#endif
+
+#ifdef BOARDLOADER
+  memregion_fill(&region, rng_get());
+#endif
+  memregion_fill(&region, 0);
+
+  // Initialize .bss, .data, ...
+  init_linker_sections();
+
+  // Initialize stack protector guard value
+  extern uint32_t __stack_chk_guard;
+  __stack_chk_guard = rng_get();
+
+  // Now everything is perfectly initialized and we can do anything
+  // in C code
+
+#ifdef BOOTLOADER
+  bootargs_init(0);
+#endif
+
+  // Enable interrupts and fault handlers
+  __enable_fault_irq();
+
+  // Run application
+  extern int main(void);
+  int main_result = main();
+
+  system_exit(main_result);
 }
 
 #endif  // #ifdef KERNEL_MODE

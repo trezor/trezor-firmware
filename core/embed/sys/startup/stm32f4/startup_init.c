@@ -21,7 +21,10 @@
 #include <trezor_rtl.h>
 
 #include <sec/rng.h>
+#include <sys/bootargs.h>
 #include <sys/bootutils.h>
+#include <sys/linker_utils.h>
+#include <sys/system.h>
 #include <sys/systick.h>
 #include "startup_init.h"
 
@@ -248,6 +251,67 @@ __attribute((used)) void clear_otg_hs_memory(void) {
 
   __HAL_RCC_USB_OTG_HS_CLK_DISABLE();  // disable USB OTG_HS peripheral clock as
                                        // the peripheral is not needed right now
+}
+
+__attribute((no_stack_protector)) void reset_handler(void) {
+#ifdef BOOTLOADER
+  uint32_t r11_value;
+  // Copy the value of R11 to the local variable r11_value
+  __asm__ volatile("MOV %0, R11" : "=r"(r11_value));
+#endif
+
+  // Now .bss, .data are not initialized yet - we need to be
+  // careful with global variables. They are not initialized,
+  // contain random values and will be rewritten in the succesive
+  // code
+
+  // Initialize system clocks
+  SystemInit();
+
+  // Clear unused part of stack
+  clear_unused_stack();
+
+  // Initialize random number generator
+  rng_init();
+
+  // Clear all memory except stack.
+  // Keep also bootargs in bootloader and boardloader.
+  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+
+  MEMREGION_DEL_SECTION(&region, _stack_section);
+#ifdef BOOTLOADER
+  MEMREGION_DEL_SECTION(&region, _bootargs_ram);
+#endif
+
+#ifdef BOARDLOADER
+  memregion_fill(&region, rng_get());
+#endif
+  memregion_fill(&region, 0);
+
+  // Initialize .bss, .data, ...
+  init_linker_sections();
+
+  // Initialize stack protector guard value
+  extern uint32_t __stack_chk_guard;
+  __stack_chk_guard = rng_get();
+
+  // Now everything is perfectly initialized and we can do anything
+  // in C code
+
+  clear_otg_hs_memory();
+
+#ifdef BOOTLOADER
+  bootargs_init(r11_value);
+#endif
+
+  // Enable interrupts and fault handlers
+  __enable_fault_irq();
+
+  // Run application
+  extern int main(void);
+  int main_result = main();
+
+  system_exit(main_result);
 }
 
 #endif  // KERNEL_MODE
