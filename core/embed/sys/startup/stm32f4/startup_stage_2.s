@@ -13,11 +13,12 @@ reset_handler:
   ldr r0, =_startup_clear_ram_1_start
   ldr r1, =_startup_clear_ram_1_end
   bl memset_reg
-
+  
   // copy data in from flash
-  ldr r0, =data_vma     // dst addr
-  ldr r1, =data_lma     // src addr
-  ldr r2, =data_size    // size in bytes
+  ldr r0, =_data_section_start     // dst addr
+  ldr r1, =_data_section_loadaddr  // src addr
+  ldr r2, =_data_section_end       // size in bytes
+  sub r2, r2, r0
   bl memcpy
 
   // setup the stack protector (see build script "-fstack-protector-all") with an unpredictable value
