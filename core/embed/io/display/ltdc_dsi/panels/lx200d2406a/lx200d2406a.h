@@ -21,6 +21,8 @@
 
 #include <trezor_types.h>
 
+#define DSI_LANE_BYTE_FREQ_HZ 62500000ULL
+
 #define VSYNC 4
 #define VBP 4
 #define VFP 660

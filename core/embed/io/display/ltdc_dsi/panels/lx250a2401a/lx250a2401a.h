@@ -21,13 +21,15 @@
 
 #include <trezor_types.h>
 
+#define DSI_LANE_BYTE_FREQ_HZ 56000000ULL
+
 #define VSYNC 2
 #define VBP 26
 #define VFP 16
 #define VACT 520
-#define HSYNC 6  // 16
-#define HBP 2    // 32
-#define HFP 6    // 26
+#define HSYNC 6
+#define HBP 2
+#define HFP 56
 #define HACT 480
 #define LCD_WIDTH 480
 #define LCD_HEIGHT 520
