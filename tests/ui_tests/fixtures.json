@@ -60,7 +60,7 @@
 "T1B1_en_bitcoin-test_getaddress.py::test_invalid_path": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1B1_en_bitcoin-test_getaddress.py::test_ltc": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1B1_en_bitcoin-test_getaddress.py::test_multisig": "09d812e81c04cef37608f181dcdefb6cd186eb5bb111d47ae0e62d1b3fdd64cf",
-"T1B1_en_bitcoin-test_getaddress.py::test_multisig_different_paths": "bcecf88ef3112f415545d37a036627823c426f774c58cca1c91f11c5ad953a5d",
+"T1B1_en_bitcoin-test_getaddress.py::test_multisig_different_paths": "e2953e3a360fc1f1a9aa57d1455ab02823f21fddc3fd172dcc74af925342cd82",
 "T1B1_en_bitcoin-test_getaddress.py::test_multisig_missing[False]": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
 "T1B1_en_bitcoin-test_getaddress.py::test_multisig_missing[True]": "ef912e3aed3113ed37f982568c0eca17c27feeb67e87e0f7e43cf8b3b3e8d199",
 "T1B1_en_bitcoin-test_getaddress.py::test_multisig_pubkeys_order": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
