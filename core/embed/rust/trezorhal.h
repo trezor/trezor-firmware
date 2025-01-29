@@ -11,6 +11,7 @@
 #include <sys/systick.h>
 #include <util/flash.h>
 #include <util/translations.h>
+#include <sys/profiler.h>
 #include "storage.h"
 
 #ifdef USE_BLE

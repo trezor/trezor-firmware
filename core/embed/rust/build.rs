@@ -397,7 +397,12 @@ fn generate_trezorhal_bindings() {
         // haptic
         .allowlist_type("haptic_effect_t")
         .allowlist_function("haptic_play")
-        .allowlist_function("haptic_play_custom");
+        .allowlist_function("haptic_play_custom")
+
+        // profiler
+        .allowlist_function("profiler_start")
+        .allowlist_function("profiler_end")
+        .allowlist_function("profiler_init");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

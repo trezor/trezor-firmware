@@ -22,6 +22,8 @@
 #include <gfx/fonts.h>
 #include <gfx/gfx_draw.h>
 #include <io/display.h>
+#include <sys/profiler.h>
+
 
 /// class Display:
 ///     """
@@ -55,6 +57,8 @@ STATIC mp_obj_t mod_trezorui_Display_make_new(const mp_obj_type_t *type,
 ///     Refresh display (update screen).
 ///     """
 STATIC mp_obj_t mod_trezorui_Display_refresh(mp_obj_t self) {
+
+  profiler_end();
   display_refresh();
   return mp_const_none;
 }

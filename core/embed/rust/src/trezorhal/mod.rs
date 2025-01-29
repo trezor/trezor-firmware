@@ -27,6 +27,7 @@ pub mod wordlist;
 
 pub mod secbool;
 
+pub mod profiler;
 #[cfg(not(feature = "micropython"))]
 pub mod time;
 

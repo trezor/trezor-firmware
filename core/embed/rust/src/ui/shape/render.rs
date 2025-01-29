@@ -1,3 +1,4 @@
+use crate::trezorhal::profiler;
 use crate::ui::{
     display::Color,
     geometry::{Offset, Rect},
@@ -85,6 +86,8 @@ where
         bg_color: Option<Color>,
         cache: &'a DrawingCache<'alloc>,
     ) -> Self {
+        profiler::init();
+        profiler::start();
         if let Some(color) = bg_color {
             canvas.fill_background(color);
         }
