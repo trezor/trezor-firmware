@@ -9,7 +9,7 @@ from trezorlib import cosi, definitions, messages, protobuf
 from .common import PRIVATE_KEYS_DEV
 
 
-def make_network(
+def make_eth_network(
     chain_id: int = 0,
     slip44: int = 0,
     symbol: str = "FAKE",
@@ -23,7 +23,7 @@ def make_network(
     )
 
 
-def make_token(
+def make_eth_token(
     symbol: str = "FAKE",
     decimals: int = 18,
     address: bytes = b"",
@@ -43,8 +43,11 @@ def make_payload(
     data_type: messages.DefinitionType = messages.DefinitionType.ETHEREUM_NETWORK,
     timestamp: int = 0xFFFF_FFFF,
     message: (
-        messages.EthereumNetworkInfo | messages.EthereumTokenInfo | bytes
-    ) = make_network(),
+        messages.EthereumNetworkInfo
+        | messages.EthereumTokenInfo
+        | messages.SolanaTokenInfo
+        | bytes
+    ) = make_eth_network(),
 ) -> bytes:
     if isinstance(message, bytes):
         message_bytes = message
@@ -83,7 +86,7 @@ def sign_payload(
     return merkle_proof, sigmask_byte + signature
 
 
-def encode_network(
+def encode_eth_network(
     network: messages.EthereumNetworkInfo | None = None,
     chain_id: int = 0,
     slip44: int = 0,
@@ -91,13 +94,15 @@ def encode_network(
     name: str = "Fake network",
 ) -> bytes:
     if network is None:
-        network = make_network(chain_id, slip44, symbol, name)
-    payload = make_payload(data_type=messages.DefinitionType.ETHEREUM_NETWORK, message=network)
+        network = make_eth_network(chain_id, slip44, symbol, name)
+    payload = make_payload(
+        data_type=messages.DefinitionType.ETHEREUM_NETWORK, message=network
+    )
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
 
 
-def encode_token(
+def encode_eth_token(
     token: messages.EthereumTokenInfo | None = None,
     symbol: str = "FakeTok",
     decimals: int = 18,
@@ -110,16 +115,45 @@ def encode_token(
             if address.startswith("0x"):
                 address = address[2:]
             address = bytes.fromhex(address)  # type: ignore (typechecker is lying)
-        token = make_token(symbol, decimals, address, chain_id, name)  # type: ignore (typechecker is lying)
-    payload = make_payload(data_type=messages.DefinitionType.ETHEREUM_TOKEN, message=token)
+        token = make_eth_token(symbol, decimals, address, chain_id, name)  # type: ignore (typechecker is lying)
+    payload = make_payload(
+        data_type=messages.DefinitionType.ETHEREUM_TOKEN, message=token
+    )
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
 
 
-def make_defs(
+def make_eth_defs(
     network: bytes | None, token: bytes | None
 ) -> messages.EthereumDefinitions:
     return messages.EthereumDefinitions(
         encoded_network=network,
         encoded_token=token,
     )
+
+
+def make_solana_token(
+    symbol: str = "FakeTok",
+    mint: bytes = b"\x00" * 32,
+    name: str = "Fake token",
+) -> messages.SolanaTokenInfo:
+    return messages.SolanaTokenInfo(
+        symbol=symbol,
+        mint=mint,
+        name=name,
+    )
+
+
+def encode_solana_token(
+    token: messages.SolanaTokenInfo | None = None,
+    symbol: str = "FakeTok",
+    mint: bytes = b"\x00" * 32,
+    name: str = "Fake token",
+) -> bytes:
+    if token is None:
+        token = make_solana_token(symbol, mint, name)
+    payload = make_payload(
+        data_type=messages.DefinitionType.SOLANA_TOKEN, message=token
+    )
+    proof, signature = sign_payload(payload, [])
+    return payload + proof + signature

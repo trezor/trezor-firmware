@@ -11,10 +11,10 @@ from trezorlib.messages import DefinitionType
 from trezorlib.tools import parse_path
 
 from ...definitions import (
-    make_defs,
-    make_network,
+    make_eth_defs,
+    make_eth_network,
     make_payload,
-    make_token,
+    make_eth_token,
     sign_payload,
 )
 from .test_definitions import DEFAULT_ERC20_PARAMS, ERC20_FAKE_ADDRESS
@@ -93,7 +93,7 @@ def test_bad_prefix(client: Client) -> None:
 def test_bad_type(client: Client) -> None:
     # assuming we expect a network definition
     payload = make_payload(
-        data_type=DefinitionType.ETHEREUM_TOKEN, message=make_token()
+        data_type=DefinitionType.ETHEREUM_TOKEN, message=make_eth_token()
     )
     proof, signature = sign_payload(payload, [])
     fails(client, payload + proof + signature, "Definition type mismatch")
@@ -113,13 +113,13 @@ def test_malformed_protobuf(client: Client) -> None:
 
 def test_protobuf_mismatch(client: Client) -> None:
     payload = make_payload(
-        data_type=DefinitionType.ETHEREUM_NETWORK, message=make_token()
+        data_type=DefinitionType.ETHEREUM_NETWORK, message=make_eth_token()
     )
     proof, signature = sign_payload(payload, [])
     fails(client, payload + proof + signature, "Invalid Ethereum definition")
 
     payload = make_payload(
-        data_type=DefinitionType.ETHEREUM_TOKEN, message=make_network()
+        data_type=DefinitionType.ETHEREUM_TOKEN, message=make_eth_network()
     )
     proof, signature = sign_payload(payload, [])
     # have to do this manually to invoke a method that eats token definitions
@@ -129,7 +129,7 @@ def test_protobuf_mismatch(client: Client) -> None:
         ethereum.sign_tx(
             client,
             **params,
-            definitions=make_defs(None, payload + proof + signature),
+            definitions=make_eth_defs(None, payload + proof + signature),
         )
 
 
