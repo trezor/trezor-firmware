@@ -6,7 +6,7 @@
   .type reset_handler, STT_FUNC
 reset_handler:
   // set the stack protection
-  ldr r0, =_sstack
+  ldr r0, =_stack_section_start
   add r0, r0, #128      // safety margin for the exception frame
   msr MSPLIM, r0
 
