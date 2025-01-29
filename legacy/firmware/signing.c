@@ -1825,13 +1825,13 @@ static void txinfo_fill_zip244_header_hash(TxInfo *tx_info) {
   uint32_t ver = tx_info->version | TX_OVERWINTERED;
   hasher_Update(&hasher, (const uint8_t *)&ver, 4);
   // T.1b: version_group_id (4-byte little-endian version group identifier)
-  hasher_Update(&hasher, (const uint8_t *)&tx_info->version_group_id, 4);
+  HASHER_UPDATE_INT(&hasher, tx_info->version_group_id, uint32_t);
   // T.1c: consensus_branch_id (4-byte little-endian consensus branch id)
-  hasher_Update(&hasher, (const uint8_t *)&tx_info->branch_id, 4);
+  HASHER_UPDATE_INT(&hasher, tx_info->branch_id, uint32_t);
   // T.1d: lock_time (4-byte little-endian nLockTime value)
-  hasher_Update(&hasher, (const uint8_t *)&tx_info->lock_time, 4);
+  HASHER_UPDATE_INT(&hasher, tx_info->lock_time, uint32_t);
   // T.1e: expiry_height (4-byte little-endian block height)
-  hasher_Update(&hasher, (const uint8_t *)&tx_info->expiry, 4);
+  HASHER_UPDATE_INT(&hasher, tx_info->expiry, uint32_t);
   hasher_Final(&hasher, tx_info->hash_header);
 }
 #endif
@@ -2666,7 +2666,7 @@ static void signing_hash_bip143(const TxInfo *tx_info,
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
 
   // nVersion
-  hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->version, 4);
+  HASHER_UPDATE_INT(&hasher_preimage, tx_info->version, uint32_t);
   // hashPrevouts
   hasher_Update(&hasher_preimage, tx_info->hash_prevouts143, 32);
   // hashSequence
@@ -2677,13 +2677,13 @@ static void signing_hash_bip143(const TxInfo *tx_info,
   tx_script_hash(&hasher_preimage, txinput->script_sig.size,
                  txinput->script_sig.bytes);
   // amount
-  hasher_Update(&hasher_preimage, (const uint8_t *)&txinput->amount, 8);
+  HASHER_UPDATE_INT(&hasher_preimage, txinput->amount, uint64_t);
   // nSequence
   tx_sequence_hash(&hasher_preimage, txinput);
   // hashOutputs
   hasher_Update(&hasher_preimage, tx_info->hash_outputs143, 32);
   // nLockTime
-  hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->lock_time, 4);
+  HASHER_UPDATE_INT(&hasher_preimage, tx_info->lock_time, uint32_t);
   // nHashType
   hasher_Update(&hasher_preimage, (const uint8_t *)&hash_type, 4);
 
@@ -2700,9 +2700,9 @@ static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
   // nHashType
   hasher_Update(&sigmsg_hasher, &sighash_type, 1);
   // nVersion
-  hasher_Update(&sigmsg_hasher, (const uint8_t *)&tx_info->version, 4);
+  HASHER_UPDATE_INT(&sigmsg_hasher, tx_info->version, uint32_t);
   // nLockTime
-  hasher_Update(&sigmsg_hasher, (const uint8_t *)&tx_info->lock_time, 4);
+  HASHER_UPDATE_INT(&sigmsg_hasher, tx_info->lock_time, uint32_t);
   // sha_prevouts
   hasher_Update(&sigmsg_hasher, tx_info->hash_prevouts, 32);
   // sha_amounts
@@ -2716,7 +2716,7 @@ static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
   // spend_type 0 (no tapscript message extension, no annex)
   hasher_Update(&sigmsg_hasher, &zero, 1);
   // input_index
-  hasher_Update(&sigmsg_hasher, (const uint8_t *)&i, 4);
+  HASHER_UPDATE_INT(&sigmsg_hasher, i, uint32_t);
 
   hasher_Final(&sigmsg_hasher, hash);
 }
@@ -2737,8 +2737,7 @@ static void signing_hash_zip243(const TxInfo *tx_info,
   uint32_t ver = tx_info->version | TX_OVERWINTERED;
   hasher_Update(&hasher_preimage, (const uint8_t *)&ver, 4);
   // 2. nVersionGroupId
-  hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->version_group_id,
-                4);
+  HASHER_UPDATE_INT(&hasher_preimage, tx_info->version_group_id, uint32_t);
   // 3. hashPrevouts
   hasher_Update(&hasher_preimage, tx_info->hash_prevouts, 32);
   // 4. hashSequence
@@ -2752,9 +2751,9 @@ static void signing_hash_zip243(const TxInfo *tx_info,
   // 8. hashShieldedOutputs
   hasher_Update(&hasher_preimage, null_bytes, 32);
   // 9. nLockTime
-  hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->lock_time, 4);
+  HASHER_UPDATE_INT(&hasher_preimage, tx_info->lock_time, uint32_t);
   // 10. expiryHeight
-  hasher_Update(&hasher_preimage, (const uint8_t *)&tx_info->expiry, 4);
+  HASHER_UPDATE_INT(&hasher_preimage, tx_info->expiry, uint32_t);
   // 11. valueBalance
   hasher_Update(&hasher_preimage, null_bytes, 8);
   // 12. nHashType
@@ -2765,7 +2764,7 @@ static void signing_hash_zip243(const TxInfo *tx_info,
   tx_script_hash(&hasher_preimage, txinput->script_sig.size,
                  txinput->script_sig.bytes);
   // 13c. value
-  hasher_Update(&hasher_preimage, (const uint8_t *)&txinput->amount, 8);
+  HASHER_UPDATE_INT(&hasher_preimage, txinput->amount, uint64_t);
   // 13d. nSequence
   tx_sequence_hash(&hasher_preimage, txinput);
 
@@ -2785,12 +2784,12 @@ static void signing_hash_zip244(const TxInfo *tx_info,
   // S.2g.i: prevout (field encoding)
   tx_prevout_hash(&hasher, txinput);
   // S.2g.ii: value (8-byte signed little-endian)
-  hasher_Update(&hasher, (const uint8_t *)&txinput->amount, 8);
+  HASHER_UPDATE_INT(&hasher, txinput->amount, uint64_t);
   // S.2g.iii: scriptPubKey (field encoding)
   tx_script_hash(&hasher, txinput->script_pubkey.size,
                  txinput->script_pubkey.bytes);
   // S.2g.iv: nSequence (4-byte unsigned little-endian)
-  hasher_Update(&hasher, (const uint8_t *)&txinput->sequence, 4);
+  HASHER_UPDATE_INT(&hasher, txinput->sequence, uint32_t);
   hasher_Final(&hasher, txin_sig_digest);
 
   // `S.2: transparent_sig_digest` field for signature digest computation.
