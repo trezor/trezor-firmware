@@ -46,12 +46,13 @@ def configure(
         "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
         "embed/io/display/ltdc_dsi/display_gfxmmu.c",
         "embed/io/display/fb_queue/fb_queue.c",
-        "embed/io/display/backlight/stm32/backlight_pwm.c",
     ]
-
     paths += ["embed/io/display/inc"]
+
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
+    sources += ["embed/io/backlight/stm32/tps61043.c"]
+    paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/ft6x36/ft6x36.c"]

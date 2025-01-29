@@ -27,7 +27,7 @@
 #include "display_io.h"
 #include "display_panel.h"
 
-#include "../backlight/backlight_pwm.h"
+#include <io/backlight.h>
 
 #ifndef BOARDLOADER
 #include "../bg_copy/bg_copy.h"
@@ -71,7 +71,7 @@ bool display_init(display_content_mode_t mode) {
     display_io_init_fmc();
     display_panel_init();
     display_panel_set_little_endian();
-    backlight_pwm_init(BACKLIGHT_RESET);
+    backlight_init(BACKLIGHT_RESET);
   } else {
     // Reinitialize FMC to set correct timing
     // We have to do this in reinit because boardloader is fixed.
@@ -80,7 +80,7 @@ bool display_init(display_content_mode_t mode) {
     // Important for model T as this is not set in boardloader
     display_panel_set_little_endian();
     display_panel_reinit();
-    backlight_pwm_init(BACKLIGHT_RETAIN);
+    backlight_init(BACKLIGHT_RETAIN);
   }
 
 #ifdef FRAMEBUFFER
@@ -116,8 +116,8 @@ void display_deinit(display_content_mode_t mode) {
 
   mpu_set_active_fb(NULL, 0);
 
-  backlight_pwm_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET
-                                                     : BACKLIGHT_RETAIN);
+  backlight_deinit(mode == DISPLAY_RESET_CONTENT ? BACKLIGHT_RESET
+                                                 : BACKLIGHT_RETAIN);
 
 #ifdef TREZOR_MODEL_T2T1
   // This ensures backward compatibility with legacy bootloader/firmware
@@ -140,15 +140,15 @@ int display_set_backlight(int level) {
 
 #ifndef BOARDLOADER
   // if turning on the backlight, wait until the panel is refreshed
-  if (backlight_pwm_get() < level && !is_mode_exception()) {
+  if (backlight_get() < level && !is_mode_exception()) {
     display_ensure_refreshed();
   }
 #endif
 
-  return backlight_pwm_set(level);
+  return backlight_set(level);
 }
 
-int display_get_backlight(void) { return backlight_pwm_get(); }
+int display_get_backlight(void) { return backlight_get(); }
 
 int display_set_orientation(int angle) {
   display_driver_t* drv = &g_display_driver;

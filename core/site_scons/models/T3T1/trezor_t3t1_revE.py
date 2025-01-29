@@ -54,9 +54,10 @@ def configure(
     sources += ["embed/io/display/fb_queue/fb_queue.c"]
     paths += ["embed/io/display/inc"]
 
-    sources += ["embed/io/display/backlight/stm32/backlight_pwm.c"]
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
+    sources += ["embed/io/backlight/stm32/tps61043.c"]
+    paths += ["embed/io/backlight/inc"]
 
     env_constraints = env.get("CONSTRAINTS")
     if not (env_constraints and "limited_util_s" in env_constraints):
