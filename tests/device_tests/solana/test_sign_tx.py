@@ -19,12 +19,13 @@ import pytest
 from trezorlib import messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.solana import sign_tx
-from trezorlib.tools import parse_path
+from trezorlib.tools import parse_path, b58decode
 
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
 from .construct.instructions import PROGRAMS, UnknownInstruction
 from .construct.transaction import Message, RawInstruction
+from ...definitions import encode_solana_token
 
 pytestmark = [
     pytest.mark.altcoin,
@@ -52,27 +53,37 @@ def test_solana_sign_tx(client: Client, parameters, result):
     with client:
         IF = InputFlowConfirmAllWarnings(client)
         client.set_input_flow(IF.get())
+        additional_info = None
+        if "additional_info" in parameters:
+            token = parameters["additional_info"].get("token")
+            if token:
+                encoded_token = encode_solana_token(
+                    symbol=token["symbol"],
+                    mint=b58decode(token["mint"]),
+                    name=token["name"],
+                )
+            else:
+                encoded_token = None
+            additional_info = messages.SolanaTxAdditionalInfo(
+                token_accounts_infos=[
+                    messages.SolanaTxTokenAccountInfo(
+                        base_address=token_account["base_address"],
+                        token_program=token_account["token_program"],
+                        token_mint=token_account["token_mint"],
+                        token_account=token_account["token_account"],
+                    )
+                    for token_account in parameters["additional_info"].get(
+                        "token_accounts_infos", []
+                    )
+                ],
+                encoded_token=encoded_token,
+            )
+
         actual_result = sign_tx(
             client,
             address_n=parse_path(parameters["address"]),
             serialized_tx=serialized_tx,
-            additional_info=(
-                messages.SolanaTxAdditionalInfo(
-                    token_accounts_infos=[
-                        messages.SolanaTxTokenAccountInfo(
-                            base_address=token_account["base_address"],
-                            token_program=token_account["token_program"],
-                            token_mint=token_account["token_mint"],
-                            token_account=token_account["token_account"],
-                        )
-                        for token_account in parameters["additional_info"][
-                            "token_accounts_infos"
-                        ]
-                    ]
-                )
-                if "additional_info" in parameters
-                else None
-            ),
+            additional_info=additional_info,
         )
 
     assert actual_result == bytes.fromhex(result["expected_signature"])

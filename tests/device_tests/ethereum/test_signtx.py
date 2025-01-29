@@ -32,7 +32,7 @@ from ...input_flows import (
     InputFlowEthereumSignTxShowFeeInfo,
     InputFlowEthereumSignTxStaking,
 )
-from ...definitions import encode_network
+from ...definitions import encode_eth_network
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
@@ -46,7 +46,7 @@ def make_defs(parameters: dict) -> messages.EthereumDefinitions:
     # we generate fake entries so that we can check the signing results.
     address_n = parse_path(parameters["path"])
     slip44 = unharden(address_n[1])
-    network = encode_network(chain_id=parameters["chain_id"], slip44=slip44)
+    network = encode_eth_network(chain_id=parameters["chain_id"], slip44=slip44)
 
     return messages.EthereumDefinitions(encoded_network=network)
 

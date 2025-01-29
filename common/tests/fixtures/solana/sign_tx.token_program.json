@@ -686,6 +686,56 @@
       }
     },
     {
+      "description": "Transfer Checked with Token Definition",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "FUqrjRRtF1LiptdFqaFxipE8R3YfCE4k56xwm5n1piqX",
+            "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {
+                "source_account": 2,
+                "token_mint": 3,
+                "destination_account": 1,
+                "owner": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 12,
+                "amount": 200,
+                "decimals": 1
+              }
+            }
+          ],
+          "luts": []
+        },
+        "additional_info": {
+          "token": {
+            "symbol": "TOK",
+            "mint": "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "name": "Magic token"
+          }
+        }
+      },
+      "result": {
+        "expected_signature": "a4b31286dd0e629e33623cab5b7243cd7557727ef51675cb52039fd0d6da717ebc4d0c5b436264db28f8a07f38121bcc79f1a26ad7674b920e786d00f0a86e03"
+      }
+    },
+    {
       "description": "Transfer Checked - Multisig",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
@@ -768,6 +818,56 @@
             }
           ],
           "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "11aa5c0ed7a8c8e053fef080b850a5bb04b3ea8abc1422e4e9438f3433d039eb92b02555037974a119f04051198d55ec5d7667cca227f99ad206c2c3b77ce800"
+      }
+    },
+    {
+      "description": "Approve Checked with Token Definition",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 3
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "FUqrjRRtF1LiptdFqaFxipE8R3YfCE4k56xwm5n1piqX",
+            "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {
+                "source_account": 1,
+                "token_mint": 2,
+                "delegate": 3,
+                "owner": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 13,
+                "amount": 200,
+                "decimals": 1
+              }
+            }
+          ],
+          "luts": []
+        },
+        "additional_info": {
+          "token": {
+            "symbol": "TOK",
+            "mint": "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "name": "Magic token"
+          }
         }
       },
       "result": {
@@ -861,6 +961,54 @@
       }
     },
     {
+      "description": "Mint To Checked with Token Definition",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 3,
+              "accounts": {
+                "mint": 1,
+                "account_to_mint": 2,
+                "minting_authority": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 14,
+                "amount": 200,
+                "decimals": 2
+              }
+            }
+          ],
+          "luts": []
+        },
+        "additional_info": {
+          "token": {
+            "symbol": "TOK",
+            "mint": "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "name": "Magic token"
+          }
+        }
+      },
+      "result": {
+        "expected_signature": "f10e8fbe7726f5887cb9753801eccaf5c035bde5b2fa80d3ecd297278e3c263034c120b25d5710fb79ea1aeac7721f8357f9a62820f89f459da33a232293610e"
+      }
+    },
+    {
       "description": "Mint To Checked - Multisig",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
@@ -939,6 +1087,55 @@
             }
           ],
           "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "e9983f1772a4e1d34867a51f0267f7adbd821ca768d53fef847cb287e9e6e7e008705d0c8ef21a9899990191a21dba2df0dc09b1e4f7fd2b8d5ae163d545ed01"
+      }
+    },
+    {
+      "description": "Burn Checked with Token Definition",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 2,
+            "readonly_signers": 1,
+            "readonly_non_signers": 1
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq",
+            "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "FUqrjRRtF1LiptdFqaFxipE8R3YfCE4k56xwm5n1piqX",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {
+                "account_to_burn_from": 3,
+                "token_mint": 2,
+                "owner": 0,
+                "multisig_signers": [0, 1]
+              },
+              "data": {
+                "instruction_id": 15,
+                "amount": 200,
+                "decimals": 2
+              }
+            }
+          ],
+          "luts": []
+        },
+        "additional_info": {
+          "token": {
+            "symbol": "TOK",
+            "mint": "6YuhWADZyAAxAaVKPm1G5N51RvDBXsnWo4SfsJ47wSoK",
+            "name": "Magic token"
+          }
         }
       },
       "result": {

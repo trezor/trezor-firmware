@@ -62,43 +62,43 @@ def test_slip44_disallowed(client: Client) -> None:
 
 def test_slip44_external(client: Client) -> None:
     # to use a non-default SLIP44, a valid network definition must be provided
-    network = definitions.encode_network(chain_id=66666, slip44=66666)
+    network = definitions.encode_eth_network(chain_id=66666, slip44=66666)
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/66666h/0h/0/0"), chain_id=66666)
-    ethereum.sign_tx(client, **params, definitions=definitions.make_defs(network, None))
+    ethereum.sign_tx(client, **params, definitions=definitions.make_eth_defs(network, None))
 
 
 def test_slip44_external_disallowed(client: Client) -> None:
     # network definition does not allow a different SLIP44
-    network = definitions.encode_network(chain_id=66666, slip44=66666)
+    network = definitions.encode_eth_network(chain_id=66666, slip44=66666)
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/55555h/0h/0/0"), chain_id=66666)
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         ethereum.sign_tx(
-            client, **params, definitions=definitions.make_defs(network, None)
+            client, **params, definitions=definitions.make_eth_defs(network, None)
         )
 
 
 def test_chain_id_mismatch(client: Client) -> None:
     # network definition for a different chain id will be rejected
-    network = definitions.encode_network(chain_id=66666, slip44=60)
+    network = definitions.encode_eth_network(chain_id=66666, slip44=60)
     params = DEFAULT_TX_PARAMS.copy()
     params.update(chain_id=55555)
     with pytest.raises(TrezorFailure, match="Network definition mismatch"):
         ethereum.sign_tx(
-            client, **params, definitions=definitions.make_defs(network, None)
+            client, **params, definitions=definitions.make_eth_defs(network, None)
         )
 
 
 def test_definition_does_not_override_builtin(client: Client) -> None:
     # The builtin definition for Ethereum (SLIP44 60, chain_id 1) will be used
     # even if a valid definition with a different SLIP44 is provided
-    network = definitions.encode_network(chain_id=1, slip44=66666)
+    network = definitions.encode_eth_network(chain_id=1, slip44=66666)
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/66666h/0h/0/0"), chain_id=1)
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         ethereum.sign_tx(
-            client, **params, definitions=definitions.make_defs(network, None)
+            client, **params, definitions=definitions.make_eth_defs(network, None)
         )
 
     # TODO: test that the builtin definition will not show different symbol
@@ -121,10 +121,10 @@ def test_builtin_token(client: Client) -> None:
 
 def test_external_token(client: Client) -> None:
     # A valid token definition must be provided to use a non-builtin token
-    token = definitions.encode_token(address=ERC20_FAKE_ADDRESS, chain_id=1, decimals=8)
+    token = definitions.encode_eth_token(address=ERC20_FAKE_ADDRESS, chain_id=1, decimals=8)
     params = DEFAULT_ERC20_PARAMS.copy()
     params.update(to=ERC20_FAKE_ADDRESS)
-    ethereum.sign_tx(client, **params, definitions=definitions.make_defs(None, token))
+    ethereum.sign_tx(client, **params, definitions=definitions.make_eth_defs(None, token))
     # TODO check that FakeTok symbol is shown
 
 
@@ -133,25 +133,25 @@ def test_external_chain_without_token(client: Client) -> None:
         if not client.debug.legacy_debug:
             client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
         # when using an external chains, unknown tokens are allowed
-        network = definitions.encode_network(chain_id=66666, slip44=60)
+        network = definitions.encode_eth_network(chain_id=66666, slip44=60)
         params = DEFAULT_ERC20_PARAMS.copy()
         params.update(to=ERC20_BUILTIN_TOKEN, chain_id=66666)
         ethereum.sign_tx(
-            client, **params, definitions=definitions.make_defs(network, None)
+            client, **params, definitions=definitions.make_eth_defs(network, None)
         )
         # TODO check that UNKN token is used, FAKE network
 
 
 def test_external_chain_token_ok(client: Client) -> None:
     # when providing an external chain and matching token, everything works
-    network = definitions.encode_network(chain_id=66666, slip44=60)
-    token = definitions.encode_token(
+    network = definitions.encode_eth_network(chain_id=66666, slip44=60)
+    token = definitions.encode_eth_token(
         address=ERC20_FAKE_ADDRESS, chain_id=66666, decimals=8
     )
     params = DEFAULT_ERC20_PARAMS.copy()
     params.update(to=ERC20_FAKE_ADDRESS, chain_id=66666)
     ethereum.sign_tx(
-        client, **params, definitions=definitions.make_defs(network, token)
+        client, **params, definitions=definitions.make_eth_defs(network, token)
     )
     # TODO check that FakeTok is used, FAKE network
 
@@ -162,14 +162,14 @@ def test_external_chain_token_mismatch(client: Client) -> None:
             client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
         # when providing external defs, we explicitly allow, but not use, tokens
         # from other chains
-        network = definitions.encode_network(chain_id=66666, slip44=60)
-        token = definitions.encode_token(
+        network = definitions.encode_eth_network(chain_id=66666, slip44=60)
+        token = definitions.encode_eth_token(
             address=ERC20_FAKE_ADDRESS, chain_id=55555, decimals=8
         )
         params = DEFAULT_ERC20_PARAMS.copy()
         params.update(to=ERC20_FAKE_ADDRESS, chain_id=66666)
         ethereum.sign_tx(
-            client, **params, definitions=definitions.make_defs(network, token)
+            client, **params, definitions=definitions.make_eth_defs(network, token)
         )
         # TODO check that UNKN is used for token, FAKE for network
 
@@ -198,7 +198,7 @@ def _call_sign_typed_data(client: Client, slip44: int, network: bytes | None) ->
         parse_path(f"m/44h/{slip44}h/0h/0/0"),
         TYPED_DATA,
         metamask_v4_compat=True,
-        definitions=definitions.make_defs(network, None),
+        definitions=definitions.make_eth_defs(network, None),
     )
 
 
@@ -241,7 +241,7 @@ def test_method_def_missing(client: Client, method: MethodType) -> None:
 @pytest.mark.parametrize("method", METHODS)
 def test_method_external(client: Client, method: MethodType) -> None:
     # calling a method with a slip44 that has an external definition will work
-    network = definitions.encode_network(slip44=66666)
+    network = definitions.encode_eth_network(slip44=66666)
     method(client, 66666, network)
 
 
@@ -249,6 +249,6 @@ def test_method_external(client: Client, method: MethodType) -> None:
 def test_method_external_mismatch(client: Client, method: MethodType) -> None:
     # calling a method with a slip44 that has an external definition that does not match
     # the slip44 will fail
-    network = definitions.encode_network(slip44=77777)
+    network = definitions.encode_eth_network(slip44=77777)
     with pytest.raises(TrezorFailure, match="Network definition mismatch"):
         method(client, 66666, network)
