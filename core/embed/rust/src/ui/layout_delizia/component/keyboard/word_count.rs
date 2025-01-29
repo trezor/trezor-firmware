@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx},
+    component::{paginated::SinglePage, Component, Event, EventCtx},
     geometry::{Alignment, Grid, GridCellSpan, Rect},
     shape::Renderer,
 };
@@ -71,6 +71,8 @@ impl Component for SelectWordCount {
         }
     }
 }
+
+impl SinglePage for SelectWordCount {}
 
 pub struct ValueKeypad {
     button: [Button; Self::NUMBERS.len()],

@@ -7,7 +7,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            ButtonRequestExt, ComponentExt, EventCtx,
+            ButtonRequestExt, ComponentExt, EventCtx, PaginateFull as _,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -20,8 +20,8 @@ use heapless::Vec;
 
 use super::super::{
     component::{
-        Footer, Frame, FrameMsg, Header, InternallySwipable, InternallySwipableContent,
-        PromptScreen, ShareWords, SwipeContent,
+        Footer, Frame, FrameMsg, Header, InternallySwipableContent, PromptScreen, ShareWords,
+        SwipeContent,
     },
     theme,
 };
@@ -74,9 +74,7 @@ fn footer_updating_func(
     ctx: &mut EventCtx,
     footer: &mut Footer,
 ) {
-    let current_page = content.inner().current_page();
-    let total_pages = content.inner().num_pages();
-    footer.update_page_counter(ctx, current_page, total_pages);
+    footer.update_pager(ctx, content.inner().pager());
 }
 
 pub fn new_show_share_words(

@@ -8,12 +8,13 @@ use crate::{
         component::{
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Component, Event, EventCtx, Paginate,
+            Component, Event, EventCtx, PaginateFull,
         },
         event::SwipeEvent,
         flow::Swipable,
         geometry::{Direction, Rect},
         shape::Renderer,
+        util::Pager,
     },
 };
 
@@ -26,7 +27,7 @@ pub struct AddressDetails {
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
     xpubs: Vec<(TString<'static>, TString<'static>), MAX_XPUBS>,
     xpub_page_count: Vec<u8, MAX_XPUBS>,
-    current_page: usize,
+    current_page: u16,
 }
 
 impl AddressDetails {
@@ -84,7 +85,7 @@ impl AddressDetails {
             .map_err(|_| Error::OutOfRange)
     }
 
-    fn switch_xpub(&mut self, i: usize, page: usize) -> usize {
+    fn switch_xpub(&mut self, i: usize, page: u16) -> usize {
         // Context is needed for updating child so that it can request repaint. In this
         // case the parent component that handles paging always requests complete
         // repaint after page change so we can use a dummy context here.
@@ -92,19 +93,17 @@ impl AddressDetails {
         self.xpub_view.update_title(&mut dummy_ctx, self.xpubs[i].0);
         self.xpub_view.update_content(&mut dummy_ctx, |_ctx, p| {
             p.inner_mut().update(self.xpubs[i].1);
-            let npages = p.page_count();
+            let npages = p.pager().total() as usize;
             p.change_page(page);
             npages
         })
     }
 
-    fn lookup(&self, scrollbar_page: usize) -> (usize, usize) {
+    fn lookup(&self, scrollbar_page: u16) -> (usize, u16) {
         let mut xpub_index = 0;
         let mut xpub_page = scrollbar_page;
-        for page_count in self.xpub_page_count.iter().map(|pc| {
-            let upc: usize = (*pc).into();
-            upc
-        }) {
+        for page_count in self.xpub_page_count.iter() {
+            let page_count = *page_count as u16;
             if page_count <= xpub_page {
                 xpub_page -= page_count;
                 xpub_index += 1;
@@ -116,12 +115,13 @@ impl AddressDetails {
     }
 }
 
-impl Paginate for AddressDetails {
-    fn page_count(&self) -> usize {
-        self.get_internal_page_count()
+impl PaginateFull for AddressDetails {
+    fn pager(&self) -> Pager {
+        let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
+        Pager::new(total_xpub_pages as u16 + 1).with_current(self.current_page)
     }
 
-    fn change_page(&mut self, to_page: usize) {
+    fn change_page(&mut self, to_page: u16) {
         self.current_page = to_page;
         if to_page > 0 {
             let i = to_page - 1;
@@ -148,17 +148,14 @@ impl Component for AddressDetails {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.page_count());
+        ctx.set_page_count(self.pager().total() as usize);
         match event {
             Event::Swipe(SwipeEvent::End(Direction::Right)) => {
-                let to_page = self.current_page.saturating_sub(1);
+                let to_page = self.pager().prev();
                 self.change_page(to_page);
             }
             Event::Swipe(SwipeEvent::End(Direction::Left)) => {
-                let to_page = self
-                    .current_page
-                    .saturating_add(1)
-                    .min(self.page_count() - 1);
+                let to_page = self.pager().next();
                 self.change_page(to_page);
             }
             _ => {}
@@ -190,9 +187,8 @@ impl Swipable for AddressDetails {
         }
     }
 
-    fn get_internal_page_count(&self) -> usize {
-        let total_xpub_pages: u8 = self.xpub_page_count.iter().copied().sum();
-        1usize.saturating_add(total_xpub_pages.into())
+    fn get_pager(&self) -> Pager {
+        self.pager()
     }
 }
 

@@ -9,7 +9,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            Component, ComponentExt, EventCtx, Paginate,
+            Component, ComponentExt, EventCtx, PaginateFull,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -234,7 +234,7 @@ pub fn new_confirm_action(
 }
 
 #[inline(never)]
-fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
+fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
     content: SwipeContent<SwipePage<T>>,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
@@ -266,14 +266,12 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
     }
 
     if page_counter {
-        fn footer_update_fn<T: Component + Paginate>(
+        fn footer_update_fn<T: Component + PaginateFull>(
             content: &SwipeContent<SwipePage<T>>,
             ctx: &mut EventCtx,
             footer: &mut Footer,
         ) {
-            let current_page = content.inner().current_page();
-            let page_count = content.inner().page_count();
-            footer.update_page_counter(ctx, current_page, page_count);
+            footer.update_pager(ctx, content.inner().pager());
         }
 
         content = content
@@ -412,12 +410,12 @@ fn create_confirm(
 }
 
 #[inline(never)]
-pub fn new_confirm_action_simple<T: Component + Paginate + MaybeTrace + 'static>(
+pub fn new_confirm_action_simple<T: Component + PaginateFull + MaybeTrace + 'static>(
     content: T,
     extra: ConfirmActionExtra,
     strings: ConfirmActionStrings,
     hold: bool,
-    page_limit: Option<usize>,
+    page_limit: Option<u16>,
     frame_margin: usize,
     page_counter: bool,
 ) -> Result<SwipeFlow, error::Error> {

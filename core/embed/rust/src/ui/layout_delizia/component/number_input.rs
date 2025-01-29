@@ -3,6 +3,7 @@ use crate::{
     strutil::{self, TString},
     ui::{
         component::{
+            paginated::SinglePage,
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx, Pad,
         },
@@ -78,6 +79,8 @@ impl Component for NumberInputDialog {
         self.paragraphs.render(target);
     }
 }
+
+impl SinglePage for NumberInputDialog {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for NumberInputDialog {
