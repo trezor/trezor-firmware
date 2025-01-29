@@ -23,9 +23,9 @@ memset_reg:
 
   // Jump to address given in first argument R0 that points to next's stage's VTOR
   // Clear memory and all registers before jump
-  .global jump_to
-  .type jump_to, STT_FUNC
-jump_to:
+  .global jump_to_next_stage
+  .type jump_to_next_stage, STT_FUNC
+jump_to_next_stage:
   ldr r1, =0
   bl jump_to_with_flag
 

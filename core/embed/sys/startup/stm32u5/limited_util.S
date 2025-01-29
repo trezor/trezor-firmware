@@ -21,9 +21,9 @@ memset_reg:
 
   // Jump to address given in first argument R0 that points to next's stage's VTOR
   // Clear memory and all registers before jump
-  .global jump_to
-  .type jump_to, STT_FUNC
-jump_to:
+  .global jump_to_next_stage
+  .type jump_to_next_stage, STT_FUNC
+jump_to_next_stage:
   mov r4, r0            // save input argument r0 (the address of the next stage's vector table) (r4 is callee save)
   // this subroutine re-points the exception handlers before the C code
   // that comprises them has been given a good environment to run.
