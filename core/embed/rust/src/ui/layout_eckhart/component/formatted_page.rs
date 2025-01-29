@@ -6,7 +6,7 @@ use crate::{
         shape::Renderer,
     },
 };
-
+use crate::trezorhal::profiler;
 use super::{action_bar::ActionBarMsg, button::Button, ActionBar, Header, Hint};
 
 /// High-level component for rendering formatted text, possibly paginated. The
@@ -113,12 +113,15 @@ impl Component for FormattedPage {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        //profiler::init();
+        //profiler::start();
         self.header.render(target);
         self.content.render(target);
         if let Some(hint) = &self.hint {
             hint.render(target);
         }
         self.action_bar.render(target);
+        //profiler::end();
     }
 }
 

@@ -12,6 +12,7 @@ use crate::{
         util::split_two_lines,
     },
 };
+use crate::trezorhal::profiler;
 use crate::ui::layout_eckhart::theme::{GREEN_DARK, WHITE};
 use crate::ui::lerp::Lerp;
 use super::theme;
@@ -191,7 +192,7 @@ impl Button {
         alpha: u8,
     ) {
         for y in self.area.y0..self.area.y1{
-            let color = GREEN_DARK;
+            let color = WHITE;
 
             let f = (y - self.area.y0) as f32 / self.area.height() as f32;
 
@@ -206,7 +207,7 @@ impl Button {
             .render(target);
         }
         for x in self.area.x0..self.area.x1{
-            let color = GREEN_DARK;
+            let color = WHITE;
 
             let distance_from_center: i16 = (x - self.area.center().x).abs();
 
