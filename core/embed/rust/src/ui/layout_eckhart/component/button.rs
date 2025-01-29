@@ -159,6 +159,10 @@ impl Button {
         }
     }
 
+    pub fn set_expanded_touch_area(&mut self, expand: Insets) {
+        self.touch_expand = Some(expand);
+    }
+
     pub fn content(&self) -> &ButtonContent {
         &self.content
     }
