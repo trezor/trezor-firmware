@@ -104,6 +104,10 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
   // any variables in the .bss and .data sections, so we must
   // be careful and avoid using them altogether.
 
+  // Reset peripherals (so we are sure that no DMA is pending)
+  // and disable all interrupts and clear all pending ones
+  reset_peripherals_and_interrupts();
+
   // Clear unused part of stack
   clear_unused_stack();
 
@@ -173,6 +177,10 @@ static void jump_to_next_stage_phase_2(uint32_t arg1, uint32_t arg2) {
   // We are now running on a new stack. We cannot be sure about
   // any variables in the .bss and .data sections, so we must
   // be careful and avoid using them altogether.
+
+  // Reset peripherals (so we are sure that no DMA is pending)
+  // and disable all interrupts and clear all pending ones
+  reset_peripherals_and_interrupts();
 
   // Clear unused part of stack
   clear_unused_stack();
