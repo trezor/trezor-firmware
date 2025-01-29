@@ -413,6 +413,10 @@
 #endif /* USE_FULL_ASSERT */
 
 
+#ifndef HardFault_IRQn
+#define HardFault_IRQn (-13)  // not defined in stm32lib/cmsis/stm32f429xx.h
+#endif
+
 #ifdef __cplusplus
 }
 #endif

@@ -260,4 +260,99 @@ __attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl(
   );
 }
 
+void reset_peripherals_and_interrupts(void) {
+#ifdef __HAL_RCC_DMA2D_FORCE_RESET
+  __HAL_RCC_DMA2D_CLK_DISABLE();
+  __HAL_RCC_DMA2D_FORCE_RESET();
+  __HAL_RCC_DMA2D_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_DSI_FORCE_RESET
+  __HAL_RCC_DSI_CLK_DISABLE();
+  __HAL_RCC_DSI_FORCE_RESET();
+  __HAL_RCC_DSI_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_GFXMMU_FORCE_RESET
+  __HAL_RCC_GFXMMU_CLK_DISABLE();
+  __HAL_RCC_GFXMMU_FORCE_RESET();
+  __HAL_RCC_GFXMMU_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_LTDC_FORCE_RESET
+  __HAL_RCC_LTDC_CLK_DISABLE();
+  __HAL_RCC_LTDC_FORCE_RESET();
+  __HAL_RCC_LTDC_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_GPDMA1_FORCE_RESET
+  __HAL_RCC_GPDMA1_CLK_DISABLE();
+  __HAL_RCC_GPDMA1_FORCE_RESET();
+  __HAL_RCC_GPDMA1_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_DMA1_FORCE_RESET
+  __HAL_RCC_DMA1_CLK_DISABLE();
+  __HAL_RCC_DMA1_FORCE_RESET();
+  __HAL_RCC_DMA1_RELEASE_RESET();
+#endif
+
+#ifdef __HAL_RCC_DMA2_FORCE_RESET
+  __HAL_RCC_DMA2_CLK_DISABLE();
+  __HAL_RCC_DMA2_FORCE_RESET();
+  __HAL_RCC_DMA2_RELEASE_RESET();
+#endif
+
+  // Disable all NVIC interrupts and clear pending flags
+  // so later the global interrupt can be re-enabled without
+  // firing any pending interrupt
+  for (int irqn = 0; irqn < 255; irqn++) {
+    NVIC_DisableIRQ(irqn);
+    NVIC_ClearPendingIRQ(irqn);
+  }
+
+  // Disable SysTick
+  SysTick->CTRL = 0;
+
+  // Clear PENDSV flag to prevent the PendSV_Handler call
+  SCB->ICSR &= ~SCB_ICSR_PENDSVSET_Msk;
+
+  // Clear SCB->SHCSR exception flags so we can return back
+  // to thread mode without any exception active
+
+  uint32_t preserved_flag = 0;
+
+  switch ((__get_IPSR() & IPSR_ISR_Msk) - 16) {
+    case MemoryManagement_IRQn:
+      preserved_flag = SCB_SHCSR_MEMFAULTACT_Msk;
+      break;
+    case BusFault_IRQn:
+      preserved_flag = SCB_SHCSR_BUSFAULTACT_Msk;
+      break;
+    case UsageFault_IRQn:
+      preserved_flag = SCB_SHCSR_USGFAULTACT_Msk;
+      break;
+    case PendSV_IRQn:
+      preserved_flag = SCB_SHCSR_PENDSVACT_Msk;
+      break;
+    case SysTick_IRQn:
+      preserved_flag = SCB_SHCSR_SYSTICKACT_Msk;
+      break;
+    case SVCall_IRQn:
+      preserved_flag = SCB_SHCSR_SVCALLACT_Msk;
+      break;
+    case HardFault_IRQn:
+    default:
+      break;
+  }
+
+  const uint32_t cleared_flags =
+      SCB_SHCSR_MEMFAULTACT_Msk | SCB_SHCSR_BUSFAULTACT_Msk |
+      SCB_SHCSR_USGFAULTACT_Msk | SCB_SHCSR_SVCALLACT_Msk |
+      SCB_SHCSR_MONITORACT_Msk | SCB_SHCSR_PENDSVACT_Msk |
+      SCB_SHCSR_SYSTICKACT_Msk;
+
+  SCB->SHCSR &= ~(cleared_flags & ~preserved_flag);
+}
+
 #endif  // KERNEL_MODE
