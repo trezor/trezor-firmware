@@ -56,9 +56,7 @@ void PVD_IRQHandler(void) {
   // Turn off display backlight
   BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;
 #endif
-  // from util.s
-  extern void shutdown_privileged(void);
-  shutdown_privileged();
+  error_shutdown("PVD IRQ");
 }
 
 #endif  // defined(KERNEL_MODE) && defined(USE_PVD)

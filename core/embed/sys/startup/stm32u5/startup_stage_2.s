@@ -48,6 +48,6 @@ reset_handler:
   // enter the application code
   bl main
 
-  b shutdown_privileged
+  b system_exit
 
   .end
