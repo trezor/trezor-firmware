@@ -1,1 +1,0 @@
-Stellar: resolves the issue of incorrect signature generation when the transaction source account differs from the signing account.
