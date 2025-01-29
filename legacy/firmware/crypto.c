@@ -471,19 +471,16 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
 
   SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
-  sha256_Update(&ctx, (const uint8_t *)&(multisig->m), sizeof(uint32_t));
-  sha256_Update(&ctx, (const uint8_t *)&(pubkeys_order), sizeof(uint32_t));
+  SHA256_UPDATE_INT(&ctx, multisig->m, uint32_t);
+  SHA256_UPDATE_INT(&ctx, pubkeys_order, uint32_t);
   for (uint32_t i = 0; i < n; i++) {
-    sha256_Update(&ctx, (const uint8_t *)&(pubnodes[i]->depth),
-                  sizeof(uint32_t));
-    sha256_Update(&ctx, (const uint8_t *)&(pubnodes[i]->fingerprint),
-                  sizeof(uint32_t));
-    sha256_Update(&ctx, (const uint8_t *)&(pubnodes[i]->child_num),
-                  sizeof(uint32_t));
-    sha256_Update(&ctx, pubnodes[i]->chain_code.bytes, 32);
-    sha256_Update(&ctx, pubnodes[i]->public_key.bytes, 33);
+    SHA256_UPDATE_INT(&ctx, pubnodes[i]->depth, uint32_t);
+    SHA256_UPDATE_INT(&ctx, pubnodes[i]->fingerprint, uint32_t);
+    SHA256_UPDATE_INT(&ctx, pubnodes[i]->child_num, uint32_t);
+    SHA256_UPDATE_BYTES(&ctx, pubnodes[i]->chain_code.bytes, 32);
+    SHA256_UPDATE_BYTES(&ctx, pubnodes[i]->public_key.bytes, 33);
   }
-  sha256_Update(&ctx, (const uint8_t *)&n, sizeof(uint32_t));
+  SHA256_UPDATE_INT(&ctx, n, uint32_t);
   sha256_Final(&ctx, hash);
   layoutProgressUpdate(true);
   return 1;
@@ -492,7 +489,7 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
 int cryptoIdentityFingerprint(const IdentityType *identity, uint8_t *hash) {
   SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
-  sha256_Update(&ctx, (const uint8_t *)&(identity->index), sizeof(uint32_t));
+  SHA256_UPDATE_INT(&ctx, identity->index, uint32_t);
   if (identity->has_proto && identity->proto[0]) {
     sha256_Update(&ctx, (const uint8_t *)(identity->proto),
                   strlen(identity->proto));

@@ -84,7 +84,7 @@ void reset_entropy(const uint8_t *ext_entropy, uint32_t len) {
 
   SHA256_CTX ctx = {0};
   sha256_Init(&ctx);
-  sha256_Update(&ctx, int_entropy, 32);
+  SHA256_UPDATE_BYTES(&ctx, int_entropy, 32);
   sha256_Update(&ctx, ext_entropy, len);
   sha256_Final(&ctx, int_entropy);
   const char *mnemonic = mnemonic_from_data(int_entropy, strength / 8);
