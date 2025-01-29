@@ -25,7 +25,8 @@ use crate::{
 
 use super::{
     component::{
-        ActionBar, Button, Header, HeaderMsg, Hint, PinKeyboard, SelectWordScreen, TextScreen,
+        ActionBar, Button, Header, HeaderMsg, Hint, MnemonicKeyboard, PinKeyboard,
+        SelectWordScreen, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
