@@ -20,6 +20,10 @@
 
 #pragma once
 
+// symbols defined in the linker script
+extern uint8_t _stack_section_start;
+extern uint8_t _stack_section_end;
+
 // Initialize linker script-defined sections (.bss, .data, etc.)
 //
 // This function must be called only during the startup sequence,

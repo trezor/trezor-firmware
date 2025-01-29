@@ -222,7 +222,6 @@ void SystemInit(void) {
 
 __attribute((no_stack_protector)) void reset_handler(void) {
   // Set stack pointer limit for checking stack overflow
-  extern uint8_t _stack_section_start;
   __set_MSPLIM((uintptr_t)&_stack_section_start + 128);
 
   // Now .bss, .data are not initialized yet - we need to be

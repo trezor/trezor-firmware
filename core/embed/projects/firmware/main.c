@@ -42,10 +42,6 @@
 #include "zkp_context.h"
 #endif
 
-// symbols defined in the linker script
-extern uint8_t _stack_section_start;
-extern uint8_t _stack_section_end;
-
 int main(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;

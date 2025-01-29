@@ -22,6 +22,7 @@
 
 #include <sys/bootutils.h>
 #include <sys/irq.h>
+#include <sys/linker_utils.h>
 #include <sys/mpu.h>
 #include <sys/syscall.h>
 #include <sys/systask.h>
@@ -53,10 +54,6 @@ typedef struct {
   // Task to be scheduled next
   systask_t* waiting_task;
 } systask_scheduler_t;
-
-// Kernel stack base pointer defined in linker script
-extern uint8_t _stack_section_start;
-extern uint8_t _stack_section_end;
 
 // Global task manager state
 static systask_scheduler_t g_systask_scheduler = {
