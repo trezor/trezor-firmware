@@ -22,6 +22,7 @@ pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;
 #[cfg(feature = "translations")]
 pub use keyboard::{
+    mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
     passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
     pin::{PinKeyboard, PinKeyboardMsg},
 };
