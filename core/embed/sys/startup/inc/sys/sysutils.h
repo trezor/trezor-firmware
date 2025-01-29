@@ -40,7 +40,21 @@ __attribute((noreturn)) void call_with_new_stack(uint32_t arg1, uint32_t arg2,
 // if so, it switches to privileged thread mode.
 void ensure_thread_mode(void);
 
+// Ensure compatible hardware settings before jumping to
+// the different booting stage. This function is used to
+// ensure backward compatibility with older versions of
+// released bootloaders and firmware.
+//
+// Does nothing on almost all platforms.
+void ensure_compatible_settings(void);
+
 // Clears USB peripheral fifo memory
 void clear_otg_hs_memory(void);
+
+// Jumps to the binary using its vector table.
+//
+// The target binary is called with interrupts disabled, and all registers
+// are cleared except R11, which is set to the specified value.
+__attribute((noreturn)) void jump_to_vectbl(uint32_t vectbl_addr, uint32_t r11);
 
 #endif  // KERNEL_MODE

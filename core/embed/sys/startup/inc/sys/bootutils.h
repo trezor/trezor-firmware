@@ -38,26 +38,20 @@ void __attribute__((noreturn)) reboot_to_bootloader(void);
 // with the firmware installation.
 void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 
-// Allows the user to see the displayed error message and then
-// safely shuts down the device (clears secrets, memory, etc.).
+// Allows the user to read the displayed error message and then
+// reboots the device or waits for power-off.
 //
-// This function is called when the device enters an
-// unrecoverable error state.
-void __attribute__((noreturn)) secure_shutdown(void);
+// The function's behavior depends on the `RSOD_INFINITE_LOOP` macro:
+// 1) If `RSOD_INFINITE_LOOP` is defined, the function enters an infinite loop.
+// 2) If `RSOD_INFINITE_LOOP` is not defined, the function waits for a
+//    specified duration and then resets the device.
+void __attribute__((noreturn)) reboot_or_halt_after_rsod(void);
 
 // Jumps to the next booting stage (e.g. bootloader to firmware).
 // `vectbl_address` points to the flash at the vector table of the next stage.
 //
 // Before jumping, the function disables all interrupts and clears the
 // memory and registers that could contain sensitive information.
-void jump_to_next_stage(uint32_t vectbl_address);
-
-// Ensure compatible hardware settings before jumping to
-// the different booting stage. This function is used to
-// ensure backward compatibility with older versions of
-// released bootloaders and firmware.
-//
-// Does nothing on almost all platforms.
-void ensure_compatible_settings(void);
+void __attribute__((noreturn)) jump_to_next_stage(uint32_t vectbl_address);
 
 #endif  // TREZORHAL_BOOTUTILS_H

@@ -24,6 +24,10 @@
 
 #ifdef KERNEL_MODE
 
+#ifdef TREZOR_MODEL_T2T1
+#include "../stm32f4/startup_init.h"
+#endif
+
 __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
     uint32_t arg1, uint32_t arg2, new_stack_callback_t callback) {
   __asm__ volatile(
@@ -187,14 +191,13 @@ __attribute((naked, no_stack_protector)) void ensure_thread_mode(void) {
       "BX      LR                  \n");
 }
 
-
 // Clears USB FIFO memory to prevent data leakage of sensitive information
 __attribute((used)) void clear_otg_hs_memory(void) {
 #ifdef STM32F4
 
-  // reference RM0090 section 35.12.1 Figure 413
-  #define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
-  #define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
+// reference RM0090 section 35.12.1 Figure 413
+#define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
+#define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
 
   // use the HAL version due to section 2.1.6 of STM32F42xx Errata sheet
   __HAL_RCC_USB_OTG_HS_CLK_ENABLE();  // enable USB_OTG_HS peripheral clock so
@@ -211,5 +214,50 @@ __attribute((used)) void clear_otg_hs_memory(void) {
 #endif
 }
 
+void ensure_compatible_settings(void) {
+#ifdef TREZOR_MODEL_T2T1
+  // Early version of bootloader on T2T1 expects 168 MHz core clock.
+  // So we need to set it here before handover to the bootloader.
+  set_core_clock(CLOCK_168_MHZ);
+#endif
+}
+
+__attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl(
+    uint32_t vectbl_addr, uint32_t r11) {
+  __asm__ volatile(
+      "CPSID    F                  \n"
+
+      "MOV      R11, R1            \n"
+      "MOV      LR, R0             \n"
+
+      "LDR      R0, =0             \n"
+      "MOV      R1, R0             \n"
+      "MOV      R2, R0             \n"
+      "MOV      R3, R0             \n"
+      "MOV      R4, R0             \n"
+      "MOV      R5, R0             \n"
+      "MOV      R6, R0             \n"
+      "MOV      R7, R0             \n"
+      "MOV      R8, R0             \n"
+      "MOV      R9, R0             \n"
+      "MOV      R10, R0            \n"  // R11 is set to r11 argument
+      "MOV      R12, R0            \n"
+
+      "LDR      R0, [LR]           \n"  // Initial MSP value
+      "MSR      MSP, R0            \n"  // Set MSP
+
+      "LDR      R0, =%[_SCB_VTOR]  \n"  // Reset handler
+      "STR      LR, [R0]           \n"  // Set SCB->VTOR = vectb_addr
+
+      "MOV      R0, R1             \n"  // Zero out R0
+
+      "LDR      LR, [LR, #4]       \n"  // Reset handler
+      "BX       LR                 \n"  // Go to reset handler
+
+      :  // no output
+      : [_SCB_VTOR] "i"(&SCB->VTOR)
+      :  // no clobber
+  );
+}
 
 #endif  // KERNEL_MODE

@@ -235,26 +235,6 @@ void set_core_clock(clock_settings_t settings) {
 }
 #endif
 
-// reference RM0090 section 35.12.1 Figure 413
-#define USB_OTG_HS_DATA_FIFO_RAM (USB_OTG_HS_PERIPH_BASE + 0x20000U)
-#define USB_OTG_HS_DATA_FIFO_SIZE (4096U)
-
-// Clears USB FIFO memory to prevent data leakage of sensitive information
-__attribute((used)) void clear_otg_hs_memory(void) {
-  // use the HAL version due to section 2.1.6 of STM32F42xx Errata sheet
-  __HAL_RCC_USB_OTG_HS_CLK_ENABLE();  // enable USB_OTG_HS peripheral clock so
-                                      // that the peripheral memory is
-                                      // accessible
-  __IO uint32_t* usb_fifo_ram = (__IO uint32_t*)USB_OTG_HS_DATA_FIFO_RAM;
-
-  for (uint32_t i = 0; i < USB_OTG_HS_DATA_FIFO_SIZE / 4; i++) {
-    usb_fifo_ram[i] = 0;
-  }
-
-  __HAL_RCC_USB_OTG_HS_CLK_DISABLE();  // disable USB OTG_HS peripheral clock as
-                                       // the peripheral is not needed right now
-}
-
 __attribute((no_stack_protector)) void reset_handler(void) {
 #ifdef BOOTLOADER
   uint32_t r11_value;
