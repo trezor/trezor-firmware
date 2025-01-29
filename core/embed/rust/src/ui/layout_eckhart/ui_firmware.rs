@@ -64,8 +64,9 @@ impl FirmwareUI for UIEckhart {
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         let right_button = if hold {
             Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
+                .with_gradient()
         } else {
-            Button::with_text(verb)
+            Button::with_text(verb) .with_gradient()
         };
         let screen = FormattedPage::new(formatted_text)
             .with_header(Header::new(title))

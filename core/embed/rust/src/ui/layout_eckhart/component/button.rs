@@ -12,7 +12,8 @@ use crate::{
         util::split_two_lines,
     },
 };
-
+use crate::ui::layout_eckhart::theme::{GREEN_DARK, WHITE};
+use crate::ui::lerp::Lerp;
 use super::theme;
 
 pub enum ButtonMsg {
@@ -33,6 +34,7 @@ pub struct Button {
     long_press: Option<Duration>,
     long_timer: Timer,
     haptic: bool,
+    gradient: bool,
 }
 
 impl Button {
@@ -50,6 +52,7 @@ impl Button {
             long_press: None,
             long_timer: Timer::new(),
             haptic: true,
+            gradient: false,
         }
     }
 
@@ -91,6 +94,11 @@ impl Button {
 
     pub fn with_radius(mut self, radius: u8) -> Self {
         self.radius = Some(radius);
+        self
+    }
+
+    pub fn with_gradient(mut self) -> Self {
+        self.gradient = true;
         self
     }
 
@@ -176,12 +184,57 @@ impl Button {
         }
     }
 
+    pub fn render_gradient_bar<'s>(
+        &self,
+        target: &mut impl Renderer<'s>,
+        style: &ButtonStyle,
+        alpha: u8,
+    ) {
+        for y in self.area.y0..self.area.y1{
+            let color = GREEN_DARK;
+
+            let f = (y - self.area.y0) as f32 / self.area.height() as f32;
+
+            let g_color = Color::lerp(color, style.background_color, f);
+
+            shape::Bar::new(Rect::new(
+                Point::new(self.area.x0, y),
+                Point::new(self.area.x1, y + 1),
+            ))
+            .with_bg(g_color)
+            .with_alpha(alpha >> 1)
+            .render(target);
+        }
+        for x in self.area.x0..self.area.x1{
+            let color = GREEN_DARK;
+
+            let distance_from_center: i16 = (x - self.area.center().x).abs();
+
+            let f = distance_from_center as f32 / (self.area.width() / 2) as f32;
+
+            let g_color = Color::lerp(color, style.background_color, f);
+
+            shape::Bar::new(Rect::new(
+                Point::new(x, self.area.y0),
+                Point::new(x+1, self.area.y1),
+            ))
+                .with_bg(g_color)
+                .with_alpha(alpha >> 2)
+                .render(target);
+        }
+    }
+
     pub fn render_background<'s>(
         &self,
         target: &mut impl Renderer<'s>,
         style: &ButtonStyle,
         alpha: u8,
     ) {
+        if self.gradient {
+            self.render_gradient_bar(target, style, alpha);
+            return;
+        }
+
         if self.radius.is_some() {
             shape::Bar::new(self.area)
                 .with_bg(style.background_color)
