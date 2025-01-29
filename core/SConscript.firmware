@@ -791,6 +791,12 @@ def cargo_build():
         # see https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
         env.Append(ENV={'RUSTFLAGS': '-Z print-type-sizes'})
 
+    # Adds an ELF section with Rust functions' stack sizes. See the following links for more details:
+    # - https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/emit-stack-sizes.html
+    # - https://blog.japaric.io/stack-analysis/
+    # - https://github.com/japaric/stack-sizes/
+    env.Append(ENV={'RUSTFLAGS': '-Z emit-stack-sizes'})
+
     bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
     build_dir = str(Dir('.').abspath)
 
