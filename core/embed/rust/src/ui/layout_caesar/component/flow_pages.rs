@@ -209,14 +209,10 @@ impl Paginate for Page {
 }
 
 // DEBUG-ONLY SECTION BELOW
-
-#[cfg(feature = "ui_debug")]
-use crate::ui::component::text::layout::LayoutFit;
-
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for Page {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        use crate::ui::component::text::layout::trace::TraceSink;
+        use crate::ui::component::text::layout::LayoutFit;
         use core::cell::Cell;
         let fit: Cell<Option<LayoutFit>> = Cell::new(None);
         t.component("Page");
@@ -227,7 +223,7 @@ impl crate::trace::Trace for Page {
         t.int("active_page", self.current_page as i64);
         t.int("page_count", self.page_count as i64);
         t.in_list("text", &|l| {
-            let result = self.formatted.layout_content(&mut TraceSink(l));
+            let result = self.formatted.trace_lines_as_list(l);
             fit.set(Some(result));
         });
     }

@@ -3,7 +3,7 @@ use crate::{
     ui::{
         component::{
             base::{AttachType, EventPropagation},
-            Component, Event, EventCtx,
+            Component, Event, EventCtx, PaginateFull,
         },
         constant::screen,
         display::Color,
@@ -11,7 +11,7 @@ use crate::{
         geometry::{Direction, Offset, Rect},
         lerp::Lerp,
         shape::{self, Renderer},
-        util::animation_disabled,
+        util::{animation_disabled, Pager},
     },
 };
 
@@ -284,6 +284,16 @@ impl<T: Component> Component for SwipeContent<T> {
     }
 }
 
+impl<T: PaginateFull> PaginateFull for SwipeContent<T> {
+    fn pager(&self) -> Pager {
+        self.inner.pager()
+    }
+
+    fn change_page(&mut self, to_page: u16) {
+        self.inner.change_page(to_page);
+    }
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for SwipeContent<T>
 where
@@ -295,15 +305,9 @@ where
     }
 }
 
-pub trait InternallySwipable {
-    fn current_page(&self) -> usize;
-
-    fn num_pages(&self) -> usize;
-}
-
 pub struct InternallySwipableContent<T>
 where
-    T: Component + InternallySwipable,
+    T: Component + PaginateFull,
 {
     content: SwipeContent<T>,
     animate: bool,
@@ -311,7 +315,7 @@ where
 
 impl<T> InternallySwipableContent<T>
 where
-    T: Component + InternallySwipable,
+    T: Component + PaginateFull,
 {
     pub fn new(content: T) -> Self {
         Self {
@@ -325,10 +329,7 @@ where
     }
 
     fn should_animate_attach(&self, attach_type: AttachType) -> bool {
-        let is_first_page = self.content.inner.current_page() == 0;
-        let is_last_page =
-            self.content.inner.current_page() == (self.content.inner.num_pages() - 1);
-
+        let pager = self.content.inner.pager();
         let is_swipe_up = matches!(attach_type, AttachType::Swipe(Direction::Up));
         let is_swipe_down = matches!(attach_type, AttachType::Swipe(Direction::Down));
 
@@ -336,11 +337,11 @@ where
             return false;
         }
 
-        if is_first_page && is_swipe_up {
+        if pager.is_first() && is_swipe_up {
             return true;
         }
 
-        if is_last_page && is_swipe_down {
+        if pager.is_last() && is_swipe_down {
             return true;
         }
 
@@ -348,18 +349,15 @@ where
     }
 
     fn should_animate_swipe(&self, swipe_direction: Direction) -> bool {
-        let is_first_page = self.content.inner.current_page() == 0;
-        let is_last_page =
-            self.content.inner.current_page() == (self.content.inner.num_pages() - 1);
-
+        let pager = self.content.inner.pager();
         let is_swipe_up = matches!(swipe_direction, Direction::Up);
         let is_swipe_down = matches!(swipe_direction, Direction::Down);
 
-        if is_last_page && is_swipe_up {
+        if pager.is_last() && is_swipe_up {
             return true;
         }
 
-        if is_first_page && is_swipe_down {
+        if pager.is_first() && is_swipe_down {
             return true;
         }
 
@@ -369,7 +367,7 @@ where
 
 impl<T> Component for InternallySwipableContent<T>
 where
-    T: Component + InternallySwipable,
+    T: Component + PaginateFull,
 {
     type Msg = T::Msg;
 
@@ -395,10 +393,23 @@ where
     }
 }
 
+impl<T> PaginateFull for InternallySwipableContent<T>
+where
+    T: Component + PaginateFull,
+{
+    fn pager(&self) -> Pager {
+        self.content.pager()
+    }
+
+    fn change_page(&mut self, to_page: u16) {
+        self.content.change_page(to_page);
+    }
+}
+
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for InternallySwipableContent<T>
 where
-    T: crate::trace::Trace + Component + InternallySwipable,
+    T: crate::trace::Trace + Component + PaginateFull,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("InternallySwipableContent");

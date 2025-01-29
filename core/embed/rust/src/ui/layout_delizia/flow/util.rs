@@ -48,7 +48,7 @@ pub struct ConfirmValue {
     chunkify: bool,
     text_mono: bool,
     page_counter: bool,
-    page_limit: Option<usize>,
+    page_limit: Option<u16>,
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
@@ -189,7 +189,7 @@ impl ConfirmValue {
         self
     }
 
-    pub const fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+    pub const fn with_page_limit(mut self, page_limit: Option<u16>) -> Self {
         self.page_limit = page_limit;
         self
     }
