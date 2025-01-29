@@ -97,6 +97,10 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # `req_type`. Raises if the message is malformed.
         req_msg = wrap_protobuf_load(msg.data, req_type)
 
+        if __debug__ and utils.LOG_STACK_USAGE:
+            utils.zero_unused_stack()
+            unused_stack_before = utils.estimate_unused_stack()
+
         # Create the handler task.
         task = handler(req_msg)
 
@@ -108,6 +112,17 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # Spawn a workflow around the task. This ensures that concurrent
         # workflows are shut down.
         res_msg = await workflow.spawn(with_context(ctx, task))
+
+        if __debug__ and utils.LOG_STACK_USAGE:
+            unused_stack_after = utils.estimate_unused_stack()
+            log.debug(
+                __name__,
+                "<%s> estimated stack usage=%d (unused before=%d, after=%d)",
+                msg_type,
+                unused_stack_before - unused_stack_after,
+                unused_stack_before,
+                unused_stack_after,
+            )
 
     except UnexpectedMessageException:
         # Workflow was trying to read a message from the wire, and

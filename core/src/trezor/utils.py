@@ -36,18 +36,24 @@ from trezorutils import (  # noqa: F401
 from typing import TYPE_CHECKING
 
 if __debug__:
+    from trezorutils import LOG_STACK_USAGE
+
+    if LOG_STACK_USAGE:
+        from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
+
     if EMULATOR:
         import uos
 
         DISABLE_ANIMATION = uos.getenv("TREZOR_DISABLE_ANIMATION") == "1"
         LOG_MEMORY = uos.getenv("TREZOR_LOG_MEMORY") == "1"
     else:
-        from trezorutils import DISABLE_ANIMATION  # noqa: F401
+        from trezorutils import DISABLE_ANIMATION
 
         LOG_MEMORY = 0
 
 else:
     DISABLE_ANIMATION = False
+    LOG_STACK_USAGE = False
 
 if TYPE_CHECKING:
     from typing import Any, Iterator, Protocol, Sequence, TypeVar
