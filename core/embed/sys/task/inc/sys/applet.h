@@ -32,12 +32,12 @@ typedef void (*applet_startup_t)(const char* args, uint32_t random);
 typedef struct {
   uint32_t start;
   uint32_t size;
-} memory_area_t;
+} applet_memory_t;
 
 // Applet header found at the beginning of the applet binary
 typedef struct {
   // Stack area
-  memory_area_t stack;
+  applet_memory_t stack;
   // Applet entry point
   applet_startup_t startup;
 } applet_header_t;
@@ -45,13 +45,13 @@ typedef struct {
 // Applet memory layout
 typedef struct {
   // Read/write data area #1
-  memory_area_t data1;
+  applet_memory_t data1;
   // Read/write data area #2
-  memory_area_t data2;
+  applet_memory_t data2;
   // Read-only code area #1
-  memory_area_t code1;
+  applet_memory_t code1;
   // Read-only code area #2
-  memory_area_t code2;
+  applet_memory_t code2;
 
 } applet_layout_t;
 

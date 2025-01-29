@@ -26,7 +26,7 @@
 #ifdef SYSCALL_DISPATCH
 
 static inline bool inside_area(const void *addr, size_t len,
-                               const memory_area_t *area) {
+                               const applet_memory_t *area) {
   return ((uintptr_t)addr >= area->start) &&
          ((uintptr_t)addr + len <= area->start + area->size);
 }
@@ -63,7 +63,7 @@ bool probe_read_access(const void *addr, size_t len) {
     return true;
   }
 
-  static const memory_area_t assets = {
+  static const applet_memory_t assets = {
       .start = ASSETS_START,
       .size = ASSETS_MAXSIZE,
   };
