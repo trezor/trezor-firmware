@@ -7985,13 +7985,13 @@ class ThpPairingRequestApproved(protobuf.MessageType):
 class ThpSelectMethod(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 1008
     FIELDS = {
-        1: protobuf.Field("selected_pairing_method", "ThpPairingMethod", repeated=False, required=False, default=ThpPairingMethod.NFC),
+        1: protobuf.Field("selected_pairing_method", "ThpPairingMethod", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
-        selected_pairing_method: Optional["ThpPairingMethod"] = ThpPairingMethod.NFC,
+        selected_pairing_method: Optional["ThpPairingMethod"] = None,
     ) -> None:
         self.selected_pairing_method = selected_pairing_method
 

@@ -992,8 +992,8 @@ impl ThpSelectMethod {
 
     pub fn selected_pairing_method(&self) -> ThpPairingMethod {
         match self.selected_pairing_method {
-            Some(e) => e.enum_value_or(ThpPairingMethod::NFC),
-            None => ThpPairingMethod::NFC,
+            Some(e) => e.enum_value_or(ThpPairingMethod::SkipPairing),
+            None => ThpPairingMethod::SkipPairing,
         }
     }
 
@@ -4105,24 +4105,24 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     on_device\x18\x02\x20\x01(\x08R\x08onDevice\x12%\n\x0ederive_cardano\x18\
     \x03\x20\x01(\x08R\rderiveCardano\"0\n\x11ThpPairingRequest\x12\x1b\n\th\
     ost_name\x18\x01\x20\x01(\tR\x08hostName\"\x1b\n\x19ThpPairingRequestApp\
-    roved\"x\n\x0fThpSelectMethod\x12e\n\x17selected_pairing_method\x18\x01\
-    \x20\x01(\x0e2(.hw.trezor.messages.thp.ThpPairingMethod:\x03NFCR\x15sele\
-    ctedPairingMethod\"\x20\n\x1eThpPairingPreparationsFinished\"8\n\x16ThpC\
-    odeEntryCommitment\x12\x1e\n\ncommitment\x18\x01\x20\x01(\x0cR\ncommitme\
-    nt\"5\n\x15ThpCodeEntryChallenge\x12\x1c\n\tchallenge\x18\x01\x20\x01(\
-    \x0cR\tchallenge\"P\n\x17ThpCodeEntryCpaceTrezor\x125\n\x17cpace_trezor_\
-    public_key\x18\x01\x20\x01(\x0cR\x14cpaceTrezorPublicKey\"_\n\x18ThpCode\
-    EntryCpaceHostTag\x121\n\x15cpace_host_public_key\x18\x01\x20\x01(\x0cR\
-    \x12cpaceHostPublicKey\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\",\
-    \n\x12ThpCodeEntrySecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\x06se\
-    cret\"\x20\n\x0cThpQrCodeTag\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03t\
-    ag\")\n\x0fThpQrCodeSecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\x06\
-    secret\"!\n\rThpNfcTagHost\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\
-    \"#\n\x0fThpNfcTagTrezor\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\"\
-    f\n\x14ThpCredentialRequest\x12,\n\x12host_static_pubkey\x18\x01\x20\x01\
-    (\x0cR\x10hostStaticPubkey\x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\x08\
-    R\x0bautoconnect\"i\n\x15ThpCredentialResponse\x120\n\x14trezor_static_p\
-    ubkey\x18\x01\x20\x01(\x0cR\x12trezorStaticPubkey\x12\x1e\n\ncredential\
+    roved\"s\n\x0fThpSelectMethod\x12`\n\x17selected_pairing_method\x18\x01\
+    \x20\x01(\x0e2(.hw.trezor.messages.thp.ThpPairingMethodR\x15selectedPair\
+    ingMethod\"\x20\n\x1eThpPairingPreparationsFinished\"8\n\x16ThpCodeEntry\
+    Commitment\x12\x1e\n\ncommitment\x18\x01\x20\x01(\x0cR\ncommitment\"5\n\
+    \x15ThpCodeEntryChallenge\x12\x1c\n\tchallenge\x18\x01\x20\x01(\x0cR\tch\
+    allenge\"P\n\x17ThpCodeEntryCpaceTrezor\x125\n\x17cpace_trezor_public_ke\
+    y\x18\x01\x20\x01(\x0cR\x14cpaceTrezorPublicKey\"_\n\x18ThpCodeEntryCpac\
+    eHostTag\x121\n\x15cpace_host_public_key\x18\x01\x20\x01(\x0cR\x12cpaceH\
+    ostPublicKey\x12\x10\n\x03tag\x18\x02\x20\x01(\x0cR\x03tag\",\n\x12ThpCo\
+    deEntrySecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\x06secret\"\x20\
+    \n\x0cThpQrCodeTag\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\")\n\
+    \x0fThpQrCodeSecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\x06secret\
+    \"!\n\rThpNfcTagHost\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\"#\n\
+    \x0fThpNfcTagTrezor\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\"f\n\
+    \x14ThpCredentialRequest\x12,\n\x12host_static_pubkey\x18\x01\x20\x01(\
+    \x0cR\x10hostStaticPubkey\x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\x08R\
+    \x0bautoconnect\"i\n\x15ThpCredentialResponse\x120\n\x14trezor_static_pu\
+    bkey\x18\x01\x20\x01(\x0cR\x12trezorStaticPubkey\x12\x1e\n\ncredential\
     \x18\x02\x20\x01(\x0cR\ncredential\"\x0f\n\rThpEndRequest\"\x10\n\x0eThp\
     EndResponse\"\\\n\x15ThpCredentialMetadata\x12\x1b\n\thost_name\x18\x01\
     \x20\x01(\tR\x08hostName\x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\x08R\

@@ -103,7 +103,7 @@ message ThpPairingRequestApproved{
  * @next ThpCodeEntryCommitment
  */
 message ThpSelectMethod {
-    optional ThpPairingMethod selected_pairing_method = 1 [default=NFC];; 
+    optional ThpPairingMethod selected_pairing_method = 1;
 }
 
 /**

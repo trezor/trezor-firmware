@@ -6247,7 +6247,7 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class ThpSelectMethod(protobuf.MessageType):
-        selected_pairing_method: "ThpPairingMethod"
+        selected_pairing_method: "ThpPairingMethod | None"
 
         def __init__(
             self,
