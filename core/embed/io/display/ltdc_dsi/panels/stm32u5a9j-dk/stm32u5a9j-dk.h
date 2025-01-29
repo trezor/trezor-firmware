@@ -19,6 +19,8 @@
 
 #pragma once
 
+#define DSI_LANE_BYTE_FREQ_HZ 62500000ULL
+
 #define VSYNC 1
 #define VBP 12
 #define VFP 50

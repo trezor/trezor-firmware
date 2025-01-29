@@ -58,7 +58,7 @@ static bool display_pll_init(void) {
 #elif HSE_VALUE == 16000000
   PLL3InitPeriph.PLL3.PLL3M = 4;
 #endif
-  PLL3InitPeriph.PLL3.PLL3N = 125;
+  PLL3InitPeriph.PLL3.PLL3N = ((DSI_LANE_BYTE_FREQ_HZ * 8) / 4000000);
   PLL3InitPeriph.PLL3.PLL3P = 8;
   PLL3InitPeriph.PLL3.PLL3Q = 8;
   PLL3InitPeriph.PLL3.PLL3R = 24;
@@ -144,11 +144,7 @@ static bool display_dsi_init(display_driver_t *drv) {
   drv->hlcd_dsi.Init.PHYFrequencyRange = DSI_DPHY_FRANGE_450MHZ_510MHZ;
   drv->hlcd_dsi.Init.PHYLowPowerOffset = 0;
 
-#if HSE_VALUE == 32000000
-  PLLInit.PLLNDIV = 62;
-#elif HSE_VALUE == 16000000
-  PLLInit.PLLNDIV = 125;
-#endif
+  PLLInit.PLLNDIV = ((DSI_LANE_BYTE_FREQ_HZ * 8 * 2 * 4) / (2 * HSE_VALUE));
   PLLInit.PLLIDF = 4;
   PLLInit.PLLODF = 2;
   PLLInit.PLLVCORange = DSI_DPHY_VCO_FRANGE_800MHZ_1GHZ;
