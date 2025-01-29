@@ -25,5 +25,5 @@ pub trait CommonUI {
 
     fn screen_fatal_error(title: &str, msg: &str, footer: &str);
 
-    fn screen_boot_stage_2();
+    fn screen_boot_stage_2(fade_in: bool);
 }

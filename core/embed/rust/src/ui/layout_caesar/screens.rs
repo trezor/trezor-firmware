@@ -18,7 +18,7 @@ pub fn screen_fatal_error(title: &str, msg: &str, footer: &str) {
     display::refresh();
 }
 
-pub fn screen_boot_stage_2() {
+pub fn screen_boot_stage_2(_fade_in: bool) {
     let mut frame = WelcomeScreen::new(false);
     frame.place(screen());
 

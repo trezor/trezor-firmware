@@ -68,8 +68,8 @@ impl CommonUI for UIBolt {
         show(&mut frame, false);
     }
 
-    fn screen_boot_stage_2() {
+    fn screen_boot_stage_2(fade_in: bool) {
         let mut frame = WelcomeScreen::new(false);
-        show(&mut frame, false);
+        show(&mut frame, fade_in);
     }
 }
