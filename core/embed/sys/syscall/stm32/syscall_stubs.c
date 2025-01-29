@@ -76,12 +76,6 @@ uint64_t systick_us_to_cycles(uint64_t us) {
 
 #include <sys/bootutils.h>
 
-void secure_shutdown(void) {
-  syscall_invoke0(SYSCALL_SECURE_SHUTDOWN);
-  while (1)
-    ;
-}
-
 void reboot_to_bootloader(void) {
   syscall_invoke0(SYSCALL_REBOOT_TO_BOOTLOADER);
   while (1)
