@@ -19,17 +19,16 @@ ustack_base = ADDR(.udata) + 512;
 _sustack = ADDR(.udata) + 256;
 _eustack = ustack_base;
 
-/* used by the startup code to populate variables used by the C code */
-data_lma = LOADADDR(.data);
-data_vma = ADDR(.data);
-data_size = SIZEOF(.data);
-bss_start = ADDR(.bss);
-bss_end = ADDR(.bss) + SIZEOF(.bss);
+_data_section_loadaddr = LOADADDR(.data);
+_data_section_start = ADDR(.data);
+_data_section_end = ADDR(.data) + SIZEOF(.data);
 
-/* used by the startup code to populate variables used by the C code */
-confidential_lma = LOADADDR(.confidential);
-confidential_vma = ADDR(.confidential);
-confidential_size = SIZEOF(.confidential);
+_bss_section_start = ADDR(.bss);
+_bss_section_end = ADDR(.bss) + SIZEOF(.bss);
+
+_confidential_section_loadaddr = LOADADDR(.confidential);
+_confidential_section_start = ADDR(.confidential);
+_confidential_section_end = ADDR(.confidential) + SIZEOF(.confidential);
 
 /* used by the startup code to wipe memory */
 _startup_clear_ram_0_start = MCU_SRAM1;

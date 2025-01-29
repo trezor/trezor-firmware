@@ -232,22 +232,24 @@ __attribute((naked, no_stack_protector)) void system_emergency_rescue(
       // Clear .bss, initialize .data, ...
       // --------------------------------------------------------------
 
-      "LDR     R0, =bss_start      \n"  // Clear .bss
+      "LDR     R0, =_bss_section_start \n"  // Clear .bss
       "MOV     R1, #0              \n"
-      "LDR     R2, =bss_end        \n"
+      "LDR     R2, =_bss_section_end \n"
       "SUB     R2, R2, R0          \n"
       "BL      memset              \n"
 
-      "LDR     R0, =data_vma       \n"  // Initialize .data
-      "LDR     R1, =data_lma       \n"
-      "LDR     R2, =data_size      \n"
+      "LDR     R0, =_data_section_start \n"  // Initialize .data
+      "LDR     R1, =_data_section_loadaddr \n"
+      "LDR     R2, =_data_section_end \n"
+      "SUB     R2, R2, R0          \n"
       "BL      memcpy              \n"
 
 #ifdef STM32U5
-      "LDR     R0, =confidential_vma   \n"  // Initialize .confidental
-      "LDR     R1, =confidential_lma   \n"
-      "LDR     R2, =confidential_size  \n"
-      "BL      memcpy                  \n"
+      "LDR     R0, =_confidential_section_start \n"  // Initialize .confidental
+      "LDR     R1, =_confidential_section_loadaddr \n"
+      "LDR     R2, =_confidential_section_end \n"
+      "SUB     R2, R2, R0          \n"
+      "BL      memcpy              \n"
 #endif
 
       // --------------------------------------------------------------
