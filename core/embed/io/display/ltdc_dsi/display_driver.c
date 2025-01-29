@@ -356,16 +356,6 @@ bool display_init(display_content_mode_t mode) {
   systick_delay_ms(120);
 #endif
 
-#ifdef DISPLAY_BACKLIGHT_PIN
-  DISPLAY_BACKLIGHT_CLK_ENABLE();
-  /* Configure LCD Backlight Pin */
-  GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStructure.Pull = GPIO_PULLUP;
-  GPIO_InitStructure.Pin = DISPLAY_BACKLIGHT_PIN;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(DISPLAY_BACKLIGHT_PORT, &GPIO_InitStructure);
-#endif
-
 #ifdef USE_BACKLIGHT
   backlight_init(BACKLIGHT_RESET);
 #endif

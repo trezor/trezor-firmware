@@ -48,6 +48,11 @@ def configure(
     ]
     paths += ["embed/io/display/inc"]
 
+    features_available.append("backlight")
+    defines += [("USE_BACKLIGHT", "1")]
+    sources += ["embed/io/backlight/stm32/backlight_pin.c"]
+    paths += ["embed/io/backlight/inc"]
+
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/io/touch/sitronix/sitronix.c"]
