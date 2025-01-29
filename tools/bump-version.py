@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import re
+import subprocess
 
 import click
 
@@ -78,6 +79,8 @@ def cli(project, version):
             VERSION_MINOR=minor,
             VERSION_PATCH=patch,
         )
+        # also bump language JSONs
+        subprocess.run(["python", project / "translations" / "cli.py", "gen"])
     elif parts[-1] == "legacy":
         bump_header(
             project / "firmware" / "version.h",
