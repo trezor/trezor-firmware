@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx},
+    component::{paginated::SinglePage, Component, Event, EventCtx},
     geometry::Rect,
     shape::Renderer,
 };
@@ -114,6 +114,8 @@ impl Component for PromptScreen {
         }
     }
 }
+
+impl SinglePage for PromptScreen {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for PromptScreen {

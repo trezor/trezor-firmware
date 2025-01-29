@@ -2,19 +2,20 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{base::AttachType, text::TextStyle, Component, Event, EventCtx, Never},
+        component::{
+            base::AttachType, paginated::PaginateFull, text::TextStyle, Component, Event, EventCtx,
+            Never,
+        },
         event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Rect},
         shape::{self, Renderer},
+        util::Pager,
     },
 };
 
 use heapless::Vec;
 
-use super::{
-    super::component::{swipe_content::SwipeAttachAnimation, InternallySwipable},
-    theme,
-};
+use super::{super::component::swipe_content::SwipeAttachAnimation, theme};
 
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
@@ -26,8 +27,8 @@ type IndexVec = Vec<u8, MAX_WORDS>;
 pub struct ShareWords<'a> {
     share_words: Vec<TString<'a>, MAX_WORDS>,
     subtitle: TString<'static>,
-    page_index: i16,
-    next_index: i16,
+    page_index: u16,
+    next_index: u16,
     /// Area reserved for a shown word from mnemonic/share
     area_word: Rect,
     progress: i16,
@@ -55,11 +56,11 @@ impl<'a> ShareWords<'a> {
     }
 
     fn is_first_page(&self) -> bool {
-        self.page_index == 0
+        self.pager().is_first()
     }
 
     fn is_final_page(&self) -> bool {
-        self.page_index == self.share_words.len() as i16 - 1
+        self.pager().is_last()
     }
 
     fn find_repeated(share_words: &[TString]) -> IndexVec {
@@ -85,9 +86,9 @@ impl<'a> ShareWords<'a> {
         (self.subtitle, &theme::TEXT_SUB_GREY)
     }
 
-    fn render_word<'s>(&self, word_index: i16, target: &mut impl Renderer<'s>, area: Rect) {
+    fn render_word<'s>(&self, word_index: u16, target: &mut impl Renderer<'s>, area: Rect) {
         // the share word
-        if word_index >= self.share_words.len() as _ || word_index < 0 {
+        if word_index >= self.share_words.len() as _ {
             return;
         }
         let word = self.share_words[word_index as usize];
@@ -157,13 +158,13 @@ impl<'a> Component for ShareWords<'a> {
             Event::Swipe(SwipeEvent::End(dir)) => match dir {
                 Direction::Up if !self.is_final_page() => {
                     self.progress = 0;
-                    self.page_index = (self.page_index + 1).min(self.share_words.len() as i16 - 1);
+                    self.page_index = self.pager().next();
                     self.wait_for_attach = true;
                     ctx.request_paint();
                 }
                 Direction::Down if !self.is_first_page() => {
                     self.progress = 0;
-                    self.page_index = self.page_index.saturating_sub(1);
+                    self.page_index = self.pager().prev();
                     self.wait_for_attach = true;
                     ctx.request_paint();
                 }
@@ -172,11 +173,11 @@ impl<'a> Component for ShareWords<'a> {
             Event::Swipe(SwipeEvent::Move(dir, progress)) => {
                 match dir {
                     Direction::Up => {
-                        self.next_index = self.page_index + 1;
+                        self.next_index = self.pager().next();
                         self.progress = progress;
                     }
                     Direction::Down => {
-                        self.next_index = self.page_index - 1;
+                        self.next_index = self.pager().prev();
                         self.progress = progress;
                     }
                     _ => {}
@@ -241,13 +242,13 @@ impl<'a> Component for ShareWords<'a> {
     }
 }
 
-impl InternallySwipable for ShareWords<'_> {
-    fn current_page(&self) -> usize {
-        self.page_index as usize
+impl PaginateFull for ShareWords<'_> {
+    fn pager(&self) -> Pager {
+        Pager::new(self.share_words.len() as u16).with_current(self.page_index)
     }
 
-    fn num_pages(&self) -> usize {
-        self.share_words.len()
+    fn change_page(&mut self, active_page: u16) {
+        unimplemented!()
     }
 }
 

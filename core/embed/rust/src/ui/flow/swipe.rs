@@ -103,10 +103,6 @@ pub struct SwipeFlow {
     swipe: SwipeDetect,
     /// Swipe allowed
     allow_swipe: bool,
-    /// Current page index
-    internal_page_idx: u16,
-    /// Internal pages count
-    internal_pages: u16,
     /// If triggering swipe by event, make this decision instead of default
     /// after the swipe.
     pending_decision: Option<Decision>,
@@ -123,8 +119,6 @@ impl SwipeFlow {
             swipe: SwipeDetect::new(),
             store: Vec::new(),
             allow_swipe: true,
-            internal_page_idx: 0,
-            internal_pages: 1,
             pending_decision: None,
             lifecycle_state: LayoutState::Initial,
             returned_value: None,
@@ -154,19 +148,6 @@ impl SwipeFlow {
         &mut self.store[self.state.index()]
     }
 
-    fn update_page_count(&mut self, attach_type: AttachType) {
-        // update page count
-        self.internal_pages = self.current_page_mut().get_internal_page_count() as u16;
-        // reset internal state:
-        self.internal_page_idx = if let Swipe(Direction::Down) = attach_type {
-            // if coming from below, set to the last page
-            self.internal_pages.saturating_sub(1)
-        } else {
-            // else reset to the first page
-            0
-        };
-    }
-
     /// Transition to a different state.
     ///
     /// This is the only way to change the current flow state.
@@ -183,7 +164,6 @@ impl SwipeFlow {
         self.current_page_mut()
             .event(ctx, Event::Attach(attach_type));
 
-        self.update_page_count(attach_type);
         ctx.request_paint();
     }
 
@@ -209,27 +189,20 @@ impl SwipeFlow {
         let mut decision = Decision::Nothing;
         let mut return_transition: AttachType = AttachType::Initial;
 
-        if let Event::Attach(attach_type) = event {
-            self.update_page_count(attach_type);
-        }
-
         let mut attach = false;
 
         let event = if self.allow_swipe {
             let page = self.current_page();
-            let config = page
-                .get_swipe_config()
-                .with_pagination(self.internal_page_idx, self.internal_pages);
+            let pager = page.get_pager();
+            let config = page.get_swipe_config().with_pager(pager);
 
             match self.swipe.event(ctx, event, config) {
                 Some(SwipeEvent::End(dir)) => {
                     return_transition = AttachType::Swipe(dir);
 
-                    let new_internal_page_idx =
-                        config.paging_event(dir, self.internal_page_idx, self.internal_pages);
-                    if new_internal_page_idx != self.internal_page_idx {
+                    let new_internal_page_idx = config.paging_event(dir, pager);
+                    if new_internal_page_idx != pager.current() {
                         // internal paging event
-                        self.internal_page_idx = new_internal_page_idx;
                         decision = Decision::Nothing;
                         attach = true;
                     } else if let Some(override_decision) = self.pending_decision.take() {

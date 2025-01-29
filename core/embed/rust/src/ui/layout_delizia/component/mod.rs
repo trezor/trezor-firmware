@@ -79,7 +79,7 @@ pub use scroll::ScrollBar;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
 pub use status_screen::StatusScreen;
-pub use swipe_content::{InternallySwipable, InternallySwipableContent, SwipeContent};
+pub use swipe_content::{InternallySwipableContent, SwipeContent};
 #[cfg(feature = "translations")]
 pub use swipe_up_screen::{SwipeUpScreen, SwipeUpScreenMsg};
 #[cfg(feature = "translations")]

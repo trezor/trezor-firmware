@@ -8,9 +8,8 @@ use crate::{
         },
         display,
         geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
-        shape,
-        shape::Renderer,
-        util::long_line_content_with_ellipsis,
+        shape::{self, Renderer},
+        util::{long_line_content_with_ellipsis, Pager},
     },
 };
 
@@ -88,7 +87,6 @@ pub struct PassphraseKeyboard {
     active_layout: KeyboardLayout,
     fade: Cell<bool>,
     swipe_config: SwipeConfig, // FIXME: how about page_swipe
-    internal_page_cnt: usize,
 }
 
 const PAGE_COUNT: usize = 4;
@@ -159,7 +157,6 @@ impl PassphraseKeyboard {
             active_layout,
             fade: Cell::new(false),
             swipe_config: SwipeConfig::new(),
-            internal_page_cnt: 1,
         }
     }
 
@@ -481,8 +478,8 @@ impl crate::ui::flow::Swipable for PassphraseKeyboard {
         self.swipe_config
     }
 
-    fn get_internal_page_count(&self) -> usize {
-        self.internal_page_cnt
+    fn get_pager(&self) -> Pager {
+        Pager::single_page()
     }
 }
 

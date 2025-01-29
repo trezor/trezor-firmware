@@ -3,13 +3,12 @@ use crate::{
     strutil::TString,
     time::{Duration, Stopwatch},
     ui::{
-        component::{Component, Event, EventCtx, Label, Timeout},
+        component::{paginated::SinglePage, Component, Event, EventCtx, Label, Timeout},
         constant::screen,
         display::{Color, Icon},
         geometry::{Alignment, Alignment2D, Insets, Point, Rect},
         lerp::Lerp,
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
         util::animation_disabled,
     },
 };
@@ -275,6 +274,8 @@ impl Component for StatusScreen {
         self.msg.render_with_alpha(target, content_2_alpha);
     }
 }
+
+impl SinglePage for StatusScreen {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for StatusScreen {

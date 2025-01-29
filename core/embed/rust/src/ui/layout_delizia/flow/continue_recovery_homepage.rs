@@ -10,7 +10,7 @@ use crate::{
             text::paragraphs::{
                 Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
             },
-            ComponentExt, EventCtx,
+            ComponentExt, EventCtx, PaginateFull as _,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -147,11 +147,7 @@ fn footer_update_fn(
     ctx: &mut EventCtx,
     footer: &mut Footer,
 ) {
-    // FIXME: current_page is implemented for Paragraphs and we have to use Vec::len
-    // to get total pages instead of using Paginate because it borrows mutably
-    let current_page = content.inner().inner().current_page();
-    let total_pages = content.inner().inner().inner().len() / 2; // 2 paragraphs per page
-    footer.update_page_counter(ctx, current_page, total_pages);
+    footer.update_pager(ctx, content.inner().inner().pager());
 }
 
 pub fn new_continue_recovery_homepage(
