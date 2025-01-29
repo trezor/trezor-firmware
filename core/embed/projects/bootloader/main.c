@@ -377,6 +377,10 @@ void real_jump_to_firmware(void) {
     ui_screen_boot_stage_1(false);
   }
 
+  if (DISPLAY_JUMP_BEHAVIOR == DISPLAY_RESET_CONTENT) {
+    display_fade(display_get_backlight(), 0, 200);
+  }
+
   drivers_deinit();
 
   system_deinit();
