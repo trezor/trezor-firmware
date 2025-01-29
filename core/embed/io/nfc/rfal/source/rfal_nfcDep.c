@@ -2041,7 +2041,7 @@ static ReturnCode nfcipTargetHandleActivation(rfalNfcDepDevice *nfcDepDev,
       /* Update Bitrate info */
       /* PRQA S 4342 2 # MISRA 10.5 - Layout of enum rfalBitRate and definition
        * of rfalNfcDepBRS2DSI guarantee no invalid enum values to be created */
-      nfcDepDev->info.DSI = (rfalBitRate)rfalNfcDepBRS2DSI(
+      nfcDepDev->info.DSI_dep = (rfalBitRate)rfalNfcDepBRS2DSI(
           *outBRS); /* DSI codes the bit rate from Initiator to Target */
       nfcDepDev->info.DRI = (rfalBitRate)rfalNfcDepBRS2DRI(
           *outBRS); /* DRI codes the bit rate from Target to Initiator */
@@ -2056,7 +2056,7 @@ static ReturnCode nfcipTargetHandleActivation(rfalNfcDepDevice *nfcDepDev,
           rfalNfcDepLR2PP(gNfcip.cfg.lr);
     }
 
-    rfalSetBitRate(RFAL_BR_KEEP, gNfcip.nfcDepDev->info.DSI);
+    rfalSetBitRate(RFAL_BR_KEEP, gNfcip.nfcDepDev->info.DSI_dep);
 
     RFAL_EXIT_ON_ERR(
         ret, nfcipTx(NFCIP_CMD_PSL_RES, txBuf, NULL, 0, 0, NFCIP_NO_FWT));
@@ -2376,7 +2376,7 @@ ReturnCode rfalNfcDepInitiatorHandleActivation(rfalNfcDepAtrParam *param,
   nfcDepDev->info.FWT = rfalNfcDepCalculateRWT(nfcDepDev->info.WT);
   nfcDepDev->info.dFWT = RFAL_NFCDEP_WT_DELTA;
 
-  rfalGetBitRate(&nfcDepDev->info.DSI, &nfcDepDev->info.DRI);
+  rfalGetBitRate(&nfcDepDev->info.DSI_dep, &nfcDepDev->info.DRI);
 
   /*******************************************************************************/
   /* Check if a PSL needs to be sent */
@@ -2384,7 +2384,7 @@ ReturnCode rfalNfcDepInitiatorHandleActivation(rfalNfcDepAtrParam *param,
   sendPSL = false;
   PSL_BRS = rfalNfcDepDx2BRS(
       nfcDepDev->info
-          .DSI); /* Set current bit rate divisor on both directions  */
+          .DSI_dep); /* Set current bit rate divisor on both directions  */
   PSL_FSL = nfcDepDev->info.LR; /* Set current Frame Size */
 
   /* Activity 1.0  9.4.4.15 & 9.4.6.3   NFC-DEP Activation PSL
@@ -2399,17 +2399,17 @@ ReturnCode rfalNfcDepInitiatorHandleActivation(rfalNfcDepAtrParam *param,
     /*******************************************************************************/
     /* Check Frame Size                                                            */
     /*******************************************************************************/
-    if( gNfcip.cfg.lr < nfcDepDev->info.LR )  /* If our Length reduction is smaller */   
+    if( gNfcip.cfg.lr < nfcDepDev->info.LR )  /* If our Length reduction is smaller */
     {
         sendPSL = true;
-        
+
         nfcDepDev->info.LR   = RFAL_MIN( nfcDepDev->info.LR, gNfcip.cfg.lr );
-        
+
         gNfcip.cfg.lr = nfcDepDev->info.LR;                /* Update nfcip LR  to be used */
-        gNfcip.fsc    = rfalNfcDepLR2FS( gNfcip.cfg.lr );  /* Update nfcip FSC to be used */     
-        
+        gNfcip.fsc    = rfalNfcDepLR2FS( gNfcip.cfg.lr );  /* Update nfcip FSC to be used */
+
         PSL_FSL       = gNfcip.cfg.lr;                     /* Set LR to be sent           */
-        
+
         nfcipLogI( " NFCIP(I) Frame Size differ, PSL new fsc: %d \r\n", gNfcip.fsc );
     }
 #endif
@@ -2417,7 +2417,7 @@ ReturnCode rfalNfcDepInitiatorHandleActivation(rfalNfcDepAtrParam *param,
   /*******************************************************************************/
   /* Check Baud rates */
   /*******************************************************************************/
-  if ((nfcDepDev->info.DSI != desiredBR) &&
+  if ((nfcDepDev->info.DSI_dep != desiredBR) &&
       (desiredBR != RFAL_BR_KEEP)) /* if desired BR is different    */
   {
     if (nfcipDxIsSupported(
@@ -2443,10 +2443,10 @@ ReturnCode rfalNfcDepInitiatorHandleActivation(rfalNfcDepAtrParam *param,
     RFAL_EXIT_ON_ERR(ret, rfalNfcDepPSL(PSL_BRS, PSL_FSL));
 
     /* Check if bit rate has been changed */
-    if (nfcDepDev->info.DSI != desiredBR) {
+    if (nfcDepDev->info.DSI_dep != desiredBR) {
       /* Check if device was in Passive NFC-A and went to higher bit rates, use
        * NFC-F */
-      if ((nfcDepDev->info.DSI == RFAL_BR_106) &&
+      if ((nfcDepDev->info.DSI_dep == RFAL_BR_106) &&
           (gNfcip.cfg.commMode == RFAL_NFCDEP_COMM_PASSIVE)) {
 #if RFAL_FEATURE_NFCF
         /* If Passive initialize NFC-F module */
@@ -2458,10 +2458,10 @@ ReturnCode rfalNfcDepInitiatorHandleActivation(rfalNfcDepAtrParam *param,
 
       nfcDepDev->info.DRI =
           desiredBR; /* DSI Bit Rate coding from Initiator  to Target  */
-      nfcDepDev->info.DSI =
+      nfcDepDev->info.DSI_dep =
           desiredBR; /* DRI Bit Rate coding from Target to Initiator   */
 
-      rfalSetBitRate(nfcDepDev->info.DSI, nfcDepDev->info.DRI);
+      rfalSetBitRate(nfcDepDev->info.DSI_dep, nfcDepDev->info.DRI);
     }
 
     return RFAL_ERR_NONE; /* PSL has been sent    */
@@ -2560,7 +2560,8 @@ ReturnCode rfalNfcDepListenStartActivation(const rfalNfcDepTargetParam *param,
   rxParam.nfcDepDev->info.FWT = NFCIP_NO_FWT;
   rxParam.nfcDepDev->info.dFWT = NFCIP_NO_FWT;
 
-  rfalGetBitRate(&rxParam.nfcDepDev->info.DSI, &rxParam.nfcDepDev->info.DRI);
+  rfalGetBitRate(&rxParam.nfcDepDev->info.DSI_dep,
+                 &rxParam.nfcDepDev->info.DRI);
 
   /* Store Device Info location, updated upon a PSL  */
   gNfcip.nfcDepDev = rxParam.nfcDepDev;
@@ -2632,14 +2633,14 @@ ReturnCode rfalNfcDepListenGetActivationStatus(void) {
         if (gNfcip.cfg.commMode == RFAL_NFCDEP_COMM_ACTIVE) {
           RFAL_EXIT_ON_ERR(err, rfalSetMode(RFAL_MODE_LISTEN_ACTIVE_P2P,
                                             gNfcip.nfcDepDev->info.DRI,
-                                            gNfcip.nfcDepDev->info.DSI));
+                                            gNfcip.nfcDepDev->info.DSI_dep));
         } else {
           RFAL_EXIT_ON_ERR(
               err, rfalSetMode(((RFAL_BR_106 == gNfcip.nfcDepDev->info.DRI)
                                     ? RFAL_MODE_LISTEN_NFCA
                                     : RFAL_MODE_LISTEN_NFCF),
                                gNfcip.nfcDepDev->info.DRI,
-                               gNfcip.nfcDepDev->info.DSI));
+                               gNfcip.nfcDepDev->info.DSI_dep));
         }
       }
       break;
