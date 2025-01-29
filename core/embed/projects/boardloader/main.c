@@ -323,7 +323,7 @@ int main(void) {
   system_deinit();
 
   // g_boot_command is preserved on STM32U5
-  jump_to(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));
+  jump_to_next_stage(IMAGE_CODE_ALIGN(BOOTLOADER_START + IMAGE_HEADER_SIZE));
 
   return 0;
 }

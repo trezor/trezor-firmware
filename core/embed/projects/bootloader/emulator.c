@@ -7,6 +7,7 @@
 
 #include <io/display.h>
 #include <sys/bootargs.h>
+#include <sys/bootutils.h>
 #include <sys/systick.h>
 #include <util/flash.h>
 #include <util/flash_otp.h>
@@ -111,7 +112,7 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
   return 1;
 }
 
-__attribute__((noreturn)) int main(int argc, char **argv) {
+int main(int argc, char **argv) {
   SDL_SetEventFilter(sdl_event_filter, NULL);
 
   display_init(DISPLAY_RESET_CONTENT);
@@ -189,10 +190,12 @@ __attribute__((noreturn)) int main(int argc, char **argv) {
 
   bootloader_main();
   hal_delay(3000);
-  jump_to(0);
+  jump_to_next_stage(0);
+
+  return 0;
 }
 
-void jump_to(uint32_t address) {
+void jump_to_next_stage(uint32_t address) {
   bool storage_is_erased =
       storage_empty(&STORAGE_AREAS[0]) && storage_empty(&STORAGE_AREAS[1]);
 

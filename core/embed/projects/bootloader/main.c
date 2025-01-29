@@ -382,7 +382,8 @@ void real_jump_to_firmware(void) {
 
   system_deinit();
 
-  jump_to(IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
+  jump_to_next_stage(
+      IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
 #ifdef USE_RESET_TO_BOOT
