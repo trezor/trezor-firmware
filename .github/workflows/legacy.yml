@@ -31,8 +31,7 @@ jobs:
     strategy:
       matrix:
         coins: [universal, btconly]
-        # type: [normal, debuglink]
-        type: [debuglink]
+        type: [normal, debuglink]
     env:
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       DEBUG_LINK: ${{ matrix.type == 'debuglink' && '1' || '0' }}
