@@ -30,7 +30,7 @@
 #include <sys/systick.h>
 
 #ifdef USE_BACKLIGHT
-#include "../backlight/backlight_pwm.h"
+#include <io/backlight.h>
 #endif
 
 #include "display_internal.h"
@@ -367,7 +367,7 @@ bool display_init(display_content_mode_t mode) {
 #endif
 
 #ifdef USE_BACKLIGHT
-  backlight_pwm_init(BACKLIGHT_RESET);
+  backlight_init(BACKLIGHT_RESET);
 #endif
 
   uint32_t fb_addr = display_fb_init();
@@ -430,16 +430,16 @@ void display_deinit(display_content_mode_t mode) {
   NVIC_DisableIRQ(LTDC_IRQn);
   NVIC_DisableIRQ(LTDC_ER_IRQn);
 
-#ifdef DISPLAY_BACKLIGHT_PIN
+#ifdef BACKLIGHT_PIN_PIN
   GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-  GPIO_InitStructure.Pin = DISPLAY_BACKLIGHT_PIN;
-  HAL_GPIO_Init(DISPLAY_BACKLIGHT_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = BACKLIGHT_PIN_PIN;
+  HAL_GPIO_Init(BACKLIGHT_PIN_PORT, &GPIO_InitStructure);
 #endif
 
 #ifdef USE_BACKLIGHT
-  backlight_pwm_deinit(BACKLIGHT_RESET);
+  backlight_deinit(BACKLIGHT_RESET);
 #endif
 
   display_dsi_deinit(drv);
@@ -478,11 +478,11 @@ int display_set_backlight(int level) {
   }
 
 #ifdef USE_BACKLIGHT
-  if (level > backlight_pwm_get()) {
+  if (level > backlight_get()) {
     display_ensure_refreshed();
   }
 
-  return backlight_pwm_set(level);
+  return backlight_set(level);
 #else
   // Just emulation, not doing anything
   drv->backlight_level = level;
@@ -497,7 +497,7 @@ int display_get_backlight(void) {
     return 0;
   }
 #ifdef USE_BACKLIGHT
-  return backlight_pwm_get();
+  return backlight_get();
 #else
   return drv->backlight_level;
 #endif

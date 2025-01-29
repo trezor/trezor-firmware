@@ -52,9 +52,9 @@ void PVD_PVM_IRQHandler(void) {
 void PVD_IRQHandler(void) {
 #endif
   mpu_reconfig(MPU_MODE_DEFAULT);
-#ifdef BACKLIGHT_PWM_TIM
+#ifdef TPS61043_TIM
   // Turn off display backlight
-  BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;
+  TPS61043_TIM->TPS61043_TIM_CCR = 0;
 #endif
   error_shutdown("PVD IRQ");
 }

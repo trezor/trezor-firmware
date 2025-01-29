@@ -22,14 +22,14 @@
 
 #include <sys/systick.h>
 
-#include "../backlight/backlight_pwm.h"
+#include <io/backlight.h>
 
 // Requested PWM Timer clock frequency [Hz]
 #define TIM_FREQ 10000000
 // Prescaler divider for the PWM Timer
 #define LED_PWM_PRESCALER (SystemCoreClock / TIM_FREQ - 1)
 // Period of the PWM Timer
-#define LED_PWM_TIM_PERIOD (TIM_FREQ / BACKLIGHT_PWM_FREQ)
+#define LED_PWM_TIM_PERIOD (TIM_FREQ / TPS61043_FREQ)
 
 // Backlight driver state
 typedef struct {
@@ -45,7 +45,7 @@ static backlight_driver_t g_backlight_driver = {
     .initialized = false,
 };
 
-void backlight_pwm_init(backlight_action_t action) {
+void backlight_init(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (drv->initialized) {
@@ -57,10 +57,10 @@ void backlight_pwm_init(backlight_action_t action) {
   int initial_level = 0;
 
   if (action == BACKLIGHT_RETAIN) {
-    // We expect the BACKLIGHT_PWM_TIM to be already initialized
+    // We expect the TPS61043_TIM to be already initialized
     // (e.g. by the bootloader or boardloader)
-    uint32_t prev_arr = BACKLIGHT_PWM_TIM->ARR;
-    uint32_t prev_ccr1 = BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR;
+    uint32_t prev_arr = TPS61043_TIM->ARR;
+    uint32_t prev_ccr1 = TPS61043_TIM->TPS61043_TIM_CCR;
 
     initial_level = (prev_ccr1 * 255) / (prev_arr + 1);
     if (initial_level > 255) {
@@ -69,20 +69,20 @@ void backlight_pwm_init(backlight_action_t action) {
   }
 
   // Initialize PWM GPIO
-  BACKLIGHT_PWM_PORT_CLK_EN();
+  TPS61043_PORT_CLK_EN();
 
   GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = BACKLIGHT_PWM_TIM_AF;
-  GPIO_InitStructure.Pin = BACKLIGHT_PWM_PIN;
-  HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Alternate = TPS61043_TIM_AF;
+  GPIO_InitStructure.Pin = TPS61043_PIN;
+  HAL_GPIO_Init(TPS61043_PORT, &GPIO_InitStructure);
 
   // Initialize PWM timer
-  BACKLIGHT_PWM_TIM_FORCE_RESET();
-  BACKLIGHT_PWM_TIM_RELEASE_RESET();
-  BACKLIGHT_PWM_TIM_CLK_EN();
+  TPS61043_TIM_FORCE_RESET();
+  TPS61043_TIM_RELEASE_RESET();
+  TPS61043_TIM_CLK_EN();
 
   uint32_t tmpcr1 = 0;
 
@@ -97,57 +97,57 @@ void backlight_pwm_init(backlight_action_t action) {
   tmpcr1 |= TIM_AUTORELOAD_PRELOAD_DISABLE;
 #endif
 
-  BACKLIGHT_PWM_TIM->CR1 = tmpcr1;
+  TPS61043_TIM->CR1 = tmpcr1;
 
   // Set the Autoreload value
-  BACKLIGHT_PWM_TIM->ARR = (uint32_t)LED_PWM_TIM_PERIOD - 1;
+  TPS61043_TIM->ARR = (uint32_t)LED_PWM_TIM_PERIOD - 1;
 
   // Set the Prescaler value
-  BACKLIGHT_PWM_TIM->PSC = LED_PWM_PRESCALER;
+  TPS61043_TIM->PSC = LED_PWM_PRESCALER;
 
   // Set the Repetition Counter value
-  BACKLIGHT_PWM_TIM->RCR = 0;
+  TPS61043_TIM->RCR = 0;
 
   // Generate an update event to reload the Prescaler
   // and the repetition counter (only for advanced timer) value immediately
-  BACKLIGHT_PWM_TIM->EGR = TIM_EGR_UG;
+  TPS61043_TIM->EGR = TIM_EGR_UG;
 
   // Set the Preload enable bit for channel1
-  BACKLIGHT_PWM_TIM->CCMR1 |= TIM_CCMR1_OC1PE;
+  TPS61043_TIM->CCMR1 |= TIM_CCMR1_OC1PE;
 
   // Configure the Output Fast mode
-  BACKLIGHT_PWM_TIM->CCMR1 &= ~TIM_CCMR1_OC1FE;
-  BACKLIGHT_PWM_TIM->CCMR1 |= TIM_OCFAST_DISABLE;
+  TPS61043_TIM->CCMR1 &= ~TIM_CCMR1_OC1FE;
+  TPS61043_TIM->CCMR1 |= TIM_OCFAST_DISABLE;
 
   uint32_t tmpccmrx;
   uint32_t tmpccer;
   uint32_t tmpcr2;
 
   // Get the TIMx CCER register value
-  tmpccer = BACKLIGHT_PWM_TIM->CCER;
+  tmpccer = TPS61043_TIM->CCER;
 
   // Disable the Channel 1: Reset the CC1E Bit
-  BACKLIGHT_PWM_TIM->CCER &= ~TIM_CCER_CC1E;
+  TPS61043_TIM->CCER &= ~TIM_CCER_CC1E;
   tmpccer |= TIM_CCER_CC1E;
 
   // Get the TIMx CR2 register value
-  tmpcr2 = BACKLIGHT_PWM_TIM->CR2;
+  tmpcr2 = TPS61043_TIM->CR2;
 
   // Get the TIMx CCMR1 register value
-  tmpccmrx = BACKLIGHT_PWM_TIM->CCMR1;
+  tmpccmrx = TPS61043_TIM->CCMR1;
 
   // Reset the Output Compare Mode Bits
   tmpccmrx &= ~TIM_CCMR1_OC1M;
   tmpccmrx &= ~TIM_CCMR1_CC1S;
   // Select the Output Compare Mode
-  tmpccmrx |= BACKLIGHT_PWM_TIM_OCMODE;
+  tmpccmrx |= TPS61043_TIM_OCMODE;
 
   // Reset the Output Polarity level
   tmpccer &= ~TIM_CCER_CC1P;
   // Set the Output Compare Polarity
   tmpccer |= TIM_OCPOLARITY_HIGH;
 
-  if (IS_TIM_CCXN_INSTANCE(BACKLIGHT_PWM_TIM, TIM_CHANNEL_1)) {
+  if (IS_TIM_CCXN_INSTANCE(TPS61043_TIM, TIM_CHANNEL_1)) {
     // Check parameters
     assert_param(IS_TIM_OCN_POLARITY(OC_Config->OCNPolarity));
 
@@ -159,7 +159,7 @@ void backlight_pwm_init(backlight_action_t action) {
     tmpccer |= TIM_CCER_CC1NE;
   }
 
-  if (IS_TIM_BREAK_INSTANCE(BACKLIGHT_PWM_TIM)) {
+  if (IS_TIM_BREAK_INSTANCE(TPS61043_TIM)) {
     // Check parameters
     assert_param(IS_TIM_OCNIDLE_STATE(OC_Config->OCNIdleState));
     assert_param(IS_TIM_OCIDLE_STATE(OC_Config->OCIdleState));
@@ -174,23 +174,23 @@ void backlight_pwm_init(backlight_action_t action) {
   }
 
   // Write to TIMx CR2
-  BACKLIGHT_PWM_TIM->CR2 = tmpcr2;
+  TPS61043_TIM->CR2 = tmpcr2;
   // Write to TIMx CCMR1
-  BACKLIGHT_PWM_TIM->CCMR1 = tmpccmrx;
+  TPS61043_TIM->CCMR1 = tmpccmrx;
   // Set the Capture Compare Register value
-  BACKLIGHT_PWM_TIM->CCR1 = 0;
+  TPS61043_TIM->CCR1 = 0;
   // Write to TIMx CCER
-  BACKLIGHT_PWM_TIM->CCER = tmpccer;
+  TPS61043_TIM->CCER = tmpccer;
 
-  BACKLIGHT_PWM_TIM->BDTR |= TIM_BDTR_MOE;
-  BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_CEN;
+  TPS61043_TIM->BDTR |= TIM_BDTR_MOE;
+  TPS61043_TIM->CR1 |= TIM_CR1_CEN;
 
   drv->initialized = true;
 
-  backlight_pwm_set(initial_level);
+  backlight_set(initial_level);
 }
 
-void backlight_pwm_deinit(backlight_action_t action) {
+void backlight_deinit(backlight_action_t action) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
@@ -207,15 +207,15 @@ void backlight_pwm_deinit(backlight_action_t action) {
 #define LED_PWM_SLOW_TIM_PERIOD (10000)
 #define LED_PWM_PRESCALER_SLOW (SystemCoreClock / 1000000 - 1)  // 1 MHz
 
-  BACKLIGHT_PWM_TIM->PSC = LED_PWM_PRESCALER_SLOW;
-  BACKLIGHT_PWM_TIM->CR1 |= TIM_CR1_ARPE;
-  BACKLIGHT_PWM_TIM->CR2 |= TIM_CR2_CCPC;
-  BACKLIGHT_PWM_TIM->ARR = LED_PWM_SLOW_TIM_PERIOD - 1;
+  TPS61043_TIM->PSC = LED_PWM_PRESCALER_SLOW;
+  TPS61043_TIM->CR1 |= TIM_CR1_ARPE;
+  TPS61043_TIM->CR2 |= TIM_CR2_CCPC;
+  TPS61043_TIM->ARR = LED_PWM_SLOW_TIM_PERIOD - 1;
 
   if (action == BACKLIGHT_RESET) {
-    BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR = 0;
+    TPS61043_TIM->TPS61043_TIM_CCR = 0;
   } else {  // action == BACKLIGHT_RETAIN
-    BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR =
+    TPS61043_TIM->TPS61043_TIM_CCR =
         (LED_PWM_SLOW_TIM_PERIOD * drv->current_level) / 255;
   }
 
@@ -226,16 +226,16 @@ void backlight_pwm_deinit(backlight_action_t action) {
     GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStructure.Pin = BACKLIGHT_PWM_PIN;
-    HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = TPS61043_PIN;
+    HAL_GPIO_Init(TPS61043_PORT, &GPIO_InitStructure);
 
     // Deinitialize PWM timer
-    BACKLIGHT_PWM_TIM_FORCE_RESET();
-    BACKLIGHT_PWM_TIM_RELEASE_RESET();
-    BACKLIGHT_PWM_TIM_CLK_DIS();
+    TPS61043_TIM_FORCE_RESET();
+    TPS61043_TIM_RELEASE_RESET();
+    TPS61043_TIM_CLK_DIS();
 
   } else {  // action == BACKLIGHT_RETAIN
-    BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR =
+    TPS61043_TIM->TPS61043_TIM_CCR =
         (LED_PWM_TIM_PERIOD * drv->current_level) / 255;
   }
 #endif
@@ -244,28 +244,28 @@ void backlight_pwm_deinit(backlight_action_t action) {
 }
 
 // Generate a pulse on the backlight control pin to wake up the TPS61043
-static void backlight_pwm_wakeup_pulse(void) {
+static void backlight_wakeup_pulse(void) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
 
-  HAL_GPIO_WritePin(BACKLIGHT_PWM_PORT, BACKLIGHT_PWM_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(TPS61043_PORT, TPS61043_PIN, GPIO_PIN_SET);
 
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Pin = BACKLIGHT_PWM_PIN;
-  HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = TPS61043_PIN;
+  HAL_GPIO_Init(TPS61043_PORT, &GPIO_InitStructure);
 
   hal_delay_us(500);
 
   GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-  GPIO_InitStructure.Alternate = BACKLIGHT_PWM_TIM_AF;
-  GPIO_InitStructure.Pin = BACKLIGHT_PWM_PIN;
-  HAL_GPIO_Init(BACKLIGHT_PWM_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Alternate = TPS61043_TIM_AF;
+  GPIO_InitStructure.Pin = TPS61043_PIN;
+  HAL_GPIO_Init(TPS61043_PORT, &GPIO_InitStructure);
 }
 
-int backlight_pwm_set(int level) {
+int backlight_set(int level) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
@@ -276,11 +276,11 @@ int backlight_pwm_set(int level) {
     // TPS61043 goes to shutdown when duty cycle is 0 (after 32ms),
     // so we need to set GPIO to high for at least 500us
     // to wake it up.
-    if (BACKLIGHT_PWM_TIM->BACKLIGHT_PWM_TIM_CCR == 0 && level != 0) {
-      backlight_pwm_wakeup_pulse();
+    if (TPS61043_TIM->TPS61043_TIM_CCR == 0 && level != 0) {
+      backlight_wakeup_pulse();
     }
 
-    BACKLIGHT_PWM_TIM->CCR1 = (LED_PWM_TIM_PERIOD * level) / 255;
+    TPS61043_TIM->CCR1 = (LED_PWM_TIM_PERIOD * level) / 255;
 
     drv->current_level = level;
   }
@@ -288,7 +288,7 @@ int backlight_pwm_set(int level) {
   return drv->current_level;
 }
 
-int backlight_pwm_get(void) {
+int backlight_get(void) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
