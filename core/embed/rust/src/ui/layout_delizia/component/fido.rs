@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{
             image::Image,
+            paginated::SinglePage,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
             Component, Event, EventCtx,
         },
@@ -76,6 +77,8 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
         self.text.render(target);
     }
 }
+
+impl<F: Fn() -> TString<'static>> SinglePage for FidoCredential<F> {}
 
 #[cfg(feature = "ui_debug")]
 impl<F: Fn() -> TString<'static>> crate::trace::Trace for FidoCredential<F> {

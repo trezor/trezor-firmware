@@ -6,7 +6,7 @@ use crate::{
         constant::screen,
         event::{SwipeEvent, TouchEvent},
         geometry::{Axis, Direction, Offset, Point},
-        util::animation_disabled,
+        util::{animation_disabled, Pager},
     },
 };
 
@@ -106,23 +106,21 @@ impl SwipeConfig {
         self
     }
 
-    pub fn with_pagination(mut self, current_page: u16, total_pages: u16) -> Self {
-        let has_prev = current_page > 0;
-        let has_next = current_page < total_pages.saturating_sub(1);
+    pub fn with_pager(mut self, pager: Pager) -> Self {
         match self.page_axis {
             Some(Axis::Horizontal) => {
-                if has_prev {
+                if pager.has_prev() {
                     self.right = Some(SwipeSettings::default());
                 }
-                if has_next {
+                if pager.has_next() {
                     self.left = Some(SwipeSettings::default());
                 }
             }
             Some(Axis::Vertical) => {
-                if has_prev {
+                if pager.has_prev() {
                     self.down = Some(SwipeSettings::default());
                 }
-                if has_next {
+                if pager.has_next() {
                     self.up = Some(SwipeSettings::default());
                 }
             }
@@ -131,15 +129,13 @@ impl SwipeConfig {
         self
     }
 
-    pub fn paging_event(&self, dir: Direction, current_page: u16, total_pages: u16) -> u16 {
-        let prev_page = current_page.saturating_sub(1);
-        let next_page = (current_page + 1).min(total_pages.saturating_sub(1));
+    pub fn paging_event(&self, dir: Direction, pager: Pager) -> u16 {
         match (self.page_axis, dir) {
-            (Some(Axis::Horizontal), Direction::Right) => prev_page,
-            (Some(Axis::Horizontal), Direction::Left) => next_page,
-            (Some(Axis::Vertical), Direction::Down) => prev_page,
-            (Some(Axis::Vertical), Direction::Up) => next_page,
-            _ => current_page,
+            (Some(Axis::Horizontal), Direction::Right) => pager.prev(),
+            (Some(Axis::Horizontal), Direction::Left) => pager.next(),
+            (Some(Axis::Vertical), Direction::Down) => pager.prev(),
+            (Some(Axis::Vertical), Direction::Up) => pager.next(),
+            _ => pager.current(),
         }
     }
 }

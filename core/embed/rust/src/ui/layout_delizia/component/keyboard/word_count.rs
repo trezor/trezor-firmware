@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Component, Event, EventCtx},
+        component::{paginated::SinglePage, Component, Event, EventCtx},
         geometry::{Alignment, Grid, GridCellSpan, Rect},
         shape::Renderer,
     },
@@ -158,6 +158,8 @@ impl Component for SelectWordCount {
         cshape::KeyboardOverlay::new(self.keypad_area).render(target);
     }
 }
+
+impl SinglePage for SelectWordCount {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for SelectWordCount {

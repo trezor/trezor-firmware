@@ -6,20 +6,21 @@ use crate::{
     ui::{
         component::{
             base::{AttachType, Component},
-            Event, EventCtx, Paginate,
+            paginated::SinglePage,
+            Event, EventCtx, PaginateFull,
         },
         constant::screen,
         display::{Color, Icon},
         geometry::{Direction, Offset, Rect},
         lerp::Lerp,
         shape::{Bar, Renderer},
-        util::animation_disabled,
+        util::{animation_disabled, Pager},
     },
 };
 
 use super::{
     super::component::button::{Button, ButtonContent, ButtonMsg, IconText},
-    theme, InternallySwipable,
+    theme,
 };
 
 pub enum VerticalMenuChoiceMsg {
@@ -303,6 +304,8 @@ impl Component for VerticalMenu {
     }
 }
 
+impl SinglePage for VerticalMenu {}
+
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for VerticalMenu {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
@@ -317,14 +320,14 @@ impl crate::trace::Trace for VerticalMenu {
 
 // Polymorphic struct, avoid adding code as it gets duplicated, prefer
 // extending VerticalMenu instead.
-pub struct PagedVerticalMenu<F: Fn(usize) -> TString<'static>> {
+pub struct PagedVerticalMenu<F: Fn(u16) -> TString<'static>> {
     inner: VerticalMenu,
-    page: usize,
+    page: u16,
     item_count: usize,
     label_fn: F,
 }
 
-impl<F: Fn(usize) -> TString<'static>> PagedVerticalMenu<F> {
+impl<F: Fn(u16) -> TString<'static>> PagedVerticalMenu<F> {
     pub fn new(item_count: usize, label_fn: F) -> Self {
         let mut result = Self {
             inner: VerticalMenu::select_word(["".into(), "".into(), "".into()]),
@@ -337,20 +340,24 @@ impl<F: Fn(usize) -> TString<'static>> PagedVerticalMenu<F> {
     }
 }
 
-impl<F: Fn(usize) -> TString<'static>> Paginate for PagedVerticalMenu<F> {
-    fn page_count(&self) -> usize {
-        self.num_pages()
+impl<F: Fn(u16) -> TString<'static>> PaginateFull for PagedVerticalMenu<F> {
+    fn pager(&self) -> Pager {
+        let num_pages =
+            (self.item_count / self.inner.n_items) + (self.item_count % self.inner.n_items).min(1);
+        Pager::new(num_pages as u16).with_current(self.page)
     }
 
-    fn change_page(&mut self, active_page: usize) {
-        for b in 0..self.inner.n_items {
-            let i = active_page * self.inner.n_items + b;
-            let text = if i < self.item_count {
+    fn change_page(&mut self, active_page: u16) {
+        let n_items = self.inner.n_items as u16;
+        for b in 0..n_items {
+            let i = active_page * n_items + b;
+            let text = if i < self.item_count as u16 {
                 (self.label_fn)(i)
             } else {
                 "".into()
             };
             let mut dummy_ctx = EventCtx::new();
+            let b = b as usize;
             self.inner.buttons[b].enable_if(&mut dummy_ctx, !text.is_empty());
             self.inner.buttons[b].set_content(ButtonContent::Text(text));
         }
@@ -359,7 +366,7 @@ impl<F: Fn(usize) -> TString<'static>> Paginate for PagedVerticalMenu<F> {
     }
 }
 
-impl<F: Fn(usize) -> TString<'static>> Component for PagedVerticalMenu<F> {
+impl<F: Fn(u16) -> TString<'static>> Component for PagedVerticalMenu<F> {
     type Msg = VerticalMenuChoiceMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -370,7 +377,7 @@ impl<F: Fn(usize) -> TString<'static>> Component for PagedVerticalMenu<F> {
         let msg = self.inner.event(ctx, event);
         if let Some(VerticalMenuChoiceMsg::Selected(i)) = msg {
             return Some(VerticalMenuChoiceMsg::Selected(
-                self.inner.n_items * self.page + i,
+                self.inner.n_items * self.page as usize + i,
             ));
         }
         msg
@@ -381,18 +388,8 @@ impl<F: Fn(usize) -> TString<'static>> Component for PagedVerticalMenu<F> {
     }
 }
 
-impl<F: Fn(usize) -> TString<'static>> InternallySwipable for PagedVerticalMenu<F> {
-    fn current_page(&self) -> usize {
-        self.page
-    }
-
-    fn num_pages(&self) -> usize {
-        (self.item_count / self.inner.n_items) + (self.item_count % self.inner.n_items).min(1)
-    }
-}
-
 #[cfg(feature = "ui_debug")]
-impl<F: Fn(usize) -> TString<'static>> crate::trace::Trace for PagedVerticalMenu<F> {
+impl<F: Fn(u16) -> TString<'static>> crate::trace::Trace for PagedVerticalMenu<F> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         self.inner.trace(t)
     }

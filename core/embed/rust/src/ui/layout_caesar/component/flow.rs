@@ -121,8 +121,8 @@ where
     fn update(&mut self, ctx: &mut EventCtx, get_new_page: bool) {
         if get_new_page {
             self.change_current_page(ctx);
+            self.current_page.place(self.content_area);
         }
-        self.current_page.place(self.content_area);
         self.set_buttons(ctx);
         self.scrollbar.request_complete_repaint(ctx);
         self.clear_and_repaint(ctx);
