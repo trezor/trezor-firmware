@@ -24,8 +24,10 @@ if __debug__:
         from trezor.messages import (
             DebugLinkDecision,
             DebugLinkEraseSdCard,
+            DebugLinkGetPairingInfo,
             DebugLinkGetState,
             DebugLinkOptigaSetSecMax,
+            DebugLinkPairingInfo,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkState,
@@ -249,11 +251,7 @@ if __debug__:
         # If no exception was raised, the layout did not shut down. That means that it
         # just updated itself. The update is already live for the caller to retrieve.
 
-    def _state(
-        thp_pairing_code_entry_code: int | None = None,
-        thp_pairing_code_qr_code: bytes | None = None,
-        thp_pairing_code_nfc: bytes | None = None,
-    ) -> DebugLinkState:
+    def _state() -> DebugLinkState:
         from trezor.messages import DebugLinkState
 
         from apps.common import mnemonic, passphrase
@@ -272,46 +270,50 @@ if __debug__:
             passphrase_protection=passphrase.is_enabled(),
             reset_entropy=storage.reset_internal_entropy,
             tokens=tokens,
-            thp_pairing_code_entry_code=thp_pairing_code_entry_code,
-            thp_pairing_code_qr_code=thp_pairing_code_qr_code,
-            thp_pairing_code_nfc=thp_pairing_code_nfc,
+        )
+
+    async def dispatch_DebugLinkGetPairingInfo(
+        msg: DebugLinkGetPairingInfo,
+    ) -> DebugLinkPairingInfo | None:
+        if not utils.USE_THP:
+            raise RuntimeError("Trezor does not support THP")
+        if msg.channel_id is None:
+            raise RuntimeError("Invalid DebugLinkGetPairingInfo message")
+
+        from trezor.wire.thp.channel import Channel
+        from trezor.wire.thp.pairing_context import PairingContext
+        from trezor.wire.thp.thp_main import _CHANNELS
+
+        channel_id = int.from_bytes(msg.channel_id, "big")
+        channel: Channel | None = None
+        ctx: PairingContext | None = None
+        try:
+            channel = _CHANNELS[channel_id]
+            ctx = channel.connection_context
+        except KeyError:
+            pass
+
+        if ctx is None or not isinstance(ctx, PairingContext):
+            raise RuntimeError("Trezor is not in pairing mode")
+
+        ctx.nfc_secret_host = msg.nfc_secret_host
+        ctx.handshake_hash_host = msg.handshake_hash
+        from trezor.messages import DebugLinkPairingInfo
+
+        return DebugLinkPairingInfo(
+            channel_id=ctx.channel_id,
+            handshake_hash=ctx.channel_ctx.get_handshake_hash(),
+            code_entry_code=ctx.display_data.code_code_entry,
+            code_qr_code=ctx.display_data.code_qr_code,
+            nfc_secret_trezor=ctx.nfc_secret,
         )
 
     async def dispatch_DebugLinkGetState(
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
 
-        thp_pairing_code_entry_code: int | None = None
-        thp_pairing_code_qr_code: bytes | None = None
-        thp_pairing_code_nfc: bytes | None = None
-        if utils.USE_THP and msg.thp_channel_id is not None:
-            channel_id = int.from_bytes(msg.thp_channel_id, "big")
-
-            from trezor.wire.thp.channel import Channel
-            from trezor.wire.thp.pairing_context import PairingContext
-            from trezor.wire.thp.thp_main import _CHANNELS
-
-            channel: Channel | None = None
-            ctx: PairingContext | None = None
-            try:
-                channel = _CHANNELS[channel_id]
-                ctx = channel.connection_context
-            except KeyError:
-                pass
-            if ctx is not None and isinstance(ctx, PairingContext):
-                thp_pairing_code_entry_code = ctx.display_data.code_code_entry
-                thp_pairing_code_qr_code = ctx.display_data.code_qr_code
-                thp_pairing_code_nfc = ctx.display_data.code_nfc
-                # if msg.host_nfc_secret is not None:
-                #     ctx.host_nfc_secret = msg.host_nfc_secret
-
         if msg.wait_layout == DebugWaitType.IMMEDIATE:
-            return _state(
-                thp_pairing_code_entry_code,
-                thp_pairing_code_qr_code,
-                thp_pairing_code_nfc,
-            )
-
+            return _state()
         assert DEBUG_CONTEXT is not None
         if msg.wait_layout == DebugWaitType.NEXT_LAYOUT:
             layout_change_box.clear()
@@ -321,11 +323,7 @@ if __debug__:
         if not layout_is_ready():
             return await return_layout_change(DEBUG_CONTEXT, detect_deadlock=True)
         else:
-            return _state(
-                thp_pairing_code_entry_code,
-                thp_pairing_code_qr_code,
-                thp_pairing_code_nfc,
-            )
+            return _state()
 
     async def dispatch_DebugLinkRecordScreen(msg: DebugLinkRecordScreen) -> Success:
         if msg.target_directory:
@@ -466,6 +464,7 @@ if __debug__:
     WORKFLOW_HANDLERS: dict[int, Handler] = {
         MessageType.DebugLinkDecision: dispatch_DebugLinkDecision,
         MessageType.DebugLinkGetState: dispatch_DebugLinkGetState,
+        MessageType.DebugLinkGetPairingInfo: dispatch_DebugLinkGetPairingInfo,
         MessageType.DebugLinkReseedRandom: dispatch_DebugLinkReseedRandom,
         MessageType.DebugLinkRecordScreen: dispatch_DebugLinkRecordScreen,
         MessageType.DebugLinkEraseSdCard: dispatch_DebugLinkEraseSdCard,

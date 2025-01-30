@@ -155,12 +155,15 @@ def test_pairing_qr_code(client: Client) -> None:
     _send_message(ButtonAck())
 
     # Read code from "Trezor's display" using debuglink
-    state = client.debug.state(thp_channel_id=protocol.channel_id.to_bytes(2, "big"))
-    code = state.thp_pairing_code_qr_code
+
+    pairing_info = client.debug.pairing_info(
+        thp_channel_id=protocol.channel_id.to_bytes(2, "big")
+    )
+    code = pairing_info.code_qr_code
 
     # Compute tag for response
     sha_ctx = hashlib.sha256(protocol.handshake_hash)
-    sha_ctx.update(state.thp_pairing_code_qr_code)
+    sha_ctx.update(code)
     tag = sha_ctx.digest()
 
     _send_message(ThpQrCodeTag(tag=tag))
@@ -218,8 +221,10 @@ def test_pairing_code_entry(client: Client) -> None:
     _read_message(ButtonRequest)
     _send_message(ButtonAck())
 
-    state = client.debug.state(thp_channel_id=protocol.channel_id.to_bytes(2, "big"))
-    code = state.thp_pairing_code_entry_code
+    pairing_info = client.debug.pairing_info(
+        thp_channel_id=protocol.channel_id.to_bytes(2, "big")
+    )
+    code = pairing_info.code_entry_code
 
     # TODO fix missing CPACE
     cpace_shared_secret = b"\x01"

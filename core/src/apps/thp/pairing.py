@@ -310,7 +310,7 @@ async def _handle_qr_code_tag(
             hexlify(ctx.display_data.code_qr_code).decode(),
         )  # TODO remove after testing
         print(
-            "expected secret:", hexlify(ctx.qr_code_secret).decode()
+            "expected secret:", hexlify(ctx.qr_code_secret or b"").decode()
         )  # TODO remove after testing
         raise ThpError("Unexpected QR Code Tag")
 
@@ -329,6 +329,7 @@ async def _handle_nfc_tag(
         assert isinstance(message, ThpNfcTagHost)
     sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
+    assert ctx.nfc_secret is not None
     sha_ctx.update(ctx.nfc_secret)
     expected_tag = sha_ctx.digest()
     if expected_tag != message.tag:

@@ -1128,8 +1128,6 @@ pub struct DebugLinkGetState {
     pub wait_word_pos: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetState.wait_layout)
     pub wait_layout: ::std::option::Option<::protobuf::EnumOrUnknown<debug_link_get_state::DebugWaitType>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetState.thp_channel_id)
-    pub thp_channel_id: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkGetState.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1206,44 +1204,8 @@ impl DebugLinkGetState {
         self.wait_layout = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
-    // optional bytes thp_channel_id = 4;
-
-    pub fn thp_channel_id(&self) -> &[u8] {
-        match self.thp_channel_id.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_thp_channel_id(&mut self) {
-        self.thp_channel_id = ::std::option::Option::None;
-    }
-
-    pub fn has_thp_channel_id(&self) -> bool {
-        self.thp_channel_id.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_thp_channel_id(&mut self, v: ::std::vec::Vec<u8>) {
-        self.thp_channel_id = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_thp_channel_id(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.thp_channel_id.is_none() {
-            self.thp_channel_id = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.thp_channel_id.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_thp_channel_id(&mut self) -> ::std::vec::Vec<u8> {
-        self.thp_channel_id.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "wait_word_list",
@@ -1259,11 +1221,6 @@ impl DebugLinkGetState {
             "wait_layout",
             |m: &DebugLinkGetState| { &m.wait_layout },
             |m: &mut DebugLinkGetState| { &mut m.wait_layout },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "thp_channel_id",
-            |m: &DebugLinkGetState| { &m.thp_channel_id },
-            |m: &mut DebugLinkGetState| { &mut m.thp_channel_id },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkGetState>(
             "DebugLinkGetState",
@@ -1292,9 +1249,6 @@ impl ::protobuf::Message for DebugLinkGetState {
                 24 => {
                     self.wait_layout = ::std::option::Option::Some(is.read_enum_or_unknown()?);
                 },
-                34 => {
-                    self.thp_channel_id = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1316,9 +1270,6 @@ impl ::protobuf::Message for DebugLinkGetState {
         if let Some(v) = self.wait_layout {
             my_size += ::protobuf::rt::int32_size(3, v.value());
         }
-        if let Some(v) = self.thp_channel_id.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(4, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1333,9 +1284,6 @@ impl ::protobuf::Message for DebugLinkGetState {
         }
         if let Some(v) = self.wait_layout {
             os.write_enum(3, ::protobuf::EnumOrUnknown::value(&v))?;
-        }
-        if let Some(v) = self.thp_channel_id.as_ref() {
-            os.write_bytes(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -1357,7 +1305,6 @@ impl ::protobuf::Message for DebugLinkGetState {
         self.wait_word_list = ::std::option::Option::None;
         self.wait_word_pos = ::std::option::Option::None;
         self.wait_layout = ::std::option::Option::None;
-        self.thp_channel_id = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1366,7 +1313,6 @@ impl ::protobuf::Message for DebugLinkGetState {
             wait_word_list: ::std::option::Option::None,
             wait_word_pos: ::std::option::Option::None,
             wait_layout: ::std::option::Option::None,
-            thp_channel_id: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1490,12 +1436,6 @@ pub struct DebugLinkState {
     pub mnemonic_type: ::std::option::Option<::protobuf::EnumOrUnknown<super::messages_management::BackupType>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.tokens)
     pub tokens: ::std::vec::Vec<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_code_entry_code)
-    pub thp_pairing_code_entry_code: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_code_qr_code)
-    pub thp_pairing_code_qr_code: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkState.thp_pairing_code_nfc)
-    pub thp_pairing_code_nfc: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkState.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1843,99 +1783,8 @@ impl DebugLinkState {
         self.mnemonic_type = ::std::option::Option::Some(::protobuf::EnumOrUnknown::new(v));
     }
 
-    // optional uint32 thp_pairing_code_entry_code = 14;
-
-    pub fn thp_pairing_code_entry_code(&self) -> u32 {
-        self.thp_pairing_code_entry_code.unwrap_or(0)
-    }
-
-    pub fn clear_thp_pairing_code_entry_code(&mut self) {
-        self.thp_pairing_code_entry_code = ::std::option::Option::None;
-    }
-
-    pub fn has_thp_pairing_code_entry_code(&self) -> bool {
-        self.thp_pairing_code_entry_code.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_thp_pairing_code_entry_code(&mut self, v: u32) {
-        self.thp_pairing_code_entry_code = ::std::option::Option::Some(v);
-    }
-
-    // optional bytes thp_pairing_code_qr_code = 15;
-
-    pub fn thp_pairing_code_qr_code(&self) -> &[u8] {
-        match self.thp_pairing_code_qr_code.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_thp_pairing_code_qr_code(&mut self) {
-        self.thp_pairing_code_qr_code = ::std::option::Option::None;
-    }
-
-    pub fn has_thp_pairing_code_qr_code(&self) -> bool {
-        self.thp_pairing_code_qr_code.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_thp_pairing_code_qr_code(&mut self, v: ::std::vec::Vec<u8>) {
-        self.thp_pairing_code_qr_code = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_thp_pairing_code_qr_code(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.thp_pairing_code_qr_code.is_none() {
-            self.thp_pairing_code_qr_code = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.thp_pairing_code_qr_code.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_thp_pairing_code_qr_code(&mut self) -> ::std::vec::Vec<u8> {
-        self.thp_pairing_code_qr_code.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
-    // optional bytes thp_pairing_code_nfc = 16;
-
-    pub fn thp_pairing_code_nfc(&self) -> &[u8] {
-        match self.thp_pairing_code_nfc.as_ref() {
-            Some(v) => v,
-            None => &[],
-        }
-    }
-
-    pub fn clear_thp_pairing_code_nfc(&mut self) {
-        self.thp_pairing_code_nfc = ::std::option::Option::None;
-    }
-
-    pub fn has_thp_pairing_code_nfc(&self) -> bool {
-        self.thp_pairing_code_nfc.is_some()
-    }
-
-    // Param is passed by value, moved
-    pub fn set_thp_pairing_code_nfc(&mut self, v: ::std::vec::Vec<u8>) {
-        self.thp_pairing_code_nfc = ::std::option::Option::Some(v);
-    }
-
-    // Mutable pointer to the field.
-    // If field is not initialized, it is initialized with default value first.
-    pub fn mut_thp_pairing_code_nfc(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.thp_pairing_code_nfc.is_none() {
-            self.thp_pairing_code_nfc = ::std::option::Option::Some(::std::vec::Vec::new());
-        }
-        self.thp_pairing_code_nfc.as_mut().unwrap()
-    }
-
-    // Take field
-    pub fn take_thp_pairing_code_nfc(&mut self) -> ::std::vec::Vec<u8> {
-        self.thp_pairing_code_nfc.take().unwrap_or_else(|| ::std::vec::Vec::new())
-    }
-
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(16);
+        let mut fields = ::std::vec::Vec::with_capacity(13);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "layout",
@@ -2002,21 +1851,6 @@ impl DebugLinkState {
             |m: &DebugLinkState| { &m.tokens },
             |m: &mut DebugLinkState| { &mut m.tokens },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "thp_pairing_code_entry_code",
-            |m: &DebugLinkState| { &m.thp_pairing_code_entry_code },
-            |m: &mut DebugLinkState| { &mut m.thp_pairing_code_entry_code },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "thp_pairing_code_qr_code",
-            |m: &DebugLinkState| { &m.thp_pairing_code_qr_code },
-            |m: &mut DebugLinkState| { &mut m.thp_pairing_code_qr_code },
-        ));
-        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "thp_pairing_code_nfc",
-            |m: &DebugLinkState| { &m.thp_pairing_code_nfc },
-            |m: &mut DebugLinkState| { &mut m.thp_pairing_code_nfc },
-        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkState>(
             "DebugLinkState",
             fields,
@@ -2079,15 +1913,6 @@ impl ::protobuf::Message for DebugLinkState {
                 106 => {
                     self.tokens.push(is.read_string()?);
                 },
-                112 => {
-                    self.thp_pairing_code_entry_code = ::std::option::Option::Some(is.read_uint32()?);
-                },
-                122 => {
-                    self.thp_pairing_code_qr_code = ::std::option::Option::Some(is.read_bytes()?);
-                },
-                130 => {
-                    self.thp_pairing_code_nfc = ::std::option::Option::Some(is.read_bytes()?);
-                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2140,15 +1965,6 @@ impl ::protobuf::Message for DebugLinkState {
         for value in &self.tokens {
             my_size += ::protobuf::rt::string_size(13, &value);
         };
-        if let Some(v) = self.thp_pairing_code_entry_code {
-            my_size += ::protobuf::rt::uint32_size(14, v);
-        }
-        if let Some(v) = self.thp_pairing_code_qr_code.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(15, &v);
-        }
-        if let Some(v) = self.thp_pairing_code_nfc.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(16, &v);
-        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2194,15 +2010,6 @@ impl ::protobuf::Message for DebugLinkState {
         for v in &self.tokens {
             os.write_string(13, &v)?;
         };
-        if let Some(v) = self.thp_pairing_code_entry_code {
-            os.write_uint32(14, v)?;
-        }
-        if let Some(v) = self.thp_pairing_code_qr_code.as_ref() {
-            os.write_bytes(15, v)?;
-        }
-        if let Some(v) = self.thp_pairing_code_nfc.as_ref() {
-            os.write_bytes(16, v)?;
-        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2233,9 +2040,6 @@ impl ::protobuf::Message for DebugLinkState {
         self.reset_word_pos = ::std::option::Option::None;
         self.mnemonic_type = ::std::option::Option::None;
         self.tokens.clear();
-        self.thp_pairing_code_entry_code = ::std::option::Option::None;
-        self.thp_pairing_code_qr_code = ::std::option::Option::None;
-        self.thp_pairing_code_nfc = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2254,9 +2058,6 @@ impl ::protobuf::Message for DebugLinkState {
             reset_word_pos: ::std::option::Option::None,
             mnemonic_type: ::std::option::Option::None,
             tokens: ::std::vec::Vec::new(),
-            thp_pairing_code_entry_code: ::std::option::Option::None,
-            thp_pairing_code_qr_code: ::std::option::Option::None,
-            thp_pairing_code_nfc: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2277,6 +2078,629 @@ impl ::std::fmt::Display for DebugLinkState {
 }
 
 impl ::protobuf::reflect::ProtobufValue for DebugLinkState {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkGetPairingInfo)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkGetPairingInfo {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetPairingInfo.channel_id)
+    pub channel_id: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetPairingInfo.handshake_hash)
+    pub handshake_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkGetPairingInfo.nfc_secret_host)
+    pub nfc_secret_host: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkGetPairingInfo.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkGetPairingInfo {
+    fn default() -> &'a DebugLinkGetPairingInfo {
+        <DebugLinkGetPairingInfo as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkGetPairingInfo {
+    pub fn new() -> DebugLinkGetPairingInfo {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes channel_id = 1;
+
+    pub fn channel_id(&self) -> &[u8] {
+        match self.channel_id.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_channel_id(&mut self) {
+        self.channel_id = ::std::option::Option::None;
+    }
+
+    pub fn has_channel_id(&self) -> bool {
+        self.channel_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_channel_id(&mut self, v: ::std::vec::Vec<u8>) {
+        self.channel_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_channel_id(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.channel_id.is_none() {
+            self.channel_id = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.channel_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_channel_id(&mut self) -> ::std::vec::Vec<u8> {
+        self.channel_id.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes handshake_hash = 2;
+
+    pub fn handshake_hash(&self) -> &[u8] {
+        match self.handshake_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_handshake_hash(&mut self) {
+        self.handshake_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_handshake_hash(&self) -> bool {
+        self.handshake_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_handshake_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.handshake_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_handshake_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.handshake_hash.is_none() {
+            self.handshake_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.handshake_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_handshake_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.handshake_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes nfc_secret_host = 3;
+
+    pub fn nfc_secret_host(&self) -> &[u8] {
+        match self.nfc_secret_host.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_nfc_secret_host(&mut self) {
+        self.nfc_secret_host = ::std::option::Option::None;
+    }
+
+    pub fn has_nfc_secret_host(&self) -> bool {
+        self.nfc_secret_host.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nfc_secret_host(&mut self, v: ::std::vec::Vec<u8>) {
+        self.nfc_secret_host = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_nfc_secret_host(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.nfc_secret_host.is_none() {
+            self.nfc_secret_host = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.nfc_secret_host.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_nfc_secret_host(&mut self) -> ::std::vec::Vec<u8> {
+        self.nfc_secret_host.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(3);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "channel_id",
+            |m: &DebugLinkGetPairingInfo| { &m.channel_id },
+            |m: &mut DebugLinkGetPairingInfo| { &mut m.channel_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "handshake_hash",
+            |m: &DebugLinkGetPairingInfo| { &m.handshake_hash },
+            |m: &mut DebugLinkGetPairingInfo| { &mut m.handshake_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nfc_secret_host",
+            |m: &DebugLinkGetPairingInfo| { &m.nfc_secret_host },
+            |m: &mut DebugLinkGetPairingInfo| { &mut m.nfc_secret_host },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkGetPairingInfo>(
+            "DebugLinkGetPairingInfo",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkGetPairingInfo {
+    const NAME: &'static str = "DebugLinkGetPairingInfo";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.channel_id = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.handshake_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                26 => {
+                    self.nfc_secret_host = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.channel_id.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.handshake_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.nfc_secret_host.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.channel_id.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.handshake_hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.nfc_secret_host.as_ref() {
+            os.write_bytes(3, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkGetPairingInfo {
+        DebugLinkGetPairingInfo::new()
+    }
+
+    fn clear(&mut self) {
+        self.channel_id = ::std::option::Option::None;
+        self.handshake_hash = ::std::option::Option::None;
+        self.nfc_secret_host = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkGetPairingInfo {
+        static instance: DebugLinkGetPairingInfo = DebugLinkGetPairingInfo {
+            channel_id: ::std::option::Option::None,
+            handshake_hash: ::std::option::Option::None,
+            nfc_secret_host: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkGetPairingInfo {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkGetPairingInfo").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkGetPairingInfo {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkGetPairingInfo {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.debug.DebugLinkPairingInfo)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct DebugLinkPairingInfo {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkPairingInfo.channel_id)
+    pub channel_id: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkPairingInfo.handshake_hash)
+    pub handshake_hash: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkPairingInfo.code_entry_code)
+    pub code_entry_code: ::std::option::Option<u32>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkPairingInfo.code_qr_code)
+    pub code_qr_code: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.debug.DebugLinkPairingInfo.nfc_secret_trezor)
+    pub nfc_secret_trezor: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.debug.DebugLinkPairingInfo.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a DebugLinkPairingInfo {
+    fn default() -> &'a DebugLinkPairingInfo {
+        <DebugLinkPairingInfo as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl DebugLinkPairingInfo {
+    pub fn new() -> DebugLinkPairingInfo {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes channel_id = 1;
+
+    pub fn channel_id(&self) -> &[u8] {
+        match self.channel_id.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_channel_id(&mut self) {
+        self.channel_id = ::std::option::Option::None;
+    }
+
+    pub fn has_channel_id(&self) -> bool {
+        self.channel_id.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_channel_id(&mut self, v: ::std::vec::Vec<u8>) {
+        self.channel_id = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_channel_id(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.channel_id.is_none() {
+            self.channel_id = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.channel_id.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_channel_id(&mut self) -> ::std::vec::Vec<u8> {
+        self.channel_id.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes handshake_hash = 2;
+
+    pub fn handshake_hash(&self) -> &[u8] {
+        match self.handshake_hash.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_handshake_hash(&mut self) {
+        self.handshake_hash = ::std::option::Option::None;
+    }
+
+    pub fn has_handshake_hash(&self) -> bool {
+        self.handshake_hash.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_handshake_hash(&mut self, v: ::std::vec::Vec<u8>) {
+        self.handshake_hash = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_handshake_hash(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.handshake_hash.is_none() {
+            self.handshake_hash = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.handshake_hash.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_handshake_hash(&mut self) -> ::std::vec::Vec<u8> {
+        self.handshake_hash.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional uint32 code_entry_code = 3;
+
+    pub fn code_entry_code(&self) -> u32 {
+        self.code_entry_code.unwrap_or(0)
+    }
+
+    pub fn clear_code_entry_code(&mut self) {
+        self.code_entry_code = ::std::option::Option::None;
+    }
+
+    pub fn has_code_entry_code(&self) -> bool {
+        self.code_entry_code.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_code_entry_code(&mut self, v: u32) {
+        self.code_entry_code = ::std::option::Option::Some(v);
+    }
+
+    // optional bytes code_qr_code = 4;
+
+    pub fn code_qr_code(&self) -> &[u8] {
+        match self.code_qr_code.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_code_qr_code(&mut self) {
+        self.code_qr_code = ::std::option::Option::None;
+    }
+
+    pub fn has_code_qr_code(&self) -> bool {
+        self.code_qr_code.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_code_qr_code(&mut self, v: ::std::vec::Vec<u8>) {
+        self.code_qr_code = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_code_qr_code(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.code_qr_code.is_none() {
+            self.code_qr_code = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.code_qr_code.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_code_qr_code(&mut self) -> ::std::vec::Vec<u8> {
+        self.code_qr_code.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // optional bytes nfc_secret_trezor = 5;
+
+    pub fn nfc_secret_trezor(&self) -> &[u8] {
+        match self.nfc_secret_trezor.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_nfc_secret_trezor(&mut self) {
+        self.nfc_secret_trezor = ::std::option::Option::None;
+    }
+
+    pub fn has_nfc_secret_trezor(&self) -> bool {
+        self.nfc_secret_trezor.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nfc_secret_trezor(&mut self, v: ::std::vec::Vec<u8>) {
+        self.nfc_secret_trezor = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_nfc_secret_trezor(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.nfc_secret_trezor.is_none() {
+            self.nfc_secret_trezor = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.nfc_secret_trezor.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_nfc_secret_trezor(&mut self) -> ::std::vec::Vec<u8> {
+        self.nfc_secret_trezor.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "channel_id",
+            |m: &DebugLinkPairingInfo| { &m.channel_id },
+            |m: &mut DebugLinkPairingInfo| { &mut m.channel_id },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "handshake_hash",
+            |m: &DebugLinkPairingInfo| { &m.handshake_hash },
+            |m: &mut DebugLinkPairingInfo| { &mut m.handshake_hash },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "code_entry_code",
+            |m: &DebugLinkPairingInfo| { &m.code_entry_code },
+            |m: &mut DebugLinkPairingInfo| { &mut m.code_entry_code },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "code_qr_code",
+            |m: &DebugLinkPairingInfo| { &m.code_qr_code },
+            |m: &mut DebugLinkPairingInfo| { &mut m.code_qr_code },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nfc_secret_trezor",
+            |m: &DebugLinkPairingInfo| { &m.nfc_secret_trezor },
+            |m: &mut DebugLinkPairingInfo| { &mut m.nfc_secret_trezor },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<DebugLinkPairingInfo>(
+            "DebugLinkPairingInfo",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for DebugLinkPairingInfo {
+    const NAME: &'static str = "DebugLinkPairingInfo";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.channel_id = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.handshake_hash = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                24 => {
+                    self.code_entry_code = ::std::option::Option::Some(is.read_uint32()?);
+                },
+                34 => {
+                    self.code_qr_code = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                42 => {
+                    self.nfc_secret_trezor = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.channel_id.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.handshake_hash.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
+        if let Some(v) = self.code_entry_code {
+            my_size += ::protobuf::rt::uint32_size(3, v);
+        }
+        if let Some(v) = self.code_qr_code.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(4, &v);
+        }
+        if let Some(v) = self.nfc_secret_trezor.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.channel_id.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.handshake_hash.as_ref() {
+            os.write_bytes(2, v)?;
+        }
+        if let Some(v) = self.code_entry_code {
+            os.write_uint32(3, v)?;
+        }
+        if let Some(v) = self.code_qr_code.as_ref() {
+            os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.nfc_secret_trezor.as_ref() {
+            os.write_bytes(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> DebugLinkPairingInfo {
+        DebugLinkPairingInfo::new()
+    }
+
+    fn clear(&mut self) {
+        self.channel_id = ::std::option::Option::None;
+        self.handshake_hash = ::std::option::Option::None;
+        self.code_entry_code = ::std::option::Option::None;
+        self.code_qr_code = ::std::option::Option::None;
+        self.nfc_secret_trezor = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static DebugLinkPairingInfo {
+        static instance: DebugLinkPairingInfo = DebugLinkPairingInfo {
+            channel_id: ::std::option::Option::None,
+            handshake_hash: ::std::option::Option::None,
+            code_entry_code: ::std::option::Option::None,
+            code_qr_code: ::std::option::Option::None,
+            nfc_secret_trezor: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for DebugLinkPairingInfo {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("DebugLinkPairingInfo").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for DebugLinkPairingInfo {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for DebugLinkPairingInfo {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -3849,44 +4273,47 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01\x20\x03(\tR\x06tokens:\x02\x18\x01\"-\n\x15DebugLinkReseedRandom\
     \x12\x14\n\x05value\x18\x01\x20\x01(\rR\x05value\"j\n\x15DebugLinkRecord\
     Screen\x12)\n\x10target_directory\x18\x01\x20\x01(\tR\x0ftargetDirectory\
-    \x12&\n\rrefresh_index\x18\x02\x20\x01(\r:\x010R\x0crefreshIndex\"\xb7\
+    \x12&\n\rrefresh_index\x18\x02\x20\x01(\r:\x010R\x0crefreshIndex\"\x91\
     \x02\n\x11DebugLinkGetState\x12(\n\x0ewait_word_list\x18\x01\x20\x01(\
     \x08R\x0cwaitWordListB\x02\x18\x01\x12&\n\rwait_word_pos\x18\x02\x20\x01\
     (\x08R\x0bwaitWordPosB\x02\x18\x01\x12e\n\x0bwait_layout\x18\x03\x20\x01\
     (\x0e29.hw.trezor.messages.debug.DebugLinkGetState.DebugWaitType:\tIMMED\
-    IATER\nwaitLayout\x12$\n\x0ethp_channel_id\x18\x04\x20\x01(\x0cR\x0cthpC\
-    hannelId\"C\n\rDebugWaitType\x12\r\n\tIMMEDIATE\x10\0\x12\x0f\n\x0bNEXT_\
-    LAYOUT\x10\x01\x12\x12\n\x0eCURRENT_LAYOUT\x10\x02\"\xbe\x05\n\x0eDebugL\
-    inkState\x12\x16\n\x06layout\x18\x01\x20\x01(\x0cR\x06layout\x12\x10\n\
-    \x03pin\x18\x02\x20\x01(\tR\x03pin\x12\x16\n\x06matrix\x18\x03\x20\x01(\
-    \tR\x06matrix\x12'\n\x0fmnemonic_secret\x18\x04\x20\x01(\x0cR\x0emnemoni\
-    cSecret\x129\n\x04node\x18\x05\x20\x01(\x0b2%.hw.trezor.messages.common.\
-    HDNodeTypeR\x04node\x123\n\x15passphrase_protection\x18\x06\x20\x01(\x08\
-    R\x14passphraseProtection\x12\x1d\n\nreset_word\x18\x07\x20\x01(\tR\tres\
-    etWord\x12#\n\rreset_entropy\x18\x08\x20\x01(\x0cR\x0cresetEntropy\x12,\
-    \n\x12recovery_fake_word\x18\t\x20\x01(\tR\x10recoveryFakeWord\x12*\n\
-    \x11recovery_word_pos\x18\n\x20\x01(\rR\x0frecoveryWordPos\x12$\n\x0eres\
-    et_word_pos\x18\x0b\x20\x01(\rR\x0cresetWordPos\x12N\n\rmnemonic_type\
-    \x18\x0c\x20\x01(\x0e2).hw.trezor.messages.management.BackupTypeR\x0cmne\
-    monicType\x12\x16\n\x06tokens\x18\r\x20\x03(\tR\x06tokens\x12<\n\x1bthp_\
-    pairing_code_entry_code\x18\x0e\x20\x01(\rR\x17thpPairingCodeEntryCode\
-    \x126\n\x18thp_pairing_code_qr_code\x18\x0f\x20\x01(\x0cR\x14thpPairingC\
-    odeQrCode\x12/\n\x14thp_pairing_code_nfc\x18\x10\x20\x01(\x0cR\x11thpPai\
-    ringCodeNfc\"\x0f\n\rDebugLinkStop\"P\n\x0cDebugLinkLog\x12\x14\n\x05lev\
-    el\x18\x01\x20\x01(\rR\x05level\x12\x16\n\x06bucket\x18\x02\x20\x01(\tR\
-    \x06bucket\x12\x12\n\x04text\x18\x03\x20\x01(\tR\x04text\"G\n\x13DebugLi\
-    nkMemoryRead\x12\x18\n\x07address\x18\x01\x20\x01(\rR\x07address\x12\x16\
-    \n\x06length\x18\x02\x20\x01(\rR\x06length\")\n\x0fDebugLinkMemory\x12\
-    \x16\n\x06memory\x18\x01\x20\x01(\x0cR\x06memory\"^\n\x14DebugLinkMemory\
-    Write\x12\x18\n\x07address\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06m\
-    emory\x18\x02\x20\x01(\x0cR\x06memory\x12\x14\n\x05flash\x18\x03\x20\x01\
-    (\x08R\x05flash\"-\n\x13DebugLinkFlashErase\x12\x16\n\x06sector\x18\x01\
-    \x20\x01(\rR\x06sector\".\n\x14DebugLinkEraseSdCard\x12\x16\n\x06format\
-    \x18\x01\x20\x01(\x08R\x06format\"0\n\x14DebugLinkWatchLayout\x12\x14\n\
-    \x05watch\x18\x01\x20\x01(\x08R\x05watch:\x02\x18\x01\"\x1f\n\x19DebugLi\
-    nkResetDebugEvents:\x02\x18\x01\"\x1a\n\x18DebugLinkOptigaSetSecMaxB=\n#\
-    com.satoshilabs.trezor.lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\
-    \x01\
+    IATER\nwaitLayout\"C\n\rDebugWaitType\x12\r\n\tIMMEDIATE\x10\0\x12\x0f\n\
+    \x0bNEXT_LAYOUT\x10\x01\x12\x12\n\x0eCURRENT_LAYOUT\x10\x02\"\x97\x04\n\
+    \x0eDebugLinkState\x12\x16\n\x06layout\x18\x01\x20\x01(\x0cR\x06layout\
+    \x12\x10\n\x03pin\x18\x02\x20\x01(\tR\x03pin\x12\x16\n\x06matrix\x18\x03\
+    \x20\x01(\tR\x06matrix\x12'\n\x0fmnemonic_secret\x18\x04\x20\x01(\x0cR\
+    \x0emnemonicSecret\x129\n\x04node\x18\x05\x20\x01(\x0b2%.hw.trezor.messa\
+    ges.common.HDNodeTypeR\x04node\x123\n\x15passphrase_protection\x18\x06\
+    \x20\x01(\x08R\x14passphraseProtection\x12\x1d\n\nreset_word\x18\x07\x20\
+    \x01(\tR\tresetWord\x12#\n\rreset_entropy\x18\x08\x20\x01(\x0cR\x0creset\
+    Entropy\x12,\n\x12recovery_fake_word\x18\t\x20\x01(\tR\x10recoveryFakeWo\
+    rd\x12*\n\x11recovery_word_pos\x18\n\x20\x01(\rR\x0frecoveryWordPos\x12$\
+    \n\x0ereset_word_pos\x18\x0b\x20\x01(\rR\x0cresetWordPos\x12N\n\rmnemoni\
+    c_type\x18\x0c\x20\x01(\x0e2).hw.trezor.messages.management.BackupTypeR\
+    \x0cmnemonicType\x12\x16\n\x06tokens\x18\r\x20\x03(\tR\x06tokens\"\x87\
+    \x01\n\x17DebugLinkGetPairingInfo\x12\x1d\n\nchannel_id\x18\x01\x20\x01(\
+    \x0cR\tchannelId\x12%\n\x0ehandshake_hash\x18\x02\x20\x01(\x0cR\rhandsha\
+    keHash\x12&\n\x0fnfc_secret_host\x18\x03\x20\x01(\x0cR\rnfcSecretHost\"\
+    \xd2\x01\n\x14DebugLinkPairingInfo\x12\x1d\n\nchannel_id\x18\x01\x20\x01\
+    (\x0cR\tchannelId\x12%\n\x0ehandshake_hash\x18\x02\x20\x01(\x0cR\rhandsh\
+    akeHash\x12&\n\x0fcode_entry_code\x18\x03\x20\x01(\rR\rcodeEntryCode\x12\
+    \x20\n\x0ccode_qr_code\x18\x04\x20\x01(\x0cR\ncodeQrCode\x12*\n\x11nfc_s\
+    ecret_trezor\x18\x05\x20\x01(\x0cR\x0fnfcSecretTrezor\"\x0f\n\rDebugLink\
+    Stop\"P\n\x0cDebugLinkLog\x12\x14\n\x05level\x18\x01\x20\x01(\rR\x05leve\
+    l\x12\x16\n\x06bucket\x18\x02\x20\x01(\tR\x06bucket\x12\x12\n\x04text\
+    \x18\x03\x20\x01(\tR\x04text\"G\n\x13DebugLinkMemoryRead\x12\x18\n\x07ad\
+    dress\x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06length\x18\x02\x20\x01\
+    (\rR\x06length\")\n\x0fDebugLinkMemory\x12\x16\n\x06memory\x18\x01\x20\
+    \x01(\x0cR\x06memory\"^\n\x14DebugLinkMemoryWrite\x12\x18\n\x07address\
+    \x18\x01\x20\x01(\rR\x07address\x12\x16\n\x06memory\x18\x02\x20\x01(\x0c\
+    R\x06memory\x12\x14\n\x05flash\x18\x03\x20\x01(\x08R\x05flash\"-\n\x13De\
+    bugLinkFlashErase\x12\x16\n\x06sector\x18\x01\x20\x01(\rR\x06sector\".\n\
+    \x14DebugLinkEraseSdCard\x12\x16\n\x06format\x18\x01\x20\x01(\x08R\x06fo\
+    rmat\"0\n\x14DebugLinkWatchLayout\x12\x14\n\x05watch\x18\x01\x20\x01(\
+    \x08R\x05watch:\x02\x18\x01\"\x1f\n\x19DebugLinkResetDebugEvents:\x02\
+    \x18\x01\"\x1a\n\x18DebugLinkOptigaSetSecMaxB=\n#com.satoshilabs.trezor.\
+    lib.protobufB\x12TrezorMessageDebug\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -3907,13 +4334,15 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::messages_management::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(16);
+            let mut messages = ::std::vec::Vec::with_capacity(18);
             messages.push(DebugLinkDecision::generated_message_descriptor_data());
             messages.push(DebugLinkLayout::generated_message_descriptor_data());
             messages.push(DebugLinkReseedRandom::generated_message_descriptor_data());
             messages.push(DebugLinkRecordScreen::generated_message_descriptor_data());
             messages.push(DebugLinkGetState::generated_message_descriptor_data());
             messages.push(DebugLinkState::generated_message_descriptor_data());
+            messages.push(DebugLinkGetPairingInfo::generated_message_descriptor_data());
+            messages.push(DebugLinkPairingInfo::generated_message_descriptor_data());
             messages.push(DebugLinkStop::generated_message_descriptor_data());
             messages.push(DebugLinkLog::generated_message_descriptor_data());
             messages.push(DebugLinkMemoryRead::generated_message_descriptor_data());

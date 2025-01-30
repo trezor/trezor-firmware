@@ -2900,13 +2900,11 @@ if TYPE_CHECKING:
 
     class DebugLinkGetState(protobuf.MessageType):
         wait_layout: "DebugWaitType"
-        thp_channel_id: "bytes | None"
 
         def __init__(
             self,
             *,
             wait_layout: "DebugWaitType | None" = None,
-            thp_channel_id: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -2928,9 +2926,6 @@ if TYPE_CHECKING:
         reset_word_pos: "int | None"
         mnemonic_type: "BackupType | None"
         tokens: "list[str]"
-        thp_pairing_code_entry_code: "int | None"
-        thp_pairing_code_qr_code: "bytes | None"
-        thp_pairing_code_nfc: "bytes | None"
 
         def __init__(
             self,
@@ -2948,14 +2943,51 @@ if TYPE_CHECKING:
             recovery_word_pos: "int | None" = None,
             reset_word_pos: "int | None" = None,
             mnemonic_type: "BackupType | None" = None,
-            thp_pairing_code_entry_code: "int | None" = None,
-            thp_pairing_code_qr_code: "bytes | None" = None,
-            thp_pairing_code_nfc: "bytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkState"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkGetPairingInfo(protobuf.MessageType):
+        channel_id: "bytes | None"
+        handshake_hash: "bytes | None"
+        nfc_secret_host: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            channel_id: "bytes | None" = None,
+            handshake_hash: "bytes | None" = None,
+            nfc_secret_host: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkGetPairingInfo"]:
+            return isinstance(msg, cls)
+
+    class DebugLinkPairingInfo(protobuf.MessageType):
+        channel_id: "bytes | None"
+        handshake_hash: "bytes | None"
+        code_entry_code: "int | None"
+        code_qr_code: "bytes | None"
+        nfc_secret_trezor: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            channel_id: "bytes | None" = None,
+            handshake_hash: "bytes | None" = None,
+            code_entry_code: "int | None" = None,
+            code_qr_code: "bytes | None" = None,
+            nfc_secret_trezor: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkPairingInfo"]:
             return isinstance(msg, cls)
 
     class DebugLinkStop(protobuf.MessageType):

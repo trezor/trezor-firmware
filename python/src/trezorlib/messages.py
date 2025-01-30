@@ -532,6 +532,8 @@ class MessageType(IntEnum):
     DebugLinkWatchLayout = 9006
     DebugLinkResetDebugEvents = 9007
     DebugLinkOptigaSetSecMax = 9008
+    DebugLinkGetPairingInfo = 9009
+    DebugLinkPairingInfo = 9010
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56
@@ -4168,7 +4170,6 @@ class DebugLinkGetState(protobuf.MessageType):
         1: protobuf.Field("wait_word_list", "bool", repeated=False, required=False, default=None),
         2: protobuf.Field("wait_word_pos", "bool", repeated=False, required=False, default=None),
         3: protobuf.Field("wait_layout", "DebugWaitType", repeated=False, required=False, default=DebugWaitType.IMMEDIATE),
-        4: protobuf.Field("thp_channel_id", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4177,12 +4178,10 @@ class DebugLinkGetState(protobuf.MessageType):
         wait_word_list: Optional["bool"] = None,
         wait_word_pos: Optional["bool"] = None,
         wait_layout: Optional["DebugWaitType"] = DebugWaitType.IMMEDIATE,
-        thp_channel_id: Optional["bytes"] = None,
     ) -> None:
         self.wait_word_list = wait_word_list
         self.wait_word_pos = wait_word_pos
         self.wait_layout = wait_layout
-        self.thp_channel_id = thp_channel_id
 
 
 class DebugLinkState(protobuf.MessageType):
@@ -4201,9 +4200,6 @@ class DebugLinkState(protobuf.MessageType):
         11: protobuf.Field("reset_word_pos", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("mnemonic_type", "BackupType", repeated=False, required=False, default=None),
         13: protobuf.Field("tokens", "string", repeated=True, required=False, default=None),
-        14: protobuf.Field("thp_pairing_code_entry_code", "uint32", repeated=False, required=False, default=None),
-        15: protobuf.Field("thp_pairing_code_qr_code", "bytes", repeated=False, required=False, default=None),
-        16: protobuf.Field("thp_pairing_code_nfc", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4222,9 +4218,6 @@ class DebugLinkState(protobuf.MessageType):
         recovery_word_pos: Optional["int"] = None,
         reset_word_pos: Optional["int"] = None,
         mnemonic_type: Optional["BackupType"] = None,
-        thp_pairing_code_entry_code: Optional["int"] = None,
-        thp_pairing_code_qr_code: Optional["bytes"] = None,
-        thp_pairing_code_nfc: Optional["bytes"] = None,
     ) -> None:
         self.tokens: Sequence["str"] = tokens if tokens is not None else []
         self.layout = layout
@@ -4239,9 +4232,52 @@ class DebugLinkState(protobuf.MessageType):
         self.recovery_word_pos = recovery_word_pos
         self.reset_word_pos = reset_word_pos
         self.mnemonic_type = mnemonic_type
-        self.thp_pairing_code_entry_code = thp_pairing_code_entry_code
-        self.thp_pairing_code_qr_code = thp_pairing_code_qr_code
-        self.thp_pairing_code_nfc = thp_pairing_code_nfc
+
+
+class DebugLinkGetPairingInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9009
+    FIELDS = {
+        1: protobuf.Field("channel_id", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("handshake_hash", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("nfc_secret_host", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        channel_id: Optional["bytes"] = None,
+        handshake_hash: Optional["bytes"] = None,
+        nfc_secret_host: Optional["bytes"] = None,
+    ) -> None:
+        self.channel_id = channel_id
+        self.handshake_hash = handshake_hash
+        self.nfc_secret_host = nfc_secret_host
+
+
+class DebugLinkPairingInfo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 9010
+    FIELDS = {
+        1: protobuf.Field("channel_id", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("handshake_hash", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("code_entry_code", "uint32", repeated=False, required=False, default=None),
+        4: protobuf.Field("code_qr_code", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("nfc_secret_trezor", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        channel_id: Optional["bytes"] = None,
+        handshake_hash: Optional["bytes"] = None,
+        code_entry_code: Optional["int"] = None,
+        code_qr_code: Optional["bytes"] = None,
+        nfc_secret_trezor: Optional["bytes"] = None,
+    ) -> None:
+        self.channel_id = channel_id
+        self.handshake_hash = handshake_hash
+        self.code_entry_code = code_entry_code
+        self.code_qr_code = code_qr_code
+        self.nfc_secret_trezor = nfc_secret_trezor
 
 
 class DebugLinkStop(protobuf.MessageType):

@@ -80,10 +80,15 @@ class PairingContext(Context):
         super().__init__(channel_ctx.iface, channel_ctx.channel_id)
         self.channel_ctx: Channel = channel_ctx
         self.incoming_message = loop.mailbox()
-        self.nfc_secret: bytes
-        self.qr_code_secret: bytes
+        self.nfc_secret: bytes | None = None
+        self.qr_code_secret: bytes | None = None
         self.code_entry_secret: bytes | None = None
+
         self.selected_method: ThpPairingMethod
+
+        # The 2 following attributes are important for NFC pairing
+        self.nfc_secret_host: bytes | None = None
+        self.handshake_hash_host: bytes | None = None
 
         self.display_data: PairingDisplayData = PairingDisplayData()
         self.cpace: Cpace

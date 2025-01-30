@@ -539,7 +539,6 @@ class DebugLink:
     def state(
         self,
         wait_type: DebugWaitType | None = None,
-        thp_channel_id: bytes | None = None,
     ) -> messages.DebugLinkState:
         if wait_type is None:
             wait_type = (
@@ -547,13 +546,27 @@ class DebugLink:
                 if self.has_global_layout
                 else DebugWaitType.IMMEDIATE
             )
+        result = self._call(messages.DebugLinkGetState(wait_layout=wait_type))
+        while not isinstance(result, (messages.Failure, messages.DebugLinkState)):
+            result = self._read()
+        if isinstance(result, messages.Failure):
+            raise TrezorFailure(result)
+        return result
+
+    def pairing_info(
+        self,
+        thp_channel_id: bytes | None = None,
+        handshake_hash: bytes | None = None,
+        nfc_secret_host: bytes | None = None,
+    ) -> messages.DebugLinkPairingInfo:
         result = self._call(
-            messages.DebugLinkGetState(
-                wait_layout=wait_type,
-                thp_channel_id=thp_channel_id,
+            messages.DebugLinkGetPairingInfo(
+                channel_id=thp_channel_id,
+                handshake_hash=handshake_hash,
+                nfc_secret_host=nfc_secret_host,
             )
         )
-        while not isinstance(result, (messages.Failure, messages.DebugLinkState)):
+        while not isinstance(result, (messages.Failure, messages.DebugLinkPairingInfo)):
             result = self._read()
         if isinstance(result, messages.Failure):
             raise TrezorFailure(result)
