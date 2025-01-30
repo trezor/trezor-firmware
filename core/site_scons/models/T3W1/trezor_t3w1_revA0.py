@@ -50,7 +50,7 @@ def configure(
 
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
-    sources += ["embed/io/backlight/stm32/tps61043.c"]
+    sources += ["embed/io/backlight/stm32u5/tps61062.c"]
     paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
