@@ -86,7 +86,7 @@ char* sha256_Data(const uint8_t*, size_t, char[SHA256_DIGEST_STRING_LENGTH]);
 // expected size.
 #define SHA256_UPDATE_INT(ctx, val, expected_type)                            \
   do {                                                                        \
-    sha256_Update(ctx, (const uint8_t *)&val, sizeof(val));                   \
+    sha256_Update(ctx, (const uint8_t *)&(val), sizeof(val));                 \
     _Static_assert(sizeof(val) == sizeof(expected_type), "invalid int size"); \
   } while (0)
 

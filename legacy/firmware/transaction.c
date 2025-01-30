@@ -601,7 +601,7 @@ uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output,
   r += 8;
   if (decred) {
     uint16_t script_version = output->decred_script_version & 0xFFFF;
-    hasher_Update(hasher, (const uint8_t *)&script_version, 2);
+    HASHER_UPDATE_INT(hasher, script_version, uint16_t);
     r += 2;
   }
   r += tx_script_hash(hasher, output->script_pubkey.size,
@@ -656,7 +656,7 @@ uint32_t tx_serialize_header_hash(TxStruct *tx) {
 #if !BITCOIN_ONLY
   if (tx->is_zcashlike && tx->version >= 3) {
     uint32_t ver = tx->version | TX_OVERWINTERED;
-    hasher_Update(&(tx->hasher), (const uint8_t *)&ver, 4);
+    HASHER_UPDATE_INT(&(tx->hasher), ver, uint32_t);
     HASHER_UPDATE_INT(&(tx->hasher), tx->version_group_id, uint32_t);
     r += 4;
   } else
