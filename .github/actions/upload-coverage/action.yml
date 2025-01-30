@@ -2,7 +2,12 @@ name: 'Upload coverage data'
 runs:
   using: "composite"
   steps:
-    - run: mv core/src/.coverage core/src/.coverage.${{ github.job }}${{ strategy.job-index }} || true
+    # add per-job suffix so the .coverage files won't be overwritten during merge (by `core_coverage_report`)
+    - run: |
+        for F in core/src/.coverage core/src/.coverage.gw*
+        do
+          mv -v $F $F.${{ github.job }}${{ strategy.job-index }} || true
+        done
       shell: sh
     - uses: actions/upload-artifact@v4
       with:
