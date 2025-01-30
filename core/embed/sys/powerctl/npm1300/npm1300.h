@@ -26,7 +26,7 @@
 // - range of np1300 is 32-800mA
 // - used battery limit is 180mA
 #define NPM1300_CHARGING_LIMIT_MIN 32       // mA
-#define NPM1300_CHARGING_LIMIT_MAX 800      // mA  // !@# TODO: set to 180mA
+#define NPM1300_CHARGING_LIMIT_MAX 180      // mA
 #define NPM1300_CHARGING_LIMIT_DEFAULT 180  // mA
 
 typedef struct {

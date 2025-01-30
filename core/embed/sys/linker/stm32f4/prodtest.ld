@@ -52,6 +52,12 @@ SECTIONS {
     *(.text*);
     . = ALIGN(4);
     *(.rodata*);
+    . = ALIGN(4);
+
+    _prodtest_cli_cmd_section_start = .;
+    KEEP(*(.prodtest_cli_cmd))
+    _prodtest_cli_cmd_section_end = .;
+
     . = ALIGN(128K);
   } >FLASH
 

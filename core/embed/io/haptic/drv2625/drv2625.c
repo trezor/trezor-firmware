@@ -105,7 +105,7 @@ bool haptic_init(void) {
   haptic_driver_t *driver = &g_haptic_driver;
 
   if (driver->initialized) {
-    return false;
+    return true;
   }
 
   memset(driver, 0, sizeof(haptic_driver_t));
