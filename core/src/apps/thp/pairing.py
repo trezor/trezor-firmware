@@ -221,10 +221,6 @@ async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None
 @check_state_and_log(ChannelState.TP1)
 async def _handle_nfc_is_selected(ctx: PairingContext) -> None:
     ctx.nfc_secret = random.bytes(16)
-    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
-    sha_ctx.update(ctx.nfc_secret)
-    sha_ctx.update(bytes("PairingMethod_NfcUnidirectional", "utf-8"))
-    ctx.display_data.code_nfc = sha_ctx.digest()[:16]
     await ctx.write_force(ThpPairingPreparationsFinished())
 
 
@@ -327,9 +323,13 @@ async def _handle_nfc_tag(
 ) -> protobuf.MessageType:
     if TYPE_CHECKING:
         assert isinstance(message, ThpNfcTagHost)
+
+    assert ctx.nfc_secret is not None
+    assert ctx.handshake_hash_host is not None
+    assert ctx.nfc_secret_host is not None
+
     sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
-    assert ctx.nfc_secret is not None
     sha_ctx.update(ctx.nfc_secret)
     expected_tag = sha_ctx.digest()
     if expected_tag != message.tag:
@@ -338,10 +338,12 @@ async def _handle_nfc_tag(
         )  # TODO remove after testing
         raise ThpError("Unexpected NFC Unidirectional Tag")
 
+    if ctx.handshake_hash_host[:16] != ctx.channel_ctx.get_handshake_hash()[:16]:
+        raise ThpError("Handshake hash mismatch")
+
     sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
-    # TODO add Host's secret from NFC message transferred over NFC
-    # sha_ctx.update(host's secret)
+    sha_ctx.update(ctx.nfc_secret_host)
     trezor_tag = sha_ctx.digest()
     return await _handle_secret_reveal(
         ctx,

@@ -18,6 +18,8 @@ from trezorlib.messages import (
     ThpCodeEntrySecret,
     ThpEndRequest,
     ThpEndResponse,
+    ThpNfcTagHost,
+    ThpNfcTagTrezor,
     ThpPairingMethod,
     ThpPairingPreparationsFinished,
     ThpPairingRequest,
@@ -247,6 +249,72 @@ def test_pairing_code_entry(client: Client) -> None:
     computed_commitment = sha_ctx.digest()
     assert commitment == computed_commitment
     assert code == b""  # TODO implement
+
+    _send_message(ThpEndRequest())
+    _read_message(ThpEndResponse)
+
+    protocol._has_valid_channel = True
+
+
+def test_pairing_nfc(client: Client) -> None:
+    global protocol
+    _prepare_protocol(client)
+
+    # Generate ephemeral keys
+    host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
+    host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
+
+    protocol._do_channel_allocation()
+
+    protocol._do_handshake(host_ephemeral_privkey, host_ephemeral_pubkey)
+
+    _send_message(ThpPairingRequest())
+
+    _read_message(ButtonRequest)
+
+    _send_message(ButtonAck())
+
+    client.debug.press_yes()
+
+    _read_message(ThpPairingRequestApproved)
+
+    _send_message(ThpSelectMethod(selected_pairing_method=ThpPairingMethod.NFC))
+
+    _read_message(ThpPairingPreparationsFinished)
+
+    # NFC screen shown
+    _read_message(ButtonRequest)
+    _send_message(ButtonAck())
+
+    nfc_secret_host = b"\x02\x11\x22\x33\x44\x55\x66\x77\x88\x99\xAA\xBB\xCC\xDD\xEE\xFF"  # TODO generate randomly
+
+    # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
+    pairing_info = client.debug.pairing_info(
+        thp_channel_id=protocol.channel_id.to_bytes(2, "big"),
+        handshake_hash=protocol.handshake_hash,
+        nfc_secret_host=nfc_secret_host,
+    )
+    handshake_hash_trezor = pairing_info.handshake_hash
+    nfc_secret_trezor = pairing_info.nfc_secret_trezor
+
+    assert handshake_hash_trezor[:16] == protocol.handshake_hash[:16]
+
+    # Compute tag for response
+    sha_ctx = hashlib.sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
+    sha_ctx.update(protocol.handshake_hash)
+    sha_ctx.update(nfc_secret_trezor)
+    tag_host = sha_ctx.digest()
+
+    _send_message(ThpNfcTagHost(tag=tag_host))
+
+    tag_trezor_msg = _read_message(ThpNfcTagTrezor)
+
+    # Check that the `code` was derived from the revealed secret
+    sha_ctx = hashlib.sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
+    sha_ctx.update(protocol.handshake_hash)
+    sha_ctx.update(nfc_secret_host)
+    computed_tag = sha_ctx.digest()
+    assert tag_trezor_msg.tag == computed_tag
 
     _send_message(ThpEndRequest())
     _read_message(ThpEndResponse)
