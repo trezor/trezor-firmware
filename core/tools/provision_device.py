@@ -9,6 +9,7 @@ from typing_extensions import Self
 import click
 import requests
 import serial
+import shlex
 
 SERVER_TOKEN = ""
 SERVER_URL = "http://localhost:8000/provision"
@@ -31,20 +32,20 @@ class ProvisioningResult:
         )
 
     def write(self, connection: Connection) -> None:
-        connection.command("CERTDEV WRITE", self.device_cert)
-        cert_dev = connection.command("CERTDEV READ")
+        connection.command("optiga-certdev-write", self.device_cert)
+        cert_dev = connection.command("optiga-certdev-read")
         if cert_dev != self.device_cert:
             print("Device certificate mismatch")
             print("Expected:", self.device_cert)
             print("Got:     ", cert_dev)
         assert cert_dev == self.device_cert
 
-        connection.command("CERTFIDO WRITE", self.fido_cert)
-        cert_fido = connection.command("CERTFIDO READ")
+        connection.command("optiga-certfido-write", self.fido_cert)
+        cert_fido = connection.command("optiga-certfido-read")
         assert cert_fido == self.fido_cert
 
-        connection.command("KEYFIDO WRITE", self.fido_privkey)
-        key_fido = connection.command("KEYFIDO READ")
+        connection.command("optiga-keyfido-write", self.fido_privkey)
+        key_fido = connection.command("optiga-keyfido-read")
         assert key_fido is not None
         assert key_fido in self.fido_cert
 
@@ -57,9 +58,9 @@ class DeviceInfo:
 
     @classmethod
     def read(cls, connection: Connection) -> Self:
-        cpu_id = connection.command("CPUID READ")
-        optiga_id = connection.command("OPTIGAID READ")
-        cert_bytes = connection.command("CERTINF READ")
+        cpu_id = connection.command("get-cpuid")
+        optiga_id = connection.command("optiga-id-read")
+        cert_bytes = connection.command("optiga-certinf-read")
         assert optiga_id is not None
         assert cpu_id is not None
         assert cert_bytes is not None
@@ -97,15 +98,7 @@ class Connection:
                 print("!!!", byte, "is not printable")
                 continue
             self.connection.write(bytes([byte]))
-            echo = self.connection.read(1)
-            assert echo[0] == byte
         self.connection.write(b"\r")
-        assert self.connection.read(2) == b"\r\n"
-        # self.connection.write(data + b"\r")
-        # echo = self.connection.read(len(data) + 2)
-        # print(len(echo), len(data) + 2)
-        # assert echo[:-2] == data
-        # assert echo[-2:] == b"\r\n"
 
     def command(self, cmd: str, *args: Any) -> bytes | None:
         cmd_line = cmd
@@ -116,23 +109,28 @@ class Connection:
                 cmd_line += " " + str(arg)
         self.writeline(cmd_line.encode())
 
-        res = self.readline()
-        if res.startswith(b"ERROR"):
-            error_text = res[len(b"ERROR ") :].decode()
-            raise ProdtestException(error_text)
-        if not res.startswith(b"OK"):
-            raise ProdtestException("Unexpected response: " + res.decode())
-        res_arg = res[len(b"OK ") :]
-        if not res_arg:
-            return None
-        try:
-            return bytes.fromhex(res_arg.decode())
-        except ValueError:
-            return res_arg
-
+        while True:
+            res = self.readline()
+            if res.startswith(b"ERROR"):
+                error_args = res[len(b"ERROR ") :].decode()
+                parts = shlex.split(error_args)
+                error_text = parts[0] # error code
+                if len(parts) > 1:
+                    error_text = parts[1] # error description
+                raise ProdtestException(error_text)
+            elif res.startswith(b"OK"):
+                res_arg = res[len(b"OK ") :]
+                if not res_arg:
+                    return None
+                try:
+                    return bytes.fromhex(res_arg.decode())
+                except ValueError:
+                    return res_arg
+            elif not res.startswith(b"#"):
+                raise ProdtestException("Unexpected response: " + res.decode())
 
 def provision_request(
-    device: DeviceInfo, url: str, verify: bool = True
+    device: DeviceInfo, url: str, model: str, verify: bool = True
 ) -> ProvisioningResult:
     request = {
         "tester_id": SERVER_TOKEN,
@@ -140,9 +138,9 @@ def provision_request(
         "optiga_id": device.optiga_id.hex(),
         "cpu_id": device.cpu_id.hex(),
         "cert": device.device_cert.hex(),
-        "model": "T2B1",
+        "model": model,
     }
-    resp = requests.post(url, json=request, verify=verify)
+    resp = requests.post(url + '/provision', json=request, verify=verify)
     if resp.status_code == 400:
         print("Server returned error:", resp.text)
     resp.raise_for_status()
@@ -156,32 +154,35 @@ def cli() -> None:
 
 
 @cli.command()
-def identify() -> None:
-    connection = Connection()
-    connection.command("PING")
+@click.option("-d", "--device", default="/dev/ttyACM0", help="Device path")
+def identify(device) -> None:
+    connection = Connection(device)
+    connection.command("ping")
     DeviceInfo.read(connection)
 
 
 @cli.command()
+@click.option("-d", "--device", default="/dev/ttyACM0", help="Device path")
 @click.option("--wipe", is_flag=True, help="Wipe the device")
-def lock(wipe) -> None:
-    connection = Connection()
-    connection.command("PING")
-    connection.command("LOCK")
+def lock(device, wipe) -> None:
+    connection = Connection(device)
+    connection.command("ping")
+    connection.command("optiga-lock")
     if wipe:
-        connection.command("WIPE")
+        connection.command("prodtest-wipe")
 
 
 @cli.command()
 @click.option("-u", "--url", default=SERVER_URL, help="Server URL")
 @click.option("-d", "--device", default="/dev/ttyACM0", help="Device path")
+@click.option("-m", "--model", help="Device path")
 @click.option(
     "--no-verify", is_flag=True, help="Disable server certificate verification"
 )
 @click.option(
     "--lock/--no-lock", default=True, help="Lock the device after provisioning"
 )
-def provision(url, device, no_verify, lock) -> None:
+def provision(url, device, model, no_verify, lock) -> None:
     global SERVER_TOKEN
 
     SERVER_TOKEN = os.environ.get("SERVER_TOKEN")
@@ -190,18 +191,18 @@ def provision(url, device, no_verify, lock) -> None:
     connection = Connection(device)
 
     # test the connection
-    connection.command("PING")
+    connection.command("ping")
 
     # grab CPUID, OPTIGAID and device certificate
     device = DeviceInfo.read(connection)
     # call the provisioning server
-    result = provision_request(device, url, not no_verify)
+    result = provision_request(device, url, model, not no_verify)
     # write provisioning result to the device
     result.write(connection)
 
     if lock:
-        connection.command("LOCK")
-        connection.command("WIPE")
+        connection.command("optiga-lock")
+        connection.command("prodtest-wipe")
 
 
 if __name__ == "__main__":

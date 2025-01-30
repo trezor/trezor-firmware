@@ -76,8 +76,10 @@ SOURCE_MOD += [
     'embed/util/image/image.c',
     'embed/util/rsod/rsod.c',
     'embed/util/scm_revision/scm_revision.c',
+    'embed/rtl/cli.c',
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
+    'embed/rtl/strutils.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -98,13 +100,27 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 SOURCE_PRODTEST = [
     'embed/projects/prodtest/header.S',
     'embed/projects/prodtest/main.c',
-    'embed/projects/prodtest/prodtest_common.c',
+    'embed/projects/prodtest/cmd/prodtest_boardloader.c',
+    'embed/projects/prodtest/cmd/prodtest_bootloader.c',
+    'embed/projects/prodtest/cmd/prodtest_button.c',
+    'embed/projects/prodtest/cmd/prodtest_display.c',
+    'embed/projects/prodtest/cmd/prodtest_prodtest.c',
+    'embed/projects/prodtest/cmd/prodtest_get_cpuid.c',
+    'embed/projects/prodtest/cmd/prodtest_haptic.c',
+    'embed/projects/prodtest/cmd/prodtest_help.c',
+    'embed/projects/prodtest/cmd/prodtest_optiga.c',
+    'embed/projects/prodtest/cmd/prodtest_otp_batch.c',
+    'embed/projects/prodtest/cmd/prodtest_otp_variant.c',
+    'embed/projects/prodtest/cmd/prodtest_ping.c',
+    'embed/projects/prodtest/cmd/prodtest_pmic.c',
+    'embed/projects/prodtest/cmd/prodtest_powerctl.c',
+    'embed/projects/prodtest/cmd/prodtest_reboot.c',
+    'embed/projects/prodtest/cmd/prodtest_rgbled.c',
+    'embed/projects/prodtest/cmd/prodtest_sdcard.c',
+    'embed/projects/prodtest/cmd/prodtest_sbu.c',
+    'embed/projects/prodtest/cmd/prodtest_touch.c',
+    'embed/projects/prodtest/cmd/prodtest_wpc.c',
 ]
-
-if 'optiga' in FEATURES_AVAILABLE:
-    SOURCE_PRODTEST += [
-        'embed/projects/prodtest/optiga_prodtest.c',
-    ]
 
 env.Replace(
     CAT='cat',

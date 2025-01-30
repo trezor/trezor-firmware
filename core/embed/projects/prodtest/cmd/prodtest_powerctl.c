@@ -17,17 +17,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PRODTEST_COMMON_H
-#define PRODTEST_COMMON_H
+#ifdef USE_POWERCTL
 
-#include <trezor_types.h>
+#include <trezor_rtl.h>
 
-enum { VCP_IFACE = 0x00 };
+#include <rtl/cli.h>
+#include <sys/powerctl.h>
+#include <sys/systick.h>
 
-void vcp_puts(const char *s, size_t len);
-void vcp_print(const char *fmt, ...);
-void vcp_println(const char *fmt, ...);
-void vcp_println_hex(const uint8_t *data, uint16_t len);
-int get_from_hex(uint8_t *buf, uint16_t buf_len, const char *hex);
+static void prodtest_powerctl_suspend(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
 
-#endif
+  cli_trace(cli, "Suspending the device to low-power mode...");
+  cli_trace(cli, "Press the POWER button to resume.");
+  systick_delay_ms(1000);
+
+  powerctl_suspend();
+
+  systick_delay_ms(1500);
+  cli_trace(cli, "Resumed to active mode.");
+
+  cli_ok(cli, "");
+}
+
+// clang-format off
+
+PRODTEST_CLI_CMD(
+  .name = "powerctl-suspend",
+  .func = prodtest_powerctl_suspend,
+  .info = "Suspend the device to low-power mode",
+  .args = ""
+);
+
+#endif  // USE_POWERCTL
