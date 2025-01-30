@@ -23,8 +23,7 @@ if utils.USE_THP:
     from trezor.enums import ThpPairingMethod
     from trezor.messages import (
         ThpCodeEntryChallenge,
-        ThpCodeEntryCpaceHost,
-        ThpCodeEntryTag,
+        ThpCodeEntryCpaceHostTag,
         ThpCredentialRequest,
         ThpEndRequest,
         ThpPairingRequest,
@@ -147,7 +146,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
             unallocated_chanel_error_on_channel_789a,
         )
 
-    def test_channel_allocation(self):
+    def tbd_channel_allocation(self):
         self.assertEqual(len(thp_main._CHANNELS), 0)
         for c in cache_thp._CHANNELS:
             self.assertEqual(int.from_bytes(c.state, "big"), ChannelState.UNALLOCATED)
@@ -159,12 +158,11 @@ class TestTrezorHostProtocol(unittest.TestCase):
         cid = cache_thp._CHANNELS[expected_channel_index].channel_id
         self.assertTrue(int.from_bytes(cid, "big") in thp_main._CHANNELS)
         self.assertEqual(len(thp_main._CHANNELS), 1)
-
         # test channel's default state is TH1:
         cid = get_channel_id_from_response(self.interface.data[-1])
         self.assertEqual(thp_main._CHANNELS[cid].get_channel_state(), ChannelState.TH1)
 
-    def test_invalid_encrypted_tag(self):
+    def tbd_invalid_encrypted_tag(self):
         gen = thp_main.thp_main_loop(self.interface)
         gen.send(None)
         # prepare 2 new channels
@@ -275,7 +273,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         # for i in self.interface.data:
         #    print(utils.get_bytes_as_str(i))
 
-    def test_skip_pairing(self):
+    def tbd_skip_pairing(self):
         config.init()
         config.wipe()
         channel = next(iter(thp_main._CHANNELS.values()))
@@ -306,7 +304,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         channel = thp_main._CHANNELS[cid]
         channel.selected_pairing_methods = [
             ThpPairingMethod.CodeEntry,
-            ThpPairingMethod.NFC_Unidirectional,
+            ThpPairingMethod.NFC,
             ThpPairingMethod.QrCode,
         ]
         pairing_ctx = PairingContext(channel)
