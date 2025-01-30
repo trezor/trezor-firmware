@@ -552,7 +552,8 @@ bool tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
   HASHER_UPDATE_INT(hasher, input->prev_index, uint32_t);
   tx_script_hash(hasher, input->script_sig.size, input->script_sig.bytes);
   HASHER_UPDATE_INT(hasher, input->sequence, uint32_t);
-  HASHER_UPDATE_INT(hasher, input->script_type, uint32_t);
+  uint32_t script_type = input->script_type;
+  HASHER_UPDATE_INT(hasher, script_type, uint32_t);
   uint8_t multisig_fp[32] = {0};
   if (input->has_multisig) {
     if (cryptoMultisigFingerprint(&input->multisig, multisig_fp) == 0) {
