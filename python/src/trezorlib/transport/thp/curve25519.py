@@ -114,3 +114,46 @@ def multiply(private_scalar: bytes, public_point: bytes):
 
     x = pow(z_2, p - 2, p) * x_2 % p
     return encode_coordinate(x)
+
+
+def elligator2(point: bytes) -> bytes:
+    # map_to_curve_elligator2_curve25519 from
+    # https://www.rfc-editor.org/rfc/rfc9380.html#ell2-opt
+
+    def conditional_move(first: int, second: int, condition: bool):
+        # Returns second if condition is true and first otherwise
+        # Must be implemented in a way that it is constant time
+        true_mask = -condition
+        false_mask = ~true_mask
+        return (first & false_mask) | (second & true_mask)
+
+    u = decode_coordinate(point)
+    tv1 = (u * u) % p
+    tv1 = (2 * tv1) % p
+    xd = (tv1 + 1) % p
+    x1n = (-J) % p
+    tv2 = (xd * xd) % p
+    gxd = (tv2 * xd) % p
+    gx1 = (J * tv1) % p
+    gx1 = (gx1 * x1n) % p
+    gx1 = (gx1 + tv2) % p
+    gx1 = (gx1 * x1n) % p
+    tv3 = (gxd * gxd) % p
+    tv2 = (tv3 * tv3) % p
+    tv3 = (tv3 * gxd) % p
+    tv3 = (tv3 * gx1) % p
+    tv2 = (tv2 * tv3) % p
+    y11 = pow(tv2, c4, p)
+    y11 = (y11 * tv3) % p
+    y12 = (y11 * c3) % p
+    tv2 = (y11 * y11) % p
+    tv2 = (tv2 * gxd) % p
+    e1 = tv2 == gx1
+    y1 = conditional_move(y12, y11, e1)
+    x2n = (x1n * tv1) % p
+    tv2 = (y1 * y1) % p
+    tv2 = (tv2 * gxd) % p
+    e3 = tv2 == gx1
+    xn = conditional_move(x2n, x1n, e3)
+    x = xn * pow(xd, p - 2, p) % p
+    return encode_coordinate(x)
