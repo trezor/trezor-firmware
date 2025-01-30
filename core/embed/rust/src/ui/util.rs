@@ -160,6 +160,99 @@ macro_rules! include_res {
 }
 pub(crate) use include_res;
 
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
+pub struct Pager {
+    current: u16,
+    total: u16,
+}
+
+impl Pager {
+    pub fn new(total: u16) -> Self {
+        Self { current: 0, total }
+    }
+
+    pub fn single_page() -> Self {
+        Self::new(1)
+    }
+
+    pub fn with_current(mut self, current: u16) -> Self {
+        self.set_current(current);
+        self
+    }
+
+    pub fn with_limit(mut self, limit: u16) -> Self {
+        self.total = self.total.min(limit);
+        // update current to be within bounds
+        self.set_current(self.current);
+        self
+    }
+
+    pub fn current(&self) -> u16 {
+        self.current
+    }
+
+    pub fn total(&self) -> u16 {
+        self.total
+    }
+
+    pub fn set_current(&mut self, page: u16) {
+        self.current = page.min(self.last());
+    }
+
+    pub fn last(&self) -> u16 {
+        self.total.saturating_sub(1)
+    }
+
+    pub fn is_first(&self) -> bool {
+        self.current == 0
+    }
+
+    pub fn is_last(&self) -> bool {
+        self.current == self.last()
+    }
+
+    pub fn is_single(&self) -> bool {
+        self.total == 1
+    }
+
+    pub fn has_prev(&self) -> bool {
+        !self.is_first()
+    }
+
+    pub fn has_next(&self) -> bool {
+        !self.is_last()
+    }
+
+    pub fn next(&self) -> u16 {
+        self.current.saturating_add(1).min(self.last())
+    }
+
+    pub fn prev(&self) -> u16 {
+        self.current.saturating_sub(1)
+    }
+
+    pub fn goto_next(&mut self) -> bool {
+        let has_next = self.has_next();
+        self.current = self.next();
+        has_next
+    }
+
+    pub fn goto_prev(&mut self) -> bool {
+        let has_prev = self.has_prev();
+        self.current = self.prev();
+        has_prev
+    }
+
+    pub fn goto_first(&mut self) {
+        self.current = 0;
+    }
+
+    pub fn goto_last(&mut self) {
+        self.current = self.last();
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::strutil;
