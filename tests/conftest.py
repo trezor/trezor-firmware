@@ -467,9 +467,10 @@ def pytest_configure(config: "Config") -> None:
         for line in f:
             config.addinivalue_line("markers", line.strip())
 
-    # enable debug
-    if config.getoption("verbose"):
-        log.enable_debug_output()
+    # enable debug if `-v` flag is passed (use multiple times for higher verbosity)
+    verbosity = config.getoption("verbose")
+    if verbosity:
+        log.enable_debug_output(verbosity)
 
     idval_orig = IdMaker._idval_from_value
 
