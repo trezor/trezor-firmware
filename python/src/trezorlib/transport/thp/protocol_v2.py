@@ -11,7 +11,7 @@ from enum import IntEnum
 import click
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
-from ... import exceptions, messages
+from ... import exceptions, messages, protobuf
 from ...mapping import ProtobufMapping
 from .. import Transport
 from ..thp import checksum, curve25519, thp_io
@@ -28,6 +28,7 @@ MANAGEMENT_SESSION_ID: int = 0
 
 if t.TYPE_CHECKING:
     from ...debuglink import DebugLink
+MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 
 def _sha256_of_two(val_1: bytes, val_2: bytes) -> bytes:
@@ -135,19 +136,30 @@ class ProtocolV2(ProtocolAndChannel):
             raise exceptions.TrezorException("Unexpected response to GetFeatures")
         self._features = features
 
+    def _send_message(
+        self,
+        message: protobuf.MessageType,
+        session_id: int = MANAGEMENT_SESSION_ID,
+    ):
+        message_type, message_data = self.mapping.encode(message)
+        self._encrypt_and_write(session_id, message_type, message_data)
+        self._read_ack()
+
+    def _read_message(self, message_type: type[MT]) -> MT:
+        _, msg_type, msg_data = self.read_and_decrypt()
+        msg = self.mapping.decode(msg_type, msg_data)
+        assert isinstance(msg, message_type)
+        return msg
+
     def _establish_new_channel(self, helper_debug: DebugLink | None = None) -> None:
+        self._reset_sync_bits()
+        self._do_channel_allocation()
+        self._do_handshake()
+        self._do_pairing(helper_debug)
+
+    def _reset_sync_bits(self) -> None:
         self.sync_bit_send = 0
         self.sync_bit_receive = 0
-
-        # Generate ephemeral keys
-        host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
-        host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
-
-        self._do_channel_allocation()
-
-        self._do_handshake(host_ephemeral_privkey, host_ephemeral_pubkey)
-
-        self._do_pairing(helper_debug)
 
     def _do_channel_allocation(self) -> None:
         channel_allocation_nonce = os.urandom(8)
@@ -176,9 +188,10 @@ class ProtocolV2(ProtocolAndChannel):
         device_properties = payload[10:]
         return (channel_id, device_properties)
 
-    def _do_handshake(
-        self, host_ephemeral_privkey: bytes, host_ephemeral_pubkey: bytes
-    ):
+    def _do_handshake(self):
+        host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
+        host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
+
         self._send_handshake_init_request(host_ephemeral_pubkey)
         self._read_ack()
         init_response = self._read_handshake_init_response()
@@ -309,49 +322,21 @@ class ProtocolV2(ProtocolAndChannel):
         self._send_ack_1()
 
     def _do_pairing(self, helper_debug: DebugLink | None):
-        # Send StartPairingReqest message
-        message = messages.ThpPairingRequest()
-        message_type, message_data = self.mapping.encode(message)
 
-        self._encrypt_and_write(MANAGEMENT_SESSION_ID, message_type, message_data)
-
-        # Read ACK
-        self._read_ack()
-
-        # Read button request
-        _, msg_type, msg_data = self.read_and_decrypt()
-        maaa = self.mapping.decode(msg_type, msg_data)
-        assert isinstance(maaa, messages.ButtonRequest)
-
-        # Send button ACK
-        message = messages.ButtonAck()
-        message_type, message_data = self.mapping.encode(message)
-
-        self._encrypt_and_write(MANAGEMENT_SESSION_ID, message_type, message_data)
-        self._read_ack()
+        self._send_message(messages.ThpPairingRequest())
+        self._read_message(messages.ButtonRequest)
+        self._send_message(messages.ButtonAck())
 
         if helper_debug is not None:
             helper_debug.press_yes()
 
-        # Read PairingRequestApproved
-        _, msg_type, msg_data = self.read_and_decrypt()
-        maaa = self.mapping.decode(msg_type, msg_data)
-
-        assert isinstance(maaa, messages.ThpPairingRequestApproved)
-
-        message = messages.ThpSelectMethod(
-            selected_pairing_method=messages.ThpPairingMethod.SkipPairing
+        self._read_message(messages.ThpPairingRequestApproved)
+        self._send_message(
+            messages.ThpSelectMethod(
+                selected_pairing_method=messages.ThpPairingMethod.SkipPairing
+            )
         )
-        message_type, message_data = self.mapping.encode(message)
-
-        self._encrypt_and_write(MANAGEMENT_SESSION_ID, message_type, message_data)
-        # Read ACK
-        self._read_ack()
-
-        # Read ThpEndResponse
-        _, msg_type, msg_data = self.read_and_decrypt()
-        maaa = self.mapping.decode(msg_type, msg_data)
-        assert isinstance(maaa, messages.ThpEndResponse)
+        self._read_message(messages.ThpEndResponse)
 
         self._has_valid_channel = True
 

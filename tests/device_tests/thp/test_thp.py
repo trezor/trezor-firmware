@@ -31,7 +31,7 @@ from trezorlib.messages import (
 )
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
-from trezorlib.transport.thp.protocol_v2 import MANAGEMENT_SESSION_ID, _hkdf
+from trezorlib.transport.thp.protocol_v2 import _hkdf
 
 if t.TYPE_CHECKING:
     P = tx.ParamSpec("P")
@@ -41,22 +41,24 @@ MT = t.TypeVar("MT", bound=protobuf.MessageType)
 pytestmark = [pytest.mark.protocol("protocol_v2")]
 
 
-protocol: ProtocolV2
-
-
-def _prepare_protocol(client: Client):
-    global protocol
+def _prepare_protocol(client: Client) -> ProtocolV2:
     protocol = client.protocol
-    protocol.sync_bit_send = 0
-    protocol.sync_bit_receive = 0
+    assert isinstance(protocol, ProtocolV2)
+    protocol._reset_sync_bits()
+    return protocol
+
+
+def _prepare_protocol_for_pairing(client: Client) -> ProtocolV2:
+    protocol = _prepare_protocol(client)
+    protocol._do_channel_allocation()
+    protocol._do_handshake()
+    return protocol
 
 
 def test_allocate_channel(client: Client) -> None:
-    global protocol
-    _prepare_protocol(client)
+    protocol = _prepare_protocol(client)
 
-    # protocol: ProtocolV2 = client.protocol
-    nonce = b"\x1A\x2B\x3B\x4A\x5C\x6D\x7E\x8F"
+    nonce = random.randbytes(8)
 
     # Use valid nonce
     protocol._send_channel_allocation_request(nonce)
@@ -72,9 +74,7 @@ def test_allocate_channel(client: Client) -> None:
 
 
 def test_handshake(client: Client) -> None:
-    global protocol
-    _prepare_protocol(client)
-    # protocol: ProtocolV2 = client.protocol
+    protocol = _prepare_protocol(client)
 
     host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
     host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
@@ -110,53 +110,24 @@ def test_handshake(client: Client) -> None:
     assert noise_tag is not None
 
 
-def _send_message(
-    message: MT,
-    session_id: int = MANAGEMENT_SESSION_ID,
-):
-    global protocol
-    message_type, message_data = protocol.mapping.encode(message)
-    protocol._encrypt_and_write(session_id, message_type, message_data)
-    protocol._read_ack()
-
-
-def _read_message(message_type: type[MT]) -> MT:
-    global protocol
-    _, msg_type, msg_data = protocol.read_and_decrypt()
-    msg = protocol.mapping.decode(msg_type, msg_data)
-    assert isinstance(msg, message_type)
-    return msg
-
-
 def test_pairing_qr_code(client: Client) -> None:
-    global protocol
-    _prepare_protocol(client)
+    protocol = _prepare_protocol_for_pairing(client)
 
-    # Generate ephemeral keys
-    host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
-    host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
-
-    protocol._do_channel_allocation()
-
-    protocol._do_handshake(host_ephemeral_privkey, host_ephemeral_pubkey)
-
-    _send_message(ThpPairingRequest())
-
-    _read_message(ButtonRequest)
-
-    _send_message(ButtonAck())
+    protocol._send_message(ThpPairingRequest())
+    protocol._read_message(ButtonRequest)
+    protocol._send_message(ButtonAck())
 
     client.debug.press_yes()
 
-    _read_message(ThpPairingRequestApproved)
-
-    _send_message(ThpSelectMethod(selected_pairing_method=ThpPairingMethod.QrCode))
-
-    _read_message(ThpPairingPreparationsFinished)
+    protocol._read_message(ThpPairingRequestApproved)
+    protocol._send_message(
+        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.QrCode)
+    )
+    protocol._read_message(ThpPairingPreparationsFinished)
 
     # QR Code shown
-    _read_message(ButtonRequest)
-    _send_message(ButtonAck())
+    protocol._read_message(ButtonRequest)
+    protocol._send_message(ButtonAck())
 
     # Read code from "Trezor's display" using debuglink
 
@@ -170,9 +141,9 @@ def test_pairing_qr_code(client: Client) -> None:
     sha_ctx.update(code)
     tag = sha_ctx.digest()
 
-    _send_message(ThpQrCodeTag(tag=tag))
+    protocol._send_message(ThpQrCodeTag(tag=tag))
 
-    secret_msg = _read_message(ThpQrCodeSecret)
+    secret_msg = protocol._read_message(ThpQrCodeSecret)
 
     # Check that the `code` was derived from the revealed secret
     sha_ctx = sha256(ThpPairingMethod.QrCode.to_bytes(1, "big"))
@@ -181,48 +152,38 @@ def test_pairing_qr_code(client: Client) -> None:
     computed_code = sha_ctx.digest()[:16]
     assert code == computed_code
 
-    _send_message(ThpEndRequest())
-    _read_message(ThpEndResponse)
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
 
     protocol._has_valid_channel = True
 
 
 def test_pairing_code_entry(client: Client) -> None:
-    global protocol
-    _prepare_protocol(client)
+    protocol = _prepare_protocol_for_pairing(client)
 
-    # Generate ephemeral keys
-    host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
-    host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
-
-    protocol._do_channel_allocation()
-
-    protocol._do_handshake(host_ephemeral_privkey, host_ephemeral_pubkey)
-
-    _send_message(ThpPairingRequest())
-
-    _read_message(ButtonRequest)
-
-    _send_message(ButtonAck())
+    protocol._send_message(ThpPairingRequest())
+    protocol._read_message(ButtonRequest)
+    protocol._send_message(ButtonAck())
 
     client.debug.press_yes()
 
-    _read_message(ThpPairingRequestApproved)
+    protocol._read_message(ThpPairingRequestApproved)
+    protocol._send_message(
+        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
+    )
 
-    _send_message(ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry))
-
-    commitment_msg = _read_message(ThpCodeEntryCommitment)
+    commitment_msg = protocol._read_message(ThpCodeEntryCommitment)
     commitment = commitment_msg.commitment
 
     challenge = random.randbytes(16)
-    _send_message(ThpCodeEntryChallenge(challenge=challenge))
+    protocol._send_message(ThpCodeEntryChallenge(challenge=challenge))
 
-    cpace_trezor = _read_message(ThpCodeEntryCpaceTrezor)
+    cpace_trezor = protocol._read_message(ThpCodeEntryCpaceTrezor)
     cpace_trezor_public_key = cpace_trezor.cpace_trezor_public_key
 
     # Code Entry code shown
-    _read_message(ButtonRequest)
-    _send_message(ButtonAck())
+    protocol._read_message(ButtonRequest)
+    protocol._send_message(ButtonAck())
 
     pairing_info = client.debug.pairing_info(
         thp_channel_id=protocol.channel_id.to_bytes(2, "big")
@@ -235,14 +196,14 @@ def test_pairing_code_entry(client: Client) -> None:
     sha_ctx = sha256(cpace.shared_secret)
     tag = sha_ctx.digest()
 
-    _send_message(
+    protocol._send_message(
         ThpCodeEntryCpaceHostTag(
             cpace_host_public_key=cpace.host_public_key,
             tag=tag,
         )
     )
 
-    secret_msg = _read_message(ThpCodeEntrySecret)
+    secret_msg = protocol._read_message(ThpCodeEntrySecret)
 
     # Check `commitment` and `code`
     sha_ctx = sha256(secret_msg.secret)
@@ -257,41 +218,30 @@ def test_pairing_code_entry(client: Client) -> None:
     computed_code = int.from_bytes(code_hash, "big") % 1000000
     assert code == computed_code
 
-    _send_message(ThpEndRequest())
-    _read_message(ThpEndResponse)
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
 
     protocol._has_valid_channel = True
 
 
 def test_pairing_nfc(client: Client) -> None:
-    global protocol
-    _prepare_protocol(client)
+    protocol = _prepare_protocol_for_pairing(client)
 
-    # Generate ephemeral keys
-    host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
-    host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
-
-    protocol._do_channel_allocation()
-
-    protocol._do_handshake(host_ephemeral_privkey, host_ephemeral_pubkey)
-
-    _send_message(ThpPairingRequest())
-
-    _read_message(ButtonRequest)
-
-    _send_message(ButtonAck())
+    protocol._send_message(ThpPairingRequest())
+    protocol._read_message(ButtonRequest)
+    protocol._send_message(ButtonAck())
 
     client.debug.press_yes()
 
-    _read_message(ThpPairingRequestApproved)
-
-    _send_message(ThpSelectMethod(selected_pairing_method=ThpPairingMethod.NFC))
-
-    _read_message(ThpPairingPreparationsFinished)
+    protocol._read_message(ThpPairingRequestApproved)
+    protocol._send_message(
+        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.NFC)
+    )
+    protocol._read_message(ThpPairingPreparationsFinished)
 
     # NFC screen shown
-    _read_message(ButtonRequest)
-    _send_message(ButtonAck())
+    protocol._read_message(ButtonRequest)
+    protocol._send_message(ButtonAck())
 
     nfc_secret_host = random.randbytes(16)
     # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
@@ -311,9 +261,9 @@ def test_pairing_nfc(client: Client) -> None:
     sha_ctx.update(nfc_secret_trezor)
     tag_host = sha_ctx.digest()
 
-    _send_message(ThpNfcTagHost(tag=tag_host))
+    protocol._send_message(ThpNfcTagHost(tag=tag_host))
 
-    tag_trezor_msg = _read_message(ThpNfcTagTrezor)
+    tag_trezor_msg = protocol._read_message(ThpNfcTagTrezor)
 
     # Check that the `code` was derived from the revealed secret
     sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
@@ -322,7 +272,7 @@ def test_pairing_nfc(client: Client) -> None:
     computed_tag = sha_ctx.digest()
     assert tag_trezor_msg.tag == computed_tag
 
-    _send_message(ThpEndRequest())
-    _read_message(ThpEndResponse)
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
 
     protocol._has_valid_channel = True
