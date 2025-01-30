@@ -198,10 +198,10 @@ async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None
 
     if challenge_message.challenge is None:
         raise Exception("Invalid message")
-    sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
+    sha_ctx = sha256(ThpPairingMethod.CodeEntry.to_bytes(1, "big"))
+    sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
     sha_ctx.update(ctx.code_entry_secret)
     sha_ctx.update(challenge_message.challenge)
-    sha_ctx.update(bytes("PairingMethod_CodeEntry", "utf-8"))
     code_code_entry_hash = sha_ctx.digest()
     ctx.display_data.code_code_entry = (
         int.from_bytes(code_code_entry_hash, "big") % 1000000
@@ -327,6 +327,7 @@ async def _handle_nfc_tag(
     assert ctx.nfc_secret is not None
     assert ctx.handshake_hash_host is not None
     assert ctx.nfc_secret_host is not None
+    assert len(ctx.nfc_secret_host) == 16
 
     sha_ctx = sha256(ThpPairingMethod.NFC.to_bytes(1, "big"))
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
