@@ -21,6 +21,19 @@
 
 #include <trezor_types.h>
 
-#undef FIRMWARE_START
+#define IFACE_USB_MAX (15)  // 0-15 reserved for USB
 
-extern uint8_t *FIRMWARE_START;
+#define MODE_READ 0x0000
+#define MODE_WRITE 0x0100
+
+typedef enum {
+  EVENT_NONE = 0,
+  EVENT_USB_CAN_READ = 0x01,
+} poll_event_type_t;
+
+typedef struct {
+  poll_event_type_t type;
+} poll_event_t;
+
+uint8_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
+                    poll_event_t* event, uint32_t timeout_ms);

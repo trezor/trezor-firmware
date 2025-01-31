@@ -17,10 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include <trezor_types.h>
+#include "protob.h"
+#include "workflow.h"
 
-#undef FIRMWARE_START
-
-extern uint8_t *FIRMWARE_START;
+workflow_result_t workflow_initialize(protob_io_t *iface,
+                                      const vendor_header *const vhdr,
+                                      const image_header *const hdr) {
+  Initialize msg_recv;
+  recv_msg_initialize(iface, &msg_recv);
+  send_msg_features(iface, vhdr, hdr);
+  return WF_OK;
+}

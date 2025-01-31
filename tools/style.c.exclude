@@ -1,4 +1,4 @@
-^\./core/embed/projects/bootloader/protob/
+^\./core/embed/projects/bootloader/protob/pb/
 ^\./crypto/aes/
 ^\./crypto/chacha20poly1305/
 ^\./crypto/ed25519-donna/
