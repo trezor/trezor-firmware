@@ -81,8 +81,13 @@ FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_
 
 SOURCE_BOARDLOADER = [
     'embed/projects/boardloader/main.c',
+    'embed/projects/boardloader/bld_version.c',
 ]
 
+if 'sd_card' in FEATURES_AVAILABLE:
+    SOURCE_MOD += [
+    'embed/projects/boardloader/sd_update.c',
+    ]
 
 env.Replace(
     CAT='cat',
