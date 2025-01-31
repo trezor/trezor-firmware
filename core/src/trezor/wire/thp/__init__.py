@@ -146,10 +146,8 @@ def get_enabled_pairing_methods(
     Returns pairing methods that are currently allowed by the device
     with respect to the wire interface the host communicates on.
     """
-    import usb
-
     methods = _DEFAULT_ENABLED_PAIRING_METHODS.copy()
-    if iface is not None and iface is usb.iface_wire:
+    if __debug__:
         methods.append(ThpPairingMethod.SkipPairing)
     return methods
 
