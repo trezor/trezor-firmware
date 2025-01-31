@@ -1,65 +1,47 @@
-/******************************************************************************
- * @attention
+/*
+ * This file is part of the Trezor project, https://trezor.io/
  *
- * COPYRIGHT 2018 STMicroelectronics, all rights reserved
+ * Copyright (c) SatoshiLabs
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied,
- * AND SPECIFICALLY DISCLAIMING THE IMPLIED WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- ******************************************************************************/
-/*! \file
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- *  \author
- *
- *  \brief Platform header file. Defining platform independent functionality.
- *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RFAL_PLATFORM_H
-#define RFAL_PLATFORM_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*ReturnCode
-******************************************************************************
-* INCLUDES
-******************************************************************************
-*/
-
-#include <trezor_bsp.h>
-#include "stm32u5xx_hal.h"
-
 #include <limits.h>
 #include <math.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <sys/systimer.h>
+#include <trezor_bsp.h>
+#include <trezor_types.h>
+
+#include <sys/systick.h>
 
 #include "io/nfc.h"
-#include "nfc_internal.h"
 
-/*
-******************************************************************************
-* GLOBAL DEFINES
-******************************************************************************
-*/
+#include "nfc_internal.h"
 
 // Device type definition
 #define ST25R3916B
 
 // GPIO pin used for ST25R SPI SS
-#define ST25R_SS_PIN SPI_INSTANCE_3_NSS_PIN
+#define ST25R_SS_PIN NFC_SPI_NSS_PIN
 
 // GPIO port used for ST25R SPI SS port
-#define ST25R_SS_PORT SPI_INSTANCE_3_NSS_PORT
+#define ST25R_SS_PORT NFC_SPI_NSS_PORT
 
 // GPIO pin used for ST25R External Interrupt
 #define ST25R_INT_PIN NFC_INT_PIN
@@ -67,18 +49,9 @@ extern "C" {
 // GPIO port used for ST25R External Interrupt
 #define ST25R_INT_PORT NFC_INT_PORT
 
-/*
-******************************************************************************
-* GLOBAL MACROS
-******************************************************************************
-*/
-#define platformProtectST25RComm() \
-  NVIC_DisableIRQ(EXTI10_IRQn)  // TODO: PRobably should be irq_lock instead //
-                                // Protect the unique access to communication
-                                // channel (disable IRQ on single thread)
+#define platformProtectST25RComm() NVIC_DisableIRQ(NFC_EXTI_INTERRUPT_NUM)
 
-#define platformUnprotectST25RComm() \
-  NVIC_EnableIRQ(EXTI10_IRQn)  // TODO: Use macro here /
+#define platformUnprotectST25RComm() NVIC_EnableIRQ(NFC_EXTI_INTERRUPT_NUM)
 
 #define platformProtectST25RIrqStatus()                                        \
   platformProtectST25RComm() /*!< Protect unique access to IRQ status var -    \
@@ -107,10 +80,10 @@ extern "C" {
 #define platformGpioIsLow(port, pin) (!platformGpioIsHigh(port, pin))
 
 // Create a timer with the given time (ms)
-#define platformTimerCreate(t) nfc_create_timer(t)
+#define platformTimerCreate(t) ticks_timeout(t)
 
 // Checks if the given timer is expired
-#define platformTimerIsExpired(timer) nfc_timer_is_expired(timer)
+#define platformTimerIsExpired(timer) ticks_expired(timer)
 
 // Performs a delay for the given time (ms)
 #define platformDelay(t) HAL_Delay(t)
@@ -141,19 +114,8 @@ extern "C" {
 // Log  method
 #define platformLog(...)  // logUsart(__VA_ARGS__)
 
-/*
-******************************************************************************
-* GLOBAL VARIABLES
-******************************************************************************
-*/
 extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
                                         platform - instantiated in main.c    */
-
-/*
-******************************************************************************
-* RFAL FEATURES CONFIGURATION
-******************************************************************************
-*/
 
 #define RFAL_FEATURE_LISTEN_MODE \
   true /*!< Enable/Disable RFAL support for Listen Mode */
@@ -292,5 +254,3 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* RFAL_PLATFORM_H */
