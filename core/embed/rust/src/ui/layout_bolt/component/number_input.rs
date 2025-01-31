@@ -9,13 +9,12 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Pad,
         },
-        display::font,
         geometry::{Alignment, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
 };
 
-use super::{theme, Button, ButtonMsg};
+use super::{super::fonts, theme, Button, ButtonMsg};
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum NumberInputDialogMsg {
@@ -206,14 +205,13 @@ impl Component for NumberInput {
         let mut buf = [0u8; 10];
 
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
-            let digit_font = font::FONT_DEMIBOLD;
+            let digit_font = fonts::FONT_DEMIBOLD;
             let y_offset = digit_font.text_height() / 2 + Button::BASELINE_OFFSET;
 
             shape::Bar::new(self.area).with_bg(theme::BG).render(target);
-            shape::Text::new(self.area.center() + Offset::y(y_offset), text)
+            shape::Text::new(self.area.center() + Offset::y(y_offset), text, digit_font)
                 .with_align(Alignment::Center)
                 .with_fg(theme::FG)
-                .with_font(digit_font)
                 .render(target);
         }
 

@@ -9,7 +9,7 @@ use crate::{
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
         constant,
-        display::{font, Icon, LOADER_MAX},
+        display::{Icon, LOADER_MAX},
         geometry::{Alignment2D, Offset, Rect},
         shape,
         shape::Renderer,
@@ -17,7 +17,7 @@ use crate::{
     },
 };
 
-use super::super::{cshape, theme};
+use super::super::{cshape, fonts, theme};
 
 const BOTTOM_DESCRIPTION_MARGIN: i16 = 10;
 const LOADER_Y_OFFSET_TITLE: i16 = -10;
@@ -99,7 +99,7 @@ impl Component for Progress {
         };
 
         let (_loader, description) = rest.split_bottom(
-            BOTTOM_DESCRIPTION_MARGIN + font::FONT_NORMAL.line_height() * description_lines,
+            BOTTOM_DESCRIPTION_MARGIN + fonts::FONT_NORMAL.line_height() * description_lines,
         );
         self.title.place(title);
         self.loader_y_offset = loader_y_offset;

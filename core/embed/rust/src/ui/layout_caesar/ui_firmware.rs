@@ -20,7 +20,6 @@ use crate::{
             },
             Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
         },
-        display::font,
         geometry,
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
@@ -40,7 +39,7 @@ use super::{
         PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords, ShowMore, SimpleChoice,
         WordlistEntry, WordlistType,
     },
-    constant, theme, UICaesar,
+    constant, fonts, theme, UICaesar,
 };
 
 use heapless::Vec;
@@ -116,13 +115,13 @@ impl FirmwareUI for UICaesar {
                 if chunkify {
                     ops = ops.chunkify_text(None);
                 }
-                ops = ops.text_normal(label).newline();
+                ops = ops.text(label, fonts::FONT_NORMAL).newline();
             }
             if chunkify {
                 // Chunkifying the address into smaller pieces when requested
                 ops = ops.chunkify_text(Some((theme::MONO_CHUNKS, 2)));
             }
-            ops = ops.text_mono(address);
+            ops = ops.text(address, fonts::FONT_MONO);
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted).with_title(title)
         };
@@ -271,9 +270,9 @@ impl FirmwareUI for UICaesar {
 
             let ops = OpTextLayout::new(theme::TEXT_NORMAL)
                 .newline()
-                .text_normal(app_name)
+                .text(app_name, fonts::FONT_NORMAL)
                 .newline()
-                .text_bold(account);
+                .text(account, fonts::FONT_BOLD);
             let formatted = FormattedText::new(ops);
 
             Page::new(btn_layout, btn_actions, formatted)
@@ -473,11 +472,11 @@ impl FirmwareUI for UICaesar {
             )
         };
         let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-            .text_normal(TR::reset__by_continuing)
+            .text(TR::reset__by_continuing, fonts::FONT_NORMAL)
             .next_page()
-            .text_normal(TR::reset__more_info_at)
+            .text(TR::reset__more_info_at, fonts::FONT_NORMAL)
             .newline()
-            .text_bold(TR::reset__tos_link);
+            .text(TR::reset__tos_link, fonts::FONT_BOLD);
         let formatted = FormattedText::new(ops).vertically_centered();
 
         content_in_button_page(title, formatted, button, Some("".into()), false)
@@ -514,7 +513,7 @@ impl FirmwareUI for UICaesar {
             let right_btn = has_pages_after.then(|| {
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(font::FONT_NORMAL)
+                    .with_font(fonts::FONT_NORMAL)
             });
             let middle_btn = Some(ButtonDetails::armed_text(TR::buttons__confirm.into()));
 
@@ -550,14 +549,14 @@ impl FirmwareUI for UICaesar {
                     let (btn_layout, btn_actions) = btns_summary_page(!info_pages.is_empty());
 
                     let ops = OpTextLayout::new(theme::TEXT_MONO)
-                        .text_bold(amount_label)
+                        .text(amount_label, fonts::FONT_BOLD)
                         .newline()
-                        .text_mono(amount)
+                        .text(amount, fonts::FONT_MONO)
                         .newline()
                         .newline()
-                        .text_bold(fee_label)
+                        .text(fee_label, fonts::FONT_BOLD)
                         .newline()
-                        .text_mono(fee);
+                        .text(fee, fonts::FONT_MONO);
 
                     let formatted = FormattedText::new(ops);
                     Page::new(btn_layout, btn_actions, formatted)
@@ -576,9 +575,9 @@ impl FirmwareUI for UICaesar {
                             ops = ops.next_page();
                         }
                         ops = ops
-                            .text_bold(unwrap!(TString::try_from(key)))
+                            .text(unwrap!(TString::try_from(key)), fonts::FONT_BOLD)
                             .newline()
-                            .text_mono(unwrap!(TString::try_from(value)));
+                            .text(unwrap!(TString::try_from(value)), fonts::FONT_MONO);
                     }
 
                     let formatted = FormattedText::new(ops).vertically_centered();
@@ -767,7 +766,7 @@ impl FirmwareUI for UICaesar {
                 )
             };
 
-            let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(text);
+            let ops = OpTextLayout::new(theme::TEXT_NORMAL).text(text, fonts::FONT_NORMAL);
             let formatted = FormattedText::new(ops).vertically_centered();
 
             Page::new(btn_layout, btn_actions, formatted)
@@ -784,9 +783,9 @@ impl FirmwareUI for UICaesar {
                 let btn_layout = ButtonLayout::text_none_arrow_wide(TR::buttons__skip.into());
                 let btn_actions = ButtonActions::cancel_none_next();
                 let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                    .text_normal(TR::backup__new_wallet_created)
+                    .text(TR::backup__new_wallet_created, fonts::FONT_NORMAL)
                     .newline()
-                    .text_normal(TR::backup__it_should_be_backed_up_now);
+                    .text(TR::backup__it_should_be_backed_up_now, fonts::FONT_NORMAL);
                 let formatted = FormattedText::new(ops).vertically_centered();
                 Page::new(btn_layout, btn_actions, formatted)
                     .with_title(TR::words__title_success.into())
@@ -794,8 +793,8 @@ impl FirmwareUI for UICaesar {
             1 => {
                 let btn_layout = ButtonLayout::up_arrow_none_text(TR::buttons__back_up.into());
                 let btn_actions = ButtonActions::prev_none_confirm();
-                let ops =
-                    OpTextLayout::new(theme::TEXT_NORMAL).text_normal(TR::backup__recover_anytime);
+                let ops = OpTextLayout::new(theme::TEXT_NORMAL)
+                    .text(TR::backup__recover_anytime, fonts::FONT_NORMAL);
                 let formatted = FormattedText::new(ops).vertically_centered();
                 Page::new(btn_layout, btn_actions, formatted)
                     .with_title(TR::backup__title_backup_wallet.into())
@@ -1070,12 +1069,12 @@ impl FirmwareUI for UICaesar {
             let btn_layout = ButtonLayout::arrow_none_text(TR::buttons__quit.into());
             let btn_actions = ButtonActions::cancel_none_confirm();
             let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-                .text_bold_upper(title)
+                .text(title, fonts::FONT_BOLD_UPPER)
                 .newline()
                 .newline_half()
-                .text_normal(TR::addr_mismatch__contact_support_at)
+                .text(TR::addr_mismatch__contact_support_at, fonts::FONT_NORMAL)
                 .newline()
-                .text_bold(TR::addr_mismatch__support_url);
+                .text(TR::addr_mismatch__support_url, fonts::FONT_BOLD);
             let formatted = FormattedText::new(ops);
             Page::new(btn_layout, btn_actions, formatted)
         };
@@ -1172,7 +1171,8 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(Connect::new(text, theme::FG, theme::BG));
+        let layout =
+            RootComponent::new(Connect::new(text, fonts::FONT_NORMAL, theme::FG, theme::BG));
         Ok(layout)
     }
 
@@ -1192,13 +1192,13 @@ impl FirmwareUI for UICaesar {
             let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
             ops = ops.alignment(geometry::Alignment::Center);
             if !value.is_empty() {
-                ops = ops.text_bold_upper(value);
+                ops = ops.text(value, fonts::FONT_BOLD_UPPER);
                 if !description.is_empty() {
                     ops = ops.newline();
                 }
             }
             if !description.is_empty() {
-                ops = ops.text_normal(description);
+                ops = ops.text(description, fonts::FONT_NORMAL);
             }
             let formatted = FormattedText::new(ops).vertically_centered();
             Page::new(btn_layout, btn_actions, formatted)
@@ -1327,7 +1327,7 @@ fn tutorial_screen(
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
 ) -> Page {
-    let ops = OpTextLayout::new(theme::TEXT_NORMAL).text_normal(text);
+    let ops = OpTextLayout::new(theme::TEXT_NORMAL).text(text, fonts::FONT_NORMAL);
     let formatted = FormattedText::new(ops).vertically_centered();
     Page::new(btn_layout, btn_actions, formatted).with_title(title)
 }

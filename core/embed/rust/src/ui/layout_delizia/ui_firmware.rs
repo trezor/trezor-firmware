@@ -20,7 +20,7 @@ use crate::{
             },
             Border, CachedJpeg, ComponentExt, Empty, FormattedText, Never, Timeout,
         },
-        geometry::{self, Direction},
+        geometry::{self, Direction, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{PropsList, RecoveryType},
@@ -42,7 +42,7 @@ use super::{
         self, new_confirm_action_simple, ConfirmActionExtra, ConfirmActionMenuStrings,
         ConfirmActionStrings, ConfirmValue, ShowInfoParams,
     },
-    theme, UIDelizia,
+    fonts, theme, UIDelizia,
 };
 
 impl FirmwareUI for UIDelizia {
@@ -223,14 +223,14 @@ impl FirmwareUI for UIDelizia {
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
         for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
-                ops = ops.text_normal(TString::try_from(item)?)
+                ops = ops.text(TString::try_from(item)?, fonts::FONT_NORMAL)
             } else {
                 let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: TString = text.try_into()?;
                 if emphasis.try_into()? {
-                    ops = ops.text_demibold(text);
+                    ops = ops.text(text, fonts::FONT_DEMIBOLD);
                 } else {
-                    ops = ops.text_normal(text);
+                    ops = ops.text(text, fonts::FONT_NORMAL);
                 }
             }
         }
@@ -803,7 +803,11 @@ impl FirmwareUI for UIDelizia {
                 .with_spacing(theme::CHECKLIST_SPACING),
         )
         .with_check_width(theme::CHECKLIST_CHECK_WIDTH)
-        .with_numerals()
+        .with_numerals(fonts::FONT_SUB)
+        .with_numeral_offset(Offset::new(
+            4,
+            fonts::FONT_DEMIBOLD.visible_text_height("1"),
+        ))
         .with_icon_done_color(theme::GREEN)
         .with_done_offset(theme::CHECKLIST_DONE_OFFSET);
 
@@ -1068,7 +1072,12 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(Connect::new(text, theme::FG, theme::BG));
+        let layout = RootComponent::new(Connect::new(
+            text,
+            fonts::FONT_DEMIBOLD,
+            theme::FG,
+            theme::BG,
+        ));
         Ok(layout)
     }
 

@@ -5,7 +5,7 @@ use crate::{
         component::{
             text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
         },
-        display::{font, Font},
+        display::Font,
         geometry::{Alignment, Offset, Rect},
         shape::{self, Renderer},
     },
@@ -15,14 +15,14 @@ use heapless::Vec;
 #[cfg(feature = "ui_debug")]
 use ufmt::uwrite;
 
-use super::{scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};
+use super::{super::fonts, scrollbar::SCROLLBAR_SPACE, theme, ScrollBar};
 
 const WORDS_PER_PAGE: usize = 3;
 const EXTRA_LINE_HEIGHT: i16 = -2;
 const NUMBER_X_OFFSET: i16 = 0;
 const WORD_X_OFFSET: i16 = 25;
-const NUMBER_FONT: Font = font::FONT_DEMIBOLD;
-const WORD_FONT: Font = font::FONT_BIG;
+const NUMBER_FONT: Font = fonts::FONT_DEMIBOLD;
+const WORD_FONT: Font = fonts::FONT_BIG;
 const INFO_TOP_OFFSET: i16 = 20;
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
@@ -81,7 +81,7 @@ impl<'a> ShareWords<'a> {
             target,
             self.area.split_top(INFO_TOP_OFFSET).1,
             final_text.as_str().into(),
-            font::FONT_NORMAL,
+            fonts::FONT_NORMAL,
             theme::FG,
             theme::BG,
             Alignment::Start,
@@ -104,13 +104,11 @@ impl<'a> ShareWords<'a> {
             let base = self.area.top_left() + Offset::y(y_offset);
 
             let ordinal_txt = uformat!("{}.", ordinal);
-            shape::Text::new(base + Offset::x(NUMBER_X_OFFSET), &ordinal_txt)
-                .with_font(NUMBER_FONT)
+            shape::Text::new(base + Offset::x(NUMBER_X_OFFSET), &ordinal_txt, NUMBER_FONT)
                 .with_fg(theme::FG)
                 .render(target);
             word.map(|w| {
-                shape::Text::new(base + Offset::x(WORD_X_OFFSET), w)
-                    .with_font(WORD_FONT)
+                shape::Text::new(base + Offset::x(WORD_X_OFFSET), w, WORD_FONT)
                     .with_fg(theme::FG)
                     .render(target);
             });

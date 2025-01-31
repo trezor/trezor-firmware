@@ -2,13 +2,13 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
-        display::{font, Font},
+        display::Font,
         geometry::{Offset, Rect},
         shape::{self, Renderer},
     },
 };
 
-use super::super::theme;
+use super::super::{fonts, theme};
 
 use heapless::Vec;
 #[cfg(feature = "ui_debug")]
@@ -16,7 +16,7 @@ use ufmt::uwrite;
 
 const WORDS_PER_PAGE: usize = 4;
 const TOP_PADDING_OFFSET: i16 = 13;
-const WORD_FONT: Font = font::FONT_MONO;
+const WORD_FONT: Font = fonts::FONT_MONO;
 const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 
 /// Showing the given share words.
@@ -75,8 +75,7 @@ impl<'a> Component for ShareWords<'a> {
                 } else {
                     uformat!(" {}. {}", ordinal, w)
                 };
-                shape::Text::new(base, &text_fmt)
-                    .with_font(WORD_FONT)
+                shape::Text::new(base, &text_fmt, WORD_FONT)
                     .with_fg(theme::FG)
                     .render(target);
             });

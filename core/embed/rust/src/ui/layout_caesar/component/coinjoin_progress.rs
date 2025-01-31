@@ -9,7 +9,6 @@ use crate::{
             text::util::{text_multiline, text_multiline_bottom},
             Component, Event, EventCtx,
         },
-        display::font,
         geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
         shape,
         shape::Renderer,
@@ -17,7 +16,7 @@ use crate::{
     },
 };
 
-use super::super::{cshape, theme};
+use super::super::{cshape, fonts, theme};
 
 const FOOTER_TEXT_MARGIN: i16 = 8;
 const LOADER_OFFSET: i16 = -15;
@@ -88,7 +87,7 @@ impl Component for CoinJoinProgress {
                 target,
                 self.area,
                 TR::coinjoin__title_progress.into(),
-                font::FONT_BOLD,
+                fonts::FONT_BOLD,
                 theme::FG,
                 theme::BG,
                 Alignment::Center,
@@ -111,7 +110,7 @@ impl Component for CoinJoinProgress {
             target,
             self.area,
             TR::coinjoin__do_not_disconnect.into(),
-            font::FONT_BOLD,
+            fonts::FONT_BOLD,
             theme::FG,
             theme::BG,
             Alignment::Center,
@@ -121,7 +120,7 @@ impl Component for CoinJoinProgress {
                 target,
                 rest.inset(Insets::bottom(FOOTER_TEXT_MARGIN)),
                 self.text,
-                font::FONT_NORMAL,
+                fonts::FONT_NORMAL,
                 theme::FG,
                 theme::BG,
                 Alignment::Center,

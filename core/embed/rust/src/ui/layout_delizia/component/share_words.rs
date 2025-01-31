@@ -94,8 +94,7 @@ impl<'a> ShareWords<'a> {
         let word_baseline =
             area.center() + Offset::y(theme::TEXT_SUPER.text_font.visible_text_height("A") / 2);
         word.map(|w| {
-            shape::Text::new(word_baseline, w)
-                .with_font(theme::TEXT_SUPER.text_font)
+            shape::Text::new(word_baseline, w, theme::TEXT_SUPER.text_font)
                 .with_align(Alignment::Center)
                 .render(target);
         });
@@ -207,8 +206,7 @@ impl<'a> Component for ShareWords<'a> {
                     .visible_text_height("1"),
             );
         let ordinal = uformat!("{}.", ordinal_val);
-        shape::Text::new(ordinal_pos, &ordinal)
-            .with_font(theme::TEXT_SUB_GREY_LIGHT.text_font)
+        shape::Text::new(ordinal_pos, &ordinal, theme::TEXT_SUB_GREY_LIGHT.text_font)
             .with_fg(theme::GREY)
             .render(target);
 

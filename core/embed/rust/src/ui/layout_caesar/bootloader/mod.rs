@@ -6,7 +6,7 @@ use crate::{
         component::{connect::Connect, Label, LineBreaking::BreakWordsNoHyphen},
         constant,
         constant::{HEIGHT, SCREEN},
-        display::{self, font, Color, Icon},
+        display::{self, Color, Icon},
         geometry::{Alignment2D, Offset, Point},
         layout::simplified::{run, show, ReturnToC},
     },
@@ -17,7 +17,7 @@ use super::{
         bl_confirm::{Confirm, ConfirmMsg},
         ResultScreen, WelcomeScreen,
     },
-    cshape,
+    cshape, fonts,
     theme::{
         bootloader::{BLD_BG, BLD_FG, ICON_ALERT, ICON_SPINNER, ICON_SUCCESS},
         ICON_ARM_LEFT, ICON_ARM_RIGHT, TEXT_BOLD, TEXT_NORMAL,
@@ -74,15 +74,13 @@ impl UICaesar {
                     .render(target);
             }
 
-            shape::Text::new(SCREEN.center() + Offset::y(8), text)
+            shape::Text::new(SCREEN.center() + Offset::y(8), text, fonts::FONT_BOLD)
                 .with_align(Alignment::Center)
-                .with_font(font::FONT_BOLD)
                 .with_fg(fg_color)
                 .render(target);
 
-            shape::Text::new(SCREEN.center() + Offset::y(20), text2)
+            shape::Text::new(SCREEN.center() + Offset::y(20), text2, fonts::FONT_BOLD)
                 .with_align(Alignment::Center)
-                .with_font(font::FONT_BOLD)
                 .with_fg(fg_color)
                 .render(target);
         });
@@ -276,7 +274,7 @@ impl BootloaderUI for UICaesar {
     }
 
     fn screen_connect(_initial_setup: bool) {
-        let mut frame = Connect::new("Waiting for host...", BLD_FG, BLD_BG);
+        let mut frame = Connect::new("Waiting for host...", fonts::FONT_NORMAL, BLD_FG, BLD_BG);
         show(&mut frame, false);
     }
 
@@ -324,9 +322,8 @@ impl BootloaderUI for UICaesar {
             // Draw vendor string if present
             if let Some(text) = vendor_str {
                 let pos = Point::new(constant::WIDTH / 2, 36);
-                shape::Text::new(pos, text)
+                shape::Text::new(pos, text, fonts::FONT_NORMAL)
                     .with_align(Alignment::Center)
-                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG) //COLOR_BL_BG
                     .render(target);
 
@@ -341,9 +338,8 @@ impl BootloaderUI for UICaesar {
                     version[2]
                 ));
 
-                shape::Text::new(pos, version_text.as_str())
+                shape::Text::new(pos, version_text.as_str(), fonts::FONT_NORMAL)
                     .with_align(Alignment::Center)
-                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG)
                     .render(target);
             }
@@ -356,15 +352,14 @@ impl BootloaderUI for UICaesar {
                     unwrap!(uwrite!(text, "starting in {} s", wait));
 
                     let pos = Point::new(constant::WIDTH / 2, HEIGHT - 5);
-                    shape::Text::new(pos, text.as_str())
+                    shape::Text::new(pos, text.as_str(), fonts::FONT_NORMAL)
                         .with_align(Alignment::Center)
-                        .with_font(font::FONT_NORMAL)
                         .with_fg(BLD_FG)
                         .render(target);
                 }
                 core::cmp::Ordering::Less => {
                     let pos = Point::new(constant::WIDTH / 2, HEIGHT - 2);
-                    shape::Text::new(pos, "CONTINUE")
+                    shape::Text::new(pos, "CONTINUE", fonts::FONT_NORMAL)
                         .with_align(Alignment::Center)
                         .with_fg(BLD_FG)
                         .render(target);

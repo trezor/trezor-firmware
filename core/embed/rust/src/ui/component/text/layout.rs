@@ -511,16 +511,14 @@ where
     R: Renderer<'s>,
 {
     fn text(&mut self, cursor: Point, layout: &TextLayout, text: &str) {
-        shape::Text::new(cursor, text)
-            .with_font(layout.style.text_font)
+        shape::Text::new(cursor, text, layout.style.text_font)
             .with_fg(layout.style.text_color)
             .with_alpha(self.alpha)
             .render(self.renderer);
     }
 
     fn hyphen(&mut self, cursor: Point, layout: &TextLayout) {
-        shape::Text::new(cursor, "-")
-            .with_font(layout.style.text_font)
+        shape::Text::new(cursor, "-", layout.style.text_font)
             .with_fg(layout.style.hyphen_color)
             .with_alpha(self.alpha)
             .render(self.renderer);
@@ -535,8 +533,7 @@ where
                 .with_alpha(self.alpha)
                 .render(self.renderer);
         } else {
-            shape::Text::new(cursor, ELLIPSIS)
-                .with_font(layout.style.text_font)
+            shape::Text::new(cursor, ELLIPSIS, layout.style.text_font)
                 .with_fg(layout.style.ellipsis_color)
                 .with_alpha(self.alpha)
                 .render(self.renderer);
@@ -551,8 +548,7 @@ where
                 .with_alpha(self.alpha)
                 .render(self.renderer);
         } else {
-            shape::Text::new(cursor, ELLIPSIS)
-                .with_font(layout.style.text_font)
+            shape::Text::new(cursor, ELLIPSIS, layout.style.text_font)
                 .with_fg(layout.style.ellipsis_color)
                 .with_alpha(self.alpha)
                 .render(self.renderer);

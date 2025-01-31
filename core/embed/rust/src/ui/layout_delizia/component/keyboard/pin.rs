@@ -10,7 +10,6 @@ use crate::{
             text::TextStyle,
             Component, Event, EventCtx, Label, Never, Pad, Timer,
         },
-        display::font::FONT_MONO,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Direction, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
@@ -27,6 +26,7 @@ use super::super::super::{
         theme,
     },
     cshape,
+    fonts::FONT_MONO,
 };
 
 pub enum PinKeyboardMsg {
@@ -609,16 +609,14 @@ impl PinDots {
         let digits = self.digits.len();
 
         if digits <= MAX_VISIBLE_DIGITS {
-            shape::Text::new(left, &self.digits)
+            shape::Text::new(left, &self.digits, FONT_MONO)
                 .with_align(Alignment::Start)
-                .with_font(FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         } else {
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
-            shape::Text::new(left, &self.digits[offset..])
+            shape::Text::new(left, &self.digits[offset..], FONT_MONO)
                 .with_align(Alignment::Start)
-                .with_font(FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         }
@@ -669,9 +667,8 @@ impl PinDots {
         if last_digit && digits > 0 {
             let last = &self.digits[(digits - 1)..digits];
             cursor.y = area.left_center().y + (FONT_MONO.visible_text_height("1") / 2);
-            shape::Text::new(cursor, last)
+            shape::Text::new(cursor, last, FONT_MONO)
                 .with_align(Alignment::Start)
-                .with_font(FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         } else {

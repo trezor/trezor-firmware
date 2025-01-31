@@ -1,5 +1,5 @@
 use crate::ui::{
-    display::{font::FONT_NORMAL, Color, Font},
+    display::{Color, Font},
     geometry::{Alignment, Offset, Point, Rect},
 };
 
@@ -28,13 +28,13 @@ pub struct Text<'a> {
 impl<'a> Text<'a> {
     /// Creates a `shape::Text` structure with a specified
     /// text (`str`) and the bottom-left corner (`pos`).
-    pub fn new(pos: Point, text: &'a str) -> Self {
+    pub fn new(pos: Point, text: &'a str, font: Font) -> Self {
         Self {
             pos,
             text,
             color: Color::white(),
             alpha: 255,
-            font: FONT_NORMAL,
+            font,
             align: Alignment::Start,
             bounds: Rect::zero(),
         }
@@ -42,10 +42,6 @@ impl<'a> Text<'a> {
 
     pub fn with_fg(self, color: Color) -> Self {
         Self { color, ..self }
-    }
-
-    pub fn with_font(self, font: Font) -> Self {
-        Self { font, ..self }
     }
 
     pub fn with_align(self, align: Alignment) -> Self {

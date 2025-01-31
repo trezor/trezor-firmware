@@ -142,16 +142,14 @@ impl Component for Bip39Input {
         };
 
         // Render text input + suggested completion
-        shape::Text::new(text_base, text)
-            .with_font(style.font)
+        shape::Text::new(text_base, text, style.font)
             .with_fg(style.text_color)
             .with_align(Alignment::Start)
             .render(target);
         if let Some(word) = self.suggested_word.and_then(|w| w.get(text.len()..)) {
             let word_baseline = text_base + Offset::x(width);
             let style = self.button_suggestion.style();
-            shape::Text::new(word_baseline, word)
-                .with_font(style.font)
+            shape::Text::new(word_baseline, word, style.font)
                 .with_fg(style.text_color)
                 .with_align(Alignment::Start)
                 .render(target);

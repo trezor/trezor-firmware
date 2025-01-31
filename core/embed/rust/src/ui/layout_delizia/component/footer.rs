@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Never},
-        display::{font::FONT_SUB, Color, Font},
+        display::{Color, Font},
         event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Direction, Offset, Point, Rect},
         lerp::Lerp,
@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-use super::theme;
+use super::{super::fonts::FONT_SUB, theme};
 
 /// Component showing a task instruction, e.g. "Swipe up", and an optional
 /// content consisting of one of these:
@@ -278,11 +278,14 @@ impl<'a> FooterContent<'a> {
             area_description.bottom_center() - Offset::y(text_description_font_descent);
 
         description.map(|t| {
-            Text::new(text_description_baseline, t)
-                .with_font(Footer::STYLE_DESCRIPTION.text_font)
-                .with_fg(Footer::STYLE_DESCRIPTION.text_color)
-                .with_align(Alignment::Center)
-                .render(target)
+            Text::new(
+                text_description_baseline,
+                t,
+                Footer::STYLE_DESCRIPTION.text_font,
+            )
+            .with_fg(Footer::STYLE_DESCRIPTION.text_color)
+            .with_align(Alignment::Center)
+            .render(target)
         });
     }
 
@@ -299,11 +302,14 @@ impl<'a> FooterContent<'a> {
         let text_instruction_baseline =
             area_instruction.bottom_center() - Offset::y(text_instruction_font_descent);
         instruction.map(|t| {
-            Text::new(text_instruction_baseline, t)
-                .with_font(Footer::STYLE_INSTRUCTION.text_font)
-                .with_fg(Footer::STYLE_INSTRUCTION.text_color)
-                .with_align(Alignment::Center)
-                .render(target)
+            Text::new(
+                text_instruction_baseline,
+                t,
+                Footer::STYLE_INSTRUCTION.text_font,
+            )
+            .with_fg(Footer::STYLE_INSTRUCTION.text_color)
+            .with_align(Alignment::Center)
+            .render(target)
         });
     }
 }
@@ -369,19 +375,17 @@ impl PageCounter {
         let base_foreslash = Point::new(counter_start_x + width_num_curr + offset_x.x, counter_y);
         let base_num_max = Point::new(counter_end_x, counter_y);
 
-        Text::new(base_num_curr, &string_curr)
+        Text::new(base_num_curr, &string_curr, self.font)
             .with_align(Alignment::Start)
             .with_fg(color)
-            .with_font(self.font)
             .render(target);
         shape::ToifImage::new(base_foreslash, theme::ICON_FORESLASH.toif)
             .with_align(Alignment2D::BOTTOM_LEFT)
             .with_fg(color)
             .render(target);
-        Text::new(base_num_max, &string_max)
+        Text::new(base_num_max, &string_max, self.font)
             .with_align(Alignment::End)
             .with_fg(color)
-            .with_font(self.font)
             .render(target);
 
         FooterContent::render_instruction(target, area, &self.instruction);
