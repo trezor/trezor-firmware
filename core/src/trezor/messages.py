@@ -1262,6 +1262,12 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["EraseBonds"]:
             return isinstance(msg, cls)
 
+    class Unpair(protobuf.MessageType):
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Unpair"]:
+            return isinstance(msg, cls)
+
     class Disconnect(protobuf.MessageType):
 
         @classmethod
