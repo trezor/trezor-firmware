@@ -389,23 +389,6 @@ def _return_success(msg: "Success") -> str | None:
     return _deprecation_retval_helper(msg.message, stacklevel=1)
 
 
-# def session(
-#     f: "Callable[Concatenate[TrezorClient, P], R]",
-# ) -> "Callable[Concatenate[TrezorClient, P], R]":
-#     # Decorator wraps a BaseClient method
-#     # with session activation / deactivation
-#     @functools.wraps(f)
-#     def wrapped_f(client: "TrezorClient", *args: "P.args", **kwargs: "P.kwargs") -> "R":
-#         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-#         client.open()
-#         try:
-#             return f(client, *args, **kwargs)
-#         finally:
-#             client.close()
-
-#     return wrapped_f
-
-
 # de-camelcasifier
 # https://stackoverflow.com/a/1176023/222189
 

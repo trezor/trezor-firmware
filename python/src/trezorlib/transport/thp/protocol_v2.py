@@ -6,7 +6,6 @@ import logging
 import os
 import typing as t
 from binascii import hexlify
-from enum import IntEnum
 
 import click
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -468,10 +467,3 @@ class ProtocolV2(ProtocolAndChannel):
             )
             return False
         return True
-
-    class ControlByteType(IntEnum):
-        CHANNEL_ALLOCATION_RES = 1
-        HANDSHAKE_INIT_RES = 2
-        HANDSHAKE_COMP_RES = 3
-        ACK = 4
-        ENCRYPTED_TRANSPORT = 5

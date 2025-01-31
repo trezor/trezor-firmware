@@ -226,7 +226,6 @@ def cli_main(
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
-    # ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
     ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
 
     # Optionally record the screen into a specified directory.
@@ -299,7 +298,7 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
     if no_resolve:
         for d in enumerate_devices():
-            print(d.get_path())
+            click.echo(d.get_path())
         return
 
     from . import get_client
@@ -358,7 +357,6 @@ def get_session(
     obj.session_id = None
 
     with obj.client_context() as client:
-
         if client.features.model == "1" and client.version < (1, 9, 0):
             raise click.ClickException(
                 "Upgrade your firmware to enable session support."

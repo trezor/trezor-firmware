@@ -71,7 +71,7 @@ def set_language(session: Session, lang: str):
         language_data = build_and_sign_blob(lang, session)
     with session:
         device.change_language(session, language_data)  # type: ignore
-
+    _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 def get_lang_json(lang: str) -> translations.JsonDef:
     assert lang in LANGUAGES

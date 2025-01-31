@@ -1,6 +1,6 @@
 # This file is part of the Trezor project.
 #
-# Copyright (C) 2012-2024 SatoshiLabs and contributors
+# Copyright (C) 2012-2022 SatoshiLabs and contributors
 #
 # This library is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License version 3
@@ -111,9 +111,7 @@ class UnstructuredJSONReader:
     def top_level_value(self, key: str) -> t.Any:
         return self.dict.get(key)
 
-    def find_objects_with_key_and_value(
-        self, key: str, value: t.Any
-    ) -> list["AnyDict"]:
+    def find_objects_with_key_and_value(self, key: str, value: t.Any) -> list[AnyDict]:
         def recursively_find(data: t.Any) -> t.Iterator[t.Any]:
             if isinstance(data, dict):
                 if data.get(key) == value:
@@ -430,7 +428,6 @@ def _make_input_func(
 
 
 class DebugLink:
-
     def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
         self.transport = transport
         self.allow_interactions = auto_interact
@@ -536,10 +533,7 @@ class DebugLink:
         self._write(msg)
         return self._read()
 
-    def state(
-        self,
-        wait_type: DebugWaitType | None = None,
-    ) -> messages.DebugLinkState:
+    def state(self, wait_type: DebugWaitType | None = None) -> messages.DebugLinkState:
         if wait_type is None:
             wait_type = (
                 DebugWaitType.CURRENT_LAYOUT
@@ -1040,7 +1034,6 @@ class MessageFilter:
 
 
 class MessageFilterGenerator:
-
     def __getattr__(self, key: str) -> t.Callable[..., "MessageFilter"]:
         message_type = getattr(messages, key)
         return MessageFilter(message_type).update_fields
@@ -1320,6 +1313,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.reset_debug_features(new_management_session=True)
         self.sync_responses()
+
         # So that we can choose right screenshotting logic (T1 vs TT)
         # and know the supported debug capabilities
         self.debug.model = self.model
@@ -1340,7 +1334,6 @@ class TrezorClientDebugLink(TrezorClient):
         Clears all debugging state that might have been modified by a testcase.
         """
         self.ui: DebugUI = DebugUI(self.debug)
-        # self.pin_callback = self.ui.debug_callback_button
         self.in_with_statement = False
         self.expected_responses: list[MessageFilter] | None = None
         self.actual_responses: list[protobuf.MessageType] | None = None
