@@ -139,6 +139,17 @@ STATIC mp_obj_t mod_trezorio_BLE_erase_bonds(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_erase_bonds_obj,
                                  mod_trezorio_BLE_erase_bonds);
 
+/// def unpair() -> bool:
+///     """
+///     Erases bond for current connection, if any
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_unpair(void) {
+  ble_command_t cmd = {.cmd_type = BLE_UNPAIR, .data_len = 0};
+  return mp_obj_new_bool(ble_issue_command(&cmd));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_unpair_obj,
+                                 mod_trezorio_BLE_unpair);
+
 /// def start_comm() -> bool:
 ///     """
 ///     Start communication with BLE chip
@@ -237,6 +248,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_BLE_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_erase_bonds),
      MP_ROM_PTR(&mod_trezorio_BLE_erase_bonds_obj)},
+    {MP_ROM_QSTR(MP_QSTR_unpair), MP_ROM_PTR(&mod_trezorio_BLE_unpair_obj)},
     {MP_ROM_QSTR(MP_QSTR_start_comm),
      MP_ROM_PTR(&mod_trezorio_BLE_start_comm_obj)},
     {MP_ROM_QSTR(MP_QSTR_start_advertising),
