@@ -107,6 +107,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_get_cpuid.c',
     'embed/projects/prodtest/cmd/prodtest_haptic.c',
     'embed/projects/prodtest/cmd/prodtest_help.c',
+    'embed/projects/prodtest/cmd/prodtest_nfc.c',
     'embed/projects/prodtest/cmd/prodtest_optiga.c',
     'embed/projects/prodtest/cmd/prodtest_otp_batch.c',
     'embed/projects/prodtest/cmd/prodtest_otp_variant.c',

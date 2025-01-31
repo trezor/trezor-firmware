@@ -16,7 +16,6 @@
 #include "../rfal/include/rfal_rf.h"
 #include "../rfal/include/rfal_t2t.h"
 #include "../rfal/include/rfal_utils.h"
-#include "prodtest_common.h"
 
 #include "stm32u5xx_hal.h"
 
