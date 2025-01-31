@@ -17,10 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include <trezor_types.h>
+#include "protob.h"
+#include "workflow.h"
 
-#undef FIRMWARE_START
-
-extern uint8_t *FIRMWARE_START;
+workflow_result_t workflow_ping(protob_io_t *iface) {
+  Ping msg_recv;
+  if (sectrue != recv_msg_ping(iface, &msg_recv)) {
+    return WF_ERROR;
+  }
+  send_msg_success(iface, msg_recv.message);
+  return WF_OK;
+}
