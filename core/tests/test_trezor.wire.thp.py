@@ -324,7 +324,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         async def _dummy(ctx: PairingContext, expected_types):
             return await ctx.read([1018, 1024])
 
-        pairing.show_display_data = _dummy
+        # pairing.show_display_data = _dummy
 
         msg_code_entry = ThpCodeEntryChallenge(challenge=b"\x12\x34")
         buffer: bytearray = bytearray(protobuf.encoded_length(msg_code_entry))
