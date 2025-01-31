@@ -299,8 +299,8 @@ if __debug__:
         return DebugLinkPairingInfo(
             channel_id=ctx.channel_id,
             handshake_hash=ctx.channel_ctx.get_handshake_hash(),
-            code_entry_code=ctx.display_data.code_code_entry,
-            code_qr_code=ctx.display_data.code_qr_code,
+            code_entry_code=ctx.code_code_entry,
+            code_qr_code=ctx.code_qr_code,
             nfc_secret_trezor=ctx.nfc_secret,
         )
 

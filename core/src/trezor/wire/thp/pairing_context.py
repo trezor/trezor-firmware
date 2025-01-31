@@ -13,7 +13,6 @@ from trezor.wire.thp import ChannelState, get_enabled_pairing_methods
 if TYPE_CHECKING:
     from typing import Awaitable, Container
 
-    from trezor import ui
     from trezor.enums import ThpPairingMethod
     from trezorui_api import UiResult
 
@@ -24,54 +23,6 @@ if TYPE_CHECKING:
 
 if __debug__:
     from trezor import log
-
-
-class PairingDisplayData:
-
-    def __init__(self) -> None:
-        self.code_code_entry: int | None = None
-        self.code_qr_code: bytes | None = None
-        self.code_nfc: bytes | None = None
-
-    def get_display_layout(self) -> ui.Layout:
-        from trezor import ui
-
-        # TODO have different layouts when there is only QR code or only Code Entry
-        qr_str = ""
-        code_str = ""
-        if self.code_qr_code is not None:
-            qr_str = self.get_code_qr_code_str()
-        if self.code_code_entry is not None:
-            code_str = self.get_code_code_entry_str()
-
-        return ui.Layout(
-            trezorui_api.show_address_details(  # noqa
-                qr_title="Scan QR code to pair",
-                address=qr_str,
-                case_sensitive=True,
-                details_title="",
-                account="Code to rewrite:\n" + code_str,
-                path="",
-                xpubs=[],
-            )
-        )
-
-    def get_code_code_entry_str(self) -> str:
-        if self.code_code_entry is not None:
-            code_str = f"{self.code_code_entry:06}"
-            if __debug__:
-                log.debug(__name__, "code_code_entry: %s", code_str)
-
-            return code_str[:3] + " " + code_str[3:]
-        raise Exception("Code entry string is not available")
-
-    def get_code_qr_code_str(self) -> str:
-        if self.code_qr_code is not None:
-            code_str = (hexlify(self.code_qr_code)).decode("utf-8")
-            if __debug__:
-                log.debug(__name__, "code_qr_code_hexlified: %s", code_str)
-            return code_str
-        raise Exception("QR code string is not available")
 
 
 class PairingContext(Context):
@@ -86,11 +37,13 @@ class PairingContext(Context):
 
         self.selected_method: ThpPairingMethod
 
+        self.code_code_entry: int | None = None
+        self.code_qr_code: bytes | None = None
+        self.code_nfc: bytes | None = None
         # The 2 following attributes are important for NFC pairing
         self.nfc_secret_host: bytes | None = None
         self.handshake_hash_host: bytes | None = None
 
-        self.display_data: PairingDisplayData = PairingDisplayData()
         self.cpace: Cpace
         self.host_name: str | None
 
@@ -117,25 +70,19 @@ class PairingContext(Context):
                 try:
                     next_message = await handle_message(self, message)
                 except Exception as exc:
-                    # Log and ignore. The session handler can only exit explicitly in the
+                    # Log and ignore. The context handler can only exit explicitly in the
                     # following finally block.
                     if __debug__:
                         log.exception(__name__, exc)
                 finally:
-                    # Unload modules imported by the workflow.  Should not raise.
-                    # This is not done for the debug session because the snapshot taken
-                    # in a debug session would clear modules which are in use by the
-                    # workflow running on wire.
-                    # TODO utils.unimport_end(modules)
-
                     if next_message is None:
 
                         # Shut down the loop if there is no next message waiting.
                         return  # pylint: disable=lost-exception
 
             except Exception as exc:
-                # Log and try again. The session handler can only exit explicitly via
-                # loop.clear() above. # TODO not updated comments
+                # Log and try again. The context handler can only exit explicitly via
+                # finally block above
                 if __debug__:
                     log.exception(__name__, exc)
 
@@ -236,45 +183,75 @@ class PairingContext(Context):
         self, selected_method: ThpPairingMethod | None = None
     ) -> UiResult:
         from trezor.enums import ThpPairingMethod
-        from trezor.ui.layouts.common import interact
 
         if selected_method is None:
             selected_method = self.selected_method
         if selected_method is ThpPairingMethod.CodeEntry:
-            result = await interact(
-                trezorui_api.show_simple(
-                    title="Copy the following",
-                    text=self.display_data.get_code_code_entry_str(),
-                ),
-                br_name="pairing_code_entry",
-                br_code=ButtonRequestType.Other,
-            )
-        elif selected_method is ThpPairingMethod.QrCode:
-            result = await interact(
-                trezorui_api.show_address_details(  # noqa
-                    qr_title="Scan QR code to pair",
-                    address=self.display_data.get_code_qr_code_str(),
-                    case_sensitive=True,
-                    details_title="",
-                    account="",
-                    path="",
-                    xpubs=[],
-                ),
-                br_name="pairing_qr_code",
-                br_code=ButtonRequestType.Other,
-            )
+            return await self._show_code_entry_screen()
         elif selected_method is ThpPairingMethod.NFC:
-            result = await interact(
-                trezorui_api.show_simple(
-                    title="NFC Pairing",
-                    text="Move your device close to Trezor",
-                ),
-                br_name="pairing_nfc",
-                br_code=ButtonRequestType.Other,
-            )
+            return await self._show_nfc_screen()
+        elif selected_method is ThpPairingMethod.QrCode:
+            return await self._show_qr_code_screen()
         else:
             raise Exception("Unknown pairing method")
-        return result
+
+    async def _show_code_entry_screen(self) -> UiResult:
+        from trezor.ui.layouts.common import interact
+
+        return await interact(
+            trezorui_api.show_simple(
+                title="Copy the following",
+                text=self._get_code_code_entry_str(),
+            ),
+            br_name="pairing_code_entry",
+            br_code=ButtonRequestType.Other,
+        )
+
+    async def _show_nfc_screen(self) -> UiResult:
+        from trezor.ui.layouts.common import interact
+
+        return await interact(
+            trezorui_api.show_simple(
+                title="NFC Pairing",
+                text="Move your device close to Trezor",
+            ),
+            br_name="pairing_nfc",
+            br_code=ButtonRequestType.Other,
+        )
+
+    async def _show_qr_code_screen(self) -> UiResult:
+        from trezor.ui.layouts.common import interact
+
+        return await interact(
+            trezorui_api.show_address_details(  # noqa
+                qr_title="Scan QR code to pair",
+                address=self._get_code_qr_code_str(),
+                case_sensitive=True,
+                details_title="",
+                account="",
+                path="",
+                xpubs=[],
+            ),
+            br_name="pairing_qr_code",
+            br_code=ButtonRequestType.Other,
+        )
+
+    def _get_code_code_entry_str(self) -> str:
+        if self.code_code_entry is not None:
+            code_str = f"{self.code_code_entry:06}"
+            if __debug__:
+                log.debug(__name__, "code_code_entry: %s", code_str)
+
+            return code_str[:3] + " " + code_str[3:]
+        raise Exception("Code entry string is not available")
+
+    def _get_code_qr_code_str(self) -> str:
+        if self.code_qr_code is not None:
+            code_str = (hexlify(self.code_qr_code)).decode("utf-8")
+            if __debug__:
+                log.debug(__name__, "code_qr_code_hexlified: %s", code_str)
+            return code_str
+        raise Exception("QR code string is not available")
 
 
 async def handle_message(

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
-from trezor import loop, protobuf
+from trezor import protobuf
 from trezor.crypto import random
 from trezor.crypto.hashlib import sha256
 from trezor.enums import ThpMessageType, ThpPairingMethod
@@ -27,7 +27,7 @@ from trezor.messages import (
 )
 from trezor.wire import message_handler
 from trezor.wire.context import UnexpectedMessageException
-from trezor.wire.errors import ActionCancelled, SilentError, UnexpectedMessage
+from trezor.wire.errors import SilentError, UnexpectedMessage
 from trezor.wire.thp import ChannelState, ThpError, crypto, get_enabled_pairing_methods
 from trezor.wire.thp.pairing_context import PairingContext
 
@@ -37,7 +37,7 @@ if __debug__:
     from trezor import log
 
 if TYPE_CHECKING:
-    from typing import Any, Callable, Concatenate, Container, ParamSpec, Tuple
+    from typing import Any, Callable, Concatenate, ParamSpec, Tuple
 
     P = ParamSpec("P")
     FuncWithContext = Callable[Concatenate[PairingContext, P], Any]
@@ -186,22 +186,6 @@ async def _prepare_pairing(ctx: PairingContext) -> None:
         raise Exception()  # TODO unknown pairing method
 
 
-async def show_display_data(
-    ctx: PairingContext, expected_types: Container[int] = ()
-) -> type[protobuf.MessageType]:
-    from trezorui_api import CANCELLED
-
-    read_task = ctx.read(expected_types)
-    cancel_task = ctx.display_data.get_display_layout()
-    race = loop.race(read_task, cancel_task.get_result())
-    result: type[protobuf.MessageType] = await race
-
-    if result is CANCELLED:
-        raise ActionCancelled
-
-    return result
-
-
 @check_state_and_log(ChannelState.TP1)
 async def _handle_code_entry_is_selected(ctx: PairingContext) -> None:
     if ctx.code_entry_secret is None:
@@ -231,16 +215,12 @@ async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None
     sha_ctx.update(ctx.code_entry_secret)
     sha_ctx.update(challenge_message.challenge)
     code_code_entry_hash = sha_ctx.digest()
-    ctx.display_data.code_code_entry = (
-        int.from_bytes(code_code_entry_hash, "big") % 1000000
-    )
+    ctx.code_code_entry = int.from_bytes(code_code_entry_hash, "big") % 1000000
     ctx.cpace = Cpace(
         ctx.channel_ctx.get_handshake_hash(),
     )
-    assert ctx.display_data.code_code_entry is not None
-    ctx.cpace.generate_keys_and_secret(
-        ctx.display_data.code_code_entry.to_bytes(6, "big")
-    )
+    assert ctx.code_code_entry is not None
+    ctx.cpace.generate_keys_and_secret(ctx.code_code_entry.to_bytes(6, "big"))
     await ctx.write_force(
         ThpCodeEntryCpaceTrezor(cpace_trezor_public_key=ctx.cpace.trezor_public_key)
     )
@@ -260,7 +240,7 @@ async def _handle_qr_code_is_selected(ctx: PairingContext) -> None:
     sha_ctx.update(ctx.channel_ctx.get_handshake_hash())
     sha_ctx.update(ctx.qr_code_secret)
 
-    ctx.display_data.code_qr_code = sha_ctx.digest()[:16]
+    ctx.code_qr_code = sha_ctx.digest()[:16]
     await ctx.write_force(ThpPairingPreparationsFinished())
 
 
@@ -317,9 +297,9 @@ async def _handle_qr_code_tag(
 ) -> protobuf.MessageType:
     if TYPE_CHECKING:
         assert isinstance(message, ThpQrCodeTag)
-    assert ctx.display_data.code_qr_code is not None
+    assert ctx.code_qr_code is not None
     sha_ctx = sha256(ctx.channel_ctx.get_handshake_hash())
-    sha_ctx.update(ctx.display_data.code_qr_code)
+    sha_ctx.update(ctx.code_qr_code)
     expected_tag = sha_ctx.digest()
     if expected_tag != message.tag:
         print(
@@ -331,7 +311,7 @@ async def _handle_qr_code_tag(
         )  # TODO remove after testing
         print(
             "expected code qr code:",
-            hexlify(ctx.display_data.code_qr_code).decode(),
+            hexlify(ctx.code_qr_code).decode(),
         )  # TODO remove after testing
         print(
             "expected secret:", hexlify(ctx.qr_code_secret or b"").decode()
