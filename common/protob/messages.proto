@@ -91,6 +91,7 @@ enum MessageType {
     // BLE
     MessageType_EraseBonds = 8006 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_Disconnect = 8007 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_Unpair = 8008 [(bitcoin_only) = true, (wire_in) = true];
 
     // Bitcoin
     MessageType_GetPublicKey = 11 [(bitcoin_only) = true, (wire_in) = true];

@@ -21,6 +21,16 @@ message EraseBonds {
 
 
 /**
+ * Request: erases bond for currently connected device
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message Unpair {
+}
+
+
+/**
  * Request: disconnect
  * @start
  * @next Success

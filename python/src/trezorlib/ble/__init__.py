@@ -48,6 +48,19 @@ def erase_bonds(
 
 
 @session
+def unpair(
+    client: "TrezorClient",
+):
+
+    resp = client.call(messages.Unpair())
+
+    if isinstance(resp, messages.Success):
+        return
+    else:
+        raise RuntimeError(f"Unexpected message {resp}")
+
+
+@session
 def disconnect(
     client: "TrezorClient",
 ):

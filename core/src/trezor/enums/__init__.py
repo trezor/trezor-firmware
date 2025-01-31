@@ -412,6 +412,7 @@ if TYPE_CHECKING:
         ProdTestT1 = 32
         EraseBonds = 8006
         Disconnect = 8007
+        Unpair = 8008
         GetPublicKey = 11
         PublicKey = 12
         SignTx = 15
