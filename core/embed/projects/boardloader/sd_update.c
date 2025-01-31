@@ -160,7 +160,13 @@ void sd_update_check_and_update(const uint8_t *const *keys, uint8_t key_m,
   }
 
   if (check_sdcard(keys, key_m, key_n) != 0) {
+#ifdef FIXED_HW_DEINIT
+    display_init(DISPLAY_RESET_CONTENT);
+#endif
     copy_sdcard(keys, key_m, key_n);
+#ifdef FIXED_HW_DEINIT
+    display_deinit(DISPLAY_RETAIN_CONTENT);
+#endif
     reboot_or_halt_after_rsod();
   }
 }
