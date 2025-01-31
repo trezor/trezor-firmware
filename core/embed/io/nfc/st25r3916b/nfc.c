@@ -34,6 +34,11 @@ typedef struct {
   SPI_HandleTypeDef hspi;
   // NFC IRQ pin callback
   void (*nfc_irq_callback)(void);
+
+  // Event callbacks
+  void(*nfc_state_idle_cb)(void);
+  void(*nfc_state_activated_cb)(void);
+
   EXTI_HandleTypeDef hEXTI;
 
   rfalNfcDiscoverParam disc_params;
@@ -42,6 +47,21 @@ typedef struct {
 static st25r3916b_driver_t g_st25r3916b_driver = {
     .initialized = false,
 };
+
+typedef struct{
+  uint8_t UID[7];
+  uint8_t BCC[1];
+  uint8_t SYSTEM_AREA[2];
+  union{
+    uint8_t CC[4];
+    struct{
+      uint8_t CC_MAGIC_NUMBER;
+      uint8_t CC_VERSION;
+      uint8_t CC_SIZE;
+      uint8_t CC_ACCESS_CONDITION;
+    };
+  };
+} nfc_device_header_t2t_t;
 
 static void parse_tag_header(uint8_t *data, uint16_t dataLen);
 
@@ -65,8 +85,6 @@ static void parse_tag_header(uint8_t *data, uint16_t dataLen);
 * GLOBAL DEFINES
 ******************************************************************************
 */
-
-
 
 /* Definition of possible states the demo state machine could have */
 #define DEMO_ST_NOTINIT 0         /*!< Demo State:  Not initialized | Stopped */
@@ -199,13 +217,10 @@ ReturnCode demoTransceiveBlocking(uint8_t *txBuf, uint16_t txBufSize,
                                   uint32_t fwt);
 
 
-
 #define MAX_HEX_STR 4
 #define MAX_HEX_STR_LENGTH 512
 char hexStr[MAX_HEX_STR][MAX_HEX_STR_LENGTH];
 uint8_t hexStrIdx = 0;
-
-
 
 char *hex2Str(unsigned char *data, size_t dataLen) {
   {
@@ -232,21 +247,6 @@ char *hex2Str(unsigned char *data, size_t dataLen) {
     return hexStr[idx];
   }
 }
-
-typedef struct{
-  uint8_t UID[7];
-  uint8_t BCC[1];
-  uint8_t SYSTEM_AREA[2];
-  union{
-    uint8_t CC[4];
-    struct{
-      uint8_t CC_MAGIC_NUMBER;
-      uint8_t CC_VERSION;
-      uint8_t CC_SIZE;
-      uint8_t CC_ACCESS_CONDITION;
-    };
-  };
-} type2_header_t;
 
 nfc_status_t nfc_init() {
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
@@ -299,8 +299,7 @@ nfc_status_t nfc_init() {
 
   drv->hspi.Instance = SPI_INSTANCE_3;
   drv->hspi.Init.Mode = SPI_MODE_MASTER;
-  drv->hspi.Init.BaudRatePrescaler =
-      SPI_BAUDRATEPRESCALER_32;  // TODO: Calculate frequency precisly.
+  drv->hspi.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;  // TODO: Calculate frequency precisly.
   drv->hspi.Init.DataSize = SPI_DATASIZE_8BIT;
   drv->hspi.Init.Direction = SPI_DIRECTION_2LINES;
   drv->hspi.Init.CLKPolarity = SPI_POLARITY_LOW;
@@ -343,6 +342,7 @@ nfc_status_t nfc_init() {
 }
 
 nfc_status_t nfc_deinit() {
+
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
 
   if (!drv->initialized) {
@@ -375,19 +375,40 @@ nfc_status_t nfc_deinit() {
   drv->initialized = false;
 
   return NFC_OK;
+
 }
 
-nfc_status_t nfc_register_card_emu(nfc_card_emul_tech_t tech) {
+void rfal_callback(rfalNfcState st){
+
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
 
-  // In case the NFC state machine is active, deactivate to idle before
-  // registering a new card emulation technology.
-  if (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
-    rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_IDLE);
-    do {
-      rfalNfcWorker();
-    } while (rfalNfcGetState() != RFAL_NFC_STATE_IDLE);
+  switch(st){
+
+    case RFAL_NFC_STATE_IDLE:
+      if(drv->nfc_state_idle_cb != NULL){
+        drv->nfc_state_idle_cb();
+      }
+      break;
+
+    case RFAL_NFC_STATE_ACTIVATED:
+      if(drv->nfc_state_activated_cb != NULL){
+        drv->nfc_state_activated_cb();
+
+        // Deactivate the device imediatly after callback
+        rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_DISCOVERY);
+
+      }
+      break;
+    default:
+      // State not reported
+      break;
   }
+
+}
+
+nfc_status_t nfc_register_tech(nfc_tech_t tech){
+
+  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
 
   drv->disc_params.devLimit = 1;
   memcpy(&drv->disc_params.nfcid3, NFCID3, sizeof(NFCID3));
@@ -395,9 +416,35 @@ nfc_status_t nfc_register_card_emu(nfc_card_emul_tech_t tech) {
   drv->disc_params.GBLen = sizeof(GB);
   drv->disc_params.p2pNfcaPrio = true;
   drv->disc_params.totalDuration = 1000U;
+  drv->disc_params.notifyCb = rfal_callback;
 
-  switch (tech) {
-    case NFC_CARD_EMU_TECH_A:
+  if(drv->initialized == false){
+    return NFC_NOT_INITIALIZED;
+  }
+
+  if (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
+    return NFC_ERROR;
+  }
+
+  // Set general discovery parameters.
+
+  if(tech & NFC_POLLER_TECH_A){
+    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_A;
+  }
+
+  if(tech & NFC_POLLER_TECH_B){
+    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_B;
+  }
+
+  if(tech & NFC_POLLER_TECH_F){
+    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_F;
+  }
+
+  if(tech & NFC_POLLER_TECH_V){
+    drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_V;
+  }
+
+  if(tech & NFC_CARD_EMU_TECH_A){
       memcpy(drv->disc_params.lmConfigPA.SENS_RES, ceNFCA_SENS_RES,
              RFAL_LM_SENS_RES_LEN); /* Set SENS_RES / ATQA */
       memcpy(drv->disc_params.lmConfigPA.nfcid, ceNFCA_NFCID,
@@ -407,19 +454,68 @@ nfc_status_t nfc_register_card_emu(nfc_card_emul_tech_t tech) {
       drv->disc_params.lmConfigPA.SEL_RES =
           ceNFCA_SEL_RES; /* Set SEL_RES / SAK */
       drv->disc_params.techs2Find |= RFAL_NFC_LISTEN_TECH_A;
+  }
+
+  if(tech & NFC_CARD_EMU_TECH_F){
+
+      /* Set configuration for NFC-F CE */
+      memcpy(drv->disc_params.lmConfigPF.SC, ceNFCF_SC,
+           RFAL_LM_SENSF_SC_LEN); /* Set System Code */
+      memcpy(&ceNFCF_SENSF_RES[RFAL_NFCF_CMD_LEN], ceNFCF_nfcid2,
+           RFAL_NFCID2_LEN); /* Load NFCID2 on SENSF_RES */
+      memcpy(drv->disc_params.lmConfigPF.SENSF_RES, ceNFCF_SENSF_RES,
+           RFAL_LM_SENSF_RES_LEN); /* Set SENSF_RES / Poll Response */
+      drv->disc_params.techs2Find |= RFAL_NFC_LISTEN_TECH_F;
+
+  }
+
+  return NFC_OK;
+
+}
+
+nfc_status_t nfc_register_event_callback(nfc_event_t event_type, void (*cb_fn)(void)){
+
+  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
+
+  switch(event_type){
+    case NFC_STATE_IDLE:
+      drv->nfc_state_idle_cb = cb_fn;
       break;
-    case NFC_CARD_EMU_TECH_V:
-      drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_V;
+    case NFC_STATE_ACTIVATED:
+      drv->nfc_state_activated_cb = cb_fn;
       break;
     default:
       return NFC_ERROR;
   }
 
   return NFC_OK;
+
 }
 
-nfc_status_t nfc_register_poller(nfc_poller_tech_t tech) {
+nfc_status_t nfc_unregister_event_callback(){
+
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
+  drv->disc_params.notifyCb = NULL;
+
+  return NFC_OK;
+
+}
+
+nfc_status_t nfc_activate_stm(){
+
+  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
+
+  ReturnCode err;
+  err = rfalNfcDiscover(&(drv->disc_params));
+  if (err != RFAL_ERR_NONE) {
+    return NFC_ERROR;
+  }
+
+  return NFC_OK;
+
+}
+
+nfc_status_t nfc_deactivate_stm(){
 
   // In case the NFC state machine is active, deactivate to idle before
   // registering a new card emulation technology.
@@ -430,45 +526,18 @@ nfc_status_t nfc_register_poller(nfc_poller_tech_t tech) {
     } while (rfalNfcGetState() != RFAL_NFC_STATE_IDLE);
   }
 
-  drv->disc_params.devLimit = 1;
-  memcpy(&drv->disc_params.nfcid3, NFCID3, sizeof(NFCID3));
-  memcpy(&drv->disc_params.GB, GB, sizeof(GB));
-  drv->disc_params.GBLen = sizeof(GB);
-  drv->disc_params.p2pNfcaPrio = true;
-  drv->disc_params.totalDuration = 1000U;
-
-  switch (tech) {
-    case NFC_POLLER_TECH_A:
-      drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_A;
-      break;
-    case NFC_POLLER_TECH_B:
-      drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_B;
-      break;
-    case NFC_POLLER_TECH_F:
-      drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_F;
-      break;
-    case NFC_POLLER_TECH_V:
-      drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_V;
-      break;
-    default:
-      return NFC_ERROR;
-  }
-
-  ReturnCode err;
-  err = rfalNfcDiscover(&drv->disc_params);
-  if (err != RFAL_ERR_NONE) {
-    return NFC_ERROR;
-  }
-
   return NFC_OK;
 }
 
-nfc_status_t nfc_run_worker() {
+
+nfc_status_t nfc_feed_worker() {
+
   static rfalNfcDevice *nfcDevice;
 
   rfalNfcWorker(); /* Run RFAL worker periodically */
 
   if (rfalNfcIsDevActivated(rfalNfcGetState())) {
+
     rfalNfcGetActiveDevice(&nfcDevice);
 
     switch (nfcDevice->type) {
@@ -511,14 +580,8 @@ nfc_status_t nfc_run_worker() {
               err = rfalT2TPollerRead(4+i*4, memory_area_data+i*16, 16 , &rcvLen);
             }
 
-            ndef_record_t record;
-            parse_ndef_record(memory_area_data+2, 160, &record);
-            vcp_println("Record payload: %s", record.payload);
-
-
-
-
-
+            ndef_message_t ndef_message;
+            parse_ndef_message(memory_area_data, 160, &ndef_message);
 
             break;
         }
@@ -577,10 +640,89 @@ nfc_status_t nfc_run_worker() {
 }
 
 
+nfc_status_t nfc_transceive(const uint8_t *txData, uint16_t txDataLen,
+                            uint8_t *rxData, uint16_t *rxDataLen) {
+
+  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
+
+  if (drv->initialized == false) {
+    return NFC_NOT_INITIALIZED;
+  }
+
+  if (rfalNfcGetState() != RFAL_NFC_STATE_IDLE) {
+    return NFC_ERROR;
+  }
+
+  ReturnCode err;
+  err = demoTransceiveBlocking((uint8_t *)txData, txDataLen, &rxData, &rxDataLen,
+                               RFAL_FWT_NONE);
+
+  if (err != RFAL_ERR_NONE) {
+    return NFC_ERROR;
+  }
+
+  return NFC_OK;
+}
+
+
+nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
+
+  if (rfalNfcIsDevActivated(rfalNfcGetState())) {
+
+    rfalNfcDevice *nfcDevice;
+    rfalNfcGetActiveDevice(&nfcDevice);
+
+
+    // Resolve device type
+    switch (nfcDevice->type) {
+      case RFAL_NFC_LISTEN_TYPE_NFCA:
+        dev_info->type = NFC_DEV_TYPE_A;
+        break;
+      case RFAL_NFC_LISTEN_TYPE_NFCB:
+        dev_info->type = NFC_DEV_TYPE_B;
+        break;
+      case RFAL_NFC_LISTEN_TYPE_NFCF:
+        dev_info->type = NFC_DEV_TYPE_F;
+        break;
+      case RFAL_NFC_LISTEN_TYPE_NFCV:
+        dev_info->type = NFC_DEV_TYPE_V;
+        break;
+      case RFAL_NFC_LISTEN_TYPE_ST25TB:
+        dev_info->type = NFC_DEV_TYPE_ST25TB;
+        break;
+      case RFAL_NFC_LISTEN_TYPE_AP2P:
+        dev_info->type = NFC_DEV_TYPE_AP2P;
+        break;
+      default:
+        dev_info->type = NFC_DEV_TYPE_UNKNOWN;
+        break;
+    }
+
+    dev_info->uid_len = nfcDevice->nfcidLen;
+
+    if(dev_info->uid_len > 10){
+      // Unexpected UID length
+      return NFC_ERROR;
+    }
+
+    char *uid_str = hex2Str(nfcDevice->nfcid, nfcDevice->nfcidLen);
+    memcpy(dev_info->uid, uid_str, nfcDevice->nfcidLen);
+
+
+  }else{
+
+    // No device activated
+    return NFC_ERROR;
+
+  }
+
+  return NFC_OK;
+}
+
 
 static void parse_tag_header(uint8_t *data, uint16_t dataLen){
 
-  type2_header_t hdr;
+  nfc_device_header_t2t_t hdr;
 
   memcpy(hdr.UID, data, 3);
   hdr.BCC[0] = data[3];
@@ -588,17 +730,16 @@ static void parse_tag_header(uint8_t *data, uint16_t dataLen){
   memcpy(hdr.SYSTEM_AREA, data+8, 2);
   memcpy(hdr.CC, data+12, 4);
 
-  vcp_println("UID: %s", hex2Str(hdr.UID, sizeof(hdr.UID)));
-  vcp_println("BCC: %s (%s)", hex2Str(hdr.BCC, sizeof(hdr.BCC)), (0x88 == (hdr.UID[0] ^ hdr.UID[1] ^ hdr.UID[2] ^ hdr.BCC[0]))? " CHECKSUM PASSED" : "CHECKSUM FAILED");
-  vcp_println("SYSTEM_AREA: %s", hex2Str(hdr.SYSTEM_AREA, sizeof(hdr.SYSTEM_AREA)));
-  vcp_println("CC: %s", hex2Str(hdr.CC, sizeof(hdr.CC)));
-  vcp_println(" -> CC_MAGIC_NUMBER: %02X", hdr.CC_MAGIC_NUMBER);
-  vcp_println(" -> CC_VERSION: %02X", hdr.CC_VERSION);
-  vcp_println(" -> CC_SIZE: %02X (%d bytes)", hdr.CC_SIZE, hdr.CC_SIZE*8);
-  vcp_println(" -> CC_ACCESS_CONDITION: %02X", hdr.CC_ACCESS_CONDITION);
+  // vcp_println("UID: %s", hex2Str(hdr.t2t.UID, sizeof(hdr.t2t.UID)));
+  // vcp_println("BCC: %s (%s)", hex2Str(hdr.t2t.BCC, sizeof(hdr.t2t.BCC)), (0x88 == (hdr.t2t.UID[0] ^ hdr.t2t.UID[1] ^ hdr.t2t.UID[2] ^ hdr.t2t.BCC[0]))? " CHECKSUM PASSED" : "CHECKSUM FAILED");
+  // vcp_println("SYSTEM_AREA: %s", hex2Str(hdr.t2t.SYSTEM_AREA, sizeof(hdr.t2t.SYSTEM_AREA)));
+  // vcp_println("CC: %s", hex2Str(hdr.t2t.CC, sizeof(hdr.t2t.CC)));
+  // vcp_println(" -> CC_MAGIC_NUMBER: %02X", hdr.t2t.CC_MAGIC_NUMBER);
+  // vcp_println(" -> CC_VERSION: %02X", hdr.t2t.CC_VERSION);
+  // vcp_println(" -> CC_SIZE: %02X (%d bytes)", hdr.t2t.CC_SIZE, hdr.t2t.CC_SIZE*8);
+  // vcp_println(" -> CC_ACCESS_CONDITION: %02X", hdr.t2t.CC_ACCESS_CONDITION);
 
 }
-
 
 /*!
  *****************************************************************************
