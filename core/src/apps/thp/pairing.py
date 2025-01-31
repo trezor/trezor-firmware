@@ -31,7 +31,7 @@ from trezor.wire.errors import ActionCancelled, SilentError, UnexpectedMessage
 from trezor.wire.thp import ChannelState, ThpError, crypto, get_enabled_pairing_methods
 from trezor.wire.thp.pairing_context import PairingContext
 
-from .credential_manager import issue_credential
+from .credential_manager import is_credential_autoconnect, issue_credential
 
 if __debug__:
     from trezor import log
@@ -116,7 +116,8 @@ async def handle_pairing_request(
 
         ctx.channel_ctx.set_channel_state(ChannelState.TP3)
         try:
-            response = await ctx.show_pairing_method_screen()
+            # Should raise UnexpectedMessageException
+            await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
             raw_response = e.msg
             name = message_handler.get_msg_name(raw_response.type)
@@ -137,12 +138,39 @@ async def handle_pairing_request(
         else:
             break
 
-    response = await _handle_different_pairing_methods(ctx, response)
+    response: protobuf.MessageType = await _handle_different_pairing_methods(
+        ctx, response
+    )
+    return await handle_credential_phase(
+        ctx,
+        message=response,
+        show_connection_dialog=False,
+    )
 
-    while ThpCredentialRequest.is_type_of(response):
-        response = await _handle_credential_request(ctx, response)
 
-    return await _handle_end_request(ctx, response)
+@check_state_and_log(ChannelState.TC1)
+async def handle_credential_phase(
+    ctx: PairingContext,
+    message: protobuf.MessageType,
+    show_connection_dialog: bool = True,
+) -> ThpEndResponse:
+    autoconnect: bool = False
+    credential = ctx.channel_ctx.credential
+
+    if credential is not None:
+        autoconnect = is_credential_autoconnect(credential)
+        if credential.cred_metadata is not None:
+            ctx.host_name = credential.cred_metadata.host_name
+        if ctx.host_name is None:
+            raise Exception("Credential does not have a hostname")
+
+    if show_connection_dialog and not autoconnect:
+        await ctx.show_connection_dialogue()
+
+    while ThpCredentialRequest.is_type_of(message):
+        message = await _handle_credential_request(ctx, message)
+
+    return await _handle_end_request(ctx, message)
 
 
 async def _prepare_pairing(ctx: PairingContext) -> None:
@@ -375,8 +403,15 @@ async def _handle_credential_request(
     if message.host_static_pubkey is None:
         raise Exception("Invalid message")  # TODO change failure type
 
+    autoconnect: bool = False
+    if message.autoconnect is not None:
+        autoconnect = message.autoconnect
+
     trezor_static_pubkey = crypto.get_trezor_static_pubkey()
-    credential_metadata = ThpCredentialMetadata(host_name=ctx.host_name)
+    credential_metadata = ThpCredentialMetadata(
+        host_name=ctx.host_name,
+        autoconnect=autoconnect,
+    )
     credential = issue_credential(message.host_static_pubkey, credential_metadata)
 
     return await ctx.call_any(

@@ -61,6 +61,7 @@ if __debug__:
 
 _TREZOR_STATE_UNPAIRED = b"\x00"
 _TREZOR_STATE_PAIRED = b"\x01"
+_TREZOR_STATE_PAIRED_AUTOCONNECT = b"\x02"
 
 
 async def handle_received_message(
@@ -264,7 +265,7 @@ async def _handle_state_TH1(
 
 
 async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -> None:
-    from apps.thp.credential_manager import validate_credential
+    from apps.thp.credential_manager import decode_credential, validate_credential
 
     if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(__name__, "handle_state_TH2")
@@ -322,21 +323,25 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
     host_static_pubkey = host_encrypted_static_pubkey[:PUBKEY_LENGTH]
 
     paired: bool = False
+    trezor_state = _TREZOR_STATE_UNPAIRED
 
     if noise_payload.host_pairing_credential is not None:
         try:  # TODO change try-except for something better
+            credential = decode_credential(noise_payload.host_pairing_credential)
             paired = validate_credential(
-                noise_payload.host_pairing_credential,
+                credential,
                 host_static_pubkey,
             )
+            if paired:
+                trezor_state = _TREZOR_STATE_PAIRED
+                ctx.credential = credential
+            else:
+                ctx.credential = None
         except DataError as e:
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.exception(__name__, e)
             pass
 
-    trezor_state = _TREZOR_STATE_UNPAIRED
-    if paired:
-        trezor_state = _TREZOR_STATE_PAIRED
     # send hanshake completion response
     ctx.write_handshake_message(
         HANDSHAKE_COMP_RES,

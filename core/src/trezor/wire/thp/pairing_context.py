@@ -8,7 +8,7 @@ from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.errors import ActionCancelled, SilentError
 from trezor.wire.protocol_common import Context, Message
-from trezor.wire.thp import get_enabled_pairing_methods
+from trezor.wire.thp import ChannelState, get_enabled_pairing_methods
 
 if TYPE_CHECKING:
     from typing import Awaitable, Container
@@ -92,7 +92,7 @@ class PairingContext(Context):
 
         self.display_data: PairingDisplayData = PairingDisplayData()
         self.cpace: Cpace
-        self.host_name: str
+        self.host_name: str | None
 
     async def handle(self) -> None:
         next_message: Message | None = None
@@ -115,7 +115,7 @@ class PairingContext(Context):
                     next_message = None
 
                 try:
-                    next_message = await handle_pairing_request_message(self, message)
+                    next_message = await handle_message(self, message)
                 except Exception as exc:
                     # Log and ignore. The session handler can only exit explicitly in the
                     # following finally block.
@@ -219,6 +219,19 @@ class PairingContext(Context):
         if result == trezorui_api.CONFIRMED:
             await self.write(ThpPairingRequestApproved())
 
+    async def show_connection_dialogue(self) -> None:
+        from trezor.ui.layouts.common import interact
+
+        await interact(
+            trezorui_api.confirm_action(
+                title="Connection dialogue",
+                action="Do you want previously connected device to connect?",
+                description="Choose wisely! (or not)",
+            ),
+            br_name="connection_request",
+            br_code=ButtonRequestType.Other,
+        )
+
     async def show_pairing_method_screen(
         self, selected_method: ThpPairingMethod | None = None
     ) -> UiResult:
@@ -264,14 +277,14 @@ class PairingContext(Context):
         return result
 
 
-async def handle_pairing_request_message(
+async def handle_message(
     pairing_ctx: PairingContext,
     msg: protocol_common.Message,
 ) -> protocol_common.Message | None:
 
     res_msg: protobuf.MessageType | None = None
 
-    from apps.thp.pairing import handle_pairing_request
+    from apps.thp.pairing import handle_pairing_request, handle_credential_phase
 
     if msg.type in workflow.ALLOW_WHILE_LOCKED:
         workflow.autolock_interrupts_workflow = False
@@ -292,7 +305,10 @@ async def handle_pairing_request_message(
         req_msg = message_handler.wrap_protobuf_load(msg.data, req_type)
 
         # Create the handler task.
-        task = handle_pairing_request(pairing_ctx, req_msg)
+        if pairing_ctx.channel_ctx.get_channel_state() == ChannelState.TC1:
+            task = handle_credential_phase(pairing_ctx, req_msg)
+        else:
+            task = handle_pairing_request(pairing_ctx, req_msg)
 
         # Run the workflow task.  Workflow can do more on-the-wire
         # communication inside, but it should eventually return a

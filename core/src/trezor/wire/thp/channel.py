@@ -45,6 +45,8 @@ if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Awaitable
 
+    from trezor.messages import ThpPairingCredential
+
     from .pairing_context import PairingContext
     from .session_context import GenericSessionContext
 
@@ -77,6 +79,7 @@ class Channel:
 
         # Temporary objects
         self.handshake: crypto.Handshake | None = None
+        self.credential: ThpPairingCredential | None = None
         self.connection_context: PairingContext | None = None
         self.busy_decoder: crypto.BusyDecoder | None = None
         self.temp_crc: int | None = None

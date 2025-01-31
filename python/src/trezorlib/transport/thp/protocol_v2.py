@@ -188,7 +188,9 @@ class ProtocolV2(ProtocolAndChannel):
         device_properties = payload[10:]
         return (channel_id, device_properties)
 
-    def _do_handshake(self):
+    def _do_handshake(
+        self, credential: bytes | None = None, host_static_privkey: bytes | None = None
+    ):
         host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
         host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
 
@@ -208,6 +210,8 @@ class ProtocolV2(ProtocolAndChannel):
             host_ephemeral_privkey,
             trezor_ephemeral_pubkey,
             encrypted_trezor_static_pubkey,
+            credential,
+            host_static_privkey,
         )
         self._read_ack()
         self._read_handshake_completion_response()
@@ -246,6 +250,7 @@ class ProtocolV2(ProtocolAndChannel):
         trezor_ephemeral_pubkey: bytes,
         encrypted_trezor_static_pubkey: bytes,
         credential: bytes | None = None,
+        host_static_privkey: bytes | None = None,
     ) -> bytes:
         PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
         IV_1 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
@@ -275,16 +280,25 @@ class ProtocolV2(ProtocolAndChannel):
 
         tag_of_empty_string = aes_ctx.encrypt(IV_1, b"", h)
         h = _sha256_of_two(h, tag_of_empty_string)
-        # TODO: search for saved credentials (or possibly not, as we skip pairing phase)
 
-        zeroes_32 = int.to_bytes(0, 32, "little")
-        temp_host_static_privkey = curve25519.get_private_key(zeroes_32)
-        temp_host_static_pubkey = curve25519.get_public_key(temp_host_static_privkey)
+        # TODO: search for saved credentials
+        if host_static_privkey is not None and credential is not None:
+            host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+        else:
+            credential = None
+            zeroes_32 = int.to_bytes(0, 32, "little")
+            temp_host_static_privkey = curve25519.get_private_key(zeroes_32)
+            temp_host_static_pubkey = curve25519.get_public_key(
+                temp_host_static_privkey
+            )
+            host_static_privkey = temp_host_static_privkey
+            host_static_pubkey = temp_host_static_pubkey
+
         aes_ctx = AESGCM(k)
-        encrypted_host_static_pubkey = aes_ctx.encrypt(IV_2, temp_host_static_pubkey, h)
+        encrypted_host_static_pubkey = aes_ctx.encrypt(IV_2, host_static_pubkey, h)
         h = _sha256_of_two(h, encrypted_host_static_pubkey)
         ck, k = _hkdf(
-            ck, curve25519.multiply(temp_host_static_privkey, trezor_ephemeral_pubkey)
+            ck, curve25519.multiply(host_static_privkey, trezor_ephemeral_pubkey)
         )
         msg_data = self.mapping.encode_without_wire_type(
             messages.ThpHandshakeCompletionReqNoisePayload(

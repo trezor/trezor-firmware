@@ -17,6 +17,8 @@ from trezorlib.messages import (
     ThpCodeEntryCpaceHostTag,
     ThpCodeEntryCpaceTrezor,
     ThpCodeEntrySecret,
+    ThpCredentialRequest,
+    ThpCredentialResponse,
     ThpEndRequest,
     ThpEndResponse,
     ThpNfcTagHost,
@@ -53,6 +55,18 @@ def _prepare_protocol_for_pairing(client: Client) -> ProtocolV2:
     protocol._do_channel_allocation()
     protocol._do_handshake()
     return protocol
+
+
+def _handle_pairing_request(client: Client, protocol: ProtocolV2) -> None:
+    protocol._send_message(ThpPairingRequest())
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "pairing_request"
+
+    protocol._send_message(ButtonAck())
+
+    client.debug.press_yes()
+
+    protocol._read_message(ThpPairingRequestApproved)
 
 
 def test_allocate_channel(client: Client) -> None:
@@ -112,14 +126,7 @@ def test_handshake(client: Client) -> None:
 
 def test_pairing_qr_code(client: Client) -> None:
     protocol = _prepare_protocol_for_pairing(client)
-
-    protocol._send_message(ThpPairingRequest())
-    protocol._read_message(ButtonRequest)
-    protocol._send_message(ButtonAck())
-
-    client.debug.press_yes()
-
-    protocol._read_message(ThpPairingRequestApproved)
+    _handle_pairing_request(client, protocol)
     protocol._send_message(
         ThpSelectMethod(selected_pairing_method=ThpPairingMethod.QrCode)
     )
@@ -161,13 +168,8 @@ def test_pairing_qr_code(client: Client) -> None:
 def test_pairing_code_entry(client: Client) -> None:
     protocol = _prepare_protocol_for_pairing(client)
 
-    protocol._send_message(ThpPairingRequest())
-    protocol._read_message(ButtonRequest)
-    protocol._send_message(ButtonAck())
+    _handle_pairing_request(client, protocol)
 
-    client.debug.press_yes()
-
-    protocol._read_message(ThpPairingRequestApproved)
     protocol._send_message(
         ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
     )
@@ -227,13 +229,17 @@ def test_pairing_code_entry(client: Client) -> None:
 def test_pairing_nfc(client: Client) -> None:
     protocol = _prepare_protocol_for_pairing(client)
 
-    protocol._send_message(ThpPairingRequest())
-    protocol._read_message(ButtonRequest)
-    protocol._send_message(ButtonAck())
+    _nfc_pairing(client, protocol)
 
-    client.debug.press_yes()
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
+    protocol._has_valid_channel = True
 
-    protocol._read_message(ThpPairingRequestApproved)
+
+def _nfc_pairing(client: Client, protocol: ProtocolV2):
+
+    _handle_pairing_request(client, protocol)
+
     protocol._send_message(
         ThpSelectMethod(selected_pairing_method=ThpPairingMethod.NFC)
     )
@@ -272,7 +278,55 @@ def test_pairing_nfc(client: Client) -> None:
     computed_tag = sha_ctx.digest()
     assert tag_trezor_msg.tag == computed_tag
 
+
+def test_credential_phase(client: Client):
+    protocol = _prepare_protocol_for_pairing(client)
+    _nfc_pairing(client, protocol)
+
+    # Request credential with confirmation after pairing
+    host_static_privkey = curve25519.get_private_key(os.urandom(32))
+    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    protocol._send_message(
+        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+    )
+    credential_response = protocol._read_message(ThpCredentialResponse)
+
+    assert credential_response.credential is not None
+    credential = credential_response.credential
     protocol._send_message(ThpEndRequest())
     protocol._read_message(ThpEndResponse)
 
-    protocol._has_valid_channel = True
+    # Connect using credential with confirmation
+    protocol = _prepare_protocol(client)
+    protocol._do_channel_allocation()
+    protocol._do_handshake(credential, host_static_privkey)
+    protocol._send_message(ThpEndRequest())
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "connection_request"
+    protocol._send_message(ButtonAck())
+    client.debug.press_yes()
+    protocol._read_message(ThpEndResponse)
+
+    # Connect using credential with confirmation and ask for autoconnect credential
+    protocol = _prepare_protocol(client)
+    protocol._do_channel_allocation()
+    protocol._do_handshake(credential, host_static_privkey)
+    protocol._send_message(
+        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=True)
+    )
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "connection_request"
+    protocol._send_message(ButtonAck())
+    client.debug.press_yes()
+    credential_response_2 = protocol._read_message(ThpCredentialResponse)
+    assert credential_response_2.credential is not None
+    credential_auto = credential_response_2.credential
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
+
+    # Connect using autoconnect credential
+    protocol = _prepare_protocol(client)
+    protocol._do_channel_allocation()
+    protocol._do_handshake(credential_auto, host_static_privkey)
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
