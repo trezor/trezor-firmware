@@ -22,34 +22,12 @@
 #include <io/display.h>
 #include <io/display_utils.h>
 #include <rtl/mini_printf.h>
+
 #include "bootui.h"
 #include "rust_ui.h"
 #include "version.h"
 
 #define BACKLIGHT_NORMAL 150
-
-#define COLOR_BL_BG COLOR_WHITE  // background
-#define COLOR_BL_FG COLOR_BLACK  // foreground
-
-#ifdef RGB16
-#define COLOR_BL_FAIL RGB16(0xFF, 0x00, 0x00)     // red
-#define COLOR_BL_DONE RGB16(0x00, 0xAE, 0x0B)     // green
-#define COLOR_BL_PROCESS RGB16(0x4A, 0x90, 0xE2)  // blue
-#define COLOR_BL_GRAY RGB16(0x99, 0x99, 0x99)     // gray
-#else
-#define COLOR_BL_FAIL COLOR_BL_FG
-#define COLOR_BL_DONE COLOR_BL_FG
-#define COLOR_BL_PROCESS COLOR_BL_FG
-#define COLOR_BL_GRAY COLOR_BL_FG
-#endif
-
-#if !defined TREZOR_MODEL_T2B1 && !defined TREZOR_MODEL_T3B1
-#define BOOT_WAIT_HEIGHT 25
-#define BOOT_WAIT_Y_TOP (DISPLAY_RESY - BOOT_WAIT_HEIGHT)
-#else
-#define BOOT_WAIT_HEIGHT 12
-#define BOOT_WAIT_Y_TOP (DISPLAY_RESY - BOOT_WAIT_HEIGHT)
-#endif
 
 #define TOIF_LENGTH(ptr) ((*(uint32_t *)((ptr) + 8)) + 12)
 
@@ -139,13 +117,15 @@ uint32_t ui_screen_menu(secbool firmware_present) {
   return screen_menu(firmware_present);
 }
 
+void ui_screen_connect(void) { screen_connect(initial_setup); }
+
 // install UI
 
-uint32_t ui_screen_install_confirm(const vendor_header *const vhdr,
-                                   const image_header *const hdr,
-                                   secbool should_keep_seed,
-                                   secbool is_newvendor, secbool is_newinstall,
-                                   int version_cmp) {
+ui_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
+                                      const image_header *const hdr,
+                                      secbool should_keep_seed,
+                                      secbool is_newvendor,
+                                      secbool is_newinstall, int version_cmp) {
   uint8_t fingerprint[32];
   char ver_str[64];
   get_image_fingerprint(hdr, fingerprint);
@@ -171,7 +151,7 @@ void ui_screen_install_progress_upload(int pos) {
 
 // wipe UI
 
-uint32_t ui_screen_wipe_confirm(void) { return screen_wipe_confirm(); }
+ui_result_t ui_screen_wipe_confirm(void) { return screen_wipe_confirm(); }
 
 void ui_screen_wipe(void) { screen_wipe_progress(0, true); }
 

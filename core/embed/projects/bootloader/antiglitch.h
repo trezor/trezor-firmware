@@ -21,6 +21,10 @@
 
 #include <trezor_types.h>
 
-#undef FIRMWARE_START
+secbool jump_is_allowed_1(void);
+secbool jump_is_allowed_2(void);
 
-extern uint8_t *FIRMWARE_START;
+void jump_allow_1(void);
+void jump_allow_2(void);
+
+void jump_reset(void);
