@@ -99,7 +99,7 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader_ci/bootui.c',
     'embed/projects/bootloader_ci/main.c',
     'embed/projects/bootloader_ci/messages.c',
-    'embed/projects/bootloader_ci/protob/messages.pb.c',
+    'embed/projects/bootloader_ci/protob/pb/messages.pb.c',
     'embed/projects/bootloader_ci/version_check.c',
 ]
 
