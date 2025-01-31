@@ -284,7 +284,7 @@ async def handle_message(
 
     res_msg: protobuf.MessageType | None = None
 
-    from apps.thp.pairing import handle_pairing_request, handle_credential_phase
+    from apps.thp.pairing import handle_credential_phase, handle_pairing_request
 
     if msg.type in workflow.ALLOW_WHILE_LOCKED:
         workflow.autolock_interrupts_workflow = False
