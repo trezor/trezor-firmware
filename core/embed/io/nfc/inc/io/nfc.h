@@ -17,23 +17,37 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_NFC_H
-#define TREZORHAL_NFC_H
+#pragma once
 
-#include <trezor_bsp.h>
-#include <trezor_rtl.h>
+#include <trezor_types.h>
 
-typedef enum {
-  NFC_CARD_EMU_TECH_A,
-  NFC_CARD_EMU_TECH_V,
-} nfc_card_emul_tech_t;
+#define NFC_MAX_UID_LEN 10
+#define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
 typedef enum {
-  NFC_POLLER_TECH_A,
-  NFC_POLLER_TECH_B,
-  NFC_POLLER_TECH_F,
-  NFC_POLLER_TECH_V,
-} nfc_poller_tech_t;
+  NFC_POLLER_TECH_A = 0x1,
+  NFC_POLLER_TECH_B = 0x1 << 1,
+  NFC_POLLER_TECH_F = 0x1 << 2,
+  NFC_POLLER_TECH_V = 0x1 << 3,
+  NFC_CARD_EMU_TECH_A = 0x1 << 4,
+  NFC_CARD_EMU_TECH_F = 0x1 << 5,
+} nfc_tech_t;
+
+typedef enum {
+  NFC_DEV_TYPE_A,
+  NFC_DEV_TYPE_B,
+  NFC_DEV_TYPE_F,
+  NFC_DEV_TYPE_V,
+  NFC_DEV_TYPE_ST25TB,
+  NFC_DEV_TYPE_AP2P,
+  NFC_DEV_TYPE_UNKNOWN,
+} nfc_dev_type_t;
+
+typedef enum {
+  NFC_NO_EVENT,
+  NFC_EVENT_DEACTIVATED,
+  NFC_EVENT_ACTIVATED,
+} nfc_event_t;
 
 typedef enum {
   NFC_OK,
@@ -43,14 +57,43 @@ typedef enum {
   NFC_INITIALIZATION_FAILED,
 } nfc_status_t;
 
-nfc_status_t nfc_init();
+typedef struct {
+  uint8_t type;
+  char uid[NFC_MAX_UID_BUF_SIZE];  // Plus one for string termination
+  uint8_t uid_len;
+} nfc_dev_info_t;
 
-nfc_status_t nfc_deinit();
+// Initialize NFC driver including supportive RFAL middleware
+nfc_status_t nfc_init(void);
 
-nfc_status_t nfc_register_card_emu(nfc_card_emul_tech_t tech);
+// Deinitialize NFC driver
+void nfc_deinit(void);
 
-nfc_status_t nfc_register_poller(nfc_poller_tech_t tech);
+// Register NFC technology (or several) to be explored by NFC state machine
+// use this function before activating the state machine with nfc_activate_stm()
+nfc_status_t nfc_register_tech(const nfc_tech_t tech);
 
-nfc_status_t nfc_run_worker();
+// Activates the NFC RFAL state machine to explore the previously registered
+// technologies. The RFAL handles low-level NFC protocols and provides
+// information about the activated device. This function only starts the
+// exploration; you must regularly call nfc_get_event() to continue processing
+// NFC operations.
+nfc_status_t nfc_activate_stm(void);
 
-#endif  // TREZORHAL_NFC_H
+// Deactivate the NFC RFAL state machine (put in IDLE state).
+nfc_status_t nfc_deactivate_stm(void);
+
+// Calls NFC RFAL worker to service the NFC state machine and expolore
+// registered technologies. This function has to be actively called in loop
+// (main NFC poll function), returns nfc event.
+nfc_status_t nfc_get_event(nfc_event_t *event);
+
+// Deactivate the currently activated NFC device and put RFAL state machine back
+// to discovary state.
+nfc_status_t nfc_dev_deactivate(void);
+
+// Read the general device information of the activated NFC device.
+nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
+
+// Write the NDEF message with the trezor.io URI to the activated NFC device.
+nfc_status_t nfc_dev_write_ndef_uri(void);

@@ -16,3 +16,9 @@ charset = utf-8
 end_of_line = unset
 insert_final_newline = unset
 trim_trailing_whitespace = unset
+
+# Ignore rfal nfc library
+[/core/embed/io/nfc/rfal/**]
+end_of_line = unset
+insert_final_newline = unset
+trim_trailing_whitespace = unset
