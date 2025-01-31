@@ -98,7 +98,7 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
-  display_init(DISPLAY_JUMP_BEHAVIOR);
+  display_init(DISPLAY_RESET_CONTENT);
   unit_properties_init();
 
 #ifdef USE_TOUCH
