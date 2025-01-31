@@ -215,12 +215,12 @@ if __debug__:
 
         x = msg.x  # local_cache_attribute
         y = msg.y  # local_cache_attribute
+
         await wait_until_layout_is_running()
         assert isinstance(ui.CURRENT_LAYOUT, ui.Layout)
         layout_change_box.clear()
 
         try:
-
             # click on specific coordinates, with possible hold
             if x is not None and y is not None:
                 await _layout_click(x, y, msg.hold_ms or 0)
@@ -232,11 +232,7 @@ if __debug__:
             elif msg.button is not None:
                 await _layout_event(msg.button)
             elif msg.input is not None:
-                try:
-                    ui.CURRENT_LAYOUT._emit_message(msg.input)
-                except Exception as e:
-                    print(type(e))
-
+                ui.CURRENT_LAYOUT._emit_message(msg.input)
             else:
                 raise RuntimeError("Invalid DebugLinkDecision message")
 
@@ -311,9 +307,9 @@ if __debug__:
     async def dispatch_DebugLinkGetState(
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
-
         if msg.wait_layout == DebugWaitType.IMMEDIATE:
             return _state()
+
         assert DEBUG_CONTEXT is not None
         if msg.wait_layout == DebugWaitType.NEXT_LAYOUT:
             layout_change_box.clear()

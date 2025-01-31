@@ -125,7 +125,6 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     try:
         # Find a protobuf.MessageType subclass that describes this
         # message.  Raises if the type is not found.
-
         req_type = protobuf.type_for_wire(msg.type)
 
         # Try to decode the message according to schema from
