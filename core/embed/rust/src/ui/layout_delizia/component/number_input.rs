@@ -6,14 +6,13 @@ use crate::{
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx, Pad,
         },
-        display::font::FONT_DEMIBOLD,
         event::SwipeEvent,
         geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
     },
 };
 
-use super::{theme, Button, ButtonMsg};
+use super::{super::fonts::FONT_DEMIBOLD, theme, Button, ButtonMsg};
 
 pub enum NumberInputDialogMsg {
     Confirmed(u32),
@@ -156,10 +155,9 @@ impl Component for NumberInput {
             let y_offset = digit_font.text_height() / 2;
 
             shape::Bar::new(self.area).with_bg(theme::BG).render(target);
-            shape::Text::new(self.area.center() + Offset::y(y_offset), text)
+            shape::Text::new(self.area.center() + Offset::y(y_offset), text, digit_font)
                 .with_align(Alignment::Center)
                 .with_fg(theme::FG)
-                .with_font(digit_font)
                 .render(target);
         }
 

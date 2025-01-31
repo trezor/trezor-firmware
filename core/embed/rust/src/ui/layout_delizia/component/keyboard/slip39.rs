@@ -166,8 +166,7 @@ impl Component for Slip39Input {
                     .assert_if_debugging_ui("Text buffer is too small");
             }
         }
-        shape::Text::new(text_center, text.as_str())
-            .with_font(style.font)
+        shape::Text::new(text_center, text.as_str(), style.font)
             .with_fg(style.text_color)
             .with_align(Alignment::Center)
             .render(target);

@@ -217,8 +217,7 @@ fn render_text_icon<'s>(
         // Possibly shifting the baseline left, when there is a text bearing.
         // This is to center the text properly.
         baseline = baseline - Offset::x(font.start_x_bearing(text));
-        shape::Text::new(baseline, text)
-            .with_font(font)
+        shape::Text::new(baseline, text, font)
             .with_fg(fg_color)
             .render(target);
     }

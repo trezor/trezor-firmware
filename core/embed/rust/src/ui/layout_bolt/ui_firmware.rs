@@ -40,7 +40,7 @@ use super::{
         PassphraseKeyboard, PinKeyboard, Progress, SelectWordCount, SetBrightnessDialog,
         ShareWords, SimplePage, Slip39Input,
     },
-    theme, UIBolt,
+    fonts, theme, UIBolt,
 };
 
 impl FirmwareUI for UIBolt {
@@ -187,14 +187,14 @@ impl FirmwareUI for UIBolt {
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
         for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
-                ops = ops.text_normal(TString::try_from(item)?)
+                ops = ops.text(TString::try_from(item)?, fonts::FONT_NORMAL)
             } else {
                 let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: TString = text.try_into()?;
                 if emphasis.try_into()? {
-                    ops = ops.text_demibold(text);
+                    ops = ops.text(text, fonts::FONT_DEMIBOLD)
                 } else {
-                    ops = ops.text_normal(text);
+                    ops = ops.text(text, fonts::FONT_NORMAL);
                 }
             }
         }
@@ -1109,7 +1109,8 @@ impl FirmwareUI for UIBolt {
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let layout = RootComponent::new(Connect::new(text, theme::FG, theme::BG));
+        let layout =
+            RootComponent::new(Connect::new(text, fonts::FONT_NORMAL, theme::FG, theme::BG));
         Ok(layout)
     }
 
@@ -1335,8 +1336,11 @@ mod tests {
         );
 
         let ops = OpTextLayout::new(theme::TEXT_NORMAL)
-            .text_normal("Testing text layout, with some text, and some more text. And ")
-            .text_bold_upper("parameters!");
+            .text(
+                "Testing text layout, with some text, and some more text. And ",
+                fonts::FONT_NORMAL,
+            )
+            .text("parameters!", fonts::FONT_BOLD_UPPER);
         let formatted = FormattedText::new(ops);
         let mut layout = Dialog::new(formatted, buttons);
         layout.place(SCREEN);

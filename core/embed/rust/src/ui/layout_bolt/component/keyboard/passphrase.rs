@@ -355,8 +355,7 @@ impl Component for Input {
         let text_to_display =
             long_line_content_with_ellipsis(text, "...", style.text_font, available_area_width);
 
-        shape::Text::new(text_baseline, &text_to_display)
-            .with_font(style.text_font)
+        shape::Text::new(text_baseline, &text_to_display, style.text_font)
             .with_fg(style.text_color)
             .render(target);
 

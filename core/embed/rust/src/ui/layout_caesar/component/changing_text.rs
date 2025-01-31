@@ -2,14 +2,14 @@ use crate::{
     strutil::ShortString,
     ui::{
         component::{Component, Event, EventCtx, Never, Pad},
-        display::{font, Font},
+        display::Font,
         geometry::{Alignment, Point, Rect},
         shape::{self, Renderer},
         util::long_line_content_with_ellipsis,
     },
 };
 
-use super::theme;
+use super::{super::fonts, theme};
 
 /// Component that allows for "allocating" a standalone line of text anywhere
 /// on the screen and updating it arbitrarily - without affecting the rest
@@ -43,11 +43,11 @@ impl ChangingTextLine {
     }
 
     pub fn center_mono(text: &str, max_len: usize) -> Self {
-        Self::new(text, font::FONT_MONO, Alignment::Center, max_len)
+        Self::new(text, fonts::FONT_MONO, Alignment::Center, max_len)
     }
 
     pub fn center_bold(text: &str, max_len: usize) -> Self {
-        Self::new(text, font::FONT_BOLD_UPPER, Alignment::Center, max_len)
+        Self::new(text, fonts::FONT_BOLD_UPPER, Alignment::Center, max_len)
     }
 
     /// Not showing ellipsis at the beginning of longer texts.
@@ -110,24 +110,20 @@ impl ChangingTextLine {
 
     fn render_left<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.x0, self.y_baseline());
-        shape::Text::new(baseline, self.text.as_ref())
-            .with_font(self.font)
-            .render(target);
+        shape::Text::new(baseline, self.text.as_ref(), self.font).render(target);
     }
 
     fn render_center<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.bottom_center().x, self.y_baseline());
-        shape::Text::new(baseline, self.text.as_ref())
+        shape::Text::new(baseline, self.text.as_ref(), self.font)
             .with_align(Alignment::Center)
-            .with_font(self.font)
             .render(target);
     }
 
     fn render_right<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let baseline = Point::new(self.pad.area.x1, self.y_baseline());
-        shape::Text::new(baseline, self.text.as_ref())
+        shape::Text::new(baseline, self.text.as_ref(), self.font)
             .with_align(Alignment::End)
-            .with_font(self.font)
             .render(target);
     }
 
@@ -145,9 +141,7 @@ impl ChangingTextLine {
         let x_offset = if self.text.len() % 2 == 0 { 0 } else { 2 };
 
         let baseline = Point::new(self.pad.area.x0 + x_offset, self.y_baseline());
-        shape::Text::new(baseline, &text_to_display)
-            .with_font(self.font)
-            .render(target);
+        shape::Text::new(baseline, &text_to_display, self.font).render(target);
     }
 }
 

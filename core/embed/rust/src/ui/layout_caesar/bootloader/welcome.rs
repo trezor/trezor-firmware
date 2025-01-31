@@ -1,12 +1,14 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
-    display::font,
     geometry::{Alignment, Offset, Rect},
     shape,
     shape::Renderer,
 };
 
-use super::super::theme::bootloader::{BLD_BG, BLD_FG};
+use super::{
+    super::theme::bootloader::{BLD_BG, BLD_FG},
+    fonts,
+};
 
 pub struct Welcome {
     bg: Pad,
@@ -37,22 +39,31 @@ impl Component for Welcome {
 
         let top_center = self.bg.area.top_center();
 
-        shape::Text::new(top_center + Offset::y(24), "Get started with")
-            .with_align(Alignment::Center)
-            .with_font(font::FONT_NORMAL)
-            .with_fg(BLD_FG)
-            .render(target);
+        shape::Text::new(
+            top_center + Offset::y(24),
+            "Get started with",
+            fonts::FONT_NORMAL,
+        )
+        .with_align(Alignment::Center)
+        .with_fg(BLD_FG)
+        .render(target);
 
-        shape::Text::new(top_center + Offset::y(32), "your Trezor at")
-            .with_align(Alignment::Center)
-            .with_font(font::FONT_NORMAL)
-            .with_fg(BLD_FG)
-            .render(target);
+        shape::Text::new(
+            top_center + Offset::y(32),
+            "your Trezor at",
+            fonts::FONT_NORMAL,
+        )
+        .with_align(Alignment::Center)
+        .with_fg(BLD_FG)
+        .render(target);
 
-        shape::Text::new(top_center + Offset::y(48), "trezor.io/start")
-            .with_align(Alignment::Center)
-            .with_font(font::FONT_BOLD)
-            .with_fg(BLD_FG)
-            .render(target);
+        shape::Text::new(
+            top_center + Offset::y(48),
+            "trezor.io/start",
+            fonts::FONT_BOLD,
+        )
+        .with_align(Alignment::Center)
+        .with_fg(BLD_FG)
+        .render(target);
     }
 }

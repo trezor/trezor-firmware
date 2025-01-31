@@ -4,11 +4,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Component, Event, EventCtx, Never, Paginate},
-        display::{
-            font::{FONT_NORMAL, FONT_SUB},
-            toif::Icon,
-            Color,
-        },
+        display::{font::Font, toif::Icon, Color},
         geometry::{Alignment, Dimensions, Insets, LinearPlacement, Offset, Point, Rect},
         shape::{self, Renderer},
     },
@@ -559,13 +555,15 @@ pub struct Checklist<T> {
     icon_current: Icon,
     icon_done: Icon,
     icon_done_color: Option<Color>,
-    show_numerals: bool,
+    numeral_font: Option<Font>,
     /// How wide will the left icon column be
     check_width: i16,
     /// Offset of the icon representing DONE
     done_offset: Offset,
     /// Offset of the icon representing CURRENT
     current_offset: Offset,
+    /// Offset of the numeral representing the ordinal number of the task
+    numeral_offset: Offset,
 }
 
 impl<'a, T> Checklist<T>
@@ -585,10 +583,11 @@ where
             icon_current,
             icon_done,
             icon_done_color: None,
-            show_numerals: false,
+            numeral_font: None,
             check_width: 0,
             done_offset: Offset::zero(),
             current_offset: Offset::zero(),
+            numeral_offset: Offset::zero(),
         }
     }
 
@@ -612,8 +611,13 @@ where
         self
     }
 
-    pub fn with_numerals(mut self) -> Self {
-        self.show_numerals = true;
+    pub fn with_numerals(mut self, numerals_font: Font) -> Self {
+        self.numeral_font = Some(numerals_font);
+        self
+    }
+
+    pub fn with_numeral_offset(mut self, offset: Offset) -> Self {
+        self.numeral_offset = offset;
         self
     }
 
@@ -628,9 +632,9 @@ where
                 self.render_icon(base + self.done_offset, self.icon_done, color, target)
             } else {
                 // current and future tasks - ordinal numbers or icon on current task
-                if self.show_numerals {
-                    let num_offset = Offset::new(4, FONT_NORMAL.visible_text_height("1"));
-                    self.render_numeral(base + num_offset, i, l.style.text_color, target);
+                if let Some(font) = self.numeral_font {
+                    let offset = self.numeral_offset;
+                    self.render_numeral(base + offset, i, font, l.style.text_color, target);
                 } else if i == current_visible {
                     let color = l.style.text_color;
                     self.render_icon(base + self.current_offset, self.icon_current, color, target);
@@ -643,12 +647,12 @@ where
         &self,
         base_point: Point,
         n: usize,
+        font: Font,
         color: Color,
         target: &mut impl Renderer<'s>,
     ) {
         let numeral = uformat!("{}.", n + 1);
-        shape::Text::new(base_point, numeral.as_str())
-            .with_font(FONT_SUB)
+        shape::Text::new(base_point, numeral.as_str(), font)
             .with_fg(color)
             .render(target);
     }

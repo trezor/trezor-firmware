@@ -1,10 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        display::{
-            font::{FONT_BOLD, FONT_BOLD_UPPER, FONT_DEMIBOLD, FONT_MONO, FONT_NORMAL},
-            Color, Font,
-        },
+        display::{Color, Font},
         geometry::{Alignment, Offset, Rect},
         util::ResultExt,
     },
@@ -111,13 +108,14 @@ impl<'a> OpTextLayout<'a> {
                     };
                 }
                 // Drawing text
-                Op::Text(text, continued) => {
+                Op::Text(text, font, continued) => {
                     // Try to fit text on the current page and if they do not fit,
                     // return the appropriate OutOfBounds message
 
                     // Inserting the ellipsis at the very beginning of the text if needed
                     // (just for incomplete texts that were separated)
                     layout.continues_from_prev_page = continued;
+                    layout.style.text_font = font;
 
                     let fit = text.map(|t| layout.layout_text(t, cursor, sink));
 
@@ -162,7 +160,7 @@ impl<'a> OpTextLayout<'a> {
         let mut skipped = 0;
         ops_iter.filter_map(move |op| {
             match op {
-                Op::Text(text, _continued) if skipped < skip_bytes => {
+                Op::Text(text, font, _continued) if skipped < skip_bytes => {
                     let skip_text_bytes_if_fits_partially = skip_bytes - skipped;
                     skipped = skipped.saturating_add(text.len());
                     if skipped > skip_bytes {
@@ -171,6 +169,7 @@ impl<'a> OpTextLayout<'a> {
                         // Signifying that the text continues from previous page
                         Some(Op::Text(
                             text.skip_prefix(skip_text_bytes_if_fits_partially),
+                            font,
                             true,
                         ))
                     } else {
@@ -201,24 +200,22 @@ impl<'a> OpTextLayout<'a> {
         self
     }
 
-    pub fn text(self, text: TString<'a>) -> Self {
-        self.with_new_item(Op::Text(text, false))
+    pub fn text(self, text: impl Into<TString<'a>>, font: Font) -> Self {
+        self.with_new_item(Op::Text(text.into(), font, false))
     }
 
     pub fn newline(self) -> Self {
-        self.text("\n".into())
+        let font = self.layout.style.text_font;
+        self.text("\n", font)
     }
 
     pub fn newline_half(self) -> Self {
-        self.text("\r".into())
+        let font = self.layout.style.text_font;
+        self.text("\r", font)
     }
 
     pub fn next_page(self) -> Self {
         self.with_new_item(Op::NextPage)
-    }
-
-    pub fn font(self, font: Font) -> Self {
-        self.with_new_item(Op::Font(font))
     }
 
     pub fn offset(self, offset: Offset) -> Self {
@@ -240,31 +237,6 @@ impl<'a> OpTextLayout<'a> {
     pub fn line_spacing(self, spacing: i16) -> Self {
         self.with_new_item(Op::LineSpacing(spacing))
     }
-}
-
-// Op-adding aggregation operations
-impl<'a> OpTextLayout<'a> {
-    // TODO: use TextStyle instead because we do not want e.g. BOLD_UPPER in all
-    // layouts
-    pub fn text_normal(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(FONT_NORMAL).text(text.into())
-    }
-
-    pub fn text_mono(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(FONT_MONO).text(text.into())
-    }
-
-    pub fn text_bold(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(FONT_BOLD).text(text.into())
-    }
-
-    pub fn text_bold_upper(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(FONT_BOLD_UPPER).text(text.into())
-    }
-
-    pub fn text_demibold(self, text: impl Into<TString<'a>>) -> Self {
-        self.font(FONT_DEMIBOLD).text(text.into())
-    }
 
     pub fn chunkify_text(self, chunks: Option<(Chunks, i16)>) -> Self {
         if let Some(chunks) = chunks {
@@ -277,10 +249,10 @@ impl<'a> OpTextLayout<'a> {
 
 #[derive(Clone)]
 pub enum Op<'a> {
-    /// Render text with current color and font.
+    /// Render text with current color and specified font.
     /// Bool signifies whether this is a split Text Op continued from previous
     /// page. If true, a leading ellipsis will be rendered.
-    Text(TString<'a>, bool),
+    Text(TString<'a>, Font, bool),
     /// Set current text color.
     Color(Color),
     /// Set currently used font.

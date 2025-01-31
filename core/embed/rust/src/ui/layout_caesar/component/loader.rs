@@ -197,8 +197,7 @@ impl Loader {
                         style.font.horz_center(self.area.x0, self.area.x1, t),
                         style.font.vert_center(self.area.y0, self.area.y1, "A"),
                     );
-                    shape::Text::new(pt, t)
-                        .with_font(style.font)
+                    shape::Text::new(pt, t, style.font)
                         .with_fg(text_color)
                         .render(target);
                 });

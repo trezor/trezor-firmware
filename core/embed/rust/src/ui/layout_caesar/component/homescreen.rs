@@ -7,7 +7,6 @@ use crate::{
         component::{Child, Component, Event, EventCtx, Label},
         constant::{HEIGHT, WIDTH},
         display::{
-            font,
             image::{ImageInfo, ToifFormat},
             Font, Icon,
         },
@@ -19,8 +18,9 @@ use crate::{
 };
 
 use super::{
-    super::constant, theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
-    CancelConfirmMsg, LoaderMsg, ProgressLoader,
+    super::{constant, fonts},
+    theme, ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos, CancelConfirmMsg,
+    LoaderMsg, ProgressLoader,
 };
 
 const AREA: Rect = constant::screen();
@@ -33,7 +33,7 @@ const LOGO_ICON_TOP_MARGIN: i16 = 12;
 const LOCK_ICON_TOP_MARGIN: i16 = 12;
 const NOTIFICATION_HEIGHT: i16 = 12;
 const LABEL_OUTSET: i16 = 3;
-const NOTIFICATION_FONT: Font = font::FONT_NORMAL_UPPER;
+const NOTIFICATION_FONT: Font = fonts::FONT_NORMAL_UPPER;
 const NOTIFICATION_ICON: Icon = theme::ICON_WARNING;
 const COINJOIN_CORNER: Point = AREA.top_right().ofs(Offset::new(-2, 2));
 
@@ -114,9 +114,8 @@ impl Homescreen {
 
             // TODO: fill warning icons here as well?
             TR::homescreen__title_no_usb_connection.map_translated(|t| {
-                shape::Text::new(baseline, t)
+                shape::Text::new(baseline, t, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
-                    .with_font(NOTIFICATION_FONT)
                     .render(target)
             });
         } else if let Some((notification, _level)) = &self.notification {
@@ -125,9 +124,8 @@ impl Homescreen {
                 .render(target);
 
             notification.map(|c| {
-                shape::Text::new(baseline, c)
+                shape::Text::new(baseline, c, NOTIFICATION_FONT)
                     .with_align(Alignment::Center)
-                    .with_font(NOTIFICATION_FONT)
                     .render(target)
             });
 

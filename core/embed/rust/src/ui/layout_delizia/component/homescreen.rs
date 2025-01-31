@@ -7,7 +7,7 @@ use crate::{
     trezorhal::usb::usb_configured,
     ui::{
         component::{Component, Event, EventCtx, Timer},
-        display::{font, image::ImageInfo, Color},
+        display::{image::ImageInfo, Color},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::util::get_user_custom_image,
@@ -24,7 +24,10 @@ use crate::ui::{
 };
 
 use super::{
-    super::cshape::{self, UnlockOverlay},
+    super::{
+        cshape::{self, UnlockOverlay},
+        fonts,
+    },
     constant, theme,
     theme::{GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
     Loader, LoaderMsg,
@@ -83,8 +86,7 @@ fn render_notif<'s>(notif: HomescreenNotification, top: i16, target: &mut impl R
             .with_alpha(NOTIFICATION_BG_ALPHA)
             .render(target);
 
-        shape::Text::new(text_pos, t)
-            .with_font(style.text_font)
+        shape::Text::new(text_pos, t, style.text_font)
             .with_fg(notif.color_text)
             .render(target);
     });
@@ -491,9 +493,8 @@ impl Homescreen {
 
     fn render_loader<'s>(&'s self, target: &mut impl Renderer<'s>) {
         TR::progress__locking_device.map_translated(|t| {
-            shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t)
+            shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t, fonts::FONT_NORMAL)
                 .with_align(Alignment::Center)
-                .with_font(font::FONT_NORMAL)
                 .with_fg(theme::FG);
         });
         self.loader.render(target)
@@ -855,8 +856,7 @@ impl Component for Lockscreen {
                 t.map_translated(|t| {
                     let text_pos = Point::new(6, offset);
 
-                    shape::Text::new(text_pos, t)
-                        .with_font(theme::TEXT_SUB_GREY.text_font)
+                    shape::Text::new(text_pos, t, theme::TEXT_SUB_GREY.text_font)
                         .with_fg(theme::TEXT_SUB_GREY.text_color)
                         .render(target);
                 })
@@ -873,8 +873,7 @@ impl Component for Lockscreen {
                 screen().y1 - offset,
             );
 
-            shape::Text::new(text_pos, t)
-                .with_font(theme::TEXT_SUB_GREY.text_font)
+            shape::Text::new(text_pos, t, theme::TEXT_SUB_GREY.text_font)
                 .with_fg(theme::GREY_DARK)
                 .render(target);
         });

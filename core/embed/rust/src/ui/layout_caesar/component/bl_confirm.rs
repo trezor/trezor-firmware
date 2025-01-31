@@ -2,7 +2,7 @@ use crate::{
     strutil::TString,
     ui::{
         component::{Child, Component, ComponentExt, Event, EventCtx, Label, Pad},
-        display::{font, Color},
+        display::Color,
         geometry::{Point, Rect},
         shape,
         shape::Renderer,
@@ -10,6 +10,7 @@ use crate::{
 };
 
 use super::{
+    super::fonts,
     theme::{BUTTON_HEIGHT, TITLE_AREA_HEIGHT, WHITE},
     ButtonController, ButtonControllerMsg, ButtonLayout, ButtonPos,
 };
@@ -200,8 +201,7 @@ impl Component for Confirm<'_> {
 
         let mut display_top_left = |text: TString| {
             text.map(|t| {
-                shape::Text::new(Point::zero(), t)
-                    .with_font(font::FONT_BOLD)
+                shape::Text::new(Point::zero(), t, fonts::FONT_BOLD)
                     .with_fg(WHITE)
                     .render(target);
             });

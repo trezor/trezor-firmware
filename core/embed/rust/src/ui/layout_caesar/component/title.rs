@@ -60,8 +60,7 @@ impl Title {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_left() + Offset::y(text_height - 1);
         title.map(|s| {
-            shape::Text::new(title_baseline, s)
-                .with_font(theme::FONT_HEADER)
+            shape::Text::new(title_baseline, s, theme::FONT_HEADER)
                 .with_fg(theme::FG)
                 .render(target);
         });
@@ -76,9 +75,8 @@ impl Title {
         let text_height = theme::FONT_HEADER.text_height();
         let title_baseline = area.top_center() + Offset::y(text_height - 1);
         title.map(|s| {
-            shape::Text::new(title_baseline, s)
+            shape::Text::new(title_baseline, s, theme::FONT_HEADER)
                 .with_align(Alignment::Center)
-                .with_font(theme::FONT_HEADER)
                 .with_fg(theme::FG)
                 .render(target);
         });

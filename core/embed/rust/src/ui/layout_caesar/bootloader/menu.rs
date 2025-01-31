@@ -5,7 +5,7 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Pad},
         constant::screen,
-        display::{font, Icon},
+        display::Icon,
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::simplified::ReturnToC,
         shape,
@@ -15,6 +15,7 @@ use crate::{
 
 use super::super::{
     component::{ButtonLayout, Choice, ChoiceFactory, ChoicePage},
+    fonts,
     theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
 };
 
@@ -58,17 +59,19 @@ impl Choice for MenuChoice {
             .with_fg(BLD_FG)
             .render(target);
 
-        shape::Text::new(SCREEN_CENTER, self.first_line)
+        shape::Text::new(SCREEN_CENTER, self.first_line, fonts::FONT_NORMAL)
             .with_align(Alignment::Center)
-            .with_font(font::FONT_NORMAL)
             .with_fg(BLD_FG)
             .render(target);
 
-        shape::Text::new(SCREEN_CENTER + Offset::y(10), self.second_line)
-            .with_align(Alignment::Center)
-            .with_font(font::FONT_NORMAL)
-            .with_fg(BLD_FG)
-            .render(target);
+        shape::Text::new(
+            SCREEN_CENTER + Offset::y(10),
+            self.second_line,
+            fonts::FONT_NORMAL,
+        )
+        .with_align(Alignment::Center)
+        .with_fg(BLD_FG)
+        .render(target);
     }
 
     fn btn_layout(&self) -> ButtonLayout {

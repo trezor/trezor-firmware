@@ -3,13 +3,14 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never, Pad},
         constant::screen,
-        display::{font, Color, Icon},
+        display::{Color, Icon},
         geometry::{Alignment2D, Insets, Offset, Point, Rect},
         shape::{self, Renderer},
     },
 };
 
 use super::{
+    super::fonts,
     constant::WIDTH,
     theme::{FG, RESULT_FOOTER_START, RESULT_PADDING},
 };
@@ -33,11 +34,11 @@ impl ResultStyle {
     }
 
     pub const fn message_style(&self) -> TextStyle {
-        TextStyle::new(font::FONT_NORMAL, self.fg_color, self.bg_color, FG, FG)
+        TextStyle::new(fonts::FONT_NORMAL, self.fg_color, self.bg_color, FG, FG)
     }
 
     pub const fn title_style(&self) -> TextStyle {
-        TextStyle::new(font::FONT_BOLD, self.fg_color, self.bg_color, FG, FG)
+        TextStyle::new(fonts::FONT_BOLD, self.fg_color, self.bg_color, FG, FG)
     }
 }
 

@@ -186,8 +186,7 @@ impl Button {
                     + Offset::new(-width / 2, height / 2)
                     + Offset::y(Self::BASELINE_OFFSET);
                 text.map(|text| {
-                    shape::Text::new(start_of_baseline, text)
-                        .with_font(style.font)
+                    shape::Text::new(start_of_baseline, text, style.font)
                         .with_fg(style.text_color)
                         .render(target);
                 });
@@ -548,8 +547,7 @@ impl IconText {
         }
 
         if use_text {
-            shape::Text::new(text_pos, self.text)
-                .with_font(style.font)
+            shape::Text::new(text_pos, self.text, style.font)
                 .with_fg(style.text_color)
                 .render(target);
         }

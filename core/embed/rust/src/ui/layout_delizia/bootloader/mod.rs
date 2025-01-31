@@ -4,7 +4,7 @@ use crate::{
     trezorhal::secbool::secbool,
     ui::{
         component::{connect::Connect, Label},
-        display::{self, font, Color, Icon},
+        display::{self, Color, Icon},
         geometry::{Alignment, Offset, Point, Rect},
         layout::simplified::{run, show},
     },
@@ -17,8 +17,9 @@ use super::{
         Button, ResultScreen, WelcomeScreen,
     },
     cshape::{render_loader, LoaderRange},
-    theme,
+    fonts,
     theme::{
+        backlight,
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
             BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD24, FIRE32,
@@ -72,8 +73,7 @@ impl UIDelizia {
         display::sync();
 
         render_on_display(None, Some(bg_color), |target| {
-            shape::Text::new(PROGRESS_TEXT_ORIGIN, text)
-                .with_font(font::FONT_NORMAL)
+            shape::Text::new(PROGRESS_TEXT_ORIGIN, text, fonts::FONT_DEMIBOLD)
                 .with_fg(BLD_FG)
                 .render(target);
 
@@ -107,9 +107,9 @@ impl UIDelizia {
                 shape::Text::new(
                     SCREEN.center() + Offset::y(loader_offset + center_text_offset),
                     center_text,
+                    fonts::FONT_DEMIBOLD,
                 )
                 .with_align(Alignment::Center)
-                .with_font(font::FONT_NORMAL)
                 .with_fg(GREY)
                 .render(target);
             }
@@ -325,7 +325,7 @@ impl BootloaderUI for UIDelizia {
         if fading {
             Self::fadein();
         } else {
-            display::set_backlight(theme::backlight::get_backlight_normal());
+            display::set_backlight(backlight::get_backlight_normal());
         }
     }
 
@@ -359,7 +359,12 @@ impl BootloaderUI for UIDelizia {
 
     fn screen_connect(initial_setup: bool) {
         let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let mut frame = Connect::new("Waiting for host...", BLD_TITLE_COLOR, bg);
+        let mut frame = Connect::new(
+            "Waiting for host...",
+            fonts::FONT_DEMIBOLD,
+            BLD_TITLE_COLOR,
+            bg,
+        );
         show(&mut frame, true);
     }
 
@@ -423,9 +428,8 @@ impl BootloaderUI for UIDelizia {
             // Draw vendor string if present
             if let Some(text) = vendor_str {
                 let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5 - 50);
-                shape::Text::new(pos, text)
+                shape::Text::new(pos, text, fonts::FONT_DEMIBOLD)
                     .with_align(Alignment::Center)
-                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG) //COLOR_BL_BG
                     .render(target);
 
@@ -440,9 +444,8 @@ impl BootloaderUI for UIDelizia {
                     version[2]
                 ));
 
-                shape::Text::new(pos, version_text.as_str())
+                shape::Text::new(pos, version_text.as_str(), fonts::FONT_DEMIBOLD)
                     .with_align(Alignment::Center)
-                    .with_font(font::FONT_NORMAL)
                     .with_fg(BLD_FG)
                     .render(target);
             }
@@ -455,17 +458,15 @@ impl BootloaderUI for UIDelizia {
                     unwrap!(uwrite!(text, "starting in {} s", wait));
 
                     let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
-                    shape::Text::new(pos, text.as_str())
+                    shape::Text::new(pos, text.as_str(), fonts::FONT_DEMIBOLD)
                         .with_align(Alignment::Center)
-                        .with_font(font::FONT_NORMAL)
                         .with_fg(BLD_FG)
                         .render(target);
                 }
                 core::cmp::Ordering::Less => {
                     let pos = Point::new(SCREEN.width() / 2, SCREEN.height() - 5);
-                    shape::Text::new(pos, "click to continue ...")
+                    shape::Text::new(pos, "click to continue ...", fonts::FONT_DEMIBOLD)
                         .with_align(Alignment::Center)
-                        .with_font(font::FONT_NORMAL)
                         .with_fg(BLD_FG)
                         .render(target);
                 }

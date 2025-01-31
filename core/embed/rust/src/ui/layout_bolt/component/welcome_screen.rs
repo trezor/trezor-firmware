@@ -5,6 +5,8 @@ use crate::ui::{
     shape::Renderer,
 };
 
+#[cfg(not(feature = "bootloader"))]
+use super::super::fonts;
 use super::theme;
 #[cfg(feature = "bootloader")]
 use super::theme::bootloader::DEVICE_NAME;
@@ -19,7 +21,7 @@ use crate::{
     ui::{display, geometry::Alignment},
 };
 #[cfg(not(feature = "bootloader"))]
-const MODEL_NAME_FONT: display::Font = display::font::FONT_DEMIBOLD;
+const MODEL_NAME_FONT: display::Font = fonts::FONT_DEMIBOLD;
 
 pub struct WelcomeScreen {
     area: Rect,
@@ -66,9 +68,9 @@ impl Component for WelcomeScreen {
         shape::Text::new(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
             model::FULL_NAME,
+            MODEL_NAME_FONT,
         )
         .with_align(Alignment::Center)
-        .with_font(MODEL_NAME_FONT)
         .with_fg(theme::FG)
         .render(target);
 

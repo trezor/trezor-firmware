@@ -124,8 +124,7 @@ impl Marquee {
             let text_height = self.font.text_height();
             let pos = self.area.top_left() + Offset::new(offset, text_height - 1);
             self.text.map(|t| {
-                shape::Text::new(pos, t)
-                    .with_font(self.font)
+                shape::Text::new(pos, t, self.font)
                     .with_fg(self.fg)
                     .render(target);
             });

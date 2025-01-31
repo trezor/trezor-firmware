@@ -9,7 +9,6 @@ use crate::{
             base::ComponentExt, text::TextStyle, Child, Component, Event, EventCtx, Label, Maybe,
             Never, Pad, Timer,
         },
-        display::font,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
@@ -17,6 +16,7 @@ use crate::{
 };
 
 use super::super::{
+    super::fonts,
     button::{
         Button, ButtonContent,
         ButtonMsg::{self, Clicked},
@@ -363,22 +363,20 @@ impl PinDots {
     }
 
     fn render_digits<'s>(&self, area: Rect, target: &mut impl Renderer<'s>) {
-        let center = area.center() + Offset::y(font::FONT_MONO.text_height() / 2);
+        let center = area.center() + Offset::y(fonts::FONT_MONO.text_height() / 2);
         let right =
-            center + Offset::x(font::FONT_MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
+            center + Offset::x(fonts::FONT_MONO.text_width("0") * (MAX_VISIBLE_DOTS as i16) / 2);
         let digits = self.digits.len();
 
         if digits <= MAX_VISIBLE_DOTS {
-            shape::Text::new(center, &self.digits)
+            shape::Text::new(center, &self.digits, fonts::FONT_MONO)
                 .with_align(Alignment::Center)
-                .with_font(font::FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         } else {
             let offset: usize = digits.saturating_sub(MAX_VISIBLE_DIGITS);
-            shape::Text::new(right, &self.digits[offset..])
+            shape::Text::new(right, &self.digits[offset..], fonts::FONT_MONO)
                 .with_align(Alignment::End)
-                .with_font(font::FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         }
@@ -422,11 +420,10 @@ impl PinDots {
         }
         if last_digit && digits > 0 {
             let last = &self.digits[(digits - 1)..digits];
-            cursor.y = area.center().y + (font::FONT_MONO.text_height() / 2);
+            cursor.y = area.center().y + (fonts::FONT_MONO.text_height() / 2);
             let offset = Offset::x(Self::DOT / 2);
-            shape::Text::new(cursor + offset, last)
+            shape::Text::new(cursor + offset, last, fonts::FONT_MONO)
                 .with_align(Alignment::Center)
-                .with_font(font::FONT_MONO)
                 .with_fg(self.style.text_color)
                 .render(target);
         } else {

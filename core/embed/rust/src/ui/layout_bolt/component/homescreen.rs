@@ -7,7 +7,6 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Pad, Timer},
         display::{
-            font,
             image::{ImageInfo, ToifFormat},
             toif::Icon,
             Color,
@@ -22,7 +21,7 @@ use crate::{
 use crate::ui::constant::{HEIGHT, WIDTH};
 
 use super::{
-    super::{constant, theme::IMAGE_HOMESCREEN},
+    super::{constant, fonts, theme::IMAGE_HOMESCREEN},
     theme, Loader, LoaderMsg,
 };
 
@@ -120,9 +119,8 @@ impl Homescreen {
 
     fn render_loader<'s>(&'s self, target: &mut impl Renderer<'s>) {
         TR::progress__locking_device.map_translated(|t| {
-            shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t)
+            shape::Text::new(TOP_CENTER + Offset::y(HOLD_Y), t, fonts::FONT_NORMAL)
                 .with_align(Alignment::Center)
-                .with_font(font::FONT_NORMAL)
                 .with_fg(theme::FG);
         });
         self.loader.render(target)
@@ -233,9 +231,8 @@ impl Component for Homescreen {
 
                 let style = theme::TEXT_DEMIBOLD;
                 let pos = Point::new(self.pad.area.center().x, LABEL_Y);
-                shape::Text::new(pos, t)
+                shape::Text::new(pos, t, style.text_font)
                     .with_align(Alignment::Center)
-                    .with_font(style.text_font)
                     .with_fg(theme::FG)
                     .render(target);
             });
@@ -267,8 +264,7 @@ impl Component for Homescreen {
                         style.text_font.vert_center(banner.y0, banner.y1, "A"),
                     );
 
-                    shape::Text::new(text_pos, t)
-                        .with_font(style.text_font)
+                    shape::Text::new(text_pos, t, style.text_font)
                         .with_fg(style.text_color)
                         .render(target);
 
@@ -401,8 +397,7 @@ impl Component for Lockscreen<'_> {
                     0,
                 ) + item.offset;
 
-                shape::Text::new(text_pos, t)
-                    .with_font(item.style.text_font)
+                shape::Text::new(text_pos, t, item.style.text_font)
                     .with_fg(item.style.text_color)
                     .render(target);
 

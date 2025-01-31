@@ -7,8 +7,6 @@ use crate::ui::{
     shape::{Bitmap, BitmapFormat},
 };
 
-pub use super::super::fonts::*;
-
 #[cfg(feature = "translations")]
 use crate::translations::flash;
 #[cfg(feature = "translations")]

@@ -1,12 +1,14 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::font,
     geometry::{Offset, Point, Rect},
     shape::{self, Renderer},
 };
 
-use super::super::theme::{BLACK, GREY, WHITE};
+use super::{
+    super::theme::{BLACK, GREY, WHITE},
+    fonts,
+};
 
 const TEXT_ORIGIN: Point = Point::new(0, 105);
 const STRIDE: i16 = 22;
@@ -37,29 +39,27 @@ impl Component for Welcome {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
+        let font = fonts::FONT_DEMIBOLD;
 
-        shape::Text::new(TEXT_ORIGIN, "Get started")
-            .with_font(font::FONT_NORMAL)
+        shape::Text::new(TEXT_ORIGIN, "Get started", font)
             .with_fg(GREY)
             .render(target);
 
-        shape::Text::new(TEXT_ORIGIN + Offset::y(STRIDE), "with your Trezor")
-            .with_font(font::FONT_NORMAL)
+        shape::Text::new(TEXT_ORIGIN + Offset::y(STRIDE), "with your Trezor", font)
             .with_fg(GREY)
             .render(target);
 
-        shape::Text::new(TEXT_ORIGIN + Offset::y(2 * STRIDE), "at")
-            .with_font(font::FONT_NORMAL)
+        shape::Text::new(TEXT_ORIGIN + Offset::y(2 * STRIDE), "at", font)
             .with_fg(GREY)
             .render(target);
 
-        let at_width = font::FONT_NORMAL.text_width("at ");
+        let at_width = font.text_width("at ");
 
         shape::Text::new(
             TEXT_ORIGIN + Offset::new(at_width, 2 * STRIDE),
             "trezor.io/start",
+            font,
         )
-        .with_font(font::FONT_NORMAL)
         .with_fg(WHITE)
         .render(target);
     }

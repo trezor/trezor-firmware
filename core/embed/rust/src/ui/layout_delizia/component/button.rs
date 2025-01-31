@@ -213,8 +213,7 @@ impl Button {
                     Alignment::End => self.area.right_center() - Offset::x(Self::BASELINE_OFFSET.x),
                 } + y_offset;
                 text.map(|text| {
-                    shape::Text::new(start_of_baseline, text)
-                        .with_font(style.font)
+                    shape::Text::new(start_of_baseline, text, style.font)
                         .with_fg(style.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
@@ -438,8 +437,7 @@ impl IconText {
         let mut show_text = |text: &str, rect: Rect| {
             let text_pos = rect.left_center() + baseline_offset;
             let text_pos = Point::new(rect.top_left().x + Self::ICON_SPACE, text_pos.y);
-            shape::Text::new(text_pos, text)
-                .with_font(style.font)
+            shape::Text::new(text_pos, text, style.font)
                 .with_fg(style.text_color)
                 .with_alpha(alpha)
                 .render(target)

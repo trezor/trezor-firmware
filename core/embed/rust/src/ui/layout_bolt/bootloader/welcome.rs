@@ -1,15 +1,17 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never, Pad},
     constant::screen,
-    display::{font, toif::Toif},
+    display::toif::Toif,
     geometry::{Alignment, Alignment2D, Offset, Rect},
-    shape,
-    shape::Renderer,
+    shape::{self, Renderer},
 };
 
-use super::super::theme::{
-    bootloader::{START_URL, WELCOME_COLOR},
-    GREY_MEDIUM, WHITE,
+use super::super::{
+    fonts,
+    theme::{
+        bootloader::{START_URL, WELCOME_COLOR},
+        GREY_MEDIUM, WHITE,
+    },
 };
 
 pub struct Welcome {
@@ -39,17 +41,23 @@ impl Component for Welcome {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
 
-        shape::Text::new(screen().top_center() + Offset::y(102), "Get started with")
-            .with_align(Alignment::Center)
-            .with_font(font::FONT_NORMAL)
-            .with_fg(GREY_MEDIUM)
-            .render(target);
+        shape::Text::new(
+            screen().top_center() + Offset::y(102),
+            "Get started with",
+            fonts::FONT_NORMAL,
+        )
+        .with_align(Alignment::Center)
+        .with_fg(GREY_MEDIUM)
+        .render(target);
 
-        shape::Text::new(screen().top_center() + Offset::y(126), "your Trezor at")
-            .with_align(Alignment::Center)
-            .with_font(font::FONT_NORMAL)
-            .with_fg(GREY_MEDIUM)
-            .render(target);
+        shape::Text::new(
+            screen().top_center() + Offset::y(126),
+            "your Trezor at",
+            fonts::FONT_NORMAL,
+        )
+        .with_align(Alignment::Center)
+        .with_fg(GREY_MEDIUM)
+        .render(target);
 
         let icon = unwrap!(Toif::new(START_URL));
         shape::ToifImage::new(screen().top_center() + Offset::y(135), icon)

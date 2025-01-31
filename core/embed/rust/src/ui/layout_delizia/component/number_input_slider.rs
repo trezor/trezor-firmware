@@ -225,11 +225,14 @@ impl Component for NumberInputSlider {
 
         if !self.touching {
             let text_height = theme::TEXT_BOLD.text_font.line_height();
-            shape::Text::new(self.area.center() + Offset::new(0, text_height / 2), &str)
-                .with_font(theme::TEXT_BOLD.text_font)
-                .with_fg(theme::TEXT_BOLD.text_color)
-                .with_align(Alignment::Center)
-                .render(target);
+            shape::Text::new(
+                self.area.center() + Offset::new(0, text_height / 2),
+                &str,
+                theme::TEXT_BOLD.text_font,
+            )
+            .with_fg(theme::TEXT_BOLD.text_color)
+            .with_align(Alignment::Center)
+            .render(target);
         }
     }
 }

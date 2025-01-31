@@ -4,7 +4,7 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx, Never},
         constant,
-        display::{font, Color, Font, Icon},
+        display::{Color, Font, Icon},
         event::PhysicalButton,
         geometry::{Alignment2D, Offset, Point, Rect},
         shape,
@@ -12,7 +12,7 @@ use crate::{
     },
 };
 
-use super::{loader::DEFAULT_DURATION_MS, theme};
+use super::{super::fonts, loader::DEFAULT_DURATION_MS, theme};
 
 const HALF_SCREEN_BUTTON_WIDTH: i16 = constant::WIDTH / 2 - 1;
 
@@ -232,8 +232,8 @@ impl Component for Button {
                 shape::Text::new(
                     self.get_text_baseline(style) - Offset::x(style.font.start_x_bearing(t)),
                     t,
+                    style.font,
                 )
-                .with_font(style.font)
                 .with_fg(fg_color)
                 .render(target);
             }),
@@ -367,7 +367,7 @@ impl ButtonDetails {
     pub fn text(text: TString<'static>) -> Self {
         Self {
             content: ButtonContent::Text(text),
-            font: font::FONT_NORMAL_UPPER,
+            font: fonts::FONT_NORMAL_UPPER,
             duration: None,
             with_outline: true,
             with_arms: false,
@@ -381,7 +381,7 @@ impl ButtonDetails {
     pub fn icon(icon: Icon) -> Self {
         Self {
             content: ButtonContent::Icon(icon),
-            font: font::FONT_NORMAL_UPPER,
+            font: fonts::FONT_NORMAL_UPPER,
             duration: None,
             with_outline: false,
             with_arms: false,
@@ -561,7 +561,7 @@ impl ButtonLayout {
             Some(
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(font::FONT_NORMAL),
+                    .with_font(fonts::FONT_NORMAL),
             ),
         )
     }
@@ -574,7 +574,7 @@ impl ButtonLayout {
             Some(
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(font::FONT_NORMAL),
+                    .with_font(fonts::FONT_NORMAL),
             ),
         )
     }
@@ -695,7 +695,7 @@ impl ButtonLayout {
             Some(
                 ButtonDetails::text("i".into())
                     .with_fixed_width(theme::BUTTON_ICON_WIDTH)
-                    .with_font(font::FONT_NORMAL),
+                    .with_font(fonts::FONT_NORMAL),
             ),
         )
     }
