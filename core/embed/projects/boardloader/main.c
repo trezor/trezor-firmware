@@ -85,7 +85,12 @@ static void drivers_init(void) {
 #ifdef USE_HASH_PROCESSOR
   hash_processor_init();
 #endif
+#ifndef FIXED_HW_DEINIT
+  // only skip this if deinit was fixed,
+  // as some old bootloaders rely on display being initialized
+  // (skipping alows faster boot time so generally a good idea)
   display_init(DISPLAY_RESET_CONTENT);
+#endif
 }
 
 static void drivers_deinit(void) {
