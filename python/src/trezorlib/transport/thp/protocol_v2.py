@@ -61,6 +61,7 @@ class ProtocolV2(ProtocolAndChannel):
     nonce_response: int
     sync_bit_send: int
     sync_bit_receive: int
+    handshake_hash: bytes
 
     _has_valid_channel: bool = False
     _features: messages.Features | None = None
@@ -81,7 +82,7 @@ class ProtocolV2(ProtocolAndChannel):
             self.nonce_response = channel_data.nonce_response
             self.sync_bit_receive = channel_data.sync_bit_receive
             self.sync_bit_send = channel_data.sync_bit_send
-            self.handshake_hash: bytes = b""
+            self.handshake_hash = bytes.fromhex(channel_data.handshake_hash)
             self._has_valid_channel = True
 
     def get_channel(self, helper_debug: DebugLink | None = None) -> ProtocolV2:

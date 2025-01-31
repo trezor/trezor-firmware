@@ -122,7 +122,7 @@ def dict_to_channel_data(dict: t.Dict) -> ChannelData:
         nonce_response=dict["nonce_response"],
         sync_bit_send=dict["sync_bit_send"],
         sync_bit_receive=dict["sync_bit_receive"],
-        handshake_hash=dict["handshake_hash"],
+        handshake_hash=bytes.fromhex(dict["handshake_hash"]),
     )
 
 

@@ -29,7 +29,7 @@ class ChannelData:
         self.nonce_response: int = nonce_response
         self.sync_bit_receive: int = sync_bit_receive
         self.sync_bit_send: int = sync_bit_send
-        self.handshake_hash: bytes = handshake_hash
+        self.handshake_hash: str = hexlify(handshake_hash).decode()
 
     def to_dict(self):
         return {
