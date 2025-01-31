@@ -26,16 +26,16 @@
 
 #define NFC_MAX_UID_LEN 10
 
-typedef enum{
+typedef enum {
   NFC_POLLER_TECH_A = 0x1,
-  NFC_POLLER_TECH_B = 0x1 << 1 ,
+  NFC_POLLER_TECH_B = 0x1 << 1,
   NFC_POLLER_TECH_F = 0x1 << 2,
   NFC_POLLER_TECH_V = 0x1 << 3,
   NFC_CARD_EMU_TECH_A = 0x1 << 4,
   NFC_CARD_EMU_TECH_F = 0x1 << 5,
-} nfc_tech_t ;
+} nfc_tech_t;
 
-typedef enum{
+typedef enum {
   NFC_DEV_TYPE_A,
   NFC_DEV_TYPE_B,
   NFC_DEV_TYPE_F,
@@ -45,7 +45,7 @@ typedef enum{
   NFC_DEV_TYPE_UNKNOWN,
 } nfc_dev_type_t;
 
-typedef enum{
+typedef enum {
   NFC_STATE_IDLE,
   NFC_STATE_ACTIVATED,
 } nfc_event_t;
@@ -58,26 +58,47 @@ typedef enum {
   NFC_INITIALIZATION_FAILED,
 } nfc_status_t;
 
-typedef struct{
+typedef struct {
   uint8_t type;
   char uid[NFC_MAX_UID_LEN];
   uint8_t uid_len;
-}nfc_dev_info_t;
+} nfc_dev_info_t;
 
+// Initialize NFC driver including supportive RFAL middlewere
 nfc_status_t nfc_init();
 
+// Deinitialize NFC drive
 nfc_status_t nfc_deinit();
 
+// Register NFC technology (or several) to be explored by NFC state machine
+// use this function before activating the state machine with nfc_activate_stm()
 nfc_status_t nfc_register_tech(nfc_tech_t tech);
 
-nfc_status_t nfc_register_event_callback(nfc_event_t event_type, void (*cb_fn)(void));
+// Register event callbacks to be called with state machine, this function is
+// used when user need to further interact (read/write) with the connected NFC
+// device
+nfc_status_t nfc_register_event_callback(nfc_event_t event_type,
+                                         void (*cb_fn)(void));
 
+// Activate the NFC RFAL state machine which will explore the registered
+// technologies State machine handles the low level NFC protocols of registered
+// technologies and provide the user with the activated device information. With
+// activated, user have to constantly run NFC workerwith nfc_feed_worker() to
+// activly loop the state machine.
 nfc_status_t nfc_activate_stm();
 
+// Deactivate the NFC RFAL state machine (put in IDLE state).
 nfc_status_t nfc_deactivate_stm();
 
+// Calls NFC RFAL worker which service the NFC statemachine exploring the
+// registered technologies. this function has to be actively called in loop
+// (main NFC poll function).
+nfc_status_t nfc_feed_worker();
+
+// Read the general device information of the activated NFC device.
 nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info);
 
-nfc_status_t nfc_feed_worker();
+// Write the NDFE message with the trezor.io URI to the activated NFC device.
+nfc_status_t nfc_def_write_ndef_uri();
 
 #endif  // TREZORHAL_NFC_H

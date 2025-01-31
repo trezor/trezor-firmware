@@ -1,132 +1,166 @@
 
 
+#include "ndef.h"
 #include <stdint.h>
 #include <string.h>
-#include "ndef.h"
-
-
 
 // ndef_status_t create_ndef_record_uri(uint8_t *bytearray, )
 
+ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len,
+                                 ndef_message_t *message) {
+  memset(message, 0, sizeof(ndef_message_t));
 
-ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len ,ndef_message_t *message){
+  uint16_t remaining_len = buffer_len;
 
+  // Indicate TLV header
+  if (*buffer == 0x3) {
+    buffer++;
+  } else {
+    return NDEF_ERROR;  // Not a valid TLV structure
+  }
 
-    memset(message, 0, sizeof(ndef_message_t));
+  // TLV length
+  if (*buffer == 0xFF) {
+    // TLV 3 byte length format
+    buffer++;
+    message->message_total_len = (int16_t)(buffer[0] << 8 | buffer[1]);
+    buffer = buffer + 2;
 
-    uint16_t remaining_len = buffer_len;
+  } else {
+    message->message_total_len = *buffer;
+    buffer++;
+  }
 
+  remaining_len = message->message_total_len;
 
-    // Indicate TLV header
-    if(*buffer == 0x3){
-        buffer++;
-    }else{
-      return NDEF_ERROR; // Not a valid TLV structure
+  while (1) {
+    parse_ndef_record(buffer, remaining_len,
+                      &(message->records[message->records_cnt]));
+    buffer += message->records[message->records_cnt].record_total_len;
+    remaining_len -= message->records[message->records_cnt].record_total_len;
+    message->records_cnt++;
+
+    if (message->records_cnt >= NDEF_MAX_RECORDS) {
+      break;  // Max records reached
     }
 
-    // TLV length
-    if(*buffer == 0xFF){
-
-        // TLV 3 byte length format
-        buffer++;
-        message->message_total_len = (int16_t) (buffer[0] << 8 | buffer[1]);
-        buffer = buffer + 2;
-
-    }else{
-
-      message->message_total_len  = *buffer;
-      buffer++;
-
+    if (remaining_len == 0) {
+      break;
     }
+  }
 
-    remaining_len = message->message_total_len;
+  // Check TLV termination character
+  if (*buffer != 0xFE) {
+    return NDEF_ERROR;  // Not a valid TLV structure
+  }
 
-    while(1){
-
-        parse_ndef_record(buffer, remaining_len , &(message->records[message->records_cnt]));
-        buffer += message->records[message->records_cnt].record_total_len;
-        remaining_len -= message->records[message->records_cnt].record_total_len;
-        message->records_cnt++;
-
-        if(message->records_cnt >= NDEF_MAX_RECORDS){
-            break; // Max records reached
-        }
-
-        if(remaining_len == 0){
-          break;
-        }
-
-    }
-
-    // Check TLV termination character
-    if(*buffer != 0xFE){
-      return NDEF_ERROR; // Not a valid TLV structure
-    }
-
-    return NDEF_OK;
+  return NDEF_OK;
 }
 
-ndef_status_t parse_ndef_record(uint8_t *buffer, uint16_t len, ndef_record_t *rec){
-
+ndef_status_t parse_ndef_record(uint8_t *buffer, uint16_t len,
+                                ndef_record_t *rec) {
   uint8_t bp = 0;
 
-  // Check if there is enough items to cover first part of the header revelaing record length
-  if(len < 3){
-    return NDEF_ERROR; // Not enough data to parse
+  // Check if there is enough items to cover first part of the header revelaing
+  // record length
+  if (len < 3) {
+    return NDEF_ERROR;  // Not enough data to parse
   }
 
   // Look at first byte, parse header
   memcpy(&(rec->header), buffer, 1);
   bp++;
 
-  if(rec->header.tnf == 0x00 || rec->header.tnf > 0x06){
-    return NDEF_ERROR; // Empty or non-existing record
+  if (rec->header.tnf == 0x00 || rec->header.tnf > 0x06) {
+    return NDEF_ERROR;  // Empty or non-existing record
   }
 
   rec->type_length = buffer[bp++];
 
-  if(rec->header.sr){
+  if (rec->header.sr) {
     rec->payload_length = buffer[bp++];
-  }else{
+  } else {
     memcpy(&(rec->payload_length), buffer + bp, 4);
     bp += 4;
   }
 
-  if(rec->header.il){
+  if (rec->header.il) {
     rec->id_length = buffer[bp++];
-  }else{
+  } else {
     // ID length ommited
     rec->id_length = 0;
   }
 
-  if(rec->type_length > 0){
+  if (rec->type_length > 0) {
     memcpy(&(rec->type), buffer + bp, rec->type_length);
     bp += rec->type_length;
-  }else{
+  } else {
     // Type length ommited
     rec->type = 0;
   }
 
-  if(rec->id_length > 0){
+  if (rec->id_length > 0) {
     memcpy(&(rec->id), buffer + bp, rec->id_length);
     bp += rec->id_length;
-  }else{
+  } else {
     // ID length ommited
     rec->id = 0;
   }
 
-  if(rec->payload_length > 0){
+  if (rec->payload_length > 0) {
     memcpy(rec->payload, buffer + bp, rec->payload_length);
     bp += rec->payload_length;
-  }else{
+  } else {
     // Payload length ommited;
   }
 
   rec->record_total_len = bp;
 
   return NDEF_OK;
-
 }
 
+uint16_t create_ndef_uri(const char *uri, uint8_t *buffer) {
+  *buffer = 0x3;  // TLV header
+  buffer++;
 
+  uint16_t uri_len = strlen(uri);
 
+  // NDEF message length
+  *buffer = uri_len + 5;  // uri + record header;
+  buffer++;
+
+  // ndef_record_header_t hdr = {
+  //   .tnf = 0x01,
+  //   .il = 0,
+  //   .sr = 1,
+  //   .cf = 0,
+  //   .me = 1,
+  //   .mb = 1,
+  // };
+
+  *buffer = 0xD1;  // NDEF record Header
+  buffer++;
+
+  *buffer = 0x1;  // Type length
+  buffer++;
+
+  *buffer = uri_len;  // Payload length
+  buffer++;
+
+  *buffer = 0x55;  // URI type
+  buffer++;
+
+  *buffer = 0x1;  // URI abreviation
+  buffer++;
+
+  for (uint8_t i = 0; i < uri_len; i++) {
+    *buffer = uri[i];
+    buffer++;
+  }
+
+  // memcpy(buffer, uri, uri_len);
+
+  *buffer = 0xFE;  // TLV termination
+
+  return uri_len + 7;  // return buffer len
+}
