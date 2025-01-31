@@ -99,10 +99,23 @@ SOURCE_NANOPB = [
 SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/bootui.c',
     'embed/projects/bootloader/main.c',
-    'embed/projects/bootloader/messages.c',
-    'embed/projects/bootloader/emulator.c',
+    'embed/projects/bootloader/poll.c',
+    'embed/projects/bootloader/antiglitch.c',
+    'embed/projects/bootloader/workflow/wf_firmware_update.c',
+    'embed/projects/bootloader/workflow/wf_wipe_device.c',
+    'embed/projects/bootloader/workflow/wf_get_features.c',
+    'embed/projects/bootloader/workflow/wf_initialize.c',
+    'embed/projects/bootloader/workflow/wf_ping.c',
+    'embed/projects/bootloader/workflow/wf_bootloader.c',
+    'embed/projects/bootloader/workflow/wf_empty_device.c',
+    'embed/projects/bootloader/workflow/wf_auto_update.c',
+    'embed/projects/bootloader/workflow/wf_host_control.c',
+    'embed/projects/bootloader/wire/codec_v1.c',
+    'embed/projects/bootloader/wire/wire_iface_usb.c',
+    'embed/projects/bootloader/protob/protob.c',
+    'embed/projects/bootloader/protob/pb/messages.pb.c',
     'embed/projects/bootloader/version_check.c',
-    'embed/projects/bootloader/protob/messages.pb.c',
+    'embed/projects/bootloader/emulator.c',
 ]
 
 SOURCE_TREZORHAL = [
@@ -136,6 +149,11 @@ env = Environment(
 )
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_UNIX, PATH_HAL)
+
+if 'optiga' in FEATURES_AVAILABLE:
+    SOURCE_BOOTLOADER += [
+        'embed/projects/bootloader/workflow/wf_unlock_bootloader.c',
+    ]
 
 env.Replace(
     CP='cp',

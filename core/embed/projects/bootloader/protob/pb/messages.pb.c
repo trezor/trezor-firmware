@@ -12,6 +12,9 @@ PB_BIND(Initialize, Initialize, AUTO)
 PB_BIND(GetFeatures, GetFeatures, AUTO)
 
 
+PB_BIND(WipeDevice, WipeDevice, AUTO)
+
+
 PB_BIND(Features, Features, 2)
 
 

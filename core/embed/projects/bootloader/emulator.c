@@ -8,11 +8,9 @@
 #include <io/display.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
-#include <sys/systick.h>
 #include <util/flash.h>
 #include <util/flash_otp.h>
 #include "bootui.h"
-#include "rust_ui.h"
 
 #ifdef USE_OPTIGA
 #include <sec/secret.h>
@@ -188,10 +186,12 @@ int main(int argc, char **argv) {
   (void)!flash_otp_write(FLASH_OTP_BLOCK_DEVICE_VARIANT, 0, otp_data,
                          sizeof(otp_data));
 
-  bootloader_main();
-  hal_delay(3000);
-  jump_to_next_stage(0);
+  int exit_code = bootloader_main();
 
+  char msg[64];
+  snprintf(msg, sizeof(msg), "Exit code: %d", exit_code);
+
+  error_shutdown_ex("BOOTLOADER ERROR", msg, "UNEXPECTED EXIT");
   return 0;
 }
 
