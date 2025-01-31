@@ -21,6 +21,30 @@
 
 #include <trezor_types.h>
 
-#undef FIRMWARE_START
+#include <pb.h>
 
-extern uint8_t *FIRMWARE_START;
+#define MAX_PACKET_SIZE 256
+
+typedef struct {
+  uint8_t iface_num;
+  size_t tx_len;
+  size_t rx_len;
+
+  // write function pointer
+  bool (*write)(uint8_t *data, size_t size);
+  // read function pointer
+  int (*read)(uint8_t *buffer, size_t buffer_size);
+
+  void (*error)(void);
+} wire_iface_t;
+
+secbool codec_parse_header(const uint8_t *buf, uint16_t *msg_id,
+                           uint32_t *msg_size);
+
+secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
+                       const pb_msgdesc_t *fields, const void *msg);
+
+secbool codec_recv_message(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf,
+                           const pb_msgdesc_t *fields, void *msg);
+
+void codec_flush(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf);

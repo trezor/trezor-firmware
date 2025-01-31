@@ -19,8 +19,6 @@
 
 #pragma once
 
-#include <trezor_types.h>
+#include "codec_v1.h"
 
-#undef FIRMWARE_START
-
-extern uint8_t *FIRMWARE_START;
+void usb_iface_init(wire_iface_t* iface, secbool no_fw);

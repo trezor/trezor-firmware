@@ -17,10 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include <trezor_types.h>
+#include <util/image.h>
 
-#undef FIRMWARE_START
+#include "bootui.h"
+#include "workflow.h"
+#include "workflow_internal.h"
 
-extern uint8_t *FIRMWARE_START;
+workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
+                                       const image_header *const hdr) {
+  workflow_reset_jump();
+  ui_set_initial_setup(true);
+  ui_screen_connect();
+
+  workflow_result_t res = WF_RETURN;
+  while (res == WF_RETURN || res == WF_STAY) {
+    res = workflow_host_control(vhdr, hdr, ui_screen_connect);
+  }
+  return workflow_exit_common(res);
+}

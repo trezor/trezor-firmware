@@ -21,6 +21,11 @@
 
 #include <trezor_types.h>
 
-#undef FIRMWARE_START
+#include "workflow.h"
 
-extern uint8_t *FIRMWARE_START;
+void workflow_allow_jump_1(void);
+void workflow_allow_jump_2(void);
+
+void workflow_reset_jump(void);
+
+workflow_result_t workflow_exit_common(workflow_result_t result);
