@@ -1,7 +1,11 @@
 
 
+#ifndef NDEF_H
+#define NDEF_H
+
 #define NDEF_MAX_RECORDS 3
 #define NDEF_MAX_RECORD_PAYLOAD_BYTES 50
+
 
 typedef enum{
     NDEF_OK = 0,
@@ -29,10 +33,12 @@ typedef struct{
 }ndef_record_t;
 
 typedef struct{
+    uint32_t message_total_len;
     uint8_t records_cnt;
     ndef_record_t records[NDEF_MAX_RECORDS];
 } ndef_message_t;
 
-// ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len ,ndef_message_t *message);
+ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len ,ndef_message_t *message);
 ndef_status_t parse_ndef_record(uint8_t *buffer, uint16_t len, ndef_record_t *rec);
 
+#endif

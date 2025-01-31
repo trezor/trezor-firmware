@@ -4,27 +4,67 @@
 #include <string.h>
 #include "ndef.h"
 
-// ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len ,ndef_message_t *message){
 
-//     memset(message, 0, sizeof(ndef_message_t));
 
-//     uint16_t offset = 0;
-//     uint16_t remainin_len = buffer_len
+// ndef_status_t create_ndef_record_uri(uint8_t *bytearray, )
 
-//     while(1){
 
-//         ndef_record_t record;
-//         parse_ndef_record(buffer + offset, remainin_len , &record);
-//         offset += record.payload_length;
+ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len ,ndef_message_t *message){
 
-//         message->records_cnt++;
-//         if(message->records_cnt >= NDEF_MAX_RECORDS){
-//             break; // Max records reached
-//         }
-//     }
 
-//     return NDEF_OK;
-// }
+    memset(message, 0, sizeof(ndef_message_t));
+
+    uint16_t remaining_len = buffer_len;
+
+
+    // Indicate TLV header
+    if(*buffer == 0x3){
+        buffer++;
+    }else{
+      return NDEF_ERROR; // Not a valid TLV structure
+    }
+
+    // TLV length
+    if(*buffer == 0xFF){
+
+        // TLV 3 byte length format
+        buffer++;
+        message->message_total_len = (int16_t) (buffer[0] << 8 | buffer[1]);
+        buffer = buffer + 2;
+
+    }else{
+
+      message->message_total_len  = *buffer;
+      buffer++;
+
+    }
+
+    remaining_len = message->message_total_len;
+
+    while(1){
+
+        parse_ndef_record(buffer, remaining_len , &(message->records[message->records_cnt]));
+        buffer += message->records[message->records_cnt].record_total_len;
+        remaining_len -= message->records[message->records_cnt].record_total_len;
+        message->records_cnt++;
+
+        if(message->records_cnt >= NDEF_MAX_RECORDS){
+            break; // Max records reached
+        }
+
+        if(remaining_len == 0){
+          break;
+        }
+
+    }
+
+    // Check TLV termination character
+    if(*buffer != 0xFE){
+      return NDEF_ERROR; // Not a valid TLV structure
+    }
+
+    return NDEF_OK;
+}
 
 ndef_status_t parse_ndef_record(uint8_t *buffer, uint16_t len, ndef_record_t *rec){
 
