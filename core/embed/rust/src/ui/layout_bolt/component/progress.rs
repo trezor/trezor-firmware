@@ -81,9 +81,8 @@ impl Component for Progress {
                     ctx.request_paint();
                 }
                 self.description.mutate(ctx, |ctx, para| {
-                    if para.inner_mut().content() != &new_description {
-                        para.inner_mut().update(new_description);
-                        para.change_page(0); // Recompute bounding box.
+                    if para.content() != &new_description {
+                        para.update(new_description);
                         ctx.request_paint();
                         self.description_pad.clear();
                     }

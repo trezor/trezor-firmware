@@ -64,7 +64,7 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Event::Attach(_) = event {
-            self.text.inner_mut()[1].update((self.get_account)());
+            self.text.mutate(|p| p[1].update((self.get_account)()));
             ctx.request_paint();
         }
         self.app_icon.event(ctx, event);
