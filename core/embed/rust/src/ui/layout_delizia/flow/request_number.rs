@@ -3,7 +3,7 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{swipe_detect::SwipeSettings, ComponentExt},
+        component::swipe_detect::SwipeSettings,
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
@@ -16,8 +16,8 @@ use core::sync::atomic::{AtomicU16, Ordering};
 
 use super::super::{
     component::{
-        Frame, FrameMsg, NumberInputDialog, NumberInputDialogMsg, SwipeContent, UpdatableMoreInfo,
-        VerticalMenu, VerticalMenuChoiceMsg,
+        Frame, NumberInputDialog, NumberInputDialogMsg, SwipeContent, UpdatableMoreInfo,
+        VerticalMenu,
     },
     theme,
 };
@@ -82,12 +82,11 @@ pub fn new_request_number(
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
         .map(|msg| match msg {
-            FrameMsg::Button(_) => Some(FlowMsg::Info),
-            FrameMsg::Content(NumberInputDialogMsg::Changed(n)) => {
+            NumberInputDialogMsg::Changed(n) => {
                 NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
                 None
             }
-            FrameMsg::Content(NumberInputDialogMsg::Confirmed(n)) => {
+            NumberInputDialogMsg::Confirmed(n) => {
                 NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
                 Some(FlowMsg::Choice(n as usize))
             }
@@ -99,20 +98,13 @@ pub fn new_request_number(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-        FrameMsg::Button(_) => None,
-    });
+    .map(super::util::map_to_choice);
 
     let updatable_info = UpdatableMoreInfo::new(info_closure);
     let content_info = Frame::left_aligned(TString::empty(), SwipeContent::new(updatable_info))
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-            _ => None,
-        });
+        .map_to_button_msg();
 
     let res = SwipeFlow::new(&RequestNumber::Number)?
         .with_page(&RequestNumber::Number, content_number_input)?

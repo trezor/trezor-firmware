@@ -6,7 +6,6 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -17,9 +16,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
-    },
+    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -74,10 +71,7 @@ pub fn new_set_new_pin(
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
-        .map(|msg| match msg {
-            FrameMsg::Button(bm) => Some(bm),
-            _ => None,
-        });
+        .map_to_button_msg();
 
     let content_menu = Frame::left_aligned(
         "".into(),
@@ -85,11 +79,7 @@ pub fn new_set_new_pin(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-        FrameMsg::Button(_) => None,
-    });
+    .map(super::util::map_to_choice);
 
     let paragraphs_cancel_intro = ParagraphVecShort::from_iter([
         Paragraph::new(&theme::TEXT_WARNING, TR::words__not_recommended),
@@ -107,10 +97,7 @@ pub fn new_set_new_pin(
     )
     .with_swipe(Direction::Up, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Button(bm) => Some(bm),
-        _ => None,
-    });
+    .map_to_button_msg();
 
     let content_cancel_confirm = Frame::left_aligned(
         TR::pin__cancel_setup.into(),
@@ -120,11 +107,7 @@ pub fn new_set_new_pin(
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-        _ => None,
-    });
+    .map(super::util::map_to_confirm);
 
     let res = SwipeFlow::new(&SetNewPin::Intro)?
         .with_page(&SetNewPin::Intro, content_intro)?

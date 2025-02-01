@@ -6,7 +6,7 @@ use crate::{
     translations::TR,
     trezorhal::display,
     ui::{
-        component::{base::ComponentExt, swipe_detect::SwipeSettings, FlowMsg},
+        component::{swipe_detect::SwipeSettings, FlowMsg},
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, SwipeFlow,
@@ -18,8 +18,7 @@ use crate::{
 use super::super::{
     component::{
         number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-        Frame, FrameMsg, PromptMsg, PromptScreen, StatusScreen, SwipeContent, VerticalMenu,
-        VerticalMenuChoiceMsg,
+        Frame, PromptMsg, PromptScreen, StatusScreen, SwipeContent, VerticalMenu,
     },
     theme,
 };
@@ -78,12 +77,11 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     .with_menu_button()
     .with_swipe(Direction::Up, SwipeSettings::default())
     .map(|msg| match msg {
-        FrameMsg::Content(NumberInputSliderDialogMsg::Changed(n)) => {
+        NumberInputSliderDialogMsg::Changed(n) => {
             display::backlight(n as _);
             BRIGHTNESS.store(n as u8, Ordering::Relaxed);
             None
         }
-        FrameMsg::Button(_) => Some(FlowMsg::Info),
     });
 
     let content_menu = Frame::left_aligned(
@@ -92,10 +90,7 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(move |msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     let content_confirm = Frame::left_aligned(
         TR::brightness__change_title.into(),
@@ -106,11 +101,10 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Left, SwipeSettings::default())
     .map(move |msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => {
+        PromptMsg::Confirmed => {
             let _ = storage::set_brightness(BRIGHTNESS.load(Ordering::Relaxed));
             Some(FlowMsg::Confirmed)
         }
-        FrameMsg::Button(_) => Some(FlowMsg::Info),
         _ => None,
     });
 

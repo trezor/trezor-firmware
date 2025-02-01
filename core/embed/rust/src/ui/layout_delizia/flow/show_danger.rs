@@ -6,7 +6,6 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource},
-            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -17,7 +16,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{Frame, FrameMsg, StatusScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
+    component::{Frame, StatusScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -80,7 +79,7 @@ pub fn new_show_danger(
         .with_danger()
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
-        .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+        .map_to_button_msg();
     // .one_button_request(ButtonRequestCode::Warning, br_name);
 
     // Menu
@@ -92,10 +91,7 @@ pub fn new_show_danger(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     // Cancelled
     let content_cancelled = Frame::left_aligned(
