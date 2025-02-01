@@ -1,0 +1,1 @@
+Changed "swipe to continue" to "tap to continue". Screens still respond to swipe-up, but the preferred interaction method is now tapping the lower part of the screen.
