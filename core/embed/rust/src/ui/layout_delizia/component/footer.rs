@@ -1,16 +1,17 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Never},
+        component::{text::TextStyle, Component, Event, EventCtx},
         display::{Color, Font},
         event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Direction, Offset, Point, Rect},
         lerp::Lerp,
         shape::{self, Renderer, Text},
+        util::Pager,
     },
 };
 
-use super::{super::fonts::FONT_SUB, theme};
+use super::{super::fonts::FONT_SUB, theme, Button, ButtonMsg};
 
 /// Component showing a task instruction, e.g. "Swipe up", and an optional
 /// content consisting of one of these:
@@ -19,7 +20,6 @@ use super::{super::fonts::FONT_SUB, theme};
 /// A host of this component is responsible of providing the exact area
 /// considering also the spacing. The height must be 18px (only instruction) or
 /// 37px (instruction and description/position).
-#[derive(Clone)]
 pub struct Footer<'a> {
     area: Rect,
     content: FooterContent<'a>,
@@ -27,6 +27,7 @@ pub struct Footer<'a> {
     swipe_allow_down: bool,
     progress: i16,
     dir: Direction,
+    virtual_button: Button,
 }
 
 #[derive(Clone)]
@@ -54,6 +55,7 @@ impl<'a> Footer<'a> {
             swipe_allow_up: false,
             progress: 0,
             dir: Direction::Up,
+            virtual_button: Button::empty(),
         }
     }
 
@@ -84,8 +86,7 @@ impl<'a> Footer<'a> {
             description_last,
             instruction,
             instruction_last,
-            page_curr: 0,
-            page_num: 1,
+            pager: Pager::single_page(),
         }))
     }
 
@@ -112,18 +113,18 @@ impl<'a> Footer<'a> {
         }
     }
 
-    pub fn update_page_counter(&mut self, ctx: &mut EventCtx, current: usize, max: usize) {
+    pub fn update_pager(&mut self, ctx: &mut EventCtx, pager: Pager) {
         match &mut self.content {
             FooterContent::PageCounter(counter) => {
-                counter.update_current_page(current, max);
-                self.swipe_allow_down = counter.is_first_page();
-                self.swipe_allow_up = counter.is_last_page();
+                counter.update(pager);
+                self.swipe_allow_down = pager.is_first();
+                self.swipe_allow_up = pager.is_last();
                 ctx.request_paint();
             }
             FooterContent::PageHint(hint) => {
-                hint.update_current_page(current, max);
-                self.swipe_allow_down = hint.is_first_page();
-                self.swipe_allow_up = hint.is_last_page();
+                hint.update(pager);
+                self.swipe_allow_down = pager.is_first();
+                self.swipe_allow_up = pager.is_last();
                 ctx.request_paint();
             }
             _ => {
@@ -153,15 +154,17 @@ impl<'a> Footer<'a> {
 }
 
 impl<'a> Component for Footer<'a> {
-    type Msg = Never;
+    type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
         assert!(bounds.height() == self.content.height());
         self.area = bounds;
+        self.virtual_button.place(bounds);
         self.area
     }
 
-    fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let btn_event = self.virtual_button.event(ctx, event);
         match event {
             Event::Attach(_) => {
                 self.progress = 0;
@@ -180,7 +183,10 @@ impl<'a> Component for Footer<'a> {
             _ => {}
         };
 
-        None
+        match btn_event {
+            Some(ButtonMsg::Clicked) => Some(()),
+            _ => None,
+        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -320,44 +326,33 @@ impl<'a> FooterContent<'a> {
 struct PageCounter {
     pub instruction: TString<'static>,
     font: Font,
-    page_curr: u8,
-    page_max: u8,
+    pager: Pager,
 }
 
 impl PageCounter {
     fn new(instruction: TString<'static>) -> Self {
         Self {
             instruction,
-            page_curr: 0,
-            page_max: 0,
+            pager: Pager::single_page(),
             font: FONT_SUB,
         }
     }
 
-    fn update_current_page(&mut self, new_value: usize, max: usize) {
-        self.page_max = max as u8;
-        self.page_curr = (new_value as u8).clamp(0, self.page_max.saturating_sub(1));
-    }
-
-    fn is_first_page(&self) -> bool {
-        self.page_curr == 0
-    }
-
-    fn is_last_page(&self) -> bool {
-        self.page_curr + 1 == self.page_max
+    fn update(&mut self, pager: Pager) {
+        self.pager = pager;
     }
 }
 
 impl PageCounter {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>, area: Rect) {
-        let color = if self.is_last_page() {
+        let color = if self.pager.is_last() {
             theme::GREEN_LIGHT
         } else {
             theme::GREY_LIGHT
         };
 
-        let string_curr = uformat!("{}", self.page_curr + 1);
-        let string_max = uformat!("{}", self.page_max);
+        let string_curr = uformat!("{}", self.pager.current() + 1);
+        let string_max = uformat!("{}", self.pager.total());
 
         // center the whole counter "x / yz"
         let offset_x = Offset::x(4); // spacing between foreslash and numbers
@@ -396,8 +391,8 @@ impl PageCounter {
 impl crate::trace::Trace for PageCounter {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("PageCounter");
-        t.int("page current", self.page_curr.into());
-        t.int("page max", self.page_max.into());
+        t.int("page current", self.pager.current().into());
+        t.int("page max", self.pager.total().into());
     }
 }
 
@@ -407,36 +402,18 @@ struct PageHint {
     pub description_last: TString<'static>,
     pub instruction: TString<'static>,
     pub instruction_last: TString<'static>,
-    pub page_curr: u8,
-    pub page_num: u8,
+    pub pager: Pager,
 }
 
 impl PageHint {
-    fn update_current_page(&mut self, current: usize, max: usize) {
-        self.page_num = max as u8;
-        self.page_curr = (current as u8).clamp(0, self.page_num.saturating_sub(1));
-    }
-
-    fn update_max_page(&mut self, max: usize) {
-        self.page_num = max as u8;
-    }
-
-    fn is_single_page(&self) -> bool {
-        self.page_num <= 1
-    }
-
-    fn is_first_page(&self) -> bool {
-        self.page_curr == 0
-    }
-
-    fn is_last_page(&self) -> bool {
-        self.page_curr + 1 == self.page_num
+    fn update(&mut self, pager: Pager) {
+        self.pager = pager;
     }
 
     fn description(&self) -> TString<'static> {
-        if self.is_single_page() {
+        if self.pager.is_single() {
             TString::empty()
-        } else if self.is_last_page() {
+        } else if self.pager.is_last() {
             self.description_last
         } else {
             self.description
@@ -444,9 +421,9 @@ impl PageHint {
     }
 
     fn instruction(&self) -> TString<'static> {
-        if self.is_single_page() {
+        if self.pager.is_single() {
             TString::empty()
-        } else if self.is_last_page() {
+        } else if self.pager.is_last() {
             self.instruction_last
         } else {
             self.instruction

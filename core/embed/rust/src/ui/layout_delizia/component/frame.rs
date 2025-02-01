@@ -3,17 +3,20 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
+            base::AttachType,
+            paginated::PaginateFull,
             swipe_detect::{SwipeConfig, SwipeSettings},
             text::TextStyle,
             Component,
             Event::{self, Swipe},
-            EventCtx, FlowMsg, SwipeDetect,
+            EventCtx, FlowMsg, MsgMap, SwipeDetect,
         },
         display::{Color, Icon},
         event::SwipeEvent,
         geometry::{Alignment, Direction, Insets, Point, Rect},
         lerp::Lerp,
         shape::{self, Renderer},
+        util::Pager,
     },
 };
 
@@ -88,7 +91,6 @@ pub struct Frame<T> {
     footer: Option<Footer<'static>>,
     footer_update_fn: Option<fn(&T, &mut EventCtx, &mut Footer)>,
     swipe: SwipeConfig,
-    internal_page_cnt: usize,
     horizontal_swipe: HorizontalSwipe,
     margin: usize,
 }
@@ -100,7 +102,7 @@ pub enum FrameMsg<T> {
 
 impl<T> Frame<T>
 where
-    T: Component,
+    T: Component + PaginateFull,
 {
     pub const fn new(alignment: Alignment, title: TString<'static>, content: T) -> Self {
         Self {
@@ -111,7 +113,6 @@ where
             footer: None,
             footer_update_fn: None,
             swipe: SwipeConfig::new(),
-            internal_page_cnt: 1,
             horizontal_swipe: HorizontalSwipe::new(),
             margin: 0,
         }
@@ -277,11 +278,28 @@ where
         self.margin = margin;
         self
     }
+
+    pub fn map_to_button_msg(self) -> MsgMap<Self, fn(FrameMsg<T::Msg>) -> Option<FlowMsg>> {
+        MsgMap::new(self, |msg| match msg {
+            FrameMsg::Button(b) => Some(b),
+            _ => None,
+        })
+    }
+
+    pub fn map(
+        self,
+        func: impl Fn(T::Msg) -> Option<FlowMsg>,
+    ) -> MsgMap<Self, impl Fn(FrameMsg<T::Msg>) -> Option<FlowMsg>> {
+        MsgMap::new(self, move |msg| match msg {
+            FrameMsg::Content(c) => func(c),
+            FrameMsg::Button(b) => Some(b),
+        })
+    }
 }
 
 impl<T> Component for Frame<T>
 where
-    T: Component,
+    T: Component + PaginateFull,
 {
     type Msg = FrameMsg<T::Msg>;
 
@@ -299,7 +317,6 @@ where
             &mut self.horizontal_swipe,
             self.swipe,
             &mut self.header,
-            &mut self.footer,
             ctx,
             event,
         ) {
@@ -307,13 +324,29 @@ where
         }
 
         let msg = self.content.event(ctx, event).map(FrameMsg::Content);
-        if let Some(count) = ctx.page_count() {
-            self.internal_page_cnt = count;
-        }
-
         if msg.is_some() {
             return msg;
         }
+
+        // handle footer click as a swipe-up event for internal pagination
+        if let Some(()) = self.footer.event(ctx, event) {
+            // if internal pagination is available, send a swipe up event
+            if !self.content.pager().is_last() {
+                // swipe up
+                let none = self
+                    .content
+                    .event(ctx, Event::Swipe(SwipeEvent::End(Direction::Up)));
+                assert!(none.is_none());
+                // attach event which triggers the animation
+                let none = self
+                    .content
+                    .event(ctx, Event::Attach(AttachType::Swipe(Direction::Up)));
+                assert!(none.is_none());
+                return None;
+            } else {
+                return Some(FrameMsg::Button(FlowMsg::Next));
+            }
+        };
 
         if let Some(header_update_fn) = self.header_update_fn {
             header_update_fn(&self.content, ctx, &mut self.header);
@@ -342,16 +375,11 @@ fn frame_event(
     horizontal_swipe: &mut HorizontalSwipe,
     swipe_config: SwipeConfig,
     header: &mut Header,
-    footer: &mut Option<Footer>,
     ctx: &mut EventCtx,
     event: Event,
 ) -> Option<FlowMsg> {
     // horizontal_swipe does not return any message
     horizontal_swipe.event(event, swipe_config);
-    // msg type of footer is Never, so this should never return a value
-    let none = footer.event(ctx, event);
-    debug_assert!(none.is_none());
-
     // msg type of header is FlowMsg, which will be the return value
     header.event(ctx, event)
 }
@@ -382,13 +410,13 @@ fn frame_place(
 }
 
 #[cfg(feature = "micropython")]
-impl<T> crate::ui::flow::Swipable for Frame<T> {
+impl<T: PaginateFull> crate::ui::flow::Swipable for Frame<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.swipe
     }
 
-    fn get_internal_page_count(&self) -> usize {
-        self.internal_page_cnt
+    fn get_pager(&self) -> Pager {
+        self.content.pager()
     }
 }
 
