@@ -1,6 +1,6 @@
 # Trezor Core
 
-Trezor Core is the second-gen firmware running on Trezor devices. It currently runs on Trezor T and Trezor Safe 3, but it might be used on Trezor One in the future as well (see issue [#24](https://github.com/trezor/trezor-firmware/issues/24)).
+Trezor Core is the second-gen firmware running on Trezor devices. It currently runs on Trezor T, Trezor Safe 3 and Trezor Safe 5.
 
 Trezor Core is part of the trezor-firmware monorepo to be found on [GitHub](https://github.com/trezor/trezor-firmware), in the `core` subdirectory.
 
@@ -12,4 +12,4 @@ Where appropriate, we also use Rust. For example, all UI components and animatio
 
 ## Boot
 
-Module `src/main.py` is the first one to be invoked in MicroPython. It starts the USB, initializes the wire codec and boots applications (see [Apps](apps.md)).
+Module `src/main.py` is the first one to be invoked in MicroPython. It starts the USB, initializes the wire codec and boots applications (see [Apps](src/apps.md)).
