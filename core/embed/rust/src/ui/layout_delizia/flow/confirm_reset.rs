@@ -7,7 +7,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
-            ButtonRequestExt, ComponentExt,
+            ButtonRequestExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -18,9 +18,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
-    },
+    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -118,7 +116,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .with_footer(TR::instructions__swipe_up.into(), None)
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
-        .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
+        .map_to_button_msg()
         .one_button_request(br);
 
     let content_menu = Frame::left_aligned(
@@ -127,10 +125,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     let res = if recovery {
         SwipeFlow::new(&ConfirmResetRecover::Intro)?
@@ -145,11 +140,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .with_footer(TR::instructions__hold_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
-        .map(|msg| match msg {
-            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-            FrameMsg::Button(_) => Some(FlowMsg::Info),
-            _ => None,
-        })
+        .map(super::util::map_to_confirm)
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 
         SwipeFlow::new(&ConfirmResetCreate::Intro)?

@@ -12,9 +12,7 @@ use crate::{
     },
 };
 
-use super::super::component::{
-    Frame, FrameMsg, PassphraseKeyboard, PassphraseKeyboardMsg, PromptMsg, PromptScreen,
-};
+use super::super::component::{Frame, PassphraseKeyboard, PassphraseKeyboardMsg, PromptScreen};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum RequestPassphrase {
@@ -56,11 +54,7 @@ pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
         TR::passphrase__continue_with_empty_passphrase.into(),
         PromptScreen::new_yes_or_no(),
     )
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Content(PromptMsg::Cancelled) => Some(FlowMsg::Cancelled),
-        _ => None,
-    });
+    .map(super::util::map_to_prompt);
 
     let content_keypad = PassphraseKeyboard::new().map(|msg| match msg {
         PassphraseKeyboardMsg::Confirmed(s) => Some(FlowMsg::Text(s)),

@@ -8,7 +8,7 @@ use crate::{
             paginated::PaginateFull as _,
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt, EventCtx,
+            EventCtx,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -20,8 +20,7 @@ use crate::{
 
 use super::super::{
     component::{
-        FidoCredential, Footer, Frame, FrameMsg, PagedVerticalMenu, PromptMsg, PromptScreen,
-        SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+        FidoCredential, Footer, Frame, PagedVerticalMenu, PromptScreen, SwipeContent, VerticalMenu,
     },
     theme,
 };
@@ -122,7 +121,7 @@ pub fn new_confirm_fido(
     .with_footer(TR::instructions__swipe_up.into(), None)
     .with_swipe(Direction::Up, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+    .map_to_button_msg();
 
     // Closure to lazy-load the information on given page index.
     // Done like this to allow arbitrarily many pages without
@@ -153,10 +152,7 @@ pub fn new_confirm_fido(
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .with_vertical_pages()
-    .map(|msg| match msg {
-        FrameMsg::Button(_) => Some(FlowMsg::Info),
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-    });
+    .map(super::util::map_to_choice);
 
     let get_account = move || {
         let current = CRED_SELECTED.load(Ordering::Relaxed);
@@ -175,21 +171,14 @@ pub fn new_confirm_fido(
     } else {
         content_details.with_cancel_button()
     }
-    .map(|msg| match msg {
-        FrameMsg::Button(bm) => Some(bm),
-        _ => None,
-    });
+    .map_to_button_msg();
 
     let content_tap = Frame::left_aligned(title, PromptScreen::new_tap_to_confirm())
         .with_menu_button()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::default())
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-            FrameMsg::Button(_) => Some(FlowMsg::Info),
-            _ => None,
-        });
+        .map(super::util::map_to_confirm);
 
     let content_menu = Frame::left_aligned(
         "".into(),
@@ -197,10 +186,7 @@ pub fn new_confirm_fido(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     let initial_page = if single_cred() {
         &ConfirmFido::Details
