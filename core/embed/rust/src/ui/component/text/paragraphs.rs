@@ -86,8 +86,10 @@ where
         &self.source
     }
 
-    pub fn inner_mut(&mut self) -> &mut T {
-        &mut self.source
+    pub fn mutate<R>(&mut self, func: impl Fn(&mut T) -> R) -> R {
+        let result = func(&mut self.source);
+        self.recalculate_pages();
+        result
     }
 
     pub fn area(&self) -> Rect {
@@ -186,6 +188,27 @@ where
             chr = 0;
         }
     }
+
+    fn recalculate_pages(&mut self) {
+        if self.area.is_empty() {
+            return;
+        }
+        let total_pages = self.break_pages_from_start().count().max(1);
+        self.pager = Pager::new(total_pages as u16);
+        self.offset = PageOffset::default();
+        self.change_offset(self.offset);
+    }
+}
+
+impl<'a> Paragraphs<Paragraph<'a>> {
+    pub fn content(&self) -> &TString<'a> {
+        self.source.content()
+    }
+
+    pub fn update<T: Into<TString<'a>>>(&mut self, content: T) {
+        self.source.update(content);
+        self.recalculate_pages();
+    }
 }
 
 impl<'a, T> Component for Paragraphs<T>
@@ -198,11 +221,8 @@ where
         let recalc = self.area != bounds;
         self.area = bounds;
         if recalc {
-            self.offset = PageOffset::default();
-            let total_pages = self.break_pages_from_start().count().max(1);
-            self.pager = Pager::new(total_pages as u16);
+            self.recalculate_pages();
         }
-        self.change_offset(self.offset);
         self.area
     }
 

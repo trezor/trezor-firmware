@@ -4,7 +4,6 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Label, Never, Pad,
         },
@@ -119,9 +118,8 @@ impl Component for Progress {
             self.description.mutate(ctx, |ctx, para| {
                 // NOTE: not doing any change for empty new descriptions
                 // (currently, there is no use-case for deleting the description)
-                if !new_description.is_empty() && para.inner_mut().content() != &new_description {
-                    para.inner_mut().update(new_description);
-                    para.change_page(0); // Recompute bounding box.
+                if !new_description.is_empty() && para.content() != &new_description {
+                    para.update(new_description);
                     ctx.request_paint();
                     self.description_pad.clear();
                 }

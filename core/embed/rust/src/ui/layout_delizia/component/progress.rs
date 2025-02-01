@@ -4,7 +4,6 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx, Label, Never, Pad,
         },
@@ -77,9 +76,8 @@ impl Component for Progress {
                 if !animation_disabled() {
                     ctx.request_paint();
                 }
-                if self.description.inner_mut().content() != &new_description {
-                    self.description.inner_mut().update(new_description);
-                    self.description.change_page(0); // Recompute bounding box.
+                if self.description.content() != &new_description {
+                    self.description.update(new_description);
                     ctx.request_paint();
                     self.description_pad.clear();
                 }
