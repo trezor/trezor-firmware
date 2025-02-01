@@ -161,7 +161,7 @@ impl FlowController for ConfirmOutputWithSummary {
             }
             (Self::AccountInfo, FlowMsg::Cancelled) => Self::MainMenu.goto(),
             (Self::MainMenuCancel, FlowMsg::Cancelled) => Self::MainMenu.goto(),
-            (Self::AddressInfo, FlowMsg::Info) => Self::MainMenu.goto(),
+            (Self::AddressInfo, FlowMsg::Cancelled) => Self::MainMenu.goto(),
             (Self::Summary, FlowMsg::Info) => Self::SummaryMenu.goto(),
             (Self::SummaryMenu, FlowMsg::Choice(MENU_ITEM_CANCEL)) => {
                 Self::SummaryMenuCancel.swipe_left()
