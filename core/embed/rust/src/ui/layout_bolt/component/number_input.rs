@@ -56,10 +56,8 @@ where
 
     fn update_text(&mut self, ctx: &mut EventCtx, value: u32) {
         let text = (self.description_func)(value);
-        self.paragraphs.mutate(ctx, move |ctx, para| {
-            para.inner_mut().update(text);
-            // Recompute bounding box.
-            para.change_page(0);
+        self.paragraphs.mutate(ctx, |ctx, p| {
+            p.update(text);
             ctx.request_paint()
         });
         self.paragraphs_pad.clear();
