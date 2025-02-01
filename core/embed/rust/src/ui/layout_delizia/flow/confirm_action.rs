@@ -20,10 +20,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Footer, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
-        VerticalMenuChoiceMsg,
-    },
+    component::{Footer, Frame, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
     theme,
 };
 
@@ -314,11 +311,7 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
     }
 
     let content = content
-        .map(move |msg| match msg {
-            FrameMsg::Button(FlowMsg::Info) => Some(FlowMsg::Info),
-            FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-            _ => None,
-        })
+        .map_to_button_msg()
         .with_pages(move |intro_pages| intro_pages + prompt_pages);
 
     let flow = flow?.with_page(page, content)?;
@@ -378,11 +371,10 @@ fn create_menu(
             .with_swipe(Direction::Right, SwipeSettings::immediate());
 
         let content_menu = content_menu.map(move |msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => {
+            VerticalMenuChoiceMsg::Selected(i) => {
                 let selected_item = menu_items[i];
                 Some(FlowMsg::Choice(selected_item))
             }
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
         if prompt_screen.is_some() {
@@ -429,11 +421,7 @@ fn create_confirm(
             content_confirm = content_confirm.with_subtitle(subtitle);
         }
 
-        let content_confirm = content_confirm.map(move |msg| match msg {
-            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-            FrameMsg::Button(_) => Some(FlowMsg::Info),
-            _ => None,
-        });
+        let content_confirm = content_confirm.map(super::util::map_to_confirm);
 
         flow.with_page(
             &ConfirmActionWithMenuAndConfirmation::Confirmation,

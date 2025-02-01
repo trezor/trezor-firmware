@@ -20,8 +20,7 @@ use heapless::Vec;
 
 use super::super::{
     component::{
-        Footer, Frame, FrameMsg, Header, InternallySwipableContent, PromptScreen, ShareWords,
-        SwipeContent,
+        Footer, Frame, Header, InternallySwipableContent, PromptScreen, ShareWords, SwipeContent,
     },
     theme,
 };
@@ -99,7 +98,7 @@ pub fn new_show_share_words(
     .with_subtitle(TR::words__instructions.into())
     .with_footer(TR::instructions__swipe_up.into(), text_footer)
     .with_swipe(Direction::Up, SwipeSettings::default())
-    .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
+    .map_to_button_msg()
     .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
     .with_pages(move |_| nwords + 2);
 
@@ -114,7 +113,7 @@ pub fn new_show_share_words(
     .register_header_update_fn(header_updating_func)
     .with_footer_counter(TR::instructions__swipe_up.into())
     .register_footer_update_fn(footer_updating_func)
-    .map(|_| None);
+    .map_to_button_msg();
 
     let content_confirm = Frame::left_aligned(
         text_confirm,

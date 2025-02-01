@@ -17,10 +17,7 @@ use crate::{
 
 use super::{
     super::{
-        component::{
-            Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
-            VerticalMenuChoiceMsg,
-        },
+        component::{Frame, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg},
         theme,
     },
     util::ShowInfoParams,
@@ -100,11 +97,7 @@ pub fn new_confirm_summary(
     .with_footer(TR::instructions__hold_to_sign.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Left, SwipeSettings::default())
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Button(_) => Some(FlowMsg::Info),
-        _ => None,
-    });
+    .map(super::util::map_to_confirm);
 
     // ExtraInfo
     let content_extra = extra_params
@@ -141,11 +134,10 @@ pub fn new_confirm_summary(
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(move |msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => {
+            VerticalMenuChoiceMsg::Selected(i) => {
                 let selected_item = menu_items[i];
                 Some(FlowMsg::Choice(selected_item))
             }
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
         });
 
     // CancelTap
@@ -156,11 +148,7 @@ pub fn new_confirm_summary(
     .with_cancel_button()
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        _ => None,
-    });
+    .map(super::util::map_to_confirm);
 
     let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?
         .with_page(&ConfirmSummary::Summary, content_summary)?

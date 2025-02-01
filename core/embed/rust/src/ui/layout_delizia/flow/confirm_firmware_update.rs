@@ -6,7 +6,6 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -17,9 +16,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
-    },
+    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -76,7 +73,7 @@ pub fn new_confirm_firmware_update(
     .with_footer(TR::instructions__swipe_up.into(), None)
     .with_swipe(Direction::Up, SwipeSettings::default())
     .with_swipe(Direction::Left, SwipeSettings::default())
-    .map(|msg| matches!(msg, FrameMsg::Button(FlowMsg::Info)).then_some(FlowMsg::Info));
+    .map_to_button_msg();
 
     let content_menu = Frame::left_aligned(
         TString::empty(),
@@ -89,10 +86,7 @@ pub fn new_confirm_firmware_update(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     let paragraphs_fingerprint =
         Paragraphs::new(Paragraph::new(&theme::TEXT_MONO_GREY_LIGHT, fingerprint));
@@ -102,7 +96,7 @@ pub fn new_confirm_firmware_update(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::default())
-    .map(|msg| matches!(msg, FrameMsg::Button(FlowMsg::Cancelled)).then_some(FlowMsg::Cancelled));
+    .map_to_button_msg();
 
     let content_confirm = Frame::left_aligned(
         TR::firmware_update__title.into(),
@@ -112,11 +106,7 @@ pub fn new_confirm_firmware_update(
     .with_footer(TR::instructions__hold_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Left, SwipeSettings::default())
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Button(_) => Some(FlowMsg::Info),
-        _ => None,
-    });
+    .map(super::util::map_to_confirm);
 
     let res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?
         .with_page(&ConfirmFirmwareUpdate::Intro, content_intro)?
