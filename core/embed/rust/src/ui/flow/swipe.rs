@@ -178,10 +178,20 @@ impl SwipeFlow {
     fn handle_event_child(&mut self, ctx: &mut EventCtx, event: Event) -> Decision {
         let msg = self.current_page_mut().event(ctx, event);
 
-        if let Some(msg) = msg {
-            self.state.handle_event(msg)
-        } else {
-            Decision::Nothing
+        match msg {
+            // HOTFIX: if no decision was reached, AND the result is a next event,
+            // use the decision for a swipe-up.
+            Some(FlowMsg::Next)
+                if self
+                    .current_page()
+                    .get_swipe_config()
+                    .is_allowed(Direction::Up) =>
+            {
+                self.state.handle_swipe(Direction::Up)
+            }
+
+            Some(msg) => self.state.handle_event(msg),
+            None => Decision::Nothing,
         }
     }
 
