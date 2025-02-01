@@ -6,13 +6,12 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::ComponentExt,
             swipe_detect::SwipeSettings,
             text::{
                 paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
                 TextStyle,
             },
-            Component,
+            Component, MsgMap, PaginateFull,
         },
         flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
         geometry::Direction,
@@ -23,7 +22,7 @@ use heapless::Vec;
 
 use super::{
     super::{
-        component::{Frame, FrameMsg, SwipeContent},
+        component::{Frame, FrameMsg, PromptMsg, SwipeContent, VerticalMenuChoiceMsg},
         flow, theme,
     },
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
@@ -253,7 +252,7 @@ impl ConfirmValue {
 
         frame = frame.with_vertical_pages();
 
-        Ok(frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)))
+        Ok(frame.map_to_button_msg())
     }
 
     pub fn into_flow(self) -> Result<SwipeFlow, Error> {
@@ -442,12 +441,26 @@ impl ShowInfoParams {
 
         frame = frame.with_vertical_pages();
 
-        Ok(frame.map(move |msg| {
-            matches!(msg, FrameMsg::Button(_)).then_some(if self.cancel_button {
-                FlowMsg::Cancelled
-            } else {
-                FlowMsg::Info
-            })
-        }))
+        Ok(frame.map_to_button_msg())
+    }
+}
+
+pub fn map_to_confirm(msg: PromptMsg) -> Option<FlowMsg> {
+    match msg {
+        PromptMsg::Confirmed => Some(FlowMsg::Confirmed),
+        _ => None,
+    }
+}
+
+pub fn map_to_prompt(msg: PromptMsg) -> Option<FlowMsg> {
+    match msg {
+        PromptMsg::Confirmed => Some(FlowMsg::Confirmed),
+        PromptMsg::Cancelled => Some(FlowMsg::Cancelled),
+    }
+}
+
+pub fn map_to_choice(msg: VerticalMenuChoiceMsg) -> Option<FlowMsg> {
+    match msg {
+        VerticalMenuChoiceMsg::Selected(i) => Some(FlowMsg::Choice(i)),
     }
 }

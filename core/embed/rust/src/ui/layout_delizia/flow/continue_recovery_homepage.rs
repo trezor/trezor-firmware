@@ -22,10 +22,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Footer, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
-        VerticalMenuChoiceMsg,
-    },
+    component::{Footer, Frame, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -198,7 +195,7 @@ pub fn new_continue_recovery_homepage(
             .with_footer(footer_instruction, footer_description)
             .with_swipe(Direction::Up, SwipeSettings::default())
             .with_swipe(Direction::Left, SwipeSettings::default())
-            .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
+            .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(
                 ButtonRequestCode::RecoveryHomepage,
                 "recovery".into(),
@@ -219,10 +216,7 @@ pub fn new_continue_recovery_homepage(
             )
             .with_swipe(Direction::Up, SwipeSettings::default())
             .with_swipe(Direction::Right, SwipeSettings::immediate())
-            .map(|msg| match msg {
-                FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-                _ => None,
-            })
+            .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(
                 ButtonRequestCode::ProtectCall,
                 "abort_recovery".into(),
@@ -236,11 +230,7 @@ pub fn new_continue_recovery_homepage(
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-        _ => None,
-    });
+    .map(super::util::map_to_confirm);
 
     let res = if show_instructions {
         let content_menu = Frame::left_aligned(
@@ -249,10 +239,7 @@ pub fn new_continue_recovery_homepage(
         )
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
+        .map(super::util::map_to_choice);
 
         SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?
             .with_page(&ContinueRecoveryBeforeShares::Main, content_main)?
@@ -264,10 +251,7 @@ pub fn new_continue_recovery_homepage(
         )
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
+        .map(super::util::map_to_choice);
 
         SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?
             .with_page(&ContinueRecoveryBetweenShares::Main, content_main)?
@@ -292,10 +276,7 @@ pub fn new_continue_recovery_homepage(
         )
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
+        .map(super::util::map_to_choice);
 
         let (footer_instruction, footer_description) = (
             TR::instructions__swipe_up.into(),
@@ -317,7 +298,7 @@ pub fn new_continue_recovery_homepage(
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
         .with_vertical_pages()
-        .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled))
+        .map_to_button_msg()
         .repeated_button_request(ButtonRequest::new(
             ButtonRequestCode::Other,
             "show_shares".into(),

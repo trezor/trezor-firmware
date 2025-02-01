@@ -13,9 +13,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
-    },
+    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -68,12 +66,9 @@ pub fn new_confirm_homescreen(
             Some(TR::buttons__change.into()),
         )
         .with_swipe(Direction::Up, SwipeSettings::default())
+        .map_to_button_msg()
         // Homescreen + Tap to confirm
-        .with_pages(|_| 2)
-        .map(|msg| match msg {
-            FrameMsg::Button(_) => Some(FlowMsg::Info),
-            _ => None,
-        });
+        .with_pages(|_| 2);
 
     let content_menu = Frame::left_aligned(
         TString::empty(),
@@ -81,10 +76,7 @@ pub fn new_confirm_homescreen(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     let content_confirm = Frame::left_aligned(
         TR::homescreen__title_set.into(),
@@ -94,11 +86,7 @@ pub fn new_confirm_homescreen(
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Left, SwipeSettings::default())
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Button(_) => Some(FlowMsg::Info),
-        _ => None,
-    });
+    .map(super::util::map_to_confirm);
 
     let res = SwipeFlow::new(&ConfirmHomescreen::Homescreen)?
         .with_page(&ConfirmHomescreen::Homescreen, content_homescreen)?
