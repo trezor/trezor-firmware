@@ -37,8 +37,7 @@ where
 
     fn update_text(&mut self, ctx: &mut EventCtx) {
         let text = (self.info_func)();
-        self.paragraphs.inner_mut().update(text);
-        self.paragraphs.change_page(0);
+        self.paragraphs.update(text);
         ctx.request_paint();
     }
 }

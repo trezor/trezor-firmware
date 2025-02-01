@@ -116,7 +116,9 @@ where
 
     pub fn with_paragraph(mut self, para: Paragraph<'static>) -> Self {
         if !para.content().is_empty() {
-            self.paragraphs.inner_mut().add(para);
+            self.paragraphs.mutate(|p| {
+                p.add(para);
+            });
         }
         self
     }
