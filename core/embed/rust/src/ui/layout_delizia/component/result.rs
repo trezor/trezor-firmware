@@ -34,11 +34,11 @@ impl ResultStyle {
     }
 
     pub const fn message_style(&self) -> TextStyle {
-        TextStyle::new(fonts::FONT_NORMAL, self.fg_color, self.bg_color, FG, FG)
+        TextStyle::new(fonts::FONT_DEMIBOLD, self.fg_color, self.bg_color, FG, FG)
     }
 
     pub const fn title_style(&self) -> TextStyle {
-        TextStyle::new(fonts::FONT_BOLD, self.fg_color, self.bg_color, FG, FG)
+        TextStyle::new(fonts::FONT_DEMIBOLD, self.fg_color, self.bg_color, FG, FG)
     }
 }
 

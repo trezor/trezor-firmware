@@ -223,15 +223,12 @@ impl FirmwareUI for UIDelizia {
         let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
         for item in IterBuf::new().try_iterate(items)? {
             if item.is_str() {
-                ops = ops.text(TString::try_from(item)?, fonts::FONT_NORMAL)
+                ops = ops.text(TString::try_from(item)?, fonts::FONT_DEMIBOLD)
             } else {
-                let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
+                let [_emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
                 let text: TString = text.try_into()?;
-                if emphasis.try_into()? {
-                    ops = ops.text(text, fonts::FONT_DEMIBOLD);
-                } else {
-                    ops = ops.text(text, fonts::FONT_NORMAL);
-                }
+                // emphasis not implemented on Delizia
+                ops = ops.text(text, fonts::FONT_DEMIBOLD);
             }
         }
 
