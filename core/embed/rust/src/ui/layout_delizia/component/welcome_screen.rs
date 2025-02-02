@@ -46,7 +46,7 @@ impl Component for WelcomeScreen {
         shape::Text::new(
             self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
             model::FULL_NAME,
-            fonts::FONT_NORMAL,
+            fonts::FONT_DEMIBOLD,
         )
         .with_align(Alignment::Center)
         .with_fg(theme::FG)

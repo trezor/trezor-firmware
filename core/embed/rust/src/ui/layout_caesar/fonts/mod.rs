@@ -21,5 +21,3 @@ pub const FONT_MONO: crate::ui::display::Font = &Font_PixelOperatorMono_Regular_
 pub const FONT_BIG: crate::ui::display::Font = &Font_Unifont_Regular_16_info;
 pub const FONT_NORMAL_UPPER: crate::ui::display::Font = &Font_PixelOperator_Regular_8_upper_info;
 pub const FONT_BOLD_UPPER: crate::ui::display::Font = &Font_PixelOperator_Bold_8_upper_info;
-// TODO: remove SUB
-pub const FONT_SUB: crate::ui::display::Font = &Font_PixelOperator_Regular_8_info;
