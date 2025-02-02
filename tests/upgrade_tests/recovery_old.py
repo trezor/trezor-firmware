@@ -11,17 +11,21 @@ def _enter_word(
 ) -> "LayoutContent":
     typed_word = word[:4]
     for coords in buttons.type_word(typed_word, is_slip39=is_slip39):
-        debug.click(coords, wait=False)
+        debug.click(coords)
+        debug.read_layout(wait=False)
 
-    return debug.click(buttons.CONFIRM_WORD, wait=True)
+    debug.click(buttons.CONFIRM_WORD)
+    return debug.read_layout(wait=True)
 
 
 def confirm_recovery(debug: "DebugLink") -> None:
     debug.click(buttons.OK)
+    debug.read_layout(wait=True)
 
 
 def select_number_of_words(debug: "DebugLink", num_of_words: int = 20) -> None:
     debug.click(buttons.OK)
+    debug.read_layout(wait=True)
 
     # click the number
     word_option_offset = 6
@@ -31,12 +35,12 @@ def select_number_of_words(debug: "DebugLink", num_of_words: int = 20) -> None:
     )  # raises if num of words is invalid
     coords = buttons.grid34(index % 3, index // 3)
     debug.click(coords)
+    debug.read_layout(wait=True)
 
 
-def enter_share(
-    debug: "DebugLink", share: str, is_first: bool = True
-) -> "LayoutContent":
-    layout = debug.click(buttons.OK)
+def enter_share(debug: "DebugLink", share: str) -> "LayoutContent":
+    debug.click(buttons.OK)
     for word in share.split(" "):
-        layout = _enter_word(debug, word, is_slip39=True)
-    return layout
+        _enter_word(debug, word, is_slip39=True)
+
+    return debug.read_layout(wait=True)

@@ -2898,11 +2898,13 @@ if TYPE_CHECKING:
 
     class DebugLinkGetState(protobuf.MessageType):
         wait_layout: "DebugWaitType"
+        return_empty_state: "bool"
 
         def __init__(
             self,
             *,
             wait_layout: "DebugWaitType | None" = None,
+            return_empty_state: "bool | None" = None,
         ) -> None:
             pass
 

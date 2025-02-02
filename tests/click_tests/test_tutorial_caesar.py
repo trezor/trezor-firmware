@@ -56,7 +56,8 @@ def go_through_tutorial_tr(debug: "DebugLink") -> None:
     debug.press_right(hold_ms=1000)
     debug.press_right()
     debug.press_right()
-    layout = debug.press_middle()
+    debug.press_middle()
+    layout = debug.read_layout()
     assert layout.title() == TR.tutorial__title_tutorial_complete
 
 

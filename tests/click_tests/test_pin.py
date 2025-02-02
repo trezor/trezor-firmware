@@ -212,6 +212,11 @@ def _cancel_pin(debug: "DebugLink") -> None:
     # TODO: implement cancel PIN for TR?
     _delete_pin(debug, 1, check=False)
 
+    # Note: `prepare()` context manager will send a tap after PIN cancellation,
+    # so we make sure the lockscreen is already up to receive it -- otherwise
+    # the input event may get lost in the loop restart.
+    assert debug.read_layout().main_component() != "PinKeyboard"
+
 
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""

@@ -64,8 +64,7 @@ if TYPE_CHECKING:
         def __call__(
             self,
             hold_ms: int | None = None,
-            wait: bool | None = None,
-        ) -> "LayoutContent": ...
+        ) -> "None": ...
 
     InputFlowType = Generator[None, messages.ButtonRequest, None]
 
@@ -416,11 +415,10 @@ def _make_input_func(
     def input_func(
         self: "DebugLink",
         hold_ms: int | None = None,
-        wait: bool | None = None,
-    ) -> LayoutContent:
+    ) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
         decision.hold_ms = hold_ms
-        return self._decision(decision, wait=wait)
+        self._decision(decision)
 
     return input_func  # type: ignore [Parameter name mismatch]
 
@@ -442,12 +440,7 @@ class DebugLink:
         self.t1_screenshot_directory: Path | None = None
         self.t1_screenshot_counter = 0
 
-        # Optional file for saving text representation of the screen
-        self.screen_text_file: Path | None = None
-        self.last_screen_content = ""
-
         self.waiting_for_layout_change = False
-        self.layout_dirty = True
 
         self.input_wait_type = DebugWaitType.IMMEDIATE
 
@@ -476,11 +469,6 @@ class DebugLink:
     def layout_type(self) -> LayoutType:
         assert self.model is not None
         return LayoutType.from_model(self.model)
-
-    def set_screen_text_file(self, file_path: Path | None) -> None:
-        if file_path is not None:
-            file_path.write_bytes(b"")
-        self.screen_text_file = file_path
 
     def open(self) -> None:
         self.transport.begin_session()
@@ -543,8 +531,19 @@ class DebugLink:
             raise TrezorFailure(result)
         return result
 
-    def read_layout(self) -> LayoutContent:
-        return LayoutContent(self.state().tokens)
+    def read_layout(self, wait: bool | None = None) -> LayoutContent:
+        """
+        Force waiting for the layout by setting `wait=True`. Force not waiting by
+        setting `wait=False` -- useful when, e.g., you are causing the next layout to be
+        deliberately delayed.
+        """
+        if wait is True:
+            wait_type = DebugWaitType.CURRENT_LAYOUT
+        elif wait is False:
+            wait_type = DebugWaitType.IMMEDIATE
+        else:
+            wait_type = None
+        return LayoutContent(self.state(wait_type=wait_type).tokens)
 
     def wait_layout(self, wait_for_external_change: bool = False) -> LayoutContent:
         # Next layout change will be caused by external event
@@ -558,18 +557,12 @@ class DebugLink:
         obj = self._call(
             messages.DebugLinkGetState(wait_layout=DebugWaitType.NEXT_LAYOUT)
         )
-        self.layout_dirty = True
         if isinstance(obj, messages.Failure):
             raise TrezorFailure(obj)
         return LayoutContent(obj.tokens)
 
     @contextmanager
-    def wait_for_layout_change(self) -> Iterator[LayoutContent]:
-        # set up a dummy layout content object to be yielded
-        layout_content = LayoutContent(
-            ["DUMMY CONTENT, WAIT UNTIL THE END OF THE BLOCK :("]
-        )
-
+    def wait_for_layout_change(self) -> Iterator[None]:
         # make sure some current layout is up by issuing a dummy GetState
         self.state()
 
@@ -579,17 +572,13 @@ class DebugLink:
         # allow the block to proceed
         self.waiting_for_layout_change = True
         try:
-            yield layout_content
+            yield
         finally:
             self.waiting_for_layout_change = False
-            self.layout_dirty = True
 
         # wait for the reply
         resp = self._read()
         assert isinstance(resp, messages.DebugLinkState)
-
-        # replace contents of the yielded object with the new thing
-        layout_content.__init__(resp.tokens)
 
     def reset_debug_events(self) -> None:
         # Only supported on TT and above certain version
@@ -634,44 +623,24 @@ class DebugLink:
         state = self._call(messages.DebugLinkGetState(wait_word_list=True))
         return state.reset_word
 
-    def _decision(
-        self, decision: messages.DebugLinkDecision, wait: bool | None = None
-    ) -> LayoutContent:
-        """Send a debuglink decision and returns the resulting layout.
+    def _decision(self, decision: messages.DebugLinkDecision) -> None:
+        """Send a debuglink decision.
 
         If hold_ms is set, an additional 200ms is added to account for processing
         delays. (This is needed for hold-to-confirm to trigger reliably.)
-
-        If `wait` is unset, the following wait mode is used:
-
-        - `IMMEDIATE`, when in normal tests, which never deadlocks the device, but may
-          return an empty layout in case the next one didn't come up immediately. (E.g.,
-          in SignTx flow, the device is waiting for more TxRequest/TxAck exchanges
-          before showing the next UI layout.)
-        - `CURRENT_LAYOUT`, when in tests running through a `DeviceHandler`. This mode
-          returns the current layout or waits for some layout to come up if there is
-          none at the moment. The assumption is that wirelink is communicating on
-          another thread and won't be blocked by waiting on debuglink.
-
-        Force waiting for the layout by setting `wait=True`. Force not waiting by
-        setting `wait=False` -- useful when, e.g., you are causing the next layout to be
-        deliberately delayed.
         """
         if not self.allow_interactions:
-            return self.wait_layout()
+            self.wait_layout()
+            return
 
         if decision.hold_ms is not None:
             decision.hold_ms += 200
 
         self._write(decision)
-        self.layout_dirty = True
-        if wait is True:
-            wait_type = DebugWaitType.CURRENT_LAYOUT
-        elif wait is False:
-            wait_type = DebugWaitType.IMMEDIATE
-        else:
-            wait_type = self.input_wait_type
-        return self._snapshot_core(wait_type)
+        if self.model is models.T1B1:
+            return
+        # When the call below returns, we know that `decision` has been processed in Core.
+        self._call(messages.DebugLinkGetState(return_empty_state=True))
 
     press_yes = _make_input_func(button=messages.DebugButton.YES)
     """Confirm current layout. See `_decision` for more details."""
@@ -698,58 +667,14 @@ class DebugLink:
     )
     """Press right button. See `_decision` for more details."""
 
-    def input(self, word: str, wait: bool | None = None) -> LayoutContent:
+    def input(self, word: str) -> None:
         """Send text input to the device. See `_decision` for more details."""
-        return self._decision(messages.DebugLinkDecision(input=word), wait)
+        self._decision(messages.DebugLinkDecision(input=word))
 
-    def click(
-        self,
-        click: Tuple[int, int],
-        hold_ms: int | None = None,
-        wait: bool | None = None,
-    ) -> LayoutContent:
+    def click(self, click: Tuple[int, int], hold_ms: int | None = None) -> None:
         """Send a click to the device. See `_decision` for more details."""
         x, y = click
-        return self._decision(
-            messages.DebugLinkDecision(x=x, y=y, hold_ms=hold_ms), wait
-        )
-
-    def _snapshot_core(
-        self, wait_type: DebugWaitType = DebugWaitType.IMMEDIATE
-    ) -> LayoutContent:
-        """Save text and image content of the screen to relevant directories."""
-        # skip the snapshot if we are on T1
-        if self.model is models.T1B1:
-            return LayoutContent([])
-
-        # take the snapshot
-        state = self.state(wait_type)
-        layout = LayoutContent(state.tokens)
-
-        if state.tokens and self.layout_dirty:
-            # save it, unless we already did or unless it's empty
-            self.save_debug_screen(layout.visible_screen())
-            self.layout_dirty = False
-
-        # return the layout
-        return layout
-
-    def save_debug_screen(self, screen_content: str) -> None:
-        if self.screen_text_file is None:
-            return
-
-        if not self.screen_text_file.exists():
-            self.screen_text_file.write_bytes(b"")
-
-        # Not writing the same screen twice
-        if screen_content == self.last_screen_content:
-            return
-
-        self.last_screen_content = screen_content
-
-        with open(self.screen_text_file, "a") as f:
-            f.write(screen_content)
-            f.write("\n" + 80 * "/" + "\n")
+        self._decision(messages.DebugLinkDecision(x=x, y=y, hold_ms=hold_ms))
 
     def stop(self) -> None:
         self._write(messages.DebugLinkStop())
@@ -882,7 +807,8 @@ class DebugUI:
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
-                    self.debuglink.swipe_up(wait=True)
+                    self.debuglink.swipe_up()
+
             if self.debuglink.model is models.T3T1:
                 layout = self.debuglink.read_layout()
                 if "PromptScreen" in layout.all_components():

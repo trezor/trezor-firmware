@@ -347,10 +347,12 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         # really cancel
         self.debug.click(buttons.CORNER_BUTTON)
         # menu
-        layout = self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.click(buttons.CORNER_BUTTON)
 
+        layout = self.debug.read_layout()
         while "PromptScreen" not in layout.all_components():
-            layout = self.debug.swipe_up()
+            self.debug.swipe_up()
+            layout = self.debug.read_layout()
         self.debug.synchronize_at("PromptScreen")
         # tap to confirm
         self.debug.click(buttons.TAP_TO_CONFIRM)
@@ -437,14 +439,16 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.click(buttons.CORNER_BUTTON)
         assert "Qr" in self.all_components()
 
-        layout = self.debug.swipe_left()
+        self.debug.swipe_left()
+        layout = self.debug.read_layout()
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
         assert TR.address_details__derivation_path in layout.screen_content()
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
-            layout = self.debug.swipe_left()
+            self.debug.swipe_left()
+            layout = self.debug.read_layout()
             self._assert_xpub_title(layout.title(), xpub_num)
             content = layout.text_content().replace(" ", "")
             assert self.xpubs[xpub_num] in content
@@ -470,18 +474,21 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         self.debug.press_right()
         assert "Qr" in self.all_components()
 
-        layout = self.debug.press_right()
+        self.debug.press_right()
+        layout = self.debug.read_layout()
         # address details
         # TODO: locate it more precisely
         assert "Multisig 2 of 3" in layout.json_str
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
-            layout = self.debug.press_right()
+            self.debug.press_right()
+            layout = self.debug.read_layout()
             self._assert_xpub_title(layout.title(), xpub_num)
             xpub_part_1 = layout.text_content().replace(" ", "")
             # Press "SHOW MORE"
-            layout = self.debug.press_middle()
+            self.debug.press_middle()
+            layout = self.debug.read_layout()
             xpub_part_2 = layout.text_content().replace(" ", "")
             # Go back
             self.debug.press_left()
@@ -525,24 +532,25 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         # three xpub pages with the same testing logic
         for _xpub_num in range(3):
-            layout = self.debug.swipe_left()
-            layout = self.debug.swipe_left()
+            self.debug.swipe_left()
+            self.debug.swipe_left()
 
         self.debug.click(buttons.CORNER_BUTTON)
-        layout = self.debug.synchronize_at("VerticalMenu")
+        self.debug.synchronize_at("VerticalMenu")
         # menu
         self.debug.click(buttons.VERTICAL_MENU[2])
         # cancel
         self.debug.swipe_up()
         # really cancel
         self.debug.click(buttons.CORNER_BUTTON)
-        layout = self.debug.synchronize_at("VerticalMenu")
+        self.debug.synchronize_at("VerticalMenu")
         # menu
         self.debug.click(buttons.CORNER_BUTTON)
         layout = self.debug.synchronize_at("Paragraphs")
         # address
         while "PromptScreen" not in layout.all_components():
-            layout = self.debug.swipe_up()
+            self.debug.swipe_up()
+            layout = self.debug.read_layout()
         self.debug.synchronize_at("PromptScreen")
         # tap to confirm
         self.debug.press_yes()
@@ -652,7 +660,8 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         layout = self.debug.synchronize_at("Paragraphs")
         # address
         while "PromptScreen" not in layout.all_components():
-            layout = self.debug.swipe_up()
+            self.debug.swipe_up()
+            layout = self.debug.read_layout()
         self.debug.synchronize_at("PromptScreen")
         # tap to confirm
         self.debug.press_yes()
@@ -834,10 +843,12 @@ def sign_tx_go_to_info_tr(
         client.debug.press_middle()
         yield
 
-    layout = client.debug.press_right()
+    client.debug.press_right()
+    layout = client.debug.read_layout()
     screen_texts.append(layout.visible_screen())
 
-    layout = client.debug.press_right()
+    client.debug.press_right()
+    layout = client.debug.read_layout()
     screen_texts.append(layout.visible_screen())
 
     client.debug.press_left()

@@ -179,7 +179,8 @@ class RecoveryFlow:
             self.debug.synchronize_at("VerticalMenu")
             self.debug.click(buttons.VERTICAL_MENU[0])
             assert (yield).name == "abort_recovery"
-            layout = self.debug.swipe_up()
+            self.debug.swipe_up()
+            layout = self.debug.read_layout()
             assert layout.title() == TR.recovery__title_cancel_recovery
             self.debug.click(buttons.TAP_TO_CONFIRM)
         else:

@@ -4136,6 +4136,7 @@ class DebugLinkGetState(protobuf.MessageType):
         1: protobuf.Field("wait_word_list", "bool", repeated=False, required=False, default=None),
         2: protobuf.Field("wait_word_pos", "bool", repeated=False, required=False, default=None),
         3: protobuf.Field("wait_layout", "DebugWaitType", repeated=False, required=False, default=DebugWaitType.IMMEDIATE),
+        4: protobuf.Field("return_empty_state", "bool", repeated=False, required=False, default=False),
     }
 
     def __init__(
@@ -4144,10 +4145,12 @@ class DebugLinkGetState(protobuf.MessageType):
         wait_word_list: Optional["bool"] = None,
         wait_word_pos: Optional["bool"] = None,
         wait_layout: Optional["DebugWaitType"] = DebugWaitType.IMMEDIATE,
+        return_empty_state: Optional["bool"] = False,
     ) -> None:
         self.wait_word_list = wait_word_list
         self.wait_word_pos = wait_word_pos
         self.wait_layout = wait_layout
+        self.return_empty_state = return_empty_state
 
 
 class DebugLinkState(protobuf.MessageType):
