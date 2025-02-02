@@ -110,6 +110,8 @@ message DebugLinkGetState {
     // trezor-core only - wait until current layout changes
     // changed in 2.6.4: multiple wait types instead of true/false.
     optional DebugWaitType wait_layout = 3 [default=IMMEDIATE];
+    // Responds immediately with an empty `DebugLinkState` (used for client-side synchronization).
+    optional bool return_empty_state = 4 [default=false];
 }
 
 /**

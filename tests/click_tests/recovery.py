@@ -23,7 +23,8 @@ def enter_word(
         if debug.layout_type is LayoutType.Delizia and not is_slip39 and len(word) > 4:
             # T3T1 (delizia) BIP39 keyboard allows to "confirm" only if the word is fully written, you need to click the word to auto-complete
             debug.click(buttons.CONFIRM_WORD)
-        return debug.click(buttons.CONFIRM_WORD)
+        debug.click(buttons.CONFIRM_WORD)
+        return debug.read_layout()
     elif debug.layout_type is LayoutType.Caesar:
         letter_index = 0
         layout = debug.read_layout()
@@ -32,16 +33,20 @@ def enter_word(
         while layout.find_values_by_key("letter_choices"):
             letter = word[letter_index]
             while not layout.get_middle_choice() == letter:
-                layout = debug.press_right()
+                debug.press_right()
+                layout = debug.read_layout()
 
-            layout = debug.press_middle()
+            debug.press_middle()
+            layout = debug.read_layout()
             letter_index += 1
 
         # Word choices
         while not layout.get_middle_choice() == word:
-            layout = debug.press_right()
+            debug.press_right()
+            layout = debug.read_layout()
 
-        return debug.press_middle()
+        debug.press_middle()
+        return debug.read_layout()
     else:
         raise ValueError("Unknown model")
 
@@ -78,7 +83,8 @@ def select_number_of_words(
         coords = coords_map.get(num_of_words)
         if coords is None:
             raise ValueError("Invalid num_of_words")
-        return debug.click(coords)
+        debug.click(coords)
+        return debug.read_layout()
 
     def select_caesar() -> "LayoutContent":
         # navigate to the number and confirm it
@@ -86,7 +92,8 @@ def select_number_of_words(
         index = word_options.index(num_of_words)
         for _ in range(index):
             debug.press_right()
-        return debug.press_middle()
+        debug.press_middle()
+        return debug.read_layout()
 
     def select_delizia() -> "LayoutContent":
         # click the button from ValuePad
@@ -103,13 +110,15 @@ def select_number_of_words(
         coords = coords_map.get(num_of_words)
         if coords is None:
             raise ValueError("Invalid num_of_words")
-        return debug.click(coords)
+        debug.click(coords)
+        return debug.read_layout()
 
     if debug.layout_type is LayoutType.Bolt:
         assert debug.read_layout().text_content() == TR.recovery__num_of_words
         layout = select_bolt()
     elif debug.layout_type is LayoutType.Caesar:
-        layout = debug.press_right()
+        debug.press_right()
+        layout = debug.read_layout()
         assert layout.title() == TR.word_count__title
         layout = select_caesar()
     elif debug.layout_type is LayoutType.Delizia:
@@ -150,12 +159,15 @@ def enter_share(
         assert TR.translate(before_title) in debug.read_layout().title()
         layout = debug.read_layout()
         for _ in range(layout.page_count()):
-            layout = debug.press_right()
+            debug.press_right()
+            layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Delizia:
-        layout = debug.swipe_up()
+        debug.swipe_up()
+        layout = debug.read_layout()
     else:
         assert TR.translate(before_title) in debug.read_layout().title()
-        layout = debug.click(buttons.OK)
+        debug.click(buttons.OK)
+        layout = debug.read_layout()
 
     assert "MnemonicKeyboard" in layout.all_components()
 
@@ -236,13 +248,17 @@ def enter_seed_previous_correct(
                 layout = debug.read_layout()
 
                 while layout.get_middle_choice() not in DELETE_BTNS:
-                    layout = debug.press_right()
-                layout = debug.press_middle()
+                    debug.press_right()
+                    layout = debug.read_layout()
+                debug.press_middle()
+                layout = debug.read_layout()
 
                 for _ in range(len(bad_word)):
                     while layout.get_middle_choice() not in DELETE_BTNS:
-                        layout = debug.press_left()
-                    layout = debug.press_middle()
+                        debug.press_left()
+                        layout = debug.read_layout()
+                    debug.press_middle()
+                    layout = debug.read_layout()
             elif debug.layout_type is LayoutType.Delizia:
                 debug.click(buttons.RECOVERY_DELETE)  # Top-left
                 for _ in range(len(bad_word)):
@@ -278,7 +294,8 @@ def prepare_enter_seed(
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         debug.press_right()
-        layout = debug.press_right()
+        debug.press_right()
+        layout = debug.read_layout()
         assert "MnemonicKeyboard" in layout.all_components()
 
 

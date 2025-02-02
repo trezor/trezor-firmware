@@ -44,8 +44,6 @@ def screen_recording(
         yield
         return
 
-    record_text_layout = request.config.getoption("record_text_layout")
-
     testcase = TestCase.build(client, request)
     testcase.dir.mkdir(exist_ok=True, parents=True)
 
@@ -55,9 +53,6 @@ def screen_recording(
 
     try:
         client.debug.start_recording(str(testcase.actual_dir))
-        if record_text_layout:
-            client.debug.set_screen_text_file(testcase.screen_text_file)
-            client.debug.watch_layout(True)
         yield
     finally:
         client.ensure_open()
@@ -65,9 +60,6 @@ def screen_recording(
         # Wait for response to Initialize, which gives the emulator time to catch up
         # and redraw the homescreen. Otherwise there's a race condition between that
         # and stopping recording.
-        if record_text_layout:
-            client.debug.set_screen_text_file(None)
-            client.debug.watch_layout(False)
         client.init_device()
         client.debug.stop_recording()
 
@@ -163,13 +155,12 @@ def sessionfinish(
     exitstatus: pytest.ExitCode,
     test_ui: str,
     check_missing: bool,
-    record_text_layout: bool,
     do_master_diff: bool,
 ) -> pytest.ExitCode:
     if not _should_write_ui_report(exitstatus):
         return exitstatus
 
-    testreport.generate_reports(record_text_layout, do_master_diff)
+    testreport.generate_reports(do_master_diff)
 
     recents = list(TestResult.recent_results())
 

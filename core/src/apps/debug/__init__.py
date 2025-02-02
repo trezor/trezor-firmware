@@ -268,6 +268,11 @@ if __debug__:
     async def dispatch_DebugLinkGetState(
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
+        if msg.return_empty_state:
+            from trezor.messages import DebugLinkState
+
+            return DebugLinkState()
+
         if msg.wait_layout == DebugWaitType.IMMEDIATE:
             return _state()
 

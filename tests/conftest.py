@@ -375,7 +375,6 @@ def pytest_sessionfinish(session: pytest.Session, exitstatus: pytest.ExitCode) -
             exitstatus,
             test_ui,  # type: ignore
             bool(session.config.getoption("ui_check_missing")),
-            bool(session.config.getoption("record_text_layout")),
             bool(session.config.getoption("do_master_diff")),
         )
 

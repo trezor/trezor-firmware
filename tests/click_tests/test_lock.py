@@ -79,9 +79,10 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
 
     # unlock by touching
     if debug.layout_type is LayoutType.Caesar:
-        layout = debug.press_right()
+        debug.press_right()
     else:
-        layout = debug.click(buttons.INFO)
+        debug.click(buttons.INFO)
+    layout = debug.read_layout()
     assert "PinKeyboard" in layout.all_components()
     debug.input("1234")
 

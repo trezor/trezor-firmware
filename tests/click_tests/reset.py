@@ -79,7 +79,8 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
             in TR.reset__title_number_of_shares + TR.words__title_threshold
         ):
             # Special info screens
-            layout = debug.press_right()
+            debug.press_right()
+            layout = debug.read_layout()
         assert "NumberInput" in layout.all_components()
         if button == buttons.reset_minus(debug.model.internal_name):
             for _ in range(diff):
@@ -102,7 +103,8 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
     layout = debug.read_layout()
     for _ in range(layout.page_count() - 1):
         words.extend(layout.seed_words())
-        layout = debug.swipe_up()
+        debug.swipe_up()
+        layout = debug.read_layout()
         assert layout is not None
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         words.extend(layout.seed_words())
@@ -147,7 +149,8 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
-            layout = debug.click(buttons.RESET_WORD_CHECK[button_pos])
+            debug.click(buttons.RESET_WORD_CHECK[button_pos])
+            layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Delizia:
         assert TR.regexp("reset__select_word_x_of_y_template").match(layout.subtitle())
         for _ in range(3):
@@ -162,10 +165,12 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             ]
             wanted_word = words[word_pos - 1].lower()
             button_pos = btn_texts.index(wanted_word)
-            layout = debug.click(buttons.VERTICAL_MENU[button_pos])
+            debug.click(buttons.VERTICAL_MENU[button_pos])
+            layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Caesar:
         assert TR.reset__select_correct_word in layout.text_content()
-        layout = debug.press_right()
+        debug.press_right()
+        layout = debug.read_layout()
         for _ in range(3):
             # "SELECT 2ND WORD"
             #         ^
@@ -176,9 +181,11 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             wanted_word = words[word_pos - 1].lower()
 
             while not layout.get_middle_choice() == wanted_word:
-                layout = debug.press_right()
+                debug.press_right()
+                layout = debug.read_layout()
 
-            layout = debug.press_middle()
+            debug.press_middle()
+            layout = debug.read_layout()
 
 
 def validate_mnemonics(mnemonics: list[str], expected_ems: bytes) -> None:

@@ -204,12 +204,12 @@ test_emu_persistence_ui: ## run persistence tests with UI testing
 
 test_emu_ui: ## run ui integration tests
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/device_tests $(TESTOPTS) \
-		--ui=test --ui-check-missing --record-text-layout --do-master-diff \
+		--ui=test --ui-check-missing --do-master-diff \
 		--lang=$(TEST_LANG)
 
 test_emu_ui_multicore: ## run ui integration tests using multiple cores
 	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/device_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
-		--ui=test --ui-check-missing --record-text-layout --do-master-diff \
+		--ui=test --ui-check-missing --do-master-diff \
 		--control-emulators --model=core --random-order-seed=$(RANDOM) \
 		--lang=$(TEST_LANG)
 
