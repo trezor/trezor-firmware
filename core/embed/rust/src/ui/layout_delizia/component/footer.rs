@@ -4,7 +4,7 @@ use crate::{
         component::{text::TextStyle, Component, Event, EventCtx},
         display::{Color, Font},
         event::SwipeEvent,
-        geometry::{Alignment, Alignment2D, Direction, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect},
         lerp::Lerp,
         shape::{self, Renderer, Text},
         util::Pager,
@@ -55,7 +55,8 @@ impl<'a> Footer<'a> {
             swipe_allow_up: false,
             progress: 0,
             dir: Direction::Up,
-            virtual_button: Button::empty(),
+            virtual_button: Button::empty()
+                .with_expanded_touch_area(Insets::top(2 * Self::HEIGHT_DEFAULT)),
         }
     }
 
