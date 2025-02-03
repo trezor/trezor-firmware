@@ -288,26 +288,6 @@ def get_next_channel_id() -> bytes:
     return cid_counter.to_bytes(_CHANNEL_ID_LENGTH, "big")
 
 
-def _deprecated_get_next_session_id(channel: ChannelCache) -> bytes:
-    while True:
-        if channel.session_id_counter >= 255:
-            channel.session_id_counter = 1
-        else:
-            channel.session_id_counter += 1
-        if _deprecated_is_session_id_unique(channel):
-            break
-    new_sid = channel.session_id_counter
-    return new_sid.to_bytes(SESSION_ID_LENGTH, "big")
-
-
-def _deprecated_is_session_id_unique(channel: ChannelCache) -> bool:
-    for session in _SESSIONS:
-        if session.channel_id == channel.channel_id:
-            if session.session_id == channel.session_id_counter:
-                return False
-    return True
-
-
 def _is_cid_unique() -> bool:
     global cid_counter
     cid_counter_bytes = cid_counter.to_bytes(_CHANNEL_ID_LENGTH, "big")
