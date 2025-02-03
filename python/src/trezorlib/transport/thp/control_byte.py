@@ -43,6 +43,10 @@ def is_ack(ctrl_byte: int) -> bool:
     return ctrl_byte & ACK_MASK == ACK_MESSAGE
 
 
+def is_error(ctrl_byte: int) -> bool:
+    return ctrl_byte == _ERROR
+
+
 def is_continuation(ctrl_byte: int) -> bool:
     return ctrl_byte & CONTINUATION_PACKET_MASK == CONTINUATION_PACKET
 

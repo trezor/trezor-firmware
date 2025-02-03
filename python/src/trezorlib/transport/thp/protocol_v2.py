@@ -400,11 +400,17 @@ class ProtocolV2(ProtocolAndChannel):
     def read_and_decrypt(self) -> t.Tuple[int, int, bytes]:
         header, raw_payload = self._read_until_valid_crc_check()
         if control_byte.is_ack(header.ctrl_byte):
+            # TODO fix this recursion
             return self.read_and_decrypt()
+        if control_byte.is_error(header.ctrl_byte):
+            # TODO check for different channel
+            err = _get_error_from_int(raw_payload[0])
+            raise Exception("Received ThpError: " + err)
         if not header.is_encrypted_transport():
             click.echo(
-                "Trying to decrypt not encrypted message!"
-                + hexlify(header.to_bytes_init() + raw_payload).decode(),
+                "Trying to decrypt not encrypted message! ("
+                + hexlify(header.to_bytes_init() + raw_payload).decode()
+                + ")",
                 err=True,
             )
 
@@ -467,3 +473,18 @@ class ProtocolV2(ProtocolAndChannel):
             )
             return False
         return True
+
+
+def _get_error_from_int(error_code: int) -> str:
+    # TODO FIXME improve this (ThpErrorType)
+    if error_code == 1:
+        return "TRANSPORT BUSY"
+    if error_code == 2:
+        return "UNALLOCATED CHANNEL"
+    if error_code == 3:
+        return "DECRYPTION FAILED"
+    if error_code == 4:
+        return "INVALID DATA"
+    if error_code == 5:
+        return "DEVICE_LOCKED"
+    raise Exception("Not Implemented error case")
