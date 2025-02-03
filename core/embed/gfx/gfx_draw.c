@@ -176,7 +176,7 @@ void gfx_draw_bitmap(gfx_rect_t rect, const gfx_bitmap_t* bitmap) {
 
 #if TREZOR_FONT_BPP == 1
 #define GLYPH_FORMAT GFX_FORMAT_MONO1P
-#define GLYPH_STRIDE(w) (((w) + 7) / 8)
+#define GLYPH_STRIDE(w) (w)
 #elif TREZOR_FONT_BPP == 2
 #error Unsupported TREZOR_FONT_BPP value
 #define GLYPH_FORMAT GFX_FORMAT_MONO2
