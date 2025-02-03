@@ -4,10 +4,11 @@ use crate::{
         component::{text::TextStyle, Component, Event, EventCtx},
         display::{Color, Font},
         event::SwipeEvent,
-        geometry::{Alignment, Alignment2D, Direction, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect},
         lerp::Lerp,
         shape::{self, Renderer, Text},
         util::Pager,
+        CommonUI, ModelUI,
     },
 };
 
@@ -157,9 +158,12 @@ impl<'a> Component for Footer<'a> {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        // place the button over bottom 2/3 of the screen
+        let button_area = ModelUI::SCREEN.inset(Insets::top(ModelUI::SCREEN.height() / 3));
+        self.virtual_button.place(button_area);
+
         assert!(bounds.height() == self.content.height());
         self.area = bounds;
-        self.virtual_button.place(bounds);
         self.area
     }
 
