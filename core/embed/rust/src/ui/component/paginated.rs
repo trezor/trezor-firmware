@@ -37,6 +37,20 @@ pub trait PaginateFull {
     fn pager(&self) -> Pager;
     /// Navigate to the given page.
     fn change_page(&mut self, active_page: u16);
+
+    fn next_page(&mut self) {
+        let mut pager = self.pager();
+        if pager.goto_next() {
+            self.change_page(pager.current());
+        }
+    }
+
+    fn prev_page(&mut self) {
+        let mut pager = self.pager();
+        if pager.goto_prev() {
+            self.change_page(pager.current());
+        }
+    }
 }
 
 impl<T: PaginateFull> Paginate for T {
