@@ -8,8 +8,8 @@ import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.client import ProtocolVersion
+from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from . import common
 from .common import SCREENS_DIR, UI_TESTS_DIR, TestCase, TestResult
