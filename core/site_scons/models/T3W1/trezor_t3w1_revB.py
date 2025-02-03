@@ -91,7 +91,6 @@ def configure(
             "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_uart_ex.c",
         ]
 
-
     if "nfc" in features_wanted:
         sources += ["embed/io/nfc/st25r3916b/nfc.c"]
         sources += ["embed/io/nfc/st25r3916b/ndef.c"]
