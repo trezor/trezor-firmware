@@ -13,6 +13,7 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     from ubinascii import hexlify
 
     from trezor import TR
+    from trezor.crypto.curve import bip340
     from trezor.crypto.hashlib import sha256
     from trezor.messages import NostrEventSignature
     from trezor.ui.layouts import confirm_value
@@ -56,7 +57,7 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     event_id = sha256(serialized_event).digest()
 
     # The event signature is basically the signature of the event ID computed above
-    signature = bip340_sign(node, event_id)
+    signature = bip340.sign(node.private_key(), event_id)
 
     return NostrEventSignature(
         pubkey=pk,
