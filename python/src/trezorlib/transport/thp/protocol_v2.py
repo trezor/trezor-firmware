@@ -486,5 +486,5 @@ def _get_error_from_int(error_code: int) -> str:
     if error_code == 4:
         return "INVALID DATA"
     if error_code == 5:
-        return "DEVICE_LOCKED"
+        return "DEVICE LOCKED"
     raise Exception("Not Implemented error case")
