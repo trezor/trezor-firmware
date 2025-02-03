@@ -23,7 +23,7 @@ from .protocol_and_channel import ProtocolAndChannel
 
 LOG = logging.getLogger(__name__)
 
-MANAGEMENT_SESSION_ID: int = 0
+DEFAULT_SESSION_ID: int = 0
 
 if t.TYPE_CHECKING:
     from ...debuglink import DebugLink
@@ -127,8 +127,8 @@ class ProtocolV2(ProtocolAndChannel):
     def update_features(self) -> None:
         message = messages.GetFeatures()
         message_type, message_data = self.mapping.encode(message)
-        self.session_id: int = 0
-        self._encrypt_and_write(MANAGEMENT_SESSION_ID, message_type, message_data)
+        self.session_id: int = DEFAULT_SESSION_ID
+        self._encrypt_and_write(DEFAULT_SESSION_ID, message_type, message_data)
         _ = self._read_until_valid_crc_check()  # TODO check ACK
         _, msg_type, msg_data = self.read_and_decrypt()
         features = self.mapping.decode(msg_type, msg_data)
@@ -139,7 +139,7 @@ class ProtocolV2(ProtocolAndChannel):
     def _send_message(
         self,
         message: protobuf.MessageType,
-        session_id: int = MANAGEMENT_SESSION_ID,
+        session_id: int = DEFAULT_SESSION_ID,
     ):
         message_type, message_data = self.mapping.encode(message)
         self._encrypt_and_write(session_id, message_type, message_data)

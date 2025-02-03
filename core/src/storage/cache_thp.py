@@ -26,7 +26,6 @@ TAG_LENGTH = const(16)
 _UNALLOCATED_STATE = const(0)
 _ALLOCATED_STATE = const(1)
 _SEEDLESS_STATE = const(2)
-MANAGEMENT_SESSION_ID = const(0)
 
 
 class ThpDataCache(DataCache):
