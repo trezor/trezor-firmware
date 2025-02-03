@@ -12,17 +12,15 @@ pub struct SwipePage<T> {
     inner: T,
     bounds: Rect,
     axis: Axis,
-    pager: Pager,
     limit: Option<u16>,
 }
 
-impl<T: Component + PaginateFull> SwipePage<T> {
+impl<T: PaginateFull> SwipePage<T> {
     pub fn vertical(inner: T) -> Self {
         Self {
             inner,
             bounds: Rect::zero(),
             axis: Axis::Vertical,
-            pager: Pager::single_page(),
             limit: None,
         }
     }
@@ -32,7 +30,6 @@ impl<T: Component + PaginateFull> SwipePage<T> {
             inner,
             bounds: Rect::zero(),
             axis: Axis::Horizontal,
-            pager: Pager::single_page(),
             limit: None,
         }
     }
@@ -45,6 +42,12 @@ impl<T: Component + PaginateFull> SwipePage<T> {
         self.limit = limit;
         self
     }
+
+    fn total_with_limit(&self) -> u16 {
+        let total = self.inner.pager().total();
+        let limit = self.limit.unwrap_or(total);
+        total.min(limit)
+    }
 }
 
 impl<T: Component + PaginateFull> Component for SwipePage<T> {
@@ -52,36 +55,28 @@ impl<T: Component + PaginateFull> Component for SwipePage<T> {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bounds = self.inner.place(bounds);
-        self.pager = self.inner.pager();
-        if let Some(limit) = self.limit {
-            self.pager = self.pager.with_limit(limit);
-        }
         self.bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.pager.total() as usize);
+        ctx.set_page_count(self.total_with_limit() as usize);
 
         if let Event::Swipe(SwipeEvent::End(direction)) = event {
             match (self.axis, direction) {
                 (Axis::Vertical, Direction::Up) => {
-                    self.pager.goto_next();
-                    self.inner.change_page(self.pager.current());
+                    self.inner.next_page();
                     ctx.request_paint();
                 }
                 (Axis::Vertical, Direction::Down) => {
-                    self.pager.goto_prev();
-                    self.inner.change_page(self.pager.current());
+                    self.inner.prev_page();
                     ctx.request_paint();
                 }
                 (Axis::Horizontal, Direction::Left) => {
-                    self.pager.goto_next();
-                    self.inner.change_page(self.pager.current());
+                    self.inner.next_page();
                     ctx.request_paint();
                 }
                 (Axis::Horizontal, Direction::Right) => {
-                    self.pager.goto_prev();
-                    self.inner.change_page(self.pager.current());
+                    self.inner.prev_page();
                     ctx.request_paint();
                 }
                 _ => {}
@@ -98,12 +93,12 @@ impl<T: Component + PaginateFull> Component for SwipePage<T> {
 
 impl<T: PaginateFull> PaginateFull for SwipePage<T> {
     fn pager(&self) -> Pager {
-        self.pager
+        self.inner.pager().with_limit(self.total_with_limit())
     }
 
     fn change_page(&mut self, to_page: u16) {
-        self.pager.set_current(to_page);
-        self.inner.change_page(self.pager.current());
+        let to_page = to_page.min(self.total_with_limit());
+        self.inner.change_page(to_page);
     }
 }
 
