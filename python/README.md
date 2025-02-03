@@ -117,7 +117,7 @@ Debian Stretch](https://packages.debian.org/en/stretch/python-trezor)
 
 You can use this python library to interact with a Trezor and use its capabilities in
 your application. See examples here in the
-[tools/](https://github.com/trezor/trezor-firmware/tree/master/python/docs/tools)
+[tools/](https://github.com/trezor/trezor-firmware/tree/main/python/tools)
 sub folder.
 
 ## PIN Entering
