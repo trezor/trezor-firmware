@@ -83,12 +83,6 @@
 // Command line interface context
 cli_t g_cli = {0};
 
-static gfx_text_attr_t bold = {
-    .font = FONT_BOLD,
-    .fg_color = COLOR_WHITE,
-    .bg_color = COLOR_BLACK,
-};
-
 #define VCP_IFACE 0
 
 static size_t console_read(void *context, char *buf, size_t size) {
@@ -163,9 +157,20 @@ static inline gfx_rect_t gfx_rect_shrink(gfx_rect_t r, int padding) {
 static void draw_welcome_screen(void) {
   gfx_clear();
   gfx_rect_t r = gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY);
+  uint8_t qr_scale = 4;
+  int16_t text_offset = 30;
+  gfx_text_attr_t bold = {
+      .font = FONT_BOLD,
+      .fg_color = COLOR_WHITE,
+      .bg_color = COLOR_BLACK,
+  };
 
 #if defined TREZOR_MODEL_T2B1 || defined TREZOR_MODEL_T3B1
   gfx_draw_bar(r, COLOR_WHITE);
+  qr_scale = 2;
+  text_offset = 9;
+  bold.fg_color = COLOR_BLACK;
+  bold.bg_color = COLOR_WHITE;
 #else
   gfx_draw_bar(gfx_rect_shrink(r, 3), COLOR_WHITE);
   gfx_draw_bar(gfx_rect_shrink(r, 4), COLOR_BLACK);
@@ -178,9 +183,9 @@ static void draw_welcome_screen(void) {
     gfx_offset_t pos;
 
     pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
-    gfx_draw_qrcode(pos, 4, dom);
+    gfx_draw_qrcode(pos, qr_scale, dom);
 
-    pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - 30);
+    pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - text_offset);
     gfx_draw_text(pos, dom + sizeof(MODEL_IDENTIFIER) - 1, -1, &bold,
                   GFX_ALIGN_CENTER);
   }
