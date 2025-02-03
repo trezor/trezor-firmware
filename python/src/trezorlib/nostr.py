@@ -18,7 +18,6 @@
 from typing import TYPE_CHECKING
 
 from . import messages
-from .tools import expect
 
 if TYPE_CHECKING:
     from .client import TrezorClient
@@ -29,7 +28,7 @@ if TYPE_CHECKING:
 def get_pubkey(
     client: "TrezorClient",
     n: "Address",
-) -> str:
+) -> bytes:
     return client.call(
         messages.NostrGetPubkey(
             address_n=n,

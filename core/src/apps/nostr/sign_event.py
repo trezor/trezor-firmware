@@ -29,8 +29,7 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     await paths.validate_path(keychain, address_n)
 
     node = keychain.derive(address_n)
-    hex_pk = hexlify(node.public_key()[-32:]).decode()
-    sk = node.private_key()
+    pk = node.public_key()[-32:]
 
     title = TR.nostr__event_kind_template.format(kind)
 
@@ -52,7 +51,7 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
         ["[" + ",".join(f'"{t}"' for t in tag) + "]" for tag in tags]
     )
     serialized_event = (
-        f'[0,"{hex_pk}",{created_at},{kind},[{serialized_tags}],"{content}"]'
+        f'[0,"{hexlify(pk).decode()}",{created_at},{kind},[{serialized_tags}],"{content}"]'
     )
     event_id = sha256(serialized_event).digest()
 
@@ -60,7 +59,7 @@ async def sign_event(msg: NostrSignEvent, keychain: Keychain) -> NostrEventSigna
     signature = bip340_sign(node, event_id)
 
     return NostrEventSignature(
-        pubkey=hex_pk,
-        id=hexlify(event_id).decode(),
-        signature=hexlify(signature).decode(),
+        pubkey=pk,
+        id=event_id,
+        signature=signature,
     )

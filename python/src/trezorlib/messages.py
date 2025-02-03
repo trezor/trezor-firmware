@@ -6793,13 +6793,13 @@ class NostrGetPubkey(protobuf.MessageType):
 class NostrPubkey(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2002
     FIELDS = {
-        1: protobuf.Field("pubkey", "string", repeated=False, required=True),
+        1: protobuf.Field("pubkey", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        pubkey: "str",
+        pubkey: "bytes",
     ) -> None:
         self.pubkey = pubkey
 
@@ -6853,17 +6853,17 @@ class NostrSignEvent(protobuf.MessageType):
 class NostrEventSignature(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 2004
     FIELDS = {
-        1: protobuf.Field("pubkey", "string", repeated=False, required=True),
-        2: protobuf.Field("id", "string", repeated=False, required=True),
-        3: protobuf.Field("signature", "string", repeated=False, required=True),
+        1: protobuf.Field("pubkey", "bytes", repeated=False, required=True),
+        2: protobuf.Field("id", "bytes", repeated=False, required=True),
+        3: protobuf.Field("signature", "bytes", repeated=False, required=True),
     }
 
     def __init__(
         self,
         *,
-        pubkey: "str",
-        id: "str",
-        signature: "str",
+        pubkey: "bytes",
+        id: "bytes",
+        signature: "bytes",
     ) -> None:
         self.pubkey = pubkey
         self.id = id

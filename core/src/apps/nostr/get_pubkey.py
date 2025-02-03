@@ -10,8 +10,6 @@ if TYPE_CHECKING:
 
 @auto_keychain(__name__)
 async def get_pubkey(msg: NostrGetPubkey, keychain: Keychain) -> NostrPubkey:
-    from ubinascii import hexlify
-
     from trezor.messages import NostrPubkey
 
     from apps.common import paths
@@ -23,4 +21,4 @@ async def get_pubkey(msg: NostrGetPubkey, keychain: Keychain) -> NostrPubkey:
     node = keychain.derive(address_n)
     pk = node.public_key()[-32:]
 
-    return NostrPubkey(pubkey=hexlify(pk).decode())
+    return NostrPubkey(pubkey=pk)

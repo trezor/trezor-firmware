@@ -5,8 +5,6 @@ package hw.trezor.messages.nostr;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageNostr";
 
-import "options.proto";
-
 /**
  * Request: Ask the device for the Nostr public key
  * @start
@@ -21,7 +19,7 @@ message NostrGetPubkey {
  * @end
  */
 message NostrPubkey {
-    required string pubkey = 1;      // pubkey derived from the seed
+    required bytes pubkey = 1;      // pubkey derived from the seed
 }
 
 /**
@@ -60,7 +58,7 @@ message NostrSignEvent {
  * @end
  */
 message NostrEventSignature {
-    required string pubkey = 1;      // pubkey used to sign the event
-    required string id = 2;          // ID of the event
-    required string signature = 3;   // signature of the event
+    required bytes pubkey = 1;      // pubkey used to sign the event
+    required bytes id = 2;          // ID of the event
+    required bytes signature = 3;   // signature of the event
 }

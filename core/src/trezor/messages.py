@@ -5229,12 +5229,12 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NostrPubkey(protobuf.MessageType):
-        pubkey: "str"
+        pubkey: "bytes"
 
         def __init__(
             self,
             *,
-            pubkey: "str",
+            pubkey: "bytes",
         ) -> None:
             pass
 
@@ -5283,16 +5283,16 @@ if TYPE_CHECKING:
             return isinstance(msg, cls)
 
     class NostrEventSignature(protobuf.MessageType):
-        pubkey: "str"
-        id: "str"
-        signature: "str"
+        pubkey: "bytes"
+        id: "bytes"
+        signature: "bytes"
 
         def __init__(
             self,
             *,
-            pubkey: "str",
-            id: "str",
-            signature: "str",
+            pubkey: "bytes",
+            id: "bytes",
+            signature: "bytes",
         ) -> None:
             pass
 

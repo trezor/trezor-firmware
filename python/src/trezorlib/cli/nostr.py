@@ -50,7 +50,7 @@ def get_pubkey(
     return nostr.get_pubkey(
         client,
         address_n,
-    )
+    ).hex()
 
 
 @cli.command()
@@ -84,9 +84,9 @@ def sign_event(
         ),
     )
 
-    event_json["id"] = res.id
-    event_json["pubkey"] = res.pubkey
-    event_json["sig"] = res.signature
+    event_json["id"] = res.id.hex()
+    event_json["pubkey"] = res.pubkey.hex()
+    event_json["sig"] = res.signature.hex()
 
     return {
         "signed_event": event_json,

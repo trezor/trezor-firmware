@@ -90,14 +90,14 @@ def test_get_pubkey(client, pubkey_hex, _):
         n=parse_path("m/44h/1237h/0h/0/0"),
     )
 
-    assert response == pubkey_hex
+    assert response == bytes.fromhex(pubkey_hex)
 
 
 @pytest.mark.parametrize("pubkey_hex,expected_sig", VECTORS)
-def test_sign_event(client, pubkey_hex,expected_sig):
+def test_sign_event(client, pubkey_hex, expected_sig):
     response = nostr.sign_event(client, SIGN_TEST_EVENT)
 
-    assert response.pubkey == pubkey_hex
+    assert response.pubkey == bytes.fromhex(pubkey_hex)
 
     expected_id = (
         sha256(
@@ -117,5 +117,5 @@ def test_sign_event(client, pubkey_hex,expected_sig):
         .hex()
     )
 
-    assert response.id == expected_id
-    assert response.signature == expected_sig
+    assert response.id == bytes.fromhex(expected_id)
+    assert response.signature == bytes.fromhex(expected_sig)
