@@ -27,6 +27,7 @@ from .tools import parse_path
 from .transport import Transport, get_transport
 from .transport.thp.protocol_and_channel import Channel
 from .transport.thp.protocol_v1 import ProtocolV1Channel
+from .transport.thp.protocol_v2 import ProtocolV2Channel
 
 if t.TYPE_CHECKING:
     from .transport.session import Session
@@ -93,19 +94,10 @@ class TrezorClient:
 
         if isinstance(self.protocol, ProtocolV1Channel):
             self._protocol_version = ProtocolVersion.PROTOCOL_V1
+        elif isinstance(self.protocol, ProtocolV2Channel):
+            self._protocol_version = ProtocolVersion.PROTOCOL_V2
         else:
             self._protocol_version = ProtocolVersion.UNKNOWN
-
-    @classmethod
-    def resume(
-        cls,
-        transport: Transport,
-        protobuf_mapping: ProtobufMapping | None = None,
-    ) -> TrezorClient:
-        if protobuf_mapping is None:
-            protobuf_mapping = mapping.DEFAULT_MAPPING
-        protocol = ProtocolV1Channel(transport, protobuf_mapping)
-        return TrezorClient(transport, protobuf_mapping, protocol)
 
     def get_session(
         self,
@@ -119,9 +111,9 @@ class TrezorClient:
 
         Will fail if the device is not initialized
         """
-        from .transport.session import SessionV1, derive_seed
-
         if isinstance(self.protocol, ProtocolV1Channel):
+            from .transport.session import SessionV1, derive_seed
+
             session = SessionV1.new(
                 self,
                 derive_cardano=derive_cardano,
@@ -139,27 +131,44 @@ class TrezorClient:
                     derive_seed(session)
 
             return session
+        if isinstance(self.protocol, ProtocolV2Channel):
+            from .transport.session import SessionV2
+
+            assert isinstance(passphrase, str) or passphrase is None
+            if session_id is not None:
+                sid = int.from_bytes(session_id, "big")
+            else:
+                sid = 1
+            assert 0 <= sid <= 255
+            return SessionV2.new(self, passphrase, derive_cardano, sid)
         raise NotImplementedError
 
     def resume_session(self, session: Session) -> Session:
         """
         Note: this function potentially modifies the input session.
         """
-        from .transport.session import SessionV1
+        from .transport.session import SessionV1, SessionV2
 
-        if isinstance(session, SessionV1):
+        if isinstance(session, SessionV2):
+            return session
+        elif isinstance(session, SessionV1):
             session.init_session()
             return session
         else:
             raise NotImplementedError
 
     def get_seedless_session(self, new_session: bool = False) -> Session:
-        from .transport.session import SessionV1
 
         if not new_session and self._seedless_session is not None:
             return self._seedless_session
         if isinstance(self.protocol, ProtocolV1Channel):
+            from .transport.session import SessionV1
+
             self._seedless_session = SessionV1.new(client=self, derive_cardano=False)
+        elif isinstance(self.protocol, ProtocolV2Channel):
+            from .transport.session import SessionV2
+
+            self._seedless_session = SessionV2(client=self, id=b"\x00")
         assert self._seedless_session is not None
         return self._seedless_session
 
@@ -209,6 +218,15 @@ class TrezorClient:
 
     def _get_protocol(self) -> Channel:
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
+
+        protocol.write(messages.Initialize())
+
+        response = protocol.read()
+        self.transport.close()
+        if isinstance(response, messages.Failure):
+            if response.code == messages.FailureType.InvalidProtocol:
+                LOG.debug("Protocol V2 detected")
+                protocol = ProtocolV2Channel(self.transport, self.mapping)
         return protocol
 
     def is_outdated(self) -> bool:
