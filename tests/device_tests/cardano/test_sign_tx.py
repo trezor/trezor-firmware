@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import cardano, device, messages
 from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 
@@ -58,9 +59,9 @@ def show_details_input_flow(client: Client):
     "cardano/sign_tx.plutus.json",
     "cardano/sign_tx.slip39.json",
 )
-def test_cardano_sign_tx(client: Client, parameters, result):
+def test_cardano_sign_tx(session: Session, parameters, result):
     response = call_sign_tx(
-        client,
+        session,
         parameters,
         input_flow=lambda client: InputFlowConfirmAllWarnings(client).get(),
     )
@@ -68,8 +69,8 @@ def test_cardano_sign_tx(client: Client, parameters, result):
 
 
 @parametrize_using_common_fixtures("cardano/sign_tx.show_details.json")
-def test_cardano_sign_tx_show_details(client: Client, parameters, result):
-    response = call_sign_tx(client, parameters, show_details_input_flow, chunkify=True)
+def test_cardano_sign_tx_show_details(session: Session, parameters, result):
+    response = call_sign_tx(session, parameters, show_details_input_flow, chunkify=True)
     assert response == _transform_expected_result(result)
 
 
@@ -79,13 +80,13 @@ def test_cardano_sign_tx_show_details(client: Client, parameters, result):
     "cardano/sign_tx.multisig.failed.json",
     "cardano/sign_tx.plutus.failed.json",
 )
-def test_cardano_sign_tx_failed(client: Client, parameters, result):
+def test_cardano_sign_tx_failed(session: Session, parameters, result):
     with pytest.raises(TrezorFailure, match=result["error_message"]):
-        call_sign_tx(client, parameters, None)
+        call_sign_tx(session, parameters, None)
 
 
-def call_sign_tx(client: Client, parameters, input_flow=None, chunkify: bool = False):
-    client.init_device(new_session=True, derive_cardano=True)
+def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool = False):
+    # session.init_device(new_session=True, derive_cardano=True)
 
     signing_mode = messages.CardanoTxSigningMode.__members__[parameters["signing_mode"]]
     inputs = [cardano.parse_input(i) for i in parameters["inputs"]]
@@ -116,18 +117,18 @@ def call_sign_tx(client: Client, parameters, input_flow=None, chunkify: bool = F
 
     if parameters.get("security_checks") == "prompt":
         device.apply_settings(
-            client, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
+            session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
         )
     else:
-        device.apply_settings(client, safety_checks=messages.SafetyCheckLevel.Strict)
+        device.apply_settings(session, safety_checks=messages.SafetyCheckLevel.Strict)
 
-    with client:
+    with session.client as client:
         if input_flow is not None:
             client.watch_layout()
             client.set_input_flow(input_flow(client))
 
         return cardano.sign_tx(
-            client=client,
+            session=session,
             signing_mode=signing_mode,
             inputs=inputs,
             outputs=outputs,

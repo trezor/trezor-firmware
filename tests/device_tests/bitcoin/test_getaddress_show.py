@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages, tools
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ...common import is_core
@@ -55,20 +55,20 @@ VECTORS = (  # path, script_type, address
 @pytest.mark.models("legacy")
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_t1(
-    client: Client, path: str, script_type: messages.InputScriptType, address: str
+    session: Session, path: str, script_type: messages.InputScriptType, address: str
 ):
     def input_flow_t1():
         yield
-        client.debug.press_no()
+        session.client.debug.press_no()
         yield
-        client.debug.press_yes()
+        session.client.debug.press_yes()
 
-    with client:
+    with session.client as client:
         # This is the only place where even T1 is using input flow
         client.set_input_flow(input_flow_t1)
         assert (
             btc.get_address(
-                client,
+                session,
                 "Bitcoin",
                 tools.parse_path(path),
                 script_type=script_type,
@@ -82,18 +82,18 @@ def test_show_t1(
 @pytest.mark.parametrize("chunkify", (True, False))
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_tt(
-    client: Client,
+    session: Session,
     chunkify: bool,
     path: str,
     script_type: messages.InputScriptType,
     address: str,
 ):
-    with client:
+    with session.client as client:
         IF = InputFlowShowAddressQRCode(client)
         client.set_input_flow(IF.get())
         assert (
             btc.get_address(
-                client,
+                session,
                 "Bitcoin",
                 tools.parse_path(path),
                 script_type=script_type,
@@ -107,13 +107,13 @@ def test_show_tt(
 @pytest.mark.models("core")
 @pytest.mark.parametrize("path, script_type, address", VECTORS)
 def test_show_cancel(
-    client: Client, path: str, script_type: messages.InputScriptType, address: str
+    session: Session, path: str, script_type: messages.InputScriptType, address: str
 ):
-    with client, pytest.raises(Cancelled):
+    with session.client as client, pytest.raises(Cancelled):
         IF = InputFlowShowAddressQRCodeCancel(client)
         client.set_input_flow(IF.get())
         btc.get_address(
-            client,
+            session,
             "Bitcoin",
             tools.parse_path(path),
             script_type=script_type,
@@ -121,10 +121,10 @@ def test_show_cancel(
         )
 
 
-def test_show_unrecognized_path(client: Client):
+def test_show_unrecognized_path(session: Session):
     with pytest.raises(TrezorFailure):
         btc.get_address(
-            client,
+            session,
             "Bitcoin",
             tools.parse_path("m/24684621h/516582h/5156h/21/856"),
             script_type=messages.InputScriptType.SPENDWITNESS,
@@ -133,10 +133,10 @@ def test_show_unrecognized_path(client: Client):
 
 
 @pytest.mark.multisig
-def test_show_multisig_3(client: Client):
+def test_show_multisig_3(session: Session):
     nodes = [
         btc.get_public_node(
-            client, tools.parse_path(f"m/45h/{i}"), coin_name="Bitcoin"
+            session, tools.parse_path(f"m/45h/{i}"), coin_name="Bitcoin"
         ).node
         for i in [1, 2, 3]
     ]
@@ -157,13 +157,13 @@ def test_show_multisig_3(client: Client):
 
     for multisig in (multisig1, multisig2):
         for i in [1, 2, 3]:
-            with client:
-                if is_core(client):
+            with session.client as client:
+                if is_core(session):
                     IF = InputFlowConfirmAllWarnings(client)
                     client.set_input_flow(IF.get())
                 assert (
                     btc.get_address(
-                        client,
+                        session,
                         "Bitcoin",
                         tools.parse_path(f"m/45h/{i}/0/0"),
                         show_display=True,
@@ -250,7 +250,7 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
     "script_type, bip48_type, address, xpubs, ignore_xpub_magic", VECTORS_MULTISIG
 )
 def test_show_multisig_xpubs(
-    client: Client,
+    session: Session,
     script_type: messages.InputScriptType,
     bip48_type: int,
     address: str,
@@ -259,7 +259,7 @@ def test_show_multisig_xpubs(
 ):
     nodes = [
         btc.get_public_node(
-            client,
+            session,
             tools.parse_path(f"m/48h/0h/{i}h/{bip48_type}h"),
             coin_name="Bitcoin",
         )
@@ -273,13 +273,13 @@ def test_show_multisig_xpubs(
     )
 
     for i in range(3):
-        with client:
+        with session, session.client as client:
             IF = InputFlowShowMultisigXPUBs(client, address, xpubs, i)
             client.set_input_flow(IF.get())
             client.debug.synchronize_at("Homescreen")
             client.watch_layout()
             btc.get_address(
-                client,
+                session,
                 "Bitcoin",
                 tools.parse_path(f"m/48h/0h/{i}h/{bip48_type}h/0/0"),
                 show_display=True,
@@ -290,10 +290,10 @@ def test_show_multisig_xpubs(
 
 
 @pytest.mark.multisig
-def test_show_multisig_15(client: Client):
+def test_show_multisig_15(session: Session):
     nodes = [
         btc.get_public_node(
-            client, tools.parse_path(f"m/45h/{i}"), coin_name="Bitcoin"
+            session, tools.parse_path(f"m/45h/{i}"), coin_name="Bitcoin"
         ).node
         for i in range(15)
     ]
@@ -314,13 +314,13 @@ def test_show_multisig_15(client: Client):
 
     for multisig in [multisig1, multisig2]:
         for i in range(15):
-            with client:
-                if is_core(client):
+            with session.client as client:
+                if is_core(session):
                     IF = InputFlowConfirmAllWarnings(client)
                     client.set_input_flow(IF.get())
                 assert (
                     btc.get_address(
-                        client,
+                        session,
                         "Bitcoin",
                         tools.parse_path(f"m/45h/{i}/0/0"),
                         show_display=True,

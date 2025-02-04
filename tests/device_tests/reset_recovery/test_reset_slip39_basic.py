@@ -21,7 +21,7 @@ from shamir_mnemonic import MnemonicError, shamir
 
 from trezorlib import device
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import BackupAvailability, BackupType
 
@@ -31,16 +31,16 @@ from ...input_flows import InputFlowSlip39BasicResetRecovery
 pytestmark = pytest.mark.models("core")
 
 
-def reset_device(client: Client, strength: int):
+def reset_device(session: Session, strength: int):
     member_threshold = 3
 
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39BasicResetRecovery(client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.setup(
-            client,
+            session,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -51,48 +51,51 @@ def reset_device(client: Client, strength: int):
         )
 
     # generate secret locally
-    internal_entropy = client.debug.state().reset_entropy
+    internal_entropy = session.client.debug.state().reset_entropy
     assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # validate that all combinations will result in the correct master secret
     validate_mnemonics(IF.mnemonics, member_threshold, secret)
-
+    session = session.client.get_session()
     # Check if device is properly initialized
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.NotAvailable
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is BackupType.Slip39_Basic_Extendable
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.NotAvailable
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is BackupType.Slip39_Basic_Extendable
 
     # backup attempt fails because backup was done in reset
     with pytest.raises(TrezorFailure, match="ProcessError: Seed already backed up"):
-        device.backup(client)
+        device.backup(session)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_basic(client: Client):
-    reset_device(client, 128)
+@pytest.mark.uninitialized_session
+def test_reset_device_slip39_basic(session: Session):
+    reset_device(session, 128)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_device_slip39_basic_256(client: Client):
-    reset_device(client, 256)
+@pytest.mark.uninitialized_session
+def test_reset_device_slip39_basic_256(session: Session):
+    reset_device(session, 256)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_reset_entropy_check(client: Client):
+@pytest.mark.uninitialized_session
+def test_reset_entropy_check(session: Session):
     member_threshold = 3
 
     strength = 128  # 20 words
 
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39BasicResetRecovery(client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase.
         path_xpubs = device.setup(
-            client,
+            session,
             strength=strength,
             passphrase_protection=False,
             pin_protection=False,
@@ -101,25 +104,27 @@ def test_reset_entropy_check(client: Client):
             entropy_check_count=3,
             _get_entropy=MOCK_GET_ENTROPY,
         )
-
     # Generate the master secret locally.
-    internal_entropy = client.debug.state().reset_entropy
+    internal_entropy = session.client.debug.state().reset_entropy
     assert internal_entropy is not None
     secret = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
 
     # Check that all combinations will result in the correct master secret.
     validate_mnemonics(IF.mnemonics, member_threshold, secret)
 
+    # Create a session with cache backing
+    session = session.client.get_session()
+
     # Check that the device is properly initialized.
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.NotAvailable
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is BackupType.Slip39_Basic_Extendable
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.NotAvailable
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is BackupType.Slip39_Basic_Extendable
 
     # Check that the XPUBs are the same as those from the entropy check.
     for path, xpub in path_xpubs:
-        res = get_public_node(client, path)
+        res = get_public_node(session, path)
         assert res.xpub == xpub
 
 
