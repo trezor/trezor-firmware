@@ -24,7 +24,7 @@ use crate::{
 };
 
 use super::{
-    component::{ActionBar, Button, Header, HeaderMsg, Hint, TextScreen},
+    component::{ActionBar, Button, Header, HeaderMsg, Hint, SelectWordScreen, TextScreen},
     flow, fonts, theme, UIEckhart,
 };
 
@@ -392,11 +392,18 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn select_word(
-        _title: TString<'static>,
-        _description: TString<'static>,
-        _words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
+        title: TString<'static>,
+        description: TString<'static>,
+        words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let component = SelectWordScreen::new(words, description).with_header(
+            Header::new(title)
+                .with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Cancelled),
+        );
+
+        let layout = RootComponent::new(component);
+
+        Ok(layout)
     }
 
     fn select_word_count(_recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
