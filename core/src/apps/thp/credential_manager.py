@@ -63,17 +63,26 @@ def issue_credential(
     return credential_raw
 
 
-def validate_credential(
+def decode_credential(
     encoded_pairing_credential_message: bytes,
+) -> ThpPairingCredential:
+    """
+    Decode a protobuf encoded pairing credential.
+    """
+    expected_type = protobuf.type_for_name("ThpPairingCredential")
+    credential = wrap_protobuf_load(encoded_pairing_credential_message, expected_type)
+    assert ThpPairingCredential.is_type_of(credential)
+    return credential
+
+
+def validate_credential(
+    credential: ThpPairingCredential,
     host_static_pubkey: bytes,
 ) -> bool:
     """
     Validate a pairing credential binded to the provided host static public key.
     """
     cred_auth_key = derive_cred_auth_key()
-    expected_type = protobuf.type_for_name("ThpPairingCredential")
-    credential = wrap_protobuf_load(encoded_pairing_credential_message, expected_type)
-    assert ThpPairingCredential.is_type_of(credential)
     proto_msg = ThpAuthenticatedCredentialData(
         host_static_pubkey=host_static_pubkey,
         cred_metadata=credential.cred_metadata,
@@ -81,6 +90,27 @@ def validate_credential(
     authenticated_credential_data = _encode_message_into_new_buffer(proto_msg)
     mac = hmac(hmac.SHA256, cred_auth_key, authenticated_credential_data).digest()
     return mac == credential.mac
+
+
+def decode_and_validate_credential(
+    encoded_pairing_credential_message: bytes,
+    host_static_pubkey: bytes,
+) -> bool:
+    """
+    Decode a protobuf encoded pairing credential and validate it
+    binded to the provided host static public key.
+    """
+    credential = decode_credential(encoded_pairing_credential_message)
+    return validate_credential(credential, host_static_pubkey)
+
+
+def is_credential_autoconnect(credential: ThpPairingCredential) -> bool:
+    assert ThpPairingCredential.is_type_of(credential)
+    if credential.cred_metadata is None:
+        return False
+    if credential.cred_metadata.autoconnect is None:
+        return False
+    return credential.cred_metadata.autoconnect
 
 
 def _encode_message_into_new_buffer(msg: protobuf.MessageType) -> bytes:
