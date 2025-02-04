@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -32,7 +32,7 @@ TXHASH_41b29a = bytes.fromhex(
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-def test_timestamp_included(client: Client):
+def test_timestamp_included(session: Session):
     # tx: 41b29ad615d8eea40a4654a052d18bb10cd08f203c351f4d241f88b031357d3d
     # input 0: 0.1 PPC
 
@@ -50,7 +50,7 @@ def test_timestamp_included(client: Client):
     )
 
     _, timestamp_tx = btc.sign_tx(
-        client,
+        session,
         "Peercoin",
         [inp1],
         [out1],
@@ -66,7 +66,7 @@ def test_timestamp_included(client: Client):
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-def test_timestamp_missing(client: Client):
+def test_timestamp_missing(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/6h/0h/0/0"),
         amount=100_000,
@@ -81,7 +81,7 @@ def test_timestamp_missing(client: Client):
 
     with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client,
+            session,
             "Peercoin",
             [inp1],
             [out1],
@@ -92,7 +92,7 @@ def test_timestamp_missing(client: Client):
 
     with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client,
+            session,
             "Peercoin",
             [inp1],
             [out1],
@@ -104,7 +104,7 @@ def test_timestamp_missing(client: Client):
 
 @pytest.mark.altcoin
 @pytest.mark.peercoin
-def test_timestamp_missing_prevtx(client: Client):
+def test_timestamp_missing_prevtx(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/6h/0h/0/0"),
         amount=100_000,
@@ -122,7 +122,7 @@ def test_timestamp_missing_prevtx(client: Client):
 
     with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client,
+            session,
             "Peercoin",
             [inp1],
             [out1],
@@ -134,7 +134,7 @@ def test_timestamp_missing_prevtx(client: Client):
     prevtx.timestamp = None
     with pytest.raises(TrezorFailure, match="Timestamp must be set."):
         btc.sign_tx(
-            client,
+            session,
             "Peercoin",
             [inp1],
             [out1],
