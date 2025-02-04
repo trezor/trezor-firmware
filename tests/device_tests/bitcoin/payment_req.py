@@ -4,6 +4,7 @@ from hashlib import sha256
 from ecdsa import SECP256k1, SigningKey
 
 from trezorlib import btc, messages
+from trezorlib.transport.session import Session
 
 from ...common import compact_size
 
@@ -27,7 +28,12 @@ def hash_bytes_prefixed(hasher, data):
 
 
 def make_payment_request(
-    client, recipient_name, outputs, change_addresses=None, memos=None, nonce=None
+    session: Session,
+    recipient_name,
+    outputs,
+    change_addresses=None,
+    memos=None,
+    nonce=None,
 ):
     h_pr = sha256(b"SL\x00\x24")
 
@@ -52,7 +58,7 @@ def make_payment_request(
             hash_bytes_prefixed(h_pr, memo.text.encode())
         elif isinstance(memo, RefundMemo):
             address_resp = btc.get_authenticated_address(
-                client, "Testnet", memo.address_n
+                session, "Testnet", memo.address_n
             )
             msg_memo = messages.RefundMemo(
                 address=address_resp.address, mac=address_resp.mac
@@ -63,7 +69,7 @@ def make_payment_request(
             hash_bytes_prefixed(h_pr, address_resp.address.encode())
         elif isinstance(memo, CoinPurchaseMemo):
             address_resp = btc.get_authenticated_address(
-                client, memo.coin_name, memo.address_n
+                session, memo.coin_name, memo.address_n
             )
             msg_memo = messages.CoinPurchaseMemo(
                 coin_type=memo.slip44,

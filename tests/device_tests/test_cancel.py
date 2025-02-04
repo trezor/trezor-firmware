@@ -17,7 +17,7 @@
 import pytest
 
 import trezorlib.messages as m
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import Cancelled
 
 from ..common import TEST_ADDRESS_N
@@ -35,15 +35,15 @@ from ..common import TEST_ADDRESS_N
         ),
     ],
 )
-def test_cancel_message_via_cancel(client: Client, message):
+def test_cancel_message_via_cancel(session: Session, message):
     def input_flow():
         yield
-        client.cancel()
+        session.cancel()
 
-    with client, pytest.raises(Cancelled):
-        client.set_expected_responses([m.ButtonRequest(), m.Failure()])
+    with session, session.client as client, pytest.raises(Cancelled):
+        session.set_expected_responses([m.ButtonRequest(), m.Failure()])
         client.set_input_flow(input_flow)
-        client.call(message)
+        session.call(message)
 
 
 @pytest.mark.parametrize(
@@ -58,43 +58,44 @@ def test_cancel_message_via_cancel(client: Client, message):
         ),
     ],
 )
-def test_cancel_message_via_initialize(client: Client, message):
-    resp = client.call_raw(message)
+def test_cancel_message_via_initialize(session: Session, message):
+    resp = session.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
 
-    client._raw_write(m.ButtonAck())
-    client._raw_write(m.Initialize())
+    session._write(m.ButtonAck())
+    session._write(m.Initialize())
 
-    resp = client._raw_read()
+    resp = session._read()
 
     assert isinstance(resp, m.Features)
 
 
 @pytest.mark.models("core")
-def test_cancel_on_paginated(client: Client):
+def test_cancel_on_paginated(session: Session):
     """Check that device is responsive on paginated screen. See #1708."""
     # In #1708, the device would ignore USB (or UDP) events while waiting for the user
     # to page through the screen. This means that this testcase, instead of failing,
     # would get stuck waiting for the _raw_read result.
     # I'm not spending the effort to modify the testcase to cause a _failure_ if that
     # happens again. Just be advised that this should not get stuck.
+
     message = m.SignMessage(
         message=b"hello" * 64,
         address_n=TEST_ADDRESS_N,
         coin_name="Testnet",
     )
-    resp = client.call_raw(message)
+    resp = session.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
-    client._raw_write(m.ButtonAck())
-    client.debug.press_yes()
+    session._write(m.ButtonAck())
+    session.client.debug.press_yes()
 
-    resp = client._raw_read()
+    resp = session._read()
     assert isinstance(resp, m.ButtonRequest)
 
     assert resp.pages is not None
-    client._raw_write(m.ButtonAck())
+    session._write(m.ButtonAck())
 
-    client._raw_write(m.Cancel())
-    resp = client._raw_read()
+    session._write(m.Cancel())
+    resp = session._read()
     assert isinstance(resp, m.Failure)
     assert resp.code == m.FailureType.ActionCancelled

@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import binance
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 BINANCE_TEST_VECTORS = [
@@ -110,10 +110,10 @@ BINANCE_TEST_VECTORS = [
 @pytest.mark.parametrize("message, expected_response", BINANCE_TEST_VECTORS)
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_binance_sign_message(
-    client: Client, chunkify: bool, message: dict, expected_response: dict
+    session: Session, chunkify: bool, message: dict, expected_response: dict
 ):
     response = binance.sign_tx(
-        client, parse_path("m/44h/714h/0h/0/0"), message, chunkify=chunkify
+        session, parse_path("m/44h/714h/0h/0/0"), message, chunkify=chunkify
     )
 
     assert response.public_key.hex() == expected_response["public_key"]

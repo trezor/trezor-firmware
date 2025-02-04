@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import H_, parse_path
 
@@ -53,7 +53,7 @@ FAKE_TXHASH_203416 = bytes.fromhex(
 pytestmark = pytest.mark.altcoin
 
 
-def test_send_bch_change(client: Client):
+def test_send_bch_change(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/145h/0h/0/0"),
         # bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv
@@ -72,14 +72,14 @@ def test_send_bch_change(client: Client):
         amount=73_452,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_bc37c2),
@@ -92,9 +92,9 @@ def test_send_bch_change(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
+            session, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
         )
-
+        # raise Exception(hexlify(serialized_tx))
     assert_tx_matches(
         serialized_tx,
         hash_link="https://bch1.trezor.io/api/tx/502e8577b237b0152843a416f8f1ab0c63321b1be7a8cad7bf5c5c216fcf062c",
@@ -102,7 +102,7 @@ def test_send_bch_change(client: Client):
     )
 
 
-def test_send_bch_nochange(client: Client):
+def test_send_bch_nochange(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/145h/0h/1/0"),
         # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
@@ -124,14 +124,14 @@ def test_send_bch_nochange(client: Client):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_502e85),
@@ -150,7 +150,7 @@ def test_send_bch_nochange(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
+            session, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
         )
 
     assert_tx_matches(
@@ -160,7 +160,7 @@ def test_send_bch_nochange(client: Client):
     )
 
 
-def test_send_bch_oldaddr(client: Client):
+def test_send_bch_oldaddr(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/145h/0h/1/0"),
         # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
@@ -182,14 +182,14 @@ def test_send_bch_oldaddr(client: Client):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_502e85),
@@ -208,7 +208,7 @@ def test_send_bch_oldaddr(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
+            session, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
         )
 
     assert_tx_matches(
@@ -218,7 +218,7 @@ def test_send_bch_oldaddr(client: Client):
     )
 
 
-def test_attack_change_input(client: Client):
+def test_attack_change_input(session: Session):
     # NOTE: fake input tx used
 
     inp1 = messages.TxInputType(
@@ -252,15 +252,15 @@ def test_attack_change_input(client: Client):
 
         return msg
 
-    with client:
-        client.set_filter(messages.TxAck, attack_processor)
-        client.set_expected_responses(
+    with session:
+        session.set_filter(messages.TxAck, attack_processor)
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(FAKE_TXHASH_bd32ff),
@@ -271,16 +271,16 @@ def test_attack_change_input(client: Client):
             ]
         )
         with pytest.raises(TrezorFailure):
-            btc.sign_tx(client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API)
+            btc.sign_tx(session, "Bcash", [inp1], [out1, out2], prev_txes=TX_API)
 
 
 @pytest.mark.multisig
-def test_send_bch_multisig_wrongchange(client: Client):
+def test_send_bch_multisig_wrongchange(session: Session):
     # NOTE: fake input tx used
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/48h/145h/{i}h/0h"), coin_name="Bcash"
+            session, parse_path(f"m/48h/145h/{i}h/0h"), coin_name="Bcash"
         ).node
         for i in range(1, 4)
     ]
@@ -327,13 +327,13 @@ def test_send_bch_multisig_wrongchange(client: Client):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
         amount=23_000,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(FAKE_TXHASH_062fbd),
@@ -346,7 +346,7 @@ def test_send_bch_multisig_wrongchange(client: Client):
             ]
         )
         (signatures1, serialized_tx) = btc.sign_tx(
-            client, "Bcash", [inp1], [out1], prev_txes=TX_API
+            session, "Bcash", [inp1], [out1], prev_txes=TX_API
         )
     assert (
         signatures1[0].hex()
@@ -359,12 +359,12 @@ def test_send_bch_multisig_wrongchange(client: Client):
 
 
 @pytest.mark.multisig
-def test_send_bch_multisig_change(client: Client):
+def test_send_bch_multisig_change(session: Session):
     # NOTE: fake input tx used
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/48h/145h/{i}h/0h"), coin_name="Bcash"
+            session, parse_path(f"m/48h/145h/{i}h/0h"), coin_name="Bcash"
         ).node
         for i in range(1, 4)
     ]
@@ -395,13 +395,13 @@ def test_send_bch_multisig_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
         amount=24_000,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -415,7 +415,7 @@ def test_send_bch_multisig_change(client: Client):
             ]
         )
         (signatures1, serialized_tx) = btc.sign_tx(
-            client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
+            session, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
         )
 
     assert (
@@ -434,13 +434,13 @@ def test_send_bch_multisig_change(client: Client):
     )
     out2.address_n[2] = H_(1)
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -454,7 +454,7 @@ def test_send_bch_multisig_change(client: Client):
             ]
         )
         (signatures1, serialized_tx) = btc.sign_tx(
-            client, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
+            session, "Bcash", [inp1], [out1, out2], prev_txes=TX_API
         )
 
     assert (
@@ -468,7 +468,7 @@ def test_send_bch_multisig_change(client: Client):
 
 
 @pytest.mark.models("core")
-def test_send_bch_external_presigned(client: Client):
+def test_send_bch_external_presigned(session: Session):
     inp1 = messages.TxInputType(
         # address_n=parse_path("44'/145'/0'/1/0"),
         # bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw
@@ -496,14 +496,14 @@ def test_send_bch_external_presigned(client: Client):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_502e85),
@@ -522,7 +522,7 @@ def test_send_bch_external_presigned(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
+            session, "Bcash", [inp1, inp2], [out1], prev_txes=TX_API
         )
 
     assert_tx_matches(
