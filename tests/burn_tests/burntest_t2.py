@@ -76,9 +76,9 @@ if __name__ == "__main__":
 
         # change PIN
         new_pin = "".join(random.choices(string.digits, k=random.randint(6, 10)))
-        client.set_input_flow(pin_input_flow(client, last_pin, new_pin))
+        session.set_input_flow(pin_input_flow(client, last_pin, new_pin))
         device.change_pin(client)
-        client.set_input_flow(None)
+        session.set_input_flow(None)
         last_pin = new_pin
 
         print(f"iteration {i}")
