@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import messages, nem
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12, is_core
@@ -32,16 +32,16 @@ pytestmark = [
 
 # assertion data from T1
 @pytest.mark.parametrize("chunkify", (True, False))
-def test_nem_signtx_simple(client: Client, chunkify: bool):
-    with client:
-        client.set_expected_responses(
+def test_nem_signtx_simple(session: Session, chunkify: bool):
+    with session:
+        session.set_expected_responses(
             [
                 # Confirm transfer and network fee
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Unencrypted message
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 (
-                    is_core(client),
+                    is_core(session),
                     messages.ButtonRequest(
                         code=messages.ButtonRequestType.ConfirmOutput
                     ),
@@ -53,7 +53,7 @@ def test_nem_signtx_simple(client: Client, chunkify: bool):
         )
 
         tx = nem.sign_tx(
-            client,
+            session,
             parse_path("m/44h/1h/0h/0h/0h"),
             {
                 "timeStamp": 74649215,
@@ -82,16 +82,16 @@ def test_nem_signtx_simple(client: Client, chunkify: bool):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_encrypted_payload(client: Client):
-    with client:
-        client.set_expected_responses(
+def test_nem_signtx_encrypted_payload(session: Session):
+    with session:
+        session.set_expected_responses(
             [
                 # Confirm transfer and network fee
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 # Ask for encryption
                 messages.ButtonRequest(code=messages.ButtonRequestType.ConfirmOutput),
                 (
-                    is_core(client),
+                    is_core(session),
                     messages.ButtonRequest(
                         code=messages.ButtonRequestType.ConfirmOutput
                     ),
@@ -103,7 +103,7 @@ def test_nem_signtx_encrypted_payload(client: Client):
         )
 
         tx = nem.sign_tx(
-            client,
+            session,
             parse_path("m/44h/1h/0h/0h/0h"),
             {
                 "timeStamp": 74649215,
@@ -134,9 +134,9 @@ def test_nem_signtx_encrypted_payload(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_xem_as_mosaic(client: Client):
+def test_nem_signtx_xem_as_mosaic(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
@@ -168,9 +168,9 @@ def test_nem_signtx_xem_as_mosaic(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_unknown_mosaic(client: Client):
+def test_nem_signtx_unknown_mosaic(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
@@ -202,9 +202,9 @@ def test_nem_signtx_unknown_mosaic(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_known_mosaic(client: Client):
+def test_nem_signtx_known_mosaic(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
@@ -236,9 +236,9 @@ def test_nem_signtx_known_mosaic(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_known_mosaic_with_levy(client: Client):
+def test_nem_signtx_known_mosaic_with_levy(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
@@ -270,9 +270,9 @@ def test_nem_signtx_known_mosaic_with_levy(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_nem_signtx_multiple_mosaics(client: Client):
+def test_nem_signtx_multiple_mosaics(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 76809215,
