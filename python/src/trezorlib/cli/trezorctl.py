@@ -24,9 +24,9 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, ca
 
 import click
 
-from .. import __version__, log, messages, protobuf, ui
-from ..client import TrezorClient
+from .. import __version__, log, messages, protobuf
 from ..transport import DeviceIsBusy, enumerate_devices
+from ..transport.session import Session
 from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
@@ -51,7 +51,7 @@ from . import (
     solana,
     stellar,
     tezos,
-    with_client,
+    with_session,
 )
 
 F = TypeVar("F", bound=Callable)
@@ -287,18 +287,21 @@ def format_device_name(features: messages.Features) -> str:
 def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
     if no_resolve:
-        return enumerate_devices()
+        for d in enumerate_devices():
+            click.echo(d.get_path())
+        return
+
+    from . import get_client
 
     for transport in enumerate_devices():
         try:
-            client = TrezorClient(transport, ui=ui.ClickUI())
+            client = get_client(transport)
             description = format_device_name(client.features)
-            client.end_session()
         except DeviceIsBusy:
             description = "Device is in use by another process"
-        except Exception:
-            description = "Failed to read details"
-        click.echo(f"{transport} - {description}")
+        except Exception as e:
+            description = "Failed to read details " + str(type(e))
+        click.echo(f"{transport.get_path()} - {description}")
     return None
 
 
@@ -316,23 +319,23 @@ def version() -> str:
 @cli.command()
 @click.argument("message")
 @click.option("-b", "--button-protection", is_flag=True)
-@with_client
-def ping(client: "TrezorClient", message: str, button_protection: bool) -> str:
+@with_session(empty_passphrase=True)
+def ping(session: "Session", message: str, button_protection: bool) -> str:
     """Send ping message."""
-    return client.ping(message, button_protection=button_protection)
+
+    # TODO return short-circuit from old client for old Trezors
+    return session.ping(message, button_protection)
 
 
 @cli.command()
 @click.pass_obj
-def get_session(obj: TrezorConnection) -> str:
+@click.option("-c", "derive_cardano", is_flag=True, help="Derive Cardano session.")
+def get_session(obj: TrezorConnection, derive_cardano: bool = False) -> str:
     """Get a session ID for subsequent commands.
 
     Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
     `trezorctl -s SESSION_ID`, or set it to an environment variable `TREZOR_SESSION_ID`,
     to avoid having to enter passphrase for subsequent commands.
-
-    The session ID is valid until another client starts using Trezor, until the next
-    get-session call, or until Trezor is disconnected.
     """
     # make sure session is not resumed
     obj.session_id = None
@@ -343,25 +346,26 @@ def get_session(obj: TrezorConnection) -> str:
                 "Upgrade your firmware to enable session support."
             )
 
-        client.ensure_unlocked()
-        if client.session_id is None:
-            raise click.ClickException("Passphrase not enabled or firmware too old.")
-        else:
-            return client.session_id.hex()
+    session = obj.get_session(derive_cardano=derive_cardano)
+    if session.id is None:
+        raise click.ClickException("Passphrase not enabled or firmware too old.")
+    else:
+        return session.id.hex()
 
 
 @cli.command()
-@with_client
-def clear_session(client: "TrezorClient") -> None:
+@with_session(must_resume=True, empty_passphrase=True)
+def clear_session(session: "Session") -> None:
     """Clear session (remove cached PIN, passphrase, etc.)."""
-    return client.clear_session()
+    session.call(messages.LockDevice())
+    session.end()
 
 
 @cli.command()
-@with_client
-def get_features(client: "TrezorClient") -> messages.Features:
+@with_session(seedless=True)
+def get_features(session: "Session") -> messages.Features:
     """Retrieve device features and settings."""
-    return client.features
+    return session.features
 
 
 @cli.command()
