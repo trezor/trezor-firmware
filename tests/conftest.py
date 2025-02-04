@@ -22,7 +22,9 @@ import time
 import typing as t
 from enum import IntEnum
 from pathlib import Path
+from time import sleep
 
+import cryptography
 import pytest
 import xdist
 from _pytest.python import IdMaker
@@ -315,11 +317,23 @@ def _client_unlocked(
         should_format = sd_marker.kwargs.get("formatted", True)
         _raw_client.debug.erase_sd_card(format=should_format)
 
-    if _raw_client.is_invalidated:
-        _raw_client = _raw_client.get_new_client()
-    session = _raw_client.get_seedless_session()
-    wipe_device(session)
-    # sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
+    while True:
+        try:
+            if _raw_client.is_invalidated:
+                _raw_client = _raw_client.get_new_client()
+            session = _raw_client.get_seedless_session()
+            wipe_device(session)
+            sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
+            break
+        except cryptography.exceptions.InvalidTag:
+            # Get a new client
+            _raw_client = _get_raw_client(request)
+
+    _raw_client.protocol = None
+    _raw_client.__init__(
+        transport=_raw_client.transport,
+        auto_interact=_raw_client.debug.allow_interactions,
+    )
 
     if not _raw_client.features.bootloader_mode:
         _raw_client.refresh_features()

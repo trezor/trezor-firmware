@@ -26,6 +26,7 @@ from .tools import parse_path
 from .transport import Transport, get_transport
 from .transport.thp.protocol_and_channel import Channel
 from .transport.thp.protocol_v1 import ProtocolV1Channel
+from .transport.thp.protocol_v2 import ProtocolV2Channel
 
 if t.TYPE_CHECKING:
     from .transport.session import Session, SessionV1
@@ -93,6 +94,8 @@ class TrezorClient:
 
         if isinstance(self.protocol, ProtocolV1Channel):
             self._protocol_version = ProtocolVersion.V1
+        elif isinstance(self.protocol, ProtocolV2Channel):
+            self._protocol_version = ProtocolVersion.PROTOCOL_V2
         else:
             raise Exception("Unknown protocol version")
 
@@ -121,8 +124,18 @@ class TrezorClient:
                 derive_cardano=derive_cardano,
             )
             derive_seed(session, passphrase)
-
             return session
+        if isinstance(self.protocol, ProtocolV2Channel):
+            from .transport.session import SessionV2
+
+            assert isinstance(passphrase, str) or passphrase is None
+            session_id = 1  # TODO fix this with ProtocolV2 session rework
+            if session_id is not None:
+                sid = int.from_bytes(session_id, "big")
+            else:
+                sid = 1
+            assert 0 <= sid <= 255
+            return SessionV2.new(self, passphrase, derive_cardano, sid)
         raise NotImplementedError
 
     def get_seedless_session(self) -> Session:
@@ -174,6 +187,15 @@ class TrezorClient:
 
     def _get_protocol(self) -> Channel:
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
+
+        protocol.write(messages.Initialize())
+
+        response = protocol.read()
+        self.transport.close()
+        if isinstance(response, messages.Failure):
+            if response.code == messages.FailureType.InvalidProtocol:
+                LOG.debug("Protocol V2 detected")
+                protocol = ProtocolV2Channel(self.transport, self.mapping)
         return protocol
 
     def is_outdated(self) -> bool:
