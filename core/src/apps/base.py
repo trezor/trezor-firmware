@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
 from trezor import TR, config, utils, wire, workflow
-from trezor.enums import HomescreenFormat, MessageType
+from trezor.enums import HomescreenFormat, MessageType, ThpMessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
 from trezor.wire import context
@@ -26,6 +26,9 @@ if TYPE_CHECKING:
         SetBusy,
     )
     from trezor.wire import Handler, Msg
+
+    if utils.USE_THP:
+        from trezor.messages import Failure, ThpCreateNewSession
 
 
 _SCREENSAVER_IS_ON = False
@@ -204,33 +207,103 @@ def get_features() -> Features:
     return f
 
 
-async def handle_Initialize(msg: Initialize) -> Features:
-    import storage.cache_codec as cache_codec
+if utils.USE_THP:
 
-    session_id = cache_codec.start_session(msg.session_id)
+    async def handle_ThpCreateNewSession(
+        message: ThpCreateNewSession,
+    ) -> Success | Failure:
+        """
+        Creates a new `ThpSession` based on the provided parameters and returns a
+        `Success` message on success.
 
-    if not utils.BITCOIN_ONLY:
-        from storage.cache_common import APP_COMMON_DERIVE_CARDANO
+        Returns an appropriate `Failure` message if session creation fails.
+        """
+        from trezor import log, loop
+        from trezor.enums import FailureType
+        from trezor.messages import Failure
+        from trezor.wire import NotInitialized
+        from trezor.wire.context import get_context
+        from trezor.wire.errors import ActionCancelled, DataError
+        from trezor.wire.thp.session_context import GenericSessionContext
+        from trezor.wire.thp.session_manager import get_new_session_context
 
-        derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
-        have_seed = context.cache_is_set(APP_COMMON_SEED)
-        if (
-            have_seed
-            and msg.derive_cardano is not None
-            and msg.derive_cardano != bool(derive_cardano)
-        ):
-            # seed is already derived, and host wants to change derive_cardano setting
-            # => create a new session
-            cache_codec.end_current_session()
-            session_id = cache_codec.start_session()
-            have_seed = False
+        from apps.common.seed import derive_and_store_roots
 
-        if not have_seed:
-            context.cache_set_bool(APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano))
+        ctx = get_context()
 
-    features = get_features()
-    features.session_id = session_id
-    return features
+        # Assert that context `ctx` is `GenericSessionContext`
+        assert isinstance(ctx, GenericSessionContext)
+
+        channel = ctx.channel
+        session_id = ctx.session_id
+
+        # Do not use `ctx` beyond this point, as it is techically
+        # allowed to change in between await statements
+
+        if not 0 <= session_id <= 255:
+            return Failure(
+                code=FailureType.DataError,
+                message="Invalid session_id for session creation.",
+            )
+
+        new_session = get_new_session_context(
+            channel_ctx=channel, session_id=session_id
+        )
+        try:
+            await unlock_device()
+            await derive_and_store_roots(new_session, message)
+        except DataError as e:
+            return Failure(code=FailureType.DataError, message=e.message)
+        except ActionCancelled as e:
+            return Failure(code=FailureType.ActionCancelled, message=e.message)
+        except NotInitialized as e:
+            return Failure(code=FailureType.NotInitialized, message=e.message)
+        # TODO handle other errors (`Exception` when "Cardano icarus secret is already set!")
+
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+            log.debug(
+                __name__,
+                "New session with sid %d and passphrase %s created.",
+                session_id,
+                message.passphrase if message.passphrase is not None else "",
+            )
+
+        channel.sessions[new_session.session_id] = new_session
+        loop.schedule(new_session.handle())
+
+        return Success(message="New session created.")
+
+else:
+
+    async def handle_Initialize(msg: Initialize) -> Features:
+        import storage.cache_codec as cache_codec
+
+        session_id = cache_codec.start_session(msg.session_id)
+
+        if not utils.BITCOIN_ONLY:
+            from storage.cache_common import APP_COMMON_DERIVE_CARDANO
+
+            derive_cardano = context.cache_get_bool(APP_COMMON_DERIVE_CARDANO)
+            have_seed = context.cache_is_set(APP_COMMON_SEED)
+            if (
+                have_seed
+                and msg.derive_cardano is not None
+                and msg.derive_cardano != bool(derive_cardano)
+            ):
+                # seed is already derived, and host wants to change derive_cardano setting
+                # => create a new session
+                cache_codec.end_current_session()
+                session_id = cache_codec.start_session()
+                have_seed = False
+
+            if not have_seed:
+                context.cache_set_bool(
+                    APP_COMMON_DERIVE_CARDANO, bool(msg.derive_cardano)
+                )
+
+        features = get_features()
+        features.session_id = session_id
+        return features
 
 
 async def handle_GetFeatures(msg: GetFeatures) -> Features:
@@ -464,8 +537,12 @@ def boot() -> None:
     MT = MessageType  # local_cache_global
 
     # Register workflow handlers
+    if utils.USE_THP:
+        TMT = ThpMessageType
+        workflow_handlers.register(TMT.ThpCreateNewSession, handle_ThpCreateNewSession)
+    else:
+        workflow_handlers.register(MT.Initialize, handle_Initialize)
     for msg_type, handler in [
-        (MT.Initialize, handle_Initialize),
         (MT.GetFeatures, handle_GetFeatures),
         (MT.Cancel, handle_Cancel),
         (MT.LockDevice, handle_LockDevice),

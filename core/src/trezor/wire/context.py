@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 from storage import cache
 from storage.cache_common import SESSIONLESS_FLAG
-from trezor import loop, protobuf
+from trezor import loop, protobuf, utils
 
 from .protocol_common import Context, Message
 
@@ -143,6 +143,17 @@ def with_context(ctx: Context, workflow: loop.Task) -> Generator:
             send_exc = e
         else:
             send_exc = None
+
+
+def try_get_ctx_ids() -> tuple[bytes, bytes] | None:
+    ids = None
+    if utils.USE_THP:
+        from trezor.wire.thp.session_context import GenericSessionContext
+
+        ctx = get_context()
+        if isinstance(ctx, GenericSessionContext):
+            ids = (ctx.channel_id, ctx.session_id.to_bytes(1, "big"))
+    return ids
 
 
 # ACCESS TO CACHE

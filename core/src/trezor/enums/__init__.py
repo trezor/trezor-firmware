@@ -39,6 +39,10 @@ if TYPE_CHECKING:
         PinMismatch = 12
         WipeCodeMismatch = 13
         InvalidSession = 14
+        ThpUnallocatedSession = 15
+        InvalidProtocol = 16
+        BufferError = 17
+        DeviceIsBusy = 18
         FirmwareError = 99
 
     class ButtonRequestType(IntEnum):
@@ -347,6 +351,32 @@ if TYPE_CHECKING:
         Nay = 1
         Pass = 2
 
+    class ThpMessageType(IntEnum):
+        ThpCreateNewSession = 1000
+        ThpPairingRequest = 1006
+        ThpPairingRequestApproved = 1007
+        ThpSelectMethod = 1008
+        ThpPairingPreparationsFinished = 1009
+        ThpCredentialRequest = 1010
+        ThpCredentialResponse = 1011
+        ThpEndRequest = 1012
+        ThpEndResponse = 1013
+        ThpCodeEntryCommitment = 1016
+        ThpCodeEntryChallenge = 1017
+        ThpCodeEntryCpaceTrezor = 1018
+        ThpCodeEntryCpaceHostTag = 1019
+        ThpCodeEntrySecret = 1020
+        ThpQrCodeTag = 1024
+        ThpQrCodeSecret = 1025
+        ThpNfcTagHost = 1032
+        ThpNfcTagTrezor = 1033
+
+    class ThpPairingMethod(IntEnum):
+        SkipPairing = 1
+        CodeEntry = 2
+        QrCode = 3
+        NFC = 4
+
     class MessageType(IntEnum):
         Initialize = 0
         Ping = 1
@@ -448,6 +478,8 @@ if TYPE_CHECKING:
         DebugLinkWatchLayout = 9006
         DebugLinkResetDebugEvents = 9007
         DebugLinkOptigaSetSecMax = 9008
+        DebugLinkGetPairingInfo = 9009
+        DebugLinkPairingInfo = 9010
         EthereumGetPublicKey = 450
         EthereumPublicKey = 451
         EthereumGetAddress = 56
