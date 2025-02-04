@@ -40,7 +40,7 @@ def test_repeated_backup(
 
     assert features.initialized is False
 
-    device_handler.run(
+    device_handler.run_with_session(
         device.setup,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
@@ -93,7 +93,7 @@ def test_repeated_backup(
     assert features.recovery_status == messages.RecoveryStatus.Nothing
 
     # run recovery to unlock backup
-    device_handler.run(
+    device_handler.run_with_session(
         device.recover,
         type=messages.RecoveryType.UnlockRepeatedBackup,
     )
@@ -160,7 +160,7 @@ def test_repeated_backup(
     assert features.recovery_status == messages.RecoveryStatus.Nothing
 
     # try to unlock backup again...
-    device_handler.run(
+    device_handler.run_with_session(
         device.recover,
         type=messages.RecoveryType.UnlockRepeatedBackup,
     )
