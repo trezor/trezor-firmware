@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import debuglink, device, messages, misc
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
@@ -62,6 +63,8 @@ def test_pin(session: Session):
 
 @pytest.mark.models("core")
 def test_softlock_instability(session: Session):
+    if session.protocol_version == ProtocolVersion.PROTOCOL_V2:
+        raise Exception("THIS NEEDS TO BE CHANGED FOR THP")
 
     def load_device():
         debuglink.load_device(
