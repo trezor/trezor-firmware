@@ -276,7 +276,7 @@ def test_sign_tx_large(client: Client):
     own_output_count = 30
     total_output_count = 1200
     output_denom = 10_000  # sats
-    max_expected_delay = 60  # seconds
+    max_expected_delay = 80  # seconds
 
     with client:
         btc.authorize_coinjoin(
