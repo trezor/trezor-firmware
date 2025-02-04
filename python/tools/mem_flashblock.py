@@ -62,6 +62,8 @@ def main() -> None:
             sectoraddrs[sector] + offset, content[offset : offset + step], flash=True
         )
 
+    debug.close()
+
 
 if __name__ == "__main__":
     main()
