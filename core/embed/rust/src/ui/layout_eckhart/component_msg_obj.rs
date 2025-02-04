@@ -13,7 +13,9 @@ use crate::{
     },
 };
 
-use super::component::{AllowedTextContent, TextScreen, TextScreenMsg};
+use super::component::{
+    AllowedTextContent, SelectWordMsg, SelectWordScreen, TextScreen, TextScreenMsg,
+};
 
 // Clippy/compiler complains about conflicting implementations
 // TODO move the common impls to a common module
@@ -47,6 +49,15 @@ where
             TextScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
             TextScreenMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             TextScreenMsg::Menu => Ok(INFO.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for SelectWordScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            SelectWordMsg::Selected(i) => i.try_into(),
+            SelectWordMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
