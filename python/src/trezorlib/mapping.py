@@ -70,6 +70,16 @@ class ProtobufMapping:
         protobuf.dump_message(buf, msg)
         return wire_type, buf.getvalue()
 
+    def encode_without_wire_type(self, msg: protobuf.MessageType) -> bytes:
+        """Serialize a Python protobuf class.
+
+        Returns the byte representation of the protobuf message.
+        """
+
+        buf = io.BytesIO()
+        protobuf.dump_message(buf, msg)
+        return buf.getvalue()
+
     def decode(self, msg_wire_type: int, msg_bytes: bytes) -> protobuf.MessageType:
         """Deserialize a protobuf message into a Python class."""
         cls = self.type_to_class[msg_wire_type]
@@ -85,8 +95,9 @@ class ProtobufMapping:
         mapping = cls()
 
         message_types = getattr(module, "MessageType")
+        thp_message_types = getattr(module, "ThpMessageType")
 
-        for entry in message_types:
+        for entry in (*message_types, *thp_message_types):
             msg_class = getattr(module, entry.name, None)
             if msg_class is None:
                 raise ValueError(
