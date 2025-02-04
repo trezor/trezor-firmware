@@ -636,14 +636,23 @@ if FROZEN:
         ] if not EVERYTHING else []
     ))
 
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
+    if THP:
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/thp/*.py'))
+    if not THP or PYOPT == '0':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
 
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
-        exclude=[
-            SOURCE_PY_DIR + 'storage/sd_salt.py',
-        ] if 'sd_card' not in FEATURES_AVAILABLE else []
-    ))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
+
+
+    exclude_list = []
+    if 'sd_card' not in FEATURES_AVAILABLE:
+        exclude_list.append(SOURCE_PY_DIR + 'storage/sd_salt.py')
+    if THP and PYOPT == '1':
+        exclude_list.append(SOURCE_PY_DIR + 'storage/cache_codec.py')
+    if not THP:
+        exclude_list.append(SOURCE_PY_DIR + 'storage/cache_thp.py')
+
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py', exclude=exclude_list))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/*.py',
