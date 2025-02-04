@@ -676,17 +676,35 @@ def gen_layout_caesar(gen_c: bool = False):
 def gen_layout_delizia(gen_c: bool = False):
     global LAYOUT_NAME
     LAYOUT_NAME = "delizia"
-    # FIXME: BIG font id not needed
+    # FIXME: BIG font idx not needed
     FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf", font_idx=1).write_files(gen_c)
     FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf", font_idx=1).write_files(gen_c)
     FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf", font_idx=8).write_files(gen_c)
     FaceProcessor("RobotoMono", "Medium", 21, font_idx=3).write_files(gen_c)
 
 
+def gen_layout_eckhart(gen_c: bool = False):
+    global LAYOUT_NAME
+    LAYOUT_NAME = "eckhart"
+    # FIXME: BIG font idx not needed
+    FaceProcessor("TTSatoshi", "ExtraLight", 72, ext="otf", font_idx=1).write_files(
+        gen_c
+    )
+    FaceProcessor("TTSatoshi", "ExtraLight", 46, ext="otf", font_idx=1).write_files(
+        gen_c
+    )
+    FaceProcessor("TTSatoshi", "Regular", 38, ext="otf", font_idx=2).write_files(gen_c)
+    FaceProcessor("TTSatoshi", "Medium", 26, ext="otf", font_idx=3).write_files(gen_c)
+    FaceProcessor("TTSatoshi", "Regular", 22, ext="otf", font_idx=4).write_files(gen_c)
+    FaceProcessor("RobotoMono", "Medium", 38, font_idx=5).write_files(gen_c)
+    FaceProcessor("RobotoMono", "Light", 30, font_idx=6).write_files(gen_c)
+
+
 LAYOUTS = {
     "bolt": gen_layout_bolt,
     "caesar": gen_layout_caesar,
     "delizia": gen_layout_delizia,
+    "eckhart": gen_layout_eckhart,
 }
 
 
