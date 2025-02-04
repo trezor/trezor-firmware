@@ -20,7 +20,10 @@ import pytest
 
 from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib._internal.emulator import Emulator
+from trezorlib.client import ProtocolVersion
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
+from trezorlib.transport.session import SessionV1
 
 from ..emulators import EmulatorWrapper
 from . import for_all
@@ -47,13 +50,14 @@ def emulator(gen: str, tag: str) -> Iterator[Emulator]:
     with EmulatorWrapper(gen, tag) as emu:
         # set up a passphrase-protected device
         device.setup(
-            emu.client,
+            emu.client.get_seedless_session(),
             pin_protection=False,
             skip_backup=True,
             entropy_check_count=0,
             backup_type=messages.BackupType.Bip39,
         )
-        resp = emu.client.call(
+        emu.client.invalidate()
+        resp = emu.client.get_seedless_session().call(
             ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
         )
         assert isinstance(resp, messages.Success)
@@ -67,33 +71,46 @@ def emulator(gen: str, tag: str) -> Iterator[Emulator]:
 )
 def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
-    if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
-        expected_responses = [
-            messages.PassphraseRequest,
-            messages.Deprecated_PassphraseStateRequest,
-            messages.Address,
-        ]
-    elif (
+    protocol_v1 = emulator.client.protocol_version == ProtocolVersion.V1
+    if (
         emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
     ) or (
         emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
     ):
         expected_responses = [
+            (protocol_v1, messages.Features),
             messages.PassphraseRequest,
             messages.Address,
         ]
     else:
         expected_responses = [
+            (protocol_v1, messages.Features),
             messages.PassphraseRequest,
             messages.ButtonRequest,
             messages.ButtonRequest,
             messages.Address,
         ]
-
-    with emulator.client:
-        emulator.client.use_passphrase("TREZOR")
-        emulator.client.set_expected_responses(expected_responses)
-        btc.get_address(emulator.client, "Testnet", parse_path("44h/1h/0h/0/0"))
+    with emulator.client as client:
+        client.set_expected_responses(expected_responses)
+        if protocol_v1:
+            session = Session(SessionV1.new(emulator.client))
+            resp = session.call_raw(
+                messages.GetAddress(
+                    address_n=parse_path("44h/1h/0h/0/0"),
+                    coin_name="Testnet",
+                )
+            )
+            if isinstance(resp, messages.PassphraseRequest):
+                resp = session.call_raw(messages.PassphraseAck(passphrase="TREZOR"))
+            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
+                resp = session.call_raw(messages.Deprecated_PassphraseStateAck())
+            if isinstance(resp, messages.ButtonRequest):
+                resp = session._callback_button(resp)
+            if isinstance(resp, messages.ButtonRequest):
+                resp = session._callback_button(resp)
+        else:
+            session = client.get_session(passphrase="TREZOR")
+            btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
 
 
 @for_all(
@@ -104,20 +121,14 @@ def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across
     supported versions.
     """
-    if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
-        expected_responses = [
-            messages.PassphraseRequest,
-            messages.Deprecated_PassphraseStateRequest,
-            messages.Address,
-            messages.Features,
-            messages.Address,
-        ]
-    elif (
+    protocol_v1 = emulator.client.protocol_version == ProtocolVersion.V1
+    if (
         emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
     ) or (
         emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
     ):
         expected_responses = [
+            (protocol_v1, messages.Features),
             messages.PassphraseRequest,
             messages.Address,
             messages.Features,
@@ -125,6 +136,7 @@ def test_init_device(emulator: Emulator):
         ]
     else:
         expected_responses = [
+            (protocol_v1, messages.Features),
             messages.PassphraseRequest,
             messages.ButtonRequest,
             messages.ButtonRequest,
@@ -133,13 +145,35 @@ def test_init_device(emulator: Emulator):
             messages.Address,
         ]
 
-    with emulator.client:
-        emulator.client.use_passphrase("TREZOR")
-        emulator.client.set_expected_responses(expected_responses)
+    with emulator.client as client:
+        client.set_expected_responses(expected_responses)
+        if protocol_v1:
+            session = Session(SessionV1.new(emulator.client))
+            resp = session.call_raw(
+                messages.GetAddress(
+                    address_n=parse_path("44h/1h/0h/0/0"),
+                    coin_name="Testnet",
+                )
+            )
+            if isinstance(resp, messages.PassphraseRequest):
+                resp = session.call_raw(messages.PassphraseAck(passphrase="TREZOR"))
+            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
+                resp = session.call_raw(messages.Deprecated_PassphraseStateAck())
+            if isinstance(resp, messages.ButtonRequest):
+                resp = session._callback_button(resp)
+            if isinstance(resp, messages.ButtonRequest):
+                resp = session._callback_button(resp)
 
-        btc.get_address(emulator.client, "Testnet", parse_path("44h/1h/0h/0/0"))
+        else:
+            session = client.get_session(passphrase="TREZOR")
+            btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
         # in TT < 2.3.0 session_id will only be available after PassphraseStateRequest
-        session_id = emulator.client.session_id
-        emulator.client.init_device()
-        btc.get_address(emulator.client, "Testnet", parse_path("44h/1h/0h/0/0"))
-        assert session_id == emulator.client.session_id
+        session_id = session.id
+        if protocol_v1:
+            session.call(messages.Initialize(session_id=session_id))
+        btc.get_address(
+            session,
+            "Testnet",
+            parse_path("44h/1h/0h/0/0"),
+        )
+        assert session_id == session.id
