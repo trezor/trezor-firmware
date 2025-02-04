@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import nem
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -31,10 +31,10 @@ pytestmark = [
 
 
 # assertion data from T1
-def test_nem_signtx_importance_transfer(client: Client):
-    with client:
+def test_nem_signtx_importance_transfer(session: Session):
+    with session:
         tx = nem.sign_tx(
-            client,
+            session,
             parse_path("m/44h/1h/0h/0h/0h"),
             {
                 "timeStamp": 12349215,
@@ -60,9 +60,9 @@ def test_nem_signtx_importance_transfer(client: Client):
         )
 
 
-def test_nem_signtx_provision_namespace(client: Client):
+def test_nem_signtx_provision_namespace(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 74649215,
