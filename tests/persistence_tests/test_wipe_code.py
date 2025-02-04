@@ -11,46 +11,55 @@ WIPE_CODE = "9876"
 
 
 def setup_device_legacy(client: Client, pin: str, wipe_code: str) -> None:
-    device.wipe(client)
+    device.wipe(client.get_seedless_session())
+    client = client.get_new_client()
     debuglink.load_device(
-        client, MNEMONIC12, pin, passphrase_protection=False, label="WIPECODE"
+        client.get_seedless_session(),
+        MNEMONIC12,
+        pin,
+        passphrase_protection=False,
+        label="WIPECODE",
     )
 
     with client:
         client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
-        device.change_wipe_code(client)
+        device.change_wipe_code(client.get_seedless_session())
 
 
 def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
-    device.wipe(client)
+    device.wipe(client.get_seedless_session())
+    client = client.get_new_client()
     debuglink.load_device(
-        client, MNEMONIC12, pin, passphrase_protection=False, label="WIPECODE"
+        client.get_seedless_session(),
+        MNEMONIC12,
+        pin,
+        passphrase_protection=False,
+        label="WIPECODE",
     )
 
     with client:
         client.use_pin_sequence([pin, wipe_code, wipe_code])
-        device.change_wipe_code(client)
+        device.change_wipe_code(client.get_seedless_session())
 
 
 @core_only
 def test_wipe_code_activate_core(core_emulator: Emulator):
     # set up device
     setup_device_core(core_emulator.client, PIN, WIPE_CODE)
-
-    core_emulator.client.init_device()
+    session = core_emulator.client.get_session()
     device_id = core_emulator.client.features.device_id
 
     # Initiate Change pin process
-    ret = core_emulator.client.call_raw(messages.ChangePin(remove=False))
+    ret = session.call_raw(messages.ChangePin(remove=False))
     assert isinstance(ret, messages.ButtonRequest)
     assert ret.name == "change_pin"
     core_emulator.client.debug.press_yes()
-    ret = core_emulator.client.call_raw(messages.ButtonAck())
+    ret = session.call_raw(messages.ButtonAck())
 
     # Enter the wipe code instead of the current PIN
     expected = message_filters.ButtonRequest(code=messages.ButtonRequestType.PinEntry)
     assert expected.match(ret)
-    core_emulator.client._raw_write(messages.ButtonAck())
+    session._write(messages.ButtonAck())
     core_emulator.client.debug.input(WIPE_CODE)
 
     # preserving screenshots even after it dies and starts again
@@ -75,25 +84,26 @@ def test_wipe_code_activate_legacy():
         # set up device
         setup_device_legacy(emu.client, PIN, WIPE_CODE)
 
-        emu.client.init_device()
+        session = emu.client.get_session()
         device_id = emu.client.features.device_id
 
         # Initiate Change pin process
-        ret = emu.client.call_raw(messages.ChangePin(remove=False))
+        ret = session.call_raw(messages.ChangePin(remove=False))
         assert isinstance(ret, messages.ButtonRequest)
         emu.client.debug.press_yes()
-        ret = emu.client.call_raw(messages.ButtonAck())
+        ret = session.call_raw(messages.ButtonAck())
 
         # Enter the wipe code instead of the current PIN
         assert isinstance(ret, messages.PinMatrixRequest)
         wipe_code_encoded = emu.client.debug.encode_pin(WIPE_CODE)
-        emu.client._raw_write(messages.PinMatrixAck(pin=wipe_code_encoded))
+        session._write(messages.PinMatrixAck(pin=wipe_code_encoded))
 
         # wait 30 seconds for emulator to shut down
         # this will raise a TimeoutError if the emulator doesn't die.
         emu.wait(30)
 
         emu.start()
+        emu.client.refresh_features()
         assert emu.client.features.initialized is False
         assert emu.client.features.pin_protection is False
         assert emu.client.features.wipe_code_protection is False
