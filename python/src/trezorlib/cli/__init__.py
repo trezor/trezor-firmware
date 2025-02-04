@@ -30,7 +30,7 @@ from .. import exceptions, transport, ui
 from ..client import PASSPHRASE_ON_DEVICE, ProtocolVersion, TrezorClient
 from ..messages import Capability
 from ..transport import Transport
-from ..transport.session import Session, SessionV1
+from ..transport.session import Session, SessionV1, SessionV2
 
 LOG = logging.getLogger(__name__)
 
@@ -135,10 +135,13 @@ class TrezorConnection:
 
         # Try resume session from id
         if self.session_id is not None:
-            if client.protocol_version is ProtocolVersion.V1:
+            if client.protocol_version is ProtocolVersion.PROTOCOL_V1:
                 session = SessionV1.resume_from_id(
                     client=client, session_id=self.session_id
                 )
+            elif client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+                session = SessionV2(client, self.session_id)
+                # TODO fix resumption on THP
             else:
                 raise Exception("Unsupported client protocol", client.protocol_version)
             if must_resume:
@@ -267,6 +270,11 @@ class TrezorConnection:
                     empty_passphrase=empty_passphrase,
                     must_resume=must_resume,
                 )
+        except exceptions.DeviceLockedException:
+            click.echo(
+                "Device is locked, enter a pin on the device.",
+                err=True,
+            )
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
             sys.exit(1)

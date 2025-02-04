@@ -2,7 +2,7 @@
 
 import binascii
 from trezorlib.client import TrezorClient
-from trezorlib.transport_hid import HidTransport
+from trezorlib.transport.hid import HidTransport
 
 devices = HidTransport.enumerate()
 if len(devices) > 0:
