@@ -19,7 +19,7 @@ import pytest
 from shamir_mnemonic import shamir
 
 from trezorlib import device
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.messages import BackupAvailability, BackupType
 
 from ...common import MOCK_GET_ENTROPY
@@ -31,32 +31,32 @@ from ...input_flows import (
 )
 
 
-def backup_flow_bip39(client: Client) -> bytes:
-    with client:
+def backup_flow_bip39(session: Session) -> bytes:
+    with session.client as client:
         IF = InputFlowBip39Backup(client)
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
     assert IF.mnemonic is not None
     return IF.mnemonic.encode()
 
 
-def backup_flow_slip39_basic(client: Client):
-    with client:
+def backup_flow_slip39_basic(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39BasicBackup(client, False)
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
     groups = shamir.decode_mnemonics(IF.mnemonics[:3])
     ems = shamir.recover_ems(groups)
     return ems.ciphertext
 
 
-def backup_flow_slip39_advanced(client: Client):
-    with client:
+def backup_flow_slip39_advanced(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39AdvancedBackup(client, False)
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
     mnemonics = IF.mnemonics[0:3] + IF.mnemonics[5:8] + IF.mnemonics[10:13]
     groups = shamir.decode_mnemonics(mnemonics)
@@ -74,10 +74,13 @@ VECTORS = [
 @pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_skip_backup_msg(client: Client, backup_type, backup_flow):
-    with client:
+@pytest.mark.uninitialized_session
+def test_skip_backup_msg(session: Session, backup_type, backup_flow):
+    assert session.features.initialized is False
+
+    with session:
         device.setup(
-            client,
+            session,
             skip_backup=True,
             passphrase_protection=False,
             pin_protection=False,
@@ -86,22 +89,22 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
             _get_entropy=MOCK_GET_ENTROPY,
         )
 
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.Required
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
-    assert client.features.backup_type is backup_type
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.Required
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is backup_type
 
-    secret = backup_flow(client)
+    secret = backup_flow(session)
 
-    client.init_device()
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.NotAvailable
-    assert client.features.unfinished_backup is False
-    assert client.features.backup_type is backup_type
+    session = session.client.get_session()
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.NotAvailable
+    assert session.features.unfinished_backup is False
+    assert session.features.backup_type is backup_type
 
     assert secret is not None
-    state = client.debug.state()
+    state = session.client.debug.state()
     assert state.mnemonic_type is backup_type
     assert state.mnemonic_secret == secret
 
@@ -109,12 +112,15 @@ def test_skip_backup_msg(client: Client, backup_type, backup_flow):
 @pytest.mark.models("core")
 @pytest.mark.parametrize("backup_type, backup_flow", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_skip_backup_manual(client: Client, backup_type: BackupType, backup_flow):
-    with client:
+@pytest.mark.uninitialized_session
+def test_skip_backup_manual(session: Session, backup_type: BackupType, backup_flow):
+    assert session.features.initialized is False
+
+    with session, session.client as client:
         IF = InputFlowResetSkipBackup(client)
         client.set_input_flow(IF.get())
         device.setup(
-            client,
+            session,
             pin_protection=False,
             passphrase_protection=False,
             backup_type=backup_type,
@@ -122,21 +128,21 @@ def test_skip_backup_manual(client: Client, backup_type: BackupType, backup_flow
             _get_entropy=MOCK_GET_ENTROPY,
         )
 
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.Required
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
-    assert client.features.backup_type is backup_type
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.Required
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is backup_type
 
-    secret = backup_flow(client)
+    secret = backup_flow(session)
 
-    client.init_device()
-    assert client.features.initialized is True
-    assert client.features.backup_availability == BackupAvailability.NotAvailable
-    assert client.features.unfinished_backup is False
-    assert client.features.backup_type is backup_type
+    session = session.client.get_session()
+    assert session.features.initialized is True
+    assert session.features.backup_availability == BackupAvailability.NotAvailable
+    assert session.features.unfinished_backup is False
+    assert session.features.backup_type is backup_type
 
     assert secret is not None
-    state = client.debug.state()
+    state = session.client.debug.state()
     assert state.mnemonic_type is backup_type
     assert state.mnemonic_secret == secret
