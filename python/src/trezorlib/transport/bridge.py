@@ -22,7 +22,6 @@ import typing as t
 
 import requests
 
-from ..client import ProtocolVersion
 from ..log import DUMP_PACKETS
 from . import DeviceIsBusy, MessagePayload, Transport, TransportException
 
@@ -31,10 +30,14 @@ if t.TYPE_CHECKING:
 
 LOG = logging.getLogger(__name__)
 
+PROTOCOL_VERSION_1 = 1
+PROTOCOL_VERSION_2 = 2
+
 TREZORD_HOST = "http://127.0.0.1:21325"
 TREZORD_ORIGIN_HEADER = {"Origin": "https://python.trezor.io"}
 
 TREZORD_VERSION_MODERN = (2, 0, 25)
+TREZORD_VERSION_THP_SUPPORT = (2, 0, 31)  # TODO add correct value
 
 CONNECTION = requests.Session()
 CONNECTION.headers.update(TREZORD_ORIGIN_HEADER)
@@ -65,23 +68,35 @@ def is_legacy_bridge() -> bool:
     return get_bridge_version() < TREZORD_VERSION_MODERN
 
 
+def supports_protocolV2() -> bool:
+    return get_bridge_version() >= TREZORD_VERSION_THP_SUPPORT
+
+
 def detect_protocol_version(transport: "BridgeTransport") -> int:
     from .. import mapping, messages
+    from ..messages import FailureType
 
-    protocol_version = ProtocolVersion.PROTOCOL_V1
+    protocol_version = PROTOCOL_VERSION_1
     request_type, request_data = mapping.DEFAULT_MAPPING.encode(messages.Initialize())
     transport.deprecated_begin_session()
     transport.deprecated_write(request_type, request_data)
 
     response_type, response_data = transport.deprecated_read()
-    _ = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
+    response = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
     transport.deprecated_begin_session()
+    if isinstance(response, messages.Failure):
+        if response.code == FailureType.InvalidProtocol:
+            LOG.debug("Protocol V2 detected")
+            protocol_version = PROTOCOL_VERSION_2
 
     return protocol_version
 
 
 def _is_transport_valid(transport: "BridgeTransport") -> bool:
-    is_valid = detect_protocol_version(transport) == ProtocolVersion.PROTOCOL_V1
+    is_valid = (
+        supports_protocolV2()
+        or detect_protocol_version(transport) == PROTOCOL_VERSION_1
+    )
     if not is_valid:
         LOG.warning("Detected unsupported Bridge transport!")
     return is_valid
