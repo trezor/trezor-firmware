@@ -117,7 +117,7 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
         if debug.layout_type is LayoutType.Bolt:
             debug.click(buttons.OK, hold_ms=1500)
         elif debug.layout_type is LayoutType.Delizia:
-            debug.click(buttons.TAP_TO_CONFIRM, hold_ms=1500)
+            debug.click(buttons.TAP_TO_CONFIRM)
         elif debug.layout_type is LayoutType.Caesar:
             debug.press_right(hold_ms=1200)
     else:
