@@ -39,6 +39,10 @@ message Failure {
         Failure_PinMismatch = 12;
         Failure_WipeCodeMismatch = 13;
         Failure_InvalidSession = 14;
+        Failure_ThpUnallocatedSession = 15;
+        Failure_InvalidProtocol = 16;
+        Failure_BufferError = 17;
+        Failure_DeviceIsBusy = 18;
         Failure_FirmwareError = 99;
     }
 }

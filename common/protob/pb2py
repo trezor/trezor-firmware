@@ -62,6 +62,7 @@ INT_TYPES = (
 )
 
 MESSAGE_TYPE_ENUM = "MessageType"
+THP_MESSAGE_TYPE_ENUM = "ThpMessageType"
 
 LengthDelimited = c.Struct(
     "len" / c.VarInt,
@@ -237,6 +238,9 @@ class ProtoMessage:
     @classmethod
     def from_message(cls, descriptor: "Descriptor", message):
         message_type = find_by_name(descriptor.message_type_enum.value, message.name)
+        thp_message_type = None
+        if not isinstance(descriptor.thp_message_type_enum,tuple):
+            thp_message_type = find_by_name(descriptor.thp_message_type_enum.value, message.name)
         # use extensions set on the message_type entry (if any)
         extensions = descriptor.get_extensions(message_type)
         # override with extensions set on the message itself
@@ -246,6 +250,8 @@ class ProtoMessage:
             wire_type = extensions["wire_type"]
         elif message_type is not None:
             wire_type = message_type.number
+        elif thp_message_type is not None:
+            wire_type = thp_message_type.number
         else:
             wire_type = None
 
@@ -349,10 +355,13 @@ class Descriptor:
             ]
             logging.debug(f"found {len(self.files)} bitcoin-only files")
 
-        # find message_type enum
+        # find message_type and thp_message_type enum
         top_level_enums = itertools.chain.from_iterable(f.enum_type for f in self.files)
         self.message_type_enum = find_by_name(top_level_enums, MESSAGE_TYPE_ENUM, ())
+        top_level_enums = itertools.chain.from_iterable(f.enum_type for f in self.files)
+        self.thp_message_type_enum = find_by_name(top_level_enums, THP_MESSAGE_TYPE_ENUM, ())
         self.convert_enum_value_names(self.message_type_enum)
+        self.convert_enum_value_names(self.thp_message_type_enum)
 
         # find messages and enums
         self.messages = []
@@ -421,6 +430,8 @@ class Descriptor:
             self._nested_types_from_message(nested.orig)
 
     def convert_enum_value_names(self, enum):
+        if isinstance(enum,tuple):
+            return
         for value in enum.value:
             value.name = strip_enum_prefix(enum.name, value.name)
 
@@ -556,6 +567,8 @@ class RustBlobRenderer:
         enums = []
         cursor = 0
         for enum in sorted(self.descriptor.enums, key=lambda e: e.name):
+            if enum.name == "MessageType":
+                continue
             self.enum_map[enum.name] = cursor
             enum_blob = ENUM_ENTRY.build(sorted(v.number for v in enum.value))
             enums.append(enum_blob)

@@ -5,14 +5,14 @@ on:
     types:
       - opened
       - reopened
-      - synchronize  # branch head update
+      - synchronize # branch head update
       - labeled
   workflow_dispatch:
   schedule:
-    - cron: '15 23 * * *'  # every day @ 23:15
+    - cron: "15 23 * * *" # every day @ 23:15
   push:
     branches:
-      - 'release/**'
+      - "release/**"
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -20,9 +20,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  id-token: write       # for fetching the OIDC token
-  contents: read        # for actions/checkout
-  pull-requests: write  # For dflook comments on PR
+  id-token: write # for fetching the OIDC token
+  contents: read # for actions/checkout
+  pull-requests: write # For dflook comments on PR
 
 env:
   PULL_COMMENT: |
@@ -49,7 +49,7 @@ jobs:
           cat $GITHUB_OUTPUT
 
   core_firmware:
-    name: Build firmware
+    name: Build firmware (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -57,10 +57,27 @@ jobs:
         model: ${{ fromJSON(startsWith(github.ref, 'refs/heads/release/') && '["T2B1", "T2T1", "T3B1", "T3T1", "T3W1"]' || '["T2T1", "T3B1", "T3T1", "T3W1"]') }}
         coins: [universal, btconly]
         type: ${{ fromJSON(github.event_name == 'schedule' && '["normal", "debuglink", "production"]' || '["normal", "debuglink"]') }}
+        protocol: [v1]
         include:
           - model: D001
             coins: universal
             type: normal
+          - model: T2T1
+            coins: universal
+            type: debuglink
+            protocol: v2
+          - model: T2T1
+            coins: btconly
+            type: debuglink
+            protocol: v2
+          - model: T3T1
+            coins: universal
+            type: debuglink
+            protocol: v2
+          - model: T3T1
+            coins: btconly
+            type: debuglink
+            protocol: v2
         exclude:
           - model: T3W1
             type: production
@@ -70,6 +87,7 @@ jobs:
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       PRODUCTION: ${{ matrix.type == 'production' && '1' || '0' }}
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T3W1' && '1' || '0' }}
+      THP: ${{ matrix.protocol == 'v2' && '1' || '0'}}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -91,7 +109,7 @@ jobs:
         if: matrix.coins == 'btconly' && matrix.type != 'debuglink'
       - uses: actions/upload-artifact@v4
         with:
-          name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}
+          name: core-firmware-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-protocol_${{ matrix.protocol }}
           path: |
             core/build/boardloader/*.bin
             core/build/bootloader/*.bin
@@ -102,7 +120,7 @@ jobs:
           retention-days: 7
 
   core_emu:
-    name: Build emu
+    name: Build emu (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.type }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs: param
     strategy:
@@ -113,15 +131,38 @@ jobs:
         # type: [normal, debuglink]
         type: [debuglink]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1]
         exclude:
           - type: normal
             asan: asan
+        include:
+          - model: T2T1
+            coins: universal
+            type: debuglink
+            asan: noasan
+            protocol: v2
+          - model: T2T1
+            coins: btconly
+            type: debuglink
+            asan: noasan
+            protocol: v2
+          - model: T3T1
+            coins: universal
+            type: debuglink
+            asan: noasan
+            protocol: v2
+          - model: T3T1
+            coins: btconly
+            type: debuglink
+            asan: noasan
+            protocol: v2
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYOPT: ${{ matrix.type == 'debuglink' && '0' || '1' }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+      THP: ${{ matrix.protocol == 'v2' && '1' || '0'}}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -133,7 +174,7 @@ jobs:
       - run: cp core/build/unix/trezor-emu-core core/build/unix/trezor-emu-core-${{ matrix.model }}-${{ matrix.coins }}
       - uses: actions/upload-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.type }}-${{ matrix.asan }}-protocol_${{ matrix.protocol }}
           path: |
             core/build/unix/trezor-emu-core*
             core/build/bootloader_emu/bootloader.elf
@@ -178,7 +219,7 @@ jobs:
           retention-days: 2
 
   core_unit_python_test:
-    name: Python unit tests
+    name: Python unit tests (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs: param
     strategy:
@@ -186,10 +227,12 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1, v2]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+      THP: ${{ matrix.protocol == 'v2' && '1' || '0'}}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -199,7 +242,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core test"
 
   core_unit_rust_test:
-    name: Rust unit tests
+    name: Rust unit tests (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -209,12 +252,14 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1, v2]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTC_BOOTSTRAP: ${{ matrix.asan == 'asan' && '1' || '0' }}
       RUSTFLAGS: ${{ matrix.asan == 'asan' && '-Z sanitizer=address' || '' }}
       LSAN_OPTIONS: "suppressions=../../asan_suppressions.txt"
+      THP: ${{ matrix.protocol == 'v2' && '1' || '0'}}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -243,7 +288,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan-protocol_v1
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -254,7 +299,7 @@ jobs:
   # See artifacts for a comprehensive report of UI.
   # See [docs/tests/ui-tests](../tests/ui-tests.md) for more info.
   core_device_test:
-    name: Device tests
+    name: Device tests (${{ matrix.model }}, ${{ matrix.coins }}, ${{ matrix.asan }}, ${{ matrix.lang }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -266,6 +311,13 @@ jobs:
         coins: [universal, btconly]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
+        protocol: [v1]
+        include:
+          - model: T2T1
+            coins: universal
+            asan: noasan
+            lang: en
+            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       TREZOR_MODEL: ${{ matrix.model }}
@@ -275,13 +327,14 @@ jobs:
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
       ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
       TEST_LANG: ${{ matrix.lang }}
+      THP: ${{ matrix.protocol == 'v2' && '1' || '0'}}
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-${{ matrix.coins }}-debuglink-${{ matrix.asan }}-protocol_${{ matrix.protocol }}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -290,7 +343,7 @@ jobs:
         if: failure()
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}
+          name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}-protocol_${{ matrix.protocol }}
           path: tests/trezor*.log
           retention-days: 7
         if: always()
@@ -306,7 +359,7 @@ jobs:
   # Click tests - UI.
   # See [docs/tests/click-tests](../tests/click-tests.md) for more info.
   core_click_test:
-    name: Click tests
+    name: Click tests (${{ matrix.model }}, ${{ matrix.asan }}, ${{ matrix.lang }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -318,6 +371,12 @@ jobs:
         model: [T2T1, T3B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
+        protocol: [v1]
+        include:
+          - model: T2T1
+            asan: noasan
+            lang: en
+            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       # MULTICORE: 4  # more could interfere with other jobs
@@ -329,7 +388,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -339,7 +398,7 @@ jobs:
         if: ${{ matrix.asan == 'asan' }}
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-click-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.asan }}
+          name: core-test-click-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: tests/trezor.log
           retention-days: 7
         if: always()
@@ -352,11 +411,10 @@ jobs:
         continue-on-error: true
       - uses: ./.github/actions/upload-coverage
 
-
   # Upgrade tests.
   # See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
   core_upgrade_test:
-    name: Upgrade tests
+    name: Upgrade tests (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -368,6 +426,7 @@ jobs:
         # FIXME: T3T1 https://github.com/trezor/trezor-firmware/issues/3595
         model: [T2T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1, v2]
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 400
@@ -378,7 +437,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -392,10 +451,9 @@ jobs:
           retention-days: 7
         if: always()
 
-
   # Persistence tests - UI.
   core_persistence_test:
-    name: Persistence tests
+    name: Persistence tests (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -406,6 +464,11 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1]
+        include:
+          - model: T2T1
+            asan: noasan
+            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
@@ -416,7 +479,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -442,7 +505,7 @@ jobs:
 
   core_hwi_test:
     name: HWI tests
-    if: false  # XXX currently failing
+    if: false # XXX currently failing
     continue-on-error: true
     runs-on: ubuntu-latest
     needs: core_emu
@@ -456,10 +519,10 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan
+          name: core-emu-${{ matrix.model }}-universal-debuglink-noasan-protocol_v1
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
-      - uses: ./.github/actions/environment  # XXX poetry maybe not needed
+      - uses: ./.github/actions/environment # XXX poetry maybe not needed
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
       # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
@@ -471,7 +534,7 @@ jobs:
 
   core_memory_profile:
     name: Memory allocation report
-    if: false  # NOTE manual job, comment out to run
+    if: false # NOTE manual job, comment out to run
     runs-on: ubuntu-latest
     env:
       TREZOR_MODEL: T2T1
@@ -507,14 +570,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1]  # FIXME: checker.py lacks awareness of U5 flash layout
+        model: [T2T1] # FIXME: checker.py lacks awareness of U5 flash layout
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-firmware-${{ matrix.model }}-universal-normal  # FIXME: s/normal/debuglink/
+          name: core-firmware-${{ matrix.model }}-universal-normal-protocol_v1 # FIXME: s/normal/debuglink/
           path: core/build
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run core/tools/size/checker.py core/build/firmware/firmware.elf"
@@ -530,7 +593,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1]  # FIXME: T2T1 url is hardcoded in compare_master.py
+        model: [T2T1] # FIXME: T2T1 url is hardcoded in compare_master.py
     steps:
       - uses: actions/checkout@v4
         with:
@@ -538,7 +601,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/download-artifact@v4
         with:
-          name: core-firmware-${{ matrix.model }}-universal-normal
+          name: core-firmware-${{ matrix.model }}-universal-normal-protocol_v1
           path: core/build
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run core/tools/size/compare_master.py core/build/firmware/firmware.elf -r firmware_elf_size_report.txt"
@@ -550,7 +613,7 @@ jobs:
 
   # Monero tests.
   core_monero_test:
-    name: Monero test
+    name: Monero test (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -560,6 +623,11 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1]
+        include:
+          - model: T2T1
+            asan: noasan
+            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
@@ -569,7 +637,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: cachix/install-nix-action@v23
@@ -580,7 +648,7 @@ jobs:
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry run make -C core test_emu_monero"
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}
+          name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: |
             tests/trezor.log
             core/tests/trezor_monero_tests.log
@@ -588,10 +656,9 @@ jobs:
         if: always()
       - uses: ./.github/actions/upload-coverage
 
-
   # Tests for U2F and HID.
   core_u2f_test:
-    name: U2F test
+    name: U2F test (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -601,6 +668,11 @@ jobs:
       matrix:
         model: [T2T1, T3B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1]
+        include:
+          - model: T2T1
+            asan: noasan
+            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
@@ -610,7 +682,7 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
@@ -618,7 +690,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core test_emu_u2f"
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}
+          name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: tests/trezor.log
           retention-days: 7
         if: always()
@@ -626,7 +698,7 @@ jobs:
 
   # FIDO2 device tests.
   core_fido2_test:
-    name: FIDO2 test
+    name: FIDO2 test (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
     runs-on: ubuntu-latest
     needs:
       - param
@@ -634,8 +706,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3T1]  # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T3T1] # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
+        protocol: [v1]
+        include:
+          - model: T2T1
+            asan: noasan
+            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
@@ -645,14 +722,14 @@ jobs:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}
+          name: core-emu-${{ matrix.model }}-universal-debuglink-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core test_emu_fido2"
       - uses: actions/upload-artifact@v4
         with:
-          name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}
+          name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}-protocol_${{matrix.protocol}}
           path: |
             tests/trezor.log
           retention-days: 7
@@ -738,7 +815,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sleep 1m  # try avoiding github api rate limit
+      - run: sleep 1m # try avoiding github api rate limit
       - uses: ./.github/actions/ui-comment
 
   core_upload_emu:
@@ -751,7 +828,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: core-emu*debuglink-noasan
+          pattern: core-emu*debuglink-noasan-protocol_v*
           merge-multiple: true
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -774,7 +851,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: core-emu*debuglink-noasan
+          pattern: core-emu*debuglink-noasan-protocol_v*
           merge-multiple: true
       - name: Configure aws credentials
         uses: aws-actions/configure-aws-credentials@v4
