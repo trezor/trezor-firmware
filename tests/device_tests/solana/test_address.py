@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.solana import get_address
 from trezorlib.tools import parse_path
 
@@ -28,9 +28,9 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core"
 @parametrize_using_common_fixtures(
     "solana/get_address.json",
 )
-def test_solana_get_address(client: Client, parameters, result):
+def test_solana_get_address(session: Session, parameters, result):
     actual_result = get_address(
-        client, address_n=parse_path(parameters["path"]), show_display=True
+        session, address_n=parse_path(parameters["path"]), show_display=True
     )
 
     assert actual_result == result["expected_address"]
