@@ -58,6 +58,7 @@ def main() -> None:
         f.write(mem)
 
     f.close()
+    debug.close()
 
 
 if __name__ == "__main__":
