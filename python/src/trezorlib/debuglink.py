@@ -32,13 +32,20 @@ from pathlib import Path
 from mnemonic import Mnemonic
 
 from . import btc, mapping, messages, models, protobuf
-from .client import ProtocolVersion, TrezorClient
-from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
+from .client import (
+    MAX_PASSPHRASE_LENGTH,
+    MAX_PIN_LENGTH,
+    PASSPHRASE_ON_DEVICE,
+    ProtocolVersion,
+    TrezorClient,
+)
+from .exceptions import Cancelled, PinException, TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
-from .messages import DebugWaitType
+from .messages import Capability, DebugWaitType
+from .protobuf import MessageType
 from .tools import parse_path
 from .transport import Timeout
-from .transport.session import Session
+from .transport.session import Session, SessionV1, derive_seed
 from .transport.thp.protocol_v1 import ProtocolV1Channel
 
 if t.TYPE_CHECKING:
@@ -542,6 +549,25 @@ class DebugLink:
             raise TrezorFailure(result)
         return result
 
+    def pairing_info(
+        self,
+        thp_channel_id: bytes | None = None,
+        handshake_hash: bytes | None = None,
+        nfc_secret_host: bytes | None = None,
+    ) -> messages.DebugLinkPairingInfo:
+        result = self._call(
+            messages.DebugLinkGetPairingInfo(
+                channel_id=thp_channel_id,
+                handshake_hash=handshake_hash,
+                nfc_secret_host=nfc_secret_host,
+            )
+        )
+        while not isinstance(result, (messages.Failure, messages.DebugLinkPairingInfo)):
+            result = self._read()
+        if isinstance(result, messages.Failure):
+            raise TrezorFailure(result)
+        return result
+
     def read_layout(self, wait: bool | None = None) -> LayoutContent:
         """
         Force waiting for the layout by setting `wait=True`. Force not waiting by
@@ -808,6 +834,7 @@ class DebugUI:
 
     def __init__(self, debuglink: DebugLink) -> None:
         self.debuglink = debuglink
+        self.pins: t.Iterator[str] | None = None
         self.clear()
 
     def clear(self) -> None:
@@ -1078,16 +1105,20 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.sync_responses()
 
-        # So that we can choose right screenshotting logic (T1 vs TT)
-        # and know the supported debug capabilities
-        self.debug.model = self.model
-        self.debug.version = self.version
+    def __getattr__(self, name: str) -> t.Any:
+        return getattr(self._session, name)
+
+    def __setattr__(self, name: str, value: t.Any) -> None:
+        if hasattr(self._session, name):
+            setattr(self._session, name, value)
+        else:
+            self.__dict__[name] = value
 
         self.reset_debug_features()
 
     @property
-    def layout_type(self) -> LayoutType:
-        return self.debug.layout_type
+    def protocol_version(self) -> int:
+        return self.client.protocol_version
 
     def get_new_client(self) -> TrezorClientDebugLink:
         new_client = TrezorClientDebugLink(
@@ -1289,8 +1320,10 @@ class TrezorClientDebugLink(TrezorClient):
         actual_responses = self.actual_responses
 
         # grab a copy of the inputflow generator to raise an exception through it
-        if isinstance(self.ui, DebugUI):
-            input_flow = self.ui.input_flow
+        if isinstance(self.client, TrezorClientDebugLink) and isinstance(
+            self.client.ui, DebugUI
+        ):
+            input_flow = self.client.ui.input_flow
         else:
             input_flow = None
 

@@ -109,3 +109,7 @@ class DerivationOnUninitaizedDeviceError(TrezorException):
     """Tried to derive seed on uninitialized device.
 
     To communicate with uninitialized device, use seedless session instead."""
+
+
+class DeviceLockedException(TrezorException):
+    pass
