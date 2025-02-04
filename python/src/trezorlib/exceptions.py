@@ -92,3 +92,7 @@ class FailedSessionResumption(TrezorException):
 
     Raised when `trezorctl -s <sesssion_id>` is used or `TREZOR_SESSION_ID = <session_id>`
     is set and resumption of session with the `session_id` fails."""
+
+
+class DeviceLockedException(TrezorException):
+    pass
