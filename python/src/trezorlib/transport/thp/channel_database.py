@@ -6,7 +6,6 @@ import os
 import typing as t
 
 from .channel_data import ChannelData
-from .protocol_and_channel import Channel
 
 LOG = logging.getLogger(__name__)
 
@@ -18,6 +17,11 @@ def get_channel_db() -> ChannelDatabase:
         set_channel_database(should_not_store=True)
     assert db is not None
     return db
+
+
+if t.TYPE_CHECKING:
+    from .protocol_and_channel import Channel
+    from .protocol_v2 import ProtocolV2Channel
 
 
 class ChannelDatabase:
@@ -73,7 +77,7 @@ class JsonChannelDatabase(ChannelDatabase):
         with open(self.data_path, "w") as f:
             json.dump(channels, f, indent=4)
 
-    def save_channel(self, new_channel: Channel):
+    def save_channel(self, new_channel: ProtocolV2Channel):
 
         LOG.debug("save channel")
         channels = self._read_all_channels()
