@@ -77,6 +77,7 @@ def test_pin_passphrase(session: Session):
     assert fakes == 12
     assert mnemonic == [None] * 12
 
+    raise Exception("TEST IS USING INIT MESSAGE - TODO CHANGE")
     # Mnemonic is the same
     session.init_session()
     session.client.refresh_features()

@@ -215,6 +215,23 @@ def test_get_address(session: Session):
 
 
 def test_wipe_device(session: Session):
+    # TODO
+    # Precise cause of crash is not determined, it happens with some order of
+    # tests, but not with all. The following leads to crash:
+    # pytest --random-order-seed=675848 tests/device_tests/test_protection_levels.py
+    #
+    # Traceback (most recent call last):
+    #   File "trezor/wire/__init__.py", line 70, in handle_session
+    #   File "trezor/wire/thp_main.py", line 79, in thp_main_loop
+    #   File "trezor/wire/thp_main.py", line 145, in _handle_allocated
+    #   File "trezor/wire/thp/received_message_handler.py", line 123, in handle_received_message
+    #   File "trezor/wire/thp/received_message_handler.py", line 231, in _handle_state_TH1
+    #   File "trezor/wire/thp/crypto.py", line 93, in handle_th1_crypto
+    #   File "trezor/wire/thp/crypto.py", line 178, in _derive_static_key_pair
+    #   File "storage/device.py", line 364, in get_device_secret
+    #   File "storage/common.py", line 21, in set
+    # RuntimeError: Could not save value
+
     session = _assert_protection(session)
     with session:
         session.set_expected_responses([messages.ButtonRequest, messages.Success])
