@@ -20,7 +20,7 @@ import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import Cancelled
 from trezorlib.tools import parse_path
@@ -293,7 +293,7 @@ VECTORS_LONG_MESSAGE = (
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )
 def test_signmessage(
-    client: Client,
+    session: Session,
     coin_name: str,
     path: str,
     script_type: messages.InputScriptType,
@@ -303,7 +303,7 @@ def test_signmessage(
     signature: str,
 ):
     sig = btc.sign_message(
-        client,
+        session,
         coin_name=coin_name,
         n=parse_path(path),
         script_type=script_type,
@@ -320,7 +320,7 @@ def test_signmessage(
     VECTORS_LONG_MESSAGE,
 )
 def test_signmessage_long(
-    client: Client,
+    session: Session,
     coin_name: str,
     path: str,
     script_type: messages.InputScriptType,
@@ -329,11 +329,11 @@ def test_signmessage_long(
     message: str,
     signature: str,
 ):
-    with client:
+    with session.client as client:
         IF = InputFlowSignVerifyMessageLong(client)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
-            client,
+            session,
             coin_name=coin_name,
             n=parse_path(path),
             script_type=script_type,
@@ -349,7 +349,7 @@ def test_signmessage_long(
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )
 def test_signmessage_info(
-    client: Client,
+    session: Session,
     coin_name: str,
     path: str,
     script_type: messages.InputScriptType,
@@ -358,11 +358,11 @@ def test_signmessage_info(
     message: str,
     signature: str,
 ):
-    with client, pytest.raises(Cancelled):
+    with session.client as client, pytest.raises(Cancelled):
         IF = InputFlowSignMessageInfo(client)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
-            client,
+            session,
             coin_name=coin_name,
             n=parse_path(path),
             script_type=script_type,
@@ -391,8 +391,8 @@ MESSAGE_LENGTHS = (
 
 @pytest.mark.models("core")
 @pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS)
-def test_signmessage_pagination(client: Client, message: str, is_long: bool):
-    with client:
+def test_signmessage_pagination(session: Session, message: str, is_long: bool):
+    with session.client as client:
         IF = (
             InputFlowSignVerifyMessageLong
             if is_long
@@ -400,7 +400,7 @@ def test_signmessage_pagination(client: Client, message: str, is_long: bool):
         )(client)
         client.set_input_flow(IF.get())
         btc.sign_message(
-            client,
+            session,
             coin_name="Bitcoin",
             n=parse_path("m/44h/0h/0h/0/0"),
             message=message,
@@ -408,19 +408,23 @@ def test_signmessage_pagination(client: Client, message: str, is_long: bool):
 
     # We cannot differentiate between a newline and space in the message read from Trezor.
     # TODO: do the check also for T2B1
-    if client.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+    if session.client.layout_type in (
+        LayoutType.Bolt,
+        LayoutType.Delizia,
+        LayoutType.Eckhart,
+    ):
         message_read = IF.message_read.replace(" ", "").replace("...", "")
         signed_message = message.replace("\n", "").replace(" ", "")
         assert signed_message in message_read
 
 
 @pytest.mark.models("t2t1", reason="Tailored to TT fonts and screen size")
-def test_signmessage_pagination_trailing_newline(client: Client):
+def test_signmessage_pagination_trailing_newline(session: Session):
     message = "THIS\nMUST\nNOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
     # The UI must be a single dialog without pagination.
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 # expect address confirmation
                 message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
@@ -430,18 +434,18 @@ def test_signmessage_pagination_trailing_newline(client: Client):
             ]
         )
         btc.sign_message(
-            client,
+            session,
             coin_name="Bitcoin",
             n=parse_path("m/44h/0h/0h/0/0"),
             message=message,
         )
 
 
-def test_signmessage_path_warning(client: Client):
+def test_signmessage_path_warning(session: Session):
     message = "This is an example of a signed message."
 
-    with client:
-        client.set_expected_responses(
+    with session, session.client as client:
+        session.set_expected_responses(
             [
                 # expect a path warning
                 message_filters.ButtonRequest(
@@ -452,11 +456,11 @@ def test_signmessage_path_warning(client: Client):
                 messages.MessageSignature,
             ]
         )
-        if is_core(client):
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         btc.sign_message(
-            client,
+            session,
             coin_name="Bitcoin",
             n=parse_path("m/86h/0h/0h/0/0"),
             message=message,

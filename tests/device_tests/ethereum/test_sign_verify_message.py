@@ -18,7 +18,7 @@ import pytest
 
 from trezorlib import ethereum
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
@@ -32,40 +32,40 @@ pytestmark = [
 
 
 @parametrize_using_common_fixtures("ethereum/signmessage.json")
-def test_signmessage(client: Client, parameters, result):
-    if not parameters["is_long"] or client.debug.layout_type is LayoutType.T1:
+def test_signmessage(session: Session, parameters, result):
+    if not parameters["is_long"] or session.client.debug.layout_type is LayoutType.T1:
         res = ethereum.sign_message(
-            client, parse_path(parameters["path"]), parameters["msg"]
+            session, parse_path(parameters["path"]), parameters["msg"]
         )
         assert res.address == result["address"]
         assert res.signature.hex() == result["sig"]
     else:
-        with client:
+        with session.client as client:
             IF = InputFlowSignVerifyMessageLong(client)
             client.set_input_flow(IF.get())
             res = ethereum.sign_message(
-                client, parse_path(parameters["path"]), parameters["msg"]
+                session, parse_path(parameters["path"]), parameters["msg"]
             )
             assert res.address == result["address"]
             assert res.signature.hex() == result["sig"]
 
 
 @parametrize_using_common_fixtures("ethereum/verifymessage.json")
-def test_verify(client: Client, parameters, result):
-    if not parameters["is_long"] or client.debug.layout_type is LayoutType.T1:
+def test_verify(session: Session, parameters, result):
+    if not parameters["is_long"] or session.client.debug.layout_type is LayoutType.T1:
         res = ethereum.verify_message(
-            client,
+            session,
             parameters["address"],
             bytes.fromhex(parameters["sig"]),
             parameters["msg"],
         )
         assert res is True
     else:
-        with client:
+        with session.client as client:
             IF = InputFlowSignVerifyMessageLong(client, verify=True)
             client.set_input_flow(IF.get())
             res = ethereum.verify_message(
-                client,
+                session,
                 parameters["address"],
                 bytes.fromhex(parameters["sig"]),
                 parameters["msg"],
@@ -73,7 +73,7 @@ def test_verify(client: Client, parameters, result):
             assert res is True
 
 
-def test_verify_invalid(client: Client):
+def test_verify_invalid(session: Session):
     # First vector from the verifymessage JSON fixture
     msg = "This is an example of a signed message."
     address = "0xEa53AF85525B1779eE99ece1a5560C0b78537C3b"
@@ -82,7 +82,7 @@ def test_verify_invalid(client: Client):
     )
 
     res = ethereum.verify_message(
-        client,
+        session,
         address,
         sig,
         msg,
@@ -91,7 +91,7 @@ def test_verify_invalid(client: Client):
 
     # Changing the signature, expecting failure
     res = ethereum.verify_message(
-        client,
+        session,
         address,
         sig[:-1] + b"\x00",
         msg,
@@ -100,7 +100,7 @@ def test_verify_invalid(client: Client):
 
     # Changing the message, expecting failure
     res = ethereum.verify_message(
-        client,
+        session,
         address,
         sig,
         msg + "abc",
@@ -109,7 +109,7 @@ def test_verify_invalid(client: Client):
 
     # Changing the address, expecting failure
     res = ethereum.verify_message(
-        client,
+        session,
         address[:-1] + "a",
         sig,
         msg,

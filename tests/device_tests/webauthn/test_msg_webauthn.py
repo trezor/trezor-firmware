@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import fido
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ...common import MNEMONIC12
@@ -30,23 +30,23 @@ RK_CAPACITY = 100
 @pytest.mark.models("core", skip=["eckhart"])
 @pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_add_remove(client: Client):
-    with client:
+def test_add_remove(session: Session):
+    with session, session.client as client:
         IF = InputFlowFidoConfirm(client)
         client.set_input_flow(IF.get())
 
         # Remove index 0 should fail.
         with pytest.raises(TrezorFailure):
-            fido.remove_credential(client, 0)
+            fido.remove_credential(session, 0)
 
         # List should be empty.
-        assert fido.list_credentials(client) == []
+        assert fido.list_credentials(session) == []
 
         # Add valid credential #1.
-        fido.add_credential(client, CRED1)
+        fido.add_credential(session, CRED1)
 
         # Check that the credential was added and parameters are correct.
-        creds = fido.list_credentials(client)
+        creds = fido.list_credentials(session)
         assert len(creds) == 1
         assert creds[0].rp_id == "example.com"
         assert creds[0].rp_name == "Example"
@@ -59,10 +59,10 @@ def test_add_remove(client: Client):
         assert creds[0].hmac_secret is True
 
         # Add valid credential #2, which has same rpId and userId as credential #1.
-        fido.add_credential(client, CRED2)
+        fido.add_credential(session, CRED2)
 
         # Check that the credential #2 replaced credential #1 and parameters are correct.
-        creds = fido.list_credentials(client)
+        creds = fido.list_credentials(session)
         assert len(creds) == 1
         assert creds[0].rp_id == "example.com"
         assert creds[0].rp_name is None
@@ -76,32 +76,32 @@ def test_add_remove(client: Client):
 
         # Adding an invalid credential should appear as if user cancelled.
         with pytest.raises(Cancelled):
-            fido.add_credential(client, CRED1[:-2])
+            fido.add_credential(session, CRED1[:-2])
 
         # Check that the invalid credential was not added.
-        creds = fido.list_credentials(client)
+        creds = fido.list_credentials(session)
         assert len(creds) == 1
 
         # Add valid credential, which has same userId as #2, but different rpId.
-        fido.add_credential(client, CRED3)
+        fido.add_credential(session, CRED3)
 
         # Check that the credential was added.
-        creds = fido.list_credentials(client)
+        creds = fido.list_credentials(session)
         assert len(creds) == 2
 
         # Fill up the credential storage to maximum capacity.
         for cred in CREDS[: RK_CAPACITY - 2]:
-            fido.add_credential(client, cred)
+            fido.add_credential(session, cred)
 
         # Adding one more valid credential to full storage should fail.
         with pytest.raises(TrezorFailure):
-            fido.add_credential(client, CREDS[-1])
+            fido.add_credential(session, CREDS[-1])
 
         # Removing the index, which is one past the end, should fail.
         with pytest.raises(TrezorFailure):
-            fido.remove_credential(client, RK_CAPACITY)
+            fido.remove_credential(session, RK_CAPACITY)
 
         # Remove index 2.
-        fido.remove_credential(client, 2)
+        fido.remove_credential(session, 2)
         # Adding another valid credential should succeed now.
-        fido.add_credential(client, CREDS[-1])
+        fido.add_credential(session, CREDS[-1])

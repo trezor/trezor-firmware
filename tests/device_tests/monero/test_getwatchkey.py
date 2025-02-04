@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import monero
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -27,8 +27,8 @@ from ...common import MNEMONIC12
 @pytest.mark.monero
 @pytest.mark.models("core", skip=["eckhart"])
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_monero_getwatchkey(client: Client):
-    res = monero.get_watch_key(client, parse_path("m/44h/128h/0h"))
+def test_monero_getwatchkey(session: Session):
+    res = monero.get_watch_key(session, parse_path("m/44h/128h/0h"))
     assert (
         res.address
         == b"4Ahp23WfMrMFK3wYL2hLWQFGt87ZTeRkufS6JoQZu6MEFDokAQeGWmu9MA3GFq1yVLSJQbKJqVAn9F9DLYGpRzRAEXqAXKM"
@@ -37,7 +37,7 @@ def test_monero_getwatchkey(client: Client):
         res.watch_key.hex()
         == "8722520a581e2a50cc1adab4a1692401effd37b0d63b9d9b60fd7f34ea2b950e"
     )
-    res = monero.get_watch_key(client, parse_path("m/44h/128h/1h"))
+    res = monero.get_watch_key(session, parse_path("m/44h/128h/1h"))
     assert (
         res.address
         == b"44iAazhoAkv5a5RqLNVyh82a1n3ceNggmN4Ho7bUBJ14WkEVR8uFTe9f7v5rNnJ2kEbVXxfXiRzsD5Jtc6NvBi4D6WNHPie"
@@ -46,7 +46,7 @@ def test_monero_getwatchkey(client: Client):
         res.watch_key.hex()
         == "1f70b7d9e86c11b7a5bee883b75c43d6be189c8f812726ea1ecd94b06bb7db04"
     )
-    res = monero.get_watch_key(client, parse_path("m/44h/128h/2h"))
+    res = monero.get_watch_key(session, parse_path("m/44h/128h/2h"))
     assert (
         res.address
         == b"47ejhmbZ4wHUhXaqA4b7PN667oPMkokf4ZkNdWrMSPy9TNaLVr7vLqVUQHh2MnmaAEiyrvLsX8xUf99q3j1iAeMV8YvSFcH"

@@ -20,7 +20,7 @@ import shamir_mnemonic as shamir
 
 from trezorlib import device, messages
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import (
@@ -41,23 +41,23 @@ from ..input_flows import (
 
 @pytest.mark.models("core")  # TODO we want this for t1 too
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC12)
-def test_backup_bip39(client: Client):
-    assert client.features.backup_availability == messages.BackupAvailability.Required
+def test_backup_bip39(session: Session):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with client:
+    with session.client as client:
         IF = InputFlowBip39Backup(client)
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
     assert IF.mnemonic == MNEMONIC12
-    client.init_device()
-    assert client.features.initialized is True
+    session.refresh_features()
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
-    assert client.features.backup_type is messages.BackupType.Bip39
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Bip39
 
 
 @pytest.mark.models("core")
@@ -65,27 +65,27 @@ def test_backup_bip39(client: Client):
 @pytest.mark.parametrize(
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
-def test_backup_slip39_basic(client: Client, click_info: bool):
-    if click_info and client.layout_type is LayoutType.Caesar:
+def test_backup_slip39_basic(session: Session, click_info: bool):
+    if click_info and session.client.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
     if click_info and client.layout_type is LayoutType.Eckhart:
         pytest.skip("click_info not yet implemented on T3W1")
 
-    assert client.features.backup_availability == messages.BackupAvailability.Required
+    assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39BasicBackup(client, click_info)
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
-    client.init_device()
-    assert client.features.initialized is True
+    session.refresh_features()
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
-    assert client.features.backup_type is messages.BackupType.Slip39_Basic
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Basic
 
     expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_BASIC_20_3of6)
     actual_ms = shamir.combine_mnemonics(IF.mnemonics[:3])
@@ -94,10 +94,10 @@ def test_backup_slip39_basic(client: Client, click_info: bool):
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
-def test_backup_slip39_single(client: Client):
-    assert client.features.backup_availability == messages.BackupAvailability.Required
+def test_backup_slip39_single(session: Session):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with client:
+    with session.client as client:
         IF = InputFlowBip39Backup(
             client,
             confirm_success=(
@@ -105,17 +105,16 @@ def test_backup_slip39_single(client: Client):
             ),
         )
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
-    client.init_device()
-    assert client.features.initialized is True
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
 
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
-    assert client.features.backup_type is messages.BackupType.Slip39_Single_Extendable
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Single_Extendable
     assert shamir.combine_mnemonics([IF.mnemonic]) == shamir.combine_mnemonics(
         MNEMONIC_SLIP39_SINGLE_EXT_20
     )
@@ -126,27 +125,27 @@ def test_backup_slip39_single(client: Client):
 @pytest.mark.parametrize(
     "click_info", [True, False], ids=["click_info", "no_click_info"]
 )
-def test_backup_slip39_advanced(client: Client, click_info: bool):
-    if click_info and client.layout_type is LayoutType.Caesar:
+def test_backup_slip39_advanced(session: Session, click_info: bool):
+    if click_info and session.client.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
     if click_info and client.layout_type is LayoutType.Eckhart:
         pytest.skip("click_info not yet implemented on T3W1")
 
-    assert client.features.backup_availability == messages.BackupAvailability.Required
+    assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedBackup(client, click_info)
         client.set_input_flow(IF.get())
-        device.backup(client)
+        device.backup(session)
 
-    client.init_device()
-    assert client.features.initialized is True
+    session.refresh_features()
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
-    assert client.features.backup_type is messages.BackupType.Slip39_Advanced
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Advanced
 
     expected_ms = shamir.combine_mnemonics(MNEMONIC_SLIP39_ADVANCED_20)
     actual_ms = shamir.combine_mnemonics(
@@ -162,23 +161,23 @@ def test_backup_slip39_advanced(client: Client, click_info: bool):
     [(1, 1), (2, 2), (3, 5)],
     ids=["1_of_1", "2_of_2", "3_of_5"],
 )
-def test_backup_slip39_custom(client: Client, share_threshold, share_count):
-    assert client.features.backup_availability == messages.BackupAvailability.Required
+def test_backup_slip39_custom(session: Session, share_threshold, share_count):
+    assert session.features.backup_availability == messages.BackupAvailability.Required
 
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39CustomBackup(client, share_count)
         client.set_input_flow(IF.get())
         device.backup(
-            client, group_threshold=1, groups=[(share_threshold, share_count)]
+            session, group_threshold=1, groups=[(share_threshold, share_count)]
         )
 
-    client.init_device()
-    assert client.features.initialized is True
+    session.refresh_features()
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
 
     assert len(IF.mnemonics) == share_count
     assert (
@@ -189,42 +188,42 @@ def test_backup_slip39_custom(client: Client, share_threshold, share_count):
 
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(no_backup=True)
-def test_no_backup_fails(client: Client):
-    client.ensure_unlocked()
-    assert client.features.initialized is True
-    assert client.features.no_backup is True
+def test_no_backup_fails(session: Session):
+    session.ensure_unlocked()
+    assert session.features.initialized is True
+    assert session.features.no_backup is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
 
     # backup attempt should fail because no_backup=True
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
-        device.backup(client)
+        device.backup(session)
 
 
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(needs_backup=True)
-def test_interrupt_backup_fails(client: Client):
-    client.ensure_unlocked()
-    assert client.features.initialized is True
-    assert client.features.backup_availability == messages.BackupAvailability.Required
-    assert client.features.unfinished_backup is False
-    assert client.features.no_backup is False
+def test_interrupt_backup_fails(session: Session):
+    session.ensure_unlocked()
+    assert session.features.initialized is True
+    assert session.features.backup_availability == messages.BackupAvailability.Required
+    assert session.features.unfinished_backup is False
+    assert session.features.no_backup is False
 
     # start backup
-    client.call_raw(messages.BackupDevice())
+    session.call_raw(messages.BackupDevice())
 
     # interupt backup by sending initialize
-    client.init_device()
+    session = session.client.get_session()
 
     # check that device state is as expected
-    assert client.features.initialized is True
+    assert session.features.initialized is True
     assert (
-        client.features.backup_availability == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
-    assert client.features.unfinished_backup is True
-    assert client.features.no_backup is False
+    assert session.features.unfinished_backup is True
+    assert session.features.no_backup is False
 
     # Second attempt at backup should fail
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
-        device.backup(client)
+        device.backup(session)
