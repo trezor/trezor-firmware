@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.solana import sign_tx
 from trezorlib.tools import parse_path
 
@@ -42,13 +42,11 @@ pytestmark = [
     "solana/sign_tx.unknown_instructions.json",
     "solana/sign_tx.predefined_transactions.json",
 )
-def test_solana_sign_tx(client: Client, parameters, result):
-    client.init_device(new_session=True)
-
+def test_solana_sign_tx(session: Session, parameters, result):
     serialized_tx = _serialize_tx(parameters["construct"])
 
     actual_result = sign_tx(
-        client,
+        session,
         address_n=parse_path(parameters["address"]),
         serialized_tx=serialized_tx,
         additional_info=(
