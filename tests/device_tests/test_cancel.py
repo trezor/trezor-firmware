@@ -58,6 +58,7 @@ def test_cancel_message_via_cancel(session: Session, message):
         ),
     ],
 )
+@pytest.mark.protocol("protocol_v1")
 def test_cancel_message_via_initialize(session: Session, message):
     resp = session.call_raw(message)
     assert isinstance(resp, m.ButtonRequest)
