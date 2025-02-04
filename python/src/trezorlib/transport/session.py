@@ -6,6 +6,7 @@ import typing as t
 from .. import exceptions, messages, models
 from ..protobuf import MessageType
 from .thp.protocol_v1 import ProtocolV1Channel
+from .thp.protocol_v2 import ProtocolV2Channel
 
 if t.TYPE_CHECKING:
     from ..client import TrezorClient
@@ -181,3 +182,50 @@ def derive_seed(session: Session) -> None:
 
     get_address(session, "Testnet", PASSPHRASE_TEST_PATH)
     session.refresh_features()
+
+
+class SessionV2(Session):
+
+    @classmethod
+    def new(
+        cls,
+        client: TrezorClient,
+        passphrase: str | None,
+        derive_cardano: bool,
+        session_id: int = 0,
+    ) -> SessionV2:
+        assert isinstance(client.protocol, ProtocolV2Channel)
+        session = cls(client, session_id.to_bytes(1, "big"))
+        session.call(
+            messages.ThpCreateNewSession(
+                passphrase=passphrase, derive_cardano=derive_cardano
+            ),
+            expect=messages.Success,
+        )
+        session.update_id_and_sid(session_id.to_bytes(1, "big"))
+        return session
+
+    def __init__(self, client: TrezorClient, id: bytes) -> None:
+        from ..debuglink import TrezorClientDebugLink
+
+        super().__init__(client, id)
+        assert isinstance(client.protocol, ProtocolV2Channel)
+
+        helper_debug = None
+        if isinstance(client, TrezorClientDebugLink):
+            helper_debug = client.debug
+        self.channel: ProtocolV2Channel = client.protocol.get_channel(helper_debug)
+        self.update_id_and_sid(id)
+
+    def _write(self, msg: t.Any) -> None:
+        LOG.debug("writing message %s", type(msg))
+        self.channel.write(self.sid, msg)
+
+    def _read(self) -> t.Any:
+        msg = self.channel.read(self.sid)
+        LOG.debug("reading message %s", type(msg))
+        return msg
+
+    def update_id_and_sid(self, id: bytes) -> None:
+        self._id = id
+        self.sid = int.from_bytes(id, "big")  # TODO update to extract only sid
