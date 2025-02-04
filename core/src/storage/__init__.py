@@ -1,12 +1,29 @@
 # make sure to import cache unconditionally at top level so that it is imported (and retained) together with the storage module
+from typing import TYPE_CHECKING
+
 from storage import cache, common, device
 
+if TYPE_CHECKING:
+    from typing import Tuple
 
-def wipe() -> None:
+    pass
+
+
+def wipe(clear_cache: bool = True) -> None:
+    """
+    Wipes the storage.
+    If the device should communicate after wipe, use `clear_cache=False` and clear cache manually later using
+    `wipe_cache()`.
+    """
     from trezor import config
 
     config.wipe()
-    cache.clear_all()
+    if clear_cache:
+        cache.clear_all()
+
+
+def wipe_cache(excluded: Tuple[bytes, bytes] | None = None) -> None:
+    cache.clear_all(excluded)
 
 
 def init_unlocked() -> None:
@@ -21,12 +38,13 @@ def init_unlocked() -> None:
         common.set_bool(common.APP_DEVICE, device.INITIALIZED, True, public=True)
 
 
-def reset() -> None:
+def reset(excluded: Tuple[bytes, bytes] | None) -> None:
     """
     Wipes storage but keeps the device id unchanged.
     """
     device_id = device.get_device_id()
-    wipe()
+    wipe(clear_cache=False)
+    wipe_cache(excluded)
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
 
 

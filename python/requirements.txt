@@ -8,5 +8,5 @@ libusb1>=1.6.4
 construct>=2.9,!=2.10.55
 typing_extensions>=4.7.1
 construct-classes>=0.1.2
-cryptography>=41
-platformdirs>=2
+cryptography >=43.0.3
+platformdirs >=2

@@ -1,3 +1,5 @@
+from trezor.wire import message_handler
+
 if not __debug__:
     from trezor.utils import halt
 
@@ -22,20 +24,23 @@ if __debug__:
         from trezor.messages import (
             DebugLinkDecision,
             DebugLinkEraseSdCard,
+            DebugLinkGetPairingInfo,
             DebugLinkGetState,
             DebugLinkOptigaSetSecMax,
+            DebugLinkPairingInfo,
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkState,
         )
         from trezor.ui import Layout
-        from trezor.wire import WireInterface, context
+        from trezor.wire import WireInterface
+        from trezor.wire.protocol_common import Context
 
         Handler = Callable[[Any], Awaitable[Any]]
 
     layout_change_box = loop.mailbox()
 
-    DEBUG_CONTEXT: context.Context | None = None
+    DEBUG_CONTEXT: Context | None = None
 
     REFRESH_INDEX = 0
 
@@ -70,9 +75,7 @@ if __debug__:
                     "layout deadlock detected (did you send a ButtonAck?)"
                 )
 
-    async def return_layout_change(
-        ctx: wire.protocol_common.Context, detect_deadlock: bool = False
-    ) -> None:
+    async def return_layout_change(ctx: Context, detect_deadlock: bool = False) -> None:
         # set up the wait
         storage.layout_watcher = True
 
@@ -265,6 +268,42 @@ if __debug__:
             tokens=tokens,
         )
 
+    async def dispatch_DebugLinkGetPairingInfo(
+        msg: DebugLinkGetPairingInfo,
+    ) -> DebugLinkPairingInfo | None:
+        if not utils.USE_THP:
+            raise RuntimeError("Trezor does not support THP")
+        if msg.channel_id is None:
+            raise RuntimeError("Invalid DebugLinkGetPairingInfo message")
+
+        from trezor.wire.thp.channel import Channel
+        from trezor.wire.thp.pairing_context import PairingContext
+        from trezor.wire.thp.thp_main import _CHANNELS
+
+        channel_id = int.from_bytes(msg.channel_id, "big")
+        channel: Channel | None = None
+        ctx: PairingContext | None = None
+        try:
+            channel = _CHANNELS[channel_id]
+            ctx = channel.connection_context
+        except KeyError:
+            pass
+
+        if ctx is None or not isinstance(ctx, PairingContext):
+            raise RuntimeError("Trezor is not in pairing mode")
+
+        ctx.nfc_secret_host = msg.nfc_secret_host
+        ctx.handshake_hash_host = msg.handshake_hash
+        from trezor.messages import DebugLinkPairingInfo
+
+        return DebugLinkPairingInfo(
+            channel_id=ctx.channel_id,
+            handshake_hash=ctx.channel_ctx.get_handshake_hash(),
+            code_entry_code=ctx.code_code_entry,
+            code_qr_code=ctx.code_qr_code,
+            nfc_secret_trezor=ctx.nfc_secret,
+        )
+
     async def dispatch_DebugLinkGetState(
         msg: DebugLinkGetState,
     ) -> DebugLinkState | None:
@@ -393,7 +432,6 @@ if __debug__:
                     ctx.iface.iface_num(),
                     msg_type,
                 )
-
                 if msg.type not in WORKFLOW_HANDLERS:
                     await ctx.write(wire.message_handler.unexpected_message())
                     continue
@@ -406,7 +444,7 @@ if __debug__:
                     await ctx.write(Success())
                     continue
 
-                req_msg = wire.message_handler.wrap_protobuf_load(msg.data, req_type)
+                req_msg = message_handler.wrap_protobuf_load(msg.data, req_type)
                 try:
                     res_msg = await WORKFLOW_HANDLERS[msg.type](req_msg)
                 except Exception as exc:
@@ -425,6 +463,7 @@ if __debug__:
     WORKFLOW_HANDLERS: dict[int, Handler] = {
         MessageType.DebugLinkDecision: dispatch_DebugLinkDecision,
         MessageType.DebugLinkGetState: dispatch_DebugLinkGetState,
+        MessageType.DebugLinkGetPairingInfo: dispatch_DebugLinkGetPairingInfo,
         MessageType.DebugLinkReseedRandom: dispatch_DebugLinkReseedRandom,
         MessageType.DebugLinkRecordScreen: dispatch_DebugLinkRecordScreen,
         MessageType.DebugLinkEraseSdCard: dispatch_DebugLinkEraseSdCard,
