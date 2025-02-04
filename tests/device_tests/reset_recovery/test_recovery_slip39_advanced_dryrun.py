@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ...common import MNEMONIC_SLIP39_ADVANCED_20
@@ -39,14 +39,14 @@ EXTRA_GROUP_SHARE = [
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=False)
-def test_2of3_dryrun(client: Client):
-    with client:
+def test_2of3_dryrun(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
             client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
         client.set_input_flow(IF.get())
         device.recover(
-            client,
+            session,
             passphrase_protection=False,
             pin_protection=False,
             label="label",
@@ -55,9 +55,9 @@ def test_2of3_dryrun(client: Client):
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
-def test_2of3_invalid_seed_dryrun(client: Client):
+def test_2of3_invalid_seed_dryrun(session: Session):
     # test fails because of different seed on device
-    with client, pytest.raises(
+    with session.client as client, pytest.raises(
         TrezorFailure, match=r"The seed does not match the one in the device"
     ):
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
@@ -65,7 +65,7 @@ def test_2of3_invalid_seed_dryrun(client: Client):
         )
         client.set_input_flow(IF.get())
         device.recover(
-            client,
+            session,
             passphrase_protection=False,
             pin_protection=False,
             label="label",

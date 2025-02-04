@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
@@ -42,7 +42,7 @@ VECTORS = (  # amount_unit
 
 
 @pytest.mark.parametrize("amount_unit", VECTORS)
-def test_signtx_testnet(client: Client, amount_unit):
+def test_signtx_testnet(session: Session, amount_unit):
     inp1 = messages.TxInputType(
         # tb1qajr3a3y5uz27lkxrmn7ck8lp22dgytvagr5nqy
         address_n=parse_path("m/84h/1h/0h/0/87"),
@@ -61,9 +61,9 @@ def test_signtx_testnet(client: Client, amount_unit):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=100_000 - 40_000 - 10_000,
     )
-    with client:
+    with session:
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1],
             [out1, out2],
@@ -79,7 +79,7 @@ def test_signtx_testnet(client: Client, amount_unit):
 
 
 @pytest.mark.parametrize("amount_unit", VECTORS)
-def test_signtx_btc(client: Client, amount_unit):
+def test_signtx_btc(session: Session, amount_unit):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
 
     inp1 = messages.TxInputType(
@@ -95,9 +95,9 @@ def test_signtx_btc(client: Client, amount_unit):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
+    with session:
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [inp1],
             [out1],
