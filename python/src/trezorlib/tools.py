@@ -45,7 +45,7 @@ if TYPE_CHECKING:
     # More details: https://www.python.org/dev/peps/pep-0612/
     from typing import TypeVar
 
-    from typing_extensions import Concatenate, ParamSpec
+    from typing_extensions import ParamSpec
 
     from . import client
     from .messages import Success
@@ -387,23 +387,6 @@ def _deprecation_retval_helper(value: Any, stacklevel: int = 0) -> Any:
 
 def _return_success(msg: "Success") -> str | None:
     return _deprecation_retval_helper(msg.message, stacklevel=1)
-
-
-def session(
-    f: "Callable[Concatenate[TrezorClient, P], R]",
-) -> "Callable[Concatenate[TrezorClient, P], R]":
-    # Decorator wraps a BaseClient method
-    # with session activation / deactivation
-    @functools.wraps(f)
-    def wrapped_f(client: "TrezorClient", *args: "P.args", **kwargs: "P.kwargs") -> "R":
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        client.open()
-        try:
-            return f(client, *args, **kwargs)
-        finally:
-            client.close()
-
-    return wrapped_f
 
 
 # de-camelcasifier
