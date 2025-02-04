@@ -11,7 +11,7 @@ use crate::{
                 paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
                 TextStyle,
             },
-            Component, MsgMap, PaginateFull,
+            Component,
         },
         flow::{FlowMsg, Swipable, SwipeFlow, SwipePage},
         geometry::Direction,
@@ -22,7 +22,7 @@ use heapless::Vec;
 
 use super::{
     super::{
-        component::{Frame, FrameMsg, PromptMsg, SwipeContent, VerticalMenuChoiceMsg},
+        component::{Frame, PromptMsg, SwipeContent, VerticalMenuChoiceMsg},
         flow, theme,
     },
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
