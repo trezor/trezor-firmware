@@ -72,6 +72,7 @@ def _get_xpub(
 
 
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_session_with_passphrase(client: Client):
 
     session = client.get_session(passphrase="A")
@@ -102,6 +103,7 @@ def test_session_with_passphrase(client: Client):
 
 
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_multiple_sessions(client: Client):
     # start SESSIONS_STORED sessions
     session_ids = []
@@ -144,6 +146,7 @@ def test_multiple_sessions(client: Client):
 
 
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_multiple_passphrases(client: Client):
     # start a session
     session_a = client.get_session(passphrase="A")
@@ -180,6 +183,7 @@ def test_multiple_passphrases(client: Client):
 
 @pytest.mark.slow
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_max_sessions_with_passphrases(client: Client):
     # for the following tests, we are using as many passphrases as there are available sessions
     assert len(XPUB_PASSPHRASES) == SESSIONS_STORED
@@ -225,6 +229,7 @@ def test_max_sessions_with_passphrases(client: Client):
         )  # passphrase is prompted
 
 
+@pytest.mark.protocol("protocol_v1")
 def test_session_enable_passphrase(client: Client):
     # Let's start the communication by calling Initialize.
     session = client.get_session(passphrase="")
@@ -251,6 +256,7 @@ def test_session_enable_passphrase(client: Client):
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_passphrase_on_device(client: Client):
     # _init_session(client)
     session = client.get_session(passphrase="A")
@@ -290,6 +296,7 @@ def test_passphrase_on_device(client: Client):
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_passphrase_always_on_device(client: Client):
     # Let's start the communication by calling Initialize.
     session = client.get_session()
@@ -325,6 +332,7 @@ def test_passphrase_always_on_device(client: Client):
 
 @pytest.mark.models("legacy")
 @pytest.mark.setup_client(passphrase="")
+@pytest.mark.protocol("protocol_v1")
 def test_passphrase_on_device_not_possible_on_t1(session: Session):
     # This setting makes no sense on T1.
     response = session.call_raw(
@@ -342,6 +350,7 @@ def test_passphrase_on_device_not_possible_on_t1(session: Session):
 
 
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_passphrase_ack_mismatch(session: Session):
     response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
@@ -351,6 +360,7 @@ def test_passphrase_ack_mismatch(session: Session):
 
 
 @pytest.mark.setup_client(passphrase="")
+@pytest.mark.protocol("protocol_v1")
 def test_passphrase_missing(session: Session):
     response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
@@ -368,6 +378,7 @@ def test_passphrase_missing(session: Session):
 
 
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_passphrase_length(client: Client):
     def call(passphrase: str, expected_result: bool):
         session = client.get_session(passphrase=passphrase)
@@ -393,6 +404,7 @@ def test_passphrase_length(client: Client):
 
 @pytest.mark.models("core")
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_hide_passphrase_from_host(client: Client):
     # Without safety checks, turning it on fails
     session = client.get_seedless_session()
@@ -488,6 +500,7 @@ def _get_xpub_cardano(session: Session, expected_passphrase_req: bool = False):
 @pytest.mark.models("core")
 @pytest.mark.altcoin
 @pytest.mark.setup_client(passphrase=True)
+@pytest.mark.protocol("protocol_v1")
 def test_cardano_passphrase(client: Client):
     # Cardano has a separate derivation method that needs to access the plaintext
     # of the passphrase.
