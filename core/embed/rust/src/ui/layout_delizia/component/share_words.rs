@@ -247,7 +247,7 @@ impl PaginateFull for ShareWords<'_> {
         Pager::new(self.share_words.len() as u16).with_current(self.page_index)
     }
 
-    fn change_page(&mut self, active_page: u16) {
+    fn change_page(&mut self, _active_page: u16) {
         unimplemented!()
     }
 }

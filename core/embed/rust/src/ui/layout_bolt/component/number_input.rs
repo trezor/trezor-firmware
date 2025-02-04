@@ -5,7 +5,6 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt,
-            paginated::Paginate,
             text::paragraphs::{Paragraph, Paragraphs},
             Child, Component, Event, EventCtx, Pad,
         },
