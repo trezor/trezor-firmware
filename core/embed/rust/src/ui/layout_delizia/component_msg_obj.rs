@@ -10,17 +10,19 @@ use crate::{
     error::Error,
     micropython::obj::Obj,
     ui::{
-        component::{
-            paginated::PaginateFull,
-            text::paragraphs::{ParagraphSource, Paragraphs},
-            Component, Never, Timeout,
-        },
+        component::{paginated::PaginateFull, Component, Never},
         flow::Swipable,
         layout::{
             obj::ComponentMsgObj,
             result::{CANCELLED, CONFIRMED},
         },
     },
+};
+
+#[cfg(not(feature = "clippy"))]
+use crate::ui::component::{
+    text::paragraphs::{ParagraphSource, Paragraphs},
+    Timeout,
 };
 
 impl TryFrom<SelectWordCountMsg> for Obj {
