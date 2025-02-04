@@ -27,6 +27,7 @@ from .transport import Transport, get_transport
 from .transport.thp.channel_data import ChannelData
 from .transport.thp.protocol_and_channel import Channel
 from .transport.thp.protocol_v1 import ProtocolV1Channel
+from .transport.thp.protocol_v2 import ProtocolV2Channel
 
 if t.TYPE_CHECKING:
     from .transport.session import Session
@@ -86,6 +87,8 @@ class TrezorClient:
 
         if isinstance(self.protocol, ProtocolV1Channel):
             self._protocol_version = ProtocolVersion.PROTOCOL_V1
+        elif isinstance(self.protocol, ProtocolV2Channel):
+            self._protocol_version = ProtocolVersion.PROTOCOL_V2
         else:
             self._protocol_version = ProtocolVersion.UNKNOWN
 
@@ -98,7 +101,29 @@ class TrezorClient:
     ) -> TrezorClient:
         if protobuf_mapping is None:
             protobuf_mapping = mapping.DEFAULT_MAPPING
-        protocol = ProtocolV1Channel(transport, protobuf_mapping, channel_data)
+        protocol_v1 = ProtocolV1Channel(transport, protobuf_mapping)
+        if channel_data.protocol_version_major >= 2:
+            try:
+                protocol_v1.write(messages.Ping(message="Sanity check - to resume"))
+            except Exception as e:
+                print(type(e))
+            response = protocol_v1.read()
+            if (
+                isinstance(response, messages.Failure)
+                and response.code == messages.FailureType.InvalidProtocol
+            ):
+                protocol = ProtocolV2Channel(transport, protobuf_mapping, channel_data)
+                protocol.write(0, messages.Ping())
+                response = protocol.read(0)
+                if not isinstance(response, messages.Success):
+                    LOG.debug("Failed to resume ProtocolV2Channel")
+                    raise Exception("Failed to resume ProtocolV2Channel")
+                LOG.debug("Protocol V2 detected - can be resumed")
+            else:
+                LOG.debug("Failed to resume ProtocolV2Channel")
+                raise Exception("Failed to resume ProtocolV2Channel")
+        else:
+            protocol = ProtocolV1Channel(transport, protobuf_mapping, channel_data)
         return TrezorClient(transport, protobuf_mapping, protocol)
 
     def get_session(
@@ -112,23 +137,28 @@ class TrezorClient:
 
         Will fail if the device is not initialized
         """
-        from .transport.session import SessionV1
+        from .transport.session import SessionV1, SessionV2
 
         if isinstance(self.protocol, ProtocolV1Channel):
             return SessionV1.new(self, passphrase, derive_cardano)
-        raise NotImplementedError
+        if isinstance(self.protocol, ProtocolV2Channel):
+            assert isinstance(passphrase, str) or passphrase is None
+            return SessionV2.new(self, passphrase, derive_cardano, session_id)
+        raise NotImplementedError  # TODO
 
     def resume_session(self, session: Session):
         """
         Note: this function potentially modifies the input session.
         """
         from .debuglink import SessionDebugWrapper
-        from .transport.session import SessionV1
+        from .transport.session import SessionV1, SessionV2
 
         if isinstance(session, SessionDebugWrapper):
             session = session._session
 
-        if isinstance(session, SessionV1):
+        if isinstance(session, SessionV2):
+            return session
+        elif isinstance(session, SessionV1):
             session.init_session()
             return session
 
@@ -136,7 +166,7 @@ class TrezorClient:
             raise NotImplementedError
 
     def get_seedless_session(self, new_session: bool = False) -> Session:
-        from .transport.session import SessionV1
+        from .transport.session import SessionV1, SessionV2
 
         if not new_session and self._seedless_session is not None:
             return self._seedless_session
@@ -146,6 +176,8 @@ class TrezorClient:
                 passphrase="",
                 derive_cardano=False,
             )
+        elif isinstance(self.protocol, ProtocolV2Channel):
+            self._seedless_session = SessionV2(client=self, id=b"\x00")
         assert self._seedless_session is not None
         return self._seedless_session
 
@@ -197,8 +229,12 @@ class TrezorClient:
 
         protocol.write(messages.Initialize())
 
-        _ = protocol.read()
+        response = protocol.read()
         self.transport.close()
+        if isinstance(response, messages.Failure):
+            if response.code == messages.FailureType.InvalidProtocol:
+                LOG.debug("Protocol V2 detected")
+                protocol = ProtocolV2Channel(self.transport, self.mapping)
         return protocol
 
 
