@@ -85,7 +85,7 @@ message DebugLinkRecordScreen {
 }
 
 /**
- * Request: Computer asks for device state
+ * Request: Host asks for device state
  * @start
  * @next DebugLinkState
  */
@@ -132,6 +132,29 @@ message DebugLinkState {
     optional uint32 reset_word_pos = 11;                    // index of mnemonic word the device is expecting during ResetDevice workflow
     optional management.BackupType mnemonic_type = 12;      // current mnemonic type (BIP-39/SLIP-39)
     repeated string tokens = 13;                            // current layout represented as a list of string tokens
+}
+
+/**
+ * Request: Host asks for device pairing info
+ * @start
+ * @next DebugLinkPairingInfo
+ */
+ message DebugLinkGetPairingInfo {
+    optional bytes channel_id = 1;              // ID of the THP channel to get pairing info from
+    optional bytes handshake_hash = 2;          // handshake hash of the THP channel
+    optional bytes nfc_secret_host = 3;         // host's NFC secret (In case of NFC pairing)
+}
+
+ /**
+ * Response: Device pairing info
+ * @end
+ */
+ message DebugLinkPairingInfo {
+    optional bytes channel_id = 1;              // ID of the THP channel the pairing info is from
+    optional bytes handshake_hash = 2;          // handshake hash of the THP channel
+    optional uint32 code_entry_code = 3;        // CodeEntry pairing code
+    optional bytes code_qr_code = 4;            // QrCode pairing code
+    optional bytes nfc_secret_trezor = 5;       // NFC secret used in NFC pairing
 }
 
 /**
