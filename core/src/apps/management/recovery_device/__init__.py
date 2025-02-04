@@ -24,6 +24,7 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     from trezor import TR, config, wire, workflow
     from trezor.enums import BackupType, ButtonRequestType
     from trezor.ui.layouts import confirm_action, confirm_reset_device
+    from trezor.wire.context import try_get_ctx_ids
 
     from apps.common import mnemonic
     from apps.common.request_pin import (
@@ -69,8 +70,8 @@ async def recovery_device(msg: RecoveryDevice) -> Success:
     if recovery_type == RecoveryType.NormalRecovery:
         await confirm_reset_device(recovery=True)
 
-        # wipe storage to make sure the device is in a clear state
-        storage.reset()
+        # wipe storage to make sure the device is in a clear state (except protocol cache)
+        storage.reset(excluded=try_get_ctx_ids())
 
         # set up pin if requested
         if msg.pin_protection:
