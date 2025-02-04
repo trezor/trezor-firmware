@@ -93,6 +93,8 @@ class Emulator:
         """
         if self._client is None:
             raise RuntimeError
+        if self._client.is_invalidated:
+            self._client = self._client.get_new_client()
         return self._client
 
     def make_args(self) -> List[str]:
@@ -112,7 +114,7 @@ class Emulator:
         start = time.monotonic()
         try:
             while True:
-                if transport._ping():
+                if transport.ping():
                     break
                 if self.process.poll() is not None:
                     raise RuntimeError("Emulator process died")
