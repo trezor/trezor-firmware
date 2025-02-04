@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import device
+from trezorlib import device, messages
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.messages import RecoveryStatus
 
@@ -45,7 +45,10 @@ def test_abort(core_emulator: Emulator):
 
     assert features.recovery_status == RecoveryStatus.Nothing
 
-    device_handler.run(device.recover, pin_protection=False)
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, pin_protection=False
+    )
 
     recovery.confirm_recovery(debug)
     layout = debug.read_layout()
@@ -82,7 +85,10 @@ def test_recovery_single_reset(core_emulator: Emulator):
     assert features.initialized is False
     assert features.recovery_status == RecoveryStatus.Nothing
 
-    device_handler.run(device.recover, pin_protection=False)
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, pin_protection=False
+    )
 
     recovery.confirm_recovery(debug)
 
@@ -102,6 +108,7 @@ def test_recovery_single_reset(core_emulator: Emulator):
     assert features.recovery_status == RecoveryStatus.Nothing
 
 
+# TODO add protocol pytest marker - run test only on Protocol_V1
 @core_only
 def test_recovery_on_old_wallet(core_emulator: Emulator):
     """Check that the recovery workflow started on a disconnected device can survive
@@ -129,7 +136,10 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     assert features.recovery_status == RecoveryStatus.Nothing
 
     # enter recovery mode
-    device_handler.run(device.recover, pin_protection=False)
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, pin_protection=False
+    )
 
     recovery.confirm_recovery(debug)
 
@@ -157,7 +167,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     layout = debug.read_layout()
 
     # while keyboard is open, hit the device with Initialize/GetFeatures
-    device_handler.client.init_device()
+    device_handler.client.get_seedless_session().call(messages.Initialize())
     device_handler.client.refresh_features()
 
     # try entering remaining 19 words
@@ -207,7 +217,10 @@ def test_recovery_multiple_resets(core_emulator: Emulator):
     assert features.recovery_status == RecoveryStatus.Nothing
 
     # start device and recovery
-    device_handler.run(device.recover, pin_protection=False)
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, pin_protection=False
+    )
 
     recovery.confirm_recovery(debug)
 
