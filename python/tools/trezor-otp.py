@@ -27,26 +27,29 @@ from trezorlib.client import TrezorClient
 from trezorlib.misc import decrypt_keyvalue, encrypt_keyvalue
 from trezorlib.tools import parse_path
 from trezorlib.transport import get_transport
-from trezorlib.ui import ClickUI
 
 BIP32_PATH = parse_path("10016h/0")
 
 
 def encrypt(type: str, domain: str, secret: str) -> str:
     transport = get_transport()
-    client = TrezorClient(transport, ClickUI())
+    transport.open()
+    client = TrezorClient(transport)
+    session = client.get_seedless_session()
     dom = type.upper() + ": " + domain
-    enc = encrypt_keyvalue(client, BIP32_PATH, dom, secret.encode(), False, True)
-    client.close()
+    enc = encrypt_keyvalue(session, BIP32_PATH, dom, secret.encode(), False, True)
+    transport.close()
     return enc.hex()
 
 
 def decrypt(type: str, domain: str, secret: bytes) -> bytes:
     transport = get_transport()
-    client = TrezorClient(transport, ClickUI())
+    transport.open()
+    client = TrezorClient(transport)
+    session = client.get_seedless_session()
     dom = type.upper() + ": " + domain
-    dec = decrypt_keyvalue(client, BIP32_PATH, dom, secret, False, True)
-    client.close()
+    dec = decrypt_keyvalue(session, BIP32_PATH, dom, secret, False, True)
+    transport.close()
     return dec
 
 
