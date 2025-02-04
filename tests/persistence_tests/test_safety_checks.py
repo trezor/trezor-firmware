@@ -20,16 +20,17 @@ from ..upgrade_tests import core_only
 def test_safety_checks_level_after_reboot(
     core_emulator: Emulator, set_level: SafetyCheckLevel, after_level: SafetyCheckLevel
 ):
-    device.wipe(core_emulator.client)
+    device.wipe(core_emulator.client.get_seedless_session())
     debuglink.load_device(
-        core_emulator.client,
+        core_emulator.client.get_seedless_session(),
         mnemonic=MNEMONIC12,
         pin="",
         passphrase_protection=False,
         label="SAFETYLEVEL",
     )
 
-    device.apply_settings(core_emulator.client, safety_checks=set_level)
+    device.apply_settings(core_emulator.client.get_session(), safety_checks=set_level)
+    core_emulator.client.refresh_features()
     assert core_emulator.client.features.safety_checks == set_level
 
     core_emulator.restart()
