@@ -24,9 +24,10 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, ca
 
 import click
 
-from .. import __version__, log, messages, protobuf, ui
+from .. import __version__, log, messages, protobuf
 from ..client import TrezorClient
 from ..transport import DeviceIsBusy, enumerate_devices
+from ..transport.session import Session
 from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
@@ -50,6 +51,7 @@ from . import (
     stellar,
     tezos,
     with_client,
+    with_session,
 )
 
 F = TypeVar("F", bound=Callable)
@@ -193,6 +195,13 @@ def configure_logging(verbose: int) -> None:
     "--record",
     help="Record screen changes into a specified directory.",
 )
+@click.option(
+    "-n",
+    "--no-store",
+    is_flag=True,
+    help="Do not store channels data between commands.",
+    default=False,
+)
 @click.version_option(version=__version__)
 @click.pass_context
 def cli_main(
@@ -204,9 +213,9 @@ def cli_main(
     script: bool,
     session_id: Optional[str],
     record: Optional[str],
+    no_store: bool,
 ) -> None:
     configure_logging(verbose)
-
     bytes_session_id: Optional[bytes] = None
     if session_id is not None:
         try:
@@ -285,18 +294,21 @@ def format_device_name(features: messages.Features) -> str:
 def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
     """List connected Trezor devices."""
     if no_resolve:
-        return enumerate_devices()
+        for d in enumerate_devices():
+            click.echo(d.get_path())
+        return
+
+    from . import get_client
 
     for transport in enumerate_devices():
         try:
-            client = TrezorClient(transport, ui=ui.ClickUI())
+            client = get_client(transport)
             description = format_device_name(client.features)
-            client.end_session()
         except DeviceIsBusy:
             description = "Device is in use by another process"
-        except Exception:
-            description = "Failed to read details"
-        click.echo(f"{transport} - {description}")
+        except Exception as e:
+            description = "Failed to read details " + str(type(e))
+        click.echo(f"{transport.get_path()} - {description}")
     return None
 
 
@@ -314,15 +326,19 @@ def version() -> str:
 @cli.command()
 @click.argument("message")
 @click.option("-b", "--button-protection", is_flag=True)
-@with_client
-def ping(client: "TrezorClient", message: str, button_protection: bool) -> str:
+@with_session(empty_passphrase=True)
+def ping(session: "Session", message: str, button_protection: bool) -> str:
     """Send ping message."""
-    return client.ping(message, button_protection=button_protection)
+
+    # TODO return short-circuit from old client for old Trezors
+    return session.ping(message, button_protection)
 
 
 @cli.command()
 @click.pass_obj
-def get_session(obj: TrezorConnection) -> str:
+def get_session(
+    obj: TrezorConnection, passphrase: str = "", derive_cardano: bool = False
+) -> str:
     """Get a session ID for subsequent commands.
 
     Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
@@ -341,18 +357,26 @@ def get_session(obj: TrezorConnection) -> str:
                 "Upgrade your firmware to enable session support."
             )
 
-        client.ensure_unlocked()
-        if client.session_id is None:
+        # client.ensure_unlocked()
+        session = client.get_session(
+            passphrase=passphrase, derive_cardano=derive_cardano
+        )
+        if session.id is None:
             raise click.ClickException("Passphrase not enabled or firmware too old.")
         else:
-            return client.session_id.hex()
+            return session.id.hex()
 
 
 @cli.command()
-@with_client
-def clear_session(client: "TrezorClient") -> None:
+@with_session(must_resume=True, empty_passphrase=True)
+def clear_session(session: "Session") -> None:
     """Clear session (remove cached PIN, passphrase, etc.)."""
-    return client.clear_session()
+    if session is None:
+        click.echo("Cannot clear session as it was not properly resumed.")
+        return
+    session.call(messages.LockDevice())
+    session.end()
+    # TODO different behaviour than main, not sure if ok
 
 
 @cli.command()

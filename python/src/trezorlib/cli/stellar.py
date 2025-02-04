@@ -21,10 +21,10 @@ from typing import TYPE_CHECKING
 import click
 
 from .. import stellar, tools
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 try:
     from stellar_sdk import (
@@ -52,13 +52,13 @@ def cli() -> None:
 )
 @click.option("-d", "--show-display", is_flag=True)
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def get_address(
-    client: "TrezorClient", address: str, show_display: bool, chunkify: bool
+    session: "Session", address: str, show_display: bool, chunkify: bool
 ) -> str:
     """Get Stellar public address."""
     address_n = tools.parse_path(address)
-    return stellar.get_address(client, address_n, show_display, chunkify)
+    return stellar.get_address(session, address_n, show_display, chunkify)
 
 
 @cli.command()
@@ -77,9 +77,9 @@ def get_address(
     help="Network passphrase (blank for public network).",
 )
 @click.argument("b64envelope")
-@with_client
+@with_session
 def sign_transaction(
-    client: "TrezorClient", b64envelope: str, address: str, network_passphrase: str
+    session: "Session", b64envelope: str, address: str, network_passphrase: str
 ) -> bytes:
     """Sign a base64-encoded transaction envelope.
 
@@ -109,6 +109,6 @@ def sign_transaction(
 
     address_n = tools.parse_path(address)
     tx, operations = stellar.from_envelope(envelope)
-    resp = stellar.sign_tx(client, tx, operations, address_n, network_passphrase)
+    resp = stellar.sign_tx(session, tx, operations, address_n, network_passphrase)
 
     return base64.b64encode(resp.signature)
