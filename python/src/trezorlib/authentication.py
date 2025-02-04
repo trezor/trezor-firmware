@@ -10,7 +10,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, utils
 
 from . import device
-from .client import TrezorClient
+from .transport.session import Session
 
 LOG = logging.getLogger(__name__)
 
@@ -349,7 +349,7 @@ def verify_authentication_response(
 
 
 def authenticate_device(
-    client: TrezorClient,
+    session: Session,
     challenge: bytes | None = None,
     *,
     whitelist: t.Collection[bytes] | None = None,
@@ -359,7 +359,7 @@ def authenticate_device(
     if challenge is None:
         challenge = secrets.token_bytes(16)
 
-    resp = device.authenticate(client, challenge)
+    resp = device.authenticate(session, challenge)
 
     return verify_authentication_response(
         challenge,
