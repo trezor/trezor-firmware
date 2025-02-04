@@ -11,10 +11,10 @@ WIPE_CODE = "9876"
 
 
 def setup_device_legacy(client: Client, pin: str, wipe_code: str) -> None:
-    device.wipe(client.get_management_session())
+    device.wipe(client.get_seedless_session())
     client = client.get_new_client()
     debuglink.load_device(
-        client.get_management_session(),
+        client.get_seedless_session(),
         MNEMONIC12,
         pin,
         passphrase_protection=False,
@@ -23,14 +23,14 @@ def setup_device_legacy(client: Client, pin: str, wipe_code: str) -> None:
 
     with client:
         client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
-        device.change_wipe_code(client.get_management_session())
+        device.change_wipe_code(client.get_seedless_session())
 
 
 def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
-    device.wipe(client.get_management_session())
+    device.wipe(client.get_seedless_session())
     client = client.get_new_client()
     debuglink.load_device(
-        client.get_management_session(),
+        client.get_seedless_session(),
         MNEMONIC12,
         pin,
         passphrase_protection=False,
@@ -39,7 +39,7 @@ def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
 
     with client:
         client.use_pin_sequence([pin, wipe_code, wipe_code])
-        device.change_wipe_code(client.get_management_session())
+        device.change_wipe_code(client.get_seedless_session())
 
 
 @core_only

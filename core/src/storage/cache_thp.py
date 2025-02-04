@@ -203,7 +203,7 @@ def get_allocated_session_index(channel_id: bytes, session_id: bytes) -> int | N
     return None
 
 
-def is_management_session(session_cache: SessionThpCache) -> bool:
+def is_seedless_session(session_cache: SessionThpCache) -> bool:
     return _get_session_state(session_cache) == _SEEDLESS_STATE
 
 

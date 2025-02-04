@@ -66,11 +66,11 @@ def test_device_id_same(client: Client):
 
 
 def test_device_id_different(client: Client):
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     id1 = client.features.device_id
     device.wipe(session)
     client = client.get_new_client()
-    session = client.get_management_session()
+    session = client.get_seedless_session()
 
     id2 = client.features.device_id
 

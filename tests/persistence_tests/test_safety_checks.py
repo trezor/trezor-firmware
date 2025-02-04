@@ -20,9 +20,9 @@ from ..upgrade_tests import core_only
 def test_safety_checks_level_after_reboot(
     core_emulator: Emulator, set_level: SafetyCheckLevel, after_level: SafetyCheckLevel
 ):
-    device.wipe(core_emulator.client.get_management_session())
+    device.wipe(core_emulator.client.get_seedless_session())
     debuglink.load_device(
-        core_emulator.client.get_management_session(),
+        core_emulator.client.get_seedless_session(),
         mnemonic=MNEMONIC12,
         pin="",
         passphrase_protection=False,

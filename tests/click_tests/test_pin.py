@@ -92,7 +92,7 @@ def prepare(
 
     tap = False
 
-    Session(device_handler.client.get_management_session()).lock()
+    Session(device_handler.client.get_seedless_session()).lock()
 
     # Setup according to the wanted situation
     if situation == Situation.PIN_INPUT:

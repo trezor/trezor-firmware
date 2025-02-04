@@ -15,7 +15,7 @@ from trezorlib.transport import get_transport
 def main() -> None:
     try:
         client = TrezorClient(get_transport())
-        session = client.get_management_session()
+        session = client.get_seedless_session()
     except Exception as e:
         print(e)
         return

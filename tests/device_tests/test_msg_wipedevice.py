@@ -53,7 +53,7 @@ def test_autolock_not_retained(session: Session):
 
     device.wipe(session)
     client = client.get_new_client()
-    session = client.get_management_session()
+    session = client.get_seedless_session()
 
     assert client.features.auto_lock_delay_ms > 10_000
 

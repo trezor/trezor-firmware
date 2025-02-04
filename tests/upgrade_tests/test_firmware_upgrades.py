@@ -71,7 +71,7 @@ def test_upgrade_load(gen: str, tag: str) -> None:
 
     with EmulatorWrapper(gen, tag) as emu:
         debuglink.load_device_by_mnemonic(
-            emu.client.get_management_session(),
+            emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
             pin="",
             passphrase_protection=False,
@@ -102,7 +102,7 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
 
     with EmulatorWrapper(gen, tag) as emu:
         debuglink.load_device_by_mnemonic(
-            Session(emu.client.get_management_session()),
+            Session(emu.client.get_seedless_session()),
             mnemonic=MNEMONIC,
             pin=PIN,
             passphrase_protection=False,
@@ -142,7 +142,7 @@ def test_storage_upgrade_progressive(gen: str, tags: List[str]):
 
     with EmulatorWrapper(gen, tags[0]) as emu:
         debuglink.load_device_by_mnemonic(
-            emu.client.get_management_session(),
+            emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
             pin=PIN,
             passphrase_protection=False,
@@ -176,7 +176,7 @@ def test_upgrade_wipe_code(gen: str, tag: str):
 
     with EmulatorWrapper(gen, tag) as emu:
         debuglink.load_device_by_mnemonic(
-            emu.client.get_management_session(),
+            emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
             pin=PIN,
             passphrase_protection=False,
@@ -185,7 +185,7 @@ def test_upgrade_wipe_code(gen: str, tag: str):
 
         # Set wipe code.
         emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
-        session = Session(emu.client.get_management_session())
+        session = Session(emu.client.get_seedless_session())
         session.refresh_features()
         device.change_wipe_code(session)
 
@@ -199,7 +199,7 @@ def test_upgrade_wipe_code(gen: str, tag: str):
 
         # Check that wipe code is set by changing the PIN to it.
         emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
-        session = Session(emu.client.get_management_session())
+        session = Session(emu.client.get_seedless_session())
         session.refresh_features()
         with pytest.raises(
             exceptions.TrezorFailure,
@@ -362,7 +362,7 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 @for_all("core", core_minimum_version=(2, 1, 9))
 def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
     with EmulatorWrapper(gen, tag) as emu:
-        session = Session(emu.client.get_management_session())
+        session = Session(emu.client.get_seedless_session())
         # Generate a new encrypted master secret and record it.
         device.setup(
             session,
@@ -433,13 +433,13 @@ def test_upgrade_u2f(gen: str, tag: str):
     """Check U2F counter stayed the same after an upgrade."""
     with EmulatorWrapper(gen, tag) as emu:
         debuglink.load_device_by_mnemonic(
-            emu.client.get_management_session(),
+            emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
             pin="",
             passphrase_protection=False,
             label=LABEL,
         )
-        session = emu.client.get_management_session()
+        session = emu.client.get_seedless_session()
         fido.set_counter(session, 10)
 
         counter = fido.get_next_counter(session)

@@ -146,7 +146,7 @@ def main() -> None:
         return
 
     client = TrezorClient(transport=transport)
-    session = client.get_management_session()
+    session = client.get_seedless_session()
 
     print()
     print("Confirm operation on Trezor")

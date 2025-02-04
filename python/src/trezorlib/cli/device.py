@@ -320,10 +320,10 @@ def reboot_to_bootloader(obj: "TrezorConnection") -> None:
 
     Currently only supported on Trezor Model One.
     """
-    # avoid using @with_management_session because it closes the session afterwards,
+    # avoid using @with_session because it closes the session afterwards,
     # which triggers double prompt on device
     with obj.client_context() as client:
-        device.reboot_to_bootloader(client.get_management_session())
+        device.reboot_to_bootloader(client.get_seedless_session())
 
 
 @cli.command()

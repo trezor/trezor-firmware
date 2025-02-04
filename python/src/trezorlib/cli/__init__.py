@@ -200,10 +200,10 @@ class TrezorConnection:
     def get_client(self) -> TrezorClient:
         return get_client(self.get_transport())
 
-    def get_management_session(self) -> Session:
+    def get_seedless_session(self) -> Session:
         client = self.get_client()
-        management_session = client.get_management_session()
-        return management_session
+        seedless_session = client.get_seedless_session()
+        return seedless_session
 
     @contextmanager
     def client_context(self):
@@ -253,7 +253,7 @@ class TrezorConnection:
         """
         try:
             if management:
-                session = self.get_management_session()
+                session = self.get_seedless_session()
             else:
                 session = self.get_session(
                     derive_cardano=derive_cardano,
@@ -294,8 +294,8 @@ def with_session(
     management: bool = False,
     must_resume: bool = False,
 ) -> t.Callable[[FuncWithSession], t.Callable[P, R]]:
-    """Provides a Click command with parameter `session=obj.get_session(...)` or
-    `session=obj.get_management_session()` based on the parameters provided.
+    """Provides a Click command with parameter `session=obj.get_session(...)`
+    based on the parameters provided.
 
     If default parameters are ok, this decorator can be used without parentheses.
 

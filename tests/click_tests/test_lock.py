@@ -34,7 +34,7 @@ PIN4 = "1234"
 @pytest.mark.setup_client(pin=PIN4)
 def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
-    session = device_handler.client.get_management_session()
+    session = device_handler.client.get_seedless_session()
     session.call(messages.LockDevice())
     session.refresh_features()
 

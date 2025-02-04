@@ -125,8 +125,7 @@ def _from_env(name: str) -> bool:
 @click.option("-V", "--valgrind", is_flag=True, help="Use valgrind instead of debugger (-D)")
 @click.option("-t", "--temporary-profile", is_flag=True, help="Create an empty temporary profile")
 @click.option("-w", "--watch", is_flag=True, help="Restart emulator if sources change")
-@click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")
-# fmt: on
+@click.option("-X", "--extra-arg", "extra_args", multiple=True, help="Extra argument to pass to micropython")# fmt: on
 @click.argument("command", nargs=-1, type=click.UNPROCESSED)
 def cli(
     disable_animation: bool,
@@ -282,10 +281,10 @@ def cli(
             label = "Emulator"
 
         assert emulator.client is not None
-        trezorlib.device.wipe(emulator.client.get_management_session())
+        trezorlib.device.wipe(emulator.client.get_seedless_session())
 
         trezorlib.debuglink.load_device(
-            emulator.client.get_management_session(),
+            emulator.client.get_seedless_session(),
             mnemonics,
             pin=None,
             passphrase_protection=False,

@@ -33,7 +33,7 @@ from ...translations import set_language
 @pytest.mark.models("core")
 @pytest.mark.setup_client(uninitialized=True)
 def test_reset_recovery(client: Client):
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     mnemonics = reset(session)
     session = client.get_session()
     address_before = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
@@ -53,11 +53,11 @@ def test_reset_recovery(client: Client):
         + mnemonics[22:25],
     ]
     for combination in test_combinations:
-        session = client.get_management_session()
+        session = client.get_seedless_session()
         lang = client.features.language or "en"
         device.wipe(session)
         client = client.get_new_client()
-        session = Session(client.get_management_session())
+        session = Session(client.get_seedless_session())
         set_language(session, lang[:2])
         recover(session, combination)
         session = client.get_session()

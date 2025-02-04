@@ -61,7 +61,7 @@ class TrezorClient:
     passphrase_callback: t.Callable[[Session, t.Any], t.Any] | None = None
     pin_callback: t.Callable[[Session, t.Any], t.Any] | None = None
 
-    _management_session: Session | None = None
+    _seedless_session: Session | None = None
     _features: messages.Features | None = None
     _protocol_version: int
     _setup_pin: str | None = None  # Should by used only by conftest
@@ -167,21 +167,21 @@ class TrezorClient:
         else:
             raise NotImplementedError
 
-    def get_management_session(self, new_session: bool = False) -> Session:
+    def get_seedless_session(self, new_session: bool = False) -> Session:
         from .transport.session import SessionV1, SessionV2
 
-        if not new_session and self._management_session is not None:
-            return self._management_session
+        if not new_session and self._seedless_session is not None:
+            return self._seedless_session
         if isinstance(self.protocol, ProtocolV1):
-            self._management_session = SessionV1.new(
+            self._seedless_session = SessionV1.new(
                 client=self,
                 passphrase="",
                 derive_cardano=False,
             )
         elif isinstance(self.protocol, ProtocolV2):
-            self._management_session = SessionV2(client=self, id=b"\x00")
-        assert self._management_session is not None
-        return self._management_session
+            self._seedless_session = SessionV2(client=self, id=b"\x00")
+        assert self._seedless_session is not None
+        return self._seedless_session
 
     def invalidate(self) -> None:
         self._is_invalidated = True

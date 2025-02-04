@@ -68,7 +68,7 @@ def test_refresh(session: Session):
 
 
 def test_wipe(client: Client):
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     # Enable SD protection
     device.sd_protect(session, Op.ENABLE)
     assert session.features.sd_protection is True
@@ -76,7 +76,7 @@ def test_wipe(client: Client):
     # Wipe device (this wipes internal storage)
     device.wipe(session)
     client = client.get_new_client()
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     assert session.features.sd_protection is False
 
     # Restore device to working status

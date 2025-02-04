@@ -213,7 +213,7 @@ def test_language_is_removed_after_wipe(client: Client):
     # Wipe device
     device.wipe(session)
     client = client.get_new_client()
-    session = Session(client.get_management_session())
+    session = Session(client.get_seedless_session())
     assert session.features.language == "en-US"
 
     # Load it again

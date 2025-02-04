@@ -52,7 +52,7 @@ def test_backup_slip39_custom(
 
     assert features.initialized is False
 
-    session = device_handler.client.get_management_session()
+    session = device_handler.client.get_seedless_session()
     device_handler.run_with_provided_session(
         session,
         device.setup,

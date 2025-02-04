@@ -656,7 +656,7 @@ def update(
     against data.trezor.io information, if available.
     """
     with obj.client_context() as client:
-        management_session = client.get_management_session()
+        seedless_session = client.get_seedless_session()
         if sum(bool(x) for x in (filename, url, version)) > 1:
             click.echo("You can use only one of: filename, url, version.")
             sys.exit(1)
@@ -712,7 +712,7 @@ def update(
             if _is_strict_update(client, firmware_data):
                 header_size = _get_firmware_header_size(firmware_data)
                 device.reboot_to_bootloader(
-                    management_session,
+                    seedless_session,
                     boot_command=messages.BootCommand.INSTALL_UPGRADE,
                     firmware_header=firmware_data[:header_size],
                     language_data=language_data,
@@ -722,7 +722,7 @@ def update(
                     click.echo(
                         "WARNING: Seamless installation not possible, language data will not be uploaded."
                     )
-                device.reboot_to_bootloader(management_session)
+                device.reboot_to_bootloader(seedless_session)
 
             click.echo("Waiting for bootloader...")
             while True:
@@ -739,7 +739,7 @@ def update(
             sys.exit(1)
 
         upload_firmware_into_device(
-            session=client.get_management_session(), firmware_data=firmware_data
+            session=client.get_seedless_session(), firmware_data=firmware_data
         )
 
 

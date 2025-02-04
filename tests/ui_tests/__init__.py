@@ -71,7 +71,7 @@ def screen_recording(
             client.debug.set_screen_text_file(None)
             client.debug.watch_layout(False)
         # Instead of client.init_device() we create a new management session
-        client.get_management_session()
+        client.get_seedless_session()
         client.debug.stop_recording()
 
     result = testcase.build_result(request)

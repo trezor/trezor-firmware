@@ -159,7 +159,7 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
 
     # while keyboard is open, hit the device with Initialize/GetFeatures
     if device_handler.client.protocol_version == ProtocolVersion.PROTOCOL_V1:
-        device_handler.client.get_management_session().call(messages.Initialize())
+        device_handler.client.get_seedless_session().call(messages.Initialize())
     device_handler.client.refresh_features()
 
     # try entering remaining 19 words

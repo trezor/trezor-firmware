@@ -106,7 +106,7 @@ def main() -> None:
     devices = wait_for_devices()
     transport = choose_device(devices)
     client = TrezorClient(transport)
-    session = client.get_management_session()
+    session = client.get_seedless_session()
 
     rootdir = os.environ["encfs_root"]  # Read "man encfs" for more
     passw_file = os.path.join(rootdir, "password.dat")

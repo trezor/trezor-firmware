@@ -23,11 +23,11 @@ def get_new_session_context(
     return SessionContext(channel_ctx, session_cache)
 
 
-def get_new_management_session_ctx(
+def get_new_seedless_session_ctx(
     channel_ctx: Channel, session_id: int
 ) -> SeedlessSessionContext:
     """
-    Creates new `ManagementSessionContext` that is not backed by a cache entry.
+    Creates new `SeedlessSessionContext` that is not backed by a cache entry.
 
     Seed cannot be derived with this type of session.
     """
@@ -38,7 +38,7 @@ def get_session_from_cache(
     channel_ctx: Channel, session_id: int
 ) -> GenericSessionContext | None:
     """
-    Returns a `SessionContext` (or `ManagementSessionContext`) reconstructed from a cache or `None` if backing cache is not found.
+    Returns a `SessionContext` (or `SeedlessSessionContext`) reconstructed from a cache or `None` if backing cache is not found.
     """
     session_id_bytes = session_id.to_bytes(1, "big")
     session_cache = cache_thp.get_allocated_session(
@@ -46,6 +46,6 @@ def get_session_from_cache(
     )
     if session_cache is None:
         return None
-    elif cache_thp.is_management_session(session_cache):
+    elif cache_thp.is_seedless_session(session_cache):
         return SeedlessSessionContext(channel_ctx, session_id)
     return SessionContext(channel_ctx, session_cache)

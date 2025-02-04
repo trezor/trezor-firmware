@@ -114,7 +114,7 @@ def test_load_device_utf(client: Client):
     passphrase_nfd = (
         "Neuve\u030cr\u030citelne\u030c bezpec\u030cne\u0301 hesli\u0301c\u030cko"
     )
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     debuglink.load_device(
         session,
         mnemonic=words_nfkd,
@@ -129,7 +129,7 @@ def test_load_device_utf(client: Client):
 
     device.wipe(session)
     client = client.get_new_client()
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     debuglink.load_device(
         session,
         mnemonic=words_nfc,
@@ -144,7 +144,7 @@ def test_load_device_utf(client: Client):
 
     device.wipe(session)
     client = client.get_new_client()
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     debuglink.load_device(
         session,
         mnemonic=words_nfkc,
@@ -159,7 +159,7 @@ def test_load_device_utf(client: Client):
 
     device.wipe(session)
     client = client.get_new_client()
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     debuglink.load_device(
         session,
         mnemonic=words_nfd,

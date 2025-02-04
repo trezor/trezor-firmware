@@ -1311,7 +1311,7 @@ class TrezorClientDebugLink(TrezorClient):
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
-        self.reset_debug_features(new_management_session=True)
+        self.reset_debug_features(new_seedless_session=True)
         self.sync_responses()
 
         # So that we can choose right screenshotting logic (T1 vs TT)
@@ -1325,11 +1325,13 @@ class TrezorClientDebugLink(TrezorClient):
         return self.debug.layout_type
 
     def get_new_client(self) -> TrezorClientDebugLink:
-        new_client = TrezorClientDebugLink(self.transport, self.debug.allow_interactions)
+        new_client = TrezorClientDebugLink(
+            self.transport, self.debug.allow_interactions
+        )
         new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
         return new_client
 
-    def reset_debug_features(self, new_management_session: bool = False) -> None:
+    def reset_debug_features(self, new_seedless_session: bool = False) -> None:
         """
         Prepare the debugging client for a new testcase.
 
@@ -1343,8 +1345,8 @@ class TrezorClientDebugLink(TrezorClient):
             t.Type[protobuf.MessageType],
             t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
         ] = {}
-        if new_management_session:
-            self._management_session = self.get_management_session(new_session=True)
+        if new_seedless_session:
+            self._seedless_session = self.get_seedless_session(new_session=True)
 
     @property
     def button_callback(self):
@@ -1455,7 +1457,7 @@ class TrezorClientDebugLink(TrezorClient):
         # self.debug.close()
 
     def lock(self) -> None:
-        s = SessionDebugWrapper(self.get_management_session())
+        s = SessionDebugWrapper(self.get_seedless_session())
         s.lock()
 
     def get_session(
@@ -1565,7 +1567,7 @@ class TrezorClientDebugLink(TrezorClient):
         else:
             input_flow = None
 
-        self.reset_debug_features(new_management_session=False)
+        self.reset_debug_features(new_seedless_session=False)
 
         if exc_type is None:
             # If no other exception was raised, evaluate missed responses
@@ -1638,14 +1640,14 @@ class TrezorClientDebugLink(TrezorClient):
 
     def _raw_read(self) -> protobuf.MessageType:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        resp = self.get_management_session()._read()
+        resp = self.get_seedless_session()._read()
         resp = self._filter_message(resp)
         if self.actual_responses is not None:
             self.actual_responses.append(resp)
         return resp
 
     def _raw_write(self, msg: protobuf.MessageType) -> None:
-        return self.get_management_session()._write(self._filter_message(msg))
+        return self.get_seedless_session()._write(self._filter_message(msg))
 
     @staticmethod
     def _expectation_lines(expected: list[MessageFilter], current: int) -> list[str]:
@@ -1720,11 +1722,11 @@ class TrezorClientDebugLink(TrezorClient):
         try:
             # self.protocol.write(messages.Cancel())
             message = "SYNC" + secrets.token_hex(8)
-            self.get_management_session()._write(messages.Ping(message=message))
+            self.get_seedless_session()._write(messages.Ping(message=message))
             resp = None
             while resp != messages.Success(message=message):
                 try:
-                    resp = self.get_management_session()._read()
+                    resp = self.get_seedless_session()._read()
 
                     raise Exception
 

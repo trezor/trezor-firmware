@@ -412,7 +412,7 @@ def test_passphrase_length(client: Client):
 @pytest.mark.protocol("protocol_v1")
 def test_hide_passphrase_from_host(client: Client):
     # Without safety checks, turning it on fails
-    session = client.get_management_session()
+    session = client.get_seedless_session()
     with pytest.raises(TrezorFailure, match="Safety checks are strict"), client:
         device.apply_settings(session, hide_passphrase_from_host=True)
 

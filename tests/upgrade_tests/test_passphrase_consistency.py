@@ -49,14 +49,14 @@ def emulator(gen: str, tag: str) -> Iterator[Emulator]:
     with EmulatorWrapper(gen, tag) as emu:
         # set up a passphrase-protected device
         device.setup(
-            emu.client.get_management_session(),
+            emu.client.get_seedless_session(),
             pin_protection=False,
             skip_backup=True,
             entropy_check_count=0,
             backup_type=messages.BackupType.Bip39,
         )
         emu.client.invalidate()
-        resp = emu.client.get_management_session().call(
+        resp = emu.client.get_seedless_session().call(
             ApplySettingsCompat(use_passphrase=True, passphrase_source=SOURCE_HOST)
         )
         assert isinstance(resp, messages.Success)

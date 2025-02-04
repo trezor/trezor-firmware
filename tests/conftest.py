@@ -312,7 +312,7 @@ def _client_unlocked(
 
     test_ui = request.config.getoption("ui")
 
-    _raw_client.reset_debug_features(new_management_session=True)
+    _raw_client.reset_debug_features(new_seedless_session=True)
     _raw_client.open()
     if isinstance(_raw_client.protocol, ProtocolV1):
         try:
@@ -337,7 +337,7 @@ def _client_unlocked(
         try:
             if _raw_client.is_invalidated:
                 _raw_client = _get_raw_client(request)
-            session = _raw_client.get_management_session()
+            session = _raw_client.get_seedless_session()
             wipe_device(session)
             sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
             break
@@ -361,7 +361,7 @@ def _client_unlocked(
         lang = request.session.config.getoption("lang") or "en"
         assert isinstance(lang, str)
         translations.set_language(
-            SessionDebugWrapper(_raw_client.get_management_session()), lang
+            SessionDebugWrapper(_raw_client.get_seedless_session()), lang
         )
 
     setup_params = dict(
@@ -381,7 +381,7 @@ def _client_unlocked(
         setup_params["passphrase"], str
     )
     if not setup_params["uninitialized"]:
-        session = _raw_client.get_management_session(new_session=True)
+        session = _raw_client.get_seedless_session(new_session=True)
         debuglink.load_device(
             session,
             mnemonic=setup_params["mnemonic"],  # type: ignore
@@ -420,7 +420,7 @@ def session(
     request: pytest.FixtureRequest, _client_unlocked: Client
 ) -> t.Generator[SessionDebugWrapper, None, None]:
     if bool(request.node.get_closest_marker("uninitialized_session")):
-        session = _client_unlocked.get_management_session()
+        session = _client_unlocked.get_seedless_session()
     else:
         derive_cardano = bool(request.node.get_closest_marker("cardano"))
         passphrase = _client_unlocked.passphrase or ""
