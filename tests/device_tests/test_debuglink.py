@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import debuglink, device, messages, misc
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 from trezorlib.transport import udp
@@ -32,35 +33,36 @@ def test_layout(client: Client):
 
 @pytest.mark.models("legacy")
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_mnemonic(client: Client):
-    client.ensure_unlocked()
-    mnemonic = client.debug.state().mnemonic_secret
+def test_mnemonic(session: Session):
+    session.ensure_unlocked()
+    mnemonic = session.client.debug.state().mnemonic_secret
     assert mnemonic == MNEMONIC12.encode()
 
 
 @pytest.mark.models("legacy")
 @pytest.mark.setup_client(mnemonic=MNEMONIC12, pin="1234", passphrase="")
-def test_pin(client: Client):
-    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
+def test_pin(session: Session):
+    resp = session.call_raw(
+        messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0"))
+    )
     assert isinstance(resp, messages.PinMatrixRequest)
 
-    state = client.debug.state()
-    assert state.pin == "1234"
-    assert state.matrix != ""
+    with session.client as client:
+        state = client.debug.state()
+        assert state.pin == "1234"
+        assert state.matrix != ""
 
-    pin_encoded = client.debug.encode_pin("1234")
-    resp = client.call_raw(messages.PinMatrixAck(pin=pin_encoded))
-    assert isinstance(resp, messages.PassphraseRequest)
-
-    resp = client.call_raw(messages.PassphraseAck(passphrase=""))
-    assert isinstance(resp, messages.Address)
+        pin_encoded = client.debug.encode_pin("1234")
+        resp = session.call_raw(messages.PinMatrixAck(pin=pin_encoded))
+        assert isinstance(resp, messages.Address)
 
 
 @pytest.mark.models("core")
-def test_softlock_instability(client: Client):
+def test_softlock_instability(session: Session):
+
     def load_device():
         debuglink.load_device(
-            client,
+            session,
             mnemonic=MNEMONIC12,
             pin="1234",
             passphrase_protection=False,
@@ -68,27 +70,29 @@ def test_softlock_instability(client: Client):
         )
 
     # start from a clean slate:
-    resp = client.debug.reseed(0)
+    resp = session.client.debug.reseed(0)
     if isinstance(resp, messages.Failure) and not isinstance(
-        client.transport, udp.UdpTransport
+        session.client.transport, udp.UdpTransport
     ):
         pytest.xfail("reseed only supported on emulator")
-    device.wipe(client)
-    entropy_after_wipe = misc.get_entropy(client, 16)
+    device.wipe(session)
+    entropy_after_wipe = misc.get_entropy(session, 16)
+    session.refresh_features()
 
     # configure and wipe the device
     load_device()
-    client.debug.reseed(0)
-    device.wipe(client)
-    assert misc.get_entropy(client, 16) == entropy_after_wipe
+    session.client.debug.reseed(0)
+    device.wipe(session)
+    assert misc.get_entropy(session, 16) == entropy_after_wipe
+    session.refresh_features()
 
     load_device()
     # the device has PIN -> lock it
-    client.call(messages.LockDevice())
-    client.debug.reseed(0)
+    session.call(messages.LockDevice())
+    session.client.debug.reseed(0)
     # wipe_device should succeed with no need to unlock
-    device.wipe(client)
+    device.wipe(session)
     # the device is now trying to run the lockscreen, which attempts to unlock.
     # If the device actually called config.unlock(), it would use additional randomness.
     # That is undesirable. Assert that the returned entropy is still the same.
-    assert misc.get_entropy(client, 16) == entropy_after_wipe
+    assert misc.get_entropy(session, 16) == entropy_after_wipe
