@@ -8,7 +8,7 @@ from pathlib import Path
 
 from trezorlib import cosi, device, models
 from trezorlib._internal import translations
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from . import common
 
@@ -58,19 +58,19 @@ def sign_blob(blob: translations.TranslationsBlob) -> bytes:
 
 def build_and_sign_blob(
     lang_or_def: translations.JsonDef | Path | str,
-    client: Client,
+    session: Session,
 ) -> bytes:
-    blob = prepare_blob(lang_or_def, client.model, client.version)
+    blob = prepare_blob(lang_or_def, session.model, session.version)
     return sign_blob(blob)
 
 
-def set_language(client: Client, lang: str):
+def set_language(session: Session, lang: str):
     if lang.startswith("en"):
         language_data = b""
     else:
-        language_data = build_and_sign_blob(lang, client)
-    with client:
-        device.change_language(client, language_data)  # type: ignore
+        language_data = build_and_sign_blob(lang, session)
+    with session:
+        device.change_language(session, language_data)  # type: ignore
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
