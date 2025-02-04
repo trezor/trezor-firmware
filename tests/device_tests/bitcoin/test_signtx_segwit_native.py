@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import H_, parse_path
 
 from ...bip32 import deserialize
@@ -61,7 +61,7 @@ TXHASH_1c022d = bytes.fromhex(
 )
 
 
-def test_send_p2sh(client: Client):
+def test_send_p2sh(session: Session):
     # input tx: 20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337
 
     inp1 = messages.TxInputType(
@@ -82,16 +82,16 @@ def test_send_p2sh(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_20912f),
@@ -106,7 +106,7 @@ def test_send_p2sh(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -116,7 +116,7 @@ def test_send_p2sh(client: Client):
     )
 
 
-def test_send_p2sh_change(client: Client):
+def test_send_p2sh_change(session: Session):
     # input tx: 20912f98ea3ed849042efed0fdac8cb4fc301961c5988cba56902d8ffb61c337
 
     inp1 = messages.TxInputType(
@@ -137,13 +137,13 @@ def test_send_p2sh_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -159,7 +159,7 @@ def test_send_p2sh_change(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     # Transaction does not exist on the blockchain, not using assert_tx_matches()
@@ -169,7 +169,7 @@ def test_send_p2sh_change(client: Client):
     )
 
 
-def test_send_native(client: Client):
+def test_send_native(session: Session):
     # input tx: b36780ceb86807ca6e7535a6fd418b1b788cb9b227d2c8a26a0de295e523219e
 
     inp1 = messages.TxInputType(
@@ -190,16 +190,16 @@ def test_send_native(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=100_000 - 40_000 - 10_000,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_b36780),
@@ -214,7 +214,7 @@ def test_send_native(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -224,7 +224,7 @@ def test_send_native(client: Client):
     )
 
 
-def test_send_to_taproot(client: Client):
+def test_send_to_taproot(session: Session):
     # input tx: ec16dc5a539c5d60001a7471c37dbb0b5294c289c77df8bd07870b30d73e2231
 
     inp1 = messages.TxInputType(
@@ -244,9 +244,9 @@ def test_send_to_taproot(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=10_000 - 7_000 - 200,
     )
-    with client:
+    with session:
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -256,7 +256,7 @@ def test_send_to_taproot(client: Client):
     )
 
 
-def test_send_native_change(client: Client):
+def test_send_native_change(session: Session):
     # input tx: fcb3f5436224900afdba50e9e763d98b920dfed056e552040d99ea9bc03a9d83
 
     inp1 = messages.TxInputType(
@@ -277,13 +277,13 @@ def test_send_native_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         amount=100_000 - 40_000 - 10_000,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -300,7 +300,7 @@ def test_send_native_change(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -310,7 +310,7 @@ def test_send_native_change(client: Client):
     )
 
 
-def test_send_both(client: Client):
+def test_send_both(session: Session):
     # input 1 tx: 65047a2b107d6301d72d4a1e49e7aea9cf06903fdc4ae74a4a9bba9bc1a414d2
     # input 2 tx: d159fd2fcb5854a7c8b275d598765a446f1e2ff510bf077545a404a0c9db65f7
 
@@ -344,21 +344,21 @@ def test_send_both(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(2),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
-                (is_core(client), messages.ButtonRequest(code=B.SignTx)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.SignTx)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_65047a),
@@ -382,7 +382,7 @@ def test_send_both(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2],
             [out1, out2, out3],
@@ -397,12 +397,12 @@ def test_send_both(client: Client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_1(client: Client):
+def test_send_multisig_1(session: Session):
     # input tx: b9abfa0d4a28f6f25e1f6c0f974bfc3f7c5a44c4d381b1796e3fbeef51b560a6
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/49h/1h/{index}h"), coin_name="Testnet"
+            session, parse_path(f"m/49h/1h/{index}h"), coin_name="Testnet"
         )
         for index in range(1, 4)
     ]
@@ -433,7 +433,7 @@ def test_send_multisig_1(client: Client):
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(TXHASH_b9abfa),
@@ -449,10 +449,10 @@ def test_send_multisig_1(client: Client):
         request_finished(),
     ]
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
         signatures, _ = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     # store signature
@@ -460,10 +460,10 @@ def test_send_multisig_1(client: Client):
     # sign with third key
     inp1.address_n[2] = H_(3)
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -474,12 +474,12 @@ def test_send_multisig_1(client: Client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_2(client: Client):
+def test_send_multisig_2(session: Session):
     # input tx: b9abfa0d4a28f6f25e1f6c0f974bfc3f7c5a44c4d381b1796e3fbeef51b560a6
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
+            session, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
         )
         for index in range(1, 4)
     ]
@@ -510,7 +510,7 @@ def test_send_multisig_2(client: Client):
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(TXHASH_b9abfa),
@@ -526,10 +526,10 @@ def test_send_multisig_2(client: Client):
         request_finished(),
     ]
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
         signatures, _ = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     # store signature
@@ -537,10 +537,10 @@ def test_send_multisig_2(client: Client):
     # sign with first key
     inp1.address_n[2] = H_(1)
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -551,12 +551,12 @@ def test_send_multisig_2(client: Client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_3_change(client: Client):
+def test_send_multisig_3_change(session: Session):
     # input tx: b9abfa0d4a28f6f25e1f6c0f974bfc3f7c5a44c4d381b1796e3fbeef51b560a6
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
+            session, parse_path(f"m/84h/1h/{index}h"), coin_name="Testnet"
         )
         for index in range(1, 4)
     ]
@@ -595,7 +595,7 @@ def test_send_multisig_3_change(client: Client):
         request_output(0),
         messages.ButtonRequest(code=B.UnknownDerivationPath),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(TXHASH_b9abfa),
@@ -611,13 +611,13 @@ def test_send_multisig_3_change(client: Client):
         request_finished(),
     ]
 
-    with client:
-        client.set_expected_responses(expected_responses)
-        if is_core(client):
+    with session, session.client as client:
+        session.set_expected_responses(expected_responses)
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     # store signature
@@ -626,13 +626,13 @@ def test_send_multisig_3_change(client: Client):
     inp1.address_n[2] = H_(3)
     out1.address_n[2] = H_(3)
 
-    with client:
-        client.set_expected_responses(expected_responses)
-        if is_core(client):
+    with session, session.client as client:
+        session.set_expected_responses(expected_responses)
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -643,12 +643,12 @@ def test_send_multisig_3_change(client: Client):
 
 
 @pytest.mark.multisig
-def test_send_multisig_4_change(client: Client):
+def test_send_multisig_4_change(session: Session):
     # input tx: b9abfa0d4a28f6f25e1f6c0f974bfc3f7c5a44c4d381b1796e3fbeef51b560a6
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/49h/1h/{index}h"), coin_name="Testnet"
+            session, parse_path(f"m/49h/1h/{index}h"), coin_name="Testnet"
         )
         for index in range(1, 4)
     ]
@@ -687,7 +687,7 @@ def test_send_multisig_4_change(client: Client):
         request_output(0),
         messages.ButtonRequest(code=B.UnknownDerivationPath),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(TXHASH_b9abfa),
@@ -703,13 +703,13 @@ def test_send_multisig_4_change(client: Client):
         request_finished(),
     ]
 
-    with client:
-        client.set_expected_responses(expected_responses)
-        if is_core(client):
+    with session, session.client as client:
+        session.set_expected_responses(expected_responses)
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     # store signature
@@ -718,13 +718,13 @@ def test_send_multisig_4_change(client: Client):
     inp1.address_n[2] = H_(3)
     out1.address_n[2] = H_(3)
 
-    with client:
-        client.set_expected_responses(expected_responses)
-        if is_core(client):
+    with session, session.client as client:
+        session.set_expected_responses(expected_responses)
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(
@@ -734,7 +734,7 @@ def test_send_multisig_4_change(client: Client):
     )
 
 
-def test_multisig_mismatch_inputs_single(client: Client):
+def test_multisig_mismatch_inputs_single(session: Session):
     # Ensure that if there is a non-multisig input, then a multisig output
     # will not be identified as a change output.
 
@@ -788,18 +788,18 @@ def test_multisig_mismatch_inputs_single(client: Client):
         amount=100_000 + 100_000 - 50_000 - 10_000,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 # Ensure that the multisig output is not identified as a change output.
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_1c022d),
@@ -824,7 +824,7 @@ def test_multisig_mismatch_inputs_single(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_API_TESTNET
+            session, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_API_TESTNET
         )
 
     assert_tx_matches(

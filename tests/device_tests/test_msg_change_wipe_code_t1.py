@@ -18,8 +18,9 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 from trezorlib.client import MAX_PIN_LENGTH
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
+from trezorlib.transport.session import SessionV1
 
 PinType = messages.PinMatrixRequestType
 
@@ -32,10 +33,10 @@ WIPE_CODE_TOO_LONG = WIPE_CODE_MAX + "1"
 pytestmark = pytest.mark.models("legacy")
 
 
-def _set_wipe_code(client: Client, pin, wipe_code):
+def _set_wipe_code(session: Session, pin, wipe_code):
     # Set/change wipe code.
-    with client:
-        if client.features.pin_protection:
+    with session.client as client, session:
+        if session.features.pin_protection:
             pins = [pin, wipe_code, wipe_code]
             pin_matrices = [
                 messages.PinMatrixRequest(type=PinType.Current),
@@ -50,74 +51,70 @@ def _set_wipe_code(client: Client, pin, wipe_code):
             ]
 
         client.use_pin_sequence(pins)
-        client.set_expected_responses(
-            [messages.ButtonRequest()]
-            + pin_matrices
-            + [messages.Success, messages.Features]
+        session.set_expected_responses(
+            [messages.ButtonRequest()] + pin_matrices + [messages.Success]
         )
-        device.change_wipe_code(client)
+        device.change_wipe_code(session)
 
 
-def _change_pin(client: Client, old_pin, new_pin):
-    assert client.features.pin_protection is True
-    with client:
+def _change_pin(session: Session, old_pin, new_pin):
+    assert session.features.pin_protection is True
+    with session.client as client:
         client.use_pin_sequence([old_pin, new_pin, new_pin])
         try:
-            return device.change_pin(client)
+            return device.change_pin(session)
         except exceptions.TrezorFailure as f:
             return f.failure
 
 
-def _check_wipe_code(client: Client, pin, wipe_code):
+def _check_wipe_code(session: Session, pin, wipe_code):
     """Check that wipe code is set by changing the PIN to it."""
-    f = _change_pin(client, pin, wipe_code)
+    f = _change_pin(session, pin, wipe_code)
     assert isinstance(f, messages.Failure)
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_remove_wipe_code(client: Client):
+def test_set_remove_wipe_code(session: Session):
     # Check that wipe code protection status is not revealed in locked state.
-    assert client.features.wipe_code_protection is None
+    assert session.features.wipe_code_protection is None
 
     # Test set wipe code.
-    _set_wipe_code(client, PIN4, WIPE_CODE_MAX)
+    _set_wipe_code(session, PIN4, WIPE_CODE_MAX)
 
     # Check that there's wipe code protection now.
-    client.init_device()
-    assert client.features.wipe_code_protection is True
+    assert session.features.wipe_code_protection is True
 
     # Check that the wipe code is correct.
-    _check_wipe_code(client, PIN4, WIPE_CODE_MAX)
+    _check_wipe_code(session, PIN4, WIPE_CODE_MAX)
 
     # Test change wipe code.
-    _set_wipe_code(client, PIN4, WIPE_CODE6)
+    _set_wipe_code(session, PIN4, WIPE_CODE6)
 
     # Check that there's still wipe code protection now.
-    client.init_device()
-    assert client.features.wipe_code_protection is True
+    assert session.features.wipe_code_protection is True
 
     # Check that the wipe code is correct.
-    _check_wipe_code(client, PIN4, WIPE_CODE6)
+    _check_wipe_code(session, PIN4, WIPE_CODE6)
 
     # Test remove wipe code.
-    with client:
+    with session.client as client:
         client.use_pin_sequence([PIN4])
-        device.change_wipe_code(client, remove=True)
+        device.change_wipe_code(session, remove=True)
 
     # Check that there's no wipe code protection now.
-    client.init_device()
-    assert client.features.wipe_code_protection is False
+    assert session.features.wipe_code_protection is False
 
 
-def test_set_wipe_code_mismatch(client: Client):
+def test_set_wipe_code_mismatch(session: Session):
     # Check that there is no wipe code protection.
-    client.ensure_unlocked()
-    assert client.features.wipe_code_protection is False
+    session.ensure_unlocked()
+    session.refresh_features()
+    assert session.features.wipe_code_protection is False
 
     # Let's set a new wipe code.
-    with client:
+    with session.client as client, session:
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE6])
-        client.set_expected_responses(
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(),
                 messages.PinMatrixRequest(type=PinType.WipeCodeFirst),
@@ -126,22 +123,22 @@ def test_set_wipe_code_mismatch(client: Client):
             ]
         )
         with pytest.raises(exceptions.TrezorFailure):
-            device.change_wipe_code(client)
+            device.change_wipe_code(session)
 
     # Check that there is no wipe code protection.
-    client.init_device()
+    client.refresh_features()
     assert client.features.wipe_code_protection is False
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_set_wipe_code_to_pin(client: Client):
+def test_set_wipe_code_to_pin(session: Session):
     # Check that wipe code protection status is not revealed in locked state.
-    assert client.features.wipe_code_protection is None
+    assert session.features.wipe_code_protection is None
 
     # Let's try setting the wipe code to the curent PIN value.
-    with client:
+    with session.client as client, session:
         client.use_pin_sequence([PIN4, PIN4])
-        client.set_expected_responses(
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(),
                 messages.PinMatrixRequest(type=PinType.Current),
@@ -150,21 +147,22 @@ def test_set_wipe_code_to_pin(client: Client):
             ]
         )
         with pytest.raises(exceptions.TrezorFailure):
-            device.change_wipe_code(client)
+            device.change_wipe_code(session)
 
     # Check that there is no wipe code protection.
-    client.init_device()
+    client.refresh_features()
     assert client.features.wipe_code_protection is False
 
 
-def test_set_pin_to_wipe_code(client: Client):
+def test_set_pin_to_wipe_code(session: Session):
     # Set wipe code.
-    _set_wipe_code(client, None, WIPE_CODE4)
+    session.refresh_features()
+    _set_wipe_code(session, None, WIPE_CODE4)
 
     # Try to set the PIN to the current wipe code value.
-    with client:
+    with session.client as client, session:
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
-        client.set_expected_responses(
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(),
                 messages.PinMatrixRequest(type=PinType.NewFirst),
@@ -173,34 +171,35 @@ def test_set_pin_to_wipe_code(client: Client):
             ]
         )
         with pytest.raises(exceptions.TrezorFailure):
-            device.change_pin(client)
+            device.change_pin(session)
 
     # Check that there is no PIN protection.
-    client.init_device()
-    assert client.features.pin_protection is False
-    resp = client.call_raw(messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0")))
+    assert session.features.pin_protection is False
+    resp = session.call_raw(
+        messages.GetAddress(address_n=parse_path("m/44'/0'/0'/0/0"))
+    )
     assert isinstance(resp, messages.Address)
 
 
 @pytest.mark.parametrize("invalid_wipe_code", ("1204", "", WIPE_CODE_TOO_LONG))
-def test_set_wipe_code_invalid(client: Client, invalid_wipe_code):
+def test_set_wipe_code_invalid(session: Session, invalid_wipe_code: str):
     # Let's set the wipe code
-    ret = client.call_raw(messages.ChangeWipeCode())
+    ret = session.call_raw(messages.ChangeWipeCode())
     assert isinstance(ret, messages.ButtonRequest)
 
     # Confirm
-    client.debug.press_yes()
-    ret = client.call_raw(messages.ButtonAck())
+    session.client.debug.press_yes()
+    ret = session.call_raw(messages.ButtonAck())
 
     # Enter a wipe code containing an invalid digit
     assert isinstance(ret, messages.PinMatrixRequest)
     assert ret.type == PinType.WipeCodeFirst
-    ret = client.call_raw(messages.PinMatrixAck(pin=invalid_wipe_code))
+    ret = session.call_raw(messages.PinMatrixAck(pin=invalid_wipe_code))
 
     # Ensure the invalid wipe code is detected
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no wipe code protection.
-    client.init_device()
-    client.ensure_unlocked()
-    assert client.features.wipe_code_protection is False
+    session = Session(SessionV1.new(session.client))
+    session.ensure_unlocked()
+    assert session.features.wipe_code_protection is False

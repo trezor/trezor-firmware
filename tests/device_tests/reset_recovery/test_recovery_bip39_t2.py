@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ...common import MNEMONIC12
 from ...input_flows import InputFlowBip39Recovery
@@ -26,47 +26,49 @@ pytestmark = pytest.mark.models("core")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_tt_pin_passphrase(client: Client):
-    with client:
+@pytest.mark.uninitialized_session
+def test_tt_pin_passphrase(session: Session):
+    with session.client as client:
         IF = InputFlowBip39Recovery(client, MNEMONIC12.split(" "), pin="654")
         client.set_input_flow(IF.get())
         device.recover(
-            client,
+            session,
             pin_protection=True,
             passphrase_protection=True,
             label="hello",
         )
 
-    assert client.debug.state().mnemonic_secret.decode() == MNEMONIC12
+    assert session.client.debug.state().mnemonic_secret.decode() == MNEMONIC12
 
-    assert client.features.pin_protection is True
-    assert client.features.passphrase_protection is True
-    assert client.features.backup_type is messages.BackupType.Bip39
-    assert client.features.label == "hello"
+    assert session.features.pin_protection is True
+    assert session.features.passphrase_protection is True
+    assert session.features.backup_type is messages.BackupType.Bip39
+    assert session.features.label == "hello"
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_tt_nopin_nopassphrase(client: Client):
-    with client:
+@pytest.mark.uninitialized_session
+def test_tt_nopin_nopassphrase(session: Session):
+    with session.client as client:
         IF = InputFlowBip39Recovery(client, MNEMONIC12.split(" "))
         client.set_input_flow(IF.get())
         device.recover(
-            client,
+            session,
             pin_protection=False,
             passphrase_protection=False,
             label="hello",
         )
 
-    assert client.debug.state().mnemonic_secret.decode() == MNEMONIC12
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is messages.BackupType.Bip39
-    assert client.features.label == "hello"
+    assert session.client.debug.state().mnemonic_secret.decode() == MNEMONIC12
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is messages.BackupType.Bip39
+    assert session.features.label == "hello"
 
 
-def test_already_initialized(client: Client):
+def test_already_initialized(session: Session):
     with pytest.raises(RuntimeError):
-        device.recover(client)
+        device.recover(session)
 
     with pytest.raises(exceptions.TrezorFailure, match="Already initialized"):
-        client.call(messages.RecoveryDevice())
+        session.call(messages.RecoveryDevice())

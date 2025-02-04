@@ -19,7 +19,7 @@ import time
 import pytest
 
 from trezorlib import device, messages, models
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 
 from ..common import TEST_ADDRESS_N, get_test_address
@@ -29,42 +29,42 @@ PIN4 = "1234"
 pytestmark = pytest.mark.setup_client(pin=PIN4)
 
 
-def pin_request(client: Client):
+def pin_request(session: Session):
     return (
         messages.PinMatrixRequest
-        if client.model is models.T1B1
+        if session.model is models.T1B1
         else messages.ButtonRequest
     )
 
 
-def set_autolock_delay(client: Client, delay):
-    with client:
+def set_autolock_delay(session: Session, delay):
+    with session, session.client as client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses(
+        session.set_expected_responses(
             [
-                pin_request(client),
+                pin_request(session),
                 messages.ButtonRequest,
                 messages.Success,
-                messages.Features,
+                # messages.Features,
             ]
         )
-        device.apply_settings(client, auto_lock_delay_ms=delay)
+        device.apply_settings(session, auto_lock_delay_ms=delay)
 
 
-def test_apply_auto_lock_delay(client: Client):
-    set_autolock_delay(client, 10 * 1000)
+def test_apply_auto_lock_delay(session: Session):
+    set_autolock_delay(session, 10 * 1000)
 
     time.sleep(0.1)  # sleep less than auto-lock delay
-    with client:
+    with session:
         # No PIN protection is required.
-        client.set_expected_responses([messages.Address])
-        get_test_address(client)
+        session.set_expected_responses([messages.Address])
+        get_test_address(session)
 
     time.sleep(10.5)  # sleep more than auto-lock delay
-    with client:
+    with session, session.client as client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses([pin_request(client), messages.Address])
-        get_test_address(client)
+        session.set_expected_responses([pin_request(session), messages.Address])
+        get_test_address(session)
 
 
 @pytest.mark.parametrize(
@@ -78,44 +78,45 @@ def test_apply_auto_lock_delay(client: Client):
         536870,  # 149 hours, maximum
     ],
 )
-def test_apply_auto_lock_delay_valid(client: Client, seconds):
-    set_autolock_delay(client, seconds * 1000)
-    assert client.features.auto_lock_delay_ms == seconds * 1000
+def test_apply_auto_lock_delay_valid(session: Session, seconds):
+    set_autolock_delay(session, seconds * 1000)
+    assert session.features.auto_lock_delay_ms == seconds * 1000
 
 
-def test_autolock_default_value(client: Client):
-    assert client.features.auto_lock_delay_ms is None
-    with client:
+def test_autolock_default_value(session: Session):
+    assert session.features.auto_lock_delay_ms is None
+    with session, session.client as client:
         client.use_pin_sequence([PIN4])
-        device.apply_settings(client, label="pls unlock")
-        client.refresh_features()
-    assert client.features.auto_lock_delay_ms == 60 * 10 * 1000
+        device.apply_settings(session, label="pls unlock")
+        session.refresh_features()
+    assert session.features.auto_lock_delay_ms == 60 * 10 * 1000
 
 
 @pytest.mark.parametrize(
     "seconds",
     [0, 1, 9, 536871, 2**22],
 )
-def test_apply_auto_lock_delay_out_of_range(client: Client, seconds):
-    with client:
+def test_apply_auto_lock_delay_out_of_range(session: Session, seconds):
+
+    with session, session.client as client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses(
+        session.set_expected_responses(
             [
-                pin_request(client),
+                pin_request(session),
                 messages.Failure(code=messages.FailureType.ProcessError),
             ]
         )
 
         delay = seconds * 1000
         with pytest.raises(TrezorFailure):
-            device.apply_settings(client, auto_lock_delay_ms=delay)
+            device.apply_settings(session, auto_lock_delay_ms=delay)
 
 
 @pytest.mark.models("core")
-def test_autolock_cancels_ui(client: Client):
-    set_autolock_delay(client, 10 * 1000)
+def test_autolock_cancels_ui(session: Session):
+    set_autolock_delay(session, 10 * 1000)
 
-    resp = client.call_raw(
+    resp = session.call_raw(
         messages.GetAddress(
             coin_name="Testnet",
             address_n=TEST_ADDRESS_N,
@@ -126,44 +127,46 @@ def test_autolock_cancels_ui(client: Client):
     assert isinstance(resp, messages.ButtonRequest)
 
     # send an ack, do not read response
-    client._raw_write(messages.ButtonAck())
+    session._write(messages.ButtonAck())
     # sleep more than auto-lock delay
     time.sleep(10.5)
-    resp = client._raw_read()
+    resp = session._read()
 
     assert isinstance(resp, messages.Failure)
     assert resp.code == messages.FailureType.ActionCancelled
 
 
-def test_autolock_ignores_initialize(client: Client):
-    set_autolock_delay(client, 10 * 1000)
+def test_autolock_ignores_initialize(session: Session):
+    set_autolock_delay(session, 10 * 1000)
 
-    assert client.features.unlocked is True
+    assert session.features.unlocked is True
 
     start = time.monotonic()
     while time.monotonic() - start < 11:
         # init_device should always work even if locked
-        client.init_device()
+        session.resume()
         time.sleep(0.1)
 
     # after 11 seconds we are definitely locked
-    assert client.features.unlocked is False
+    session.refresh_features()
+    assert session.features.unlocked is False
 
 
-def test_autolock_ignores_getaddress(client: Client):
-    set_autolock_delay(client, 10 * 1000)
+def test_autolock_ignores_getaddress(session: Session):
 
-    assert client.features.unlocked is True
+    set_autolock_delay(session, 10 * 1000)
+
+    assert session.features.unlocked is True
 
     start = time.monotonic()
     # let's continue for 8 seconds to give a little leeway to the slow CI
     while time.monotonic() - start < 8:
-        get_test_address(client)
+        get_test_address(session)
         time.sleep(0.1)
 
     # sleep 3 more seconds to wait for autolock
     time.sleep(3)
 
     # after 11 seconds we are definitely locked
-    client.refresh_features()
-    assert client.features.unlocked is False
+    session.refresh_features()
+    assert session.features.unlocked is False

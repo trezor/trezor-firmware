@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -57,7 +57,7 @@ pytestmark = [
 ]
 
 
-def test_send_decred(client: Client):
+def test_send_decred(session: Session):
     # NOTE: fake input tx used
 
     inp1 = messages.TxInputType(
@@ -76,13 +76,13 @@ def test_send_decred(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.FeeOverThreshold),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -95,7 +95,7 @@ def test_send_decred(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Decred Testnet", [inp1], [out1], prev_txes=TX_API
+            session, "Decred Testnet", [inp1], [out1], prev_txes=TX_API
         )
 
     assert (
@@ -105,7 +105,7 @@ def test_send_decred(client: Client):
 
 
 @pytest.mark.models("core")
-def test_purchase_ticket_decred(client: Client):
+def test_purchase_ticket_decred(session: Session):
     # NOTE: fake input tx used
 
     inp1 = messages.TxInputType(
@@ -133,8 +133,8 @@ def test_purchase_ticket_decred(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -153,7 +153,7 @@ def test_purchase_ticket_decred(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Decred Testnet",
             [inp1],
             [out1, out2, out3],
@@ -168,7 +168,7 @@ def test_purchase_ticket_decred(client: Client):
 
 
 @pytest.mark.models("core")
-def test_spend_from_stake_generation_and_revocation_decred(client: Client):
+def test_spend_from_stake_generation_and_revocation_decred(session: Session):
     # NOTE: fake input tx used
 
     inp1 = messages.TxInputType(
@@ -197,14 +197,14 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(FAKE_TXHASH_8b6890),
@@ -223,7 +223,7 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Decred Testnet", [inp1, inp2], [out1], prev_txes=TX_API
+            session, "Decred Testnet", [inp1, inp2], [out1], prev_txes=TX_API
         )
 
     assert (
@@ -232,7 +232,7 @@ def test_spend_from_stake_generation_and_revocation_decred(client: Client):
     )
 
 
-def test_send_decred_change(client: Client):
+def test_send_decred_change(session: Session):
     # NOTE: fake input tx used
 
     inp1 = messages.TxInputType(
@@ -278,15 +278,15 @@ def test_send_decred_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_input(2),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -311,7 +311,7 @@ def test_send_decred_change(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Decred Testnet",
             [inp1, inp2, inp3],
             [out1, out2],
@@ -325,12 +325,12 @@ def test_send_decred_change(client: Client):
 
 
 @pytest.mark.multisig
-def test_decred_multisig_change(client: Client):
+def test_decred_multisig_change(session: Session):
     # NOTE: fake input tx used
 
     paths = [parse_path(f"m/48h/1h/{index}'/0'") for index in range(3)]
     nodes = [
-        btc.get_public_node(client, address_n, coin_name="Decred Testnet").node
+        btc.get_public_node(session, address_n, coin_name="Decred Testnet").node
         for address_n in paths
     ]
 
@@ -384,15 +384,15 @@ def test_decred_multisig_change(client: Client):
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
-        with client:
-            client.set_expected_responses(
+        with session:
+            session.set_expected_responses(
                 [
                     request_input(0),
                     request_input(1),
                     request_output(0),
                     request_output(1),
                     messages.ButtonRequest(code=B.ConfirmOutput),
-                    (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                    (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                     messages.ButtonRequest(code=B.SignTx),
                     request_input(0),
                     request_meta(FAKE_TXHASH_9ac7d2),
@@ -410,7 +410,7 @@ def test_decred_multisig_change(client: Client):
                 ]
             )
             signature, serialized_tx = btc.sign_tx(
-                client,
+                session,
                 "Decred Testnet",
                 [inp1, inp2],
                 [out1, out2],
