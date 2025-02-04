@@ -19,6 +19,7 @@ import time
 import pytest
 
 from trezorlib import btc, device, messages
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -59,15 +60,15 @@ SLIP25_PATH = parse_path("m/10025h")
 
 @pytest.mark.parametrize("chunkify", (True, False))
 @pytest.mark.setup_client(pin=PIN)
-def test_sign_tx(client: Client, chunkify: bool):
+def test_sign_tx(session: Session, chunkify: bool):
     # NOTE: FAKE input tx
-
+    assert session.features.unlocked is False
     commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
 
-    with client:
+    with session.client as client:
         client.use_pin_sequence([PIN])
         btc.authorize_coinjoin(
-            client,
+            session,
             coordinator="www.example.com",
             max_rounds=2,
             max_coordinator_fee_rate=500_000,  # 0.5 %
@@ -77,14 +78,14 @@ def test_sign_tx(client: Client, chunkify: bool):
             script_type=messages.InputScriptType.SPENDTAPROOT,
         )
 
-    client.call(messages.LockDevice())
+    session.call(messages.LockDevice())
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
         btc.get_ownership_proof(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -93,12 +94,12 @@ def test_sign_tx(client: Client, chunkify: bool):
             preauthorized=True,
         )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
         btc.get_ownership_proof(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/5"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -206,8 +207,8 @@ def test_sign_tx(client: Client, chunkify: bool):
         no_fee_indices=[],
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 messages.PreauthorizedRequest(),
                 request_input(0),
@@ -222,7 +223,7 @@ def test_sign_tx(client: Client, chunkify: bool):
             ]
         )
         signatures, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             inputs,
             outputs,
@@ -243,7 +244,7 @@ def test_sign_tx(client: Client, chunkify: bool):
 
     # Test for a second time.
     btc.sign_tx(
-        client,
+        session,
         "Testnet",
         inputs,
         outputs,
@@ -256,7 +257,7 @@ def test_sign_tx(client: Client, chunkify: bool):
     # Test for a third time, number of rounds should be exceeded.
     with pytest.raises(TrezorFailure, match="No preauthorized operation"):
         btc.sign_tx(
-            client,
+            session,
             "Testnet",
             inputs,
             outputs,
@@ -267,7 +268,7 @@ def test_sign_tx(client: Client, chunkify: bool):
         )
 
 
-def test_sign_tx_large(client: Client):
+def test_sign_tx_large(session: Session):
     # NOTE: FAKE input tx
 
     commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
@@ -278,17 +279,16 @@ def test_sign_tx_large(client: Client):
     output_denom = 10_000  # sats
     max_expected_delay = 80  # seconds
 
-    with client:
-        btc.authorize_coinjoin(
-            client,
-            coordinator="www.example.com",
-            max_rounds=2,
-            max_coordinator_fee_rate=500_000,  # 0.5 %
-            max_fee_per_kvbyte=3500,
-            n=parse_path("m/10025h/1h/0h/1h"),
-            coin_name="Testnet",
-            script_type=messages.InputScriptType.SPENDTAPROOT,
-        )
+    btc.authorize_coinjoin(
+        session,
+        coordinator="www.example.com",
+        max_rounds=2,
+        max_coordinator_fee_rate=500_000,  # 0.5 %
+        max_fee_per_kvbyte=3500,
+        n=parse_path("m/10025h/1h/0h/1h"),
+        coin_name="Testnet",
+        script_type=messages.InputScriptType.SPENDTAPROOT,
+    )
 
     # INPUTS.
 
@@ -399,22 +399,21 @@ def test_sign_tx_large(client: Client):
     )
 
     start = time.time()
-    with client:
-        btc.sign_tx(
-            client,
-            "Testnet",
-            inputs,
-            outputs,
-            prev_txes=TX_CACHE_TESTNET,
-            coinjoin_request=coinjoin_req,
-            preauthorized=True,
-            serialize=False,
-        )
+    btc.sign_tx(
+        session,
+        "Testnet",
+        inputs,
+        outputs,
+        prev_txes=TX_CACHE_TESTNET,
+        coinjoin_request=coinjoin_req,
+        preauthorized=True,
+        serialize=False,
+    )
     delay = time.time() - start
     assert delay <= max_expected_delay
 
 
-def test_sign_tx_spend(client: Client):
+def test_sign_tx_spend(session: Session):
     # NOTE: FAKE input tx
 
     inputs = [
@@ -446,15 +445,15 @@ def test_sign_tx_spend(client: Client):
     # Ensure that Trezor refuses to spend from CoinJoin without user authorization.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             inputs,
             outputs,
             prev_txes=TX_CACHE_TESTNET,
         )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
@@ -462,7 +461,7 @@ def test_sign_tx_spend(client: Client):
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -472,7 +471,7 @@ def test_sign_tx_spend(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             inputs,
             outputs,
@@ -487,7 +486,7 @@ def test_sign_tx_spend(client: Client):
     )
 
 
-def test_sign_tx_migration(client: Client):
+def test_sign_tx_migration(session: Session):
     inputs = [
         messages.TxInputType(
             address_n=parse_path("m/84h/1h/3h/0/12"),
@@ -520,15 +519,15 @@ def test_sign_tx_migration(client: Client):
     # Ensure that Trezor refuses to receive to CoinJoin path without the user first authorizing access to CoinJoin paths.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             inputs,
             outputs,
             prev_txes=TX_CACHE_TESTNET,
         )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
@@ -536,7 +535,7 @@ def test_sign_tx_migration(client: Client):
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_2cc3c1),
@@ -558,7 +557,7 @@ def test_sign_tx_migration(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             inputs,
             outputs,
@@ -573,11 +572,11 @@ def test_sign_tx_migration(client: Client):
     )
 
 
-def test_wrong_coordinator(client: Client):
+def test_wrong_coordinator(session: Session):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
     btc.authorize_coinjoin(
-        client,
+        session,
         coordinator="www.example.com",
         max_rounds=10,
         max_coordinator_fee_rate=500_000,  # 0.5 %
@@ -589,7 +588,7 @@ def test_wrong_coordinator(client: Client):
 
     with pytest.raises(TrezorFailure, match="Unauthorized operation"):
         btc.get_ownership_proof(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -599,9 +598,9 @@ def test_wrong_coordinator(client: Client):
         )
 
 
-def test_wrong_account_type(client: Client):
+def test_wrong_account_type(session: Session):
     params = {
-        "client": client,
+        "session": session,
         "coordinator": "www.example.com",
         "max_rounds": 10,
         "max_coordinator_fee_rate": 500_000,  # 0.5 %
@@ -625,11 +624,11 @@ def test_wrong_account_type(client: Client):
     )
 
 
-def test_cancel_authorization(client: Client):
+def test_cancel_authorization(session: Session):
     # Ensure that a preauthorized GetOwnershipProof fails if the commitment_data doesn't match the coordinator.
 
     btc.authorize_coinjoin(
-        client,
+        session,
         coordinator="www.example.com",
         max_rounds=10,
         max_coordinator_fee_rate=500_000,  # 0.5 %
@@ -639,11 +638,11 @@ def test_cancel_authorization(client: Client):
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
 
-    device.cancel_authorization(client)
+    device.cancel_authorization(session)
 
     with pytest.raises(TrezorFailure, match="No preauthorized operation"):
         btc.get_ownership_proof(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -653,35 +652,35 @@ def test_cancel_authorization(client: Client):
         )
 
 
-def test_get_public_key(client: Client):
+def test_get_public_key(session: Session):
     ACCOUNT_PATH = parse_path("m/10025h/1h/0h/1h")
     EXPECTED_XPUB = "tpubDEMKm4M3S2Grx5DHTfbX9et5HQb9KhdjDCkUYdH9gvVofvPTE6yb2MH52P9uc4mx6eFohUmfN1f4hhHNK28GaZnWRXr3b8KkfFcySo1SmXU"
 
     # Ensure that user cannot access SLIP-25 path without UnlockPath.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         resp = btc.get_public_node(
-            client,
+            session,
             ACCOUNT_PATH,
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDTAPROOT,
         )
 
     # Get unlock path MAC.
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
                 messages.Failure(code=messages.FailureType.ActionCancelled),
             ]
         )
-        unlock_path_mac = device.unlock_path(client, n=SLIP25_PATH)
+        unlock_path_mac = device.unlock_path(session, n=SLIP25_PATH)
 
     # Ensure that UnlockPath fails with invalid MAC.
     invalid_unlock_path_mac = bytes([unlock_path_mac[0] ^ 1]) + unlock_path_mac[1:]
     with pytest.raises(TrezorFailure, match="Invalid MAC"):
         resp = btc.get_public_node(
-            client,
+            session,
             ACCOUNT_PATH,
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -690,15 +689,15 @@ def test_get_public_key(client: Client):
         )
 
     # Ensure that user does not need to confirm access when path unlock is requested with MAC.
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 messages.UnlockedPathRequest,
                 messages.PublicKey,
             ]
         )
         resp = btc.get_public_node(
-            client,
+            session,
             ACCOUNT_PATH,
             coin_name="Testnet",
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -708,11 +707,12 @@ def test_get_public_key(client: Client):
         assert resp.xpub == EXPECTED_XPUB
 
 
-def test_get_address(client: Client):
+def test_get_address(session: Session):
+
     # Ensure that the SLIP-0025 external chain is inaccessible without user confirmation.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/0/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -720,20 +720,20 @@ def test_get_address(client: Client):
         )
 
     # Unlock CoinJoin path.
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
                 messages.Failure(code=messages.FailureType.ActionCancelled),
             ]
         )
-        unlock_path_mac = device.unlock_path(client, SLIP25_PATH)
+        unlock_path_mac = device.unlock_path(session, SLIP25_PATH)
 
     # Ensure that the SLIP-0025 external chain is accessible after user confirmation.
     for chunkify in (True, False):
         resp = btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/0/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -745,7 +745,7 @@ def test_get_address(client: Client):
         assert resp == "tb1pl3y9gf7xk2ryvmav5ar66ra0d2hk7lhh9mmusx3qvn0n09kmaghqh32ru7"
 
     resp = btc.get_address(
-        client,
+        session,
         "Testnet",
         parse_path("m/10025h/1h/0h/1h/0/1"),
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -758,7 +758,7 @@ def test_get_address(client: Client):
     # Ensure that the SLIP-0025 internal chain is inaccessible even with user authorization.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -769,7 +769,7 @@ def test_get_address(client: Client):
 
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/1"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -781,7 +781,7 @@ def test_get_address(client: Client):
     # Ensure that another SLIP-0025 account is inaccessible with the same MAC.
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/10025h/1h/1h/1h/0/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -793,8 +793,10 @@ def test_get_address(client: Client):
 
 def test_multisession_authorization(client: Client):
     # Authorize CoinJoin with www.example1.com in session 1.
+    session1 = client.get_session(session_id=1)
+
     btc.authorize_coinjoin(
-        client,
+        session1,
         coordinator="www.example1.com",
         max_rounds=10,
         max_coordinator_fee_rate=500_000,  # 0.5 %
@@ -803,14 +805,14 @@ def test_multisession_authorization(client: Client):
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
-
+    session2 = client.get_session(session_id=2)
     # Open a second session.
-    session_id1 = client.session_id
-    client.init_device(new_session=True)
+    # session_id1 = session.session_id
+    # TODO client.init_device(new_session=True)
 
     # Authorize CoinJoin with www.example2.com in session 2.
     btc.authorize_coinjoin(
-        client,
+        session2,
         coordinator="www.example2.com",
         max_rounds=10,
         max_coordinator_fee_rate=500_000,  # 0.5 %
@@ -823,7 +825,7 @@ def test_multisession_authorization(client: Client):
     # Requesting a preauthorized ownership proof for www.example1.com should fail in session 2.
     with pytest.raises(TrezorFailure, match="Unauthorized operation"):
         ownership_proof, _ = btc.get_ownership_proof(
-            client,
+            session2,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -834,7 +836,7 @@ def test_multisession_authorization(client: Client):
 
     # Requesting a preauthorized ownership proof for www.example2.com should succeed in session 2.
     ownership_proof, _ = btc.get_ownership_proof(
-        client,
+        session2,
         "Testnet",
         parse_path("m/10025h/1h/0h/1h/1/0"),
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -849,12 +851,12 @@ def test_multisession_authorization(client: Client):
     )
 
     # Switch back to the first session.
-    session_id2 = client.session_id
-    client.init_device(session_id=session_id1)
-
+    # session_id2 = session.session_id
+    # TODO client.init_device(session_id=session_id1)
+    client.resume_session(session1)
     # Requesting a preauthorized ownership proof for www.example1.com should succeed in session 1.
     ownership_proof, _ = btc.get_ownership_proof(
-        client,
+        session1,
         "Testnet",
         parse_path("m/10025h/1h/0h/1h/1/0"),
         script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -871,7 +873,7 @@ def test_multisession_authorization(client: Client):
     # Requesting a preauthorized ownership proof for www.example2.com should fail in session 1.
     with pytest.raises(TrezorFailure, match="Unauthorized operation"):
         ownership_proof, _ = btc.get_ownership_proof(
-            client,
+            session1,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -881,12 +883,12 @@ def test_multisession_authorization(client: Client):
         )
 
     # Cancel the authorization in session 1.
-    device.cancel_authorization(client)
+    device.cancel_authorization(session1)
 
     # Requesting a preauthorized ownership proof should fail now.
     with pytest.raises(TrezorFailure, match="No preauthorized operation"):
         ownership_proof, _ = btc.get_ownership_proof(
-            client,
+            session1,
             "Testnet",
             parse_path("m/10025h/1h/0h/1h/1/0"),
             script_type=messages.InputScriptType.SPENDTAPROOT,
@@ -896,11 +898,11 @@ def test_multisession_authorization(client: Client):
         )
 
     # Switch to the second session.
-    client.init_device(session_id=session_id2)
-
+    # TODO client.init_device(session_id=session_id2)
+    client.resume_session(session2)
     # Requesting a preauthorized ownership proof for www.example2.com should still succeed in session 2.
     ownership_proof, _ = btc.get_ownership_proof(
-        client,
+        session2,
         "Testnet",
         parse_path("m/10025h/1h/0h/1h/1/0"),
         script_type=messages.InputScriptType.SPENDTAPROOT,

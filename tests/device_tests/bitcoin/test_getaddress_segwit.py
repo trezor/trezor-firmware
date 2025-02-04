@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -25,10 +25,10 @@ from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 
 
-def test_show_segwit(client: Client):
+def test_show_segwit(session: Session):
     assert (
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/49h/1h/0h/1/0"),
             True,
@@ -39,7 +39,7 @@ def test_show_segwit(client: Client):
     )
     assert (
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/49h/1h/0h/0/0"),
             False,
@@ -50,7 +50,7 @@ def test_show_segwit(client: Client):
     )
     assert (
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/44h/1h/0h/0/0"),
             False,
@@ -61,7 +61,7 @@ def test_show_segwit(client: Client):
     )
     assert (
         btc.get_address(
-            client,
+            session,
             "Testnet",
             parse_path("m/44h/1h/0h/0/0"),
             False,
@@ -73,14 +73,14 @@ def test_show_segwit(client: Client):
 
 
 @pytest.mark.altcoin
-def test_show_segwit_altcoin(client: Client):
-    with client:
-        if is_core(client):
+def test_show_segwit_altcoin(session: Session):
+    with session.client as client:
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         assert (
             btc.get_address(
-                client,
+                session,
                 "Groestlcoin Testnet",
                 parse_path("m/49h/1h/0h/1/0"),
                 True,
@@ -91,7 +91,7 @@ def test_show_segwit_altcoin(client: Client):
         )
         assert (
             btc.get_address(
-                client,
+                session,
                 "Groestlcoin Testnet",
                 parse_path("m/49h/1h/0h/0/0"),
                 True,
@@ -102,7 +102,7 @@ def test_show_segwit_altcoin(client: Client):
         )
         assert (
             btc.get_address(
-                client,
+                session,
                 "Groestlcoin Testnet",
                 parse_path("m/44h/1h/0h/0/0"),
                 True,
@@ -113,7 +113,7 @@ def test_show_segwit_altcoin(client: Client):
         )
         assert (
             btc.get_address(
-                client,
+                session,
                 "Groestlcoin Testnet",
                 parse_path("m/44h/1h/0h/0/0"),
                 True,
@@ -124,7 +124,7 @@ def test_show_segwit_altcoin(client: Client):
         )
         assert (
             btc.get_address(
-                client,
+                session,
                 "Elements",
                 parse_path("m/49h/1h/0h/0/0"),
                 True,
@@ -136,10 +136,10 @@ def test_show_segwit_altcoin(client: Client):
 
 
 @pytest.mark.multisig
-def test_show_multisig_3(client: Client):
+def test_show_multisig_3(session: Session):
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/49h/1h/{i}h"), coin_name="Testnet"
+            session, parse_path(f"m/49h/1h/{i}h"), coin_name="Testnet"
         ).node
         for i in range(1, 4)
     ]
@@ -155,7 +155,7 @@ def test_show_multisig_3(client: Client):
     for i in [1, 2, 3]:
         assert (
             btc.get_address(
-                client,
+                session,
                 "Testnet",
                 parse_path(f"m/49h/1h/{i}h/0/7"),
                 False,
@@ -168,11 +168,11 @@ def test_show_multisig_3(client: Client):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
-def test_multisig_missing(client: Client, show_display):
+def test_multisig_missing(session: Session, show_display):
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
-        btc.get_public_node(client, parse_path(f"m/49h/0h/{i}h")).node
+        btc.get_public_node(session, parse_path(f"m/49h/0h/{i}h")).node
         for i in range(1, 4)
     ]
 
@@ -193,7 +193,7 @@ def test_multisig_missing(client: Client, show_display):
     for multisig in (multisig1, multisig2):
         with pytest.raises(TrezorFailure):
             btc.get_address(
-                client,
+                session,
                 "Bitcoin",
                 parse_path("m/49h/0h/0h/0/0"),
                 show_display=show_display,
