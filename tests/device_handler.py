@@ -49,10 +49,11 @@ class BackgroundDeviceHandler:
     def _configure_client(self, client: "Client") -> None:
         self.client = client
         self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
+        self.client.button_callback = self.client.ui.button_request
         self.client.watch_layout(True)
         self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
-    def run(
+    def run_with_session(
         self,
         function: t.Callable[tx.Concatenate["Client", P], t.Any],
         *args: P.args,
@@ -66,16 +67,35 @@ class BackgroundDeviceHandler:
             raise RuntimeError("Wait for previous task first")
 
         # wait for the first UI change triggered by the task running in the background
+        session = self.client.get_session()
         with self.debuglink().wait_for_layout_change():
-            self.task = self._pool.submit(function, self.client, *args, **kwargs)
+            self.task = self._pool.submit(function, session, *args, **kwargs)
+
+    def run_with_provided_session(
+        self,
+        session,
+        function: t.Callable[tx.Concatenate["Client", P], t.Any],
+        *args: P.args,
+        **kwargs: P.kwargs,
+    ) -> None:
+        """Runs some function that interacts with a device.
+
+        Makes sure the UI is updated before returning.
+        """
+        if self.task is not None:
+            raise RuntimeError("Wait for previous task first")
+
+        # wait for the first UI change triggered by the task running in the background
+        with self.debuglink().wait_for_layout_change():
+            self.task = self._pool.submit(function, session, *args, **kwargs)
 
     def kill_task(self) -> None:
         if self.task is not None:
             # Force close the client, which should raise an exception in a client
             # waiting on IO. Does not work over Bridge, because bridge doesn't have
             # a close() method.
-            while self.client.session_counter > 0:
-                self.client.close()
+            # while self.client.session_counter > 0:
+            # self.client.close()
             try:
                 self.task.result(timeout=1)
             except Exception:
@@ -99,7 +119,7 @@ class BackgroundDeviceHandler:
     def features(self) -> "Features":
         if self.task is not None:
             raise RuntimeError("Cannot query features while task is running")
-        self.client.init_device()
+        self.client.refresh_features()
         return self.client.features
 
     def debuglink(self) -> "DebugLink":
