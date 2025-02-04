@@ -1325,7 +1325,9 @@ class TrezorClientDebugLink(TrezorClient):
         return self.debug.layout_type
 
     def get_new_client(self) -> TrezorClientDebugLink:
-        return TrezorClientDebugLink(self.transport, self.debug.allow_interactions)
+        new_client = TrezorClientDebugLink(self.transport, self.debug.allow_interactions)
+        new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
+        return new_client
 
     def reset_debug_features(self, new_management_session: bool = False) -> None:
         """
