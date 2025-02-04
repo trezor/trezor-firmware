@@ -10,12 +10,231 @@ import "options.proto";
 option (include_in_bitcoin_only) = true;
 
 /**
+ * Mapping between Trezor wire identifier (uint) and a Thp protobuf message
+ */
+enum ThpMessageType {
+    reserved 0 to 999;  // Values reserved by other messages, see messages.proto
+
+    ThpMessageType_ThpCreateNewSession = 1000 [(bitcoin_only)=true];
+    ThpMessageType_ThpPairingRequest = 1006 [(bitcoin_only) = true];
+    ThpMessageType_ThpPairingRequestApproved = 1007 [(bitcoin_only) = true];
+    ThpMessageType_ThpSelectMethod = 1008 [(bitcoin_only) = true];
+    ThpMessageType_ThpPairingPreparationsFinished = 1009 [(bitcoin_only) = true];
+    ThpMessageType_ThpCredentialRequest = 1010 [(bitcoin_only) = true];
+    ThpMessageType_ThpCredentialResponse = 1011 [(bitcoin_only) = true];
+    ThpMessageType_ThpEndRequest = 1012 [(bitcoin_only) = true];
+    ThpMessageType_ThpEndResponse = 1013 [(bitcoin_only) = true];
+    ThpMessageType_ThpCodeEntryCommitment = 1016 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryChallenge = 1017 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryCpaceTrezor = 1018 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntryCpaceHostTag = 1019 [(bitcoin_only)=true];
+    ThpMessageType_ThpCodeEntrySecret = 1020 [(bitcoin_only)=true];
+    ThpMessageType_ThpQrCodeTag = 1024 [(bitcoin_only)=true];
+    ThpMessageType_ThpQrCodeSecret = 1025 [(bitcoin_only)=true];
+    ThpMessageType_ThpNfcTagHost = 1032 [(bitcoin_only)=true];
+    ThpMessageType_ThpNfcTagTrezor = 1033 [(bitcoin_only)=true];
+
+    reserved 1100 to 2147483647;  // Values reserved by other messages, see messages.proto
+}
+
+
+/**
+ * Numeric identifiers of pairing methods.
+ * @embed
+ */
+enum ThpPairingMethod {
+    SkipPairing = 1;          // Trust without MITM protection.
+    CodeEntry = 2;            // User types code diplayed on Trezor into the host application.
+    QrCode = 3;               // User scans code displayed on Trezor into host application.
+    NFC = 4;                  // Trezor and host application exchange authentication secrets via NFC.
+}
+
+/**
+ * @embed
+ */
+message ThpDeviceProperties {
+    optional string internal_model = 1;               // Internal model name e.g. "T2B1".
+    optional uint32 model_variant = 2;                // Encodes the device properties such as color.
+    optional uint32 protocol_version_major = 3;       // The major version of the communication protocol used by the firmware.
+    optional uint32 protocol_version_minor = 4;       // The minor version of the communication protocol used by the firmware.
+    repeated ThpPairingMethod pairing_methods = 5;    // The pairing methods supported by the Trezor.
+}
+
+/**
+ * @embed
+ */
+message ThpHandshakeCompletionReqNoisePayload {
+    optional bytes host_pairing_credential = 1;       // Host's pairing credential
+}
+
+/**
+ * Request: Ask device for a new session with given passphrase.
+ * @start
+ * @next Success
+ */
+message ThpCreateNewSession{
+    optional string passphrase = 1;
+    optional bool on_device = 2;       // User wants to enter passphrase on the device
+    optional bool derive_cardano = 3;  // If True, Cardano keys will be derived. Ignored with BTC-only
+}
+
+
+/**
+ * Request: Start pairing process.
+ * @start
+ * @next ThpPairingRequestApproved
+ */
+message ThpPairingRequest{
+    optional string host_name = 1;     // Human-readable host name
+}
+
+/**
+ * Response: Host is allowed to start pairing process.
+ * @start
+ * @next ThpSelectMethod
+ */
+message ThpPairingRequestApproved{
+}
+
+/**
+ * Request: Start pairing using the method selected.
+ * @start
+ * @next ThpPairingPreparationsFinished
+ * @next ThpCodeEntryCommitment
+ */
+message ThpSelectMethod {
+    optional ThpPairingMethod selected_pairing_method = 1;
+}
+
+/**
+ * Response: Pairing is ready for user input / OOB communication.
+ * @next ThpCodeEntryCpace
+ * @next ThpQrCodeTag
+ * @next ThpNfcTagHost
+ */
+message ThpPairingPreparationsFinished{
+}
+
+/**
+ * Response: If Code Entry is an allowed pairing option, Trezor responds with a commitment.
+ * @next ThpCodeEntryChallenge
+ */
+message ThpCodeEntryCommitment {
+    optional bytes commitment = 1;     // SHA-256 of Trezor's random 32-byte secret
+}
+
+/**
+ * Response: Host responds to Trezor's Code Entry commitment with a challenge.
+ * @next ThpCodeEntryCpaceTrezor
+ */
+message ThpCodeEntryChallenge {
+    optional bytes challenge = 1;      // Host's random 32-byte challenge
+}
+
+
+
+/**
+ * Response: Trezor continues with the CPACE protocol.
+ * @next ThpCodeEntryCpaceHostTag
+ */
+message ThpCodeEntryCpaceTrezor {
+    optional bytes cpace_trezor_public_key = 1;  // Trezor's ephemeral CPace public key
+}
+
+/**
+ * Request: User selected Code Entry option in Host. Host starts CPACE protocol with Trezor.
+ * @next ThpCodeEntrySecret
+ */
+ message ThpCodeEntryCpaceHostTag {
+    optional bytes cpace_host_public_key = 1;    // Host's ephemeral CPace public key
+    optional bytes tag = 2;                      // SHA-256 of shared secret
+
+}
+
+/**
+ * Response: Trezor finishes the CPACE protocol.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpCodeEntrySecret {
+    optional bytes secret = 1;    // Trezor's secret
+}
+
+/**
+ * Request: User selected QR Code pairing option. Host sends a QR Tag.
+ * @next ThpQrCodeSecret
+ */
+message ThpQrCodeTag {
+    optional bytes tag = 1;       // SHA-256 of shared secret
+}
+
+/**
+ * Response: Trezor sends the QR secret.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpQrCodeSecret {
+    optional bytes secret = 1;    // Trezor's secret
+}
+
+/**
+ * Request: User selected Unidirectional NFC pairing option. Host sends an Unidirectional NFC Tag.
+ * @next ThpNfcTagTrezor
+ */
+message ThpNfcTagHost {
+    optional bytes tag = 1;       // Host's tag
+}
+
+/**
+ * Response: Trezor sends the Unidirectioal NFC secret.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpNfcTagTrezor {
+    optional bytes tag = 1;       // Trezor's tag
+}
+
+/**
+ * Request: Host requests issuance of a new pairing credential.
+ * @start
+ * @next ThpCredentialResponse
+ */
+message ThpCredentialRequest {
+    optional bytes host_static_pubkey = 1;       // Host's static public key identifying the credential.
+    optional bool autoconnect = 2;               // Whether host wants to autoconnect without user confirmation
+}
+
+/**
+ * Response: Trezor issues a new pairing credential.
+ * @next ThpCredentialRequest
+ * @next ThpEndRequest
+ */
+message ThpCredentialResponse {
+    optional bytes trezor_static_pubkey = 1;     // Trezor's static public key used in the handshake.
+    optional bytes credential = 2;               // The pairing credential issued by the Trezor to the host.
+}
+
+/**
+ * Request: Host requests transition to the encrypted traffic phase.
+ * @start
+ * @next ThpEndResponse
+ */
+message ThpEndRequest {}
+
+/**
+ * Response: Trezor approves transition to the encrypted traffic phase
+ * @end
+ */
+message ThpEndResponse {}
+
+/**
  * Only for internal use.
  * @embed
  */
  message ThpCredentialMetadata {
     option (internal_only) = true;
     optional string host_name = 1;     // Human-readable host name
+    optional bool autoconnect = 2;     // Whether host is allowed to autoconnect without user confirmation
 }
 
 /**
