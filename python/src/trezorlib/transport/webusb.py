@@ -20,14 +20,11 @@ import atexit
 import logging
 import sys
 import time
-from typing import Iterable
-
-from typing_extensions import Self
+from typing import Iterable, List
 
 from ..log import DUMP_PACKETS
 from ..models import TREZORS, TrezorModel
-from . import UDEV_RULES_STR, DeviceIsBusy, Timeout, TransportException
-from .protocol import ProtocolBasedTransport, ProtocolV1
+from . import UDEV_RULES_STR, DeviceIsBusy, Timeout, Transport, TransportException
 
 LOG = logging.getLogger(__name__)
 
@@ -48,13 +45,69 @@ USB_COMM_TIMEOUT_MS = 300
 WEBUSB_CHUNK_SIZE = 64
 
 
-class WebUsbHandle:
-    def __init__(self, device: usb1.USBDevice, debug: bool = False) -> None:
+class WebUsbTransport(Transport):
+    """
+    WebUsbTransport implements transport over WebUSB interface.
+    """
+
+    PATH_PREFIX = "webusb"
+    ENABLED = USB_IMPORTED
+    context = None
+    CHUNK_SIZE = 64
+
+    def __init__(
+        self,
+        device: "usb1.USBDevice",
+        debug: bool = False,
+    ) -> None:
+
         self.device = device
+        self.debug = debug
+
         self.interface = DEBUG_INTERFACE if debug else INTERFACE
         self.endpoint = DEBUG_ENDPOINT if debug else ENDPOINT
-        self.count = 0
         self.handle: usb1.USBDeviceHandle | None = None
+
+        super().__init__()
+
+    @classmethod
+    def enumerate(
+        cls, models: Iterable["TrezorModel"] | None = None, usb_reset: bool = False
+    ) -> Iterable["WebUsbTransport"]:
+        if cls.context is None:
+            cls.context = usb1.USBContext()
+            cls.context.open()
+            atexit.register(cls.context.close)
+
+        if models is None:
+            models = TREZORS
+        usb_ids = [id for model in models for id in model.usb_ids]
+        devices: List["WebUsbTransport"] = []
+        for dev in cls.context.getDeviceIterator(skip_on_error=True):
+            usb_id = (dev.getVendorID(), dev.getProductID())
+            if usb_id not in usb_ids:
+                continue
+            if not is_vendor_class(dev):
+                continue
+            if usb_reset:
+                handle = dev.open()
+                handle.resetDevice()
+                handle.close()
+                continue
+            try:
+                # workaround for issue #223:
+                # on certain combinations of Windows USB drivers and libusb versions,
+                # Trezor is returned twice (possibly because Windows know it as both
+                # a HID and a WebUSB device), and one of the returned devices is
+                # non-functional.
+                dev.getProduct()
+                devices.append(WebUsbTransport(dev))
+            except usb1.USBErrorNotSupported:
+                pass
+        return devices
+
+    def get_path(self) -> str:
+        return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
 
     def open(self) -> None:
         self.handle = self.device.open()
@@ -68,6 +121,8 @@ class WebUsbHandle:
             self.handle.claimInterface(self.interface)
         except usb1.USBErrorAccess as e:
             raise DeviceIsBusy(self.device) from e
+        except usb1.USBErrorBusy as e:
+            raise DeviceIsBusy(self.device) from e
 
     def close(self) -> None:
         if self.handle is not None:
@@ -79,6 +134,8 @@ class WebUsbHandle:
         self.handle = None
 
     def write_chunk(self, chunk: bytes) -> None:
+        if self.handle is None:
+            self.open()
         assert self.handle is not None
         if len(chunk) != WEBUSB_CHUNK_SIZE:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
@@ -119,73 +176,7 @@ class WebUsbHandle:
             except Exception as e:
                 raise TransportException(f"USB read failed: {e}") from e
 
-
-class WebUsbTransport(ProtocolBasedTransport):
-    """
-    WebUsbTransport implements transport over WebUSB interface.
-    """
-
-    PATH_PREFIX = "webusb"
-    ENABLED = USB_IMPORTED
-    context = None
-
-    def __init__(
-        self,
-        device: usb1.USBDevice,
-        handle: WebUsbHandle | None = None,
-        debug: bool = False,
-    ) -> None:
-        if handle is None:
-            handle = WebUsbHandle(device, debug)
-
-        self.device = device
-        self.handle = handle
-        self.debug = debug
-
-        super().__init__(protocol=ProtocolV1(handle))
-
-    def get_path(self) -> str:
-        return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
-
-    @classmethod
-    def enumerate(
-        cls,
-        models: Iterable[TrezorModel] | None = None,
-        usb_reset: bool = False,
-    ) -> Iterable[WebUsbTransport]:
-        if cls.context is None:
-            cls.context = usb1.USBContext()
-            cls.context.open()
-            atexit.register(cls.context.close)
-
-        if models is None:
-            models = TREZORS
-        usb_ids = [id for model in models for id in model.usb_ids]
-        devices: list[WebUsbTransport] = []
-        for dev in cls.context.getDeviceIterator(skip_on_error=True):
-            usb_id = (dev.getVendorID(), dev.getProductID())
-            if usb_id not in usb_ids:
-                continue
-            if not is_vendor_class(dev):
-                continue
-            try:
-                # workaround for issue #223:
-                # on certain combinations of Windows USB drivers and libusb versions,
-                # Trezor is returned twice (possibly because Windows know it as both
-                # a HID and a WebUSB device), and one of the returned devices is
-                # non-functional.
-                dev.getProduct()
-                devices.append(WebUsbTransport(dev))
-            except usb1.USBErrorNotSupported:
-                pass
-            except usb1.USBErrorPipe:
-                if usb_reset:
-                    handle = dev.open()
-                    handle.resetDevice()
-                    handle.close()
-        return devices
-
-    def find_debug(self) -> Self:
+    def find_debug(self) -> "WebUsbTransport":
         # For v1 protocol, find debug USB interface for the same serial number
         return self.__class__(self.device, debug=True)
 
