@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import nem
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import MNEMONIC12
@@ -31,9 +31,9 @@ pytestmark = [
 
 
 # assertion data from T1
-def test_nem_signtx_aggregate_modification(client: Client):
+def test_nem_signtx_aggregate_modification(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 74649215,
@@ -61,9 +61,9 @@ def test_nem_signtx_aggregate_modification(client: Client):
     )
 
 
-def test_nem_signtx_multisig(client: Client):
+def test_nem_signtx_multisig(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 1,
@@ -98,7 +98,7 @@ def test_nem_signtx_multisig(client: Client):
     )
 
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 74649215,
@@ -132,9 +132,9 @@ def test_nem_signtx_multisig(client: Client):
     )
 
 
-def test_nem_signtx_multisig_signer(client: Client):
+def test_nem_signtx_multisig_signer(session: Session):
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 333,
@@ -169,7 +169,7 @@ def test_nem_signtx_multisig_signer(client: Client):
     )
 
     tx = nem.sign_tx(
-        client,
+        session,
         parse_path("m/44h/1h/0h/0h/0h"),
         {
             "timeStamp": 900000,

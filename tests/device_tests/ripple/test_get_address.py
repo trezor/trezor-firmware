@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.ripple import get_address
 from trezorlib.tools import parse_path
 
@@ -43,28 +43,28 @@ TEST_VECTORS = [
 
 
 @pytest.mark.parametrize("path, expected_address", TEST_VECTORS)
-def test_ripple_get_address(client: Client, path: str, expected_address: str):
-    address = get_address(client, parse_path(path), show_display=True)
+def test_ripple_get_address(session: Session, path: str, expected_address: str):
+    address = get_address(session, parse_path(path), show_display=True)
     assert address == expected_address
 
 
 @pytest.mark.parametrize("path, expected_address", TEST_VECTORS)
 def test_ripple_get_address_chunkify_details(
-    client: Client, path: str, expected_address: str
+    session: Session, path: str, expected_address: str
 ):
-    with client:
+    with session.client as client:
         IF = InputFlowShowAddressQRCode(client)
         client.set_input_flow(IF.get())
         address = get_address(
-            client, parse_path(path), show_display=True, chunkify=True
+            session, parse_path(path), show_display=True, chunkify=True
         )
         assert address == expected_address
 
 
 @pytest.mark.setup_client(mnemonic=CUSTOM_MNEMONIC)
-def test_ripple_get_address_other(client: Client):
+def test_ripple_get_address_other(session: Session):
     # data from https://github.com/you21979/node-ripple-bip32/blob/master/test/test.js
-    address = get_address(client, parse_path("m/44h/144h/0h/0/0"))
+    address = get_address(session, parse_path("m/44h/144h/0h/0/0"))
     assert address == "r4ocGE47gm4G4LkA9mriVHQqzpMLBTgnTY"
-    address = get_address(client, parse_path("m/44h/144h/0h/0/1"))
+    address = get_address(session, parse_path("m/44h/144h/0h/0/1"))
     assert address == "rUt9ULSrUvfCmke8HTFU1szbmFpWzVbBXW"
