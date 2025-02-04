@@ -30,6 +30,16 @@ XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7
 PIN4 = "1234"
 
 
+@pytest.mark.protocol("protocol_v2")
+def test_thp_end_session(client: Client):
+    session = client.get_session()
+
+    msg = session.call(messages.EndSession())
+    assert isinstance(msg, messages.Success)
+    with pytest.raises(TrezorFailure, match="ThpUnallocatedSession"):
+        session.call(messages.GetFeatures())
+
+
 @pytest.mark.setup_client(pin=PIN4, passphrase="")
 def test_clear_session(client: Client):
     is_t1 = client.model is models.T1B1

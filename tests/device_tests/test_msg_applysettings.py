@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, device, exceptions, messages, misc, models
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
@@ -205,6 +206,10 @@ def test_apply_homescreen_toif(session: Session):
 
 @pytest.mark.models(skip=["legacy", "safe3"])
 def test_apply_homescreen_jpeg(session: Session):
+    if session.protocol_version is ProtocolVersion.PROTOCOL_V2:
+        raise Exception(
+            "FAILS BECAUSE THE MESSAGE IS BIGGER THAN THE INTERNAL READ BUFFER"
+        )
     with open(HERE / "test_bg.jpg", "rb") as f:
         img = f.read()
         # raise Exception("FAILS FOR SOME REASON ")

@@ -62,6 +62,8 @@ def _assert_protection(
         session.client.refresh_features()
         assert session.client.features.pin_protection is pin
         assert session.client.features.passphrase_protection is passphrase
+        if session.protocol_version == ProtocolVersion.PROTOCOL_V2:
+            new_session = session.client.get_session()
         session.lock()
         # session.end()
     if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
@@ -69,6 +71,7 @@ def _assert_protection(
     return new_session
 
 
+@pytest.mark.protocol("protocol_v1")
 def test_initialize(session: Session):
     with session:
         session.client.use_pin_sequence([PIN4])
