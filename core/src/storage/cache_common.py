@@ -14,6 +14,14 @@ if not utils.BITCOIN_ONLY:
     APP_CARDANO_ICARUS_TREZOR_SECRET = const(6)
     APP_MONERO_LIVE_REFRESH = const(7)
 
+# Cache keys for THP channel
+if utils.USE_THP:
+    CHANNEL_HANDSHAKE_HASH = const(0)
+    CHANNEL_KEY_RECEIVE = const(1)
+    CHANNEL_KEY_SEND = const(2)
+    CHANNEL_NONCE_RECEIVE = const(3)
+    CHANNEL_NONCE_SEND = const(4)
+
 # Keys that are valid across sessions
 SESSIONLESS_FLAG = const(128)
 APP_COMMON_SEED_WITHOUT_PASSPHRASE = const(0 | SESSIONLESS_FLAG)

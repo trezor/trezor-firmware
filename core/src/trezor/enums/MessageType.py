@@ -103,6 +103,8 @@ if __debug__:
     DebugLinkWatchLayout = 9006
     DebugLinkResetDebugEvents = 9007
     DebugLinkOptigaSetSecMax = 9008
+    DebugLinkGetPairingInfo = 9009
+    DebugLinkPairingInfo = 9010
 if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80
