@@ -18,20 +18,19 @@ from typing import TYPE_CHECKING
 
 from . import messages
 from .protobuf import dict_to_proto
-from .tools import session
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .tools import Address
+    from .transport.session import Session
 
 
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
 ) -> str:
-    return client.call(
+    return session.call(
         messages.BinanceGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         ),
@@ -40,17 +39,16 @@ def get_address(
 
 
 def get_public_key(
-    client: "TrezorClient", address_n: "Address", show_display: bool = False
+    session: "Session", address_n: "Address", show_display: bool = False
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.BinanceGetPublicKey(address_n=address_n, show_display=show_display),
         expect=messages.BinancePublicKey,
     ).public_key
 
 
-@session
 def sign_tx(
-    client: "TrezorClient", address_n: "Address", tx_json: dict, chunkify: bool = False
+    session: "Session", address_n: "Address", tx_json: dict, chunkify: bool = False
 ) -> messages.BinanceSignedTx:
     msg = tx_json["msgs"][0]
     tx_msg = tx_json.copy()
@@ -59,7 +57,7 @@ def sign_tx(
     tx_msg["chunkify"] = chunkify
     envelope = dict_to_proto(messages.BinanceSignTx, tx_msg)
 
-    client.call(envelope, expect=messages.BinanceTxRequest)
+    session.call(envelope, expect=messages.BinanceTxRequest)
 
     if "refid" in msg:
         msg = dict_to_proto(messages.BinanceCancelMsg, msg)
@@ -70,4 +68,4 @@ def sign_tx(
     else:
         raise ValueError("can not determine msg type")
 
-    return client.call(msg, expect=messages.BinanceSignedTx)
+    return session.call(msg, expect=messages.BinanceSignedTx)
