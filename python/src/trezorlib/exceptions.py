@@ -85,3 +85,7 @@ class UnexpectedMessageError(TrezorException):
         self.expected = expected
         self.actual = actual
         super().__init__(f"Expected {expected.__name__} but Trezor sent {actual}")
+
+
+class DeviceLockedException(TrezorException):
+    pass
