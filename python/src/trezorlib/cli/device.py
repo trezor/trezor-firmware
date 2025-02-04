@@ -25,10 +25,10 @@ import requests
 
 from .. import authentication, debuglink, device, exceptions, messages, ui
 from ..tools import format_path
-from . import ChoiceType, with_client
+from . import ChoiceType, with_session
 
 if t.TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
     from . import TrezorConnection
 
 RECOVERY_DEVICE_INPUT_METHOD = {
@@ -64,17 +64,18 @@ def cli() -> None:
     help="Wipe device in bootloader mode. This also erases the firmware.",
     is_flag=True,
 )
-@with_client
-def wipe(client: "TrezorClient", bootloader: bool) -> None:
+@with_session(seedless=True)
+def wipe(session: "Session", bootloader: bool) -> None:
     """Reset device to factory defaults and remove all private data."""
+    features = session.features
     if bootloader:
-        if not client.features.bootloader_mode:
+        if not features.bootloader_mode:
             click.echo("Please switch your device to bootloader mode.")
             sys.exit(1)
         else:
             click.echo("Wiping user data and firmware!")
     else:
-        if client.features.bootloader_mode:
+        if features.bootloader_mode:
             click.echo(
                 "Your device is in bootloader mode. This operation would also erase firmware."
             )
@@ -86,7 +87,11 @@ def wipe(client: "TrezorClient", bootloader: bool) -> None:
         else:
             click.echo("Wiping user data!")
 
-    device.wipe(client)
+    try:
+        device.wipe(session)
+    except exceptions.TrezorFailure as e:
+        click.echo("Action failed: {} {}".format(*e.args))
+        sys.exit(3)
 
 
 @cli.command()
@@ -99,9 +104,9 @@ def wipe(client: "TrezorClient", bootloader: bool) -> None:
 @click.option("-a", "--academic", is_flag=True)
 @click.option("-b", "--needs-backup", is_flag=True)
 @click.option("-n", "--no-backup", is_flag=True)
-@with_client
+@with_session(seedless=True)
 def load(
-    client: "TrezorClient",
+    session: "Session",
     mnemonic: t.Sequence[str],
     pin: str,
     passphrase_protection: bool,
@@ -132,7 +137,7 @@ def load(
 
     try:
         debuglink.load_device(
-            client,
+            session,
             mnemonic=list(mnemonic),
             pin=pin,
             passphrase_protection=passphrase_protection,
@@ -167,9 +172,9 @@ def load(
 )
 @click.option("-d", "--dry-run", is_flag=True)
 @click.option("-b", "--unlock-repeated-backup", is_flag=True)
-@with_client
+@with_session(seedless=True)
 def recover(
-    client: "TrezorClient",
+    session: "Session",
     words: str,
     expand: bool,
     pin_protection: bool,
@@ -197,7 +202,7 @@ def recover(
         type = messages.RecoveryType.UnlockRepeatedBackup
 
     device.recover(
-        client,
+        session,
         word_count=int(words),
         passphrase_protection=passphrase_protection,
         pin_protection=pin_protection,
@@ -219,9 +224,9 @@ def recover(
 @click.option("-n", "--no-backup", is_flag=True)
 @click.option("-b", "--backup-type", type=ChoiceType(BACKUP_TYPE))
 @click.option("-e", "--entropy-check-count", type=click.IntRange(0))
-@with_client
+@with_session(seedless=True)
 def setup(
-    client: "TrezorClient",
+    session: "Session",
     strength: int | None,
     passphrase_protection: bool,
     pin_protection: bool,
@@ -241,10 +246,10 @@ def setup(
     if (
         backup_type
         in (BT.Slip39_Single_Extendable, BT.Slip39_Basic, BT.Slip39_Basic_Extendable)
-        and messages.Capability.Shamir not in client.features.capabilities
+        and messages.Capability.Shamir not in session.features.capabilities
     ) or (
         backup_type in (BT.Slip39_Advanced, BT.Slip39_Advanced_Extendable)
-        and messages.Capability.ShamirGroups not in client.features.capabilities
+        and messages.Capability.ShamirGroups not in session.features.capabilities
     ):
         click.echo(
             "WARNING: Your Trezor device does not indicate support for the requested\n"
@@ -252,7 +257,7 @@ def setup(
         )
 
     path_xpubs = device.setup(
-        client,
+        session,
         strength=strength,
         passphrase_protection=passphrase_protection,
         pin_protection=pin_protection,
@@ -273,22 +278,21 @@ def setup(
 @cli.command()
 @click.option("-t", "--group-threshold", type=int)
 @click.option("-g", "--group", "groups", type=(int, int), multiple=True, metavar="T N")
-@with_client
+@with_session(seedless=True)
 def backup(
-    client: "TrezorClient",
+    session: "Session",
     group_threshold: int | None = None,
     groups: t.Sequence[tuple[int, int]] = (),
 ) -> None:
     """Perform device seed backup."""
-    device.backup(client, group_threshold, groups)
+
+    device.backup(session, group_threshold, groups)
 
 
 @cli.command()
 @click.argument("operation", type=ChoiceType(SD_PROTECT_OPERATIONS))
-@with_client
-def sd_protect(
-    client: "TrezorClient", operation: messages.SdProtectOperationType
-) -> None:
+@with_session(seedless=True)
+def sd_protect(session: "Session", operation: messages.SdProtectOperationType) -> None:
     """Secure the device with SD card protection.
 
     When SD card protection is enabled, a randomly generated secret is stored
@@ -302,33 +306,33 @@ def sd_protect(
     off - Remove SD card secret protection.
     refresh - Replace the current SD card secret with a new one.
     """
-    if client.features.model == "1":
+    if session.features.model == "1":
         raise click.ClickException("Trezor One does not support SD card protection.")
-    device.sd_protect(client, operation)
+    device.sd_protect(session, operation)
 
 
 @cli.command()
 @click.pass_obj
 def reboot_to_bootloader(obj: "TrezorConnection") -> None:
     """Reboot device into bootloader mode."""
-    # avoid using @with_client because it closes the session afterwards,
+    # avoid using @with_session because it closes the session afterwards,
     # which triggers double prompt on device
     with obj.client_context() as client:
-        device.reboot_to_bootloader(client)
+        device.reboot_to_bootloader(client.get_seedless_session())
 
 
 @cli.command()
-@with_client
-def tutorial(client: "TrezorClient") -> None:
+@with_session(seedless=True)
+def tutorial(session: "Session") -> None:
     """Show on-device tutorial."""
-    device.show_device_tutorial(client)
+    device.show_device_tutorial(session)
 
 
 @cli.command()
-@with_client
-def unlock_bootloader(client: "TrezorClient") -> None:
+@with_session(seedless=True)
+def unlock_bootloader(session: "Session") -> None:
     """Unlocks bootloader. Irreversible."""
-    device.unlock_bootloader(client)
+    device.unlock_bootloader(session)
 
 
 @cli.command()
@@ -339,12 +343,11 @@ def unlock_bootloader(client: "TrezorClient") -> None:
     type=int,
     help="Dialog expiry in seconds.",
 )
-@with_client
-def set_busy(client: "TrezorClient", enable: bool | None, expiry: int | None) -> None:
+@with_session(seedless=True)
+def set_busy(session: "Session", enable: bool | None, expiry: int | None) -> None:
     """Show a "Do not disconnect" dialog."""
     if enable is False:
-        device.set_busy(client, None)
-        return
+        device.set_busy(session, None)
 
     if expiry is None:
         raise click.ClickException("Missing option '-e' / '--expiry'.")
@@ -354,7 +357,7 @@ def set_busy(client: "TrezorClient", enable: bool | None, expiry: int | None) ->
             f"Invalid value for '-e' / '--expiry': '{expiry}' is not a positive integer."
         )
 
-    device.set_busy(client, expiry * 1000)
+    device.set_busy(session, expiry * 1000)
 
 
 PUBKEY_WHITELIST_URL_TEMPLATE = (
@@ -374,9 +377,9 @@ PUBKEY_WHITELIST_URL_TEMPLATE = (
     is_flag=True,
     help="Do not check intermediate certificates against the whitelist.",
 )
-@with_client
+@with_session(seedless=True)
 def authenticate(
-    client: "TrezorClient",
+    session: "Session",
     hex_challenge: str | None,
     root: t.BinaryIO | None,
     raw: bool | None,
@@ -397,7 +400,7 @@ def authenticate(
     challenge = bytes.fromhex(hex_challenge)
 
     if raw:
-        msg = device.authenticate(client, challenge)
+        msg = device.authenticate(session, challenge)
 
         click.echo(f"Challenge: {hex_challenge}")
         click.echo(f"Signature of challenge: {msg.signature.hex()}")
@@ -436,14 +439,14 @@ def authenticate(
     else:
         whitelist_json = requests.get(
             PUBKEY_WHITELIST_URL_TEMPLATE.format(
-                model=client.model.internal_name.lower()
+                model=session.model.internal_name.lower()
             )
         ).json()
         whitelist = [bytes.fromhex(pk) for pk in whitelist_json["ca_pubkeys"]]
 
     try:
         authentication.authenticate_device(
-            client, challenge, root_pubkey=root_bytes, whitelist=whitelist
+            session, challenge, root_pubkey=root_bytes, whitelist=whitelist
         )
     except authentication.DeviceNotAuthentic:
         click.echo("Device is not authentic.")
