@@ -20,62 +20,66 @@ import pytest
 
 from trezorlib import btc, device
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 PIN = "1234"
 
 
-def _assert_busy(client: Client, should_be_busy: bool, screen: str = "Homescreen"):
-    assert client.features.busy is should_be_busy
-    if client.layout_type is not LayoutType.T1:
+def _assert_busy(session: Session, should_be_busy: bool, screen: str = "Homescreen"):
+    assert session.features.busy is should_be_busy
+    if session.client.layout_type is not LayoutType.T1:
         if should_be_busy:
-            assert "CoinJoinProgress" in client.debug.read_layout().all_components()
+            assert (
+                "CoinJoinProgress"
+                in session.client.debug.read_layout().all_components()
+            )
         else:
-            assert client.debug.read_layout().main_component() == screen
+            assert session.client.debug.read_layout().main_component() == screen
 
 
 @pytest.mark.setup_client(pin=PIN)
-def test_busy_state(client: Client):
-    _assert_busy(client, False, "Lockscreen")
-    assert client.features.unlocked is False
+def test_busy_state(session: Session):
+    _assert_busy(session, False, "Lockscreen")
+    assert session.features.unlocked is False
 
     # Show busy dialog for 1 minute.
-    device.set_busy(client, expiry_ms=60 * 1000)
-    _assert_busy(client, True)
-    assert client.features.unlocked is False
+    device.set_busy(session, expiry_ms=60 * 1000)
+    _assert_busy(session, True)
+    assert session.features.unlocked is False
 
-    with client:
+    with session.client as client:
         client.use_pin_sequence([PIN])
         btc.get_address(
-            client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), show_display=True
+            session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), show_display=True
         )
 
-    client.refresh_features()
-    _assert_busy(client, True)
-    assert client.features.unlocked is True
+    session.refresh_features()
+    _assert_busy(session, True)
+    assert session.features.unlocked is True
 
     # Hide the busy dialog.
-    device.set_busy(client, None)
+    device.set_busy(session, None)
 
-    _assert_busy(client, False)
-    assert client.features.unlocked is True
+    _assert_busy(session, False)
+    assert session.features.unlocked is True
 
 
 @pytest.mark.models("core")
-def test_busy_expiry_core(client: Client):
+def test_busy_expiry_core(session: Session):
     WAIT_TIME_MS = 1500
     TOLERANCE = 1000
 
-    _assert_busy(client, False)
+    _assert_busy(session, False)
     # Start a timer
     start = time.monotonic()
     # Show the busy dialog.
-    device.set_busy(client, expiry_ms=WAIT_TIME_MS)
-    _assert_busy(client, True)
+    device.set_busy(session, expiry_ms=WAIT_TIME_MS)
+    _assert_busy(session, True)
 
     # Wait until the layout changes
-    client.debug.wait_layout()
+    time.sleep(0.1)  # Improves stability of the test for devices with THP
+    session.client.debug.wait_layout()
     end = time.monotonic()
 
     # Check that the busy dialog was shown for at least WAIT_TIME_MS.
@@ -84,26 +88,26 @@ def test_busy_expiry_core(client: Client):
 
     # Check that the device is no longer busy.
     # Also needs to come back to Homescreen (for UI tests).
-    client.refresh_features()
-    _assert_busy(client, False)
+    session.refresh_features()
+    _assert_busy(session, False)
 
 
 @pytest.mark.flaky(reruns=5)
 @pytest.mark.models("legacy")
-def test_busy_expiry_legacy(client: Client):
-    _assert_busy(client, False)
+def test_busy_expiry_legacy(session: Session):
+    _assert_busy(session, False)
     # Show the busy dialog.
-    device.set_busy(client, expiry_ms=1500)
-    _assert_busy(client, True)
+    device.set_busy(session, expiry_ms=1500)
+    _assert_busy(session, True)
 
     # Hasn't expired yet.
     time.sleep(0.1)
-    _assert_busy(client, True)
+    _assert_busy(session, True)
 
     # Wait for it to expire. Add some tolerance to account for CI/hardware slowness.
     time.sleep(4.0)
 
     # Check that the device is no longer busy.
     # Also needs to come back to Homescreen (for UI tests).
-    client.refresh_features()
-    _assert_busy(client, False)
+    session.refresh_features()
+    _assert_busy(session, False)

@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ...common import MNEMONIC_SLIP39_ADVANCED_20, MNEMONIC_SLIP39_ADVANCED_33
 from ...input_flows import (
@@ -28,7 +28,7 @@ from ...input_flows import (
     InputFlowSlip39AdvancedRecoveryThresholdReached,
 )
 
-pytestmark = pytest.mark.models("core")
+pytestmark = [pytest.mark.models("core"), pytest.mark.uninitialized_session]
 
 EXTRA_GROUP_SHARE = [
     "eraser senior decision smug corner ruin rescue cubic angel tackle skin skunk program roster trash rumor slush angel flea amazing"
@@ -46,98 +46,98 @@ VECTORS = (
 
 # To allow reusing functionality for multiple tests
 def _test_secret(
-    client: Client, shares: list[str], secret: str, click_info: bool = False
+    session: Session, shares: list[str], secret: str, click_info: bool = False
 ):
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecovery(client, shares, click_info=click_info)
         client.set_input_flow(IF.get())
         device.recover(
-            client,
+            session,
             pin_protection=False,
             passphrase_protection=False,
             label="label",
         )
 
-    assert client.features.initialized is True
-    assert client.features.pin_protection is False
-    assert client.features.passphrase_protection is False
-    assert client.features.backup_type is messages.BackupType.Slip39_Advanced
-    assert client.debug.state().mnemonic_secret.hex() == secret
+    assert session.features.initialized is True
+    assert session.features.pin_protection is False
+    assert session.features.passphrase_protection is False
+    assert session.features.backup_type is messages.BackupType.Slip39_Advanced
+    assert session.client.debug.state().mnemonic_secret.hex() == secret
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
-def test_secret(client: Client, shares: list[str], secret: str):
-    _test_secret(client, shares, secret)
+def test_secret(session: Session, shares: list[str], secret: str):
+    _test_secret(session, shares, secret)
 
 
 @pytest.mark.parametrize("shares, secret", VECTORS)
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.models(skip="safe3", reason="safe3 does not have info button")
-def test_secret_click_info_button(client: Client, shares: list[str], secret: str):
-    _test_secret(client, shares, secret, click_info=True)
+def test_secret_click_info_button(session: Session, shares: list[str], secret: str):
+    _test_secret(session, shares, secret, click_info=True)
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_extra_share_entered(client: Client):
+def test_extra_share_entered(session: Session):
     _test_secret(
-        client,
+        session,
         shares=EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20,
         secret=VECTORS[0][1],
     )
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_abort(client: Client):
-    with client:
+def test_abort(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryAbort(client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is False
+            device.recover(session, pin_protection=False, label="label")
+        session.refresh_features()
+        assert session.features.initialized is False
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_noabort(client: Client):
-    with client:
+def test_noabort(session: Session):
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryNoAbort(
             client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
         client.set_input_flow(IF.get())
-        device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is True
+        device.recover(session, pin_protection=False, label="label")
+        session.refresh_features()
+        assert session.features.initialized is True
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_same_share(client: Client):
+def test_same_share(session: Session):
     # we choose the second share from the fixture because
     # the 1st is 1of1 and group threshold condition is reached first
     first_share = MNEMONIC_SLIP39_ADVANCED_20[1].split(" ")
     # second share is first 4 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[1].split(" ")[:4]
 
-    with client:
+    with session, session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(
-            client, first_share, second_share
+            session, first_share, second_share
         )
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(session, pin_protection=False, label="label")
 
 
 @pytest.mark.setup_client(uninitialized=True)
-def test_group_threshold_reached(client: Client):
+def test_group_threshold_reached(session: Session):
     # first share in the fixture is 1of1 so we choose that
     first_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")
     # second share is first 3 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")[:3]
 
-    with client:
+    with session, session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryThresholdReached(
-            client, first_share, second_share
+            session, first_share, second_share
         )
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
+            device.recover(session, pin_protection=False, label="label")

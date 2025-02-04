@@ -15,21 +15,23 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 
-def test_ping(client: Client):
-    with client:
-        client.set_expected_responses([messages.Success])
-        res = client.ping("random data")
-        assert res == "random data"
+def test_ping(session: Session):
+    with session:
+        session.set_expected_responses([messages.Success])
+        res = session.call(messages.Ping(message="random data"))
+        assert res.message == "random data"
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.Success,
             ]
         )
-        res = client.ping("random data", button_protection=True)
-        assert res == "random data"
+        res = session.call(
+            messages.Ping(message="random data 2", button_protection=True)
+        )
+        assert res.message == "random data 2"
