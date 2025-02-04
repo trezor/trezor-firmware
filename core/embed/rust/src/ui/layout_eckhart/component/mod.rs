@@ -5,6 +5,7 @@ mod error;
 mod header;
 mod hint;
 mod result;
+mod select_word_screen;
 mod share_words;
 mod text_screen;
 mod vertical_menu;
@@ -17,6 +18,7 @@ pub use error::ErrorScreen;
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
+pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 #[cfg(feature = "translations")]
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
