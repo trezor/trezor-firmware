@@ -288,9 +288,10 @@ def cli(
             label = "Emulator"
 
         assert emulator.client is not None
-        trezorlib.device.wipe(emulator.client)
+        trezorlib.device.wipe(emulator.client.get_seedless_session())
+
         trezorlib.debuglink.load_device(
-            emulator.client,
+            emulator.client.get_seedless_session(),
             mnemonics,
             pin=None,
             passphrase_protection=False,
