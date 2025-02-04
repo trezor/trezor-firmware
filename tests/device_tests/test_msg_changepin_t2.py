@@ -19,7 +19,7 @@ import pytest
 from trezorlib import btc, device, messages
 from trezorlib.client import MAX_PIN_LENGTH, PASSPHRASE_TEST_PATH
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
 from ..input_flows import (
@@ -35,170 +35,172 @@ PIN_MAX = "".join(chr((i % 10) + ord("0")) for i in range(MAX_PIN_LENGTH))
 pytestmark = pytest.mark.models("core")
 
 
-def _check_pin(client: Client, pin: str):
-    client.lock()
-    assert client.features.pin_protection is True
-    assert client.features.unlocked is False
+def _check_pin(session: Session, pin: str):
 
-    with client:
-        client.use_pin_sequence([pin])
-        client.set_expected_responses([messages.ButtonRequest, messages.Address])
-        btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
-
-
-def _check_no_pin(client: Client):
-    client.lock()
-    assert client.features.pin_protection is False
-
-    with client:
-        client.set_expected_responses([messages.Address])
-        btc.get_address(client, "Testnet", PASSPHRASE_TEST_PATH)
+    with session, session.client as client:
+        client.ui.__init__(client.debug)
+        client.use_pin_sequence([pin, pin, pin, pin, pin, pin])
+        session.lock()
+        assert session.features.pin_protection is True
+        assert session.features.unlocked is False
+        session.set_expected_responses([messages.ButtonRequest, messages.Address])
+        btc.get_address(session, "Testnet", PASSPHRASE_TEST_PATH)
 
 
-def test_set_pin(client: Client):
-    assert client.features.pin_protection is False
+def _check_no_pin(session: Session):
+    session.lock()
+    assert session.features.pin_protection is False
+
+    with session:
+        session.set_expected_responses([messages.Address])
+        btc.get_address(session, "Testnet", PASSPHRASE_TEST_PATH)
+
+
+def test_set_pin(session: Session):
+    assert session.features.pin_protection is False
 
     # Check that there's no PIN protection
-    _check_no_pin(client)
+    _check_no_pin(session)
 
     # Let's set new PIN
-    with client:
+    with session, session.client as client:
         if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 4
         client.use_pin_sequence([PIN_MAX, PIN_MAX])
-        client.set_expected_responses(
-            [messages.ButtonRequest] * br_count + [messages.Success, messages.Features]
+        session.set_expected_responses(
+            [messages.ButtonRequest] * br_count + [messages.Success]
         )
-        device.change_pin(client)
+        device.change_pin(session)
 
-    client.init_device()
-    assert client.features.pin_protection is True
-    _check_pin(client, PIN_MAX)
+    assert session.features.pin_protection is True
+    _check_pin(session, PIN_MAX)
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_pin(client: Client):
-    assert client.features.pin_protection is True
+def test_change_pin(session: Session):
+    assert session.features.pin_protection is True
 
     # Check current PIN value
-    _check_pin(client, PIN4)
+    _check_pin(session, PIN4)
 
     # Let's change PIN
-    with client:
+    with session, session.client as client:
         client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
         if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 5
-        client.set_expected_responses(
-            [messages.ButtonRequest] * br_count + [messages.Success, messages.Features]
+        session.set_expected_responses(
+            [messages.ButtonRequest] * br_count
+            + [messages.Success]  # , messages.Features]
         )
-        device.change_pin(client)
+        device.change_pin(session)
 
     # Check that there's still PIN protection now
-    client.init_device()
-    assert client.features.pin_protection is True
+    session.refresh_features()
+    assert session.features.pin_protection is True
     # Check that the PIN is correct
-    _check_pin(client, PIN_MAX)
+    _check_pin(session, PIN_MAX)
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_remove_pin(client: Client):
-    assert client.features.pin_protection is True
+def test_remove_pin(session: Session):
+    assert session.features.pin_protection is True
 
     # Check current PIN value
-    _check_pin(client, PIN4)
+    _check_pin(session, PIN4)
 
     # Let's remove PIN
-    with client:
+    with session, session.client as client:
         client.use_pin_sequence([PIN4])
-        client.set_expected_responses(
-            [messages.ButtonRequest] * 3 + [messages.Success, messages.Features]
+        session.set_expected_responses(
+            [messages.ButtonRequest] * 3 + [messages.Success]
         )
-        device.change_pin(client, remove=True)
+        device.change_pin(session, remove=True)
 
     # Check that there's no PIN protection now
-    client.init_device()
-    assert client.features.pin_protection is False
-    _check_no_pin(client)
+    session.refresh_features()
+    assert session.features.pin_protection is False
+    _check_no_pin(session)
 
 
-def test_set_failed(client: Client):
-    assert client.features.pin_protection is False
+def test_set_failed(session: Session):
+    assert session.features.pin_protection is False
 
     # Check that there's no PIN protection
-    _check_no_pin(client)
+    _check_no_pin(session)
 
-    with client, pytest.raises(TrezorFailure):
+    with session, session.client as client, pytest.raises(TrezorFailure):
         IF = InputFlowNewCodeMismatch(client, PIN4, PIN60, what="pin")
         client.set_input_flow(IF.get())
 
-        device.change_pin(client)
+        device.change_pin(session)
 
     # Check that there's still no PIN protection now
-    client.init_device()
-    assert client.features.pin_protection is False
-    _check_no_pin(client)
+    session.refresh_features()
+    assert session.features.pin_protection is False
+    _check_no_pin(session)
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_failed(client: Client):
-    assert client.features.pin_protection is True
+def test_change_failed(session: Session):
+    assert session.features.pin_protection is True
 
     # Check current PIN value
-    _check_pin(client, PIN4)
+    _check_pin(session, PIN4)
 
-    with client, pytest.raises(Cancelled):
-        IF = InputFlowCodeChangeFail(client, PIN4, "457891", "381847")
+    with session, session.client as client, pytest.raises(Cancelled):
+        IF = InputFlowCodeChangeFail(session, PIN4, "457891", "381847")
         client.set_input_flow(IF.get())
 
-        device.change_pin(client)
+        device.change_pin(session)
 
     # Check that there's still old PIN protection
-    client.init_device()
-    assert client.features.pin_protection is True
-    _check_pin(client, PIN4)
+    session.refresh_features()
+    assert session.features.pin_protection is True
+    _check_pin(session, PIN4)
 
 
 @pytest.mark.setup_client(pin=PIN4)
-def test_change_invalid_current(client: Client):
-    assert client.features.pin_protection is True
+def test_change_invalid_current(session: Session):
+    assert session.features.pin_protection is True
 
     # Check current PIN value
-    _check_pin(client, PIN4)
+    _check_pin(session, PIN4)
 
-    with client, pytest.raises(TrezorFailure):
+    with session, session.client as client, pytest.raises(TrezorFailure):
         IF = InputFlowWrongPIN(client, PIN60)
         client.set_input_flow(IF.get())
 
-        device.change_pin(client)
+        device.change_pin(session)
 
     # Check that there's still old PIN protection
-    client.init_device()
-    assert client.features.pin_protection is True
-    _check_pin(client, PIN4)
+    session.refresh_features()
+    assert session.features.pin_protection is True
+    _check_pin(session, PIN4)
 
 
 @pytest.mark.models("delizia")
 @pytest.mark.setup_client(pin=None)
-def test_pin_menu_cancel_setup(client: Client):
+def test_pin_menu_cancel_setup(session: Session):
     def cancel_pin_setup_input_flow():
         yield
+        debug = session.client.debug
         # enter context menu
-        client.debug.click(client.debug.screen_buttons.menu())
-        client.debug.synchronize_at("VerticalMenu")
+        debug.click(debug.screen_buttons.menu())
+        debug.synchronize_at("VerticalMenu")
         # click "Cancel PIN setup"
-        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
-        client.debug.synchronize_at("Paragraphs")
+        debug.click(debug.screen_buttons.vertical_menu_items()[0])
+        debug.synchronize_at("Paragraphs")
         # swipe through info screen
-        client.debug.swipe_up()
-        client.debug.synchronize_at("PromptScreen")
+        debug.swipe_up()
+        debug.synchronize_at("PromptScreen")
         # tap to confirm
-        client.debug.click(client.debug.screen_buttons.tap_to_confirm())
+        debug.click(debug.screen_buttons.tap_to_confirm())
 
-    with client, pytest.raises(Cancelled):
+    with session, session.client as client, pytest.raises(Cancelled):
         client.set_input_flow(cancel_pin_setup_input_flow)
-        client.call(messages.ChangePin())
-    _check_no_pin(client)
+        session.call(messages.ChangePin())
+    _check_no_pin(session)
