@@ -18,6 +18,7 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 from trezorlib.client import MAX_PIN_LENGTH
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
@@ -109,15 +110,16 @@ def test_set_remove_wipe_code(client: Client):
     assert client.features.wipe_code_protection is False
 
 
-def test_set_wipe_code_mismatch(client: Client):
+def test_set_wipe_code_mismatch(session: Session):
     # Check that there is no wipe code protection.
-    client.ensure_unlocked()
-    assert client.features.wipe_code_protection is False
+    session.ensure_unlocked()
+    session.refresh_features()
+    assert session.features.wipe_code_protection is False
 
     # Let's set a new wipe code.
-    with client:
+    with session.client as client, session:
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE6])
-        client.set_expected_responses(
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(),
                 messages.PinMatrixRequest(type=PinType.WipeCodeFirst),
@@ -126,10 +128,10 @@ def test_set_wipe_code_mismatch(client: Client):
             ]
         )
         with pytest.raises(exceptions.TrezorFailure):
-            device.change_wipe_code(client)
+            device.change_wipe_code(session)
 
     # Check that there is no wipe code protection.
-    client.init_device()
+    client.refresh_features()
     assert client.features.wipe_code_protection is False
 
 
@@ -183,24 +185,24 @@ def test_set_pin_to_wipe_code(client: Client):
 
 
 @pytest.mark.parametrize("invalid_wipe_code", ("1204", "", WIPE_CODE_TOO_LONG))
-def test_set_wipe_code_invalid(client: Client, invalid_wipe_code):
+def test_set_wipe_code_invalid(session: Session, invalid_wipe_code):
     # Let's set the wipe code
-    ret = client.call_raw(messages.ChangeWipeCode())
+    ret = session.call_raw(messages.ChangeWipeCode())
     assert isinstance(ret, messages.ButtonRequest)
 
     # Confirm
-    client.debug.press_yes()
-    ret = client.call_raw(messages.ButtonAck())
+    session.client.debug.press_yes()
+    ret = session.call_raw(messages.ButtonAck())
 
     # Enter a wipe code containing an invalid digit
     assert isinstance(ret, messages.PinMatrixRequest)
     assert ret.type == PinType.WipeCodeFirst
-    ret = client.call_raw(messages.PinMatrixAck(pin=invalid_wipe_code))
+    ret = session.call_raw(messages.PinMatrixAck(pin=invalid_wipe_code))
 
     # Ensure the invalid wipe code is detected
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no wipe code protection.
-    client.init_device()
-    client.ensure_unlocked()
-    assert client.features.wipe_code_protection is False
+    session.refresh_features()
+    session.ensure_unlocked()
+    assert session.features.wipe_code_protection is False
