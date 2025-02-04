@@ -29,6 +29,7 @@ from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
 from trezorlib import debuglink, log, models
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
@@ -274,6 +275,29 @@ def _client_unlocked(
     if _raw_client.model not in models_filter:
         pytest.skip(f"Skipping test for model {_raw_client.model.internal_name}")
 
+    protocol_marker: Mark | None = request.node.get_closest_marker("protocol")
+    if protocol_marker:
+        args = protocol_marker.args
+        protocol_version = _raw_client.protocol_version
+
+        if (
+            protocol_version == ProtocolVersion.PROTOCOL_V1
+            and "protocol_v1" not in args
+        ):
+            pytest.skip(
+                f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
+            )
+
+        if (
+            protocol_version == ProtocolVersion.PROTOCOL_V2
+            and "protocol_v2" not in args
+        ):
+            pytest.skip(
+                f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
+            )
+
+    if _raw_client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+        pass
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
         raise RuntimeError(
