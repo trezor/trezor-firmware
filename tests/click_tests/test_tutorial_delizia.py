@@ -47,7 +47,7 @@ def test_tutorial_ignore_menu(device_handler: "BackgroundDeviceHandler"):
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.TAP_TO_CONFIRM, hold_ms=1000)
+    debug.click(buttons.TAP_TO_CONFIRM)
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -73,7 +73,7 @@ def test_tutorial_menu_open_close(device_handler: "BackgroundDeviceHandler"):
 
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.TAP_TO_CONFIRM, hold_ms=1000)
+    debug.click(buttons.TAP_TO_CONFIRM)
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -96,7 +96,7 @@ def test_tutorial_menu_exit(device_handler: "BackgroundDeviceHandler"):
     assert TR.tutorial__did_you_know in debug.read_layout().text_content()
     debug.click(buttons.VERTICAL_MENU[2])
     assert TR.instructions__hold_to_exit_tutorial in debug.read_layout().footer()
-    debug.click(buttons.TAP_TO_CONFIRM, hold_ms=1000)
+    debug.click(buttons.TAP_TO_CONFIRM)
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -126,7 +126,7 @@ def test_tutorial_menu_repeat(device_handler: "BackgroundDeviceHandler"):
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.TAP_TO_CONFIRM, hold_ms=1000)
+    debug.click(buttons.TAP_TO_CONFIRM)
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -159,7 +159,7 @@ def test_tutorial_menu_funfact(device_handler: "BackgroundDeviceHandler"):
 
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.TAP_TO_CONFIRM, hold_ms=1000)
+    debug.click(buttons.TAP_TO_CONFIRM)
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
