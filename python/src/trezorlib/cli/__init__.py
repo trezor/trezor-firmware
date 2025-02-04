@@ -30,7 +30,7 @@ from .. import exceptions, transport, ui
 from ..client import PASSPHRASE_ON_DEVICE, ProtocolVersion, TrezorClient
 from ..messages import Capability
 from ..transport import Transport
-from ..transport.session import Session, SessionV1
+from ..transport.session import Session, SessionV1, SessionV2
 
 LOG = logging.getLogger(__name__)
 
@@ -139,6 +139,9 @@ class TrezorConnection:
                 session = SessionV1.resume_from_id(
                     client=client, session_id=self.session_id
                 )
+            elif client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+                session = SessionV2(client, self.session_id)
+                # TODO fix resumption on THP
             else:
                 raise Exception("Unsupported client protocol", client.protocol_version)
             if must_resume:
