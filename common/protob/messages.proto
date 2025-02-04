@@ -136,6 +136,8 @@ enum MessageType {
     MessageType_DebugLinkWatchLayout = 9006 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkResetDebugEvents = 9007 [(bitcoin_only) = true, (wire_debug_in) = true];
     MessageType_DebugLinkOptigaSetSecMax = 9008 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkGetPairingInfo = 9009 [(bitcoin_only) = true, (wire_debug_in) = true];
+    MessageType_DebugLinkPairingInfo = 9010 [(bitcoin_only) = true, (wire_debug_out) = true];
 
     // Ethereum
     MessageType_EthereumGetPublicKey = 450 [(wire_in) = true];
