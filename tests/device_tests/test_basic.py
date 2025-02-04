@@ -15,44 +15,47 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import device, messages, models
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 
-def test_features(client: Client):
-    f0 = client.features
-    # client erases session_id from its features
-    f0.session_id = client.session_id
-    f1 = client.call(messages.Initialize(session_id=f0.session_id))
-    assert f0 == f1
-
-
-def test_capabilities(client: Client):
-    assert (messages.Capability.Translations in client.features.capabilities) == (
-        client.model is not models.T1B1
+def test_capabilities(session: Session):
+    assert (messages.Capability.Translations in session.features.capabilities) == (
+        session.model is not models.T1B1
     )
 
 
-def test_ping(client: Client):
-    ping = client.call(messages.Ping(message="ahoj!"))
+def test_ping(session: Session):
+    ping = session.call(messages.Ping(message="ahoj!"))
     assert ping == messages.Success(message="ahoj!")
 
 
 def test_device_id_same(client: Client):
-    id1 = client.get_device_id()
-    client.init_device()
-    id2 = client.get_device_id()
+    session1 = client.get_session()
+    session2 = client.get_session()
+    id1 = session1.features.device_id
+    session2.refresh_features()
+    id2 = session2.features.device_id
+    client = client.get_new_client()
+    session3 = client.get_session()
+    id3 = session3.features.device_id
 
     # ID must be at least 12 characters
     assert len(id1) >= 12
 
     # Every resulf of UUID must be the same
     assert id1 == id2
+    assert id2 == id3
 
 
 def test_device_id_different(client: Client):
-    id1 = client.get_device_id()
-    device.wipe(client)
-    id2 = client.get_device_id()
+    session = client.get_seedless_session()
+    id1 = client.features.device_id
+    device.wipe(session)
+    client = client.get_new_client()
+    session = client.get_seedless_session()
+
+    id2 = client.features.device_id
 
     # Device ID must be fresh after every reset
     assert id1 != id2
