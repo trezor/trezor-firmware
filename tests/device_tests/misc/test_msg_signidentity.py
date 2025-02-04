@@ -17,13 +17,13 @@
 import pytest
 
 from trezorlib import messages, misc
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from ...common import MNEMONIC12
 
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
-def test_sign(client: Client):
+def test_sign(session: Session):
     hidden = bytes.fromhex(
         "cd8552569d6e4509266ef137584d1e62c7579b5b8ed69bbafa4b864c6521e7c2"
     )
@@ -40,7 +40,7 @@ def test_sign(client: Client):
         path="/login",
         index=0,
     )
-    sig = misc.sign_identity(client, identity, hidden, visual)
+    sig = misc.sign_identity(session, identity, hidden, visual)
     assert sig.address == "17F17smBTX9VTZA9Mj8LM5QGYNZnmziCjL"
     assert (
         sig.public_key.hex()
@@ -62,7 +62,7 @@ def test_sign(client: Client):
         path="/pub",
         index=3,
     )
-    sig = misc.sign_identity(client, identity, hidden, visual)
+    sig = misc.sign_identity(session, identity, hidden, visual)
     assert sig.address == "1KAr6r5qF2kADL8bAaRQBjGKYEGxn9WrbS"
     assert (
         sig.public_key.hex()
@@ -80,7 +80,7 @@ def test_sign(client: Client):
         proto="ssh", user="satoshi", host="bitcoin.org", port="", path="", index=47
     )
     sig = misc.sign_identity(
-        client, identity, hidden, visual, ecdsa_curve_name="nist256p1"
+        session, identity, hidden, visual, ecdsa_curve_name="nist256p1"
     )
     assert sig.address is None
     assert (
@@ -99,7 +99,7 @@ def test_sign(client: Client):
         proto="ssh", user="satoshi", host="bitcoin.org", port="", path="", index=47
     )
     sig = misc.sign_identity(
-        client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+        session, identity, hidden, visual, ecdsa_curve_name="ed25519"
     )
     assert sig.address is None
     assert (
@@ -116,7 +116,7 @@ def test_sign(client: Client):
         proto="gpg", user="satoshi", host="bitcoin.org", port="", path=""
     )
     sig = misc.sign_identity(
-        client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+        session, identity, hidden, visual, ecdsa_curve_name="ed25519"
     )
     assert sig.address is None
     assert (
@@ -133,7 +133,7 @@ def test_sign(client: Client):
         proto="signify", user="satoshi", host="bitcoin.org", port="", path=""
     )
     sig = misc.sign_identity(
-        client, identity, hidden, visual, ecdsa_curve_name="ed25519"
+        session, identity, hidden, visual, ecdsa_curve_name="ed25519"
     )
     assert sig.address is None
     assert (

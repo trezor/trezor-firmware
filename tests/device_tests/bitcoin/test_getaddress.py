@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, device, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import MultisigPubkeysOrder, SafetyCheckLevel
 from trezorlib.tools import parse_path
@@ -36,112 +36,112 @@ def getmultisig(chain, nr, xpubs):
     )
 
 
-def test_btc(client: Client):
+def test_btc(session: Session):
     assert (
-        btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
+        btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"))
         == "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
     )
     assert (
-        btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/0/1"))
+        btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/0/1"))
         == "1GWFxtwWmNVqotUPXLcKVL2mUKpshuJYo"
     )
     assert (
-        btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/1/0"))
+        btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/1/0"))
         == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
     )
 
 
 @pytest.mark.altcoin
-def test_ltc(client: Client):
+def test_ltc(session: Session):
     assert (
-        btc.get_address(client, "Litecoin", parse_path("m/44h/2h/0h/0/0"))
+        btc.get_address(session, "Litecoin", parse_path("m/44h/2h/0h/0/0"))
         == "LcubERmHD31PWup1fbozpKuiqjHZ4anxcL"
     )
     assert (
-        btc.get_address(client, "Litecoin", parse_path("m/44h/2h/0h/0/1"))
+        btc.get_address(session, "Litecoin", parse_path("m/44h/2h/0h/0/1"))
         == "LVWBmHBkCGNjSPHucvL2PmnuRAJnucmRE6"
     )
     assert (
-        btc.get_address(client, "Litecoin", parse_path("m/44h/2h/0h/1/0"))
+        btc.get_address(session, "Litecoin", parse_path("m/44h/2h/0h/1/0"))
         == "LWj6ApswZxay4cJEJES2sGe7fLMLRvvv8h"
     )
 
 
-def test_tbtc(client: Client):
+def test_tbtc(session: Session):
     assert (
-        btc.get_address(client, "Testnet", parse_path("m/44h/1h/0h/0/0"))
+        btc.get_address(session, "Testnet", parse_path("m/44h/1h/0h/0/0"))
         == "mvbu1Gdy8SUjTenqerxUaZyYjmveZvt33q"
     )
     assert (
-        btc.get_address(client, "Testnet", parse_path("m/44h/1h/0h/0/1"))
+        btc.get_address(session, "Testnet", parse_path("m/44h/1h/0h/0/1"))
         == "mopZWqZZyQc3F2Sy33cvDtJchSAMsnLi7b"
     )
     assert (
-        btc.get_address(client, "Testnet", parse_path("m/44h/1h/0h/1/0"))
+        btc.get_address(session, "Testnet", parse_path("m/44h/1h/0h/1/0"))
         == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ"
     )
 
 
 @pytest.mark.altcoin
-def test_bch(client: Client):
+def test_bch(session: Session):
     assert (
-        btc.get_address(client, "Bcash", parse_path("m/44h/145h/0h/0/0"))
+        btc.get_address(session, "Bcash", parse_path("m/44h/145h/0h/0/0"))
         == "bitcoincash:qr08q88p9etk89wgv05nwlrkm4l0urz4cyl36hh9sv"
     )
     assert (
-        btc.get_address(client, "Bcash", parse_path("m/44h/145h/0h/0/1"))
+        btc.get_address(session, "Bcash", parse_path("m/44h/145h/0h/0/1"))
         == "bitcoincash:qr23ajjfd9wd73l87j642puf8cad20lfmqdgwvpat4"
     )
     assert (
-        btc.get_address(client, "Bcash", parse_path("m/44h/145h/0h/1/0"))
+        btc.get_address(session, "Bcash", parse_path("m/44h/145h/0h/1/0"))
         == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
     )
 
 
 @pytest.mark.altcoin
-def test_grs(client: Client):
+def test_grs(session: Session):
     assert (
-        btc.get_address(client, "Groestlcoin", parse_path("m/44h/17h/0h/0/0"))
+        btc.get_address(session, "Groestlcoin", parse_path("m/44h/17h/0h/0/0"))
         == "Fj62rBJi8LvbmWu2jzkaUX1NFXLEqDLoZM"
     )
     assert (
-        btc.get_address(client, "Groestlcoin", parse_path("m/44h/17h/0h/1/0"))
+        btc.get_address(session, "Groestlcoin", parse_path("m/44h/17h/0h/1/0"))
         == "FmRaqvVBRrAp2Umfqx9V1ectZy8gw54QDN"
     )
     assert (
-        btc.get_address(client, "Groestlcoin", parse_path("m/44h/17h/0h/1/1"))
+        btc.get_address(session, "Groestlcoin", parse_path("m/44h/17h/0h/1/1"))
         == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
     )
 
 
 @pytest.mark.altcoin
-def test_tgrs(client: Client):
+def test_tgrs(session: Session):
     assert (
-        btc.get_address(client, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/0/0"))
+        btc.get_address(session, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/0/0"))
         == "mvbu1Gdy8SUjTenqerxUaZyYjmvedc787y"
     )
     assert (
-        btc.get_address(client, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/1/0"))
+        btc.get_address(session, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/1/0"))
         == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1LMq8cN"
     )
     assert (
-        btc.get_address(client, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/1/1"))
+        btc.get_address(session, "Groestlcoin Testnet", parse_path("m/44h/1h/0h/1/1"))
         == "mjXZwmEi1z1MzveZrKUAo4DBgbdq6ZhGD6"
     )
 
 
 @pytest.mark.altcoin
-def test_elements(client: Client):
+def test_elements(session: Session):
     assert (
-        btc.get_address(client, "Elements", parse_path("m/44h/1h/0h/0/0"))
+        btc.get_address(session, "Elements", parse_path("m/44h/1h/0h/0/0"))
         == "2dpWh6jbhAowNsQ5agtFzi7j6nKscj6UnEr"
     )
 
 
 @pytest.mark.models("core")
-def test_address_mac(client: Client):
+def test_address_mac(session: Session):
     resp = btc.get_authenticated_address(
-        client, "Bitcoin", parse_path("m/44h/0h/0h/1/0")
+        session, "Bitcoin", parse_path("m/44h/0h/0h/1/0")
     )
     assert resp.address == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
     assert (
@@ -150,7 +150,7 @@ def test_address_mac(client: Client):
     )
 
     resp = btc.get_authenticated_address(
-        client, "Testnet", parse_path("m/44h/1h/0h/1/0")
+        session, "Testnet", parse_path("m/44h/1h/0h/1/0")
     )
     assert resp.address == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ"
     assert (
@@ -160,16 +160,16 @@ def test_address_mac(client: Client):
 
     # Script type mismatch.
     resp = btc.get_authenticated_address(
-        client, "Bitcoin", parse_path("m/84h/0h/0h/0/0"), show_display=False
+        session, "Bitcoin", parse_path("m/84h/0h/0h/0/0"), show_display=False
     )
     assert resp.mac is None
 
 
 @pytest.mark.models("core")
 @pytest.mark.altcoin
-def test_altcoin_address_mac(client: Client):
+def test_altcoin_address_mac(session: Session):
     resp = btc.get_authenticated_address(
-        client, "Litecoin", parse_path("m/44h/2h/0h/1/0")
+        session, "Litecoin", parse_path("m/44h/2h/0h/1/0")
     )
     assert resp.address == "LWj6ApswZxay4cJEJES2sGe7fLMLRvvv8h"
     assert (
@@ -178,7 +178,7 @@ def test_altcoin_address_mac(client: Client):
     )
 
     resp = btc.get_authenticated_address(
-        client, "Bcash", parse_path("m/44h/145h/0h/1/0")
+        session, "Bcash", parse_path("m/44h/145h/0h/1/0")
     )
     assert resp.address == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
     assert (
@@ -187,7 +187,7 @@ def test_altcoin_address_mac(client: Client):
     )
 
     resp = btc.get_authenticated_address(
-        client, "Groestlcoin", parse_path("m/44h/17h/0h/1/1")
+        session, "Groestlcoin", parse_path("m/44h/17h/0h/1/1")
     )
     assert resp.address == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
     assert (
@@ -197,9 +197,9 @@ def test_altcoin_address_mac(client: Client):
 
 
 @pytest.mark.multisig
-def test_multisig_pubkeys_order(client: Client):
-    xpub_internal = btc.get_public_node(client, parse_path("m/45h/0")).xpub
-    xpub_external = btc.get_public_node(client, parse_path("m/45h/1")).xpub
+def test_multisig_pubkeys_order(session: Session):
+    xpub_internal = btc.get_public_node(session, parse_path("m/45h/0")).xpub
+    xpub_external = btc.get_public_node(session, parse_path("m/45h/1")).xpub
 
     multisig_unsorted_1 = messages.MultisigRedeemScriptType(
         nodes=[bip32.deserialize(xpub) for xpub in [xpub_external, xpub_internal]],
@@ -238,45 +238,45 @@ def test_multisig_pubkeys_order(client: Client):
 
     assert (
         btc.get_address(
-            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_1
+            session, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_1
         )
         == address_unsorted_1
     )
     assert (
         btc.get_address(
-            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_2
+            session, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_unsorted_2
         )
         == address_unsorted_2
     )
     assert (
         btc.get_address(
-            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_1
+            session, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_1
         )
         == address_unsorted_2
     )
     assert (
         btc.get_address(
-            client, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_2
+            session, "Bitcoin", parse_path("m/45h/0/0/0"), multisig=multisig_sorted_2
         )
         == address_unsorted_2
     )
 
 
 @pytest.mark.multisig
-def test_multisig(client: Client):
+def test_multisig(session: Session):
     xpubs = []
     for n in range(1, 4):
-        node = btc.get_public_node(client, parse_path(f"m/44h/0h/{n}h"))
+        node = btc.get_public_node(session, parse_path(f"m/44h/0h/{n}h"))
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        with client:
-            if is_core(client):
+        with session.client as client:
+            if is_core(session):
                 IF = InputFlowConfirmAllWarnings(client)
                 client.set_input_flow(IF.get())
             assert (
                 btc.get_address(
-                    client,
+                    session,
                     "Bitcoin",
                     parse_path(f"m/44h/0h/{nr}h/0/0"),
                     show_display=(nr == 1),
@@ -286,7 +286,7 @@ def test_multisig(client: Client):
             )
             assert (
                 btc.get_address(
-                    client,
+                    session,
                     "Bitcoin",
                     parse_path(f"m/44h/0h/{nr}h/1/0"),
                     show_display=(nr == 1),
@@ -298,11 +298,11 @@ def test_multisig(client: Client):
 
 @pytest.mark.multisig
 @pytest.mark.parametrize("show_display", (True, False))
-def test_multisig_missing(client: Client, show_display):
+def test_multisig_missing(session: Session, show_display):
     # Use account numbers 1, 2 and 3 to create a valid multisig,
     # but not containing the keys from account 0 used below.
     nodes = [
-        btc.get_public_node(client, parse_path(f"m/44h/0h/{i}h")).node
+        btc.get_public_node(session, parse_path(f"m/44h/0h/{i}h")).node
         for i in range(1, 4)
     ]
 
@@ -321,12 +321,12 @@ def test_multisig_missing(client: Client, show_display):
     )
 
     for multisig in (multisig1, multisig2):
-        with client, pytest.raises(TrezorFailure):
-            if is_core(client):
+        with session.client as client, pytest.raises(TrezorFailure):
+            if is_core(session):
                 IF = InputFlowConfirmAllWarnings(client)
                 client.set_input_flow(IF.get())
             btc.get_address(
-                client,
+                session,
                 "Bitcoin",
                 parse_path("m/44h/0h/0h/0/0"),
                 show_display=show_display,
@@ -336,22 +336,22 @@ def test_multisig_missing(client: Client, show_display):
 
 @pytest.mark.altcoin
 @pytest.mark.multisig
-def test_bch_multisig(client: Client):
+def test_bch_multisig(session: Session):
     xpubs = []
     for n in range(1, 4):
         node = btc.get_public_node(
-            client, parse_path(f"m/44h/145h/{n}h"), coin_name="Bcash"
+            session, parse_path(f"m/44h/145h/{n}h"), coin_name="Bcash"
         )
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        with client:
-            if is_core(client):
+        with session.client as client:
+            if is_core(session):
                 IF = InputFlowConfirmAllWarnings(client)
                 client.set_input_flow(IF.get())
             assert (
                 btc.get_address(
-                    client,
+                    session,
                     "Bcash",
                     parse_path(f"m/44h/145h/{nr}h/0/0"),
                     show_display=(nr == 1),
@@ -361,7 +361,7 @@ def test_bch_multisig(client: Client):
             )
             assert (
                 btc.get_address(
-                    client,
+                    session,
                     "Bcash",
                     parse_path(f"m/44h/145h/{nr}h/1/0"),
                     show_display=(nr == 1),
@@ -371,43 +371,43 @@ def test_bch_multisig(client: Client):
             )
 
 
-def test_public_ckd(client: Client):
-    node = btc.get_public_node(client, parse_path("m/44h/0h/0h")).node
-    node_sub1 = btc.get_public_node(client, parse_path("m/44h/0h/0h/1/0")).node
+def test_public_ckd(session: Session):
+    node = btc.get_public_node(session, parse_path("m/44h/0h/0h")).node
+    node_sub1 = btc.get_public_node(session, parse_path("m/44h/0h/0h/1/0")).node
     node_sub2 = bip32.public_ckd(node, [1, 0])
 
     assert node_sub1.chain_code == node_sub2.chain_code
     assert node_sub1.public_key == node_sub2.public_key
 
-    address1 = btc.get_address(client, "Bitcoin", parse_path("m/44h/0h/0h/1/0"))
+    address1 = btc.get_address(session, "Bitcoin", parse_path("m/44h/0h/0h/1/0"))
     address2 = bip32.get_address(node_sub2, 0)
 
     assert address2 == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
     assert address1 == address2
 
 
-def test_invalid_path(client: Client):
+def test_invalid_path(session: Session):
     with pytest.raises(TrezorFailure, match="Forbidden key path"):
         # slip44 id mismatch
         btc.get_address(
-            client, "Bitcoin", parse_path("m/44h/111h/0h/0/0"), show_display=True
+            session, "Bitcoin", parse_path("m/44h/111h/0h/0/0"), show_display=True
         )
 
 
-def test_unknown_path(client: Client):
+def test_unknown_path(session: Session):
     UNKNOWN_PATH = parse_path("m/44h/9h/0h/0/0")
-    with client:
-        client.set_expected_responses([messages.Failure])
+    with session:
+        session.set_expected_responses([messages.Failure])
 
         with pytest.raises(TrezorFailure, match="Forbidden key path"):
             # account number is too high
-            btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=True)
+            btc.get_address(session, "Bitcoin", UNKNOWN_PATH, show_display=True)
 
     # disable safety checks
-    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
 
-    with client:
-        client.set_expected_responses(
+    with session, session.client as client:
+        session.set_expected_responses(
             [
                 messages.ButtonRequest(
                     code=messages.ButtonRequestType.UnknownDerivationPath
@@ -416,30 +416,30 @@ def test_unknown_path(client: Client):
                 messages.Address,
             ]
         )
-        if is_core(client):
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         # try again with a warning
-        btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=True)
+        btc.get_address(session, "Bitcoin", UNKNOWN_PATH, show_display=True)
 
-    with client:
+    with session:
         # no warning is displayed when the call is silent
-        client.set_expected_responses([messages.Address])
-        btc.get_address(client, "Bitcoin", UNKNOWN_PATH, show_display=False)
+        session.set_expected_responses([messages.Address])
+        btc.get_address(session, "Bitcoin", UNKNOWN_PATH, show_display=False)
 
 
 @pytest.mark.altcoin
-def test_crw(client: Client):
+def test_crw(session: Session):
     assert (
-        btc.get_address(client, "Crown", parse_path("m/44h/72h/0h/0/0"))
+        btc.get_address(session, "Crown", parse_path("m/44h/72h/0h/0/0"))
         == "CRWYdvZM1yXMKQxeN3hRsAbwa7drfvTwys48"
     )
 
 
 @pytest.mark.multisig
-def test_multisig_different_paths(client: Client):
+def test_multisig_different_paths(session: Session):
     nodes = [
-        btc.get_public_node(client, parse_path(f"m/45h/{i}"), coin_name="Bitcoin").node
+        btc.get_public_node(session, parse_path(f"m/45h/{i}"), coin_name="Bitcoin").node
         for i in range(2)
     ]
 
@@ -455,12 +455,12 @@ def test_multisig_different_paths(client: Client):
     with pytest.raises(
         Exception, match="Using different paths for different xpubs is not allowed"
     ):
-        with client:
-            if is_core(client):
+        with session.client as client, session:
+            if is_core(session):
                 IF = InputFlowConfirmAllWarnings(client)
                 client.set_input_flow(IF.get())
             btc.get_address(
-                client,
+                session,
                 "Bitcoin",
                 parse_path("m/45h/0/0/0"),
                 show_display=True,
@@ -468,13 +468,13 @@ def test_multisig_different_paths(client: Client):
                 script_type=messages.InputScriptType.SPENDMULTISIG,
             )
 
-    device.apply_settings(client, safety_checks=SafetyCheckLevel.PromptTemporarily)
-    with client:
-        if is_core(client):
+    device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
+    with session.client as client:
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         btc.get_address(
-            client,
+            session,
             "Bitcoin",
             parse_path("m/45h/0/0/0"),
             show_display=True,
