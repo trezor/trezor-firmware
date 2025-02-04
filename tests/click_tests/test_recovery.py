@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Generator
 import pytest
 
 from trezorlib import device, exceptions, messages
+from trezorlib.transport.session import SessionV1
 
 from ..common import MNEMONIC12, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
@@ -40,7 +41,10 @@ def prepare_recovery_and_evaluate(
     features = device_handler.features()
     debug = device_handler.debuglink()
     assert features.initialized is False
-    device_handler.run(device.recover, pin_protection=False)  # type: ignore
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, pin_protection=False
+    )  # type: ignore
 
     yield debug
 
@@ -58,7 +62,10 @@ def prepare_recovery_and_evaluate_cancel(
     features = device_handler.features()
     debug = device_handler.debuglink()
     assert features.initialized is False
-    device_handler.run(device.recover, pin_protection=False)  # type: ignore
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, pin_protection=False
+    )  # type: ignore
 
     yield debug
 
@@ -113,7 +120,10 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
 
     # initiate and confirm the recovery
-    device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session, device.recover, type=messages.RecoveryType.DryRun
+    )
     recovery.confirm_recovery(debug, title="recovery__title_dry_run")
     # select number of words
     recovery.select_number_of_words(debug, num_of_words=12)
@@ -129,7 +139,9 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
 
     # Ping the Trezor with an Initialize message (listed in DO_NOT_RESTART)
     try:
-        features = device_handler.client.call(messages.Initialize())
+        session = SessionV1(device_handler.client, id=b"")
+        session.client._last_active_session = session
+        features = session.call(messages.Initialize())
     except exceptions.Cancelled:
         # due to a related problem, the first call in this situation will return
         # a Cancelled failure. This test does not care, we just retry.
