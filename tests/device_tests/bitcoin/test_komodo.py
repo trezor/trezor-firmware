@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -43,7 +43,7 @@ TXHASH_7b28bd = bytes.fromhex(
 pytestmark = [pytest.mark.altcoin, pytest.mark.komodo]
 
 
-def test_one_one_fee_sapling(client: Client):
+def test_one_one_fee_sapling(session: Session):
     # prevout: 2807c5b126ec8e2b078cab0f12e4c8b4ce1d7724905f8ebef8dca26b0c8e0f1d:0
     # input 1: 10.9998 KMD
 
@@ -61,13 +61,13 @@ def test_one_one_fee_sapling(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -82,7 +82,7 @@ def test_one_one_fee_sapling(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Komodo",
             [inp1],
             [out1],
@@ -100,7 +100,7 @@ def test_one_one_fee_sapling(client: Client):
     )
 
 
-def test_one_one_rewards_claim(client: Client):
+def test_one_one_rewards_claim(session: Session):
     # prevout: 7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1:0
     # input 1: 10.9997 KMD
 
@@ -125,16 +125,16 @@ def test_one_one_rewards_claim(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -150,7 +150,7 @@ def test_one_one_rewards_claim(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Komodo",
             [inp1],
             [out1, out2],
