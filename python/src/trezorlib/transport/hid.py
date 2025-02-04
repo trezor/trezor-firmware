@@ -19,12 +19,11 @@ from __future__ import annotations
 import logging
 import sys
 import time
-from typing import Any, Dict, Iterable
+import typing as t
 
 from ..log import DUMP_PACKETS
 from ..models import TREZOR_ONE, TrezorModel
-from . import UDEV_RULES_STR, Timeout, TransportException
-from .protocol import ProtocolBasedTransport, ProtocolV1
+from . import UDEV_RULES_STR, Timeout, Transport, TransportException
 
 LOG = logging.getLogger(__name__)
 
@@ -37,23 +36,61 @@ except Exception as e:
     HID_IMPORTED = False
 
 
-HidDevice = Dict[str, Any]
-HidDeviceHandle = Any
+HidDevice = t.Dict[str, t.Any]
+HidDeviceHandle = t.Any
 
 
-class HidHandle:
-    def __init__(
-        self, path: bytes, serial: str, probe_hid_version: bool = False
-    ) -> None:
-        self.path = path
-        self.serial = serial
+class HidTransport(Transport):
+    """
+    HidTransport implements transport over USB HID interface.
+    """
+
+    PATH_PREFIX = "hid"
+    ENABLED = HID_IMPORTED
+
+    def __init__(self, device: HidDevice, probe_hid_version: bool = False) -> None:
+        self.device = device
+        self.device_path = device["path"]
+        self.device_serial_number = device["serial_number"]
         self.handle: HidDeviceHandle = None
         self.hid_version = None if probe_hid_version else 2
+
+    def get_path(self) -> str:
+        return f"{self.PATH_PREFIX}:{self.device['path'].decode()}"
+
+    @classmethod
+    def enumerate(
+        cls, models: t.Iterable["TrezorModel"] | None = None, debug: bool = False
+    ) -> t.Iterable["HidTransport"]:
+        if models is None:
+            models = {TREZOR_ONE}
+        usb_ids = [id for model in models for id in model.usb_ids]
+
+        devices: t.List["HidTransport"] = []
+        for dev in hid.enumerate(0, 0):
+            usb_id = (dev["vendor_id"], dev["product_id"])
+            if usb_id not in usb_ids:
+                continue
+            if debug:
+                if not is_debuglink(dev):
+                    continue
+            else:
+                if not is_wirelink(dev):
+                    continue
+            devices.append(HidTransport(dev))
+        return devices
+
+    def find_debug(self) -> "HidTransport":
+        # For v1 protocol, find debug USB interface for the same serial number
+        for debug in HidTransport.enumerate(debug=True):
+            if debug.device["serial_number"] == self.device["serial_number"]:
+                return debug
+        raise TransportException("Debug HID device not found")
 
     def open(self) -> None:
         self.handle = hid.device()
         try:
-            self.handle.open_path(self.path)
+            self.handle.open_path(self.device_path)
         except (IOError, OSError) as e:
             if sys.platform.startswith("linux"):
                 e.args = e.args + (UDEV_RULES_STR,)
@@ -64,11 +101,11 @@ class HidHandle:
         # and we wouldn't even know.
         # So we check that the serial matches what we expect.
         serial = self.handle.get_serial_number_string()
-        if serial != self.serial:
+        if serial != self.device_serial_number:
             self.handle.close()
             self.handle = None
             raise TransportException(
-                f"Unexpected device {serial} on path {self.path.decode()}"
+                f"Unexpected device {serial} on path {self.device_path.decode()}"
             )
 
         self.handle.set_nonblocking(True)
@@ -79,7 +116,7 @@ class HidHandle:
     def close(self) -> None:
         if self.handle is not None:
             # reload serial, because device.wipe() can reset it
-            self.serial = self.handle.get_serial_number_string()
+            self.device_serial_number = self.handle.get_serial_number_string()
             self.handle.close()
         self.handle = None
 
@@ -118,53 +155,6 @@ class HidHandle:
         if n == 64:
             return 1
         raise TransportException("Unknown HID version")
-
-
-class HidTransport(ProtocolBasedTransport):
-    """
-    HidTransport implements transport over USB HID interface.
-    """
-
-    PATH_PREFIX = "hid"
-    ENABLED = HID_IMPORTED
-
-    def __init__(self, device: HidDevice) -> None:
-        self.device = device
-        self.handle = HidHandle(device["path"], device["serial_number"])
-
-        super().__init__(protocol=ProtocolV1(self.handle))
-
-    def get_path(self) -> str:
-        return f"{self.PATH_PREFIX}:{self.device['path'].decode()}"
-
-    @classmethod
-    def enumerate(
-        cls, models: Iterable[TrezorModel] | None = None, debug: bool = False
-    ) -> Iterable[HidTransport]:
-        if models is None:
-            models = {TREZOR_ONE}
-        usb_ids = [id for model in models for id in model.usb_ids]
-
-        devices: list[HidTransport] = []
-        for dev in hid.enumerate(0, 0):
-            usb_id = (dev["vendor_id"], dev["product_id"])
-            if usb_id not in usb_ids:
-                continue
-            if debug:
-                if not is_debuglink(dev):
-                    continue
-            else:
-                if not is_wirelink(dev):
-                    continue
-            devices.append(HidTransport(dev))
-        return devices
-
-    def find_debug(self) -> HidTransport:
-        # For v1 protocol, find debug USB interface for the same serial number
-        for debug in HidTransport.enumerate(debug=True):
-            if debug.device["serial_number"] == self.device["serial_number"]:
-                return debug
-        raise TransportException("Debug HID device not found")
 
 
 def is_wirelink(dev: HidDevice) -> bool:
