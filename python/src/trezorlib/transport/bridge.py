@@ -21,6 +21,7 @@ import typing as t
 
 import requests
 
+from ..client import ProtocolVersion
 from ..log import DUMP_PACKETS
 from . import DeviceIsBusy, Transport, TransportException
 
@@ -61,6 +62,35 @@ def get_bridge_version() -> t.Tuple[int, ...]:
 
 def is_legacy_bridge() -> bool:
     return get_bridge_version() < TREZORD_VERSION_MODERN
+
+
+def detect_protocol_version(transport: "BridgeTransport") -> int:
+    from .. import mapping, messages
+
+    protocol_version = ProtocolVersion.PROTOCOL_V1
+    request_type, request_data = mapping.DEFAULT_MAPPING.encode(messages.Initialize())
+    transport.deprecated_begin_session()
+    transport.deprecated_write(request_type, request_data)
+
+    response_type, response_data = transport.deprecated_read()
+    _ = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
+    transport.deprecated_begin_session()
+
+    return protocol_version
+
+
+def _is_transport_valid(transport: "BridgeTransport") -> bool:
+    is_valid = detect_protocol_version(transport) == ProtocolVersion.PROTOCOL_V1
+    if not is_valid:
+        LOG.warning("Detected unsupported Bridge transport!")
+    return is_valid
+
+
+def filter_invalid_bridge_transports(
+    transports: t.Iterable["BridgeTransport"],
+) -> t.Sequence["BridgeTransport"]:
+    """Filters out invalid bridge transports. Keeps only valid ones."""
+    return [t for t in transports if _is_transport_valid(t)]
 
 
 class BridgeHandle:
@@ -152,9 +182,12 @@ class BridgeTransport(Transport):
     ) -> t.Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
-            return [
-                BridgeTransport(dev, legacy) for dev in call_bridge("enumerate").json()
-            ]
+            return filter_invalid_bridge_transports(
+                [
+                    BridgeTransport(dev, legacy)
+                    for dev in call_bridge("enumerate").json()
+                ]
+            )
         except Exception:
             return []
 
