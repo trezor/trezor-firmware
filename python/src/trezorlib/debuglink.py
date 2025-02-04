@@ -534,6 +534,25 @@ class DebugLink:
             raise TrezorFailure(result)
         return result
 
+    def pairing_info(
+        self,
+        thp_channel_id: bytes | None = None,
+        handshake_hash: bytes | None = None,
+        nfc_secret_host: bytes | None = None,
+    ) -> messages.DebugLinkPairingInfo:
+        result = self._call(
+            messages.DebugLinkGetPairingInfo(
+                channel_id=thp_channel_id,
+                handshake_hash=handshake_hash,
+                nfc_secret_host=nfc_secret_host,
+            )
+        )
+        while not isinstance(result, (messages.Failure, messages.DebugLinkPairingInfo)):
+            result = self._read()
+        if isinstance(result, messages.Failure):
+            raise TrezorFailure(result)
+        return result
+
     def read_layout(self, wait: bool | None = None) -> LayoutContent:
         """
         Force waiting for the layout by setting `wait=True`. Force not waiting by
@@ -1326,8 +1345,9 @@ class TrezorClientDebugLink(TrezorClient):
                 return send_passphrase(None, None)
 
             try:
-                if isinstance(session, SessionV1) or isinstance(
-                    session, SessionDebugWrapper
+                if isinstance(session, SessionV1) or (
+                    isinstance(session, SessionDebugWrapper)
+                    and isinstance(session._session, SessionV1)
                 ):
                     passphrase = self.ui.get_passphrase(
                         available_on_device=available_on_device
@@ -1335,7 +1355,7 @@ class TrezorClientDebugLink(TrezorClient):
                     if passphrase is None:
                         passphrase = session.passphrase
                 else:
-                    raise NotImplementedError
+                    passphrase = session.passphrase
             except Cancelled:
                 session.call_raw(messages.Cancel())
                 raise
