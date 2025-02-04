@@ -279,6 +279,7 @@ where
         self
     }
 
+    #[allow(clippy::type_complexity)]
     pub fn map_to_button_msg(self) -> MsgMap<Self, fn(FrameMsg<T::Msg>) -> Option<FlowMsg>> {
         MsgMap::new(self, |msg| match msg {
             FrameMsg::Button(b) => Some(b),
