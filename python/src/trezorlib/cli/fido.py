@@ -19,10 +19,10 @@ from typing import TYPE_CHECKING
 import click
 
 from .. import fido
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 ALGORITHM_NAME = {-7: "ES256 (ECDSA w/ SHA-256)", -8: "EdDSA"}
 
@@ -40,10 +40,10 @@ def credentials() -> None:
 
 
 @credentials.command(name="list")
-@with_client
-def credentials_list(client: "TrezorClient") -> None:
+@with_session(empty_passphrase=True)
+def credentials_list(session: "Session") -> None:
     """List all resident credentials on the device."""
-    creds = fido.list_credentials(client)
+    creds = fido.list_credentials(session)
     for cred in creds:
         click.echo("")
         click.echo(f"WebAuthn credential at index {cred.index}:")
@@ -79,23 +79,23 @@ def credentials_list(client: "TrezorClient") -> None:
 
 @credentials.command(name="add")
 @click.argument("hex_credential_id")
-@with_client
-def credentials_add(client: "TrezorClient", hex_credential_id: str) -> None:
+@with_session(empty_passphrase=True)
+def credentials_add(session: "Session", hex_credential_id: str) -> None:
     """Add the credential with the given ID as a resident credential.
 
     HEX_CREDENTIAL_ID is the credential ID as a hexadecimal string.
     """
-    fido.add_credential(client, bytes.fromhex(hex_credential_id))
+    fido.add_credential(session, bytes.fromhex(hex_credential_id))
 
 
 @credentials.command(name="remove")
 @click.option(
     "-i", "--index", required=True, type=click.IntRange(0, 99), help="Credential index."
 )
-@with_client
-def credentials_remove(client: "TrezorClient", index: int) -> None:
+@with_session(empty_passphrase=True)
+def credentials_remove(session: "Session", index: int) -> None:
     """Remove the resident credential at the given index."""
-    fido.remove_credential(client, index)
+    fido.remove_credential(session, index)
 
 
 #
@@ -110,19 +110,19 @@ def counter() -> None:
 
 @counter.command(name="set")
 @click.argument("counter", type=int)
-@with_client
-def counter_set(client: "TrezorClient", counter: int) -> None:
+@with_session(empty_passphrase=True)
+def counter_set(session: "Session", counter: int) -> None:
     """Set FIDO/U2F counter value."""
-    fido.set_counter(client, counter)
+    fido.set_counter(session, counter)
 
 
 @counter.command(name="get-next")
-@with_client
-def counter_get_next(client: "TrezorClient") -> int:
+@with_session(empty_passphrase=True)
+def counter_get_next(session: "Session") -> int:
     """Get-and-increase value of FIDO/U2F counter.
 
     FIDO counter value cannot be read directly. On each U2F exchange, the counter value
     is returned and atomically increased. This command performs the same operation
     and returns the counter value.
     """
-    return fido.get_next_counter(client)
+    return fido.get_next_counter(session)
