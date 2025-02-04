@@ -46,7 +46,9 @@ def test_reset_slip39_basic(
 
     assert features.initialized is False
 
-    device_handler.run(
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session,
         device.setup,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,

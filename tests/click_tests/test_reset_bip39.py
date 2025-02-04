@@ -38,8 +38,9 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
 
     assert features.initialized is False
-
-    device_handler.run(
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session,
         device.setup,
         strength=128,
         backup_type=messages.BackupType.Bip39,
