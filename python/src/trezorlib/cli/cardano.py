@@ -20,10 +20,10 @@ from typing import TYPE_CHECKING, Optional, TextIO
 import click
 
 from .. import cardano, messages, tools
-from . import ChoiceType, with_client
+from . import ChoiceType, with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44h/1815h/0h/0/0"
 
@@ -62,9 +62,9 @@ def cli() -> None:
 @click.option("-i", "--include-network-id", is_flag=True)
 @click.option("-C", "--chunkify", is_flag=True)
 @click.option("-T", "--tag-cbor-sets", is_flag=True)
-@with_client
+@with_session(derive_cardano=True)
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     file: TextIO,
     signing_mode: messages.CardanoTxSigningMode,
     protocol_magic: int,
@@ -123,9 +123,8 @@ def sign_tx(
         for p in transaction["additional_witness_requests"]
     ]
 
-    client.init_device(derive_cardano=True)
     sign_tx_response = cardano.sign_tx(
-        client,
+        session,
         signing_mode,
         inputs,
         outputs,
@@ -209,9 +208,9 @@ def sign_tx(
     default=messages.CardanoDerivationType.ICARUS,
 )
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session(derive_cardano=True)
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     address_type: messages.CardanoAddressType,
     staking_address: str,
@@ -262,9 +261,8 @@ def get_address(
         script_staking_hash_bytes,
     )
 
-    client.init_device(derive_cardano=True)
     return cardano.get_address(
-        client,
+        session,
         address_parameters,
         protocol_magic,
         network_id,
@@ -283,18 +281,17 @@ def get_address(
     default=messages.CardanoDerivationType.ICARUS,
 )
 @click.option("-d", "--show-display", is_flag=True)
-@with_client
+@with_session(derive_cardano=True)
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     derivation_type: messages.CardanoDerivationType,
     show_display: bool,
 ) -> messages.CardanoPublicKey:
     """Get Cardano public key."""
     address_n = tools.parse_path(address)
-    client.init_device(derive_cardano=True)
     return cardano.get_public_key(
-        client, address_n, derivation_type=derivation_type, show_display=show_display
+        session, address_n, derivation_type=derivation_type, show_display=show_display
     )
 
 
@@ -312,9 +309,9 @@ def get_public_key(
     type=ChoiceType({m.name: m for m in messages.CardanoDerivationType}),
     default=messages.CardanoDerivationType.ICARUS,
 )
-@with_client
+@with_session(derive_cardano=True)
 def get_native_script_hash(
-    client: "TrezorClient",
+    session: "Session",
     file: TextIO,
     display_format: messages.CardanoNativeScriptHashDisplayFormat,
     derivation_type: messages.CardanoDerivationType,
@@ -323,7 +320,6 @@ def get_native_script_hash(
     native_script_json = json.load(file)
     native_script = cardano.parse_native_script(native_script_json)
 
-    client.init_device(derive_cardano=True)
     return cardano.get_native_script_hash(
-        client, native_script, display_format, derivation_type=derivation_type
+        session, native_script, display_format, derivation_type=derivation_type
     )
