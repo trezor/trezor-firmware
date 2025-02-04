@@ -25,7 +25,7 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, ca
 import click
 
 from .. import __version__, log, messages, protobuf
-from ..client import TrezorClient
+from ..client import ProtocolVersion, TrezorClient
 from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.session import Session
 from ..transport.thp import channel_database
@@ -309,6 +309,8 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
         try:
             client = get_client(transport, get_channel_db())
             description = format_device_name(client.features)
+            if client.protocol_version == ProtocolVersion.PROTOCOL_V2:
+                get_channel_db().save_channel(client.protocol)
         except DeviceIsBusy:
             description = "Device is in use by another process"
         except Exception as e:
