@@ -21,24 +21,20 @@ from . import messages
 
 if TYPE_CHECKING:
     from .client import TrezorClient
-    from .protobuf import MessageType
     from .tools import Address
 
 
-def get_pubkey(
-    client: "TrezorClient",
-    n: "Address",
-) -> bytes:
+def get_pubkey(client: "TrezorClient", n: "Address") -> bytes:
     return client.call(
         messages.NostrGetPubkey(
             address_n=n,
         ),
-        expect=messages.NostrPubkey
+        expect=messages.NostrPubkey,
     ).pubkey
 
 
 def sign_event(
     client: "TrezorClient",
     sign_event: messages.NostrSignEvent,
-) -> "MessageType":
+) -> messages.NostrEventSignature:
     return client.call(sign_event, expect=messages.NostrEventSignature)
