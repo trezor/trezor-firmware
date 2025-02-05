@@ -371,7 +371,7 @@ impl LayoutObj {
     }
 
     pub fn new_root(root: impl LayoutMaybeTrace + 'static) -> Result<Gc<Self>, Error> {
-        // SAFETY: This is a Python object and hase a base as first element
+        // SAFETY: This is a Python object and has a base as first element
         unsafe {
             Gc::new_with_custom_finaliser(Self {
                 base: Self::obj_type().as_base(),
