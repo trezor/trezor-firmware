@@ -129,6 +129,25 @@ static secbool ft6x36_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
   return sectrue;
 }
 
+// Wake up the touch controller from monitor mode.
+//
+// The FT3168 touch controller switches from active mode to monitor mode
+// after a period of inactivity (the default setting is ~12s).
+// This feature cannot be disabled (at least in the current controller
+// firmware). When in this mode, it fails to respond to the first I2C command —
+// writes are not ACKed, and reads return 0x00 or garbage data.
+// To avoid this issue, we need to wake up the controller before
+// sending any commands to it.
+static void ft6x36_wake_up(i2c_bus_t* bus) {
+  uint8_t temp;
+  // Wake up the touch controller by reading one of its registers
+  // (the specific register does not matter)
+  ft6x36_read_regs(bus, 0x00, &temp, 1);
+  // Wait for the touch controller to wake up
+  // (not sure if this is necessary, but it's safer to include it)
+  systick_delay_ms(1);
+}
+
 // Powers down the touch controller and puts all
 // the pins in the proper state to save power.
 static void ft6x36_power_down(void) {
@@ -288,6 +307,8 @@ secbool touch_init(void) {
     goto cleanup;
   }
 
+  ft6x36_wake_up(driver->i2c_bus);
+
   // Configure the touch controller
   if (sectrue != ft6x36_configure(driver->i2c_bus)) {
     goto cleanup;
@@ -344,6 +365,7 @@ secbool touch_set_sensitivity(uint8_t value) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (sectrue == driver->initialized) {
+    ft6x36_wake_up(driver->i2c_bus);
     return ft6x36_write_reg(driver->i2c_bus, FT6X36_REG_TH_GROUP, value);
   } else {
     return secfalse;
@@ -364,6 +386,8 @@ uint8_t touch_get_version(void) {
   while (sectrue != touch_ready()) {
     hal_delay(1);
   }
+
+  ft6x36_wake_up(driver->i2c_bus);
 
   uint8_t fw_version = 0;
 
