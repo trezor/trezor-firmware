@@ -27,10 +27,10 @@
  *  \author  Gustavo Patricio
  *
  *  \brief Implementation of NFC-DEP protocol
- *  
- *  NFC-DEP is also known as NFCIP - Near Field Communication 
+ *
+ *  NFC-DEP is also known as NFCIP - Near Field Communication
  *  Interface and Protocol
- *  
+ *
  *  This implementation was based on the following specs:
  *    - NFC Forum Digital 1.1
  *    - ECMA 340 3rd Edition 2013
@@ -66,7 +66,7 @@
  * ENABLE SWITCH
  ******************************************************************************
  */
-    
+
 /* If module is disabled remove the need for the user to set lengths */
 #if !RFAL_FEATURE_NFC_DEP
     #undef RFAL_FEATURE_NFC_DEP_BLOCK_MAX_LEN
@@ -85,7 +85,7 @@
 #define RFAL_NFCDEP_DEPREQ_HEADER_LEN   5U               /*!< DEP_REQ header length: CMD_TYPE + CMD_CMD + PBF + DID + NAD    */
 
 /*! Length NFCIP DEP REQ or RES header (incl LEN)                                                                           */
-#define RFAL_NFCDEP_DEP_HEADER          ( RFAL_NFCDEP_LEN_LEN + RFAL_NFCDEP_CMDTYPE_LEN + RFAL_NFCDEP_CMD_LEN + RFAL_NFCDEP_DEP_PFB_LEN ) 
+#define RFAL_NFCDEP_DEP_HEADER          ( RFAL_NFCDEP_LEN_LEN + RFAL_NFCDEP_CMDTYPE_LEN + RFAL_NFCDEP_CMD_LEN + RFAL_NFCDEP_DEP_PFB_LEN )
 #define RFAL_NFCDEP_HEADER              ( RFAL_NFCDEP_CMDTYPE_LEN + RFAL_NFCDEP_CMD_LEN ) /*!< NFCIP header length           */
 #define RFAL_NFCDEP_SB_LEN              1U               /*!< SB length on NFCIP fram for NFC-A                              */
 #define RFAL_NFCDEP_LEN_LEN             1U               /*!< LEN length on NFCIP frame                                      */
@@ -140,7 +140,7 @@
 #define RFAL_NFCDEP_ATRREQ_MIN_LEN       16U             /*!< Minimum length for an ATR REQ                                  */
 #define RFAL_NFCDEP_ATRREQ_MAX_LEN       RFAL_NFCDEP_ATRRES_MAX_LEN /*!< Maximum length for an ATR REQ  Digital 1.0 14.6.1   */
 
-#define RFAL_NFCDEP_GB_MAX_LEN           (RFAL_NFCDEP_ATRREQ_MAX_LEN - RFAL_NFCDEP_ATRREQ_MIN_LEN) /*!< Maximum length the General Bytes on ATR  Digital 1.1  16.6.3 */  
+#define RFAL_NFCDEP_GB_MAX_LEN           (RFAL_NFCDEP_ATRREQ_MAX_LEN - RFAL_NFCDEP_ATRREQ_MIN_LEN) /*!< Maximum length the General Bytes on ATR  Digital 1.1  16.6.3 */
 
 #define RFAL_NFCDEP_WT_INI_DEFAULT       RFAL_NFCDEP_WT_INI_MAX  /*!< WT Initiator default value Digital 1.0 14.6.3.8        */
 #define RFAL_NFCDEP_WT_INI_MIN           0U                      /*!< WT Initiator minimum value Digital 1.0 14.6.3.8        */
@@ -174,7 +174,7 @@
 #define rfalNfcDepDx2BRS( br )         ( (((uint8_t)(br) & RFAL_NFCDEP_BRS_Dx_MASK) << RFAL_NFCDEP_BRS_DSI_POS) | ((uint8_t)(br) & RFAL_NFCDEP_BRS_Dx_MASK) )
 
 #define rfalNfcDepBRS2DRI( brs )       (uint8_t)( (uint8_t)(brs) & RFAL_NFCDEP_BRS_Dx_MASK )                              /*!< Returns the DRI value from the given BRS byte */
-#define rfalNfcDepBRS2DSI( brs )       (uint8_t)( ((uint8_t)(brs) >> RFAL_NFCDEP_BRS_DSI_POS) & RFAL_NFCDEP_BRS_Dx_MASK ) /*!< Returns the DSI value from the given BRS byte */
+#define rfalNfcDepBRS2DSI( brs )       (uint8_t)( ((uint8_t)(brs) >> RFAL_NFCDEP_BRS_DSI_POS) & RFAL_NFCDEP_BRS_Dx_MASK ) /*!< Returns the DSI_ID value from the given BRS byte */
 
 #define rfalNfcDepPP2LR( PPx )         ( ((uint8_t)(PPx) & RFAL_NFCDEP_PP_LR_MASK ) >> RFAL_NFCDEP_PP_LR_SHIFT)  /*!< Returns the LR value from the given PPx byte  */
 #define rfalNfcDepLR2PP( LRx )         ( ((uint8_t)(LRx) << RFAL_NFCDEP_PP_LR_SHIFT) & RFAL_NFCDEP_PP_LR_MASK)   /*!< Returns the PP byte with the given LRx value  */
@@ -182,9 +182,9 @@
 /*! Returns the Frame size value from the given LRx value  */
 #define rfalNfcDepLR2FS( LRx )         (uint16_t)(RFAL_MIN( (RFAL_NFCDEP_FS_VAL_MIN * ((uint16_t)(LRx) + 1U) ), RFAL_NFCDEP_FRAME_SIZE_MAX_LEN ))
 
-/*! 
- *  Despite DIGITAL 1.0 14.6.2.1 stating that the last two bytes may filled with 
- *  any value, some devices (Samsung Google Nexus) only accept when these are 0 */ 
+/*!
+ *  Despite DIGITAL 1.0 14.6.2.1 stating that the last two bytes may filled with
+ *  any value, some devices (Samsung Google Nexus) only accept when these are 0 */
 #define rfalNfcDepSetNFCID( dst, src, len )   RFAL_MEMSET( (dst), 0x00, RFAL_NFCDEP_NFCID3_LEN ); \
                                               if( (len) > 0U ) {RFAL_MEMCPY( (dst), (src), (len) );}
 
@@ -252,7 +252,7 @@ typedef struct{
   rfalNfcDepRole      role;     /*!< Current NFCIP role                                      */
   rfalNfcDepCommMode  commMode; /*!< Current NFCIP communication mode                        */
   uint8_t             oper;     /*!< Operation config similar to NCI 1.0 Table 81            */
-  
+
   uint8_t             did;      /*!< Current Device ID (DID)                                 */
   uint8_t             nad;      /*!< Current Node Addressing (NAD)                           */
   uint8_t             bs;       /*!< Bit rate in Sending Direction                           */
@@ -291,7 +291,7 @@ typedef struct {
     uint8_t      BRt;                            /*!< Receiving Bitrate for Initiator        */
     uint8_t      TO;                             /*!< Timeout                                */
     uint8_t      PPt;                            /*!< Optional Parameters presence indicator */
-    uint8_t      GBt[RFAL_NFCDEP_GB_MAX_LEN];    /*!< General Bytes                          */    
+    uint8_t      GBt[RFAL_NFCDEP_GB_MAX_LEN];    /*!< General Bytes                          */
 } rfalNfcDepAtrRes;
 
 
@@ -332,7 +332,7 @@ typedef struct {
     uint32_t          dFWT;       /*!< Delta FWT to be used (1/fc)                */
     uint8_t           LR;         /*!< Length Reduction coding the max payload    */
     uint16_t          FS;         /*!< Frame Size                                 */
-    rfalBitRate       DSI;        /*!< Bit Rate coding from Initiator  to Target  */
+    rfalBitRate       DSI_ID;        /*!< Bit Rate coding from Initiator  to Target  */
     rfalBitRate       DRI;        /*!< Bit Rate coding from Target to Initiator   */
     uint8_t           DID;        /*!< Device ID (RFAL_NFCDEP_DID_NO if no DID)   */
     uint8_t           NAD;        /*!< Node ADdress (RFAL_NFCDEP_NAD_NO if no NAD)*/
@@ -351,12 +351,12 @@ typedef struct {
  *   operParam : derives from NFC-Forum NCI NFC-DEP Operation Parameter
  *               NCI 1.1 Table 86: NFC-DEP Operation Parameter
  *               and it's a bit mask composed as:
- *                  [ 0000b 
- *                    | Chain SHALL use max. Transport Data Byte[1b] 
+ *                  [ 0000b
+ *                    | Chain SHALL use max. Transport Data Byte[1b]
  *                    | I-PDU with no Transport Data SHALL NOT be sent [1b]
  *                    | NFC-DEP Target SHALL NOT send RTOX request [1b]
  *                  ]
- * 
+ *
  */
 typedef struct{
     rfalNfcDepCommMode commMode;       /*!< Initiator in Active P2P or Passive P2P*/
@@ -388,12 +388,12 @@ typedef struct
  *   operParam : derives from NFC-Forum NCI NFC-DEP Operation Parameter
  *               NCI 1.1 Table 86: NFC-DEP Operation Parameter
  *               and it's a bit mask composed as:
- *                  [ 0000b 
- *                    | Chain SHALL use max. Transport Data Byte[1b] 
+ *                  [ 0000b
+ *                    | Chain SHALL use max. Transport Data Byte[1b]
  *                    | I-PDU with no Transport Data SHALL NOT be sent [1b]
  *                    | NFC-DEP Target SHALL NOT send RTOX request [1b]
  *                  ]
- * 
+ *
  */
 typedef struct{
     rfalNfcDepCommMode commMode;                       /*!< Target in Active P2P or Passive P2P   */
@@ -455,10 +455,10 @@ typedef struct
 /*!
  ******************************************************************************
  * \brief NFCIP Initialize
- * 
+ *
  * This method resets all NFC-DEP inner states, counters and context and sets
  * default values
- * 
+ *
  ******************************************************************************
  */
 void rfalNfcDepInitialize( void );
@@ -467,12 +467,12 @@ void rfalNfcDepInitialize( void );
 /*!
  ******************************************************************************
  * \brief Set deactivating callback
- * 
+ *
  * Sets the deactivating callback so that nfcip layer can check if upper layer
  * has a deactivation pending, and not perform error recovery upon specific
  * errors
- * 
- * \param[in] pFunc : method pointer to deactivation flag check 
+ *
+ * \param[in] pFunc : method pointer to deactivation flag check
  ******************************************************************************
  */
 void rfalNfcDepSetDeactivatingCallback( rfalNfcDepDeactCallback pFunc );
@@ -481,11 +481,11 @@ void rfalNfcDepSetDeactivatingCallback( rfalNfcDepDeactCallback pFunc );
 /*!
  ******************************************************************************
  * \brief Calculate Response Waiting Time
- * 
+ *
  * Calculates the Response Waiting Time (RWT) from the given Waiting Time (WT)
- * 
+ *
  * \param[in]  wt : the WT value to calculate RWT
- * 
+ *
  * \return RWT value in 1/fc
  ******************************************************************************
  */
@@ -495,14 +495,14 @@ uint32_t rfalNfcDepCalculateRWT( uint8_t wt );
 /*!
  ******************************************************************************
  * \brief NFC-DEP Initiator ATR (Attribute Request)
- * 
+ *
  * This method configures the NFC-DEP layer with given parameters and then
  * sends an ATR to the Target with and checks for a valid response response
  *
  * \param[in]   param     : parameters to initialize and compose the ATR
  * \param[out]  atrRes    : location to store the ATR_RES
  * \param[out]  atrResLen : length of the ATR_RES received
- * 
+ *
  * \return RFAL_ERR_NONE    : No error
  * \return RFAL_ERR_TIMEOUT : Timeout occurred
  * \return RFAL_ERR_PROTO   : Protocol error occurred
@@ -514,15 +514,15 @@ ReturnCode rfalNfcDepATR( const rfalNfcDepAtrParam* param, rfalNfcDepAtrRes *atr
 /*!
  ******************************************************************************
  * \brief NFC-DEP Initiator PSL (Parameter Selection)
- * 
+ *
  * This method sends a PSL to the Target with the given parameters and checks
  * for a valid response response
- * 
+ *
  * The parameters must be coded according to  Digital 1.1  16.7.1
- * 
+ *
  * \param[in] BRS : the selected Bit Rates for Initiator and Target
  * \param[in] FSL : the maximum length of Commands and Responses
- * 
+ *
  * \return RFAL_ERR_NONE    : No error
  * \return RFAL_ERR_TIMEOUT : Timeout occurred
  * \return RFAL_ERR_PROTO   : Protocol error occurred
@@ -534,12 +534,12 @@ ReturnCode rfalNfcDepPSL( uint8_t BRS, uint8_t FSL );
 /*!
  ******************************************************************************
  * \brief NFC-DEP Initiator DSL (Deselect)
- * 
- * This method checks if the NFCIP module is configured as initiator and if 
- * so sends a DSL REQ, waits  the target's response and checks it 
- * 
- * In case of performing as target no action is taken 
- * 
+ *
+ * This method checks if the NFCIP module is configured as initiator and if
+ * so sends a DSL REQ, waits  the target's response and checks it
+ *
+ * In case of performing as target no action is taken
+ *
  * \return RFAL_ERR_NONE       : No error
  * \return RFAL_ERR_TIMEOUT    : Timeout occurred
  * \return RFAL_ERR_MAX_RERUNS : Timeout occurred
@@ -552,12 +552,12 @@ ReturnCode rfalNfcDepDSL( void );
 /*!
  ******************************************************************************
  * \brief NFC-DEP Initiator RLS (Release)
- * 
- * This method checks if the NFCIP module is configured as initiator and if 
- * so sends a RLS REQ, waits target's response and checks it 
- * 
- * In case of performing as target no action is taken 
- * 
+ *
+ * This method checks if the NFCIP module is configured as initiator and if
+ * so sends a RLS REQ, waits target's response and checks it
+ *
+ * In case of performing as target no action is taken
+ *
  * \return RFAL_ERR_NONE       : No error
  * \return RFAL_ERR_TIMEOUT    : Timeout occurred
  * \return RFAL_ERR_MAX_RERUNS : Timeout occurred
@@ -567,15 +567,15 @@ ReturnCode rfalNfcDepDSL( void );
 ReturnCode rfalNfcDepRLS( void );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  NFC-DEP Initiator Handle  Activation
- *   
+ *
  *  This performs a Activation into NFC-DEP layer with the given
- *  parameters. It sends ATR_REQ and if the higher bit rates are supported by 
+ *  parameters. It sends ATR_REQ and if the higher bit rates are supported by
  *  both devices it additionally sends PSL
  *  Once Activated all details of the device are provided on nfcDepDev
- *   
+ *
  *  \param[in]  param     : required parameters to initialize and send ATR_REQ
  *  \param[in]  desiredBR : Desired bit rate supported by the Poller
  *  \param[out] nfcDepDev : NFC-DEP information of the activated Listen device
@@ -596,20 +596,20 @@ ReturnCode rfalNfcDepInitiatorHandleActivation( rfalNfcDepAtrParam* param, rfalB
 
 /*!
  ******************************************************************************
- * \brief Check if buffer contains valid ATR_REQ 
- * 
+ * \brief Check if buffer contains valid ATR_REQ
+ *
  * This method checks if the given ATR_REQ is valid
- * 
- * 
+ *
+ *
  * \param[in]  buf    : buffer holding Initiator's received request
  * \param[in]  bufLen : size of the msg contained on the buf in Bytes
- * \param[out] nfcid3 : pointer to where the NFCID3 may be outputed, 
+ * \param[out] nfcid3 : pointer to where the NFCID3 may be outputed,
  *                       nfcid3 has NFCF_SENSF_NFCID3_LEN as length
- *                       Pass NULL if output parameter not desired 
- *                       
+ *                       Pass NULL if output parameter not desired
+ *
  * \return true  : Valid ATR_REQ received, the ATR_RES has been computed in txBuf
  * \return false : Invalid protocol request
- * 
+ *
  ******************************************************************************
  */
 bool rfalNfcDepIsAtrReq( const uint8_t* buf, uint16_t bufLen, uint8_t* nfcid3 );
@@ -617,13 +617,13 @@ bool rfalNfcDepIsAtrReq( const uint8_t* buf, uint16_t bufLen, uint8_t* nfcid3 );
 
 /*!
  ******************************************************************************
- * \brief Check is Target has received ATR 
- * 
+ * \brief Check is Target has received ATR
+ *
  * This method checks if the NFCIP module is configured as target and if a
  * ATR REQ has been received ( whether is in activation or in data exchange)
- * 
+ *
  * \return true  : a ATR has already been received
- * \return false : no ATR has been received 
+ * \return false : no ATR has been received
  ******************************************************************************
  */
 bool rfalNfcDepTargetRcvdATR( void );
@@ -631,28 +631,28 @@ bool rfalNfcDepTargetRcvdATR( void );
 /*!
  *****************************************************************************
  * \brief NFCDEP Start Listen Activation Handling
- * 
+ *
  * Start Activation Handling and setup to receive first frame which may
- * contain complete or partial DEP-REQ after activation is completed 
- * 
- * Pass in ATR_REQ for NFC-DEP to handle ATR_RES. The Activation Handling 
+ * contain complete or partial DEP-REQ after activation is completed
+ *
+ * Pass in ATR_REQ for NFC-DEP to handle ATR_RES. The Activation Handling
  * handles ATR_RES and PSL_RES if a PSL_REQ is received
- * 
+ *
  * Activation is completed if PSL_RES is sent or if first I-PDU is received
- *  
- * \ref rfalNfcDepListenGetActivationStatus() provide status of the 
+ *
+ * \ref rfalNfcDepListenGetActivationStatus() provide status of the
  *       ongoing activation
- * 
- * \warning nfcDepGetTransceiveStatus() shall be called right after activation 
- * is completed (i.e. rfalNfcDepListenGetActivationStatus() return RFAL_ERR_NONE) 
+ *
+ * \warning nfcDepGetTransceiveStatus() shall be called right after activation
+ * is completed (i.e. rfalNfcDepListenGetActivationStatus() return RFAL_ERR_NONE)
  * to check for first received frame.
- * 
+ *
  * \param[in]  param       : Target parameters to be used
- * \param[in]  atrReq      : reference to buffer containing ATR_REQ 
+ * \param[in]  atrReq      : reference to buffer containing ATR_REQ
  * \param[in]  atrReqLength: Length of ATR_REQ
- * \param[out] rxParam     : references to buffer, length and chaining indication 
+ * \param[out] rxParam     : references to buffer, length and chaining indication
  *                           for first complete LLCP to be received
- * 
+ *
  * \return RFAL_ERR_NONE      : ATR_REQ is valid and activation ongoing
  * \return RFAL_ERR_PARAM     : ATR_REQ or other params are invalid
  * \return RFAL_ERR_LINK_LOSS : Remote Field is turned off
@@ -664,7 +664,7 @@ ReturnCode rfalNfcDepListenStartActivation( const rfalNfcDepTargetParam *param, 
 /*!
  *****************************************************************************
  * \brief Get the current NFC-DEP Activation Status
- * 
+ *
  * \return RFAL_ERR_NONE      : Activation has completed successfully
  * \return RFAL_ERR_BUSY      : Activation is ongoing
  * \return RFAL_ERR_LINK_LOSS : Remote Field was turned off
@@ -674,18 +674,18 @@ ReturnCode rfalNfcDepListenGetActivationStatus( void );
 
 /*!
  *****************************************************************************
- * \brief Start Transceive 
- * 
+ * \brief Start Transceive
+ *
  * Transceives a complete or partial DEP block
- * 
- * The txBuf contains complete or partial of DEP to be transmitted. 
+ *
+ * The txBuf contains complete or partial of DEP to be transmitted.
  * The Prologue field of the I-PDU is handled internally
- * 
- * If the buffer contains partial LLCP and is not the last block, then 
+ *
+ * If the buffer contains partial LLCP and is not the last block, then
  * isTxChaining must be set to true
- * 
+ *
  * \param[in] param: reference parameters to be used for the Transceive
- *                    
+ *
  * \return RFAL_ERR_PARAM       : Bad request
  * \return RFAL_ERR_WRONG_STATE : The module is not in a proper state
  * \return RFAL_ERR_NONE        : The Transceive request has been started
@@ -699,15 +699,15 @@ ReturnCode rfalNfcDepStartTransceive( const rfalNfcDepTxRxParam *param );
  * \brief Return the Transceive status
  *
  * Returns the status of the NFC-DEP Transceive
- * 
- * \warning  When the other device is performing chaining once a chained 
- *            block is received the error RFAL_ERR_AGAIN is sent. At this point 
- *            caller must handle the received data immediately. 
- *            When RFAL_ERR_AGAIN is returned an ACK has already been sent to 
- *            the other device and the next block might be incoming. 
- *            If rfalWorker() is called frequently it will place the next 
- *            block on the given buffer  
- * 
+ *
+ * \warning  When the other device is performing chaining once a chained
+ *            block is received the error RFAL_ERR_AGAIN is sent. At this point
+ *            caller must handle the received data immediately.
+ *            When RFAL_ERR_AGAIN is returned an ACK has already been sent to
+ *            the other device and the next block might be incoming.
+ *            If rfalWorker() is called frequently it will place the next
+ *            block on the given buffer
+ *
  * \return RFAL_ERR_NONE      : Transceive has been completed successfully
  * \return RFAL_ERR_BUSY      : Transceive is ongoing
  * \return RFAL_ERR_PROTO     : Protocol error occurred
@@ -715,7 +715,7 @@ ReturnCode rfalNfcDepStartTransceive( const rfalNfcDepTxRxParam *param );
  * \return RFAL_ERR_SLEEP_REQ : Deselect has been received and responded
  * \return RFAL_ERR_NOMEM     : The received I-PDU does not fit into the
  *                            receive buffer
- * \return RFAL_ERR_LINK_LOSS : Communication is lost because Reader/Writer 
+ * \return RFAL_ERR_LINK_LOSS : Communication is lost because Reader/Writer
  *                            has turned off its field
  * \return RFAL_ERR_AGAIN     : received one chaining block, continue to call
  *                            this method to retrieve the remaining blocks
@@ -726,20 +726,20 @@ ReturnCode rfalNfcDepGetTransceiveStatus( void );
 
 /*!
  *****************************************************************************
- * \brief Start PDU Transceive 
- * 
+ * \brief Start PDU Transceive
+ *
  * This method triggers a NFC-DEP Transceive containing a complete PDU
  * It transmits the given message and handles all protocol retransmitions,
  * error handling and control messages
- * 
- * The txBuf  contains a complete PDU to be transmitted 
+ *
+ * The txBuf  contains a complete PDU to be transmitted
  * The Prologue field will be manipulated by the Transceive
- *  
+ *
  * \warning the txBuf will be modified during the transmission
  * \warning the maximum RF frame which can be received is limited by param.tmpBuf
- * 
+ *
  * \param[in] param: reference parameters to be used for the Transceive
- *                    
+ *
  * \return RFAL_ERR_PARAM       : Bad request
  * \return RFAL_ERR_WRONG_STATE : The module is not in a proper state
  * \return RFAL_ERR_NONE        : The Transceive request has been started
@@ -753,8 +753,8 @@ ReturnCode rfalNfcDepStartPduTransceive( rfalNfcDepPduTxRxParam param );
  * \brief Return the PDU Transceive status
  *
  * Returns the status of the NFC-DEP PDU Transceive
- * 
- * 
+ *
+ *
  * \return RFAL_ERR_NONE      : Transceive has been completed successfully
  * \return RFAL_ERR_BUSY      : Transceive is ongoing
  * \return RFAL_ERR_PROTO     : Protocol error occurred
@@ -762,7 +762,7 @@ ReturnCode rfalNfcDepStartPduTransceive( rfalNfcDepPduTxRxParam param );
  * \return RFAL_ERR_SLEEP_REQ : Deselect has been received and responded
  * \return RFAL_ERR_NOMEM     : The received I-PDU does not fit into the
  *                            receive buffer
- * \return RFAL_ERR_LINK_LOSS : Communication is lost because Reader/Writer 
+ * \return RFAL_ERR_LINK_LOSS : Communication is lost because Reader/Writer
  *                            has turned off its field
  *****************************************************************************
  */
