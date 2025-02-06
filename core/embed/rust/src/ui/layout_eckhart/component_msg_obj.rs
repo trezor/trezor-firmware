@@ -14,8 +14,18 @@ use crate::{
 };
 
 use super::component::{
-    AllowedTextContent, SelectWordMsg, SelectWordScreen, TextScreen, TextScreenMsg,
+    AllowedTextContent, PinKeyboard, PinKeyboardMsg, SelectWordMsg, SelectWordScreen, TextScreen,
+    TextScreenMsg,
 };
+
+impl ComponentMsgObj for PinKeyboard<'_> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PinKeyboardMsg::Confirmed => self.pin().try_into(),
+            PinKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
 
 // Clippy/compiler complains about conflicting implementations
 // TODO move the common impls to a common module
