@@ -5,6 +5,7 @@ mod error;
 mod header;
 mod hint;
 mod hold_to_confirm;
+mod keyboard;
 mod result;
 mod select_word_screen;
 mod share_words;
