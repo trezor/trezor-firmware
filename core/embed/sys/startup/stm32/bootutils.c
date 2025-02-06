@@ -99,6 +99,46 @@ void bootargs_init(uint32_t r11_register) {
 }
 #endif
 
+#ifdef RSOD_INFINITE_LOOP
+// Continuation of `reboot_with_args`
+static void halt_device_phase_2(uint32_t arg1, uint32_t arg2) {
+  // We are now running on a new stack. We cannot be sure about
+  // any variables in the .bss and .data sections, so we must
+  // be careful and avoid using them altogether.
+
+  // Reset peripherals (so we are sure that no DMA is pending)
+  // and disable all interrupts and clear all pending ones
+  reset_peripherals_and_interrupts();
+
+  // Clear unused part of stack
+  clear_unused_stack();
+
+  // Clear all memory except stack and bootargs
+  memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
+  MEMREGION_DEL_SECTION(&region, _stack_section);
+  MEMREGION_DEL_SECTION(&region, _bootargs_ram);
+  memregion_fill(&region, 0);
+
+#ifdef STM32F4
+  clear_otg_hs_memory();
+#endif
+
+  while (true)
+    ;  // Infinite loop
+}
+
+__attribute__((noreturn)) static void halt_device(void) {
+  // Clear bootargs to prevent the bootloader doing anything
+  // unexpected when if the device is reset during the halt.
+  bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
+
+  // Disable interrupts, MPU, clear all registers and set up a new stack
+  // (on STM32U5 it also clear all CPU secrets and SRAM2).
+  call_with_new_stack(0, 0, halt_device_phase_2);
+}
+#endif  // RSOD_INFINITE_LOOP
+
+// Continuation of `reboot_with_args`
 static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
   // We are now running on a new stack. We cannot be sure about
   // any variables in the .bss and .data sections, so we must
@@ -166,8 +206,7 @@ __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
   systick_delay_ms(10 * 1000);
 #endif
 #ifdef RSOD_INFINITE_LOOP
-  while (true)
-    ;
+  halt_device();
 #else
   reboot_device();
 #endif
