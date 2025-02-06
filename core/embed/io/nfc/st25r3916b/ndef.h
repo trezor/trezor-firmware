@@ -1,7 +1,6 @@
-#include <stdint.h>
+#pragma once
 
-#ifndef NDEF_H
-#define NDEF_H
+#include <trezor_types.h>
 
 #define NDEF_MAX_RECORDS 3
 #define NDEF_MAX_RECORD_PAYLOAD_BYTES 50
@@ -37,10 +36,9 @@ typedef struct {
   ndef_record_t records[NDEF_MAX_RECORDS];
 } ndef_message_t;
 
-ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len,
+ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
                                  ndef_message_t *message);
-ndef_status_t parse_ndef_record(uint8_t *buffer, uint16_t len,
+ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
                                 ndef_record_t *rec);
-uint16_t create_ndef_uri(const char *uri, uint8_t *buffer);
+uint16_t ndef_create_uri(const char *uri, uint8_t *buffer);
 
-#endif

@@ -20,8 +20,7 @@
  *
  */
 
-#ifndef RFAL_PLATFORM_H
-#define RFAL_PLATFORM_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,16 +33,13 @@ extern "C" {
 */
 
 #include <trezor_bsp.h>
-#include "stm32u5xx_hal.h"
-
+#include <trezor_types.h>
 #include <limits.h>
 #include <math.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <sys/systimer.h>
 
+#include <sys/systimer.h>
 #include "io/nfc.h"
+
 #include "nfc_internal.h"
 
 /*
@@ -56,10 +52,10 @@ extern "C" {
 #define ST25R3916B
 
 // GPIO pin used for ST25R SPI SS
-#define ST25R_SS_PIN SPI_INSTANCE_3_NSS_PIN
+#define ST25R_SS_PIN NFC_SPI_NSS_PIN
 
 // GPIO port used for ST25R SPI SS port
-#define ST25R_SS_PORT SPI_INSTANCE_3_NSS_PORT
+#define ST25R_SS_PORT NFC_SPI_NSS_PORT
 
 // GPIO pin used for ST25R External Interrupt
 #define ST25R_INT_PIN NFC_INT_PIN
@@ -73,12 +69,10 @@ extern "C" {
 ******************************************************************************
 */
 #define platformProtectST25RComm() \
-  NVIC_DisableIRQ(EXTI10_IRQn)  // TODO: PRobably should be irq_lock instead //
-                                // Protect the unique access to communication
-                                // channel (disable IRQ on single thread)
+  NVIC_DisableIRQ(NFC_EXTI_INTERRUPT_NUM)
 
 #define platformUnprotectST25RComm() \
-  NVIC_EnableIRQ(EXTI10_IRQn)  // TODO: Use macro here /
+  NVIC_EnableIRQ(NFC_EXTI_INTERRUPT_NUM)
 
 #define platformProtectST25RIrqStatus()                                        \
   platformProtectST25RComm() /*!< Protect unique access to IRQ status var -    \
@@ -292,5 +286,3 @@ extern uint8_t globalCommProtectCnt; /* Global Protection Counter provided per
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* RFAL_PLATFORM_H */

@@ -1,12 +1,28 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-
+#include <trezor_rtl.h>
 #include "ndef.h"
-#include <stdint.h>
-#include <string.h>
 
 // ndef_status_t create_ndef_record_uri(uint8_t *bytearray, )
 
-ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len,
+ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
                                  ndef_message_t *message) {
   memset(message, 0, sizeof(ndef_message_t));
 
@@ -34,7 +50,7 @@ ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len,
   remaining_len = message->message_total_len;
 
   while (1) {
-    parse_ndef_record(buffer, remaining_len,
+    ndef_parse_record(buffer, remaining_len,
                       &(message->records[message->records_cnt]));
     buffer += message->records[message->records_cnt].record_total_len;
     remaining_len -= message->records[message->records_cnt].record_total_len;
@@ -57,7 +73,7 @@ ndef_status_t parse_ndef_message(uint8_t *buffer, uint16_t buffer_len,
   return NDEF_OK;
 }
 
-ndef_status_t parse_ndef_record(uint8_t *buffer, uint16_t len,
+ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
                                 ndef_record_t *rec) {
   uint8_t bp = 0;
 
@@ -119,7 +135,7 @@ ndef_status_t parse_ndef_record(uint8_t *buffer, uint16_t len,
   return NDEF_OK;
 }
 
-uint16_t create_ndef_uri(const char *uri, uint8_t *buffer) {
+uint16_t ndef_create_uri(const char *uri, uint8_t *buffer) {
   *buffer = 0x3;  // TLV header
   buffer++;
 
@@ -128,15 +144,6 @@ uint16_t create_ndef_uri(const char *uri, uint8_t *buffer) {
   // NDEF message length
   *buffer = uri_len + 5;  // uri + record header;
   buffer++;
-
-  // ndef_record_header_t hdr = {
-  //   .tnf = 0x01,
-  //   .il = 0,
-  //   .sr = 1,
-  //   .cf = 0,
-  //   .me = 1,
-  //   .mb = 1,
-  // };
 
   *buffer = 0xD1;  // NDEF record Header
   buffer++;
@@ -157,8 +164,6 @@ uint16_t create_ndef_uri(const char *uri, uint8_t *buffer) {
     *buffer = uri[i];
     buffer++;
   }
-
-  // memcpy(buffer, uri, uri_len);
 
   *buffer = 0xFE;  // TLV termination
 

@@ -25,20 +25,7 @@
 #include <rtl/cli.h>
 #include <sys/systick.h>
 
-static bool nfc_dev_activated = false;
 static nfc_dev_info_t dev_info = {0};
-
-static void nfc_activated_callback() {
-  nfc_dev_read_info(&dev_info);
-  nfc_dev_activated = true;
-}
-
-static void nfc_write_tag_callback() {
-  nfc_dev_info_t dev_info;
-  nfc_dev_read_info(&dev_info);
-
-  nfc_dev_activated = true;
-}
 
 static void prodtest_nfc_read_card(cli_t* cli) {
   uint32_t timeout = 0;
@@ -55,31 +42,41 @@ static void prodtest_nfc_read_card(cli_t* cli) {
     return;
   }
 
-  nfc_dev_activated = false;
-
   nfc_status_t ret = nfc_init();
   if (ret != NFC_OK) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
   } else {
-    cli_trace(cli, "NFC activated in reader mode for %d seconds.", timeout);
+    cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
   }
 
   nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B | NFC_POLLER_TECH_F |
                     NFC_POLLER_TECH_V);
-  nfc_register_event_callback(NFC_STATE_ACTIVATED, nfc_activated_callback);
   nfc_activate_stm();
 
-  uint32_t tick = systick_ms();
+  nfc_event_t nfc_event = NFC_NO_EVENT;
 
-  while (!nfc_dev_activated) {  // Todo, while timeout or device found
+  uint32_t expire_time = ticks_timeout(timeout);
 
-    if ((systick_ms() - tick) > (timeout * 1000)) {
+  while (true) {
+
+    if (ticks_expired(expire_time)) {
       nfc_deinit();
       cli_error(cli, CLI_ERROR_TIMEOUT, "NFC timeout");
       return;
     }
 
-    nfc_feed_worker();
+    nfc_event = nfc_get_event();
+
+    if(nfc_event == NFC_STATE_ACTIVATED) {
+      nfc_dev_read_info(&dev_info);
+      nfc_dev_deactivate();
+      break;
+    }
+
+    if (cli_aborted(cli)) {
+      return;
+    }
+
   }
 
   cli_trace(cli, "NFC card detected.");
@@ -136,16 +133,21 @@ static void prodtest_nfc_emulate_card(cli_t* cli) {
   if (ret != NFC_OK) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
   } else {
-    cli_trace(cli, "Emulation started for %d seconds", timeout);
+    cli_trace(cli, "Emulation started for %d ms", timeout);
   }
 
   nfc_register_tech(NFC_CARD_EMU_TECH_A);
   nfc_activate_stm();
 
-  uint32_t tick = systick_ms();
+  uint32_t expire_time = ticks_timeout(timeout);
 
-  while ((systick_ms() - tick) < (timeout * 1000)) {
-    nfc_feed_worker();
+  while (!ticks_expired(expire_time)) {
+    nfc_get_event();
+
+    if (cli_aborted(cli)) {
+      return;
+    }
+
   }
 
   cli_trace(cli, "Emulation over");
@@ -170,41 +172,52 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     return;
   }
 
-  nfc_dev_activated = false;
-
   nfc_status_t ret = nfc_init();
 
   if (ret != NFC_OK) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
   } else {
-    cli_trace(cli, "NFC reader on  put the card on the reader (timeout %d s)",
+    cli_trace(cli, "NFC reader on, put the card on the reader (timeout %d ms)",
               timeout);
   }
 
   nfc_register_tech(NFC_POLLER_TECH_A);
-  nfc_register_event_callback(NFC_STATE_ACTIVATED, nfc_write_tag_callback);
   nfc_activate_stm();
 
-  uint32_t tick = systick_ms();
+  nfc_event_t nfc_event = NFC_NO_EVENT;
+  uint32_t expire_time = ticks_timeout(timeout);
 
-  while (!nfc_dev_activated) {  // Todo, while timeout or device found
+  while (true) {
 
-    if ((systick_ms() - tick) > timeout * 1000) {
+    if (ticks_expired(expire_time)) {
       nfc_deinit();
       cli_error(cli, CLI_ERROR_TIMEOUT, "NFC timeout");
       return;
     }
 
-    nfc_feed_worker();
-  }
+    nfc_event = nfc_get_event();
+    if (nfc_event == NFC_STATE_ACTIVATED) {
 
-  if (dev_info.type != NFC_DEV_TYPE_A) {
-    cli_error(cli, CLI_ERROR, "Only NFC type A cards supported");
-    return;
-  }
+      nfc_dev_read_info(&dev_info);
 
-  cli_trace(cli, "Writting URI to NFC tag %s", dev_info.uid);
-  nfc_def_write_ndef_uri();
+      if (dev_info.type != NFC_DEV_TYPE_A) {
+        cli_error(cli, CLI_ERROR, "Only NFC type A cards supported");
+        return;
+      }
+
+      cli_trace(cli, "Writting URI to NFC tag %s", dev_info.uid);
+      nfc_dev_write_ndef_uri();
+
+      nfc_dev_deactivate();
+      break;
+
+    }
+
+    if (cli_aborted(cli)) {
+      return;
+    }
+
+  }
 
   nfc_deinit();
 

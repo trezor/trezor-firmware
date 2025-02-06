@@ -529,7 +529,7 @@ static uint16_t card_emulation_t3t_update(uint8_t *cmdData, uint8_t *rspData) {
  * @return None
  *****************************************************************************
  */
-void card_emulation_init(uint8_t *nfcfNfcid) {
+void card_emulation_init(const uint8_t *nfcfNfcid) {
   if (nfcfNfcid != NULL) {
     memcpy(gNfcfNfcid, nfcfNfcid, RFAL_NFCF_NFCID2_LEN);
   }
