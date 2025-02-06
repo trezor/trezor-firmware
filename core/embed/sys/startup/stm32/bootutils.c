@@ -35,8 +35,10 @@
 
 // Battery powered devices (USE_POWERCTL) should not stall
 // after showing RSOD, as it would drain the battery.
-#ifndef USE_POWERCTL
-#define RSOD_INFINITE_LOOP
+#ifdef USE_POWERCTL
+#ifdef RSOD_INFINITE_LOOP
+#error "RSOD_INFINITE_LOOP is not supported on battery powered devices"
+#endif
 #endif
 
 #ifdef STM32U5
