@@ -1,22 +1,24 @@
 
 /******************************************************************************
- * @attention
- *
- * COPYRIGHT 2016 STMicroelectronics, all rights reserved
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied,
- * AND SPECIFICALLY DISCLAIMING THE IMPLIED WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- ******************************************************************************/
+  * @attention
+  *
+  * COPYRIGHT 2016 STMicroelectronics, all rights reserved
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied,
+  * AND SPECIFICALLY DISCLAIMING THE IMPLIED WARRANTIES OF MERCHANTABILITY,
+  * FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  *
+******************************************************************************/
+
+
 
 /*
  *      PROJECT:   ST25R3916 firmware
- *      Revision:
+ *      Revision: 
  *      LANGUAGE:  ISO C99
  */
 
@@ -37,11 +39,11 @@
  * \addtogroup ST25R3916
  * \brief RFAL ST25R3916 Driver
  * @{
- *
+ * 
  * \addtogroup ST25R3916_LED
  * \brief RFAL ST25R3916 LED
  * @{
- *
+ * 
  */
 
 #ifndef ST25R3916_LED_H
@@ -67,49 +69,50 @@
 ******************************************************************************
 */
 
-/*!
+
+/*! 
  *****************************************************************************
  *  \brief  ST25R3916 LED Initialize
  *
- *  This function initializes the LEDs that represent ST25R3916 activity
+ *  This function initializes the LEDs that represent ST25R3916 activity 
  *
  *****************************************************************************
  */
-void st25r3916ledInit(void);
+void st25r3916ledInit( void );
 
-/*!
+/*! 
  *****************************************************************************
  *  \brief   ST25R3916 LED Event Interrupt
  *
- *  This function should be called upon a ST25R3916 Interrupt, providing
- *  the interrupt event with ST25R3916 irq flags to update LEDs
+ *  This function should be called upon a ST25R3916 Interrupt, providing 
+ *  the interrupt event with ST25R3916 irq flags to update LEDs 
  *
  *  \param[in] irqs: ST25R3916 irqs mask
  *
  *****************************************************************************
  */
-void st25r3916ledEvtIrq(uint32_t irqs);
+void st25r3916ledEvtIrq( uint32_t irqs );
 
-/*!
+/*! 
  *****************************************************************************
  *  \brief   ST25R3916 LED Event Write Register
  *
  *  This function should be called on a ST25R3916 Write Register operation
- *  providing the event with the register and value to update LEDs
+ *  providing the event with the register and value to update LEDs 
  *
  *  \param[in] reg: ST25R3916 register to be written
  *  \param[in] val: value to be written on the register
  *
  *****************************************************************************
  */
-void st25r3916ledEvtWrReg(uint8_t reg, uint8_t val);
+void st25r3916ledEvtWrReg( uint8_t reg, uint8_t val );
 
-/*!
+/*! 
  *****************************************************************************
  *  \brief   ST25R3916 LED Event Write Multiple Register
  *
- *  This function should be called upon a ST25R3916 Write Multiple Registers,
- *  providing the event with the registers and values to update LEDs
+ *  This function should be called upon a ST25R3916 Write Multiple Registers, 
+ *  providing the event with the registers and values to update LEDs 
  *
  *  \param[in] reg : ST25R3916 first register written
  *  \param[in] vals: pointer to the values written
@@ -117,29 +120,29 @@ void st25r3916ledEvtWrReg(uint8_t reg, uint8_t val);
  *
  *****************************************************************************
  */
-void st25r3916ledEvtWrMultiReg(uint8_t reg, const uint8_t* vals, uint8_t len);
+void st25r3916ledEvtWrMultiReg( uint8_t reg, const uint8_t* vals, uint8_t len );
 
-/*!
+/*! 
  *****************************************************************************
  *  \brief   ST25R3916 LED Event Direct Command
  *
- *  This function should be called upon a ST25R3916 direct command, providing
+ *  This function should be called upon a ST25R3916 direct command, providing 
  *  the event with the command executed
  *
  *  \param[in] cmd: ST25R3916 cmd executed
  *
  *****************************************************************************
  */
-void st25r3916ledEvtCmd(uint8_t cmd);
+void st25r3916ledEvtCmd( uint8_t cmd );
 
 #endif /* ST25R3916_LED_H */
 
 /**
- * @}
- *
- * @}
- *
- * @}
- *
- * @}
- */
+  * @}
+  *
+  * @}
+  *
+  * @}
+  * 
+  * @}
+  */
