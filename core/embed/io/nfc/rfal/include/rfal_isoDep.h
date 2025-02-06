@@ -27,7 +27,7 @@
  *  \author Gustavo Patricio
  *
  *  \brief Implementation of ISO-DEP protocol
- *  
+ *
  *  This implementation was based on the following specs:
  *    - ISO/IEC 14443-4  2nd Edition 2008-07-15
  *    - NFC Forum Digital Protocol  1.1 2014-01-14
@@ -43,7 +43,7 @@
  * \addtogroup ISO-DEP
  * \brief RFAL ISO-DEP Module
  * @{
- * 
+ *
  */
 
 #ifndef RFAL_ISODEP_H_
@@ -139,10 +139,10 @@
 #define RFAL_ISODEP_SPARAM_TAG_PCD2PICC_LEN     (2U)     /*!< S(PARAMETERS) bit rates from PICC to PCD Length                   */
 #define RFAL_ISODEP_SPARAM_TAG_BRACK_LEN        (0U)     /*!< S(PARAMETERS) tag Bit rates Acknowledgement Length                */
 
-#define RFAL_ISODEP_ATS_TA_DPL_212              (0x01U)  /*!< ATS TA DSI 212 kbps support bit mask                              */
-#define RFAL_ISODEP_ATS_TA_DPL_424              (0x02U)  /*!< ATS TA DSI 424 kbps support bit mask                              */
-#define RFAL_ISODEP_ATS_TA_DPL_848              (0x04U)  /*!< ATS TA DSI 848 kbps support bit mask                              */
-#define RFAL_ISODEP_ATS_TA_DLP_212              (0x10U)  /*!< ATS TA DSI 212 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DPL_212              (0x01U)  /*!< ATS TA DSI_ID 212 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DPL_424              (0x02U)  /*!< ATS TA DSI_ID 424 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DPL_848              (0x04U)  /*!< ATS TA DSI_ID 848 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DLP_212              (0x10U)  /*!< ATS TA DSI_ID 212 kbps support bit mask                              */
 #define RFAL_ISODEP_ATS_TA_DLP_424              (0x20U)  /*!< ATS TA DRI 424 kbps support bit mask                              */
 #define RFAL_ISODEP_ATS_TA_DLP_848              (0x40U)  /*!< ATS TA DRI 848 kbps support bit mask                              */
 #define RFAL_ISODEP_ATS_TA_SAME_D               (0x80U)  /*!< ATS TA same bit both directions bit mask                          */
@@ -163,7 +163,7 @@
 #define RFAL_ISODEP_MAX_WTX_RETRYS_ULTD         (255U)   /*!< Use unlimited number of overall S(WTX)                                      */
 #define RFAL_ISODEP_MAX_DSL_RETRYS              (0U)     /*!< Number of retries for a S(DESELECT) Digital 2.0 B9 - nRETRY DESELECT: [0,5] */
 #define RFAL_ISODEP_RATS_RETRIES                (1U)     /*!< RATS retries upon fail              Digital 2.0 B7 - nRETRY RATS [0,1]      */
- 
+
 
 /*! Frame Size for Proximity Card Integer definitions                                                               */
 typedef enum
@@ -238,7 +238,7 @@ typedef struct
 {
     uint8_t      PPSS;                              /*!< Start Byte: [ 1101b | CID[4b] ]          */
     uint8_t      PPS0;                              /*!< Parameter 0:[ 000b | PPS1[1n] | 0001b ]  */
-    uint8_t      PPS1;                              /*!< Parameter 1:[ 0000b | DSI[2b] | DRI[2b] ]*/    
+    uint8_t      PPS1;                              /*!< Parameter 1:[ 0000b | DSI_ID[2b] | DRI[2b] ]*/
 } rfalIsoDepPpsReq;
 
 
@@ -293,7 +293,7 @@ typedef union {/*  PRQA S 0750 # MISRA 19.2 - Both members of the union will not
             rfalIsoDepRats      RATS;               /*!< RATS request          (Listener mode)    */
         }Poller;
     }A;
-    
+
     /*! NFC-B information                                                                         */
     union {
         struct{
@@ -318,7 +318,7 @@ typedef struct {
     uint8_t            FSxI;            /*!< Frame Size Device/Card Integer (FSDI or FSCI)        */
     uint16_t           FSx;             /*!< Frame Size Device/Card (FSD or FSC)                  */
     uint32_t           MBL;             /*!< Maximum Buffer Length (optional for NFC-B)           */
-    rfalBitRate        DSI;             /*!< Bit Rate coding from Listener (PICC) to Poller (PCD) */
+    rfalBitRate        DSI_ID;             /*!< Bit Rate coding from Listener (PICC) to Poller (PCD) */
     rfalBitRate        DRI;             /*!< Bit Rate coding from Poller (PCD) to Listener (PICC) */
     uint8_t            DID;             /*!< Device ID                                            */
     uint8_t            NAD;             /*!< Node ADdress                                         */
@@ -424,8 +424,8 @@ typedef struct
 
 /*!
  ******************************************************************************
- * \brief Initialize the ISO-DEP protocol 
- * 
+ * \brief Initialize the ISO-DEP protocol
+ *
  * Initialize the ISO-DEP protocol layer with default config
  ******************************************************************************
  */
@@ -434,27 +434,27 @@ void rfalIsoDepInitialize( void );
 
 /*!
  ******************************************************************************
- * \brief Initialize the ISO-DEP protocol 
- * 
+ * \brief Initialize the ISO-DEP protocol
+ *
  * Initialize the ISO-DEP protocol layer with additional parameters allowing
  * to customise the protocol layer for specific behaviours
- * 
+ *
 
  *  \param[in] compMode        : Compliance mode to be performed
  *  \param[in] maxRetriesR     : Number of retries for a R-Block
  *                                Digital 2.0 B9 - nRETRY ACK/NAK: [2,5]
  *  \param[in] maxRetriesSnWTX : Number of retries for a S(WTX) (only in case
- *                               of NAKs)   Digital 2.0 B9 - nRETRY WTX[2,5]    
- *  \param[in] maxRetriesSWTX  : Number of overall S(WTX) retries. 
- *                                Use RFAL_ISODEP_MAX_WTX_RETRYS_ULTD for disabling 
+ *                               of NAKs)   Digital 2.0 B9 - nRETRY WTX[2,5]
+ *  \param[in] maxRetriesSWTX  : Number of overall S(WTX) retries.
+ *                                Use RFAL_ISODEP_MAX_WTX_RETRYS_ULTD for disabling
  *                                this limit check   Digital 2.0  16.2.5.2
  *  \param[in] maxRetriesSDSL  : Number of retries for a S(DESELECT)
  *                                Digital 2.0 B9 - nRETRY DESELECT: [0,5]
- *  \param[in] maxRetriesI     : Number of retries for a I-Block 
+ *  \param[in] maxRetriesI     : Number of retries for a I-Block
  *                                Digital 2.0  16.2.5.4
- *  \param[in] maxRetriesRATS  : Number of retries for RATS 
+ *  \param[in] maxRetriesRATS  : Number of retries for RATS
  *                                Digital 2.0 B7 - nRETRY RATS [0,1]
- *    
+ *
  ******************************************************************************
  */
 void rfalIsoDepInitializeWithParams( rfalComplianceMode compMode,
@@ -470,19 +470,19 @@ void rfalIsoDepInitializeWithParams( rfalComplianceMode compMode,
  *****************************************************************************
  *  \brief  FSxI to FSx
  *
- *  Convert Frame Size for proximity coupling Device Integer (FSxI) to 
+ *  Convert Frame Size for proximity coupling Device Integer (FSxI) to
  *  Frame Size for proximity coupling Device (FSx)
- *  
+ *
  *  FSD - maximum frame size for NFC Forum Device in Poll Mode
  *  FSC - maximum frame size for NFC Forum Device in Listen Mode
- *  
+ *
  *  FSxI = FSDI or FSCI
  *  FSx  = FSD or FSC
- *  
+ *
  *  The FSD/FSC value includes the header and CRC
  *
  *  \param[in] FSxI :  Frame Size for proximity coupling Device Integer
- *  
+ *
  *  \return fsx : Frame Size for proximity coupling Device (FSD or FSC)
  *
  *****************************************************************************
@@ -490,7 +490,7 @@ void rfalIsoDepInitializeWithParams( rfalComplianceMode compMode,
 uint16_t rfalIsoDepFSxI2FSx( uint8_t FSxI );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  FWI to FWT
  *
@@ -498,7 +498,7 @@ uint16_t rfalIsoDepFSxI2FSx( uint8_t FSxI );
  *  1/fc units
  *
  *  \param[in] fwi : Frame Waiting time Integer
- *  
+ *
  *  \return fwt : Frame Waiting Time in 1/fc units
  *
  *****************************************************************************
@@ -506,7 +506,7 @@ uint16_t rfalIsoDepFSxI2FSx( uint8_t FSxI );
 uint32_t rfalIsoDepFWI2FWT( uint8_t fwi );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  Check if the buffer data contains a valid RATS command
  *
@@ -522,11 +522,11 @@ uint32_t rfalIsoDepFWI2FWT( uint8_t fwi );
 bool rfalIsoDepIsRats( const uint8_t *buf, uint8_t bufLen );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  Check if the buffer data contains a valid ATTRIB command
  *
- *  Check if it is a well formed ATTRIB command, but does not check the 
+ *  Check if it is a well formed ATTRIB command, but does not check the
  *  validity of the information inside
  *
  *  \param[in] buf    : reference to buffer containing the data to be checked
@@ -541,35 +541,35 @@ bool rfalIsoDepIsAttrib( const uint8_t *buf, uint8_t bufLen );
 /*!
  *****************************************************************************
  * \brief Start Listen Activation Handling
- * 
+ *
  * Start Listen Activation Handling and setup to receive first I-block which may
- * contain complete or partial APDU after activation is completed 
- * 
+ * contain complete or partial APDU after activation is completed
+ *
  *  Pass in RATS for T4AT, or ATTRIB for T4BT, to handle ATS or ATTRIB Response respectively
- *  The Activation Handling handles ATS and ATTRIB Response; and additionally PPS Response 
+ *  The Activation Handling handles ATS and ATTRIB Response; and additionally PPS Response
  *  if a PPS is received for T4AT.
  *  The method uses the current RFAL state machine to determine if it is expecting RATS or ATTRIB
- * 
+ *
  *  Activation is completed if PPS Response is sent or if first PDU is received in T4T-A
  *  Activation is completed if ATTRIB Response is sent in T4T-B
- *  
- *  \ref rfalIsoDepListenGetActivationStatus provide status if activation is completed. 
+ *
+ *  \ref rfalIsoDepListenGetActivationStatus provide status if activation is completed.
  *  \ref rfalIsoDepStartTransceive shall be called right after activation is completed
- * 
+ *
  *  \param[in] atsParam       : reference to ATS parameters
  *  \param[in] attribResParam : reference to ATTRIB_RES parameters
  *  \param[in] buf            : reference to buffer containing RATS or ATTRIB
  *  \param[in] bufLen         : length in bytes of the given bufffer
  *  \param[in] actParam       : reference to incoming reception information will be placed
- *  
- *  
- *  \warning Once the Activation has been completed the method 
+ *
+ *
+ *  \warning Once the Activation has been completed the method
  *  rfalIsoDepGetTransceiveStatus() must be called.
- *  If activation has completed due to reception of a data block (not PPS) the 
+ *  If activation has completed due to reception of a data block (not PPS) the
  *  buffer owned by the caller and passed on actParam must still contain this data.
  *  The first data will be processed (I-Block or S-DSL) by rfalIsoDepGetTransceiveStatus()
  *  inform the caller and then for the next transaction use rfalIsoDepStartTransceive()
- * 
+ *
  *  \return RFAL_ERR_NONE    : RATS/ATTRIB is valid and activation has started
  *  \return RFAL_ERR_PARAM   : Invalid parameters
  *  \return RFAL_ERR_PROTO   : Invalid request
@@ -582,7 +582,7 @@ ReturnCode rfalIsoDepListenStartActivation( rfalIsoDepAtsParam *atsParam, const 
 /*!
  *****************************************************************************
  *  \brief Get the current Activation Status
- * 
+ *
  *  \return RFAL_ERR_NONE if Activation is already completed
  *  \return RFAL_ERR_BUSY if Activation is ongoing
  *  \return RFAL_ERR_LINK_LOSS if Remote Field is turned off
@@ -594,8 +594,8 @@ ReturnCode rfalIsoDepListenGetActivationStatus( void );
 /*!
  *****************************************************************************
  *  \brief Get the ISO-DEP Communication Information
- *  
- *  Gets the maximum INF length in bytes based on current Frame Size 
+ *
+ *  Gets the maximum INF length in bytes based on current Frame Size
  *  for proximity coupling Device (FSD or FSC) excluding the header and CRC
  *
  *  \return maximum INF length in bytes
@@ -606,21 +606,21 @@ uint16_t rfalIsoDepGetMaxInfLen( void );
 
 /*!
  *****************************************************************************
- *  \brief ISO-DEP Start Transceive 
- *  
- *  This method triggers a ISO-DEP Transceive containing a complete or 
+ *  \brief ISO-DEP Start Transceive
+ *
+ *  This method triggers a ISO-DEP Transceive containing a complete or
  *  partial APDU
  *  It transmits the given message and handles all protocol retransmitions,
  *  error handling and control messages
- *  
- *  The txBuf  contains a complete or partial APDU (INF) to be transmitted 
+ *
+ *  The txBuf  contains a complete or partial APDU (INF) to be transmitted
  *  The Prologue field will be manipulated by the Transceive
- *  
- *  If the buffer contains a partial APDU and is not the last block, 
+ *
+ *  If the buffer contains a partial APDU and is not the last block,
  *  then isTxChaining must be set to true
- *  
+ *
  *  \param[in] param: reference parameters to be used for the Transceive
- *                     
+ *
  *  \return RFAL_ERR_PARAM       : Bad request
  *  \return RFAL_ERR_WRONG_STATE : The module is not in a proper state
  *  \return RFAL_ERR_NONE        : The Transceive request has been started
@@ -632,18 +632,18 @@ ReturnCode rfalIsoDepStartTransceive( rfalIsoDepTxRxParam param );
 /*!
  *****************************************************************************
  *  \brief Get the Transceive status
- *  
+ *
  *  Returns the status of the ISO-DEP Transceive
- *  
- *  \warning  When the other device is performing chaining once a chained 
- *            block is received the error RFAL_ERR_AGAIN is sent. At this point 
- *            caller must handle the received data immediately. 
- *            When RFAL_ERR_AGAIN is returned an ACK has already been sent to 
- *            the other device and the next block might be incoming. 
- *            If rfalWorker() is called frequently it will place the next 
- *            block on the given buffer  
- *              
- *  
+ *
+ *  \warning  When the other device is performing chaining once a chained
+ *            block is received the error RFAL_ERR_AGAIN is sent. At this point
+ *            caller must handle the received data immediately.
+ *            When RFAL_ERR_AGAIN is returned an ACK has already been sent to
+ *            the other device and the next block might be incoming.
+ *            If rfalWorker() is called frequently it will place the next
+ *            block on the given buffer
+ *
+ *
  *  \return RFAL_ERR_NONE      : Transceive has been completed successfully
  *  \return RFAL_ERR_BUSY      : Transceive is ongoing
  *  \return RFAL_ERR_PROTO     : Protocol error occurred
@@ -651,7 +651,7 @@ ReturnCode rfalIsoDepStartTransceive( rfalIsoDepTxRxParam param );
  *  \return RFAL_ERR_SLEEP_REQ : Deselect has been received and responded
  *  \return RFAL_ERR_NOMEM     : The received INF does not fit into the
  *                                 receive buffer
- *  \return RFAL_ERR_LINK_LOSS : Communication is lost because Reader/Writer 
+ *  \return RFAL_ERR_LINK_LOSS : Communication is lost because Reader/Writer
  *                                 has turned off its field
  *  \return RFAL_ERR_AGAIN     : received one chaining block, continue to call
  *                                 this method to retrieve the remaining blocks
@@ -662,20 +662,20 @@ ReturnCode rfalIsoDepGetTransceiveStatus( void );
 
 /*!
  *****************************************************************************
- *  \brief ISO-DEP Start APDU Transceive 
- *  
+ *  \brief ISO-DEP Start APDU Transceive
+ *
  *  This method triggers a ISO-DEP Transceive containing a complete APDU
  *  It transmits the given message and handles all protocol retransmitions,
  *  error handling and control messages
- *  
- *  The txBuf  contains a complete APDU to be transmitted 
+ *
+ *  The txBuf  contains a complete APDU to be transmitted
  *  The Prologue field will be manipulated by the Transceive
- *  
+ *
  *  \warning the txBuf will be modified during the transmission
  *  \warning the maximum RF frame which can be received is limited by param.tmpBuf
- *  
+ *
  *  \param[in] param: reference parameters to be used for the Transceive
- *                     
+ *
  *  \return RFAL_ERR_PARAM       : Bad request
  *  \return RFAL_ERR_WRONG_STATE : The module is not in a proper state
  *  \return RFAL_ERR_NONE        : The Transceive request has been started
@@ -687,29 +687,29 @@ ReturnCode rfalIsoDepStartApduTransceive( rfalIsoDepApduTxRxParam param );
 /*!
  *****************************************************************************
  *  \brief Get the APDU Transceive status
- *  
+ *
  *  \return RFAL_ERR_NONE      : if Transceive has been completed successfully
  *  \return RFAL_ERR_BUSY      : if Transceive is ongoing
  *  \return RFAL_ERR_PROTO     : if a protocol error occurred
  *  \return RFAL_ERR_TIMEOUT   : if a timeout error occurred
  *  \return RFAL_ERR_SLEEP_REQ : if Deselect is received and responded
- *  \return RFAL_ERR_NOMEM     : if the received INF does not fit into the 
+ *  \return RFAL_ERR_NOMEM     : if the received INF does not fit into the
  *                                 receive buffer
- *  \return RFAL_ERR_LINK_LOSS : if communication is lost because Reader/Writer 
+ *  \return RFAL_ERR_LINK_LOSS : if communication is lost because Reader/Writer
  *                                 has turned off its field
  *****************************************************************************
  */
 ReturnCode rfalIsoDepGetApduTransceiveStatus( void );
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  ISO-DEP Send RATS
- *   
- *  This sends a RATS to make a NFC-A Listen Device to enter 
+ *
+ *  This sends a RATS to make a NFC-A Listen Device to enter
  *  ISO-DEP layer (ISO14443-4) and checks if the received ATS is valid
- *   
+ *
  *  \param[in]  FSDI   : Frame Size Device Integer to be used
- *  \param[in]  DID    : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID  
+ *  \param[in]  DID    : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
  *  \param[out] ats    : pointer to place the ATS Response
  *  \param[out] atsLen : pointer to place the ATS length
  *
@@ -727,16 +727,16 @@ ReturnCode rfalIsoDepGetApduTransceiveStatus( void );
 ReturnCode rfalIsoDepRATS( rfalIsoDepFSxI FSDI, uint8_t DID, rfalIsoDepAts *ats , uint8_t *atsLen );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  ISO-DEP Send PPS
- *   
+ *
  *  This sends a PPS to make a NFC-A Listen Device change the communications
  *  bit rate from 106kbps to one of the supported bit rates
  *  Additionally checks if the received PPS response is valid
- *   
+ *
  *  \param[in]  DID    : Device ID
- *  \param[in]  DSI    : DSI code the divisor from Listener (PICC) to Poller (PCD)
+ *  \param[in]  DSI_ID    : DSI_ID code the divisor from Listener (PICC) to Poller (PCD)
  *  \param[in]  DRI    : DRI code the divisor from Poller (PCD) to Listener (PICC)
  *  \param[out] ppsRes : pointer to place the PPS Response
  *
@@ -751,19 +751,19 @@ ReturnCode rfalIsoDepRATS( rfalIsoDepFSxI FSDI, uint8_t DID, rfalIsoDepAts *ats 
  *  \return RFAL_ERR_NONE         : No error, PPS Response received
  *****************************************************************************
  */
-ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes );
+ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  ISO-DEP Send ATTRIB
- *   
- *  This sends a ATTRIB to make a NFC-B Listen Device to enter 
+ *
+ *  This sends a ATTRIB to make a NFC-B Listen Device to enter
  *  ISO-DEP layer (ISO14443-4) and checks if the received ATTRIB Response is valid
- *   
- *  \param[in]  nfcid0    : NFCID0 to be used for the ATTRIB 
- *  \param[in]  PARAM1    : ATTRIB PARAM1 byte (communication parameters) 
- *  \param[in]  DSI       : DSI code the divisor from Listener (PICC) to Poller (PCD)
+ *
+ *  \param[in]  nfcid0    : NFCID0 to be used for the ATTRIB
+ *  \param[in]  PARAM1    : ATTRIB PARAM1 byte (communication parameters)
+ *  \param[in]  DSI_ID       : DSI_ID code the divisor from Listener (PICC) to Poller (PCD)
  *  \param[in]  DRI       : DRI code the divisor from Poller (PCD) to Listener (PICC)
  *  \param[in]  FSDI      : PCD's Frame Size to be announced on the ATTRIB
  *  \param[in]  PARAM3    : ATTRIB PARAM1 byte (protocol type)
@@ -784,66 +784,66 @@ ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIso
  *  \return RFAL_ERR_NONE         : No error, ATTRIB Response received
  *****************************************************************************
  */
-ReturnCode rfalIsoDepATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen );
+ReturnCode rfalIsoDepATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  Deselect PICC
  *
  *  This function sends a deselect command to PICC and waits for its
  *  responce in a blocking way
  *
- *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC 
+ *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC
  *  \return RFAL_ERR_PROTO   : Protocol error occurred
- *  \return RFAL_ERR_TIMEOUT : No response rcvd from PICC 
+ *  \return RFAL_ERR_TIMEOUT : No response rcvd from PICC
  *
  *****************************************************************************
  */
 ReturnCode rfalIsoDepDeselect( void );
 
 
-/*! 
+/*!
  *****************************************************************************
- *  \brief  Start Deselect 
+ *  \brief  Start Deselect
  *
- *  This function starts the exchange to send deselect command to PICC and 
+ *  This function starts the exchange to send deselect command to PICC and
  *  waits for its response
  *
- *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC 
+ *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC
  *  \return RFAL_ERR_PROTO   : Protocol error occurred
- *  \return RFAL_ERR_TIMEOUT : No response rcvd from PICC 
+ *  \return RFAL_ERR_TIMEOUT : No response rcvd from PICC
  *
  *****************************************************************************
  */
 ReturnCode rfalIsoDepStartDeselect( void );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  Deselect Get Status
  *
  *  This function sends a deselect command to PICC and waits for it`s
  *  responce in a blocking way
  *
- *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC 
+ *  \return RFAL_ERR_NONE    : Deselect successfully sent and acknowledged by PICC
  *  \return RFAL_ERR_PROTO   : Protocol error occurred
- *  \return RFAL_ERR_TIMEOUT : No response rcvd from PICC 
+ *  \return RFAL_ERR_TIMEOUT : No response rcvd from PICC
  *
  *****************************************************************************
  */
 ReturnCode rfalIsoDepGetDeselectStatus( void );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  ISO-DEP Poller Handle NFC-A Activation
- *   
+ *
  *  This performs a NFC-A Activation into ISO-DEP layer (ISO14443-4) with the given
- *  parameters. It sends RATS and if the higher bit rates are supported by 
+ *  parameters. It sends RATS and if the higher bit rates are supported by
  *  both devices it additionally sends PPS
  *  Once Activated all details of the device are provided on isoDepDev
- *   
+ *
  *  \param[in]  FSDI          : Frame Size Device Integer to be used
  *  \param[in]  DID           : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
  *  \param[in]  maxBR         : Max bit rate supported by the Poller
@@ -863,15 +863,15 @@ ReturnCode rfalIsoDepGetDeselectStatus( void );
 ReturnCode rfalIsoDepPollAHandleActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rfalBitRate maxBR, rfalIsoDepDevice *rfalIsoDepDev );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  ISO-DEP Poller Handle NFC-B Activation
- *   
+ *
  *  This performs a NFC-B Activation into ISO-DEP layer (ISO14443-4) with the given
- *  parameters. It sends ATTRIB and calculates supported higher bit rates of both 
+ *  parameters. It sends ATTRIB and calculates supported higher bit rates of both
  *  devices and performs activation.
  *  Once Activated all details of the device are provided on isoDepDev
- *   
+ *
  *  \param[in]  FSDI           : Frame Size Device Integer to be used
  *  \param[in]  DID            : Device ID to be used or RFAL_ISODEP_NO_DID for not use DID
  *  \param[in]  maxBR          : Max bit rate supported by the Poller
@@ -895,14 +895,14 @@ ReturnCode rfalIsoDepPollAHandleActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rf
 ReturnCode rfalIsoDepPollBHandleActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rfalBitRate maxBR, uint8_t PARAM1, const rfalNfcbListenDevice *nfcbDev, const uint8_t* HLInfo, uint8_t HLInfoLen, rfalIsoDepDevice *rfalIsoDepDev );
 
 
-/*! 
+/*!
  *****************************************************************************
  *  \brief  ISO-DEP Poller Handle S(Parameters)
- *   
+ *
  *  This checks if PICC supports S(PARAMETERS), retieves PICC's
  *  capabilities and sets the Bit Rate at the highest supported by both
  *  devices
- *   
+ *
  *  \param[out] rfalIsoDepDev  : ISO-DEP information of the activated Listen device
  *  \param[in]  maxTxBR        : Maximum Tx bit rate supported by PCD
  *  \param[in]  maxRxBR        : Maximum Rx bit rate supported by PCD
@@ -921,7 +921,7 @@ ReturnCode rfalIsoDepPollHandleSParameters( rfalIsoDepDevice *rfalIsoDepDev, rfa
 
 /*!
  *****************************************************************************
- *  \brief  ISO-DEP Poller Start NFC-A Activation 
+ *  \brief  ISO-DEP Poller Start NFC-A Activation
  *
  *  This starts a NFC-A Activation into ISO-DEP layer (ISO14443-4) with the given
  *  parameters. It sends RATS and if the higher bit rates are supported by
@@ -975,10 +975,10 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void );
 
 /*!
  *****************************************************************************
- *  \brief  ISO-DEP Poller Start NFC-B Activation 
+ *  \brief  ISO-DEP Poller Start NFC-B Activation
  *
  *  This starts a NFC-B Activation into ISO-DEP layer (ISO14443-4) with the given
- *  parameters. It will send ATTRIB and calculate supported higher bit rates of both 
+ *  parameters. It will send ATTRIB and calculate supported higher bit rates of both
  *  devices and perform activation.
  *  Once Activated all details of the device are provided on isoDepDev
  *
