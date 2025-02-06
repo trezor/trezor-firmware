@@ -1,8 +1,7 @@
 
-#include <trezor_bsp.h>
+#pragma once
 
-#ifndef TREZORHAL_NFC_INTERNAL_H
-#define TREZORHAL_NFC_INTERNAL_H
+#include <trezor_bsp.h>
 
 HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *txData,
                                            uint8_t *rxData, uint16_t length);
@@ -13,4 +12,3 @@ bool nfc_timer_is_expired(uint32_t timer);
 
 void nfc_ext_irq_set_callback(void (*cb)(void));
 
-#endif

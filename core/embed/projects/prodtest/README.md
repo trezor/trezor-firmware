@@ -545,3 +545,48 @@ Example:
 optiga-counter-read
 OK 0E
 ```
+
+
+### nfc-read-card
+Activate the NFC in reader mode for a given time. Read general information from firstly discovered NFC tag or exits on timeout.
+
+Example:
+```
+nfc-read-card <timeout_seconds>
+# NFC activated in reader mode for <timeout_seconds> seconds.
+# NFC card detected.
+# NFC Type A: UID: %s
+OK
+```
+
+
+### nfc-emulate-card
+Activate NFC in Card Emulator mode for given time.
+
+Example:
+```
+nfc-emulate-card <timeout_seconds>
+# Emulation started for <timeout_seconds>
+# Emulation over
+OK
+```
+
+### nfc-write-card
+Activates the NFC reader for given time. Writes the NDEF URI message into the first discovered NFC tag type A or exits on timeout.
+
+Example:
+```
+nfc-write_card <timeout_seconds>
+# NFC reader on, put the card on the reader (timeout <timeout_seconds> s)
+# Writting URI to NFC tag 7AF403
+OK
+```
+
+
+
+
+
+
+
+
+

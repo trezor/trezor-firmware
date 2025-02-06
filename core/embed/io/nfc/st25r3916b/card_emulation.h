@@ -16,16 +16,14 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef DEMO_CE_H
-#define DEMO_CE_H
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include <stdbool.h>
-#include <stdint.h>
+#include <trezor_bsp.h>
 
 /** @addtogroup X-CUBE-NFC6_Applications
  *  @brief Sample applications for X-NUCLEO-NFC06A1 STM32 expansion boards.
@@ -74,7 +72,7 @@ extern "C" {
 /** @defgroup CE_CardEmul_Exported_functions
  *  @{
  */
-void card_emulation_init(uint8_t *nfcfNfcid);
+void card_emulation_init(const uint8_t *nfcfNfcid);
 uint16_t card_emulation_t3t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
                             uint16_t txBufLen);
 uint16_t card_emulation_t4t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
@@ -99,7 +97,5 @@ uint16_t card_emulation_t4t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* DEMO_CE_H */
 
 /******************* (C) COPYRIGHT 2018 STMicroelectronics *****END OF FILE****/
