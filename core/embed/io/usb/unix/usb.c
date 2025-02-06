@@ -69,7 +69,7 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   return sectrue;
 }
 
-void usb_deinit(void) {}
+void usb_deinit(void) { usb_stop(); }
 
 secbool usb_start(void) {
   const char *ip = getenv("TREZOR_UDP_IP");
