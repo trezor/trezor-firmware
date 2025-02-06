@@ -242,7 +242,7 @@ ReturnCode rfalNfcvPollerInventory(rfalNfcvNumSlots nSlots, uint8_t maskLen,
   ReturnCode ret;
   rfalNfcvInventoryReq invReq;
   uint16_t rxLen;
-
+`
   if (((maskVal == NULL) && (maskLen != 0U)) || (invRes == NULL)) {
     return RFAL_ERR_PARAM;
   }
