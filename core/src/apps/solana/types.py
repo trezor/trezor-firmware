@@ -34,6 +34,12 @@ class AddressType(IntEnum):
     AddressRw = 3
 
 
+class StakeType(IntEnum):
+    Stake = 1
+    Unstake = 2
+    Claim = 3
+
+
 class PropertyTemplate(Generic[T]):
     def __init__(
         self,
