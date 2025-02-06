@@ -24,7 +24,9 @@ use crate::{
 };
 
 use super::{
-    component::{ActionBar, Button, Header, HeaderMsg, Hint, SelectWordScreen, TextScreen},
+    component::{
+        ActionBar, Button, Header, HeaderMsg, Hint, PinKeyboard, SelectWordScreen, TextScreen,
+    },
     flow, fonts, theme, UIEckhart,
 };
 
@@ -376,12 +378,19 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn request_pin(
-        _prompt: TString<'static>,
-        _subprompt: TString<'static>,
-        _allow_cancel: bool,
-        _warning: bool,
+        prompt: TString<'static>,
+        subprompt: TString<'static>,
+        allow_cancel: bool,
+        warning: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let warning = if warning {
+            Some(TR::pin__wrong_pin.into())
+        } else {
+            None
+        };
+
+        let layout = RootComponent::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel));
+        Ok(layout)
     }
 
     fn request_passphrase(
