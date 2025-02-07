@@ -454,7 +454,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T build/firmware/memory.ld -Wl,--gc-sections  -Wl,--print-memory-usage -Wl,-Map=build/firmware/firmware.map -Wl,--warn-common',
+    LINKFLAGS=['-Tbuild/firmware/memory.ld', '-Wl,--gc-sections', '-Wl,--print-memory-usage', '-Wl,-Map=build/firmware/firmware.map', '-Wl,--warn-common'],
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'FIRMWARE',
@@ -751,67 +751,27 @@ protobuf_blobs = env.Command(
 )
 env.Depends(protobuf_blobs, qstr_generated)
 
-RUST_PROFILE = 'release'
-RUST_LIB = 'trezor_lib'
-RUST_LIBDIR = f'build/firmware/rust/{env.get("ENV")["RUST_TARGET"]}/{RUST_PROFILE}'
-RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+#
+# Rust library
+#
+features = ['micropython', 'protobuf', 'ui', 'translations'] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+if PYOPT == '0':
+    features.append('debug')
+    features.append('ui_debug')
+if EVERYTHING:
+    features.append('universal_fw')
 
-def cargo_build():
-    # Determine the profile build flags.
-    if RUST_PROFILE == 'release':
-        profile = '--release'
-    else:
-        profile = ''
+rust = tools.add_rust_lib(
+    env,
+    'firmware',
+    'release',
+    features,
+    ALLPATHS,
+    str(Dir('.').abspath))
 
-    features = ['micropython', 'protobuf']
-    if EVERYTHING:
-        features.append('universal_fw')
-    features.extend(RUST_UI_FEATURES)
-    features.append('ui')
-    features.append('translations')
 
-    if PYOPT == '0':
-        features.append('debug')
-        features.append('ui_debug')
-
-    features.extend(FEATURES_AVAILABLE)
-
-    cargo_opts = [
-        f'--target={env.get("ENV")["RUST_TARGET"]}',
-        f'--target-dir=../../build/firmware/rust',
-        '--no-default-features',
-        '--features ' + ','.join(features),
-        '-Z build-std=core',
-        '-Z build-std-features=panic_immediate_abort',
-    ]
-
-    env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
-
-    if ARGUMENTS.get('RUST_PRINT_TYPES_SIZES', '0') == '1':
-        # see https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
-        env.Append(ENV={'RUSTFLAGS': '-Z print-type-sizes'})
-
-    # Adds an ELF section with Rust functions' stack sizes. See the following links for more details:
-    # - https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/emit-stack-sizes.html
-    # - https://blog.japaric.io/stack-analysis/
-    # - https://github.com/japaric/stack-sizes/
-    env.Append(ENV={'RUSTFLAGS': '-Z emit-stack-sizes'})
-
-    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
-    build_dir = str(Dir('.').abspath)
-
-    return f'export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
-
-rust = env.Command(
-    target=RUST_LIBPATH,
-    source='',
-    action=cargo_build(), )
 env.Depends(rust, protobuf_blobs)
 env.Depends(rust, TRANSLATION_DATA)
-
-env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
-env.Append(LINKFLAGS=f' -l{RUST_LIB}')
-
 
 BOOTLOADER_SUFFIX = TREZOR_MODEL
 if BOOTLOADER_QA or BOOTLOADER_DEVEL:
