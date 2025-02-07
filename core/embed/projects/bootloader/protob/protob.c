@@ -77,42 +77,43 @@
 #define MSG_RECV(TYPE) \
   codec_recv_message(iface->wire, msg_size, buf, TYPE##_fields, &msg_recv)
 
-void send_user_abort(protob_iface_t *iface, const char *msg) {
+secbool send_user_abort(protob_iface_t *iface, const char *msg) {
   if (iface == NULL) {
-    return;
+    return sectrue;
   }
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ActionCancelled);
   MSG_SEND_ASSIGN_STRING(message, msg);
-  MSG_SEND(Failure);
+  return MSG_SEND(Failure);
 }
 
-void send_msg_failure(protob_iface_t *iface, FailureType type,
-                      const char *msg) {
+secbool send_msg_failure(protob_iface_t *iface, FailureType type,
+                         const char *msg) {
   if (iface == NULL) {
-    return;
+    return sectrue;
   }
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, type);
   MSG_SEND_ASSIGN_STRING(message, msg);
-  MSG_SEND(Failure);
+  return MSG_SEND(Failure);
 }
 
-void send_msg_success(protob_iface_t *iface, const char *msg) {
+secbool send_msg_success(protob_iface_t *iface, const char *msg) {
   if (iface == NULL) {
-    return;
+    return sectrue;
   }
   MSG_SEND_INIT(Success);
   if (msg != NULL) {
     MSG_SEND_ASSIGN_STRING(message, msg);
   }
-  MSG_SEND(Success);
+  return MSG_SEND(Success);
 }
 
-void send_msg_features(protob_iface_t *iface, const vendor_header *const vhdr,
-                       const image_header *const hdr) {
+secbool send_msg_features(protob_iface_t *iface,
+                          const vendor_header *const vhdr,
+                          const image_header *const hdr) {
   if (iface == NULL) {
-    return;
+    return sectrue;
   }
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
@@ -145,7 +146,7 @@ void send_msg_features(protob_iface_t *iface, const vendor_header *const vhdr,
   MSG_SEND_ASSIGN_VALUE(bootloader_locked,
                         (secret_bootloader_locked() == sectrue));
 #endif
-  MSG_SEND(Features);
+  return MSG_SEND(Features);
 }
 
 secbool recv_msg_initialize(protob_iface_t *iface, Initialize *msg,
@@ -193,16 +194,16 @@ secbool recv_msg_firmware_erase(protob_iface_t *iface, FirmwareErase *msg,
   return result;
 }
 
-void send_msg_request_firmware(protob_iface_t *iface, uint32_t offset,
-                               uint32_t length) {
+secbool send_msg_request_firmware(protob_iface_t *iface, uint32_t offset,
+                                  uint32_t length) {
   if (iface == NULL) {
-    return;
+    return sectrue;
   }
 
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
-  MSG_SEND(FirmwareRequest);
+  return MSG_SEND(FirmwareRequest);
 }
 
 typedef struct {

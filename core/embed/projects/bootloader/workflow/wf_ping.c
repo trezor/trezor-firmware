@@ -26,7 +26,9 @@
 workflow_result_t workflow_ping(protob_iface_t *iface, uint32_t msg_size,
                                 uint8_t *buf) {
   Ping msg_recv;
-  recv_msg_ping(iface, &msg_recv, buf, msg_size);
+  if (sectrue != recv_msg_ping(iface, &msg_recv, buf, msg_size)) {
+    return WF_STAY;
+  }
   send_msg_success(iface, msg_recv.message);
   return WF_STAY;
 }

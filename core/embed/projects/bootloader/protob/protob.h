@@ -31,17 +31,19 @@ typedef struct {
   wire_iface_t *wire;
 } protob_iface_t;
 
-void send_user_abort(protob_iface_t *iface, const char *msg);
+secbool send_user_abort(protob_iface_t *iface, const char *msg);
 
-void send_msg_features(protob_iface_t *iface, const vendor_header *const vhdr,
-                       const image_header *const hdr);
+secbool send_msg_features(protob_iface_t *iface,
+                          const vendor_header *const vhdr,
+                          const image_header *const hdr);
 
-void send_msg_failure(protob_iface_t *iface, FailureType type, const char *msg);
+secbool send_msg_failure(protob_iface_t *iface, FailureType type,
+                         const char *msg);
 
-void send_msg_success(protob_iface_t *iface, const char *msg);
+secbool send_msg_success(protob_iface_t *iface, const char *msg);
 
-void send_msg_request_firmware(protob_iface_t *iface, uint32_t offset,
-                               uint32_t length);
+secbool send_msg_request_firmware(protob_iface_t *iface, uint32_t offset,
+                                  uint32_t length);
 
 secbool recv_msg_initialize(protob_iface_t *iface, Initialize *msg,
                             uint8_t *buf, uint32_t msg_size);

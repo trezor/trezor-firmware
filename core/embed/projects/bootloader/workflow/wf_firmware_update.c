@@ -60,6 +60,7 @@ typedef enum {
   UPLOAD_ERR_NOT_FIRMWARE_UPGRADE = -12,
   UPLOAD_ERR_NOT_FULLTRUST_IMAGE = -13,
   UPLOAD_ERR_INVALID_CHUNK_PADDING = -14,
+  UPLOAD_ERR_COMMUNICATION = -17,
 } upload_status_t;
 
 #define FIRMWARE_UPLOAD_CHUNK_RETRY_COUNT 2
@@ -354,7 +355,10 @@ static upload_status_t process_msg_FirmwareUpload(protob_iface_t *iface,
                                  : ctx->firmware_remaining;
       ctx->chunk_requested = chunk_limit - ctx->read_offset;
 
-      send_msg_request_firmware(iface, ctx->read_offset, ctx->chunk_requested);
+      if (sectrue != send_msg_request_firmware(iface, ctx->read_offset,
+                                               ctx->chunk_requested)) {
+        return UPLOAD_ERR_COMMUNICATION;
+      }
 
       ctx->firmware_remaining -= ctx->read_offset;
       if (ctx->firmware_remaining > 0) {
@@ -386,8 +390,11 @@ static upload_status_t process_msg_FirmwareUpload(protob_iface_t *iface,
       memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
       ctx->chunk_size = 0;
 
-      send_msg_request_firmware(iface, ctx->firmware_block * IMAGE_CHUNK_SIZE,
-                                ctx->chunk_requested);
+      if (sectrue != send_msg_request_firmware(
+                         iface, ctx->firmware_block * IMAGE_CHUNK_SIZE,
+                         ctx->chunk_requested)) {
+        return UPLOAD_ERR_COMMUNICATION;
+      }
       if (ctx->firmware_remaining > 0) {
         return UPLOAD_IN_PROGRESS;
       }
@@ -462,8 +469,11 @@ static upload_status_t process_msg_FirmwareUpload(protob_iface_t *iface,
     // clear chunk buffer
     ctx->chunk_size = 0;
     memset((uint8_t *)&chunk_buffer, 0xFF, IMAGE_CHUNK_SIZE);
-    send_msg_request_firmware(iface, ctx->firmware_block * IMAGE_CHUNK_SIZE,
-                              ctx->chunk_requested);
+    if (sectrue !=
+        send_msg_request_firmware(iface, ctx->firmware_block * IMAGE_CHUNK_SIZE,
+                                  ctx->chunk_requested)) {
+      return UPLOAD_ERR_COMMUNICATION;
+    }
   } else {
     send_msg_success(iface, NULL);
   }
@@ -499,7 +509,10 @@ workflow_result_t workflow_firmware_update(protob_iface_t *iface,
     ctx.chunk_requested = (ctx.firmware_remaining > IMAGE_INIT_CHUNK_SIZE)
                               ? IMAGE_INIT_CHUNK_SIZE
                               : ctx.firmware_remaining;
-    send_msg_request_firmware(iface, 0, ctx.chunk_requested);
+    if (sectrue != send_msg_request_firmware(iface, 0, ctx.chunk_requested)) {
+      ui_screen_fail();
+      return WF_SHUTDOWN;
+    }
   } else {
     // invalid firmware size
     send_msg_failure(iface, FailureType_Failure_ProcessError,
