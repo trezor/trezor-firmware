@@ -810,48 +810,35 @@ protobuf_blobs = env.Command(
 )
 env.Depends(protobuf_blobs, qstr_generated)
 
-TARGET = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
 
+
+#
+# Rust library
+#
+env.get("ENV")["RUST_TARGET"] = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
-    RUST_PROFILE = 'dev'
-    RUST_LIBDIR = f'build/unix/rust/{TARGET}/debug'
+    profile = 'dev'
 else:
-    RUST_PROFILE = 'release'
-    RUST_LIBDIR = f'build/unix/rust/{TARGET}/release'
-RUST_LIB = 'trezor_lib'
-RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+    profile = 'release'
 
-def cargo_build():
-    features = ['micropython', 'protobuf']
-    if EVERYTHING:
-        features.append('universal_fw')
-    features.extend(RUST_UI_FEATURES)
-    features.append('ui')
-    features.append('translations')
+features = ['micropython', 'protobuf', 'ui', 'translations'] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+if PYOPT == '0':
+    features.append('debug')
+    features.append('ui_debug')
+if EVERYTHING:
+    features.append('universal_fw')
 
-    if PYOPT == '0':
-        features.append('debug')
+rust = tools.add_rust_lib(
+    env,
+    'firmware',
+    profile,
+    features,
+    ALLPATHS,
+    str(Dir('.').abspath))
 
-    features.extend(FEATURES_AVAILABLE)
 
-    env.get('ENV')['TREZOR_MODEL'] = TREZOR_MODEL
-
-    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
-    build_dir = str(Dir('.').abspath)
-
-    return f'export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build --profile {RUST_PROFILE} --target-dir=../../build/unix/rust --no-default-features --features "{" ".join(features)}"  --target {TARGET}'
-
-rust = env.Command(
-    target=RUST_LIBPATH,
-    source='',
-    action=cargo_build(), )
 env.Depends(rust, protobuf_blobs)
 env.Depends(rust, TRANSLATION_DATA)
-
-
-env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
-env.Append(LINKFLAGS=f'-l{RUST_LIB}')
-
 env.Depends(obj_program, qstr_generated)
 
 program = env.Command(

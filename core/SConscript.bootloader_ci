@@ -131,7 +131,7 @@ env.Replace(
     '-fstack-protector-strong '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=f'-T build/bootloader_ci/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader_ci/bootloader.map -Wl,--warn-common',
+    LINKFLAGS=['-Tbuild/bootloader_ci/memory.ld', '-Wl,--gc-sections', '-Wl,-Map=build/bootloader_ci/bootloader.map', '-Wl,--warn-common', '-Wl,--print-memory-usage'],
     CPPPATH=[
         'embed/projects/bootloader_ci',
         'embed/projects/bootloader_ci/nanopb',

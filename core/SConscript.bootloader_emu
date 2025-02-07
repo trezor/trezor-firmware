@@ -194,6 +194,7 @@ env.Replace(
     '-ffreestanding '
     '-fstack-protector-all '
     + CCFLAGS_MOD,
+    LINKFLAGS='',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'BOOTLOADER',
@@ -221,53 +222,24 @@ cmake_gen = env.Command(
     action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
 )
 
-
 #
 # Rust library
 #
-
-RUST_TARGET = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
-RUST_LIB = 'trezor_lib'
-
+env.get("ENV")["RUST_TARGET"] = os.popen("rustc -vV | sed -n 's/host: //p'").read().strip()
+features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 if ARGUMENTS.get('TREZOR_EMULATOR_DEBUGGABLE', '0') == '1':
-    RUST_PROFILE = 'dev'
-    RUST_LIBDIR = f'build/bootloader_emu/rust/{RUST_TARGET}/debug'
+    profile = 'dev'
 else:
-    RUST_PROFILE = 'release'
-    RUST_LIBDIR = f'build/bootloader_emu/rust/{RUST_TARGET}/release'
+    profile = 'release'
 
-RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+rust = tools.add_rust_lib(
+    env,
+    'bootloader_emu',
+    profile,
+    features,
+    ALLPATHS,
+    str(Dir('.').abspath))
 
-def cargo_build():
-    features = []
-
-    features.extend(RUST_UI_FEATURES)
-    features.append("ui")
-    features.append("bootloader")
-    features.extend(FEATURES_AVAILABLE)
-
-
-    cargo_opts = [
-        f'--target={RUST_TARGET}',
-        '--target-dir=../../build/bootloader_emu/rust',
-        '--no-default-features',
-        '--features ' + ','.join(features),
-        '-Z build-std=core',
-        '-Z build-std-features=panic_immediate_abort',
-    ]
-
-    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
-    build_dir = str(Dir('.').abspath)
-
-    return f'export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build --profile {RUST_PROFILE} ' + ' '.join(cargo_opts)
-
-rust = env.Command(
-    target=RUST_LIBPATH,
-    source='',
-    action=cargo_build(), )
-
-env.Append(LINKFLAGS=f'-L{RUST_LIBDIR}')
-env.Append(LINKFLAGS=f'-l{RUST_LIB}')
 env.Append(LINKFLAGS='-lm')
 env.Append(LINKFLAGS='-Wl,' + ('-dead_strip' if env['PLATFORM'] == 'darwin' else '--gc-sections'))
 
@@ -287,7 +259,7 @@ program_elf = env.Command(
     target='bootloader.elf',
     source=obj_program,
     action=
-    '$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS', )
+    '$CC -o $TARGET $SOURCES $_LIBDIRFLAGS $_LIBFLAGS $LINKFLAGS')
 
 env.Depends(program_elf, rust)
 

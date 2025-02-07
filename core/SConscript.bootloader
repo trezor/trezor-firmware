@@ -155,7 +155,7 @@ env.Replace(
     '-fstack-protector-strong '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS='-T build/bootloader/memory.ld -Wl,--gc-sections -Wl,-Map=build/bootloader/bootloader.map -Wl,--warn-common -Wl,--print-memory-usage',
+    LINKFLAGS=['-Tbuild/bootloader/memory.ld', '-Wl,--gc-sections', '-Wl,-Map=build/bootloader/bootloader.map', '-Wl,--warn-common', '-Wl,--print-memory-usage'],
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'BOOTLOADER',
@@ -183,50 +183,19 @@ cmake_gen = env.Command(
     action='$MAKECMAKELISTS --sources $ALLSOURCES --dirs $CPPPATH --defs $ALLDEFS',
 )
 
-
 #
 # Rust library
 #
+features = ['bootloader',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 
-RUST_PROFILE = 'release'
-RUST_LIB = 'trezor_lib'
-RUST_LIBDIR = f'build/bootloader/rust/{env.get("ENV")["RUST_TARGET"]}/{RUST_PROFILE}'
-RUST_LIBPATH = f'{RUST_LIBDIR}/lib{RUST_LIB}.a'
+rust = tools.add_rust_lib(
+    env,
+    'bootloader',
+    'release',
+    features,
+    ALLPATHS,
+    str(Dir('.').abspath))
 
-def cargo_build():
-    # Determine the profile build flags.
-    if RUST_PROFILE == 'release':
-        profile = '--release'
-    else:
-        profile = ''
-
-    features = []
-    features.extend(RUST_UI_FEATURES)
-    features.append("ui")
-    features.append("bootloader")
-    features.extend(FEATURES_AVAILABLE)
-
-    cargo_opts = [
-        f'--target={env.get("ENV")["RUST_TARGET"]}',
-        f'--target-dir=../../build/bootloader/rust',
-        '--no-default-features',
-        '--features ' + ','.join(features),
-        '-Z build-std=core',
-        '-Z build-std-features=panic_immediate_abort',
-    ]
-
-    bindgen_macros = tools.get_bindgen_defines(env.get("CPPDEFINES"), ALLPATHS)
-    build_dir = str(Dir('.').abspath)
-
-    return f'export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; export BUILD_DIR=\'{build_dir}\'; cd embed/rust; cargo build {profile} ' + ' '.join(cargo_opts)
-
-rust = env.Command(
-    target=RUST_LIBPATH,
-    source='',
-    action=cargo_build(), )
-
-env.Append(LINKFLAGS=f' -L{RUST_LIBDIR}')
-env.Append(LINKFLAGS=f' -l{RUST_LIB}')
 
 #
 # Program objects
