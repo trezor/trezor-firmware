@@ -133,8 +133,6 @@ def test_pairing_qr_code(client: Client) -> None:
     protocol._read_message(ThpPairingPreparationsFinished)
 
     # QR Code shown
-    protocol._read_message(ButtonRequest)
-    protocol._send_message(ButtonAck())
 
     # Read code from "Trezor's display" using debuglink
 
@@ -184,8 +182,6 @@ def test_pairing_code_entry(client: Client) -> None:
     cpace_trezor_public_key = cpace_trezor.cpace_trezor_public_key
 
     # Code Entry code shown
-    protocol._read_message(ButtonRequest)
-    protocol._send_message(ButtonAck())
 
     pairing_info = client.debug.pairing_info(
         thp_channel_id=protocol.channel_id.to_bytes(2, "big")
@@ -246,8 +242,6 @@ def _nfc_pairing(client: Client, protocol: ProtocolV2Channel):
     protocol._read_message(ThpPairingPreparationsFinished)
 
     # NFC screen shown
-    protocol._read_message(ButtonRequest)
-    protocol._send_message(ButtonAck())
 
     nfc_secret_host = random.randbytes(16)
     # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
