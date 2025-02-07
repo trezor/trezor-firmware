@@ -168,3 +168,67 @@ def calculate_fee(transaction: Transaction) -> int:
                 is_unit_price_set = True
 
     return int(base_fee + math.ceil(unit_price * unit_limit / 1000000))
+
+
+def calculate_max_rent_exemption(transaction: Transaction) -> int:
+    """
+    Returns max rent exemption in lamports.
+
+    To estimate rent exemption from a transaction we need to go over the instructions.
+    When new accounts are created, space must be allocated for them, rent exemption value depends on that space.
+
+    There are a handful of instruction that allocate space:
+    - System program create account instruction (the space data parameter)
+    - System program create account with seed instruction (the space data parameter)
+    - System program allocate instruction (the space data parameter)
+    - System program allocate with seed instruction (the space data parameter)
+    - Associated token account program create instruction (165 bytes)
+    - Associated token account program create idempotent instruction (165 bytes, might not allocate)
+    """
+    from .constants import (
+        SOLANA_ACCOUNT_METADATA_SIZE,
+        SOLANA_ASSOCIATED_TOKEN_ACCOUNT_SIZE,
+        SOLANA_RENT_EXEMPTION_MULTIPLIER,
+        SOLANA_RENT_PER_BYTE_EPOCH,
+    )
+    from .transaction.instructions import (
+        _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+        _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+        _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+        _SYSTEM_PROGRAM_ID,
+        _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
+        _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
+        _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
+        _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+    )
+
+    allocation_estimate = 0
+    for instruction in transaction.instructions:
+        if instruction.program_id == _SYSTEM_PROGRAM_ID and (
+            instruction.instruction_id == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT
+            or instruction.instruction_id
+            == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED
+            or instruction.instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE
+            or instruction.instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED
+        ):
+            allocation_estimate += (
+                instruction.parsed_data["space"] + SOLANA_ACCOUNT_METADATA_SIZE
+            )
+        elif instruction.program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID and (
+            instruction.instructiod_id
+            == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE
+            or
+            # This might not allocate
+            instruction.instructiod_id
+            == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT
+        ):
+            allocation_estimate += (
+                SOLANA_ASSOCIATED_TOKEN_ACCOUNT_SIZE + SOLANA_ACCOUNT_METADATA_SIZE
+            )
+
+    rent_exemption_estimate = (
+        allocation_estimate
+        * SOLANA_RENT_PER_BYTE_EPOCH
+        * SOLANA_RENT_EXEMPTION_MULTIPLIER
+    )
+    return rent_exemption_estimate
