@@ -43,8 +43,10 @@ static void prodtest_nfc_read_card(cli_t* cli) {
   }
 
   nfc_status_t ret = nfc_init();
+
   if (ret != NFC_OK) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
+    goto cleanup;
   } else {
     cli_trace(cli, "NFC activated in reader mode for %d ms.", timeout);
   }
@@ -53,28 +55,32 @@ static void prodtest_nfc_read_card(cli_t* cli) {
                     NFC_POLLER_TECH_V);
   nfc_activate_stm();
 
-  nfc_event_t nfc_event = NFC_NO_EVENT;
-
+  nfc_event_t nfc_event;
   uint32_t expire_time = ticks_timeout(timeout);
 
   while (true) {
 
     if (ticks_expired(expire_time)) {
-      nfc_deinit();
       cli_error(cli, CLI_ERROR_TIMEOUT, "NFC timeout");
-      return;
+      goto cleanup;
     }
 
-    nfc_event = nfc_get_event();
+    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
 
-    if(nfc_event == NFC_STATE_ACTIVATED) {
+    if(nfc_status != NFC_OK) {
+      cli_error(cli, CLI_ERROR, "NFC error");
+      goto cleanup;
+    }
+
+
+    if(nfc_event == NFC_EVENT_ACTIVATED) {
       nfc_dev_read_info(&dev_info);
       nfc_dev_deactivate();
       break;
     }
 
     if (cli_aborted(cli)) {
-      return;
+      goto cleanup;
     }
 
   }
@@ -102,16 +108,20 @@ static void prodtest_nfc_read_card(cli_t* cli) {
       break;
     case NFC_DEV_TYPE_UNKNOWN:
       cli_error(cli, CLI_ERROR, "NFC Type UNKNOWN");
-      break;
+      goto cleanup;
+      return;
 
     default:
       cli_error(cli, CLI_ERROR, "NFC Type UNKNOWN");
-      break;
+      goto cleanup;
   }
 
-  nfc_deinit();
 
   cli_ok(cli, "");
+
+cleanup:
+  nfc_deinit();
+
 }
 
 static void prodtest_nfc_emulate_card(cli_t* cli) {
@@ -132,6 +142,7 @@ static void prodtest_nfc_emulate_card(cli_t* cli) {
 
   if (ret != NFC_OK) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
+    goto cleanup;
   } else {
     cli_trace(cli, "Emulation started for %d ms", timeout);
   }
@@ -140,22 +151,32 @@ static void prodtest_nfc_emulate_card(cli_t* cli) {
   nfc_activate_stm();
 
   uint32_t expire_time = ticks_timeout(timeout);
+  nfc_event_t nfc_event;
 
   while (!ticks_expired(expire_time)) {
-    nfc_get_event();
+
+    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
+
+    if(nfc_status != NFC_OK) {
+      cli_error(cli, CLI_ERROR, "NFC error");
+      goto cleanup;
+    }
 
     if (cli_aborted(cli)) {
-      return;
+      goto cleanup;
     }
 
   }
 
   cli_trace(cli, "Emulation over");
 
+  cli_ok(cli, "");
+
+  cleanup:
   nfc_deinit();
 
-  cli_ok(cli, "");
 }
+
 
 static void prodtest_nfc_write_card(cli_t* cli) {
   uint32_t timeout = 0;
@@ -176,6 +197,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
 
   if (ret != NFC_OK) {
     cli_error(cli, CLI_ERROR_FATAL, "NFC init failed");
+    goto cleanup;
   } else {
     cli_trace(cli, "NFC reader on, put the card on the reader (timeout %d ms)",
               timeout);
@@ -184,25 +206,30 @@ static void prodtest_nfc_write_card(cli_t* cli) {
   nfc_register_tech(NFC_POLLER_TECH_A);
   nfc_activate_stm();
 
-  nfc_event_t nfc_event = NFC_NO_EVENT;
+  nfc_event_t nfc_event;
   uint32_t expire_time = ticks_timeout(timeout);
 
   while (true) {
 
     if (ticks_expired(expire_time)) {
-      nfc_deinit();
       cli_error(cli, CLI_ERROR_TIMEOUT, "NFC timeout");
-      return;
+      goto cleanup;
     }
 
-    nfc_event = nfc_get_event();
-    if (nfc_event == NFC_STATE_ACTIVATED) {
+    nfc_status_t nfc_status = nfc_get_event(&nfc_event);
+
+    if(nfc_status != NFC_OK) {
+      cli_error(cli, CLI_ERROR, "NFC error");
+      goto cleanup;
+    }
+
+    if (nfc_event == NFC_EVENT_ACTIVATED) {
 
       nfc_dev_read_info(&dev_info);
 
       if (dev_info.type != NFC_DEV_TYPE_A) {
         cli_error(cli, CLI_ERROR, "Only NFC type A cards supported");
-        return;
+        goto cleanup;
       }
 
       cli_trace(cli, "Writting URI to NFC tag %s", dev_info.uid);
@@ -214,14 +241,15 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     }
 
     if (cli_aborted(cli)) {
-      return;
+      goto cleanup;
     }
 
   }
 
-  nfc_deinit();
-
   cli_ok(cli, "");
+
+  cleanup:
+  nfc_deinit();
 }
 
 // clang-format off
