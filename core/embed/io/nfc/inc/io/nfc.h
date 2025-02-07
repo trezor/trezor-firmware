@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "trezor_types.h"
+#include <trezor_types.h>
 
 #define NFC_MAX_UID_LEN 10
 
@@ -45,7 +45,7 @@ typedef enum {
 
 typedef enum {
   NFC_NO_EVENT,
-  NFC_STATE_ACTIVATED,
+  NFC_EVENT_ACTIVATED,
 } nfc_event_t;
 
 typedef enum {
@@ -84,7 +84,7 @@ nfc_status_t nfc_deactivate_stm(void);
 // Calls NFC RFAL worker to service the NFC state machine and expolore
 // registered technologies. This function has to be actively called in loop
 // (main NFC poll function), returns nfc event.
-nfc_event_t nfc_get_event(void);
+nfc_status_t nfc_get_event(nfc_event_t *event);
 
 // Deactivate the currently activated NFC device and put RFAL state machine back to
 // discovary state.

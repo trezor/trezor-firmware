@@ -17,15 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #include <sys/irq.h>
 #include <sys/systick.h>
 #include <rtl/strutils.h>
+#include <io/nfc.h>
 
-#include "io/nfc.h"
 #include "rfal_isoDep.h"
 #include "rfal_nfc.h"
 #include "rfal_nfca.h"
@@ -37,16 +36,20 @@
 #include "nfc_internal.h"
 #include "rfal_platform.h"
 
-#define LM_SEL_RES \
-  0x20U /*!<NFC-A SEL_RES configured for Type 4A Tag Platform    */
-#define LM_NFCID2_BYTE1 \
-  0x02U /*!<NFC-F SENSF_RES configured for Type 3 Tag Platform   */
-#define LM_SC_BYTE1 \
-  0x12U /*!<NFC-F System Code byte 1                             */
-#define LM_SC_BYTE2 \
-  0xFCU /*!<NFC-F System Code byte 2                             */
-#define LM_PAD0 \
-  0x00U /*!<NFC-F PAD0                                           */
+// NFC-A SEL_RES configured for Type 4A Tag Platform
+#define LM_SEL_RES 0x20U
+
+// NFC-F SENSF_RES configured for Type 3 Tag Platform
+#define LM_NFCID2_BYTE1 0x02U
+
+// NFC-F System Code byte 1
+#define LM_SC_BYTE1 0x12U
+
+// NFC-F System Code byte 2
+#define LM_SC_BYTE2 0xFCU
+
+// NFC-F PAD0
+#define LM_PAD0 0x00U
 
 typedef struct {
   bool initialized;
@@ -79,39 +82,38 @@ typedef struct {
   };
 } nfc_device_header_t2t_t;
 
-/* P2P communication data */
-const  uint8_t NFCID3[] = {0x01, 0xFE, 0x03, 0x04, 0x05,
+// P2P communication data
+static const uint8_t NFCID3[] = {0x01, 0xFE, 0x03, 0x04, 0x05,
                            0x06, 0x07, 0x08, 0x09, 0x0A};
-const uint8_t GB[] = {0x46, 0x66, 0x6d, 0x01, 0x01, 0x11, 0x02,
+static const uint8_t GB[] = {0x46, 0x66, 0x6d, 0x01, 0x01, 0x11, 0x02,
                        0x02, 0x07, 0x80, 0x03, 0x02, 0x00, 0x03,
                        0x04, 0x01, 0x32, 0x07, 0x01, 0x03};
 
-/* NFC-A CE config */
-/* 4-byte UIDs with first byte 0x08 would need random number for the subsequent
- * 3 bytes. 4-byte UIDs with first byte 0x*F are Fixed number, not unique, use
- * for this demo 7-byte UIDs need a manufacturer ID and need to assure
- * uniqueness of the rest.*/
-const uint8_t ceNFCA_NFCID[] = {
-    0x1, 0x2, 0x3, 0x4}; /* =_STM, 5F 53 54 4D NFCID1 / UID (4 bytes) */
-const uint8_t ceNFCA_SENS_RES[] = {0x02,
-                                    0x00};  /* SENS_RES / ATQA for 4-byte UID */
-const uint8_t ceNFCA_SEL_RES = LM_SEL_RES; /* SEL_RES / SAK */
+// NFC-A CE config
+// 4-byte UIDs with first byte 0x08 would need random number for the subsequent
+// 3 bytes. 4-byte UIDs with first byte 0x*F are Fixed number, not unique, use
+// for this demo 7-byte UIDs need a manufacturer ID and need to assure
+// uniqueness of the rest.
+static const uint8_t ceNFCA_NFCID[] = {
+    0x1, 0x2, 0x3, 0x4}; // =_STM, 5F 53 54 4D NFCID1 / UID (4 bytes)
+static const uint8_t ceNFCA_SENS_RES[] = {0x02,
+                                    0x00}; // SENS_RES / ATQA for 4-byte UID
+static const uint8_t ceNFCA_SEL_RES = LM_SEL_RES; // SEL_RES / SAK
 
-const uint8_t ceNFCF_nfcid2[] = {
+static const uint8_t ceNFCF_nfcid2[] = {
     LM_NFCID2_BYTE1, 0xFE, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66};
 
-/* NFC-F CE config */
-const uint8_t ceNFCF_SC[] = {LM_SC_BYTE1, LM_SC_BYTE2};
-uint8_t ceNFCF_SENSF_RES[] = {
-    0x01, /* SENSF_RES                                */
+// NFC-F CE config
+static const uint8_t ceNFCF_SC[] = {LM_SC_BYTE1, LM_SC_BYTE2};
+static uint8_t ceNFCF_SENSF_RES[] = {
+    0x01,  // SENSF_RES
     0x02,    0xFE,    0x11, 0x22, 0x33,
-    0x44,    0x55,    0x66, /* NFCID2 */
+    0x44,    0x55,    0x66, // NFCID2
     LM_PAD0, LM_PAD0, 0x00, 0x00, 0x00,
-    0x7F,    0x7F,    0x00, /* PAD0, PAD1, MRTIcheck, MRTIupdate, PAD2
-                             */
-    0x00,    0x00};         /* RD                                       */
+    0x7F,    0x7F,    0x00, // PAD0, PAD1, MRTIcheck, MRTIupdate, PAD2
+    0x00,    0x00};         // RD
 
-static ReturnCode nfc_transcieve_blocking(uint8_t *txBuf, uint16_t txBufSize,
+static nfc_status_t nfc_transcieve_blocking(uint8_t *txBuf, uint16_t txBufSize,
                                           uint8_t **rxBuf, uint16_t **rcvLen,
                                           uint32_t fwt);
 
@@ -166,7 +168,7 @@ nfc_status_t nfc_init() {
   GPIO_InitStructure_int.Pin = NFC_INT_PIN;
   HAL_GPIO_Init(NFC_INT_PORT, &GPIO_InitStructure_int);
 
-  memset(&(drv->hspi), 0, sizeof(drv->hspi));
+  memset(&drv->hspi, 0, sizeof(drv->hspi));
 
   drv->hspi.Instance = NFC_SPI_INSTANCE;
   drv->hspi.Init.Mode = SPI_MODE_MASTER;
@@ -192,7 +194,7 @@ nfc_status_t nfc_init() {
 
   HAL_StatusTypeDef status;
 
-  status = HAL_SPI_Init(&(drv->hspi));
+  status = HAL_SPI_Init(&drv->hspi);
 
   if (status != HAL_OK) {
     return false;
@@ -235,7 +237,7 @@ nfc_status_t nfc_deinit(void) {
     return NFC_ERROR;
   }
 
-  HAL_SPI_DeInit(&(drv->hspi));
+  HAL_SPI_DeInit(&drv->hspi);
 
   HAL_GPIO_DeInit(NFC_SPI_MISO_PORT, NFC_SPI_MISO_PIN);
   HAL_GPIO_DeInit(NFC_SPI_MOSI_PORT, NFC_SPI_MOSI_PIN);
@@ -248,7 +250,6 @@ nfc_status_t nfc_deinit(void) {
   return NFC_OK;
 
 }
-
 
 nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
@@ -269,7 +270,6 @@ nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
   }
 
   // Set general discovery parameters.
-
   if (tech & NFC_POLLER_TECH_A) {
     drv->disc_params.techs2Find |= RFAL_NFC_POLL_TECH_A;
   }
@@ -287,26 +287,42 @@ nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
   }
 
   if (tech & NFC_CARD_EMU_TECH_A) {
+
     card_emulation_init(ceNFCF_nfcid2);
+
+    // Set SENS_RES / ATQA
     memcpy(drv->disc_params.lmConfigPA.SENS_RES, ceNFCA_SENS_RES,
-           RFAL_LM_SENS_RES_LEN); /* Set SENS_RES / ATQA */
+           RFAL_LM_SENS_RES_LEN);
+
+    // Set NFCID / UID
     memcpy(drv->disc_params.lmConfigPA.nfcid, ceNFCA_NFCID,
-           RFAL_LM_NFCID_LEN_04); /* Set NFCID / UID */
+           RFAL_LM_NFCID_LEN_04);
+
+    // Set NFCID length to 4 bytes
     drv->disc_params.lmConfigPA.nfcidLen =
-        RFAL_LM_NFCID_LEN_04; /* Set NFCID length to 4 bytes */
+        RFAL_LM_NFCID_LEN_04;
+
+    // Set SEL_RES / SAK
     drv->disc_params.lmConfigPA.SEL_RES =
-        ceNFCA_SEL_RES; /* Set SEL_RES / SAK */
+        ceNFCA_SEL_RES;
     drv->disc_params.techs2Find |= RFAL_NFC_LISTEN_TECH_A;
+
   }
 
   if (tech & NFC_CARD_EMU_TECH_F) {
-    /* Set configuration for NFC-F CE */
+
+    // Set configuration for NFC-F CE
     memcpy(drv->disc_params.lmConfigPF.SC, ceNFCF_SC,
-           RFAL_LM_SENSF_SC_LEN); /* Set System Code */
+           RFAL_LM_SENSF_SC_LEN); // Set System Code
+
+    // Load NFCID2 on SENSF_RES
     memcpy(&ceNFCF_SENSF_RES[RFAL_NFCF_CMD_LEN], ceNFCF_nfcid2,
-           RFAL_NFCID2_LEN); /* Load NFCID2 on SENSF_RES */
+           RFAL_NFCID2_LEN);
+
+    // Set SENSF_RES / Poll Response
     memcpy(drv->disc_params.lmConfigPF.SENSF_RES, ceNFCF_SENSF_RES,
-           RFAL_LM_SENSF_RES_LEN); /* Set SENSF_RES / Poll Response */
+           RFAL_LM_SENSF_RES_LEN);
+
     drv->disc_params.techs2Find |= RFAL_NFC_LISTEN_TECH_F;
   }
 
@@ -321,7 +337,7 @@ nfc_status_t nfc_activate_stm(void) {
   }
 
   ReturnCode err;
-  err = rfalNfcDiscover(&(drv->disc_params));
+  err = rfalNfcDiscover(&drv->disc_params);
   if (err != RFAL_ERR_NONE) {
     return NFC_ERROR;
   }
@@ -349,9 +365,11 @@ nfc_status_t nfc_deactivate_stm(void) {
   return NFC_OK;
 }
 
-nfc_event_t nfc_get_event(void) {
+nfc_status_t nfc_get_event(nfc_event_t *event) {
 
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
+
+  *event = NFC_NO_EVENT;
 
   if(!drv->initialized) {
     return NFC_NOT_INITIALIZED;
@@ -359,9 +377,12 @@ nfc_event_t nfc_get_event(void) {
 
   static rfalNfcDevice *nfcDevice;
 
-  rfalNfcWorker(); /* Run RFAL worker periodically */
+  // Run RFAL worker periodically
+  rfalNfcWorker();
 
   if(rfalNfcIsDevActivated(rfalNfcGetState())) {
+
+    *event = NFC_EVENT_ACTIVATED;
 
     rfalNfcGetActiveDevice(&nfcDevice);
 
@@ -413,19 +434,18 @@ nfc_event_t nfc_get_event(void) {
           rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_DISCOVERY); // Automatically deactivate
         }
 
-        return NFC_NO_EVENT;
+        *event = NFC_NO_EVENT;
 
         break;
 
       default:
         break;
-    }
 
-    return NFC_STATE_ACTIVATED;
+    }
 
   }
 
-  return NFC_NO_EVENT;
+  return NFC_OK;
 }
 
 nfc_status_t nfc_dev_deactivate(void) {
@@ -485,6 +505,7 @@ nfc_status_t nfc_dev_write_ndef_uri(void) {
 }
 
 nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
+
   if (rfalNfcIsDevActivated(rfalNfcGetState())) {
     rfalNfcDevice *nfcDevice;
     rfalNfcGetActiveDevice(&nfcDevice);
@@ -542,20 +563,16 @@ HAL_StatusTypeDef nfc_spi_transmit_receive(const uint8_t *txData,
   HAL_StatusTypeDef status;
 
   if ((txData != NULL) && (rxData == NULL)) {
-    status = HAL_SPI_Transmit(&(drv->hspi), (uint8_t *)txData, length, 1000);
+    status = HAL_SPI_Transmit(&drv->hspi, (uint8_t *)txData, length, 1000);
   } else if ((txData == NULL) && (rxData != NULL)) {
-    status = HAL_SPI_Receive(&(drv->hspi), rxData, length, 1000);
+    status = HAL_SPI_Receive(&drv->hspi, rxData, length, 1000);
   } else {
-    status = HAL_SPI_TransmitReceive(&(drv->hspi), (uint8_t *)txData, rxData,
+    status = HAL_SPI_TransmitReceive(&drv->hspi, (uint8_t *)txData, rxData,
                                      length, 1000);
   }
 
   return status;
 }
-
-uint32_t nfc_create_timer(uint16_t time) { return ticks_timeout(time); }
-
-bool nfc_timer_is_expired(uint32_t timer) { return ticks_expired(timer); }
 
 void nfc_ext_irq_set_callback(void (*cb)(void)) {
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
@@ -612,11 +629,10 @@ static void nfc_card_emulator_loop(rfalNfcDevice *nfcDev) {
   } while ((err == RFAL_ERR_NONE) || (err == RFAL_ERR_SLEEP_REQ));
 }
 
-static ReturnCode nfc_transcieve_blocking(uint8_t *txBuf, uint16_t txBufSize,
+static nfc_status_t nfc_transcieve_blocking(uint8_t *txBuf, uint16_t txBufSize,
                                           uint8_t **rxBuf, uint16_t **rcvLen,
                                           uint32_t fwt) {
   ReturnCode err;
-
   err = rfalNfcDataExchangeStart(txBuf, txBufSize, rxBuf, rcvLen, fwt);
   if (err == RFAL_ERR_NONE) {
     do {
@@ -624,5 +640,11 @@ static ReturnCode nfc_transcieve_blocking(uint8_t *txBuf, uint16_t txBufSize,
       err = rfalNfcDataExchangeGetStatus();
     } while (err == RFAL_ERR_BUSY);
   }
-  return err;
+
+  if (err != RFAL_ERR_NONE) {
+    return NFC_ERROR;
+  }else {
+    return NFC_OK;
+  }
+
 }

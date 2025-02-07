@@ -176,7 +176,7 @@ static uint8_t InformationBlock[] = {
  * @retval False : Different command.
  *****************************************************************************
  */
-static bool cmdCompare(uint8_t *cmd, uint8_t *find, uint16_t len) {
+static bool cmd_compare(uint8_t *cmd, uint8_t *find, uint16_t len) {
   for (int i = 0; i < 20; i++) {
     if (!memcmp(&cmd[i], find, len)) {
       return true;
@@ -212,17 +212,17 @@ static uint16_t card_emulation_t4t_select(uint8_t *cmdData, uint8_t *rspData) {
   uint8_t fidNDEF[] = {FID_NDEF >> 8, FID_NDEF & 0xFF};
   uint8_t selectFileId[] = {0xA4, 0x00, 0x0C, 0x02, 0x00, 0x01};
 
-  if (cmdCompare(cmdData, aid, sizeof(aid))) { /* Select Appli */
+  if (cmd_compare(cmdData, aid, sizeof(aid))) { /* Select Appli */
     nState = STATE_APP_SELECTED;
     success = true;
   } else if ((nState >= STATE_APP_SELECTED) &&
-             cmdCompare(cmdData, fidCC, sizeof(fidCC))) { /* Select CC */
+             cmd_compare(cmdData, fidCC, sizeof(fidCC))) { /* Select CC */
     nState = STATE_CC_SELECTED;
     nSelectedIdx = 0;
     success = true;
   } else if ((nState >= STATE_APP_SELECTED) &&
-             (cmdCompare(cmdData, fidNDEF, sizeof(fidNDEF)) ||
-              cmdCompare(cmdData, selectFileId,
+             (cmd_compare(cmdData, fidNDEF, sizeof(fidNDEF)) ||
+              cmd_compare(cmdData, selectFileId,
                          sizeof(selectFileId)))) { /* Select NDEF */
     nState = STATE_FID_SELECTED;
     nSelectedIdx = 1;
