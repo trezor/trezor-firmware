@@ -669,7 +669,7 @@
     "reset__check_backup_title": "Contr. back-up",
     "reset__check_group_share_title_template": "Contr. g{0} - az. {1}",
     "reset__check_share_title_template": "Contr. azione n.{0}",
-    "reset__check_wallet_backup_title": "Verifica back-up del wallet",
+    "reset__check_wallet_backup_title": "Verifica back-up",
     "reset__continue_with_next_share": "Continua con azione success.",
     "reset__continue_with_share_template": "Continua con azione n.{0}.",
     "reset__create_x_of_y_multi_share_backup_template": "Creare {0} back-up multi-condivisione su {1}?",
