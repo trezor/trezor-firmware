@@ -74,7 +74,6 @@ SOURCE_MOD += [
     'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
     'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
     'embed/gfx/fonts/font_bitmap.c',
-    'embed/gfx/fonts/fonts.c',
     'embed/gfx/gfx_color.c',
     'embed/gfx/gfx_draw.c',
     'embed/gfx/terminal.c',
@@ -127,7 +126,7 @@ SOURCE_UNIX = [
     'embed/projects/unix/profile.c',
 ]
 
-ui.init_ui(TREZOR_MODEL, "bootloader", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
+ui.init_ui(TREZOR_MODEL, "bootloader", RUST_UI_FEATURES)
 
 env = Environment(
     ENV=os.environ,

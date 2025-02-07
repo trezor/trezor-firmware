@@ -18,12 +18,10 @@ def get_ui_module(layout: str):
 def init_ui(
     model: str,
     stage: int,
-    defines: list[str | tuple[str, str]],
-    sources: list[str],
     rust_features: list[str],
 ):
     conf = models.get_model_ui_conf(model)
-    get_ui_module(model).init_ui(stage, conf, defines, sources, rust_features)
+    get_ui_module(model).init_ui(stage, conf, rust_features)
 
 
 def get_ui_layout(model: str):

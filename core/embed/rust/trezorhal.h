@@ -2,7 +2,6 @@
 
 #include <trezor_model.h>
 
-#include <gfx/fonts.h>
 #include <gfx/gfx_bitblt.h>
 #include <io/display.h>
 #include <io/usb.h>
