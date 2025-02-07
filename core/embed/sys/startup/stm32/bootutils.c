@@ -136,7 +136,7 @@ __attribute__((noreturn)) static void halt_device(void) {
 
   // Disable interrupts, MPU, clear all registers and set up a new stack
   // (on STM32U5 it also clear all CPU secrets and SRAM2).
-  call_with_new_stack(0, 0, halt_device_phase_2);
+  call_with_new_stack(0, 0, true, halt_device_phase_2);
 }
 #endif  // RSOD_INFINITE_LOOP
 
@@ -188,7 +188,7 @@ __attribute__((noreturn)) static void reboot_with_args(boot_command_t command,
 
   // Disable interrupts, MPU, clear all registers and set up a new stack
   // (on STM32U5 it also clear all CPU secrets and SRAM2).
-  call_with_new_stack(command, 0, reboot_with_args_phase_2);
+  call_with_new_stack(command, 0, true, reboot_with_args_phase_2);
 }
 
 __attribute__((noreturn)) void reboot_to_bootloader(void) {
@@ -247,7 +247,7 @@ void __attribute__((noreturn)) jump_to_next_stage(uint32_t vectbl_address) {
 
   // Disable interrupts, MPU, clear all registers and set up a new stack
   // (on STM32U5 it also clear all CPU secrets and SRAM2).
-  call_with_new_stack(vectbl_address, 0, jump_to_next_stage_phase_2);
+  call_with_new_stack(vectbl_address, 0, false, jump_to_next_stage_phase_2);
 }
 
 #endif  // KERNEL_MODE
