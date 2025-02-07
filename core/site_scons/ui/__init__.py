@@ -5,28 +5,33 @@ from site_scons import models
 from . import ui_bolt, ui_caesar, ui_delizia
 
 
-def get_ui_module(layout: str):
+def get_ui_module(model: str, stage: str):
     ui_modules = {
         "delizia": ui_delizia,
         "caesar": ui_caesar,
         "bolt": ui_bolt,
     }
 
-    return ui_modules[models.get_model_ui(layout)]
+    layout = models.get_model_ui(model)
+
+    if layout == "delizia" and stage == "prodtest":
+        layout = "bolt"
+
+    return ui_modules[layout]
 
 
 def init_ui(
     model: str,
-    stage: int,
+    stage: str,
     rust_features: list[str],
 ):
     conf = models.get_model_ui_conf(model)
-    get_ui_module(model).init_ui(stage, conf, rust_features)
+    get_ui_module(model, stage).init_ui(stage, conf, rust_features)
 
 
 def get_ui_layout(model: str):
-    return get_ui_module(model).get_ui_layout()
+    return get_ui_module(model, "firmware").get_ui_layout()
 
 
 def get_ui_layout_path(model: str):
-    return get_ui_module(model).get_ui_layout_path()
+    return get_ui_module(model, "firmware").get_ui_layout_path()
