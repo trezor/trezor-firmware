@@ -20,11 +20,12 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/fonts.h>
 #include <gfx/gfx_draw.h>
 #include <gfx/terminal.h>
 #include <io/display.h>
 #include <rtl/mini_printf.h>
+
+#include "fonts/font_bitmap.h"
 
 #define TERMINAL_COLS (DISPLAY_RESX / 6)
 #define TERMINAL_ROWS (DISPLAY_RESY / 8)

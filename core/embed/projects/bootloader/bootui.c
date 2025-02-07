@@ -19,7 +19,6 @@
 
 #include <trezor_rtl.h>
 
-#include <gfx/fonts.h>
 #include <io/display.h>
 #include <io/display_utils.h>
 #include <rtl/mini_printf.h>

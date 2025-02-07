@@ -67,11 +67,9 @@ SOURCE_MOD += [
     'embed/gfx/bitblt/gfx_bitblt_rgba8888.c',
     'embed/gfx/bitblt/gfx_bitblt_mono8.c',
     'embed/gfx/fonts/font_bitmap.c',
-    'embed/gfx/fonts/fonts.c',
     'embed/gfx/gfx_color.c',
     'embed/gfx/gfx_draw.c',
     'embed/gfx/terminal.c',
-    'embed/gfx/qrcode/qrcodegen.c',
     'embed/io/display/display_utils.c',
     'embed/util/image/image.c',
     'embed/util/rsod/rsod.c',
@@ -85,7 +83,7 @@ SOURCE_MOD += [
     'vendor/micropython/lib/uzlib/tinflate.c',
 ]
 
-ui.init_ui(TREZOR_MODEL, "prodtest", CPPDEFINES_MOD, SOURCE_MOD, RUST_UI_FEATURES)
+ui.init_ui(TREZOR_MODEL, "prodtest", RUST_UI_FEATURES)
 
 env = Environment(
     ENV=os.environ,

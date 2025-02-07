@@ -19,7 +19,6 @@
 
 #include <trezor_model.h>
 
-#include <gfx/fonts.h>
 #include <gfx/gfx_draw.h>
 #include <io/display.h>
 
