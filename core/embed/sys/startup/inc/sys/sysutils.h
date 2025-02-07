@@ -28,9 +28,13 @@ typedef void (*new_stack_callback_t)(uint32_t arg1, uint32_t arg2);
 // Disables interrupts, disables the MPU, clears
 // all registers, sets up a new stack and calls the given callback.
 //
+// If `clear_bkregs` is set, the function also clears the BKP registers
+// and SRAM2 on STM32U5. It has no effect on STM32F4.
+//
 // The function is intended to be used in special cases, like
 // emergency situations, where the current stack may be corrupted.
 __attribute((noreturn)) void call_with_new_stack(uint32_t arg1, uint32_t arg2,
+                                                 bool clear_bkpregs,
                                                  new_stack_callback_t callback);
 
 // Ensure that we are running in privileged thread mode.

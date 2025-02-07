@@ -29,7 +29,8 @@
 #endif
 
 __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
-    uint32_t arg1, uint32_t arg2, new_stack_callback_t callback) {
+    uint32_t arg1, uint32_t arg2, bool clear_bkpregs,
+    new_stack_callback_t callback) {
   __asm__ volatile(
 
       // R0, R1, R2 are used for arguments
@@ -48,8 +49,10 @@ __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
 
 #ifdef STM32U5
   __asm__ volatile(
+      "CMP     R2, #0              \n"  // clear_bkpregs?
+      "BEQ     1f                  \n"
       // --------------------------------------------------------------
-      // Delete all secrets and SRAM2 where stack is located.
+      // Delete all BKP registers and SRAM2 where stack is located.
       // SAES peripheral need to be disabled, so that we don't get
       // tamper events.
       // --------------------------------------------------------------
@@ -67,7 +70,7 @@ __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
       "LDR     R6, [R4]            \n"
       "ORR     R6, R6, R5          \n"
       "STR     R6, [R4]            \n"
-
+      "1:                          \n"
       :  // no output
       : [_RCC_AHB2ENR1] "i"(&RCC->AHB2ENR1),
         [_RCC_AHB2ENR1_SAESEN] "i"(RCC_AHB2ENR1_SAESEN),
@@ -107,16 +110,15 @@ __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
       // Clear all unused registers
       // --------------------------------------------------------------
 
-      "MOV     R3, #0              \n"
-      "MOV     R4, R3              \n"
-      "MOV     R5, R3              \n"
-      "MOV     R6, R3              \n"
-      "MOV     R7, R3              \n"
-      "MOV     R8, R3              \n"
-      "MOV     R9, R3              \n"
-      "MOV     R10, R3             \n"
-      "MOV     R11, R3             \n"
-      "MOV     R12, R3             \n"
+      "MOV     R4, #0              \n"
+      "MOV     R5, R4              \n"
+      "MOV     R6, R4              \n"
+      "MOV     R7, R4              \n"
+      "MOV     R8, R4              \n"
+      "MOV     R9, R4              \n"
+      "MOV     R10, R4             \n"
+      "MOV     R11, R4             \n"
+      "MOV     R12, R4             \n"
 
       // --------------------------------------------------------------
       // Invoke phase 2 function
@@ -125,7 +127,7 @@ __attribute((naked, noreturn, no_stack_protector)) void call_with_new_stack(
       // R0 = arg1
       // R1 = arg2
 
-      "BX      R2                  \n"
+      "BX      R3                  \n"
 
       :  // no output
       : [estack] "i"(&_stack_section_end),

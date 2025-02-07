@@ -131,7 +131,7 @@ __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
   // Save `pminfo` to bootargs so it isn't overwritten by succesive call
   bootargs_set(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
 
-  call_with_new_stack((uint32_t)error_handler, 0,
+  call_with_new_stack((uint32_t)error_handler, 0, true,
                       system_emergency_rescue_phase_2);
 }
 
