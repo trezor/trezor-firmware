@@ -1410,6 +1410,12 @@ pub enum TranslatedString {
     ble__unpair_current = 994,  // "Unpair connected device"
     ble__unpair_title = 995,  // "Unpair"
     words__unlocked = 996,  // "Unlocked"
+    #[cfg(feature = "universal_fw")]
+    solana__max_fees_rent = 997,  // "Max fees and rent"
+    #[cfg(feature = "universal_fw")]
+    solana__max_rent_fee = 998,  // "Max rent fee"
+    #[cfg(feature = "universal_fw")]
+    solana__transaction_fee = 999,  // "Transaction fee"
 }
 
 impl TranslatedString {
@@ -2816,6 +2822,12 @@ impl TranslatedString {
             Self::ble__unpair_current => "Unpair connected device",
             Self::ble__unpair_title => "Unpair",
             Self::words__unlocked => "Unlocked",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__max_fees_rent => "Max fees and rent",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__max_rent_fee => "Max rent fee",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__transaction_fee => "Transaction fee",
         }
     }
 
@@ -4221,6 +4233,12 @@ impl TranslatedString {
             Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
             Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
             Qstr::MP_QSTR_words__unlocked => Some(Self::words__unlocked),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__max_fees_rent => Some(Self::solana__max_fees_rent),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__max_rent_fee => Some(Self::solana__max_rent_fee),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__transaction_fee => Some(Self::solana__transaction_fee),
             _ => None,
         }
     }

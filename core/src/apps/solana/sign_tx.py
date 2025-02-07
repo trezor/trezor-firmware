@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from trezor.crypto import base58
 from trezor.wire import DataError
 
 from apps.common.keychain import with_slip44_keychain
@@ -78,11 +79,22 @@ async def sign_tx(
             address_n,
             transaction.blockhash,
             fee,
+            _has_unsupported_instructions(transaction),
         )
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
 
     return SolanaTxSignature(signature=signature)
+
+
+def _has_unsupported_instructions(transaction: Transaction) -> bool:
+    visible_instructions = transaction.get_visible_instructions()
+    for instruction in visible_instructions:
+        if not (
+            instruction.is_program_supported and instruction.is_instruction_supported
+        ):
+            return True
+    return False
 
 
 async def confirm_instructions(

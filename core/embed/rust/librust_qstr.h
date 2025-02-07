@@ -1144,6 +1144,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__instruction_is_multisig;
   MP_QSTR_solana__is_provided_via_lookup_table_template;
   MP_QSTR_solana__lookup_table_address;
+  MP_QSTR_solana__max_fees_rent;
+  MP_QSTR_solana__max_rent_fee;
   MP_QSTR_solana__multiple_signers;
   MP_QSTR_solana__priority_fee;
   MP_QSTR_solana__stake;
@@ -1155,6 +1157,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__stake_withdrawal_warning_title;
   MP_QSTR_solana__token_address;
   MP_QSTR_solana__transaction_contains_unknown_instructions;
+  MP_QSTR_solana__transaction_fee;
   MP_QSTR_solana__transaction_requires_x_signers_template;
   MP_QSTR_solana__unstake;
   MP_QSTR_solana__unstake_question;
