@@ -149,11 +149,11 @@ class ProtocolV1(Protocol):
     def read_first(self) -> Tuple[int, int, bytes]:
         chunk = self.handle.read_chunk()
         if chunk[:3] != b"?##":
-            raise RuntimeError("Unexpected magic characters")
+            raise RuntimeError(f"Unexpected magic characters: {chunk.hex()}")
         try:
             msg_type, datalen = struct.unpack(">HL", chunk[3 : 3 + self.HEADER_LEN])
         except Exception:
-            raise RuntimeError("Cannot parse header")
+            raise RuntimeError(f"Cannot parse header: {chunk.hex()}")
 
         data = chunk[3 + self.HEADER_LEN :]
         return msg_type, datalen, data
@@ -161,5 +161,5 @@ class ProtocolV1(Protocol):
     def read_next(self) -> bytes:
         chunk = self.handle.read_chunk()
         if chunk[:1] != b"?":
-            raise RuntimeError("Unexpected magic characters")
+            raise RuntimeError(f"Unexpected magic characters: {chunk.hex()}")
         return chunk[1:]
