@@ -1,4 +1,4 @@
-#[cfg(not(feature = "bootloader"))]
+#[cfg(not(any(feature = "bootloader", feature = "prodtest")))]
 use crate::storage;
 
 // Typical backlight values.
@@ -9,24 +9,24 @@ const BACKLIGHT_NONE: u8 = 0;
 const BACKLIGHT_MIN: u8 = 10;
 const BACKLIGHT_MAX: u8 = 255;
 
-#[cfg(feature = "bootloader")]
+#[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub fn get_backlight_normal() -> u8 {
     BACKLIGHT_NORMAL
 }
 
-#[cfg(not(feature = "bootloader"))]
+#[cfg(not(any(feature = "bootloader", feature = "prodtest")))]
 pub fn get_backlight_normal() -> u8 {
     storage::get_brightness()
         .unwrap_or(BACKLIGHT_NORMAL)
         .clamp(BACKLIGHT_MIN, BACKLIGHT_MAX)
 }
 
-#[cfg(feature = "bootloader")]
+#[cfg(any(feature = "bootloader", feature = "prodtest"))]
 pub fn get_backlight_low() -> u8 {
     BACKLIGHT_LOW
 }
 
-#[cfg(not(feature = "bootloader"))]
+#[cfg(not(any(feature = "bootloader", feature = "prodtest")))]
 pub fn get_backlight_low() -> u8 {
     storage::get_brightness()
         .unwrap_or(BACKLIGHT_LOW)

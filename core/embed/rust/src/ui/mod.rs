@@ -26,6 +26,10 @@ pub mod layout_delizia;
 
 #[cfg(feature = "bootloader")]
 pub mod ui_bootloader;
+
+#[cfg(feature = "prodtest")]
+pub mod ui_prodtest;
+
 pub mod ui_common;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;

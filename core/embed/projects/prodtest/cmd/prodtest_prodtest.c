@@ -17,25 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <rust_ui_prodtest.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/fonts.h>
-#include <gfx/gfx_draw.h>
-#include <io/display.h>
 #include <rtl/cli.h>
-#include <sys/bootutils.h>
-#include <sys/mpu.h>
-#include <sys/systick.h>
 #include <util/fwutils.h>
 
 #include <version.h>
-
-static gfx_text_attr_t bold = {
-    .font = FONT_BOLD,
-    .fg_color = COLOR_WHITE,
-    .bg_color = COLOR_BLACK,
-};
 
 static void prodtest_prodtest_intro(cli_t* cli) {
   cli_trace(cli, "Welcome to Trezor %s Production Test Firmware v%d.%d.%d.",
@@ -63,10 +52,8 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
   cli_trace(cli, "Invalidating the production test firmware header...");
   firmware_invalidate_header();
 
-  gfx_clear();
-  gfx_offset_t pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2 + 10);
-  gfx_draw_text(pos, "WIPED", -1, &bold, GFX_ALIGN_CENTER);
-  display_refresh();
+  const char msg[] = "WIPED";
+  screen_prodtest_show_text(msg, strlen(msg));
 
   cli_ok(cli, "");
 }
