@@ -16,7 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Remove deprecated Unchained Capital's multisig path.  [#4396]
 - Forbid per-node paths in multisig change outputs and multisig receive addresses.  [#4396]
 - Forbid multisig to singlesig change outputs.  [#4396]
-- Reworked PIN processing.
+- Reworked PIN processing.  [#3949]
 
 ### Removed
 - CoSi functionality.  [#2675]
@@ -635,6 +635,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3043]: https://github.com/trezor/trezor-firmware/pull/3043
 [#3216]: https://github.com/trezor/trezor-firmware/pull/3216
 [#3691]: https://github.com/trezor/trezor-firmware/pull/3691
+[#3949]: https://github.com/trezor/trezor-firmware/pull/3949
 [#4093]: https://github.com/trezor/trezor-firmware/pull/4093
 [#4119]: https://github.com/trezor/trezor-firmware/pull/4119
 [#4324]: https://github.com/trezor/trezor-firmware/pull/4324
