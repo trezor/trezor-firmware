@@ -20,7 +20,8 @@
 #include <trezor_rtl.h>
 #include "ndef.h"
 
-// ndef_status_t create_ndef_record_uri(uint8_t *bytearray, )
+
+#define NDEF_MESSAGE_URI_OVERHEAD 7
 
 ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
                                  ndef_message_t *message) {
@@ -107,8 +108,7 @@ ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
   }
 
   // Look at first byte, parse header
-  memcpy(&rec->header, buffer, 1);
-  bp++;
+  rec->header.byte = buffer[bp++];
 
   if (rec->header.tnf == 0x00 || rec->header.tnf > 0x06) {
     return NDEF_ERROR;  // Empty or non-existing record
@@ -119,7 +119,7 @@ ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
   if (rec->header.sr) {
     rec->payload_length = buffer[bp++];
   } else {
-    memcpy(&rec->payload_length, buffer + bp, 4);
+    rec->payload_length = (uint32_t) buffer[bp];
     bp += 4;
   }
 
@@ -131,22 +131,26 @@ ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
   }
 
   if (rec->type_length > 0) {
-    memcpy(&rec->type, buffer + bp, rec->type_length);
+    rec->type = buffer[bp];
     bp += rec->type_length;
   } else {
     // Type length ommited
     rec->type = 0;
   }
 
-  if (rec->id_length > 0) {
-    memcpy(&rec->id, buffer + bp, rec->id_length);
-    bp += rec->id_length;
-  } else {
-    // ID length ommited
+  if (rec->id_length == 0) {
+    // ID ommited
     rec->id = 0;
+  }else{
+    rec->id = buffer[bp++];
   }
 
   if (rec->payload_length > 0) {
+
+    if (rec->payload_length > NDEF_MAX_RECORD_PAYLOAD_BYTES) {
+      return NDEF_ERROR;  // Payload too long
+    }
+
     memcpy(rec->payload, buffer + bp, rec->payload_length);
     bp += rec->payload_length;
   } else {
@@ -158,11 +162,17 @@ ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
   return NDEF_OK;
 }
 
-uint16_t ndef_create_uri(const char *uri, uint8_t *buffer) {
-  *buffer = 0x3;  // TLV header
-  buffer++;
+uint16_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
+
 
   uint16_t uri_len = strlen(uri);
+
+  if(buffer_size < (uri_len + NDEF_MESSAGE_URI_OVERHEAD)){
+    return 0; // Not enough room to create URI
+  }
+
+  *buffer = 0x3;  // TLV header
+  buffer++;
 
   // NDEF message length
   *buffer = uri_len + 5;  // uri + record header;

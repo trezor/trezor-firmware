@@ -30,12 +30,17 @@ typedef enum {
 } ndef_status_t;
 
 typedef struct {
-  uint8_t tnf : 3;
-  uint8_t il : 1;
-  uint8_t sr : 1;
-  uint8_t cf : 1;
-  uint8_t me : 1;
-  uint8_t mb : 1;
+  union{
+    struct {
+      uint8_t mb : 1;
+      uint8_t me : 1;
+      uint8_t cf : 1;
+      uint8_t sr : 1;
+      uint8_t il : 1;
+      uint8_t tnf : 3;
+    };
+    uint8_t byte;
+  };
 } ndef_record_header_t;
 
 typedef struct {
@@ -59,5 +64,6 @@ ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
                                  ndef_message_t *message);
 ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
                                 ndef_record_t *rec);
-uint16_t ndef_create_uri(const char *uri, uint8_t *buffer);
+
+uint16_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size);
 

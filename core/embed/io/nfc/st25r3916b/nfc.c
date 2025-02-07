@@ -495,7 +495,7 @@ nfc_status_t nfc_dev_write_ndef_uri(void) {
   // NDEF message
   uint8_t ndef_message[128] = {0};
 
-  uint16_t buffer_len = ndef_create_uri("trezor.io/", ndef_message);
+  uint16_t buffer_len = ndef_create_uri("trezor.io/", ndef_message, sizeof(ndef_message));
 
   for (uint8_t i = 0; i < buffer_len / 4; i++) {
     rfalT2TPollerWrite(4 + i, ndef_message + i * 4);
