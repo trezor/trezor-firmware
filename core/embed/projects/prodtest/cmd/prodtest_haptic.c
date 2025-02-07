@@ -42,16 +42,15 @@ static void prodtest_haptic_test(cli_t* cli) {
     return;
   }
 
+  haptic_play(HAPTIC_BUTTON_PRESS);
+
   cli_trace(cli, "Running haptic feedback test for %d ms...", duration);
   if (!haptic_test(duration)) {
     cli_error(cli, CLI_ERROR, "Haptic feedback test failed.");
-    goto cleanup;
+    return;
   }
 
   cli_ok(cli, "");
-
-cleanup:
-  haptic_deinit();
 }
 
 // clang-format off
