@@ -193,7 +193,9 @@ async def try_confirm_predefined_transaction(
 
     if instructions_count == 1:
         if SystemProgramTransferInstruction.is_type_of(instructions[0]):
-            await confirm_system_transfer(instructions[0], fee, signer_path, blockhash)
+            await confirm_system_transfer(
+                instructions[0], fee, signer_path, blockhash
+            )
             return True
 
     if await try_confirm_staking_transaction(
@@ -206,7 +208,11 @@ async def try_confirm_predefined_transaction(
         return True
 
     return await try_confirm_token_transfer_transaction(
-        transaction, fee, signer_path, blockhash, additional_info
+        transaction,
+        fee,
+        signer_path,
+        blockhash,
+        additional_info,
     )
 
 
