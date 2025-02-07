@@ -202,9 +202,9 @@ class PairingContext(Context):
             trezorui_api.show_simple(
                 title="Copy the following",
                 text=self._get_code_code_entry_str(),
+                button="Cancel",
             ),
-            br_name="pairing_code_entry",
-            br_code=ButtonRequestType.Other,
+            br_name=None,
         )
 
     async def _show_nfc_screen(self) -> UiResult:
@@ -214,9 +214,9 @@ class PairingContext(Context):
             trezorui_api.show_simple(
                 title="NFC Pairing",
                 text="Move your device close to Trezor",
+                button="Cancel",
             ),
-            br_name="pairing_nfc",
-            br_code=ButtonRequestType.Other,
+            br_name=None,
         )
 
     async def _show_qr_code_screen(self) -> UiResult:
@@ -232,7 +232,7 @@ class PairingContext(Context):
                 path="",
                 xpubs=[],
             ),
-            br_name="pairing_qr_code",
+            br_name=None,
             br_code=ButtonRequestType.Other,
         )
 
