@@ -17,22 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <rust_ui_prodtest.h>
 #ifdef USE_TOUCH
 
 #include <trezor_rtl.h>
 
-#include <gfx/fonts.h>
-#include <gfx/gfx_draw.h>
 #include <io/display.h>
 #include <io/touch.h>
 #include <rtl/cli.h>
 #include <sys/systick.h>
-
-const static gfx_text_attr_t bold = {
-    .font = FONT_BOLD,
-    .fg_color = COLOR_WHITE,
-    .bg_color = COLOR_BLACK,
-};
 
 static bool ensure_touch_init(cli_t* cli) {
   cli_trace(cli, "Initializing the touch controller...");
@@ -108,26 +101,23 @@ static void prodtest_touch_test(cli_t* cli) {
     return;
   }
 
-  const int width = DISPLAY_RESX / 2;
-  const int height = DISPLAY_RESY / 2;
+  const int16_t width = DISPLAY_RESX / 2;
+  const int16_t height = DISPLAY_RESY / 2;
 
-  gfx_clear();
   switch (position) {
     case 1:
-      gfx_draw_bar(gfx_rect_wh(0, 0, width, height), COLOR_WHITE);
+      screen_prodtest_touch(0, 0, width, height);
       break;
     case 2:
-      gfx_draw_bar(gfx_rect_wh(width, 0, width, height), COLOR_WHITE);
+      screen_prodtest_touch(width, 0, width, height);
       break;
     case 3:
-      gfx_draw_bar(gfx_rect_wh(width, height, width, height), COLOR_WHITE);
+      screen_prodtest_touch(width, height, width, height);
       break;
     default:
-      gfx_draw_bar(gfx_rect_wh(0, height, width, height), COLOR_WHITE);
+      screen_prodtest_touch(0, height, width, height);
       break;
   }
-
-  display_refresh();
 
   uint32_t event = 0;
   if (touch_click_timeout(cli, &event, timeout)) {
@@ -140,8 +130,7 @@ static void prodtest_touch_test(cli_t* cli) {
     }
   }
 
-  gfx_clear();
-  display_refresh();
+  screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_custom(cli_t* cli) {
@@ -188,9 +177,7 @@ static void prodtest_touch_test_custom(cli_t* cli) {
   cli_trace(cli, "Drawing a rectangle at [%d, %d] with size [%d x %d]...", x, y,
             width, height);
 
-  gfx_clear();
-  gfx_draw_bar(gfx_rect_wh(x, y, width, height), COLOR_WHITE);
-  display_refresh();
+  screen_prodtest_touch(x, y, width, height);
 
   uint32_t expire_time = ticks_timeout(timeout);
 
@@ -226,8 +213,7 @@ static void prodtest_touch_test_custom(cli_t* cli) {
     }
   }
 
-  gfx_clear();
-  display_refresh();
+  screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_idle(cli_t* cli) {
@@ -243,10 +229,8 @@ static void prodtest_touch_test_idle(cli_t* cli) {
     return;
   }
 
-  gfx_clear();
-  gfx_offset_t pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
-  gfx_draw_text(pos, "DON'T TOUCH", -1, &bold, GFX_ALIGN_CENTER);
-  display_refresh();
+  const char msg[] = "DON'T TOUCH";
+  screen_prodtest_show_text(msg, strlen(msg));
 
   if (!ensure_touch_init(cli)) {
     return;
@@ -273,8 +257,7 @@ static void prodtest_touch_test_idle(cli_t* cli) {
   cli_ok(cli, "");
 
 cleanup:
-  gfx_clear();
-  display_refresh();
+  screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_power(cli_t* cli) {
@@ -290,10 +273,8 @@ static void prodtest_touch_test_power(cli_t* cli) {
     return;
   }
 
-  gfx_clear();
-  gfx_offset_t pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
-  gfx_draw_text(pos, "MEASURING", -1, &bold, GFX_ALIGN_CENTER);
-  display_refresh();
+  const char text[] = "MEASURING";
+  screen_prodtest_show_text(text, strlen(text));
 
   cli_trace(cli, "Setting touch controller power for %d ms...", timeout);
 
@@ -311,8 +292,7 @@ static void prodtest_touch_test_power(cli_t* cli) {
 
 cleanup:
   touch_power_set(false);
-  gfx_clear();
-  display_refresh();
+  screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_sensitivity(cli_t* cli) {
@@ -338,28 +318,22 @@ static void prodtest_touch_test_sensitivity(cli_t* cli) {
   cli_trace(cli, "Running touch controller test...");
   cli_trace(cli, "Press CTRL+C for exit.");
 
-  gfx_clear();
-  display_refresh();
-
   for (;;) {
     uint32_t evt = touch_get_event();
     if (evt & TOUCH_START || evt & TOUCH_MOVE) {
       int x = touch_unpack_x(evt);
       int y = touch_unpack_y(evt);
-      gfx_clear();
-      gfx_draw_bar(gfx_rect_wh(x - 48, y - 48, 96, 96), COLOR_WHITE);
-      display_refresh();
+
+      screen_prodtest_touch(x - 48, y - 48, 96, 96);
     } else if (evt & TOUCH_END) {
-      gfx_clear();
-      display_refresh();
+      screen_prodtest_touch(0, 0, 0, 0);
     }
     if (cli_aborted(cli)) {
       break;
     }
   }
 
-  gfx_clear();
-  display_refresh();
+  screen_prodtest_welcome();
 }
 
 // clang-format off

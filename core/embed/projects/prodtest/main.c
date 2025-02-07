@@ -20,17 +20,14 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <gfx/fonts.h>
-#include <gfx/gfx_draw.h>
 #include <io/display.h>
-#include <io/display_utils.h>
 #include <io/usb.h>
 #include <rtl/cli.h>
 #include <sys/system.h>
-#include <sys/systick.h>
-#include <util/flash.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
+
+#include "rust_ui_prodtest.h"
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -144,53 +141,17 @@ static void usb_init_all(void) {
   ensure(usb_start(), NULL);
 }
 
-static inline gfx_rect_t gfx_rect_shrink(gfx_rect_t r, int padding) {
-  gfx_rect_t result = {
-      .x0 = r.x0 + padding,
-      .y0 = r.y0 + padding,
-      .x1 = r.x1 - padding,
-      .y1 = r.y1 - padding,
-  };
-  return result;
-}
-
-static void draw_welcome_screen(void) {
-  gfx_clear();
-  gfx_rect_t r = gfx_rect_wh(0, 0, DISPLAY_RESX, DISPLAY_RESY);
-  uint8_t qr_scale = 4;
-  int16_t text_offset = 30;
-  gfx_text_attr_t bold = {
-      .font = FONT_BOLD,
-      .fg_color = COLOR_WHITE,
-      .bg_color = COLOR_BLACK,
-  };
-
-#if defined TREZOR_MODEL_T2B1 || defined TREZOR_MODEL_T3B1
-  gfx_draw_bar(r, COLOR_WHITE);
-  qr_scale = 2;
-  text_offset = 9;
-  bold.fg_color = COLOR_BLACK;
-  bold.bg_color = COLOR_WHITE;
-#else
-  gfx_draw_bar(gfx_rect_shrink(r, 3), COLOR_WHITE);
-  gfx_draw_bar(gfx_rect_shrink(r, 4), COLOR_BLACK);
-#endif
-
-  char dom[32];
+static void show_welcome_screen(void) {
+  char dom[32] = {0};
   // format: {MODEL_IDENTIFIER}YYMMDD
-  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
-      dom[31] == 0 && cstr_starts_with(dom, MODEL_IDENTIFIER)) {
-    gfx_offset_t pos;
-
-    pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY / 2);
-    gfx_draw_qrcode(pos, qr_scale, dom);
-
-    pos = gfx_offset(DISPLAY_RESX / 2, DISPLAY_RESY - text_offset);
-    gfx_draw_text(pos, dom + sizeof(MODEL_IDENTIFIER) - 1, -1, &bold,
-                  GFX_ALIGN_CENTER);
+  if ((sectrue ==
+           flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
+       dom[31] == 0 && cstr_starts_with(dom, MODEL_IDENTIFIER))) {
+    screen_prodtest_info(dom, strlen(dom), dom + sizeof(MODEL_IDENTIFIER) - 1,
+                         strlen(dom) - sizeof(MODEL_IDENTIFIER) + 1);
+  } else {
+    screen_prodtest_welcome();
   }
-
-  display_refresh();
 }
 
 static void drivers_init(void) {
@@ -230,9 +191,7 @@ int main(void) {
   drivers_init();
   usb_init_all();
 
-  // Draw welcome screen
-  draw_welcome_screen();
-  display_fade(0, BACKLIGHT_NORMAL, 1000);
+  show_welcome_screen();
 
   // Initialize command line interface
   cli_init(&g_cli, console_read, console_write, NULL);

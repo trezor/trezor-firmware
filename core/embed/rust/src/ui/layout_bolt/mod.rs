@@ -23,6 +23,9 @@ pub struct UIBolt;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
 
+#[cfg(feature = "prodtest")]
+pub mod prodtest;
+
 impl CommonUI for UIBolt {
     #[cfg(feature = "backlight")]
     fn fadein() {

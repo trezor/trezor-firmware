@@ -58,7 +58,7 @@ SOURCE_MOD_CRYPTO += [
 
 # modtrezorui
 CPPPATH_MOD += [
-        'vendor/micropython/lib/uzlib',
+        'vendor/micropython/lib/uzlib'
 ]
 
 SOURCE_MOD += [
@@ -138,6 +138,23 @@ env.Replace(
 env.Replace(
     TREZOR_MODEL=TREZOR_MODEL, )
 
+ALLPATHS = [
+        'embed/rust',
+        'embed/projects/prodtest',
+        'embed/rtl/inc',
+        'embed/models',
+        'embed/gfx/inc',
+        'embed/sys/bsp/inc',
+        'embed/util/image/inc',
+        'embed/util/rsod/inc',
+        'embed/util/scm_revision/inc',
+        'embed/util/translations/inc',
+        'embed/upymod/modtrezorui',
+    ]
+
+ALLPATHS += CPPPATH_MOD + PATH_HAL
+
+
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
@@ -149,18 +166,8 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=f'-T build/prodtest/memory.ld -Wl,--gc-sections -Wl,--print-memory-usage -Wl,-Map=build/prodtest/prodtest.map -Wl,--warn-common',
-    CPPPATH=[
-        'embed/projects/prodtest',
-        'embed/rtl/inc',
-        'embed/models',
-        'embed/gfx/inc',
-        'embed/sys/bsp/inc',
-        'embed/util/image/inc',
-        'embed/util/rsod/inc',
-        'embed/util/scm_revision/inc',
-        'embed/upymod/modtrezorui',
-    ] + CPPPATH_MOD + PATH_HAL,
+    LINKFLAGS=['-Tbuild/prodtest/memory.ld', '-Wl,--gc-sections', '-Wl,--print-memory-usage', '-Wl,-Map=build/prodtest/prodtest.map', '-Wl,--warn-common'],
+    CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'TREZOR_PRODTEST',
         'TREZOR_MODEL_'+TREZOR_MODEL,
@@ -197,6 +204,20 @@ obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftriv
 obj_program.extend(env.Object(source=SOURCE_PRODTEST))
 obj_program.extend(env.Object(source=SOURCE_HAL))
 
+#
+# Rust library
+#
+features = ['prodtest',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
+
+
+rust = tools.add_rust_lib(
+    env,
+    'prodtest',
+    'release',
+    features,
+    ALLPATHS,
+    str(Dir('.').abspath))
+
 
 if (vh := ARGUMENTS.get("VENDOR_HEADER", None)):
     VENDORHEADER = vh
@@ -232,10 +253,11 @@ program_elf = env.Command(
     target='prodtest.elf',
     source=obj_program,
     action=
-    '$LINK -o $TARGET $CCFLAGS $CFLAGS $LINKFLAGS $SOURCES -lc_nano -lgcc -lm',
+    '$LINK -o $TARGET $CCFLAGS $CFLAGS $SOURCES $LINKFLAGS -lc_nano -lgcc -lm',
 )
 
 env.Depends(program_elf, linkerscript_gen)
+env.Depends(program_elf, rust)
 
 BINARY_NAME = f"build/prodtest/prodtest-{TREZOR_MODEL}"
 BINARY_NAME += "-" + tools.get_version('embed/projects/prodtest/version.h')

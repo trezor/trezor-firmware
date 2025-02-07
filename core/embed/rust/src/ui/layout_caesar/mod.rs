@@ -2,6 +2,10 @@ use super::{geometry::Rect, CommonUI};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
+
+#[cfg(feature = "prodtest")]
+pub mod prodtest;
+
 pub mod common_messages;
 pub mod component;
 #[cfg(feature = "micropython")]
