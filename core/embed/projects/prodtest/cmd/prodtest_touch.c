@@ -57,8 +57,6 @@ static void prodtest_touch_version(cli_t* cli) {
   uint8_t version = touch_get_version();
 
   cli_ok(cli, "%d", version);
-
-  touch_deinit();
 }
 
 static bool touch_click_timeout(cli_t* cli, uint32_t* event, uint32_t timeout) {
@@ -141,8 +139,6 @@ static void prodtest_touch_test(cli_t* cli) {
       cli_error(cli, CLI_ERROR_TIMEOUT, "");
     }
   }
-
-  touch_deinit();
 
   gfx_clear();
   display_refresh();
@@ -230,8 +226,6 @@ static void prodtest_touch_test_custom(cli_t* cli) {
     }
   }
 
-  touch_deinit();
-
   gfx_clear();
   display_refresh();
 }
@@ -279,7 +273,6 @@ static void prodtest_touch_test_idle(cli_t* cli) {
   cli_ok(cli, "");
 
 cleanup:
-  touch_deinit();
   gfx_clear();
   display_refresh();
 }
@@ -364,8 +357,6 @@ static void prodtest_touch_test_sensitivity(cli_t* cli) {
       break;
     }
   }
-
-  touch_deinit();
 
   gfx_clear();
   display_refresh();
