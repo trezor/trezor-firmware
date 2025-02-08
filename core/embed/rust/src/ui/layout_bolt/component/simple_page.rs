@@ -1,5 +1,5 @@
 use crate::ui::{
-    component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, Paginate},
+    component::{base::ComponentExt, Component, Event, EventCtx, Pad, PageMsg, PaginateFull},
     display::{self, Color},
     geometry::{Axis, Insets, Rect},
     shape::Renderer,
@@ -22,7 +22,7 @@ pub struct SimplePage<T> {
 
 impl<T> SimplePage<T>
 where
-    T: Paginate,
+    T: PaginateFull,
     T: Component,
 {
     pub fn new(content: T, axis: Axis, background: Color) -> Self {
@@ -66,7 +66,7 @@ where
 
         // Change the page in the content, make sure it gets completely repainted and
         // clear the background under it.
-        self.content.change_page(self.scrollbar.active_page);
+        self.content.change_page(self.scrollbar.pager().current());
         self.content.request_complete_repaint(ctx);
         self.pad.clear();
 
@@ -83,7 +83,7 @@ where
 
 impl<T> Component for SimplePage<T>
 where
-    T: Paginate,
+    T: PaginateFull,
     T: Component,
 {
     type Msg = PageMsg<T::Msg>;
@@ -98,7 +98,7 @@ where
         };
 
         self.content.place(bounds);
-        if self.content.page_count() > 1 {
+        if !self.content.pager().is_single() {
             self.pad.place(content);
             self.content.place(content);
         } else {
@@ -113,15 +113,14 @@ where
                 .place(scrollbar.inset(Insets::right(SCROLLBAR_BORDER)));
         }
 
-        self.scrollbar
-            .set_count_and_active_page(self.content.page_count(), 0);
+        self.scrollbar.set_pager(self.content.pager());
         self.setup_swipe();
 
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        ctx.set_page_count(self.scrollbar.page_count);
+        ctx.set_page_count(self.scrollbar.pager().total() as usize);
         if let Some(swipe) = self.swipe.event(ctx, event) {
             match (swipe, self.axis) {
                 (SwipeDirection::Left, Axis::Horizontal) | (SwipeDirection::Up, Axis::Vertical) => {
@@ -144,7 +143,7 @@ where
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         self.content.render(target);
-        if self.scrollbar.has_pages() {
+        if !self.scrollbar.pager().is_single() {
             self.scrollbar.render(target);
         }
         if let Some(val) = self.fade.take() {
@@ -161,8 +160,8 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("SimplePage");
-        t.int("active_page", self.scrollbar.active_page as i64);
-        t.int("page_count", self.scrollbar.page_count as i64);
+        t.int("active_page", self.scrollbar.pager().current() as i64);
+        t.int("page_count", self.scrollbar.pager().total() as i64);
         t.child("content", &self.content);
     }
 }

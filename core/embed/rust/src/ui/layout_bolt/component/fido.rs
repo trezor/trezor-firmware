@@ -4,12 +4,12 @@ use crate::{
         component::{
             image::Image,
             text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
-            Child, Component, Event, EventCtx, Label,
+            Child, Component, Event, EventCtx, Label, PaginateFull,
         },
         display,
         geometry::{Insets, Rect},
-        shape,
-        shape::Renderer,
+        shape::{self, Renderer},
+        util::Pager,
     },
 };
 
@@ -61,19 +61,19 @@ where
 
         // Preparing scrollbar and setting its page-count.
         let mut scrollbar = ScrollBar::horizontal();
-        scrollbar.set_count_and_active_page(page_count, 0);
+        scrollbar.set_pager(Pager::new(page_count as u16));
 
         // Preparing swipe component and setting possible initial
         // swipe directions according to number of pages.
         let mut page_swipe = Swipe::horizontal();
-        page_swipe.allow_right = scrollbar.has_previous_page();
-        page_swipe.allow_left = scrollbar.has_next_page();
+        page_swipe.allow_right = scrollbar.pager().has_prev();
+        page_swipe.allow_left = scrollbar.pager().has_next();
 
         Self {
             app_name: Label::centered(app_name, theme::TEXT_DEMIBOLD),
             account_name: Paragraph::new(
                 &theme::TEXT_MONO_DATA,
-                get_account(scrollbar.active_page),
+                get_account(scrollbar.pager().current().into()),
             )
             .into_paragraphs(),
             page_swipe,
@@ -88,11 +88,11 @@ where
     fn on_page_swipe(&mut self, ctx: &mut EventCtx, swipe: SwipeDirection) {
         // Change the page number.
         match swipe {
-            SwipeDirection::Left if self.scrollbar.has_next_page() => {
-                self.scrollbar.go_to_next_page();
+            SwipeDirection::Left => {
+                self.scrollbar.next_page();
             }
-            SwipeDirection::Right if self.scrollbar.has_previous_page() => {
-                self.scrollbar.go_to_previous_page();
+            SwipeDirection::Right => {
+                self.scrollbar.prev_page();
             }
             _ => {} // page did not change
         };
@@ -112,7 +112,7 @@ where
     }
 
     fn active_page(&self) -> usize {
-        self.scrollbar.active_page
+        self.scrollbar.pager().current() as usize
     }
 }
 
@@ -134,7 +134,7 @@ where
         let (image_area, content_area) = content_area.split_top(ICON_HEIGHT);
 
         // In case of showing a scrollbar, getting its area and placing it.
-        let remaining_area = if self.scrollbar.page_count > 1 {
+        let remaining_area = if !self.scrollbar.pager().is_single() {
             let (scrollbar_area, remaining_area) = content_area
                 .inset(Insets::top(SCROLLBAR_INSET_TOP))
                 .split_top(SCROLLBAR_HEIGHT);
@@ -176,7 +176,7 @@ where
         self.controls.render(target);
         self.app_name.render(target);
 
-        if self.scrollbar.page_count > 1 {
+        if self.scrollbar.pager().total() > 1 {
             self.scrollbar.render(target);
         }
 

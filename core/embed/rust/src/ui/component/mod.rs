@@ -52,7 +52,7 @@ pub use map::{MsgMap, PageMap};
 pub use marquee::Marquee;
 pub use maybe::Maybe;
 pub use pad::Pad;
-pub use paginated::{PageMsg, Paginate, PaginateFull};
+pub use paginated::{PageMsg, PaginateFull};
 pub use placed::{FixedHeightBar, Floating, GridPlaced, Split};
 pub use qr_code::Qr;
 #[cfg(feature = "touch")]

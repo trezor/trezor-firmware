@@ -1,10 +1,11 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Component, Event, EventCtx, Never, Paginate},
+        component::{Component, Event, EventCtx, Never, PaginateFull},
         display::Font,
         geometry::{Offset, Rect},
         shape::{self, Renderer},
+        util::Pager,
     },
 };
 
@@ -23,20 +24,17 @@ const MAX_WORDS: usize = 33; // super-shamir has 33 words, all other have less
 pub struct ShareWords<'a> {
     area: Rect,
     share_words: Vec<TString<'a>, MAX_WORDS>,
-    page_index: usize,
+    pager: Pager,
 }
 
 impl<'a> ShareWords<'a> {
     pub fn new(share_words: Vec<TString<'a>, MAX_WORDS>) -> Self {
+        let total_page_count = share_words.len().div_ceil(WORDS_PER_PAGE);
         Self {
             area: Rect::zero(),
             share_words,
-            page_index: 0,
+            pager: Pager::new(total_page_count as u16),
         }
-    }
-
-    fn total_page_count(&self) -> usize {
-        self.share_words.len().div_ceil(WORDS_PER_PAGE)
     }
 }
 
@@ -55,7 +53,7 @@ impl<'a> Component for ShareWords<'a> {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let line_height = WORD_FONT.line_height();
         let ordinal_largest_on_this_page =
-            (WORDS_PER_PAGE * (self.page_index + 1)).min(self.share_words.len());
+            (WORDS_PER_PAGE * (self.pager.current() as usize + 1)).min(self.share_words.len());
         let is_largest_double_digit = ordinal_largest_on_this_page >= 10;
         let mut y_offset = self.area.top_left().y + TOP_PADDING_OFFSET;
 
@@ -63,7 +61,7 @@ impl<'a> Component for ShareWords<'a> {
             .share_words
             .iter()
             .enumerate()
-            .skip(self.page_index * WORDS_PER_PAGE)
+            .skip(self.pager().current() as usize * WORDS_PER_PAGE)
             .take(WORDS_PER_PAGE)
         {
             let ordinal = word_idx + 1;
@@ -84,13 +82,14 @@ impl<'a> Component for ShareWords<'a> {
     }
 }
 
-impl<'a> Paginate for ShareWords<'a> {
-    fn page_count(&self) -> usize {
-        self.total_page_count()
+impl<'a> PaginateFull for ShareWords<'a> {
+    fn pager(&self) -> Pager {
+        self.pager
     }
 
-    fn change_page(&mut self, active_page: usize) {
-        self.page_index = active_page;
+    fn change_page(&mut self, active_page: u16) {
+        let to_page = active_page.min(self.pager.total() - 1);
+        self.pager.set_current(to_page);
     }
 }
 
@@ -105,7 +104,7 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
             .share_words
             .iter()
             .enumerate()
-            .skip(self.page_index * WORDS_PER_PAGE)
+            .skip(self.pager().current() as usize * WORDS_PER_PAGE)
             .take(WORDS_PER_PAGE)
         {
             let ordinal = word_idx + 1;
