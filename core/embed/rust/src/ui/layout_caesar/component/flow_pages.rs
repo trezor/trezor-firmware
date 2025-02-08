@@ -1,9 +1,10 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{base::Component, FormattedText, Paginate},
+        component::{base::Component, FormattedText, PaginateFull},
         geometry::Rect,
         shape::Renderer,
+        util::Pager,
     },
 };
 
@@ -66,9 +67,9 @@ where
         for i in 0..page_index {
             let mut current_page = self.get(i);
             current_page.place(bounds);
-            page_count += current_page.page_count;
+            page_count += current_page.pager().total();
         }
-        page_count
+        page_count as usize
     }
 }
 
@@ -77,8 +78,6 @@ pub struct Page {
     formatted: FormattedText,
     btn_layout: ButtonLayout,
     btn_actions: ButtonActions,
-    current_page: usize,
-    page_count: usize,
     title: Option<TString<'static>>,
     slim_arrows: bool,
 }
@@ -90,17 +89,13 @@ impl Page {
         btn_actions: ButtonActions,
         formatted: FormattedText,
     ) -> Self {
-        let mut page = Self {
+        Self {
             formatted,
             btn_layout,
             btn_actions,
-            current_page: 0,
-            page_count: 1,
             title: None,
             slim_arrows: false,
-        };
-        page.change_page(page.current_page);
-        page
+        }
     }
 }
 
@@ -124,7 +119,6 @@ impl Page {
 
     pub fn place(&mut self, bounds: Rect) -> Rect {
         self.formatted.place(bounds);
-        self.page_count = self.page_count();
         bounds
     }
 
@@ -135,13 +129,13 @@ impl Page {
 
         // On the last page showing only the narrow arrow, so the right
         // button with possibly long text has enough space.
-        let btn_left = if self.has_prev_page() && !self.has_next_page() {
+        let btn_left = if self.pager().has_prev() && !self.pager().has_next() {
             if self.slim_arrows {
                 Some(ButtonDetails::left_arrow_icon())
             } else {
                 Some(ButtonDetails::up_arrow_icon())
             }
-        } else if self.has_prev_page() {
+        } else if self.pager().has_prev() {
             if self.slim_arrows {
                 Some(ButtonDetails::left_arrow_icon())
             } else {
@@ -153,7 +147,7 @@ impl Page {
 
         // Middle button should be shown only on the last page, not to collide
         // with the possible fat right button.
-        let (btn_middle, btn_right) = if self.has_next_page() {
+        let (btn_middle, btn_right) = if self.pager().has_next() {
             if self.slim_arrows {
                 (None, Some(ButtonDetails::right_arrow_icon()))
             } else {
@@ -173,37 +167,15 @@ impl Page {
     pub fn title(&self) -> Option<TString<'static>> {
         self.title
     }
-
-    pub fn has_prev_page(&self) -> bool {
-        self.current_page > 0
-    }
-
-    pub fn has_next_page(&self) -> bool {
-        self.current_page < self.page_count - 1
-    }
-
-    pub fn go_to_prev_page(&mut self) {
-        self.current_page -= 1;
-        self.change_page(self.current_page);
-    }
-
-    pub fn go_to_next_page(&mut self) {
-        self.current_page += 1;
-        self.change_page(self.current_page);
-    }
-
-    pub fn get_current_page(&self) -> usize {
-        self.current_page
-    }
 }
 
 // Pagination
-impl Paginate for Page {
-    fn page_count(&self) -> usize {
-        self.formatted.page_count()
+impl PaginateFull for Page {
+    fn pager(&self) -> Pager {
+        self.formatted.pager()
     }
 
-    fn change_page(&mut self, to_page: usize) {
+    fn change_page(&mut self, to_page: u16) {
         self.formatted.change_page(to_page)
     }
 }
@@ -220,8 +192,8 @@ impl crate::trace::Trace for Page {
             // Not calling it "title" as that is already traced by FlowPage
             t.string("page_title", *title);
         }
-        t.int("active_page", self.current_page as i64);
-        t.int("page_count", self.page_count as i64);
+        t.int("active_page", self.pager().current() as i64);
+        t.int("page_count", self.pager().total() as i64);
         t.in_list("text", &|l| {
             let result = self.formatted.trace_lines_as_list(l);
             fit.set(Some(result));

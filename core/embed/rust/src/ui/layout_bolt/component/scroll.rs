@@ -1,9 +1,9 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never},
+    component::{Component, Event, EventCtx, Never, PaginateFull},
     display::toif::Icon,
     geometry::{Alignment2D, Axis, LinearPlacement, Offset, Rect},
-    shape,
-    shape::Renderer,
+    shape::{self, Renderer},
+    util::Pager,
 };
 
 use super::theme;
@@ -11,15 +11,14 @@ use super::theme;
 pub struct ScrollBar {
     area: Rect,
     layout: LinearPlacement,
-    pub page_count: usize,
-    pub active_page: usize,
+    pager: Pager,
 }
 
 impl ScrollBar {
     pub const DOT_SIZE: i16 = 8;
     /// If there's more pages than this value then smaller dots are used at the
     /// beginning/end of the scrollbar to denote the fact.
-    const MAX_DOTS: usize = 7;
+    const MAX_DOTS: u16 = 7;
     /// Center to center.
     const DOT_INTERVAL: i16 = 18;
 
@@ -28,8 +27,7 @@ impl ScrollBar {
         Self {
             area: Rect::zero(),
             layout: layout.align_at_center().with_spacing(Self::DOT_INTERVAL),
-            page_count: 0,
-            active_page: 0,
+            pager: Pager::default(),
         }
     }
 
@@ -41,39 +39,23 @@ impl ScrollBar {
         Self::new(Axis::Horizontal)
     }
 
-    pub fn set_count_and_active_page(&mut self, page_count: usize, active_page: usize) {
-        self.page_count = page_count;
-        self.active_page = active_page;
-    }
-
-    pub fn has_pages(&self) -> bool {
-        self.page_count > 1
+    pub fn set_pager(&mut self, pager: Pager) {
+        self.pager = pager
     }
 
     pub fn has_next_page(&self) -> bool {
-        self.active_page < self.page_count - 1
+        self.pager.has_next()
     }
 
     pub fn has_previous_page(&self) -> bool {
-        self.active_page > 0
-    }
-
-    pub fn go_to_next_page(&mut self) {
-        self.go_to_relative(1)
-    }
-
-    pub fn go_to_previous_page(&mut self) {
-        self.go_to_relative(-1)
+        self.pager.has_prev()
     }
 
     pub fn go_to_relative(&mut self, step: isize) {
-        self.go_to(
-            (self.active_page as isize + step).clamp(0, self.page_count as isize - 1) as usize,
-        );
-    }
-
-    pub fn go_to(&mut self, active_page: usize) {
-        self.active_page = active_page;
+        let current = self.pager.current() as isize;
+        let total = self.pager.total() as isize;
+        let new_page = (current + step).clamp(0, total - 1) as u16;
+        self.change_page(new_page);
     }
 }
 
@@ -85,7 +67,7 @@ impl Component for ScrollBar {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        fn dotsize(distance: usize, nhidden: usize) -> Icon {
+        fn dotsize(distance: u16, nhidden: u16) -> Icon {
             match (nhidden.saturating_sub(distance)).min(2 - distance) {
                 0 => theme::DOT_INACTIVE,
                 1 => theme::DOT_INACTIVE_HALF,
@@ -94,12 +76,13 @@ impl Component for ScrollBar {
         }
 
         // Number of visible dots.
-        let num_shown = self.page_count.min(Self::MAX_DOTS);
+        let num_shown = self.pager.total().min(Self::MAX_DOTS);
         // Page indices corresponding to the first (and last) dot.
         let first_shown = self
-            .active_page
+            .pager
+            .current()
             .saturating_sub(Self::MAX_DOTS / 2)
-            .min(self.page_count.saturating_sub(Self::MAX_DOTS));
+            .min(self.pager().total().saturating_sub(Self::MAX_DOTS));
         let last_shown = first_shown + num_shown - 1;
 
         let mut cursor = self.area.center()
@@ -108,13 +91,13 @@ impl Component for ScrollBar {
                 Self::DOT_INTERVAL * (num_shown.saturating_sub(1) as i16) / 2,
             );
         for i in first_shown..(last_shown + 1) {
-            let icon = if i == self.active_page {
+            let icon = if i == self.pager.current() {
                 theme::DOT_ACTIVE
             } else if i <= first_shown + 1 {
                 let before_first_shown = first_shown;
                 dotsize(i - first_shown, before_first_shown)
             } else if i >= last_shown - 1 {
-                let after_last_shown = self.page_count - 1 - last_shown;
+                let after_last_shown = self.pager.last() - last_shown;
                 dotsize(last_shown - i, after_last_shown)
             } else {
                 theme::DOT_INACTIVE
@@ -130,5 +113,15 @@ impl Component for ScrollBar {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
         bounds
+    }
+}
+
+impl PaginateFull for ScrollBar {
+    fn pager(&self) -> Pager {
+        self.pager
+    }
+
+    fn change_page(&mut self, active_page: u16) {
+        self.pager.set_current(active_page);
     }
 }

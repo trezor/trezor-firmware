@@ -8,7 +8,7 @@ use crate::{
     ui::{
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
-            Child, Component, Event, EventCtx, Pad, Paginate, Qr,
+            Child, Component, Event, EventCtx, Pad, PaginateFull, Qr,
         },
         geometry::Rect,
         layout::util::MAX_XPUBS,
@@ -102,7 +102,7 @@ impl AddressDetails {
 
     fn subpages_in_current_page(&mut self) -> usize {
         if self.is_xpub_page() {
-            self.xpub_view.page_count()
+            self.xpub_view.pager().total() as usize
         } else {
             1
         }
@@ -171,7 +171,7 @@ impl AddressDetails {
     fn change_subpage(&mut self, ctx: &mut EventCtx) {
         if self.is_xpub_page() {
             self.xpub_view
-                .update_content(ctx, |p| p.change_page(self.current_subpage));
+                .update_content(ctx, |p| p.change_page(self.current_subpage as u16));
             self.pad.clear();
         }
     }

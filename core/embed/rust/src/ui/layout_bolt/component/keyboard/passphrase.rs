@@ -3,12 +3,12 @@ use crate::{
     ui::{
         component::{
             base::ComponentExt, text::common::TextBox, Child, Component, Event, EventCtx, Never,
+            PaginateFull,
         },
         display,
         geometry::{Grid, Offset, Rect},
-        shape,
-        shape::Renderer,
-        util::long_line_content_with_ellipsis,
+        shape::{self, Renderer},
+        util::{long_line_content_with_ellipsis, Pager},
     },
 };
 
@@ -95,18 +95,19 @@ impl PassphraseKeyboard {
 
     fn on_page_swipe(&mut self, ctx: &mut EventCtx, swipe: SwipeDirection) {
         // Change the page number.
-        let key_page = self.scrollbar.active_page;
-        let key_page = match swipe {
-            SwipeDirection::Left => (key_page as isize + 1) as usize % PAGE_COUNT,
-            SwipeDirection::Right => (key_page as isize - 1) as usize % PAGE_COUNT,
-            _ => key_page,
+        let mut pager = self.scrollbar.pager();
+        match swipe {
+            SwipeDirection::Left => pager.goto_next(),
+            SwipeDirection::Right => pager.goto_prev(),
+            _ => false,
         };
-        self.scrollbar.go_to(key_page);
+
+        self.scrollbar.set_pager(pager);
         // Clear the pending state.
         self.input
             .mutate(ctx, |ctx, i| i.multi_tap.clear_pending_state(ctx));
         // Update buttons.
-        self.replace_button_content(ctx, key_page);
+        self.replace_button_content(ctx, pager.current().into());
         // Reset backlight to normal level on next paint.
         self.fade.set(true);
         // So that swipe does not visually enable the input buttons when max length
@@ -203,7 +204,7 @@ impl Component for PassphraseKeyboard {
         self.back.place(back_btn_area);
         self.scrollbar.place(scroll_area);
         self.scrollbar
-            .set_count_and_active_page(PAGE_COUNT, STARTING_PAGE);
+            .set_pager(Pager::new(PAGE_COUNT as u16).with_current(STARTING_PAGE as u16));
 
         // Place all the character buttons.
         for (key, btn) in &mut self.keys.iter_mut().enumerate() {

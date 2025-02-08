@@ -3,7 +3,7 @@ use core::convert::TryInto;
 use super::component::{
     AddressDetails, ButtonPage, CancelConfirmMsg, CancelInfoConfirmMsg, CoinJoinProgress,
     ConfirmHomescreen, Flow, Frame, Homescreen, Lockscreen, NumberInput, Page, PassphraseEntry,
-    PinEntry, Progress, ScrollableContent, ScrollableFrame, ShowMore, WordlistEntry,
+    PinEntry, Progress, ScrollableFrame, ShowMore, WordlistEntry,
 };
 use crate::{
     error::Error,
@@ -11,7 +11,7 @@ use crate::{
     ui::{
         component::{
             base::Component,
-            paginated::{PageMsg, Paginate},
+            paginated::{PageMsg, PaginateFull},
             text::paragraphs::{ParagraphSource, Paragraphs},
             Never, Timeout,
         },
@@ -55,7 +55,7 @@ where
 
 impl<T> ComponentMsgObj for ButtonPage<T>
 where
-    T: Component + Paginate,
+    T: Component + PaginateFull,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -150,7 +150,7 @@ where
 
 impl<T> ComponentMsgObj for ScrollableFrame<T>
 where
-    T: ComponentMsgObj + ScrollableContent,
+    T: ComponentMsgObj + PaginateFull,
 {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         self.inner().msg_try_into_obj(msg)
