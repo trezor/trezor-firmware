@@ -3,11 +3,12 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::util::text_multiline, Child, Component, Event, EventCtx, Never, Paginate,
+            text::util::text_multiline, Child, Component, Event, EventCtx, Never, PaginateFull,
         },
         display::Font,
         geometry::{Alignment, Offset, Rect},
         shape::{self, Renderer},
+        util::Pager,
     },
 };
 
@@ -31,39 +32,26 @@ pub struct ShareWords<'a> {
     area: Rect,
     scrollbar: Child<ScrollBar>,
     share_words: Vec<TString<'a>, MAX_WORDS>,
-    page_index: usize,
+    pager: Pager,
 }
 
 impl<'a> ShareWords<'a> {
     pub fn new(share_words: Vec<TString<'a>, MAX_WORDS>) -> Self {
-        let mut instance = Self {
-            area: Rect::zero(),
-            scrollbar: Child::new(ScrollBar::to_be_filled_later()),
-            share_words,
-            page_index: 0,
+        let total_page_count = {
+            let words_screen = share_words.len().div_ceil(WORDS_PER_PAGE);
+            // One page after the words
+            words_screen as u16 + 1
         };
-        let page_count = instance.total_page_count();
-        let scrollbar = ScrollBar::new(page_count);
-        instance.scrollbar = Child::new(scrollbar);
-        instance
+        Self {
+            area: Rect::zero(),
+            scrollbar: Child::new(ScrollBar::new(total_page_count)),
+            share_words,
+            pager: Pager::new(total_page_count),
+        }
     }
 
     fn word_index(&self) -> usize {
-        self.page_index * WORDS_PER_PAGE
-    }
-
-    fn is_final_page(&self) -> bool {
-        self.page_index == self.total_page_count() - 1
-    }
-
-    fn total_page_count(&self) -> usize {
-        let word_screens = if self.share_words.len() % WORDS_PER_PAGE == 0 {
-            self.share_words.len() / WORDS_PER_PAGE
-        } else {
-            self.share_words.len() / WORDS_PER_PAGE + 1
-        };
-        // One page after the words
-        word_screens + 1
+        self.pager.current() as usize * WORDS_PER_PAGE
     }
 
     fn get_final_text(&self) -> ShortString {
@@ -96,7 +84,7 @@ impl<'a> ShareWords<'a> {
             .share_words
             .iter()
             .enumerate()
-            .skip(self.page_index * WORDS_PER_PAGE)
+            .skip(self.pager().current() as usize * WORDS_PER_PAGE)
             .take(WORDS_PER_PAGE)
         {
             let ordinal = word_idx + 1;
@@ -140,7 +128,7 @@ impl<'a> Component for ShareWords<'a> {
         // Showing scrollbar in all cases
         // Individual pages are responsible for not colliding with it
         self.scrollbar.render(target);
-        if self.is_final_page() {
+        if self.pager().is_last() {
             self.render_final_page(target);
         } else {
             self.render_words(target);
@@ -148,14 +136,14 @@ impl<'a> Component for ShareWords<'a> {
     }
 }
 
-impl<'a> Paginate for ShareWords<'a> {
-    fn page_count(&self) -> usize {
-        self.total_page_count()
+impl<'a> PaginateFull for ShareWords<'a> {
+    fn pager(&self) -> Pager {
+        self.pager
     }
 
-    fn change_page(&mut self, active_page: usize) {
-        self.page_index = active_page;
-        self.scrollbar.change_page(active_page);
+    fn change_page(&mut self, active_page: u16) {
+        self.pager.set_current(active_page);
+        self.scrollbar.change_page(self.pager.current());
     }
 }
 
@@ -165,7 +153,7 @@ impl<'a> Paginate for ShareWords<'a> {
 impl<'a> crate::trace::Trace for ShareWords<'a> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ShareWords");
-        let content = if self.is_final_page() {
+        let content = if self.pager().is_last() {
             self.get_final_text()
         } else {
             let mut content = ShortString::new();
@@ -173,7 +161,7 @@ impl<'a> crate::trace::Trace for ShareWords<'a> {
                 .share_words
                 .iter()
                 .enumerate()
-                .skip(self.page_index * WORDS_PER_PAGE)
+                .skip(self.pager().current() as usize * WORDS_PER_PAGE)
                 .take(WORDS_PER_PAGE)
             {
                 let ordinal = word_idx + 1;

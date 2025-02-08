@@ -18,7 +18,8 @@ use crate::{
                 },
                 TextStyle,
             },
-            Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, Paginate, Timeout,
+            Component, ComponentExt, Empty, FormattedText, Label, LineBreaking, PaginateFull,
+            Timeout,
         },
         geometry,
         layout::{
@@ -1445,7 +1446,7 @@ impl FirmwareUI for UICaesar {
 /// (e.g. `Paragraphs` or `FormattedText`).
 /// Has optional title (supply empty `TString` for that) and hold-to-confirm
 /// functionality.
-fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
+fn content_in_button_page<T: Component + PaginateFull + MaybeTrace + 'static>(
     title: TString<'static>,
     content: T,
     verb: TString<'static>,

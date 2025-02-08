@@ -9,6 +9,7 @@ use crate::{
         component::{MsgMap, PageMap},
         geometry::{Offset, Rect},
         shape::Renderer,
+        util::Pager,
     },
 };
 
@@ -25,7 +26,7 @@ use crate::ui::{
     geometry::Direction,
 };
 
-use super::Paginate;
+use super::PaginateFull;
 
 /// Type used by components that do not return any messages.
 ///
@@ -154,12 +155,12 @@ where
     }
 }
 
-impl<T: Paginate> Paginate for Child<T> {
-    fn page_count(&self) -> usize {
-        self.component.page_count()
+impl<T: PaginateFull> PaginateFull for Child<T> {
+    fn pager(&self) -> Pager {
+        self.component.pager()
     }
 
-    fn change_page(&mut self, active_page: usize) {
+    fn change_page(&mut self, active_page: u16) {
         self.component.change_page(active_page);
     }
 }

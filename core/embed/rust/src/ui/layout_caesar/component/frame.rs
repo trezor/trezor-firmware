@@ -1,9 +1,10 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Child, Component, ComponentExt, Event, EventCtx, Paginate},
+        component::{Child, Component, ComponentExt, Event, EventCtx, PaginateFull},
         geometry::{Insets, Rect},
         shape::Renderer,
+        util::Pager,
     },
 };
 
@@ -83,29 +84,24 @@ where
     }
 }
 
-impl<T> Paginate for Frame<T>
+impl<T> PaginateFull for Frame<T>
 where
-    T: Component + Paginate,
+    T: Component + PaginateFull,
 {
-    fn page_count(&self) -> usize {
-        self.content.page_count()
+    fn pager(&self) -> Pager {
+        self.content.pager()
     }
 
-    fn change_page(&mut self, active_page: usize) {
+    fn change_page(&mut self, active_page: u16) {
         self.content.change_page(active_page);
     }
-}
-
-pub trait ScrollableContent {
-    fn page_count(&self) -> usize;
-    fn active_page(&self) -> usize;
 }
 
 /// Component for holding another component and displaying a title.
 /// Also is allocating space for a scrollbar.
 pub struct ScrollableFrame<T>
 where
-    T: Component + ScrollableContent,
+    T: Component + PaginateFull,
 {
     title: Option<Child<Title>>,
     scrollbar: ScrollBar,
@@ -114,7 +110,7 @@ where
 
 impl<T> ScrollableFrame<T>
 where
-    T: Component + ScrollableContent,
+    T: Component + PaginateFull,
 {
     pub fn new(content: T) -> Self {
         Self {
@@ -136,7 +132,7 @@ where
 
 impl<T> Component for ScrollableFrame<T>
 where
-    T: Component + ScrollableContent,
+    T: Component + PaginateFull,
 {
     type Msg = T::Msg;
 
@@ -145,9 +141,9 @@ where
         let (content_area, scrollbar_area, title_area) = if self.title.is_none() {
             // When the content fits on one page, no need for allocating place for scrollbar
             self.content.place(bounds);
-            let page_count = self.content.inner().page_count();
-            self.scrollbar.set_page_count(page_count);
-            if page_count == 1 {
+            let pager = self.content.inner().pager();
+            self.scrollbar.set_pager(pager);
+            if pager.is_single() {
                 (bounds, Rect::zero(), Rect::zero())
             } else {
                 let (scrollbar_area, content_area) =
@@ -164,9 +160,9 @@ where
             // When there is only one page, do not allocate anything for scrollbar,
             // which would reduce the space for title
             self.content.place(content_area);
-            let page_count = self.content.inner().page_count();
-            self.scrollbar.set_page_count(page_count);
-            let (title_area, scrollbar_area) = if page_count == 1 {
+            let pager = self.content.inner().pager();
+            self.scrollbar.set_pager(pager);
+            let (title_area, scrollbar_area) = if pager.is_single() {
                 (title_and_scrollbar_area, Rect::zero())
             } else {
                 title_and_scrollbar_area
@@ -184,8 +180,8 @@ where
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg = self.content.event(ctx, event);
-        let content_active_page = self.content.inner().active_page();
-        if self.scrollbar.active_page != content_active_page {
+        let content_active_page = self.content.inner().pager().current();
+        if self.scrollbar.pager().current() != content_active_page {
             self.scrollbar.change_page(content_active_page);
             self.scrollbar.request_complete_repaint(ctx);
         }
@@ -217,7 +213,7 @@ where
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for ScrollableFrame<T>
 where
-    T: crate::trace::Trace + Component + ScrollableContent,
+    T: crate::trace::Trace + Component + PaginateFull,
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ScrollableFrame");
