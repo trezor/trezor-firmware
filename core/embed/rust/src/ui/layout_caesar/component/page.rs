@@ -23,6 +23,7 @@ where
     pad: Pad,
     cancel_btn_details: Option<ButtonDetails>,
     confirm_btn_details: Option<ButtonDetails>,
+    middle_confirm: bool,
     back_btn_details: Option<ButtonDetails>,
     next_btn_details: Option<ButtonDetails>,
     buttons: Child<ButtonController>,
@@ -40,6 +41,7 @@ where
             pad: Pad::with_background(background).with_clear(),
             cancel_btn_details: Some(ButtonDetails::cancel_icon()),
             confirm_btn_details: Some(ButtonDetails::text(TR::buttons__confirm.into())),
+            middle_confirm: false,
             back_btn_details: Some(ButtonDetails::up_arrow_icon()),
             next_btn_details: Some(ButtonDetails::down_arrow_icon_wide()),
             // Setting empty layout for now, we do not yet know the page count.
@@ -56,6 +58,14 @@ where
 
     pub fn with_confirm_btn(mut self, btn_details: Option<ButtonDetails>) -> Self {
         self.confirm_btn_details = btn_details;
+        self
+    }
+
+    pub fn with_middle_confirm(mut self, middle_confirm: bool) -> Self {
+        self.middle_confirm = middle_confirm;
+        self.confirm_btn_details =
+            self.confirm_btn_details
+                .map(|btn| if middle_confirm { btn.with_arms() } else { btn });
         self
     }
 
@@ -114,25 +124,17 @@ where
     }
 
     fn get_button_layout(&self, has_prev: bool, has_next: bool) -> ButtonLayout {
-        let btn_left = self.get_left_button_details(!has_prev);
-        let btn_right = self.get_right_button_details(has_next);
-        ButtonLayout::new(btn_left, None, btn_right)
-    }
-
-    fn get_left_button_details(&self, is_first: bool) -> Option<ButtonDetails> {
-        if is_first {
+        let btn_left = if !has_prev {
             self.cancel_btn_details.clone()
         } else {
             self.back_btn_details.clone()
-        }
-    }
-
-    fn get_right_button_details(&self, has_next_page: bool) -> Option<ButtonDetails> {
-        if has_next_page {
-            self.next_btn_details.clone()
-        } else {
-            self.confirm_btn_details.clone()
-        }
+        };
+        let (btn_middle, btn_right) = match (has_next, self.middle_confirm) {
+            (true, _) => (None, self.next_btn_details.clone()),
+            (false, true) => (self.confirm_btn_details.clone(), None),
+            (false, false) => (None, self.confirm_btn_details.clone()),
+        };
+        ButtonLayout::new(btn_left, btn_middle, btn_right)
     }
 }
 
@@ -186,6 +188,10 @@ where
                         return None;
                     }
                 }
+                ButtonPos::Middle => {
+                    // Clicked CONFIRM. Send result.
+                    return Some(PageMsg::Confirmed);
+                }
                 ButtonPos::Right => {
                     if self.has_next_page() {
                         // Clicked NEXT. Scroll down.
@@ -196,7 +202,6 @@ where
                         return Some(PageMsg::Confirmed);
                     }
                 }
-                _ => {}
             }
         }
 

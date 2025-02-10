@@ -407,7 +407,7 @@ impl FirmwareUI for UICaesar {
             paragraphs.into_paragraphs(),
             button,
             Some("<".into()),
-            false,
+            true,
         )
     }
 
@@ -1298,20 +1298,16 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     // Left button - icon, text or nothing.
     let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
 
-    // Right button - text or nothing.
-    // Optional HoldToConfirm
-    let mut confirm_btn = if !verb.is_empty() {
+    let confirm_btn = if !verb.is_empty() {
         Some(ButtonDetails::text(verb))
     } else {
         None
     };
-    if hold {
-        confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
-    }
 
     let content = ButtonPage::new(content, theme::BG)
         .with_cancel_btn(cancel_btn)
-        .with_confirm_btn(confirm_btn);
+        .with_confirm_btn(confirm_btn)
+        .with_middle_confirm(hold);
 
     let mut frame = ScrollableFrame::new(content);
     if !title.is_empty() {
