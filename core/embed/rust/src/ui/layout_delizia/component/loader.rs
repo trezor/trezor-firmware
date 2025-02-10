@@ -143,11 +143,17 @@ impl Loader {
     }
 
     pub fn is_completely_grown(&self, now: Instant) -> bool {
-        matches!(self.progress_raw(now), Some(display::LOADER_MAX))
+        match &self.state {
+            State::Growing(a) => a.finished(now),
+            _ => false,
+        }
     }
 
     pub fn is_completely_shrunk(&self, now: Instant) -> bool {
-        matches!(self.progress_raw(now), Some(display::LOADER_MIN))
+        match &self.state {
+            State::Shrinking(a) => a.finished(now),
+            _ => false,
+        }
     }
 }
 
