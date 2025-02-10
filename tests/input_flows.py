@@ -268,12 +268,6 @@ class InputFlowSignMessageInfo(InputFlowBase):
         yield
         self.debug.press_yes()
         yield
-        # going back to the signing address
-        self.debug.press_no()
-        yield
-        self.debug.press_no()
-        # address mismatch?
-        self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
