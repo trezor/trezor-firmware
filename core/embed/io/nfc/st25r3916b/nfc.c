@@ -537,17 +537,12 @@ nfc_status_t nfc_dev_read_info(nfc_dev_info_t *dev_info) {
 
     dev_info->uid_len = nfcDevice->nfcidLen;
 
-    if (dev_info->uid_len > 10) {
-      // Unexpected UID length
-      return NFC_ERROR;
-    }
-
-    if (nfcDevice->nfcidLen <= NFC_MAX_UID_LEN) {
+    if (nfcDevice->nfcidLen > NFC_MAX_UID_LEN) {
       return NFC_ERROR;
     }
 
     // Copy the hex UID in printable string
-    cstr_encode_hex(dev_info->uid, NFC_MAX_UID_LEN, nfcDevice->nfcid, nfcDevice->nfcidLen);
+    cstr_encode_hex(dev_info->uid, NFC_MAX_UID_BUF_SIZE, nfcDevice->nfcid, nfcDevice->nfcidLen);
 
   } else {
     // No device activated

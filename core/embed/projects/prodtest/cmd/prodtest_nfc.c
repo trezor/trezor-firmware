@@ -107,12 +107,12 @@ static void prodtest_nfc_read_card(cli_t* cli) {
       cli_trace(cli, "NFC Type AP2P: UID: %s", dev_info.uid);
       break;
     case NFC_DEV_TYPE_UNKNOWN:
-      cli_error(cli, CLI_ERROR, "NFC Type UNKNOWN");
+      cli_error(cli, CLI_ERROR_ABORT, "NFC Type UNKNOWN");
       goto cleanup;
       return;
 
     default:
-      cli_error(cli, CLI_ERROR, "NFC Type UNKNOWN");
+      cli_error(cli, CLI_ERROR_ABORT, "NFC Type UNKNOWN");
       goto cleanup;
   }
 
@@ -203,7 +203,8 @@ static void prodtest_nfc_write_card(cli_t* cli) {
               timeout);
   }
 
-  nfc_register_tech(NFC_POLLER_TECH_A);
+  nfc_register_tech(NFC_POLLER_TECH_A | NFC_POLLER_TECH_B | NFC_POLLER_TECH_F |
+                    NFC_POLLER_TECH_V);
   nfc_activate_stm();
 
   nfc_event_t nfc_event;
@@ -219,7 +220,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
     nfc_status_t nfc_status = nfc_get_event(&nfc_event);
 
     if(nfc_status != NFC_OK) {
-      cli_error(cli, CLI_ERROR, "NFC error");
+      cli_error(cli, CLI_ERROR_FATAL, "NFC error");
       goto cleanup;
     }
 
@@ -228,7 +229,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
       nfc_dev_read_info(&dev_info);
 
       if (dev_info.type != NFC_DEV_TYPE_A) {
-        cli_error(cli, CLI_ERROR, "Only NFC type A cards supported");
+        cli_error(cli, CLI_ERROR_ABORT, "Only NFC type A cards supported");
         goto cleanup;
       }
 

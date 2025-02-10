@@ -23,6 +23,7 @@
 #include <trezor_types.h>
 
 #define NFC_MAX_UID_LEN 10
+#define NFC_MAX_UID_BUF_SIZE ((NFC_MAX_UID_LEN + 1) * 2)
 
 typedef enum {
   NFC_POLLER_TECH_A = 0x1,
@@ -58,7 +59,7 @@ typedef enum {
 
 typedef struct {
   uint8_t type;
-  char uid[NFC_MAX_UID_LEN + 1]; // Plus one for string termination
+  char uid[NFC_MAX_UID_BUF_SIZE]; // Plus one for string termination
   uint8_t uid_len;
 } nfc_dev_info_t;
 
