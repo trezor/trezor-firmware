@@ -427,8 +427,8 @@ async def should_show_payment_request_details(
             title=TR.send__title_sending,
             items=[(f"{amount} to\n{recipient_name}", False)]
             + [(memo, False) for memo in memos],
-            button=TR.buttons__confirm,
-            info_button=TR.buttons__details,
+            verb=TR.buttons__confirm,
+            verb_info=TR.buttons__details,
         ),
         "confirm_payment_request",
         ButtonRequestType.ConfirmOutput,
@@ -463,8 +463,8 @@ async def should_show_more(
         trezorui_api.confirm_with_info(
             title=title,
             items=para,
-            button=confirm,
-            info_button=button_text,
+            verb=confirm,
+            verb_info=button_text,
         ),
         br_name,
         br_code,
@@ -501,6 +501,7 @@ def confirm_blob(
             subtitle=description,
             verb=verb,
             verb_cancel=verb_cancel,
+            hold=hold,
             chunkify=chunkify,
         )
         info_layout = trezorui_api.confirm_value(
@@ -511,10 +512,10 @@ def confirm_blob(
             verb=None,
             verb_cancel=verb_cancel,
             info=False,
-            hold=False,
+            hold=hold,
             chunkify=chunkify,
             page_counter=True,
-            prompt_screen=False,
+            prompt_screen=prompt_screen,
             cancel=True,
         )
 
@@ -1056,17 +1057,6 @@ async def confirm_signverify(
         horizontal=True,
     )
 
-    message_layout = trezorui_api.confirm_value(
-        title=TR.sign_message__confirm_message,
-        description=None,
-        value=message,
-        extra=None,
-        prompt_screen=True,
-        hold=not verify,
-        info=False,
-        verb=TR.buttons__confirm if verify else None,
-    )
-
     while True:
         try:
             await with_info(address_layout, info_layout, br_name, br_code=BR_CODE_OTHER)
@@ -1084,7 +1074,29 @@ async def confirm_signverify(
         else:
             break
 
-    await interact(message_layout, br_name, BR_CODE_OTHER)
+    message_layout = trezorui_api.confirm_value(
+        title=TR.sign_message__confirm_message,
+        description=None,
+        value=message,
+        extra=None,
+        prompt_screen=True,
+        hold=not verify,
+        info=False,
+        verb=TR.buttons__confirm,
+    )
+
+    if message_layout.page_count() <= 5:
+        await interact(message_layout, br_name, BR_CODE_OTHER)
+    else:
+        await confirm_blob(
+            br_name,
+            TR.sign_message__confirm_message,
+            message,
+            verb="",
+            br_code=BR_CODE_OTHER,
+            hold=not verify,
+            ask_pagination=True,
+        )
 
 
 def error_popup(

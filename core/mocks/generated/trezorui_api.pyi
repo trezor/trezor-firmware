@@ -154,6 +154,7 @@ def confirm_value_intro(
     subtitle: str | None = None,
     verb: str | None = None,
     verb_cancel: str | None = None,
+    hold: bool = False,
     chunkify: bool = False,
 ) -> LayoutObj[UiResult]:
     """Similar to `confirm_value`, but only the first page is shown.
@@ -241,6 +242,7 @@ def confirm_more(
     title: str,
     button: str,
     button_style_confirm: bool = False,
+    hold: bool = False,
     items: Iterable[tuple[str | bytes, bool]],
 ) -> LayoutObj[UiResult]:
     """Confirm long content with the possibility to go back from any page.
@@ -283,10 +285,10 @@ def confirm_summary(
 def confirm_with_info(
     *,
     title: str,
-    button: str,
-    info_button: str,
-    verb_cancel: str | None = None,
     items: Iterable[tuple[str | bytes, bool]],
+    verb: str,
+    verb_info: str,
+    verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm given items but with third button. Always single page
     without scrolling. In Delizia, the button is placed in

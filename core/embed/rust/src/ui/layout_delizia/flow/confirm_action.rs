@@ -122,6 +122,35 @@ impl FlowController for ConfirmAction {
     }
 }
 
+// A ConfirmAction flow with  a separate "Tap to confirm" or "Hold to confirm" screen.
+#[derive(Copy, Clone, PartialEq, Eq)]
+enum ConfirmActionWithConfirmation {
+    Action,
+    Confirmation,
+}
+
+impl FlowController for ConfirmActionWithConfirmation {
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
+        match (self, direction) {
+            (Self::Action, Direction::Up) => Self::Confirmation.swipe(direction),
+            (Self::Confirmation, Direction::Down) => Self::Action.swipe(direction),
+            _ => self.do_nothing(),
+        }
+    }
+
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
+        match (self, msg) {
+            (Self::Action, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Confirmation, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
+        }
+    }
+}
+
 /// A ConfirmAction flow with a menu which can contain various items
 /// as defined by ConfirmActionExtra::Menu.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -316,7 +345,8 @@ fn create_flow(
     let initial_page: &dyn FlowController = match (extra, prompt_screen.is_some()) {
         (ConfirmActionExtra::Menu { .. }, false) => &ConfirmActionWithMenu::Action,
         (ConfirmActionExtra::Menu { .. }, true) => &ConfirmActionWithMenuAndConfirmation::Action,
-        _ => &ConfirmAction::Action,
+        (ConfirmActionExtra::Cancel, false) => &ConfirmAction::Action,
+        (ConfirmActionExtra::Cancel, true) => &ConfirmActionWithConfirmation::Action,
     };
 
     (

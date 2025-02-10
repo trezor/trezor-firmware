@@ -129,6 +129,7 @@ impl FirmwareUI for UIDelizia {
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        hold: bool,
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         const CONFIRM_VALUE_INTRO_MARGIN: usize = 24;
@@ -138,12 +139,11 @@ impl FirmwareUI for UIDelizia {
             .with_description_font(&theme::TEXT_SUB_GREEN_LIME)
             .with_subtitle(subtitle)
             .with_verb_cancel(verb_cancel)
-            .with_footer_description(Some(
-                TR::buttons__confirm.into(), /* or words__confirm?? */
-            ))
+            .with_footer_description(verb)
             .with_chunkify(chunkify)
             .with_page_limit(Some(1))
             .with_frame_margin(CONFIRM_VALUE_INTRO_MARGIN)
+            .with_hold(hold)
             .into_flow()
             .and_then(LayoutObj::new_root)
             .map(Into::into)
@@ -346,6 +346,7 @@ impl FirmwareUI for UIDelizia {
         _title: TString<'static>,
         _button: TString<'static>,
         _button_style_confirm: bool,
+        _hold: bool,
         _items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
@@ -436,10 +437,10 @@ impl FirmwareUI for UIDelizia {
 
     fn confirm_with_info(
         title: TString<'static>,
-        button: TString<'static>,
-        info_button: TString<'static>,
-        _verb_cancel: Option<TString<'static>>,
         items: Obj,
+        verb: TString<'static>,
+        verb_info: TString<'static>,
+        _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -461,10 +462,10 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
             ConfirmActionExtra::Menu(
-                ConfirmActionMenuStrings::new().with_verb_info(Some(info_button)),
+                ConfirmActionMenuStrings::new().with_verb_info(Some(verb_info)),
             ),
             ConfirmActionStrings::new(title, None, None, None)
-                .with_footer_description(Some(button)),
+                .with_footer_description(Some(verb)),
             false,
             None,
             0,

@@ -132,6 +132,7 @@ impl FirmwareUI for UIBolt {
         _subtitle: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
+        _hold: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
@@ -335,6 +336,7 @@ impl FirmwareUI for UIBolt {
         title: TString<'static>,
         button: TString<'static>,
         button_style_confirm: bool,
+        hold: bool,
         items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
@@ -351,17 +353,22 @@ impl FirmwareUI for UIBolt {
             paragraphs.add(Paragraph::new(style, text));
         }
 
+        let mut button_page = ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
+        .with_cancel_confirm(None, Some(button))
+        .with_confirm_style(if button_style_confirm {
+            theme::button_confirm()
+        } else {
+            theme::button_default()
+        })
+        .with_back_button();
+        if hold {
+            button_page = button_page.with_hold()?;
+        }
+
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            ButtonPage::new(paragraphs.into_paragraphs(), theme::BG)
-                .with_cancel_confirm(None, Some(button))
-                .with_confirm_style(if button_style_confirm {
-                    theme::button_confirm()
-                } else {
-                    theme::button_default()
-                })
-                .with_back_button(),
+            button_page,
         ));
         Ok(layout)
     }
@@ -457,10 +464,10 @@ impl FirmwareUI for UIBolt {
 
     fn confirm_with_info(
         title: TString<'static>,
-        button: TString<'static>,
-        info_button: TString<'static>,
-        _verb_cancel: Option<TString<'static>>,
         items: Obj,
+        verb: TString<'static>,
+        verb_info: TString<'static>,
+        _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -479,7 +486,13 @@ impl FirmwareUI for UIBolt {
             }
         }
 
-        let buttons = Button::cancel_info_confirm(button, info_button);
+        let confirm_button = if verb.map(|v| v == "V") {
+            Button::with_icon(theme::ICON_DOWN)
+        } else {
+            Button::with_text(verb)
+        }.styled(theme::button_confirm());
+
+        let buttons = Button::cancel_info_confirm(confirm_button, verb_info);
 
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
@@ -522,7 +535,8 @@ impl FirmwareUI for UIBolt {
                 Dialog::new(
                     paragraphs,
                     Button::cancel_info_confirm(
-                        TR::buttons__continue.into(),
+                        Button::with_text(TR::buttons__continue.into())
+        .styled(theme::button_confirm()),
                         TR::buttons__more_info.into(),
                     ),
                 ),
