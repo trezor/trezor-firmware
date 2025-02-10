@@ -988,5 +988,6 @@
   "986": "solana__unstake",
   "987": "solana__unstake_question",
   "988": "solana__vote_account",
-  "989": "solana__stake_on_question"
+  "989": "solana__stake_on_question",
+  "990": "sign_message__confirm_without_review"
 }

@@ -21,8 +21,11 @@ import pytest
 from trezorlib import btc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
+from ...input_flows import InputFlowSignVerifyMessageLong
 
-def test_message_long(client: Client):
+
+@pytest.mark.models("legacy")
+def test_message_long_legacy(client: Client):
     ret = btc.verify_message(
         client,
         "Bitcoin",
@@ -33,6 +36,23 @@ def test_message_long(client: Client):
         "VeryLongMessage!" * 64,
     )
     assert ret is True
+
+
+@pytest.mark.models("core")
+def test_message_long_core(client: Client):
+    with client:
+        IF = InputFlowSignVerifyMessageLong(client, verify=True)
+        client.set_input_flow(IF.get())
+        ret = btc.verify_message(
+            client,
+            "Bitcoin",
+            "14LmW5k4ssUrtbAB4255zdqv3b4w1TuX9e",
+            bytes.fromhex(
+                "205ff795c29aef7538f8b3bdb2e8add0d0722ad630a140b6aefd504a5a895cbd867cbb00981afc50edd0398211e8d7c304bb8efa461181bc0afa67ea4a720a89ed"
+            ),
+            "VeryLongMessage!" * 64,
+        )
+        assert ret is True
 
 
 def test_message_testnet(client: Client):

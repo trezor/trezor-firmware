@@ -810,6 +810,7 @@
     "sign_message__bytes_template": "{0} bajtů",
     "sign_message__confirm_address": "Podepisování adresy",
     "sign_message__confirm_message": "Potvrdit zprávu",
+    "sign_message__confirm_without_review": "Potvrdit bez kontroly",
     "sign_message__message_size": "Velikost zprávy",
     "sign_message__verify_address": "Ověřit adresu",
     "solana__account_index": "Index účtu",

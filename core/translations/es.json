@@ -810,6 +810,7 @@
     "sign_message__bytes_template": "{0} bytes",
     "sign_message__confirm_address": "Dirección firma",
     "sign_message__confirm_message": "Validar mensaje",
+    "sign_message__confirm_without_review": "Confirmar sin revisar",
     "sign_message__message_size": "Tamaño del mensaje",
     "sign_message__verify_address": "Verificar dirección",
     "solana__account_index": "Índice de la cuenta",

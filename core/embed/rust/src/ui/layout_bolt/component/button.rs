@@ -410,19 +410,17 @@ impl Button {
     }
 
     pub fn cancel_info_confirm(
-        confirm: TString<'static>,
-        info: TString<'static>,
+        confirm: Button,
+        verb_info: TString<'static>,
     ) -> CancelInfoConfirm<
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
         impl Fn(ButtonMsg) -> Option<CancelInfoConfirmMsg>,
     > {
-        let right = Button::with_text(confirm)
-            .styled(theme::button_confirm())
-            .map(|msg| {
-                (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
-            });
-        let top = Button::with_text(info)
+        let right = confirm.map(|msg| {
+            (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Confirmed)
+        });
+        let top = Button::with_text(verb_info)
             .styled(theme::button_moreinfo())
             .map(|msg| (matches!(msg, ButtonMsg::Clicked)).then(|| CancelInfoConfirmMsg::Info));
         let left = Button::with_icon(theme::ICON_CANCEL).map(|msg| {

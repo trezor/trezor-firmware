@@ -252,6 +252,98 @@ class InputFlowSignMessagePagination(InputFlowBase):
         self.debug.press_yes()
 
 
+class InputFlowSignVerifyMessageLong(InputFlowBase):
+    def __init__(self, client: Client, verify=False):
+        super().__init__(client)
+        self.message_read = ""
+        self.verify = verify
+
+    def input_flow_bolt(self) -> BRGeneratorType:
+        # collect screen contents into `message_read`.
+        # Using a helper debuglink function to assemble the final text.
+        layouts: list[LayoutContent] = []
+
+        # confirm address
+        yield
+        self.debug.press_yes()
+
+        br = yield
+        self.debug.press_info()
+
+        br = yield
+
+        assert br.pages is not None
+        for i in range(br.pages):
+            layout = self.debug.read_layout()
+            layouts.append(layout)
+
+            if i < br.pages - 1:
+                self.debug.swipe_up()
+
+        self.message_read = multipage_content(layouts)
+
+        self.debug.press_yes()
+
+        if self.verify:
+            # "The signature is valid!" screen
+            self.debug.press_yes()
+            br = yield
+
+    def input_flow_caesar(self) -> BRGeneratorType:
+        # confirm address
+        yield
+        self.debug.press_yes()
+
+        br = yield
+        self.debug.press_info()
+
+        # paginate through the whole message
+        br = yield
+        # TODO: try load the message_read the same way as in UI bolt (T)
+        if br.pages is not None:
+            for i in range(br.pages):
+                if i < br.pages - 1:
+                    self.debug.swipe_up()
+        self.debug.press_yes()
+
+        # confirm message
+        yield
+        self.debug.press_yes()
+
+    def input_flow_delizia(self) -> BRGeneratorType:
+        # collect screen contents into `message_read`.
+        # Using a helper debuglink function to assemble the final text.
+        layouts: list[LayoutContent] = []
+
+        br = yield  # confirm address
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+        self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.click(buttons.VERTICAL_MENU[0])
+
+        br = yield
+        self.debug.read_layout()
+        assert br.pages is not None
+        layout = self.debug.read_layout()
+        while "PromptScreen" not in layout.all_components():
+            layouts.append(layout)
+            self.debug.swipe_up()
+            layout = self.debug.read_layout()
+        self.debug.synchronize_at("PromptScreen")
+
+        self.message_read = multipage_content(layouts)
+
+        self.debug.press_yes()
+        br = yield
+
+        if self.verify:
+            # "The signature is valid!" screen
+            self.debug.press_yes()
+            br = yield
+
+
 class InputFlowSignMessageInfo(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)
@@ -261,19 +353,12 @@ class InputFlowSignMessageInfo(InputFlowBase):
         # signing address/message info
         self.debug.click(buttons.CORNER_BUTTON)
         self.debug.click(buttons.CORNER_BUTTON)
+        # signing address "x"
         self.debug.press_no()
         self.debug.synchronize_at("IconDialog")
-        # address mismatch?
-        self.debug.press_no()
-        yield
+        # address mismatch? yes!
         self.debug.press_yes()
         yield
-        # going back to the signing address
-        self.debug.press_no()
-        yield
-        self.debug.press_no()
-        # address mismatch?
-        self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
@@ -282,7 +367,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.click(buttons.VERTICAL_MENU[0])
         self.debug.click(buttons.CORNER_BUTTON)
         self.debug.click(buttons.VERTICAL_MENU[1])
-        # address mismatch?
+        # address mismatch? yes!
         self.debug.swipe_up()
         yield
 

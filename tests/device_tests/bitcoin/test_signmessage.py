@@ -30,6 +30,7 @@ from ...input_flows import (
     InputFlowConfirmAllWarnings,
     InputFlowSignMessageInfo,
     InputFlowSignMessagePagination,
+    InputFlowSignVerifyMessageLong,
 )
 
 S = messages.InputScriptType
@@ -114,37 +115,6 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
         "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
         "This is an example of a signed message.",
         "20b55d7600d9e9a7e2a49155ddf3cfdb8e796c207faab833010fa41fb7828889bc47cf62348a7aaa0923c0832a589fab541e8f12eb54fb711c90e2307f0f66b194",
-    ),
-    # ==== Bitcoin with long message ====
-    case(
-        "p2pkh long message",
-        "Bitcoin",
-        "m/44h/0h/0h/0/0",
-        S.SPENDADDRESS,
-        False,
-        "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
-        "VeryLongMessage!" * 64,
-        "200a46476ceb84d06ef5784828026f922c8815f57aac837b8c013007ca8a8460db63ef917dbebaebd108b1c814bbeea6db1f2b2241a958e53fe715cc86b199d9c3",
-    ),
-    case(
-        "segwit-p2sh long message",
-        "Bitcoin",
-        "m/49h/0h/0h/0/0",
-        S.SPENDP2SHWITNESS,
-        False,
-        "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
-        "VeryLongMessage!" * 64,
-        "236eadee380684f70749c52141c8aa7c3b6afd84d0e5f38cfa71823f3b1105a5f34e23834a5bb6f239ff28ad87f409f44e4ce6269754adc00388b19507a5d9386f",
-    ),
-    case(
-        "segwit-native long message",
-        "Bitcoin",
-        "m/84h/0h/0h/0/0",
-        S.SPENDWITNESS,
-        False,
-        "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
-        "VeryLongMessage!" * 64,
-        "28c6f86e255eaa768c447d635d91da01631ac54af223c2c182d4fa3676cfecae4a199ad33a74fe04fb46c39432acb8d83de74da90f5f01123b3b7d8bc252bc7f71",
     ),
     # ==== NFKD vs NFC message - signatures must be identical ====
     case(
@@ -282,6 +252,41 @@ VECTORS = (  # case name, coin_name, path, script_type, address, message, signat
 )
 
 
+VECTORS_LONG_MESSAGE = (
+    # ==== Bitcoin with long message ====
+    case(
+        "p2pkh long message",
+        "Bitcoin",
+        "m/44h/0h/0h/0/0",
+        S.SPENDADDRESS,
+        False,
+        "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL",
+        "VeryLongMessage!" * 64,
+        "200a46476ceb84d06ef5784828026f922c8815f57aac837b8c013007ca8a8460db63ef917dbebaebd108b1c814bbeea6db1f2b2241a958e53fe715cc86b199d9c3",
+    ),
+    case(
+        "segwit-p2sh long message",
+        "Bitcoin",
+        "m/49h/0h/0h/0/0",
+        S.SPENDP2SHWITNESS,
+        False,
+        "3L6TyTisPBmrDAj6RoKmDzNnj4eQi54gD2",
+        "VeryLongMessage!" * 64,
+        "236eadee380684f70749c52141c8aa7c3b6afd84d0e5f38cfa71823f3b1105a5f34e23834a5bb6f239ff28ad87f409f44e4ce6269754adc00388b19507a5d9386f",
+    ),
+    case(
+        "segwit-native long message",
+        "Bitcoin",
+        "m/84h/0h/0h/0/0",
+        S.SPENDWITNESS,
+        False,
+        "bc1qannfxke2tfd4l7vhepehpvt05y83v3qsf6nfkk",
+        "VeryLongMessage!" * 64,
+        "28c6f86e255eaa768c447d635d91da01631ac54af223c2c182d4fa3676cfecae4a199ad33a74fe04fb46c39432acb8d83de74da90f5f01123b3b7d8bc252bc7f71",
+    ),
+)
+
+
 @pytest.mark.parametrize(
     "coin_name, path, script_type, no_script_type, address, message, signature", VECTORS
 )
@@ -305,6 +310,36 @@ def test_signmessage(
     )
     assert sig.address == address
     assert sig.signature.hex() == signature
+
+
+@pytest.mark.models("core")
+@pytest.mark.parametrize(
+    "coin_name, path, script_type, no_script_type, address, message, signature",
+    VECTORS_LONG_MESSAGE,
+)
+def test_signmessage_long(
+    client: Client,
+    coin_name: str,
+    path: str,
+    script_type: messages.InputScriptType,
+    no_script_type: bool,
+    address: str,
+    message: str,
+    signature: str,
+):
+    with client:
+        IF = InputFlowSignVerifyMessageLong(client)
+        client.set_input_flow(IF.get())
+        sig = btc.sign_message(
+            client,
+            coin_name=coin_name,
+            n=parse_path(path),
+            script_type=script_type,
+            no_script_type=no_script_type,
+            message=message,
+        )
+        assert sig.address == address
+        assert sig.signature.hex() == signature
 
 
 @pytest.mark.models("core", skip=["safe3"], reason="Not implemented")
@@ -338,23 +373,30 @@ def test_signmessage_info(
 
 
 MESSAGE_LENGTHS = (
-    pytest.param("This is a very long message. " * 16, id="normal_text"),
-    pytest.param("ThisIsAMessageWithoutSpaces" * 16, id="no_spaces"),
-    pytest.param("ThisIsAMessageWithLongWords " * 16, id="long_words"),
+    pytest.param("This is a very long message. " * 16, False, id="normal_text"),
+    pytest.param("ThisIsAMessageWithoutSpaces" * 16, False, id="no_spaces"),
+    pytest.param("ThisIsAMessageWithLongWords " * 16, False, id="long_words"),
     pytest.param(
-        "This\nmessage\nhas\nnewlines\nafter\nevery\nsingle\nword", id="newlines"
+        "This\nmessage\nhas\nnewlines\nafter\nevery\nsingle\nword", False, id="newlines"
     ),
-    pytest.param("Příšerně žluťoučký kůň úpěl ďábelské ódy. " * 16, id="utf_text"),
-    pytest.param("PříšerněŽluťoučkýKůňÚpělĎábelskéÓdy" * 16, id="utf_nospace"),
-    pytest.param("1\n2\n3\n4\n5\n6\n7", id="single_line_over"),
+    pytest.param(
+        "Příšerně žluťoučký kůň úpěl ďábelské ódy. " * 16, True, id="utf_text"
+    ),
+    pytest.param("PříšerněŽluťoučkýKůňÚpělĎábelskéÓdy" * 16, True, id="utf_nospace"),
+    pytest.param("1\n2\n3\n4\n5\n6\n7", False, id="single_line_over"),
 )
 
 
 @pytest.mark.models("core")
-@pytest.mark.parametrize("message", MESSAGE_LENGTHS)
-def test_signmessage_pagination(client: Client, message: str):
+@pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS)
+def test_signmessage_pagination(client: Client, message: str, is_long: bool):
     with client:
-        IF = InputFlowSignMessagePagination(client)
+        print("AAAA ", is_long)
+        IF = (
+            InputFlowSignVerifyMessageLong
+            if is_long
+            else InputFlowSignMessagePagination
+        )(client)
         client.set_input_flow(IF.get())
         btc.sign_message(
             client,

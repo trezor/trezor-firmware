@@ -429,8 +429,8 @@ async def should_show_payment_request_details(
             title=TR.send__title_sending,
             items=[(f"{amount} to\n{recipient_name}", False)]
             + [(memo, False) for memo in memos],
-            button=TR.buttons__confirm,
-            info_button=TR.buttons__details,
+            verb=TR.buttons__confirm,
+            verb_info=TR.buttons__details,
         ),
         "confirm_payment_request",
         ButtonRequestType.ConfirmOutput,
@@ -450,7 +450,7 @@ async def should_show_more(
     button_text: str | None = None,
     br_name: str = "should_show_more",
     br_code: ButtonRequestType = BR_CODE_OTHER,
-    confirm: str | bytes | None = None,
+    confirm: str | None = None,
 ) -> bool:
     """Return True if the user wants to show more (they click a special button)
     and False when the user wants to continue without showing details.
@@ -458,15 +458,13 @@ async def should_show_more(
     Raises ActionCancelled if the user cancels.
     """
     button_text = button_text or TR.buttons__show_all  # def_arg
-    if confirm is None or not isinstance(confirm, str):
-        confirm = TR.buttons__confirm
 
     result = await interact(
         trezorui_api.confirm_with_info(
             title=title,
             items=para,
-            button=confirm,
-            info_button=button_text,
+            verb=confirm or TR.buttons__confirm,
+            verb_info=button_text,
         ),
         br_name,
         br_code,
@@ -493,6 +491,7 @@ def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     ask_pagination: bool = False,
+    verb_skip_pagination: str | None = None,
     chunkify: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
@@ -501,8 +500,9 @@ def confirm_blob(
             title=title,
             value=data,
             subtitle=description,
-            verb=verb,
+            verb=verb_skip_pagination or verb,
             verb_cancel=verb_cancel,
+            hold=hold,
             chunkify=chunkify,
         )
         info_layout = trezorui_api.confirm_value(
@@ -513,10 +513,10 @@ def confirm_blob(
             verb=None,
             verb_cancel=verb_cancel,
             info=False,
-            hold=False,
+            hold=hold,
             chunkify=chunkify,
             page_counter=True,
-            prompt_screen=False,
+            prompt_screen=prompt_screen,
             cancel=True,
         )
 
@@ -1059,6 +1059,9 @@ def confirm_sign_identity(
     )
 
 
+LONG_MSG_PAGE_THRESHOLD = 5
+
+
 async def confirm_signverify(
     message: str,
     address: str,
@@ -1101,17 +1104,6 @@ async def confirm_signverify(
         horizontal=True,
     )
 
-    message_layout = trezorui_api.confirm_value(
-        title=TR.sign_message__confirm_message,
-        description=None,
-        value=message,
-        extra=None,
-        prompt_screen=True,
-        hold=not verify,
-        info=False,
-        verb=TR.buttons__confirm if verify else None,
-    )
-
     while True:
         try:
             await with_info(address_layout, info_layout, br_name, br_code=BR_CODE_OTHER)
@@ -1129,7 +1121,30 @@ async def confirm_signverify(
         else:
             break
 
-    await interact(message_layout, br_name, BR_CODE_OTHER)
+    message_layout = trezorui_api.confirm_value(
+        title=TR.sign_message__confirm_message,
+        description=None,
+        value=message,
+        extra=None,
+        prompt_screen=True,
+        hold=not verify,
+        info=False,
+        verb=TR.buttons__confirm,
+    )
+
+    if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
+        await interact(message_layout, br_name, BR_CODE_OTHER)
+    else:
+        await confirm_blob(
+            br_name,
+            TR.sign_message__confirm_message,
+            message,
+            verb="",
+            br_code=BR_CODE_OTHER,
+            hold=not verify,
+            ask_pagination=True,
+            verb_skip_pagination=TR.sign_message__confirm_without_review,
+        )
 
 
 def error_popup(

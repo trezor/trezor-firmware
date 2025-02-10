@@ -122,6 +122,36 @@ impl FlowController for ConfirmAction {
     }
 }
 
+// A ConfirmAction flow with  a separate "Tap to confirm" or "Hold to confirm"
+// screen.
+#[derive(Copy, Clone, PartialEq, Eq)]
+enum ConfirmActionWithConfirmation {
+    Action,
+    Confirmation,
+}
+
+impl FlowController for ConfirmActionWithConfirmation {
+    fn index(&'static self) -> usize {
+        *self as usize
+    }
+
+    fn handle_swipe(&'static self, direction: Direction) -> Decision {
+        match (self, direction) {
+            (Self::Action, Direction::Up) => Self::Confirmation.swipe(direction),
+            (Self::Confirmation, Direction::Down) => Self::Action.swipe(direction),
+            _ => self.do_nothing(),
+        }
+    }
+
+    fn handle_event(&'static self, msg: FlowMsg) -> Decision {
+        match (self, msg) {
+            (Self::Action, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Cancelled),
+            (Self::Confirmation, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            _ => self.do_nothing(),
+        }
+    }
+}
+
 /// A ConfirmAction flow with a menu which can contain various items
 /// as defined by ConfirmActionExtra::Menu.
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -294,8 +324,8 @@ fn new_confirm_action_uni<T: Component + Paginate + MaybeTrace + 'static>(
         .with_pages(move |intro_pages| intro_pages + prompt_pages);
 
     let flow = flow?.with_page(page, content)?;
-    let flow = create_menu(flow, extra, prompt_screen)?;
-    let flow = create_confirm(flow, strings.subtitle, hold, prompt_screen)?;
+    let flow = create_menu(flow, &extra, prompt_screen)?;
+    let flow = create_confirm(flow, &extra, strings.subtitle, hold, prompt_screen)?;
 
     Ok(flow)
 }
@@ -316,7 +346,8 @@ fn create_flow(
     let initial_page: &dyn FlowController = match (extra, prompt_screen.is_some()) {
         (ConfirmActionExtra::Menu { .. }, false) => &ConfirmActionWithMenu::Action,
         (ConfirmActionExtra::Menu { .. }, true) => &ConfirmActionWithMenuAndConfirmation::Action,
-        _ => &ConfirmAction::Action,
+        (ConfirmActionExtra::Cancel, false) => &ConfirmAction::Action,
+        (ConfirmActionExtra::Cancel, true) => &ConfirmActionWithConfirmation::Action,
     };
 
     (
@@ -329,7 +360,7 @@ fn create_flow(
 
 fn create_menu(
     flow: SwipeFlow,
-    extra: ConfirmActionExtra,
+    extra: &ConfirmActionExtra,
     prompt_screen: Option<TString<'static>>,
 ) -> Result<SwipeFlow, Error> {
     if let ConfirmActionExtra::Menu(menu_strings) = extra {
@@ -369,6 +400,7 @@ fn create_menu(
 // Create the extra confirmation screen (optional).
 fn create_confirm(
     flow: SwipeFlow,
+    extra: &ConfirmActionExtra,
     subtitle: Option<TString<'static>>,
     hold: bool,
     prompt_screen: Option<TString<'static>>,
@@ -388,9 +420,12 @@ fn create_confirm(
 
         let mut content_confirm = Frame::left_aligned(prompt_title, SwipeContent::new(prompt))
             .with_footer(prompt_action, None)
-            .with_menu_button()
             .with_swipe(Direction::Down, SwipeSettings::default())
             .with_swipe(Direction::Left, SwipeSettings::default());
+
+        if matches!(extra, ConfirmActionExtra::Menu(_)) {
+            content_confirm = content_confirm.with_menu_button();
+        }
 
         if let Some(subtitle) = subtitle {
             content_confirm = content_confirm.with_subtitle(subtitle);
