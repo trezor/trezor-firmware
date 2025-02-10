@@ -231,7 +231,6 @@ async def _require_confirm_safety_checks(level: SafetyCheckLevel) -> None:
             TR.words__are_you_sure,
             description,
             hold=True,
-            verb=TR.buttons__hold_to_confirm,
             reverse=True,
             br_code=BRT_PROTECT_CALL,
             prompt_screen=True,

@@ -20,7 +20,6 @@ async def wipe_device(msg: WipeDevice) -> Success:
         TR.wipe__info,
         TR.wipe__want_to_wipe,
         reverse=True,
-        verb=TR.buttons__hold_to_confirm,
         hold=True,
         hold_danger=True,
         br_code=ButtonRequestType.WipeDevice,

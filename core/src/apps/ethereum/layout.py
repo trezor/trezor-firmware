@@ -195,7 +195,6 @@ async def confirm_typed_data_final() -> None:
         "confirm_typed_data_final",
         TR.ethereum__title_confirm_typed_data,
         TR.ethereum__sign_eip712,
-        verb=TR.buttons__hold_to_confirm,
         hold=True,
     )
 

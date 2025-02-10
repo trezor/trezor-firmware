@@ -371,9 +371,9 @@ class EthereumFlow:
         assert br.name == "confirm_data"
         assert br.pages is not None
         assert self.debug.read_layout().title() == TR.ethereum__title_input_data
-        for _ in range(br.pages):
+        for i in range(br.pages):
             self.debug.read_layout()
-            go_next(self.debug)
+            go_next(self.debug, i == br.pages - 1)
         self.debug.read_layout()
 
     def paginate_data_go_back(self) -> BRGeneratorType:

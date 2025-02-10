@@ -47,11 +47,14 @@ def get_char_category(char: str) -> PassphraseCategory:
     return PassphraseCategory.SPECIAL
 
 
-def go_next(debug: "DebugLink") -> LayoutContent:
+def go_next(debug: "DebugLink", caesar_middle: bool = False) -> LayoutContent:
     if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.Caesar:
-        debug.press_right()
+        if caesar_middle:
+            debug.press_middle()
+        else:
+            debug.press_right()
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
     else:
@@ -59,11 +62,11 @@ def go_next(debug: "DebugLink") -> LayoutContent:
     return debug.read_layout()
 
 
-def go_back(debug: "DebugLink", r_middle: bool = False) -> LayoutContent:
+def go_back(debug: "DebugLink", caesar_middle: bool = False) -> LayoutContent:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         debug.click(buttons.CANCEL)
     elif debug.layout_type is LayoutType.Caesar:
-        if r_middle:
+        if caesar_middle:
             debug.press_middle()
         else:
             debug.press_left()
