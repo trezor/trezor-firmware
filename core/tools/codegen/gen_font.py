@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 
-# script used to generate
-#  1) core/embed/gfx/fonts/font_*_*.c for `prodtest` and `bootloader_ci`
-#  2) rust/src/ui/layout_*/fonts/font_*_*.rs for `bootloader` and `firmware`
+# script used to generate FontInfo in `rust/src/ui/layout_*/fonts/font_*_*.rs`
 
 from __future__ import annotations
 
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TextIO
 import click
 import json
 
@@ -28,8 +25,6 @@ HERE = Path(__file__).parent
 CORE_ROOT = HERE.parent.parent
 FONTS_DIR = HERE / "fonts"
 RUST_MAKO_TMPL = HERE / "gen_font.mako"
-OUT_DIR = HERE / ".." / ".." / "embed" / "gfx" / "fonts"
-C_FONTS_DEST = CORE_ROOT / "embed" / "gfx" / "fonts"
 JSON_FONTS_DEST = CORE_ROOT / "translations" / "fonts"
 RUST_FONTS_DEST = CORE_ROOT / "embed" / "rust" / "src" / "ui"
 LAYOUT_NAME = ""
@@ -223,22 +218,6 @@ class Glyph:
         else:
             return b
 
-    def get_definition_line(
-        self,
-        name_style_size: str,
-        bpp: int,
-        i: int | str,
-        static: bool = True,
-    ) -> str:
-        numbers = ", ".join(str(n) for n in self.to_bytes(bpp))
-        comment = f"/* {self.char} */"
-        const_name = f"Font_{name_style_size}_glyph_{i}"
-        if static:
-            modifier = "static const"
-        else:
-            modifier = "const"
-        return f"{comment} {modifier} uint8_t {const_name}[] = {{ {numbers} }};\n"
-
     def to_bytes(self, bpp: int) -> bytes:
         infos = [
             self.width,
@@ -298,14 +277,6 @@ class FaceProcessor:
         return f"{self.name}_{self.style}_{self.size}"
 
     @property
-    def _c_file_name(self) -> Path:
-        return C_FONTS_DEST / f"font_{self.fontname}.c"
-
-    @property
-    def _h_file_name(self) -> Path:
-        return C_FONTS_DEST / f"font_{self.fontname}.h"
-
-    @property
     def _rs_file_name(self) -> Path:
         return (
             RUST_FONTS_DEST
@@ -314,10 +285,7 @@ class FaceProcessor:
             / f"font_{self.fontname}.rs"
         )
 
-    def write_files(self, gen_c: bool = False) -> None:
-        # C files:
-        if gen_c:
-            self.write_c_files()
+    def write_files(self) -> None:
         # JSON files:
         if self.gen_normal:
             self.write_foreign_json(upper_cased=False)
@@ -326,10 +294,6 @@ class FaceProcessor:
         if WRITE_WIDTHS:
             self.write_char_widths_files()
         self.write_rust_file()
-
-    def write_c_files(self) -> None:
-        self._write_c_file()
-        self._write_h_file()
 
     def write_foreign_json(self, upper_cased=False) -> None:
         for lang, language_chars in all_languages.items():
@@ -378,120 +342,8 @@ class FaceProcessor:
             json_content = json.dumps(widths, indent=2, ensure_ascii=False)
             f.write(json_content + "\n")
 
-    def _write_c_file(self) -> None:
-        with open(OUT_DIR / self._c_file_name, "wt") as f:
-            self._write_c_file_header(f)
-            self._write_c_file_content(f)
-
-    def _write_c_file_content(self, f: TextIO) -> None:
-        # Write "normal" ASCII characters
-        for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-            if chr(i).islower() and not self.gen_normal:
-                continue
-            self._write_char_definition(f, chr(i), i)
-
-        # Write nonprintable glyph
-        f.write("\n")
-        nonprintable = self._get_nonprintable_definition_line()
-        f.write(nonprintable)
-
-        # Write array of all glyphs
-        if self.gen_normal:
-            f.write("\n")
-            f.write(
-                f"static const uint8_t * const Font_{self._name_style_size}[{MAX_GLYPH} + 1 - {MIN_GLYPH}] = {{\n"
-            )
-            for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-                f.write(f"    Font_{self._name_style_size}_glyph_{i},\n")
-            f.write("};\n")
-
-        # Write array of all glyphs for _upper version
-        if self.gen_upper:
-            f.write("\n")
-            f.write(
-                f"static const uint8_t * const Font_{self._name_style_size}_upper[{MAX_GLYPH} + 1 - {MIN_GLYPH}] = {{\n"
-            )
-            for i in range(MIN_GLYPH, MAX_GLYPH + 1):
-                comment = ""
-                if chr(i).islower():
-                    c_from = chr(i)
-                    c_to = c_from.upper()
-                    i = ord(c_to)
-                    comment = f"  // {c_from} -> {c_to}"
-                f.write(f"    Font_{self._name_style_size}_glyph_{i},{comment}\n")
-            f.write("};\n")
-
-        # Write font info structure
-        if self.gen_normal:
-            self._write_font_info_structure(f)
-        if self.gen_upper:
-            self._write_font_info_structure(f, is_upper=True)
-
-    def _write_char_definition(self, f: TextIO, c: str, i: int) -> None:
-        self._load_char(c)
-        glyph = Glyph.from_face(self.face, c, self.shaveX)
-        glyph.print_metrics()
-        definition_line = glyph.get_definition_line(self._name_style_size, self.bpp, i)
-        f.write(definition_line)
-
-        # Update mix/max metrics
-        yMin = glyph.bearingY - glyph.rows
-        yMax = yMin + glyph.rows
-        self.font_ymin = min(self.font_ymin, yMin)
-        self.font_ymax = max(self.font_ymax, yMax)
-
-    def _write_c_file_header(self, f: TextIO) -> None:
-        f.write("// This file is generated by core/tools/codegen/gen_font.py\n\n")
-        f.write("#include <stdint.h>\n")
-        f.write('#include "fonts.h"\n\n')
-        f.write("// clang-format off\n\n")
-        f.write("// - the first two bytes are width and height of the glyph\n")
-        f.write(
-            "// - the third, fourth and fifth bytes are advance, bearingX and bearingY of the horizontal metrics of the glyph\n"
-        )
-        f.write(f"// - the rest is packed {self.bpp}-bit glyph data\n\n")
-
-    # Write font info structure to instantiate font_info_t defined in fonts.h
-    def _write_font_info_structure(self, f: TextIO, is_upper: bool = False):
-        suffix = "_upper" if is_upper else ""
-        f.write("\n")
-        f.write(f"const font_info_t Font_{self._name_style_size}{suffix}_info = {{\n")
-        f.write(f"    .height = {self.size},\n")
-        f.write(f"    .max_height = {self.font_ymax - self.font_ymin},\n")
-        f.write(f"    .baseline = {-self.font_ymin},\n")
-        f.write(f"    .glyph_data = Font_{self._name_style_size}{suffix},\n")
-        f.write(
-            f"    .glyph_nonprintable = Font_{self._name_style_size}_glyph_nonprintable,\n"
-        )
-        f.write("};\n")
-
-    def _get_nonprintable_definition_line(self) -> str:
-        c = "?"
-        self._load_char(c)
-        glyph = Glyph.from_face(self.face, c, self.shaveX, inverse_colors=True)
-        return glyph.get_definition_line(
-            self._name_style_size, self.bpp, "nonprintable", static=True
-        )
-
     def _load_char(self, c: str) -> None:
         self.face.load_char(c, freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_NORMAL)  # type: ignore
-
-    def _write_h_file(self) -> None:
-        with open(OUT_DIR / self._h_file_name, "wt") as f:
-            f.write("// This file is generated by core/tools/codegen/gen_font.py\n\n")
-            f.write("#include <stdint.h>\n")
-            f.write('#include "fonts.h"\n\n')
-            f.write(f"#if TREZOR_FONT_BPP != {self.bpp}\n")
-            f.write(f"#error Wrong TREZOR_FONT_BPP (expected {self.bpp})\n")
-            f.write("#endif\n\n")
-            if self.gen_normal:
-                f.write(
-                    f"extern const font_info_t Font_{self._name_style_size}_info;\n"
-                )
-            if self.gen_upper:
-                f.write(
-                    f"extern const font_info_t Font_{self._name_style_size}_upper_info;\n"
-                )
 
     # --------------------------------------------------------------------
     # Rust code generation
@@ -619,11 +471,11 @@ class FaceProcessor:
             f.write(rendered)
 
 
-def gen_layout_bolt(gen_c: bool = False):
+def gen_layout_bolt():
     global LAYOUT_NAME
     LAYOUT_NAME = "bolt"
-    FaceProcessor("TTHoves", "Regular", 21, ext="otf", font_idx=1).write_files(gen_c)
-    FaceProcessor("TTHoves", "DemiBold", 21, ext="otf", font_idx=5).write_files(gen_c)
+    FaceProcessor("TTHoves", "Regular", 21, ext="otf", font_idx=1).write_files()
+    FaceProcessor("TTHoves", "DemiBold", 21, ext="otf", font_idx=5).write_files()
     FaceProcessor(
         "TTHoves",
         "Bold",
@@ -632,11 +484,11 @@ def gen_layout_bolt(gen_c: bool = False):
         gen_normal=False,
         gen_upper=True,
         font_idx_upper=7,
-    ).write_files(gen_c)
-    FaceProcessor("RobotoMono", "Medium", 20, font_idx=3).write_files(gen_c)
+    ).write_files()
+    FaceProcessor("RobotoMono", "Medium", 20, font_idx=3).write_files()
 
 
-def gen_layout_caesar(gen_c: bool = False):
+def gen_layout_caesar():
     global LAYOUT_NAME
     LAYOUT_NAME = "caesar"
     FaceProcessor(
@@ -649,7 +501,7 @@ def gen_layout_caesar(gen_c: bool = False):
         gen_upper=True,
         font_idx=1,
         font_idx_upper=6,
-    ).write_files(gen_c)
+    ).write_files()
     FaceProcessor(
         "PixelOperator",
         "Bold",
@@ -660,27 +512,27 @@ def gen_layout_caesar(gen_c: bool = False):
         gen_upper=True,
         font_idx=2,
         font_idx_upper=7,
-    ).write_files(gen_c)
+    ).write_files()
     FaceProcessor(
         "PixelOperatorMono", "Regular", 8, bpp=1, shaveX=1, font_idx=3
-    ).write_files(gen_c)
+    ).write_files()
     FaceProcessor(
         "Unifont", "Regular", 16, bpp=1, shaveX=1, ext="otf", font_idx=4
-    ).write_files(gen_c)
+    ).write_files()
     # NOTE: Unifont Bold does not seem to have czech characters
     FaceProcessor(
         "Unifont", "Bold", 16, bpp=1, shaveX=1, ext="otf", font_idx=5
-    ).write_files(gen_c)
+    ).write_files()
 
 
-def gen_layout_delizia(gen_c: bool = False):
+def gen_layout_delizia():
     global LAYOUT_NAME
     LAYOUT_NAME = "delizia"
     # FIXME: BIG font id not needed
-    FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf", font_idx=1).write_files(gen_c)
-    FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf", font_idx=1).write_files(gen_c)
-    FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf", font_idx=8).write_files(gen_c)
-    FaceProcessor("RobotoMono", "Medium", 21, font_idx=3).write_files(gen_c)
+    FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf", font_idx=1).write_files()
+    FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf", font_idx=1).write_files()
+    FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf", font_idx=8).write_files()
+    FaceProcessor("RobotoMono", "Medium", 21, font_idx=3).write_files()
 
 
 LAYOUTS = {
@@ -704,25 +556,19 @@ LAYOUTS = {
     default=False,
     help="Generate character width files",
 )
-@click.option(
-    "--gen-c",
-    is_flag=True,
-    default=False,
-    help="Also generate C font files",
-)
-def main(layout: str | None, write_widths: bool, gen_c: bool):
+def main(layout: str | None, write_widths: bool):
     """Generate font files for Trezor firmware."""
     global WRITE_WIDTHS
     WRITE_WIDTHS = write_widths
 
     if layout:
         click.echo(f"Generating fonts for layout: {layout}")
-        LAYOUTS[layout](gen_c)
+        LAYOUTS[layout]()
     else:
         click.echo("Generating all fonts")
         for layout_name, layout_func in LAYOUTS.items():
             click.echo(f"\nGenerating {layout_name} layout:")
-            layout_func(gen_c)
+            layout_func()
 
 
 if __name__ == "__main__":
