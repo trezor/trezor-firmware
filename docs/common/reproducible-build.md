@@ -31,21 +31,21 @@ After the build finishes the firmware images are located in:
 
 You can speed up the build process by adding options to the script:
 
-* `--skip-core` if you are only building for Trezor One,
-* `--skip-legacy --models=A,B,C` to only build for specific model(s) which are not Trezor One.
+* `--models=A,B,C` to only build for specific model(s) which are not Trezor One.
 
 The following models are supported:
 
-* **`T`** - Trezor Model T
-* **`R`** - Trezor Safe 3 rev.A
+* **`T1B1`** - Trezor One
+* **`T2T1`** - Trezor Model T
+* **`T2B1`** - Trezor Safe 3 rev.A
 * **`T3B1`** - Trezor Safe 3 rev.B
 * **`T3T1`** - Trezor Safe 5
 
 Examples:
 
 ```sh
-bash build-docker.sh --skip-core legacy/v1.10.3  # build only for Trezor One
-bash build-docker.sh --skip-legacy --models=T3T1 core/v2.8.3  # build only for Trezor Safe 5
+bash build-docker.sh --models=T1B1 legacy/v1.10.3  # build only for Trezor One
+bash build-docker.sh --models=T3T1 core/v2.8.3  # build only for Trezor Safe 5
 ```
 
 ## Verifying
