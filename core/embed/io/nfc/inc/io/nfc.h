@@ -46,6 +46,7 @@ typedef enum {
 
 typedef enum {
   NFC_NO_EVENT,
+  NFC_EVENT_DEACTIVATED,
   NFC_EVENT_ACTIVATED,
 } nfc_event_t;
 

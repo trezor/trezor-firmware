@@ -51,16 +51,20 @@
 // NFC-F PAD0
 #define LM_PAD0 0x00U
 
+typedef enum{
+  NFC_STATE_ACTIVE,
+  NFC_STATE_NOT_ACTIVE
+} nfc_state_t;
+
 typedef struct {
   bool initialized;
   // SPI driver
   SPI_HandleTypeDef hspi;
   // NFC IRQ pin callback
   void (*nfc_irq_callback)(void);
-
   EXTI_HandleTypeDef hEXTI;
-
   rfalNfcDiscoverParam disc_params;
+  nfc_state_t last_nfc_state;
 } st25r3916b_driver_t;
 
 static st25r3916b_driver_t g_st25r3916b_driver = {
@@ -211,6 +215,7 @@ nfc_status_t nfc_init() {
   }
 
   drv->initialized = true;
+  drv->last_nfc_state = NFC_STATE_NOT_ACTIVE;
 
   return NFC_OK;
 }
@@ -375,14 +380,40 @@ nfc_status_t nfc_get_event(nfc_event_t *event) {
     return NFC_NOT_INITIALIZED;
   }
 
-  static rfalNfcDevice *nfcDevice;
+  rfalNfcDevice *nfcDevice;
 
   // Run RFAL worker periodically
   rfalNfcWorker();
 
-  if(rfalNfcIsDevActivated(rfalNfcGetState())) {
+  rfalNfcState rfal_state = rfalNfcGetState();
 
-    *event = NFC_EVENT_ACTIVATED;
+  nfc_state_t cur_nfc_state = NFC_STATE_NOT_ACTIVE;
+
+  if(rfalNfcIsDevActivated(rfal_state)) {
+    cur_nfc_state = NFC_STATE_ACTIVE;
+  }
+
+  if(cur_nfc_state != drv->last_nfc_state){
+
+    switch(cur_nfc_state){
+
+      case NFC_STATE_ACTIVE:
+        *event = NFC_EVENT_ACTIVATED;
+        break;
+
+      case NFC_STATE_NOT_ACTIVE:
+        *event = NFC_EVENT_DEACTIVATED;
+        break;
+
+      default:
+        *event = NFC_NO_EVENT;
+    }
+
+    drv->last_nfc_state = cur_nfc_state;
+
+  }
+
+  if(cur_nfc_state == NFC_STATE_ACTIVE) {
 
     rfalNfcGetActiveDevice(&nfcDevice);
 
@@ -434,6 +465,7 @@ nfc_status_t nfc_get_event(nfc_event_t *event) {
           rfalNfcDeactivate(RFAL_NFC_DEACTIVATE_DISCOVERY); // Automatically deactivate
         }
 
+        // No event in CE mode, activation/deactivation handled automatically
         *event = NFC_NO_EVENT;
 
         break;
