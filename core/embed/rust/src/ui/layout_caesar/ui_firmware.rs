@@ -77,7 +77,7 @@ impl FirmwareUI for UICaesar {
         content_in_button_page(
             title,
             paragraphs,
-            verb.unwrap_or(TString::empty()),
+            verb.unwrap_or(TR::buttons__confirm.into()),
             verb_cancel,
             hold,
         )
@@ -211,7 +211,7 @@ impl FirmwareUI for UICaesar {
         content_in_button_page(
             TR::coinjoin__title.into(),
             paragraphs,
-            TR::buttons__hold_to_confirm.into(),
+            TR::buttons__confirm.into(),
             None,
             true,
         )
@@ -407,7 +407,7 @@ impl FirmwareUI for UICaesar {
             paragraphs.into_paragraphs(),
             button,
             Some("<".into()),
-            false,
+            true,
         )
     }
 
@@ -446,16 +446,11 @@ impl FirmwareUI for UICaesar {
                 paragraphs.add(Paragraph::new(style, value));
             }
         }
-        let button_text = if hold {
-            TR::buttons__hold_to_confirm.into()
-        } else {
-            TR::buttons__confirm.into()
-        };
 
         content_in_button_page(
             title,
             paragraphs.into_paragraphs(),
-            button_text,
+            TR::buttons__confirm.into(),
             Some("".into()),
             hold,
         )
@@ -1306,20 +1301,16 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     // Left button - icon, text or nothing.
     let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
 
-    // Right button - text or nothing.
-    // Optional HoldToConfirm
-    let mut confirm_btn = if !verb.is_empty() {
+    let confirm_btn = if !verb.is_empty() {
         Some(ButtonDetails::text(verb))
     } else {
         None
     };
-    if hold {
-        confirm_btn = confirm_btn.map(|btn| btn.with_default_duration());
-    }
 
     let content = ButtonPage::new(content, theme::BG)
         .with_cancel_btn(cancel_btn)
-        .with_confirm_btn(confirm_btn);
+        .with_confirm_btn(confirm_btn)
+        .with_middle_confirm(hold);
 
     let mut frame = ScrollableFrame::new(content);
     if !title.is_empty() {
