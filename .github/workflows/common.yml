@@ -139,7 +139,7 @@ jobs:
         with:
           fetch-depth: 0
       - run: git checkout ${{ github.head_ref || github.ref_name }}
-      - run: ./build-docker.sh ${{ matrix.model == 'T1B1' && '--skip-core' || '--skip-legacy' }} --models ${{ matrix.model }} --targets bootloader,firmware,prodtest ${{ github.head_ref || github.ref_name }}
+      - run: ./build-docker.sh --models ${{ matrix.model }} --targets bootloader,firmware,prodtest ${{ github.head_ref || github.ref_name }}
       - name: Show fingerprints
         run: |
           for file in build/*/*/*.fingerprint; do
