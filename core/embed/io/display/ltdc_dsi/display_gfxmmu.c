@@ -40,7 +40,7 @@ bool display_gfxmmu_init(display_driver_t *drv) {
   // GFXMMU peripheral initialization
   drv->hlcd_gfxmmu.Instance = GFXMMU;
   drv->hlcd_gfxmmu.Init.BlocksPerLine = GFXMMU_192BLOCKS;
-  drv->hlcd_gfxmmu.Init.DefaultValue = 0xFFFFFFFFU;
+  drv->hlcd_gfxmmu.Init.DefaultValue = 0;
   drv->hlcd_gfxmmu.Init.Buffers.Buf0Address = (uint32_t)physical_frame_buffer_0;
   drv->hlcd_gfxmmu.Init.Buffers.Buf1Address = (uint32_t)physical_frame_buffer_1;
   drv->hlcd_gfxmmu.Init.Buffers.Buf2Address = 0;
