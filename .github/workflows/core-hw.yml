@@ -52,7 +52,7 @@ jobs:
       - run: |
           # log serial console to file; sleep is used because tio needs stdin that is not /dev/null
           nix-shell --arg hardwareTest true --run "sleep 8h | tio --no-autoconnect /dev/ttyTREZOR &> trezor.log" &
-          nix-shell --run "poetry run pytest -v tests/device_tests"
+          nix-shell --run "poetry run pytest -v tests/device_tests $TESTOPTS"
       - run: tail -n50 trezor.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
