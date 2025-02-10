@@ -27,8 +27,8 @@
 static void prodtest_haptic_test(cli_t* cli) {
   uint32_t duration = 0;  // ms
 
-  if (!cli_arg_uint32(cli, "duration", &duration) || duration > 5000) {
-    cli_error_arg(cli, "Expecting time in milliseconds in range 0-5000.");
+  if (!cli_arg_uint32(cli, "duration", &duration)) {
+    cli_error_arg(cli, "Expecting time in milliseconds.");
     return;
   }
 
