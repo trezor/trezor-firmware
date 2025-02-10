@@ -809,6 +809,7 @@
     "sign_message__bytes_template": "{0} bytes",
     "sign_message__confirm_address": "End. assinatura",
     "sign_message__confirm_message": "Confirmar mensagem",
+    "sign_message__confirm_without_review": "Confirmar sem revisão",
     "sign_message__message_size": "Tam. mensagem",
     "sign_message__verify_address": "Verificar endereço",
     "solana__account_index": "Índice da conta",

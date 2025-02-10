@@ -476,8 +476,8 @@ async def should_show_payment_request_details(
             title=TR.send__title_sending,
             items=[(f"{amount} to\n{recipient_name}", False)]
             + [(memo, False) for memo in memos],
-            button=TR.buttons__confirm,
-            info_button=TR.buttons__details,
+            verb=TR.buttons__confirm,
+            verb_info=TR.buttons__details,
         ),
         "confirm_payment_request",
         ButtonRequestType.ConfirmOutput,
@@ -493,27 +493,24 @@ async def should_show_payment_request_details(
 
 async def should_show_more(
     title: str,
-    para: Iterable[tuple[str | bytes, bool]],
+    items: Iterable[tuple[str | bytes, bool]],
     button_text: str | None = None,
     br_name: str = "should_show_more",
     br_code: ButtonRequestType = BR_CODE_OTHER,
-    confirm: str | bytes | None = None,
+    confirm: str | None = None,
 ) -> bool:
     """Return True if the user wants to show more (they click a special button)
     and False when the user wants to continue without showing details.
 
     Raises ActionCancelled if the user cancels.
     """
-    button_text = button_text or TR.buttons__show_all  # def_arg
-    if confirm is None or not isinstance(confirm, str):
-        confirm = TR.buttons__confirm
 
     result = await interact(
         trezorui_api.confirm_with_info(
             title=title,
-            items=para,
-            button=confirm,
-            info_button=button_text,
+            items=items,
+            verb=confirm or TR.buttons__confirm,
+            verb_info=button_text or TR.buttons__show_all,
         ),
         br_name,
         br_code,
@@ -533,6 +530,8 @@ async def _confirm_ask_pagination(
     data: bytes | str,
     description: str,
     br_code: ButtonRequestType,
+    extra_confirmation_if_not_read: bool = False,
+    hold: bool = False,
 ) -> None:
     # TODO: make should_show_more/confirm_more accept bytes directly
     if isinstance(data, (bytes, bytearray, memoryview)):
@@ -545,14 +544,31 @@ async def _confirm_ask_pagination(
         button=TR.buttons__confirm,
         button_style_confirm=True,
         items=[(data, True)],
+        hold=hold,
     )
     while True:
         if not await should_show_more(
             title,
-            para=[(description, False), (data, True)],
+            [(description, False), (data, True)],
             br_name=br_name,
             br_code=br_code,
+            confirm="V" if extra_confirmation_if_not_read else None,
         ):
+            if extra_confirmation_if_not_read:
+                try:
+                    await confirm_value(
+                        title,
+                        TR.sign_message__confirm_without_review,
+                        None,
+                        br_name=br_name,
+                        br_code=br_code,
+                        verb=TR.buttons__confirm,
+                        verb_cancel="^",
+                        hold=True,
+                        is_data=False,
+                    )
+                except ActionCancelled:
+                    continue
             return
 
         result = await interact(
@@ -576,6 +592,7 @@ def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     ask_pagination: bool = False,
+    extra_confirmation_if_not_read: bool = False,
     chunkify: bool = False,
     prompt_screen: bool = True,
 ) -> Awaitable[None]:
@@ -595,9 +612,17 @@ def confirm_blob(
     )
 
     if ask_pagination and layout.page_count() > 1:
-        assert not hold
-        return _confirm_ask_pagination(br_name, title, data, description or "", br_code)
+        return _confirm_ask_pagination(
+            br_name,
+            title,
+            data,
+            description or "",
+            br_code,
+            extra_confirmation_if_not_read,
+            hold,
+        )
     else:
+        assert not extra_confirmation_if_not_read
         return raise_if_not_confirmed(
             layout,
             br_name,
@@ -664,11 +689,12 @@ def confirm_amount(
 def confirm_value(
     title: str,
     value: str,
-    description: str,
+    description: str | None,
     br_name: str,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     *,
     verb: str | None = None,
+    verb_cancel: str | None = None,
     subtitle: str | None = None,
     hold: bool = False,
     is_data: bool = True,
@@ -699,6 +725,7 @@ def confirm_value(
             is_data=is_data,
             subtitle=subtitle,
             verb=verb,
+            verb_cancel=verb_cancel,
             info=bool(info_items),
             hold=hold,
         ),
@@ -1155,6 +1182,9 @@ def confirm_sign_identity(
     )
 
 
+LONG_MSG_PAGE_THRESHOLD = 5
+
+
 async def confirm_signverify(
     message: str,
     address: str,
@@ -1197,17 +1227,10 @@ async def confirm_signverify(
         horizontal=True,
     )
 
-    message_layout = trezorui_api.confirm_value(
-        title=TR.sign_message__confirm_message,
-        description=None,
-        value=message,
-        hold=not verify,
-        verb=TR.buttons__confirm if verify else None,
-    )
-
     while True:
         try:
             await with_info(address_layout, info_layout, br_name, br_code=BR_CODE_OTHER)
+            break
         except ActionCancelled:
             result = await interact(
                 trezorui_api.show_mismatch(title=TR.addr_mismatch__mismatch),
@@ -1221,10 +1244,31 @@ async def confirm_signverify(
             else:
                 continue
 
-        result = await interact(
-            message_layout, br_name, BR_CODE_OTHER, raise_on_cancel=None
-        )
-        if result is CONFIRMED:
+    message_layout = trezorui_api.confirm_value(
+        title=TR.sign_message__confirm_message,
+        description=None,
+        value=message,
+        hold=not verify,
+        verb=TR.buttons__confirm,
+    )
+
+    while True:
+        if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
+            result = await interact(message_layout, br_name, BR_CODE_OTHER)
+            if result is CONFIRMED:
+                break
+        else:
+            await confirm_blob(
+                br_name,
+                TR.sign_message__confirm_message,
+                message,
+                verb=TR.buttons__confirm,
+                hold=not verify,
+                br_code=BR_CODE_OTHER,
+                ask_pagination=True,
+                extra_confirmation_if_not_read=not verify,
+            )
+
             break
 
 

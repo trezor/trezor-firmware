@@ -180,6 +180,7 @@ impl FirmwareUI for UICaesar {
         _subtitle: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
+        _hold: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
@@ -384,6 +385,7 @@ impl FirmwareUI for UICaesar {
         title: TString<'static>,
         button: TString<'static>,
         _button_style_confirm: bool,
+        _hold: bool,
         items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecLong::new();
@@ -599,10 +601,10 @@ impl FirmwareUI for UICaesar {
 
     fn confirm_with_info(
         title: TString<'static>,
-        button: TString<'static>,
-        _info_button: TString<'static>,
-        verb_cancel: Option<TString<'static>>,
         items: Obj,
+        verb: TString<'static>,
+        _verb_info: TString<'static>,
+        verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut paragraphs = ParagraphVecShort::new();
 
@@ -626,7 +628,7 @@ impl FirmwareUI for UICaesar {
             ShowMore::<Paragraphs<ParagraphVecShort>>::new(
                 paragraphs.into_paragraphs(),
                 verb_cancel,
-                button,
+                verb,
             ),
         ));
         Ok(layout)
