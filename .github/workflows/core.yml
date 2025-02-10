@@ -264,6 +264,7 @@ jobs:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       TREZOR_MODEL: ${{ matrix.model }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
+      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
       ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
@@ -279,12 +280,12 @@ jobs:
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run make -C core ${{ env.ACTIONS_DO_UI_TEST == 'true' && 'test_emu_ui_multicore' || 'test_emu' }}"
-      - run: tail -n50 tests/trezor.log || true
+      - run: tail -v -n50 tests/trezor*.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-device-${{ matrix.model }}-${{ matrix.coins }}-${{ matrix.lang }}-${{ matrix.asan }}
-          path: tests/trezor.log
+          path: tests/trezor*.log
           retention-days: 7
         if: always()
       - uses: ./.github/actions/ui-report
