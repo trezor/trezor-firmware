@@ -114,7 +114,9 @@ def is_predefined_token_transfer(
 
 async def try_confirm_token_transfer_transaction(
     transaction: Transaction,
-    fee: int,
+    base_fee: int,
+    priority_fee: int,
+    rent: int,
     signer_path: list[int],
     blockhash: bytes,
     additional_info: AdditionalTxInfo | None = None,
@@ -165,7 +167,9 @@ async def try_confirm_token_transfer_transaction(
         token_ticker,
         total_token_amount,
         transfer_token_instructions[0].decimals,
-        fee,
+        base_fee,
+        priority_fee,
+        rent,
         signer_path,
         blockhash,
     )
@@ -174,7 +178,9 @@ async def try_confirm_token_transfer_transaction(
 
 async def try_confirm_predefined_transaction(
     transaction: Transaction,
-    fee: int,
+    base_fee: int,
+    priority_fee: int,
+    rent: int,
     signer_path: list[int],
     blockhash: bytes,
     additional_info: AdditionalTxInfo | None = None,
@@ -191,9 +197,17 @@ async def try_confirm_predefined_transaction(
 
     if instructions_count == 1:
         if SystemProgramTransferInstruction.is_type_of(instructions[0]):
-            await confirm_system_transfer(instructions[0], fee, signer_path, blockhash)
+            await confirm_system_transfer(
+                instructions[0], base_fee, priority_fee, signer_path, blockhash
+            )
             return True
 
     return await try_confirm_token_transfer_transaction(
-        transaction, fee, signer_path, blockhash, additional_info
+        transaction,
+        base_fee,
+        priority_fee,
+        rent,
+        signer_path,
+        blockhash,
+        additional_info,
     )

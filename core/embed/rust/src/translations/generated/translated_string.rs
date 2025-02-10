@@ -1382,6 +1382,18 @@ pub enum TranslatedString {
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
+    #[cfg(feature = "universal_fw")]
+    solana__base_fee = 975,  // "Base fee"
+    #[cfg(feature = "universal_fw")]
+    solana__max_fees_rent = 976,  // "Max fees and rent"
+    #[cfg(feature = "universal_fw")]
+    solana__max_rent_fee = 977,  // "Max rent fee"
+    #[cfg(feature = "universal_fw")]
+    solana__priority_fee = 978,  // "Priority fee"
+    #[cfg(feature = "universal_fw")]
+    solana__transaction_fee = 979,  // "Transaction fee"
+    #[cfg(feature = "universal_fw")]
+    solana__unknown = 980,  // "\"\""
 }
 
 impl TranslatedString {
@@ -2760,6 +2772,18 @@ impl TranslatedString {
             Self::misc__enable_labeling => "Enable labeling?",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__base_fee => "Base fee",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__max_fees_rent => "Max fees and rent",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__max_rent_fee => "Max rent fee",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__priority_fee => "Priority fee",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__transaction_fee => "Transaction fee",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__unknown => "\"\"",
         }
     }
 
@@ -4137,6 +4161,18 @@ impl TranslatedString {
             Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__base_fee => Some(Self::solana__base_fee),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__max_fees_rent => Some(Self::solana__max_fees_rent),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__max_rent_fee => Some(Self::solana__max_rent_fee),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__priority_fee => Some(Self::solana__priority_fee),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__transaction_fee => Some(Self::solana__transaction_fee),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__unknown => Some(Self::solana__unknown),
             _ => None,
         }
     }

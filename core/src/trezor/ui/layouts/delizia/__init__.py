@@ -839,6 +839,23 @@ if not utils.BITCOIN_ONLY:
             br_name=None,
         )
 
+    def confirm_solana_recipient(
+        recipient: str,
+        title: str,
+        items: Iterable[tuple[str, str]],
+        br_name: str = "confirm_solana_recipient",
+        br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
+    ):
+        return confirm_value(
+            title=title,
+            value=recipient,
+            description="",
+            br_name=br_name,
+            br_code=br_code,
+            verb=TR.buttons__continue,
+            info_items=items,
+        )
+
     def confirm_solana_tx(
         amount: str,
         fee: str,
@@ -857,6 +874,7 @@ if not utils.BITCOIN_ONLY:
             amount_title,
             fee,
             fee_title,
+            extra_title=TR.confirm_total__title_fee,
             extra_items=items,
             br_name=br_name,
             br_code=br_code,
