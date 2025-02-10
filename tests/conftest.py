@@ -111,21 +111,13 @@ def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, No
             "Legacy emulator is not supported until it can be run on arbitrary ports."
         )
 
-    def _get_port() -> int:
-        """Get a unique port for this worker process on which it can run.
-
-        Guarantees to be unique because each worker has a different name.
-        gw0=>20000, gw1=>20003, gw2=>20006, etc.
-        """
-        worker_id = xdist.get_xdist_worker_id(request)
-        assert worker_id.startswith("gw")
-        # One emulator instance occupies 3 consecutive ports:
-        # 1. normal link, 2. debug link and 3. webauthn fake interface
-        return 20000 + int(worker_id[2:]) * 3
+    worker_id = xdist.get_xdist_worker_id(request)
+    assert worker_id.startswith("gw")
+    worker_id = int(worker_id[2:])
 
     with EmulatorWrapper(
         model,
-        port=_get_port(),
+        worker_id=worker_id,
         headless=True,
         auto_interact=not interact,
         main_args=_emulator_wrapper_main_args(),

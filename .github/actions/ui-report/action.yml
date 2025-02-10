@@ -26,7 +26,7 @@ runs:
         nix-shell --run "poetry run python ci/prepare_ui_artifacts.py || true"
         mv tests/ui_tests/reports/test/* $OUTDIR || true
         mv tests/ui_tests/fixtures.*.json $OUTDIR || true
-        mv tests/trezor.log $OUTDIR || true
+        mv tests/trezor*.log $OUTDIR || true
         diff -u tests/ui_tests/fixtures.json tests/ui_tests/fixtures.suggestion.json || true
         tar -cf screens_$MODELJOB.tar tests/ui_tests/screens || true
 
