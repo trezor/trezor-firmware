@@ -137,6 +137,12 @@ pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     GREY_EXTRA_LIGHT,
 );
 
+/// Decide the text style of chunkified text according to its length.
+pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
+    // TODO: implement properly for Eckhart, see Delizia implemenation
+    &TEXT_MONO_MEDIUM
+}
+
 pub const fn label_title_main() -> TextStyle {
     TEXT_SMALL
 }
