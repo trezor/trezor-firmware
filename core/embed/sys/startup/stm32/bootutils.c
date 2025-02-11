@@ -162,8 +162,13 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
 #if defined STM32U5
   NVIC_SystemReset();
 #elif defined STM32F4
+  boot_command_t command = arg1;
   clear_otg_hs_memory();
-  jump_to_vectbl(BOOTLOADER_START + IMAGE_HEADER_SIZE, arg1);
+  if (command == BOOT_COMMAND_NONE) {
+    NVIC_SystemReset();
+  } else {
+    jump_to_vectbl(BOOTLOADER_START + IMAGE_HEADER_SIZE, command);
+  }
 #else
 #error Unsupported platform
 #endif
