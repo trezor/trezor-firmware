@@ -41,25 +41,27 @@ pub fn fade_backlight(target: u8) {
 
 #[cfg(feature = "backlight")]
 pub fn fade_backlight_duration(target: u8, duration_ms: u32) {
-    let target = target as i32;
-    let current = backlight() as i32;
+    let current = backlight();
     let duration = Duration::from_millis(duration_ms);
 
     if animation_disabled() {
-        set_backlight(target as u8);
+        set_backlight(target);
         return;
     }
 
     let timer = Stopwatch::new_started();
 
-    while timer.elapsed() < duration {
+    loop {
         let elapsed = timer.elapsed();
-        let val = i32::lerp(current, target, elapsed / duration);
-        set_backlight(val as u8);
+        if elapsed >= duration {
+            break;
+        }
+        let val = u8::lerp(current, target, elapsed / duration);
+        set_backlight(val);
         time::sleep(Duration::from_millis(1));
     }
     //account for imprecise rounding
-    set_backlight(target as u8);
+    set_backlight(target);
 }
 
 #[cfg(not(feature = "backlight"))]
