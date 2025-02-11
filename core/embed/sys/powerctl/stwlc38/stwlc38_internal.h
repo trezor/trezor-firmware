@@ -18,8 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_STWLC38_INTERNAL_H
-#define TREZORHAL_STWLC38_INTERNAL_H
+#pragma once
 
 #include <io/i2c_bus.h>
 #include <trezor_types.h>
@@ -35,7 +34,7 @@
 #define STWLC38_EXTI_INTERRUPT_NUM EXTI15_IRQn
 #define STWLC38_EXTI_INTERRUPT_HANDLER EXTI15_IRQHandler
 #define STWLC38_ENB_PIN GPIO_PIN_3
-#define STWLC37_ENB_PORT GPIOD
+#define STWLC38_ENB_PORT GPIOD
 #define STWLC38_ENB_PIN_CLK_ENA __HAL_RCC_GPIOD_CLK_ENABLE
 
 // Period of the report readout [ms]
@@ -73,6 +72,9 @@ typedef struct {
   // Set if the driver is initialized
   bool initialized;
 
+  // EXTI handle
+  EXTI_HandleTypeDef EXTI_Handle;
+
   // I2C bus where the STWLC38 is connected
   i2c_bus_t *i2c_bus;
   // Storage for the pending I2C packet
@@ -99,5 +101,3 @@ typedef struct {
 extern stwlc38_driver_t g_stwlc38_driver;
 
 #endif  // KERNEL_MODE
-
-#endif  // TREZORHAL_STWLC38_INTERNAL_H
