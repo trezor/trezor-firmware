@@ -280,10 +280,10 @@ macro_rules! menu_item_title {
             },
             active: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_REGULAR_38,
-                text_color: $color,
-                button_color: BG,
-                icon_color: $color,
-                background_color: BG,
+                text_color: GREY_DARK,
+                button_color: GREY_SUPER_DARK,
+                icon_color: GREY_DARK,
+                background_color: GREY_SUPER_DARK,
             },
             disabled: &ButtonStyle {
                 font: fonts::FONT_SATOSHI_REGULAR_38,
@@ -306,6 +306,32 @@ pub const fn menu_item_title_yellow() -> ButtonStyleSheet {
 
 pub const fn menu_item_title_red() -> ButtonStyleSheet {
     menu_item_title!(RED)
+}
+pub const fn button_select_word() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_EXTRALIGHT_46,
+            text_color: GREY_EXTRA_LIGHT,
+            button_color: BG,
+            icon_color: GREY_EXTRA_LIGHT,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_EXTRALIGHT_46,
+            text_color: GREY_DARK,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_DARK,
+            background_color: GREY_SUPER_DARK,
+        },
+        // unused
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_EXTRALIGHT_46,
+            text_color: BG,
+            button_color: BG,
+            icon_color: BG,
+            background_color: BG,
+        },
+    }
 }
 
 // Result  constants
