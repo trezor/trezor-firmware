@@ -4,7 +4,7 @@ use crate::{
     strutil::TString,
     time::Duration,
     ui::{
-        component::{Component, Event, EventCtx, Timer},
+        component::{text::TextStyle, Component, Event, EventCtx, Timer},
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
@@ -37,6 +37,8 @@ pub struct Button {
 
 impl Button {
     pub const BASELINE_OFFSET: Offset = Offset::new(2, 6);
+    const LINE_SPACING: i16 = 7;
+    const SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
 
     pub const fn new(content: ButtonContent) -> Self {
         Self {
@@ -55,6 +57,10 @@ impl Button {
 
     pub const fn with_text(text: TString<'static>) -> Self {
         Self::new(ButtonContent::Text(text))
+    }
+
+    pub const fn with_text_and_subtext(text: TString<'static>, subtext: TString<'static>) -> Self {
+        Self::new(ButtonContent::TextAndSubtext(text, subtext))
     }
 
     pub const fn with_icon(icon: Icon) -> Self {
@@ -147,6 +153,24 @@ impl Button {
         &self.content
     }
 
+    pub fn content_height(&self) -> i16 {
+        match &self.content {
+            ButtonContent::Empty => 0,
+            ButtonContent::Text(_) => self.style().font.allcase_text_height(),
+            ButtonContent::Icon(icon) => icon.toif.height(),
+            ButtonContent::IconAndText(child) => {
+                let text_height = self.style().font.allcase_text_height();
+                let icon_height = child.icon.toif.height();
+                text_height.max(icon_height)
+            }
+            ButtonContent::TextAndSubtext(_, _) => {
+                self.style().font.allcase_text_height()
+                    + Self::LINE_SPACING
+                    + Self::SUBTEXT_STYLE.text_font.allcase_text_height()
+            }
+        }
+    }
+
     pub fn set_stylesheet(&mut self, styles: ButtonStyleSheet) {
         if self.styles != styles {
             self.styles = styles;
@@ -208,7 +232,7 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let y_offset = Offset::y(self.style().font.allcase_text_height() / 2);
+                let y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => {
                         self.area.left_center() + Offset::x(Self::BASELINE_OFFSET.x)
@@ -219,6 +243,37 @@ impl Button {
                 text.map(|text| {
                     shape::Text::new(start_of_baseline, text, style.font)
                         .with_fg(style.text_color)
+                        .with_align(self.text_align)
+                        .with_alpha(alpha)
+                        .render(target);
+                });
+            }
+            ButtonContent::TextAndSubtext(text, subtext) => {
+                let text_y_offset = Offset::y(
+                    self.content_height() / 2 - self.style().font.allcase_text_height() / 2,
+                );
+                let subtext_y_offset = Offset::y(self.content_height() / 2);
+                let start_of_baseline = match self.text_align {
+                    Alignment::Start => {
+                        self.area.left_center() + Offset::x(Self::BASELINE_OFFSET.x)
+                    }
+                    Alignment::Center => self.area.center(),
+                    Alignment::End => self.area.right_center() - Offset::x(Self::BASELINE_OFFSET.x),
+                };
+                let text_baseline = start_of_baseline - text_y_offset;
+                let subtext_baseline = start_of_baseline + subtext_y_offset;
+
+                text.map(|text| {
+                    shape::Text::new(text_baseline, text, style.font)
+                        .with_fg(style.text_color)
+                        .with_align(self.text_align)
+                        .with_alpha(alpha)
+                        .render(target);
+                });
+
+                text.map(|subtext| {
+                    shape::Text::new(subtext_baseline, subtext, Self::SUBTEXT_STYLE.text_font)
+                        .with_fg(Self::SUBTEXT_STYLE.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
                         .render(target);
@@ -376,6 +431,9 @@ impl crate::trace::Trace for Button {
                 t.string("text", content.text);
                 t.bool("icon", true);
             }
+            ButtonContent::TextAndSubtext(text, _) => {
+                t.string("text", *text);
+            }
         }
     }
 }
@@ -392,6 +450,7 @@ enum State {
 pub enum ButtonContent {
     Empty,
     Text(TString<'static>),
+    TextAndSubtext(TString<'static>, TString<'static>),
     Icon(Icon),
     IconAndText(IconText),
 }
