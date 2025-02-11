@@ -1,14 +1,14 @@
 use crate::{
     error::Error,
     io::BinaryData,
-    micropython::{gc::Gc, list::List, obj::Obj},
+    micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
         component::{
             text::{
                 op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
             },
             Empty, FormattedText,
         },
@@ -24,7 +24,7 @@ use crate::{
 };
 
 use super::{
-    component::{ActionBar, Button, Header, Hint, TextScreen},
+    component::{ActionBar, Button, Header, HeaderMsg, Hint, TextScreen},
     fonts, theme, UIEckhart,
 };
 
@@ -188,22 +188,65 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_value(
-        _title: TString<'static>,
-        _value: Obj,
-        _description: Option<TString<'static>>,
-        _is_data: bool,
-        _extra: Option<TString<'static>>,
+        title: TString<'static>,
+        value: Obj,
+        description: Option<TString<'static>>,
+        is_data: bool,
+        extra: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
-        _verb: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
-        _info: bool,
-        _hold: bool,
-        _chunkify: bool,
-        _page_counter: bool,
+        info: bool,
+        hold: bool,
+        chunkify: bool,
+        page_counter: bool,
         _prompt_screen: bool,
-        _cancel: bool,
+        cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ConfirmValueParams {
+            description: description.unwrap_or("".into()),
+            extra: extra.unwrap_or("".into()),
+            value: if value != Obj::const_none() {
+                value.try_into()?
+            } else {
+                StrOrBytes::Str("".into())
+            },
+            font: if chunkify {
+                let value: TString = value.try_into()?;
+                theme::get_chunkified_text_style(value.len())
+            } else if is_data {
+                &theme::TEXT_MONO_MEDIUM
+            } else {
+                &theme::TEXT_MEDIUM
+            },
+            description_font: &theme::TEXT_SMALL,
+            extra_font: &theme::TEXT_SMALL,
+        }
+        .into_paragraphs();
+
+        let verb = verb.unwrap_or(TR::buttons__confirm.into());
+        let right_button = if hold {
+            Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
+        } else {
+            Button::with_text(verb)
+        };
+        let header = if info {
+            Header::new(title)
+                .with_right_button(Button::with_icon(theme::ICON_INFO), HeaderMsg::Menu)
+        } else {
+            Header::new(title)
+        };
+
+        let mut screen = TextScreen::new(paragraphs)
+            .with_header(header)
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                right_button,
+            ));
+        if page_counter {
+            screen = screen.with_hint(Hint::new_page_counter());
+        }
+        LayoutObj::new(screen)
     }
 
     fn confirm_value_intro(
@@ -439,12 +482,31 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_info_with_cancel(
-        _title: TString<'static>,
-        _items: Obj,
+        title: TString<'static>,
+        items: Obj,
         _horizontal: bool,
-        _chunkify: bool,
+        chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let mut paragraphs = ParagraphVecShort::new();
+        for para in IterBuf::new().try_iterate(items)? {
+            let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
+            let key: TString = key.try_into()?;
+            let value: TString = value.try_into()?;
+            paragraphs.add(Paragraph::new(&theme::TEXT_MEDIUM, key).no_break());
+            if chunkify {
+                paragraphs.add(Paragraph::new(
+                    theme::get_chunkified_text_style(value.len()),
+                    value,
+                ));
+            } else {
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_MEDIUM, value));
+            }
+        }
+
+        let screen = TextScreen::new(paragraphs.into_paragraphs())
+            .with_header(Header::new(title).with_close_button());
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn show_lockscreen(
@@ -498,7 +560,7 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_simple(
-        text: TString<'static>,
+        _text: TString<'static>,
         _title: Option<TString<'static>>,
         _button: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
