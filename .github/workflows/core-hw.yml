@@ -34,12 +34,13 @@ jobs:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
-      PYTEST_TIMEOUT: 1200
+      PYTEST_TIMEOUT: 1200  # 20m single test timeout
       PYOPT: 0
       DISABLE_OPTIGA: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
-      TESTOPTS: "-k 'not authenticate and not recovery and not lots'"
+      TESTOPTS: "-k 'not authenticate and not recovery and not lots' --session-timeout 19800"  # 5.5h pytest global timeout
       TT_UHUB_PORT: 1
+    timeout-minutes: 360  # 6h CI job timeout
     steps:
       - uses: actions/checkout@v4
         with:
