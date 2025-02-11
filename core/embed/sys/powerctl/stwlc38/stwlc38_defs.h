@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_STWLC38_DEFS_H
-#define TREZORHAL_STWLC38_DEFS_H
+#pragma once
 
 // I2C address of the STWLC38 on the I2C bus.
 #define STWLC38_I2C_ADDRESS 0x61
@@ -95,5 +94,3 @@
 #define STWLC38_ERR_INVALID_CHIP_ID 0x80000006U
 #define STWLC38_ERR_NVM_ID_MISMATCH 0x80000007U
 #define STWLC38_ERR_NVM_DATA_CORRUPTED 0x80000008U
-
-#endif  // TREZORHAL_STWLC38_DEFS_H

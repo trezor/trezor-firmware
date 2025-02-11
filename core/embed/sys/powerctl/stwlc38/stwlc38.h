@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_STWLC38_H
-#define TREZORHAL_STWLC38_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -89,7 +88,7 @@ void stwlc38_deinit(void);
 // wireless charging functionality.
 //
 // If the STWLC38 is disabled, it's not self-powered and is unable to
-// communicate over I2C. STWLC38 is disabled by default after initialization.
+// communicate over I2C. STWLC38 is enabled by default after initialization.
 //
 // Returns true if the STWLC38 was successfully enabled or disabled.
 bool stwlc38_enable(bool enable);
@@ -120,5 +119,3 @@ bool stwlc38_patch_and_config();
 
 // Gets the current report from the STWLC38
 bool stwlc38_get_report(stwlc38_report_t* status);
-
-#endif  // TREZORHAL_STWLC38_H

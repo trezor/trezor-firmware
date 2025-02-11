@@ -22,7 +22,6 @@
 
 #include <io/i2c_bus.h>
 #include <sys/irq.h>
-#include <sys/systick.h>
 #include <sys/systimer.h>
 
 #include "stwlc38.h"
@@ -75,8 +74,14 @@ static void stwlc38_fsm_continue(stwlc38_driver_t *drv);
 void stwlc38_deinit(void) {
   stwlc38_driver_t *drv = &g_stwlc38_driver;
 
-  i2c_bus_close(drv->i2c_bus);
+  NVIC_DisableIRQ(STWLC38_EXTI_INTERRUPT_NUM);
+  HAL_EXTI_ClearConfigLine(&drv->EXTI_Handle);
+
   systimer_delete(drv->timer);
+  i2c_bus_close(drv->i2c_bus);
+
+  HAL_GPIO_DeInit(STWLC38_INT_PORT, STWLC38_INT_PIN);
+  HAL_GPIO_DeInit(STWLC38_ENB_PORT, STWLC38_ENB_PIN);
   memset(drv, 0, sizeof(stwlc38_driver_t));
 }
 
@@ -122,17 +127,16 @@ bool stwlc38_init(void) {
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
   GPIO_InitStructure.Pin = STWLC38_ENB_PIN;
-  HAL_GPIO_WritePin(STWLC37_ENB_PORT, STWLC38_ENB_PIN, GPIO_PIN_RESET);
-  HAL_GPIO_Init(STWLC37_ENB_PORT, &GPIO_InitStructure);
+  HAL_GPIO_WritePin(STWLC38_ENB_PORT, STWLC38_ENB_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_Init(STWLC38_ENB_PORT, &GPIO_InitStructure);
 
   // Setup interrupt line for the STWLC38
-  EXTI_HandleTypeDef EXTI_Handle = {0};
   EXTI_ConfigTypeDef EXTI_Config = {0};
   EXTI_Config.GPIOSel = STWLC38_EXTI_INTERRUPT_GPIOSEL;
   EXTI_Config.Line = STWLC38_EXTI_INTERRUPT_LINE;
   EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
   EXTI_Config.Trigger = EXTI_TRIGGER_FALLING;
-  HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
+  HAL_EXTI_SetConfigLine(&drv->EXTI_Handle, &EXTI_Config);
   NVIC_SetPriority(STWLC38_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
   __HAL_GPIO_EXTI_CLEAR_FLAG(STWLC38_INT_PIN);
   NVIC_EnableIRQ(STWLC38_EXTI_INTERRUPT_NUM);
@@ -160,9 +164,9 @@ bool stwlc38_enable(bool enable) {
   }
 
   if (enable) {
-    HAL_GPIO_WritePin(STWLC37_ENB_PORT, STWLC38_ENB_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(STWLC38_ENB_PORT, STWLC38_ENB_PIN, GPIO_PIN_RESET);
   } else {
-    HAL_GPIO_WritePin(STWLC37_ENB_PORT, STWLC38_ENB_PIN, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(STWLC38_ENB_PORT, STWLC38_ENB_PIN, GPIO_PIN_SET);
   }
 
   return true;
@@ -319,6 +323,10 @@ void STWLC38_EXTI_INTERRUPT_HANDLER(void) {
 
   // Clear the EXTI line pending bit
   __HAL_GPIO_EXTI_CLEAR_FLAG(STWLC38_INT_PIN);
+
+  if (!drv->initialized) {
+    return;
+  }
 
   if (drv->state == STWLC38_STATE_POWER_DOWN) {
     // Inform the powerctl module about the WPC
