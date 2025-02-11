@@ -1,6 +1,6 @@
 
 RFAL middleware was imported into trezor-firmware to support a low level NFC operations of st25r3916b from
-https://www.st.com/en/embedded-software/stsw-st25r-lib.html#overview (version 1.7.0)
+https://www.st.com/en/embedded-software/stsw-st25rfal002.html (version 3.0.1)
 
 # Local changes
 
