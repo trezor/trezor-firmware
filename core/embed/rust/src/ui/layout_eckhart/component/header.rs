@@ -84,6 +84,7 @@ pub struct Header {
 
 #[derive(Copy, Clone)]
 pub enum HeaderMsg {
+    Back,
     Cancelled,
     Menu,
 }
