@@ -32,6 +32,7 @@ jobs:
         coins: [universal, btconly]
     env:
       TREZOR_MODEL: ${{ matrix.model }}
+      BITCOIN_ONLY: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       PYTEST_TIMEOUT: 1200
       PYOPT: 0
