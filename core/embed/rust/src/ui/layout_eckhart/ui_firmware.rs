@@ -25,7 +25,7 @@ use crate::{
 
 use super::{
     component::{ActionBar, Button, Header, HeaderMsg, Hint, TextScreen},
-    fonts, theme, UIEckhart,
+    flow, fonts, theme, UIEckhart,
 };
 
 impl FirmwareUI for UIEckhart {
@@ -556,17 +556,33 @@ impl FirmwareUI for UIEckhart {
         _words: heapless::Vec<TString<'static>, 33>,
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"use show_share_words_extended instead",
+        ))
     }
 
-    fn show_share_words_delizia(
-        _words: heapless::Vec<TString<'static>, 33>,
-        _subtitle: Option<TString<'static>>,
-        _instructions: Obj,
+    fn show_share_words_extended(
+        words: heapless::Vec<TString<'static>, 33>,
+        subtitle: Option<TString<'static>>,
+        instructions: Obj,
+        // Irrelevant for Eckhart because the footer is dynamic
         _text_footer: Option<TString<'static>>,
-        _text_confirm: TString<'static>,
+        text_confirm: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        // TODO: add support for multiple instructions
+        let instruction: TString = IterBuf::new()
+            .try_iterate(instructions)?
+            .next()
+            .unwrap()
+            .try_into()?;
+
+        let flow = flow::show_share_words::new_show_share_words_flow(
+            words,
+            subtitle.unwrap_or(TString::empty()),
+            Paragraph::new(&theme::TEXT_REGULAR, instruction),
+            text_confirm,
+        )?;
+        Ok(flow)
     }
 
     fn show_remaining_shares(_pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
