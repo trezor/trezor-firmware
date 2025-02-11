@@ -569,6 +569,15 @@ void cli_run_loop(cli_t* cli) {
     }
     cli->empty_lines = 0;
 
+    // Quit interactive mode on `.+ENTER`
+    if ((strcmp(cli->cmd_name, ".") == 0)) {
+      if (cli->interactive) {
+        cli->interactive = false;
+        cli_trace(cli, "Exiting interactive mode...");
+      }
+      continue;
+    }
+
     // Find the command handler
     cli->current_cmd = cli_find_command(cli, cli->cmd_name);
 

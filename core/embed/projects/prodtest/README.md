@@ -12,6 +12,8 @@ The prodtest includes a simple text-based command-line interface that can be con
 
 Pressing the ENTER key twice switches the interface to interactive mode, enabling basic line editing, autocomplete functionality (using the TAB key), and text coloring.
 
+To exit from interactive mode type `.+ENTER`.
+
 ### Commands
 These commands begin with the command name and may optionally include parameters separated by spaces.
 
