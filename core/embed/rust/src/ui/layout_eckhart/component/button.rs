@@ -403,7 +403,7 @@ pub struct ButtonStyleSheet {
     pub disabled: &'static ButtonStyle,
 }
 
-#[derive(PartialEq, Eq)]
+#[derive(PartialEq, Eq, Clone)]
 pub struct ButtonStyle {
     pub font: Font,
     pub text_color: Color,
