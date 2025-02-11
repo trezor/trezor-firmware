@@ -776,6 +776,10 @@ bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
     return false;
   }
 
+  if (bb->src_downscale > 0) {
+    return false;
+  }
+
   drv->handle.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
   drv->handle.Init.Mode = DMA2D_M2M_PFC;
   drv->handle.Init.OutputOffset = bb->dst_stride / sizeof(uint32_t) - bb->width;
