@@ -40,6 +40,7 @@ pub const ORANGE_EXTRA_DARK: Color = Color::rgb(0x12, 0x07, 0x04);
 
 pub const YELLOW: Color = Color::rgb(0xFF, 0xE4, 0x58);
 
+pub const RED: Color = Color::rgb(0xFF, 0x30, 0x30);
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
@@ -147,6 +148,10 @@ pub const fn label_title_main() -> TextStyle {
     TEXT_SMALL
 }
 
+pub const fn label_menu_item_subtitle() -> TextStyle {
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY)
+}
+
 // Button styles
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -250,6 +255,47 @@ pub const fn button_header() -> ButtonStyleSheet {
             background_color: BG,
         },
     }
+}
+
+// Macro for styles differing only in text color
+macro_rules! menu_item_title {
+    ($color:expr) => {
+        ButtonStyleSheet {
+            normal: &ButtonStyle {
+                font: fonts::FONT_SATOSHI_REGULAR_38,
+                text_color: $color,
+                button_color: BG,
+                icon_color: $color,
+                background_color: BG,
+            },
+            active: &ButtonStyle {
+                font: fonts::FONT_SATOSHI_REGULAR_38,
+                text_color: $color,
+                button_color: BG,
+                icon_color: $color,
+                background_color: BG,
+            },
+            disabled: &ButtonStyle {
+                font: fonts::FONT_SATOSHI_REGULAR_38,
+                text_color: GREY_DARK,
+                button_color: BG,
+                icon_color: GREY_DARK,
+                background_color: BG,
+            },
+        }
+    };
+}
+
+pub const fn menu_item_title() -> ButtonStyleSheet {
+    menu_item_title!(GREY_LIGHT)
+}
+
+pub const fn menu_item_title_yellow() -> ButtonStyleSheet {
+    menu_item_title!(YELLOW)
+}
+
+pub const fn menu_item_title_red() -> ButtonStyleSheet {
+    menu_item_title!(RED)
 }
 
 // Result  constants
