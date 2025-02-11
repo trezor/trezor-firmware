@@ -829,7 +829,7 @@ pub enum TranslatedString {
     reset__recovery_share_title_template = 567,  // "Recovery share #{0}"
     reset__required_number_of_groups = 568,  // "The required number of groups for recovery."
     reset__select_correct_word = 569,  // "Select the correct word for each position."
-    reset__select_word_template = 570,  // "Select {0} word"
+    reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word #{0} from your wallet backup"}
     reset__select_word_x_of_y_template = 571,  // "Select word {0} of {1}:"
     reset__set_it_to_count_template = 572,  // "Set it to {0} and you will need "
     reset__share_checked_successfully_template = 573,  // "Share #{0} checked successfully."
@@ -1303,7 +1303,7 @@ pub enum TranslatedString {
     reset__repeat_for_all_shares = 938,  // "Repeat for all shares."
     homescreen__settings_subtitle = 939,  // "Settings"
     homescreen__settings_title = 940,  // "Homescreen"
-    reset__the_word_is_repeated = 941,  // "The word is repeated"
+    reset__the_word_is_repeated = 941,  // {"Bolt": "The word is repeated", "Caesar": "The word is repeated", "Delizia": "The word is repeated", "Eckhart": "The word appears multiple times in the backup."}
     tutorial__title_lets_begin = 942,  // "Let's begin"
     tutorial__did_you_know = 943,  // "Did you know?"
     tutorial__first_wallet = 944,  // "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."
