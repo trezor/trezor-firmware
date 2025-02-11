@@ -711,7 +711,7 @@ void dump_qstrdata(FILE *out) {
 
 /// def meminfo(filename: str) -> None:
 ///     """Dumps map of micropython GC arena to a file.
-///     The JSON file can be decoded by analyze.py
+///     The JSON file can be decoded by analyze-memory-dump.py
 ///     Only available in the emulator.
 ///      """
 STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
