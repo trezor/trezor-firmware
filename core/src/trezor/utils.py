@@ -134,7 +134,7 @@ if __debug__:
             mem_info(True)
 
     def get_bytes_as_str(a: bytes) -> str:
-        """Converts the provided bytes to a hexadecimal string (decoded as`utf-8`)."""
+        """Converts the provided bytes to a hexadecimal string (decoded as `utf-8`)."""
         return hexlify(a).decode("utf-8")
 
 
