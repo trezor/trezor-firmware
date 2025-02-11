@@ -778,7 +778,7 @@ if not utils.BITCOIN_ONLY:
                 account_path=account_path,
                 address=None,
                 address_title=None,
-                br_code=ButtonRequestType.Other,
+                br_code=ButtonRequestType.SignTx,
                 br_name="confirm_output",
                 summary_items=(
                     (TR.words__amount, total_amount),
