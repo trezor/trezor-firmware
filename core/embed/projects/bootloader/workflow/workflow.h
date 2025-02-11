@@ -26,12 +26,21 @@
 #include "protob/protob.h"
 
 typedef enum {
-  WF_WIPE_AND_SHUTDOWN = 0,
-  WF_SHUTDOWN = 0x11223344,
-  WF_CONTINUE_TO_FIRMWARE = 0xAABBCCDD,
-  WF_RETURN = 0x55667788,
-  WF_STAY = 0xEEFF0011,
+  WF_ERROR_FATAL = 0,
+  WF_ERROR = 0x11223344,
+  WF_OK = 0xAABBCCDD,
+  WF_CANCELLED = 0x55667788,
 } workflow_result_t;
+
+typedef enum {
+  HC_ERROR_FATAL = 0,
+  HC_ERROR = 0x11223344,
+  HC_CANCELLED,
+  HC_REBOOT,
+  HC_FIRMWARE_INSTALLED,
+  HC_DEVICE_WIPED,
+  HC_BOOTLOADER_UNLOCKED,
+} hc_result_t;
 
 workflow_result_t workflow_firmware_update(protob_iface_t *iface,
                                            uint32_t msg_size, uint8_t *buf);
@@ -57,18 +66,18 @@ workflow_result_t workflow_get_features(protob_iface_t *iface,
                                         const vendor_header *const vhdr,
                                         const image_header *const hdr);
 
-workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
-                                      const image_header *const hdr,
-                                      secbool firmware_present);
+hc_result_t workflow_bootloader(const vendor_header *const vhdr,
+                                const image_header *const hdr,
+                                secbool firmware_present);
 
-workflow_result_t workflow_empty_device(void);
+hc_result_t workflow_empty_device(void);
 
-workflow_result_t workflow_host_control(const vendor_header *const vhdr,
-                                        const image_header *const hdr,
-                                        void (*redraw_wait_screen)(void));
+hc_result_t workflow_host_control(const vendor_header *const vhdr,
+                                  const image_header *const hdr,
+                                  void (*redraw_wait_screen)(void));
 
-workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
-                                       const image_header *const hdr);
+hc_result_t workflow_auto_update(const vendor_header *const vhdr,
+                                 const image_header *const hdr);
 
 secbool workflow_is_jump_allowed_1(void);
 secbool workflow_is_jump_allowed_2(void);

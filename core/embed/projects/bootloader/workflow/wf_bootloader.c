@@ -31,9 +31,9 @@
 #include "workflow.h"
 #include "workflow_internal.h"
 
-workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
-                                      const image_header *const hdr,
-                                      secbool firmware_present) {
+hc_result_t workflow_bootloader(const vendor_header *const vhdr,
+                                const image_header *const hdr,
+                                secbool firmware_present) {
   workflow_reset_jump();
   ui_set_initial_setup(false);
 
@@ -62,31 +62,37 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
 #endif
           workflow_allow_jump_1();
           workflow_allow_jump_2();
-          return WF_CONTINUE_TO_FIRMWARE;
+          return HC_REBOOT;
         }
         if (ui_result == 0x55667788) {  // wipe
           workflow_result_t r = workflow_wipe_device(NULL, 0, NULL);
-          if (r == WF_SHUTDOWN) {
+          if (r == WF_ERROR) {
             return r;
           }
+          if (r == WF_OK) {
+            return HC_DEVICE_WIPED;
+          }
+
+          if (r == WF_CANCELLED) {
+            screen = SCREEN_MENU;
+            continue;
+          }
+          return WF_ERROR_FATAL;
         }
         break;
       case SCREEN_WAIT_FOR_HOST:
         ui_screen_connect();
-        workflow_result_t res =
-            workflow_host_control(vhdr, hdr, ui_screen_connect);
+        hc_result_t res = workflow_host_control(vhdr, hdr, ui_screen_connect);
         switch (res) {
-          case WF_STAY:
-            break;
-          case WF_RETURN:
+          case HC_CANCELLED:
             screen = SCREEN_INTRO;
-            break;
+            continue;
           default:
-            return workflow_exit_common(res);
+            return res;
         }
         break;
       default:
-        return WF_WIPE_AND_SHUTDOWN;
+        return HC_ERROR_FATAL;
         break;
     }
   }

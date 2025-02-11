@@ -30,5 +30,5 @@ workflow_result_t workflow_initialize(protob_iface_t *iface, uint32_t msg_size,
   Initialize msg_recv;
   recv_msg_initialize(iface, &msg_recv, buf, msg_size);
   send_msg_features(iface, vhdr, hdr);
-  return WF_STAY;
+  return WF_OK;
 }

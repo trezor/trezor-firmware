@@ -494,7 +494,7 @@ workflow_result_t workflow_firmware_update(protob_iface_t *iface,
   secbool res = recv_msg_firmware_erase(iface, &msg, buf, msg_size);
 
   if (res != sectrue) {
-    return WF_RETURN;
+    return WF_ERROR;
   }
 
   ctx.firmware_remaining = msg.has_length ? msg.length : 0;
@@ -511,13 +511,13 @@ workflow_result_t workflow_firmware_update(protob_iface_t *iface,
                               : ctx.firmware_remaining;
     if (sectrue != send_msg_request_firmware(iface, 0, ctx.chunk_requested)) {
       ui_screen_fail();
-      return WF_SHUTDOWN;
+      return WF_ERROR;
     }
   } else {
     // invalid firmware size
     send_msg_failure(iface, FailureType_Failure_ProcessError,
                      "Wrong firmware size");
-    return WF_RETURN;
+    return WF_ERROR;
   }
 
   upload_status_t s = UPLOAD_IN_PROGRESS;
@@ -536,7 +536,7 @@ workflow_result_t workflow_firmware_update(protob_iface_t *iface,
 
     if (sectrue != protob_get_msg_header(iface, buf, &msg_id, &msg_size)) {
       // invalid header -> discard
-      return WF_RETURN;
+      return WF_ERROR;
     }
     s = process_msg_FirmwareUpload(iface, msg_size, buf, &ctx);
 
@@ -547,10 +547,10 @@ workflow_result_t workflow_firmware_update(protob_iface_t *iface,
       } else {
         ui_screen_fail();
       }
-      return WF_SHUTDOWN;
+      return WF_ERROR;
     } else if (s == UPLOAD_ERR_USER_ABORT) {
       systick_delay_ms(100);
-      return WF_RETURN;
+      return WF_CANCELLED;
     } else if (s == UPLOAD_OK) {  // last chunk received
       ui_screen_install_progress_upload(1000);
       ui_screen_done(4, sectrue);
@@ -560,7 +560,7 @@ workflow_result_t workflow_firmware_update(protob_iface_t *iface,
       systick_delay_ms(1000);
       ui_screen_done(1, secfalse);
       systick_delay_ms(1000);
-      return WF_CONTINUE_TO_FIRMWARE;
+      return WF_OK;
     }
   }
 }

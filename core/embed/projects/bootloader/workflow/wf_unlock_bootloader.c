@@ -32,12 +32,11 @@ workflow_result_t workflow_unlock_bootloader(protob_iface_t *iface,
   ui_result_t response = ui_screen_unlock_bootloader_confirm();
   if (UI_RESULT_CONFIRM != response) {
     send_user_abort(iface, "Bootloader unlock cancelled");
-    return WF_RETURN;
+    return WF_CANCELLED;
   }
-
   secret_optiga_erase();
   send_msg_success(iface, NULL);
 
   screen_unlock_bootloader_success();
-  return WF_SHUTDOWN;
+  return WF_OK;
 }

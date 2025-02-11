@@ -31,9 +31,9 @@
 #include "workflow.h"
 #include "workflow_internal.h"
 
-workflow_result_t workflow_host_control(const vendor_header *const vhdr,
-                                        const image_header *const hdr,
-                                        void (*redraw_wait_screen)(void)) {
+hc_result_t workflow_host_control(const vendor_header *const vhdr,
+                                  const image_header *const hdr,
+                                  void (*redraw_wait_screen)(void)) {
   wire_iface_t usb_iface = {0};
   protob_iface_t protob_usb_iface = {0};
 
@@ -46,7 +46,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
   uint8_t buf[MAX_PACKET_SIZE] = {0};
 
-  workflow_result_t result = WF_STAY;
+  workflow_result_t result = WF_ERROR_FATAL;
 
   for (;;) {
     uint16_t ifaces[1] = {protob_get_iface_flag(&protob_usb_iface) | MODE_READ};
@@ -75,51 +75,65 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
     switch (msg_id) {
       case MessageType_MessageType_Initialize:
-        result = workflow_initialize(active_iface, msg_size, buf, vhdr, hdr);
-        break;
+        workflow_initialize(active_iface, msg_size, buf, vhdr, hdr);
+        // whatever the result, we stay here and continue
+        continue;
       case MessageType_MessageType_Ping:
-        result = workflow_ping(active_iface, msg_size, buf);
-        break;
+        workflow_ping(active_iface, msg_size, buf);
+        // whatever the result, we stay here and continue
+        continue;
       case MessageType_MessageType_WipeDevice:
         result = workflow_wipe_device(active_iface, msg_size, buf);
+        if (result == WF_OK) {
+          workflow_allow_jump_1();
+          systick_delay_ms(100);
+          usb_deinit();
+          return HC_DEVICE_WIPED;
+        }
         break;
       case MessageType_MessageType_FirmwareErase:
         result = workflow_firmware_update(active_iface, msg_size, buf);
+        if (result == WF_OK) {
+          workflow_allow_jump_1();
+          systick_delay_ms(100);
+          usb_deinit();
+          return HC_FIRMWARE_INSTALLED;
+        }
         break;
       case MessageType_MessageType_GetFeatures:
-        result = workflow_get_features(active_iface, msg_size, buf, vhdr, hdr);
-        break;
+        workflow_get_features(active_iface, msg_size, buf, vhdr, hdr);
+        // whatever the result, we stay here and continue
+        continue;
 #if defined USE_OPTIGA
       case MessageType_MessageType_UnlockBootloader:
         result = workflow_unlock_bootloader(active_iface, msg_size, buf);
+        if (result == WF_OK) {
+          workflow_allow_jump_1();
+          systick_delay_ms(100);
+          usb_deinit();
+          return HC_BOOTLOADER_UNLOCKED;
+        }
         break;
 #endif
       default:
         recv_msg_unknown(active_iface, msg_size, buf);
-        break;
+        continue;
     }
 
     switch (result) {
-      case WF_CONTINUE_TO_FIRMWARE:
-        workflow_allow_jump_1();
+      case WF_CANCELLED:
         systick_delay_ms(100);
         usb_deinit();
-        return WF_CONTINUE_TO_FIRMWARE;
-      case WF_SHUTDOWN:
+        return HC_CANCELLED;
+      case WF_ERROR:
         systick_delay_ms(100);
         usb_deinit();
-        return WF_SHUTDOWN;
-      case WF_STAY:
-        break;
-      case WF_RETURN:
-        systick_delay_ms(100);
-        usb_deinit();
-        return WF_RETURN;
+        return HC_ERROR;
+      case WF_ERROR_FATAL:
       default:
-        // todo show some error?
         systick_delay_ms(100);
         usb_deinit();
-        return WF_SHUTDOWN;
+        return WF_ERROR_FATAL;
     }
   }
 }

@@ -28,4 +28,4 @@ void workflow_allow_jump_2(void);
 
 void workflow_reset_jump(void);
 
-workflow_result_t workflow_exit_common(workflow_result_t result);
+// workflow_result_t workflow_exit_common(workflow_result_t result);

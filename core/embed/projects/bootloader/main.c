@@ -369,7 +369,7 @@ int bootloader_main(void) {
   // ... or there is no valid firmware
   if (touched || stay_in_bootloader == sectrue || firmware_present != sectrue ||
       auto_upgrade == sectrue) {
-    workflow_result_t result;
+    hc_result_t result;
 
     do {
       if (header_present == sectrue) {
@@ -381,10 +381,11 @@ int bootloader_main(void) {
       } else {
         result = workflow_empty_device();
       }
-    } while (result == WF_STAY || result == WF_RETURN);
+    } while (result == HC_CANCELLED);
 
     switch (result) {
-      case WF_CONTINUE_TO_FIRMWARE: {
+      case HC_REBOOT:
+      case HC_FIRMWARE_INSTALLED: {
         ensure(dont_optimize_out_true * (workflow_is_jump_allowed_1() ==
                                          workflow_is_jump_allowed_2()),
                NULL);
@@ -395,10 +396,12 @@ int bootloader_main(void) {
         firmware_jump_fn = real_jump_to_firmware;
 #endif
       } break;
-      case WF_SHUTDOWN:
+      case HC_DEVICE_WIPED:
+      case HC_BOOTLOADER_UNLOCKED:
+      case HC_ERROR:
         reboot_or_halt_after_rsod();
         return 0;
-      case WF_WIPE_AND_SHUTDOWN:
+      case HC_ERROR_FATAL:
       default: {
         // erase storage if we saw flips randomly flip, most likely due to
         // glitch
