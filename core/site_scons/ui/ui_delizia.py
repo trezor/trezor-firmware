@@ -22,7 +22,7 @@ def init_ui(
         add_font("BOLD", "Font_TTSatoshi_DemiBold_21", defines, sources)
     if stage == "firmware":
         rust_features.append("ui_blurring")
-        rust_features.append("ui_jpeg_decoder")
+        rust_features.append("ui_jpeg")
         rust_features.append("ui_image_buffer")
         rust_features.append("ui_overlay")
 

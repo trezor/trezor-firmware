@@ -13,6 +13,10 @@
 #include <util/translations.h>
 #include "storage.h"
 
+#ifdef USE_HW_JPEG_DECODER
+#include <gfx/jpegdec.h>
+#endif
+
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif

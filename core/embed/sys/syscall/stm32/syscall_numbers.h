@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SYSCALL_NUMBERS_H
-#define SYSCALL_NUMBERS_H
+#pragma once
 
 // Syscall identifiers
 typedef enum {
@@ -149,6 +148,10 @@ typedef enum {
 
   SYSCALL_POWERCTL_SUSPEND,
 
-} syscall_number_t;
+  SYSCALL_JPEGDEC_OPEN,
+  SYSCALL_JPEGDEC_CLOSE,
+  SYSCALL_JPEGDEC_PROCESS,
+  SYSCALL_JPEGDEC_GET_INFO,
+  SYSCALL_JPEGDEC_GET_SLICE_RGBA8888,
 
-#endif  // SYSCALL_NUMBERS_H
+} syscall_number_t;

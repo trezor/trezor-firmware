@@ -781,4 +781,48 @@ access_violation:
 }
 #endif
 
+// ---------------------------------------------------------------------
+
+#ifdef USE_HW_JPEG_DECODER
+
+jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
+  if (!probe_write_access(input, sizeof(*input))) {
+    goto access_violation;
+  }
+
+  return jpegdec_process(input);
+
+access_violation:
+  return JPEGDEC_STATE_ERROR;
+}
+
+bool jpegdec_get_info__verified(jpegdec_image_t *image) {
+  if (!probe_write_access(image, sizeof(*image))) {
+    goto access_violation;
+  }
+
+  return jpegdec_get_info(image);
+
+access_violation:
+  return false;
+}
+
+bool jpegdec_get_slice_rgba8888__verified(void *rgba8888,
+                                          jpegdec_slice_t *slice) {
+  if (!probe_write_access(rgba8888, JPEGDEC_RGBA8888_BUFFER_SIZE)) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(slice, sizeof(*slice))) {
+    goto access_violation;
+  }
+
+  return jpegdec_get_slice_rgba8888(rgba8888, slice);
+
+access_violation:
+  return false;
+}
+
+#endif  // USE_HW_JPEG_DECODER
+
 #endif  // SYSCALL_DISPATCH

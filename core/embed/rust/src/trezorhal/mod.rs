@@ -13,6 +13,9 @@ mod ffi;
 pub mod haptic;
 
 pub mod io;
+
+#[cfg(feature = "hw_jpeg_decoder")]
+pub mod jpegdec;
 pub mod model;
 pub mod random;
 #[cfg(feature = "rgb_led")]

@@ -196,7 +196,7 @@ impl<'a> JpegCache<'a> {
                 offset_y += row_canvas.height() - offset_y % row_canvas.height();
             }
         } else {
-            // Create a new row for cahing decoded JPEG data
+            // Create a new row for caching decoded JPEG data
             // Now there's nobody else holding any reference to canvas_buff so
             // we can get a mutable reference and pass it to a new instance
             // of Rgb565Canvas
