@@ -82,6 +82,10 @@ include_icon!(ICON_LOGO, "layout_eckhart/res/lock_full.toif");
 // Homescreen notifications.
 include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
 
+// Battery icons
+include_icon!(ICON_BATTERY_BAR, "layout_eckhart/res/battery_bar.toif");
+include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery_zap.toif");
+
 // Text styles
 /// Alias for use with copied code, might be deleted later
 pub const TEXT_NORMAL: TextStyle = TEXT_MEDIUM;
