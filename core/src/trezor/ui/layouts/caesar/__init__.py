@@ -982,6 +982,7 @@ if not utils.BITCOIN_ONLY:
                 title,
                 recipient or TR.ethereum__new_contract,
                 verb=TR.buttons__continue,
+                br_code=br_code,
                 chunkify=(chunkify if recipient else False),
             )
 

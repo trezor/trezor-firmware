@@ -864,9 +864,7 @@ if not utils.BITCOIN_ONLY:
         )
 
         while True:
-            await with_info(
-                address_layout, account_info_layout, br_name, ButtonRequestType.Other
-            )
+            await with_info(address_layout, account_info_layout, br_name, br_code)
 
             try:
                 await with_info(total_layout, fee_info_layout, br_name, br_code)
