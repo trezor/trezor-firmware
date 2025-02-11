@@ -88,30 +88,6 @@ impl<'a> BinaryData<'a> {
         self.len() == 0
     }
 
-    /// Returns a reference to the binary data.
-    ///
-    /// This function is used just in the `paint()` functions in
-    /// UI components, that are going to be deleted after adopting new
-    /// drawing library for models T and TS3. Do not use this function in new
-    /// code.
-    ///
-    /// # Safety
-    /// The caller must ensure that the returned slice is not modified by
-    /// MicroPython. This means (a) discarding the slice before returning
-    /// to Python, and (b) being careful about calling into Python while
-    /// the slice is held.
-    pub unsafe fn data(&self) -> &[u8] {
-        match self {
-            Self::Slice(data) => data,
-            // SAFETY: We expect no existing mutable reference. See safety
-            // note above.
-            #[cfg(feature = "micropython")]
-            Self::Object(obj) => unsafe { unwrap!(get_buffer(*obj)) },
-            #[cfg(feature = "micropython")]
-            Self::AllocatedSlice(data) => data,
-        }
-    }
-
     /// Returns the length of the binary data in bytes.
     pub fn len(&self) -> usize {
         match self {
