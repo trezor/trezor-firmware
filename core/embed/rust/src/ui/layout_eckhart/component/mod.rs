@@ -6,18 +6,21 @@ mod header;
 mod hint;
 mod hold_to_confirm;
 mod result;
+mod share_words;
 mod text_screen;
 mod vertical_menu;
 mod vertical_menu_screen;
 mod welcome_screen;
 
-pub use action_bar::ActionBar;
+pub use action_bar::{ActionBar, ActionBarMsg};
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, IconText};
 pub use error::ErrorScreen;
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
+#[cfg(feature = "translations")]
+pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
 pub use vertical_menu::{VerticalMenu, VerticalMenuMsg, MENU_MAX_ITEMS};
 pub use vertical_menu_screen::{VerticalMenuScreen, VerticalMenuScreenMsg};
