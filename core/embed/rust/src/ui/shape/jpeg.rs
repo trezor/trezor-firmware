@@ -197,14 +197,14 @@ impl<'a> Shape<'a> for JpegImage<'a> {
                         if let Some(y) = blur.push_ready() {
                             if y < row_r.y1 {
                                 // should never fail
-                                blur.push(unwrap!(jpeg_slice.row(y - row_r.y0)));
+                                blur.push(unwrap!(jpeg_slice.row::<u16>(y - row_r.y0)));
                             } else {
                                 return true; // need more data
                             }
                         }
 
                         if let Some(y) = blur.pop_ready() {
-                            blur.pop(unwrap!(slice.row_mut(0)), Some(self.dim)); // should never fail
+                            blur.pop(unwrap!(slice.row_mut::<u16>(0)), Some(self.dim)); // should never fail
                             let dst_r = Rect::from_top_left_and_size(bounds.top_left(), jpeg_size)
                                 .translate(Offset::new(0, y));
                             canvas.draw_bitmap(dst_r, slice.view());

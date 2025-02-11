@@ -46,10 +46,8 @@ const MAX_WIDTH: usize = display::DISPLAY_RESX as usize;
 
 pub type BlurBuff = [u8; MAX_WIDTH * (MAX_SIDE * 3 + size_of::<u16>() * 3) + 8];
 
-type PixelColor = u16;
-
 #[derive(Default, Copy, Clone)]
-struct Rgb<T> {
+pub struct Rgb<T> {
     pub r: T,
     pub g: T,
     pub b: T,
@@ -77,6 +75,17 @@ impl From<u16> for Rgb<u16> {
     }
 }
 
+impl From<u32> for Rgb<u16> {
+    #[inline(always)]
+    fn from(value: u32) -> Self {
+        Self {
+            r: ((value >> 16) & 0xFF) as u16,
+            g: ((value >> 8) & 0xFF) as u16,
+            b: (value & 0xFF) as u16,
+        }
+    }
+}
+
 impl core::ops::AddAssign<u16> for Rgb<u16> {
     #[inline(always)]
     fn add_assign(&mut self, rhs: u16) {
@@ -85,9 +94,25 @@ impl core::ops::AddAssign<u16> for Rgb<u16> {
     }
 }
 
+impl core::ops::AddAssign<u32> for Rgb<u16> {
+    #[inline(always)]
+    fn add_assign(&mut self, rhs: u32) {
+        let rgb: Self = rhs.into();
+        *self += rgb;
+    }
+}
+
 impl core::ops::SubAssign<u16> for Rgb<u16> {
     #[inline(always)]
     fn sub_assign(&mut self, rhs: u16) {
+        let rgb: Self = rhs.into();
+        *self -= rgb;
+    }
+}
+
+impl core::ops::SubAssign<u32> for Rgb<u16> {
+    #[inline(always)]
+    fn sub_assign(&mut self, rhs: u32) {
         let rgb: Self = rhs.into();
         *self -= rgb;
     }
@@ -118,6 +143,17 @@ impl From<Rgb<u8>> for u16 {
         let g = (value.g as u16 & 0xFC) << 3;
         let b = (value.b as u16 & 0xF8) >> 3;
         r | g | b
+    }
+}
+
+impl From<Rgb<u8>> for u32 {
+    #[inline(always)]
+    fn from(value: Rgb<u8>) -> u32 {
+        let r = (value.r as u32) << 16;
+        let g = (value.g as u32) << 8;
+        let b = value.b as u32;
+        let alpha = 0xFF000000;
+        alpha | r | g | b
     }
 }
 
@@ -209,7 +245,10 @@ impl<'a> BlurAlgorithm<'a> {
     /// as the floating average of n subsequent elements where n = 2 * radius +
     /// 1. Finally, it stores it into the specifed row in the  sliding
     /// window.
-    fn average_to_row(&mut self, inp: &[PixelColor], row: usize) {
+    fn average_to_row<T>(&mut self, inp: &[T], row: usize)
+    where
+        T: Copy + Into<Rgb<u16>>,
+    {
         let radius = self.radius;
         let offset = self.size.x as usize * row;
         let row = &mut self.window[offset..offset + self.size.x as usize];
@@ -222,29 +261,29 @@ impl<'a> BlurAlgorithm<'a> {
 
         // Prepare before averaging
         for i in 0..radius {
-            sum += inp[0]; // Duplicate pixels on the left
-            sum += inp[i]; // Add first radius pixels
+            sum += inp[0].into(); // Duplicate pixels on the left
+            sum += inp[i].into(); // Add first radius pixels
         }
 
         // Process the first few pixels of the row
         for i in 0..radius {
-            sum += inp[i + radius];
+            sum += inp[i + radius].into();
             row[i] = sum.mulshift(multiplier, shift);
-            sum -= inp[0];
+            sum -= inp[0].into();
         }
 
         // Process the inner part of the row
         for i in radius..row.len() - radius {
-            sum += inp[i + radius];
+            sum += inp[i + radius].into();
             row[i] = sum.mulshift(multiplier, shift);
-            sum -= inp[i - radius];
+            sum -= inp[i - radius].into();
         }
 
         // Process the last few pixels of the row
         for i in (row.len() - radius)..row.len() {
-            sum += inp[inp.len() - 1];
+            sum += inp[inp.len() - 1].into();
             row[i] = sum.mulshift(multiplier, shift);
-            sum -= inp[i - radius]; // Duplicate pixels on the right
+            sum -= inp[i - radius].into(); // Duplicate pixels on the right
         }
     }
 
@@ -305,7 +344,10 @@ impl<'a> BlurAlgorithm<'a> {
     }
 
     /// Takes the source row and pushes it into the sliding window.
-    pub fn push(&mut self, input: &[PixelColor]) {
+    pub fn push<T>(&mut self, input: &[T])
+    where
+        T: Copy + Into<Rgb<u16>>,
+    {
         let row = self.row;
 
         self.subtract_row(row);
@@ -331,7 +373,10 @@ impl<'a> BlurAlgorithm<'a> {
     }
 
     /// Copies the current content of `totals[]` to the output buffer.
-    pub fn pop(&mut self, output: &mut [PixelColor], dim: Option<u8>) {
+    pub fn pop<T>(&mut self, output: &mut [T], dim: Option<u8>)
+    where
+        T: Copy + Into<Rgb<u16>> + From<Rgb<u8>>,
+    {
         let divisor = match dim {
             Some(dim) => {
                 if dim > 0 {
