@@ -105,6 +105,7 @@ where
             match msg {
                 HeaderMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
                 HeaderMsg::Menu => return Some(TextScreenMsg::Menu),
+                _ => {}
             }
         }
         if let Some(msg) = self.action_bar.event(ctx, event) {
