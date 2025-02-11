@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_SYSCALL_VERIFIERS_H
-#define TREZORHAL_SYSCALL_VERIFIERS_H
+#pragma once
 
 #ifdef SYSCALL_DISPATCH
 
@@ -203,6 +202,18 @@ secbool ble_read__verified(uint8_t *data, size_t len);
 
 #endif
 
-#endif  // SYSCALL_DISPATCH
+// ---------------------------------------------------------------------
+#ifdef USE_HW_JPEG_DECODER
 
-#endif  // TREZORHAL_SYSCALL_VERIFIERS_H
+#include <gfx/jpegdec.h>
+
+jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input);
+
+bool jpegdec_get_info__verified(jpegdec_image_t *image);
+
+bool jpegdec_get_slice_rgba8888__verified(void *rgba8888,
+                                          jpegdec_slice_t *slice);
+
+#endif  // USE_HW_JPEG_DECODER
+
+#endif  // SYSCALL_DISPATCH

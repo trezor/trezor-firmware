@@ -80,6 +80,7 @@ static void term_redraw_rows(int start_row, int row_count) {
       .src_stride = 8,
       .src_fg = terminal_fgcolor,
       .src_bg = terminal_bgcolor,
+      .src_alpha = 255,
   };
 
   for (int y = start_row; y < start_row + row_count; y++) {

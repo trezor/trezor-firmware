@@ -3,8 +3,11 @@ use super::zlib_cache::ZlibCache;
 #[cfg(feature = "ui_blurring")]
 use super::blur_cache::BlurCache;
 
-#[cfg(feature = "ui_jpeg_decoder")]
+#[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
 use super::jpeg_cache::JpegCache;
+
+#[cfg(feature = "hw_jpeg_decoder")]
+use crate::trezorhal::jpegdec;
 
 use core::cell::{RefCell, RefMut};
 use without_alloc::alloc::LocalAllocLeakExt;
@@ -19,10 +22,28 @@ const ZLIB_CACHE_SLOTS: usize = 3;
 #[cfg(not(feature = "framebuffer"))]
 const RENDER_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
 
-#[cfg(feature = "ui_overlay")]
-const IMAGE_BUFF_SIZE: usize = 240 * 240 + ALIGN_PAD;
-#[cfg(not(feature = "ui_overlay"))]
-const IMAGE_BUFF_SIZE: usize = 2048 + ALIGN_PAD;
+const fn const_max(a: usize, b: usize) -> usize {
+    if a > b {
+        a
+    } else {
+        b
+    }
+}
+const IMAGE_BUFF_SIZE: usize = {
+    const DEFAULT: usize = 2048;
+
+    #[cfg(feature = "ui_overlay")]
+    const OVERLAY: usize = 240 * 240;
+    #[cfg(not(feature = "ui_overlay"))]
+    const OVERLAY: usize = 0;
+
+    #[cfg(feature = "hw_jpeg_decoder")]
+    const JPEG: usize = jpegdec::RGBA8888_BUFFER_SIZE;
+    #[cfg(not(feature = "hw_jpeg_decoder"))]
+    const JPEG: usize = 0;
+
+    const_max(DEFAULT, const_max(JPEG, OVERLAY)) + ALIGN_PAD
+};
 
 pub type ImageBuff = [u8; IMAGE_BUFF_SIZE];
 
@@ -38,7 +59,7 @@ pub struct DrawingCache<'a> {
     image_buff: &'a RefCell<ImageBuff>,
     zlib_cache: RefCell<ZlibCache<'a>>,
 
-    #[cfg(feature = "ui_jpeg_decoder")]
+    #[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
     jpeg_cache: RefCell<JpegCache<'a>>,
 
     #[cfg(feature = "ui_blurring")]
@@ -67,7 +88,7 @@ impl<'a> DrawingCache<'a> {
                 ZlibCache::new(bump_a, ZLIB_CACHE_SLOTS),
                 "ZLIB cache alloc"
             )),
-            #[cfg(feature = "ui_jpeg_decoder")]
+            #[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
             jpeg_cache: RefCell::new(unwrap!(JpegCache::new(bump_a), "JPEG cache alloc")),
             #[cfg(feature = "ui_blurring")]
             blur_cache: RefCell::new(unwrap!(BlurCache::new(bump_a), "Blur cache alloc")),
@@ -83,7 +104,7 @@ impl<'a> DrawingCache<'a> {
     }
 
     /// Returns an object for decompression of JPEG images
-    #[cfg(feature = "ui_jpeg_decoder")]
+    #[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
     pub fn jpeg(&self) -> RefMut<JpegCache<'a>> {
         self.jpeg_cache.borrow_mut()
     }
@@ -111,7 +132,7 @@ impl<'a> DrawingCache<'a> {
 
         size += ZlibCache::get_bump_size(ZLIB_CACHE_SLOTS);
 
-        #[cfg(feature = "ui_jpeg_decoder")]
+        #[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
         {
             size += JpegCache::get_bump_size();
         }

@@ -8,9 +8,9 @@ build = "build.rs"
 [features]
 default = ["layout_bolt"]
 crypto = ["zeroize"]
-layout_bolt = ["jpeg"]
+layout_bolt = []
 layout_caesar = []
-layout_delizia = ["jpeg", "dma2d"]
+layout_delizia = []
 micropython = []
 protobuf = ["micropython"]
 ui = []
@@ -22,16 +22,16 @@ display_rgba8888 = ["ui_antialiasing"]
 ui_debug = []
 ui_antialiasing = []
 ui_blurring = []
-ui_jpeg_decoder = ["jpeg"]
 ui_image_buffer = []
 ui_color_32bit = []
 ui_overlay = []
 ui_empty_lock = []
+ui_jpeg = []
+hw_jpeg_decoder = []
 bootloader = []
 button = []
 touch = []
 clippy = []
-jpeg = []
 debug = ["ui_debug"]
 sbu = []
 haptic = []
@@ -56,7 +56,7 @@ test = [
     "touch",
     "translations",
     "ui",
-    "ui_jpeg_decoder",
+    "ui_jpeg",
     "ui_blurring",
     "ui_image_buffer",
     "ui_overlay",

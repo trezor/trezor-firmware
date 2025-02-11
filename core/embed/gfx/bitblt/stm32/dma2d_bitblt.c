@@ -794,3 +794,64 @@ bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
                   bb->width, bb->height);
   return true;
 }
+
+#ifdef USE_HW_JPEG_DECODER
+static bool dma2d_rgba8888_copy_ycbcr(const gfx_bitblt_t* bb, uint32_t css) {
+  dma2d_driver_t* drv = &g_dma2d_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  dma2d_wait();
+
+  if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {
+    return false;
+  }
+
+  drv->handle.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
+  drv->handle.Init.Mode = DMA2D_M2M_PFC;
+  drv->handle.Init.OutputOffset = bb->dst_stride / sizeof(uint32_t) - bb->width;
+  HAL_DMA2D_Init(&drv->handle);
+
+  drv->handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_YCBCR;
+  drv->handle.LayerCfg[1].InputOffset = 0;
+  drv->handle.LayerCfg[1].ChromaSubSampling = css;
+  drv->handle.LayerCfg[1].AlphaMode = 0;
+  drv->handle.LayerCfg[1].InputAlpha = 0;
+  HAL_DMA2D_ConfigLayer(&drv->handle, 1);
+
+  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row,
+                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                  bb->width, bb->height);
+
+  // DMA2D overwrites CLUT during YCbCr conversion
+  // (seems to be a bug or an undocumented feature)
+  drv->clut_valid = false;
+
+  return true;
+}
+
+bool dma2d_rgba8888_copy_ycbcr420(const gfx_bitblt_t* bb) {
+  return dma2d_rgba8888_copy_ycbcr(bb, DMA2D_CSS_420);
+}
+
+bool dma2d_rgba8888_copy_ycbcr422(const gfx_bitblt_t* bb) {
+  return dma2d_rgba8888_copy_ycbcr(bb, DMA2D_CSS_422);
+}
+
+bool dma2d_rgba8888_copy_ycbcr444(const gfx_bitblt_t* bb) {
+  return dma2d_rgba8888_copy_ycbcr(bb, DMA2D_NO_CSS);
+}
+
+// Temporary hack to invalidate CLUT cache used in jpeg decoder.
+// This function should be removed in the future with DMA2D syscalls.
+void dma2d_invalidate_clut(void) {
+  dma2d_driver_t* drv = &g_dma2d_driver;
+  if (!drv->initialized) {
+    return;
+  }
+  drv->clut_valid = false;
+}
+
+#endif  // USE_HW_JPEG_DECODER

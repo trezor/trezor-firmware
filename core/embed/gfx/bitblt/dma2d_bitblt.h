@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_DMA2D_BITBLT_H
-#define TREZORHAL_DMA2D_BITBLT_H
+#pragma once
 
 #include <gfx/gfx_bitblt.h>
 
@@ -50,4 +49,8 @@ bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb);
 
-#endif  // TREZORHAL_DMA2D_BITBLT_H
+#ifdef USE_HW_JPEG_DECODER
+bool dma2d_rgba8888_copy_ycbcr420(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_copy_ycbcr422(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_copy_ycbcr444(const gfx_bitblt_t* bb);
+#endif

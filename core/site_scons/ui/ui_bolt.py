@@ -22,7 +22,7 @@ def init_ui(
         add_font("BOLD", "Font_Roboto_Bold_20", defines, sources)
     if stage == "firmware":
         rust_features.append("ui_blurring")
-        rust_features.append("ui_jpeg_decoder")
+        rust_features.append("ui_jpeg")
 
 
 def get_ui_layout() -> str:

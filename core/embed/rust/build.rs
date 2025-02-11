@@ -53,6 +53,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_HAPTIC",
     "-DUSE_RGB_LED",
     "-DUSE_BLE",
+    "-DUSE_HW_JPEG_DECODER",
 ];
 
 fn add_bindgen_macros<'a>(
@@ -395,7 +396,18 @@ fn generate_trezorhal_bindings() {
         // haptic
         .allowlist_type("haptic_effect_t")
         .allowlist_function("haptic_play")
-        .allowlist_function("haptic_play_custom");
+        .allowlist_function("haptic_play_custom")
+        // jpegdec
+        .allowlist_var("JPEGDEC_RGBA8888_BUFFER_SIZE")
+        .allowlist_type("jpegdec_state_t")
+        .allowlist_type("jpegdec_image_t")
+        .allowlist_type("jpegdec_image_format_t")
+        .allowlist_type("jpegdec_slice_t")
+        .allowlist_function("jpegdec_open")
+        .allowlist_function("jpegdec_close")
+        .allowlist_function("jpegdec_process")
+        .allowlist_function("jpegdec_get_info")
+        .allowlist_function("jpegdec_get_slice_rgba8888");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

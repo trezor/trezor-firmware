@@ -51,6 +51,10 @@
 #include <io/haptic.h>
 #endif
 
+#ifdef USE_HW_JPEG_DECODER
+#include <gfx/jpegdec.h>
+#endif
+
 #ifdef USE_OPTIGA
 #include <sec/optiga.h>
 #endif
@@ -723,6 +727,31 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       powerctl_suspend();
     } break;
 #endif
+
+#ifdef USE_HW_JPEG_DECODER
+    case SYSCALL_JPEGDEC_OPEN: {
+      args[0] = jpegdec_open();
+    } break;
+
+    case SYSCALL_JPEGDEC_CLOSE: {
+      jpegdec_close();
+    } break;
+
+    case SYSCALL_JPEGDEC_PROCESS: {
+      args[0] = jpegdec_process__verified((jpegdec_input_t *)args[0]);
+    } break;
+
+    case SYSCALL_JPEGDEC_GET_INFO: {
+      args[0] = jpegdec_get_info__verified((jpegdec_image_t *)args[0]);
+      break;
+    }
+
+    case SYSCALL_JPEGDEC_GET_SLICE_RGBA8888: {
+      args[0] = jpegdec_get_slice_rgba8888__verified(
+          (void *)args[0], (jpegdec_slice_t *)args[1]);
+      break;
+    }
+#endif  // USE_HW_JPEG_DECODER
 
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);

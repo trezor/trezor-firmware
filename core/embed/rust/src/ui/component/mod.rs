@@ -4,12 +4,16 @@ pub mod bar;
 pub mod base;
 pub mod border;
 pub mod button_request;
-#[cfg(all(feature = "jpeg", feature = "ui_image_buffer", feature = "micropython"))]
+#[cfg(all(
+    feature = "ui_jpeg",
+    feature = "ui_image_buffer",
+    feature = "micropython"
+))]
 pub mod cached_jpeg;
 pub mod connect;
 pub mod empty;
 pub mod image;
-#[cfg(all(feature = "jpeg", feature = "micropython"))]
+#[cfg(all(feature = "ui_jpeg", feature = "micropython"))]
 pub mod jpeg;
 pub mod label;
 pub mod map;
@@ -30,10 +34,14 @@ pub use bar::Bar;
 pub use base::{Child, Component, ComponentExt, Event, EventCtx, FlowMsg, Never, Timer};
 pub use border::Border;
 pub use button_request::{ButtonRequestExt, SendButtonRequest};
-#[cfg(all(feature = "jpeg", feature = "ui_image_buffer", feature = "micropython"))]
+#[cfg(all(
+    feature = "ui_jpeg",
+    feature = "ui_image_buffer",
+    feature = "micropython"
+))]
 pub use cached_jpeg::CachedJpeg;
 pub use empty::Empty;
-#[cfg(all(feature = "jpeg", feature = "micropython"))]
+#[cfg(all(feature = "ui_jpeg", feature = "micropython"))]
 pub use jpeg::Jpeg;
 pub use label::Label;
 pub use map::{MsgMap, PageMap};

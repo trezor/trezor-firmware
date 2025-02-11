@@ -687,4 +687,40 @@ void powerctl_suspend(void) { syscall_invoke0(SYSCALL_POWERCTL_SUSPEND); }
 
 #endif  // USE_POWERCTL
 
+// =============================================================================
+// jpegdec.h
+// =============================================================================
+
+#ifdef USE_HW_JPEG_DECODER
+
+#include <gfx/jpegdec.h>
+
+bool jpegdec_open(void) { return (bool)syscall_invoke0(SYSCALL_JPEGDEC_OPEN); }
+
+void jpegdec_close(void) {
+  {
+    // Temporary hack to fix the problem with dual DMA2D driver in
+    // user/kernel space - will be removed in the future with DMA2D syscalls
+    extern void dma2d_invalidate_clut();
+    dma2d_invalidate_clut();
+  }
+  syscall_invoke0(SYSCALL_JPEGDEC_CLOSE);
+}
+
+jpegdec_state_t jpegdec_process(jpegdec_input_t *input) {
+  return (jpegdec_state_t)syscall_invoke1((uint32_t)input,
+                                          SYSCALL_JPEGDEC_PROCESS);
+}
+
+bool jpegdec_get_info(jpegdec_image_t *info) {
+  return (bool)syscall_invoke1((uint32_t)info, SYSCALL_JPEGDEC_GET_INFO);
+}
+
+bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
+  return (bool)syscall_invoke2((uint32_t)rgba8888, (uint32_t)slice,
+                               SYSCALL_JPEGDEC_GET_SLICE_RGBA8888);
+}
+
+#endif  // USE_HW_JPEG_DECODER
+
 #endif  // KERNEL_MODE

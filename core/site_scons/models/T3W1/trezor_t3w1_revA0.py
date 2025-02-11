@@ -139,11 +139,15 @@ def configure(
     features_available.append("framebuffer")
     features_available.append("display_rgb565")
 
-    defines += [
-        "USE_DMA2D",
-    ]
+    defines += ["USE_DMA2D"]
     features_available.append("dma2d")
     sources += ["embed/gfx/bitblt/stm32/dma2d_bitblt.c"]
+
+    defines += ["USE_HW_JPEG_DECODER"]
+    features_available.append("hw_jpeg_decoder")
+    sources += [
+        "embed/gfx/jpegdec/stm32u5/jpegdec.c",
+    ]
 
     defines += [
         ("USE_HASH_PROCESSOR", "1"),
