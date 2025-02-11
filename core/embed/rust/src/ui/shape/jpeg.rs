@@ -108,8 +108,6 @@ impl<'a> Shape<'a> for JpegImage<'a> {
         let bounds = self.bounds();
         let clip = canvas.viewport().relative_clip(bounds).clip;
 
-        let vp = canvas.set_clip(clip);
-
         // Translate clip to JPEG relative coordinates
         let clip = clip.translate(-canvas.viewport().origin);
         let clip = clip.translate((-bounds.top_left()).into());
@@ -119,6 +117,13 @@ impl<'a> Shape<'a> for JpegImage<'a> {
 
         let mut jpegdec = unwrap!(JpegDecoder::new(self.jpeg));
         let _ = jpegdec.decode(&mut buff[..], &mut |slice_r, slice| {
+            let slice = slice.with_downscale(self.scale);
+            let slice_r = Rect {
+                x0: slice_r.x0 >> self.scale,
+                y0: slice_r.y0 >> self.scale,
+                x1: slice_r.x1 >> self.scale,
+                y1: slice_r.y1 >> self.scale,
+            };
             // Draw single slice
             canvas.draw_bitmap(slice_r.translate(bounds.top_left().into()), slice);
             // Return true if we are not done yet
@@ -136,8 +141,6 @@ impl<'a> Shape<'a> for JpegImage<'a> {
             // Blur the image
             canvas.blur_rect(clip, self.blur_radius, cache);
         }
-
-        canvas.set_viewport(vp);
     }
 
     // This is a little bit slower implementation suitable for ProgressiveRenderer

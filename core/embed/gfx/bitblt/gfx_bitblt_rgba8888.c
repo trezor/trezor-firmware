@@ -125,10 +125,10 @@ void gfx_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
 
     while (height-- > 0) {
       for (int x = 0; x < bb->width; x++) {
-        dst_ptr[x] = src_ptr[x];
+        dst_ptr[x] = src_ptr[x << bb->src_downscale];
       }
       dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
-      src_ptr += bb->src_stride / sizeof(*src_ptr);
+      src_ptr += (bb->src_stride / sizeof(*src_ptr)) << bb->src_downscale;
     }
   }
 }

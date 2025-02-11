@@ -31,6 +31,7 @@ impl Default for ffi::gfx_bitblt_t {
             src_x: 0,
             src_y: 0,
             src_alpha: 255,
+            src_downscale: 0,
         }
     }
 }
@@ -125,6 +126,15 @@ impl ffi::gfx_bitblt_t {
     fn with_alpha(self, alpha: u8) -> Self {
         Self {
             src_alpha: alpha,
+            ..self
+        }
+    }
+
+    /// Sets the downscaling for the source bitmap.
+    /// (0 = no downscale, 1 = 1/2, 2 = 1/4, 3 = 1/8)
+    fn with_downscale(self, downscale: u8) -> Self {
+        Self {
+            src_downscale: downscale,
             ..self
         }
     }
@@ -250,16 +260,18 @@ impl<'a> BitBltCopy<'a> {
 
         // Clip with the bitmap top-left
         if r.x0 > r_dst.x0 {
-            offset.x += r.x0 - r_dst.x0;
+            offset.x += (r.x0 - r_dst.x0) << src.downscale;
         }
 
         if r.y0 > r_dst.y0 {
-            offset.y += r.y0 - r_dst.y0;
+            offset.y += (r.y0 - r_dst.y0) << src.downscale;
         }
 
         // Clip with the bitmap size
-        r.x1 = r.x1.min(r.x0 + src.size().x - offset.x);
-        r.y1 = r.y1.min(r.y0 + src.size().y - offset.y);
+        r.x1 =
+            r.x1.min(r.x0 + ((src.size().x - offset.x) >> src.downscale));
+        r.y1 =
+            r.y1.min(r.y0 + ((src.size().y - offset.y) >> src.downscale));
 
         if !r.is_empty() {
             Some(Self {
@@ -280,6 +292,7 @@ impl<'a> BitBltCopy<'a> {
                         .with_bg(src.bg_color)
                         .with_fg(src.fg_color)
                         .with_alpha(src.alpha)
+                        .with_downscale(src.downscale)
                 },
                 src,
             })

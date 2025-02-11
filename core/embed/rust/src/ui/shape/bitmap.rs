@@ -300,6 +300,7 @@ pub struct BitmapView<'a> {
     pub fg_color: Color,
     pub bg_color: Color,
     pub alpha: u8,
+    pub downscale: u8,
 }
 
 impl<'a> BitmapView<'a> {
@@ -311,6 +312,7 @@ impl<'a> BitmapView<'a> {
             fg_color: Color::black(),
             bg_color: Color::black(),
             alpha: 255,
+            downscale: 0,
         }
     }
 
@@ -335,6 +337,12 @@ impl<'a> BitmapView<'a> {
     /// Builds a new structure with alpha set to the specified value
     pub fn with_alpha(self, alpha: u8) -> Self {
         Self { alpha, ..self }
+    }
+
+    /// Builds a new structure with downscale set to the specified value
+    /// (0 means no downscale, 1 means 1/2, 2 means 1/4, etc.)
+    pub fn with_downscale(self, downscale: u8) -> Self {
+        Self { downscale, ..self }
     }
 
     /// Returns the bitmap width and height in pixels
