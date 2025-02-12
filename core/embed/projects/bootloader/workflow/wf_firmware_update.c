@@ -35,7 +35,6 @@
 #include "protob/protob.h"
 #include "version_check.h"
 #include "workflow.h"
-#include "workflow_internal.h"
 
 #ifdef TREZOR_EMULATOR
 #include "emulator.h"

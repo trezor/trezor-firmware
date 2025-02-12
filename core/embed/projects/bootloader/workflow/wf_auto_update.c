@@ -24,13 +24,10 @@
 
 #include "bootui.h"
 #include "workflow.h"
-#include "workflow_internal.h"
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
                                        const image_header *const hdr) {
-  workflow_reset_jump();
   ui_set_initial_setup(true);
-  ui_screen_connect();
 
   workflow_result_t res = WF_CANCELLED;
   while (res == WF_CANCELLED) {

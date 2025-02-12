@@ -28,15 +28,6 @@ typedef enum {
   UI_RESULT_CONFIRM = 2,
 } ui_result_t;
 
-typedef enum {
-  SCREEN_INTRO = 0,
-  SCREEN_MENU = 1,
-  SCREEN_WIPE_CONFIRM = 2,
-  SCREEN_FINGER_PRINT = 3,
-  SCREEN_WAIT_FOR_HOST = 4,
-  SCREEN_WELCOME = 5,
-} screen_t;
-
 // Displays a warning screeen before jumping to the untrusted firmware
 //
 // Shows vendor image, vendor string and firmware version

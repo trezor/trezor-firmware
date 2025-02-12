@@ -30,9 +30,9 @@
 
 uint8_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
                     poll_event_t* event, uint32_t timeout_ms) {
-  uint32_t start = systick_ms();
+  uint32_t deadline = ticks_timeout(timeout_ms);
 
-  while (systick_ms() - start < timeout_ms) {
+  while (!ticks_expired(deadline)) {
 #ifdef TREZOR_EMULATOR
     // Ensures that SDL events are processed. This prevents the emulator from
     // freezing when the user interacts with the window.

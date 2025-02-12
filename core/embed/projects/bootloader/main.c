@@ -57,10 +57,10 @@
 #include <sec/hash_processor.h>
 #endif
 
-#include <workflow/workflow.h>
-
+#include "antiglitch.h"
 #include "bootui.h"
 #include "version_check.h"
+#include "workflow/workflow.h"
 
 #ifdef TREZOR_EMULATOR
 #include "SDL.h"
@@ -371,29 +371,27 @@ int bootloader_main(void) {
       auto_upgrade == sectrue) {
     workflow_result_t result;
 
-    do {
-      if (header_present == sectrue) {
-        if (auto_upgrade == sectrue) {
-          result = workflow_auto_update(&vhdr, hdr);
-        } else {
-          result = workflow_bootloader(&vhdr, hdr, firmware_present);
-        }
+    jump_reset();
+    if (header_present == sectrue) {
+      if (auto_upgrade == sectrue) {
+        result = workflow_auto_update(&vhdr, hdr);
       } else {
-        result = workflow_empty_device();
+        result = workflow_bootloader(&vhdr, hdr, firmware_present);
       }
-    } while (result == WF_CANCELLED);
+    } else {
+      result = workflow_empty_device();
+    }
 
     switch (result) {
-      case WF_OK_REBOOT_SELECTED:
-      case WF_OK_FIRMWARE_INSTALLED: {
-        ensure(dont_optimize_out_true * (workflow_is_jump_allowed_1() ==
-                                         workflow_is_jump_allowed_2()),
+      case WF_OK_FIRMWARE_INSTALLED:
+        firmware_present = sectrue;
+        firmware_present_backup = sectrue;
+      case WF_OK_REBOOT_SELECTED: {
+        ensure(dont_optimize_out_true *
+                   (jump_is_allowed_1() == jump_is_allowed_2()),
                NULL);
-#ifdef USE_RESET_TO_BOOT
-        firmware_jump_fn = jump_to_fw_through_reset;
-#else
+#ifndef USE_RESET_TO_BOOT
         ui_screen_boot_stage_1(true);
-        firmware_jump_fn = real_jump_to_firmware;
 #endif
       } break;
       case WF_OK_DEVICE_WIPED:
@@ -409,7 +407,7 @@ int bootloader_main(void) {
         secret_bhk_regenerate();
 #endif
         ensure(erase_storage(NULL), NULL);
-        return 1;
+        error_shutdown("Bootloader fatal error");
       }
     }
   }

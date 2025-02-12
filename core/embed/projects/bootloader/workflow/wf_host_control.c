@@ -25,17 +25,20 @@
 #include <sys/types.h>
 #include <util/image.h>
 
+#include "antiglitch.h"
+#include "bootui.h"
 #include "poll.h"
 #include "protob/protob.h"
 #include "wire/wire_iface_usb.h"
 #include "workflow.h"
-#include "workflow_internal.h"
 
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
                                         void (*redraw_wait_screen)(void)) {
   wire_iface_t usb_iface = {0};
   protob_iface_t protob_usb_iface = {0};
+
+  ui_screen_connect();
 
   // if both are NULL, we don't have a firmware installed
   // let's show a webusb landing page in this case
@@ -82,10 +85,13 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         workflow_ping(active_iface, msg_size, buf);
         // whatever the result, we stay here and continue
         continue;
+      case MessageType_MessageType_GetFeatures:
+        workflow_get_features(active_iface, msg_size, buf, vhdr, hdr);
+        // whatever the result, we stay here and continue
+        continue;
       case MessageType_MessageType_WipeDevice:
         result = workflow_wipe_device(active_iface, msg_size, buf);
         if (result == WF_OK) {
-          workflow_allow_jump_1();
           systick_delay_ms(100);
           usb_deinit();
           return WF_OK_DEVICE_WIPED;
@@ -94,21 +100,17 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
       case MessageType_MessageType_FirmwareErase:
         result = workflow_firmware_update(active_iface, msg_size, buf);
         if (result == WF_OK) {
-          workflow_allow_jump_1();
+          jump_allow_1();
+          jump_allow_2();
           systick_delay_ms(100);
           usb_deinit();
           return WF_OK_FIRMWARE_INSTALLED;
         }
         break;
-      case MessageType_MessageType_GetFeatures:
-        workflow_get_features(active_iface, msg_size, buf, vhdr, hdr);
-        // whatever the result, we stay here and continue
-        continue;
 #if defined USE_OPTIGA
       case MessageType_MessageType_UnlockBootloader:
         result = workflow_unlock_bootloader(active_iface, msg_size, buf);
         if (result == WF_OK) {
-          workflow_allow_jump_1();
           systick_delay_ms(100);
           usb_deinit();
           return WF_OK_BOOTLOADER_UNLOCKED;
@@ -120,20 +122,6 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         continue;
     }
 
-    switch (result) {
-      case WF_CANCELLED:
-        systick_delay_ms(100);
-        usb_deinit();
-        return WF_CANCELLED;
-      case WF_ERROR:
-        systick_delay_ms(100);
-        usb_deinit();
-        return WF_ERROR;
-      case WF_ERROR_FATAL:
-      default:
-        systick_delay_ms(100);
-        usb_deinit();
-        return WF_ERROR_FATAL;
-    }
+    return result;
   }
 }

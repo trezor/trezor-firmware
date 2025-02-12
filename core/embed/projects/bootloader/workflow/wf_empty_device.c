@@ -31,10 +31,8 @@
 
 #include "bootui.h"
 #include "workflow.h"
-#include "workflow_internal.h"
 
 workflow_result_t workflow_empty_device(void) {
-  workflow_reset_jump();
   ui_set_initial_setup(true);
 
 #ifdef USE_STORAGE_HWKEY
@@ -53,7 +51,6 @@ workflow_result_t workflow_empty_device(void) {
 
   workflow_result_t res = WF_CANCELLED;
   while (res == WF_CANCELLED) {
-    ui_screen_welcome();
     res = workflow_host_control(NULL, NULL, ui_screen_welcome);
   }
   return res;

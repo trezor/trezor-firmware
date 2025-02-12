@@ -72,6 +72,3 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
                                        const image_header *const hdr);
-
-secbool workflow_is_jump_allowed_1(void);
-secbool workflow_is_jump_allowed_2(void);

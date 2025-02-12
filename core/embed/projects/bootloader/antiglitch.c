@@ -17,15 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_rtl.h>
 
-#include <trezor_types.h>
+// anti-glitch
+volatile secbool continue_to_firmware = secfalse;
+volatile secbool continue_to_firmware_backup = secfalse;
 
-#include "workflow.h"
+secbool jump_is_allowed_1(void) { return continue_to_firmware; }
+secbool jump_is_allowed_2(void) { return continue_to_firmware_backup; }
 
-void workflow_allow_jump_1(void);
-void workflow_allow_jump_2(void);
+void jump_allow_1(void) { continue_to_firmware = sectrue; }
+void jump_allow_2(void) { continue_to_firmware_backup = sectrue; }
 
-void workflow_reset_jump(void);
-
-// workflow_result_t workflow_exit_common(workflow_result_t result);
+void jump_reset(void) {
+  continue_to_firmware_backup = secfalse;
+  continue_to_firmware = secfalse;
+}

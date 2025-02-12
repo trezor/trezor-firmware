@@ -17,23 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_rtl.h>
+#pragma once
 
-#include "protob/protob.h"
-#include "workflow.h"
-#include "workflow_internal.h"
+#include <trezor_types.h>
 
-// anti-glitch
-volatile secbool continue_to_firmware = secfalse;
-volatile secbool continue_to_firmware_backup = secfalse;
+secbool jump_is_allowed_1(void);
+secbool jump_is_allowed_2(void);
 
-secbool workflow_is_jump_allowed_1(void) { return continue_to_firmware; }
-secbool workflow_is_jump_allowed_2(void) { return continue_to_firmware_backup; }
+void jump_allow_1(void);
+void jump_allow_2(void);
 
-void workflow_allow_jump_1(void) { continue_to_firmware = sectrue; }
-void workflow_allow_jump_2(void) { continue_to_firmware_backup = sectrue; }
-
-void workflow_reset_jump(void) {
-  continue_to_firmware_backup = secfalse;
-  continue_to_firmware = secfalse;
-}
+void jump_reset(void);
