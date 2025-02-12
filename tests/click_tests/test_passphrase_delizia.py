@@ -98,7 +98,6 @@ def prepare_passphrase_dialogue(
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.run_with_session(get_test_address)  # type: ignore
-    # TODO
     assert debug.read_layout().main_component() == "PassphraseKeyboard"
 
     # Resetting the category as it could have been changed by previous tests
