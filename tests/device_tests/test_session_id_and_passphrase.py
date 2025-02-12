@@ -19,7 +19,6 @@ import random
 import pytest
 
 from trezorlib import device, exceptions, messages
-from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -54,7 +53,6 @@ SESSIONS_STORED = 10
 def _get_xpub(
     session: Session,
     expected_passphrase_req: bool = False,
-    passphrase_v1: str | None = None,
 ):
     """Get XPUB and check that the appropriate passphrase flow has happened."""
     if expected_passphrase_req:
@@ -66,11 +64,6 @@ def _get_xpub(
         ]
     else:
         expected_responses = [messages.PublicKey]
-    if (
-        passphrase_v1 is not None
-        and session.protocol_version == ProtocolVersion.PROTOCOL_V1
-    ):
-        session.passphrase = passphrase_v1
 
     with session:
         session.set_expected_responses(expected_responses)
@@ -228,7 +221,6 @@ def test_max_sessions_with_passphrases(client: Client):
         _get_xpub(
             resumed_session,
             expected_passphrase_req=True,
-            passphrase_v1="whatever",
         )  # passphrase is prompted
 
 
@@ -435,7 +427,6 @@ def test_hide_passphrase_from_host(client: Client):
                 messages.PublicKey,
             ]
         )
-        client.use_passphrase(passphrase)
         result = session.call(XPUB_REQUEST)
         assert isinstance(result, messages.PublicKey)
         xpub_hidden_passphrase = result.xpub
@@ -471,7 +462,6 @@ def test_hide_passphrase_from_host(client: Client):
                 messages.PublicKey,
             ]
         )
-        client.use_passphrase(passphrase)
         result = session.call(XPUB_REQUEST)
         assert isinstance(result, messages.PublicKey)
         xpub_shown_passphrase = result.xpub

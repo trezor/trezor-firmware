@@ -64,8 +64,8 @@ class BackgroundDeviceHandler:
             raise RuntimeError("Wait for previous task first")
 
         # wait for the first UI change triggered by the task running in the background
+        session = self.client.get_session()
         with self.debuglink().wait_for_layout_change():
-            session = self.client.get_session()
             self.task = self._pool.submit(function, session, *args, **kwargs)
 
     def run_with_provided_session(

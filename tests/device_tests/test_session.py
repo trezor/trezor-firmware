@@ -146,7 +146,6 @@ def test_session_recycling(client: Client):
                 messages.Address,
             ]
         )
-        client.use_passphrase("TREZOR")
         _ = get_test_address(session)
         # address = get_test_address(session)
 

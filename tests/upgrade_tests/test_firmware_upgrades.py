@@ -384,7 +384,7 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
         address = btc.get_address(session, "Bitcoin", PATH)
         if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
             session.call(messages.Initialize(new_session=True))
-        new_session = emu.client.get_session(passphrase="TREZOR")
+        new_session = Session(emu.client.get_session(passphrase="TREZOR"))
         address_passphrase = btc.get_address(new_session, "Bitcoin", PATH)
 
         assert emu.client.features.backup_availability == BackupAvailability.Required

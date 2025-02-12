@@ -116,7 +116,7 @@ class TrezorClient:
 
         if isinstance(self.protocol, ProtocolV1Channel):
             return SessionV1.new(self, passphrase, derive_cardano)
-        raise NotImplementedError  # TODO
+        raise NotImplementedError
 
     def resume_session(self, session: Session):
         """
