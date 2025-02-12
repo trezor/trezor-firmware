@@ -39,25 +39,24 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
   ui_set_initial_setup(false);
 
   screen_t screen = SCREEN_INTRO;
-  uint32_t ui_result = 0;
 
   while (true) {
     switch (screen) {
       case SCREEN_INTRO:
-        ui_result = ui_screen_intro(vhdr, hdr, firmware_present);
-        if (ui_result == 1) {
+        intro_result_t ui_result = ui_screen_intro(vhdr, hdr, firmware_present);
+        if (ui_result == INTRO_MENU) {
           screen = SCREEN_MENU;
         }
-        if (ui_result == 2) {
+        if (ui_result == INTRO_HOST) {
           screen = SCREEN_WAIT_FOR_HOST;
         }
         break;
       case SCREEN_MENU:
-        ui_result = ui_screen_menu(firmware_present);
-        if (ui_result == 0xAABBCCDD) {  // exit menu
+        menu_result_t menu_result = ui_screen_menu(firmware_present);
+        if (menu_result == MENU_EXIT) {  // exit menu
           screen = SCREEN_INTRO;
         }
-        if (ui_result == 0x11223344) {  // reboot
+        if (menu_result == MENU_REBOOT) {  // reboot
 #ifndef USE_HASH_PROCESSOR
           ui_screen_boot_stage_1(true);
 #endif
@@ -65,7 +64,7 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
           jump_allow_2();
           return WF_OK_REBOOT_SELECTED;
         }
-        if (ui_result == 0x55667788) {  // wipe
+        if (menu_result == MENU_WIPE) {  // wipe
           workflow_result_t r = workflow_wipe_device(NULL, 0, NULL);
           if (r == WF_ERROR) {
             return r;

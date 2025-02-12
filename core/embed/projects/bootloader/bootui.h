@@ -23,12 +23,26 @@
 
 #include <util/image.h>
 
+// todo: use bindgen to tie this to rust
 typedef enum {
   UI_RESULT_CANCEL = 1,
   UI_RESULT_CONFIRM = 2,
 } ui_result_t;
 
-// Displays a warning screeen before jumping to the untrusted firmware
+// todo: use bindgen to tie this to rust
+typedef enum {
+  MENU_EXIT = 0xAABBCCDD,
+  MENU_REBOOT = 0x11223344,
+  MENU_WIPE = 0x55667788,
+} menu_result_t;
+
+// todo: use bindgen to tie this to rust
+typedef enum {
+  INTRO_MENU = 1,
+  INTRO_HOST = 2,
+} intro_result_t;
+
+// Displays a warning screen before jumping to the untrusted firmware
 //
 // Shows vendor image, vendor string and firmware version
 // and optional message to the user (see `wait` argument)
