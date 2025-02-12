@@ -1,1 +1,0 @@
-Use `frozenset` for `models.TREZORS` to prevent accidental modification.

@@ -1,1 +1,0 @@
-Most USB level errors are now converted to `TransportException`.

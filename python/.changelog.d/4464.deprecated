@@ -1,1 +1,0 @@
-`device.reset()` is deprecated, migrate to `device.setup()`.

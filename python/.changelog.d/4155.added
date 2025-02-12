@@ -1,1 +1,0 @@
-Added support for entropy check workflow in `device.reset()`.

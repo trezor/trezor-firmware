@@ -1,1 +1,0 @@
-Added pretty-printing of protobuf messages in IPython (`_repr_pretty_`).
