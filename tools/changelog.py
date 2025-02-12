@@ -19,7 +19,7 @@ MODELS_RE = re.compile(r"\[([A-Z0-9]{4})(,[A-Z0-9]{4})*\][ ]?")
 INTERNAL_MODELS = ("T2T1", "T2B1", "T3B1", "T3T1", "D001")
 INTERNAL_MODELS_SKIP = ("D001",)
 
-ROOT = Path(__file__).parent.parent
+ROOT = Path(__file__).parent.parent.resolve()
 
 # Source of truth for all managed changelogs in this repository.
 # Please extend it when adding a new project with a managed changelog.
@@ -38,7 +38,7 @@ KNOWN_PROJECTS = (
 for project in KNOWN_PROJECTS:
     assert project.is_dir(), f"Project {project} does not exist"
 
-IGNORED_FILES = ('.gitignore', '.keep')
+IGNORED_FILES = (".gitignore", ".keep")
 
 
 def linkify_changelog(changelog_file: Path, only_check: bool = False) -> bool:
@@ -132,7 +132,9 @@ def filter_changelog(changelog_file: Path, internal_name: str):
             return None
 
     destination_file = changelog_file.with_suffix(f".{internal_name}.md")
-    with open(changelog_file, "r") as changelog, open(destination_file, "w") as destination:
+    with open(changelog_file, "r") as changelog, open(
+        destination_file, "w"
+    ) as destination:
         for line in changelog:
             res = filter_line(line)
             if res is not None:
@@ -201,7 +203,13 @@ def style():
 @cli.command()
 @click.argument(
     "project",
-    type=click.Path(exists=True, dir_okay=True, file_okay=False, resolve_path=True),
+    type=click.Path(
+        exists=True,
+        dir_okay=True,
+        file_okay=False,
+        resolve_path=True,
+        path_type=Path,
+    ),
 )
 @click.argument(
     "version",
@@ -212,7 +220,11 @@ def style():
 @click.option(
     "--check", is_flag=True, help="Dry run, do not actually create changelog."
 )
-@click.option("--only-models", is_flag=True, help="Only regenerate the model-changelogs from the main one.")
+@click.option(
+    "--only-models",
+    is_flag=True,
+    help="Only regenerate the model-changelogs from the main one.",
+)
 def generate(project, version, date, check, only_models):
     """Generate changelog for given project (core, python, legacy/firmware,
     legacy/bootloader).
@@ -224,9 +236,16 @@ def generate(project, version, date, check, only_models):
 
     - Tell git to stage changed files.
     """
-    project = Path(project)
     if project not in KNOWN_PROJECTS:
-        raise click.ClickException(f"Please add '{project}' to `KNOWN_PROJECTS` to be part of our managed changelogs.")
+        try:
+            path_for_print = project.relative_to(ROOT)
+        except ValueError:
+            raise click.ClickException(
+                f"Paths outside the repository are not supported (path was: {project})."
+            )
+        raise click.ClickException(
+            f"Please add '{path_for_print}' to `KNOWN_PROJECTS` to be part of our managed changelogs."
+        )
 
     changelog = project / "CHANGELOG.md"
 
