@@ -86,6 +86,12 @@ include_icon!(ICON_WARNING40, "layout_eckhart/res/warning40.toif");
 include_icon!(ICON_BATTERY_BAR, "layout_eckhart/res/battery_bar.toif");
 include_icon!(ICON_BATTERY_ZAP, "layout_eckhart/res/battery_zap.toif");
 
+// Border overlay icons for bootloader screens and hold to confirm animation
+include_icon!(ICON_BORDER_BL, "layout_eckhart/res/border/BL.toif");
+include_icon!(ICON_BORDER_BR, "layout_eckhart/res/border/BR.toif");
+include_icon!(ICON_BORDER_TL, "layout_eckhart/res/border/TL.toif");
+include_icon!(ICON_BORDER_TR, "layout_eckhart/res/border/TR.toif");
+
 // Text styles
 /// Alias for use with copied code, might be deleted later
 pub const TEXT_NORMAL: TextStyle = TEXT_MEDIUM;
