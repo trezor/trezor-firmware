@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Generator
 
 import pytest
 
-from trezorlib import device, messages
+from trezorlib import device, exceptions, messages
 
 from ..common import MNEMONIC12, MNEMONIC_SLIP39_BASIC_20_3of6
 from . import recovery
@@ -78,3 +78,46 @@ def test_recovery_bip39_previous_word(device_handler: "BackgroundDeviceHandler")
         bad_indexes = {1: seed_words[-1], 7: seed_words[0]}
         recovery.enter_seed_previous_correct(debug, seed_words, bad_indexes)
         recovery.finalize(debug)
+
+
+def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
+    """Test for issue fixed in PR #4613: After aborting the recovery flow from host
+    side, it was impossible to exit recovery until device was restarted."""
+
+    debug = device_handler.debuglink()
+
+    # initiate and confirm the recovery
+    device_handler.run(device.recover, type=messages.RecoveryType.DryRun)
+    recovery.confirm_recovery(debug, title="recovery__title_dry_run")
+    # select number of words
+    recovery.select_number_of_words(debug, num_of_words=12)
+    # abort the process running the recovery from host
+    device_handler.kill_task()
+
+    # Now Trezor is hanging, waiting for user interaction, but nobody is communicating
+    # from the host side.
+
+    # Reopen client and debuglink, closed by kill_task
+    device_handler.client.open()
+    debug = device_handler.debuglink()
+
+    # Ping the Trezor with an Initialize message (listed in DO_NOT_RESTART)
+    try:
+        features = device_handler.client.call(messages.Initialize())
+    except exceptions.Cancelled:
+        # due to a related problem, the first call in this situation will return
+        # a Cancelled failure. This test does not care, we just retry.
+        features = device_handler.client.call(messages.Initialize())
+
+    assert features.recovery_status == messages.RecoveryStatus.Recovery
+    # Trezor is sitting in recovery_homescreen now, waiting for the user to select
+    # number of words
+    recovery.select_number_of_words(debug, num_of_words=12)
+    # Trezor is waiting at "enter any word" screen, which has a Cancel button
+    recovery.cancel_recovery(debug)
+
+    # We should be back at homescreen
+    layout = debug.read_layout()
+    assert layout.main_component() == "Homescreen"
+    features = device_handler.client.refresh_features()
+    assert features.recovery_status == messages.RecoveryStatus.Nothing
