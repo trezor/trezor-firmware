@@ -33,7 +33,7 @@
 #include "workflow.h"
 #include "workflow_internal.h"
 
-hc_result_t workflow_empty_device(void) {
+workflow_result_t workflow_empty_device(void) {
   workflow_reset_jump();
   ui_set_initial_setup(true);
 
@@ -51,8 +51,8 @@ hc_result_t workflow_empty_device(void) {
   systick_delay_ms(1000);
 #endif
 
-  hc_result_t res = HC_CANCELLED;
-  while (res == HC_CANCELLED) {
+  workflow_result_t res = WF_CANCELLED;
+  while (res == WF_CANCELLED) {
     ui_screen_welcome();
     res = workflow_host_control(NULL, NULL, ui_screen_welcome);
   }

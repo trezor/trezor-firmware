@@ -26,14 +26,14 @@
 #include "workflow.h"
 #include "workflow_internal.h"
 
-hc_result_t workflow_auto_update(const vendor_header *const vhdr,
-                                 const image_header *const hdr) {
+workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
+                                       const image_header *const hdr) {
   workflow_reset_jump();
   ui_set_initial_setup(true);
   ui_screen_connect();
 
-  hc_result_t res = HC_CANCELLED;
-  while (res == HC_CANCELLED) {
+  workflow_result_t res = WF_CANCELLED;
+  while (res == WF_CANCELLED) {
     res = workflow_host_control(vhdr, hdr, ui_screen_connect);
   }
   return res;

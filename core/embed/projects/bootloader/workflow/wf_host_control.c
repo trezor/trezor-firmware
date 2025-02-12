@@ -31,9 +31,9 @@
 #include "workflow.h"
 #include "workflow_internal.h"
 
-hc_result_t workflow_host_control(const vendor_header *const vhdr,
-                                  const image_header *const hdr,
-                                  void (*redraw_wait_screen)(void)) {
+workflow_result_t workflow_host_control(const vendor_header *const vhdr,
+                                        const image_header *const hdr,
+                                        void (*redraw_wait_screen)(void)) {
   wire_iface_t usb_iface = {0};
   protob_iface_t protob_usb_iface = {0};
 
@@ -88,7 +88,7 @@ hc_result_t workflow_host_control(const vendor_header *const vhdr,
           workflow_allow_jump_1();
           systick_delay_ms(100);
           usb_deinit();
-          return HC_DEVICE_WIPED;
+          return WF_OK_DEVICE_WIPED;
         }
         break;
       case MessageType_MessageType_FirmwareErase:
@@ -97,7 +97,7 @@ hc_result_t workflow_host_control(const vendor_header *const vhdr,
           workflow_allow_jump_1();
           systick_delay_ms(100);
           usb_deinit();
-          return HC_FIRMWARE_INSTALLED;
+          return WF_OK_FIRMWARE_INSTALLED;
         }
         break;
       case MessageType_MessageType_GetFeatures:
@@ -111,7 +111,7 @@ hc_result_t workflow_host_control(const vendor_header *const vhdr,
           workflow_allow_jump_1();
           systick_delay_ms(100);
           usb_deinit();
-          return HC_BOOTLOADER_UNLOCKED;
+          return WF_OK_BOOTLOADER_UNLOCKED;
         }
         break;
 #endif
@@ -124,11 +124,11 @@ hc_result_t workflow_host_control(const vendor_header *const vhdr,
       case WF_CANCELLED:
         systick_delay_ms(100);
         usb_deinit();
-        return HC_CANCELLED;
+        return WF_CANCELLED;
       case WF_ERROR:
         systick_delay_ms(100);
         usb_deinit();
-        return HC_ERROR;
+        return WF_ERROR;
       case WF_ERROR_FATAL:
       default:
         systick_delay_ms(100);

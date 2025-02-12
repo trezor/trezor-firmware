@@ -27,20 +27,6 @@
 volatile secbool continue_to_firmware = secfalse;
 volatile secbool continue_to_firmware_backup = secfalse;
 
-// workflow_result_t workflow_exit_common(workflow_result_t result) {
-//   switch (result) {
-//     case WF_SHUTDOWN:
-//       return WF_SHUTDOWN;
-//     case WF_RETURN:
-//       return WF_STAY;
-//     case WF_CONTINUE_TO_FIRMWARE:
-//       workflow_allow_jump_2();
-//       return WF_CONTINUE_TO_FIRMWARE;
-//     default:
-//       return WF_WIPE_AND_SHUTDOWN;
-//   }
-// }
-
 secbool workflow_is_jump_allowed_1(void) { return continue_to_firmware; }
 secbool workflow_is_jump_allowed_2(void) { return continue_to_firmware_backup; }
 

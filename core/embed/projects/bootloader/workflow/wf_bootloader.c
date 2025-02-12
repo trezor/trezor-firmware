@@ -31,9 +31,9 @@
 #include "workflow.h"
 #include "workflow_internal.h"
 
-hc_result_t workflow_bootloader(const vendor_header *const vhdr,
-                                const image_header *const hdr,
-                                secbool firmware_present) {
+workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
+                                      const image_header *const hdr,
+                                      secbool firmware_present) {
   workflow_reset_jump();
   ui_set_initial_setup(false);
 
@@ -62,7 +62,7 @@ hc_result_t workflow_bootloader(const vendor_header *const vhdr,
 #endif
           workflow_allow_jump_1();
           workflow_allow_jump_2();
-          return HC_REBOOT;
+          return WF_OK_REBOOT_SELECTED;
         }
         if (ui_result == 0x55667788) {  // wipe
           workflow_result_t r = workflow_wipe_device(NULL, 0, NULL);
@@ -70,7 +70,7 @@ hc_result_t workflow_bootloader(const vendor_header *const vhdr,
             return r;
           }
           if (r == WF_OK) {
-            return HC_DEVICE_WIPED;
+            return WF_OK_DEVICE_WIPED;
           }
 
           if (r == WF_CANCELLED) {
@@ -82,9 +82,10 @@ hc_result_t workflow_bootloader(const vendor_header *const vhdr,
         break;
       case SCREEN_WAIT_FOR_HOST:
         ui_screen_connect();
-        hc_result_t res = workflow_host_control(vhdr, hdr, ui_screen_connect);
+        workflow_result_t res =
+            workflow_host_control(vhdr, hdr, ui_screen_connect);
         switch (res) {
-          case HC_CANCELLED:
+          case WF_CANCELLED:
             screen = SCREEN_INTRO;
             continue;
           default:
@@ -92,7 +93,7 @@ hc_result_t workflow_bootloader(const vendor_header *const vhdr,
         }
         break;
       default:
-        return HC_ERROR_FATAL;
+        return WF_ERROR_FATAL;
         break;
     }
   }
