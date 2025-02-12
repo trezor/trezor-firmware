@@ -27,6 +27,7 @@
 #include <sys/irq.h>
 #include <sys/linker_utils.h>
 #include <sys/mpu.h>
+#include <sys/stack_utils.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>
 #include <util/image.h>

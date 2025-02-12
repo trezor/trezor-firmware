@@ -23,6 +23,7 @@
 #include <sec/rng.h>
 #include <sys/bootargs.h>
 #include <sys/linker_utils.h>
+#include <sys/stack_utils.h>
 #include <sys/system.h>
 
 #ifdef KERNEL_MODE
