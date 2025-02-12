@@ -139,6 +139,7 @@ static secbool ft6x36_write_reg(i2c_bus_t* bus, uint8_t reg, uint8_t value) {
 // To avoid this issue, we need to wake up the controller before
 // sending any commands to it.
 static void ft6x36_wake_up(i2c_bus_t* bus) {
+#ifdef TOUCH_WAKEUP_WORKAROUND
   uint8_t temp;
   // Wake up the touch controller by reading one of its registers
   // (the specific register does not matter)
@@ -146,6 +147,7 @@ static void ft6x36_wake_up(i2c_bus_t* bus) {
   // Wait for the touch controller to wake up
   // (not sure if this is necessary, but it's safer to include it)
   systick_delay_ms(1);
+#endif
 }
 
 // Powers down the touch controller and puts all
