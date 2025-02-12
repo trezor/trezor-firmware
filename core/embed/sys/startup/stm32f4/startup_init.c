@@ -24,6 +24,7 @@
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/linker_utils.h>
+#include <sys/stack_utils.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <sys/sysutils.h>

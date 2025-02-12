@@ -54,21 +54,6 @@ void init_linker_sections(void) {
   }
 }
 
-__attribute((naked, no_stack_protector)) void clear_unused_stack(void) {
-  __asm__ volatile(
-      "    MOV     R0, #0              \n"
-      "    LDR     R1, =%[sstack]      \n"
-      "1:                              \n"
-      "    STR     R0, [R1], #4        \n"
-      "    CMP     R1, SP              \n"
-      "    BNE     1b                  \n"
-      "    BX      LR                  \n"
-      :  // no output
-      : [sstack] "i"((uint32_t)&_stack_section_start)
-      :  // no clobber
-  );
-}
-
 static void memregion_remove_block(memregion_t* region, int idx) {
   if (idx < 0 || idx >= MEMREGION_MAX_BLOCKS) {
     return;

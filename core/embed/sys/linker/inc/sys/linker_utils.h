@@ -31,15 +31,6 @@ extern uint8_t _stack_section_end;
 // to reinitialize these sections if necessary.
 void init_linker_sections(void);
 
-// Clears the unused portion of the stack.
-//
-// This includes memory between the start of the stack
-// and the current stack pointer (SP).
-//
-// It's safe to call this function at any time, but it's
-// recommended to call it only during the startup sequence.
-void clear_unused_stack(void);
-
 // Maximum number of memory blocks in a memory region
 #define MEMREGION_MAX_BLOCKS 8
 
