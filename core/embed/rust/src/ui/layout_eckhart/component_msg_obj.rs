@@ -14,7 +14,8 @@ use crate::{
 };
 
 use super::component::{
-    AllowedTextContent, SelectWordMsg, SelectWordScreen, TextScreen, TextScreenMsg,
+    AllowedTextContent, DeviceMenuMsg, DeviceMenuScreen, SelectWordMsg, SelectWordScreen,
+    TextScreen, TextScreenMsg, VerticalMenuScreen, VerticalMenuScreenMsg,
 };
 
 // Clippy/compiler complains about conflicting implementations
@@ -58,6 +59,25 @@ impl ComponentMsgObj for SelectWordScreen {
         match msg {
             SelectWordMsg::Selected(i) => i.try_into(),
             SelectWordMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for VerticalMenuScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            VerticalMenuScreenMsg::Back => Ok(CANCELLED.as_obj()),
+            VerticalMenuScreenMsg::Close => Ok(CANCELLED.as_obj()),
+            VerticalMenuScreenMsg::Selected(_) => Ok(CONFIRMED.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for DeviceMenuScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
+            DeviceMenuMsg::Selected(_) => Ok(CONFIRMED.as_obj()),
         }
     }
 }

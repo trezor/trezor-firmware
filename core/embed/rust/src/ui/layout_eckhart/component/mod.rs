@@ -1,6 +1,7 @@
 mod action_bar;
 pub mod bl_confirm;
 mod button;
+mod device_menu_screen;
 mod error;
 mod header;
 mod hint;
@@ -14,6 +15,7 @@ mod welcome_screen;
 
 pub use action_bar::{ActionBar, ActionBarMsg};
 pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, IconText};
+pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
 pub use error::ErrorScreen;
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
