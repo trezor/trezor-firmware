@@ -9,6 +9,8 @@ from trezor.ui.layouts.recovery import (  # noqa: F401
 
 from apps.common import backup_types
 
+from .recover import RecoveryAborted
+
 if TYPE_CHECKING:
     from typing import Awaitable
 
@@ -174,8 +176,6 @@ async def homescreen_dialog(
 ) -> None:
     import storage.recovery as storage_recovery
     from trezor.ui.layouts.recovery import continue_recovery
-
-    from .recover import RecoveryAborted
 
     recovery_type = storage_recovery.get_type()
     if not await continue_recovery(
