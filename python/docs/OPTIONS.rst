@@ -37,11 +37,11 @@ on one page here.
     --help                    Show this message and exit.
 
   Commands:
+    benchmark          Benchmark commands.
     binance            Binance Chain commands.
     btc                Bitcoin and Bitcoin-like coins commands.
     cardano            Cardano commands.
     clear-session      Clear session (remove cached PIN, passphrase, etc.).
-    cosi               CoSi (Cothority / collective signing) commands.
     crypto             Miscellaneous cryptography features.
     debug              Miscellaneous debug features.
     device             Device management commands - setup, recover seed, wipe, etc.
@@ -63,6 +63,26 @@ on one page here.
     usb-reset          Perform USB reset on stuck devices.
     version            Show version of trezorctl/trezorlib.
     wait-for-emulator  Wait until Trezor Emulator comes up.
+
+Benchmark commands.
+~~~~~~~~~~~~~~~~~~~
+
+.. code::
+
+  trezorctl benchmark --help
+
+.. code::
+
+  Usage: trezorctl benchmark [OPTIONS] COMMAND [ARGS]...
+
+    Benchmark commands.
+
+  Options:
+    --help  Show this message and exit.
+
+  Commands:
+    list-names  List names of all supported benchmarks
+    run         Run benchmark
 
 Binance Chain commands.
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -131,26 +151,6 @@ Cardano commands.
     get-public-key          Get Cardano public key.
     sign-tx                 Sign Cardano transaction.
 
-CoSi (Cothority / collective signing) commands.
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code::
-
-  trezorctl cosi --help
-
-.. code::
-
-  Usage: trezorctl cosi [OPTIONS] COMMAND [ARGS]...
-
-    CoSi (Cothority / collective signing) commands.
-
-  Options:
-    --help  Show this message and exit.
-
-  Commands:
-    commit  Ask device to commit to CoSi signing.
-    sign    Ask device to sign using CoSi.
-
 Miscellaneous cryptography features.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -189,9 +189,10 @@ Miscellaneous debug features.
     --help  Show this message and exit.
 
   Commands:
-    prodtest-t1  Perform a prodtest on Model One.
-    record       Record screen changes into a specified directory.
-    send-bytes   Send raw bytes to Trezor.
+    optiga-set-sec-max  Set Optiga's security event counter to maximum.
+    prodtest-t1         Perform a prodtest on Model One.
+    record              Record screen changes into a specified directory.
+    send-bytes          Send raw bytes to Trezor.
 
 Device management commands - setup, recover seed, wipe, etc.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
