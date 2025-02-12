@@ -68,6 +68,9 @@ def select_number_of_words(
     num_of_words: int = 20,
     unlock_repeated_backup=False,
 ) -> None:
+    layout = debug.read_layout()
+    assert TR.recovery__num_of_words in layout.text_content()
+
     def select_bolt() -> "LayoutContent":
         # click the button from ValuePad
         if unlock_repeated_backup:
@@ -114,7 +117,6 @@ def select_number_of_words(
         return debug.read_layout()
 
     if debug.layout_type is LayoutType.Bolt:
-        assert debug.read_layout().text_content() == TR.recovery__num_of_words
         layout = select_bolt()
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
@@ -302,4 +304,37 @@ def prepare_enter_seed(
 def finalize(debug: "DebugLink") -> None:
     layout = go_next(debug)
     assert layout is not None
+    assert layout.main_component() == "Homescreen"
+
+
+def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
+    title = TR.translate(f"recovery__title_{recovery_type}")
+    cancel_title = TR.translate(f"recovery__title_cancel_{recovery_type}")
+
+    layout = debug.read_layout()
+    assert title in layout.title()
+
+    if debug.layout_type is LayoutType.Bolt:
+        debug.click(buttons.CANCEL)
+        layout = debug.read_layout()
+        assert cancel_title in layout.title()
+        debug.click(buttons.OK)
+    elif debug.layout_type is LayoutType.Caesar:
+        debug.press_left()
+        layout = debug.read_layout()
+        assert cancel_title in layout.title()
+        for _ in range(layout.page_count()):
+            debug.press_right()
+    elif debug.layout_type is LayoutType.Delizia:
+        # go to menu
+        debug.click(buttons.CORNER_BUTTON)
+        layout = debug.read_layout()
+        assert (
+            TR.translate(f"recovery__cancel_{recovery_type}") in layout.text_content()
+        )
+        debug.click(buttons.VERTICAL_MENU[0])
+    else:
+        raise ValueError("Unknown model")
+
+    layout = debug.read_layout()
     assert layout.main_component() == "Homescreen"
