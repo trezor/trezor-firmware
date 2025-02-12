@@ -120,7 +120,7 @@ async def _confirm_abort(dry_run: bool = False) -> None:
         await confirm_action(
             "abort_recovery",
             TR.recovery__title_cancel_dry_run,
-            TR.recovery__cancel_dry_run,
+            None,
             description=TR.recovery__wanna_cancel_dry_run,
             verb=TR.buttons__cancel,
             br_code=ButtonRequestType.ProtectCall,
