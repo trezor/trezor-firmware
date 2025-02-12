@@ -356,9 +356,9 @@ def show_success(
 ) -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui_api.show_success(
-            title=content,
-            button="",
-            description=subheader if subheader else "",
+            title=subheader if subheader else "",
+            button=button if button else "",
+            description=content,
         ),
         br_name,
         ButtonRequestType.Success,
