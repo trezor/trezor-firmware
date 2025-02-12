@@ -439,25 +439,27 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
       .src_alpha = 255,
   };
 
+  bool result = false;
+
 #ifdef KERNEL
   tz_set_dma2d_unpriv(false);
 #endif
 
   switch (dec->image.format) {
     case JPEGDEC_IMAGE_YCBCR420:
-      dma2d_rgba8888_copy_ycbcr420(&bb);
+      result = dma2d_rgba8888_copy_ycbcr420(&bb);
       break;
     case JPEGDEC_IMAGE_YCBCR422:
-      dma2d_rgba8888_copy_ycbcr422(&bb);
+      result = dma2d_rgba8888_copy_ycbcr422(&bb);
       break;
     case JPEGDEC_IMAGE_YCBCR444:
-      dma2d_rgba8888_copy_ycbcr444(&bb);
+      result = dma2d_rgba8888_copy_ycbcr444(&bb);
       break;
     case JPEGDEC_IMAGE_GRAYSCALE:
       // Conversion from grayscale to RGBA8888 is not supported
-      return false;
     default:
-      return false;
+      result = false;
+      break;
   }
 
   // Wait until the DMA transfer is complete so that the caller can use
@@ -468,7 +470,7 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
   tz_set_dma2d_unpriv(true);
 #endif
 
-  return true;
+  return result;
 }
 
 #endif  // KERNEL_MODE
