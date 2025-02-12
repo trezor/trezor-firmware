@@ -504,6 +504,14 @@ impl FirmwareUI for UIDelizia {
         LayoutObj::new_root(flow)
     }
 
+    fn device_menu(
+        _failed_backup: bool,
+        _low_battery: bool,
+        _connections: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+    }
+
     fn flow_confirm_output(
         title: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,

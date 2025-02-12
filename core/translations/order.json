@@ -994,5 +994,17 @@
   "992": "nostr__event_kind_template",
   "993": "reset__share_words_first",
   "994": "backup__not_recommend",
-  "995": "words__pay_attention"
+  "995": "words__pay_attention",
+  "996": "device_menu__1_connection",
+  "997": "device_menu__about",
+  "998": "device_menu__active_connections",
+  "999": "device_menu__backup_failed_description",
+  "1000": "device_menu__backup_failed_title",
+  "1001": "device_menu__battery_low_description",
+  "1002": "device_menu__battery_low_title",
+  "1003": "device_menu__bluetooth",
+  "1004": "device_menu__brightness",
+  "1005": "device_menu__connections_title",
+  "1006": "device_menu__fw_version",
+  "1007": "device_menu__language"
 }

@@ -1407,6 +1407,18 @@ pub enum TranslatedString {
     reset__share_words_first = 993,  // "Write down the first word from the backup."
     backup__not_recommend = 994,  // "We don't recommend to skip wallet backup creation."
     words__pay_attention = 995,  // "Pay attention"
+    device_menu__1_connection = 996,  // "1 active connection"
+    device_menu__about = 997,  // "About"
+    device_menu__active_connections = 998,  // "{0} active connections"
+    device_menu__backup_failed_description = 999,  // "Review"
+    device_menu__backup_failed_title = 1000,  // "Backup failed"
+    device_menu__battery_low_description = 1001,  // "Recharge soon"
+    device_menu__battery_low_title = 1002,  // "Battery low"
+    device_menu__bluetooth = 1003,  // "Bluetooth management"
+    device_menu__brightness = 1004,  // "Brightness"
+    device_menu__connections_title = 1005,  // "Pair & Connect"
+    device_menu__fw_version = 1006,  // "Firmware version"
+    device_menu__language = 1007,  // "Language"
 }
 
 impl TranslatedString {
@@ -2880,6 +2892,18 @@ impl TranslatedString {
             Self::reset__share_words_first => "Write down the first word from the backup.",
             Self::backup__not_recommend => "We don't recommend to skip wallet backup creation.",
             Self::words__pay_attention => "Pay attention",
+            Self::device_menu__1_connection => "1 active connection",
+            Self::device_menu__about => "About",
+            Self::device_menu__active_connections => "{0} active connections",
+            Self::device_menu__backup_failed_description => "Review",
+            Self::device_menu__backup_failed_title => "Backup failed",
+            Self::device_menu__battery_low_description => "Recharge soon",
+            Self::device_menu__battery_low_title => "Battery low",
+            Self::device_menu__bluetooth => "Bluetooth management",
+            Self::device_menu__brightness => "Brightness",
+            Self::device_menu__connections_title => "Pair & Connect",
+            Self::device_menu__fw_version => "Firmware version",
+            Self::device_menu__language => "Language",
         }
     }
 
@@ -4282,6 +4306,18 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
             Qstr::MP_QSTR_backup__not_recommend => Some(Self::backup__not_recommend),
             Qstr::MP_QSTR_words__pay_attention => Some(Self::words__pay_attention),
+            Qstr::MP_QSTR_device_menu__1_connection => Some(Self::device_menu__1_connection),
+            Qstr::MP_QSTR_device_menu__about => Some(Self::device_menu__about),
+            Qstr::MP_QSTR_device_menu__active_connections => Some(Self::device_menu__active_connections),
+            Qstr::MP_QSTR_device_menu__backup_failed_description => Some(Self::device_menu__backup_failed_description),
+            Qstr::MP_QSTR_device_menu__backup_failed_title => Some(Self::device_menu__backup_failed_title),
+            Qstr::MP_QSTR_device_menu__battery_low_description => Some(Self::device_menu__battery_low_description),
+            Qstr::MP_QSTR_device_menu__battery_low_title => Some(Self::device_menu__battery_low_title),
+            Qstr::MP_QSTR_device_menu__bluetooth => Some(Self::device_menu__bluetooth),
+            Qstr::MP_QSTR_device_menu__brightness => Some(Self::device_menu__brightness),
+            Qstr::MP_QSTR_device_menu__connections_title => Some(Self::device_menu__connections_title),
+            Qstr::MP_QSTR_device_menu__fw_version => Some(Self::device_menu__fw_version),
+            Qstr::MP_QSTR_device_menu__language => Some(Self::device_menu__language),
             _ => None,
         }
     }

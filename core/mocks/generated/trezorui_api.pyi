@@ -309,6 +309,16 @@ def continue_recovery_homepage(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def device_menu(
+    *,
+    failed_backup: bool,
+    low_battery: bool,
+    connections: str | None,
+) -> LayoutObj[int]:
+    """Show eckhart device menu."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def flow_confirm_output(
     *,
     title: str | None,

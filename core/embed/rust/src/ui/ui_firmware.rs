@@ -158,6 +158,12 @@ pub trait FirmwareUI {
 
     fn check_homescreen_format(image: BinaryData, accept_toif: bool) -> bool;
 
+    fn device_menu(
+        failed_backup: bool,
+        low_battery: bool,
+        connections: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
     #[allow(clippy::too_many_arguments)]
     fn flow_confirm_output(
         title: Option<TString<'static>>,

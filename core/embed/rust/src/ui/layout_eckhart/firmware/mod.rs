@@ -1,4 +1,5 @@
 mod action_bar;
+mod device_menu_screen;
 mod header;
 mod hint;
 mod hold_to_confirm;
@@ -11,6 +12,7 @@ mod vertical_menu;
 mod vertical_menu_screen;
 
 pub use action_bar::{ActionBar, ActionBarMsg};
+pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;
