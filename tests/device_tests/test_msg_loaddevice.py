@@ -124,7 +124,6 @@ def test_load_device_utf(client: Client):
         skip_checksum=True,
     )
     session: Session = session.client.get_session(passphrase=passphrase_nfkd)
-    session.client.use_passphrase(passphrase_nfkd)  # TODO is needed?
     address_nfkd = get_test_address(session)
 
     device.wipe(session)
@@ -139,7 +138,6 @@ def test_load_device_utf(client: Client):
         skip_checksum=True,
     )
     session = client.get_session(passphrase=passphrase_nfc)
-    session.client.use_passphrase(passphrase_nfc)  # TODO is needed?
     address_nfc = get_test_address(session)
 
     device.wipe(session)
@@ -154,7 +152,6 @@ def test_load_device_utf(client: Client):
         skip_checksum=True,
     )
     session = client.get_session(passphrase=passphrase_nfkc)
-    session.client.use_passphrase(passphrase_nfkc)  # TODO is needed?
     address_nfkc = get_test_address(session)
 
     device.wipe(session)
@@ -169,7 +166,6 @@ def test_load_device_utf(client: Client):
         skip_checksum=True,
     )
     session = client.get_session(passphrase=passphrase_nfd)
-    session.client.use_passphrase(passphrase_nfd)  # TODO is needed?
     address_nfd = get_test_address(session)
     assert address_nfkd == address_nfc
     assert address_nfkd == address_nfkc
