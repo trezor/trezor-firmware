@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 2.1.10 [19th February 2025]
+
+### Fixed
+- [T3T1] Fix slow fade in/non responsiveness in bootloader UI.  [#4492]
+
 ## 2.1.9 [September 2024]
 
 ### Changed
@@ -170,3 +175,4 @@ Internal only release for Model R prototypes.
 [#4133]: https://github.com/trezor/trezor-firmware/pull/4133
 [#4140]: https://github.com/trezor/trezor-firmware/pull/4140
 [#4195]: https://github.com/trezor/trezor-firmware/pull/4195
+[#4492]: https://github.com/trezor/trezor-firmware/pull/4492

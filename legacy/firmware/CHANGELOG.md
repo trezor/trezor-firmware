@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## 1.13.0 [19th February 2025]
+
+### Added
+- Signed Ethereum network and token definitions from host.  [#15]
+- Unchained paths for p2wsh multisig.  [#4324]
+- Added support for lexicographic sorting of pubkeys in multisig.  [#4396]
+
+### Changed
+- Changed prefix of public key returned by `get_ecdh_session_key` for curve25519.  [#4093]
+- Remove deprecated Unchained Capital's multisig path.  [#4396]
+- Forbid per-node paths in multisig change outputs and multisig receive addresses.  [#4396]
+- Forbid multisig to singlesig change outputs.  [#4396]
+- Reworked PIN processing.  [#3949]
+
+### Removed
+- CoSi functionality.  [#2675]
+- MUE support.  [#3216]
+- Removed display_random feature.  [#4119]
+
+### Fixed
+- Allow showing XPUB using a QR code.  [#3043]
+- Stellar: resolves the issue of incorrect signature generation when the transaction source account differs from the signing account.  [#3691]
+- Fixed SLIP-10 fingerprints for ed25519 and curve25519.  [#4093]
+
 ## 1.12.1 [15th March 2023]
 
 ### Added
@@ -536,6 +560,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Removed all current limits on size of signed transaction.
 
+[#15]: https://github.com/trezor/trezor-firmware/pull/15
 [#131]: https://github.com/trezor/trezor-firmware/pull/131
 [#965]: https://github.com/trezor/trezor-firmware/pull/965
 [#1018]: https://github.com/trezor/trezor-firmware/pull/1018
@@ -603,6 +628,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#2486]: https://github.com/trezor/trezor-firmware/pull/2486
 [#2487]: https://github.com/trezor/trezor-firmware/pull/2487
 [#2568]: https://github.com/trezor/trezor-firmware/pull/2568
+[#2675]: https://github.com/trezor/trezor-firmware/pull/2675
 [#2682]: https://github.com/trezor/trezor-firmware/pull/2682
 [#2718]: https://github.com/trezor/trezor-firmware/pull/2718
 [#2743]: https://github.com/trezor/trezor-firmware/pull/2743
+[#3043]: https://github.com/trezor/trezor-firmware/pull/3043
+[#3216]: https://github.com/trezor/trezor-firmware/pull/3216
+[#3691]: https://github.com/trezor/trezor-firmware/pull/3691
+[#3949]: https://github.com/trezor/trezor-firmware/pull/3949
+[#4093]: https://github.com/trezor/trezor-firmware/pull/4093
+[#4119]: https://github.com/trezor/trezor-firmware/pull/4119
+[#4324]: https://github.com/trezor/trezor-firmware/pull/4324
+[#4396]: https://github.com/trezor/trezor-firmware/pull/4396

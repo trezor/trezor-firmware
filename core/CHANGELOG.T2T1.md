@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.8.8] (19th February 2025)
+
+### Fixed
+- Fix wrong RSOD color on some older Model T devices.  [#4491]
+- Fixed a bug resulting in restarting the recovery flow when inputting 33-word mnemonic.  [#4537]
+
 ## [2.8.7] (22th January 2025)
 
 ### Added
@@ -964,6 +970,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3640]: https://github.com/trezor/trezor-firmware/pull/3640
 [#3692]: https://github.com/trezor/trezor-firmware/pull/3692
 [#3728]: https://github.com/trezor/trezor-firmware/pull/3728
+[#3772]: https://github.com/trezor/trezor-firmware/pull/3772
 [#3797]: https://github.com/trezor/trezor-firmware/pull/3797
 [#3813]: https://github.com/trezor/trezor-firmware/pull/3813
 [#3855]: https://github.com/trezor/trezor-firmware/pull/3855
@@ -1023,3 +1030,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4402]: https://github.com/trezor/trezor-firmware/pull/4402
 [#4421]: https://github.com/trezor/trezor-firmware/pull/4421
 [#4462]: https://github.com/trezor/trezor-firmware/pull/4462
+[#4491]: https://github.com/trezor/trezor-firmware/pull/4491
+[#4492]: https://github.com/trezor/trezor-firmware/pull/4492
+[#4500]: https://github.com/trezor/trezor-firmware/pull/4500
+[#4537]: https://github.com/trezor/trezor-firmware/pull/4537
