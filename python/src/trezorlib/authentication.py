@@ -4,25 +4,13 @@ import io
 import logging
 import secrets
 import typing as t
-from importlib import metadata
-
-from . import device
-from .client import TrezorClient
-
-try:
-    cryptography_version = metadata.version("cryptography")
-    vsplit = [int(x) for x in cryptography_version.split(".")]
-    if vsplit[0] < 41:
-        raise ImportError(
-            "cryptography>=41 is required for this module, "
-            f"found cryptography=={cryptography_version}"
-        )
-except ImportError as e:
-    raise ImportError("cryptography>=41 is required for this module") from e
 
 from cryptography import exceptions, x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, utils
+
+from . import device
+from .client import TrezorClient
 
 LOG = logging.getLogger(__name__)
 

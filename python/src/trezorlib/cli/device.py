@@ -23,7 +23,7 @@ import typing as t
 import click
 import requests
 
-from .. import debuglink, device, exceptions, messages, ui
+from .. import authentication, debuglink, device, exceptions, messages, ui
 from ..tools import format_path
 from . import ChoiceType, with_client
 
@@ -393,10 +393,6 @@ def authenticate(
     authenticity. By default, it will also check the public keys against a whitelist
     downloaded from Trezor servers. You can skip this check with the --skip-whitelist
     option.
-
-    \b
-    When not using --raw, 'cryptography' library is required. You can install it via:
-      pip3 install trezor[authentication]
     """
     if hex_challenge is None:
         hex_challenge = secrets.token_hex(32)
@@ -412,15 +408,6 @@ def authenticate(
         for cert in msg.certificates[1:]:
             click.echo(f"CA certificate: {cert.hex()}")
         return
-
-    try:
-        from .. import authentication
-    except ImportError as e:
-        click.echo("Failed to import the authentication module.")
-        click.echo(f"Error: {e}")
-        click.echo("Make sure you have the required dependencies:")
-        click.echo("  pip3 install trezor[authentication]")
-        sys.exit(4)
 
     if root is not None:
         root_bytes = root.read()
