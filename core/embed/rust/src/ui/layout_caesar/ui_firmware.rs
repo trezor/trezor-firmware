@@ -681,6 +681,14 @@ impl FirmwareUI for UICaesar {
         LayoutObj::new_root(layout)
     }
 
+    fn device_menu(
+        _failed_backup: bool,
+        _low_battery: bool,
+        _connections: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+    }
+
     fn flow_confirm_output(
         _title: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,

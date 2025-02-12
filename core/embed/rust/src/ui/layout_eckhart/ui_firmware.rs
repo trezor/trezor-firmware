@@ -12,7 +12,7 @@ use crate::{
             },
             Empty, FormattedText,
         },
-        geometry::LinearPlacement,
+        geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, RecoveryType, StrOrBytes},
@@ -25,14 +25,17 @@ use crate::{
 };
 
 use super::{
-    component::Button,
+    component::{Button, ButtonStyleSheet},
     firmware::{
-        ActionBar, Bip39Input, ConfirmHomescreen, Header, HeaderMsg, Hint, Homescreen,
-        MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen, SelectWordScreen,
-        Slip39Input, TextScreen,
+        ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, Header, HeaderMsg, Hint,
+        Homescreen, MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen,
+        SelectWordScreen, Slip39Input, TextScreen, VerticalMenu, VerticalMenuScreen,
+        MENU_MAX_ITEMS,
     },
     flow, fonts, theme, UIEckhart,
 };
+
+use heapless::Vec;
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
@@ -330,6 +333,151 @@ impl FirmwareUI for UIEckhart {
         _remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+    }
+
+    fn device_menu(
+        failed_backup: bool,
+        low_battery: bool,
+        connections: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        const BUTTON_RADIUS: u8 = 12;
+        const BUTTON_ALIGNMENT: Alignment = Alignment::Start;
+        const BUTTON_CONTENT_OFFSET: Offset = Offset::x(12);
+
+        // Function to add a menu item with optional subtext to the VerticalMenu
+        fn add_menu_item(
+            menu: VerticalMenu,
+            text: TString<'static>,
+            subtext: Option<TString<'static>>,
+            style: ButtonStyleSheet,
+            include: bool,
+        ) -> VerticalMenu {
+            if include {
+                let button = match subtext {
+                    Some(sub) => Button::with_text_and_subtext(text, sub)
+                        .with_text_align(BUTTON_ALIGNMENT)
+                        .with_content_offset(BUTTON_CONTENT_OFFSET)
+                        .styled(style)
+                        .with_radius(BUTTON_RADIUS),
+                    None => Button::with_text(text)
+                        .with_text_align(BUTTON_ALIGNMENT)
+                        .with_content_offset(BUTTON_CONTENT_OFFSET)
+                        .styled(style)
+                        .with_radius(BUTTON_RADIUS),
+                };
+                menu.item(button)
+            } else {
+                menu
+            }
+        }
+
+        // Create the device menu screen
+        let mut device_menu = DeviceMenuScreen::empty();
+
+        // Define menu items for settings
+        let settings_menu_items = [
+            (TR::device_menu__language, None, true),
+            (TR::device_menu__bluetooth, None, true),
+            (TR::device_menu__brightness, None, true),
+            (TR::device_menu__fw_version, None, true),
+            (TR::device_menu__about, None, true),
+        ];
+
+        // Build the settings menu dynamically
+        let settings_menu = settings_menu_items
+            .iter()
+            .fold(
+                VerticalMenu::empty().with_separators(),
+                |menu, &(text, subtext, include)| {
+                    add_menu_item(
+                        menu,
+                        text.into(),
+                        subtext.into(),
+                        theme::menu_item_title(),
+                        include,
+                    )
+                },
+            )
+            .with_separators();
+
+        // Create the settings screen
+        let settings_screen = VerticalMenuScreen::new(settings_menu).with_header(
+            Header::new(TR::words__settings.into())
+                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled)
+                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
+        );
+        let setting_index = device_menu.add_leaf_menu(settings_screen);
+
+        // Determine battery color based on low_battery flag
+        let battery_color = if low_battery {
+            theme::YELLOW
+        } else {
+            theme::GREEN_LIME
+        };
+
+        // Define root menu items
+        let root_menu_items = [
+            (
+                TR::device_menu__backup_failed_title,
+                Some(TR::device_menu__backup_failed_description.into()),
+                theme::menu_item_title_orange(),
+                failed_backup,
+            ),
+            (
+                TR::device_menu__battery_low_title,
+                Some(TR::device_menu__battery_low_description.into()),
+                theme::menu_item_title_yellow(),
+                low_battery,
+            ),
+            (
+                TR::device_menu__connections_title,
+                Some(connections.into()),
+                theme::menu_item_title(),
+                true,
+            ),
+            (TR::words__settings, None, theme::menu_item_title(), true),
+        ];
+
+        // Build the root menu dynamically
+        let root_menu = root_menu_items.iter().fold(
+            VerticalMenu::empty().with_separators(),
+            |menu, &(text, subtext, style, include)| {
+                add_menu_item(menu, text.into(), subtext.into(), style, include)
+            },
+        );
+
+        // Initialize root children
+        let mut root_children: Vec<Option<usize>, MENU_MAX_ITEMS> = Vec::new();
+
+        // Optional failed backup child
+        if failed_backup {
+            root_children.push(None).unwrap();
+        }
+        // Optional low battery child
+        if low_battery {
+            root_children.push(None).unwrap();
+        }
+
+        // Remaining children
+        root_children
+            .extend_from_slice(&[None, Some(setting_index)])
+            .unwrap();
+
+        // Create the root screen
+        let root_screen = VerticalMenuScreen::new(root_menu).with_header(
+            Header::new("".into())
+                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled)
+                .with_icon(theme::ICON_BATTERY_ZAP, battery_color),
+        );
+        let root_index: usize = device_menu.add_inner_menu(root_screen, root_children);
+
+        // Set root menu as active
+        device_menu.set_active_menu(root_index);
+
+        // Create and return the layout
+        let layout = RootComponent::new(device_menu);
+
+        Ok(layout)
     }
 
     fn flow_confirm_output(

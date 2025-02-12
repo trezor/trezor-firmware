@@ -924,6 +924,35 @@ async def confirm_signverify(
     raise NotImplementedError
 
 
+async def device_menu(
+    failed_backup: bool,
+    battery_level: int,
+    connections: int,
+) -> None:
+
+    # Currently arbitrary value
+    if battery_level < 20:
+        low_battery = True
+    else:
+        low_battery = False
+
+    if connections == 1:
+        connections_str = TR.device_menu__1_connection
+    elif connections == 0:
+        connections_str = TR.device_menu__connections_title.format("No")
+    else:
+        connections_str = TR.device_menu__connections_title.format(connections)
+
+    await interact(
+        trezorui_api.device_menu(
+            failed_backup=failed_backup,
+            low_battery=low_battery,
+            connections=connections_str,
+        ),
+        None,
+    )
+
+
 def error_popup(
     title: str,
     description: str,

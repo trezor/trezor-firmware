@@ -428,6 +428,19 @@ extern "C" fn new_continue_recovery_homepage(
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
+        let low_battery: bool = kwargs.get(Qstr::MP_QSTR_low_battery)?.try_into()?;
+        let connections: TString = kwargs.get(Qstr::MP_QSTR_connections)?.try_into()?;
+
+
+        let layout = ModelUI::device_menu(failed_backup, low_battery, connections)?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
@@ -1352,6 +1365,16 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Device recovery homescreen."""
     Qstr::MP_QSTR_continue_recovery_homepage => obj_fn_kw!(0, new_continue_recovery_homepage).as_obj(),
+
+    /// def device_menu(
+    ///     *,
+    ///     failed_backup: bool,
+    ///     low_battery: bool,
+    ///     connections: str | None,
+    /// ) -> LayoutObj[int]:
+    ///     """Show eckhart device menu."""
+    Qstr::MP_QSTR_device_menu => obj_fn_kw!(0, new_device_menu).as_obj(),
+
 
     /// def flow_confirm_output(
     ///     *,
