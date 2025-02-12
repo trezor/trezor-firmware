@@ -798,7 +798,7 @@ class DebugUI:
 
     def clear(self) -> None:
         self.pins: t.Iterator[str] | None = None
-        self.passphrase = ""
+        self.passphrase = None
         self.input_flow: t.Union[
             t.Generator[None, messages.ButtonRequest, None], object, None
         ] = None
@@ -848,7 +848,7 @@ class DebugUI:
         except StopIteration:
             raise AssertionError("PIN sequence ended prematurely")
 
-    def get_passphrase(self, available_on_device: bool) -> str:
+    def get_passphrase(self, available_on_device: bool) -> str | None | object:
         self.debuglink.snapshot_legacy()
         return self.passphrase
 
@@ -967,6 +967,10 @@ class SessionDebugWrapper(Session):
     @property
     def id(self) -> bytes:
         return self._session.id
+
+    @property
+    def passphrase(self) -> str | None | object:
+        return self._session.passphrase
 
     def _write(self, msg: t.Any) -> None:
         print("writing message:", msg.__class__.__name__)
@@ -1090,7 +1094,6 @@ class SessionDebugWrapper(Session):
         self.button_callback = self.client.button_callback
         self.pin_callback = self.client.pin_callback
         self.passphrase_callback = self._session.passphrase_callback
-        self.passphrase = self._session.passphrase
 
     def __enter__(self) -> "SessionDebugWrapper":
         # For usage in with/expected_responses
@@ -1224,7 +1227,6 @@ class TrezorClientDebugLink(TrezorClient):
         # and know the supported debug capabilities
         self.debug.model = self.model
         self.debug.version = self.version
-        self.passphrase: str | None = None
 
     @property
     def layout_type(self) -> LayoutType:
@@ -1320,12 +1322,16 @@ class TrezorClientDebugLink(TrezorClient):
                 return send_passphrase(None, None)
 
             try:
-                if session.passphrase is None and isinstance(session, SessionV1):
+                if isinstance(session, SessionV1) or isinstance(
+                    session, SessionDebugWrapper
+                ):
                     passphrase = self.ui.get_passphrase(
                         available_on_device=available_on_device
                     )
+                    if passphrase is None:
+                        passphrase = session.passphrase
                 else:
-                    passphrase = session.passphrase
+                    raise NotImplementedError
             except Cancelled:
                 session.call_raw(messages.Cancel())
                 raise
@@ -1378,33 +1384,6 @@ class TrezorClientDebugLink(TrezorClient):
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
         return super().get_session(passphrase, derive_cardano, session_id)
-
-    def set_filter(
-        self,
-        message_type: t.Type[protobuf.MessageType],
-        callback: t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
-    ) -> None:
-        """Configure a filter function for a specified message type.
-
-        The `callback` must be a function that accepts a protobuf message, and returns
-        a (possibly modified) protobuf message of the same type. Whenever a message
-        is sent or received that matches `message_type`, `callback` is invoked on the
-        message and its result is substituted for the original.
-
-        Useful for test scenarios with an active malicious actor on the wire.
-        """
-        if not self.in_with_statement:
-            raise RuntimeError("Must be called inside 'with' statement")
-
-        self.filters[message_type] = callback
-
-    def _filter_message(self, msg: protobuf.MessageType) -> protobuf.MessageType:
-        message_type = msg.__class__
-        callback = self.filters.get(message_type)
-        if callable(callback):
-            return callback(deepcopy(msg))
-        else:
-            return msg
 
     def set_input_flow(
         self, input_flow: InputFlowType | t.Callable[[], InputFlowType]
@@ -1537,26 +1516,10 @@ class TrezorClientDebugLink(TrezorClient):
         """
         self.ui.pins = iter(pins)
 
-    def use_passphrase(self, passphrase: str) -> None:
-        """Respond to passphrase prompts from device with the provided passphrase."""
-        self.passphrase = passphrase
-        self.ui.passphrase = Mnemonic.normalize_string(passphrase)
-
     def use_mnemonic(self, mnemonic: str) -> None:
         """Use the provided mnemonic to respond to device.
         Only applies to T1, where device prompts the host for mnemonic words."""
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
-
-    def _raw_read(self) -> protobuf.MessageType:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        resp = self.get_seedless_session()._read()
-        resp = self._filter_message(resp)
-        if self.actual_responses is not None:
-            self.actual_responses.append(resp)
-        return resp
-
-    def _raw_write(self, msg: protobuf.MessageType) -> None:
-        return self.get_seedless_session()._write(self._filter_message(msg))
 
     @staticmethod
     def _expectation_lines(expected: list[MessageFilter], current: int) -> list[str]:

@@ -364,9 +364,6 @@ def _client_unlocked(
         if request.node.get_closest_marker("experimental"):
             apply_settings(session, experimental_features=True)
 
-        if use_passphrase and isinstance(setup_params["passphrase"], str):
-            _raw_client.use_passphrase(setup_params["passphrase"])
-
         # TODO _raw_client.clear_session()
 
     yield _raw_client
@@ -391,7 +388,10 @@ def session(
         session = _client_unlocked.get_seedless_session()
     else:
         derive_cardano = bool(request.node.get_closest_marker("cardano"))
-        passphrase = _client_unlocked.passphrase or ""
+        passphrase = ""
+        marker = request.node.get_closest_marker("setup_client")
+        if marker and isinstance(marker.kwargs.get("passphrase"), str):
+            passphrase = marker.kwargs["passphrase"]
         if _client_unlocked._setup_pin is not None:
             _client_unlocked.use_pin_sequence([_client_unlocked._setup_pin])
         session = _client_unlocked.get_session(
