@@ -121,6 +121,8 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         continue;
     }
 
+    systick_delay_ms(100);
+    usb_iface_deinit(&usb_iface);
     return result;
   }
 }
