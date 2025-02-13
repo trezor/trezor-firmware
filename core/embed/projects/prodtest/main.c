@@ -155,6 +155,10 @@ static void show_welcome_screen(void) {
 }
 
 static void drivers_init(void) {
+#ifdef USE_POWERCTL
+  powerctl_init();
+#endif
+
   display_init(DISPLAY_RESET_CONTENT);
 
 #ifdef USE_STORAGE_HWKEY

@@ -203,6 +203,16 @@ secbool ble_read__verified(uint8_t *data, size_t len);
 #endif
 
 // ---------------------------------------------------------------------
+
+#ifdef USE_POWERCTL
+
+#include <sys/powerctl.h>
+
+bool powerctl_get_status__verified(powerctl_status_t *status);
+
+#endif
+
+// ---------------------------------------------------------------------
 #ifdef USE_HW_JPEG_DECODER
 
 #include <gfx/jpegdec.h>

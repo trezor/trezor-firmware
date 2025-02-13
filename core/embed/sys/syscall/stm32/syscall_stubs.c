@@ -685,6 +685,14 @@ uint32_t ble_read(uint8_t *data, uint16_t len) {
 
 void powerctl_suspend(void) { syscall_invoke0(SYSCALL_POWERCTL_SUSPEND); }
 
+bool powerctl_hibernate(void) {
+  return (bool)syscall_invoke0(SYSCALL_POWERCTL_HIBERNATE);
+}
+
+bool powerctl_get_status(powerctl_status_t *status) {
+  return (bool)syscall_invoke1((uint32_t)status, SYSCALL_POWERCTL_GET_STATUS);
+}
+
 #endif  // USE_POWERCTL
 
 // =============================================================================

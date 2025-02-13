@@ -547,3 +547,40 @@ Example:
 optiga-counter-read
 OK 0E
 ```
+
+### powerctl-suspend
+Enters low-power mode.
+
+In low-power mode, the CPU retains its state, including SRAM content.
+The device can be woken by pressing the power button and will continue
+operation from the point where it was suspended.
+
+Example:
+```
+powerctl-suspend
+# Suspending the device to low-power mode...
+# Press the POWER button to resume.
+
+....
+
+# Resumed to active mode.
+OK
+```
+
+### powerctl-hibernate
+Enters Hibernate mode.
+
+In Hibernate mode, the CPU is powered off, and only the VBAT domain remains
+active. The device can be woken by pressing the power button, triggering
+a full boot sequence.
+
+Hibernate mode can only be entered if the device is not connected to a USB or
+wireless charger.
+
+Example:
+```
+powerctl-hibernate
+# Hibernating the the device...
+# Device is powered externally, hibernation is not possible.
+OK
+```

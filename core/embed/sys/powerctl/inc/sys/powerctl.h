@@ -49,10 +49,30 @@ typedef struct {
 } powerctl_status_t;
 
 // Gets the current power status.
-void powerctl_get_status(powerctl_status_t* status);
+//
+// Returns `true` if the status was successfully retrieved.
+bool powerctl_get_status(powerctl_status_t* status);
 
 // Enters low-power mode
 //
+// In low-power mode, the CPU retains its state, including SRAM content.
+// The device can be woken by pressing the power button and will continue
+// operation from the point where it was suspended.
 void powerctl_suspend(void);
+
+// Enters Hibernate mode.
+//
+// In Hibernate mode, the CPU is powered off, and only the VBAT domain remains
+// active. The device can be woken by pressing the power button, triggering
+// a full boot sequence.
+//
+// Hibernate mode can only be entered if the device is not connected to a USB or
+// wireless charger. If the device is charging, the function returns `true`,
+// and the device state remains unchanged. If the function succeeds, it does
+// not return.
+//
+// Returns `false` if the operation fails (likely due to uninitialized power
+// management).
+bool powerctl_hibernate(void);
 
 #endif  // TREZORHAL_POWERCTL_H

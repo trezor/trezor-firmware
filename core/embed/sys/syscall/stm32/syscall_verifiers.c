@@ -783,6 +783,28 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
+#ifdef USE_POWERCTL
+
+bool powerctl_get_status__verified(powerctl_status_t *status) {
+  if (!probe_write_access(status, sizeof(*status))) {
+    goto access_violation;
+  }
+
+  powerctl_status_t status_copy = {0};
+  bool retval = powerctl_get_status(&status_copy);
+  *status = status_copy;
+
+  return retval;
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif
+
+// ---------------------------------------------------------------------
+
 #ifdef USE_HW_JPEG_DECODER
 
 jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {

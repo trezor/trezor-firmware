@@ -726,6 +726,15 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_POWERCTL_SUSPEND: {
       powerctl_suspend();
     } break;
+
+    case SYSCALL_POWERCTL_HIBERNATE: {
+      args[0] = powerctl_hibernate();
+    }
+
+    case SYSCALL_POWERCTL_GET_STATUS: {
+      powerctl_status_t *status = (powerctl_status_t *)args[0];
+      args[0] = powerctl_get_status__verified(status);
+    }
 #endif
 
 #ifdef USE_HW_JPEG_DECODER
