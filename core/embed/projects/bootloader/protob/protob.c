@@ -78,9 +78,6 @@
   codec_recv_message(iface->wire, msg_size, buf, TYPE##_fields, &msg_recv)
 
 secbool send_user_abort(protob_iface_t *iface, const char *msg) {
-  if (iface == NULL) {
-    return sectrue;
-  }
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ActionCancelled);
   MSG_SEND_ASSIGN_STRING(message, msg);
@@ -89,9 +86,6 @@ secbool send_user_abort(protob_iface_t *iface, const char *msg) {
 
 secbool send_msg_failure(protob_iface_t *iface, FailureType type,
                          const char *msg) {
-  if (iface == NULL) {
-    return sectrue;
-  }
   MSG_SEND_INIT(Failure);
   MSG_SEND_ASSIGN_VALUE(code, type);
   MSG_SEND_ASSIGN_STRING(message, msg);
@@ -99,9 +93,6 @@ secbool send_msg_failure(protob_iface_t *iface, FailureType type,
 }
 
 secbool send_msg_success(protob_iface_t *iface, const char *msg) {
-  if (iface == NULL) {
-    return sectrue;
-  }
   MSG_SEND_INIT(Success);
   if (msg != NULL) {
     MSG_SEND_ASSIGN_STRING(message, msg);
@@ -112,9 +103,6 @@ secbool send_msg_success(protob_iface_t *iface, const char *msg) {
 secbool send_msg_features(protob_iface_t *iface,
                           const vendor_header *const vhdr,
                           const image_header *const hdr) {
-  if (iface == NULL) {
-    return sectrue;
-  }
   MSG_SEND_INIT(Features);
   MSG_SEND_ASSIGN_STRING(vendor, "trezor.io");
   MSG_SEND_ASSIGN_REQUIRED_VALUE(major_version, VERSION_MAJOR);
@@ -151,9 +139,6 @@ secbool send_msg_features(protob_iface_t *iface,
 
 secbool recv_msg_initialize(protob_iface_t *iface, Initialize *msg,
                             uint8_t *buf, uint32_t msg_size) {
-  if (iface == NULL) {
-    return sectrue;
-  }
   MSG_RECV_INIT(Initialize);
   secbool result = MSG_RECV(Initialize);
   memcpy(msg, &msg_recv, sizeof(Initialize));
@@ -162,9 +147,6 @@ secbool recv_msg_initialize(protob_iface_t *iface, Initialize *msg,
 
 secbool recv_msg_get_features(protob_iface_t *iface, GetFeatures *msg,
                               uint8_t *buf, uint32_t msg_size) {
-  if (iface == NULL) {
-    return sectrue;
-  }
   MSG_RECV_INIT(GetFeatures);
   secbool result = MSG_RECV(GetFeatures);
   memcpy(msg, &msg_recv, sizeof(GetFeatures));
@@ -173,9 +155,6 @@ secbool recv_msg_get_features(protob_iface_t *iface, GetFeatures *msg,
 
 secbool recv_msg_ping(protob_iface_t *iface, Ping *msg, uint8_t *buf,
                       uint32_t msg_size) {
-  if (iface == NULL) {
-    return sectrue;
-  }
   MSG_RECV_INIT(Ping);
   secbool result = MSG_RECV(Ping);
   memcpy(msg, &msg_recv, sizeof(Ping));
@@ -184,10 +163,6 @@ secbool recv_msg_ping(protob_iface_t *iface, Ping *msg, uint8_t *buf,
 
 secbool recv_msg_firmware_erase(protob_iface_t *iface, FirmwareErase *msg,
                                 uint8_t *buf, uint32_t msg_size) {
-  if (iface == NULL) {
-    return sectrue;
-  }
-
   MSG_RECV_INIT(FirmwareErase);
   secbool result = MSG_RECV(FirmwareErase);
   memcpy(msg, &msg_recv, sizeof(FirmwareErase));
@@ -196,10 +171,6 @@ secbool recv_msg_firmware_erase(protob_iface_t *iface, FirmwareErase *msg,
 
 secbool send_msg_request_firmware(protob_iface_t *iface, uint32_t offset,
                                   uint32_t length) {
-  if (iface == NULL) {
-    return sectrue;
-  }
-
   MSG_SEND_INIT(FirmwareRequest);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(offset, offset);
   MSG_SEND_ASSIGN_REQUIRED_VALUE(length, length);
@@ -273,9 +244,6 @@ uint32_t protob_get_iface_flag(protob_iface_t *iface) {
 
 secbool protob_get_msg_header(protob_iface_t *iface, uint8_t *buf,
                               uint16_t *msg_id, uint32_t *msg_size) {
-  if (iface != NULL) {
-    iface->wire->read(buf, iface->wire->rx_packet_size);
-    return codec_parse_header(buf, msg_id, msg_size);
-  }
-  return secfalse;
+  iface->wire->read(buf, iface->wire->rx_packet_size);
+  return codec_parse_header(buf, msg_id, msg_size);
 }
