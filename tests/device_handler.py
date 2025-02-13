@@ -6,7 +6,6 @@ from concurrent.futures import ThreadPoolExecutor
 import typing_extensions as tx
 
 from trezorlib.client import PASSPHRASE_ON_DEVICE
-from trezorlib.messages import DebugWaitType
 from trezorlib.transport import udp
 
 if t.TYPE_CHECKING:
@@ -51,7 +50,6 @@ class BackgroundDeviceHandler:
         self.client.ui = NullUI  # type: ignore [NullUI is OK UI]
         self.client.button_callback = self.client.ui.button_request
         self.client.watch_layout(True)
-        self.client.debug.input_wait_type = DebugWaitType.CURRENT_LAYOUT
 
     def run_with_session(
         self,
