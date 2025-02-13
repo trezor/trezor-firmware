@@ -94,12 +94,12 @@ static void usb_init_all(secbool usb21_landing) {
   ensure(usb_start(), NULL);
 }
 
-void usb_iface_init(wire_iface_t* iface, secbool no_fw) {
-  usb_init_all(no_fw);
+void usb_iface_init(wire_iface_t* iface, secbool usb21_landing) {
+  usb_init_all(usb21_landing);
 
-  iface->iface_num = USB_IFACE_NUM;
-  iface->tx_len = USB_PACKET_SIZE;
-  iface->rx_len = USB_PACKET_SIZE;
+  iface->poll_iface_id = USB_IFACE_NUM;
+  iface->tx_packet_size = USB_PACKET_SIZE;
+  iface->rx_packet_size = USB_PACKET_SIZE;
   iface->write = &usb_write;
   iface->read = &usb_read;
   iface->error = &usb_error;

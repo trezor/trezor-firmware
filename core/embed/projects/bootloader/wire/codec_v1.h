@@ -26,15 +26,19 @@
 #define MAX_PACKET_SIZE 256
 
 typedef struct {
-  uint8_t iface_num;
-  size_t tx_len;
-  size_t rx_len;
+  // identifier of the interface used for polling communication events
+  uint8_t poll_iface_id;
+  // size of TX packet
+  size_t tx_packet_size;
+  // size of RX packet
+  size_t rx_packet_size;
 
   // write function pointer
   bool (*write)(uint8_t *data, size_t size);
   // read function pointer
   int (*read)(uint8_t *buffer, size_t buffer_size);
 
+  // RSOD function pointer
   void (*error)(void);
 } wire_iface_t;
 

@@ -152,7 +152,7 @@ secbool send_msg_features(protob_iface_t *iface,
 secbool recv_msg_initialize(protob_iface_t *iface, Initialize *msg,
                             uint8_t *buf, uint32_t msg_size) {
   if (iface == NULL) {
-    return secfalse;
+    return sectrue;
   }
   MSG_RECV_INIT(Initialize);
   secbool result = MSG_RECV(Initialize);
@@ -163,7 +163,7 @@ secbool recv_msg_initialize(protob_iface_t *iface, Initialize *msg,
 secbool recv_msg_get_features(protob_iface_t *iface, GetFeatures *msg,
                               uint8_t *buf, uint32_t msg_size) {
   if (iface == NULL) {
-    return secfalse;
+    return sectrue;
   }
   MSG_RECV_INIT(GetFeatures);
   secbool result = MSG_RECV(GetFeatures);
@@ -174,7 +174,7 @@ secbool recv_msg_get_features(protob_iface_t *iface, GetFeatures *msg,
 secbool recv_msg_ping(protob_iface_t *iface, Ping *msg, uint8_t *buf,
                       uint32_t msg_size) {
   if (iface == NULL) {
-    return secfalse;
+    return sectrue;
   }
   MSG_RECV_INIT(Ping);
   secbool result = MSG_RECV(Ping);
@@ -185,7 +185,7 @@ secbool recv_msg_ping(protob_iface_t *iface, Ping *msg, uint8_t *buf,
 secbool recv_msg_firmware_erase(protob_iface_t *iface, FirmwareErase *msg,
                                 uint8_t *buf, uint32_t msg_size) {
   if (iface == NULL) {
-    return secfalse;
+    return sectrue;
   }
 
   MSG_RECV_INIT(FirmwareErase);
@@ -268,13 +268,13 @@ void protob_init(protob_iface_t *iface, wire_iface_t *wire) {
 }
 
 uint32_t protob_get_iface_flag(protob_iface_t *iface) {
-  return iface->wire->iface_num;
+  return iface->wire->poll_iface_id;
 }
 
 secbool protob_get_msg_header(protob_iface_t *iface, uint8_t *buf,
                               uint16_t *msg_id, uint32_t *msg_size) {
   if (iface != NULL) {
-    iface->wire->read(buf, iface->wire->rx_len);
+    iface->wire->read(buf, iface->wire->rx_packet_size);
     return codec_parse_header(buf, msg_id, msg_size);
   }
   return secfalse;

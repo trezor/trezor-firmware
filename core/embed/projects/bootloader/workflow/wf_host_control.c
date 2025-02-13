@@ -20,7 +20,6 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <io/usb.h>
 #include <sys/systick.h>
 #include <sys/types.h>
 #include <util/image.h>
@@ -93,7 +92,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         result = workflow_wipe_device(active_iface, msg_size, buf);
         if (result == WF_OK) {
           systick_delay_ms(100);
-          usb_deinit();
+          usb_iface_deinit(&usb_iface);
           return WF_OK_DEVICE_WIPED;
         }
         break;
@@ -103,7 +102,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
           jump_allow_1();
           jump_allow_2();
           systick_delay_ms(100);
-          usb_deinit();
+          usb_iface_deinit(&usb_iface);
           return WF_OK_FIRMWARE_INSTALLED;
         }
         break;
@@ -112,7 +111,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
         result = workflow_unlock_bootloader(active_iface, msg_size, buf);
         if (result == WF_OK) {
           systick_delay_ms(100);
-          usb_deinit();
+          usb_iface_deinit(&usb_iface);
           return WF_OK_BOOTLOADER_UNLOCKED;
         }
         break;

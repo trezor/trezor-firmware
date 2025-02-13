@@ -60,7 +60,7 @@ secbool codec_parse_header(const uint8_t *buf, uint16_t *msg_id,
 static bool write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
   packet_write_state_t *state = (packet_write_state_t *)(stream->state);
 
-  size_t tx_len = state->iface->tx_len;
+  size_t tx_len = state->iface->tx_packet_size;
   uint8_t *tx_buf = state->buf;
 
   size_t written = 0;
@@ -95,7 +95,7 @@ static bool write(pb_ostream_t *stream, const pb_byte_t *buf, size_t count) {
 }
 
 static void write_flush(packet_write_state_t *state) {
-  size_t packet_size = state->iface->tx_len;
+  size_t packet_size = state->iface->tx_packet_size;
 
   // if packet is not filled up completely
   if (state->packet_pos < packet_size) {
@@ -154,7 +154,7 @@ secbool codec_send_msg(wire_iface_t *iface, uint16_t msg_id,
 }
 
 static void read_retry(wire_iface_t *iface, uint8_t *buf) {
-  size_t packet_size = iface->rx_len;
+  size_t packet_size = iface->rx_packet_size;
 
   for (int retry = 0;; retry++) {
     int r = iface->read(buf, packet_size);
@@ -174,7 +174,7 @@ static void read_retry(wire_iface_t *iface, uint8_t *buf) {
 static bool read(pb_istream_t *stream, uint8_t *buf, size_t count) {
   packet_read_state_t *state = (packet_read_state_t *)(stream->state);
 
-  size_t packet_size = state->iface->rx_len;
+  size_t packet_size = state->iface->rx_packet_size;
 
   size_t read = 0;
   // while we have data left
@@ -231,7 +231,7 @@ void codec_flush(wire_iface_t *iface, uint32_t msg_size, uint8_t *buf) {
   // consume remaining message
   int remaining_chunks = 0;
 
-  size_t packet_size = iface->rx_len;
+  size_t packet_size = iface->rx_packet_size;
 
   if (msg_size > (packet_size - MSG_HEADER1_LEN)) {
     // calculate how many blocks need to be read to drain the message (rounded
