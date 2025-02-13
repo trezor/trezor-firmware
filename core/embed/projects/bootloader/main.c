@@ -389,8 +389,9 @@ int bootloader_main(void) {
                    (jump_is_allowed_1() == jump_is_allowed_2()),
                NULL);
 
-        ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
-         NULL);
+        ensure(dont_optimize_out_true *
+                   (firmware_present == firmware_present_backup),
+               NULL);
         jump_to_fw_through_reset();
         break;
       case WF_OK_DEVICE_WIPED:
