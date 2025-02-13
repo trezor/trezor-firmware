@@ -202,3 +202,161 @@ uint16_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
 
   return uri_len + 7;  // return buffer len
 }
+
+size_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
+  mbuf_t mbuf = mbuf_init(buffer, buffer_size);
+  size_t uri_len = strlen(uri);
+
+  mbuf_write_u8(&mbuf, 0x3);          // TLV header
+  mbuf_write_u8(&mbuf, uri_len + 5);  // uri + record header
+  mbuf_write_u8(&mbuf, 0xD1);         // NDEF record Header
+  mbuf_write_u8(&mbuf, 0x1);          // Type length
+  mbuf_write_u8(&mbuf, uri_len);      // Payload length
+  mbuf_write_u8(&mbuf, 0x55);         // URI type
+  mbuf_write_u8(&mbuf, 0x1);          // URI abreviation
+  mbuf_write(&mbuf, uri, uri_len);
+  mbuf_write_u8(&mbuf, 0xFE);  // TLV termination
+
+  return mbuf_ok(&mbuf) ? mbuf_len(&mbuf) : 0;
+}
+
+ndef_status_t ndef_parse_record(mbuf_t *mbuf, ndef_record_t *rec) {
+  memset(rec, 0, sizeof(ndef_record_t));
+
+  if (!mbuf_read_u8(mbuf, &rec->header.byte)) {
+    return NDEF_ERROR;
+  }
+
+  if (rec->header.tnf == 0x00 || rec->header.tnf > 0x06) {
+    return NDEF_ERROR;  // Empty or non-existing record
+  }
+
+  if (!mbuf_read_u8(mbuf, &rec->type_length)) {
+    return NDEF_ERROR;
+  }
+
+  if (rec->header.sr) {
+    uint8_t len;
+    if (!mbuf_read_u8(mbuf, &len)) {
+      return NDEF_ERROR;
+    }
+    rec->payload_length = len;
+  } else {
+    if (!mbuf_read_u32(mbuf, &rec->payload_length)) {
+      return NDEF_ERROR;
+    }
+  }
+
+  if (rec->header.il) {
+    if (!mbuf_read_u8(mbuf, &rec->id_length)) {
+      return NDEF_ERROR;
+    }
+  }
+
+  if (rec->type_length > 0) {
+    mbuf_read_u8(mbuf, &rec->type);
+    mbuf_skip(mbuf, rec->type_length - 1);
+  }
+
+  if (rec->id_length > 0) {
+    mbuf_read_u8(mbuf, &rec->id);
+    mbuf_skip(mbuf, rec->id_length - 1);
+  }
+
+  if (rec->payload_length > NDEF_MAX_RECORD_PAYLOAD_BYTES) {
+    return NDEF_ERROR;
+  }
+
+  if (rec->payload_length > 0) {
+    mbuf_read(mbuf, rec->payload, rec->payload_length);
+  }
+
+  rec->record_total_len = mbuf_offset(&mbuf);
+
+  return NDEF_OK;
+}
+
+ndef_status_t ndef_parse_record(mbuf_t *mbuf, ndef_record_t *rec) {
+  memset(rec, 0, sizeof(ndef_record_t));
+
+  mbuf_read_u8(mbuf, &rec->header.byte);
+
+  if (rec->header.tnf == 0x00 || rec->header.tnf > 0x06) {
+    return NDEF_ERROR;  // Empty or non-existing record
+  }
+
+  mbuf_read_u8(mbuf, &rec->type_length);
+
+  if (rec->header.sr) {
+    uint8_t len;
+    mbuf_read_u8(mbuf, &len);
+    rec->payload_length = len;
+  } else {
+    mbuf_read_u32(mbuf, &rec->payload_length);
+  }
+
+  if (rec->header.il) {
+    mbuf_read_u8(mbuf, &rec->id_length);
+  }
+
+  if (rec->type_length > 0) {
+    mbuf_read_u8(mbuf, &rec->type);
+    mbuf_skip(mbuf, rec->type_length - 1);
+  }
+
+  if (rec->id_length > 0) {
+    mbuf_read_u8(mbuf, &rec->id);
+    mbuf_skip(mbuf, rec->id_length - 1);
+  }
+
+  if (rec->payload_length > NDEF_MAX_RECORD_PAYLOAD_BYTES) {
+    return NDEF_ERROR;
+  }
+
+  if (rec->payload_length > 0) {
+    mbuf_read(mbuf, rec->payload, rec->payload_length);
+  }
+
+  rec->record_total_len = mbuf_offset(&mbuf);
+
+  return mbuf_ok(&mbuf) ? NDEF_OK : NDEF_ERROR;
+}
+
+ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
+                                 ndef_message_t *message) {
+  memset(message, 0, sizeof(ndef_message_t));
+
+  mbuf_t mbuf = mbuf_init(buffer, buffer_len);
+
+  uint8_t temp;
+  if (!mbuf_read_u8(&mbuf, &temp) || temp != 0x3) {
+    return NDEF_ERROR;  // Not a valid TLV structure
+  }
+
+  if (!mbuf_read_u8(&mbuf, &temp)) {
+    return NDEF_ERROR;
+  }
+
+  uint16_t len = temp;
+  if (temp == 0xFF) {
+    if (!mbuf_read_u16(&mbuf, &len)) {
+      return NDEF_ERROR;
+    }
+  }
+
+  if (mbuf_remaining(&mbuf) < len) {
+    return NDEF_ERROR;
+  }
+
+  while (message->records_cnt < NDEF_MAX_RECORDS &&
+         ndef_parse_record(&mbuf, &message->records[message->records_cnt]) ==
+             NDEF_OK) {
+    message->records_cnt++;
+  }
+
+  if (!mbuf_read_u8(&mbuf, &temp) || temp != 0xFE) {
+    return NDEF_ERROR;  // Not a valid TLV structure
+  }
+
+  return mbuf_ok() ? NDEF_OK : NDEF_ERROR;
+}
