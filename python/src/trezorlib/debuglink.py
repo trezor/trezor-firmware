@@ -446,8 +446,6 @@ class DebugLink:
 
         self.waiting_for_layout_change = False
 
-        self.input_wait_type = DebugWaitType.IMMEDIATE
-
     @property
     def legacy_ui(self) -> bool:
         """Differences between UI1 and UI2."""
