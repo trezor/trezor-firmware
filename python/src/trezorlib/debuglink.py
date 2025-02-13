@@ -460,8 +460,6 @@ class DebugLink:
 
         self.waiting_for_layout_change = False
 
-        self.input_wait_type = DebugWaitType.IMMEDIATE
-
     @property
     def legacy_ui(self) -> bool:
         """Differences between UI1 and UI2."""
@@ -514,10 +512,6 @@ class DebugLink:
                 "Debuglink is unavailable while waiting for layout change."
             )
 
-        LOG.debug(
-            f"sending message: {msg.__class__.__name__}",
-            extra={"protobuf": msg},
-        )
         msg_type, msg_bytes = self.mapping.encode(msg)
         LOG.log(
             DUMP_BYTES,
@@ -534,10 +528,6 @@ class DebugLink:
             msg_for_log = deepcopy(msg)
             msg_for_log.tokens = ["".join(msg_for_log.tokens)]
 
-        LOG.debug(
-            f"received message: {msg_for_log.__class__.__name__}",
-            extra={"protobuf": msg_for_log},
-        )
         return msg
 
     def _call(self, msg: protobuf.MessageType, timeout: float | None = None) -> t.Any:
@@ -1273,14 +1263,6 @@ class TrezorClientDebugLink(TrezorClient):
         """
         self.ui: DebugUI = DebugUI(self.debug)
         self.in_with_statement = False
-        self.expected_responses: list[MessageFilter] | None = None
-        self.actual_responses: list[protobuf.MessageType] | None = None
-        self.filters: t.Dict[
-            t.Type[protobuf.MessageType],
-            t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
-        ] = {}
-        if new_seedless_session:
-            self._seedless_session = self.get_seedless_session(new_session=True)
 
     @property
     def button_callback(self):
@@ -1486,10 +1468,6 @@ class TrezorClientDebugLink(TrezorClient):
     def __exit__(self, exc_type: t.Any, value: t.Any, traceback: t.Any) -> None:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
 
-        # copy expected/actual responses before clearing them
-        expected_responses = self.expected_responses
-        actual_responses = self.actual_responses
-
         # grab a copy of the inputflow generator to raise an exception through it
         if isinstance(self.ui, DebugUI):
             input_flow = self.ui.input_flow
@@ -1498,58 +1476,10 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.reset_debug_features(new_seedless_session=False)
 
-        if exc_type is None:
-            # If no other exception was raised, evaluate missed responses
-            # (raises AssertionError on mismatch)
-            self._verify_responses(expected_responses, actual_responses)
-
-        elif isinstance(input_flow, t.Generator):
+        if exc_type is not None and isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
             input_flow.throw(exc_type, value, traceback)
-
-    def set_expected_responses(
-        self,
-        expected: t.Sequence[
-            t.Union["ExpectedMessage", t.Tuple[bool, "ExpectedMessage"]]
-        ],
-    ) -> None:
-        """Set a sequence of expected responses to client calls.
-
-        Within a given with-block, the list of received responses from device must
-        match the list of expected responses, otherwise an AssertionError is raised.
-
-        If an expected response is given a field value other than None, that field value
-        must exactly match the received field value. If a given field is None
-        (or unspecified) in the expected response, the received field value is not
-        checked.
-
-        Each expected response can also be a tuple (bool, message). In that case, the
-        expected response is only evaluated if the first field is True.
-        This is useful for differentiating sequences between Trezor models:
-
-        >>> trezor_one = client.features.model == "1"
-        >>> client.set_expected_responses([
-        >>>     messages.ButtonRequest(code=ConfirmOutput),
-        >>>     (trezor_one, messages.ButtonRequest(code=ConfirmOutput)),
-        >>>     messages.Success(),
-        >>> ])
-        """
-        if not self.in_with_statement:
-            raise RuntimeError("Must be called inside 'with' statement")
-
-        # make sure all items are (bool, message) tuples
-        expected_with_validity = (
-            e if isinstance(e, tuple) else (True, e) for e in expected
-        )
-
-        # only apply those items that are (True, message)
-        self.expected_responses = [
-            MessageFilter.from_message_or_type(expected)
-            for valid, expected in expected_with_validity
-            if valid
-        ]
-        self.actual_responses = []
 
     def use_pin_sequence(self, pins: t.Iterable[str]) -> None:
         """Respond to PIN prompts from device with the provided PINs.
@@ -1580,41 +1510,6 @@ class TrezorClientDebugLink(TrezorClient):
 
         output.append("")
         return output
-
-    @classmethod
-    def _verify_responses(
-        cls,
-        expected: list[MessageFilter] | None,
-        actual: list[protobuf.MessageType] | None,
-    ) -> None:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-
-        if expected is None and actual is None:
-            return
-
-        assert expected is not None
-        assert actual is not None
-
-        for i, (exp, act) in enumerate(zip_longest(expected, actual)):
-            if exp is None:
-                output = cls._expectation_lines(expected, i)
-                output.append("No more messages were expected, but we got:")
-                for resp in actual[i:]:
-                    output.append(
-                        textwrap.indent(protobuf.format_message(resp), "    ")
-                    )
-                raise AssertionError("\n".join(output))
-
-            if act is None:
-                output = cls._expectation_lines(expected, i)
-                output.append("This and the following message was not received.")
-                raise AssertionError("\n".join(output))
-
-            if not exp.match(act):
-                output = cls._expectation_lines(expected, i)
-                output.append("Actually received:")
-                output.append(textwrap.indent(protobuf.format_message(act), "    "))
-                raise AssertionError("\n".join(output))
 
     def sync_responses(self) -> None:
         """Synchronize Trezor device receiving with caller.
