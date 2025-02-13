@@ -63,7 +63,21 @@ void npm1300_deinit(void);
 // Gets the cause of the last restart
 uint8_t npm1300_restart_cause(void);
 
-// Switches the device to the ship mode
+// Switches the device to ship mode.
+//
+// In tge ship mode, the CPU is powered off, and only the VBAT domain remains
+// active. The device can be woken by pressing the power button, triggering
+// a full boot sequence.
+//
+// Ship mode can only be entered if the device is not connected to a USB or
+// wireless charger. If the device is charging, the function returns `true`,
+// and the device state remains unchanged.
+//
+// If the function succeeds, the device will not be powered off immediately,
+// but after some time (typically a few milliseconds).
+//
+// Returns `false` if the operation fails (likely due to uninitialized power
+// management).
 bool npm1300_enter_shipmode(void);
 
 // Starts the asynchronous measurement

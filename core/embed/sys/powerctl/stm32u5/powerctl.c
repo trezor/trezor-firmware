@@ -21,6 +21,7 @@
 #include <trezor_rtl.h>
 
 #include <sys/powerctl.h>
+#include <sys/systick.h>
 
 #include "../npm1300/npm1300.h"
 #include "../stwlc38/stwlc38.h"
@@ -77,16 +78,35 @@ void powerctl_deinit(void) {
   drv->initialized = false;
 }
 
-void powerctl_get_status(powerctl_status_t* status) {
+bool powerctl_get_status(powerctl_status_t* status) {
   powerctl_driver_t* drv = &g_powerctl_driver;
 
   memset(status, 0, sizeof(powerctl_status_t));
 
   if (!drv->initialized) {
-    return;
+    return false;
   }
 
   // TODO
+
+  return true;
+}
+
+bool powerctl_hibernate(void) {
+  powerctl_driver_t* drv = &g_powerctl_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  if (!npm1300_enter_shipmode()) {
+    return false;
+  }
+
+  // Wait for the device to power off
+  systick_delay_ms(50);
+
+  return true;
 }
 
 #endif  // KERNEL_MODE

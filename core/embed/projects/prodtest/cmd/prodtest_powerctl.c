@@ -43,6 +43,23 @@ static void prodtest_powerctl_suspend(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_powerctl_hibernate(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Hibernating the the device...");
+
+  if (!powerctl_hibernate()) {
+    cli_error(cli, CLI_ERROR, "Failed to hibernate.");
+    return;
+  }
+
+  cli_trace(cli, "Device is powered externally, hibernation is not possible.");
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -51,5 +68,13 @@ PRODTEST_CLI_CMD(
   .info = "Suspend the device to low-power mode",
   .args = ""
 );
+
+PRODTEST_CLI_CMD(
+  .name = "powerctl-hibernate",
+  .func = prodtest_powerctl_hibernate,
+  .info = "Hibernate the device into a near power-off state",
+  .args = ""
+);
+
 
 #endif  // USE_POWERCTL
