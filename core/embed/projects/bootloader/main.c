@@ -219,12 +219,10 @@ void real_jump_to_firmware(void) {
       IMAGE_CODE_ALIGN(FIRMWARE_START + vhdr.hdrlen + IMAGE_HEADER_SIZE));
 }
 
-#ifdef USE_RESET_TO_BOOT
 __attribute__((noreturn)) void jump_to_fw_through_reset(void) {
   display_fade(display_get_backlight(), 0, 200);
   reboot_device();
 }
-#endif
 
 #ifndef TREZOR_EMULATOR
 int main(void) {
@@ -386,14 +384,15 @@ int bootloader_main(void) {
       case WF_OK_FIRMWARE_INSTALLED:
         firmware_present = sectrue;
         firmware_present_backup = sectrue;
-      case WF_OK_REBOOT_SELECTED: {
+      case WF_OK_REBOOT_SELECTED:
         ensure(dont_optimize_out_true *
                    (jump_is_allowed_1() == jump_is_allowed_2()),
                NULL);
-#ifndef USE_RESET_TO_BOOT
-        ui_screen_boot_stage_1(true);
-#endif
-      } break;
+
+        ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
+         NULL);
+        jump_to_fw_through_reset();
+        break;
       case WF_OK_DEVICE_WIPED:
       case WF_OK_BOOTLOADER_UNLOCKED:
       case WF_ERROR:
@@ -415,16 +414,9 @@ int bootloader_main(void) {
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
          NULL);
 
-#ifdef USE_RESET_TO_BOOT
-  if (sectrue == firmware_present &&
-      firmware_jump_fn != jump_to_fw_through_reset) {
-    firmware_jump_fn = real_jump_to_firmware;
-  }
-#else
   if (sectrue == firmware_present) {
     firmware_jump_fn = real_jump_to_firmware;
   }
-#endif
 
   firmware_jump_fn();
 

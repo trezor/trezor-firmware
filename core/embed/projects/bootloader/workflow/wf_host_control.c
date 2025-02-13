@@ -25,7 +25,6 @@
 #include <util/image.h>
 
 #include "antiglitch.h"
-#include "bootui.h"
 #include "poll.h"
 #include "protob/protob.h"
 #include "wire/wire_iface_usb.h"
@@ -37,7 +36,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
   wire_iface_t usb_iface = {0};
   protob_iface_t protob_usb_iface = {0};
 
-  ui_screen_connect();
+  redraw_wait_screen();
 
   // if both are NULL, we don't have a firmware installed
   // let's show a webusb landing page in this case
