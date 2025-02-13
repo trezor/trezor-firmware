@@ -397,7 +397,8 @@ impl FirmwareUI for UIEckhart {
         _prompt: TString<'static>,
         _max_len: u32,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let flow = flow::request_passphrase::new_request_passphrase()?;
+        Ok(flow)
     }
 
     fn select_word(
