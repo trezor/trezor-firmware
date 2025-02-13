@@ -10,3 +10,4 @@
 ^\./crypto/sha3
 ^\./legacy/vendor
 ^\./core/embed/sys/systemview/stm32
+^\./core/embed/io/nfc/rfal
