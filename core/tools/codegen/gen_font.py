@@ -533,7 +533,15 @@ def gen_layout_delizia():
     FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf", font_idx=1).write_files()
     FaceProcessor("TTSatoshi", "DemiBold", 18, ext="otf", font_idx=8).write_files()
     FaceProcessor("RobotoMono", "Medium", 21, font_idx=3).write_files()
-
+    FaceProcessor(
+        "TTHoves",
+        "Bold",
+        17,
+        ext="otf",
+        gen_normal=False,
+        gen_upper=True,
+        font_idx_upper=7,
+    ).write_files()
 
 LAYOUTS = {
     "bolt": gen_layout_bolt,

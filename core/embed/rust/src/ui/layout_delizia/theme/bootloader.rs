@@ -74,21 +74,21 @@ pub const CHECK40: &[u8] = include_res!("layout_delizia/res/check40.toif");
 pub fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_BG,
             button_color: WHITE,
             icon_color: BLD_BG,
             background_color: BLD_BG,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_BG,
             button_color: BLD_INSTALL_BTN_COLOR_ACTIVE,
             icon_color: BLD_BG,
             background_color: BLD_BG,
         },
         disabled: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: FG,
             button_color: GREY_DARK,
             icon_color: BLD_BG,
@@ -100,21 +100,21 @@ pub fn button_confirm() -> ButtonStyleSheet {
 pub fn button_wipe_cancel() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: WHITE,
             button_color: BLD_WIPE_CANCEL_BTN_COLOR,
             icon_color: WHITE,
             background_color: BLD_WIPE_COLOR,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: WHITE,
             button_color: BLD_WIPE_CANCEL_BTN_COLOR_ACTIVE,
             icon_color: WHITE,
             background_color: BLD_WIPE_COLOR,
         },
         disabled: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: GREY_LIGHT,
             button_color: GREY_DARK,
             icon_color: GREY_LIGHT,
@@ -126,21 +126,21 @@ pub fn button_wipe_cancel() -> ButtonStyleSheet {
 pub fn button_wipe_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_WIPE_COLOR,
             button_color: BLD_WIPE_BTN_COLOR,
             icon_color: BLD_WIPE_COLOR,
             background_color: BLD_WIPE_COLOR,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_WIPE_COLOR,
             button_color: BLD_WIPE_BTN_COLOR_ACTIVE,
             icon_color: BLD_WIPE_COLOR,
             background_color: BLD_WIPE_COLOR,
         },
         disabled: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: FG,
             button_color: GREY_DARK,
             icon_color: FG,
@@ -152,21 +152,21 @@ pub fn button_wipe_confirm() -> ButtonStyleSheet {
 pub fn button_bld_menu() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_FG,
             button_color: BLD_BG,
             icon_color: BLD_FG,
             background_color: BLD_BG,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_FG,
             button_color: BLD_BG,
             icon_color: BLD_FG,
             background_color: BLD_BG,
         },
         disabled: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: GREY_LIGHT,
             button_color: BLD_BG,
             icon_color: GREY_LIGHT,
@@ -178,21 +178,21 @@ pub fn button_bld_menu() -> ButtonStyleSheet {
 pub fn button_bld() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_FG,
             button_color: BLD_BTN_COLOR,
             icon_color: BLD_FG,
             background_color: BLD_BG,
         },
         active: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: BLD_FG,
             button_color: BLD_BTN_COLOR_ACTIVE,
             icon_color: BLD_FG,
             background_color: BLD_BG,
         },
         disabled: &ButtonStyle {
-            font: fonts::FONT_DEMIBOLD,
+            font: fonts::FONT_SUB,
             text_color: GREY_LIGHT,
             button_color: BLD_BTN_COLOR,
             icon_color: GREY_LIGHT,
@@ -203,7 +203,7 @@ pub fn button_bld() -> ButtonStyleSheet {
 
 pub const fn text_title(bg: Color) -> TextStyle {
     TextStyle::new(
-        fonts::FONT_DEMIBOLD,
+        fonts::FONT_SUB,
         BLD_TITLE_COLOR,
         bg,
         BLD_TITLE_COLOR,
@@ -214,7 +214,7 @@ pub const fn text_title(bg: Color) -> TextStyle {
 pub const TEXT_NORMAL: TextStyle =
     TextStyle::new(fonts::FONT_DEMIBOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_WARNING: TextStyle = TextStyle::new(
-    fonts::FONT_DEMIBOLD,
+    fonts::FONT_SUB,
     BLD_WARN_COLOR,
     BLD_BG,
     BLD_WARN_COLOR,
@@ -227,7 +227,7 @@ pub const fn text_fingerprint(bg: Color) -> TextStyle {
 pub const TEXT_BOLD: TextStyle =
     TextStyle::new(fonts::FONT_DEMIBOLD, BLD_FG, BLD_BG, BLD_FG, BLD_FG);
 pub const TEXT_WIPE_BOLD: TextStyle = TextStyle::new(
-    fonts::FONT_DEMIBOLD,
+    fonts::FONT_SUB,
     BLD_WIPE_TEXT_COLOR,
     BLD_WIPE_COLOR,
     BLD_WIPE_TEXT_COLOR,
