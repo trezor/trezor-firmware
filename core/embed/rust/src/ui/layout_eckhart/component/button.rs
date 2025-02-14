@@ -135,8 +135,8 @@ impl Button {
         )
     }
 
-    pub fn is_long_press(&self) -> bool {
-        self.long_press.is_some()
+    pub fn long_press(&self) -> Option<Duration> {
+        self.long_press
     }
 
     pub fn is_disabled(&self) -> bool {
