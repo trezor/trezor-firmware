@@ -16,7 +16,6 @@ pub mod print;
 pub mod qstr;
 pub mod runtime;
 pub mod simple_type;
-pub mod time;
 pub mod typ;
 pub mod util;
 

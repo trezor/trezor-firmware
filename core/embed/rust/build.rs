@@ -394,6 +394,7 @@ fn generate_trezorhal_bindings() {
         // systick
         .allowlist_function("systick_delay_ms")
         .allowlist_function("systick_ms")
+        .allowlist_function("systick_us")
         // toif
         .allowlist_type("toif_format_t")
         //usb
