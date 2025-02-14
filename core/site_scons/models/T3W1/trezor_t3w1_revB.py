@@ -14,7 +14,7 @@ def configure(
     features_available: list[str] = []
     board = "T3W1/boards/trezor_t3w1_revB.h"
     hw_model = get_hw_model_as_number("T3W1")
-    hw_revision = 0
+    hw_revision = 1
 
     mcu = "STM32U5G9xx"
     linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
