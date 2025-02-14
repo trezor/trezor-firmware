@@ -1,4 +1,4 @@
-use super::{geometry::Rect, CommonUI};
+use super::{geometry::Rect, shape, CommonUI, InfoOverlay};
 
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
@@ -30,5 +30,9 @@ impl CommonUI for UICaesar {
 
     fn screen_boot_stage_2(fade_in: bool) {
         screens::screen_boot_stage_2(fade_in);
+    }
+
+    fn render_info_overlay<'s>(_target: &mut impl shape::Renderer<'s>, _info: InfoOverlay) {
+        // Not implemented
     }
 }

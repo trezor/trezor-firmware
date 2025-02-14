@@ -6,11 +6,16 @@ use crate::ui::{
     },
 };
 
+use crate::ui::{CommonUI, InfoOverlay, ModelUI};
+
 use super::bumps;
 
-use crate::trezorhal::display;
+use crate::trezorhal::{display, time};
 
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgb565Canvas<'alloc>>;
+
+// Time of the last frame buffer get operation
+static mut FRAME_BUFFER_GET_TIME: u64 = 0;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
@@ -32,7 +37,9 @@ where
 
         let cache = DrawingCache::new(bump_a, bump_b);
 
+        let refresh_time = unsafe { time::ticks_us() - FRAME_BUFFER_GET_TIME };
         let fb_info = display::get_frame_buffer();
+        unsafe { FRAME_BUFFER_GET_TIME = time::ticks_us() };
 
         if fb_info.is_none() {
             return;
@@ -53,6 +60,13 @@ where
 
         let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
 
-        func(&mut target);
+        let render_time = time::measure_us(|| func(&mut target));
+
+        let info = InfoOverlay {
+            render_time,
+            refresh_time,
+        };
+
+        ModelUI::render_info_overlay(&mut target, info);
     });
 }
