@@ -557,6 +557,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__set_it_to_count_template;
   MP_QSTR_reset__share_checked_successfully_template;
   MP_QSTR_reset__share_completed_template;
+  MP_QSTR_reset__share_words_first;
   MP_QSTR_reset__share_words_title;
   MP_QSTR_reset__slip39_checklist_more_info_threshold;
   MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template;
@@ -674,7 +675,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
-  MP_QSTR_show_share_words_delizia;
+  MP_QSTR_show_share_words_extended;
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
   MP_QSTR_show_wait_text;

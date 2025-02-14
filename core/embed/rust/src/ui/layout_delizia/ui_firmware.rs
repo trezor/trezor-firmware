@@ -994,11 +994,11 @@ impl FirmwareUI for UIDelizia {
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"use show_share_words_delizia instead",
+            c"use show_share_words_extended instead",
         ))
     }
 
-    fn show_share_words_delizia(
+    fn show_share_words_extended(
         words: heapless::Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,

@@ -998,5 +998,6 @@
   "996": "words__unlocked",
   "997": "solana__max_fees_rent",
   "998": "solana__max_rent_fee",
-  "999": "solana__transaction_fee"
+  "999": "solana__transaction_fee",
+  "1000": "reset__share_words_first"
 }
