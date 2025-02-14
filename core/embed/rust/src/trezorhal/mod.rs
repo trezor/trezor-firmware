@@ -30,8 +30,4 @@ pub mod wordlist;
 
 pub mod secbool;
 
-#[cfg(not(feature = "micropython"))]
 pub mod time;
-
-#[cfg(feature = "micropython")]
-pub use crate::micropython::time;
