@@ -1013,5 +1013,6 @@
   "1011": "ethereum__approve_revoke_from",
   "1012": "words__chain",
   "1013": "words__token",
-  "1014": "instructions__tap"
+  "1014": "instructions__tap",
+  "1015": "reset__share_words_first"
 }
