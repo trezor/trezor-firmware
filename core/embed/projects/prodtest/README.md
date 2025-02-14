@@ -548,6 +548,81 @@ optiga-counter-read
 OK 0E
 ```
 
+### pmic-init
+Reinitializes the PMIC driver, restoring it to its default state.
+
+Example:
+```
+# Initializing the NPM1300 driver...
+OK
+```
+
+### pmic-charge-enable
+Enables battery charging. If a charger is connected, charging starts immediately.
+
+Example:
+```
+pmic-charge-enable
+# Enabling battery charging @ 180mA...
+OK
+```
+
+### pmic-charge-disable
+Disables battery charging.
+
+Example:
+```
+pmic-charge-disable
+# Disabling battery charging...
+OK
+```
+
+### pmic-charge-set-limit
+Sets the batter charging current limit.
+
+`pmic-charge-set-limit <limit>`
+
+* `limit` - Charging limit in mA, ranging from 30 to 180.
+
+```
+pmic-charge-set-limit 100
+# Setting battery charging limit to 100 mA...
+OK
+```
+
+### pmic-buck-set-mode
+Selects of one PMIC buck converter modes.
+
+`pmic-buck-set-mode <mode>`
+
+* `pmic-buck-set-mode` - Buck converter mode (pwm, pfm or auto)
+
+Example:
+```
+pmic-buck-set-mode auto
+# Setting the buck converter mode...
+OK
+```
+
+### pmic-report
+Starts single or continuous reporting of PMIC state including voltage, current and temperature.
+
+`pmic-report [<count>] [<period>]`
+
+* `count` - Number of measurement periods
+* `period` - Duration of single measurement period in milliseconds
+
+Example:
+```
+pmic-report 4 1000
+#       time      vbat  ibat  ntc    vsys  die    bat  buck mode
+PROGRESS 000229555 0.000 0.000 -88.117 4.692 36.414 0x08 0x0C IDLE
+PROGRESS 000230555 0.000 0.000 -88.117 4.673 37.207 0x08 0x0C IDLE
+PROGRESS 000231555 0.004 0.000 -88.117 4.673 36.414 0x08 0x0C IDLE
+PROGRESS 000232555 0.004 0.000 -88.117 4.679 36.414 0x08 0x0C IDLE
+OK
+```
+
 ### powerctl-suspend
 Enters low-power mode.
 
@@ -583,4 +658,107 @@ powerctl-hibernate
 # Hibernating the the device...
 # Device is powered externally, hibernation is not possible.
 OK
+```
+
+### wpc-init
+Reinitializes the wireless power receiver driver, restoring it to its default state.
+
+Example:
+```
+wpc-init
+# Initializing the WPC driver...
+OK
+```
+
+### wpc-enable
+Enables the wireless power receiver. When enabled, the receiver can initiate communication with the transmitter. To start battery charging, the voltage output must also be enabled (see `wpc-out-enable`).
+
+Example:
+```
+wpc-enable
+# Enabling STWLC38...
+OK
+```
+
+### wpc-disable
+Disables wireless power receiver.
+
+Example:
+```
+wpc-disable
+# Disabling STWLC38...
+OK
+```
+
+### wpc-out-enable
+Enables the voltage output of the wireless power receiver.  By default, the voltage output is enabled.
+
+Example:
+```
+wpc-out-enable
+# Enabling STWLC38 output...
+OK
+```
+
+### wpc-out-disable
+Disables the voltage output of the wireless power receiver.
+
+Example:
+```
+wpc-out-disable
+# Disabling STWLC38 output...
+OK
+```
+
+### wpc-report
+
+Example:
+```
+#       time       ready vout_ready vrect vout icur tmeas opfreq ntc
+PROGRESS 000314886 1 1 5.068 5.001 59.000 41.000 146 320.900
+PROGRESS 000315886 1 1 5.064 5.006 61.000 41.100 146 321.000
+PROGRESS 000316886 1 1 5.114 5.003 61.000 41.200 146 321.100
+PROGRESS 000317886 1 1 5.151 5.006 61.000 41.300 146 321.000
+PROGRESS 000318886 1 1 5.150 5.002 59.000 41.000 146 320.800
+OK
+```
+
+### wpc-info
+Retrieves detailed information from the wireless power receiver, including chip identification, firmware version, configuration settings, and error status.
+
+Example:
+```
+> wpc-info
+# Reading STWLC38 info...
+# chip_id    0x38
+# chip_rev   0x3
+# cust_id    0x0
+# rom_id     0x161
+# patch_id   0x1299
+# cfg_id     0x1026
+# pe_id      0x7
+# op_mode    0x2
+# device_id  005A32344D3555AA021F781855AA55AA
+#
+# sys_err              0x0
+#   core_hard_fault:   0x0
+#   nvm_ip_err:        0x0
+#   nvm_boot_err:      0x0
+#   nvm_pe_error:      0x0
+#   nvm_config_err:    0x0
+#   nvm_patch_err:     0x0
+#   nvm_prod_info_err: 0x0
+OK
+```
+
+### wpc-update
+Updates the firmware and configuration of the wireless power receiver.
+
+WARNING: The update will only succeed if the receiver is externally powered (5V present on the VOUT test point).
+
+Example:
+```
+wpc-update
+# Updating STWLC38...
+# WPC update completed 800 ms
 ```
