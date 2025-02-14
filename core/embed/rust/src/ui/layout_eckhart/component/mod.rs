@@ -4,6 +4,7 @@ mod button;
 mod error;
 mod header;
 mod hint;
+mod hold_to_confirm;
 mod result;
 mod text_screen;
 mod vertical_menu;
@@ -15,6 +16,7 @@ pub use button::{Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet
 pub use error::ErrorScreen;
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
+pub use hold_to_confirm::HoldToConfirmAnim;
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
 pub use vertical_menu::{VerticalMenu, VerticalMenuMsg, MENU_MAX_ITEMS};
