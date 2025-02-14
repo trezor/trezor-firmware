@@ -1279,7 +1279,7 @@ pub enum TranslatedString {
     haptic_feedback__enable = 885,  // "Enable haptic feedback?"
     haptic_feedback__subtitle = 886,  // "Setting"
     haptic_feedback__title = 887,  // "Haptic feedback"
-    instructions__continue_holding = 888,  // "Continue\nholding"
+    instructions__continue_holding = 888,  // {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"}
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
@@ -2682,7 +2682,14 @@ impl TranslatedString {
             Self::haptic_feedback__enable => "Enable haptic feedback?",
             Self::haptic_feedback__subtitle => "Setting",
             Self::haptic_feedback__title => "Haptic feedback",
+            #[cfg(feature = "layout_bolt")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_caesar")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_delizia")]
             Self::instructions__continue_holding => "Continue\nholding",
+            #[cfg(feature = "layout_eckhart")]
+            Self::instructions__continue_holding => "Keep holding",
             Self::instructions__enter_next_share => "Enter next share",
             Self::instructions__hold_to_continue => "Hold to continue",
             Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",

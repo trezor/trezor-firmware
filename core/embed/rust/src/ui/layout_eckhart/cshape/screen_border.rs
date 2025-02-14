@@ -19,7 +19,8 @@ impl ScreenBorder {
     pub fn new(color: Color) -> Self {
         let screen = constant::screen();
 
-        // Top bar: from the right edge of top-left icon to the left edge of top-right icon.
+        // Top bar: from the right edge of top-left icon to the left edge of top-right
+        // icon.
         let top_bar_rect = Rect {
             x0: screen.x0 + ICON_BORDER_TL.toif.width(),
             y0: screen.y0,
@@ -27,7 +28,8 @@ impl ScreenBorder {
             y1: screen.y0 + 2,
         };
 
-        // Bottom bar: from the right edge of bottom-left icon to the left edge of bottom-right icon.
+        // Bottom bar: from the right edge of bottom-left icon to the left edge of
+        // bottom-right icon.
         let bottom_bar_rect = Rect {
             x0: screen.x0 + ICON_BORDER_BL.toif.width(),
             y0: screen.y1 - 2,
@@ -35,14 +37,16 @@ impl ScreenBorder {
             y1: screen.y1,
         };
 
-        // Left bar: from the bottom edge of top-left icon to the top edge of bottom-left icon.
+        // Left bar: from the bottom edge of top-left icon to the top edge of
+        // bottom-left icon.
         let left_bar_rect = Rect {
             x0: screen.x0,
             y0: screen.y0 + ICON_BORDER_TL.toif.height() - 1,
             x1: screen.x0 + 2,
             y1: screen.y1 - ICON_BORDER_BL.toif.height(),
         };
-        // Right bar: from the bottom edge of top-right icon to the top edge of bottom-right icon.
+        // Right bar: from the bottom edge of top-right icon to the top edge of
+        // bottom-right icon.
         let right_bar_rect = Rect {
             x0: screen.x1 - 2,
             y0: screen.y0 + ICON_BORDER_TR.toif.height() - 1,

@@ -391,7 +391,7 @@
     "inputs__return": "RETURN",
     "inputs__show": "SHOW",
     "inputs__space": "SPACE",
-    "instructions__continue_holding": "Continue\nholding",
+    "instructions__continue_holding": {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"},
     "instructions__continue_in_app": "Continue in the app",
     "instructions__enter_next_share": "Enter next share",
     "instructions__hold_to_confirm": "Hold to confirm",
