@@ -16,8 +16,37 @@ def show_share_words(
     share_index: int | None = None,
     group_index: int | None = None,
 ) -> Awaitable[None]:
-    # FIXME: not implemented
-    raise NotImplemented
+    if share_index is None:
+        subtitle = None
+    elif group_index is None:
+        subtitle = TR.reset__recovery_share_title_template.format(share_index + 1)
+    else:
+        subtitle = TR.reset__group_share_title_template.format(
+            group_index + 1, share_index + 1
+        )
+    words_count = len(share_words)
+    description = None
+    instructions = [TR.reset__write_down_words_template.format(words_count)]
+    if words_count == 20 and share_index is None:
+        # 1-of-1 SLIP39: inform the user about repeated words
+        instructions.append(TR.reset__words_may_repeat)
+    if share_index == 0:
+        # regular SLIP39, 1st share
+        description = TR.instructions__shares_start_with_1
+        instructions.append(TR.reset__repeat_for_all_shares)
+    assert len(instructions) < 3
+    text_confirm = TR.reset__words_written_down_template.format(words_count)
+
+    return raise_if_not_confirmed(
+        trezorui_api.show_share_words_extended(
+            words=share_words,
+            subtitle=subtitle,
+            instructions=instructions,
+            text_footer=description,
+            text_confirm=text_confirm,
+        ),
+        None,
+    )
 
 
 async def select_word(
@@ -46,9 +75,7 @@ async def select_word(
     result = await interact(
         trezorui_api.select_word(
             title=title,
-            description=TR.reset__select_word_x_of_y_template.format(
-                checked_index + 1, count
-            ),
+            description=TR.reset__select_word_template.format(checked_index + 1),
             words=(words[0], words[1], words[2]),
         ),
         None,
