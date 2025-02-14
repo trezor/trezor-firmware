@@ -245,7 +245,6 @@ impl<'a> Instruction<'a> {
     fn height(&self) -> i16 {
         let text_area_width = screen().inset(Hint::HINT_INSETS).width() - self.icon_width();
         let calculated_height = self.label.text_height(text_area_width);
-        dbg_print!("Instruction height: {}\n", calculated_height as i16);
         debug_assert!(calculated_height <= Hint::HEIGHT_MAXIMAL);
         calculated_height
     }
