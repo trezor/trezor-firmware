@@ -290,6 +290,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__hold_to_exit_tutorial;
   MP_QSTR_instructions__hold_to_finish_tutorial;
   MP_QSTR_instructions__hold_to_sign;
+  MP_QSTR_instructions__keep_holding;
   MP_QSTR_instructions__learn_more;
   MP_QSTR_instructions__shares_continue_with_x_template;
   MP_QSTR_instructions__shares_start_with_1;
