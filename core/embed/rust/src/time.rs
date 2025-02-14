@@ -158,7 +158,7 @@ pub enum Stopwatch {
 }
 
 impl Default for Stopwatch {
-    /// Returns a new sopteed stopwatch by default.
+    /// Returns a new stopped stopwatch by default.
     fn default() -> Self {
         Self::new_stopped()
     }
