@@ -1,16 +1,28 @@
-use crate::ui::{
-    display::Color,
-    geometry::Offset,
-    shape::{
-        render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Rgb565Canvas, Viewport,
+use crate::{
+    trezorhal::display,
+    ui::{
+        display::Color,
+        geometry::Offset,
+        shape::{
+            render::ScopedRenderer, BasicCanvas, DirectRenderer, DrawingCache, Rgb565Canvas,
+            Viewport,
+        },
     },
+};
+
+#[cfg(feature = "ui_debug_overlay")]
+use crate::{
+    trezorhal::time,
+    ui::{CommonUI, DebugOverlay, ModelUI},
 };
 
 use super::bumps;
 
-use crate::trezorhal::display;
-
 pub type ConcreteRenderer<'a, 'alloc> = DirectRenderer<'a, 'alloc, Rgb565Canvas<'alloc>>;
+
+// Time of the last frame buffer get operation
+#[cfg(feature = "ui_debug_overlay")]
+static mut FRAME_BUFFER_GET_TIME: u64 = 0;
 
 /// Creates the `Renderer` object for drawing on a display and invokes a
 /// user-defined function that takes a single argument `target`. The user's
@@ -32,7 +44,15 @@ where
 
         let cache = DrawingCache::new(bump_a, bump_b);
 
+        #[cfg(feature = "ui_debug_overlay")]
+        let refresh_time = unsafe { time::ticks_us() - FRAME_BUFFER_GET_TIME };
+
         let fb_info = display::get_frame_buffer();
+
+        #[cfg(feature = "ui_debug_overlay")]
+        unsafe {
+            FRAME_BUFFER_GET_TIME = time::ticks_us()
+        };
 
         if fb_info.is_none() {
             return;
@@ -53,6 +73,21 @@ where
 
         let mut target = ScopedRenderer::new(DirectRenderer::new(&mut canvas, bg_color, &cache));
 
-        func(&mut target);
+        // In debug mode, measure the time spent on rendering.
+        #[cfg(feature = "ui_debug_overlay")]
+        {
+            let render_time = time::measure_us(|| func(&mut target));
+            let info = DebugOverlay {
+                render_time,
+                refresh_time,
+            };
+            ModelUI::render_debug_overlay(&mut target, info);
+        }
+
+        // In production, just execute the drawing function without timing.
+        #[cfg(not(feature = "ui_debug_overlay"))]
+        {
+            func(&mut target);
+        }
     });
 }

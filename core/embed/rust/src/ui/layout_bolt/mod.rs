@@ -1,5 +1,8 @@
 use super::{geometry::Rect, CommonUI};
 
+#[cfg(feature = "ui_debug_overlay")]
+use super::{shape, DebugOverlay};
+
 #[cfg(feature = "bootloader")]
 pub mod bootloader;
 pub mod component;
@@ -75,5 +78,10 @@ impl CommonUI for UIBolt {
     fn screen_boot_stage_2(fade_in: bool) {
         let mut frame = WelcomeScreen::new(false);
         show(&mut frame, fade_in);
+    }
+
+    #[cfg(feature = "ui_debug_overlay")]
+    fn render_debug_overlay<'s>(_target: &mut impl shape::Renderer<'s>, _info: DebugOverlay) {
+        // Not implemented
     }
 }
