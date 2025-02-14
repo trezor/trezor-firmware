@@ -52,6 +52,10 @@
 #include "cmd/prodtest_optiga.h"
 #endif
 
+#ifdef USE_TROPIC
+#include <sec/tropic.h>
+#endif
+
 #ifdef USE_HAPTIC
 #include <io/haptic.h>
 #endif
@@ -191,6 +195,9 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();
+#endif
+#ifdef USE_TROPIC
+  tropic_init();
 #endif
 #ifdef USE_BLE
   unit_properties_init();
