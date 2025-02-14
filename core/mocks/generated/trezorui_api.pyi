@@ -603,7 +603,7 @@ def show_share_words(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_share_words_delizia(
+def show_share_words_extended(
     *,
     words: Iterable[str],
     subtitle: str | None,
