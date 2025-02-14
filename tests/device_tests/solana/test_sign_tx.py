@@ -45,35 +45,41 @@ pytestmark = [
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
 
-    serialized_tx = serialize_tx(parameters["construct"])
+    serialized_tx = _serialize_tx(parameters["construct"])
+
+    additional_info = None
+    if "additional_info" in parameters:
+        definitions = None
+        token = parameters["additional_info"].get("token", None)
+        if token:
+            definitions = messages.SolanaDefinitions(encoded_token=bytes.fromhex(token))
+
+        additional_info = messages.SolanaTxAdditionalInfo(
+            token_accounts_infos=[
+                messages.SolanaTxTokenAccountInfo(
+                    base_address=token_account["base_address"],
+                    token_program=token_account["token_program"],
+                    token_mint=token_account["token_mint"],
+                    token_account=token_account["token_account"],
+                )
+                for token_account in parameters["additional_info"][
+                    "token_accounts_infos"
+                ]
+            ],
+            definitions=definitions,
+        )
 
     actual_result = sign_tx(
         client,
         address_n=parse_path(parameters["address"]),
         serialized_tx=serialized_tx,
-        additional_info=(
-            messages.SolanaTxAdditionalInfo(
-                token_accounts_infos=[
-                    messages.SolanaTxTokenAccountInfo(
-                        base_address=token_account["base_address"],
-                        token_program=token_account["token_program"],
-                        token_mint=token_account["token_mint"],
-                        token_account=token_account["token_account"],
-                    )
-                    for token_account in parameters["additional_info"][
-                        "token_accounts_infos"
-                    ]
-                ]
-            )
-            if "additional_info" in parameters
-            else None
-        ),
+        additional_info=additional_info,
     )
 
     assert actual_result == bytes.fromhex(result["expected_signature"])
 
 
-def serialize_tx(tx_construct):
+def _serialize_tx(tx_construct):
     serialized_instructions = []
     for instruction in tx_construct["instructions"]:
         program = tx_construct["accounts"][instruction["program_index"]]
