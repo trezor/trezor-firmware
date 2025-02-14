@@ -393,6 +393,7 @@ class TR:
     instructions__hold_to_continue: str = "Hold to continue"
     instructions__hold_to_exit_tutorial: str = "Hold to exit tutorial"
     instructions__hold_to_sign: str = "Hold to sign"
+    instructions__keep_holding: str = "Keep holding"
     instructions__learn_more: str = "Learn more"
     instructions__shares_continue_with_x_template: str = "Continue with Share #{0}"
     instructions__shares_start_with_1: str = "Start with share #1"
