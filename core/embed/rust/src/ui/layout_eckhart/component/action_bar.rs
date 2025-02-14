@@ -1,13 +1,16 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Alignment2D, Offset, Rect},
-    shape::{self, Renderer},
-    util::Pager,
+use crate::{
+    translations::TR,
+    ui::{
+        component::{Component, Event, EventCtx},
+        geometry::{Alignment2D, Offset, Rect},
+        shape::{self, Renderer},
+        util::{animation_disabled, Pager},
+    },
 };
 
 use super::{
     button::{Button, ButtonContent, ButtonMsg},
-    theme, ButtonStyleSheet,
+    theme, ButtonStyleSheet, HoldToConfirmAnim,
 };
 
 /// Component for control buttons in the bottom of the screen.
@@ -25,7 +28,8 @@ pub struct ActionBar {
     // Storage of original button content for paginated component
     left_original: Option<(ButtonContent, ButtonStyleSheet)>,
     right_original: Option<(ButtonContent, ButtonStyleSheet)>,
-    // TODO: animation
+    /// Hold to confirm animation
+    htc_anim: Option<HoldToConfirmAnim>,
 }
 
 pub enum ActionBarMsg {
@@ -129,6 +133,15 @@ impl ActionBar {
             _ => (None, None),
         };
 
+        let htc_anim = right_button
+            .long_press()
+            .filter(|_| !animation_disabled())
+            .map(|dur| {
+                HoldToConfirmAnim::new()
+                    .with_duration(dur)
+                    .with_header_overlay(TR::instructions__continue_holding.into())
+            });
+
         Self {
             mode,
             right_button,
@@ -137,7 +150,56 @@ impl ActionBar {
             left_short: false,
             left_original,
             right_original,
+            htc_anim,
         }
+    }
+
+    /// Handle right button at the last page, this includes:
+    ///     - Single button mode
+    ///     - Double button mode at single page component
+    ///     - Double button mode at last page of paginated component
+    /// The function takes care about triggering the correct action to
+    /// HoldToConfirm or returning the correct message out of the ActionBar.
+    fn right_button_at_last_page(
+        &mut self,
+        ctx: &mut EventCtx,
+        msg: ButtonMsg,
+    ) -> Option<ActionBarMsg> {
+        let is_hold = self.right_button.long_press().is_some();
+        match (msg, is_hold) {
+            (ButtonMsg::Pressed, true) => {
+                if let Some(htc_anim) = &mut self.htc_anim {
+                    htc_anim.start();
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                    ctx.disable_swipe();
+                }
+            }
+            (ButtonMsg::Clicked, true) => {
+                if let Some(htc_anim) = &mut self.htc_anim {
+                    htc_anim.stop();
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                    ctx.enable_swipe();
+                } else {
+                    // Animations disabled, return confirmed
+                    return Some(ActionBarMsg::Confirmed);
+                }
+            }
+            (ButtonMsg::Released, true) => {
+                if let Some(htc_anim) = &mut self.htc_anim {
+                    htc_anim.stop();
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+                    ctx.enable_swipe();
+                }
+            }
+            (ButtonMsg::Clicked, false) | (ButtonMsg::LongPressed, true) => {
+                return Some(ActionBarMsg::Confirmed);
+            }
+            _ => {}
+        }
+        None
     }
 }
 
@@ -172,60 +234,43 @@ impl Component for ActionBar {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.htc_anim.event(ctx, event);
         match &self.mode {
             Mode::Single => {
                 // Only handle confirm button
-                if let Some(ButtonMsg::Clicked) = self.right_button.event(ctx, event) {
-                    return Some(ActionBarMsg::Confirmed);
+                if let Some(msg) = self.right_button.event(ctx, event) {
+                    return self.right_button_at_last_page(ctx, msg);
                 }
             }
             Mode::Double { pager } => {
                 if pager.is_single() {
                     // Single page - show back and confirm
-                    if let Some(btn) = &mut self.left_button {
-                        if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                            return Some(ActionBarMsg::Cancelled);
-                        }
+                    if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
+                        return Some(ActionBarMsg::Cancelled);
                     }
                     if let Some(msg) = self.right_button.event(ctx, event) {
-                        match (&self.right_button.is_long_press(), msg) {
-                            (true, ButtonMsg::LongPressed) | (false, ButtonMsg::Clicked) => {
-                                return Some(ActionBarMsg::Confirmed);
-                            }
-                            _ => {}
-                        }
+                        return self.right_button_at_last_page(ctx, msg);
                     }
                 } else if pager.is_first() && !pager.is_single() {
                     // First page of multiple - go back and next page
-                    if let Some(btn) = &mut self.left_button {
-                        if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                            return Some(ActionBarMsg::Cancelled);
-                        }
+                    if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
+                        return Some(ActionBarMsg::Cancelled);
                     }
                     if let Some(ButtonMsg::Clicked) = self.right_button.event(ctx, event) {
                         return Some(ActionBarMsg::Next);
                     }
                 } else if pager.is_last() && !pager.is_single() {
                     // Last page - enable up button, show confirm
-                    if let Some(btn) = &mut self.left_button {
-                        if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                            return Some(ActionBarMsg::Prev);
-                        }
+                    if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
+                        return Some(ActionBarMsg::Prev);
                     }
                     if let Some(msg) = self.right_button.event(ctx, event) {
-                        match (&self.right_button.is_long_press(), msg) {
-                            (true, ButtonMsg::LongPressed) | (false, ButtonMsg::Clicked) => {
-                                return Some(ActionBarMsg::Confirmed);
-                            }
-                            _ => {}
-                        }
+                        return self.right_button_at_last_page(ctx, msg);
                     }
                 } else {
                     // Middle pages - navigations up/down
-                    if let Some(btn) = &mut self.left_button {
-                        if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                            return Some(ActionBarMsg::Prev);
-                        }
+                    if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
+                        return Some(ActionBarMsg::Prev);
                     }
                     if let Some(ButtonMsg::Clicked) = self.right_button.event(ctx, event) {
                         return Some(ActionBarMsg::Next);
@@ -246,8 +291,12 @@ impl Component for ActionBar {
             btn.render(target);
         }
         self.right_button.render(target);
+        if let Some(htc_anim) = &self.htc_anim {
+            htc_anim.render(target);
+        }
     }
 }
+
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for ActionBar {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
