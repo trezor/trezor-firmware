@@ -389,7 +389,7 @@ class TR:
     inputs__return: str = "RETURN"
     inputs__show: str = "SHOW"
     inputs__space: str = "SPACE"
-    instructions__continue_holding: str = "Continue\nholding"
+    instructions__continue_holding: str = ""
     instructions__continue_in_app: str = "Continue in the app"
     instructions__enter_next_share: str = "Enter next share"
     instructions__hold_to_confirm: str = "Hold to confirm"
