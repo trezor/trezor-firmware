@@ -665,12 +665,18 @@
     "reset__required_number_of_groups": "The required number of groups for recovery.",
     "reset__select_correct_word": "Select the correct word for each position.",
     "reset__select_threshold": "Select the minimum shares required to recover your wallet.",
-    "reset__select_word_template": "Select {0} word",
+    "reset__select_word_template": {
+      "Bolt": "Select {0} word",
+      "Caesar": "Select {0} word",
+      "Delizia": "Select {0} word",
+      "Eckhart": "Select word #{0} from your wallet backup"
+    },
     "reset__select_word_x_of_y_template": "Select word {0} of {1}:",
     "reset__set_it_to_count_template": "Set it to {0} and you will need ",
     "reset__share_checked_successfully_template": "Share #{0} checked successfully.",
     "reset__share_completed_template": "Share #{0} completed",
     "reset__share_words_title": "Standard backup",
+    "reset__share_words_first": "Write down the first word from the backup.",
     "reset__slip39_checklist_more_info_threshold": "The threshold sets the minumum number of shares needed to recover your wallet.",
     "reset__slip39_checklist_more_info_threshold_example_template": "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.",
     "reset__slip39_checklist_num_groups": "Number of groups",
@@ -687,7 +693,12 @@
     "reset__slip39_checklist_write_down": "Write down and check all shares",
     "reset__slip39_checklist_write_down_recovery": "Write down & check all wallet backup shares",
     "reset__the_threshold_sets_the_number_of_shares": "The threshold sets the number of shares ",
-    "reset__the_word_is_repeated": "The word is repeated",
+    "reset__the_word_is_repeated": {
+      "Bolt": "The word is repeated",
+      "Caesar": "The word is repeated",
+      "Delizia": "The word is repeated",
+      "Eckhart": "The word appears multiple times in the backup."
+    },
     "reset__threshold_info": "= minimum number of unique word lists used for recovery.",
     "reset__title_backup_is_done": "Backup is done",
     "reset__title_create_wallet": "Create wallet",

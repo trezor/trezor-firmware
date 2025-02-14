@@ -994,5 +994,6 @@
   "992": "nostr__event_kind_template",
   "993": "ble__unpair_all",
   "994": "ble__unpair_current",
-  "995": "ble__unpair_title"
+  "995": "ble__unpair_title",
+  "996": "reset__share_words_first"
 }

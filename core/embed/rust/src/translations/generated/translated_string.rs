@@ -851,7 +851,7 @@ pub enum TranslatedString {
     reset__recovery_share_title_template = 567,  // "Recovery share #{0}"
     reset__required_number_of_groups = 568,  // "The required number of groups for recovery."
     reset__select_correct_word = 569,  // "Select the correct word for each position."
-    reset__select_word_template = 570,  // "Select {0} word"
+    reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word #{0} from your wallet backup"}
     reset__select_word_x_of_y_template = 571,  // "Select word {0} of {1}:"
     reset__set_it_to_count_template = 572,  // "Set it to {0} and you will need "
     reset__share_checked_successfully_template = 573,  // "Share #{0} checked successfully."
@@ -1327,7 +1327,7 @@ pub enum TranslatedString {
     reset__repeat_for_all_shares = 938,  // "Repeat for all shares."
     homescreen__settings_subtitle = 939,  // "Settings"
     homescreen__settings_title = 940,  // "Homescreen"
-    reset__the_word_is_repeated = 941,  // "The word is repeated"
+    reset__the_word_is_repeated = 941,  // {"Bolt": "The word is repeated", "Caesar": "The word is repeated", "Delizia": "The word is repeated", "Eckhart": "The word appears multiple times in the backup."}
     tutorial__title_lets_begin = 942,  // "Let's begin"
     tutorial__did_you_know = 943,  // "Did you know?"
     tutorial__first_wallet = 944,  // "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."
@@ -1407,6 +1407,7 @@ pub enum TranslatedString {
     ble__unpair_all = 993,  // "Unpair all bluetooth devices"
     ble__unpair_current = 994,  // "Unpair connected device"
     ble__unpair_title = 995,  // "Unpair"
+    reset__share_words_first = 996,  // "Write down the first word from the backup."
 }
 
 impl TranslatedString {
@@ -2254,7 +2255,14 @@ impl TranslatedString {
             Self::reset__recovery_share_title_template => "Recovery share #{0}",
             Self::reset__required_number_of_groups => "The required number of groups for recovery.",
             Self::reset__select_correct_word => "Select the correct word for each position.",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__select_word_template => "Select {0} word",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__select_word_template => "Select {0} word",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__select_word_template => "Select {0} word",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__select_word_template => "Select word #{0} from your wallet backup",
             Self::reset__select_word_x_of_y_template => "Select word {0} of {1}:",
             Self::reset__set_it_to_count_template => "Set it to {0} and you will need ",
             Self::reset__share_checked_successfully_template => "Share #{0} checked successfully.",
@@ -2737,7 +2745,14 @@ impl TranslatedString {
             Self::reset__repeat_for_all_shares => "Repeat for all shares.",
             Self::homescreen__settings_subtitle => "Settings",
             Self::homescreen__settings_title => "Homescreen",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__the_word_is_repeated => "The word is repeated",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__the_word_is_repeated => "The word is repeated",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__the_word_is_repeated => "The word is repeated",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__the_word_is_repeated => "The word appears multiple times in the backup.",
             Self::tutorial__title_lets_begin => "Let's begin",
             Self::tutorial__did_you_know => "Did you know?",
             Self::tutorial__first_wallet => "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
@@ -2817,6 +2832,7 @@ impl TranslatedString {
             Self::ble__unpair_all => "Unpair all bluetooth devices",
             Self::ble__unpair_current => "Unpair connected device",
             Self::ble__unpair_title => "Unpair",
+            Self::reset__share_words_first => "Write down the first word from the backup.",
         }
     }
 
@@ -4219,6 +4235,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_ble__unpair_all => Some(Self::ble__unpair_all),
             Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
             Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
+            Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
             _ => None,
         }
     }

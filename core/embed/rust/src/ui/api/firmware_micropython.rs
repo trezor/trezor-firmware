@@ -907,7 +907,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_share_words_delizia(
+extern "C" fn new_show_share_words_extended(
     n_args: usize,
     args: *const Obj,
     kwargs: *mut Map,
@@ -927,7 +927,7 @@ extern "C" fn new_show_share_words_delizia(
 
         let words: Vec<TString, 33> = util::iter_into_vec(words)?;
 
-        let layout = ModelUI::show_share_words_delizia(
+        let layout = ModelUI::show_share_words_extended(
             words,
             subtitle,
             instructions,
@@ -1627,7 +1627,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Show mnemonic for backup."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
-    /// def show_share_words_delizia(
+    /// def show_share_words_extended(
     ///     *,
     ///     words: Iterable[str],
     ///     subtitle: str | None,
@@ -1637,7 +1637,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     ///     confirmation screen."""
-    Qstr::MP_QSTR_show_share_words_delizia => obj_fn_kw!(0, new_show_share_words_delizia).as_obj(),
+    Qstr::MP_QSTR_show_share_words_extended => obj_fn_kw!(0, new_show_share_words_extended).as_obj(),
 
     /// def show_simple(
     ///     *,
