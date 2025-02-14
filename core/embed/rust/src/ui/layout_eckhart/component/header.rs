@@ -171,7 +171,8 @@ impl Header {
         ctx.request_paint();
     }
 
-    /// Calculates the width needed for the left icon, be it a button with icon or just icon
+    /// Calculates the width needed for the left icon, be it a button with icon
+    /// or just icon
     fn left_icon_width(&self) -> i16 {
         let margin_right: i16 = 16; // [px]
         if let Some(b) = &self.left_button {
