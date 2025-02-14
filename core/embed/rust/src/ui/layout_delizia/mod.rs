@@ -1,12 +1,13 @@
-use super::{geometry::Rect, shape, CommonUI, InfoOverlay};
+use super::{geometry::Rect, CommonUI};
 
-#[cfg(feature = "render_info_overlay")]
+#[cfg(feature = "ui_debug_overlay")]
 use super::{
     display::Color,
     geometry::{Alignment, Alignment2D, Offset, Point},
+    shape, DebugOverlay,
 };
 
-#[cfg(feature = "render_info_overlay")]
+#[cfg(feature = "ui_debug_overlay")]
 use crate::strutil::ShortString;
 
 use theme::backlight;
@@ -80,13 +81,8 @@ impl CommonUI for UIDelizia {
         screens::screen_boot_stage_2(fade_in);
     }
 
-    #[cfg(not(feature = "render_info_overlay"))]
-    fn render_info_overlay<'s>(_target: &mut impl shape::Renderer<'s>, _info: InfoOverlay) {
-        // Not implemented
-    }
-
-    #[cfg(feature = "render_info_overlay")]
-    fn render_info_overlay<'s>(target: &mut impl shape::Renderer<'s>, info: InfoOverlay) {
+    #[cfg(feature = "ui_debug_overlay")]
+    fn render_debug_overlay<'s>(target: &mut impl shape::Renderer<'s>, info: DebugOverlay) {
         let mut text = ShortString::new();
         let t1 = info.render_time.min(99999) as u32;
         let t2 = info.refresh_time.min(99999) as u32;

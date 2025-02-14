@@ -8,7 +8,7 @@ CMAKELISTS = int(ARGUMENTS.get('CMAKELISTS', 0))
 PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
-RENDER_INFO_OVERLAY = ARGUMENTS.get('RENDER_INFO_OVERLAY', '0') == '1'
+UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
 
 FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic"]
 
@@ -208,8 +208,8 @@ obj_program.extend(env.Object(source=SOURCE_HAL))
 #
 features = ['prodtest',] + FEATURES_AVAILABLE + RUST_UI_FEATURES
 
-if RENDER_INFO_OVERLAY:
-    features.append('render_info_overlay')
+if UI_DEBUG_OVERLAY:
+    features.append('ui_debug_overlay')
 
 
 rust = tools.add_rust_lib(

@@ -34,7 +34,10 @@ pub mod ui_common;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
 
-pub use ui_common::{CommonUI, InfoOverlay};
+pub use ui_common::CommonUI;
+
+#[cfg(feature = "ui_debug_overlay")]
+pub use ui_common::DebugOverlay;
 
 #[cfg(all(
     feature = "layout_delizia",
