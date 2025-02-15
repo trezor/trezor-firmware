@@ -82,6 +82,14 @@ char* sha256_End(SHA256_CTX*, char[SHA256_DIGEST_STRING_LENGTH]);
 void sha256_Raw(const uint8_t*, size_t, uint8_t[SHA256_DIGEST_LENGTH]);
 char* sha256_Data(const uint8_t*, size_t, char[SHA256_DIGEST_STRING_LENGTH]);
 
+// Update the hash with an integer and also (statically) check that it has the
+// expected size.
+#define SHA256_UPDATE_INT(ctx, val, expected_type)                            \
+  do {                                                                        \
+    sha256_Update(ctx, (const uint8_t *)&(val), sizeof(val));                 \
+    _Static_assert(sizeof(val) == sizeof(expected_type), "invalid int size"); \
+  } while (0)
+
 void sha384_Raw(const uint8_t*, size_t, uint8_t[SHA384_DIGEST_LENGTH]);
 
 void sha512_Transform(const uint64_t* state_in, const uint64_t* data, uint64_t* state_out);
