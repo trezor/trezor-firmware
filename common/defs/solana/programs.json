@@ -3004,6 +3004,68 @@
           ]
         },
         {
+          "id": 0,
+          "name": "Create1",
+          "is_multisig": false,
+          "parameters": [],
+          "references": [
+            {
+              "name": "funding_account",
+              "is_authority": true,
+              "optional": false
+            },
+            {
+              "name": "associated_token_account",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "wallet_address",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "token_mint",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "system_program",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "name": "spl_token",
+              "is_authority": false,
+              "optional": false
+            },
+            {
+              "//": "Some dApps still include the rent sysvar although it's not officially required anymore.",
+              "name": "rent_sysvar",
+              "is_authority": false,
+              "optional": true
+            }
+          ],
+          "ui_properties": [
+            {
+              "account": "associated_token_account",
+              "display_name": "Create token account"
+            },
+            {
+              "account": "token_mint",
+              "display_name": "For token"
+            },
+            {
+              "account": "wallet_address",
+              "display_name": "Owned by"
+            },
+            {
+              "account": "funding_account",
+              "display_name": "Funded by"
+            }
+          ]
+        },
+        {
           "id": 1,
           "name": "Create Idempotent",
           "is_multisig": false,
