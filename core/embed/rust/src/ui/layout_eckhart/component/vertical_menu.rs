@@ -2,7 +2,7 @@ use crate::ui::{
     component::{Component, Event, EventCtx},
     geometry::{Insets, Offset, Rect},
     layout_eckhart::{
-        component::{Button, ButtonContent, ButtonMsg},
+        component::{Button, ButtonMsg},
         theme,
     },
     shape::{Bar, Renderer},
@@ -29,19 +29,19 @@ pub struct VerticalMenu {
     offset_y: i16,
     /// Maximum vertical offset.
     max_offset: i16,
+    /// Adapt padding to fit entire area. If the area is too small, the padding
+    /// will be reduced to min value.
+    fit_area: bool,
 }
 
 pub enum VerticalMenuMsg {
     Selected(usize),
-    /// Left header button clicked
-    Back,
-    /// Right header button clicked
-    Close,
 }
 
 impl VerticalMenu {
-    const SIDE_INSET: i16 = 24;
-    const BUTTON_PADDING: i16 = 28;
+    const SIDE_INSET: i16 = 12;
+    const DEFAULT_PADDING: i16 = 28;
+    const MIN_PADDING: i16 = 2;
 
     fn new(buttons: VerticalMenuButtons) -> Self {
         Self {
@@ -51,6 +51,7 @@ impl VerticalMenu {
             separators: false,
             offset_y: 0,
             max_offset: 0,
+            fit_area: false,
         }
     }
 
@@ -63,22 +64,13 @@ impl VerticalMenu {
         self
     }
 
+    pub fn with_fit_area(mut self) -> Self {
+        self.fit_area = true;
+        self
+    }
+
     pub fn item(mut self, button: Button) -> Self {
-        unwrap!(self.buttons.push(button.styled(theme::menu_item_title())));
-        self
-    }
-
-    pub fn item_yellow(mut self, button: Button) -> Self {
-        unwrap!(self
-            .buttons
-            .push(button.styled(theme::menu_item_title_yellow())));
-        self
-    }
-
-    pub fn item_red(mut self, button: Button) -> Self {
-        unwrap!(self
-            .buttons
-            .push(button.styled(theme::menu_item_title_red())));
+        unwrap!(self.buttons.push(button));
         self
     }
 
@@ -112,6 +104,49 @@ impl VerticalMenu {
             button.enable_if(ctx, in_bounds);
         }
     }
+
+    fn set_max_offset(&mut self) {
+        // Calculate the overflow of the menu area
+        let menu_overflow = (self.virtual_bounds.height() - self.bounds.height()).max(0);
+
+        // Find the first button from the top that would completely fit in the menu area
+        // in the bottom position
+        for button in &self.buttons {
+            let offset = button.area().top_left().y - self.area().top_left().y;
+            if offset > menu_overflow {
+                self.max_offset = offset;
+                return;
+            }
+        }
+
+        self.max_offset = menu_overflow;
+    }
+
+    fn render_buttons<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        for button in &self.buttons {
+            button.render(target);
+        }
+    }
+
+    fn render_separators<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        for i in 1..self.buttons.len() {
+            let button = &self.buttons[i];
+            let button_prev = &self.buttons[i - 1];
+
+            if !button.is_pressed() && !button_prev.is_pressed() {
+                let separator = Rect::from_top_left_and_size(
+                    button
+                        .area()
+                        .top_left()
+                        .ofs(Offset::x(Button::BASELINE_OFFSET.x).into()),
+                    Offset::new(button.area().width() - 2 * Button::BASELINE_OFFSET.x, 1),
+                );
+                Bar::new(separator)
+                    .with_fg(theme::GREY_EXTRA_DARK)
+                    .render(target);
+            }
+        }
+    }
 }
 
 impl Component for VerticalMenu {
@@ -121,29 +156,42 @@ impl Component for VerticalMenu {
         // Crop the menu area
         self.bounds = bounds.inset(Insets::sides(Self::SIDE_INSET));
 
+        // Determine padding dynamically if `fit_area` is enabled
+        let padding = if self.fit_area {
+            let mut content_height = 0;
+            for button in self.buttons.iter_mut() {
+                content_height += button.content_height();
+            }
+            let padding = (self.bounds.height() - content_height) / (self.buttons.len() as i16) / 2;
+            padding.max(Self::MIN_PADDING)
+        } else {
+            Self::DEFAULT_PADDING
+        };
+
         let button_width = self.bounds.width();
         let mut top_left = self.bounds.top_left();
 
+        // Place each button (might overflow the menu bounds)
         for button in self.buttons.iter_mut() {
-            let button_height = button.content_height() + 2 * Self::BUTTON_PADDING;
-
-            // Calculate button bounds (might overflow the menu bounds)
+            let button_height = button.content_height() + 2 * padding;
             let button_bounds =
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
+
             button.place(button_bounds);
 
             top_left = top_left + Offset::y(button_height);
         }
 
         // Calculate virtual bounds of all buttons combined
-        let height = top_left.y - self.bounds.top_left().y;
+        let total_height = top_left.y - self.bounds.top_left().y;
         self.virtual_bounds = Rect::from_top_left_and_size(
             self.bounds.top_left(),
-            Offset::new(self.bounds.width(), height),
+            Offset::new(self.bounds.width(), total_height),
         );
 
         // Calculate maximum offset for scrolling
-        self.max_offset = (self.virtual_bounds.height() - self.bounds.height()).max(0);
+        self.set_max_offset();
+
         bounds
     }
 
@@ -160,25 +208,11 @@ impl Component for VerticalMenu {
         // Clip and translate the sliding window based on the scroll offset
         target.in_clip(self.bounds, &|target| {
             target.with_origin(Offset::y(-self.offset_y), &|target| {
-                // Render menu button
-                for button in (&self.buttons).into_iter() {
-                    button.render(target);
-                }
+                self.render_buttons(target);
 
                 // Render separators between buttons
                 if self.separators {
-                    for i in 1..self.buttons.len() {
-                        let button = self.buttons.get(i).unwrap();
-
-                        // Render a line above the button
-                        let separator = Rect::from_top_left_and_size(
-                            button.area().top_left(),
-                            Offset::new(button.area().width(), 1),
-                        );
-                        Bar::new(separator)
-                            .with_fg(theme::GREY_EXTRA_DARK)
-                            .render(target);
-                    }
+                    self.render_separators(target);
                 }
             });
         });
