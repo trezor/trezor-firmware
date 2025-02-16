@@ -36,7 +36,7 @@ pub struct Button {
 }
 
 impl Button {
-    pub const BASELINE_OFFSET: Offset = Offset::new(2, 6);
+    pub const BASELINE_OFFSET: Offset = Offset::new(12, 6);
     const LINE_SPACING: i16 = 7;
     const SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
 
@@ -249,9 +249,8 @@ impl Button {
                 });
             }
             ButtonContent::TextAndSubtext(text, subtext) => {
-                let text_y_offset = Offset::y(
-                    self.content_height() / 2 - self.style().font.allcase_text_height() / 2,
-                );
+                let text_y_offset =
+                    Offset::y(self.content_height() / 2 - self.style().font.allcase_text_height());
                 let subtext_y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => {
@@ -271,7 +270,7 @@ impl Button {
                         .render(target);
                 });
 
-                text.map(|subtext| {
+                subtext.map(|subtext| {
                     shape::Text::new(subtext_baseline, subtext, Self::SUBTEXT_STYLE.text_font)
                         .with_fg(Self::SUBTEXT_STYLE.text_color)
                         .with_align(self.text_align)
