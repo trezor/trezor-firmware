@@ -8,12 +8,13 @@ use crate::{
         },
         event::{SwipeEvent, TouchEvent},
         geometry::{Alignment2D, Direction, Offset, Rect},
-        layout_eckhart::{
-            component::{constant::screen, Header, HeaderMsg, VerticalMenu, VerticalMenuMsg},
-            theme,
-        },
         shape::{Renderer, ToifImage},
     },
+};
+
+use super::super::{
+    component::{constant::SCREEN, Header, HeaderMsg, VerticalMenu, VerticalMenuMsg},
+    theme,
 };
 
 pub struct VerticalMenuScreen {
@@ -88,8 +89,8 @@ impl Component for VerticalMenuScreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // assert full screen
-        debug_assert_eq!(bounds.height(), screen().height());
-        debug_assert_eq!(bounds.width(), screen().width());
+        debug_assert_eq!(bounds.height(), SCREEN.height());
+        debug_assert_eq!(bounds.width(), SCREEN.width());
 
         let (header_area, menu_area) = bounds.split_top(Header::HEADER_HEIGHT);
 
@@ -147,21 +148,8 @@ impl Component for VerticalMenuScreen {
 
         // Shift touch events in the menu area by the current sliding window position
         if let Some(shifted) = self.shift_touch_event(event) {
-            if let Some(msg) = self.menu.event(ctx, shifted) {
-                match msg {
-                    VerticalMenuMsg::Selected(i) => {
-                        return Some(VerticalMenuScreenMsg::Selected(i))
-                    }
-                    _ => {}
-                }
-            }
-        }
-
-        // Handle shifted touch events in the menu
-        if let Some(msg) = self.menu.event(ctx, event) {
-            match msg {
-                VerticalMenuMsg::Selected(i) => return Some(VerticalMenuScreenMsg::Selected(i)),
-                _ => {}
+            if let Some(VerticalMenuMsg::Selected(i)) = self.menu.event(ctx, shifted) {
+                return Some(VerticalMenuScreenMsg::Selected(i));
             }
         }
 
