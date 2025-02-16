@@ -135,6 +135,10 @@ impl Button {
         )
     }
 
+    pub fn is_pressed(&self) -> bool {
+        matches!(self.state, State::Pressed)
+    }
+
     pub fn long_press(&self) -> Option<Duration> {
         self.long_press
     }
