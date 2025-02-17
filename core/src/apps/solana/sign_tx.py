@@ -194,24 +194,32 @@ def calculate_fee(transaction: Transaction) -> tuple[int, int]:
 
 def calculate_rent(transaction: Transaction) -> int:
     """
-    Returns max rent exemption in lamports.
+        Returns max rent exemption in lamports.
 
-    To estimate rent exemption from a transaction we need to go over the instructions.
-    When new accounts are created, space must be allocated for them, rent exemption value depends on that space.
+        To estimate rent exemption from a transaction we need to go over the instructions.
+        When new accounts are created, space must be allocated for them, rent exemption value depends on that space.
 
-    There are a handful of instruction that allocate space:
-    - System program create account instruction (the space data parameter)
-    - System program create account with seed instruction (the space data parameter)
-    - System program allocate instruction (the space data parameter)
-    - System program allocate with seed instruction (the space data parameter)
-    - Associated token account program create instruction (165 bytes for Token, ??? for Token22)
-    - Associated token account program create idempotent instruction (165 bytes for Token, ??? for Token22, might not allocate)
+        There are a handful of instruction that allocate space:
+        - System program create account instruction (the space data parameter)
+        - System program create account with seed instruction (the space data parameter)
+        - System program allocate instruction (the space data parameter)
+        - System program allocate with seed instruction (the space data parameter)
+        - Associated token account program create instruction (165 bytes for Token, 170-195 for Token22)
+        - Associated token account program create idempotent instruction (165 bytes for Token, 170-195 for Token22, might not allocate)
+    loo
+        Associated token account program allocates space based on used extensions which must be enabled in the same transaction.
+        Currently, the token22 extensions aren't supported, so the max value of 195 bytes is assumed.
+        The min Token22 account size is the base Token account size plus some overhead.
+        The max Token22 account size is derived from the program source code:
+        https://github.com/solana-program/token-2022/blob/d9cfcf32cf5fbb3ee32f9f873d3fe3c94356e981/program/src/extension/mod.rs#L1299
+        Note that Token/Token22 programs don't allocate space by themselves, they only use preallocated accounts.
     """
     from .constants import (
-        SOLANA_ACCOUNT_METADATA_SIZE,
-        SOLANA_ASSOCIATED_TOKEN_ACCOUNT_SIZE,
-        SOLANA_RENT_EXEMPTION_MULTIPLIER,
-        SOLANA_RENT_PER_BYTE_EPOCH,
+        SOLANA_ACCOUNT_OVERHEAD_SIZE,
+        SOLANA_RENT_EXEMPTION_YEARS,
+        SOLANA_RENT_LAMPORTS_PER_BYTE_YEAR,
+        SOLANA_TOKEN22_MAX_ACCOUNT_SIZE,
+        SOLANA_TOKEN_ACCOUNT_SIZE,
     )
     from .transaction.instructions import (
         _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
@@ -222,42 +230,43 @@ def calculate_rent(transaction: Transaction) -> int:
         _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
         _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
         _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+        _TOKEN_2022_PROGRAM_ID,
         _TOKEN_PROGRAM_ID,
     )
 
-    allocation_estimate = 0
+    allocation = 0
     for instruction in transaction.instructions:
         if instruction.program_id == _SYSTEM_PROGRAM_ID and (
-            instruction.instruction_id == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT
-            or instruction.instruction_id
-            == _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED
-            or instruction.instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE
-            or instruction.instruction_id == _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED
+            instruction.instruction_id
+            in (
+                _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+                _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
+                _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
+            )
         ):
-            allocation_estimate += (
-                instruction.parsed_data["space"] + SOLANA_ACCOUNT_METADATA_SIZE
+            allocation += (
+                instruction.parsed_data["space"] + SOLANA_ACCOUNT_OVERHEAD_SIZE
             )
         elif instruction.program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID and (
             instruction.instruction_id
-            == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE
-            or instruction.instruction_id
-            == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT
+            in (
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+            )
         ):
-            # REVIEW: What do I do with AddressReferences here?
-            spl_token_account = instruction.parsed_accounts["spl_token"]
-            if len(spl_token_account) == 2 and spl_token_account[0] == base58.decode(
-                _TOKEN_PROGRAM_ID
-            ):
-                allocation_estimate += (
-                    SOLANA_ASSOCIATED_TOKEN_ACCOUNT_SIZE + SOLANA_ACCOUNT_METADATA_SIZE
+            spl_token_account = transaction.get_account_address(
+                instruction.parsed_accounts["spl_token"]
+            )
+            if spl_token_account == base58.decode(_TOKEN_PROGRAM_ID):
+                allocation += SOLANA_TOKEN_ACCOUNT_SIZE + SOLANA_ACCOUNT_OVERHEAD_SIZE
+            elif spl_token_account == base58.decode(_TOKEN_2022_PROGRAM_ID):
+                allocation += (
+                    SOLANA_TOKEN22_MAX_ACCOUNT_SIZE + SOLANA_ACCOUNT_OVERHEAD_SIZE
                 )
-            else:
-                # TODO: come up with a max space for Token22
-                ...
 
-    rent_exemption_estimate = (
-        allocation_estimate
-        * SOLANA_RENT_PER_BYTE_EPOCH
-        * SOLANA_RENT_EXEMPTION_MULTIPLIER
+    rent_exemption = (
+        allocation * SOLANA_RENT_LAMPORTS_PER_BYTE_YEAR * SOLANA_RENT_EXEMPTION_YEARS
     )
-    return rent_exemption_estimate
+
+    return rent_exemption
