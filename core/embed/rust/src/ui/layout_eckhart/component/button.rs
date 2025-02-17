@@ -26,6 +26,7 @@ pub struct Button {
     area: Rect,
     touch_expand: Option<Insets>,
     content: ButtonContent,
+    content_offset: Offset,
     styles: ButtonStyleSheet,
     text_align: Alignment,
     radius: Option<u8>,
@@ -36,13 +37,13 @@ pub struct Button {
 }
 
 impl Button {
-    pub const BASELINE_OFFSET: Offset = Offset::new(12, 6);
     const LINE_SPACING: i16 = 7;
     const SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
 
     pub const fn new(content: ButtonContent) -> Self {
         Self {
             content,
+            content_offset: Offset::zero(),
             area: Rect::zero(),
             touch_expand: None,
             styles: theme::button_default(),
@@ -82,6 +83,11 @@ impl Button {
 
     pub const fn with_text_align(mut self, align: Alignment) -> Self {
         self.text_align = align;
+        self
+    }
+
+    pub const fn with_content_offset(mut self, offset: Offset) -> Self {
+        self.content_offset = offset;
         self
     }
 
@@ -155,6 +161,10 @@ impl Button {
 
     pub fn content(&self) -> &ButtonContent {
         &self.content
+    }
+
+    pub fn content_offset(&self) -> Offset {
+        self.content_offset
     }
 
     pub fn content_height(&self) -> i16 {
@@ -238,11 +248,9 @@ impl Button {
             ButtonContent::Text(text) => {
                 let y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
-                    Alignment::Start => {
-                        self.area.left_center() + Offset::x(Self::BASELINE_OFFSET.x)
-                    }
+                    Alignment::Start => self.area.left_center() + self.content_offset,
                     Alignment::Center => self.area.center(),
-                    Alignment::End => self.area.right_center() - Offset::x(Self::BASELINE_OFFSET.x),
+                    Alignment::End => self.area.right_center() - self.content_offset,
                 } + y_offset;
                 text.map(|text| {
                     shape::Text::new(start_of_baseline, text, style.font)
@@ -257,11 +265,9 @@ impl Button {
                     Offset::y(self.content_height() / 2 - self.style().font.allcase_text_height());
                 let subtext_y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
-                    Alignment::Start => {
-                        self.area.left_center() + Offset::x(Self::BASELINE_OFFSET.x)
-                    }
+                    Alignment::Start => self.area.left_center() + self.content_offset,
                     Alignment::Center => self.area.center(),
-                    Alignment::End => self.area.right_center() - Offset::x(Self::BASELINE_OFFSET.x),
+                    Alignment::End => self.area.right_center() - self.content_offset,
                 };
                 let text_baseline = start_of_baseline - text_y_offset;
                 let subtext_baseline = start_of_baseline + subtext_y_offset;
@@ -290,13 +296,7 @@ impl Button {
                     .render(target);
             }
             ButtonContent::IconAndText(child) => {
-                child.render(
-                    target,
-                    self.area,
-                    self.style(),
-                    Self::BASELINE_OFFSET,
-                    alpha,
-                );
+                child.render(target, self.area, self.style(), self.content_offset, alpha);
             }
         }
     }
