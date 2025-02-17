@@ -56,7 +56,7 @@ async def sign_tx(
             br_code=ButtonRequestType.Other,
         )
 
-    fee = calculate_fee(transaction)
+    fee = transaction.calculate_fee()
 
     if not await try_confirm_predefined_transaction(
         transaction, fee, address_n, transaction.blockhash, msg.additional_info
@@ -65,7 +65,7 @@ async def sign_tx(
         await confirm_transaction(
             address_n,
             transaction.blockhash,
-            calculate_fee(transaction),
+            fee,
         )
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
@@ -110,46 +110,3 @@ async def confirm_instructions(
                 signer_path,
                 signer_public_key,
             )
-
-
-def calculate_fee(transaction: Transaction) -> int:
-    import math
-
-    from .constants import SOLANA_BASE_FEE_LAMPORTS, SOLANA_COMPUTE_UNIT_LIMIT
-    from .transaction.instructions import (
-        COMPUTE_BUDGET_PROGRAM_ID,
-        COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
-        COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
-    )
-    from .types import AddressType
-
-    number_of_signers = 0
-    for address in transaction.addresses:
-        if address[1] == AddressType.AddressSig:
-            number_of_signers += 1
-
-    base_fee = SOLANA_BASE_FEE_LAMPORTS * number_of_signers
-
-    unit_price = 0
-    is_unit_price_set = False
-    unit_limit = SOLANA_COMPUTE_UNIT_LIMIT
-    is_unit_limit_set = False
-
-    for instruction in transaction.instructions:
-        if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:
-            if (
-                instruction.instruction_id
-                == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT
-                and not is_unit_limit_set
-            ):
-                unit_limit = instruction.units
-                is_unit_limit_set = True
-            elif (
-                instruction.instruction_id
-                == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE
-                and not is_unit_price_set
-            ):
-                unit_price = instruction.lamports
-                is_unit_price_set = True
-
-    return int(base_fee + math.ceil(unit_price * unit_limit / 1000000))

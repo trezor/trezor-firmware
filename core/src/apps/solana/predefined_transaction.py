@@ -13,6 +13,8 @@ from .transaction.instructions import (
 if TYPE_CHECKING:
     from trezor.messages import SolanaTxAdditionalInfo
 
+    from .transaction import Fee
+
     TransferTokenInstruction = (
         TokenProgramTransferCheckedInstruction
         | Token2022ProgramTransferCheckedInstruction
@@ -114,7 +116,7 @@ def is_predefined_token_transfer(
 
 async def try_confirm_token_transfer_transaction(
     transaction: Transaction,
-    fee: int,
+    fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
     additional_info: SolanaTxAdditionalInfo | None = None,
@@ -169,7 +171,7 @@ async def try_confirm_token_transfer_transaction(
 
 async def try_confirm_predefined_transaction(
     transaction: Transaction,
-    fee: int,
+    fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
     additional_info: SolanaTxAdditionalInfo | None = None,
