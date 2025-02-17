@@ -950,6 +950,57 @@ if not utils.BITCOIN_ONLY:
             br_code=br_code,
         )
 
+    async def confirm_solana_staking_tx(
+        title: str,
+        message: str,
+        account: str,
+        account_path: str,
+        vote_account: str,
+        stake_item: tuple[str, str],
+        amount_item: tuple[str, str],
+        fee_item: tuple[str, str],
+        fee_details: Iterable[tuple[str, str]],
+        blockhash_item: tuple[str, str],
+        br_name: str,
+    ) -> None:
+        (amount_label, amount) = amount_item
+        (fee_label, fee) = fee_item
+
+        confirm_layout = trezorui_api.confirm_value(
+            title=title,
+            description=message,
+            extra=f"{TR.solana__stake_provider}:" if vote_account else None,
+            value=vote_account,
+            verb=TR.buttons__continue,
+            info=True,
+        )
+
+        info_layout = trezorui_api.show_info_with_cancel(
+            title=title,
+            items=(
+                (f"{TR.words__account}:", account),
+                (f"{TR.address_details__derivation_path}:", account_path),
+                stake_item,
+                blockhash_item,
+            ),
+            horizontal=True,
+        )
+
+        await with_info(confirm_layout, info_layout, br_name, ButtonRequestType.SignTx)
+
+        await _confirm_summary(
+            amount=amount,
+            amount_label=amount_label,
+            fee=fee,
+            fee_label=fee_label,
+            account_items=None,
+            title=title,
+            extra_title=TR.confirm_total__title_fee,
+            extra_items=fee_details,
+            br_name=br_name,
+            br_code=ButtonRequestType.SignTx,
+        )
+
     def confirm_cardano_tx(
         amount: str,
         fee: str,
