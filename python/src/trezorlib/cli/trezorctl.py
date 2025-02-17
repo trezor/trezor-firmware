@@ -33,6 +33,7 @@ from ..transport.thp.channel_database import get_channel_db
 from ..transport.udp import UdpTransport
 from . import (
     AliasedGroup,
+    Capability,
     TrezorConnection,
     benchmark,
     binance,
@@ -45,6 +46,7 @@ from . import (
     ethereum,
     fido,
     firmware,
+    get_passphrase,
     monero,
     nem,
     ripple,
@@ -225,7 +227,7 @@ def cli_main(
             bytes_session_id = bytes.fromhex(session_id)
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
-
+    # channel database = get_db(should_not_store=no_store)
     ctx.obj = TrezorConnection(
         path, bytes_session_id, passphrase_on_host, script, get_channel_db()
     )
@@ -342,10 +344,14 @@ def ping(session: "Session", message: str, button_protection: bool) -> str:
 
 
 @cli.command()
+@click.option(
+    "-c",
+    "--derive-cardano",
+    is_flag=True,
+    help="Should the session have cardano seed derived.",
+)
 @click.pass_obj
-def get_session(
-    obj: TrezorConnection, passphrase: str = "", derive_cardano: bool = False
-) -> str:
+def get_session(obj: TrezorConnection, derive_cardano: bool) -> str:
     """Get a session ID for subsequent commands.
 
     Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
@@ -363,11 +369,13 @@ def get_session(
             raise click.ClickException(
                 "Upgrade your firmware to enable session support."
             )
+        available_on_device = Capability.PassphraseEntry in client.features.capabilities
 
         # client.ensure_unlocked()
+        passphrase = get_passphrase(available_on_device, obj.passphrase_on_host)
         session = client.get_session(
             passphrase=passphrase, derive_cardano=derive_cardano
-        )
+        )  # TODO add arguments to get_passphrase, add session id=1 or from user input
         if session.id is None:
             raise click.ClickException("Passphrase not enabled or firmware too old.")
         else:
