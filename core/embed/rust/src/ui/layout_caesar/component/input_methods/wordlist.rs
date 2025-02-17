@@ -9,7 +9,10 @@ use crate::{
     },
 };
 
-use super::super::{theme, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage};
+use super::super::{
+    theme, ButtonLayout, ChangingTextLine, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg,
+    ChoicePage,
+};
 use heapless::Vec;
 
 enum WordlistAction {
@@ -173,8 +176,8 @@ impl WordlistEntry {
             // Starting at random letter position
             choice_page: ChoicePage::new(choices)
                 .with_incomplete(true)
-                .with_carousel(true)
-                .with_initial_page_counter(get_random_position(choices_count)),
+                .with_initial_page_counter(get_random_position(choices_count))
+                .with_controls(ChoiceControls::Carousel),
             chosen_letters: Child::new(ChangingTextLine::center_mono(PROMPT, LINE_CAPACITY)),
             textbox: TextBox::empty(MAX_WORD_LENGTH),
             offer_words: false,
@@ -253,8 +256,12 @@ impl WordlistEntry {
         let new_page_counter = self.get_new_page_counter(&new_choices);
         // Not using carousel in case of words, as that looks weird in case
         // there is only one word to choose from.
-        self.choice_page
-            .reset(ctx, new_choices, Some(new_page_counter), !self.offer_words);
+        self.choice_page.reset(
+            ctx,
+            new_choices,
+            Some(new_page_counter),
+            ChoiceControls::Carousel,
+        );
         ctx.request_paint();
     }
 
@@ -280,31 +287,41 @@ impl Component for WordlistEntry {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
-            match action {
-                WordlistAction::Previous => {
-                    if self.can_go_back {
-                        return Some("");
-                    }
-                }
-                WordlistAction::Delete => {
-                    // Deleting all when long-pressed
-                    if long_press {
-                        self.textbox.clear(ctx);
-                    } else {
-                        self.textbox.delete_last(ctx);
-                    }
-                    self.update(ctx);
-                }
-                WordlistAction::Letter(letter) => {
-                    self.textbox.append(ctx, letter);
-                    self.update(ctx);
-                }
-                WordlistAction::Word(word) => {
-                    return Some(word);
-                }
+        match self.choice_page.event(ctx, event) {
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Previous,
+                ..
+            }) if self.can_go_back => {
+                return Some("");
             }
-        }
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Delete,
+                long_press,
+            }) => {
+                // Deleting all when long-pressed
+                if long_press {
+                    self.textbox.clear(ctx);
+                } else {
+                    self.textbox.delete_last(ctx);
+                }
+                self.update(ctx);
+            }
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Letter(letter),
+                ..
+            }) => {
+                self.textbox.append(ctx, letter);
+                self.update(ctx);
+            }
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Word(word),
+                ..
+            }) => {
+                return Some(word);
+            }
+            _ => {}
+        };
+
         None
     }
 

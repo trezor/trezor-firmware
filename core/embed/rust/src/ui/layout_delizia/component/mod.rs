@@ -63,7 +63,7 @@ pub use keyboard::{
     passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
     pin::{PinKeyboard, PinKeyboardMsg},
     slip39::Slip39Input,
-    word_count::{SelectWordCount, SelectWordCountMsg},
+    word_count::{SelectWordCount, SelectWordCountLayout, SelectWordCountMsg},
 };
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet};
 #[cfg(feature = "translations")]

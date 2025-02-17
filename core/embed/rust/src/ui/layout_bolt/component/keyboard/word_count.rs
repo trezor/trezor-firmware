@@ -1,7 +1,10 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Grid, GridCellSpan, Rect},
-    shape::Renderer,
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{Component, Event, EventCtx},
+        geometry::{Grid, GridCellSpan, Rect},
+        shape::Renderer,
+    },
 };
 
 use super::super::{
@@ -11,37 +14,90 @@ use super::super::{
 
 use heapless::Vec;
 
-#[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
+#[derive(Copy, Clone)]
 pub enum SelectWordCountMsg {
     Selected(u32),
+    Cancelled,
+}
+
+type Cell = (usize, usize);
+
+struct Btn {
+    text: TString<'static>,
+    msg: SelectWordCountMsg,
+    placement: GridCellSpan,
+}
+
+impl Btn {
+    pub const fn new(content: &'static str, value: u32, cell: Cell) -> Self {
+        Self {
+            text: TString::Str(content),
+            msg: SelectWordCountMsg::Selected(value),
+            placement: GridCellSpan {
+                from: cell,
+                to: (cell.0, cell.1 + 1),
+            },
+        }
+    }
+}
+
+pub struct SelectWordCountLayout {
+    choice_buttons: &'static [Btn],
+    cancel_button_placement: GridCellSpan,
+}
+
+impl SelectWordCountLayout {
+    /*
+     * 12 | 18 | 20
+     * ------------
+     * x  | 24 | 33
+     */
+    pub const LAYOUT_ALL: SelectWordCountLayout = SelectWordCountLayout {
+        choice_buttons: &[
+            Btn::new("12", 12, (0, 0)),
+            Btn::new("18", 18, (0, 2)),
+            Btn::new("20", 20, (0, 4)),
+            Btn::new("24", 24, (1, 2)),
+            Btn::new("33", 33, (1, 4)),
+        ],
+        cancel_button_placement: GridCellSpan {
+            from: (1, 0),
+            to: (1, 1),
+        },
+    };
+
+    /*
+     * x | 20 | 33
+     */
+    pub const LAYOUT_MULTISHARE: SelectWordCountLayout = SelectWordCountLayout {
+        choice_buttons: &[Btn::new("20", 20, (0, 2)), Btn::new("33", 33, (0, 4))],
+        cancel_button_placement: GridCellSpan {
+            from: (0, 0),
+            to: (0, 1),
+        },
+    };
 }
 
 pub struct SelectWordCount {
-    keypad: ValueKeypad,
+    layout: SelectWordCountLayout,
+    choice_buttons: Vec<Button, 5>,
+    cancel_button: Button,
 }
 
 impl SelectWordCount {
-    const NUMBERS_ALL: [u32; 5] = [12, 18, 20, 24, 33];
-    const LABELS_ALL: [&'static str; 5] = ["12", "18", "20", "24", "33"];
-    const CELLS_ALL: [(usize, usize); 5] = [(0, 0), (0, 2), (0, 4), (1, 0), (1, 2)];
+    pub fn new(layout: SelectWordCountLayout) -> Self {
+        let choice_buttons = layout
+            .choice_buttons
+            .iter()
+            .map(|btn| Button::with_text(btn.text).styled(theme::button_pin()))
+            .collect();
 
-    const NUMBERS_MULTISHARE: [u32; 2] = [20, 33];
-    const LABELS_MULTISHARE: [&'static str; 2] = ["20", "33"];
-    const CELLS_MULTISHARE: [(usize, usize); 2] = [(0, 0), (0, 2)];
+        let cancel_button = Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel());
 
-    pub fn new_all() -> Self {
         Self {
-            keypad: ValueKeypad::new(&Self::NUMBERS_ALL, &Self::LABELS_ALL, &Self::CELLS_ALL),
-        }
-    }
-
-    pub fn new_multishare() -> Self {
-        Self {
-            keypad: ValueKeypad::new(
-                &Self::NUMBERS_MULTISHARE,
-                &Self::LABELS_MULTISHARE,
-                &Self::CELLS_MULTISHARE,
-            ),
+            layout,
+            choice_buttons,
+            cancel_button,
         }
     }
 }
@@ -50,68 +106,37 @@ impl Component for SelectWordCount {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        self.keypad.place(bounds)
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.keypad.event(ctx, event)
-    }
-
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.keypad.render(target)
-    }
-}
-
-type ValueKeyPacked = (Button, u32, (usize, usize)); // (Button, number, cell)
-
-pub struct ValueKeypad {
-    buttons: Vec<ValueKeyPacked, 5>,
-}
-
-impl ValueKeypad {
-    fn new(numbers: &[u32], labels: &[&'static str], cells: &[(usize, usize)]) -> Self {
-        let mut buttons = Vec::new();
-
-        for ((&number, &label), &cell) in numbers.iter().zip(labels).zip(cells).take(5) {
-            unwrap!(buttons.push((
-                Button::with_text(label.into()).styled(theme::button_pin()),
-                number,
-                cell
-            )));
-        }
-
-        Self { buttons }
-    }
-}
-
-impl Component for ValueKeypad {
-    type Msg = SelectWordCountMsg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
         let (_, bounds) = bounds.split_bottom(2 * theme::BUTTON_HEIGHT + theme::BUTTON_SPACING);
         let grid = Grid::new(bounds, 2, 6).with_spacing(theme::BUTTON_SPACING);
-        for (btn, _, (x, y)) in self.buttons.iter_mut() {
-            btn.place(grid.cells(GridCellSpan {
-                from: (*x, *y),
-                to: (*x, *y + 1),
-            }));
+        for (i, button) in self.choice_buttons.iter_mut().enumerate() {
+            button.place(grid.cells(self.layout.choice_buttons[i].placement));
         }
+        self.cancel_button
+            .place(grid.cells(self.layout.cancel_button_placement));
+
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        for (i, (btn, _, _)) in self.buttons.iter_mut().enumerate() {
-            if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                return Some(SelectWordCountMsg::Selected(self.buttons[i].1));
+        for (i, button) in self.choice_buttons.iter_mut().enumerate() {
+            if matches!(button.event(ctx, event), Some(ButtonMsg::Clicked)) {
+                return Some(self.layout.choice_buttons[i].msg);
             }
+        }
+        if matches!(
+            self.cancel_button.event(ctx, event),
+            Some(ButtonMsg::Clicked)
+        ) {
+            return Some(SelectWordCountMsg::Cancelled);
         }
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        for btn in self.buttons.iter() {
-            btn.0.render(target)
+        for button in self.choice_buttons.iter() {
+            button.render(target);
         }
+        self.cancel_button.render(target);
     }
 }
 
@@ -119,13 +144,5 @@ impl Component for ValueKeypad {
 impl crate::trace::Trace for SelectWordCount {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("SelectWordCount");
-        t.child("keypad", &self.keypad);
-    }
-}
-
-#[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for ValueKeypad {
-    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("ValueKeypad");
     }
 }

@@ -12,8 +12,8 @@ use crate::{
 };
 
 use super::super::{
-    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceFactory,
-    ChoiceItem, ChoicePage,
+    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceControls,
+    ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
 
 /// Defines the choices currently available on the screen
@@ -279,8 +279,8 @@ impl PassphraseEntry {
     pub fn new() -> Self {
         Self {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
-                .with_carousel(true)
-                .with_initial_page_counter(random_menu_position()),
+                .with_initial_page_counter(random_menu_position())
+                .with_controls(ChoiceControls::Carousel),
             passphrase_dots: Child::new(ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH)),
             show_plain_passphrase: false,
             show_last_digit: false,
@@ -334,8 +334,12 @@ impl PassphraseEntry {
     /// Displaying the MENU
     fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, self.is_empty());
-        self.choice_page
-            .reset(ctx, menu_choices, Some(random_menu_position()), true);
+        self.choice_page.reset(
+            ctx,
+            menu_choices,
+            Some(random_menu_position()),
+            ChoiceControls::Carousel,
+        );
     }
 
     /// Displaying the character category
@@ -345,7 +349,7 @@ impl PassphraseEntry {
             ctx,
             category_choices,
             Some(random_category_position(&self.current_category)),
-            true,
+            ChoiceControls::Carousel,
         );
     }
 
@@ -396,54 +400,70 @@ impl Component for PassphraseEntry {
             }
         }
 
-        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
-            match action {
-                PassphraseAction::CancelOrDelete => {
-                    if self.is_empty() {
-                        return Some(CancelConfirmMsg::Cancelled);
+        match self.choice_page.event(ctx, event) {
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::CancelOrDelete,
+                long_press,
+            }) => {
+                if self.is_empty() {
+                    return Some(CancelConfirmMsg::Cancelled);
+                } else {
+                    // Deleting all when long-pressed
+                    if long_press {
+                        self.delete_all_digits(ctx);
                     } else {
-                        // Deleting all when long-pressed
-                        if long_press {
-                            self.delete_all_digits(ctx);
-                        } else {
-                            self.delete_last_digit(ctx);
-                        }
-                        self.update_passphrase_dots(ctx);
-                        if self.is_empty() {
-                            // Allowing for DELETE/CANCEL change
-                            self.show_menu_page(ctx);
-                        }
-                        ctx.request_paint();
+                        self.delete_last_digit(ctx);
                     }
-                }
-                PassphraseAction::Enter => {
-                    return Some(CancelConfirmMsg::Confirmed);
-                }
-                PassphraseAction::Show => {
-                    self.show_plain_passphrase = true;
                     self.update_passphrase_dots(ctx);
+                    if self.is_empty() {
+                        // Allowing for DELETE/CANCEL change
+                        self.show_menu_page(ctx);
+                    }
                     ctx.request_paint();
                 }
-                PassphraseAction::Category(category) => {
-                    self.current_category = category;
-                    self.show_category_page(ctx);
-                    ctx.request_paint();
-                }
-                PassphraseAction::Menu => {
-                    self.current_category = ChoiceCategory::Menu;
-                    self.show_menu_page(ctx);
-                    ctx.request_paint();
-                }
-                PassphraseAction::Character(ch) if !self.is_full() => {
-                    self.append_char(ctx, ch);
-                    self.show_last_digit = true;
-                    self.update_passphrase_dots(ctx);
-                    self.randomize_category_position(ctx);
-                    ctx.request_paint();
-                }
-                _ => {}
             }
-        }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Enter,
+                ..
+            }) => {
+                return Some(CancelConfirmMsg::Confirmed);
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Show,
+                ..
+            }) => {
+                self.show_plain_passphrase = true;
+                self.update_passphrase_dots(ctx);
+                ctx.request_paint();
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Category(category),
+                ..
+            }) => {
+                self.current_category = category;
+                self.show_category_page(ctx);
+                ctx.request_paint();
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Menu,
+                ..
+            }) => {
+                self.current_category = ChoiceCategory::Menu;
+                self.show_menu_page(ctx);
+                ctx.request_paint();
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Character(ch),
+                ..
+            }) if !self.is_full() => {
+                self.append_char(ctx, ch);
+                self.show_last_digit = true;
+                self.update_passphrase_dots(ctx);
+                self.randomize_category_position(ctx);
+                ctx.request_paint();
+            }
+            _ => {}
+        };
 
         None
     }

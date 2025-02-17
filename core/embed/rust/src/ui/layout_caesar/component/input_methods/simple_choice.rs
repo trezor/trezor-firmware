@@ -8,7 +8,9 @@ use crate::{
     },
 };
 
-use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage};
+use super::super::{
+    ButtonDetails, ButtonLayout, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
+};
 use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
@@ -17,12 +19,12 @@ const MAX_LENGTH: usize = 5;
 
 struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
-    carousel: bool,
+    controls: ChoiceControls,
 }
 
 impl ChoiceFactorySimple {
-    fn new(choices: Vec<TString<'static>, MAX_LENGTH>, carousel: bool) -> Self {
-        Self { choices, carousel }
+    fn new(choices: Vec<TString<'static>, MAX_LENGTH>, controls: ChoiceControls) -> Self {
+        Self { choices, controls }
     }
 
     fn get_string(&self, choice_index: usize) -> TString<'static> {
@@ -48,10 +50,14 @@ impl ChoiceFactory for ChoiceFactorySimple {
         });
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
-        // (could be done to the same button if there is only one)
-        if !self.carousel {
+        // (could be done to the same item if there is only one)
+        if self.controls != ChoiceControls::Carousel {
             if choice_index == 0 {
-                choice_item.set_left_btn(None);
+                if self.controls == ChoiceControls::Cancellable {
+                    choice_item.set_left_btn(Some(ButtonDetails::cancel_icon()));
+                } else {
+                    choice_item.set_left_btn(None);
+                }
             }
             if choice_index == self.count() - 1 {
                 choice_item.set_right_btn(None);
@@ -70,10 +76,11 @@ pub struct SimpleChoice {
 }
 
 impl SimpleChoice {
-    pub fn new(str_choices: Vec<TString<'static>, MAX_LENGTH>, carousel: bool) -> Self {
-        let choices = ChoiceFactorySimple::new(str_choices, carousel);
+    pub fn new(str_choices: Vec<TString<'static>, MAX_LENGTH>, controls: ChoiceControls) -> Self {
+        let choices = ChoiceFactorySimple::new(str_choices, controls);
+        let choice_page = ChoicePage::new(choices).with_controls(controls);
         Self {
-            choice_page: ChoicePage::new(choices).with_carousel(carousel),
+            choice_page,
             return_index: false,
         }
     }
@@ -103,14 +110,14 @@ impl SimpleChoice {
 }
 
 impl Component for SimpleChoice {
-    type Msg = usize;
+    type Msg = ChoiceMsg<usize>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.choice_page.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.choice_page.event(ctx, event).map(|evt| evt.0)
+        self.choice_page.event(ctx, event)
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

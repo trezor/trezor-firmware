@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoicePage};
+use super::super::{ButtonLayout, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage};
 
 struct ChoiceFactoryNumberInput {
     min: u32,
@@ -69,14 +69,14 @@ impl NumberInput {
 }
 
 impl Component for NumberInput {
-    type Msg = u32;
+    type Msg = ChoiceMsg<u32>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.choice_page.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.choice_page.event(ctx, event).map(|evt| evt.0)
+        self.choice_page.event(ctx, event)
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

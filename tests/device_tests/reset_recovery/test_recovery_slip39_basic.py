@@ -29,6 +29,7 @@ from ...input_flows import (
     InputFlowSlip39BasicRecovery,
     InputFlowSlip39BasicRecoveryAbort,
     InputFlowSlip39BasicRecoveryAbortBetweenShares,
+    InputFlowSlip39BasicRecoveryAbortOnNumberOfWords,
     InputFlowSlip39BasicRecoveryInvalidFirstShare,
     InputFlowSlip39BasicRecoveryInvalidSecondShare,
     InputFlowSlip39BasicRecoveryNoAbort,
@@ -110,6 +111,20 @@ def test_recover_with_pin_passphrase(client: Client):
 def test_abort(client: Client):
     with client:
         IF = InputFlowSlip39BasicRecoveryAbort(client)
+        client.set_input_flow(IF.get())
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(client, pin_protection=False, label="label")
+        client.init_device()
+        assert client.features.initialized is False
+        assert client.features.recovery_status is messages.RecoveryStatus.Nothing
+
+
+@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.setup_client(uninitialized=True)
+def test_abort_on_number_of_words(client: Client):
+    # on Caesar, test_abort actually aborts on the # of words selection
+    with client:
+        IF = InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(client, pin_protection=False, label="label")

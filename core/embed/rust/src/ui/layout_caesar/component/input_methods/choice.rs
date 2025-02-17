@@ -11,6 +11,11 @@ use super::super::{
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
 
+pub enum ChoiceMsg<T> {
+    Choice { item: T, long_press: bool },
+    Cancel,
+}
+
 pub trait Choice {
     fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool);
 
@@ -50,6 +55,12 @@ pub trait ChoiceFactory {
     fn get(&self, index: usize) -> (Self::Item, Self::Action);
 }
 
+#[derive(PartialEq, Copy, Clone)]
+pub enum ChoiceControls {
+    Carousel,
+    Cancellable,
+}
+
 /// General component displaying a set of items on the screen
 /// and allowing the user to select one of them.
 ///
@@ -60,9 +71,6 @@ pub trait ChoiceFactory {
 /// Each `Choice` is responsible for setting the screen -
 /// choosing the button text, their duration, text displayed
 /// on screen etc.
-///
-/// `is_carousel` can be used to make the choice page "infinite" -
-/// after reaching one end, users will appear at the other end.
 pub struct ChoicePage<F, A>
 where
     F: ChoiceFactory<Action = A>,
@@ -73,8 +81,9 @@ where
     page_counter: usize,
     /// How many pixels are between the items.
     items_distance: i16,
-    /// Whether the choice page is "infinite" (carousel).
-    is_carousel: bool,
+    /// Whether the choice page is cancelable
+    /// or a carousel.
+    controls: ChoiceControls,
     /// Whether we should show items on left/right even when they cannot
     /// be painted entirely (they would be cut off).
     show_incomplete: bool,
@@ -116,7 +125,7 @@ where
             ),
             page_counter: 0,
             items_distance: DEFAULT_ITEMS_DISTANCE,
-            is_carousel: false,
+            controls: ChoiceControls::Cancellable,
             show_incomplete: false,
             show_only_one_item: false,
             inverse_selected_item: false,
@@ -138,9 +147,8 @@ where
         self
     }
 
-    /// Enabling the carousel mode.
-    pub fn with_carousel(mut self, carousel: bool) -> Self {
-        self.is_carousel = carousel;
+    pub fn with_controls(mut self, controls: ChoiceControls) -> Self {
+        self.controls = controls;
         self
     }
 
@@ -172,13 +180,13 @@ where
         ctx: &mut EventCtx,
         new_choices: F,
         new_page_counter: Option<usize>,
-        is_carousel: bool,
+        controls: ChoiceControls,
     ) {
         self.choices = new_choices;
         if let Some(new_counter) = new_page_counter {
             self.page_counter = new_counter;
         }
-        self.is_carousel = is_carousel;
+        self.controls = controls;
         self.update(ctx);
     }
 
@@ -239,12 +247,12 @@ where
         let (left_area, _center_area, right_area) = center_row_area.split_center(center_width);
 
         // Possibly drawing on the left side.
-        if self.has_previous_choice() || self.is_carousel {
+        if self.has_previous_choice() || self.controls == ChoiceControls::Carousel {
             self.show_left_choices(target, left_area);
         }
 
         // Possibly drawing on the right side.
-        if self.has_next_choice() || self.is_carousel {
+        if self.has_next_choice() || self.controls == ChoiceControls::Carousel {
             self.show_right_choices(target, right_area);
         }
     }
@@ -307,7 +315,7 @@ where
             // Breaking out of the loop if we exhausted left items
             // and the carousel mode is not enabled.
             if page_index < 0 {
-                if self.is_carousel {
+                if self.controls == ChoiceControls::Carousel {
                     // Moving to the last page.
                     page_index = self.last_page_index() as i16;
                 } else {
@@ -348,7 +356,7 @@ where
             // Breaking out of the loop if we exhausted right items
             // and the carousel mode is not enabled.
             if page_index > self.last_page_index() {
-                if self.is_carousel {
+                if self.controls == ChoiceControls::Carousel {
                     // Moving to the first page.
                     page_index = 0;
                 } else {
@@ -428,8 +436,10 @@ where
     /// Check possibility of going left/right.
     fn can_move(&self, button: ButtonPos) -> bool {
         match button {
-            ButtonPos::Left => self.has_previous_choice() || self.is_carousel,
-            ButtonPos::Right => self.has_next_choice() || self.is_carousel,
+            ButtonPos::Left => {
+                self.has_previous_choice() || self.controls == ChoiceControls::Carousel
+            }
+            ButtonPos::Right => self.has_next_choice() || self.controls == ChoiceControls::Carousel,
             _ => false,
         }
     }
@@ -439,7 +449,7 @@ where
         if self.has_previous_choice() {
             self.decrease_page_counter();
             self.update(ctx);
-        } else if self.is_carousel {
+        } else if self.controls == ChoiceControls::Carousel {
             self.page_counter_to_max();
             self.update(ctx);
         }
@@ -450,7 +460,7 @@ where
         if self.has_next_choice() {
             self.increase_page_counter();
             self.update(ctx);
-        } else if self.is_carousel {
+        } else if self.controls == ChoiceControls::Carousel {
             self.page_counter_to_zero();
             self.update(ctx);
         }
@@ -486,7 +496,7 @@ impl<F, A> Component for ChoicePage<F, A>
 where
     F: ChoiceFactory<Action = A>,
 {
-    type Msg = (A, bool);
+    type Msg = ChoiceMsg<A>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
@@ -558,9 +568,13 @@ where
         if let Some(ButtonControllerMsg::Triggered(pos, long_press)) = button_event {
             match pos {
                 ButtonPos::Left => {
-                    // Clicked BACK. Decrease the page counter.
-                    // In case of carousel going to the right end.
-                    self.move_left(ctx);
+                    if self.controls == ChoiceControls::Cancellable && self.page_counter == 0 {
+                        return Some(ChoiceMsg::<A>::Cancel);
+                    } else {
+                        // Clicked BACK. Decrease the page counter.
+                        // In case of carousel going to the right end.
+                        self.move_left(ctx);
+                    }
                 }
                 ButtonPos::Right => {
                     // Clicked NEXT. Increase the page counter.
@@ -570,7 +584,10 @@ where
                 ButtonPos::Middle => {
                     // Clicked SELECT. Send current choice index with information about long-press
                     self.clear_and_repaint(ctx);
-                    return Some((self.get_current_action(), long_press));
+                    return Some(ChoiceMsg::Choice {
+                        item: self.get_current_action(),
+                        long_press,
+                    });
                 }
             }
         };
@@ -583,7 +600,10 @@ where
                     buttons.reset_state(ctx);
                 });
                 self.clear_and_repaint(ctx);
-                return Some((self.get_current_action(), true));
+                return Some(ChoiceMsg::Choice {
+                    item: self.get_current_action(),
+                    long_press: true,
+                });
             }
         };
         // The middle button was pressed, highlighting the current choice by color
@@ -614,11 +634,11 @@ where
         t.component("ChoicePage");
         t.int("active_page", self.page_counter as i64);
         t.int("page_count", self.choices.count() as i64);
-        t.bool("is_carousel", self.is_carousel);
+        t.bool("is_carousel", self.controls == ChoiceControls::Carousel);
 
         if self.has_previous_choice() {
             t.child("prev_choice", &self.choices.get(self.page_counter - 1).0);
-        } else if self.is_carousel {
+        } else if self.controls == ChoiceControls::Carousel {
             // In case of carousel going to the left end.
             t.child("prev_choice", &self.choices.get(self.last_page_index()).0);
         }
@@ -627,7 +647,7 @@ where
 
         if self.has_next_choice() {
             t.child("next_choice", &self.choices.get(self.page_counter + 1).0);
-        } else if self.is_carousel {
+        } else if self.controls == ChoiceControls::Carousel {
             // In case of carousel going to the very left.
             t.child("next_choice", &self.choices.get(0).0);
         }

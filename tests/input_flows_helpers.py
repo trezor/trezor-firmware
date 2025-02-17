@@ -192,7 +192,7 @@ class RecoveryFlow:
             assert TR.recovery__wanna_cancel_recovery in self._text_content()
             self.debug.press_yes()
 
-    def input_number_of_words(self, num_words: int) -> BRGeneratorType:
+    def input_number_of_words(self, num_words: int | None) -> BRGeneratorType:
         br = yield
         assert br.code == B.MnemonicWordCount
         assert br.name == "recovery_word_count"
@@ -200,7 +200,11 @@ class RecoveryFlow:
             assert TR.word_count__title in self.debug.read_layout().title()
         else:
             assert TR.recovery__num_of_words in self._text_content()
-        self.debug.input(str(num_words))
+
+        if num_words is None:
+            self.debug.press_no()
+        else:
+            self.debug.input(str(num_words))
 
     def warning_invalid_recovery_seed(self) -> BRGeneratorType:
         br = yield
