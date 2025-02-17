@@ -68,7 +68,7 @@ typedef struct {
 nfc_status_t nfc_init(void);
 
 // Deinitialize NFC driver
-nfc_status_t nfc_deinit(void);
+void nfc_deinit(void);
 
 // Register NFC technology (or several) to be explored by NFC state machine
 // use this function before activating the state machine with nfc_activate_stm()

@@ -190,7 +190,7 @@ nfc_status_t nfc_init() {
   status = HAL_SPI_Init(&drv->hspi);
 
   if (status != HAL_OK) {
-    return false;
+    goto cleanup;
   }
 
   ReturnCode ret;
@@ -200,7 +200,7 @@ nfc_status_t nfc_init() {
   rfalNfcDefaultDiscParams(&drv->disc_params);
 
   if (ret != RFAL_ERR_NONE) {
-    return NFC_ERROR;
+    goto cleanup;
   }
 
   // Initialize EXTI for NFC IRQ pin
@@ -209,7 +209,11 @@ nfc_status_t nfc_init() {
   EXTI_Config.Line = NFC_EXTI_INTERRUPT_LINE;
   EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
   EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
-  HAL_EXTI_SetConfigLine(&drv->hEXTI, &EXTI_Config);
+  status = HAL_EXTI_SetConfigLine(&drv->hEXTI, &EXTI_Config);
+
+  if (status != HAL_OK) {
+    goto cleanup;
+  }
 
   NVIC_SetPriority(NFC_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
   __HAL_GPIO_EXTI_CLEAR_FLAG(NFC_INT_PIN);
@@ -220,14 +224,19 @@ nfc_status_t nfc_init() {
   drv->last_nfc_state = NFC_STATE_NOT_ACTIVE;
 
   return NFC_OK;
+
+cleanup:
+  nfc_deinit();
+  return NFC_ERROR;
+
 }
 
-nfc_status_t nfc_deinit(void) {
+void nfc_deinit(void) {
 
   st25r3916b_driver_t *drv = &g_st25r3916b_driver;
 
   if (!drv->initialized) {
-    return NFC_OK;
+    return;
   }
 
   // Deactivate rfal STM (Disconnects active devices)
@@ -239,11 +248,7 @@ nfc_status_t nfc_deinit(void) {
   HAL_EXTI_ClearConfigLine(&drv->hEXTI);
   NVIC_DisableIRQ(NFC_EXTI_INTERRUPT_NUM);
 
-  ReturnCode ret_code = rfalDeinitialize();
-
-  if (ret_code != RFAL_ERR_NONE) {
-    return NFC_ERROR;
-  }
+  rfalDeinitialize();
 
   HAL_SPI_DeInit(&drv->hspi);
 
@@ -255,7 +260,7 @@ nfc_status_t nfc_deinit(void) {
 
   drv->initialized = false;
 
-  return NFC_OK;
+  return;
 
 }
 
@@ -485,9 +490,9 @@ nfc_status_t nfc_get_event(nfc_event_t *event) {
 
 nfc_status_t nfc_dev_deactivate(void) {
 
-  st25r3916b_driver_t drv = g_st25r3916b_driver;
+  st25r3916b_driver_t *drv = &g_st25r3916b_driver;
 
-  if (!drv.initialized) {
+  if (!drv->initialized) {
     return NFC_NOT_INITIALIZED;
   }
 

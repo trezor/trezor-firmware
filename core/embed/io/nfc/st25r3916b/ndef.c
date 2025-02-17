@@ -23,12 +23,12 @@
 
 #define NDEF_MESSAGE_URI_OVERHEAD 7
 
-ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
+ndef_status_t ndef_parse_message(const uint8_t *buffer, size_t buffer_size,
                                  ndef_message_t *message) {
 
   memset(message, 0, sizeof(ndef_message_t));
 
-  int16_t remaining_len = buffer_len;
+  size_t remaining_len = buffer_size;
 
   if (remaining_len <= 0){
     return NDEF_ERROR;
@@ -72,10 +72,16 @@ ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
   }
   remaining_len = message->message_total_len;
 
+  ndef_status_t status;
   while (1) {
 
-    ndef_parse_record(buffer, remaining_len,
+    status = ndef_parse_record(buffer, remaining_len,
                       &message->records[message->records_cnt]);
+
+    if(status != NDEF_OK){
+      return status;
+    }
+
     buffer += message->records[message->records_cnt].record_total_len;
     remaining_len -= message->records[message->records_cnt].record_total_len;
     message->records_cnt++;
@@ -97,13 +103,13 @@ ndef_status_t ndef_parse_message(const uint8_t *buffer, uint16_t buffer_len,
   return NDEF_OK;
 }
 
-ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
+ndef_status_t ndef_parse_record(const uint8_t *buffer, size_t buffer_size,
                                 ndef_record_t *rec) {
   uint8_t bp = 0;
 
   // Check if there is enough items to cover first part of the header revelaing
   // record length
-  if (len < 3) {
+  if (buffer_size < 3) {
     return NDEF_ERROR;  // Not enough data to parse
   }
 
@@ -162,10 +168,9 @@ ndef_status_t ndef_parse_record(const uint8_t *buffer, uint16_t len,
   return NDEF_OK;
 }
 
-uint16_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
+size_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
 
-
-  uint16_t uri_len = strlen(uri);
+  size_t uri_len = strlen(uri);
 
   if(buffer_size < (uri_len + NDEF_MESSAGE_URI_OVERHEAD)){
     return 0; // Not enough room to create URI
@@ -200,5 +205,5 @@ uint16_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
 
   *buffer = 0xFE;  // TLV termination
 
-  return uri_len + 7;  // return buffer len
+  return uri_len + NDEF_MESSAGE_URI_OVERHEAD;  // return buffer len
 }
