@@ -35,7 +35,7 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 bool advertising = false;
 bool advertising_wl = false;
 
-uint8_t manufacturer_data[8] = {0xff, 0xff, 0, 0, 'T', '3', 'W', '1'};
+uint8_t manufacturer_data[8] = {0xff, 0xff, 0, 0, 0, 0, 0, 0};
 
 static struct bt_data advertising_data[2];
 
@@ -61,7 +61,8 @@ void advertising_setup_wl(void) {
   bt_foreach_bond(BT_ID_DEFAULT, add_to_whitelist, NULL);
 }
 
-void advertising_start(bool wl, uint8_t color, char *name, int name_len) {
+void advertising_start(bool wl, uint8_t color, uint32_t device_code,
+                       bool static_addr, char *name, int name_len) {
   if (advertising) {
     LOG_WRN("Restarting advertising");
     bt_le_adv_stop();
@@ -74,6 +75,10 @@ void advertising_start(bool wl, uint8_t color, char *name, int name_len) {
   }
 
   manufacturer_data[3] = color;
+  manufacturer_data[4] = (device_code >> 24) & 0xff;
+  manufacturer_data[5] = (device_code >> 16) & 0xff;
+  manufacturer_data[6] = (device_code >> 8) & 0xff;
+  manufacturer_data[7] = device_code & 0xff;
 
   advertising_data[0].type = BT_DATA_FLAGS;
   advertising_data[0].data_len = 1;
@@ -96,23 +101,31 @@ void advertising_start(bool wl, uint8_t color, char *name, int name_len) {
 
     manufacturer_data[2] = 0x00;
 
-    err = bt_le_adv_start(
-        BT_LE_ADV_PARAM(BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE |
-                            BT_LE_ADV_OPT_FILTER_CONN |
-                            BT_LE_ADV_OPT_FILTER_SCAN_REQ,
-                        160, 1600, NULL),
-        advertising_data, ARRAY_SIZE(advertising_data), scan_response_data,
-        ARRAY_SIZE(scan_response_data));
+    uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE |
+                       BT_LE_ADV_OPT_FILTER_CONN |
+                       BT_LE_ADV_OPT_FILTER_SCAN_REQ;
+    if (static_addr) {
+      LOG_ERR("Advertising with static ADDR");
+      options |= BT_LE_ADV_OPT_USE_IDENTITY;
+    }
+
+    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, 160, 1600, NULL),
+                          advertising_data, ARRAY_SIZE(advertising_data),
+                          scan_response_data, ARRAY_SIZE(scan_response_data));
   } else {
     LOG_INF("Advertising no whitelist");
 
     manufacturer_data[2] = 0x01;
 
-    err = bt_le_adv_start(
-        BT_LE_ADV_PARAM(BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE,
-                        160, 1600, NULL),
-        advertising_data, ARRAY_SIZE(advertising_data), scan_response_data,
-        ARRAY_SIZE(scan_response_data));
+    uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE;
+    if (static_addr) {
+      LOG_ERR("Advertising with static ADDR");
+      options |= BT_LE_ADV_OPT_USE_IDENTITY;
+    }
+
+    err = bt_le_adv_start(BT_LE_ADV_PARAM(options, 160, 1600, NULL),
+                          advertising_data, ARRAY_SIZE(advertising_data),
+                          scan_response_data, ARRAY_SIZE(scan_response_data));
   }
   if (err) {
     LOG_ERR("Advertising failed to start (err %d)", err);
@@ -151,4 +164,29 @@ bool advertising_is_advertising_whitelist(void) { return advertising_wl; }
 void advertising_init(void) {
   LOG_INF("Advertising init");
   advertising_setup_wl();
+}
+
+void advertising_get_mac(uint8_t *mac, uint16_t max_len) {
+  bt_addr_le_t addr[CONFIG_BT_ID_MAX] = {0};
+  size_t count = 0;
+
+  // Get the first (default) identity address
+  bt_id_get(addr, &count);
+
+  struct bt_le_oob oob_data;
+  bt_le_oob_get_local(BT_ID_DEFAULT, &oob_data);
+
+  for (size_t i = 0; i < count; i++) {
+    char addr_str[BT_ADDR_LE_STR_LEN];
+    bt_addr_le_to_str(addr, addr_str, sizeof(addr_str));
+    LOG_ERR("Current BT MAC Address: %s\n", addr_str);
+  }
+
+  char addr_str[BT_ADDR_LE_STR_LEN];
+  bt_addr_le_to_str(&oob_data.addr, addr_str, sizeof(addr_str));
+  LOG_ERR("Current BT MAC Address: %s\n", addr_str);
+
+  LOG_ERR("Num of IDS: %d", count);
+
+  memcpy(mac, oob_data.addr.a.val, max_len);
 }

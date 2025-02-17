@@ -8,6 +8,7 @@ pub fn connected() -> bool {
             connectable: false,
             pairing: false,
             pairing_requested: false,
+            state_known: false,
         };
         ffi::ble_get_state(&mut state as _);
 
@@ -26,9 +27,9 @@ pub fn pairing_mode(name: &str) {
         let bytes = name.as_bytes();
 
         // Determine how many bytes we can copy (min of buffer size and string length).
-        let len = bytes.len().min(cmd.data.name.len());
+        let len = bytes.len().min(cmd.data.adv_start.name.len());
 
-        cmd.data.name[..len].copy_from_slice(&bytes[..len]);
+        cmd.data.adv_start.name[..len].copy_from_slice(&bytes[..len]);
 
         ffi::ble_issue_command(&mut cmd as _);
     }

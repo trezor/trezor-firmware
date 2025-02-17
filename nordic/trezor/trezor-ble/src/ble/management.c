@@ -96,6 +96,13 @@ void management_send_pairing_request_event(uint8_t *data, uint16_t len) {
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
+void management_send_mac(uint8_t *mac) {
+  uint8_t tx_data[1 + BT_ADDR_SIZE] = {0};
+  tx_data[0] = INTERNAL_EVENT_MAC;
+  memcpy(&tx_data[1], mac, BT_ADDR_SIZE);
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
+}
+
 static void process_command(uint8_t *data, uint16_t len) {
   uint8_t cmd = data[0];
   bool success = true;
@@ -107,9 +114,14 @@ static void process_command(uint8_t *data, uint16_t len) {
       break;
     case INTERNAL_CMD_ADVERTISING_ON: {
       uint8_t color = data[2];
-      char *name = &data[3];
+      bool static_addr = data[3];
+      uint32_t device_code =
+          (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7];
+      char *name = &data[8];
+
       int name_len = strnlen(name, 20);
-      advertising_start(data[1] != 0, color, name, name_len);
+      advertising_start(data[1] != 0, color, device_code, static_addr, name,
+                        name_len);
     } break;
     case INTERNAL_CMD_ADVERTISING_OFF:
       advertising_stop();
@@ -131,6 +143,12 @@ static void process_command(uint8_t *data, uint16_t len) {
     case INTERNAL_CMD_UNPAIR:
       success = bonds_erase_current();
       break;
+    case INTERNAL_CMD_GET_MAC: {
+      uint8_t mac[BT_ADDR_SIZE] = {0};
+      advertising_get_mac(mac, BT_ADDR_SIZE);
+      management_send_mac(mac);
+      send_response = false;
+    } break;
     default:
       break;
   }
