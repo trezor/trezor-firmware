@@ -12,8 +12,8 @@ use crate::{
 };
 
 use super::super::{
-    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceFactory,
-    ChoiceItem, ChoicePage,
+    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, CancelableChoiceAction, ChangingTextLine,
+    ChoiceFactory, ChoiceItem, ChoicePage,
 };
 
 /// Defines the choices currently available on the screen
@@ -398,7 +398,9 @@ impl Component for PassphraseEntry {
 
         if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
             match action {
-                PassphraseAction::CancelOrDelete => {
+                CancelableChoiceAction::<PassphraseAction>::Choice(
+                    PassphraseAction::CancelOrDelete,
+                ) => {
                     if self.is_empty() {
                         return Some(CancelConfirmMsg::Cancelled);
                     } else {
@@ -416,25 +418,29 @@ impl Component for PassphraseEntry {
                         ctx.request_paint();
                     }
                 }
-                PassphraseAction::Enter => {
+                CancelableChoiceAction::<PassphraseAction>::Choice(PassphraseAction::Enter) => {
                     return Some(CancelConfirmMsg::Confirmed);
                 }
-                PassphraseAction::Show => {
+                CancelableChoiceAction::<PassphraseAction>::Choice(PassphraseAction::Show) => {
                     self.show_plain_passphrase = true;
                     self.update_passphrase_dots(ctx);
                     ctx.request_paint();
                 }
-                PassphraseAction::Category(category) => {
+                CancelableChoiceAction::<PassphraseAction>::Choice(PassphraseAction::Category(
+                    category,
+                )) => {
                     self.current_category = category;
                     self.show_category_page(ctx);
                     ctx.request_paint();
                 }
-                PassphraseAction::Menu => {
+                CancelableChoiceAction::<PassphraseAction>::Choice(PassphraseAction::Menu) => {
                     self.current_category = ChoiceCategory::Menu;
                     self.show_menu_page(ctx);
                     ctx.request_paint();
                 }
-                PassphraseAction::Character(ch) if !self.is_full() => {
+                CancelableChoiceAction::<PassphraseAction>::Choice(
+                    PassphraseAction::Character(ch),
+                ) if !self.is_full() => {
                     self.append_char(ctx, ch);
                     self.show_last_digit = true;
                     self.update_passphrase_dots(ctx);

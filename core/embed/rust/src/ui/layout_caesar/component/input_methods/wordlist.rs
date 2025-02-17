@@ -9,7 +9,10 @@ use crate::{
     },
 };
 
-use super::super::{theme, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage};
+use super::super::{
+    theme, ButtonLayout, CancelableChoiceAction, ChangingTextLine, ChoiceFactory, ChoiceItem,
+    ChoicePage,
+};
 use heapless::Vec;
 
 enum WordlistAction {
@@ -282,12 +285,12 @@ impl Component for WordlistEntry {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
             match action {
-                WordlistAction::Previous => {
+                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Previous) => {
                     if self.can_go_back {
                         return Some("");
                     }
                 }
-                WordlistAction::Delete => {
+                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Delete) => {
                     // Deleting all when long-pressed
                     if long_press {
                         self.textbox.clear(ctx);
@@ -296,13 +299,16 @@ impl Component for WordlistEntry {
                     }
                     self.update(ctx);
                 }
-                WordlistAction::Letter(letter) => {
+                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Letter(
+                    letter,
+                )) => {
                     self.textbox.append(ctx, letter);
                     self.update(ctx);
                 }
-                WordlistAction::Word(word) => {
+                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Word(word)) => {
                     return Some(word);
                 }
+                _ => {}
             }
         }
         None

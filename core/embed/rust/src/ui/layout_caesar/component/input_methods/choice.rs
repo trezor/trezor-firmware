@@ -1,3 +1,5 @@
+use crate::error::Error;
+
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::{Insets, Offset, Rect},
@@ -10,6 +12,11 @@ use super::super::{
 };
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
+
+pub enum CancelableChoiceAction<T> {
+    Choice(T),
+    Cancel,
+}
 
 pub trait Choice {
     fn render_center<'s>(&self, target: &mut impl Renderer<'s>, _area: Rect, _inverse: bool);
@@ -75,6 +82,9 @@ where
     items_distance: i16,
     /// Whether the choice page is "infinite" (carousel).
     is_carousel: bool,
+    /// Whether the choice page is cancelable.
+    /// Only works if is_carousel is false.
+    is_cancelable: bool,
     /// Whether we should show items on left/right even when they cannot
     /// be painted entirely (they would be cut off).
     show_incomplete: bool,
@@ -117,6 +127,7 @@ where
             page_counter: 0,
             items_distance: DEFAULT_ITEMS_DISTANCE,
             is_carousel: false,
+            is_cancelable: false,
             show_incomplete: false,
             show_only_one_item: false,
             inverse_selected_item: false,
@@ -138,9 +149,15 @@ where
         self
     }
 
-    /// Enabling the carousel mode.
+    /// Set the carousel mode.
     pub fn with_carousel(mut self, carousel: bool) -> Self {
         self.is_carousel = carousel;
+        self
+    }
+
+    /// Set the cancelable mode.
+    pub fn with_cancelable(mut self, cancelable: bool) -> Self {
+        self.is_cancelable = cancelable;
         self
     }
 
@@ -486,7 +503,7 @@ impl<F, A> Component for ChoicePage<F, A>
 where
     F: ChoiceFactory<Action = A>,
 {
-    type Msg = (A, bool);
+    type Msg = (CancelableChoiceAction<A>, bool);
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
@@ -558,9 +575,13 @@ where
         if let Some(ButtonControllerMsg::Triggered(pos, long_press)) = button_event {
             match pos {
                 ButtonPos::Left => {
-                    // Clicked BACK. Decrease the page counter.
-                    // In case of carousel going to the right end.
-                    self.move_left(ctx);
+                    if self.is_cancelable && self.page_counter == 0 {
+                        return Some((CancelableChoiceAction::<A>::Cancel, true));
+                    } else {
+                        // Clicked BACK. Decrease the page counter.
+                        // In case of carousel going to the right end.
+                        self.move_left(ctx);
+                    }
                 }
                 ButtonPos::Right => {
                     // Clicked NEXT. Increase the page counter.
@@ -570,7 +591,10 @@ where
                 ButtonPos::Middle => {
                     // Clicked SELECT. Send current choice index with information about long-press
                     self.clear_and_repaint(ctx);
-                    return Some((self.get_current_action(), long_press));
+                    return Some((
+                        CancelableChoiceAction::Choice(self.get_current_action()),
+                        long_press,
+                    ));
                 }
             }
         };
@@ -583,7 +607,10 @@ where
                     buttons.reset_state(ctx);
                 });
                 self.clear_and_repaint(ctx);
-                return Some((self.get_current_action(), true));
+                return Some((
+                    CancelableChoiceAction::Choice(self.get_current_action()),
+                    true,
+                ));
             }
         };
         // The middle button was pressed, highlighting the current choice by color

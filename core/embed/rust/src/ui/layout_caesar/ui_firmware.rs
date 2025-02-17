@@ -882,7 +882,7 @@ impl FirmwareUI for UICaesar {
         let layout = RootComponent::new(
             Frame::new(
                 description,
-                SimpleChoice::new(words, false)
+                SimpleChoice::new(words, false, false)
                     .with_show_incomplete()
                     .with_return_index(),
             )
@@ -904,7 +904,7 @@ impl FirmwareUI for UICaesar {
         };
 
         let layout = RootComponent::new(
-            Frame::new(title, SimpleChoice::new(choices, false)).with_title_centered(),
+            Frame::new(title, SimpleChoice::new(choices, false, true)).with_title_centered(),
         );
         Ok(layout)
     }

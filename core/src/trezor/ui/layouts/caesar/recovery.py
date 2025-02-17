@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 import trezorui_api
 from trezor import TR, ui
 from trezor.enums import ButtonRequestType, RecoveryType
+from trezor.wire import ActionCancelled
 
 from ..common import interact
 from . import show_warning
@@ -14,13 +15,18 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
-    count = await interact(
-        trezorui_api.select_word_count(recovery_type=recovery_type),
-        "recovery_word_count",
-        ButtonRequestType.MnemonicWordCount,
-    )
-    # It can be returning a string (for example for __debug__ in tests)
-    return int(count)
+    from apps.management.recovery_device.recover import RecoveryAborted
+
+    try:
+        count = await interact(
+            trezorui_api.select_word_count(recovery_type=recovery_type),
+            "recovery_word_count",
+            ButtonRequestType.MnemonicWordCount,
+        )
+        # It can be returning a string (for example for __debug__ in tests)
+        return int(count)
+    except ActionCancelled:
+        raise RecoveryAborted
 
 
 async def request_word(

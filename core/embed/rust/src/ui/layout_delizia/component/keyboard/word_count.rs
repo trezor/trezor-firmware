@@ -4,38 +4,56 @@ use crate::ui::{
     shape::Renderer,
 };
 
+use heapless::Vec;
+
 use super::super::super::{
-    component::{
-        button::{Button, ButtonContent, ButtonMsg},
-        BinarySelection, BinarySelectionMsg,
-    },
+    component::button::{Button, ButtonMsg},
     cshape, theme,
 };
 
 pub enum SelectWordCountMsg {
     Selected(u32),
+    Cancelled,
 }
 
-// We allow large_enum_variant here because the code is simpler and the larger
-// variant (ValueKeypad) predates the smaller one.
-#[allow(clippy::large_enum_variant)]
-pub enum SelectWordCount {
-    All(ValueKeypad),
-    Multishare(BinarySelection),
+pub struct SelectWordCount {
+    keypad: ValueKeypad,
 }
+
+type Value = Option<u32>;
+type Label = &'static str;
+type Cell = (usize, usize, usize, usize);
 
 impl SelectWordCount {
+    const VALUES_ALL: [Value; 6] = [Some(12), Some(18), Some(20), Some(24), None, Some(33)];
+    const LABELS_ALL: [Label; 6] = ["12", "18", "20", "24", "", "33"];
+    const CELLS_ALL: [Cell; 6] = [
+        (0, 0, 1, 1),
+        (0, 2, 1, 1),
+        (2, 0, 1, 1),
+        (2, 2, 1, 1),
+        (4, 0, 1, 1),
+        (4, 2, 1, 1),
+    ];
+
+    const VALUES_MULTISHARE: [Value; 3] = [Some(20), Some(33), None];
+    const LABELS_MULTISHARE: [Label; 3] = ["20", "33", ""];
+    const CELLS_MULTISHARE: [Cell; 3] = [(0, 0, 1, 1), (0, 2, 1, 1), (2, 0, 3, 1)];
+
     pub fn new_all() -> Self {
-        Self::All(ValueKeypad::new())
+        Self {
+            keypad: ValueKeypad::new(&Self::VALUES_ALL, &Self::LABELS_ALL, &Self::CELLS_ALL),
+        }
     }
 
     pub fn new_multishare() -> Self {
-        Self::Multishare(BinarySelection::new(
-            ButtonContent::Text("20".into()),
-            ButtonContent::Text("33".into()),
-            theme::button_keyboard(),
-            theme::button_keyboard(),
-        ))
+        Self {
+            keypad: ValueKeypad::new(
+                &Self::VALUES_MULTISHARE,
+                &Self::LABELS_MULTISHARE,
+                &Self::CELLS_MULTISHARE,
+            ),
+        }
     }
 }
 
@@ -43,52 +61,42 @@ impl Component for SelectWordCount {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        match self {
-            SelectWordCount::All(full_selector) => full_selector.place(bounds),
-            SelectWordCount::Multishare(bin_selector) => bin_selector.place(bounds),
-        }
+        self.keypad.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match self {
-            SelectWordCount::All(full_selector) => full_selector.event(ctx, event),
-            SelectWordCount::Multishare(bin_selector) => {
-                if let Some(m) = bin_selector.event(ctx, event) {
-                    return match m {
-                        BinarySelectionMsg::Left => Some(SelectWordCountMsg::Selected(20)),
-                        BinarySelectionMsg::Right => Some(SelectWordCountMsg::Selected(33)),
-                    };
-                }
-                None
-            }
-        }
+        self.keypad.event(ctx, event)
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        match self {
-            SelectWordCount::All(full_selector) => full_selector.render(target),
-            SelectWordCount::Multishare(bin_selector) => bin_selector.render(target),
-        }
+        self.keypad.render(target)
     }
 }
 
-pub struct ValueKeypad {
-    button: [Button; Self::NUMBERS.len()],
+struct ValueKeypad {
+    buttons: Vec<(Button, Value, Cell), 6>,
     keypad_area: Rect,
 }
 
 impl ValueKeypad {
-    const NUMBERS: [u32; 5] = [12, 18, 20, 24, 33];
-    const LABELS: [&'static str; 5] = ["12", "18", "20", "24", "33"];
-    const CELLS: [(usize, usize); 5] = [(0, 0), (0, 2), (1, 0), (1, 2), (2, 1)];
+    fn new(values: &[Value], labels: &[Label], cells: &[Cell]) -> Self {
+        let mut buttons = Vec::new();
 
-    fn new() -> Self {
-        ValueKeypad {
-            button: Self::LABELS.map(|t| {
-                Button::with_text(t.into())
-                    .styled(theme::button_keyboard())
-                    .with_text_align(Alignment::Center)
-            }),
+        for ((&value, &label), &cell) in values.iter().zip(labels).zip(cells) {
+            unwrap!(buttons.push((
+                if value.is_none() {
+                    Button::with_icon(theme::ICON_CLOSE).styled(theme::button_cancel())
+                } else {
+                    Button::with_text(label.into()).styled(theme::button_keyboard())
+                }
+                .with_text_align(Alignment::Center),
+                value,
+                cell
+            )));
+        }
+
+        Self {
+            buttons,
             keypad_area: Rect::zero(),
         }
     }
@@ -98,17 +106,17 @@ impl Component for ValueKeypad {
     type Msg = SelectWordCountMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let n_rows: usize = 3;
+        let n_rows: usize = self.buttons.len();
         let n_cols: usize = 4;
 
         let (_, bounds) = bounds.split_bottom(
             n_rows as i16 * theme::BUTTON_HEIGHT + (n_rows as i16 - 1) * theme::BUTTON_SPACING,
         );
         let grid = Grid::new(bounds, n_rows, n_cols).with_spacing(theme::BUTTON_SPACING);
-        for (btn, (x, y)) in self.button.iter_mut().zip(Self::CELLS) {
+        for (btn, _, (r, c, w, h)) in self.buttons.iter_mut() {
             btn.place(grid.cells(GridCellSpan {
-                from: (x, y),
-                to: (x, y + 1),
+                from: (*r, *c),
+                to: (*r + *h, *c + *w),
             }));
         }
         self.keypad_area = grid.area;
@@ -116,16 +124,19 @@ impl Component for ValueKeypad {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        for (i, btn) in self.button.iter_mut().enumerate() {
-            if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                return Some(SelectWordCountMsg::Selected(Self::NUMBERS[i]));
+        for (btn, value, _) in self.buttons.iter_mut() {
+            if matches!(btn.event(ctx, event), Some(ButtonMsg::Clicked)) {
+                return Some(match value {
+                    Some(number) => SelectWordCountMsg::Selected(*number),
+                    None => SelectWordCountMsg::Cancelled,
+                });
             }
         }
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        for btn in self.button.iter() {
+        for (btn, _, _) in self.buttons.iter() {
             btn.render(target)
         }
 
@@ -137,10 +148,7 @@ impl Component for ValueKeypad {
 impl crate::trace::Trace for SelectWordCount {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("SelectWordCount");
-        match self {
-            SelectWordCount::All(full_selector) => t.child("all", full_selector),
-            SelectWordCount::Multishare(bin_selector) => t.child("multi-share", bin_selector),
-        }
+        t.child("keypad", &self.keypad);
     }
 }
 

@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{ButtonLayout, Choice, ChoiceFactory, ChoicePage},
+    component::{ButtonLayout, CancelableChoiceAction, Choice, ChoiceFactory, ChoicePage},
     fonts,
     theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
 };
@@ -159,7 +159,10 @@ impl Component for Menu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.choice_page.event(ctx, event).map(|evt| evt.0)
+        match self.choice_page.event(ctx, event).map(|evt| evt.0) {
+            Some(CancelableChoiceAction::Choice(m)) => Some(m),
+            _ => None,
+        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

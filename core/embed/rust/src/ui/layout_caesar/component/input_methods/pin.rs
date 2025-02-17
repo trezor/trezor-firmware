@@ -14,8 +14,8 @@ use crate::{
 };
 
 use super::super::{
-    super::fonts, theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine,
-    ChoiceFactory, ChoiceItem, ChoicePage,
+    super::fonts, theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, CancelableChoiceAction,
+    ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
 };
 
 #[derive(Clone, Copy)]
@@ -297,7 +297,7 @@ impl Component for PinEntry<'_> {
 
         if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
             match action {
-                PinAction::Delete => {
+                CancelableChoiceAction::Choice(PinAction::Delete) => {
                     // Deleting all when long-pressed
                     if long_press {
                         self.textbox.clear(ctx);
@@ -306,15 +306,15 @@ impl Component for PinEntry<'_> {
                     }
                     self.update(ctx);
                 }
-                PinAction::Show => {
+                CancelableChoiceAction::Choice(PinAction::Show) => {
                     self.show_real_pin = true;
                     self.update(ctx);
                 }
-                PinAction::Enter if !self.is_empty() => {
+                CancelableChoiceAction::Choice(PinAction::Enter) if !self.is_empty() => {
                     // ENTER is not valid when the PIN is empty
                     return Some(CancelConfirmMsg::Confirmed);
                 }
-                PinAction::Digit(ch) if !self.is_full() => {
+                CancelableChoiceAction::Choice(PinAction::Digit(ch)) if !self.is_full() => {
                     self.textbox.append(ctx, ch);
                     // Choosing random digit to be shown next
                     self.choice_page

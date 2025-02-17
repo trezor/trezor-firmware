@@ -14,31 +14,36 @@ use heapless::Vec;
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 pub enum SelectWordCountMsg {
     Selected(u32),
+    Cancelled,
 }
 
 pub struct SelectWordCount {
     keypad: ValueKeypad,
 }
 
-impl SelectWordCount {
-    const NUMBERS_ALL: [u32; 5] = [12, 18, 20, 24, 33];
-    const LABELS_ALL: [&'static str; 5] = ["12", "18", "20", "24", "33"];
-    const CELLS_ALL: [(usize, usize); 5] = [(0, 0), (0, 2), (0, 4), (1, 0), (1, 2)];
+type Value = Option<u32>;
+type Label = &'static str;
+type Cell = (usize, usize);
 
-    const NUMBERS_MULTISHARE: [u32; 2] = [20, 33];
-    const LABELS_MULTISHARE: [&'static str; 2] = ["20", "33"];
-    const CELLS_MULTISHARE: [(usize, usize); 2] = [(0, 0), (0, 2)];
+impl SelectWordCount {
+    const VALUES_ALL: [Value; 6] = [Some(12), Some(18), Some(20), None, Some(24), Some(33)];
+    const LABELS_ALL: [Label; 6] = ["12", "18", "20", "", "24", "33"];
+    const CELLS_ALL: [Cell; 6] = [(0, 0), (0, 2), (0, 4), (1, 0), (1, 2), (1, 4)];
+
+    const VALUES_MULTISHARE: [Value; 3] = [None, Some(20), Some(33)];
+    const LABELS_MULTISHARE: [Label; 3] = ["", "20", "33"];
+    const CELLS_MULTISHARE: [Cell; 3] = [(0, 0), (0, 2), (0, 4)];
 
     pub fn new_all() -> Self {
         Self {
-            keypad: ValueKeypad::new(&Self::NUMBERS_ALL, &Self::LABELS_ALL, &Self::CELLS_ALL),
+            keypad: ValueKeypad::new(&Self::VALUES_ALL, &Self::LABELS_ALL, &Self::CELLS_ALL),
         }
     }
 
     pub fn new_multishare() -> Self {
         Self {
             keypad: ValueKeypad::new(
-                &Self::NUMBERS_MULTISHARE,
+                &Self::VALUES_MULTISHARE,
                 &Self::LABELS_MULTISHARE,
                 &Self::CELLS_MULTISHARE,
             ),
@@ -62,20 +67,22 @@ impl Component for SelectWordCount {
     }
 }
 
-type ValueKeyPacked = (Button, u32, (usize, usize)); // (Button, number, cell)
-
-pub struct ValueKeypad {
-    buttons: Vec<ValueKeyPacked, 5>,
+struct ValueKeypad {
+    buttons: Vec<(Button, Value, Cell), 6>,
 }
 
 impl ValueKeypad {
-    fn new(numbers: &[u32], labels: &[&'static str], cells: &[(usize, usize)]) -> Self {
+    fn new(values: &[Value], labels: &[Label], cells: &[Cell]) -> Self {
         let mut buttons = Vec::new();
 
-        for ((&number, &label), &cell) in numbers.iter().zip(labels).zip(cells).take(5) {
+        for ((&value, &label), &cell) in values.iter().zip(labels).zip(cells) {
             unwrap!(buttons.push((
-                Button::with_text(label.into()).styled(theme::button_pin()),
-                number,
+                if value.is_none() {
+                    Button::with_icon(theme::ICON_CANCEL).styled(theme::button_cancel())
+                } else {
+                    Button::with_text(label.into()).styled(theme::button_pin())
+                },
+                value,
                 cell
             )));
         }
@@ -90,27 +97,30 @@ impl Component for ValueKeypad {
     fn place(&mut self, bounds: Rect) -> Rect {
         let (_, bounds) = bounds.split_bottom(2 * theme::BUTTON_HEIGHT + theme::BUTTON_SPACING);
         let grid = Grid::new(bounds, 2, 6).with_spacing(theme::BUTTON_SPACING);
-        for (btn, _, (x, y)) in self.buttons.iter_mut() {
+        for (btn, _, (r, c)) in self.buttons.iter_mut() {
             btn.place(grid.cells(GridCellSpan {
-                from: (*x, *y),
-                to: (*x, *y + 1),
+                from: (*r, *c),
+                to: (*r, *c + 1),
             }));
         }
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        for (i, (btn, _, _)) in self.buttons.iter_mut().enumerate() {
-            if let Some(ButtonMsg::Clicked) = btn.event(ctx, event) {
-                return Some(SelectWordCountMsg::Selected(self.buttons[i].1));
+        for (btn, value, _) in self.buttons.iter_mut() {
+            if matches!(btn.event(ctx, event), Some(ButtonMsg::Clicked)) {
+                return Some(match value {
+                    Some(number) => SelectWordCountMsg::Selected(*number),
+                    None => SelectWordCountMsg::Cancelled,
+                });
             }
         }
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        for btn in self.buttons.iter() {
-            btn.0.render(target)
+        for (btn, _, _) in self.buttons.iter() {
+            btn.render(target)
         }
     }
 }
