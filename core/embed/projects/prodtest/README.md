@@ -130,6 +130,54 @@ bootloader-version
 OK 2.1.7
 ```
 
+### ble-adv-start
+Starts BLE advertising. Accepts one parameter, advertising name. The command returns `OK` if the operation is successful.
+
+`ble-adv-start <name>`
+
+Example:
+```
+ble-adv-start TREZOR_BLE
+# Advertising started.
+OK
+```
+
+### ble-adv-stop
+Stops BLE advertising. The command returns `OK` if the operation is successful.
+
+`ble-adv-stop`
+
+Example:
+```
+ble-adv-stop
+# Advertising stopped.
+OK
+```
+
+### ble-info
+Reads info about BLE. Currently, it returns only MAC address.
+The advertising needs to be started before the MAC can be read,
+otherwise the address will be random and will not correspond to actual MAC used.
+
+`ble-info`
+
+Example:
+```
+ble-info
+# MAC: 56:0b:b8:99:32:23
+OK
+```
+
+### ble-erase-bonds
+Erases all BLE bonds from the device.
+
+Example:
+```
+ble-erase-bonds
+# Erased 2 bonds.
+OK
+```
+
 ### button-test
 The `button-test` command tests the functionality of the device's hardware buttons. It waits for the user to press and release a specified button in a designated timeout period.
 

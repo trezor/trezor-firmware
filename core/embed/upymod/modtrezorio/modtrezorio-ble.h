@@ -173,12 +173,13 @@ STATIC mp_obj_t mod_trezorio_BLE_start_advertising(size_t n_args,
 
   ble_command_t cmd = {
       .cmd_type = whitelist_bool ? BLE_SWITCH_ON : BLE_PAIRING_MODE,
-      .data_len = name.len};
+      .data_len = sizeof(ble_adv_start_cmd_data_t)};
 
   // get a minimum of the two lengths
   int len = name_len < BLE_ADV_NAME_LEN ? name_len : BLE_ADV_NAME_LEN;
 
-  memcpy(cmd.data.name, name_buf, len);
+  cmd.data.adv_start.static_mac = false;
+  memcpy(cmd.data.adv_start.name, name_buf, len);
 
   return mp_obj_new_bool(ble_issue_command(&cmd));
 }
