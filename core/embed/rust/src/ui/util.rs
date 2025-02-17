@@ -107,7 +107,7 @@ pub fn split_two_lines(text: &str, text_font: Font, available_width: i16) -> (&s
 
     #[cfg(feature = "ui_debug")]
     if text_font.text_width(second_line) > available_width {
-        fatal_error!(&uformat!("Text too long: {}...!", &text[..15]));
+        fatal_error!(&uformat!(len: 128, "Text too long: '{}'", text));
     }
 
     (first_line, second_line)
