@@ -74,7 +74,7 @@ def _get_xpub(
 @pytest.mark.setup_client(passphrase=True)
 def test_session_with_passphrase(client: Client):
 
-    session = Session(client.get_session(passphrase="A"))
+    session = client.get_session(passphrase="A")
     session_id = session.id
     # GetPublicKey requires passphrase and since it is not cached,
     # Trezor will prompt for it.
@@ -83,19 +83,19 @@ def test_session_with_passphrase(client: Client):
     # Call Initialize again, this time with the received session id and then call
     # GetPublicKey. The passphrase should be cached now so Trezor must
     # not ask for it again, whilst returning the same xpub.
-    session2 = Session(client.resume_session(session))
+    session2 = client.resume_session(session)
     assert session2.id == session_id
     assert _get_xpub(session2) == XPUB_PASSPHRASES["A"]
 
     # If we set session id in Initialize to None, the cache will be cleared
     # and Trezor will ask for the passphrase again.
-    session3 = Session(client.get_session(passphrase="A"))
+    session3 = client.get_session(passphrase="A")
     assert session3 != session_id
     assert _get_xpub(session3, expected_passphrase_req=True) == XPUB_PASSPHRASES["A"]
 
     # TODO: The following part is kept only for solving UI-diff in tests
     #  - it can be removed if fixtures are updated, imo
-    session4 = Session(client.get_session(passphrase="A"))
+    session4 = client.get_session(passphrase="A")
     assert session4 != session_id
     assert _get_xpub(session4, expected_passphrase_req=True) == XPUB_PASSPHRASES["A"]
 
@@ -145,34 +145,34 @@ def test_multiple_sessions(client: Client):
 @pytest.mark.setup_client(passphrase=True)
 def test_multiple_passphrases(client: Client):
     # start a session
-    session_a = Session(client.get_session(passphrase="A"))
+    session_a = client.get_session(passphrase="A")
     session_a_id = session_a.id
     assert _get_xpub(session_a, expected_passphrase_req=True) == XPUB_PASSPHRASES["A"]
     # start it again wit the same session id
-    session_a_resumed = Session(client.resume_session(session_a))
+    session_a_resumed = client.resume_session(session_a)
     # session is the same
     assert session_a_resumed.id == session_a_id
     # passphrase is not prompted
     assert _get_xpub(session_a_resumed) == XPUB_PASSPHRASES["A"]
 
     # start a second session
-    session_b = Session(client.get_session(passphrase="B"))
+    session_b = client.get_session(passphrase="B")
     session_b_id = session_b.id
     # new session -> new session id and passphrase prompt
     assert _get_xpub(session_b, expected_passphrase_req=True) == XPUB_PASSPHRASES["B"]
 
     # provide the same session id -> must not ask for passphrase again.
-    session_b_resumed = Session(client.resume_session(session_b))
+    session_b_resumed = client.resume_session(session_b)
     assert session_b_resumed.id == session_b_id
     assert _get_xpub(session_b_resumed) == XPUB_PASSPHRASES["B"]
 
     # provide the first session id -> must not ask for passphrase again and return the same result.
-    session_a_resumed_again = Session(client.resume_session(session_a))
+    session_a_resumed_again = client.resume_session(session_a)
     assert session_a_resumed_again.id == session_a_id
     assert _get_xpub(session_a_resumed_again) == XPUB_PASSPHRASES["A"]
 
     # provide the second session id -> must not ask for passphrase again and return the same result.
-    session_b_resumed_again = Session(client.resume_session(session_b))
+    session_b_resumed_again = client.resume_session(session_b)
     assert session_b_resumed_again.id == session_b_id
     assert _get_xpub(session_b_resumed_again) == XPUB_PASSPHRASES["B"]
 
@@ -187,7 +187,7 @@ def test_max_sessions_with_passphrases(client: Client):
     session_ids = {}
     sessions = {}
     for passphrase, xpub in XPUB_PASSPHRASES.items():
-        session = Session(client.get_session(passphrase=passphrase))
+        session = client.get_session(passphrase=passphrase)
         assert session.id not in session_ids.values()
         session_ids[passphrase] = session.id
         sessions[passphrase] = session
@@ -200,24 +200,24 @@ def test_max_sessions_with_passphrases(client: Client):
     for _ in range(20):
         random.shuffle(shuffling)
         for passphrase in shuffling:
-            resumed_session = Session(client.resume_session(sessions[passphrase]))
+            resumed_session = client.resume_session(sessions[passphrase])
             assert resumed_session.id == session_ids[passphrase]
             assert _get_xpub(resumed_session) == XPUB_PASSPHRASES[passphrase]
 
     # make sure the usage order is the reverse of the creation order
     for passphrase in reversed(passphrases):
-        resumed_session = Session(client.resume_session(sessions[passphrase]))
+        resumed_session = client.resume_session(sessions[passphrase])
         assert resumed_session.id == session_ids[passphrase]
         assert _get_xpub(resumed_session) == XPUB_PASSPHRASES[passphrase]
 
     # creating one more session will exceed the limit
-    new_session = Session(client.get_session(passphrase="XX"))
+    new_session = client.get_session(passphrase="XX")
     # new session asks for passphrase
     _get_xpub(new_session, expected_passphrase_req=True)
 
     # restoring the sessions in reverse will evict the next-up session
     for passphrase in reversed(passphrases):
-        resumed_session = Session(client.resume_session(sessions[passphrase]))
+        resumed_session = client.resume_session(sessions[passphrase])
         _get_xpub(
             resumed_session,
             expected_passphrase_req=True,
@@ -226,7 +226,7 @@ def test_max_sessions_with_passphrases(client: Client):
 
 def test_session_enable_passphrase(client: Client):
     # Let's start the communication by calling Initialize.
-    session = Session(client.get_session(passphrase=""))
+    session = client.get_session(passphrase="")
 
     # Trezor will not prompt for passphrase because it is turned off.
     assert _get_xpub(session, expected_passphrase_req=False) == XPUB_PASSPHRASE_NONE
@@ -238,12 +238,12 @@ def test_session_enable_passphrase(client: Client):
 
     # The session id is unchanged, therefore we do not prompt for the passphrase.
     session_id = session.id
-    resumed_session = Session(client.resume_session(session))
+    resumed_session = client.resume_session(session)
     assert session_id == resumed_session.id
     assert _get_xpub(resumed_session) == XPUB_PASSPHRASE_NONE
 
     # We clear the session id now, so the passphrase should be asked.
-    new_session = Session(client.get_session(passphrase="A"))
+    new_session = client.get_session(passphrase="A")
     assert session_id != new_session.id
     assert _get_xpub(new_session, expected_passphrase_req=True) == XPUB_PASSPHRASES["A"]
 
@@ -402,7 +402,7 @@ def test_hide_passphrase_from_host(client: Client):
     device.apply_settings(session, hide_passphrase_from_host=True)
 
     passphrase = "abc"
-    session = Session(client.get_session(passphrase=passphrase))
+    session = client.get_session(passphrase=passphrase)
     with client, session:
 
         def input_flow():
@@ -435,7 +435,7 @@ def test_hide_passphrase_from_host(client: Client):
     device.apply_settings(session, hide_passphrase_from_host=False)
 
     # Starting new session, otherwise the passphrase would be cached
-    session = Session(client.get_session(passphrase=passphrase))
+    session = client.get_session(passphrase=passphrase)
 
     with client, session:
 
@@ -494,7 +494,7 @@ def test_cardano_passphrase(client: Client):
 
     # GetPublicKey requires passphrase and since it is not cached,
     # Trezor will prompt for it.
-    session = Session(client.get_session(passphrase="B", derive_cardano=True))
+    session = client.get_session(passphrase="B", derive_cardano=True)
     assert _get_xpub(session, expected_passphrase_req=True) == XPUB_PASSPHRASES["B"]
 
     # The passphrase is now cached for non-Cardano coins.
@@ -504,13 +504,13 @@ def test_cardano_passphrase(client: Client):
     assert _get_xpub_cardano(session) == XPUB_CARDANO_PASSPHRASE_B
 
     # Initialize with the session id does not destroy the state
-    resumed_session = Session(client.resume_session(session))
+    resumed_session = client.resume_session(session)
     # _init_session(client, session_id=session_id, derive_cardano=True)
     assert _get_xpub(resumed_session) == XPUB_PASSPHRASES["B"]
     assert _get_xpub_cardano(resumed_session) == XPUB_CARDANO_PASSPHRASE_B
 
     # New session will destroy the state
-    new_session = Session(client.get_session(passphrase="A", derive_cardano=True))
+    new_session = client.get_session(passphrase="A", derive_cardano=True)
     # _init_session(client, derive_cardano=True)
 
     # Cardano must ask for passphrase again

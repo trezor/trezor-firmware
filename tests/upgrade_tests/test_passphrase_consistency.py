@@ -21,7 +21,6 @@ import pytest
 from trezorlib import btc, device, mapping, messages, models, protobuf
 from trezorlib._internal.emulator import Emulator
 from trezorlib.client import ProtocolVersion
-from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ..emulators import EmulatorWrapper
@@ -93,7 +92,7 @@ def test_passphrase_works(emulator: Emulator):
             messages.Address,
         ]
     emu_session = emulator.client.get_session(passphrase="TREZOR")
-    with Session(emu_session) as session:
+    with emu_session as session:
         session.set_expected_responses(expected_responses)
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
 
@@ -136,7 +135,7 @@ def test_init_device(emulator: Emulator):
         ]
 
     emu_session = emulator.client.get_session(passphrase="TREZOR")
-    with Session(emu_session) as session:
+    with emu_session as session:
         session.set_expected_responses(expected_responses)
 
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))

@@ -38,7 +38,7 @@ def test_reset_recovery(client: Client):
     lang = client.features.language or "en"
     device.wipe(session)
     client = client.get_new_client()
-    session = Session(client.get_seedless_session())
+    session = client.get_seedless_session()
     set_language(session, lang[:2])
     recover(session, mnemonic)
     session = client.get_session()

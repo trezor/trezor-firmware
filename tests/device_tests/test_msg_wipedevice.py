@@ -69,7 +69,7 @@ def test_autolock_not_retained(session: Session):
         )
 
     time.sleep(10.5)
-    session = Session(client.get_session())
+    session = client.get_session()
 
     with session, client:
         # after sleeping for the pre-wipe autolock amount, Trezor must still be unlocked

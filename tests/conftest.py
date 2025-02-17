@@ -29,7 +29,6 @@ from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
 from trezorlib import debuglink, log, models
-from trezorlib.debuglink import SessionDebugWrapper
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
@@ -52,6 +51,7 @@ if t.TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
     from trezorlib._internal.emulator import Emulator
+    from trezorlib.debuglink import SessionDebugWrapper
 
 
 HERE = Path(__file__).resolve().parent
@@ -328,9 +328,7 @@ def _client_unlocked(
     if _raw_client.model is not models.T1B1:
         lang = request.session.config.getoption("lang") or "en"
         assert isinstance(lang, str)
-        translations.set_language(
-            SessionDebugWrapper(_raw_client.get_seedless_session()), lang
-        )
+        translations.set_language(_raw_client.get_seedless_session(), lang)
 
     setup_params = dict(
         uninitialized=False,
@@ -398,11 +396,10 @@ def session(
             derive_cardano=derive_cardano, passphrase=passphrase
         )
     try:
-        wrapped_session = SessionDebugWrapper(session)
         if _client_unlocked._setup_pin is not None:
-            wrapped_session.lock()
+            session.lock()
         with ui_tests.screen_recording(_client_unlocked, request):
-            yield wrapped_session
+            yield session
     finally:
         pass
         # TODO

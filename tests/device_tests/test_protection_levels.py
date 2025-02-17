@@ -66,7 +66,7 @@ def _assert_protection(
         # session.end()
     if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
         new_session = session.client.get_session()
-    return Session(new_session)
+    return new_session
 
 
 def test_initialize(session: Session):
@@ -237,7 +237,7 @@ def test_wipe_device(session: Session):
         session.set_expected_responses([messages.ButtonRequest, messages.Success])
         device.wipe(session)
     client = session.client.get_new_client()
-    session = Session(client.get_seedless_session())
+    session = client.get_seedless_session()
     with session, session.client as client:
         client.use_pin_sequence([PIN4])
         session.set_expected_responses([messages.Features])

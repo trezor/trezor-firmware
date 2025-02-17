@@ -18,7 +18,6 @@ import pytest
 
 from trezorlib import cardano, messages, models
 from trezorlib.btc import get_public_node
-from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
@@ -40,7 +39,7 @@ def test_clear_session(client: Client):
     ]
 
     cached_responses = [messages.PublicKey]
-    session = Session(client.get_session())
+    session = client.get_session()
     session.lock()
     with client, session:
         client.use_pin_sequence([PIN4])
@@ -55,7 +54,7 @@ def test_clear_session(client: Client):
 
     session.lock()
     session.end()
-    session = Session(client.get_session())
+    session = client.get_session()
 
     # session cache is cleared
     with client, session:
@@ -77,7 +76,7 @@ def test_end_session(client: Client):
     assert session.id is not None
 
     # get_address will succeed
-    with Session(session) as session:
+    with session as session:
         session.set_expected_responses([messages.Address])
         get_test_address(session)
 
@@ -90,12 +89,12 @@ def test_end_session(client: Client):
 
     session = client.get_session()
     assert session.id is not None
-    with Session(session) as session:
+    with session as session:
         session.set_expected_responses([messages.Address])
         get_test_address(session)
 
     # TODO: is the following valid? I do not think so
-    # with Session(session) as session:
+    # with session as session:
     #     # end_session should succeed on empty session too
     #     session.set_expected_responses([messages.Success] * 2)
     #     session.end_session()
@@ -136,7 +135,7 @@ def test_end_session_only_current(client: Client):
 
 @pytest.mark.setup_client(passphrase=True)
 def test_session_recycling(client: Client):
-    session = Session(client.get_session(passphrase="TREZOR"))
+    session = client.get_session(passphrase="TREZOR")
     with client, session:
         session.set_expected_responses(
             [

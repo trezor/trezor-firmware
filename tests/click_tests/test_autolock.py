@@ -23,7 +23,6 @@ import pytest
 from trezorlib import btc, device, exceptions, messages
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
 
@@ -60,7 +59,7 @@ CENTER_BUTTON = buttons.grid35(1, 2)
 
 def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int):
     debug = device_handler.debuglink()
-    Session(device_handler.client.get_seedless_session()).lock()
+    device_handler.client.get_seedless_session().lock()
     device_handler.run_with_session(device.apply_settings, auto_lock_delay_ms=delay_ms)  # type: ignore
 
     assert "PinKeyboard" in debug.read_layout().all_components()
@@ -140,7 +139,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     debug = device_handler.debuglink()
 
     # Prepare session to use later
-    session = Session(device_handler.client.get_session())
+    session = device_handler.client.get_session()
 
     # try to sign a transaction
     inp1 = messages.TxInputType(
@@ -213,9 +212,8 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     debug = device_handler.debuglink()
 
     # get address
-    session = Session(
-        device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
-    )
+    session = device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
+
     device_handler.run_with_provided_session(session, common.get_test_address)  # type: ignore
     assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
@@ -257,9 +255,7 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     debug = device_handler.debuglink()
 
     # get address
-    session = Session(
-        device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
-    )
+    session = device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
     device_handler.run_with_provided_session(session, common.get_test_address)  # type: ignore
     assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
@@ -425,7 +421,7 @@ def test_autolock_does_not_interrupt_preauthorized(
     debug = device_handler.debuglink()
 
     # Prepare session to use later
-    session = Session(device_handler.client.get_session())
+    session = device_handler.client.get_session()
 
     device_handler.run_with_provided_session(
         session,

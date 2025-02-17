@@ -44,7 +44,7 @@ from .log import DUMP_BYTES
 from .messages import Capability, DebugWaitType
 from .protobuf import MessageType
 from .tools import parse_path
-from .transport.session import Session, SessionV1
+from .transport.session import Session
 from .transport.thp.protocol_v1 import ProtocolV1Channel
 
 if t.TYPE_CHECKING:
@@ -950,31 +950,19 @@ message_filters = MessageFilterGenerator()
 
 class SessionDebugWrapper(Session):
     def __init__(self, session: Session) -> None:
-        self._session = session
-        self.reset_debug_features()
         if isinstance(session, SessionDebugWrapper):
             raise Exception("Cannot wrap already wrapped session!")
+        self._session = session
+        self.reset_debug_features()
+
+    def __getattr__(self, name: str) -> t.Any:
+        return getattr(self._session, name)
+
 
     @property
     def protocol_version(self) -> int:
         return self.client.protocol_version
 
-    @property
-    def client(self) -> TrezorClientDebugLink:
-        assert isinstance(self._session.client, TrezorClientDebugLink)
-        return self._session.client
-
-    @property
-    def id(self) -> bytes:
-        return self._session.id
-
-    @id.setter
-    def id(self, value: bytes) -> None:
-        self._session.id = value
-
-    @property
-    def passphrase(self) -> str | None | object:
-        return self._session.passphrase
 
     def _write(self, msg: t.Any) -> None:
         print("writing message:", msg.__class__.__name__)
@@ -1114,7 +1102,9 @@ class SessionDebugWrapper(Session):
         actual_responses = self.actual_responses
 
         # grab a copy of the inputflow generator to raise an exception through it
-        if isinstance(self.client.ui, DebugUI):
+        if isinstance(self.client, TrezorClientDebugLink) and isinstance(
+            self.client.ui, DebugUI
+        ):
             input_flow = self.client.ui.input_flow
         else:
             input_flow = None
@@ -1326,9 +1316,7 @@ class TrezorClientDebugLink(TrezorClient):
                 return send_passphrase(None, None)
 
             try:
-                if isinstance(session, SessionV1) or isinstance(
-                    session, SessionDebugWrapper
-                ):
+                if isinstance(session, SessionDebugWrapper):
                     passphrase = self.ui.get_passphrase(
                         available_on_device=available_on_device
                     )
@@ -1376,7 +1364,7 @@ class TrezorClientDebugLink(TrezorClient):
         # self.debug.close()
 
     def lock(self) -> None:
-        s = SessionDebugWrapper(self.get_seedless_session())
+        s = self.get_seedless_session()
         s.lock()
 
     def get_session(
@@ -1384,10 +1372,27 @@ class TrezorClientDebugLink(TrezorClient):
         passphrase: str | object | None = "",
         derive_cardano: bool = False,
         session_id: int = 0,
-    ) -> Session:
+    ) -> SessionDebugWrapper:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
-        return super().get_session(passphrase, derive_cardano, session_id)
+        return SessionDebugWrapper(
+            super().get_session(passphrase, derive_cardano, session_id)
+        )
+
+    def get_seedless_session(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> SessionDebugWrapper:
+        session = super().get_seedless_session(*args, **kwargs)
+        if not isinstance(session, SessionDebugWrapper):
+            session = SessionDebugWrapper(session)
+        return session
+
+    def resume_session(self, session: Session) -> SessionDebugWrapper:
+        if isinstance(session, SessionDebugWrapper):
+            session._session = super().resume_session(session._session)
+            return session
+        else:
+            return SessionDebugWrapper(super().resume_session(session))
 
     def set_input_flow(
         self, input_flow: InputFlowType | t.Callable[[], InputFlowType]

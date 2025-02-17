@@ -22,7 +22,6 @@ from shamir_mnemonic import shamir
 
 from trezorlib import btc, debuglink, device, exceptions, fido, messages, models
 from trezorlib.client import ProtocolVersion
-from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.messages import (
     ApplySettings,
     BackupAvailability,
@@ -95,14 +94,14 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
         assert not client.features.passphrase_protection
         assert client.features.initialized
         assert client.features.label == LABEL
-        session = Session(client.get_session())
+        session = client.get_session()
         with client, session:
             client.use_pin_sequence([PIN])
             assert btc.get_address(session, "Bitcoin", PATH) == ADDRESS
 
     with EmulatorWrapper(gen, tag) as emu:
         debuglink.load_device_by_mnemonic(
-            Session(emu.client.get_seedless_session()),
+            emu.client.get_seedless_session(),
             mnemonic=MNEMONIC,
             pin=PIN,
             passphrase_protection=False,
@@ -185,7 +184,7 @@ def test_upgrade_wipe_code(gen: str, tag: str):
 
         # Set wipe code.
         emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
-        session = Session(emu.client.get_seedless_session())
+        session = emu.client.get_seedless_session()
         session.refresh_features()
         device.change_wipe_code(session)
 
@@ -199,7 +198,7 @@ def test_upgrade_wipe_code(gen: str, tag: str):
 
         # Check that wipe code is set by changing the PIN to it.
         emu.client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
-        session = Session(emu.client.get_seedless_session())
+        session = emu.client.get_seedless_session()
         session.refresh_features()
         with pytest.raises(
             exceptions.TrezorFailure,
@@ -362,7 +361,7 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
 @for_all("core", core_minimum_version=(2, 1, 9))
 def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
     with EmulatorWrapper(gen, tag) as emu:
-        session = Session(emu.client.get_seedless_session())
+        session = emu.client.get_seedless_session()
         # Generate a new encrypted master secret and record it.
         device.setup(
             session,
@@ -376,7 +375,7 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
         mnemonic_secret = emu.client.debug.state().mnemonic_secret
 
         # Set passphrase_source = HOST.
-        session = Session(emu.client.get_session())
+        session = emu.client.get_session()
         resp = session.call(ApplySettings(_passphrase_source=2, use_passphrase=True))
         assert isinstance(resp, Success)
 
@@ -384,7 +383,7 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
         address = btc.get_address(session, "Bitcoin", PATH)
         if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
             session.call(messages.Initialize(new_session=True))
-        new_session = Session(emu.client.get_session(passphrase="TREZOR"))
+        new_session = emu.client.get_session(passphrase="TREZOR")
         address_passphrase = btc.get_address(new_session, "Bitcoin", PATH)
 
         assert emu.client.features.backup_availability == BackupAvailability.Required

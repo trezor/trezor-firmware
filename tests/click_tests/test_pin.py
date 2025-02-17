@@ -23,7 +23,6 @@ import pytest
 
 from trezorlib import device, exceptions
 from trezorlib.debuglink import LayoutType
-from trezorlib.debuglink import SessionDebugWrapper as Session
 
 from .. import buttons
 from .. import translations as TR
@@ -92,7 +91,7 @@ def prepare(
 
     tap = False
 
-    Session(device_handler.client.get_seedless_session()).lock()
+    device_handler.client.get_seedless_session().lock()
 
     # Setup according to the wanted situation
     if situation == Situation.PIN_INPUT:

@@ -7,6 +7,7 @@ import typing_extensions as tx
 
 from trezorlib.client import PASSPHRASE_ON_DEVICE
 from trezorlib.transport import udp
+from trezorlib.transport.session import Session
 
 if t.TYPE_CHECKING:
     from trezorlib._internal.emulator import Emulator

@@ -199,7 +199,7 @@ def test_full_language_change(session: Session, lang: str):
 
 
 def test_language_is_removed_after_wipe(client: Client):
-    session = Session(client.get_session())
+    session = client.get_session()
     assert session.features.language == "en-US"
 
     _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
@@ -213,7 +213,7 @@ def test_language_is_removed_after_wipe(client: Client):
     # Wipe device
     device.wipe(session)
     client = client.get_new_client()
-    session = Session(client.get_seedless_session())
+    session = client.get_seedless_session()
     assert session.features.language == "en-US"
 
     # Load it again

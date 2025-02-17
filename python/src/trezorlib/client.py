@@ -122,16 +122,11 @@ class TrezorClient:
         """
         Note: this function potentially modifies the input session.
         """
-        from .debuglink import SessionDebugWrapper
         from .transport.session import SessionV1
-
-        if isinstance(session, SessionDebugWrapper):
-            session = session._session
 
         if isinstance(session, SessionV1):
             session.init_session()
             return session
-
         else:
             raise NotImplementedError
 
