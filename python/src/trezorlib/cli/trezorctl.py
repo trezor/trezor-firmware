@@ -227,7 +227,9 @@ def cli_main(
         except ValueError:
             raise click.ClickException(f"Not a valid session id: {session_id}")
 
-    ctx.obj = TrezorConnection(path, bytes_session_id, passphrase_on_host, script)
+    ctx.obj = TrezorConnection(
+        path, bytes_session_id, passphrase_on_host, script, get_channel_db()
+    )
 
     # Optionally record the screen into a specified directory.
     if record:
@@ -306,7 +308,7 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
 
     for transport in enumerate_devices():
         try:
-            client = get_client(transport)
+            client = get_client(transport, get_channel_db())
             description = format_device_name(client.features)
         except DeviceIsBusy:
             description = "Device is in use by another process"
