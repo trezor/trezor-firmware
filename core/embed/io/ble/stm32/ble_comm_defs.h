@@ -45,6 +45,7 @@ typedef enum {
   INTERNAL_EVENT_STATUS = 0x01,
   INTERNAL_EVENT_PAIRING_REQUEST = 0x04,
   INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
+  INTERNAL_EVENT_MAC = 0x06,
 } internal_event_t;
 
 typedef enum {
@@ -56,11 +57,14 @@ typedef enum {
   INTERNAL_CMD_ACK = 0x05,
   INTERNAL_CMD_ALLOW_PAIRING = 0x06,
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
+  INTERNAL_CMD_MAC_REQUEST = 0x09,
 } internal_cmd_t;
 
 typedef struct {
   uint8_t cmd_id;
   uint8_t whitelist;
   uint8_t color;
+  uint8_t static_addr;
+  uint32_t device_code;
   uint8_t name[BLE_ADV_NAME_LEN];
 } cmd_advertising_on_t;

@@ -70,6 +70,7 @@ typedef enum {
   INTERNAL_EVENT_FAILURE = 0x03,
   INTERNAL_EVENT_PAIRING_REQUEST = 0x04,
   INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
+  INTERNAL_EVENT_MAC = 0x06,
 } internal_event_t;
 
 typedef enum {
@@ -82,6 +83,7 @@ typedef enum {
   INTERNAL_CMD_ALLOW_PAIRING = 0x06,
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
   INTERNAL_CMD_UNPAIR = 0x08,
+  INTERNAL_CMD_GET_MAC = 0x09,
 } internal_cmd_t;
 
 // BLE management functions
@@ -106,13 +108,16 @@ bool bonds_erase_current(void);
 // Initialization
 void advertising_init(void);
 // Start advertising, with or without whitelist
-void advertising_start(bool wl, uint8_t color, char *name, int name_len);
+void advertising_start(bool wl, uint8_t color, uint32_t device_code,
+                       bool static_addr, char *name, int name_len);
 // Stop advertising
 void advertising_stop(void);
 // Check if advertising is active
 bool advertising_is_advertising(void);
 // Check if advertising is active with whitelist
 bool advertising_is_advertising_whitelist(void);
+// Get current MAC address
+void advertising_get_mac(uint8_t *mac, uint16_t max_len);
 
 // Connection functions
 // Initialization
