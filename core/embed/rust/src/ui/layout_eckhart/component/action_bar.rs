@@ -2,7 +2,7 @@ use crate::{
     translations::TR,
     ui::{
         component::{Component, Event, EventCtx},
-        geometry::{Alignment2D, Offset, Rect},
+        geometry::{Alignment2D, Insets, Offset, Rect},
         shape::{self, Renderer},
         util::{animation_disabled, Pager},
     },
@@ -58,6 +58,7 @@ impl ActionBar {
     /// TODO: use this offset
     /// offset for button content to move it towards center
     const BUTTON_CONTENT_OFFSET: Offset = Offset::x(12); // [px]
+    const BUTTON_EXPAND_TOUCH: Insets = Insets::top(Self::ACTION_BAR_HEIGHT);
 
     const PAGINATE_LEFT_CONTENT: ButtonContent = ButtonContent::Icon(theme::ICON_CHEVRON_UP);
     const PAGINATE_RIGHT_CONTENT: ButtonContent = ButtonContent::Icon(theme::ICON_CHEVRON_DOWN);
@@ -65,7 +66,11 @@ impl ActionBar {
 
     /// Create action bar with single button confirming the layout
     pub fn new_single(button: Button) -> Self {
-        Self::new(Mode::Single, None, button)
+        Self::new(
+            Mode::Single,
+            None,
+            button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH),
+        )
     }
 
     /// Create action bar with cancel and confirm buttons. The component
@@ -76,8 +81,8 @@ impl ActionBar {
             Mode::Double {
                 pager: Pager::single_page(),
             },
-            Some(left),
-            right,
+            Some(left.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)),
+            right.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH),
         )
     }
 
