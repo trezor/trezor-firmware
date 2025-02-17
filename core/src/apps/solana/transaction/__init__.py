@@ -4,13 +4,35 @@ from trezor.crypto import base58
 from trezor.utils import BufferReader
 from trezor.wire import DataError
 
+from ..constants import (
+    MICROLAMPORTS_PER_LAMPORT,
+    SOLANA_BASE_FEE_LAMPORTS,
+    SOLANA_COMPUTE_UNIT_LIMIT,
+)
 from ..types import AddressType
 from .instruction import Instruction
-from .instructions import get_instruction, get_instruction_id_length
+from .instructions import (
+    COMPUTE_BUDGET_PROGRAM_ID,
+    COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
+    COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
+    get_instruction,
+    get_instruction_id_length,
+)
 from .parse import parse_block_hash, parse_pubkey, parse_var_int
 
 if TYPE_CHECKING:
     from ..types import Account, Address, AddressReference, RawInstruction
+
+
+class Fee:
+    def __init__(
+        self,
+        base: int,
+        priority: int,
+    ) -> None:
+        self.base = base
+        self.priority = priority
+        self.total = base + priority
 
 
 class Transaction:
@@ -209,3 +231,40 @@ class Transaction:
             for instruction in self.instructions
             if not instruction.is_ui_hidden
         ]
+
+    def calculate_fee(self) -> Fee:
+        number_of_signers = 0
+        for address in self.addresses:
+            if address[1] == AddressType.AddressSig:
+                number_of_signers += 1
+
+        base_fee = SOLANA_BASE_FEE_LAMPORTS * number_of_signers
+
+        unit_price = 0
+        is_unit_price_set = False
+        unit_limit = SOLANA_COMPUTE_UNIT_LIMIT
+        is_unit_limit_set = False
+
+        for instruction in self.instructions:
+            if instruction.program_id == COMPUTE_BUDGET_PROGRAM_ID:
+                if (
+                    instruction.instruction_id
+                    == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT
+                    and not is_unit_limit_set
+                ):
+                    unit_limit = instruction.units
+                    is_unit_limit_set = True
+                elif (
+                    instruction.instruction_id
+                    == COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE
+                    and not is_unit_price_set
+                ):
+                    unit_price = instruction.lamports
+                    is_unit_price_set = True
+
+        priority_fee = unit_price * unit_limit  # in microlamports
+        return Fee(
+            base=base_fee,
+            priority=(priority_fee + MICROLAMPORTS_PER_LAMPORT - 1)
+            // MICROLAMPORTS_PER_LAMPORT,
+        )
