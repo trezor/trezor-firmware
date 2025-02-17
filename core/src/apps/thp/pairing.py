@@ -220,7 +220,7 @@ async def _handle_code_entry_is_selected_first_time(ctx: PairingContext) -> None
         ctx.channel_ctx.get_handshake_hash(),
     )
     assert ctx.code_code_entry is not None
-    ctx.cpace.generate_keys_and_secret(ctx.code_code_entry.to_bytes(6, "big"))
+    ctx.cpace.generate_keys(ctx.code_code_entry.to_bytes(6, "big"))
     await ctx.write_force(
         ThpCodeEntryCpaceTrezor(cpace_trezor_public_key=ctx.cpace.trezor_public_key)
     )
