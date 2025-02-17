@@ -29,7 +29,6 @@ mod progress;
 #[cfg(feature = "translations")]
 mod prompt_screen;
 mod result;
-mod scroll;
 #[cfg(feature = "translations")]
 mod share_words;
 mod status_screen;
@@ -75,7 +74,6 @@ pub use progress::Progress;
 #[cfg(feature = "translations")]
 pub use prompt_screen::{PromptMsg, PromptScreen};
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
-pub use scroll::ScrollBar;
 #[cfg(feature = "translations")]
 pub use share_words::ShareWords;
 pub use status_screen::StatusScreen;
