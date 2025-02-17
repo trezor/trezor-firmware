@@ -1,14 +1,15 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     geometry::{Insets, Offset, Rect},
-    layout_eckhart::{
-        component::{Button, ButtonMsg},
-        theme,
-    },
     shape::{Bar, Renderer},
 };
 
 use heapless::Vec;
+
+use super::super::{
+    component::{Button, ButtonMsg},
+    theme,
+};
 
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
@@ -39,7 +40,7 @@ pub enum VerticalMenuMsg {
 }
 
 impl VerticalMenu {
-    const SIDE_INSET: i16 = 12;
+    const SIDE_INSETS: Insets = Insets::sides(12);
     const DEFAULT_PADDING: i16 = 28;
     const MIN_PADDING: i16 = 2;
 
@@ -138,8 +139,8 @@ impl VerticalMenu {
                     button
                         .area()
                         .top_left()
-                        .ofs(Offset::x(Button::BASELINE_OFFSET.x).into()),
-                    Offset::new(button.area().width() - 2 * Button::BASELINE_OFFSET.x, 1),
+                        .ofs(Offset::x(button.content_offset().x).into()),
+                    Offset::new(button.area().width() - 2 * button.content_offset().x, 1),
                 );
                 Bar::new(separator)
                     .with_fg(theme::GREY_EXTRA_DARK)
@@ -154,7 +155,7 @@ impl Component for VerticalMenu {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // Crop the menu area
-        self.bounds = bounds.inset(Insets::sides(Self::SIDE_INSET));
+        self.bounds = bounds.inset(Self::SIDE_INSETS);
 
         // Determine padding dynamically if `fit_area` is enabled
         let padding = if self.fit_area {
