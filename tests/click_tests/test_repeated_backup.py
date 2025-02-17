@@ -18,7 +18,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from trezorlib import device, messages
+from trezorlib import device, exceptions, messages
 
 from .. import buttons
 from ..common import MOCK_GET_ENTROPY
@@ -194,6 +194,28 @@ def test_repeated_backup(
 
     # but if we cancel the backup at this point...
     reset.cancel_backup(debug)
+
+    # ...we are out of recovery mode!
+    features = device_handler.features()
+    assert features.backup_type is messages.BackupType.Slip39_Basic_Extendable
+    assert features.initialized is True
+    assert features.backup_availability == messages.BackupAvailability.NotAvailable
+    assert features.no_backup is False
+    assert features.recovery_status == messages.RecoveryStatus.Nothing
+
+    # try to unlock backup yet again...
+    device_handler.run(
+        device.recover,
+        type=messages.RecoveryType.UnlockRepeatedBackup,
+    )
+
+    recovery.confirm_recovery(debug, "recovery__title_unlock_repeated_backup")
+
+    # but cancel on the word count selection screen!
+    recovery.cancel_select_number_of_words(debug, unlock_repeated_backup=True)
+
+    with pytest.raises(exceptions.Cancelled):
+        device_handler.result()
 
     # ...we are out of recovery mode!
     features = device_handler.features()

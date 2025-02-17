@@ -18,7 +18,7 @@ pub use common_messages::CancelConfirmMsg;
 pub use error::ErrorScreen;
 pub use hold_to_confirm::{HoldToConfirm, HoldToConfirmMsg};
 pub use input_methods::{
-    choice::{Choice, ChoiceFactory, ChoicePage},
+    choice::{Choice, ChoiceControls, ChoiceFactory, ChoiceMsg, ChoicePage},
     choice_item::ChoiceItem,
 };
 pub use loader::{Loader, LoaderMsg, LoaderStyle, LoaderStyleSheet, ProgressLoader};

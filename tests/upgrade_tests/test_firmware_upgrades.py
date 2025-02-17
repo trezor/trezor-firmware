@@ -30,6 +30,7 @@ from trezorlib.messages import (
 )
 from trezorlib.tools import H_
 
+from ..click_tests import recovery
 from ..common import MNEMONIC_SLIP39_BASIC_20_3of6, MNEMONIC_SLIP39_BASIC_20_3of6_SECRET
 from ..device_handler import BackgroundDeviceHandler
 from ..emulators import ALL_TAGS, EmulatorWrapper
@@ -308,7 +309,7 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         device_handler.run(device.recover, pin_protection=False)
 
         recovery_old.confirm_recovery(debug)
-        recovery_old.select_number_of_words(debug)
+        recovery_old.select_number_of_words(debug, version_from_tag(tag))
         layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[0])
         if not debug.legacy_ui and not debug.legacy_debug:
             assert (
@@ -327,14 +328,14 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         emu.client.watch_layout(True)
 
         # second share
-        layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[2])
+        layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[2])
         assert (
             "2 of 3 shares entered" in layout.text_content()
             or "1 more share" in layout.text_content()
         )
 
         # last one
-        layout = recovery_old.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[1])
+        layout = recovery.enter_share(debug, MNEMONIC_SLIP39_BASIC_20_3of6[1])
         assert (
             "Wallet recovery completed" in layout.text_content()
             or "finished recovering" in layout.text_content()

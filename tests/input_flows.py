@@ -2075,6 +2075,16 @@ class InputFlowSlip39BasicRecovery(InputFlowBase):
         yield from self.REC.success_wallet_recovered()
 
 
+class InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(InputFlowBase):
+    def __init__(self, client: Client):
+        super().__init__(client)
+
+    def input_flow_common(self) -> BRGeneratorType:
+        yield from self.REC.confirm_recovery()
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            yield from self.REC.input_number_of_words(None)
+
+
 class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
     def __init__(self, client: Client):
         super().__init__(client)

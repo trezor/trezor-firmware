@@ -7,6 +7,7 @@ from trezor import TR, wire
 from trezor.messages import Success
 
 from apps.common import backup_types
+from apps.management.recovery_device.recover import RecoveryAborted
 
 from . import layout, recover
 
@@ -103,7 +104,10 @@ async def _continue_recovery_process() -> Success:
                     TR.buttons__continue, TR.recovery__num_of_words
                 )
             # ask for the number of words
-            word_count = await layout.request_word_count(recovery_type)
+            try:
+                word_count = await layout.request_word_count(recovery_type)
+            except wire.ActionCancelled:
+                raise RecoveryAborted
             # ...and only then show the starting screen with word count.
             await _request_share_first_screen(word_count, recovery_type)
         assert word_count is not None
