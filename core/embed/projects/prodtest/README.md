@@ -158,6 +158,15 @@ display-border
 OK
 ```
 
+### display-text
+The `display-text` command draws text to the screen
+
+Example:
+```
+display-text hello_world
+OK
+```
+
 ### display-bars
 Draws vertical color bars on the screen according to a specified string of color codes.
 

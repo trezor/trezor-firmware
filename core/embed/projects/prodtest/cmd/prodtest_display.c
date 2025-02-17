@@ -36,6 +36,19 @@ static void prodtest_display_border(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_display_text(cli_t* cli) {
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  const char* text = cli_arg(cli, "text");
+
+  screen_prodtest_show_text(text, strlen(text));
+
+  cli_ok(cli, "");
+}
+
 static void prodtest_display_bars(cli_t* cli) {
   const char* colors = cli_arg(cli, "colors");
   size_t color_count = strlen(colors);
@@ -93,6 +106,13 @@ PRODTEST_CLI_CMD(
   .func = prodtest_display_border,
   .info = "Display a border around the screen",
   .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-text",
+  .func = prodtest_display_text,
+  .info = "Display text on the screen",
+  .args = "<text>"
 );
 
 PRODTEST_CLI_CMD(
