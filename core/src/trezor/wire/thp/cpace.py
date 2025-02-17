@@ -17,9 +17,9 @@ class Cpace:
         self.trezor_private_key: bytes
         self.trezor_public_key: bytes
 
-    def generate_keys_and_secret(self, code_code_entry: bytes) -> None:
+    def generate_keys(self, code_code_entry: bytes) -> None:
         """
-        Generate ephemeral key pair and a shared secret using Elligator2 with X25519.
+        Generate an ephemeral key pair using Elligator2 with X25519.
         """
         sha_ctx = sha512(_PREFIX)
         sha_ctx.update(code_code_entry)
@@ -32,6 +32,10 @@ class Cpace:
         self.trezor_public_key = curve25519.multiply(self.trezor_private_key, generator)
 
     def compute_shared_secret(self, host_public_key: bytes) -> None:
+        """
+        Compute a shared secret using host's public (cpace) key.
+        Must be called after `generate_keys`.
+        """
         self.shared_secret = curve25519.multiply(
             self.trezor_private_key, host_public_key
         )
