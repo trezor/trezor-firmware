@@ -18,6 +18,7 @@ from .types import AddressType
 if TYPE_CHECKING:
     from typing import Sequence
 
+    from .transaction import Fee
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
     from .types import AddressReference
 
@@ -264,7 +265,7 @@ async def confirm_unsupported_program_confirm(
 
 async def confirm_system_transfer(
     transfer_instruction: SystemProgramTransferInstruction,
-    fee: int,
+    fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
 ) -> None:
@@ -293,7 +294,7 @@ async def confirm_token_transfer(
     token_mint: bytes,
     amount: int,
     decimals: int,
-    fee: int,
+    fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
 ) -> None:
@@ -334,13 +335,13 @@ async def confirm_custom_transaction(
     amount: int,
     decimals: int,
     unit: str,
-    fee: int,
+    fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
 ) -> None:
     await confirm_solana_tx(
         amount=f"{format_amount(amount, decimals)} {unit}",
-        fee=f"{format_amount(fee, 9)} SOL",
+        fee=f"{format_amount(fee.total, 9)} SOL",
         fee_title=f"{TR.solana__expected_fee}:",
         items=(
             (f"{TR.words__account}:", _format_path(signer_path)),
@@ -350,12 +351,12 @@ async def confirm_custom_transaction(
 
 
 async def confirm_transaction(
-    signer_path: list[int], blockhash: bytes, fee: int
+    signer_path: list[int], blockhash: bytes, fee: Fee
 ) -> None:
     await confirm_solana_tx(
         amount="",
         amount_title="",
-        fee=f"{format_amount(fee, 9)} SOL",
+        fee=f"{format_amount(fee.total, 9)} SOL",
         fee_title=f"{TR.solana__expected_fee}:",
         items=(
             (f"{TR.words__account}:", _format_path(signer_path)),
