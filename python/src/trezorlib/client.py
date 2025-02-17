@@ -71,6 +71,7 @@ class TrezorClient:
         transport: Transport,
         protobuf_mapping: ProtobufMapping | None = None,
         protocol: Channel | None = None,
+        # channel_database
     ) -> None:
         self._is_invalidated: bool = False
         self.transport = transport
@@ -125,6 +126,9 @@ class TrezorClient:
         else:
             protocol = ProtocolV1Channel(transport, protobuf_mapping, channel_data)
         return TrezorClient(transport, protobuf_mapping, protocol)
+
+    def get_channel_data(self) -> ChannelData:
+        return self.protocol.get_channel_data()
 
     def get_session(
         self,
@@ -234,7 +238,9 @@ class TrezorClient:
         if isinstance(response, messages.Failure):
             if response.code == messages.FailureType.InvalidProtocol:
                 LOG.debug("Protocol V2 detected")
-                protocol = ProtocolV2Channel(self.transport, self.mapping)
+                protocol = ProtocolV2Channel(
+                    self.transport, self.mapping
+                )  # self.database
         return protocol
 
 
