@@ -24,6 +24,10 @@
 #include <rtl/cli.h>
 #include <util/fwutils.h>
 
+#ifdef USE_BLE
+#include "prodtest_ble.h"
+#endif
+
 #include <version.h>
 
 static void prodtest_prodtest_intro(cli_t* cli) {
@@ -48,6 +52,14 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
     cli_error_arg_count(cli);
     return;
   }
+
+#ifdef USE_BLE
+  cli_trace(cli, "Erasing BLE bonds...");
+  if (!prodtest_ble_erase_bonds()) {
+    cli_error(cli, CLI_ERROR, "Failed to erase BLE bonds.");
+    return;
+  }
+#endif
 
   cli_trace(cli, "Invalidating the production test firmware header...");
   firmware_invalidate_header();

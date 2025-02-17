@@ -9,7 +9,7 @@ PRODUCTION = ARGUMENTS.get('PRODUCTION', '0') == '1'
 BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 
-FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic"]
+FEATURES_WANTED = ["input", "sbu", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "ble"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -99,6 +99,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/header.S',
     'embed/projects/prodtest/main.c',
     'embed/projects/prodtest/cmd/prodtest_boardloader.c',
+    'embed/projects/prodtest/cmd/prodtest_ble.c',
     'embed/projects/prodtest/cmd/prodtest_bootloader.c',
     'embed/projects/prodtest/cmd/prodtest_button.c',
     'embed/projects/prodtest/cmd/prodtest_display.c',

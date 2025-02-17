@@ -26,6 +26,7 @@
 #include <sys/system.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
+#include <util/unit_properties.h>
 
 #include "rust_ui_prodtest.h"
 
@@ -69,6 +70,12 @@
 
 #ifdef USE_STORAGE_HWKEY
 #include <sec/secure_aes.h>
+#endif
+
+#ifdef USE_BLE
+#include <io/ble.h>
+#include <util/unit_properties.h>
+#include "cmd/prodtest_ble.h"
 #endif
 
 #ifdef TREZOR_MODEL_T2T1
@@ -184,6 +191,11 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();
+#endif
+#ifdef USE_BLE
+  unit_properties_init();
+  ble_init();
+  prodtest_ble_init();
 #endif
 }
 
