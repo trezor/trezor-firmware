@@ -9,7 +9,7 @@ use crate::{
             base::ComponentExt,
             swipe_detect::SwipeSettings,
             text::{
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
                 TextStyle,
             },
             Component,
@@ -386,7 +386,7 @@ impl ShowInfoParams {
     pub fn into_layout(
         self,
     ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecShort::new();
+        let mut paragraphs = ParagraphVecLong::new();
         let mut first: bool = true;
         for item in self.items {
             // FIXME: padding:
