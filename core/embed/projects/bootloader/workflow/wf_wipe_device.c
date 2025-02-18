@@ -31,20 +31,26 @@ workflow_result_t workflow_wipe_device(protob_iface_t *iface, uint32_t msg_size,
                                        uint8_t *buf) {
   ui_result_t response = ui_screen_wipe_confirm();
   if (UI_RESULT_CONFIRM != response) {
-    send_user_abort(iface, "Wipe cancelled");
+    if (iface != NULL) {
+      send_user_abort(iface, "Wipe cancelled");
+    }
     return WF_CANCELLED;
   }
   ui_screen_wipe();
   secbool wipe_result = erase_device(ui_screen_wipe_progress);
 
   if (sectrue != wipe_result) {
-    send_msg_failure(iface, FailureType_Failure_ProcessError,
-                     "Could not erase flash");
+    if (iface != NULL) {
+      send_msg_failure(iface, FailureType_Failure_ProcessError,
+                       "Could not erase flash");
+    }
     screen_wipe_fail();
     return WF_ERROR;
   }
 
-  send_msg_success(iface, NULL);
+  if (iface != NULL) {
+    send_msg_success(iface, NULL);
+  }
   screen_wipe_success();
   return WF_OK;
 }

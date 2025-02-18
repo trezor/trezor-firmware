@@ -112,7 +112,6 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/workflow/wf_auto_update.c',
     'embed/projects/bootloader/workflow/wf_host_control.c',
     'embed/projects/bootloader/wire/codec_v1.c',
-    'embed/projects/bootloader/wire/wire_iface_null.c',
     'embed/projects/bootloader/wire/wire_iface_usb.c',
     'embed/projects/bootloader/protob/protob.c',
     'embed/projects/bootloader/protob/pb/messages.pb.c',

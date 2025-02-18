@@ -25,7 +25,6 @@
 
 #include "antiglitch.h"
 #include "bootui.h"
-#include "wire/wire_iface_null.h"
 #include "workflow.h"
 
 typedef enum {
@@ -66,12 +65,7 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
           return WF_OK_REBOOT_SELECTED;
         }
         if (menu_result == MENU_WIPE) {  // wipe
-          protob_iface_t iface;
-          wire_iface_t wire;
-          null_iface_init(&wire);
-          protob_init(&iface, NULL);
-          workflow_result_t r = workflow_wipe_device(&iface, 0, NULL);
-          null_iface_deinit(&wire);
+          workflow_result_t r = workflow_wipe_device(NULL, 0, NULL);
           if (r == WF_ERROR) {
             return r;
           }
