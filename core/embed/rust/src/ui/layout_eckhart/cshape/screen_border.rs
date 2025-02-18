@@ -16,6 +16,7 @@ pub struct ScreenBorder {
 }
 
 impl ScreenBorder {
+    pub const WIDTH: i16 = 2;
     pub fn new(color: Color) -> Self {
         let screen = constant::screen();
 
@@ -57,6 +58,10 @@ impl ScreenBorder {
             color,
             side_bars: [bottom_bar_rect, left_bar_rect, right_bar_rect, top_bar_rect],
         }
+    }
+
+    pub fn bottom_width(&self) -> i16 {
+        self.side_bars[0].width()
     }
 
     pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

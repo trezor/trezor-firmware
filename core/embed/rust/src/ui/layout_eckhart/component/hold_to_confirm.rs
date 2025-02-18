@@ -5,12 +5,14 @@ use crate::{
         component::{Component, Event, EventCtx, Never},
         display::Color,
         geometry::{Offset, Rect},
-        layout_eckhart::{cshape::ScreenBorder, fonts},
         shape::{self, Renderer},
     },
 };
 
-use super::{constant, theme, Header};
+use super::{
+    super::{component::Header, cshape::ScreenBorder, fonts, theme},
+    constant::SCREEN,
+};
 
 /// A component that displays a border that grows from the bottom of the screen
 /// to the top. The animation is parametrizable by color and duration.
@@ -67,17 +69,57 @@ impl HoldToConfirmAnim {
         self.timer.is_running_within(self.duration)
     }
 
-    fn get_clip(&self) -> Rect {
-        // TODO:
-        // 1) there will be some easer function
-        // 2) the growth of the top bar cannot be done with just one clip
-        let screen = constant::screen();
+    fn get_clips(&self) -> (Rect, Option<Rect>) {
         let ratio = self.timer.elapsed() / self.duration;
-        let clip_height = ((ratio * screen.height() as f32) as i16).clamp(0, screen.height());
-        Rect::from_bottom_left_and_size(
-            screen.bottom_left(),
-            Offset::new(screen.width(), clip_height),
-        )
+
+        let bottom_width = self.border.bottom_width();
+        let total_height = SCREEN.height();
+        let total_width = SCREEN.width();
+
+        let circumference = 2 * total_height + total_width + bottom_width;
+        let bottom_ratio = bottom_width as f32 / circumference as f32;
+        let vertical_ratio = (2 * total_height) as f32 / circumference as f32;
+        let upper_ratio = total_width as f32 / circumference as f32;
+
+        let vertical_cut = bottom_ratio + vertical_ratio;
+
+        if ratio < bottom_ratio {
+            // Animate the bottom border growing horizontally.
+            let clip_width = ((ratio / bottom_ratio) * bottom_width as f32) as i16;
+            let clip_width = clip_width.clamp(0, bottom_width);
+            (
+                Rect::from_center_and_size(
+                    SCREEN
+                        .bottom_center()
+                        .ofs(Offset::y(-ScreenBorder::WIDTH / 2)),
+                    Offset::new(clip_width, ScreenBorder::WIDTH),
+                ),
+                None,
+            )
+        } else if ratio < vertical_cut {
+            // Animate the vertical border growing from the bottom up.
+            let progress = (ratio - bottom_ratio) / vertical_ratio;
+            let clip_height = (progress * total_height as f32) as i16;
+            let clip_height = clip_height.clamp(0, total_height - ScreenBorder::WIDTH);
+            (
+                Rect::from_bottom_left_and_size(
+                    SCREEN.bottom_left(),
+                    Offset::new(total_width, clip_height),
+                ),
+                None,
+            )
+        } else {
+            // Animate the top border growing horizontally towards center.
+            let progress = (ratio - vertical_cut) / upper_ratio;
+            let clip_width = total_width - ((progress * total_width as f32) as i16);
+            (
+                SCREEN,
+                Some(Rect::from_center_and_size(
+                    SCREEN.top_center().ofs(Offset::y(ScreenBorder::WIDTH / 2)),
+                    Offset::new(clip_width, ScreenBorder::WIDTH),
+                )),
+            )
+        }
     }
 }
 
@@ -104,8 +146,8 @@ impl Component for HoldToConfirmAnim {
             if let Some(text) = self.header_overlay {
                 let font = fonts::FONT_SATOSHI_REGULAR_22;
                 let header_pad = Rect::from_top_left_and_size(
-                    constant::screen().top_left(),
-                    Offset::new(constant::screen().width(), Header::HEADER_HEIGHT),
+                    SCREEN.top_left(),
+                    Offset::new(SCREEN.width(), Header::HEADER_HEIGHT),
                 );
                 shape::Bar::new(header_pad)
                     .with_bg(theme::BG)
@@ -119,10 +161,17 @@ impl Component for HoldToConfirmAnim {
                 });
             }
             // growing border
-            let clip = self.get_clip();
-            target.in_clip(clip, &|target| {
+            let (in_clip, out_clip_opt) = self.get_clips();
+            target.in_clip(in_clip, &|target| {
                 self.border.render(target);
             });
+            // optional out clip for upper line rendering
+            if let Some(out_clip) = out_clip_opt {
+                shape::Bar::new(out_clip)
+                    .with_bg(theme::BG)
+                    .with_fg(theme::BG)
+                    .render(target);
+            }
         }
     }
 }
