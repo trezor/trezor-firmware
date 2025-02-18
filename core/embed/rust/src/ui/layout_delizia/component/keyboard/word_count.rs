@@ -20,39 +20,12 @@ pub struct SelectWordCount {
     keypad: ValueKeypad,
 }
 
-type Value = Option<u32>;
 type Label = &'static str;
-type Cell = (usize, usize, usize, usize);
 
 impl SelectWordCount {
-    const VALUES_ALL: [Value; 6] = [Some(12), Some(18), Some(20), Some(24), None, Some(33)];
-    const LABELS_ALL: [Label; 6] = ["12", "18", "20", "24", "", "33"];
-    const CELLS_ALL: [Cell; 6] = [
-        (0, 0, 1, 1),
-        (0, 2, 1, 1),
-        (2, 0, 1, 1),
-        (2, 2, 1, 1),
-        (4, 0, 1, 1),
-        (4, 2, 1, 1),
-    ];
-
-    const VALUES_MULTISHARE: [Value; 3] = [Some(20), Some(33), None];
-    const LABELS_MULTISHARE: [Label; 3] = ["20", "33", ""];
-    const CELLS_MULTISHARE: [Cell; 3] = [(0, 0, 1, 1), (0, 2, 1, 1), (2, 0, 3, 1)];
-
-    pub fn new_all() -> Self {
+    pub fn new(choices: Vec<u32, 5>, labels: Vec<Label, 5>) -> Self {
         Self {
-            keypad: ValueKeypad::new(&Self::VALUES_ALL, &Self::LABELS_ALL, &Self::CELLS_ALL),
-        }
-    }
-
-    pub fn new_multishare() -> Self {
-        Self {
-            keypad: ValueKeypad::new(
-                &Self::VALUES_MULTISHARE,
-                &Self::LABELS_MULTISHARE,
-                &Self::CELLS_MULTISHARE,
-            ),
+            keypad: ValueKeypad::new(choices, labels),
         }
     }
 }
@@ -73,16 +46,54 @@ impl Component for SelectWordCount {
     }
 }
 
+type Cell = (usize, usize, usize, usize);
+
 struct ValueKeypad {
-    buttons: Vec<(Button, Value, Cell), 6>,
+    buttons: Vec<(Button, Option<u32>, Cell), 6>,
     keypad_area: Rect,
 }
 
 impl ValueKeypad {
-    fn new(values: &[Value], labels: &[Label], cells: &[Cell]) -> Self {
+    /*
+     * 0 | 1
+     * -----
+     * 2 | 3
+     * -----
+     * x | 4
+     */
+    const SIX_CELLS: [Cell; 6] = [
+        (0, 0, 1, 1),
+        (0, 2, 1, 1),
+        (2, 0, 1, 1),
+        (2, 2, 1, 1),
+        (4, 0, 1, 1),
+        (4, 2, 1, 1),
+    ];
+    const SIX_CELLS_CANCEL_POSITION: usize = 4;
+
+    /*
+     * 0 | 1
+     * -----
+     *   x
+     */
+    const THREE_CELLS: [Cell; 3] = [(0, 0, 1, 1), (0, 2, 1, 1), (2, 0, 3, 1)];
+    const THREE_CELLS_CANCEL_POSITION: usize = 2;
+
+    fn new(choices: Vec<u32, 5>, labels: Vec<Label, 5>) -> Self {
         let mut buttons = Vec::new();
 
-        for ((&value, &label), &cell) in values.iter().zip(labels).zip(cells) {
+        let (cells, cancel_position) = match choices.len() {
+            5 => (&Self::SIX_CELLS[..], Self::SIX_CELLS_CANCEL_POSITION),
+            2 => (&Self::THREE_CELLS[..], Self::THREE_CELLS_CANCEL_POSITION),
+            _ => unreachable!(),
+        };
+
+        let mut values_vec: Vec<Option<u32>, 6> = choices.iter().copied().map(Some).collect();
+        unwrap!(values_vec.insert(cancel_position, None));
+        let mut labels_vec: Vec<Label, 6> = labels.iter().copied().collect();
+        unwrap!(labels_vec.insert(cancel_position, ""));
+
+        for ((value, label), cell) in values_vec.iter().zip(labels_vec).zip(cells) {
             unwrap!(buttons.push((
                 if value.is_none() {
                     Button::with_icon(theme::ICON_CLOSE).styled(theme::button_cancel())
@@ -90,8 +101,8 @@ impl ValueKeypad {
                     Button::with_text(label.into()).styled(theme::button_keyboard())
                 }
                 .with_text_align(Alignment::Center),
-                value,
-                cell
+                *value,
+                *cell
             )));
         }
 

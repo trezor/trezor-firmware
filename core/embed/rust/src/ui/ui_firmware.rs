@@ -15,6 +15,11 @@ pub const MAX_CHECKLIST_ITEMS: usize = 3;
 pub const MAX_WORD_QUIZ_ITEMS: usize = 3;
 pub const MAX_GROUP_SHARE_LINES: usize = 4;
 
+pub const WORD_COUNTS_ALL: [u32; 5] = [12, 18, 20, 24, 33];
+pub const WORD_COUNT_LABELS_ALL: [&str; 5] = ["12", "18", "20", "24", "33"];
+pub const WORD_COUNTS_MULTISHARE: [u32; 2] = [20, 33];
+pub const WORD_COUNT_LABELS_MULTISHARE: [&str; 2] = ["20", "33"];
+
 pub trait FirmwareUI {
     #[allow(clippy::too_many_arguments)]
     fn confirm_action(

@@ -27,6 +27,8 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+            WORD_COUNTS_ALL, WORD_COUNTS_MULTISHARE, WORD_COUNT_LABELS_ALL,
+            WORD_COUNT_LABELS_MULTISHARE,
         },
         ModelUI,
     },
@@ -699,16 +701,22 @@ impl FirmwareUI for UIBolt {
             TR::recovery__num_of_words,
         ));
 
-        let content = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
-            SelectWordCount::new_multishare()
+        let (choices, labels) = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+            (
+                WORD_COUNTS_MULTISHARE.iter().copied().collect(),
+                WORD_COUNT_LABELS_MULTISHARE.iter().copied().collect(),
+            )
         } else {
-            SelectWordCount::new_all()
+            (
+                WORD_COUNTS_ALL.iter().copied().collect(),
+                WORD_COUNT_LABELS_ALL.iter().copied().collect(),
+            )
         };
 
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,
-            Dialog::new(paragraphs, content),
+            Dialog::new(paragraphs, SelectWordCount::new(choices, labels)),
         ));
         Ok(layout)
     }
