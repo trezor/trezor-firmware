@@ -20,6 +20,7 @@ SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
+UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
@@ -759,6 +760,8 @@ if PYOPT == '0':
     features.append('ui_debug')
 if EVERYTHING:
     features.append('universal_fw')
+if UI_DEBUG_OVERLAY:
+    features.append('ui_debug_overlay')
 
 rust = tools.add_rust_lib(
     env,
