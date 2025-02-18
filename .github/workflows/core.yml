@@ -371,6 +371,7 @@ jobs:
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 400
+      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
     steps:
       - uses: actions/checkout@v4
         with:
@@ -383,6 +384,13 @@ jobs:
       - uses: ./.github/actions/environment
       - run: nix-shell --run "tests/download_emulators.sh"
       - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-test-upgrade-${{ matrix.model }}-${{ matrix.asan }}
+          path: |
+            tests/trezor.log
+          retention-days: 7
+        if: always()
 
 
   # Persistence tests - UI.
@@ -401,6 +409,7 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
     steps:
       - uses: actions/checkout@v4
         with:
@@ -423,6 +432,13 @@ jobs:
         if: always()
         continue-on-error: true
       - uses: ./.github/actions/upload-coverage
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}
+          path: |
+            tests/trezor.log
+          retention-days: 7
+        if: always()
 
   core_hwi_test:
     name: HWI tests
