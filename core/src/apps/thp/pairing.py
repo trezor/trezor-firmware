@@ -393,6 +393,9 @@ async def _handle_credential_request(
         autoconnect=autoconnect,
     )
     credential = issue_credential(message.host_static_pubkey, credential_metadata)
+    ctx.channel_ctx.channel_cache.set_host_static_pubkey(
+        bytearray(message.host_static_pubkey)
+    )  # TODO This could raise an exception, should be handled?
 
     return await ctx.call_any(
         ThpCredentialResponse(
