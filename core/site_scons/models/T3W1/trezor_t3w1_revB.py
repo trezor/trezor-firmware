@@ -118,7 +118,6 @@ def configure(
         paths += ["embed/io/nfc/rfal/source"]
         paths += ["embed/io/nfc/rfal/source/st25r3916"]
         paths += ["embed/io/nfc/rfal/include/"]
-        features_available.append("nfc")
         defines += [("USE_NFC", "1")]
 
     if "optiga" in features_wanted:
