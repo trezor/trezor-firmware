@@ -4,6 +4,7 @@ from trezor.crypto import base58
 
 from .transaction import Transaction
 from .transaction.instructions import (
+    _SYSTEM_PROGRAM_ID,
     AssociatedTokenAccountProgramCreateInstruction,
     Instruction,
     Token2022ProgramTransferCheckedInstruction,
@@ -11,6 +12,8 @@ from .transaction.instructions import (
 )
 
 if TYPE_CHECKING:
+    from typing import Type
+
     from trezor.messages import SolanaTxAdditionalInfo
 
     from .transaction import Fee
@@ -173,6 +176,7 @@ async def try_confirm_predefined_transaction(
     transaction: Transaction,
     fee: Fee,
     signer_path: list[int],
+    signer_public_key: bytes,
     blockhash: bytes,
     additional_info: SolanaTxAdditionalInfo | None = None,
 ) -> bool:
@@ -191,6 +195,116 @@ async def try_confirm_predefined_transaction(
             await confirm_system_transfer(instructions[0], fee, signer_path, blockhash)
             return True
 
+    if await try_confirm_staking_transaction(
+        transaction,
+        fee,
+        signer_path,
+        signer_public_key,
+        blockhash,
+    ):
+        return True
+
     return await try_confirm_token_transfer_transaction(
         transaction, fee, signer_path, blockhash, additional_info
     )
+
+
+async def try_confirm_staking_transaction(
+    transaction: Transaction,
+    fee: Fee,
+    signer_path: list[int],
+    signer_public_key: bytes,
+    blockhash: bytes,
+) -> bool:
+    from .transaction.instructions import (
+        ComputeBudgetProgramSetComputeUnitPriceInstruction,
+        StakeProgramDeactivateInstruction,
+        StakeProgramDelegateStakeInstruction,
+        StakeProgramInitializeInstruction,
+        StakeProgramWithdrawInstruction,
+        SystemProgramCreateAccountWithSeedInstruction,
+    )
+
+    instructions = transaction.instructions
+
+    def _match_instructions(*expected_types: Type[Instruction]) -> bool:
+        if len(instructions) != len(expected_types):
+            return False
+        return all(
+            expected_type.is_type_of(instruction)
+            for instruction, expected_type in zip(instructions, expected_types)
+        )
+
+    if _match_instructions(
+        ComputeBudgetProgramSetComputeUnitPriceInstruction,
+        SystemProgramCreateAccountWithSeedInstruction,
+        StakeProgramInitializeInstruction,
+        StakeProgramDelegateStakeInstruction,
+    ):
+        from .layout import confirm_stake_transaction, confirm_stake_withdrawer
+
+        _budget, create, init, delegate = instructions
+        if signer_public_key != create.funding_account[0]:
+            return False
+        if signer_public_key != create.base:
+            return False
+        if signer_public_key != init.withdrawer:
+            await confirm_stake_withdrawer(init.withdrawer)
+        if signer_public_key != init.staker:
+            return False
+        if signer_public_key != delegate.stake_authority[0]:
+            return False
+
+        if base58.encode(init.custodian) != _SYSTEM_PROGRAM_ID:
+            return False
+
+        stake_account = create.created_account[0]
+        if stake_account != init.uninitialized_stake_account[0]:
+            return False
+        if stake_account != delegate.initialized_stake_account[0]:
+            return False
+
+        await confirm_stake_transaction(
+            fee=fee,
+            signer_path=signer_path,
+            blockhash=blockhash,
+            create=create,
+            delegate=delegate,
+        )
+        return True
+
+    if _match_instructions(
+        ComputeBudgetProgramSetComputeUnitPriceInstruction,
+        StakeProgramDeactivateInstruction,
+    ):
+        from .layout import confirm_unstake_transaction
+
+        _budget, deactivate = instructions
+        if signer_public_key != deactivate.stake_authority[0]:
+            return False
+
+        await confirm_unstake_transaction(
+            fee=fee, signer_path=signer_path, blockhash=blockhash, deactivate=deactivate
+        )
+        return True
+
+    if _match_instructions(
+        ComputeBudgetProgramSetComputeUnitPriceInstruction,
+        StakeProgramWithdrawInstruction,
+    ):
+        from .layout import confirm_claim_recipient, confirm_claim_transaction
+
+        _budget, withdraw = instructions
+        if signer_public_key != withdraw.withdrawal_authority[0]:
+            return False
+        if signer_public_key != withdraw.recipient_account[0]:
+            await confirm_claim_recipient(withdraw.recipient_account[0])
+
+        await confirm_claim_transaction(
+            fee=fee, signer_path=signer_path, blockhash=blockhash, withdraw=withdraw
+        )
+
+        return True
+
+    # not a staking transaction
+    return False
