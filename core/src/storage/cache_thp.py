@@ -2,7 +2,7 @@ import builtins
 from micropython import const
 from typing import TYPE_CHECKING
 
-from storage.cache_common import DataCache
+from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY, DataCache
 
 if TYPE_CHECKING:
     from typing import Tuple
@@ -41,18 +41,18 @@ class ThpDataCache(DataCache):
 
 
 class ChannelCache(ThpDataCache):
+
     def __init__(self) -> None:
-        self.host_ephemeral_pubkey = bytearray(KEY_LENGTH)
         self.state = bytearray(_CHANNEL_STATE_LENGTH)
         self.iface = bytearray(1)  # TODO add decoding
         self.sync = 0x80  # can_send_bit | sync_receive_bit | sync_send_bit | rfu(5)
-        self.session_id_counter = 0x00
         self.fields = (
             32,  # CHANNEL_HANDSHAKE_HASH
             32,  # CHANNEL_KEY_RECEIVE
             32,  # CHANNEL_KEY_SEND
             8,  # CHANNEL_NONCE_RECEIVE
             8,  # CHANNEL_NONCE_SEND
+            32,  # CHANNEL_HOST_STATIC_PUBKEY
         )
         super().__init__()
 
@@ -60,10 +60,14 @@ class ChannelCache(ThpDataCache):
         self.state[:] = bytearray(
             int.to_bytes(0, _CHANNEL_STATE_LENGTH, "big")
         )  # Set state to UNALLOCATED
-        self.host_ephemeral_pubkey[:] = bytearray(KEY_LENGTH)
         self.state[:] = bytearray(_CHANNEL_STATE_LENGTH)
         self.iface[:] = bytearray(1)
         super().clear()
+
+    def set_host_static_pubkey(self, key: bytearray) -> None:
+        if len(key) != KEY_LENGTH:
+            raise Exception("Invalid key length")
+        self.set(CHANNEL_HOST_STATIC_PUBKEY, key)
 
 
 class SessionThpCache(ThpDataCache):
@@ -205,12 +209,6 @@ def get_allocated_session_index(channel_id: bytes, session_id: bytes) -> int | N
 
 def is_seedless_session(session_cache: SessionThpCache) -> bool:
     return _get_session_state(session_cache) == _SEEDLESS_STATE
-
-
-def set_channel_host_ephemeral_key(channel: ChannelCache, key: bytearray) -> None:
-    if len(key) != KEY_LENGTH:
-        raise Exception("Invalid key length")
-    channel.host_ephemeral_pubkey = key
 
 
 def create_or_replace_session(
