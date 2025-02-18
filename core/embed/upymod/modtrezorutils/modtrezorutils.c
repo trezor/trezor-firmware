@@ -416,8 +416,15 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
     {MP_OBJ_NEW_SMALL_INT(VERSION_MAJOR), MP_OBJ_NEW_SMALL_INT(VERSION_MINOR),
      MP_OBJ_NEW_SMALL_INT(VERSION_PATCH), MP_OBJ_NEW_SMALL_INT(VERSION_BUILD)}};
 
-STATIC mp_obj_t mod_trezorutils_register_gc_dump() {
-  gc_set_dump_func(gc_dump_alloc_table);
+STATIC void dump_func(void)
+{
+  printf(">>>>>>>>>>>>>>>>>>>>>\n");
+  dump_meminfo_json(&mp_plat_print);
+  printf("<<<<<<<<<<<<<<<<<<<<<\n");
+}
+
+STATIC mp_obj_t mod_trezorutils_register_gc_dump(void) {
+  gc_set_dump_func(dump_func);
   return mp_const_none;
 }
 

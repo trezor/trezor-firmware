@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !TREZOR_EMULATOR || PYOPT
+#if PYOPT
 #define MEMINFO_DICT_ENTRIES /* empty */
 
 #else
@@ -37,6 +37,15 @@
 #include <io/usb.h>
 #include "embed/rust/librust.h"
 #include "embed/upymod/trezorobj.h"
+
+const mp_print_t *fake_fopen(const char *, const char *) {
+  return &mp_plat_print;
+}
+#define fopen fake_fopen
+#define fprintf mp_printf
+#define fflush(f)
+#define fclose(f)
+#define FILE const mp_print_t
 
 #define WORDS_PER_BLOCK ((MICROPY_BYTES_PER_GC_BLOCK) / MP_BYTES_PER_OBJ_WORD)
 #define BYTES_PER_BLOCK (MICROPY_BYTES_PER_GC_BLOCK)
@@ -199,7 +208,7 @@ void dump_short(FILE *out, mp_const_obj_t value) {
 
   } else if (mp_obj_is_small_int(value)) {
     static char num_buf[100];
-    snprintf(num_buf, 100, "%ld", MP_OBJ_SMALL_INT_VALUE(value));
+    snprintf(num_buf, 100, INT_FMT, MP_OBJ_SMALL_INT_VALUE(value));
     print_type(out, "smallint", num_buf, NULL, true);
 
   } else if (!VERIFY_PTR(value)) {
@@ -709,6 +718,8 @@ void dump_qstrdata(FILE *out) {
   }
 }
 
+STATIC void dump_meminfo_json(FILE *out);
+
 /// def meminfo(filename: str) -> None:
 ///     """Dumps map of micropython GC arena to a file.
 ///     The JSON file can be decoded by analyze-memory-dump.py
@@ -717,6 +728,23 @@ void dump_qstrdata(FILE *out) {
 STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
   size_t fn_len;
   FILE *out = fopen(mp_obj_str_get_data(filename, &fn_len), "w");
+
+  dump_meminfo_json(out);
+
+  for (size_t block = 0;
+       block < MP_STATE_MEM(gc_alloc_table_byte_len) * BLOCKS_PER_ATB;
+       block++) {
+    if (ATB_GET_KIND(block) == AT_MARK) {
+      ATB_MARK_TO_HEAD(block);
+    }
+  }
+
+  gc_dump_alloc_table();
+  return mp_const_none;
+}
+
+STATIC void dump_meminfo_json(FILE *out)
+{
   fprintf(out, "[");
 
   // void **ptrs = (void **)(void *)&mp_state_ctx;
@@ -770,17 +798,8 @@ STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
 
   fprintf(out, "null]\n");
   fclose(out);
-  for (size_t block = 0;
-       block < MP_STATE_MEM(gc_alloc_table_byte_len) * BLOCKS_PER_ATB;
-       block++) {
-    if (ATB_GET_KIND(block) == AT_MARK) {
-      ATB_MARK_TO_HEAD(block);
-    }
-  }
-
-  gc_dump_alloc_table();
-  return mp_const_none;
 }
+
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,
                                  mod_trezorutils_meminfo);
 

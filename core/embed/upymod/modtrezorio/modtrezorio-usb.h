@@ -287,7 +287,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_USB_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_USB_locals_dict,
                             mod_trezorio_USB_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorio_USB_type = {
+const mp_obj_type_t mod_trezorio_USB_type = {
     {&mp_type_type},
     .name = MP_QSTR_USB,
     .make_new = mod_trezorio_USB_make_new,

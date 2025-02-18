@@ -143,7 +143,7 @@ STATIC const mp_rom_map_elem_t mod_trezorui_Display_locals_dict_table[] = {
 STATIC MP_DEFINE_CONST_DICT(mod_trezorui_Display_locals_dict,
                             mod_trezorui_Display_locals_dict_table);
 
-STATIC const mp_obj_type_t mod_trezorui_Display_type = {
+const mp_obj_type_t mod_trezorui_Display_type = {
     {&mp_type_type},
     .name = MP_QSTR_Display,
     .make_new = mod_trezorui_Display_make_new,
