@@ -59,7 +59,12 @@ async def sign_tx(
     fee = transaction.calculate_fee()
 
     if not await try_confirm_predefined_transaction(
-        transaction, fee, address_n, transaction.blockhash, msg.additional_info
+        transaction,
+        fee,
+        address_n,
+        signer_public_key,
+        transaction.blockhash,
+        msg.additional_info,
     ):
         await confirm_instructions(address_n, signer_public_key, transaction)
         await confirm_transaction(
