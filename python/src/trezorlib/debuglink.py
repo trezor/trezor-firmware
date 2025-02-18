@@ -958,11 +958,9 @@ class SessionDebugWrapper(Session):
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._session, name)
 
-
     @property
     def protocol_version(self) -> int:
         return self.client.protocol_version
-
 
     def _write(self, msg: t.Any) -> None:
         print("writing message:", msg.__class__.__name__)
