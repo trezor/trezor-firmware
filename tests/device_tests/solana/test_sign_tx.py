@@ -41,6 +41,7 @@ pytestmark = [
     "solana/sign_tx.token_program.json",
     "solana/sign_tx.unknown_instructions.json",
     "solana/sign_tx.predefined_transactions.json",
+    "solana/sign_tx.staking_transactions.json",
 )
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
