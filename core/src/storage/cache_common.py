@@ -21,6 +21,7 @@ if utils.USE_THP:
     CHANNEL_KEY_SEND = const(2)
     CHANNEL_NONCE_RECEIVE = const(3)
     CHANNEL_NONCE_SEND = const(4)
+    CHANNEL_HOST_STATIC_PUBKEY = const(5)
 
 # Keys that are valid across sessions
 SESSIONLESS_FLAG = const(128)
