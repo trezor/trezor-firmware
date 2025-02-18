@@ -99,11 +99,15 @@ class Translation:
         if tr is not None:
             return tr
         if self.lang != "en":
+            # check if the key exists in English first
+            retval = TRANSLATIONS["en"]._translate_raw(key)
+            # if not, a KeyError was raised so we fall through.
+            # otherwise, warn that the key is untranslated in target language.
             warnings.warn(
                 f"Translation key '{key}' not found in '{self.lang}' translation file",
                 stacklevel=_stacklevel + 2,
             )
-            return TRANSLATIONS["en"]._translate_raw(key)
+            return retval
         raise KeyError(key)
 
     def translate(self, key: str, _stacklevel: int = 0) -> str:
