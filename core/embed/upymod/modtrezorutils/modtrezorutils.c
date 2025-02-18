@@ -20,6 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include "py/gc.h"
 #include "py/objstr.h"
 #include "py/runtime.h"
 
@@ -415,6 +416,14 @@ STATIC mp_obj_tuple_t mod_trezorutils_version_obj = {
     {MP_OBJ_NEW_SMALL_INT(VERSION_MAJOR), MP_OBJ_NEW_SMALL_INT(VERSION_MINOR),
      MP_OBJ_NEW_SMALL_INT(VERSION_PATCH), MP_OBJ_NEW_SMALL_INT(VERSION_BUILD)}};
 
+STATIC mp_obj_t mod_trezorutils_register_gc_dump() {
+  gc_set_dump_func(gc_dump_alloc_table);
+  return mp_const_none;
+}
+
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_register_gc_dump_obj,
+                                 mod_trezorutils_register_gc_dump);
+
 /// SCM_REVISION: bytes
 /// """Git commit hash of the firmware."""
 /// VERSION: VersionTuple
@@ -574,6 +583,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #else
     {MP_ROM_QSTR(MP_QSTR_LOG_STACK_USAGE), mp_const_false},
 #endif  // LOG_STACK_USAGE
+    {MP_ROM_QSTR(MP_QSTR_register_gc_dump), MP_ROM_PTR(&mod_trezorutils_register_gc_dump_obj)},
 #endif  // PYOPT
 };
 

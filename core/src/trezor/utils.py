@@ -124,6 +124,9 @@ def presize_module(modname: str, size: int) -> None:
 if __debug__:
     from ubinascii import hexlify
 
+    from trezorutils import register_gc_dump
+    register_gc_dump()
+
     def mem_dump(filename: str) -> None:
         from micropython import mem_info
 
