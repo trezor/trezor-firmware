@@ -365,6 +365,7 @@ jobs:
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 400
+      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
     steps:
       - uses: actions/checkout@v4
         with:
@@ -395,6 +396,7 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
+      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
     steps:
       - uses: actions/checkout@v4
         with:
