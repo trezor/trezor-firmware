@@ -5,10 +5,13 @@ from trezor.crypto import base58
 from trezor.enums import ButtonRequestType
 from trezor.strings import format_amount
 from trezor.ui.layouts import (
+    confirm_address,
     confirm_metadata,
     confirm_properties,
     confirm_solana_tx,
     confirm_value,
+    show_danger,
+    show_warning,
 )
 
 from apps.common.paths import address_n_to_str
@@ -350,14 +353,146 @@ async def confirm_custom_transaction(
     )
 
 
+def _fee_details(fee: Fee) -> tuple[tuple[str, str], ...]:
+    return (
+        (TR.solana__base_fee, f"{format_amount(fee.base, 9)} SOL"),
+        (TR.solana__priority_fee, f"{format_amount(fee.priority, 9)} SOL"),
+    )
+
+
+def _fee_summary(fee: Fee) -> tuple[str, str]:
+    return (f"{TR.solana__expected_fee}:", f"{format_amount(fee.total, 9)} SOL")
+
+
+async def confirm_stake_withdrawer(withdrawer_account: bytes) -> None:
+    await show_danger(
+        title=TR.words__important,
+        content=TR.solana__stake_withdrawal_warning,
+        verb_cancel=TR.words__cancel_and_exit,
+        br_name="confirm_stake_warning",
+    )
+    await confirm_address(
+        title=TR.solana__stake_withdrawal_warning_title,
+        address=base58.encode(withdrawer_account),
+        br_name="confirm_stake_warning_address",
+    )
+
+
+async def confirm_claim_recipient(recipient_account: bytes) -> None:
+    await show_warning(
+        content=TR.solana__claim_recipient_warning,
+        br_name="confirm_claim_warning",
+    )
+    await confirm_address(
+        title=TR.address_details__title_receive_address,
+        address=base58.encode(recipient_account),
+        br_name="confirm_claim_warning_address",
+    )
+
+
+async def confirm_stake_transaction(
+    fee: Fee,
+    signer_path: list[int],
+    blockhash: bytes,
+    create: Instruction,
+    delegate: Instruction,
+) -> None:
+    from trezor.ui.layouts import confirm_solana_staking_tx
+
+    vote_account = base58.encode(delegate.vote_account[0])
+    KNOWN_ACCOUNTS = {
+        "9QU2QSxhb24FUX3Tu2FpczXjpK3VYrvRudywSZaM29mF": "Everstake",
+    }
+    vote_account_label = KNOWN_ACCOUNTS.get(vote_account)
+    if vote_account_label is None:
+        description = TR.solana__stake_question
+        vote_account_label = vote_account
+    else:
+        description = TR.solana__stake_on_question.format(vote_account_label)
+        vote_account_label = ""
+
+    await confirm_solana_staking_tx(
+        title=TR.solana__stake,
+        description=description,
+        account=_format_path(signer_path),
+        account_path=address_n_to_str(signer_path),
+        vote_account=vote_account_label,
+        stake_item=(
+            TR.solana__stake_account,
+            base58.encode(delegate.initialized_stake_account[0]),
+        ),
+        amount_item=(
+            f"{TR.words__amount}:",
+            f"{format_amount(create.lamports, 9)} SOL",
+        ),
+        fee_item=_fee_summary(fee),
+        fee_details=_fee_details(fee),
+        blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
+    )
+
+
+async def confirm_unstake_transaction(
+    fee: Fee,
+    signer_path: list[int],
+    blockhash: bytes,
+    deactivate: Instruction,
+) -> None:
+    from trezor.ui.layouts import confirm_solana_staking_tx
+
+    await confirm_solana_staking_tx(
+        title=TR.solana__unstake,
+        description=TR.solana__unstake_question,
+        account=_format_path(signer_path),
+        account_path=address_n_to_str(signer_path),
+        vote_account="",
+        stake_item=(
+            TR.solana__stake_account,
+            base58.encode(deactivate.delegated_stake_account[0]),
+        ),
+        amount_item=_fee_summary(fee),
+        fee_item=("", ""),
+        fee_details=_fee_details(fee),
+        blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
+    )
+
+
+async def confirm_claim_transaction(
+    fee: Fee,
+    signer_path: list[int],
+    blockhash: bytes,
+    withdraw: Instruction,
+) -> None:
+    from trezor.ui.layouts import confirm_solana_staking_tx
+
+    await confirm_solana_staking_tx(
+        title=TR.solana__claim,
+        description=TR.solana__claim_question,
+        account=_format_path(signer_path),
+        account_path=address_n_to_str(signer_path),
+        vote_account="",
+        stake_item=(
+            TR.solana__stake_account,
+            base58.encode(withdraw.stake_account[0]),
+        ),
+        amount_item=(
+            f"{TR.words__amount}:",
+            f"{format_amount(withdraw.lamports, 9)} SOL",
+        ),
+        fee_item=_fee_summary(fee),
+        fee_details=_fee_details(fee),
+        blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
+    )
+
+
 async def confirm_transaction(
     signer_path: list[int], blockhash: bytes, fee: Fee
 ) -> None:
+    (fee_title, fee_value) = _fee_summary(fee)
     await confirm_solana_tx(
         amount="",
         amount_title="",
-        fee=f"{format_amount(fee.total, 9)} SOL",
-        fee_title=f"{TR.solana__expected_fee}:",
+        fee=fee_value,
+        fee_title=fee_title,
         items=(
             (f"{TR.words__account}:", _format_path(signer_path)),
             (f"{TR.words__blockhash}:", base58.encode(blockhash)),
