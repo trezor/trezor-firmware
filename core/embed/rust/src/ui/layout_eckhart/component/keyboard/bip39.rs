@@ -101,6 +101,14 @@ impl Component for Bip39Input {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Attach(_) = event {
+            // Catch up with the prefilled word
+            if !self.textbox.is_empty() {
+                self.complete_word_from_dictionary(ctx);
+                return Some(MnemonicInputMsg::Completed);
+            }
+        }
+
         _ = self.button_suggestion.event(ctx, event);
 
         if self.multi_tap.timeout_event(event) {
