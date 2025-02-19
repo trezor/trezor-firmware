@@ -840,7 +840,7 @@ pub enum TranslatedString {
     reset__slip39_checklist_set_num_shares = 578,  // "Set number of shares"
     reset__slip39_checklist_set_sizes = 579,  // "Set sizes and thresholds"
     reset__slip39_checklist_set_sizes_longer = 580,  // "Set size and threshold for each group"
-    reset__slip39_checklist_set_threshold = 581,  // "Set threshold"
+    reset__slip39_checklist_set_threshold = 581,  // {"Bolt": "Set threshold", "Caesar": "Set threshold", "Delizia": "Set threshold", "Eckhart": "Set recovery threshold"}
     reset__slip39_checklist_title = 582,  // "Backup checklist"
     reset__slip39_checklist_write_down = 583,  // "Write down and check all shares"
     reset__slip39_checklist_write_down_recovery = 584,  // "Write down & check all wallet backup shares"
