@@ -64,6 +64,7 @@ pub trait FirmwareUI {
         subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
+        hold: bool,
         chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
@@ -113,6 +114,7 @@ pub trait FirmwareUI {
         title: TString<'static>,
         button: TString<'static>,
         button_style_confirm: bool,
+        hold: bool,
         items: Obj, // TODO: replace Obj
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
@@ -139,10 +141,10 @@ pub trait FirmwareUI {
 
     fn confirm_with_info(
         title: TString<'static>,
-        button: TString<'static>,
-        info_button: TString<'static>,
-        verb_cancel: Option<TString<'static>>,
         items: Obj, // TODO: replace Obj
+        verb: TString<'static>,
+        verb_info: TString<'static>,
+        verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn continue_recovery_homepage(

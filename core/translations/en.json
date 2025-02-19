@@ -768,6 +768,7 @@
     "sign_message__bytes_template": "{0} Bytes",
     "sign_message__confirm_address": "Signing address",
     "sign_message__confirm_message": "Confirm message",
+    "sign_message__confirm_without_review": "Confirm without review",
     "sign_message__message_size": "Message size",
     "sign_message__verify_address": "Verify address",
     "solana__account_index": "Account index",

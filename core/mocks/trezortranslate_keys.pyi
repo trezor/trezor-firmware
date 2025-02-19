@@ -766,6 +766,7 @@ class TR:
     sign_message__bytes_template: str = "{0} Bytes"
     sign_message__confirm_address: str = "Signing address"
     sign_message__confirm_message: str = "Confirm message"
+    sign_message__confirm_without_review: str = "Confirm without review"
     sign_message__message_size: str = "Message size"
     sign_message__verify_address: str = "Verify address"
     solana__account_index: str = "Account index"
