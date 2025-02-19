@@ -78,7 +78,7 @@ where
                 ButtonState::Disabled
             };
             self.keypad
-                .set_button_state(ctx, KeypadButton::Key(idx), state);
+                .set_button_state(ctx, KeypadButton::Key(idx), &state);
         }
 
         // Determine states for erase and back buttons
@@ -117,11 +117,11 @@ where
 
         // Apply all button states
         self.keypad
-            .set_button_state(ctx, KeypadButton::Erase, erase_state);
+            .set_button_state(ctx, KeypadButton::Erase, &erase_state);
         self.keypad
-            .set_button_state(ctx, KeypadButton::Back, back_state);
+            .set_button_state(ctx, KeypadButton::Back, &back_state);
         self.keypad
-            .set_button_state(ctx, KeypadButton::Confirm, confirm_state);
+            .set_button_state(ctx, KeypadButton::Confirm, &confirm_state);
 
         // Apply the stylesheet for the confirm button
         self.keypad
