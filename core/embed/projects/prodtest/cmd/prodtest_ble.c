@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/systick.h>
 #ifdef USE_BLE
 
 #include <trezor_rtl.h>
 
 #include <io/ble.h>
 #include <rtl/cli.h>
+#include <sys/systick.h>
 #include <sys/systimer.h>
 
 void ble_timer_cb(void* context) {
