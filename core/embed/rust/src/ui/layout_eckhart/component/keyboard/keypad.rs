@@ -209,24 +209,30 @@ impl Keypad {
         }
     }
 
+    fn render_button<'s>(btn: &'s Maybe<Button>, target: &mut impl Renderer<'s>) {
+        if btn.is_visible() {
+            btn.render(target);
+        }
+    }
+
     // Render the pressed button.
     // TODO: Render special shape for the edge buttons.
     fn render_pressed_button<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match self.pressed {
             Some(KeypadButton::Key(idx)) => {
-                self.keys[idx].render(target);
+                Self::render_button(&self.keys[idx], target);
             }
             Some(KeypadButton::Cancel) => {
-                self.cancel.render(target);
+                Self::render_button(&self.cancel, target);
             }
             Some(KeypadButton::Erase) => {
-                self.erase.render(target);
+                Self::render_button(&self.erase, target);
             }
             Some(KeypadButton::Confirm) => {
-                self.confirm.render(target);
+                Self::render_button(&self.confirm, target);
             }
             Some(KeypadButton::Back) => {
-                self.back.render(target);
+                Self::render_button(&self.back, target);
             }
             None => {}
         }
@@ -338,14 +344,14 @@ impl Component for Keypad {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         // render key buttons
         for btn in self.keys.iter() {
-            btn.render(target);
+            Self::render_button(btn, target);
         }
 
         // render special buttons
-        self.cancel.render(target);
-        self.erase.render(target);
-        self.back.render(target);
-        self.confirm.render(target);
+        Self::render_button(&self.cancel, target);
+        Self::render_button(&self.erase, target);
+        Self::render_button(&self.back, target);
+        Self::render_button(&self.confirm, target);
 
         // render currently pressed button once again because of possible overlap
         self.render_pressed_button(target);
