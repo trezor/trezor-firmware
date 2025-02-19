@@ -61,11 +61,8 @@ check_release_branch () {
     fi
 }
 
-# gitlab
-if echo "$CI_COMMIT_BRANCH" | grep -Eq "^(release|secfix)/"; then
-    check_release_branch
 # github, TODO this only makes sense running on branches but not pull requests
-elif $(git branch --show-current) | grep -Eq "^(release|secfix)/"; then
+if $(git branch --show-current) | grep -Eq "^(release|secfix)/"; then
     check_release_branch
 else
     check_feature_branch
