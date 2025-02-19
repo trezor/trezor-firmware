@@ -115,11 +115,11 @@ impl<'a> PinKeyboard<'a> {
         // Apply all button states
         self.keypad.set_keys_state(ctx, &keys_state);
         self.keypad
-            .set_button_state(ctx, KeypadButton::Erase, erase_state);
+            .set_button_state(ctx, KeypadButton::Erase, &erase_state);
         self.keypad
-            .set_button_state(ctx, KeypadButton::Confirm, confirm_state);
+            .set_button_state(ctx, KeypadButton::Confirm, &confirm_state);
         self.keypad
-            .set_button_state(ctx, KeypadButton::Cancel, cancel_state);
+            .set_button_state(ctx, KeypadButton::Cancel, &cancel_state);
     }
 
     pub fn pin(&self) -> &str {
