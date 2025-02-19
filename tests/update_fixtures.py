@@ -43,12 +43,6 @@ def _get_current_git_branch() -> str:
     hidden=True,
     expose_value=False,
 )
-@click.option(
-    "-l",
-    "--gitlab",
-    is_flag=True,
-    help="Fetch from Gitlab CI instead of GitHub Actions",
-)
 @click.option("-b", "--branch", help="Branch name")
 @click.option("-r", "--run-id", help="GitHub Actions run id", type=int)
 @click.option(
@@ -65,7 +59,6 @@ def _get_current_git_branch() -> str:
 )
 @click.option("-r", "--remove-missing", is_flag=True, help="Remove missing tests")
 def ci(
-    gitlab: bool,
     branch: str | None,
     run_id: int | None,
     only_jobs: Iterable[str] | None,
@@ -87,18 +80,9 @@ def ci(
     if exclude_jobs:
         print(f"Exclude jobs: {exclude_jobs}")
 
-    if not gitlab:
-        from github import get_branch_ui_fixtures_results
+    from github import get_branch_ui_fixtures_results
 
-        ui_results = get_branch_ui_fixtures_results(
-            branch, only_jobs, exclude_jobs, run_id
-        )
-    else:
-        from gitlab import get_branch_ui_fixtures_results, get_jobs_of_interest
-
-        jobs_of_interest = get_jobs_of_interest(only_jobs, exclude_jobs)
-        ui_results = get_branch_ui_fixtures_results(branch, jobs_of_interest)
-
+    ui_results = get_branch_ui_fixtures_results(branch, only_jobs, exclude_jobs, run_id)
     current_fixtures = get_current_fixtures()
 
     is_error = False

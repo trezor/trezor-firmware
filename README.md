@@ -4,7 +4,7 @@
 
 ## Repository Structure
 
-* **[`ci`](ci/)**: [Gitlab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware) configuration files
+* **[`ci`](ci/)**: Ancillary files, data, and scripts for the CI pipeline
 * **[`common/defs`](common/defs/)**: JSON coin definitions and support tables
 * **[`common/protob`](common/protob/)**: Common protobuf definitions for the Trezor protocol
 * **[`common/tools`](common/tools/)**: Tools for managing coin definitions and related data

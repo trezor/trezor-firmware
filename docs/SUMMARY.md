@@ -44,8 +44,6 @@
   - [Upgrade Tests](tests/upgrade-tests.md)
   - [UI Tests](tests/ui-tests.md)
   - [Click Tests](tests/click-tests.md)
-- [CI](ci/index.md)
-  - [GitLab CI Jobs](ci/jobs.md)
 - [Miscellaneous](misc/index.md)
   - [Affected third-parties](misc/third-parties.md)
   - [Changelog](misc/changelog.md)
