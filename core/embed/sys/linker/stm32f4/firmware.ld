@@ -59,7 +59,7 @@ SECTIONS {
   } >FLASH AT>FLASH
 
   .stack : ALIGN(8) {
-    . = 16K; /* Exactly 16K allocated for stack. Overflow causes MemManage fault (when using MPU). */
+    . = 32K; /* Exactly 32K allocated for stack. Overflow causes MemManage fault (when using MPU). */
   } >AUX1_RAM
 
   .data : ALIGN(4) {
