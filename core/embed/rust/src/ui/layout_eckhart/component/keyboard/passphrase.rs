@@ -134,7 +134,8 @@ impl PassphraseKeyboard {
             input_prompt: Label::left_aligned(
                 TString::from_translation(TR::passphrase__title_enter),
                 theme::TEXT_SMALL,
-            ).vertically_centered(),
+            )
+            .vertically_centered(),
             next_btn,
             keypad: Keypad::new_shown().with_keys_content(&keypad_content),
             active_layout,
@@ -238,9 +239,9 @@ impl PassphraseKeyboard {
         // Apply all button states
         self.keypad.set_keys_state(ctx, &keys_state);
         self.keypad
-            .set_button_state(ctx, KeypadButton::Erase, erase_state);
+            .set_button_state(ctx, KeypadButton::Erase, &erase_state);
         self.keypad
-            .set_button_state(ctx, KeypadButton::Confirm, confirm_state);
+            .set_button_state(ctx, KeypadButton::Confirm, &confirm_state);
     }
 
     pub fn passphrase(&self) -> &str {
