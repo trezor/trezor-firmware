@@ -241,8 +241,6 @@ where
         } else {
             self.input.render(target);
         }
-
-        self.keypad.render(target);
     }
 }
 
@@ -256,12 +254,6 @@ pub trait MnemonicInput: Component<Msg = MnemonicInputMsg> {
     fn on_backspace_long_press(&mut self, ctx: &mut EventCtx);
     fn is_empty(&self) -> bool;
     fn mnemonic(&self) -> Option<&'static str>;
-}
-
-pub enum InputState {
-    ValidWord,
-    InvalidWord,
-    PartialWord,
 }
 
 pub enum MnemonicInputMsg {
