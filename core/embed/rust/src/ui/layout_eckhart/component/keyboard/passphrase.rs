@@ -181,6 +181,7 @@ impl PassphraseKeyboard {
         if self.multi_tap.pending_key().is_some() {
             // Clear the pending state.
             self.multi_tap.clear_pending_state(ctx);
+            self.input.marker = false;
             // the character has been added, show it for a bit and then hide it
             self.input
                 .last_char_timer
@@ -314,6 +315,7 @@ impl Component for PassphraseKeyboard {
                 if text.len() == 1 {
                     // If the key has just one character, it is immediately applied and the last
                     // digit timer should be started
+                    self.input.marker = false;
                     self.input
                         .last_char_timer
                         .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
@@ -358,6 +360,12 @@ impl Component for PassphraseKeyboard {
                 return None;
             }
             Some(PassphraseInputMsg::TouchEnd) => {
+                // Change display style according to the pending key state.
+                self.input.display_style = match self.multi_tap.pending_key() {
+                    Some(_) => DisplayStyle::LastOnly,
+                    None => DisplayStyle::Hidden,
+                };
+
                 // Enable keypad.
                 self.update_keypad_state(ctx);
                 return None;
@@ -563,6 +571,8 @@ impl Component for PassphraseInput {
         match event {
             // Return touch start if the touch is detected inside the touchable area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
+                // Stop the last char timer
+                self.last_char_timer.stop();
                 // Show the entire passphrase on the touch start
                 self.display_style = DisplayStyle::Shown;
                 self.update_shown_area();
@@ -572,14 +582,12 @@ impl Component for PassphraseInput {
             Event::Touch(TouchEvent::TouchEnd(pos))
                 if self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
             {
-                self.display_style = DisplayStyle::Hidden;
                 return Some(PassphraseInputMsg::TouchEnd);
             }
             // Return touch end if the touch moves out of the visible area
             Event::Touch(TouchEvent::TouchMove(pos))
                 if !self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
             {
-                self.display_style = DisplayStyle::Hidden;
                 return Some(PassphraseInputMsg::TouchEnd);
             }
             // Timeout for showing the last char.
