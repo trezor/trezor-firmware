@@ -2,7 +2,6 @@ use crate::{
     trezorhal::random,
     ui::{
         component::{Component, Event, EventCtx, Maybe},
-        display::Color,
         geometry::{Alignment, Insets, Offset, Rect},
         shape::Renderer,
     },
@@ -13,94 +12,6 @@ use super::super::super::{
     constant::SCREEN,
     theme,
 };
-
-struct MaybeButton {
-    button: Maybe<Button>,
-}
-impl Component for MaybeButton {
-    type Msg = ButtonMsg;
-
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.button.place(bounds)
-    }
-
-    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.button.event(ctx, event)
-    }
-
-    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        // Render only if visible.
-        if self.button.is_visible() {
-            self.button.render(target);
-        }
-    }
-}
-
-impl MaybeButton {
-    pub fn new(bg_color: Color, inner: Button, visible: bool) -> Self {
-        Self {
-            button: Maybe::new(bg_color, inner, visible),
-        }
-    }
-
-    pub fn set_state(&mut self, ctx: &mut EventCtx, state: &ButtonState) {
-        match state {
-            ButtonState::Enabled => {
-                self.show(ctx);
-                self.enable(ctx);
-            }
-            ButtonState::Disabled => {
-                self.show(ctx);
-                self.disable(ctx);
-            }
-            ButtonState::Hidden => {
-                self.hide(ctx);
-            }
-        }
-    }
-
-    pub fn hidden(bg_color: Color, inner: Button) -> Self {
-        Self {
-            button: Maybe::hidden(bg_color, inner),
-        }
-    }
-
-    pub fn shown(bg_color: Color, inner: Button) -> Self {
-        Self::new(bg_color, inner, true)
-    }
-
-    pub fn enable(&mut self, ctx: &mut EventCtx) {
-        self.button.inner_mut().enable(ctx);
-    }
-
-    pub fn disable(&mut self, ctx: &mut EventCtx) {
-        self.button.inner_mut().disable(ctx);
-    }
-
-    pub fn hide(&mut self, ctx: &mut EventCtx) {
-        self.button.hide(ctx);
-    }
-
-    pub fn show(&mut self, ctx: &mut EventCtx) {
-        self.button.show(ctx);
-    }
-
-    pub fn set_stylesheet(&mut self, styles: ButtonStyleSheet) {
-        self.button.inner_mut().set_stylesheet(styles);
-    }
-
-    pub fn content(&self) -> &ButtonContent {
-        &self.button.inner().content()
-    }
-
-    pub fn set_expanded_touch_area(&mut self, insets: Insets) {
-        self.button.inner_mut().set_expanded_touch_area(insets);
-    }
-
-    pub fn set_content(&mut self, content: ButtonContent) {
-        self.button.inner_mut().set_content(content);
-    }
-}
 
 #[derive(PartialEq)]
 pub enum KeypadButton {
@@ -118,13 +29,13 @@ pub enum ButtonState {
 }
 
 const KEYPAD_MAX_KEYS: usize = 10;
-type KeypadKeys = [MaybeButton; KEYPAD_MAX_KEYS];
+type KeypadKeys = [Maybe<Button>; KEYPAD_MAX_KEYS];
 
 pub struct Keypad {
-    back: MaybeButton,
-    erase: MaybeButton,
-    cancel: MaybeButton,
-    confirm: MaybeButton,
+    back: Maybe<Button>,
+    erase: Maybe<Button>,
+    cancel: Maybe<Button>,
+    confirm: Maybe<Button>,
     keys: KeypadKeys,
     pressed: Option<KeypadButton>,
 }
@@ -177,28 +88,28 @@ impl Keypad {
     fn new_inner(enabled: bool, visible: bool, styles: ButtonStyleSheet) -> Self {
         Self {
             // Special buttons are hidden by default.
-            back: MaybeButton::hidden(
+            back: Maybe::hidden(
                 theme::BG,
                 Button::with_icon(theme::ICON_CHEVRON_LEFT)
                     .styled(theme::button_keyboard_numeric())
                     .with_radius(Self::KEYBOARD_BUTTON_RADIUS)
                     .initially_enabled(false),
             ),
-            cancel: MaybeButton::hidden(
+            cancel: Maybe::hidden(
                 theme::BG,
                 Button::with_icon(theme::ICON_CROSS)
                     .styled(theme::button_cancel())
                     .with_radius(Self::KEYBOARD_BUTTON_RADIUS)
                     .initially_enabled(false),
             ),
-            confirm: MaybeButton::hidden(
+            confirm: Maybe::hidden(
                 theme::BG,
                 Button::with_icon(theme::ICON_CHECKMARK)
                     .styled(theme::button_keyboard_confirm())
                     .with_radius(Self::KEYBOARD_BUTTON_RADIUS)
                     .initially_enabled(false),
             ),
-            erase: MaybeButton::hidden(
+            erase: Maybe::hidden(
                 theme::BG,
                 Button::with_icon(theme::ICON_DELETE)
                     .styled(theme::button_keyboard())
@@ -213,7 +124,7 @@ impl Keypad {
                     .styled(styles)
                     .with_text_align(Alignment::Center)
                     .initially_enabled(enabled);
-                MaybeButton::new(theme::BG, inner, visible)
+                Maybe::new(theme::BG, inner, visible)
             }),
             pressed: None,
         }
@@ -225,7 +136,7 @@ impl Keypad {
         debug_assert!(keypad_content.len() <= Self::MAX_KEYS);
 
         for (i, key_content) in keypad_content.into_iter().enumerate() {
-            self.keys[i].set_content(key_content.clone());
+            self.keys[i].inner_mut().set_content(key_content.clone());
         }
         self
     }
@@ -235,7 +146,7 @@ impl Keypad {
         // Make sure the index is within bounds.
         debug_assert!(idx < Self::MAX_KEYS);
 
-        &self.keys[idx].content()
+        &self.keys[idx].inner().content()
     }
 
     // Set the content of a key at the specified index.
@@ -243,19 +154,12 @@ impl Keypad {
         // Make sure the index is within bounds.
         debug_assert!(idx < Self::MAX_KEYS);
 
-        self.keys[idx].set_content(content);
-    }
-
-    // Set the state of all key buttons
-    pub fn set_keys_state(&mut self, ctx: &mut EventCtx, state: &ButtonState) {
-        for btn in self.keys.iter_mut() {
-            btn.set_state(ctx, state);
-        }
+        self.keys[idx].inner_mut().set_content(content);
     }
 
     pub fn set_button_stylesheet(&mut self, button: KeypadButton, styles: ButtonStyleSheet) {
-        let apply_state = |btn: &mut MaybeButton, styles: ButtonStyleSheet| {
-            btn.set_stylesheet(styles);
+        let apply_state = |btn: &mut Maybe<Button>, styles: ButtonStyleSheet| {
+            btn.inner_mut().set_stylesheet(styles);
         };
 
         match button {
@@ -267,33 +171,41 @@ impl Keypad {
         }
     }
 
+    fn apply_button_state(btn: &mut Maybe<Button>, state: &ButtonState, ctx: &mut EventCtx) {
+        match state {
+            ButtonState::Enabled => {
+                btn.show(ctx);
+                btn.inner_mut().enable(ctx);
+            }
+            ButtonState::Disabled => {
+                btn.show(ctx);
+                btn.inner_mut().disable(ctx);
+            }
+            ButtonState::Hidden => {
+                btn.hide(ctx);
+            }
+        }
+    }
+
+    // Set the state of all key buttons
+    pub fn set_keys_state(&mut self, ctx: &mut EventCtx, state: &ButtonState) {
+        for btn in self.keys.iter_mut() {
+            Self::apply_button_state(btn, state, ctx);
+        }
+    }
+
     pub fn set_button_state(
         &mut self,
         ctx: &mut EventCtx,
         button: KeypadButton,
-        state: ButtonState,
+        state: &ButtonState,
     ) {
-        let apply_state =
-            |btn: &mut MaybeButton, state: ButtonState, ctx: &mut EventCtx| match state {
-                ButtonState::Enabled => {
-                    btn.show(ctx);
-                    btn.enable(ctx);
-                }
-                ButtonState::Disabled => {
-                    btn.show(ctx);
-                    btn.disable(ctx);
-                }
-                ButtonState::Hidden => {
-                    btn.hide(ctx);
-                }
-            };
-
         match button {
-            KeypadButton::Key(idx) => apply_state(&mut self.keys[idx], state, ctx),
-            KeypadButton::Erase => apply_state(&mut self.erase, state, ctx),
-            KeypadButton::Cancel => apply_state(&mut self.cancel, state, ctx),
-            KeypadButton::Confirm => apply_state(&mut self.confirm, state, ctx),
-            KeypadButton::Back => apply_state(&mut self.back, state, ctx),
+            KeypadButton::Key(idx) => Self::apply_button_state(&mut self.keys[idx], state, ctx),
+            KeypadButton::Erase => Self::apply_button_state(&mut self.erase, state, ctx),
+            KeypadButton::Cancel => Self::apply_button_state(&mut self.cancel, state, ctx),
+            KeypadButton::Confirm => Self::apply_button_state(&mut self.confirm, state, ctx),
+            KeypadButton::Back => Self::apply_button_state(&mut self.back, state, ctx),
         }
     }
 
@@ -346,13 +258,22 @@ impl Component for Keypad {
         let erase_touch_inset = keypad_grid.insets_of_cell(Self::ERASE_BUTTON_INDEX);
         let confirm_touch_inset = keypad_grid.insets_of_cell(Self::CONFIRM_BUTTON_INDEX);
 
-        self.erase.set_expanded_touch_area(erase_touch_inset);
-        self.cancel.set_expanded_touch_area(erase_touch_inset);
-        self.back.set_expanded_touch_area(erase_touch_inset);
-        self.confirm.set_expanded_touch_area(confirm_touch_inset);
+        self.erase
+            .inner_mut()
+            .set_expanded_touch_area(erase_touch_inset);
+        self.cancel
+            .inner_mut()
+            .set_expanded_touch_area(erase_touch_inset);
+        self.back
+            .inner_mut()
+            .set_expanded_touch_area(erase_touch_inset);
+        self.confirm
+            .inner_mut()
+            .set_expanded_touch_area(confirm_touch_inset);
 
         for (i, btn) in self.keys.iter_mut().enumerate() {
-            btn.set_expanded_touch_area(keypad_grid.insets_of_cell(Self::key_2_grid_cell(i)));
+            btn.inner_mut()
+                .set_expanded_touch_area(keypad_grid.insets_of_cell(Self::key_2_grid_cell(i)));
         }
 
         // Place buttons
