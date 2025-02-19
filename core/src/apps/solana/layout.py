@@ -349,6 +349,42 @@ async def confirm_custom_transaction(
     )
 
 
+async def confirm_stake_transaction() -> None:
+    # TODO: properly display transaction items
+    await confirm_value(
+        title=TR.words__recipient,
+        value="",
+        description="Stake SOL on Everstake?",
+        br_name="confirm_recipient",
+        br_code=ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__continue,
+    )
+
+
+async def confirm_unstake_transaction() -> None:
+    # TODO: properly display transaction items
+    await confirm_value(
+        title=TR.words__recipient,
+        value="",
+        description="Unstake SOL on Everstake?",
+        br_name="confirm_recipient",
+        br_code=ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__continue,
+    )
+
+
+async def confirm_claim_transaction() -> None:
+    # TODO: properly display transaction items
+    await confirm_value(
+        title=TR.words__recipient,
+        value="",
+        description="Withdraw SOL stake?",
+        br_name="confirm_recipient",
+        br_code=ButtonRequestType.ConfirmOutput,
+        verb=TR.buttons__continue,
+    )
+
+
 async def confirm_transaction(
     signer_path: list[int], blockhash: bytes, fee: int
 ) -> None:

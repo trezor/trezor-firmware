@@ -9,6 +9,7 @@ from .transaction.instructions import (
     Token2022ProgramTransferCheckedInstruction,
     TokenProgramTransferCheckedInstruction,
 )
+from .types import StakeType
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaTxAdditionalInfo
@@ -38,6 +39,66 @@ def get_create_associated_token_account_instructions(
         for instruction in instructions
         if AssociatedTokenAccountProgramCreateInstruction.is_type_of(instruction)
     ]
+
+
+def is_transaction_staking(instructions: list[Instruction]) -> bool:
+    from .transaction.instructions import (
+        ComputeBudgetProgramSetComputeUnitPriceInstruction,
+        StakeProgramDelegateStakeInstruction,
+        StakeProgramInitializeInstruction,
+        SystemProgramCreateAccountWithSeedInstruction,
+    )
+
+    return (
+        len(instructions) == 4
+        and ComputeBudgetProgramSetComputeUnitPriceInstruction.is_type_of(
+            instructions[0]
+        )
+        and SystemProgramCreateAccountWithSeedInstruction.is_type_of(instructions[1])
+        and StakeProgramInitializeInstruction.is_type_of(instructions[2])
+        and StakeProgramDelegateStakeInstruction.is_type_of(instructions[3])
+    )
+
+
+def is_transaction_unstaking(instructions: list[Instruction]) -> bool:
+    from .transaction.instructions import (
+        ComputeBudgetProgramSetComputeUnitPriceInstruction,
+        StakeProgramDeactivateInstruction,
+    )
+
+    return (
+        len(instructions) == 2
+        and ComputeBudgetProgramSetComputeUnitPriceInstruction.is_type_of(
+            instructions[0]
+        )
+        and StakeProgramDeactivateInstruction.is_type_of(instructions[1])
+    )
+
+
+def is_transaction_claiming(instructions: list[Instruction]) -> bool:
+    from .transaction.instructions import (
+        ComputeBudgetProgramSetComputeUnitPriceInstruction,
+        StakeProgramWithdrawInstruction,
+    )
+
+    return (
+        len(instructions) == 2
+        and ComputeBudgetProgramSetComputeUnitPriceInstruction.is_type_of(
+            instructions[0]
+        )
+        and StakeProgramWithdrawInstruction.is_type_of(instructions[1])
+    )
+
+
+def get_transaction_stake_type(instructions: list[Instruction]) -> StakeType | None:
+    if is_transaction_staking(instructions):
+        return StakeType.Stake
+    elif is_transaction_unstaking(instructions):
+        return StakeType.Unstake
+    elif is_transaction_claiming(instructions):
+        return StakeType.Claim
+    else:
+        return None
 
 
 def is_predefined_token_transfer(
@@ -189,6 +250,31 @@ async def try_confirm_predefined_transaction(
             await confirm_system_transfer(instructions[0], fee, signer_path, blockhash)
             return True
 
+    stake_type = get_transaction_stake_type(transaction.instructions)
+    if stake_type is not None:
+        await confirm_stake_type_transaction(transaction, stake_type)
+        return True
+
     return await try_confirm_token_transfer_transaction(
         transaction, fee, signer_path, blockhash, additional_info
     )
+
+
+async def confirm_stake_type_transaction(
+    transaction: Transaction, stake_type: StakeType
+) -> None:
+    from .layout import (
+        confirm_claim_transaction,
+        confirm_stake_transaction,
+        confirm_unstake_transaction,
+    )
+
+    # TODO: extract and pass proper info to layout functions
+    if stake_type == StakeType.Stake:
+        await confirm_stake_transaction()
+    elif stake_type == StakeType.Unstake:
+        await confirm_unstake_transaction()
+    elif stake_type == StakeType.Claim:
+        await confirm_claim_transaction()
+    else:
+        raise ValueError("Invalid stake type")  # TODO
