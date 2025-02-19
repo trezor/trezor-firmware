@@ -63,8 +63,8 @@ pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
     let content_confirm_empty = TextScreen::new(FormattedText::new(op_confirm))
         .with_header(Header::new("".into()))
         .with_action_bar(ActionBar::new_double(
-            Button::with_icon(theme::ICON_CROSS),
-            Button::with_icon(theme::ICON_CHECKMARK),
+            Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
+            Button::with_icon(theme::ICON_CHECKMARK).styled(theme::button_confirm()),
         ))
         .map(|msg| match msg {
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
