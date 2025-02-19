@@ -92,6 +92,10 @@ include_icon!(ICON_BORDER_BR, "layout_eckhart/res/border/BR.toif");
 include_icon!(ICON_BORDER_TL, "layout_eckhart/res/border/TL.toif");
 include_icon!(ICON_BORDER_TR, "layout_eckhart/res/border/TR.toif");
 
+// Icons for number input screen
+include_icon!(ICON_PLUS, "layout_eckhart/res/plus.toif");
+include_icon!(ICON_MINUS, "layout_eckhart/res/minus.toif");
+
 // Text styles
 /// Alias for use with copied code, might be deleted later
 pub const TEXT_NORMAL: TextStyle = TEXT_MEDIUM;
