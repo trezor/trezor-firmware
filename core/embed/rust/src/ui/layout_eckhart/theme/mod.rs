@@ -215,6 +215,32 @@ pub const fn button_confirm() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_cancel() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
+            text_color: ORANGE,                   // unused
+            button_color: BG,
+            icon_color: ORANGE,
+            background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
+            text_color: ORANGE_DIMMED,            //unused
+            button_color: ORANGE_EXTRA_DARK,
+            icon_color: ORANGE_DIMMED,
+            background_color: ORANGE_EXTRA_DARK,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
+            text_color: GREY_EXTRA_DARK,          // unused
+            button_color: BG,
+            icon_color: GREY_EXTRA_DARK,
+            background_color: BG,
+        },
+    }
+}
+
 pub const fn button_warning_high() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
@@ -379,32 +405,6 @@ pub const fn button_keyboard_numeric() -> ButtonStyleSheet {
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_EXTRALIGHT_72,
             text_color: GREY_EXTRA_DARK,
-            button_color: BG,
-            icon_color: GREY_EXTRA_DARK,
-            background_color: BG,
-        },
-    }
-}
-
-pub const fn button_keyboard_cancel() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
-            text_color: ORANGE,                   // unused
-            button_color: BG,
-            icon_color: ORANGE,
-            background_color: BG,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
-            text_color: ORANGE_DIMMED,            //unused
-            button_color: ORANGE_EXTRA_DARK,
-            icon_color: ORANGE_DIMMED,
-            background_color: BG,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
-            text_color: GREY_EXTRA_DARK,          // unused
             button_color: BG,
             icon_color: GREY_EXTRA_DARK,
             background_color: BG,
