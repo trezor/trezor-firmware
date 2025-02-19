@@ -94,7 +94,6 @@ pub struct PassphraseKeyboard {
     active_layout: KeyboardLayout,
     swipe_config: SwipeConfig,
     multi_tap: MultiTapKeyboard,
-    pager: Pager,
 }
 
 const PAGE_COUNT: usize = 4;
@@ -141,7 +140,6 @@ impl PassphraseKeyboard {
             active_layout,
             swipe_config: SwipeConfig::new(),
             multi_tap: MultiTapKeyboard::new(),
-            pager: Pager::single_page(),
         }
     }
 
@@ -610,7 +608,7 @@ impl Swipable for PassphraseKeyboard {
     }
 
     fn get_pager(&self) -> Pager {
-        self.pager
+        Pager::single_page()
     }
 }
 
