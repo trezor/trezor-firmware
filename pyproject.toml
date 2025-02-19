@@ -104,5 +104,5 @@ extra_standard_library = [
   "trezorconfig",
   "trezorcrypto",
 ]
-known_first_party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests", "gitlab"]
+known_first_party = ["trezorlib", "apps", "coin_info", "marketcap", "ui_tests"]
 known_third_party = ["trezor", "storage"]
