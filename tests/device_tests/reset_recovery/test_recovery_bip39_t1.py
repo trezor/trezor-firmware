@@ -77,9 +77,9 @@ def test_pin_passphrase(session: Session):
     assert fakes == 12
     assert mnemonic == [None] * 12
 
-    raise Exception("TEST IS USING INIT MESSAGE - TODO CHANGE")
     # Mnemonic is the same
-    session.init_device()
+    session.init_session()
+    session.client.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
     assert session.features.pin_protection is True
@@ -131,10 +131,9 @@ def test_nopin_nopassphrase(session: Session):
     assert fakes == 12
     assert mnemonic == [None] * 12
 
-    raise Exception("TEST IS USING INIT MESSAGE - TODO CHANGE")
-
     # Mnemonic is the same
-    # session.init_device()
+    session.init_session()
+    session.client.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
     assert session.features.pin_protection is False

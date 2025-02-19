@@ -133,7 +133,6 @@ def test_change_pin_t1(session: Session):
                 _pin_request(session),
                 _pin_request(session),
                 messages.Success,
-                messages.Features,
             ]
         )
         device.change_pin(session)

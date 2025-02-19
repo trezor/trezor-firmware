@@ -54,8 +54,8 @@ def reset_device(session: Session, strength: int):
     mnemonic = []
     for _ in range(strength // 32 * 3):
         assert isinstance(ret, messages.ButtonRequest)
-        mnemonic.append(session.debug.read_reset_word())
-        session.debug.press_yes()
+        mnemonic.append(session.client.debug.read_reset_word())
+        session.client.debug.press_yes()
         session.call_raw(messages.ButtonAck())
 
     mnemonic = " ".join(mnemonic)
@@ -66,7 +66,7 @@ def reset_device(session: Session, strength: int):
     mnemonic = []
     for _ in range(strength // 32 * 3):
         assert isinstance(ret, messages.ButtonRequest)
-        mnemonic.append(session.debug.read_reset_word())
+        mnemonic.append(session.client.debug.read_reset_word())
         debug.press_yes()
         resp = session.call_raw(messages.ButtonAck())
 
@@ -78,7 +78,7 @@ def reset_device(session: Session, strength: int):
     assert mnemonic == expected_mnemonic
 
     # Check if device is properly initialized
-    resp = session.call_raw(messages.GetFeatures())
+    resp = session.call_raw(messages.Initialize())
     assert resp.initialized is True
     assert resp.backup_availability == messages.BackupAvailability.NotAvailable
     assert resp.pin_protection is False
@@ -170,7 +170,7 @@ def test_reset_device_256_pin(session: Session):
     assert mnemonic == expected_mnemonic
 
     # Check if device is properly initialized
-    resp = session.call_raw(messages.GetFeatures())
+    resp = session.call_raw(messages.Initialize())
     assert resp.initialized is True
     assert resp.backup_availability == messages.BackupAvailability.NotAvailable
     assert resp.pin_protection is True

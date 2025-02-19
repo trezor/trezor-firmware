@@ -160,13 +160,13 @@ def test_get_public_node_show_legacy(
 
     with client:
         # test XPUB display flow (without showing QR code)
-        res = btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
+        res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub
 
         # test XPUB QR code display using the input flow above
         client.set_input_flow(input_flow)
-        res = btc.get_public_node(client, path, coin_name=coin_name, show_display=True)
+        res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub
 

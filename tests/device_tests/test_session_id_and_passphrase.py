@@ -324,16 +324,18 @@ def test_passphrase_always_on_device(client: Client):
 
 @pytest.mark.models("legacy")
 @pytest.mark.setup_client(passphrase="")
-def test_passphrase_on_device_not_possible_on_t1(client: Client):
+def test_passphrase_on_device_not_possible_on_t1(session: Session):
     # This setting makes no sense on T1.
-    response = client.call_raw(messages.ApplySettings(passphrase_always_on_device=True))
+    response = session.call_raw(
+        messages.ApplySettings(passphrase_always_on_device=True)
+    )
     assert isinstance(response, messages.Failure)
     assert response.code == FailureType.DataError
 
     # T1 should not accept on_device request
-    response = client.call_raw(XPUB_REQUEST)
+    response = session.call_raw(XPUB_REQUEST)
     assert isinstance(response, messages.PassphraseRequest)
-    response = client.call_raw(messages.PassphraseAck(on_device=True))
+    response = session.call_raw(messages.PassphraseAck(on_device=True))
     assert isinstance(response, messages.Failure)
     assert response.code == FailureType.DataError
 

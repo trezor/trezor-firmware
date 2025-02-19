@@ -59,13 +59,13 @@ def test_show_t1(
 ):
     def input_flow_t1():
         yield
-        session.debug.press_no()
+        session.client.debug.press_no()
         yield
-        session.debug.press_yes()
+        session.client.debug.press_yes()
 
-    with session:
+    with session.client as client:
         # This is the only place where even T1 is using input flow
-        session.set_input_flow(input_flow_t1)
+        client.set_input_flow(input_flow_t1)
         assert (
             btc.get_address(
                 session,

@@ -61,7 +61,6 @@ def test_set_pin(session: Session):
                 messages.PinMatrixRequest,
                 messages.PinMatrixRequest,
                 messages.Success,
-                messages.Features,
             ]
         )
         device.change_pin(session)
@@ -88,7 +87,6 @@ def test_change_pin(session: Session):
                 messages.PinMatrixRequest,
                 messages.PinMatrixRequest,
                 messages.Success,
-                messages.Features,
             ]
         )
         device.change_pin(session)
@@ -113,7 +111,6 @@ def test_remove_pin(session: Session):
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.PinMatrixRequest,
                 messages.Success,
-                messages.Features,
             ]
         )
         device.change_pin(session, remove=True)
@@ -199,7 +196,7 @@ def test_set_invalid(session: Session, invalid_pin):
 
     # Check that there's still no PIN protection now
     # TODO change session.init_device()
-    session.refresh_features()
+    session.init_session()
     assert session.features.pin_protection is False
     _check_no_pin(session)
 
