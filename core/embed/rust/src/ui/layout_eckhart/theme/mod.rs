@@ -424,9 +424,9 @@ pub const fn button_keyboard_confirm() -> ButtonStyleSheet {
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_22, // unused
             text_color: GREEN,                    // unused
-            button_color: GREEN_DARK,
+            button_color: GREEN_EXTRA_DARK,
             icon_color: GREEN,
-            background_color: GREEN_DARK,
+            background_color: GREEN_EXTRA_DARK,
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_22, // unused
