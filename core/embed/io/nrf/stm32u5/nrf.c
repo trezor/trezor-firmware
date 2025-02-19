@@ -307,8 +307,6 @@ void nrf_init(void) {
   drv->tx_request_id = -1;
   drv->initialized = true;
 
-  nrf_reboot();
-
   nrf_start();
 }
 
