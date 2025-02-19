@@ -187,7 +187,7 @@ impl Keypad {
             cancel: MaybeButton::hidden(
                 theme::BG,
                 Button::with_icon(theme::ICON_CROSS)
-                    .styled(theme::button_keyboard_cancel())
+                    .styled(theme::button_cancel())
                     .with_radius(Self::KEYBOARD_BUTTON_RADIUS)
                     .initially_enabled(false),
             ),
