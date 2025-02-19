@@ -63,6 +63,47 @@ def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None
             debug.press_right()
 
 
+def cancel_select_number_of_words(
+    debug: "DebugLink",
+    unlock_repeated_backup=False,
+) -> None:
+    def select_bolt() -> "LayoutContent":
+        # click the button from ValuePad
+        if unlock_repeated_backup:
+            coords = buttons.grid34(0, 2)
+        else:
+            coords = buttons.grid34(0, 3)
+        debug.click(coords)
+        return debug.read_layout()
+
+    def select_caesar() -> "LayoutContent":
+        # navigate to the number and confirm it
+        debug.press_left()
+        return debug.read_layout()
+
+    def select_delizia() -> "LayoutContent":
+        # click the button from ValuePad
+        if unlock_repeated_backup:
+            coords = buttons.grid34(0, 3)
+        else:
+            coords = buttons.grid34(0, 3)
+        debug.click(coords)
+        return debug.read_layout()
+
+    if debug.layout_type is LayoutType.Bolt:
+        assert debug.read_layout().text_content() == TR.recovery__num_of_words
+        layout = select_bolt()
+    elif debug.layout_type is LayoutType.Caesar:
+        debug.press_right()
+        layout = debug.read_layout()
+        assert layout.title() == TR.word_count__title
+        layout = select_caesar()
+    elif debug.layout_type is LayoutType.Delizia:
+        layout = select_delizia()
+    else:
+        raise ValueError("Unknown model")
+
+
 def select_number_of_words(
     debug: "DebugLink",
     num_of_words: int = 20,
@@ -71,14 +112,14 @@ def select_number_of_words(
     def select_bolt() -> "LayoutContent":
         # click the button from ValuePad
         if unlock_repeated_backup:
-            coords_map = {20: buttons.grid34(0, 2), 33: buttons.grid34(1, 2)}
+            coords_map = {20: buttons.grid34(1, 2), 33: buttons.grid34(2, 2)}
         else:
             coords_map = {
                 12: buttons.grid34(0, 2),
                 18: buttons.grid34(1, 2),
                 20: buttons.grid34(2, 2),
-                24: buttons.grid34(0, 3),
-                33: buttons.grid34(1, 3),
+                24: buttons.grid34(1, 3),
+                33: buttons.grid34(2, 3),
             }
         coords = coords_map.get(num_of_words)
         if coords is None:
@@ -98,14 +139,14 @@ def select_number_of_words(
     def select_delizia() -> "LayoutContent":
         # click the button from ValuePad
         if unlock_repeated_backup:
-            coords_map = {20: buttons.NO_UI_DELIZIA, 33: buttons.YES_UI_DELIZIA}
+            coords_map = {20: buttons.grid34(0, 1), 33: buttons.grid34(2, 1)}
         else:
             coords_map = {
                 12: buttons.grid34(0, 1),
                 18: buttons.grid34(2, 1),
                 20: buttons.grid34(0, 2),
                 24: buttons.grid34(2, 2),
-                33: buttons.grid34(1, 3),
+                33: buttons.grid34(2, 3),
             }
         coords = coords_map.get(num_of_words)
         if coords is None:
