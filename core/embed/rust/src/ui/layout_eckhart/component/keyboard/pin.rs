@@ -448,6 +448,8 @@ impl Component for PinInput {
         match event {
             // Return touch start if the touch is detected inside the touchable area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
+                // Stop the last char timer
+                self.last_digit_timer.stop();
                 // Show the entire pin on the touch start
                 self.display_style = DisplayStyle::Shown;
                 self.update_shown_area();
