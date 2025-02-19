@@ -241,6 +241,8 @@ apps.benchmark.curve_benchmark
 import apps.benchmark.curve_benchmark
 apps.benchmark.hash_benchmark
 import apps.benchmark.hash_benchmark
+apps.benchmark.kem_benchmark
+import apps.benchmark.kem_benchmark
 apps.benchmark.list_names
 import apps.benchmark.list_names
 apps.benchmark.run

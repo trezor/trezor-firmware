@@ -74,6 +74,7 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #include "modtrezorcrypto-monero.h"
 #include "modtrezorcrypto-nem.h"
 #endif
+#include "modtrezorcrypto-mlkem.h"
 
 STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_trezorcrypto)},
@@ -135,6 +136,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
 #if USE_OPTIGA
     {MP_ROM_QSTR(MP_QSTR_optiga), MP_ROM_PTR(&mod_trezorcrypto_optiga_module)},
 #endif
+    {MP_ROM_QSTR(MP_QSTR_mlkem), MP_ROM_PTR(&mod_trezorcrypto_mlkem_module)},
 };
 STATIC MP_DEFINE_CONST_DICT(mp_module_trezorcrypto_globals,
                             mp_module_trezorcrypto_globals_table);
