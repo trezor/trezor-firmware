@@ -127,6 +127,7 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     recovery.confirm_recovery(debug, title="recovery__title_dry_run")
     # select number of words
     recovery.select_number_of_words(debug, num_of_words=12)
+    device_handler.client.transport.close()
     # abort the process running the recovery from host
     device_handler.kill_task()
 
@@ -134,7 +135,7 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     # from the host side.
 
     # Reopen client and debuglink, closed by kill_task
-    device_handler.client.open()
+    device_handler.client.transport.open()
     debug = device_handler.debuglink()
 
     # Ping the Trezor with an Initialize message (listed in DO_NOT_RESTART)
@@ -145,7 +146,9 @@ def test_recovery_cancel_issue4613(device_handler: "BackgroundDeviceHandler"):
     except exceptions.Cancelled:
         # due to a related problem, the first call in this situation will return
         # a Cancelled failure. This test does not care, we just retry.
-        features = device_handler.client.call(messages.Initialize())
+        features = device_handler.client.get_seedless_session().call(
+            messages.Initialize()
+        )
 
     assert features.recovery_status == messages.RecoveryStatus.Recovery
     # Trezor is sitting in recovery_homescreen now, waiting for the user to select
