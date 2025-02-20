@@ -56,7 +56,7 @@ void connected(struct bt_conn *conn, uint8_t err) {
   //   LOG_ERR("Phy update request failed: %d",  err);
   // }
 
-  management_send_status_event();
+  ble_management_send_status_event();
 }
 
 void disconnected(struct bt_conn *conn, uint8_t reason) {
@@ -73,7 +73,7 @@ void disconnected(struct bt_conn *conn, uint8_t reason) {
     current_conn = NULL;
   }
 
-  management_send_status_event();
+  ble_management_send_status_event();
 }
 
 static void security_changed(struct bt_conn *conn, bt_security_t level,

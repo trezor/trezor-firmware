@@ -129,32 +129,32 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
   }
   if (err) {
     LOG_ERR("Advertising failed to start (err %d)", err);
-    management_send_status_event();
+    ble_management_send_status_event();
     return;
   }
   advertising = true;
   advertising_wl = wl;
 
-  management_send_status_event();
+  ble_management_send_status_event();
 }
 
 void advertising_stop(void) {
   if (!advertising) {
     LOG_WRN("Not advertising");
 
-    management_send_status_event();
+    ble_management_send_status_event();
     return;
   }
 
   int err = bt_le_adv_stop();
   if (err) {
     LOG_ERR("Advertising failed to stop (err %d)", err);
-    management_send_status_event();
+    ble_management_send_status_event();
     return;
   }
   advertising = false;
   advertising_wl = false;
-  management_send_status_event();
+  ble_management_send_status_event();
 }
 
 bool advertising_is_advertising(void) { return advertising; }
