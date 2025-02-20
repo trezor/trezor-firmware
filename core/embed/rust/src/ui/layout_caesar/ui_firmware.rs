@@ -548,15 +548,19 @@ impl FirmwareUI for UICaesar {
                     // Total amount + fee
                     let (btn_layout, btn_actions) = btns_summary_page(!info_pages.is_empty());
 
-                    let ops = OpTextLayout::new(theme::TEXT_MONO)
+                    let mut ops = OpTextLayout::new(theme::TEXT_MONO)
                         .text(amount_label, fonts::FONT_BOLD)
                         .newline()
-                        .text(amount, fonts::FONT_MONO)
-                        .newline()
-                        .newline()
-                        .text(fee_label, fonts::FONT_BOLD)
-                        .newline()
-                        .text(fee, fonts::FONT_MONO);
+                        .text(amount, fonts::FONT_MONO);
+
+                    if !fee_label.is_empty() || !fee.is_empty() {
+                        ops = ops
+                            .newline()
+                            .newline()
+                            .text(fee_label, fonts::FONT_BOLD)
+                            .newline()
+                            .text(fee, fonts::FONT_MONO);
+                    }
 
                     let formatted = FormattedText::new(ops);
                     Page::new(btn_layout, btn_actions, formatted)
