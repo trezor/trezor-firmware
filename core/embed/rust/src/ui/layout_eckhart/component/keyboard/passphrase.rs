@@ -140,7 +140,7 @@ impl PassphraseKeyboard {
             keypad: Keypad::new_shown().with_keys_content(&keypad_content),
             active_layout,
             swipe_config: SwipeConfig::new(),
-            multi_tap: MultiTapKeyboard::new(),
+            multi_tap: MultiTapKeyboard::new().with_short_key_timeout(),
         }
     }
 
@@ -178,15 +178,10 @@ impl PassphraseKeyboard {
             Direction::Right => self.active_layout.prev(),
             _ => self.active_layout,
         };
-        if self.multi_tap.pending_key().is_some() {
-            // Clear the pending state.
-            self.multi_tap.clear_pending_state(ctx);
-            self.input.marker = false;
-            // the character has been added, show it for a bit and then hide it
-            self.input
-                .last_char_timer
-                .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
-        }
+        // Clear pending state and hide the passphrase.
+        self.multi_tap.clear_pending_state(ctx);
+        self.input.marker = false;
+        self.input.display_style = DisplayStyle::Hidden;
         // Update keys.
         self.replace_keys_contents();
     }
@@ -287,10 +282,9 @@ impl Component for PassphraseKeyboard {
             }
             Event::Timer(_) if self.multi_tap.timeout_event(event) => {
                 self.multi_tap.clear_pending_state(ctx);
-                self.input
-                    .last_char_timer
-                    .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
                 self.input.marker = false;
+                self.input.display_style = DisplayStyle::Hidden;
+                ctx.request_paint();
                 return None;
             }
 
@@ -313,15 +307,8 @@ impl Component for PassphraseKeyboard {
                 let edit = text.map(|c| self.multi_tap.click_key(ctx, idx, c));
                 self.input.textbox.apply(ctx, edit);
                 if text.len() == 1 {
-                    // If the key has just one character, it is immediately applied and the last
-                    // digit timer should be started
                     self.input.marker = false;
-                    self.input
-                        .last_char_timer
-                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
                 } else {
-                    // multi tap timer is runnig, the last digit timer should be stopped
-                    self.input.last_char_timer.stop();
                     self.input.marker = true;
                 }
                 self.input.display_style = DisplayStyle::LastOnly;
@@ -355,18 +342,11 @@ impl Component for PassphraseKeyboard {
 
         match self.input.event(ctx, event) {
             Some(PassphraseInputMsg::TouchStart) => {
-                // Disable keypad.
+                self.multi_tap.clear_pending_state(ctx);
                 self.update_keypad_state(ctx);
                 return None;
             }
             Some(PassphraseInputMsg::TouchEnd) => {
-                // Change display style according to the pending key state.
-                self.input.display_style = match self.multi_tap.pending_key() {
-                    Some(_) => DisplayStyle::LastOnly,
-                    None => DisplayStyle::Hidden,
-                };
-
-                // Enable keypad.
                 self.update_keypad_state(ctx);
                 return None;
             }
@@ -420,7 +400,6 @@ struct PassphraseInput {
     textbox: TextBox,
     display_style: DisplayStyle,
     marker: bool,
-    last_char_timer: Timer,
     shown_area: Rect,
 }
 
@@ -439,7 +418,6 @@ impl PassphraseInput {
             textbox: TextBox::empty(MAX_LENGTH),
             display_style: DisplayStyle::LastOnly,
             marker: false,
-            last_char_timer: Timer::new(),
             shown_area: Rect::zero(),
         }
     }
@@ -571,9 +549,6 @@ impl Component for PassphraseInput {
         match event {
             // Return touch start if the touch is detected inside the touchable area
             Event::Touch(TouchEvent::TouchStart(pos)) if self.area.contains(pos) => {
-                // Stop the last char timer
-                self.last_char_timer.stop();
-                // Show the entire passphrase on the touch start
                 self.display_style = DisplayStyle::Shown;
                 self.update_shown_area();
                 return Some(PassphraseInputMsg::TouchStart);
@@ -582,18 +557,15 @@ impl Component for PassphraseInput {
             Event::Touch(TouchEvent::TouchEnd(pos))
                 if self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
             {
+                self.display_style = DisplayStyle::Hidden;
                 return Some(PassphraseInputMsg::TouchEnd);
             }
             // Return touch end if the touch moves out of the visible area
             Event::Touch(TouchEvent::TouchMove(pos))
                 if !self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
             {
-                return Some(PassphraseInputMsg::TouchEnd);
-            }
-            // Timeout for showing the last char.
-            Event::Timer(_) if self.last_char_timer.expire(event) => {
                 self.display_style = DisplayStyle::Hidden;
-                ctx.request_paint();
+                return Some(PassphraseInputMsg::TouchEnd);
             }
             _ => {}
         };
