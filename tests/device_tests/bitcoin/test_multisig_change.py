@@ -19,7 +19,7 @@ from typing import Optional
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import H_, parse_path
 
 from ... import bip32
@@ -191,7 +191,7 @@ TX_API = {
 
 
 def _responses(
-    client: Client,
+    session: Session,
     INP1: messages.TxInputType,
     INP2: messages.TxInputType,
     change_indices: Optional[list[int]] = None,
@@ -212,7 +212,7 @@ def _responses(
         resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
     if 1 not in change_indices:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
-        if is_core(client):
+        if is_core(session):
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
 
     resp.append(request_output(1))
@@ -221,7 +221,7 @@ def _responses(
         resp.append(messages.ButtonRequest(code=B.UnknownDerivationPath))
     if 2 not in change_indices:
         resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
-        if is_core(client):
+        if is_core(session):
             resp.append(messages.ButtonRequest(code=B.ConfirmOutput))
 
     resp += [
@@ -250,7 +250,7 @@ def _responses(
 
 
 # both outputs are external
-def test_external_external(client: Client):
+def test_external_external(session: Session):
     out1 = messages.TxOutputType(
         address="1F8yBZB2NZhPZvJekhjTwjhQRRvQeTjjXr",
         amount=40_000_000,
@@ -263,10 +263,10 @@ def test_external_external(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(_responses(client, INP1, INP2))
+    with session:
+        session.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -275,7 +275,7 @@ def test_external_external(client: Client):
 
 
 # first external, second internal
-def test_external_internal(client: Client):
+def test_external_internal(session: Session):
     out1 = messages.TxOutputType(
         address="1F8yBZB2NZhPZvJekhjTwjhQRRvQeTjjXr",
         amount=40_000_000,
@@ -288,21 +288,21 @@ def test_external_internal(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session, session.client as client:
+        session.set_expected_responses(
             _responses(
-                client,
+                session,
                 INP1,
                 INP2,
                 change_indices=[],
                 foreign_indices=[2],
             )
         )
-        if is_core(client):
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -311,7 +311,7 @@ def test_external_internal(client: Client):
 
 
 # first internal, second external
-def test_internal_external(client: Client):
+def test_internal_external(session: Session):
     out1 = messages.TxOutputType(
         address_n=parse_path("m/45h/0/1/0"),
         amount=40_000_000,
@@ -324,21 +324,21 @@ def test_internal_external(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session, session.client as client:
+        session.set_expected_responses(
             _responses(
-                client,
+                session,
                 INP1,
                 INP2,
                 change_indices=[],
                 foreign_indices=[1],
             )
         )
-        if is_core(client):
+        if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -347,7 +347,7 @@ def test_internal_external(client: Client):
 
 
 # both outputs are external
-def test_multisig_external_external(client: Client):
+def test_multisig_external_external(session: Session):
     out1 = messages.TxOutputType(
         address="3B23k4kFBRtu49zvpG3Z9xuFzfpHvxBcwt",
         amount=40_000_000,
@@ -360,10 +360,10 @@ def test_multisig_external_external(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(_responses(client, INP1, INP2))
+    with session:
+        session.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -372,7 +372,7 @@ def test_multisig_external_external(client: Client):
 
 
 # inputs match, change matches (first is change)
-def test_multisig_change_match_first(client: Client):
+def test_multisig_change_match_first(session: Session):
     multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
         address_n=[1, 0],
@@ -393,12 +393,12 @@ def test_multisig_change_match_first(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
-            _responses(client, INP1, INP2, change_indices=[1])
+    with session:
+        session.set_expected_responses(
+            _responses(session, INP1, INP2, change_indices=[1])
         )
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -407,7 +407,7 @@ def test_multisig_change_match_first(client: Client):
 
 
 # inputs match, change matches (second is change)
-def test_multisig_change_match_second(client: Client):
+def test_multisig_change_match_second(session: Session):
     multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
         address_n=[1, 1],
@@ -428,12 +428,12 @@ def test_multisig_change_match_second(client: Client):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with client:
-        client.set_expected_responses(
-            _responses(client, INP1, INP2, change_indices=[2])
+    with session:
+        session.set_expected_responses(
+            _responses(session, INP1, INP2, change_indices=[2])
         )
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -442,7 +442,7 @@ def test_multisig_change_match_second(client: Client):
 
 
 # inputs match, change matches (first is change)
-def test_sorted_multisig_change_match_first(client: Client):
+def test_sorted_multisig_change_match_first(session: Session):
     multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_INT, NODE_EXT2],
         address_n=[1, 0],
@@ -464,12 +464,12 @@ def test_sorted_multisig_change_match_first(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
-            _responses(client, INP4, INP5, change_indices=[1])
+    with session:
+        session.set_expected_responses(
+            _responses(session, INP4, INP5, change_indices=[1])
         )
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP4, INP5],
             [out1, out2],
@@ -478,7 +478,7 @@ def test_sorted_multisig_change_match_first(client: Client):
 
 
 # inputs match, change mismatches (second tries to be change but isn't because the pubkeys are in different order)
-def test_multisig_mismatch_multisig_change(client: Client):
+def test_multisig_mismatch_multisig_change(session: Session):
     multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_INT, NODE_EXT2],
         address_n=[1, 0],
@@ -499,10 +499,10 @@ def test_multisig_mismatch_multisig_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with client:
-        client.set_expected_responses(_responses(client, INP1, INP2))
+    with session:
+        session.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -511,7 +511,7 @@ def test_multisig_mismatch_multisig_change(client: Client):
 
 
 # inputs match, change mismatches (second tries to be change but isn't because the pubkeys are different)
-def test_sorted_multisig_mismatch_multisig_change(client: Client):
+def test_sorted_multisig_mismatch_multisig_change(session: Session):
     multisig_out2 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_INT, NODE_EXT3],
         address_n=[1, 0],
@@ -532,10 +532,10 @@ def test_sorted_multisig_mismatch_multisig_change(client: Client):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with client:
-        client.set_expected_responses(_responses(client, INP4, INP5))
+    with session:
+        session.set_expected_responses(_responses(session, INP4, INP5))
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP4, INP5],
             [out1, out2],
@@ -544,7 +544,7 @@ def test_sorted_multisig_mismatch_multisig_change(client: Client):
 
 
 # inputs match, change mismatches (second tries to be change but isn't because is uses per-node paths)
-def test_multisig_mismatch_multisig_change_different_paths(client: Client):
+def test_multisig_mismatch_multisig_change_different_paths(session: Session):
     multisig_out2 = messages.MultisigRedeemScriptType(
         pubkeys=[
             messages.HDNodePathType(node=NODE_EXT1, address_n=[1, 0]),
@@ -568,10 +568,10 @@ def test_multisig_mismatch_multisig_change_different_paths(client: Client):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
     )
 
-    with client:
-        client.set_expected_responses(_responses(client, INP1, INP2))
+    with session:
+        session.set_expected_responses(_responses(session, INP1, INP2))
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP2],
             [out1, out2],
@@ -580,7 +580,7 @@ def test_multisig_mismatch_multisig_change_different_paths(client: Client):
 
 
 # inputs mismatch because the pubkeys are different, change matches with first input
-def test_multisig_mismatch_inputs(client: Client):
+def test_multisig_mismatch_inputs(session: Session):
     multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
         address_n=[1, 0],
@@ -601,10 +601,10 @@ def test_multisig_mismatch_inputs(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(_responses(client, INP1, INP3))
+    with session:
+        session.set_expected_responses(_responses(session, INP1, INP3))
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP1, INP3],
             [out1, out2],
@@ -613,7 +613,7 @@ def test_multisig_mismatch_inputs(client: Client):
 
 
 # inputs mismatch because the pubkeys are different, change matches with first input
-def test_sorted_multisig_mismatch_inputs(client: Client):
+def test_sorted_multisig_mismatch_inputs(session: Session):
     multisig_out1 = messages.MultisigRedeemScriptType(
         nodes=[NODE_EXT1, NODE_EXT2, NODE_INT],
         address_n=[1, 0],
@@ -635,10 +635,10 @@ def test_sorted_multisig_mismatch_inputs(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(_responses(client, INP4, INP6))
+    with session:
+        session.set_expected_responses(_responses(session, INP4, INP6))
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [INP4, INP6],
             [out1, out2],
