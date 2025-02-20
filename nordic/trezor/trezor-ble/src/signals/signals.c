@@ -28,12 +28,16 @@
 #define LOG_MODULE_NAME signals
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
-#define RUN_STATUS_LED DK_LED1
-#define RUN_LED_BLINK_INTERVAL 1000
+#define OUT_RESERVED DK_LED1
+#define OUT_NRF_READY DK_LED2
 
-#define FW_RUNNING_SIG DK_LED2
+#define IN_STAY_IN_BOOTLOADER DK_BTN1_MSK
+#define IN_TRZ_READY DK_BTN2_MSK
 
-static K_SEM_DEFINE(led_init_ok, 0, 1);
+static K_SEM_DEFINE(signals_ok, 0, 1);
+
+static bool out_nrf_ready = false;
+static bool out_reserved = false;
 
 void button_changed(uint32_t button_state, uint32_t has_changed) {}
 
@@ -52,44 +56,31 @@ static void configure_gpio(void) {
 }
 
 bool signals_is_trz_ready(void) {
-  return (dk_get_buttons() & DK_BTN2_MSK) != 0;
+  return (dk_get_buttons() & IN_TRZ_READY) != 0;
+}
+
+bool signals_is_stay_in_bootloader(void) {
+  return (dk_get_buttons() & IN_STAY_IN_BOOTLOADER) != 0;
 }
 
 bool signals_init(void) {
   configure_gpio();
 
-  k_sem_give(&led_init_ok);
+  k_sem_give(&signals_ok);
 
   return true;
 }
 
-void signals_fw_running(bool set) { dk_set_led(FW_RUNNING_SIG, set); }
-
-void led_thread(void) {
-  //  bool connected = false;
-  int blink_status = 0;
-  /* Don't go any further until BLE is initialized */
-  k_sem_take(&led_init_ok, K_FOREVER);
-
-  for (;;) {
-    blink_status++;
-    dk_set_led(RUN_STATUS_LED, (blink_status) % 2);
-
-    //    connected = is_connected();
-    //
-    //    if (connected) {
-    //      dk_set_led_on(CON_STATUS_LED);
-    //    } else {
-    //      if (is_advertising() && !is_advertising_whitelist()) {
-    //        dk_set_led(CON_STATUS_LED, (blink_status) % 2);
-    //      } else {
-    //        dk_set_led_off(CON_STATUS_LED);
-    //      }
-    //    }
-
-    k_sleep(K_MSEC(RUN_LED_BLINK_INTERVAL));
-  }
+void signals_nrf_ready(bool set) {
+  out_nrf_ready = set;
+  dk_set_led(OUT_NRF_READY, set);
 }
 
-K_THREAD_DEFINE(led_thread_id, CONFIG_DEFAULT_THREAD_STACK_SIZE, led_thread,
-                NULL, NULL, NULL, 7, 0, 0);
+bool signals_out_get_nrf_ready(void) { return out_nrf_ready; }
+
+void signals_reserved(bool set) {
+  out_reserved = set;
+  dk_set_led(OUT_RESERVED, set);
+}
+
+bool signals_out_get_reserved(void) { return out_reserved; }
