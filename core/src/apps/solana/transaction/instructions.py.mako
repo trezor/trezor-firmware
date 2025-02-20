@@ -181,6 +181,7 @@ def get_instruction(
                         "${reference["name"]}",
                         ${reference["is_authority"]},
                         ${reference["optional"]},
+                        ${reference.get("is_token_mint", False)},
                     ),
                 % endfor
                 ],

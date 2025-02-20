@@ -6,7 +6,6 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageEthereum";
 
 import "messages-common.proto";
-import "messages-ethereum-definitions.proto";
 
 /**
  * Request: Ask device for public key corresponding to address_n path
@@ -60,18 +59,18 @@ message EthereumAddress {
  * @next Failure
  */
 message EthereumSignTx {
-    repeated uint32 address_n = 1;                                       // BIP-32 path to derive the key from master node
-    optional bytes nonce = 2 [default=''];                               // <=256 bit unsigned big endian
-    required bytes gas_price = 3;                                        // <=256 bit unsigned big endian (in wei)
-    required bytes gas_limit = 4;                                        // <=256 bit unsigned big endian
-    optional string to = 11 [default=''];                                // recipient address
-    optional bytes value = 6 [default=''];                               // <=256 bit unsigned big endian (in wei)
-    optional bytes data_initial_chunk = 7 [default=''];                  // The initial data chunk (<= 1024 bytes)
-    optional uint32 data_length = 8 [default=0];                         // Length of transaction payload
-    required uint64 chain_id = 9;                                        // Chain Id for EIP 155
-    optional uint32 tx_type = 10;                                        // Used for Wanchain
-    optional ethereum_definitions.EthereumDefinitions definitions = 12;  // network and/or token definitions for tx
-    optional bool chunkify = 13;                                         // display the address in chunks of 4 characters
+    repeated uint32 address_n = 1;                       // BIP-32 path to derive the key from master node
+    optional bytes nonce = 2 [default=''];               // <=256 bit unsigned big endian
+    required bytes gas_price = 3;                        // <=256 bit unsigned big endian (in wei)
+    required bytes gas_limit = 4;                        // <=256 bit unsigned big endian
+    optional string to = 11 [default=''];                // recipient address
+    optional bytes value = 6 [default=''];               // <=256 bit unsigned big endian (in wei)
+    optional bytes data_initial_chunk = 7 [default=''];  // The initial data chunk (<= 1024 bytes)
+    optional uint32 data_length = 8 [default=0];         // Length of transaction payload
+    required uint64 chain_id = 9;                        // Chain Id for EIP 155
+    optional uint32 tx_type = 10;                        // Used for Wanchain
+    optional EthereumDefinitions definitions = 12;       // network and/or token definitions for tx
+    optional bool chunkify = 13;                         // display the address in chunks of 4 characters
 }
 
 /**
@@ -82,19 +81,19 @@ message EthereumSignTx {
  * @next Failure
  */
 message EthereumSignTxEIP1559 {
-    repeated uint32 address_n = 1;                                             // BIP-32 path to derive the key from master node
-    required bytes nonce = 2;                                                  // <=256 bit unsigned big endian
-    required bytes max_gas_fee = 3;                                            // <=256 bit unsigned big endian (in wei)
-    required bytes max_priority_fee = 4;                                       // <=256 bit unsigned big endian (in wei)
-    required bytes gas_limit = 5;                                              // <=256 bit unsigned big endian
-    optional string to = 6 [default=''];                                       // recipient address
-    required bytes value = 7;                                                  // <=256 bit unsigned big endian (in wei)
-    optional bytes data_initial_chunk = 8 [default=''];                        // The initial data chunk (<= 1024 bytes)
-    required uint32 data_length = 9;                                           // Length of transaction payload
-    required uint64 chain_id = 10;                                             // Chain Id for EIP 155
-    repeated EthereumAccessList access_list = 11;                              // Access List
-    optional ethereum_definitions.EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
-    optional bool chunkify = 13;                                               // display the address in chunks of 4 characters
+    repeated uint32 address_n = 1;                       // BIP-32 path to derive the key from master node
+    required bytes nonce = 2;                            // <=256 bit unsigned big endian
+    required bytes max_gas_fee = 3;                      // <=256 bit unsigned big endian (in wei)
+    required bytes max_priority_fee = 4;                 // <=256 bit unsigned big endian (in wei)
+    required bytes gas_limit = 5;                        // <=256 bit unsigned big endian
+    optional string to = 6 [default=''];                 // recipient address
+    required bytes value = 7;                            // <=256 bit unsigned big endian (in wei)
+    optional bytes data_initial_chunk = 8 [default=''];  // The initial data chunk (<= 1024 bytes)
+    required uint32 data_length = 9;                     // Length of transaction payload
+    required uint64 chain_id = 10;                       // Chain Id for EIP 155
+    repeated EthereumAccessList access_list = 11;        // Access List
+    optional EthereumDefinitions definitions = 12;       // network and/or token definitions for tx
+    optional bool chunkify = 13;                         // display the address in chunks of 4 characters
 
     message EthereumAccessList {
         required string address = 1;
@@ -179,4 +178,13 @@ message EthereumSignTypedHash {
 message EthereumTypedDataSignature {
     required bytes signature = 1;    // signature of the typed data
     required string address = 2;     // address used to sign the typed data
+}
+
+/**
+ * Contains an encoded network and/or token definition. See ethereum-definitions.md for details.
+ * @embed
+ */
+message EthereumDefinitions {
+    optional bytes encoded_network = 1; // encoded ethereum network
+    optional bytes encoded_token = 2;   // encoded ethereum token
 }

@@ -2,5 +2,6 @@
 # fmt: off
 # isort:skip_file
 
-NETWORK = 0
-TOKEN = 1
+ETHEREUM_NETWORK = 0
+ETHEREUM_TOKEN = 1
+SOLANA_TOKEN = 2

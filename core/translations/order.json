@@ -973,5 +973,11 @@
   "971": "instructions__view_all_data",
   "972": "ethereum__interaction_contract",
   "973": "misc__enable_labeling",
-  "974": "ethereum__unknown_contract_address_short"
+  "974": "ethereum__unknown_contract_address_short",
+  "975": "solana__base_fee",
+  "976": "solana__max_fees_rent",
+  "977": "solana__max_rent_fee",
+  "978": "solana__priority_fee",
+  "979": "solana__transaction_fee",
+  "980": "solana__unknown"
 }

@@ -1105,6 +1105,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ripple__destination_tag_template;
   MP_QSTR_solana__account_index;
   MP_QSTR_solana__associated_token_account;
+  MP_QSTR_solana__base_fee;
   MP_QSTR_solana__confirm_multisig;
   MP_QSTR_solana__expected_fee;
   MP_QSTR_solana__instruction_accounts_template;
@@ -1112,10 +1113,15 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__instruction_is_multisig;
   MP_QSTR_solana__is_provided_via_lookup_table_template;
   MP_QSTR_solana__lookup_table_address;
+  MP_QSTR_solana__max_fees_rent;
+  MP_QSTR_solana__max_rent_fee;
   MP_QSTR_solana__multiple_signers;
+  MP_QSTR_solana__priority_fee;
   MP_QSTR_solana__token_address;
   MP_QSTR_solana__transaction_contains_unknown_instructions;
+  MP_QSTR_solana__transaction_fee;
   MP_QSTR_solana__transaction_requires_x_signers_template;
+  MP_QSTR_solana__unknown;
   MP_QSTR_stellar__account_merge;
   MP_QSTR_stellar__account_thresholds;
   MP_QSTR_stellar__add_signer;

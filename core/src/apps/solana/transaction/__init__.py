@@ -209,3 +209,10 @@ class Transaction:
             for instruction in self.instructions
             if not instruction.is_ui_hidden
         ]
+
+    def get_account_address(self, account: Account) -> bytes:
+        if len(account) == 2:
+            return account[0]
+        else:
+            _, index, _ = account
+            return self.addresses[index][0]

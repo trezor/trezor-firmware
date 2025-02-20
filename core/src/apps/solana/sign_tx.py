@@ -1,11 +1,14 @@
 from typing import TYPE_CHECKING
 
+from trezor.crypto import base58
 from trezor.wire import DataError
 
 from apps.common.keychain import with_slip44_keychain
 
 from . import CURVE, PATTERNS, SLIP44_ID
+from .definitions import Definitions
 from .transaction import Transaction
+from .types import AdditionalTxInfo
 
 if TYPE_CHECKING:
     from trezor.messages import SolanaSignTx, SolanaTxSignature
@@ -56,16 +59,32 @@ async def sign_tx(
             br_code=ButtonRequestType.Other,
         )
 
-    fee = calculate_fee(transaction)
+    base_fee, priority_fee = calculate_fee(transaction)
+    rent = calculate_rent(transaction)
+
+    additional_tx_info = AdditionalTxInfo.from_solana_tx_additional_info(
+        msg.additional_info
+    )
 
     if not await try_confirm_predefined_transaction(
-        transaction, fee, address_n, transaction.blockhash, msg.additional_info
+        transaction,
+        base_fee,
+        priority_fee,
+        rent,
+        address_n,
+        transaction.blockhash,
+        additional_tx_info,
     ):
-        await confirm_instructions(address_n, signer_public_key, transaction)
+        await confirm_instructions(
+            address_n, signer_public_key, transaction, additional_tx_info
+        )
         await confirm_transaction(
             address_n,
             transaction.blockhash,
-            calculate_fee(transaction),
+            base_fee,
+            priority_fee,
+            rent,
+            _has_unsupported_instructions(transaction),
         )
 
     signature = ed25519.sign(node.private_key(), serialized_tx)
@@ -73,9 +92,25 @@ async def sign_tx(
     return SolanaTxSignature(signature=signature)
 
 
+def _has_unsupported_instructions(transaction: Transaction) -> bool:
+    visible_instructions = transaction.get_visible_instructions()
+    for instruction in visible_instructions:
+        if not (
+            instruction.is_program_supported and instruction.is_instruction_supported
+        ):
+            return True
+    return False
+
+
 async def confirm_instructions(
-    signer_path: list[int], signer_public_key: bytes, transaction: Transaction
-) -> None:
+    signer_path: list[int],
+    signer_public_key: bytes,
+    transaction: Transaction,
+    additional_info: AdditionalTxInfo | None,
+):
+    definitions: Definitions | None = (
+        additional_info.definitions if additional_info else None
+    )
 
     visible_instructions = transaction.get_visible_instructions()
     instructions_count = len(visible_instructions)
@@ -109,10 +144,11 @@ async def confirm_instructions(
                 instruction_index,
                 signer_path,
                 signer_public_key,
+                definitions,
             )
 
 
-def calculate_fee(transaction: Transaction) -> int:
+def calculate_fee(transaction: Transaction) -> tuple[int, int]:
     import math
 
     from .constants import SOLANA_BASE_FEE_LAMPORTS, SOLANA_COMPUTE_UNIT_LIMIT
@@ -152,4 +188,85 @@ def calculate_fee(transaction: Transaction) -> int:
                 unit_price = instruction.lamports
                 is_unit_price_set = True
 
-    return int(base_fee + math.ceil(unit_price * unit_limit / 1000000))
+    priority_fee = math.ceil(unit_price * unit_limit / 1000000)
+    return base_fee, priority_fee
+
+
+def calculate_rent(transaction: Transaction) -> int:
+    """
+        Returns max rent exemption in lamports.
+
+        To estimate rent exemption from a transaction we need to go over the instructions.
+        When new accounts are created, space must be allocated for them, rent exemption value depends on that space.
+
+        There are a handful of instruction that allocate space:
+        - System program create account instruction (the space data parameter)
+        - System program create account with seed instruction (the space data parameter)
+        - System program allocate instruction (the space data parameter)
+        - System program allocate with seed instruction (the space data parameter)
+        - Associated token account program create instruction (165 bytes for Token, 170-195 for Token22)
+        - Associated token account program create idempotent instruction (165 bytes for Token, 170-195 for Token22, might not allocate)
+    loo
+        Associated token account program allocates space based on used extensions which must be enabled in the same transaction.
+        Currently, the token22 extensions aren't supported, so the max value of 195 bytes is assumed.
+        The min Token22 account size is the base Token account size plus some overhead.
+        The max Token22 account size is derived from the program source code:
+        https://github.com/solana-program/token-2022/blob/d9cfcf32cf5fbb3ee32f9f873d3fe3c94356e981/program/src/extension/mod.rs#L1299
+        Note that Token/Token22 programs don't allocate space by themselves, they only use preallocated accounts.
+    """
+    from .constants import (
+        SOLANA_ACCOUNT_OVERHEAD_SIZE,
+        SOLANA_RENT_EXEMPTION_YEARS,
+        SOLANA_RENT_LAMPORTS_PER_BYTE_YEAR,
+        SOLANA_TOKEN22_MAX_ACCOUNT_SIZE,
+        SOLANA_TOKEN_ACCOUNT_SIZE,
+    )
+    from .transaction.instructions import (
+        _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
+        _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+        _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+        _SYSTEM_PROGRAM_ID,
+        _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
+        _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
+        _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
+        _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+        _TOKEN_2022_PROGRAM_ID,
+        _TOKEN_PROGRAM_ID,
+    )
+
+    allocation = 0
+    for instruction in transaction.instructions:
+        if instruction.program_id == _SYSTEM_PROGRAM_ID and (
+            instruction.instruction_id
+            in (
+                _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
+                _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+                _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
+                _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
+            )
+        ):
+            allocation += (
+                instruction.parsed_data["space"] + SOLANA_ACCOUNT_OVERHEAD_SIZE
+            )
+        elif instruction.program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID and (
+            instruction.instruction_id
+            in (
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+                _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+            )
+        ):
+            spl_token_account = transaction.get_account_address(
+                instruction.parsed_accounts["spl_token"]
+            )
+            if spl_token_account == base58.decode(_TOKEN_PROGRAM_ID):
+                allocation += SOLANA_TOKEN_ACCOUNT_SIZE + SOLANA_ACCOUNT_OVERHEAD_SIZE
+            elif spl_token_account == base58.decode(_TOKEN_2022_PROGRAM_ID):
+                allocation += (
+                    SOLANA_TOKEN22_MAX_ACCOUNT_SIZE + SOLANA_ACCOUNT_OVERHEAD_SIZE
+                )
+
+    rent_exemption = (
+        allocation * SOLANA_RENT_LAMPORTS_PER_BYTE_YEAR * SOLANA_RENT_EXEMPTION_YEARS
+    )
+
+    return rent_exemption

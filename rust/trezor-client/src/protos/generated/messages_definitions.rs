@@ -19,26 +19,26 @@
 #![allow(unused_results)]
 #![allow(unused_mut)]
 
-//! Generated file from `messages-ethereum-definitions.proto`
+//! Generated file from `messages-definitions.proto`
 
 /// Generated files are compatible only with the same version
 /// of protobuf runtime.
 const _PROTOBUF_VERSION_CHECK: () = ::protobuf::VERSION_3_3_0;
 
-// @@protoc_insertion_point(message:hw.trezor.messages.ethereum_definitions.EthereumNetworkInfo)
+// @@protoc_insertion_point(message:hw.trezor.messages.definitions.EthereumNetworkInfo)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct EthereumNetworkInfo {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumNetworkInfo.chain_id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumNetworkInfo.chain_id)
     pub chain_id: ::std::option::Option<u64>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumNetworkInfo.symbol)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumNetworkInfo.symbol)
     pub symbol: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumNetworkInfo.slip44)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumNetworkInfo.slip44)
     pub slip44: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumNetworkInfo.name)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumNetworkInfo.name)
     pub name: ::std::option::Option<::std::string::String>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum_definitions.EthereumNetworkInfo.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.definitions.EthereumNetworkInfo.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
@@ -323,22 +323,22 @@ impl ::protobuf::reflect::ProtobufValue for EthereumNetworkInfo {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.ethereum_definitions.EthereumTokenInfo)
+// @@protoc_insertion_point(message:hw.trezor.messages.definitions.EthereumTokenInfo)
 #[derive(PartialEq,Clone,Default,Debug)]
 pub struct EthereumTokenInfo {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumTokenInfo.address)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumTokenInfo.address)
     pub address: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumTokenInfo.chain_id)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumTokenInfo.chain_id)
     pub chain_id: ::std::option::Option<u64>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumTokenInfo.symbol)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumTokenInfo.symbol)
     pub symbol: ::std::option::Option<::std::string::String>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumTokenInfo.decimals)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumTokenInfo.decimals)
     pub decimals: ::std::option::Option<u32>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumTokenInfo.name)
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.EthereumTokenInfo.name)
     pub name: ::std::option::Option<::std::string::String>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum_definitions.EthereumTokenInfo.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.definitions.EthereumTokenInfo.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
@@ -678,127 +678,225 @@ impl ::protobuf::reflect::ProtobufValue for EthereumTokenInfo {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
-// @@protoc_insertion_point(message:hw.trezor.messages.ethereum_definitions.EthereumDefinitions)
+// @@protoc_insertion_point(message:hw.trezor.messages.definitions.SolanaTokenInfo)
 #[derive(PartialEq,Clone,Default,Debug)]
-pub struct EthereumDefinitions {
+pub struct SolanaTokenInfo {
     // message fields
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumDefinitions.encoded_network)
-    pub encoded_network: ::std::option::Option<::std::vec::Vec<u8>>,
-    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_definitions.EthereumDefinitions.encoded_token)
-    pub encoded_token: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.SolanaTokenInfo.mint)
+    pub mint: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.SolanaTokenInfo.program_id)
+    pub program_id: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.SolanaTokenInfo.name)
+    pub name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.definitions.SolanaTokenInfo.ticker)
+    pub ticker: ::std::option::Option<::std::string::String>,
     // special fields
-    // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum_definitions.EthereumDefinitions.special_fields)
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.definitions.SolanaTokenInfo.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
 }
 
-impl<'a> ::std::default::Default for &'a EthereumDefinitions {
-    fn default() -> &'a EthereumDefinitions {
-        <EthereumDefinitions as ::protobuf::Message>::default_instance()
+impl<'a> ::std::default::Default for &'a SolanaTokenInfo {
+    fn default() -> &'a SolanaTokenInfo {
+        <SolanaTokenInfo as ::protobuf::Message>::default_instance()
     }
 }
 
-impl EthereumDefinitions {
-    pub fn new() -> EthereumDefinitions {
+impl SolanaTokenInfo {
+    pub fn new() -> SolanaTokenInfo {
         ::std::default::Default::default()
     }
 
-    // optional bytes encoded_network = 1;
+    // required bytes mint = 1;
 
-    pub fn encoded_network(&self) -> &[u8] {
-        match self.encoded_network.as_ref() {
+    pub fn mint(&self) -> &[u8] {
+        match self.mint.as_ref() {
             Some(v) => v,
             None => &[],
         }
     }
 
-    pub fn clear_encoded_network(&mut self) {
-        self.encoded_network = ::std::option::Option::None;
+    pub fn clear_mint(&mut self) {
+        self.mint = ::std::option::Option::None;
     }
 
-    pub fn has_encoded_network(&self) -> bool {
-        self.encoded_network.is_some()
+    pub fn has_mint(&self) -> bool {
+        self.mint.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_encoded_network(&mut self, v: ::std::vec::Vec<u8>) {
-        self.encoded_network = ::std::option::Option::Some(v);
+    pub fn set_mint(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mint = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_encoded_network(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.encoded_network.is_none() {
-            self.encoded_network = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_mint(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mint.is_none() {
+            self.mint = ::std::option::Option::Some(::std::vec::Vec::new());
         }
-        self.encoded_network.as_mut().unwrap()
+        self.mint.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_encoded_network(&mut self) -> ::std::vec::Vec<u8> {
-        self.encoded_network.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_mint(&mut self) -> ::std::vec::Vec<u8> {
+        self.mint.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // optional bytes encoded_token = 2;
+    // required string program_id = 2;
 
-    pub fn encoded_token(&self) -> &[u8] {
-        match self.encoded_token.as_ref() {
+    pub fn program_id(&self) -> &str {
+        match self.program_id.as_ref() {
             Some(v) => v,
-            None => &[],
+            None => "",
         }
     }
 
-    pub fn clear_encoded_token(&mut self) {
-        self.encoded_token = ::std::option::Option::None;
+    pub fn clear_program_id(&mut self) {
+        self.program_id = ::std::option::Option::None;
     }
 
-    pub fn has_encoded_token(&self) -> bool {
-        self.encoded_token.is_some()
+    pub fn has_program_id(&self) -> bool {
+        self.program_id.is_some()
     }
 
     // Param is passed by value, moved
-    pub fn set_encoded_token(&mut self, v: ::std::vec::Vec<u8>) {
-        self.encoded_token = ::std::option::Option::Some(v);
+    pub fn set_program_id(&mut self, v: ::std::string::String) {
+        self.program_id = ::std::option::Option::Some(v);
     }
 
     // Mutable pointer to the field.
     // If field is not initialized, it is initialized with default value first.
-    pub fn mut_encoded_token(&mut self) -> &mut ::std::vec::Vec<u8> {
-        if self.encoded_token.is_none() {
-            self.encoded_token = ::std::option::Option::Some(::std::vec::Vec::new());
+    pub fn mut_program_id(&mut self) -> &mut ::std::string::String {
+        if self.program_id.is_none() {
+            self.program_id = ::std::option::Option::Some(::std::string::String::new());
         }
-        self.encoded_token.as_mut().unwrap()
+        self.program_id.as_mut().unwrap()
     }
 
     // Take field
-    pub fn take_encoded_token(&mut self) -> ::std::vec::Vec<u8> {
-        self.encoded_token.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    pub fn take_program_id(&mut self) -> ::std::string::String {
+        self.program_id.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string name = 3;
+
+    pub fn name(&self) -> &str {
+        match self.name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_name(&mut self) {
+        self.name = ::std::option::Option::None;
+    }
+
+    pub fn has_name(&self) -> bool {
+        self.name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_name(&mut self, v: ::std::string::String) {
+        self.name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_name(&mut self) -> &mut ::std::string::String {
+        if self.name.is_none() {
+            self.name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_name(&mut self) -> ::std::string::String {
+        self.name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // required string ticker = 4;
+
+    pub fn ticker(&self) -> &str {
+        match self.ticker.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_ticker(&mut self) {
+        self.ticker = ::std::option::Option::None;
+    }
+
+    pub fn has_ticker(&self) -> bool {
+        self.ticker.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_ticker(&mut self, v: ::std::string::String) {
+        self.ticker = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_ticker(&mut self) -> &mut ::std::string::String {
+        if self.ticker.is_none() {
+            self.ticker = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.ticker.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_ticker(&mut self) -> ::std::string::String {
+        self.ticker.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(4);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "encoded_network",
-            |m: &EthereumDefinitions| { &m.encoded_network },
-            |m: &mut EthereumDefinitions| { &mut m.encoded_network },
+            "mint",
+            |m: &SolanaTokenInfo| { &m.mint },
+            |m: &mut SolanaTokenInfo| { &mut m.mint },
         ));
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
-            "encoded_token",
-            |m: &EthereumDefinitions| { &m.encoded_token },
-            |m: &mut EthereumDefinitions| { &mut m.encoded_token },
+            "program_id",
+            |m: &SolanaTokenInfo| { &m.program_id },
+            |m: &mut SolanaTokenInfo| { &mut m.program_id },
         ));
-        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumDefinitions>(
-            "EthereumDefinitions",
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "name",
+            |m: &SolanaTokenInfo| { &m.name },
+            |m: &mut SolanaTokenInfo| { &mut m.name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "ticker",
+            |m: &SolanaTokenInfo| { &m.ticker },
+            |m: &mut SolanaTokenInfo| { &mut m.ticker },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaTokenInfo>(
+            "SolanaTokenInfo",
             fields,
             oneofs,
         )
     }
 }
 
-impl ::protobuf::Message for EthereumDefinitions {
-    const NAME: &'static str = "EthereumDefinitions";
+impl ::protobuf::Message for SolanaTokenInfo {
+    const NAME: &'static str = "SolanaTokenInfo";
 
     fn is_initialized(&self) -> bool {
+        if self.mint.is_none() {
+            return false;
+        }
+        if self.program_id.is_none() {
+            return false;
+        }
+        if self.name.is_none() {
+            return false;
+        }
+        if self.ticker.is_none() {
+            return false;
+        }
         true
     }
 
@@ -806,10 +904,16 @@ impl ::protobuf::Message for EthereumDefinitions {
         while let Some(tag) = is.read_raw_tag_or_eof()? {
             match tag {
                 10 => {
-                    self.encoded_network = ::std::option::Option::Some(is.read_bytes()?);
+                    self.mint = ::std::option::Option::Some(is.read_bytes()?);
                 },
                 18 => {
-                    self.encoded_token = ::std::option::Option::Some(is.read_bytes()?);
+                    self.program_id = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.name = ::std::option::Option::Some(is.read_string()?);
+                },
+                34 => {
+                    self.ticker = ::std::option::Option::Some(is.read_string()?);
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -823,11 +927,17 @@ impl ::protobuf::Message for EthereumDefinitions {
     #[allow(unused_variables)]
     fn compute_size(&self) -> u64 {
         let mut my_size = 0;
-        if let Some(v) = self.encoded_network.as_ref() {
+        if let Some(v) = self.mint.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
-        if let Some(v) = self.encoded_token.as_ref() {
-            my_size += ::protobuf::rt::bytes_size(2, &v);
+        if let Some(v) = self.program_id.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        if let Some(v) = self.name.as_ref() {
+            my_size += ::protobuf::rt::string_size(3, &v);
+        }
+        if let Some(v) = self.ticker.as_ref() {
+            my_size += ::protobuf::rt::string_size(4, &v);
         }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
@@ -835,11 +945,17 @@ impl ::protobuf::Message for EthereumDefinitions {
     }
 
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
-        if let Some(v) = self.encoded_network.as_ref() {
+        if let Some(v) = self.mint.as_ref() {
             os.write_bytes(1, v)?;
         }
-        if let Some(v) = self.encoded_token.as_ref() {
-            os.write_bytes(2, v)?;
+        if let Some(v) = self.program_id.as_ref() {
+            os.write_string(2, v)?;
+        }
+        if let Some(v) = self.name.as_ref() {
+            os.write_string(3, v)?;
+        }
+        if let Some(v) = self.ticker.as_ref() {
+            os.write_string(4, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -853,85 +969,94 @@ impl ::protobuf::Message for EthereumDefinitions {
         &mut self.special_fields
     }
 
-    fn new() -> EthereumDefinitions {
-        EthereumDefinitions::new()
+    fn new() -> SolanaTokenInfo {
+        SolanaTokenInfo::new()
     }
 
     fn clear(&mut self) {
-        self.encoded_network = ::std::option::Option::None;
-        self.encoded_token = ::std::option::Option::None;
+        self.mint = ::std::option::Option::None;
+        self.program_id = ::std::option::Option::None;
+        self.name = ::std::option::Option::None;
+        self.ticker = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
-    fn default_instance() -> &'static EthereumDefinitions {
-        static instance: EthereumDefinitions = EthereumDefinitions {
-            encoded_network: ::std::option::Option::None,
-            encoded_token: ::std::option::Option::None,
+    fn default_instance() -> &'static SolanaTokenInfo {
+        static instance: SolanaTokenInfo = SolanaTokenInfo {
+            mint: ::std::option::Option::None,
+            program_id: ::std::option::Option::None,
+            name: ::std::option::Option::None,
+            ticker: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
     }
 }
 
-impl ::protobuf::MessageFull for EthereumDefinitions {
+impl ::protobuf::MessageFull for SolanaTokenInfo {
     fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().message_by_package_relative_name("EthereumDefinitions").unwrap()).clone()
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("SolanaTokenInfo").unwrap()).clone()
     }
 }
 
-impl ::std::fmt::Display for EthereumDefinitions {
+impl ::std::fmt::Display for SolanaTokenInfo {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
         ::protobuf::text_format::fmt(self, f)
     }
 }
 
-impl ::protobuf::reflect::ProtobufValue for EthereumDefinitions {
+impl ::protobuf::reflect::ProtobufValue for SolanaTokenInfo {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
 #[derive(Clone,Copy,PartialEq,Eq,Debug,Hash)]
-// @@protoc_insertion_point(enum:hw.trezor.messages.ethereum_definitions.EthereumDefinitionType)
-pub enum EthereumDefinitionType {
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ethereum_definitions.EthereumDefinitionType.NETWORK)
-    NETWORK = 0,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.ethereum_definitions.EthereumDefinitionType.TOKEN)
-    TOKEN = 1,
+// @@protoc_insertion_point(enum:hw.trezor.messages.definitions.DefinitionType)
+pub enum DefinitionType {
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.DefinitionType.ETHEREUM_NETWORK)
+    ETHEREUM_NETWORK = 0,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.DefinitionType.ETHEREUM_TOKEN)
+    ETHEREUM_TOKEN = 1,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.definitions.DefinitionType.SOLANA_TOKEN)
+    SOLANA_TOKEN = 2,
 }
 
-impl ::protobuf::Enum for EthereumDefinitionType {
-    const NAME: &'static str = "EthereumDefinitionType";
+impl ::protobuf::Enum for DefinitionType {
+    const NAME: &'static str = "DefinitionType";
 
     fn value(&self) -> i32 {
         *self as i32
     }
 
-    fn from_i32(value: i32) -> ::std::option::Option<EthereumDefinitionType> {
+    fn from_i32(value: i32) -> ::std::option::Option<DefinitionType> {
         match value {
-            0 => ::std::option::Option::Some(EthereumDefinitionType::NETWORK),
-            1 => ::std::option::Option::Some(EthereumDefinitionType::TOKEN),
+            0 => ::std::option::Option::Some(DefinitionType::ETHEREUM_NETWORK),
+            1 => ::std::option::Option::Some(DefinitionType::ETHEREUM_TOKEN),
+            2 => ::std::option::Option::Some(DefinitionType::SOLANA_TOKEN),
             _ => ::std::option::Option::None
         }
     }
 
-    fn from_str(str: &str) -> ::std::option::Option<EthereumDefinitionType> {
+    fn from_str(str: &str) -> ::std::option::Option<DefinitionType> {
         match str {
-            "NETWORK" => ::std::option::Option::Some(EthereumDefinitionType::NETWORK),
-            "TOKEN" => ::std::option::Option::Some(EthereumDefinitionType::TOKEN),
+            "ETHEREUM_NETWORK" => ::std::option::Option::Some(DefinitionType::ETHEREUM_NETWORK),
+            "ETHEREUM_TOKEN" => ::std::option::Option::Some(DefinitionType::ETHEREUM_TOKEN),
+            "SOLANA_TOKEN" => ::std::option::Option::Some(DefinitionType::SOLANA_TOKEN),
             _ => ::std::option::Option::None
         }
     }
 
-    const VALUES: &'static [EthereumDefinitionType] = &[
-        EthereumDefinitionType::NETWORK,
-        EthereumDefinitionType::TOKEN,
+    const VALUES: &'static [DefinitionType] = &[
+        DefinitionType::ETHEREUM_NETWORK,
+        DefinitionType::ETHEREUM_TOKEN,
+        DefinitionType::SOLANA_TOKEN,
     ];
 }
 
-impl ::protobuf::EnumFull for EthereumDefinitionType {
+impl ::protobuf::EnumFull for DefinitionType {
     fn enum_descriptor() -> ::protobuf::reflect::EnumDescriptor {
         static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::EnumDescriptor> = ::protobuf::rt::Lazy::new();
-        descriptor.get(|| file_descriptor().enum_by_package_relative_name("EthereumDefinitionType").unwrap()).clone()
+        descriptor.get(|| file_descriptor().enum_by_package_relative_name("DefinitionType").unwrap()).clone()
     }
 
     fn descriptor(&self) -> ::protobuf::reflect::EnumValueDescriptor {
@@ -940,32 +1065,34 @@ impl ::protobuf::EnumFull for EthereumDefinitionType {
     }
 }
 
-impl ::std::default::Default for EthereumDefinitionType {
+impl ::std::default::Default for DefinitionType {
     fn default() -> Self {
-        EthereumDefinitionType::NETWORK
+        DefinitionType::ETHEREUM_NETWORK
     }
 }
 
-impl EthereumDefinitionType {
+impl DefinitionType {
     fn generated_enum_descriptor_data() -> ::protobuf::reflect::GeneratedEnumDescriptorData {
-        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<EthereumDefinitionType>("EthereumDefinitionType")
+        ::protobuf::reflect::GeneratedEnumDescriptorData::new::<DefinitionType>("DefinitionType")
     }
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n#messages-ethereum-definitions.proto\x12'hw.trezor.messages.ethereum_d\
-    efinitions\"t\n\x13EthereumNetworkInfo\x12\x19\n\x08chain_id\x18\x01\x20\
-    \x02(\x04R\x07chainId\x12\x16\n\x06symbol\x18\x02\x20\x02(\tR\x06symbol\
-    \x12\x16\n\x06slip44\x18\x03\x20\x02(\rR\x06slip44\x12\x12\n\x04name\x18\
-    \x04\x20\x02(\tR\x04name\"\x90\x01\n\x11EthereumTokenInfo\x12\x18\n\x07a\
-    ddress\x18\x01\x20\x02(\x0cR\x07address\x12\x19\n\x08chain_id\x18\x02\
-    \x20\x02(\x04R\x07chainId\x12\x16\n\x06symbol\x18\x03\x20\x02(\tR\x06sym\
-    bol\x12\x1a\n\x08decimals\x18\x04\x20\x02(\rR\x08decimals\x12\x12\n\x04n\
-    ame\x18\x05\x20\x02(\tR\x04name\"c\n\x13EthereumDefinitions\x12'\n\x0fen\
-    coded_network\x18\x01\x20\x01(\x0cR\x0eencodedNetwork\x12#\n\rencoded_to\
-    ken\x18\x02\x20\x01(\x0cR\x0cencodedToken*0\n\x16EthereumDefinitionType\
-    \x12\x0b\n\x07NETWORK\x10\0\x12\t\n\x05TOKEN\x10\x01BG\n#com.satoshilabs\
-    .trezor.lib.protobufB\x20TrezorMessageEthereumDefinitions\
+    \n\x1amessages-definitions.proto\x12\x1ehw.trezor.messages.definitions\"\
+    t\n\x13EthereumNetworkInfo\x12\x19\n\x08chain_id\x18\x01\x20\x02(\x04R\
+    \x07chainId\x12\x16\n\x06symbol\x18\x02\x20\x02(\tR\x06symbol\x12\x16\n\
+    \x06slip44\x18\x03\x20\x02(\rR\x06slip44\x12\x12\n\x04name\x18\x04\x20\
+    \x02(\tR\x04name\"\x90\x01\n\x11EthereumTokenInfo\x12\x18\n\x07address\
+    \x18\x01\x20\x02(\x0cR\x07address\x12\x19\n\x08chain_id\x18\x02\x20\x02(\
+    \x04R\x07chainId\x12\x16\n\x06symbol\x18\x03\x20\x02(\tR\x06symbol\x12\
+    \x1a\n\x08decimals\x18\x04\x20\x02(\rR\x08decimals\x12\x12\n\x04name\x18\
+    \x05\x20\x02(\tR\x04name\"p\n\x0fSolanaTokenInfo\x12\x12\n\x04mint\x18\
+    \x01\x20\x02(\x0cR\x04mint\x12\x1d\n\nprogram_id\x18\x02\x20\x02(\tR\tpr\
+    ogramId\x12\x12\n\x04name\x18\x03\x20\x02(\tR\x04name\x12\x16\n\x06ticke\
+    r\x18\x04\x20\x02(\tR\x06ticker*L\n\x0eDefinitionType\x12\x14\n\x10ETHER\
+    EUM_NETWORK\x10\0\x12\x12\n\x0eETHEREUM_TOKEN\x10\x01\x12\x10\n\x0cSOLAN\
+    A_TOKEN\x10\x02B?\n#com.satoshilabs.trezor.lib.protobufB\x18TrezorMessag\
+    eDefinitions\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -986,9 +1113,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut messages = ::std::vec::Vec::with_capacity(3);
             messages.push(EthereumNetworkInfo::generated_message_descriptor_data());
             messages.push(EthereumTokenInfo::generated_message_descriptor_data());
-            messages.push(EthereumDefinitions::generated_message_descriptor_data());
+            messages.push(SolanaTokenInfo::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(1);
-            enums.push(EthereumDefinitionType::generated_enum_descriptor_data());
+            enums.push(DefinitionType::generated_enum_descriptor_data());
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
                 deps,

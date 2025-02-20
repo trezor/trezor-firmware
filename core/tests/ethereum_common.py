@@ -4,7 +4,7 @@ from trezor import messages, protobuf
 from trezor.crypto import cosi
 from trezor.crypto.curve import ed25519
 from trezor.crypto.hashlib import sha256
-from trezor.enums import EthereumDefinitionType
+from trezor.enums import DefinitionType
 
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
@@ -41,7 +41,7 @@ def make_token(
 
 def make_payload(
     prefix: bytes = b"trzd1",
-    data_type: EthereumDefinitionType = EthereumDefinitionType.NETWORK,
+    data_type: DefinitionType = DefinitionType.ETHEREUM_NETWORK,
     timestamp: int = 0xFFFF_FFFF,
     message: (
         messages.EthereumNetworkInfo | messages.EthereumTokenInfo | bytes
@@ -106,7 +106,7 @@ def encode_network(
 ) -> bytes:
     if network is None:
         network = make_network(chain_id, slip44, symbol, name)
-    payload = make_payload(data_type=EthereumDefinitionType.NETWORK, message=network)
+    payload = make_payload(data_type=DefinitionType.ETHEREUM_NETWORK, message=network)
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
 
@@ -121,6 +121,6 @@ def encode_token(
 ) -> bytes:
     if token is None:
         token = make_token(symbol, decimals, address, chain_id, name)
-    payload = make_payload(data_type=EthereumDefinitionType.TOKEN, message=token)
+    payload = make_payload(data_type=DefinitionType.ETHEREUM_TOKEN, message=token)
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature

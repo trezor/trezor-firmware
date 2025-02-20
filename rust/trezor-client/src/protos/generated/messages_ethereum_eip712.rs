@@ -36,7 +36,7 @@ pub struct EthereumSignTypedData {
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_eip712.EthereumSignTypedData.metamask_v4_compat)
     pub metamask_v4_compat: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum_eip712.EthereumSignTypedData.definitions)
-    pub definitions: ::protobuf::MessageField<super::messages_ethereum_definitions::EthereumDefinitions>,
+    pub definitions: ::protobuf::MessageField<super::messages_ethereum::EthereumDefinitions>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum_eip712.EthereumSignTypedData.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -126,7 +126,7 @@ impl EthereumSignTypedData {
             |m: &EthereumSignTypedData| { &m.metamask_v4_compat },
             |m: &mut EthereumSignTypedData| { &mut m.metamask_v4_compat },
         ));
-        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_ethereum_definitions::EthereumDefinitions>(
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_ethereum::EthereumDefinitions>(
             "definitions",
             |m: &EthereumSignTypedData| { &m.definitions },
             |m: &mut EthereumSignTypedData| { &mut m.definitions },
@@ -1400,31 +1400,31 @@ impl ::protobuf::reflect::ProtobufValue for EthereumTypedDataValueAck {
 
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x1emessages-ethereum-eip712.proto\x12\"hw.trezor.messages.ethereum_ei\
-    p712\x1a#messages-ethereum-definitions.proto\"\xeb\x01\n\x15EthereumSign\
-    TypedData\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\
-    \x0cprimary_type\x18\x02\x20\x02(\tR\x0bprimaryType\x122\n\x12metamask_v\
-    4_compat\x18\x03\x20\x01(\x08:\x04trueR\x10metamaskV4Compat\x12^\n\x0bde\
-    finitions\x18\x04\x20\x01(\x0b2<.hw.trezor.messages.ethereum_definitions\
-    .EthereumDefinitionsR\x0bdefinitions\"4\n\x1eEthereumTypedDataStructRequ\
-    est\x12\x12\n\x04name\x18\x01\x20\x02(\tR\x04name\"\xb4\x05\n\x1aEthereu\
-    mTypedDataStructAck\x12m\n\x07members\x18\x01\x20\x03(\x0b2S.hw.trezor.m\
-    essages.ethereum_eip712.EthereumTypedDataStructAck.EthereumStructMemberR\
-    \x07members\x1a\x90\x01\n\x14EthereumStructMember\x12d\n\x04type\x18\x01\
-    \x20\x02(\x0b2P.hw.trezor.messages.ethereum_eip712.EthereumTypedDataStru\
-    ctAck.EthereumFieldTypeR\x04type\x12\x12\n\x04name\x18\x02\x20\x02(\tR\
-    \x04name\x1a\xa7\x02\n\x11EthereumFieldType\x12l\n\tdata_type\x18\x01\
-    \x20\x02(\x0e2O.hw.trezor.messages.ethereum_eip712.EthereumTypedDataStru\
-    ctAck.EthereumDataTypeR\x08dataType\x12\x12\n\x04size\x18\x02\x20\x01(\r\
-    R\x04size\x12o\n\nentry_type\x18\x03\x20\x01(\x0b2P.hw.trezor.messages.e\
-    thereum_eip712.EthereumTypedDataStructAck.EthereumFieldTypeR\tentryType\
-    \x12\x1f\n\x0bstruct_name\x18\x04\x20\x01(\tR\nstructName\"j\n\x10Ethere\
-    umDataType\x12\x08\n\x04UINT\x10\x01\x12\x07\n\x03INT\x10\x02\x12\t\n\
-    \x05BYTES\x10\x03\x12\n\n\x06STRING\x10\x04\x12\x08\n\x04BOOL\x10\x05\
-    \x12\x0b\n\x07ADDRESS\x10\x06\x12\t\n\x05ARRAY\x10\x07\x12\n\n\x06STRUCT\
-    \x10\x08\"@\n\x1dEthereumTypedDataValueRequest\x12\x1f\n\x0bmember_path\
-    \x18\x01\x20\x03(\rR\nmemberPath\"1\n\x19EthereumTypedDataValueAck\x12\
-    \x14\n\x05value\x18\x01\x20\x02(\x0cR\x05valueBB\n#com.satoshilabs.trezo\
-    r.lib.protobufB\x1bTrezorMessageEthereumEIP712\
+    p712\x1a\x17messages-ethereum.proto\"\xdf\x01\n\x15EthereumSignTypedData\
+    \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cprimary_\
+    type\x18\x02\x20\x02(\tR\x0bprimaryType\x122\n\x12metamask_v4_compat\x18\
+    \x03\x20\x01(\x08:\x04trueR\x10metamaskV4Compat\x12R\n\x0bdefinitions\
+    \x18\x04\x20\x01(\x0b20.hw.trezor.messages.ethereum.EthereumDefinitionsR\
+    \x0bdefinitions\"4\n\x1eEthereumTypedDataStructRequest\x12\x12\n\x04name\
+    \x18\x01\x20\x02(\tR\x04name\"\xb4\x05\n\x1aEthereumTypedDataStructAck\
+    \x12m\n\x07members\x18\x01\x20\x03(\x0b2S.hw.trezor.messages.ethereum_ei\
+    p712.EthereumTypedDataStructAck.EthereumStructMemberR\x07members\x1a\x90\
+    \x01\n\x14EthereumStructMember\x12d\n\x04type\x18\x01\x20\x02(\x0b2P.hw.\
+    trezor.messages.ethereum_eip712.EthereumTypedDataStructAck.EthereumField\
+    TypeR\x04type\x12\x12\n\x04name\x18\x02\x20\x02(\tR\x04name\x1a\xa7\x02\
+    \n\x11EthereumFieldType\x12l\n\tdata_type\x18\x01\x20\x02(\x0e2O.hw.trez\
+    or.messages.ethereum_eip712.EthereumTypedDataStructAck.EthereumDataTypeR\
+    \x08dataType\x12\x12\n\x04size\x18\x02\x20\x01(\rR\x04size\x12o\n\nentry\
+    _type\x18\x03\x20\x01(\x0b2P.hw.trezor.messages.ethereum_eip712.Ethereum\
+    TypedDataStructAck.EthereumFieldTypeR\tentryType\x12\x1f\n\x0bstruct_nam\
+    e\x18\x04\x20\x01(\tR\nstructName\"j\n\x10EthereumDataType\x12\x08\n\x04\
+    UINT\x10\x01\x12\x07\n\x03INT\x10\x02\x12\t\n\x05BYTES\x10\x03\x12\n\n\
+    \x06STRING\x10\x04\x12\x08\n\x04BOOL\x10\x05\x12\x0b\n\x07ADDRESS\x10\
+    \x06\x12\t\n\x05ARRAY\x10\x07\x12\n\n\x06STRUCT\x10\x08\"@\n\x1dEthereum\
+    TypedDataValueRequest\x12\x1f\n\x0bmember_path\x18\x01\x20\x03(\rR\nmemb\
+    erPath\"1\n\x19EthereumTypedDataValueAck\x12\x14\n\x05value\x18\x01\x20\
+    \x02(\x0cR\x05valueBB\n#com.satoshilabs.trezor.lib.protobufB\x1bTrezorMe\
+    ssageEthereumEIP712\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -1442,7 +1442,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
-            deps.push(super::messages_ethereum_definitions::file_descriptor().clone());
+            deps.push(super::messages_ethereum::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(7);
             messages.push(EthereumSignTypedData::generated_message_descriptor_data());
             messages.push(EthereumTypedDataStructRequest::generated_message_descriptor_data());

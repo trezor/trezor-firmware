@@ -58,6 +58,60 @@
       }
     },
     {
+      "description": "Transfer Token - predefined - with definitions",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "74pZnim7gywyschy4MGkW6eZURv1DBXqwHTCqLRk63wz",
+            "92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx",
+            "GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
+            "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ],
+          "blockhash": "26kt5r94ZYdTZY27nAHqjropeDf7dPS19VkZJrta7duL",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {
+                "source_account": 1,
+                "token_mint": 3,
+                "destination_account": 2,
+                "owner": 0,
+                "multisig_signers": []
+              },
+              "data": {
+                "instruction_id": 12,
+                "amount": 11,
+                "decimals": 9
+              }
+            }
+          ],
+          "luts": []
+        },
+        "additional_info": {
+          "token": "74727a643102ffffffff64000a20e303bf2ce35eddf29e99210c22a5203541ea2e3313bfed187a500eaf1b7e3560122b546f6b656e6b65675166655a79694e77414a624e62474b50465843577542766639537336323356513544411a0a46616b6520546f6b656e220746616b65546f6b000746efd16f0dbb3b452ba95ff78dd11596fe49d85ab27fbf18e35a61da5f9c76708e8f58302c4e6c27d58c6a9cc440ae2c28b710b1e095d45ac3f490013da8bc04",
+          "token_accounts_infos": [
+            {
+              "base_address": "BkoECWJYM7w9qNZ6EGCoBtnkphWau6nZMPbPqvm4eYF4",
+              "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+              "token_mint": "GHArwcWCuk9WkUG4XKUbt935rKfmBmywbEWyFxdH3mou",
+              "token_account": "92YgwqTtTWB7qY92JT6mbL2WCmhAs7LPZL4jLcizNfwx"
+            }
+          ]
+        }
+      },
+      "result": {
+        "expected_signature": "f03cf48bd421011c5e04affeb52e8aac726d345871b74494acf59c507bda41ce4a3624fad0650312de32bb1b6afe5d22778bbb9eaabd0a16f24189181394290e"
+      }
+    },
+    {
       "description": "Create Token Account and Transfer Token - predefined",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
