@@ -88,13 +88,13 @@ typedef enum {
 
 // BLE management functions
 // Initialization
-void management_init(void);
+void ble_management_init(void);
 // Send status event
-void management_send_status_event(void);
+void ble_management_send_status_event(void);
 // Send Pairing Request event, data is the pairing code
-void management_send_pairing_request_event(uint8_t *data, uint16_t len);
+void ble_management_send_pairing_request_event(uint8_t *data, uint16_t len);
 // Send Pairing Cancelled event
-void management_send_pairing_cancelled_event(void);
+void ble_management_send_pairing_cancelled_event(void);
 
 // Bonds
 // Erase all bonds
