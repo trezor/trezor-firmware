@@ -14,8 +14,8 @@ use crate::{
 };
 
 use super::super::{
-    super::fonts, theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, CancelableChoiceAction,
-    ChangingTextLine, ChoiceFactory, ChoiceItem, ChoicePage,
+    super::fonts, theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine,
+    ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
 
 #[derive(Clone, Copy)]
@@ -295,9 +295,12 @@ impl Component for PinEntry<'_> {
             }
         }
 
-        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
-            match action {
-                CancelableChoiceAction::Choice(PinAction::Delete) => {
+        if let Some(msg) = self.choice_page.event(ctx, event) {
+            match msg {
+                ChoiceMsg::Choice {
+                    item: PinAction::Delete,
+                    long_press,
+                } => {
                     // Deleting all when long-pressed
                     if long_press {
                         self.textbox.clear(ctx);
@@ -306,15 +309,24 @@ impl Component for PinEntry<'_> {
                     }
                     self.update(ctx);
                 }
-                CancelableChoiceAction::Choice(PinAction::Show) => {
+                ChoiceMsg::Choice {
+                    item: PinAction::Show,
+                    ..
+                } => {
                     self.show_real_pin = true;
                     self.update(ctx);
                 }
-                CancelableChoiceAction::Choice(PinAction::Enter) if !self.is_empty() => {
+                ChoiceMsg::Choice {
+                    item: PinAction::Enter,
+                    ..
+                } if !self.is_empty() => {
                     // ENTER is not valid when the PIN is empty
                     return Some(CancelConfirmMsg::Confirmed);
                 }
-                CancelableChoiceAction::Choice(PinAction::Digit(ch)) if !self.is_full() => {
+                ChoiceMsg::Choice {
+                    item: PinAction::Digit(ch),
+                    ..
+                } if !self.is_full() => {
                     self.textbox.append(ctx, ch);
                     // Choosing random digit to be shown next
                     self.choice_page

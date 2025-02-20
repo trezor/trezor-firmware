@@ -15,18 +15,13 @@ if TYPE_CHECKING:
 
 
 async def request_word_count(recovery_type: RecoveryType) -> int:
-    from apps.management.recovery_device.recover import RecoveryAborted
-
-    try:
-        count = await interact(
-            trezorui_api.select_word_count(recovery_type=recovery_type),
-            "recovery_word_count",
-            ButtonRequestType.MnemonicWordCount,
-        )
-        # It can be returning a string (for example for __debug__ in tests)
-        return int(count)
-    except ActionCancelled:
-        raise RecoveryAborted
+    count = await interact(
+        trezorui_api.select_word_count(recovery_type=recovery_type),
+        "recovery_word_count",
+        ButtonRequestType.MnemonicWordCount,
+    )
+    # It can be returning a string (for example for __debug__ in tests)
+    return int(count)
 
 
 async def request_word(

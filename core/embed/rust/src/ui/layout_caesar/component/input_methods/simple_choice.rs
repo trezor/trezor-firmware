@@ -1,5 +1,3 @@
-use crate::error::Error;
-
 use crate::{
     strutil::TString,
     translations::TR,
@@ -10,9 +8,7 @@ use crate::{
     },
 };
 
-use super::super::{
-    ButtonDetails, ButtonLayout, CancelableChoiceAction, ChoiceFactory, ChoiceItem, ChoicePage,
-};
+use super::super::{ButtonDetails, ButtonLayout, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage};
 use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
@@ -122,14 +118,14 @@ impl SimpleChoice {
 }
 
 impl Component for SimpleChoice {
-    type Msg = CancelableChoiceAction<usize>;
+    type Msg = ChoiceMsg<usize>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.choice_page.place(bounds)
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.choice_page.event(ctx, event).map(|evt| evt.0)
+        self.choice_page.event(ctx, event)
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

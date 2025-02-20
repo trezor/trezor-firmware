@@ -67,39 +67,27 @@ def cancel_select_number_of_words(
     debug: "DebugLink",
     unlock_repeated_backup=False,
 ) -> None:
-    def select_bolt() -> "LayoutContent":
+    if debug.layout_type is LayoutType.Bolt:
+        assert debug.read_layout().text_content() == TR.recovery__num_of_words
         # click the button from ValuePad
         if unlock_repeated_backup:
             coords = buttons.grid34(0, 2)
         else:
             coords = buttons.grid34(0, 3)
         debug.click(coords)
-        return debug.read_layout()
-
-    def select_caesar() -> "LayoutContent":
+    elif debug.layout_type is LayoutType.Caesar:
+        debug.press_right()
+        layout = debug.read_layout()
+        assert layout.title() == TR.word_count__title
         # navigate to the number and confirm it
         debug.press_left()
-        return debug.read_layout()
-
-    def select_delizia() -> "LayoutContent":
+    elif debug.layout_type is LayoutType.Delizia:
         # click the button from ValuePad
         if unlock_repeated_backup:
             coords = buttons.grid34(0, 3)
         else:
             coords = buttons.grid34(0, 3)
         debug.click(coords)
-        return debug.read_layout()
-
-    if debug.layout_type is LayoutType.Bolt:
-        assert debug.read_layout().text_content() == TR.recovery__num_of_words
-        layout = select_bolt()
-    elif debug.layout_type is LayoutType.Caesar:
-        debug.press_right()
-        layout = debug.read_layout()
-        assert layout.title() == TR.word_count__title
-        layout = select_caesar()
-    elif debug.layout_type is LayoutType.Delizia:
-        layout = select_delizia()
     else:
         raise ValueError("Unknown model")
 

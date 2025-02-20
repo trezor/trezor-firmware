@@ -10,8 +10,7 @@ use crate::{
 };
 
 use super::super::{
-    theme, ButtonLayout, CancelableChoiceAction, ChangingTextLine, ChoiceFactory, ChoiceItem,
-    ChoicePage,
+    theme, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
 use heapless::Vec;
 
@@ -283,14 +282,20 @@ impl Component for WordlistEntry {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some((action, long_press)) = self.choice_page.event(ctx, event) {
-            match action {
-                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Previous) => {
+        if let Some(msg) = self.choice_page.event(ctx, event) {
+            match msg {
+                ChoiceMsg::Choice {
+                    item: WordlistAction::Previous,
+                    ..
+                } => {
                     if self.can_go_back {
                         return Some("");
                     }
                 }
-                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Delete) => {
+                ChoiceMsg::Choice {
+                    item: WordlistAction::Delete,
+                    long_press,
+                } => {
                     // Deleting all when long-pressed
                     if long_press {
                         self.textbox.clear(ctx);
@@ -299,13 +304,17 @@ impl Component for WordlistEntry {
                     }
                     self.update(ctx);
                 }
-                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Letter(
-                    letter,
-                )) => {
+                ChoiceMsg::Choice {
+                    item: WordlistAction::Letter(letter),
+                    ..
+                } => {
                     self.textbox.append(ctx, letter);
                     self.update(ctx);
                 }
-                CancelableChoiceAction::<WordlistAction>::Choice(WordlistAction::Word(word)) => {
+                ChoiceMsg::Choice {
+                    item: WordlistAction::Word(word),
+                    ..
+                } => {
                     return Some(word);
                 }
                 _ => {}

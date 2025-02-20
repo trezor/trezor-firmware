@@ -28,12 +28,14 @@ def select_number_of_words(debug: "DebugLink", num_of_words: int = 20) -> None:
     debug.read_layout(wait=True)
 
     # click the number
-    word_option_offset = 6
-    word_options = (12, 18, 20, 24, 33)
-    index = word_option_offset + word_options.index(
-        num_of_words
-    )  # raises if num of words is invalid
-    coords = buttons.grid34(index % 3, index // 3)
+    coords_map = {
+        12: buttons.grid34(0, 2),
+        18: buttons.grid34(1, 2),
+        20: buttons.grid34(2, 2),
+        24: buttons.grid34(1, 3),
+        33: buttons.grid34(2, 3),
+    }
+    coords = coords_map.get(num_of_words)
     debug.click(coords)
     debug.read_layout(wait=True)
 

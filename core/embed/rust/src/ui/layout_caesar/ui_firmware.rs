@@ -27,7 +27,6 @@ use crate::{
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
-            WORD_COUNT_LABELS_ALL, WORD_COUNT_LABELS_MULTISHARE,
         },
         ModelUI,
     },
@@ -894,18 +893,14 @@ impl FirmwareUI for UICaesar {
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
         let title: TString = TR::word_count__title.into();
-        let choices = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
-            WORD_COUNT_LABELS_MULTISHARE
-                .iter()
-                .map(|&label| TString::from_str(label))
-                .collect()
-        } else {
-            WORD_COUNT_LABELS_ALL
-                .iter()
-                .map(|&label| TString::from_str(label))
-                .collect()
+        let choices: Vec<TString<'static>, 5> = {
+            let nums: &[&str] = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+                &["20", "33"]
+            } else {
+                &["12", "18", "20", "24", "33"]
+            };
+            nums.iter().map(|&num| num.into()).collect()
         };
-
         let layout = RootComponent::new(
             Frame::new(title, SimpleChoice::new(choices, false, true)).with_title_centered(),
         );

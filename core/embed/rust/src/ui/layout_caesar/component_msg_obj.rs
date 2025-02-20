@@ -119,7 +119,7 @@ impl ComponentMsgObj for NumberInput {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             Self::Msg::Cancel => (CANCELLED.as_obj(), 0.try_into()?).try_into(),
-            Self::Msg::Choice(m) => (CONFIRMED.as_obj(), m.try_into()?).try_into(),
+            Self::Msg::Choice { item, .. } => (CONFIRMED.as_obj(), item.try_into()?).try_into(),
         }
     }
 }
@@ -128,11 +128,11 @@ impl ComponentMsgObj for SimpleChoice {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             Self::Msg::Cancel => Ok(CANCELLED.as_obj()),
-            Self::Msg::Choice(index) => {
+            Self::Msg::Choice { item, .. } => {
                 if self.return_index {
-                    index.try_into()
+                    item.try_into()
                 } else {
-                    let text = self.result_by_index(index);
+                    let text = self.result_by_index(item);
                     text.try_into()
                 }
             }

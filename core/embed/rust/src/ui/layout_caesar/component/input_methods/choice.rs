@@ -1,5 +1,3 @@
-use crate::error::Error;
-
 use crate::ui::{
     component::{Child, Component, Event, EventCtx, Pad},
     geometry::{Insets, Offset, Rect},
@@ -13,8 +11,8 @@ use super::super::{
 
 const DEFAULT_ITEMS_DISTANCE: i16 = 10;
 
-pub enum CancelableChoiceAction<T> {
-    Choice(T),
+pub enum ChoiceMsg<T> {
+    Choice { item: T, long_press: bool },
     Cancel,
 }
 
@@ -503,7 +501,7 @@ impl<F, A> Component for ChoicePage<F, A>
 where
     F: ChoiceFactory<Action = A>,
 {
-    type Msg = (CancelableChoiceAction<A>, bool);
+    type Msg = ChoiceMsg<A>;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let (content_area, button_area) = bounds.split_bottom(theme::BUTTON_HEIGHT);
@@ -576,7 +574,7 @@ where
             match pos {
                 ButtonPos::Left => {
                     if self.is_cancelable && self.page_counter == 0 {
-                        return Some((CancelableChoiceAction::<A>::Cancel, true));
+                        return Some(ChoiceMsg::<A>::Cancel);
                     } else {
                         // Clicked BACK. Decrease the page counter.
                         // In case of carousel going to the right end.
@@ -591,10 +589,10 @@ where
                 ButtonPos::Middle => {
                     // Clicked SELECT. Send current choice index with information about long-press
                     self.clear_and_repaint(ctx);
-                    return Some((
-                        CancelableChoiceAction::Choice(self.get_current_action()),
+                    return Some(ChoiceMsg::Choice {
+                        item: self.get_current_action(),
                         long_press,
-                    ));
+                    });
                 }
             }
         };
@@ -607,10 +605,10 @@ where
                     buttons.reset_state(ctx);
                 });
                 self.clear_and_repaint(ctx);
-                return Some((
-                    CancelableChoiceAction::Choice(self.get_current_action()),
-                    true,
-                ));
+                return Some(ChoiceMsg::Choice {
+                    item: self.get_current_action(),
+                    long_press: true,
+                });
             }
         };
         // The middle button was pressed, highlighting the current choice by color
