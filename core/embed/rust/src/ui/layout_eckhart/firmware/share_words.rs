@@ -15,8 +15,9 @@ use crate::{
 use heapless::Vec;
 
 use super::super::{
-    component::{button::Button, ActionBar, ActionBarMsg, Header, HeaderMsg, Hint},
+    component::Button,
     constant::SCREEN,
+    firmware::{ActionBar, ActionBarMsg, Header, HeaderMsg, Hint},
     fonts, theme,
 };
 

@@ -5,7 +5,7 @@ use crate::ui::{
     shape::Renderer,
 };
 
-use super::{super::fonts, theme};
+use super::super::{fonts, theme};
 
 const TEXT_BOTTOM_MARGIN: i16 = 54;
 const ICON_TOP_MARGIN: i16 = 48;

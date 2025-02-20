@@ -10,8 +10,10 @@ use crate::{
 };
 
 use super::{
-    constant::WIDTH,
-    theme::{FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE},
+    super::{
+        constant::WIDTH,
+        theme::{FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE},
+    },
     ResultFooter, ResultStyle,
 };
 
@@ -22,7 +24,7 @@ const MESSAGE_AREA_START: i16 = 90;
 #[cfg(feature = "bootloader")]
 const STYLE: &ResultStyle = &crate::ui::layout_eckhart::theme::bootloader::RESULT_WIPE;
 #[cfg(not(feature = "bootloader"))]
-const STYLE: &ResultStyle = &super::theme::RESULT_ERROR;
+const STYLE: &ResultStyle = &super::super::theme::RESULT_ERROR;
 
 pub struct ErrorScreen<'a> {
     bg: Pad,

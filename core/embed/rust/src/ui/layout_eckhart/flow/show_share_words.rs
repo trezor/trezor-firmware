@@ -18,8 +18,9 @@ use crate::{
 use heapless::Vec;
 
 use super::super::{
-    component::{
-        ActionBar, Button, Header, ShareWordsScreen, ShareWordsScreenMsg, TextScreen, TextScreenMsg,
+    component::Button,
+    firmware::{
+        ActionBar, Header, ShareWordsScreen, ShareWordsScreenMsg, TextScreen, TextScreenMsg,
     },
     theme,
 };
