@@ -608,7 +608,7 @@
     "reboot_to_bootloader__restart": "O Trezor será reiniciado no modo bootloader.",
     "reboot_to_bootloader__title": "Vá para bootloader",
     "reboot_to_bootloader__version_by_template": "Versão firmware {0}\npor {1}",
-    "recovery__cancel_dry_run": "Cancelar verificação do backup",
+    "recovery__cancel_dry_run": "Cancelar verif. do backup",
     "recovery__check_dry_run": "Verificar seu backup?",
     "recovery__cursor_will_change": "A posição do cursor mudará entre as entradas para maior segurança.",
     "recovery__dry_run_backup_not_on_this_device": "Cópia de segurança da carteira não está neste dispositivo",
