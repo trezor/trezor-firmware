@@ -209,6 +209,11 @@ impl Keypad {
         }
     }
 
+    // Check if any button is currently pressed.
+    pub fn pressed(&self) -> bool {
+        self.pressed.is_some()
+    }
+
     fn render_button<'s>(btn: &'s Maybe<Button>, target: &mut impl Renderer<'s>) {
         if btn.is_visible() {
             btn.render(target);
