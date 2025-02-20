@@ -16,19 +16,13 @@ use crate::{
     },
 };
 
-use super::super::super::{
-    component::{
-        button::ButtonContent,
-        constant::SCREEN,
-        keyboard::{
-            common::{
-                DisplayStyle, FADING_ICON_COLORS, FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT,
-                KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS, KEYPAD_VISIBLE_HEIGHT,
-            },
-            keypad::{ButtonState, Keypad, KeypadMsg, KeypadState},
-        },
+use super::{
+    super::super::{component::ButtonContent, constant::SCREEN, theme},
+    common::{
+        DisplayStyle, FADING_ICON_COLORS, FADING_ICON_COUNT, INPUT_TOUCH_HEIGHT,
+        KEYBOARD_INPUT_INSETS, KEYBOARD_INPUT_RADIUS, KEYPAD_VISIBLE_HEIGHT,
     },
-    theme,
+    keypad::{ButtonState, Keypad, KeypadMsg, KeypadState},
 };
 
 pub enum PinKeyboardMsg {
