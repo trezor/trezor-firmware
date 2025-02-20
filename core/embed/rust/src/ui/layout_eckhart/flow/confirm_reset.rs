@@ -13,7 +13,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
+    firmware::{
         ActionBar, Header, HeaderMsg, Hint, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },

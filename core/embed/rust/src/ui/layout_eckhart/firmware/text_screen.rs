@@ -10,7 +10,7 @@ use crate::ui::{
     util::Pager,
 };
 
-pub(crate) use super::{action_bar::ActionBarMsg, ActionBar, Header, HeaderMsg, Hint};
+use super::{action_bar::ActionBarMsg, ActionBar, Header, HeaderMsg, Hint};
 
 /// Full-screen component for rendering text.
 ///
