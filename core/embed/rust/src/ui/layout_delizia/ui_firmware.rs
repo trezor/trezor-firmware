@@ -35,7 +35,7 @@ use crate::{
 use super::{
     component::{
         check_homescreen_format, Bip39Input, CoinJoinProgress, Frame, Homescreen, Lockscreen,
-        MnemonicKeyboard, PinKeyboard, Progress, SelectWordCount, Slip39Input, StatusScreen,
+        MnemonicKeyboard, PinKeyboard, Progress, SelectWordCount, SelectWordCountLayout, Slip39Input, StatusScreen,
         SwipeContent, SwipeUpScreen, VerticalMenu,
     },
     flow::{
@@ -744,9 +744,14 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
+        let selector = SelectWordCount::new(if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+            SelectWordCountLayout::LAYOUT_MULTISHARE
+        } else {
+            SelectWordCountLayout::LAYOUT_ALL
+        });
         let layout = RootComponent::new(Frame::left_aligned(
             TR::recovery__num_of_words.into(),
-            SelectWordCount::new(recovery_type),
+            selector,
         ));
         Ok(layout)
     }

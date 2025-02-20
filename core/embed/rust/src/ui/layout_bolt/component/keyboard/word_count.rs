@@ -3,7 +3,6 @@ use crate::{
     ui::{
         component::{Component, Event, EventCtx},
         geometry::{Grid, GridCellSpan, Rect},
-        layout::util::RecoveryType,
         shape::Renderer,
     },
 };
@@ -42,24 +41,18 @@ impl Btn {
     }
 }
 
-struct SelectWordCountLayout {
+pub struct SelectWordCountLayout {
     choice_buttons: &'static [Btn],
     cancel_button_placement: GridCellSpan,
 }
 
-pub struct SelectWordCount {
-    layout: SelectWordCountLayout,
-    choice_buttons: Vec<Button, 5>,
-    cancel_button: Button,
-}
-
-impl SelectWordCount {
+impl SelectWordCountLayout {
     /*
      * 12 | 18 | 20
      * ------------
      * x  | 24 | 33
      */
-    const LAYOUT_ALL: SelectWordCountLayout = SelectWordCountLayout {
+    pub const LAYOUT_ALL: SelectWordCountLayout = SelectWordCountLayout {
         choice_buttons: &[
             Btn::new("12", 12, (0, 0)),
             Btn::new("18", 18, (0, 2)),
@@ -76,21 +69,23 @@ impl SelectWordCount {
     /*
      * x | 20 | 33
      */
-    const LAYOUT_MULTISHARE: SelectWordCountLayout = SelectWordCountLayout {
+    pub const LAYOUT_MULTISHARE: SelectWordCountLayout = SelectWordCountLayout {
         choice_buttons: &[Btn::new("20", 20, (0, 2)), Btn::new("33", 33, (0, 4))],
         cancel_button_placement: GridCellSpan {
             from: (0, 0),
             to: (0, 1),
         },
     };
+}
 
-    pub fn new(recovery_type: RecoveryType) -> Self {
-        let layout = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
-            Self::LAYOUT_MULTISHARE
-        } else {
-            Self::LAYOUT_ALL
-        };
+pub struct SelectWordCount {
+    layout: SelectWordCountLayout,
+    choice_buttons: Vec<Button, 5>,
+    cancel_button: Button,
+}
 
+impl SelectWordCount {
+    pub fn new(layout: SelectWordCountLayout) -> Self {
         let choice_buttons = layout
             .choice_buttons
             .iter()
