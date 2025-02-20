@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import atexit
 import functools
 import logging
 import os
@@ -32,6 +33,8 @@ from ..transport import Transport
 from ..transport.session import Session, SessionV1
 
 LOG = logging.getLogger(__name__)
+
+_TRANSPORT: Transport | None = None
 
 if t.TYPE_CHECKING:
     # Needed to enforce a return value from decorators
@@ -167,16 +170,25 @@ class TrezorConnection:
         return session
 
     def get_transport(self) -> "Transport":
+        global _TRANSPORT
+        if _TRANSPORT is not None:
+            return _TRANSPORT
+
         try:
             # look for transport without prefix search
-            return transport.get_transport(self.path, prefix_search=False)
+            _TRANSPORT = transport.get_transport(self.path, prefix_search=False)
         except Exception:
             # most likely not found. try again below.
             pass
 
         # look for transport with prefix search
         # if this fails, we want the exception to bubble up to the caller
-        return transport.get_transport(self.path, prefix_search=True)
+        if not _TRANSPORT:
+            _TRANSPORT = transport.get_transport(self.path, prefix_search=True)
+
+        _TRANSPORT.open()
+        atexit.register(_TRANSPORT.close)
+        return _TRANSPORT
 
     def get_client(self) -> TrezorClient:
         return get_client(self.get_transport())
