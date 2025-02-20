@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, TextIO, Union, cast
 
 from ..debuglink import TrezorClientDebugLink
+from ..transport import Transport
 from ..transport.udp import UdpTransport
 
 LOG = logging.getLogger(__name__)
@@ -108,13 +109,12 @@ class Emulator:
 
     def wait_until_ready(self, timeout: float = EMULATOR_WAIT_TIME) -> None:
         assert self.process is not None, "Emulator not started"
-        transport = self._get_transport()
-        transport.open()
+        self.transport.open()
         LOG.info("Waiting for emulator to come up...")
         start = time.monotonic()
         try:
             while True:
-                if transport.ping():
+                if self.transport.ping():
                     break
                 if self.process.poll() is not None:
                     raise RuntimeError("Emulator process died")
@@ -125,7 +125,7 @@ class Emulator:
 
                 time.sleep(0.1)
         finally:
-            transport.close()
+            self.transport.close()
 
         LOG.info(f"Emulator ready after {time.monotonic() - start:.3f} seconds")
 
@@ -155,7 +155,11 @@ class Emulator:
             env=env,
         )
 
-    def start(self) -> None:
+    def start(
+        self,
+        transport: Optional[UdpTransport] = None,
+        debug_transport: Optional[Transport] = None,
+    ) -> None:
         if self.process:
             if self.process.poll() is not None:
                 # process has died, stop and start again
@@ -165,6 +169,7 @@ class Emulator:
                 # process is running, no need to start again
                 return
 
+        self.transport = transport or self._get_transport()
         self.process = self.launch_process()
         try:
             self.wait_until_ready()
@@ -177,15 +182,16 @@ class Emulator:
         (self.profile_dir / "trezor.pid").write_text(str(self.process.pid) + "\n")
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
-        transport = self._get_transport()
         self._client = TrezorClientDebugLink(
-            transport, auto_interact=self.auto_interact
+            self.transport,
+            auto_interact=self.auto_interact,
+            open_transport=True,
+            debug_transport=debug_transport,
         )
-        self._client.open()
 
     def stop(self) -> None:
         if self._client:
-            self._client.close()
+            self._client.close_transport()
         self._client = None
 
         if self.process:
@@ -208,8 +214,9 @@ class Emulator:
         # preserving the recording directory between restarts
         self.restart_amount += 1
         prev_screenshot_dir = self.client.debug.screenshot_recording_dir
+        debug_transport = self.client.debug.transport
         self.stop()
-        self.start()
+        self.start(transport=self.transport, debug_transport=debug_transport)
         if prev_screenshot_dir:
             self.client.debug.start_recording(
                 prev_screenshot_dir, refresh_index=self.restart_amount

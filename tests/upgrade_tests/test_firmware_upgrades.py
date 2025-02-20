@@ -447,6 +447,7 @@ def test_upgrade_u2f(gen: str, tag: str):
         storage = emu.get_storage()
 
     with EmulatorWrapper(gen, storage=storage) as emu:
+        session = emu.client.get_seedless_session()
         counter = fido.get_next_counter(session)
         assert counter == 12
 
