@@ -17,12 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_NRF_CRC8_H
-#define TREZORHAL_NRF_CRC8_H
+#pragma once
 
 #include <trezor_types.h>
 
 uint8_t crc8(const uint8_t *src, size_t len, uint8_t polynomial,
              uint8_t initial_value, bool reversed);
-
-#endif
