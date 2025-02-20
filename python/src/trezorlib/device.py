@@ -138,8 +138,6 @@ def sd_protect(
 def wipe(session: "Session") -> str | None:
     ret = session.call(messages.WipeDevice(), expect=messages.Success)
     session.invalidate()
-    # if not session.features.bootloader_mode:
-    #     session.refresh_features()
     return _return_success(ret)
 
 
