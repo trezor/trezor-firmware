@@ -496,15 +496,9 @@ class DebugLink:
 
     def open(self) -> None:
         self.transport.open()
-        # raise NotImplementedError
-        # TODO is this needed?
-        # self.transport.deprecated_begin_session()
 
     def close(self) -> None:
-        pass
-        # raise NotImplementedError
-        # TODO is this needed?
-        # self.transport.deprecated_end_session()
+        self.transport.close()
 
     def _write(self, msg: protobuf.MessageType) -> None:
         if self.waiting_for_layout_change:
@@ -1215,18 +1209,28 @@ class TrezorClientDebugLink(TrezorClient):
     # without special DebugLink interface provided
     # by the device.
 
-    def __init__(self, transport: "Transport", auto_interact: bool = True) -> None:
+    def __init__(
+        self,
+        transport: Transport,
+        auto_interact: bool = True,
+        open_transport: bool = True,
+        debug_transport: Transport | None = None,
+    ) -> None:
         try:
-            debug_transport = transport.find_debug()
+            debug_transport = debug_transport or transport.find_debug()
             self.debug = DebugLink(debug_transport, auto_interact)
+            if open_transport:
+                self.debug.open()
             # try to open debuglink, see if it works
-            self.debug.open()
-            self.debug.close()
+            assert self.debug.transport.ping()
         except Exception:
             if not auto_interact:
                 self.debug = NullDebugLink()
             else:
                 raise
+
+        if open_transport:
+            transport.open()
 
         # set transport explicitly so that sync_responses can work
         super().__init__(transport)
@@ -1234,7 +1238,6 @@ class TrezorClientDebugLink(TrezorClient):
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
-        self.reset_debug_features(new_seedless_session=True)
         self.sync_responses()
 
         # So that we can choose right screenshotting logic (T1 vs TT)
@@ -1248,14 +1251,17 @@ class TrezorClientDebugLink(TrezorClient):
 
     def get_new_client(self) -> TrezorClientDebugLink:
         new_client = TrezorClientDebugLink(
-            self.transport, self.debug.allow_interactions
+            self.transport,
+            self.debug.allow_interactions,
+            open_transport=False,
+            debug_transport=self.debug.transport,
         )
         new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
         new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
         new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
         return new_client
 
-    def reset_debug_features(self, new_seedless_session: bool = False) -> None:
+    def reset_debug_features(self) -> None:
         """
         Prepare the debugging client for a new testcase.
 
@@ -1361,21 +1367,9 @@ class TrezorClientDebugLink(TrezorClient):
 
         return _callback_passphrase
 
-    def ensure_open(self) -> None:
-        """Only open session if there isn't already an open one."""
-        # if self.session_counter == 0:
-        #     self.open()
-        # TODO check if is this needed
-
-    def open(self) -> None:
-        pass
-        # TODO is this needed?
-        # self.debug.open()
-
-    def close(self) -> None:
-        pass
-        # TODO is this needed?
-        # self.debug.close()
+    def close_transport(self) -> None:
+        self.transport.close()
+        self.debug.close()
 
     def lock(self) -> None:
         s = self.get_seedless_session()
@@ -1385,7 +1379,7 @@ class TrezorClientDebugLink(TrezorClient):
         self,
         passphrase: str | object | None = "",
         derive_cardano: bool = False,
-        session_id: int = 0,
+        session_id: bytes | None = None,
     ) -> SessionDebugWrapper:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
@@ -1474,7 +1468,7 @@ class TrezorClientDebugLink(TrezorClient):
         else:
             input_flow = None
 
-        self.reset_debug_features(new_seedless_session=False)
+        self.reset_debug_features()
 
         if exc_type is not None and isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in
@@ -1527,20 +1521,15 @@ class TrezorClientDebugLink(TrezorClient):
         # prompt, which is in TINY mode and does not respond to `Ping`.
         if self.protocol_version is ProtocolVersion.V1:
             assert isinstance(self.protocol, ProtocolV1Channel)
-            self.transport.open()
-            try:
-                self.protocol.write(messages.Cancel())
-                resp = self.protocol.read()
-                message = "SYNC" + secrets.token_hex(8)
-                self.protocol.write(messages.Ping(message=message))
-                while resp != messages.Success(message=message):
-                    try:
-                        resp = self.protocol.read()
-                    except Exception:
-                        pass
-            finally:
-                pass
-                # TODO fix self.transport.end_session()
+            self.protocol.write(messages.Cancel())
+            resp = self.protocol.read()
+            message = "SYNC" + secrets.token_hex(8)
+            self.protocol.write(messages.Ping(message=message))
+            while resp != messages.Success(message=message):
+                try:
+                    resp = self.protocol.read()
+                except Exception:
+                    pass
 
     def mnemonic_callback(self, _) -> str:
         word, pos = self.debug.read_recovery_word()

@@ -795,7 +795,7 @@ def test_get_address(session: Session):
 
 def test_multisession_authorization(client: Client):
     # Authorize CoinJoin with www.example1.com in session 1.
-    session1 = client.get_session(session_id=1)
+    session1 = client.get_session()
 
     btc.authorize_coinjoin(
         session1,
@@ -807,10 +807,9 @@ def test_multisession_authorization(client: Client):
         coin_name="Testnet",
         script_type=messages.InputScriptType.SPENDTAPROOT,
     )
-    session2 = client.get_session(session_id=2)
+
     # Open a second session.
-    # session_id1 = session.session_id
-    # TODO client.init_device(new_session=True)
+    session2 = client.get_session()
 
     # Authorize CoinJoin with www.example2.com in session 2.
     btc.authorize_coinjoin(
