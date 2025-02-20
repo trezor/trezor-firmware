@@ -5,7 +5,6 @@ use crate::{
         component::{text::TextStyle, Component, Event, EventCtx, Label},
         display::{Color, Icon},
         geometry::{Alignment2D, Insets, Offset, Rect},
-        layout_eckhart::constant,
         lerp::Lerp,
         shape::{self, Renderer},
         util::animation_disabled,
@@ -13,8 +12,8 @@ use crate::{
 };
 
 use super::{
-    button::{Button, ButtonContent, ButtonMsg},
-    theme,
+    super::component::{Button, ButtonContent, ButtonMsg},
+    constant, theme,
 };
 
 const ANIMATION_TIME_MS: u32 = 1000;

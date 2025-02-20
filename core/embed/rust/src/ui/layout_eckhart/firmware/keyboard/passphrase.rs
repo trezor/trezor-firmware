@@ -22,7 +22,7 @@ use crate::{
 };
 
 use super::super::{
-    button::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
+    super::component::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
     constant::SCREEN,
     keyboard::{
         common::{
