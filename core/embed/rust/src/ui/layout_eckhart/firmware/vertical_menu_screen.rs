@@ -14,10 +14,7 @@ use crate::{
     },
 };
 
-use super::super::{
-    component::{constant::SCREEN, Header, HeaderMsg, VerticalMenu, VerticalMenuMsg},
-    theme,
-};
+use super::{constant::SCREEN, theme, Header, HeaderMsg, VerticalMenu, VerticalMenuMsg};
 
 pub struct VerticalMenuScreen {
     header: Header,
