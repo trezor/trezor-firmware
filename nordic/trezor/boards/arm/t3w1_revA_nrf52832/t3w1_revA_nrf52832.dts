@@ -28,11 +28,11 @@
 		compatible = "gpio-leds";
 		led0: led_0 {
 			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
-			label = "Green LED 0";
+			label = "Reserved output";
 		};
 		led1: led_1 {
 			gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
-			label = "Green LED 1";
+			label = "NRF ready";
 		};
 	};
 
@@ -40,7 +40,7 @@
 		compatible = "gpio-keys";
 		button0: button_0 {
 			gpios = <&gpio0 14 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
-			label = "Push button switch 0";
+			label = "Stay in bootloader";
 			zephyr,code = <INPUT_KEY_0>;
 		};
 		trezor_ready: trezor_ready {

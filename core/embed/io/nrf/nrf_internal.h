@@ -17,10 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_NRF_INTERNAL_H
-#define TREZORHAL_NRF_INTERNAL_H
+#pragma once
 
 #include <trezor_types.h>
+
+typedef enum {
+  MGMT_CMD_SYSTEM_OFF = 0x00,
+  MGMT_CMD_INFO = 0x01,
+} management_cmd_t;
+
+typedef enum {
+  MGMT_RESP_INFO = 0,
+} management_resp_t;
 
 void nrf_dfu_comm_send(const uint8_t *data, uint32_t len);
 uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len);
@@ -36,4 +44,5 @@ bool nrf_reboot_to_bootloader(void);
 void nrf_signal_running(void);
 void nrf_signal_off(void);
 
-#endif
+void nrf_stay_in_bootloader(bool set);
+bool nrf_in_reserved_gpio(void);

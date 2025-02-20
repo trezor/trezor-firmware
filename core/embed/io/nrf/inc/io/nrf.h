@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_NRF_H
-#define TREZORHAL_NRF_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -28,6 +27,8 @@
 typedef enum {
   NRF_SERVICE_BLE = 0,
   NRF_SERVICE_BLE_MANAGER = 1,
+  NRF_SERVICE_MANAGEMENT = 2,
+  NRF_SERVICE_PRODTEST = 3,
 
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;
@@ -38,6 +39,18 @@ typedef enum {
   NRF_STATUS_ERROR = 2,    // General error
   NRF_STATUS_ABORTED = 3,  // Packet was aborted
 } nrf_status_t;
+
+typedef struct {
+  uint8_t version_major;
+  uint8_t version_minor;
+  uint8_t version_patch;
+  uint8_t version_tweak;
+
+  bool in_trz_ready;
+  bool in_stay_in_bootloader;
+  bool out_nrf_ready;
+  bool out_reserved;
+} nrf_info_t;
 
 typedef void (*nrf_rx_callback_t)(const uint8_t *data, uint32_t len);
 typedef void (*nrf_tx_callback_t)(nrf_status_t status, void *context);
@@ -74,4 +87,23 @@ int32_t nrf_send_msg(nrf_service_id_t service, const uint8_t *data,
 // the message is being sent, it will be sent. The callback will not be called.
 bool nrf_abort_msg(int32_t id);
 
-#endif
+// Reads version and other info from NRF application.
+// Blocking function.
+bool nrf_get_info(nrf_info_t *info);
+
+// TEST only functions
+
+// Test SPI communication with NRF
+bool nrf_test_spi_comm(void);
+
+// Test UART communication with NRF
+bool nrf_test_uart_comm(void);
+
+// Test reboot to bootloader
+bool nrf_test_reboot_to_bootloader(void);
+
+bool nrf_test_gpio_trz_ready(void);
+
+bool nrf_test_gpio_stay_in_bld(void);
+
+bool nrf_test_gpio_reserved(void);
