@@ -40,7 +40,7 @@ def prepare_recovery_and_evaluate(
     features = device_handler.features()
     debug = device_handler.debuglink()
     assert features.initialized is False
-    device_handler.run(device.recover, pin_protection=False)  # type: ignore
+    device_handler.run_with_session(device.recover, pin_protection=False)  # type: ignore
 
     yield debug
 

@@ -17,11 +17,11 @@
 import pytest
 
 from trezorlib import device
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.models("safe")
-def test_tutorial(client: Client):
-    device.show_device_tutorial(client)
-    assert client.features.initialized is False
+def test_tutorial(session: Session):
+    device.show_device_tutorial(session)
+    assert session.features.initialized is False
