@@ -45,10 +45,14 @@ use crate::micropython::qstr::Qstr;
 #[allow(non_camel_case_types)]
 pub enum TranslatedString {
 % for idx, name in order.items():
+<%
+    if name not in en_data:
+        continue
+%>\
     %if any(name.startswith(prefix + "__") for prefix in ALTCOIN_PREFIXES):
     #[cfg(feature = "universal_fw")]
     %endif
-    ${name} = ${idx},  // ${json.dumps(en_data.get(name, '""'))}
+    ${name} = ${idx},  // ${encode_str(en_data.get(name))}
 % endfor
 }
 
@@ -59,7 +63,9 @@ impl TranslatedString {
         match self {
 % for name in order.values():
 <%
-            value = en_data.get(name, '""')
+            value = en_data.get(name)
+            if value is None:
+                continue
             layouts_dict = value if isinstance(value, dict) else None
             universal_fw = any(name.startswith(prefix + "__") for prefix in ALTCOIN_PREFIXES)
 %>\
@@ -85,6 +91,10 @@ impl TranslatedString {
     pub fn from_qstr(qstr: Qstr) -> Option<Self> {
         match qstr {
 % for name in order.values():
+<%
+            if name not in en_data:
+                continue
+%>\
             %if any(name.startswith(prefix + "__") for prefix in ALTCOIN_PREFIXES):
             #[cfg(feature = "universal_fw")]
             %endif

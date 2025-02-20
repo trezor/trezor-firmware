@@ -171,8 +171,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     cardano__collateral_return = 124,  // "Collateral return"
     #[cfg(feature = "universal_fw")]
-    cardano__confirm = 125,  // "\"\""
-    #[cfg(feature = "universal_fw")]
     cardano__confirm_signing_stake_pool = 126,  // "Confirm signing the stake pool registration as an owner."
     #[cfg(feature = "universal_fw")]
     cardano__confirm_transaction = 127,  // "Confirm transaction"
@@ -361,7 +359,6 @@ pub enum TranslatedString {
     device_name__change_template = 226,  // "Change device name to {0}?"
     device_name__title = 227,  // "Device name"
     entropy__send = 228,  // "Do you really want to send entropy?"
-    entropy__title = 229,  // "\"\""
     entropy__title_confirm = 230,  // "Confirm entropy"
     #[cfg(feature = "universal_fw")]
     eos__about_to_sign_template = 231,  // "You are about to sign {0}."
@@ -799,7 +796,6 @@ pub enum TranslatedString {
     recovery__num_of_words = 511,  // "Select the number of words in your backup."
     recovery__only_first_n_letters = 512,  // "You'll only have to select the first 2-4 letters of each word."
     recovery__progress_will_be_lost = 513,  // "All progress will be lost."
-    recovery__select_num_of_words = 514,  // "\"\""
     recovery__share_already_entered = 515,  // "Share already entered"
     recovery__share_from_another_multi_share_backup = 516,  // "You have entered a share from a different backup."
     recovery__share_num_template = 517,  // "Share {0}"
@@ -874,7 +870,6 @@ pub enum TranslatedString {
     reset__threshold_info = 586,  // "= minimum number of unique word lists used for recovery."
     reset__title_backup_is_done = 587,  // "Backup is done"
     reset__title_create_wallet = 588,  // "Create wallet"
-    reset__title_create_wallet_shamir = 589,  // "\"\""
     reset__title_group_threshold = 590,  // "Group threshold"
     reset__title_number_of_groups = 591,  // "Number of groups"
     reset__title_number_of_shares = 592,  // "Number of shares"
@@ -940,7 +935,6 @@ pub enum TranslatedString {
     send__title_sending_amount = 650,  // "Sending amount"
     send__title_sending_to = 651,  // "Sending to"
     send__to_the_total_amount = 652,  // "To the total amount:"
-    send__total_amount_colon = 653,  // "\"\""
     send__transaction_id = 654,  // "Transaction ID"
     send__you_are_contributing = 655,  // "You are contributing:"
     share_words__words_in_order = 656,  // " words in order."
@@ -1290,7 +1284,6 @@ pub enum TranslatedString {
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
-    instructions__hold_to_finish_tutorial = 892,  // "\"\""
     instructions__learn_more = 893,  // "Learn more"
     instructions__shares_continue_with_x_template = 894,  // "Continue with Share #{0}"
     instructions__shares_start_with_1 = 895,  // "Start with share #1"
@@ -1316,12 +1309,8 @@ pub enum TranslatedString {
     send__transaction_signed = 915,  // "Transaction signed"
     tutorial__continue = 916,  // "Continue tutorial"
     tutorial__exit = 917,  // "Exit tutorial"
-    tutorial__first_transaction_finish = 918,  // "\"\""
-    tutorial__first_transaction_intro = 919,  // "\"\""
     tutorial__menu = 920,  // "Find context-specific actions and options in the menu."
-    tutorial__one_more_step = 921,  // "\"\""
     tutorial__ready_to_use_safe5 = 922,  // "You're all set to start using your device!"
-    tutorial__subtitle_safe5 = 923,  // "\"\""
     tutorial__swipe_up_and_down = 924,  // "Swipe up & down\nto move through screens."
     tutorial__title_easy_navigation = 925,  // "Easy navigation"
     tutorial__welcome_safe5 = 926,  // "Welcome to\nTrezor Safe 5"
@@ -1549,8 +1538,6 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::cardano__collateral_return => "Collateral return",
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirm => "\"\"",
-            #[cfg(feature = "universal_fw")]
             Self::cardano__confirm_signing_stake_pool => "Confirm signing the stake pool registration as an owner.",
             #[cfg(feature = "universal_fw")]
             Self::cardano__confirm_transaction => "Confirm transaction",
@@ -1739,7 +1726,6 @@ impl TranslatedString {
             Self::device_name__change_template => "Change device name to {0}?",
             Self::device_name__title => "Device name",
             Self::entropy__send => "Do you really want to send entropy?",
-            Self::entropy__title => "\"\"",
             Self::entropy__title_confirm => "Confirm entropy",
             #[cfg(feature = "universal_fw")]
             Self::eos__about_to_sign_template => "You are about to sign {0}.",
@@ -2177,7 +2163,6 @@ impl TranslatedString {
             Self::recovery__num_of_words => "Select the number of words in your backup.",
             Self::recovery__only_first_n_letters => "You'll only have to select the first 2-4 letters of each word.",
             Self::recovery__progress_will_be_lost => "All progress will be lost.",
-            Self::recovery__select_num_of_words => "\"\"",
             Self::recovery__share_already_entered => "Share already entered",
             Self::recovery__share_from_another_multi_share_backup => "You have entered a share from a different backup.",
             Self::recovery__share_num_template => "Share {0}",
@@ -2252,7 +2237,6 @@ impl TranslatedString {
             Self::reset__threshold_info => "= minimum number of unique word lists used for recovery.",
             Self::reset__title_backup_is_done => "Backup is done",
             Self::reset__title_create_wallet => "Create wallet",
-            Self::reset__title_create_wallet_shamir => "\"\"",
             Self::reset__title_group_threshold => "Group threshold",
             Self::reset__title_number_of_groups => "Number of groups",
             Self::reset__title_number_of_shares => "Number of shares",
@@ -2318,7 +2302,6 @@ impl TranslatedString {
             Self::send__title_sending_amount => "Sending amount",
             Self::send__title_sending_to => "Sending to",
             Self::send__to_the_total_amount => "To the total amount:",
-            Self::send__total_amount_colon => "\"\"",
             Self::send__transaction_id => "Transaction ID",
             Self::send__you_are_contributing => "You are contributing:",
             Self::share_words__words_in_order => " words in order.",
@@ -2668,7 +2651,6 @@ impl TranslatedString {
             Self::instructions__enter_next_share => "Enter next share",
             Self::instructions__hold_to_continue => "Hold to continue",
             Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
-            Self::instructions__hold_to_finish_tutorial => "\"\"",
             Self::instructions__learn_more => "Learn more",
             Self::instructions__shares_continue_with_x_template => "Continue with Share #{0}",
             Self::instructions__shares_start_with_1 => "Start with share #1",
@@ -2694,12 +2676,8 @@ impl TranslatedString {
             Self::send__transaction_signed => "Transaction signed",
             Self::tutorial__continue => "Continue tutorial",
             Self::tutorial__exit => "Exit tutorial",
-            Self::tutorial__first_transaction_finish => "\"\"",
-            Self::tutorial__first_transaction_intro => "\"\"",
             Self::tutorial__menu => "Find context-specific actions and options in the menu.",
-            Self::tutorial__one_more_step => "\"\"",
             Self::tutorial__ready_to_use_safe5 => "You're all set to start using your device!",
-            Self::tutorial__subtitle_safe5 => "\"\"",
             Self::tutorial__swipe_up_and_down => "Swipe up & down\nto move through screens.",
             Self::tutorial__title_easy_navigation => "Easy navigation",
             Self::tutorial__welcome_safe5 => "Welcome to\nTrezor Safe 5",
@@ -2926,8 +2904,6 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_cardano__collateral_return => Some(Self::cardano__collateral_return),
             #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__confirm => Some(Self::cardano__confirm),
-            #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_cardano__confirm_signing_stake_pool => Some(Self::cardano__confirm_signing_stake_pool),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_cardano__confirm_transaction => Some(Self::cardano__confirm_transaction),
@@ -3116,7 +3092,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_device_name__change_template => Some(Self::device_name__change_template),
             Qstr::MP_QSTR_device_name__title => Some(Self::device_name__title),
             Qstr::MP_QSTR_entropy__send => Some(Self::entropy__send),
-            Qstr::MP_QSTR_entropy__title => Some(Self::entropy__title),
             Qstr::MP_QSTR_entropy__title_confirm => Some(Self::entropy__title_confirm),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_eos__about_to_sign_template => Some(Self::eos__about_to_sign_template),
@@ -3554,7 +3529,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_recovery__num_of_words => Some(Self::recovery__num_of_words),
             Qstr::MP_QSTR_recovery__only_first_n_letters => Some(Self::recovery__only_first_n_letters),
             Qstr::MP_QSTR_recovery__progress_will_be_lost => Some(Self::recovery__progress_will_be_lost),
-            Qstr::MP_QSTR_recovery__select_num_of_words => Some(Self::recovery__select_num_of_words),
             Qstr::MP_QSTR_recovery__share_already_entered => Some(Self::recovery__share_already_entered),
             Qstr::MP_QSTR_recovery__share_from_another_multi_share_backup => Some(Self::recovery__share_from_another_multi_share_backup),
             Qstr::MP_QSTR_recovery__share_num_template => Some(Self::recovery__share_num_template),
@@ -3629,7 +3603,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__threshold_info => Some(Self::reset__threshold_info),
             Qstr::MP_QSTR_reset__title_backup_is_done => Some(Self::reset__title_backup_is_done),
             Qstr::MP_QSTR_reset__title_create_wallet => Some(Self::reset__title_create_wallet),
-            Qstr::MP_QSTR_reset__title_create_wallet_shamir => Some(Self::reset__title_create_wallet_shamir),
             Qstr::MP_QSTR_reset__title_group_threshold => Some(Self::reset__title_group_threshold),
             Qstr::MP_QSTR_reset__title_number_of_groups => Some(Self::reset__title_number_of_groups),
             Qstr::MP_QSTR_reset__title_number_of_shares => Some(Self::reset__title_number_of_shares),
@@ -3695,7 +3668,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_send__title_sending_amount => Some(Self::send__title_sending_amount),
             Qstr::MP_QSTR_send__title_sending_to => Some(Self::send__title_sending_to),
             Qstr::MP_QSTR_send__to_the_total_amount => Some(Self::send__to_the_total_amount),
-            Qstr::MP_QSTR_send__total_amount_colon => Some(Self::send__total_amount_colon),
             Qstr::MP_QSTR_send__transaction_id => Some(Self::send__transaction_id),
             Qstr::MP_QSTR_send__you_are_contributing => Some(Self::send__you_are_contributing),
             Qstr::MP_QSTR_share_words__words_in_order => Some(Self::share_words__words_in_order),
@@ -4045,7 +4017,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__enter_next_share => Some(Self::instructions__enter_next_share),
             Qstr::MP_QSTR_instructions__hold_to_continue => Some(Self::instructions__hold_to_continue),
             Qstr::MP_QSTR_instructions__hold_to_exit_tutorial => Some(Self::instructions__hold_to_exit_tutorial),
-            Qstr::MP_QSTR_instructions__hold_to_finish_tutorial => Some(Self::instructions__hold_to_finish_tutorial),
             Qstr::MP_QSTR_instructions__learn_more => Some(Self::instructions__learn_more),
             Qstr::MP_QSTR_instructions__shares_continue_with_x_template => Some(Self::instructions__shares_continue_with_x_template),
             Qstr::MP_QSTR_instructions__shares_start_with_1 => Some(Self::instructions__shares_start_with_1),
@@ -4071,12 +4042,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_send__transaction_signed => Some(Self::send__transaction_signed),
             Qstr::MP_QSTR_tutorial__continue => Some(Self::tutorial__continue),
             Qstr::MP_QSTR_tutorial__exit => Some(Self::tutorial__exit),
-            Qstr::MP_QSTR_tutorial__first_transaction_finish => Some(Self::tutorial__first_transaction_finish),
-            Qstr::MP_QSTR_tutorial__first_transaction_intro => Some(Self::tutorial__first_transaction_intro),
             Qstr::MP_QSTR_tutorial__menu => Some(Self::tutorial__menu),
-            Qstr::MP_QSTR_tutorial__one_more_step => Some(Self::tutorial__one_more_step),
             Qstr::MP_QSTR_tutorial__ready_to_use_safe5 => Some(Self::tutorial__ready_to_use_safe5),
-            Qstr::MP_QSTR_tutorial__subtitle_safe5 => Some(Self::tutorial__subtitle_safe5),
             Qstr::MP_QSTR_tutorial__swipe_up_and_down => Some(Self::tutorial__swipe_up_and_down),
             Qstr::MP_QSTR_tutorial__title_easy_navigation => Some(Self::tutorial__title_easy_navigation),
             Qstr::MP_QSTR_tutorial__welcome_safe5 => Some(Self::tutorial__welcome_safe5),
