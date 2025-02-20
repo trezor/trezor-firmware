@@ -80,7 +80,7 @@ def core_emulator(request: pytest.FixtureRequest) -> t.Iterator[Emulator]:
     """Fixture returning default core emulator with possibility of screen recording."""
     with EmulatorWrapper("core", main_args=_emulator_wrapper_main_args()) as emu:
         # Modifying emu.client to add screen recording (when --ui=test is used)
-        with ui_tests.screen_recording(emu.client, request) as _:
+        with ui_tests.screen_recording(emu.client, request, lambda: emu.client) as _:
             yield emu
 
 
@@ -129,8 +129,12 @@ def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, No
 
 
 @pytest.fixture(scope="session")
-def _raw_client(request: pytest.FixtureRequest) -> Client:
-    return _get_raw_client(request)
+def _raw_client(request: pytest.FixtureRequest) -> t.Generator[Client, None, None]:
+    client = _get_raw_client(request)
+    try:
+        yield client
+    finally:
+        client.close_transport()
 
 
 def _get_raw_client(request: pytest.FixtureRequest) -> Client:
@@ -155,7 +159,7 @@ def _client_from_path(
 ) -> Client:
     try:
         transport = get_transport(path)
-        return Client(transport, auto_interact=not interact)
+        return Client(transport, auto_interact=not interact, open_transport=True)
     except Exception as e:
         request.session.shouldstop = "Failed to communicate with Trezor"
         raise RuntimeError(f"Failed to open debuglink for {path}") from e
@@ -164,7 +168,7 @@ def _client_from_path(
 def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
     devices = enumerate_devices()
     for device in devices:
-        return Client(device, auto_interact=not interact)
+        return Client(device, auto_interact=not interact, open_transport=True)
 
     request.session.shouldstop = "Failed to communicate with Trezor"
     raise RuntimeError("No debuggable device found")
@@ -279,14 +283,14 @@ def _client_unlocked(
 
     test_ui = request.config.getoption("ui")
 
-    _raw_client.reset_debug_features(new_seedless_session=True)
-    _raw_client.open()
+    _raw_client.reset_debug_features()
     if isinstance(_raw_client.protocol, ProtocolV1Channel):
         try:
             _raw_client.sync_responses()
         except Exception:
             request.session.shouldstop = "Failed to communicate with Trezor"
             pytest.fail("Failed to communicate with Trezor")
+    _raw_client._seedless_session = _raw_client.get_seedless_session(new_session=True)
 
     # Resetting all the debug events to not be influenced by previous test
     _raw_client.debug.reset_debug_events()
@@ -305,11 +309,6 @@ def _client_unlocked(
     wipe_device(session)
     sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
 
-    _raw_client.protocol = None
-    _raw_client.__init__(
-        transport=_raw_client.transport,
-        auto_interact=_raw_client.debug.allow_interactions,
-    )
     if not _raw_client.features.bootloader_mode:
         _raw_client.refresh_features()
 
@@ -350,12 +349,9 @@ def _client_unlocked(
 
         if request.node.get_closest_marker("experimental"):
             apply_settings(session, experimental_features=True)
-
-        # TODO _raw_client.clear_session()
+        session.end()
 
     yield _raw_client
-
-    _raw_client.close()
 
 
 @pytest.fixture(scope="function")

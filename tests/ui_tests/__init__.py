@@ -38,7 +38,9 @@ def _process_tested(result: TestResult, item: Node) -> None:
 
 @contextmanager
 def screen_recording(
-    client: Client, request: pytest.FixtureRequest
+    client: Client,
+    request: pytest.FixtureRequest,
+    client_callback: Callable[[], Client] | None = None,
 ) -> Generator[None, None, None]:
     test_ui = request.config.getoption("ui")
     if not test_ui:
@@ -56,7 +58,8 @@ def screen_recording(
         client.debug.start_recording(str(testcase.actual_dir))
         yield
     finally:
-        client.ensure_open()
+        if client_callback:
+            client = client_callback()
         if client.protocol_version == ProtocolVersion.PROTOCOL_V1:
             client.sync_responses()
         # Wait for response to Initialize, which gives the emulator time to catch up
