@@ -157,18 +157,30 @@ impl Keypad {
         self.keys[idx].inner_mut().set_content(content);
     }
 
-    pub fn set_button_stylesheet(&mut self, button: KeypadButton, styles: ButtonStyleSheet) {
-        let apply_state = |btn: &mut Maybe<Button>, styles: ButtonStyleSheet| {
-            btn.inner_mut().set_stylesheet(styles);
-        };
-
+    fn get_button_mut(&mut self, button: &KeypadButton) -> &mut Maybe<Button> {
         match button {
-            KeypadButton::Key(idx) => apply_state(&mut self.keys[idx], styles),
-            KeypadButton::Erase => apply_state(&mut self.erase, styles),
-            KeypadButton::Cancel => apply_state(&mut self.cancel, styles),
-            KeypadButton::Confirm => apply_state(&mut self.confirm, styles),
-            KeypadButton::Back => apply_state(&mut self.back, styles),
+            KeypadButton::Key(idx) => &mut self.keys[*idx],
+            KeypadButton::Erase => &mut self.erase,
+            KeypadButton::Cancel => &mut self.cancel,
+            KeypadButton::Confirm => &mut self.confirm,
+            KeypadButton::Back => &mut self.back,
         }
+    }
+
+    fn get_button(&self, button: &KeypadButton) -> &Maybe<Button> {
+        match button {
+            KeypadButton::Key(idx) => &self.keys[*idx],
+            KeypadButton::Erase => &self.erase,
+            KeypadButton::Cancel => &self.cancel,
+            KeypadButton::Confirm => &self.confirm,
+            KeypadButton::Back => &self.back,
+        }
+    }
+
+    pub fn set_button_stylesheet(&mut self, button: KeypadButton, styles: ButtonStyleSheet) {
+        self.get_button_mut(&button)
+            .inner_mut()
+            .set_stylesheet(styles);
     }
 
     fn apply_button_state(btn: &mut Maybe<Button>, state: &ButtonState, ctx: &mut EventCtx) {
@@ -200,13 +212,7 @@ impl Keypad {
         button: KeypadButton,
         state: &ButtonState,
     ) {
-        match button {
-            KeypadButton::Key(idx) => Self::apply_button_state(&mut self.keys[idx], state, ctx),
-            KeypadButton::Erase => Self::apply_button_state(&mut self.erase, state, ctx),
-            KeypadButton::Cancel => Self::apply_button_state(&mut self.cancel, state, ctx),
-            KeypadButton::Confirm => Self::apply_button_state(&mut self.confirm, state, ctx),
-            KeypadButton::Back => Self::apply_button_state(&mut self.back, state, ctx),
-        }
+        Self::apply_button_state(self.get_button_mut(&button), state, ctx);
     }
 
     // Check if any button is currently pressed.
@@ -223,23 +229,8 @@ impl Keypad {
     // Render the pressed button.
     // TODO: Render special shape for the edge buttons.
     fn render_pressed_button<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        match self.pressed {
-            Some(KeypadButton::Key(idx)) => {
-                Self::render_button(&self.keys[idx], target);
-            }
-            Some(KeypadButton::Cancel) => {
-                Self::render_button(&self.cancel, target);
-            }
-            Some(KeypadButton::Erase) => {
-                Self::render_button(&self.erase, target);
-            }
-            Some(KeypadButton::Confirm) => {
-                Self::render_button(&self.confirm, target);
-            }
-            Some(KeypadButton::Back) => {
-                Self::render_button(&self.back, target);
-            }
-            None => {}
+        if let Some(button) = &self.pressed {
+            Self::render_button(self.get_button(button), target);
         }
     }
 
@@ -301,28 +292,28 @@ impl Component for Keypad {
         bounds
     }
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let buttons = [
-            (&mut self.confirm, KeypadButton::Confirm, KeypadMsg::Confirm),
-            (&mut self.erase, KeypadButton::Erase, KeypadMsg::EraseShort),
-            (&mut self.cancel, KeypadButton::Cancel, KeypadMsg::Cancel),
-            (&mut self.back, KeypadButton::Back, KeypadMsg::Back),
+        let click_mapping = [
+            (KeypadButton::Confirm, KeypadMsg::Confirm),
+            (KeypadButton::Erase, KeypadMsg::EraseShort),
+            (KeypadButton::Cancel, KeypadMsg::Cancel),
+            (KeypadButton::Back, KeypadMsg::Back),
         ];
 
-        for (btn, btn_type, msg) in buttons {
-            match btn.event(ctx, event) {
+        for (button, msg) in click_mapping {
+            match self.get_button_mut(&button).event(ctx, event) {
                 // Detect click of all special buttons
                 Some(ButtonMsg::Clicked) => {
                     self.pressed = None;
                     return Some(msg);
                 }
                 // Detect long press of the erase button
-                Some(ButtonMsg::LongPressed) if btn_type == KeypadButton::Erase => {
+                Some(ButtonMsg::LongPressed) if button == KeypadButton::Erase => {
                     self.pressed = None;
                     return Some(KeypadMsg::EraseLong);
                 }
                 // Detect press of all special buttons for rendering purposes
                 Some(ButtonMsg::Pressed) => {
-                    self.pressed = Some(btn_type);
+                    self.pressed = Some(button);
                 }
                 _ => {}
             }
