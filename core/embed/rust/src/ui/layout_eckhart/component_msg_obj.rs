@@ -14,8 +14,36 @@ use crate::{
 };
 
 use super::component::{
-    AllowedTextContent, SelectWordMsg, SelectWordScreen, TextScreen, TextScreenMsg,
+    AllowedTextContent, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
+    PinKeyboardMsg, SelectWordMsg, SelectWordScreen, TextScreen, TextScreenMsg,
 };
+
+impl ComponentMsgObj for PinKeyboard<'_> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            PinKeyboardMsg::Confirmed => self.pin().try_into(),
+            PinKeyboardMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<T> ComponentMsgObj for MnemonicKeyboard<T>
+where
+    T: MnemonicInput,
+{
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            MnemonicKeyboardMsg::Confirmed => {
+                if let Some(word) = self.mnemonic() {
+                    word.try_into()
+                } else {
+                    fatal_error!("Invalid mnemonic")
+                }
+            }
+            MnemonicKeyboardMsg::Previous => "".try_into(),
+        }
+    }
+}
 
 // Clippy/compiler complains about conflicting implementations
 // TODO move the common impls to a common module

@@ -24,7 +24,10 @@ use crate::{
 };
 
 use super::{
-    component::{ActionBar, Button, Header, HeaderMsg, Hint, SelectWordScreen, TextScreen},
+    component::{
+        ActionBar, Bip39Input, Button, Header, HeaderMsg, Hint, MnemonicKeyboard, PinKeyboard,
+        SelectWordScreen, Slip39Input, TextScreen,
+    },
     flow, fonts, theme, UIEckhart,
 };
 
@@ -346,19 +349,30 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn request_bip39(
-        _prompt: TString<'static>,
-        _prefill_word: TString<'static>,
-        _can_go_back: bool,
+        prompt: TString<'static>,
+        prefill_word: TString<'static>,
+        can_go_back: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let layout = RootComponent::new(MnemonicKeyboard::new(
+            prefill_word.map(Bip39Input::prefilled_word),
+            prompt,
+            can_go_back,
+        ));
+        Ok(layout)
     }
 
     fn request_slip39(
-        _prompt: TString<'static>,
-        _prefill_word: TString<'static>,
-        _can_go_back: bool,
+        prompt: TString<'static>,
+        prefill_word: TString<'static>,
+        can_go_back: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let layout = RootComponent::new(MnemonicKeyboard::new(
+            prefill_word.map(Slip39Input::prefilled_word),
+            prompt,
+            can_go_back,
+        ));
+
+        Ok(layout)
     }
 
     fn request_number(
@@ -373,19 +387,27 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn request_pin(
-        _prompt: TString<'static>,
-        _subprompt: TString<'static>,
-        _allow_cancel: bool,
-        _warning: bool,
+        prompt: TString<'static>,
+        subprompt: TString<'static>,
+        allow_cancel: bool,
+        warning: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let warning = if warning {
+            Some(TR::pin__wrong_pin.into())
+        } else {
+            None
+        };
+
+        let layout = RootComponent::new(PinKeyboard::new(prompt, subprompt, warning, allow_cancel));
+        Ok(layout)
     }
 
     fn request_passphrase(
         _prompt: TString<'static>,
         _max_len: u32,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let flow = flow::request_passphrase::new_request_passphrase()?;
+        Ok(flow)
     }
 
     fn select_word(
