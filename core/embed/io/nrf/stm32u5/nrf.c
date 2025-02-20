@@ -524,14 +524,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
     } else if (drv->rx_idx >= UART_HEADER_SIZE &&
                drv->rx_idx < (drv->rx_len - 1)) {
       // receive the rest of the message
-
-      drv->rx_buffer.data[drv->rx_idx - UART_HEADER_SIZE] = drv->rx_byte;
-      drv->rx_idx++;
-
-      if (drv->rx_idx >= NRF_MAX_TX_DATA_SIZE) {
+      if (drv->rx_idx >= NRF_MAX_TX_DATA_SIZE + UART_HEADER_SIZE) {
         // message is too long, flush the line
         drv->rx_idx = 0;
         drv->rx_len = 0;
+      } else {
+        drv->rx_buffer.data[drv->rx_idx - UART_HEADER_SIZE] = drv->rx_byte;
+        drv->rx_idx++;
       }
 
     } else if (drv->rx_idx == (drv->rx_len - 1)) {
