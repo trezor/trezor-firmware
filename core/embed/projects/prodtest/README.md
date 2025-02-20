@@ -256,6 +256,30 @@ haptic-test 3000
 OK
 ```
 
+### nrf-communication
+Tests the internal communication between the main MCU and NRF MCU. The command returns `OK` if the communication is successful.
+
+Example:
+```
+nrf-communication
+# Testing SPI communication...
+# Testing UART communication...
+# Testing reboot to bootloader...
+# Testing GPIO TRZ ready...
+# Testing GPIO stay in bootloader...
+# Testing GPIO reserved...
+OK
+```
+
+### nrf-version
+Retrieves the version of the NRF52 MCU. The command returns `OK` followed by the version in the format `<major>.<minor>.<patch>.<tweak>`.
+
+Example:
+```
+nrf-version
+OK 0.1.2.3
+```
+
 ### touch-test
 Tests the functionality of the display's touch screen. It draws a filled rectangle in one of the four display quadrants and waits for user interaction.
 

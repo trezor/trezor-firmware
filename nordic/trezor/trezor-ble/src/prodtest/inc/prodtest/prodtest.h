@@ -19,5 +19,5 @@
 
 #pragma once
 
-// Initialize the power management module
-void power_management_init(void);
+// Initialize the prodtest module
+void prodtest_init(void);
