@@ -234,12 +234,20 @@ where
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.keypad.render(target);
+        let render_prompt_or_input = |target| {
+            if self.input.inner().is_empty() {
+                self.prompt.render(target);
+            } else {
+                self.input.render(target);
+            }
+        };
 
-        if self.input.inner().is_empty() {
-            self.prompt.render(target);
+        if self.keypad.pressed() {
+            render_prompt_or_input(target);
+            self.keypad.render(target);
         } else {
-            self.input.render(target);
+            self.keypad.render(target);
+            render_prompt_or_input(target);
         }
     }
 }
