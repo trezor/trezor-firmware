@@ -13,7 +13,7 @@ target_sources(app PRIVATE
         src/main.c
         src/ble/connection.c
         src/ble/advertising.c
-        src/ble/management.c
+        src/ble/ble_management.c
         src/ble/service.c
         src/ble/bonds.c
         src/ble/pairing.c

@@ -74,12 +74,12 @@ bool ble_init(void) {
   }
 
   advertising_init();
-  management_init();
+  ble_management_init();
 
   k_sem_give(&ble_init_ok);
   LOG_INF("Bluetooth initialized");
 
-  management_send_status_event();
+  ble_management_send_status_event();
 
   return true;
 }
