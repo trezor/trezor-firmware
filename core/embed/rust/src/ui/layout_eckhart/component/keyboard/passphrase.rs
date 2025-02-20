@@ -355,17 +355,12 @@ impl Component for PassphraseKeyboard {
 
         match self.input.event(ctx, event) {
             Some(PassphraseInputMsg::TouchStart) => {
+                self.multi_tap.clear_pending_state(ctx);
                 // Disable keypad.
                 self.update_keypad_state(ctx);
                 return None;
             }
             Some(PassphraseInputMsg::TouchEnd) => {
-                // Change display style according to the pending key state.
-                self.input.display_style = match self.multi_tap.pending_key() {
-                    Some(_) => DisplayStyle::LastOnly,
-                    None => DisplayStyle::Hidden,
-                };
-
                 // Enable keypad.
                 self.update_keypad_state(ctx);
                 return None;
@@ -582,12 +577,14 @@ impl Component for PassphraseInput {
             Event::Touch(TouchEvent::TouchEnd(pos))
                 if self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
             {
+                self.display_style = DisplayStyle::Hidden;
                 return Some(PassphraseInputMsg::TouchEnd);
             }
             // Return touch end if the touch moves out of the visible area
             Event::Touch(TouchEvent::TouchMove(pos))
                 if !self.shown_area.contains(pos) && self.display_style == DisplayStyle::Shown =>
             {
+                self.display_style = DisplayStyle::Hidden;
                 return Some(PassphraseInputMsg::TouchEnd);
             }
             // Timeout for showing the last char.
