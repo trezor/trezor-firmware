@@ -130,8 +130,12 @@ def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, No
 
 
 @pytest.fixture(scope="session")
-def _raw_client(request: pytest.FixtureRequest) -> Client:
-    return _get_raw_client(request)
+def _raw_client(request: pytest.FixtureRequest) -> t.Generator[Client, None, None]:
+    client = _get_raw_client(request)
+    try:
+        yield client
+    finally:
+        client.close()
 
 
 def _get_raw_client(request: pytest.FixtureRequest) -> Client:
@@ -280,8 +284,11 @@ def _client_unlocked(
 
     test_ui = request.config.getoption("ui")
 
-    _raw_client.reset_debug_features(new_seedless_session=True)
-    _raw_client.open()
+    # _raw_client.open() or ensure_open
+    _raw_client.reset_debug_features()
+    _raw_client._seedless_session = _raw_client.get_seedless_session(
+        new_session=True
+    )  # we're missing transport here
     if isinstance(_raw_client.protocol, ProtocolV1Channel):
         try:
             _raw_client.sync_responses()
@@ -304,7 +311,7 @@ def _client_unlocked(
     while True:
         try:
             if _raw_client.is_invalidated:
-                _raw_client = _get_raw_client(request)
+                _raw_client = _get_raw_client(request)  # transport opened again
             session = _raw_client.get_seedless_session()
             wipe_device(session)
             sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
@@ -366,7 +373,7 @@ def _client_unlocked(
 
     yield _raw_client
 
-    _raw_client.close()
+    # _raw_client.close()
 
 
 @pytest.fixture(scope="function")

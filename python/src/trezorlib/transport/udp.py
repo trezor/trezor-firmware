@@ -101,6 +101,7 @@ class UdpTransport(Transport):
         return "{}:{}:{}".format(self.PATH_PREFIX, *self.device)
 
     def open(self) -> None:
+        # assert self.socket is None
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
         self.socket.settimeout(SOCKET_TIMEOUT)
@@ -111,8 +112,6 @@ class UdpTransport(Transport):
         self.socket = None
 
     def write_chunk(self, chunk: bytes) -> None:
-        if self.socket is None:
-            self.open()
         assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
@@ -120,8 +119,6 @@ class UdpTransport(Transport):
         self.socket.sendall(chunk)
 
     def read_chunk(self) -> bytes:
-        if self.socket is None:
-            self.open()
         assert self.socket is not None
         while True:
             try:

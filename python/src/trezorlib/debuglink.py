@@ -479,7 +479,7 @@ class DebugLink:
         # self.transport.deprecated_begin_session()
 
     def close(self) -> None:
-        pass
+        self.transport.close()
         # raise NotImplementedError
         # TODO is this needed?
         # self.transport.deprecated_end_session()
@@ -1207,13 +1207,19 @@ class TrezorClientDebugLink(TrezorClient):
                 raise
 
         # set transport explicitly so that sync_responses can work
-        super().__init__(transport)
+        super().__init__(transport)  # does open & close transport
 
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
-        self.reset_debug_features(new_seedless_session=True)
-        self.sync_responses()
+        self.transport.open()  # closed in close()
+        self.debug.open()
+
+        self.reset_debug_features()
+        self._seedless_session = self.get_seedless_session(
+            new_session=True
+        )  # needs transport
+        self.sync_responses()  # uses transport
 
         # So that we can choose right screenshotting logic (T1 vs TT)
         # and know the supported debug capabilities
@@ -1225,6 +1231,7 @@ class TrezorClientDebugLink(TrezorClient):
         return self.debug.layout_type
 
     def get_new_client(self) -> TrezorClientDebugLink:
+        self.close()
         new_client = TrezorClientDebugLink(
             self.transport, self.debug.allow_interactions
         )
@@ -1233,7 +1240,7 @@ class TrezorClientDebugLink(TrezorClient):
         new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
         return new_client
 
-    def reset_debug_features(self, new_seedless_session: bool = False) -> None:
+    def reset_debug_features(self) -> None:
         """
         Prepare the debugging client for a new testcase.
 
@@ -1247,8 +1254,6 @@ class TrezorClientDebugLink(TrezorClient):
             t.Type[protobuf.MessageType],
             t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
         ] = {}
-        if new_seedless_session:
-            self._seedless_session = self.get_seedless_session(new_session=True)
 
     @property
     def button_callback(self):
@@ -1354,13 +1359,15 @@ class TrezorClientDebugLink(TrezorClient):
         # TODO check if is this needed
 
     def open(self) -> None:
-        pass
-        # TODO is this needed?
+        self.transport.open()
+        self.debug.open()
+        # TODO is this needed? #
         # self.debug.open()
 
     def close(self) -> None:
-        pass
-        # TODO is this needed?
+        self.transport.close()
+        self.debug.close()
+        # TODO is this needed? #
         # self.debug.close()
 
     def lock(self) -> None:
@@ -1371,7 +1378,7 @@ class TrezorClientDebugLink(TrezorClient):
         self,
         passphrase: str | object | None = "",
         derive_cardano: bool = False,
-        session_id: int = 0,
+        session_id: bytes | None = None,
     ) -> SessionDebugWrapper:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
@@ -1464,7 +1471,7 @@ class TrezorClientDebugLink(TrezorClient):
         else:
             input_flow = None
 
-        self.reset_debug_features(new_seedless_session=False)
+        self.reset_debug_features()
 
         if exc_type is None:
             # If no other exception was raised, evaluate missed responses
@@ -1600,7 +1607,7 @@ class TrezorClientDebugLink(TrezorClient):
         # prompt, which is in TINY mode and does not respond to `Ping`.
         if self.protocol_version is ProtocolVersion.PROTOCOL_V1:
             assert isinstance(self.protocol, ProtocolV1Channel)
-            self.transport.open()
+            # self.transport.open()
             try:
                 self.protocol.write(messages.Cancel())
                 resp = self.protocol.read()
@@ -1612,8 +1619,8 @@ class TrezorClientDebugLink(TrezorClient):
                     except Exception:
                         pass
             finally:
-                pass
-                # TODO fix self.transport.end_session()
+                pass  # self.transport.close()
+                # TODO fix self.transport.end_session() # TODO
 
     def mnemonic_callback(self, _) -> str:
         word, pos = self.debug.read_recovery_word()

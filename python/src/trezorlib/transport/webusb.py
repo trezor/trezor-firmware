@@ -110,6 +110,7 @@ class WebUsbTransport(Transport):
         return f"{self.PATH_PREFIX}:{dev_to_str(self.device)}"
 
     def open(self) -> None:
+        # assert self.handle is None
         self.handle = self.device.open()
         if self.handle is None:
             if sys.platform.startswith("linux"):
@@ -134,8 +135,6 @@ class WebUsbTransport(Transport):
         self.handle = None
 
     def write_chunk(self, chunk: bytes) -> None:
-        if self.handle is None:
-            self.open()
         assert self.handle is not None
         if len(chunk) != WEBUSB_CHUNK_SIZE:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
@@ -158,8 +157,6 @@ class WebUsbTransport(Transport):
             return
 
     def read_chunk(self) -> bytes:
-        if self.handle is None:
-            self.open()
         assert self.handle is not None
         endpoint = 0x80 | self.endpoint
         while True:
