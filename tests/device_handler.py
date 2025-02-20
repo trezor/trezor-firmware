@@ -11,6 +11,7 @@ from trezorlib.transport import udp
 if t.TYPE_CHECKING:
     from trezorlib._internal.emulator import Emulator
     from trezorlib.debuglink import DebugLink
+    from trezorlib.debuglink import SessionDebugWrapper as Session
     from trezorlib.debuglink import TrezorClientDebugLink as Client
     from trezorlib.messages import Features
 
@@ -53,7 +54,7 @@ class BackgroundDeviceHandler:
 
     def run_with_session(
         self,
-        function: t.Callable[tx.Concatenate["Client", P], t.Any],
+        function: t.Callable[tx.Concatenate["Session", P], t.Any],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> None:
@@ -72,7 +73,7 @@ class BackgroundDeviceHandler:
     def run_with_provided_session(
         self,
         session,
-        function: t.Callable[tx.Concatenate["Client", P], t.Any],
+        function: t.Callable[tx.Concatenate["Session", P], t.Any],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> None:
@@ -92,8 +93,6 @@ class BackgroundDeviceHandler:
             # Force close the client, which should raise an exception in a client
             # waiting on IO. Does not work over Bridge, because bridge doesn't have
             # a close() method.
-            # while self.client.session_counter > 0:
-            # self.client.close()
             try:
                 self.task.result(timeout=1)
             except Exception:
