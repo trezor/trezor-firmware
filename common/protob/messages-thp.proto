@@ -200,7 +200,7 @@ message ThpNfcTagTrezor {
  * @next ThpCredentialResponse
  */
 message ThpCredentialRequest {
-    optional bytes host_static_pubkey = 1;       // Host's static public key used in the handshake.
+    optional bytes host_static_pubkey = 1;       // Host's static public key identifying the credential.
     optional bool autoconnect = 2;               // Whether host wants to autoconnect without user confirmation
 }
 
