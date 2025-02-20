@@ -11,7 +11,7 @@ use crate::{
 };
 
 use super::{
-    super::{component::Header, cshape::ScreenBorder, theme},
+    super::{cshape::ScreenBorder, firmware::Header, theme},
     constant::SCREEN,
 };
 

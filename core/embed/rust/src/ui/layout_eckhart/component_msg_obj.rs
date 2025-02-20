@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-use super::component::{
+use super::firmware::{
     AllowedTextContent, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputScreen,
     NumberInputScreenMsg, PinKeyboard, PinKeyboardMsg, SelectWordCountMsg, SelectWordCountScreen,
     SelectWordMsg, SelectWordScreen, TextScreen, TextScreenMsg,

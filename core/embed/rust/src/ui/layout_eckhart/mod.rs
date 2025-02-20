@@ -15,6 +15,8 @@ use crate::strutil::ShortString;
 pub mod bootloader;
 pub mod component;
 pub mod constant;
+#[cfg(feature = "micropython")]
+pub mod firmware;
 pub mod theme;
 
 #[cfg(feature = "micropython")]
@@ -24,6 +26,8 @@ pub mod cshape;
 pub mod flow;
 pub mod fonts;
 pub mod screens;
+#[cfg(feature = "bootloader")]
+pub mod ui_bootloader;
 #[cfg(feature = "micropython")]
 pub mod ui_firmware;
 

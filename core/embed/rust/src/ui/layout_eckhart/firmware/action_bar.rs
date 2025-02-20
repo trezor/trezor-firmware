@@ -9,8 +9,8 @@ use crate::{
 };
 
 use super::{
-    button::{Button, ButtonContent, ButtonMsg},
-    theme, ButtonStyleSheet, HoldToConfirmAnim,
+    super::component::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
+    theme, HoldToConfirmAnim,
 };
 
 /// Component for control buttons in the bottom of the screen.

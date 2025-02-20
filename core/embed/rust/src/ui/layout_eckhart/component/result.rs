@@ -10,9 +10,9 @@ use crate::{
     },
 };
 
-use super::{
-    super::fonts,
+use super::super::{
     constant::WIDTH,
+    fonts,
     theme::{FG, RESULT_FOOTER_START, RESULT_PADDING},
 };
 

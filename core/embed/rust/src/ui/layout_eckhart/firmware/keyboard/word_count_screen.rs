@@ -8,8 +8,12 @@ use crate::{
 };
 
 use super::super::{
-    super::{super::constant::SCREEN, theme},
-    Button, ButtonMsg, Header,
+    super::{
+        super::constant::SCREEN,
+        component::{Button, ButtonMsg},
+        theme,
+    },
+    Header,
 };
 
 use heapless::Vec;

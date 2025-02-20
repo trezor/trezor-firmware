@@ -16,8 +16,9 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        ActionBar, Button, Header, HeaderMsg, Hint, TextScreen, TextScreenMsg, VerticalMenu,
+    component::Button,
+    firmware::{
+        ActionBar, Header, HeaderMsg, Hint, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
