@@ -25,10 +25,10 @@ use crate::{
 };
 
 use super::{
-    component::{
-        ActionBar, Bip39Input, Button, Header, HeaderMsg, Hint, MnemonicKeyboard,
-        NumberInputScreen, PinKeyboard, SelectWordCountScreen, SelectWordScreen, Slip39Input,
-        TextScreen,
+    component::Button,
+    firmware::{
+        ActionBar, Bip39Input, Header, HeaderMsg, Hint, MnemonicKeyboard, NumberInputScreen,
+        PinKeyboard, SelectWordCountScreen, SelectWordScreen, Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };

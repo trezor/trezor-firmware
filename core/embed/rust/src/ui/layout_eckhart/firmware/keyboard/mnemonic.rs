@@ -8,14 +8,12 @@ use crate::{
 };
 
 use super::super::super::{
-    component::{
-        button::ButtonContent,
-        keyboard::{
-            common::{INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS, KEYPAD_VISIBLE_HEIGHT},
-            keypad::{ButtonState, Keypad, KeypadButton, KeypadMsg},
-        },
-    },
+    component::ButtonContent,
     constant::SCREEN,
+    firmware::keyboard::{
+        common::{INPUT_TOUCH_HEIGHT, KEYBOARD_INPUT_INSETS, KEYPAD_VISIBLE_HEIGHT},
+        keypad::{ButtonState, Keypad, KeypadButton, KeypadMsg},
+    },
     theme,
 };
 

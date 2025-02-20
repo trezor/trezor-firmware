@@ -11,7 +11,8 @@ use crate::{
     },
 };
 
-use super::{
+use super::super::{
+    component::{Button, ButtonMsg::Clicked, ButtonStyleSheet},
     constant::WIDTH,
     theme::{
         bootloader::{
@@ -20,9 +21,6 @@ use super::{
         },
         WHITE,
     },
-    Button,
-    ButtonMsg::Clicked,
-    ButtonStyleSheet,
 };
 
 const ICON_TOP: i16 = 17;
@@ -51,7 +49,7 @@ pub struct ConfirmInfo<'a> {
     pub close_button: Child<Button>,
 }
 
-pub struct Confirm<'a> {
+pub struct ConfirmScreen<'a> {
     bg: Pad,
     content_pad: Pad,
     bg_color: Color,
@@ -64,7 +62,7 @@ pub struct Confirm<'a> {
     show_info: bool,
 }
 
-impl<'a> Confirm<'a> {
+impl<'a> ConfirmScreen<'a> {
     pub fn new(
         bg_color: Color,
         left_button: Button,
@@ -119,7 +117,7 @@ impl<'a> Confirm<'a> {
     }
 }
 
-impl Component for Confirm<'_> {
+impl Component for ConfirmScreen<'_> {
     type Msg = ConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -241,7 +239,7 @@ impl Component for Confirm<'_> {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for Confirm<'_> {
+impl crate::trace::Trace for ConfirmScreen<'_> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("BlConfirm");
     }

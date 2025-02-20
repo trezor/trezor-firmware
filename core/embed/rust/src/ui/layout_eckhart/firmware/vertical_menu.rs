@@ -4,12 +4,11 @@ use crate::ui::{
     shape::{Bar, Renderer},
 };
 
-use heapless::Vec;
-
-use super::super::{
-    component::{Button, ButtonMsg},
+use super::{
+    super::component::{Button, ButtonMsg},
     theme,
 };
+use heapless::Vec;
 
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
