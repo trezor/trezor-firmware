@@ -226,7 +226,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_encode;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
-  MP_QSTR_entropy__title;
   MP_QSTR_entropy__title_confirm;
   MP_QSTR_erase;
   MP_QSTR_experimental_mode__enable;
@@ -288,7 +287,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__hold_to_confirm;
   MP_QSTR_instructions__hold_to_continue;
   MP_QSTR_instructions__hold_to_exit_tutorial;
-  MP_QSTR_instructions__hold_to_finish_tutorial;
   MP_QSTR_instructions__hold_to_sign;
   MP_QSTR_instructions__learn_more;
   MP_QSTR_instructions__shares_continue_with_x_template;
@@ -449,7 +447,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__num_of_words;
   MP_QSTR_recovery__only_first_n_letters;
   MP_QSTR_recovery__progress_will_be_lost;
-  MP_QSTR_recovery__select_num_of_words;
   MP_QSTR_recovery__share_already_entered;
   MP_QSTR_recovery__share_does_not_match;
   MP_QSTR_recovery__share_from_another_multi_share_backup;
@@ -552,7 +549,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__threshold_info;
   MP_QSTR_reset__title_backup_is_done;
   MP_QSTR_reset__title_create_wallet;
-  MP_QSTR_reset__title_create_wallet_shamir;
   MP_QSTR_reset__title_group_threshold;
   MP_QSTR_reset__title_number_of_groups;
   MP_QSTR_reset__title_number_of_shares;
@@ -626,7 +622,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__title_sending_to;
   MP_QSTR_send__to_the_total_amount;
   MP_QSTR_send__total_amount;
-  MP_QSTR_send__total_amount_colon;
   MP_QSTR_send__transaction_id;
   MP_QSTR_send__transaction_signed;
   MP_QSTR_send__you_are_contributing;
@@ -691,20 +686,16 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__continue;
   MP_QSTR_tutorial__did_you_know;
   MP_QSTR_tutorial__exit;
-  MP_QSTR_tutorial__first_transaction_finish;
-  MP_QSTR_tutorial__first_transaction_intro;
   MP_QSTR_tutorial__first_wallet;
   MP_QSTR_tutorial__get_started;
   MP_QSTR_tutorial__lets_begin;
   MP_QSTR_tutorial__menu;
   MP_QSTR_tutorial__middle_click;
-  MP_QSTR_tutorial__one_more_step;
   MP_QSTR_tutorial__press_and_hold;
   MP_QSTR_tutorial__ready_to_use;
   MP_QSTR_tutorial__ready_to_use_safe5;
   MP_QSTR_tutorial__restart_tutorial;
   MP_QSTR_tutorial__scroll_down;
-  MP_QSTR_tutorial__subtitle_safe5;
   MP_QSTR_tutorial__sure_you_want_skip;
   MP_QSTR_tutorial__swipe_up_and_down;
   MP_QSTR_tutorial__title_easy_navigation;
@@ -840,7 +831,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_cardano__collateral_input_index;
   MP_QSTR_cardano__collateral_output_contains_tokens;
   MP_QSTR_cardano__collateral_return;
-  MP_QSTR_cardano__confirm;
   MP_QSTR_cardano__confirm_signing_stake_pool;
   MP_QSTR_cardano__confirm_transaction;
   MP_QSTR_cardano__confirming_a_multisig_transaction;
