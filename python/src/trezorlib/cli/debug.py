@@ -52,9 +52,8 @@ def record_screen_from_connection(
     """Record screen helper to transform TrezorConnection into TrezorClientDebugLink."""
     transport = obj.get_transport()
     debug_client = TrezorClientDebugLink(transport, auto_interact=False)
-    debug_client.open()
     record_screen(debug_client, directory, report_func=click.echo)
-    debug_client.close()
+    debug_client.close_transport()
 
 
 @cli.command()

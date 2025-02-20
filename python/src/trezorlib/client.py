@@ -70,6 +70,11 @@ class TrezorClient:
         protobuf_mapping: ProtobufMapping | None = None,
         protocol: Channel | None = None,
     ) -> None:
+        """
+        Transport needs to be opened before calling a method (or accessing
+        an attribute) for the first time. It should be closed after you're
+        done using the client.
+        """
         self._is_invalidated: bool = False
         self.transport = transport
 
@@ -103,7 +108,7 @@ class TrezorClient:
         self,
         passphrase: str | object | None = None,
         derive_cardano: bool = False,
-        session_id: int = 0,
+        session_id: bytes | None = None,
     ) -> Session:
         """
         Returns initialized session (with derived seed).
@@ -132,7 +137,7 @@ class TrezorClient:
             return session
         raise NotImplementedError
 
-    def resume_session(self, session: Session):
+    def resume_session(self, session: Session) -> Session:
         """
         Note: this function potentially modifies the input session.
         """
@@ -195,19 +200,13 @@ class TrezorClient:
     def is_invalidated(self) -> bool:
         return self._is_invalidated
 
-    def refresh_features(self) -> None:
+    def refresh_features(self) -> messages.Features:
         self.protocol.update_features()
         self._features = self.protocol.get_features()
+        return self._features
 
     def _get_protocol(self) -> Channel:
-        self.transport.open()
-
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
-
-        protocol.write(messages.Initialize())
-
-        _ = protocol.read()
-        self.transport.close()
         return protocol
 
 
@@ -219,6 +218,8 @@ def get_default_client(
 
     Returns a TrezorClient instance with minimum fuss.
 
+    Transport is opened and should be closed after you're done with the client.
+
     If path is specified, does a prefix-search for the specified device. Otherwise, uses
     the value of TREZOR_PATH env variable, or finds first connected Trezor.
     If no UI is supplied, instantiates the default CLI UI.
@@ -228,5 +229,6 @@ def get_default_client(
         path = os.getenv("TREZOR_PATH")
 
     transport = get_transport(path, prefix_search=True)
+    transport.open()
 
     return TrezorClient(transport, **kwargs)
