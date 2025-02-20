@@ -22,13 +22,13 @@ const BUTTON_SPACING: i16 = 8;
 
 #[repr(u32)]
 #[derive(Copy, Clone, ToPrimitive)]
-pub enum MenuMsg {
+pub enum BldMenuMsg {
     Close = 0xAABBCCDD,
     Reboot = 0x11223344,
     FactoryReset = 0x55667788,
 }
 
-pub struct Menu {
+pub struct BldMenuScreen {
     bg: Pad,
     title: Child<Label<'static>>,
     close: Child<Button>,
@@ -36,7 +36,7 @@ pub struct Menu {
     reset: Child<Button>,
 }
 
-impl Menu {
+impl BldMenuScreen {
     pub fn new(firmware_present: secbool) -> Self {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
@@ -63,8 +63,8 @@ impl Menu {
     }
 }
 
-impl Component for Menu {
-    type Msg = MenuMsg;
+impl Component for BldMenuScreen {
+    type Msg = BldMenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg.place(screen());

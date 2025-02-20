@@ -25,7 +25,7 @@ pub enum IntroMsg {
     Host = 2,
 }
 
-pub struct Intro<'a> {
+pub struct IntroScreen<'a> {
     bg: Pad,
     title: Child<Label<'a>>,
     menu: Child<Button>,
@@ -34,7 +34,7 @@ pub struct Intro<'a> {
     warn: Option<Child<Label<'a>>>,
 }
 
-impl<'a> Intro<'a> {
+impl<'a> IntroScreen<'a> {
     pub fn new(title: TString<'a>, content: TString<'a>, fw_ok: bool) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
@@ -58,7 +58,7 @@ impl<'a> Intro<'a> {
     }
 }
 
-impl<'a> Component for Intro<'a> {
+impl<'a> Component for IntroScreen<'a> {
     type Msg = IntroMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {

@@ -12,6 +12,7 @@ const ICON_TOP_MARGIN: i16 = 48;
 
 use crate::trezorhal::model;
 
+/// Firmware welcome screen
 pub struct WelcomeScreen {
     area: Rect,
 }

@@ -38,6 +38,8 @@ pub const ORANGE_EXTRA_DARK: Color = Color::rgb(0x12, 0x07, 0x04);
 
 pub const YELLOW: Color = Color::rgb(0xFF, 0xE4, 0x58);
 
+pub const BLUE: Color = Color::rgb(0x00, 0x46, 0xFF);
+
 pub const RED: Color = Color::rgb(0xFF, 0x30, 0x30);
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);

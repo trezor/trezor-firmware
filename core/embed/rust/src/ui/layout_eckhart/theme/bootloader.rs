@@ -14,8 +14,9 @@ use super::{
     BLACK, GREY_DARK, GREY_LIGHT, GREY_SUPER_DARK, WHITE,
 };
 
-pub const BLD_BG: Color = Color::rgb(0x00, 0x1E, 0xAD);
+pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;
+
 pub const BLD_WIPE_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const BLD_WIPE_TEXT_COLOR: Color = WHITE;
 
@@ -36,9 +37,6 @@ pub const BLD_TITLE_COLOR: Color = WHITE;
 
 pub const WELCOME_COLOR: Color = BLACK;
 pub const WELCOME_HIGHLIGHT_COLOR: Color = Color::rgb(0x28, 0x28, 0x28);
-
-// Commonly used corner radius (i.e. for buttons).
-pub const RADIUS: u8 = 2;
 
 // Commonly used constants for UI elements.
 pub const CONTENT_PADDING: i16 = 6;
