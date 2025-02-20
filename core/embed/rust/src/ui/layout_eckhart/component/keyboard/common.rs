@@ -18,6 +18,8 @@ pub struct MultiTapKeyboard {
     pending: Option<Pending>,
     /// Timer for clearing the pending state.
     timer: Timer,
+    /// Apply the timeout event to one-character keys
+    short_key_timeout: bool,
 }
 
 struct Pending {
@@ -35,7 +37,13 @@ impl MultiTapKeyboard {
             timeout: Duration::from_secs(1),
             pending: None,
             timer: Timer::new(),
+            short_key_timeout: false,
         }
+    }
+
+    pub fn with_short_key_timeout(mut self) -> Self {
+        self.short_key_timeout = true;
+        self
     }
 
     /// Return the index of the currently pending key, if any.
@@ -96,6 +104,9 @@ impl MultiTapKeyboard {
             self.timer.start(ctx, self.timeout);
             Some(Pending { key, press })
         } else {
+            if self.short_key_timeout {
+                self.timer.start(ctx, self.timeout);
+            }
             None
         };
 
