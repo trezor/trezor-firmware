@@ -1229,6 +1229,8 @@ class TrezorClientDebugLink(TrezorClient):
             self.transport, self.debug.allow_interactions
         )
         new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
+        new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
+        new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
         return new_client
 
     def reset_debug_features(self, new_seedless_session: bool = False) -> None:
