@@ -973,5 +973,20 @@
   "971": "instructions__view_all_data",
   "972": "ethereum__interaction_contract",
   "973": "misc__enable_labeling",
-  "974": "ethereum__unknown_contract_address_short"
+  "974": "ethereum__unknown_contract_address_short",
+  "975": "solana__base_fee",
+  "976": "solana__claim",
+  "977": "solana__claim_question",
+  "978": "solana__claim_recipient_warning",
+  "979": "solana__priority_fee",
+  "980": "solana__stake",
+  "981": "solana__stake_account",
+  "982": "solana__stake_provider",
+  "983": "solana__stake_question",
+  "984": "solana__stake_withdrawal_warning",
+  "985": "solana__stake_withdrawal_warning_title",
+  "986": "solana__unstake",
+  "987": "solana__unstake_question",
+  "988": "solana__vote_account",
+  "989": "solana__stake_on_question"
 }
