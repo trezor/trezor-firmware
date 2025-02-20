@@ -1371,6 +1371,36 @@ pub enum TranslatedString {
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
+    #[cfg(feature = "universal_fw")]
+    solana__base_fee = 975,  // "Base fee"
+    #[cfg(feature = "universal_fw")]
+    solana__claim = 976,  // "Claim"
+    #[cfg(feature = "universal_fw")]
+    solana__claim_question = 977,  // "Claim SOL from stake account?"
+    #[cfg(feature = "universal_fw")]
+    solana__claim_recipient_warning = 978,  // "Claiming SOL to address outside your current wallet."
+    #[cfg(feature = "universal_fw")]
+    solana__priority_fee = 979,  // "Priority fee"
+    #[cfg(feature = "universal_fw")]
+    solana__stake = 980,  // "Stake"
+    #[cfg(feature = "universal_fw")]
+    solana__stake_account = 981,  // "Stake account"
+    #[cfg(feature = "universal_fw")]
+    solana__stake_provider = 982,  // "Provider"
+    #[cfg(feature = "universal_fw")]
+    solana__stake_question = 983,  // "Stake SOL?"
+    #[cfg(feature = "universal_fw")]
+    solana__stake_withdrawal_warning = 984,  // "The current wallet isn't the SOL staking withdraw authority."
+    #[cfg(feature = "universal_fw")]
+    solana__stake_withdrawal_warning_title = 985,  // "Withdraw authority address"
+    #[cfg(feature = "universal_fw")]
+    solana__unstake = 986,  // "Unstake"
+    #[cfg(feature = "universal_fw")]
+    solana__unstake_question = 987,  // "Unstake SOL from stake account?"
+    #[cfg(feature = "universal_fw")]
+    solana__vote_account = 988,  // "Vote account"
+    #[cfg(feature = "universal_fw")]
+    solana__stake_on_question = 989,  // "Stake SOL on {0}?"
 }
 
 impl TranslatedString {
@@ -2738,6 +2768,36 @@ impl TranslatedString {
             Self::misc__enable_labeling => "Enable labeling?",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__base_fee => "Base fee",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__claim => "Claim",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__claim_question => "Claim SOL from stake account?",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__claim_recipient_warning => "Claiming SOL to address outside your current wallet.",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__priority_fee => "Priority fee",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake => "Stake",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake_account => "Stake account",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake_provider => "Provider",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake_question => "Stake SOL?",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake_withdrawal_warning => "The current wallet isn't the SOL staking withdraw authority.",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake_withdrawal_warning_title => "Withdraw authority address",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__unstake => "Unstake",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__unstake_question => "Unstake SOL from stake account?",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__vote_account => "Vote account",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake_on_question => "Stake SOL on {0}?",
         }
     }
 
@@ -4104,6 +4164,36 @@ impl TranslatedString {
             Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__base_fee => Some(Self::solana__base_fee),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__claim => Some(Self::solana__claim),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__claim_question => Some(Self::solana__claim_question),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__claim_recipient_warning => Some(Self::solana__claim_recipient_warning),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__priority_fee => Some(Self::solana__priority_fee),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake => Some(Self::solana__stake),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake_account => Some(Self::solana__stake_account),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake_provider => Some(Self::solana__stake_provider),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake_question => Some(Self::solana__stake_question),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake_withdrawal_warning => Some(Self::solana__stake_withdrawal_warning),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake_withdrawal_warning_title => Some(Self::solana__stake_withdrawal_warning_title),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__unstake => Some(Self::solana__unstake),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__unstake_question => Some(Self::solana__unstake_question),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__vote_account => Some(Self::solana__vote_account),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake_on_question => Some(Self::solana__stake_on_question),
             _ => None,
         }
     }
