@@ -54,9 +54,9 @@ void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
 
   uint8_t passkey_str[6];
   passkey_to_str(passkey_str, passkey);
-  management_send_pairing_request_event(passkey_str, 6);
+  ble_management_send_pairing_request_event(passkey_str, 6);
 
-  management_send_status_event();
+  ble_management_send_status_event();
 }
 
 void pairing_auth_cancel(struct bt_conn *conn) {
@@ -66,8 +66,8 @@ void pairing_auth_cancel(struct bt_conn *conn) {
 
   connection_disconnect();
 
-  management_send_pairing_cancelled_event();
-  management_send_status_event();
+  ble_management_send_pairing_cancelled_event();
+  ble_management_send_status_event();
 
   LOG_INF("Pairing cancelled: %s", addr);
 }
