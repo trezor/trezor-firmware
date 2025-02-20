@@ -11,10 +11,7 @@ use heapless::String;
 
 use super::{
     bootloader::welcome::Welcome,
-    component::{
-        bl_confirm::{Confirm, ConfirmTitle},
-        Button, ResultScreen, WelcomeScreen,
-    },
+    component::{Button, ResultScreen, WelcomeScreen},
     cshape::{render_loader, LoaderRange},
     fonts,
     theme::{
@@ -45,9 +42,11 @@ use super::theme::bootloader::BLD_WARN_COLOR;
 use intro::Intro;
 use menu::Menu;
 
+mod confirm;
 pub mod intro;
 pub mod menu;
 pub mod welcome;
+use confirm::{Confirm, ConfirmTitle};
 
 pub type BootloaderString = String<128>;
 
