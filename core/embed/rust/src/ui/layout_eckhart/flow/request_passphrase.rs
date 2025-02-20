@@ -9,14 +9,15 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::Direction,
-        layout_eckhart::{
-            component::{
-                ActionBar, Button, Header, PassphraseKeyboard, PassphraseKeyboardMsg, TextScreen,
-                TextScreenMsg,
-            },
-            fonts, theme,
-        },
     },
+};
+
+use super::super::{
+    component::Button,
+    firmware::{
+        ActionBar, Header, PassphraseKeyboard, PassphraseKeyboardMsg, TextScreen, TextScreenMsg,
+    },
+    fonts, theme,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
