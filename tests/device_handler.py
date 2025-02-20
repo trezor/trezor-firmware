@@ -91,8 +91,6 @@ class BackgroundDeviceHandler:
             # Force close the client, which should raise an exception in a client
             # waiting on IO. Does not work over Bridge, because bridge doesn't have
             # a close() method.
-            # while self.client.session_counter > 0:
-            # self.client.close()
             try:
                 self.task.result(timeout=1)
             except Exception:
