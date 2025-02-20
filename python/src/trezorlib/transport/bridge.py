@@ -229,3 +229,6 @@ class BridgeTransport(Transport):
 
     def read_chunk(self) -> bytes:  # TODO check if it works :)
         return self.handle.read_buf()
+
+    def ping(self) -> bool:
+        return True

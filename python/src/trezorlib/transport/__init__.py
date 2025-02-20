@@ -85,6 +85,9 @@ class Transport:
     def read_chunk(self) -> bytes:
         raise NotImplementedError
 
+    def ping(self) -> bool:
+        raise NotImplementedError
+
     CHUNK_SIZE: t.ClassVar[int]
 
 

@@ -103,7 +103,7 @@ class TrezorClient:
         self,
         passphrase: str | object | None = None,
         derive_cardano: bool = False,
-        session_id: int = 0,
+        session_id: bytes | None = None,
     ) -> Session:
         """
         Returns initialized session (with derived seed).
@@ -113,10 +113,12 @@ class TrezorClient:
         from .transport.session import SessionV1
 
         if isinstance(self.protocol, ProtocolV1Channel):
-            return SessionV1.new(self, passphrase, derive_cardano)
+            return SessionV1.new(
+                self, passphrase, derive_cardano, session_id=session_id
+            )
         raise NotImplementedError
 
-    def resume_session(self, session: Session):
+    def resume_session(self, session: Session) -> Session:
         """
         Note: this function potentially modifies the input session.
         """
@@ -179,19 +181,13 @@ class TrezorClient:
     def is_invalidated(self) -> bool:
         return self._is_invalidated
 
-    def refresh_features(self) -> None:
+    def refresh_features(self) -> messages.Features:
         self.protocol.update_features()
         self._features = self.protocol.get_features()
+        return self._features
 
     def _get_protocol(self) -> Channel:
-        self.transport.open()
-
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
-
-        protocol.write(messages.Initialize())
-
-        _ = protocol.read()
-        self.transport.close()
         return protocol
 
 

@@ -204,7 +204,7 @@ def test_repeated_backup(
     assert features.recovery_status == messages.RecoveryStatus.Nothing
 
     # try to unlock backup yet again...
-    device_handler.run(
+    device_handler.run_with_session(
         device.recover,
         type=messages.RecoveryType.UnlockRepeatedBackup,
     )
