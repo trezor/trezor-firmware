@@ -9,7 +9,7 @@ use crate::{
 
 use super::{
     super::super::{
-        component::button::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
+        component::{Button, ButtonContent, ButtonMsg, ButtonStyleSheet},
         constant::SCREEN,
         theme,
     },

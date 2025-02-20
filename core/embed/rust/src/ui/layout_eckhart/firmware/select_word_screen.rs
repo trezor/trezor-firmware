@@ -9,8 +9,9 @@ use crate::{
 };
 
 use super::super::{
-    component::{Button, Header, HeaderMsg, VerticalMenu, VerticalMenuMsg},
+    component::Button,
     constant::SCREEN,
+    firmware::{Header, HeaderMsg, VerticalMenu, VerticalMenuMsg},
     theme,
 };
 

@@ -14,12 +14,10 @@ use crate::{
 };
 
 use super::super::super::{
-    component::{
-        keyboard::{
-            common::{render_pending_marker, MultiTapKeyboard},
-            mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
-        },
-        Button, ButtonMsg,
+    component::{Button, ButtonMsg},
+    firmware::keyboard::{
+        common::{render_pending_marker, MultiTapKeyboard},
+        mnemonic::{MnemonicInput, MnemonicInputMsg, MNEMONIC_KEY_COUNT},
     },
     theme,
 };
