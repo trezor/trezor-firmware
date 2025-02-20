@@ -170,8 +170,7 @@ impl<'a> PinEntry<'a> {
         Self {
             // Starting at a random digit.
             choice_page: ChoicePage::new(ChoiceFactoryPIN)
-                .with_initial_page_counter(get_random_digit_position())
-                .with_carousel(true),
+                .with_initial_page_counter(get_random_digit_position()),
             header_line: Child::new(
                 header_line_content
                     .map(|s| ChangingTextLine::center_bold(s, MAX_PIN_LENGTH))

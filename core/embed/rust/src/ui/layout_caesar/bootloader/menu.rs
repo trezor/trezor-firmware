@@ -142,7 +142,6 @@ impl Menu {
             pad: Pad::with_background(BLD_BG).with_clear(),
             choice_page: Child::new(
                 ChoicePage::new(choices)
-                    .with_carousel(true)
                     .with_only_one_item(true),
             ),
         }

@@ -10,7 +10,8 @@ use crate::{
 };
 
 use super::super::{
-    theme, ButtonLayout, ChangingTextLine, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
+    theme, ButtonLayout, ChangingTextLine, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg,
+    ChoicePage,
 };
 use heapless::Vec;
 
@@ -175,7 +176,6 @@ impl WordlistEntry {
             // Starting at random letter position
             choice_page: ChoicePage::new(choices)
                 .with_incomplete(true)
-                .with_carousel(true)
                 .with_initial_page_counter(get_random_position(choices_count)),
             chosen_letters: Child::new(ChangingTextLine::center_mono(PROMPT, LINE_CAPACITY)),
             textbox: TextBox::empty(MAX_WORD_LENGTH),
@@ -255,8 +255,12 @@ impl WordlistEntry {
         let new_page_counter = self.get_new_page_counter(&new_choices);
         // Not using carousel in case of words, as that looks weird in case
         // there is only one word to choose from.
-        self.choice_page
-            .reset(ctx, new_choices, Some(new_page_counter), !self.offer_words);
+        self.choice_page.reset(
+            ctx,
+            new_choices,
+            Some(new_page_counter),
+            ChoiceControls::Carousel,
+        );
         ctx.request_paint();
     }
 

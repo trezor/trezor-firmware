@@ -8,7 +8,9 @@ use crate::{
     },
 };
 
-use super::super::{ButtonDetails, ButtonLayout, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage};
+use super::super::{
+    ButtonDetails, ButtonLayout, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
+};
 use heapless::Vec;
 
 // So that there is only one implementation, and not multiple generic ones
@@ -17,17 +19,12 @@ const MAX_LENGTH: usize = 5;
 
 struct ChoiceFactorySimple {
     choices: Vec<TString<'static>, MAX_LENGTH>,
-    carousel: bool,
-    cancelable: bool,
+    controls: ChoiceControls,
 }
 
 impl ChoiceFactorySimple {
-    fn new(choices: Vec<TString<'static>, MAX_LENGTH>, carousel: bool, cancelable: bool) -> Self {
-        Self {
-            choices,
-            carousel,
-            cancelable,
-        }
+    fn new(choices: Vec<TString<'static>, MAX_LENGTH>, controls: ChoiceControls) -> Self {
+        Self { choices, controls }
     }
 
     fn get_string(&self, choice_index: usize) -> TString<'static> {
@@ -54,9 +51,9 @@ impl ChoiceFactory for ChoiceFactorySimple {
 
         // Disabling prev/next buttons for the first/last choice when not in carousel.
         // (could be done to the same item if there is only one)
-        if !self.carousel {
+        if self.controls != ChoiceControls::Carousel {
             if choice_index == 0 {
-                if self.cancelable {
+                if self.controls == ChoiceControls::Cancellable {
                     choice_item.set_left_btn(Some(ButtonDetails::cancel_icon()));
                 } else {
                     choice_item.set_left_btn(None);
@@ -79,16 +76,11 @@ pub struct SimpleChoice {
 }
 
 impl SimpleChoice {
-    pub fn new(
-        str_choices: Vec<TString<'static>, MAX_LENGTH>,
-        carousel: bool,
-        cancelable: bool,
-    ) -> Self {
-        let choices = ChoiceFactorySimple::new(str_choices, carousel, cancelable);
+    pub fn new(str_choices: Vec<TString<'static>, MAX_LENGTH>, controls: ChoiceControls) -> Self {
+        let choices = ChoiceFactorySimple::new(str_choices, controls);
+        let choice_page = ChoicePage::new(choices).with_controls(controls);
         Self {
-            choice_page: ChoicePage::new(choices)
-                .with_carousel(carousel)
-                .with_cancelable(cancelable),
+            choice_page,
             return_index: false,
         }
     }

@@ -12,8 +12,8 @@ use crate::{
 };
 
 use super::super::{
-    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceFactory,
-    ChoiceItem, ChoiceMsg, ChoicePage,
+    theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine, ChoiceControls,
+    ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
 
 /// Defines the choices currently available on the screen
@@ -279,7 +279,6 @@ impl PassphraseEntry {
     pub fn new() -> Self {
         Self {
             choice_page: ChoicePage::new(ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, true))
-                .with_carousel(true)
                 .with_initial_page_counter(random_menu_position()),
             passphrase_dots: Child::new(ChangingTextLine::center_mono("", MAX_PASSPHRASE_LENGTH)),
             show_plain_passphrase: false,
@@ -334,8 +333,12 @@ impl PassphraseEntry {
     /// Displaying the MENU
     fn show_menu_page(&mut self, ctx: &mut EventCtx) {
         let menu_choices = ChoiceFactoryPassphrase::new(ChoiceCategory::Menu, self.is_empty());
-        self.choice_page
-            .reset(ctx, menu_choices, Some(random_menu_position()), true);
+        self.choice_page.reset(
+            ctx,
+            menu_choices,
+            Some(random_menu_position()),
+            ChoiceControls::Cancellable,
+        );
     }
 
     /// Displaying the character category
@@ -345,7 +348,7 @@ impl PassphraseEntry {
             ctx,
             category_choices,
             Some(random_category_position(&self.current_category)),
-            true,
+            ChoiceControls::Cancellable,
         );
     }
 
