@@ -9,8 +9,12 @@ use crate::{
 };
 
 use super::{
-    super::{super::constant::SCREEN, fonts, theme},
-    ActionBar, ActionBarMsg, Button, ButtonMsg, Header, HeaderMsg,
+    super::{
+        super::constant::SCREEN,
+        component::{Button, ButtonMsg},
+        fonts, theme,
+    },
+    ActionBar, ActionBarMsg, Header, HeaderMsg,
 };
 
 pub enum NumberInputScreenMsg {
