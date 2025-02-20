@@ -156,6 +156,9 @@ class HidTransport(Transport):
             return 1
         raise TransportException("Unknown HID version")
 
+    def ping(self) -> bool:
+        return self.handle is not None
+
 
 def is_wirelink(dev: HidDevice) -> bool:
     return dev["usage_page"] == 0xFF00 or dev["interface_number"] == 0
