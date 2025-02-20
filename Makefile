@@ -128,12 +128,6 @@ protobuf_check: ## check that generated protobuf headers are up to date
 	./tools/build_protobuf --check
 	./rust/trezor-client/scripts/build_protos --check
 
-ci_docs: ## generate CI documentation
-	./tools/generate_ci_docs.py
-
-ci_docs_check: ## check that generated CI documentation is up to date
-	./tools/generate_ci_docs.py --check
-
 docs_summary_check: ## check if there are unlinked documentation files
 	@echo [DOCS-SUMMARY-MARKDOWN-CHECK]
 	python3 tools/check_docs_summary.py
@@ -156,6 +150,6 @@ lsgen: ## generate linker scripts hashes
 lsgen_check: ## check generated linker scripts
 	lsgen --check
 
-gen:  templates mocks icons protobuf ci_docs vendorheader solana_templates bootloader_hashes lsgen ## regenerate auto-generated files from sources
+gen:  templates mocks icons protobuf vendorheader solana_templates bootloader_hashes lsgen ## regenerate auto-generated files from sources
 
-gen_check: templates_check mocks_check icons_check protobuf_check ci_docs_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check ## check validity of auto-generated files
+gen_check: templates_check mocks_check icons_check protobuf_check vendorheader_check solana_templates_check bootloader_hashes_check lsgen_check ## check validity of auto-generated files
