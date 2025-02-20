@@ -296,11 +296,14 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
     for transport in enumerate_devices():
         try:
             client = get_client(transport)
+            transport.open()
             description = format_device_name(client.features)
         except DeviceIsBusy:
             description = "Device is in use by another process"
         except Exception as e:
             description = "Failed to read details " + str(type(e))
+        finally:
+            transport.close()
         click.echo(f"{transport.get_path()} - {description}")
     return None
 

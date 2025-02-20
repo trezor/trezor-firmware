@@ -134,8 +134,6 @@ class WebUsbTransport(Transport):
         self.handle = None
 
     def write_chunk(self, chunk: bytes) -> None:
-        if self.handle is None:
-            self.open()
         assert self.handle is not None
         if len(chunk) != WEBUSB_CHUNK_SIZE:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
@@ -179,6 +177,9 @@ class WebUsbTransport(Transport):
     def find_debug(self) -> "WebUsbTransport":
         # For v1 protocol, find debug USB interface for the same serial number
         return self.__class__(self.device, debug=True)
+
+    def ping(self) -> bool:
+        return self.handle is not None
 
 
 def is_vendor_class(dev: usb1.USBDevice) -> bool:
