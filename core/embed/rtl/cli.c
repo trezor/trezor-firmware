@@ -26,6 +26,11 @@ void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
   cli->cmd_array = cmd_array;
   cli->cmd_count = cmd_count;
 }
+void cli_set_unit_tests(cli_t* cli, const cli_unit_test_t* unit_test_array,
+                        size_t unit_test_count) {
+  cli->unit_test_array = unit_test_array;
+  cli->unit_test_count = unit_test_count;
+}
 
 static void cli_vprintf(cli_t* cli, const char* format, va_list args) {
   char buffer[CLI_LINE_BUFFER_SIZE];
