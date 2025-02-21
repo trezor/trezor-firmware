@@ -95,7 +95,12 @@ def confirm_reset_device(recovery: bool = False) -> Awaitable[None]:
 
 async def show_wallet_created_success() -> None:
     await interact(
-        trezorui_api.show_success(title=TR.backup__new_wallet_created, button=""),
+        trezorui_api.show_success(
+            title=TR.words__title_done,
+            description=TR.backup__new_wallet_created,
+            button=TR.buttons__continue,
+            allow_cancel=False,
+        ),
         "backup_device",
         ButtonRequestType.ResetDevice,
     )
