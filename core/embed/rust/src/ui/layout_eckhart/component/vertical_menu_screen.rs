@@ -7,8 +7,10 @@ use crate::{
             Component, Event, EventCtx, SwipeDetect,
         },
         event::{SwipeEvent, TouchEvent},
+        flow::Swipable,
         geometry::{Alignment2D, Direction, Offset, Rect},
         shape::{Renderer, ToifImage},
+        util::Pager,
     },
 };
 
@@ -170,6 +172,17 @@ impl Component for VerticalMenuScreen {
             .with_fg(theme::GREY_LIGHT)
             .render(target);
         }
+    }
+}
+
+#[cfg(feature = "micropython")]
+impl Swipable for VerticalMenuScreen {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        self.swipe_config
+    }
+
+    fn get_pager(&self) -> Pager {
+        Pager::single_page()
     }
 }
 
