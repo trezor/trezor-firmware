@@ -56,9 +56,9 @@ def screen_recording(
         client.debug.start_recording(str(testcase.actual_dir))
         yield
     finally:
-        client.ensure_open()
+        client.open() # client.ensure_open()
         if client.protocol_version == ProtocolVersion.PROTOCOL_V1:
-            client.sync_responses()
+            client.sync_responses()  # needs transport
         # Wait for response to Initialize, which gives the emulator time to catch up
         # and redraw the homescreen. Otherwise there's a race condition between that
         # and stopping recording.

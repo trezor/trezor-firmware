@@ -177,16 +177,18 @@ class Emulator:
         (self.profile_dir / "trezor.pid").write_text(str(self.process.pid) + "\n")
         (self.profile_dir / "trezor.port").write_text(str(self.port) + "\n")
 
-        transport = self._get_transport()
+        transport = self._get_transport()  # not opened
+        # self.transport.open()
         self._client = TrezorClientDebugLink(
             transport, auto_interact=self.auto_interact
         )
-        self._client.open()
+        # self._client.open() # maybe not needed?
 
     def stop(self) -> None:
         if self._client:
             self._client.close()
         self._client = None
+        # self.transport.close() # called by _client.close()?
 
         if self.process:
             LOG.info("Terminating emulator...")
