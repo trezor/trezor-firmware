@@ -336,8 +336,7 @@ impl FirmwareUI for UIDelizia {
         let layout = RootComponent::new(SwipeUpScreen::new(
             Frame::left_aligned(TR::modify_amount__title.into(), paragraphs)
                 .with_cancel_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default()),
+                .with_swipeup_footer(None),
         ));
         Ok(layout)
     }
@@ -372,8 +371,7 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut summary_params = ShowInfoParams::new(title.unwrap_or(TString::empty()))
             .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_swipe_up();
+            .with_swipeup_footer(None);
         summary_params = unwrap!(summary_params.add(amount_label, amount));
         summary_params = unwrap!(summary_params.add(fee_label, fee));
 
@@ -532,18 +530,16 @@ impl FirmwareUI for UIDelizia {
             ConfirmValue::new(title.unwrap_or(TString::empty()), message, description)
                 .with_subtitle(subtitle)
                 .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipeup_footer(None)
                 .with_chunkify(chunkify)
-                .with_text_mono(text_mono)
-                .with_swipe_up();
+                .with_text_mono(text_mono);
 
         let confirm_amount = amount.map(|amount| {
             ConfirmValue::new(TR::words__amount.into(), amount, None)
                 .with_subtitle(subtitle)
                 .with_menu_button()
-                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_swipeup_footer(None)
                 .with_text_mono(text_mono)
-                .with_swipe_up()
                 .with_swipe_down()
         });
 
@@ -576,8 +572,7 @@ impl FirmwareUI for UIDelizia {
             let mut summary =
                 ShowInfoParams::new(summary_title.unwrap_or(TR::words__title_summary.into()))
                     .with_menu_button()
-                    .with_footer(TR::instructions__swipe_up.into(), None)
-                    .with_swipe_up()
+                    .with_swipeup_footer(None)
                     .with_swipe_down();
             for pair in IterBuf::new().try_iterate(summary_items.unwrap())? {
                 let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
@@ -820,8 +815,7 @@ impl FirmwareUI for UIDelizia {
 
         let layout = RootComponent::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(checklist_content))
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default()),
+                .with_swipeup_footer(None),
         ));
         Ok(layout)
     }
@@ -848,13 +842,11 @@ impl FirmwareUI for UIDelizia {
             Frame::left_aligned(title, SwipeContent::new(content))
                 .with_cancel_button()
                 .with_danger()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default())
+                .with_swipeup_footer(None)
         } else {
             Frame::left_aligned(title, SwipeContent::new(content))
                 .with_danger()
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default())
+                .with_swipeup_footer(None)
         };
 
         let obj = LayoutObj::new(SwipeUpScreen::new(frame))?;
@@ -874,9 +866,7 @@ impl FirmwareUI for UIDelizia {
         .with_placement(geometry::LinearPlacement::vertical().align_at_center());
 
         let layout = RootComponent::new(SwipeUpScreen::new(
-            Frame::left_aligned("".into(), SwipeContent::new(paragraphs))
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default()),
+            Frame::left_aligned("".into(), SwipeContent::new(paragraphs)).with_swipeup_footer(None),
         ));
         Ok(layout)
     }
@@ -900,9 +890,7 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<Gc<LayoutObj>, Error> {
         let content = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, description));
         let obj = LayoutObj::new(SwipeUpScreen::new(
-            Frame::left_aligned(title, SwipeContent::new(content))
-                .with_footer(TR::instructions__swipe_up.into(), None)
-                .with_swipe(Direction::Up, SwipeSettings::default()),
+            Frame::left_aligned(title, SwipeContent::new(content)).with_swipeup_footer(None),
         ))?;
         Ok(obj)
     }
@@ -960,8 +948,7 @@ impl FirmwareUI for UIDelizia {
         let layout = RootComponent::new(SwipeUpScreen::new(
             Frame::left_aligned(title, SwipeContent::new(paragraphs))
                 .with_cancel_button()
-                .with_footer(TR::instructions__swipe_up.into(), Some(button))
-                .with_swipe(Direction::Up, SwipeSettings::default()),
+                .with_swipeup_footer(Some(button)),
         ));
 
         Ok(layout)
@@ -1071,9 +1058,8 @@ impl FirmwareUI for UIDelizia {
                 TR::words__title_success.into(),
                 SwipeContent::new(content).with_no_attach_anim(),
             )
-            .with_footer(TR::instructions__swipe_up.into(), description)
-            .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
-            .with_swipe(Direction::Up, SwipeSettings::default()),
+            .with_swipeup_footer(description)
+            .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT),
         ))?;
         Ok(layout)
     }
@@ -1107,9 +1093,8 @@ impl FirmwareUI for UIDelizia {
         ])
         .into_paragraphs();
 
-        let frame = Frame::left_aligned(title, SwipeContent::new(content))
-            .with_footer(TR::instructions__swipe_up.into(), action)
-            .with_swipe(Direction::Up, SwipeSettings::default());
+        let frame =
+            Frame::left_aligned(title, SwipeContent::new(content)).with_swipeup_footer(action);
 
         let frame_with_icon = if danger {
             frame.with_danger_icon()

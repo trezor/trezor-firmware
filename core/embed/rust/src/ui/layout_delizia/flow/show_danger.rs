@@ -75,9 +75,8 @@ pub fn new_show_danger(
     .into_paragraphs();
     let content_message = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), Some(verb_cancel))
+        .with_swipeup_footer(Some(verb_cancel))
         .with_danger()
-        .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
         .map_to_button_msg();
     // .one_button_request(ButtonRequestCode::Warning, br_name);

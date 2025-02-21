@@ -115,8 +115,7 @@ pub fn new_get_address(
     let content_address =
         Frame::left_aligned(title, SwipeContent::new(SwipePage::vertical(paragraphs)))
             .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipeup_footer(None)
             .with_swipe(Direction::Left, SwipeSettings::default())
             .with_vertical_pages()
             .map_to_button_msg()
@@ -183,8 +182,7 @@ pub fn new_get_address(
         ))),
     )
     .with_cancel_button()
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();
 

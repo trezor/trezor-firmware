@@ -61,11 +61,7 @@ pub fn new_confirm_homescreen(
 ) -> Result<SwipeFlow, error::Error> {
     let content_homescreen = Frame::left_aligned(title, SwipeContent::new(image))
         .with_menu_button()
-        .with_footer(
-            TR::instructions__swipe_up.into(),
-            Some(TR::buttons__change.into()),
-        )
-        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipeup_footer(Some(TR::buttons__change.into()))
         .map_to_button_msg()
         // Homescreen + Tap to confirm
         .with_pages(|_| 2);

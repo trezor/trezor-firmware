@@ -70,8 +70,7 @@ pub fn new_confirm_firmware_update(
         SwipeContent::new(paragraphs),
     )
     .with_menu_button()
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Left, SwipeSettings::default())
     .map_to_button_msg();
 
