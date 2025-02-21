@@ -75,7 +75,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         TR::tutorial__welcome_safe5.into(),
         SwipeContent::new(PromptScreen::new_tap_to_start()),
     )
-    .with_footer(TR::instructions__tap_to_start.into(), None)
+    .with_footer(TR::instructions__tap_to_continue.into(), None)
     .map(super::util::map_to_confirm);
 
     let content_step_begin = Frame::left_aligned(
@@ -85,11 +85,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             TR::tutorial__lets_begin,
         ))),
     )
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::tutorial__get_started.into()),
-    )
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .map_to_button_msg();
 
     let content_step_navigation = Frame::left_aligned(
@@ -99,11 +95,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             TR::tutorial__swipe_up_and_down,
         ))),
     )
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::tutorial__continue.into()),
-    )
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .map_to_button_msg();
 
@@ -116,11 +108,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     )
     .with_menu_button()
     .button_styled(theme::button_warning_low())
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::buttons__continue.into()),
-    )
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .map_to_button_msg();
 
@@ -138,8 +126,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             TR::tutorial__ready_to_use_safe5,
         ))),
     )
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .map_to_button_msg();
 
     let content_menu = Frame::left_aligned(
