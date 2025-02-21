@@ -69,9 +69,9 @@ impl SelectWordCountLayout {
     };
 
     /*
-     * 0 | 1
-     * -----
-     *   x
+     * 20 | 33
+     * -------
+     *    x
      */
     pub const LAYOUT_MULTISHARE: SelectWordCountLayout = SelectWordCountLayout {
         choice_buttons: &[Btn::new("20", 20, (0, 0)), Btn::new("33", 33, (0, 2))],
