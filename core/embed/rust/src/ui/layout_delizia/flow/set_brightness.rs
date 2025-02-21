@@ -115,8 +115,7 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
         ))
         .with_no_attach_anim(),
     )
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
     .map(move |_msg| Some(FlowMsg::Confirmed));
 

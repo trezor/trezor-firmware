@@ -274,12 +274,8 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
 
     let mut content = Frame::left_aligned(strings.title, content)
         .with_margin(frame_margin)
-        .with_swipe(Direction::Up, SwipeSettings::default())
-        .with_vertical_pages()
-        .with_footer(
-            TR::instructions__swipe_up.into(),
-            strings.footer_description,
-        );
+        .with_swipeup_footer(strings.footer_description)
+        .with_vertical_pages();
 
     match extra {
         ConfirmActionExtra::Menu { .. } => {

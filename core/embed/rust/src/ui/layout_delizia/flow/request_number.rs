@@ -78,8 +78,7 @@ pub fn new_request_number(
     let number_input_dialog = NumberInputDialog::new(min_count, max_count, count, description)?;
     let content_number_input = Frame::left_aligned(title, SwipeContent::new(number_input_dialog))
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipeup_footer(None)
         .with_swipe(Direction::Left, SwipeSettings::default())
         .map(|msg| match msg {
             NumberInputDialogMsg::Changed(n) => {
