@@ -12,6 +12,7 @@ use crate::{
             },
             Empty, FormattedText,
         },
+        geometry::LinearPlacement,
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, RecoveryType, StrOrBytes},
@@ -422,10 +423,7 @@ impl FirmwareUI for UIEckhart {
         description: TString<'static>,
         words: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let component = SelectWordScreen::new(words, description).with_header(
-            Header::new(title)
-                .with_right_button(Button::with_icon(theme::ICON_MENU), HeaderMsg::Cancelled),
-        );
+        let component = SelectWordScreen::new(words, description).with_header(Header::new(title));
 
         let layout = RootComponent::new(component);
 
@@ -630,17 +628,16 @@ impl FirmwareUI for UIEckhart {
         _text_footer: Option<TString<'static>>,
         text_confirm: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        // TODO: add support for multiple instructions
-        let instruction: TString = IterBuf::new()
-            .try_iterate(instructions)?
-            .next()
-            .unwrap()
-            .try_into()?;
+        let mut instructions_paragraphs = ParagraphVecShort::new();
+        for item in IterBuf::new().try_iterate(instructions)? {
+            let text: TString = item.try_into()?;
+            instructions_paragraphs.add(Paragraph::new(&theme::TEXT_REGULAR, text));
+        }
 
         let flow = flow::show_share_words::new_show_share_words_flow(
             words,
             subtitle.unwrap_or(TString::empty()),
-            Paragraph::new(&theme::TEXT_REGULAR, instruction),
+            instructions_paragraphs,
             text_confirm,
         )?;
         Ok(flow)
@@ -676,8 +673,12 @@ impl FirmwareUI for UIEckhart {
         allow_cancel: bool,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description).into_paragraphs();
-        let header = Header::new(title).with_icon(theme::ICON_DONE, theme::GREEN_LIGHT);
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
+        let header = Header::new(title)
+            .with_icon(theme::ICON_DONE, theme::GREEN_LIGHT)
+            .with_text_style(theme::label_title_confirm());
         let action_bar = if allow_cancel {
             ActionBar::new_double(
                 Button::with_icon(theme::ICON_CROSS),
@@ -706,18 +707,27 @@ impl FirmwareUI for UIEckhart {
         value: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        _danger: bool, // TODO: review if `danger` needed in all layouts since we have show_danger
+        danger: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_SMALL, description),
             Paragraph::new(&theme::TEXT_REGULAR, value),
         ])
-        .into_paragraphs();
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
-        let header = Header::new(title).with_icon(theme::ICON_INFO, theme::GREEN_LIGHT);
+        let (color, style) = if danger {
+            (theme::ORANGE, theme::label_title_danger())
+        } else {
+            (theme::YELLOW, theme::label_title_warning())
+        };
+
+        let header = Header::new(title)
+            .with_icon(theme::ICON_INFO, color)
+            .with_text_style(style);
         let action_bar = if allow_cancel {
             ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS),
+                Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
                 Button::with_text(button),
             )
         } else {
