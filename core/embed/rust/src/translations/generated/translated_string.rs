@@ -853,7 +853,7 @@ pub enum TranslatedString {
     reset__recovery_share_title_template = 567,  // "Recovery share #{0}"
     reset__required_number_of_groups = 568,  // "The required number of groups for recovery."
     reset__select_correct_word = 569,  // "Select the correct word for each position."
-    reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word #{0} from your wallet backup"}
+    reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word no. {0} from your wallet backup"}
     reset__select_word_x_of_y_template = 571,  // "Select word {0} of {1}:"
     reset__set_it_to_count_template = 572,  // "Set it to {0} and you will need "
     reset__share_checked_successfully_template = 573,  // "Share #{0} checked successfully."
@@ -1275,7 +1275,7 @@ pub enum TranslatedString {
     auto_lock__turned_on = 879,  // "Auto-lock turned on"
     backup__info_multi_share_backup = 880,  // "Your wallet backup contains multiple lists of words in a specific order (shares)."
     backup__info_single_share_backup = 881,  // "Your wallet backup contains {0} words in a specific order."
-    backup__title_backup_completed = 882,  // "Wallet backup completed"
+    backup__title_backup_completed = 882,  // {"Bolt": "Wallet backup completed", "Caesar": "Wallet backup completed", "Delizia": "Wallet backup completed", "Eckhart": "Wallet backup completed."}
     backup__title_create_wallet_backup = 883,  // "Create wallet backup"
     haptic_feedback__disable = 884,  // "Disable haptic feedback?"
     haptic_feedback__enable = 885,  // "Enable haptic feedback?"
@@ -1299,7 +1299,7 @@ pub enum TranslatedString {
     recovery__info_about_disconnect = 904,  // "It's safe to disconnect your Trezor while recovering your wallet and continue later."
     recovery__share_does_not_match = 905,  // "Share doesn't match"
     reset__cancel_create_wallet = 906,  // "Cancel create wallet"
-    reset__incorrect_word_selected = 907,  // "Incorrect word selected"
+    reset__incorrect_word_selected = 907,  // {"Bolt": "Incorrect word selected", "Caesar": "Incorrect word selected", "Delizia": "Incorrect word selected", "Eckhart": "Incorrect word selected."}
     reset__more_at = 908,  // "More at"
     reset__num_of_shares_how_many = 909,  // "How many wallet backup shares do you want to create?"
     reset__num_of_shares_long_info_template = 910,  // "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
@@ -1318,7 +1318,7 @@ pub enum TranslatedString {
     words__good_to_know = 927,  // "Good to know"
     words__operation_cancelled = 928,  // "Operation cancelled"
     words__settings = 929,  // "Settings"
-    words__try_again = 930,  // "Try again."
+    words__try_again = 930,  // {"Bolt": "Try again.", "Caesar": "Try again.", "Delizia": "Try again.", "Eckhart": "Try again"}
     reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
     brightness__title = 932,  // "Display brightness"
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
