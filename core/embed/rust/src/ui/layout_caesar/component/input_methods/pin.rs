@@ -294,50 +294,49 @@ impl Component for PinEntry<'_> {
             }
         }
 
-        if let Some(msg) = self.choice_page.event(ctx, event) {
-            match msg {
-                ChoiceMsg::Choice {
-                    item: PinAction::Delete,
-                    long_press,
-                } => {
-                    // Deleting all when long-pressed
-                    if long_press {
-                        self.textbox.clear(ctx);
-                    } else {
-                        self.textbox.delete_last(ctx);
-                    }
-                    self.update(ctx);
+        match self.choice_page.event(ctx, event) {
+            Some(ChoiceMsg::Choice {
+                item: PinAction::Delete,
+                long_press,
+            }) => {
+                // Deleting all when long-pressed
+                if long_press {
+                    self.textbox.clear(ctx);
+                } else {
+                    self.textbox.delete_last(ctx);
                 }
-                ChoiceMsg::Choice {
-                    item: PinAction::Show,
-                    ..
-                } => {
-                    self.show_real_pin = true;
-                    self.update(ctx);
-                }
-                ChoiceMsg::Choice {
-                    item: PinAction::Enter,
-                    ..
-                } if !self.is_empty() => {
-                    // ENTER is not valid when the PIN is empty
-                    return Some(CancelConfirmMsg::Confirmed);
-                }
-                ChoiceMsg::Choice {
-                    item: PinAction::Digit(ch),
-                    ..
-                } if !self.is_full() => {
-                    self.textbox.append(ctx, ch);
-                    // Choosing random digit to be shown next
-                    self.choice_page
-                        .set_page_counter(ctx, get_random_digit_position(), true);
-                    self.show_last_digit = true;
-                    self.timeout_timer
-                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
-                    self.update(ctx);
-                }
-                _ => {}
+                self.update(ctx);
             }
-        }
+            Some(ChoiceMsg::Choice {
+                item: PinAction::Show,
+                ..
+            }) => {
+                self.show_real_pin = true;
+                self.update(ctx);
+            }
+            Some(ChoiceMsg::Choice {
+                item: PinAction::Enter,
+                ..
+            }) if !self.is_empty() => {
+                // ENTER is not valid when the PIN is empty
+                return Some(CancelConfirmMsg::Confirmed);
+            }
+            Some(ChoiceMsg::Choice {
+                item: PinAction::Digit(ch),
+                ..
+            }) if !self.is_full() => {
+                self.textbox.append(ctx, ch);
+                // Choosing random digit to be shown next
+                self.choice_page
+                    .set_page_counter(ctx, get_random_digit_position(), true);
+                self.show_last_digit = true;
+                self.timeout_timer
+                    .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+                self.update(ctx);
+            }
+            _ => {}
+        };
+
         None
     }
 

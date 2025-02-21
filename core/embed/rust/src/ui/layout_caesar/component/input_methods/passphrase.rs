@@ -399,72 +399,70 @@ impl Component for PassphraseEntry {
             }
         }
 
-        if let Some(msg) = self.choice_page.event(ctx, event) {
-            match msg {
-                ChoiceMsg::Choice {
-                    item: PassphraseAction::CancelOrDelete,
-                    long_press,
-                } => {
-                    if self.is_empty() {
-                        return Some(CancelConfirmMsg::Cancelled);
+        match self.choice_page.event(ctx, event) {
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::CancelOrDelete,
+                long_press,
+            }) => {
+                if self.is_empty() {
+                    return Some(CancelConfirmMsg::Cancelled);
+                } else {
+                    // Deleting all when long-pressed
+                    if long_press {
+                        self.delete_all_digits(ctx);
                     } else {
-                        // Deleting all when long-pressed
-                        if long_press {
-                            self.delete_all_digits(ctx);
-                        } else {
-                            self.delete_last_digit(ctx);
-                        }
-                        self.update_passphrase_dots(ctx);
-                        if self.is_empty() {
-                            // Allowing for DELETE/CANCEL change
-                            self.show_menu_page(ctx);
-                        }
-                        ctx.request_paint();
+                        self.delete_last_digit(ctx);
                     }
-                }
-                ChoiceMsg::Choice {
-                    item: PassphraseAction::Enter,
-                    ..
-                } => {
-                    return Some(CancelConfirmMsg::Confirmed);
-                }
-                ChoiceMsg::Choice {
-                    item: PassphraseAction::Show,
-                    ..
-                } => {
-                    self.show_plain_passphrase = true;
                     self.update_passphrase_dots(ctx);
+                    if self.is_empty() {
+                        // Allowing for DELETE/CANCEL change
+                        self.show_menu_page(ctx);
+                    }
                     ctx.request_paint();
                 }
-                ChoiceMsg::Choice {
-                    item: PassphraseAction::Category(category),
-                    ..
-                } => {
-                    self.current_category = category;
-                    self.show_category_page(ctx);
-                    ctx.request_paint();
-                }
-                ChoiceMsg::Choice {
-                    item: PassphraseAction::Menu,
-                    ..
-                } => {
-                    self.current_category = ChoiceCategory::Menu;
-                    self.show_menu_page(ctx);
-                    ctx.request_paint();
-                }
-                ChoiceMsg::Choice {
-                    item: PassphraseAction::Character(ch),
-                    ..
-                } if !self.is_full() => {
-                    self.append_char(ctx, ch);
-                    self.show_last_digit = true;
-                    self.update_passphrase_dots(ctx);
-                    self.randomize_category_position(ctx);
-                    ctx.request_paint();
-                }
-                _ => {}
             }
-        }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Enter,
+                ..
+            }) => {
+                return Some(CancelConfirmMsg::Confirmed);
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Show,
+                ..
+            }) => {
+                self.show_plain_passphrase = true;
+                self.update_passphrase_dots(ctx);
+                ctx.request_paint();
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Category(category),
+                ..
+            }) => {
+                self.current_category = category;
+                self.show_category_page(ctx);
+                ctx.request_paint();
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Menu,
+                ..
+            }) => {
+                self.current_category = ChoiceCategory::Menu;
+                self.show_menu_page(ctx);
+                ctx.request_paint();
+            }
+            Some(ChoiceMsg::Choice {
+                item: PassphraseAction::Character(ch),
+                ..
+            }) if !self.is_full() => {
+                self.append_char(ctx, ch);
+                self.show_last_digit = true;
+                self.update_passphrase_dots(ctx);
+                self.randomize_category_position(ctx);
+                ctx.request_paint();
+            }
+            _ => {}
+        };
 
         None
     }

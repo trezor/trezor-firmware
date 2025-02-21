@@ -286,44 +286,41 @@ impl Component for WordlistEntry {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        if let Some(msg) = self.choice_page.event(ctx, event) {
-            match msg {
-                ChoiceMsg::Choice {
-                    item: WordlistAction::Previous,
-                    ..
-                } => {
-                    if self.can_go_back {
-                        return Some("");
-                    }
-                }
-                ChoiceMsg::Choice {
-                    item: WordlistAction::Delete,
-                    long_press,
-                } => {
-                    // Deleting all when long-pressed
-                    if long_press {
-                        self.textbox.clear(ctx);
-                    } else {
-                        self.textbox.delete_last(ctx);
-                    }
-                    self.update(ctx);
-                }
-                ChoiceMsg::Choice {
-                    item: WordlistAction::Letter(letter),
-                    ..
-                } => {
-                    self.textbox.append(ctx, letter);
-                    self.update(ctx);
-                }
-                ChoiceMsg::Choice {
-                    item: WordlistAction::Word(word),
-                    ..
-                } => {
-                    return Some(word);
-                }
-                _ => {}
+        match self.choice_page.event(ctx, event) {
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Previous,
+                ..
+            }) if self.can_go_back => {
+                return Some("");
             }
-        }
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Delete,
+                long_press,
+            }) => {
+                // Deleting all when long-pressed
+                if long_press {
+                    self.textbox.clear(ctx);
+                } else {
+                    self.textbox.delete_last(ctx);
+                }
+                self.update(ctx);
+            }
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Letter(letter),
+                ..
+            }) => {
+                self.textbox.append(ctx, letter);
+                self.update(ctx);
+            }
+            Some(ChoiceMsg::Choice {
+                item: WordlistAction::Word(word),
+                ..
+            }) => {
+                return Some(word);
+            }
+            _ => {}
+        };
+
         None
     }
 

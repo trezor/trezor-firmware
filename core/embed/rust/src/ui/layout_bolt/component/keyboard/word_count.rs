@@ -108,7 +108,7 @@ impl Component for SelectWordCount {
     fn place(&mut self, bounds: Rect) -> Rect {
         let (_, bounds) = bounds.split_bottom(2 * theme::BUTTON_HEIGHT + theme::BUTTON_SPACING);
         let grid = Grid::new(bounds, 2, 6).with_spacing(theme::BUTTON_SPACING);
-        for (i, button) in self.choice_buttons.enumerate() {
+        for (i, button) in self.choice_buttons.iter_mut().enumerate() {
             button.place(grid.cells(self.layout.choice_buttons[i].placement));
         }
         self.cancel_button
