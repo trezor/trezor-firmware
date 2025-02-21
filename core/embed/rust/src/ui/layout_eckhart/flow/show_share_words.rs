@@ -4,11 +4,8 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::{
-                op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource},
-            },
-            ComponentExt, FormattedText,
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
+            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -24,7 +21,7 @@ use super::super::{
     component::{
         ActionBar, Button, Header, ShareWordsScreen, ShareWordsScreenMsg, TextScreen, TextScreenMsg,
     },
-    fonts, theme,
+    theme,
 };
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -32,6 +29,7 @@ pub enum ShowShareWords {
     Instruction,
     ShareWords,
     Confirm,
+    CheckBackupIntro,
 }
 
 impl FlowController for ShowShareWords {
@@ -53,7 +51,8 @@ impl FlowController for ShowShareWords {
             (Self::ShareWords, FlowMsg::Cancelled) => Self::Instruction.goto(),
             (Self::ShareWords, FlowMsg::Confirmed) => Self::Confirm.goto(),
             (Self::Confirm, FlowMsg::Cancelled) => Self::ShareWords.goto(),
-            (Self::Confirm, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            (Self::Confirm, FlowMsg::Confirmed) => Self::CheckBackupIntro.goto(),
+            (Self::CheckBackupIntro, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
     }
@@ -62,19 +61,18 @@ impl FlowController for ShowShareWords {
 pub fn new_show_share_words_flow(
     words: Vec<TString<'static>, 33>,
     _subtitle: TString<'static>,
-    instruction: Paragraph<'static>,
+    instructions_paragraphs: ParagraphVecShort<'static>,
     text_confirm: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     let instruction = TextScreen::new(
-        instruction
+        instructions_paragraphs
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical()),
+            .with_placement(LinearPlacement::vertical().with_spacing(24)),
     )
     .with_header(Header::new(TR::reset__recovery_wallet_backup_title.into()))
-    .with_action_bar(ActionBar::new_double(
-        Button::with_icon(theme::ICON_CHEVRON_UP),
-        Button::with_text(TR::buttons__continue.into()),
-    ))
+    .with_action_bar(ActionBar::new_single(Button::with_text(
+        TR::buttons__continue.into(),
+    )))
     .map(|msg| match msg {
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
@@ -86,13 +84,14 @@ pub fn new_show_share_words_flow(
         ShareWordsScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
     });
 
-    let op_confirm =
-        OpTextLayout::new(theme::TEXT_NORMAL).text(text_confirm, fonts::FONT_SATOSHI_REGULAR_38);
+    let confirm_paragraphs = Paragraph::new(&theme::TEXT_REGULAR, text_confirm)
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
-    let confirm = TextScreen::new(FormattedText::new(op_confirm))
+    let confirm = TextScreen::new(confirm_paragraphs)
         .with_header(Header::new(TR::reset__recovery_wallet_backup_title.into()))
         .with_action_bar(ActionBar::new_double(
-            Button::with_icon(theme::ICON_CHEVRON_LEFT),
+            Button::with_icon(theme::ICON_CHEVRON_UP),
             Button::with_text(TR::buttons__hold_to_confirm.into())
                 .styled(theme::button_confirm())
                 .with_long_press(theme::CONFIRM_HOLD_DURATION),
@@ -103,9 +102,25 @@ pub fn new_show_share_words_flow(
             TextScreenMsg::Menu => Some(FlowMsg::Cancelled),
         });
 
+    let check_backup_paragraphs =
+        Paragraph::new(&theme::TEXT_REGULAR, TR::reset__check_backup_instructions)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
+
+    let check_backup_intro = TextScreen::new(check_backup_paragraphs)
+        .with_header(Header::new(TR::reset__check_wallet_backup_title.into()))
+        .with_action_bar(ActionBar::new_single(Button::with_text(
+            TR::buttons__continue.into(),
+        )))
+        .map(|msg| match msg {
+            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+            _ => None,
+        });
+
     let mut res = SwipeFlow::new(&ShowShareWords::Instruction)?;
     res.add_page(&ShowShareWords::Instruction, instruction)?
         .add_page(&ShowShareWords::ShareWords, share_words)?
-        .add_page(&ShowShareWords::Confirm, confirm)?;
+        .add_page(&ShowShareWords::Confirm, confirm)?
+        .add_page(&ShowShareWords::CheckBackupIntro, check_backup_intro)?;
     Ok(res)
 }
