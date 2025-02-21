@@ -22,6 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <rtl/unit_test.h>
 #include <sys/systick.h>
 
 #include <stdlib.h>
@@ -198,6 +199,65 @@ static void prodtest_pmic_report(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+// ut-pmic-init-deinit
+// This unit test verifies the PMIC driver initialization and deinitialization
+// routine could be called repeatably witout failure. It should verify that all
+// driver components are properly cleaned by deinit function.
+static ut_status_t ut_pmic_init_deinit() {
+  ut_status_t ut_result = UT_PASSED;
+
+  for (uint8_t i = 0; i < 5; i++) {
+    // deinitilize the pmic driver
+    npm1300_deinit();
+    if (npm1300_init() == false) {
+      ut_result = UT_FAILED;
+      break;
+    }
+  }
+
+  npm1300_deinit();
+
+  return ut_result;
+}
+
+// ut-pmic-battery
+// This unit test verifies the battery connection to NPM1300 PMIC.
+// Firstly it initilize the PMIC driver and request the measurement
+// report. From the measurement report it checks, if the battery voltage and
+// NTC temperature are within the expeted range. At last, it checks if NTC
+// temperature measurement is not too far away from the die temperarture.
+static ut_status_t ut_pmic_battery() {
+  ut_status_t ut_result = UT_PASSED;
+  npm1300_report_t report;
+
+  if (npm1300_init() == false) {
+    ut_result = UT_FAILED;
+  } else {
+    // Request mesaurement report from PMIC
+    if (npm1300_measure_sync(&report) == false) {
+      ut_result = UT_FAILED;
+    } else {
+      // Battery voltage outside given range
+      if (report.vbat < 3.0 || report.vbat > 3.8) {
+        ut_result = UT_FAILED;
+      }
+
+      // Battery NTC outside given range
+      if (report.ntc_temp < -40.0 || report.ntc_temp > 50.0) {
+        ut_result = UT_FAILED;
+      }
+
+      // Battery NTC too far from die temp
+      if (abs(report.ntc_temp - report.die_temp) > 10.0) {
+        ut_result = UT_FAILED;
+      }
+    }
+  }
+
+  npm1300_deinit();
+  return ut_result;
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -241,5 +301,17 @@ PRODTEST_CLI_CMD(
   .info = "Retrieve PMIC report",
   .args = "[<count>] [<period>]"
 );
+
+REGISTER_UNIT_TEST(
+  .name = "ut-pmic-init-deinit",
+  .func = ut_pmic_init_deinit,
+  .info = "Test PMIC driver initialization and deinitialization",
+)
+
+REGISTER_UNIT_TEST(
+  .name = "ut-pmic-battery",
+  .func = ut_pmic_battery,
+  .info = "Test PMIC battery connection",
+)
 
 #endif  // USE_POWERCTL

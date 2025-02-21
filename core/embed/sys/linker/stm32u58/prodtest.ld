@@ -59,6 +59,11 @@ SECTIONS {
     _prodtest_cli_cmd_section_start = .;
     KEEP(*(.prodtest_cli_cmd))
     _prodtest_cli_cmd_section_end = .;
+    . = ALIGN(4);
+
+    _unit_test_section_start = .;
+    KEEP(*(.unit_test))
+    _unit_test_section_end = .;
 
     . = ALIGN(512);
   } >FLASH AT>FLASH
