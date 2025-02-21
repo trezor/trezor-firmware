@@ -14,7 +14,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{ButtonLayout, Choice, ChoiceFactory, ChoicePage},
+    component::{ButtonLayout, Choice, ChoiceFactory, ChoiceMsg, ChoicePage},
     fonts,
     theme::bootloader::{BLD_BG, BLD_FG, ICON_EXIT, ICON_REDO, ICON_TRASH},
 };
@@ -140,11 +140,7 @@ impl Menu {
         let choices = MenuChoiceFactory::new(firmware_present);
         Self {
             pad: Pad::with_background(BLD_BG).with_clear(),
-            choice_page: Child::new(
-                ChoicePage::new(choices)
-                    .with_carousel(true)
-                    .with_only_one_item(true),
-            ),
+            choice_page: Child::new(ChoicePage::new(choices).with_only_one_item(true)),
         }
     }
 }
@@ -159,7 +155,10 @@ impl Component for Menu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.choice_page.event(ctx, event).map(|evt| evt.0)
+        match self.choice_page.event(ctx, event) {
+            Some(ChoiceMsg::Choice { item, .. }) => Some(item),
+            _ => None,
+        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {

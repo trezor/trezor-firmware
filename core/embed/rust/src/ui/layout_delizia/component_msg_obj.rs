@@ -28,6 +28,7 @@ impl TryFrom<SelectWordCountMsg> for Obj {
     fn try_from(value: SelectWordCountMsg) -> Result<Self, Self::Error> {
         match value {
             SelectWordCountMsg::Selected(i) => i.try_into(),
+            SelectWordCountMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
@@ -84,6 +85,7 @@ where
 impl ComponentMsgObj for SelectWordCount {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
+            SelectWordCountMsg::Cancelled => Ok(CANCELLED.as_obj()),
             SelectWordCountMsg::Selected(n) => n.try_into(),
         }
     }

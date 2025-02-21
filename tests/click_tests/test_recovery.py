@@ -51,6 +51,25 @@ def prepare_recovery_and_evaluate(
     assert features.recovery_status == messages.RecoveryStatus.Nothing
 
 
+@contextmanager
+def prepare_recovery_and_evaluate_cancel(
+    device_handler: "BackgroundDeviceHandler",
+) -> Generator["DebugLink", None, None]:
+    features = device_handler.features()
+    debug = device_handler.debuglink()
+    assert features.initialized is False
+    device_handler.run(device.recover, pin_protection=False)  # type: ignore
+
+    yield debug
+
+    with pytest.raises(exceptions.Cancelled):
+        device_handler.result()
+
+    features = device_handler.features()
+    assert features.initialized is False
+    assert features.recovery_status == messages.RecoveryStatus.Nothing
+
+
 @pytest.mark.setup_client(uninitialized=True)
 def test_recovery_slip39_basic(device_handler: "BackgroundDeviceHandler"):
     with prepare_recovery_and_evaluate(device_handler) as debug:
@@ -58,6 +77,13 @@ def test_recovery_slip39_basic(device_handler: "BackgroundDeviceHandler"):
         recovery.select_number_of_words(debug)
         recovery.enter_shares(debug, MNEMONIC_SLIP39_BASIC_20_3of6)
         recovery.finalize(debug)
+
+
+@pytest.mark.setup_client(uninitialized=True)
+def test_recovery_cancel_number_of_words(device_handler: "BackgroundDeviceHandler"):
+    with prepare_recovery_and_evaluate_cancel(device_handler) as debug:
+        recovery.confirm_recovery(debug)
+        recovery.cancel_select_number_of_words(debug)
 
 
 @pytest.mark.setup_client(uninitialized=True)
