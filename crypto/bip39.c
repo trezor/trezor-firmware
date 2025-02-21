@@ -50,17 +50,6 @@ void bip39_cache_clear(void) {
 
 #endif
 
-const char *mnemonic_generate(int strength) {
-  if (strength % 32 || strength < 128 || strength > 256) {
-    return 0;
-  }
-  uint8_t data[32] = {0};
-  random_buffer(data, 32);
-  const char *r = mnemonic_from_data(data, strength / 8);
-  memzero(data, sizeof(data));
-  return r;
-}
-
 static CONFIDENTIAL char mnemo[24 * 10];
 
 const char *mnemonic_from_data(const uint8_t *data, int len) {
