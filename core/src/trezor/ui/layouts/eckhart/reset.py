@@ -27,8 +27,10 @@ def show_share_words(
     words_count = len(share_words)
     description = None
     # Eckhart currently has only one instruction, other are shown in the hint area
-    instructions = [TR.reset__write_down_words_template.format(words_count)]
-    assert len(instructions) == 1
+    instructions = [
+        TR.reset__write_down_words_template.format(words_count),
+        TR.reset__words_may_repeat,
+    ]
     text_confirm = TR.reset__words_written_down_template.format(words_count)
 
     return raise_if_not_confirmed(
@@ -283,6 +285,7 @@ async def show_intro_backup(single_share: bool, num_of_words: int | None) -> Non
         trezorui_api.show_info(
             title=TR.backup__title_create_wallet_backup,
             description=description,
+            button=TR.buttons__continue,
         ),
         "backup_intro",
         ButtonRequestType.ResetDevice,
@@ -294,7 +297,7 @@ def show_warning_backup() -> Awaitable[ui.UiResult]:
         trezorui_api.show_warning(
             title=TR.words__important,
             value=TR.reset__never_make_digital_copy,
-            button="",
+            button=TR.buttons__continue,
             allow_cancel=False,
             danger=False,  # Use a less severe icon color
         ),
@@ -307,6 +310,8 @@ def show_success_backup() -> Awaitable[None]:
     return show_success(
         "success_backup",
         TR.backup__title_backup_completed,
+        TR.words__title_done,
+        TR.buttons__continue,
     )
 
 
@@ -320,9 +325,9 @@ def show_reset_warning(
     return raise_if_not_confirmed(
         trezorui_api.show_warning(
             title=subheader or "",
-            description=content,
-            value="",
-            button="",
+            description="",
+            value=content,
+            button=button or "",
             allow_cancel=False,
             danger=True,
         ),
@@ -338,40 +343,41 @@ async def show_share_confirmation_success(
 ) -> None:
     if share_index is None or num_of_shares is None:
         # it is a BIP39 or a 1-of-1 SLIP39 backup
-        # mercury UI shows only final wallet backup confirmation screen later
+        # delizia and eckhart UIs show only final wallet backup confirmation screen later
         return
 
     # TODO: super-shamir copy not done
     if share_index == num_of_shares - 1:
-        title = TR.reset__share_completed_template.format(share_index + 1)
+        content = TR.reset__share_completed_template.format(share_index + 1)
         if group_index is None:
-            footer_description = ""
+            title = TR.words__title_done
         else:
-            footer_description = TR.reset__finished_verifying_group_template.format(
-                group_index + 1
-            )
+            title = TR.reset__finished_verifying_group_template.format(group_index + 1)
     else:
         if group_index is None:
-            title = TR.reset__share_completed_template.format(share_index + 1)
-            footer_description = (
-                TR.instructions__shares_continue_with_x_template.format(share_index + 2)
+            content = TR.reset__share_completed_template.format(share_index + 1)
+            title = TR.instructions__shares_continue_with_x_template.format(
+                share_index + 2
             )
         else:
-            title = TR.reset__continue_with_next_share
-            footer_description = (
-                TR.reset__group_share_checked_successfully_template.format(
-                    group_index + 1, share_index + 1
-                )
+            content = TR.reset__continue_with_next_share
+            title = TR.reset__group_share_checked_successfully_template.format(
+                group_index + 1, share_index + 1
             )
 
-    await show_success("success_recovery", title, subheader=footer_description)
+    await show_success(
+        "success_recovery",
+        content,
+        subheader=title,
+        button=TR.buttons__continue,
+    )
 
 
 def show_share_confirmation_failure() -> Awaitable[None]:
     return show_reset_warning(
         "warning_backup_check",
-        TR.words__try_again,
         TR.reset__incorrect_word_selected,
-        "",
+        TR.words__pay_attention,
+        TR.words__try_again,
         ButtonRequestType.ResetDevice,
     )
