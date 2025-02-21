@@ -294,7 +294,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__shares_start_with_1;
   MP_QSTR_instructions__swipe_down;
   MP_QSTR_instructions__swipe_horizontally;
-  MP_QSTR_instructions__swipe_up;
   MP_QSTR_instructions__tap_to_confirm;
   MP_QSTR_instructions__tap_to_continue;
   MP_QSTR_instructions__tap_to_start;
