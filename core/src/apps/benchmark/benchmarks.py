@@ -1,4 +1,4 @@
-from trezor.crypto import aes, aesgcm, chacha20poly1305
+from trezor.crypto import aes, aesgcm, chacha20poly1305, mlkem
 from trezor.crypto.curve import curve25519, ed25519, nist256p1, secp256k1
 from trezor.crypto.hashlib import (
     blake2b,
@@ -22,6 +22,28 @@ from .curve_benchmark import (
     VerifyBenchmark,
 )
 from .hash_benchmark import HashBenchmark
+from .kem_benchmark import (
+    DecapsulateMemoryBenchmark,
+    DecapsulateTimeBenchmark,
+    EncapsulateMemoryBenchmark,
+    EncapsulateTimeBenchmark,
+    GenerateKeypairMemoryBenchmark,
+    GenerateKeypairTimeBenchmark,
+)
+
+
+class MlKem:
+    def __init__(self) -> None:
+        pass
+
+    def generate_keypair(self) -> tuple[bytes, bytes]:
+        return mlkem.generate_keypair()
+
+    def encapsulate(self, encapsulation_key: bytes) -> tuple[bytes, bytes]:
+        return mlkem.encapsulate(encapsulation_key)
+
+    def decapsulate(self, decapsulation_key: bytes, ciphertext: bytes) -> bytes:
+        return mlkem.decapsulate(decapsulation_key, ciphertext)
 
 
 # This is a wrapper above the trezor.crypto.curve.ed25519 module that satisfies SignCurve protocol, the modules uses `message` instead of `digest` in `sign()` and `verify()`
@@ -92,4 +114,10 @@ benchmarks = {
     "crypto/curve/ed25519/publickey": PublickeyBenchmark(ed25519),
     "crypto/curve/curve25519/publickey": PublickeyBenchmark(curve25519),
     "crypto/curve/curve25519/multiply": MultiplyBenchmark(curve25519),
+    "crypto/mlkem/generate/time": GenerateKeypairTimeBenchmark(MlKem()),
+    "crypto/mlkem/encapsulate/time": EncapsulateTimeBenchmark(MlKem()),
+    "crypto/mlkem/decapsulate/time": DecapsulateTimeBenchmark(MlKem()),
+    "crypto/mlkem/generate/memory": GenerateKeypairMemoryBenchmark(MlKem()),
+    "crypto/mlkem/encapsulate/memory": EncapsulateMemoryBenchmark(MlKem()),
+    "crypto/mlkem/decapsulate/memory": DecapsulateMemoryBenchmark(MlKem()),
 }

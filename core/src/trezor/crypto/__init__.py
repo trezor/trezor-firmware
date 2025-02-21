@@ -5,6 +5,7 @@ from trezorcrypto import (  # noqa: F401
     chacha20poly1305,
     crc,
     hmac,
+    mlkem,
     pbkdf2,
     random,
 )
