@@ -14,15 +14,19 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import atexit
 import logging
 import sys
 import time
-from typing import Iterable, List, Optional
+from typing import Iterable
+
+from typing_extensions import Self
 
 from ..log import DUMP_PACKETS
 from ..models import TREZORS, TrezorModel
-from . import UDEV_RULES_STR, DeviceIsBusy, TransportException
+from . import UDEV_RULES_STR, DeviceIsBusy, Timeout, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
@@ -45,12 +49,12 @@ WEBUSB_CHUNK_SIZE = 64
 
 
 class WebUsbHandle:
-    def __init__(self, device: "usb1.USBDevice", debug: bool = False) -> None:
+    def __init__(self, device: usb1.USBDevice, debug: bool = False) -> None:
         self.device = device
         self.interface = DEBUG_INTERFACE if debug else INTERFACE
         self.endpoint = DEBUG_ENDPOINT if debug else ENDPOINT
         self.count = 0
-        self.handle: Optional["usb1.USBDeviceHandle"] = None
+        self.handle: usb1.USBDeviceHandle | None = None
 
     def open(self) -> None:
         self.handle = self.device.open()
@@ -96,26 +100,24 @@ class WebUsbHandle:
                 )
             return
 
-    def read_chunk(self) -> bytes:
+    def read_chunk(self, timeout: float | None = None) -> bytes:
         assert self.handle is not None
         endpoint = 0x80 | self.endpoint
+        start = time.time()
         while True:
             try:
                 chunk = self.handle.interruptRead(
                     endpoint, WEBUSB_CHUNK_SIZE, USB_COMM_TIMEOUT_MS
                 )
-                if chunk:
-                    break
-                else:
-                    time.sleep(0.001)
+                LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
+                if len(chunk) != WEBUSB_CHUNK_SIZE:
+                    raise TransportException(f"Unexpected chunk size: {len(chunk)}")
+                return chunk
             except usb1.USBErrorTimeout:
-                pass
+                if timeout is not None and time.time() - start > timeout:
+                    raise Timeout(f"Timeout reading WebUSB packet ({timeout}s)")
             except Exception as e:
                 raise TransportException(f"USB read failed: {e}") from e
-        LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
-        if len(chunk) != WEBUSB_CHUNK_SIZE:
-            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
-        return chunk
 
 
 class WebUsbTransport(ProtocolBasedTransport):
@@ -129,8 +131,8 @@ class WebUsbTransport(ProtocolBasedTransport):
 
     def __init__(
         self,
-        device: "usb1.USBDevice",
-        handle: Optional[WebUsbHandle] = None,
+        device: usb1.USBDevice,
+        handle: WebUsbHandle | None = None,
         debug: bool = False,
     ) -> None:
         if handle is None:
@@ -147,8 +149,10 @@ class WebUsbTransport(ProtocolBasedTransport):
 
     @classmethod
     def enumerate(
-        cls, models: Optional[Iterable["TrezorModel"]] = None, usb_reset: bool = False
-    ) -> Iterable["WebUsbTransport"]:
+        cls,
+        models: Iterable[TrezorModel] | None = None,
+        usb_reset: bool = False,
+    ) -> Iterable[WebUsbTransport]:
         if cls.context is None:
             cls.context = usb1.USBContext()
             cls.context.open()
@@ -157,7 +161,7 @@ class WebUsbTransport(ProtocolBasedTransport):
         if models is None:
             models = TREZORS
         usb_ids = [id for model in models for id in model.usb_ids]
-        devices: List["WebUsbTransport"] = []
+        devices: list[WebUsbTransport] = []
         for dev in cls.context.getDeviceIterator(skip_on_error=True):
             usb_id = (dev.getVendorID(), dev.getProductID())
             if usb_id not in usb_ids:
@@ -181,12 +185,12 @@ class WebUsbTransport(ProtocolBasedTransport):
                     handle.close()
         return devices
 
-    def find_debug(self) -> "WebUsbTransport":
+    def find_debug(self) -> Self:
         # For v1 protocol, find debug USB interface for the same serial number
-        return WebUsbTransport(self.device, debug=True)
+        return self.__class__(self.device, debug=True)
 
 
-def is_vendor_class(dev: "usb1.USBDevice") -> bool:
+def is_vendor_class(dev: usb1.USBDevice) -> bool:
     configurationId = 0
     altSettingId = 0
     return (
@@ -195,7 +199,7 @@ def is_vendor_class(dev: "usb1.USBDevice") -> bool:
     )
 
 
-def dev_to_str(dev: "usb1.USBDevice") -> str:
+def dev_to_str(dev: usb1.USBDevice) -> str:
     return ":".join(
         str(x) for x in ["%03i" % (dev.getBusNumber(),)] + dev.getPortNumberList()
     )

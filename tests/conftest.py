@@ -30,7 +30,7 @@ from trezorlib import debuglink, log, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
-from trezorlib.transport import enumerate_devices, get_transport
+from trezorlib.transport import enumerate_devices, get_transport, protocol
 
 # register rewrites before importing from local package
 # so that we see details of failed asserts from this module
@@ -134,6 +134,10 @@ def _raw_client(request: pytest.FixtureRequest) -> Client:
         client = emu_fixture.client
     else:
         interact = os.environ.get("INTERACT") == "1"
+        if not interact:
+            # prevent tests from getting stuck in case there is an USB packet loss
+            protocol._DEFAULT_READ_TIMEOUT = 50.0
+
         path = os.environ.get("TREZOR_PATH")
         if path:
             client = _client_from_path(request, path, interact)
