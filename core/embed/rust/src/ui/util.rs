@@ -160,7 +160,8 @@ macro_rules! include_res {
 }
 pub(crate) use include_res;
 
-/// Pager helper for keeping track of the current page and total number of pages.
+/// Pager helper for keeping track of the current page and total number of
+/// pages.
 ///
 /// Page numbers are zero-based, so the values can be directly used for indexing
 /// arrays, etc. It always holds that `current < total`, and `total > 0`.
@@ -256,8 +257,8 @@ impl Pager {
 
     /// Go to the next page.
     ///
-    /// Returns true if this resulted in a move. False if we are already at the last
-    /// page.
+    /// Returns true if this resulted in a move. False if we are already at the
+    /// last page.
     pub fn goto_next(&mut self) -> bool {
         let has_next = self.has_next();
         self.current = self.next();
@@ -266,8 +267,8 @@ impl Pager {
 
     /// Go to the previous page.
     ///
-    /// Returns true if this resulted in a move. False if we are already at the first
-    /// page.
+    /// Returns true if this resulted in a move. False if we are already at the
+    /// first page.
     pub fn goto_prev(&mut self) -> bool {
         let has_prev = self.has_prev();
         self.current = self.prev();
