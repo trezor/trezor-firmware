@@ -27,10 +27,10 @@ pub enum SelectWordMsg {
 }
 
 impl SelectWordScreen {
-    const INSET: i16 = 24;
-    const DESCRIPTION_HEIGHT: i16 = 52;
-    const BUTTON_RADIUS: u8 = 12;
-
+    const DESCRIPTION_HEIGHT: i16 = 58;
+    const MENU_HEIGHT: i16 = 360;
+    const DESCRIPTION_PADDING: i16 = 24;
+    const MENU_PADDING: i16 = 12;
     pub fn new(
         share_words_vec: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
         description: TString<'static>,
@@ -41,14 +41,14 @@ impl SelectWordScreen {
             menu = menu.item(
                 Button::with_text(word)
                     .styled(theme::button_select_word())
-                    .with_radius(Self::BUTTON_RADIUS),
+                    .with_radius(12),
             );
         }
 
         Self {
             header: Header::new(TString::empty()),
             description: Label::new(description, Alignment::Start, theme::TEXT_MEDIUM)
-                .vertically_centered(),
+                .top_aligned(),
             menu,
         }
     }
@@ -69,10 +69,10 @@ impl Component for SelectWordScreen {
 
         let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
         let (description_area, rest) = rest.split_top(Self::DESCRIPTION_HEIGHT);
-        let (_, rest) = rest.split_top(Self::INSET);
-        let (menu_area, _) = rest.split_bottom(Self::INSET);
+        let (menu_area, _) = rest.split_top(Self::MENU_HEIGHT);
 
-        let description_area = description_area.inset(Insets::sides(Self::INSET));
+        let description_area = description_area.inset(Insets::sides(Self::DESCRIPTION_PADDING));
+        let menu_area = menu_area.inset(Insets::sides(Self::MENU_PADDING));
 
         self.menu.place(menu_area);
         self.description.place(description_area);
@@ -104,5 +104,21 @@ impl Component for SelectWordScreen {
 impl crate::trace::Trace for SelectWordScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("SelectWordScreen");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{super::super::constant::SCREEN, *};
+
+    #[test]
+    fn test_component_heights_fit_screen() {
+        assert!(
+            SelectWordScreen::DESCRIPTION_HEIGHT
+                + SelectWordScreen::MENU_HEIGHT
+                + Header::HEADER_HEIGHT
+                <= SCREEN.height(),
+            "Components overflow the screen height",
+        );
     }
 }
