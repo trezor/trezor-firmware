@@ -88,11 +88,8 @@ impl<'a> ShareWordsScreen<'a> {
 
         // Update hint content based on the current page
 
-        // First word gets a special hint
-        if self.content.pager().is_first() {
-            self.hint = Hint::new_instruction(TR::reset__share_words_first, Some(theme::ICON_INFO));
         // Repeated words get a special hint
-        } else if self.content.is_repeated() {
+        if self.content.is_repeated() {
             self.hint = Hint::new_instruction_green(
                 TR::reset__the_word_is_repeated,
                 Some(theme::ICON_INFO),
