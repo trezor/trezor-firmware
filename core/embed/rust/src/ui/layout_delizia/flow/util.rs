@@ -175,7 +175,7 @@ impl ConfirmValue {
 
     pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
         self.with_footer(
-            TString::from_translation(TR::instructions__swipe_up),
+            TString::from_translation(TR::instructions__tap_to_continue),
             description,
         )
         .with_swipe_up()
@@ -385,7 +385,7 @@ impl ShowInfoParams {
 
     pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
         self.with_footer(
-            TString::from_translation(TR::instructions__swipe_up),
+            TString::from_translation(TR::instructions__tap_to_continue),
             description,
         )
         .with_swipe_up()

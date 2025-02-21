@@ -202,7 +202,7 @@ where
     pub fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
         use crate::translations::TR;
 
-        self.with_footer(TR::instructions__swipe_up.into(), description)
+        self.with_footer(TR::instructions__tap_to_continue.into(), description)
             .with_swipe(Direction::Up, SwipeSettings::default())
     }
 

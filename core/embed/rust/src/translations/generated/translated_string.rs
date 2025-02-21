@@ -1401,6 +1401,7 @@ pub enum TranslatedString {
     solana__vote_account = 988,  // "Vote account"
     #[cfg(feature = "universal_fw")]
     solana__stake_on_question = 989,  // "Stake SOL on {0}?"
+    instructions__tap_to_continue = 990,  // "Tap to continue"
 }
 
 impl TranslatedString {
@@ -2798,6 +2799,7 @@ impl TranslatedString {
             Self::solana__vote_account => "Vote account",
             #[cfg(feature = "universal_fw")]
             Self::solana__stake_on_question => "Stake SOL on {0}?",
+            Self::instructions__tap_to_continue => "Tap to continue",
         }
     }
 
@@ -4194,6 +4196,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_solana__vote_account => Some(Self::solana__vote_account),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_solana__stake_on_question => Some(Self::solana__stake_on_question),
+            Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
             _ => None,
         }
     }
