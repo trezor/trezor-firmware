@@ -37,8 +37,8 @@ use super::{
         check_homescreen_format, AddressDetails, Bip39Input, Button, ButtonMsg, ButtonPage,
         ButtonStyleSheet, CancelConfirmMsg, CoinJoinProgress, Dialog, FidoConfirm, Frame,
         Homescreen, IconDialog, Lockscreen, MnemonicKeyboard, NumberInputDialog,
-        PassphraseKeyboard, PinKeyboard, Progress, SelectWordCount, SelectWordCountLayout, SetBrightnessDialog,
-        ShareWords, SimplePage, Slip39Input,
+        PassphraseKeyboard, PinKeyboard, Progress, SelectWordCount, SelectWordCountLayout,
+        SetBrightnessDialog, ShareWords, SimplePage, Slip39Input,
     },
     fonts, theme, UIBolt,
 };
@@ -699,11 +699,13 @@ impl FirmwareUI for UIBolt {
             TR::recovery__num_of_words,
         ));
 
-        let selector = SelectWordCount::new(if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
-            SelectWordCountLayout::LAYOUT_MULTISHARE
-        } else {
-            SelectWordCountLayout::LAYOUT_ALL
-        });
+        let selector = SelectWordCount::new(
+            if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+                SelectWordCountLayout::LAYOUT_MULTISHARE
+            } else {
+                SelectWordCountLayout::LAYOUT_ALL
+            },
+        );
         let layout = RootComponent::new(Frame::left_aligned(
             theme::label_title(),
             title,

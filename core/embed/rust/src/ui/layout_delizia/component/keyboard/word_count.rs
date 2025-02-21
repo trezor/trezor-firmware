@@ -125,12 +125,8 @@ impl Component for SelectWordCount {
             n_rows as i16 * theme::BUTTON_HEIGHT + (n_rows as i16 - 1) * theme::BUTTON_SPACING,
         );
         let grid = Grid::new(bounds, n_rows, n_cols).with_spacing(theme::BUTTON_SPACING);
-        for (button, layout_btn) in self
-            .choice_buttons
-            .iter_mut()
-            .zip(self.layout.choice_buttons.iter())
-        {
-            button.place(grid.cells(layout_btn.placement));
+        for (i, button) in self.choice_buttons.iter_mut().enumerate() {
+            button.place(grid.cells(self.layout.choice_buttons[i].placement));
         }
         self.cancel_button
             .place(grid.cells(self.layout.cancel_button_placement));

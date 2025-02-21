@@ -445,8 +445,8 @@ def select_word_count(
     *,
     recovery_type: RecoveryType,
 ) -> LayoutObj[int | str | UIResult]:  # TR returns str
-    """Select a mnemonic word count from WORD_COUNTS_ALL.
-    For unlocking a repeated backup, select from WORD_COUNTS_MULTISHARE."""
+    """Select a mnemonic word count from the options: 12, 18, 20, 24, or 33.
+    For unlocking a repeated backup, select between 20 and 33."""
 
 
 # rust/src/ui/api/firmware_micropython.rs

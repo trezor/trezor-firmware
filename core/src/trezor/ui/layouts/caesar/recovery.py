@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 import trezorui_api
 from trezor import TR, ui
 from trezor.enums import ButtonRequestType, RecoveryType
-from trezor.wire import ActionCancelled
 
 from ..common import interact
 from . import show_warning

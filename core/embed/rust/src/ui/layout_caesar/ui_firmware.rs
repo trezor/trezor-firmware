@@ -34,10 +34,10 @@ use crate::{
 
 use super::{
     component::{
-        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, CoinJoinProgress,
-        ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen, NumberInput, Page,
-        PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords, ShowMore, SimpleChoice, ChoiceControls,
-        WordlistEntry, WordlistType,
+        AddressDetails, ButtonActions, ButtonDetails, ButtonLayout, ButtonPage, ChoiceControls,
+        CoinJoinProgress, ConfirmHomescreen, Flow, FlowPages, Frame, Homescreen, Lockscreen,
+        NumberInput, Page, PassphraseEntry, PinEntry, Progress, ScrollableFrame, ShareWords,
+        ShowMore, SimpleChoice, WordlistEntry, WordlistType,
     },
     constant, fonts, theme, UICaesar,
 };
@@ -902,8 +902,11 @@ impl FirmwareUI for UICaesar {
             nums.iter().map(|&num| num.into()).collect()
         };
         let layout = RootComponent::new(
-            Frame::new(title, SimpleChoice::new(choices, ChoiceControls::Cancellable))
-                .with_title_centered(),
+            Frame::new(
+                title,
+                SimpleChoice::new(choices, ChoiceControls::Cancellable),
+            )
+            .with_title_centered(),
         );
         Ok(layout)
     }
