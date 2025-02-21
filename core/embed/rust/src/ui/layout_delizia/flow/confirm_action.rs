@@ -298,7 +298,7 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
         }
 
         content = content
-            .with_footer_counter(TR::instructions__swipe_up.into())
+            .with_footer_counter(TR::instructions__tap_to_continue.into())
             .register_footer_update_fn(footer_update_fn::<T>);
     }
 

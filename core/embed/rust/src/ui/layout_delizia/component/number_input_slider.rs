@@ -84,7 +84,7 @@ impl Component for NumberInputSliderDialog {
             ctx.request_paint();
         } else {
             self.footer
-                .update_instruction(ctx, TR::instructions__swipe_up);
+                .update_instruction(ctx, TR::instructions__tap_to_continue);
             self.footer.update_description(ctx, TR::setting__apply);
             ctx.request_paint();
         }

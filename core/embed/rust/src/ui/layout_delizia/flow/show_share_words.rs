@@ -110,7 +110,7 @@ pub fn new_show_share_words(
     .with_vertical_pages()
     .with_subtitle(subtitle)
     .register_header_update_fn(header_updating_func)
-    .with_footer_counter(TR::instructions__swipe_up.into())
+    .with_footer_counter(TR::instructions__tap_to_continue.into())
     .register_footer_update_fn(footer_updating_func)
     .map_to_button_msg();
 
