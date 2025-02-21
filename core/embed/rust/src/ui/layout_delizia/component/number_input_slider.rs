@@ -3,7 +3,7 @@ use crate::{
     strutil::{ShortString, TString},
     translations::TR,
     ui::{
-        component::{Component, Event, EventCtx},
+        component::{paginated::SinglePage, Component, Event, EventCtx},
         constant::screen,
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
@@ -84,7 +84,7 @@ impl Component for NumberInputSliderDialog {
             ctx.request_paint();
         } else {
             self.footer
-                .update_instruction(ctx, TR::instructions__swipe_up);
+                .update_instruction(ctx, TR::instructions__tap_to_continue);
             self.footer.update_description(ctx, TR::setting__apply);
             ctx.request_paint();
         }
@@ -100,6 +100,8 @@ impl Component for NumberInputSliderDialog {
         self.footer.render(target);
     }
 }
+
+impl SinglePage for NumberInputSliderDialog {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for NumberInputSliderDialog {

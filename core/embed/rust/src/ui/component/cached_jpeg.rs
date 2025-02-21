@@ -9,6 +9,8 @@ use crate::{
     },
 };
 
+use super::paginated::SinglePage;
+
 pub struct CachedJpeg {
     area: Rect,
     image_size: Offset,
@@ -72,6 +74,8 @@ impl Component for CachedJpeg {
         .render(target);
     }
 }
+
+impl SinglePage for CachedJpeg {}
 
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for CachedJpeg {

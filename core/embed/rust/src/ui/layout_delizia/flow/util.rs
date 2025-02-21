@@ -6,7 +6,6 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            base::ComponentExt,
             swipe_detect::SwipeSettings,
             text::{
                 paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
@@ -23,7 +22,7 @@ use heapless::Vec;
 
 use super::{
     super::{
-        component::{Frame, FrameMsg, SwipeContent},
+        component::{Frame, PromptMsg, SwipeContent, VerticalMenuChoiceMsg},
         flow, theme,
     },
     ConfirmActionExtra, ConfirmActionMenuStrings, ConfirmActionStrings,
@@ -48,7 +47,7 @@ pub struct ConfirmValue {
     chunkify: bool,
     text_mono: bool,
     page_counter: bool,
-    page_limit: Option<usize>,
+    page_limit: Option<u16>,
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
@@ -174,6 +173,14 @@ impl ConfirmValue {
         self
     }
 
+    pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
+        self.with_footer(
+            TString::from_translation(TR::instructions__tap_to_continue),
+            description,
+        )
+        .with_swipe_up()
+    }
+
     pub const fn with_chunkify(mut self, chunkify: bool) -> Self {
         self.chunkify = chunkify;
         self
@@ -189,7 +196,7 @@ impl ConfirmValue {
         self
     }
 
-    pub const fn with_page_limit(mut self, page_limit: Option<usize>) -> Self {
+    pub const fn with_page_limit(mut self, page_limit: Option<u16>) -> Self {
         self.page_limit = page_limit;
         self
     }
@@ -253,7 +260,7 @@ impl ConfirmValue {
 
         frame = frame.with_vertical_pages();
 
-        Ok(frame.map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info)))
+        Ok(frame.map_to_button_msg())
     }
 
     pub fn into_flow(self) -> Result<SwipeFlow, Error> {
@@ -372,6 +379,14 @@ impl ShowInfoParams {
         self
     }
 
+    pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
+        self.with_footer(
+            TString::from_translation(TR::instructions__tap_to_continue),
+            description,
+        )
+        .with_swipe_up()
+    }
+
     pub const fn with_swipe_up(mut self) -> Self {
         self.swipe_up = true;
         self
@@ -438,12 +453,26 @@ impl ShowInfoParams {
 
         frame = frame.with_vertical_pages();
 
-        Ok(frame.map(move |msg| {
-            matches!(msg, FrameMsg::Button(_)).then_some(if self.cancel_button {
-                FlowMsg::Cancelled
-            } else {
-                FlowMsg::Info
-            })
-        }))
+        Ok(frame.map_to_button_msg())
+    }
+}
+
+pub fn map_to_confirm(msg: PromptMsg) -> Option<FlowMsg> {
+    match msg {
+        PromptMsg::Confirmed => Some(FlowMsg::Confirmed),
+        _ => None,
+    }
+}
+
+pub fn map_to_prompt(msg: PromptMsg) -> Option<FlowMsg> {
+    match msg {
+        PromptMsg::Confirmed => Some(FlowMsg::Confirmed),
+        PromptMsg::Cancelled => Some(FlowMsg::Cancelled),
+    }
+}
+
+pub fn map_to_choice(msg: VerticalMenuChoiceMsg) -> Option<FlowMsg> {
+    match msg {
+        VerticalMenuChoiceMsg::Selected(i) => Some(FlowMsg::Choice(i)),
     }
 }

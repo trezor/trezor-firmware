@@ -1,6 +1,7 @@
 use crate::ui::{
     component::{base::AttachType, swipe_detect::SwipeConfig},
     geometry::Direction,
+    util::Pager,
 };
 
 pub use crate::ui::component::FlowMsg;
@@ -8,7 +9,7 @@ pub use crate::ui::component::FlowMsg;
 pub trait Swipable {
     fn get_swipe_config(&self) -> SwipeConfig;
 
-    fn get_internal_page_count(&self) -> usize;
+    fn get_pager(&self) -> Pager;
 }
 
 /// Composable event handler result.

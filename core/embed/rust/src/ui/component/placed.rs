@@ -4,6 +4,8 @@ use crate::ui::{
     shape::Renderer,
 };
 
+use super::paginated::SinglePage;
+
 pub struct GridPlaced<T> {
     inner: T,
     grid: Grid,
@@ -271,6 +273,8 @@ where
         self.second.render(target);
     }
 }
+
+impl<T, U> SinglePage for Split<T, U> {}
 
 #[cfg(feature = "ui_debug")]
 impl<T, U> crate::trace::Trace for Split<T, U>

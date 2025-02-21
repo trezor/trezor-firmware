@@ -99,10 +99,9 @@ impl AddressDetails {
         let mut dummy_ctx = EventCtx::new();
         self.xpub_view.update_title(&mut dummy_ctx, self.xpubs[i].0);
         self.xpub_view.update_content(&mut dummy_ctx, |p| {
-            p.inner_mut().update(self.xpubs[i].1);
-            let npages = p.page_count();
+            p.update(self.xpubs[i].1);
             p.change_page(page);
-            npages
+            p.page_count()
         })
     }
 

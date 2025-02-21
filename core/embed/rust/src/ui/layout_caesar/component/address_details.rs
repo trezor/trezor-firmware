@@ -158,7 +158,7 @@ impl AddressDetails {
         let i = self.current_page - 2;
         self.xpub_view.update_title(ctx, self.xpubs[i].0);
         self.xpub_view.update_content(ctx, |p| {
-            p.inner_mut().update(self.xpubs[i].1);
+            p.update(self.xpubs[i].1);
             p.change_page(0)
         });
     }
