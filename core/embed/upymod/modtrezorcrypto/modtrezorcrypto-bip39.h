@@ -25,26 +25,6 @@
 
 /// package: trezorcrypto.bip39
 
-/// def generate(strength: int) -> str:
-///     """
-///     Generate a mnemonic of given strength (128, 160, 192, 224 and 256 bits).
-///     """
-STATIC mp_obj_t mod_trezorcrypto_bip39_generate(mp_obj_t strength) {
-  int bits = mp_obj_get_int(strength);
-  if (bits % 32 || bits < 128 || bits > 256) {
-    mp_raise_ValueError(
-        "Invalid bit strength (only 128, 160, 192, 224 and 256 values are "
-        "allowed)");
-  }
-  const char *mnemo = mnemonic_generate(bits);
-  mp_obj_t res =
-      mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)mnemo, strlen(mnemo));
-  mnemonic_clear();
-  return res;
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_bip39_generate_obj,
-                                 mod_trezorcrypto_bip39_generate);
-
 /// def from_data(data: bytes) -> str:
 ///     """
 ///     Generate a mnemonic from given data (of 16, 20, 24, 28 and 32 bytes).
@@ -113,8 +93,6 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_bip39_seed_obj, 2,
 
 STATIC const mp_rom_map_elem_t mod_trezorcrypto_bip39_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_bip39)},
-    {MP_ROM_QSTR(MP_QSTR_generate),
-     MP_ROM_PTR(&mod_trezorcrypto_bip39_generate_obj)},
     {MP_ROM_QSTR(MP_QSTR_from_data),
      MP_ROM_PTR(&mod_trezorcrypto_bip39_from_data_obj)},
     {MP_ROM_QSTR(MP_QSTR_check), MP_ROM_PTR(&mod_trezorcrypto_bip39_check_obj)},
