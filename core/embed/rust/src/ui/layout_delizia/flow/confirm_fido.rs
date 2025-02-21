@@ -118,8 +118,7 @@ pub fn new_confirm_fido(
         ))),
     )
     .with_menu_button()
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();
 
@@ -163,8 +162,7 @@ pub fn new_confirm_fido(
         TR::fido__title_credential_details.into(),
         SwipeContent::new(FidoCredential::new(icon_name, app_name, get_account)),
     )
-    .with_footer(TR::instructions__swipe_up.into(), Some(title))
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(Some(title))
     .with_swipe(Direction::Right, SwipeSettings::immediate());
     let content_details = if single_cred() {
         content_details.with_menu_button()

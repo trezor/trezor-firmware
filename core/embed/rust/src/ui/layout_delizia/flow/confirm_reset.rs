@@ -113,8 +113,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     .into_paragraphs();
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipeup_footer(None)
         .with_swipe(Direction::Left, SwipeSettings::default())
         .map_to_button_msg()
         .one_button_request(br);

@@ -67,8 +67,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     let paragraphs = Paragraphs::new(Paragraph::new(&theme::TEXT_MAIN_GREY_LIGHT, text_intro));
     let content_intro = Frame::left_aligned(title, SwipeContent::new(paragraphs))
         .with_menu_button()
-        .with_footer(TR::instructions__swipe_up.into(), None)
-        .with_swipe(Direction::Up, SwipeSettings::default())
+        .with_swipeup_footer(None)
         .with_swipe(Direction::Left, SwipeSettings::default())
         .map_to_button_msg();
 
@@ -93,10 +92,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
         SwipeContent::new(paragraphs_skip_intro),
     )
     .with_cancel_button()
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::words__continue_anyway_question.into()),
-    )
+    .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
     .with_swipe(Direction::Up, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map_to_button_msg();

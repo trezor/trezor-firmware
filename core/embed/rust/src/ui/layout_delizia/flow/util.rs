@@ -173,6 +173,14 @@ impl ConfirmValue {
         self
     }
 
+    pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
+        self.with_footer(
+            TString::from_translation(TR::instructions__swipe_up),
+            description,
+        )
+        .with_swipe_up()
+    }
+
     pub const fn with_chunkify(mut self, chunkify: bool) -> Self {
         self.chunkify = chunkify;
         self
@@ -373,6 +381,14 @@ impl ShowInfoParams {
         self.footer_instruction = Some(instruction);
         self.footer_description = description;
         self
+    }
+
+    pub const fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
+        self.with_footer(
+            TString::from_translation(TR::instructions__swipe_up),
+            description,
+        )
+        .with_swipe_up()
     }
 
     pub const fn with_swipe_up(mut self) -> Self {

@@ -170,30 +170,25 @@ pub fn new_continue_recovery_homepage(
     };
 
     let mut pars_main = ParagraphVecShort::new();
-    let footer_instruction;
-    let footer_description;
-    if show_instructions {
+    let footer_description = if show_instructions {
         pars_main.add(Paragraph::new(
             &theme::TEXT_MAIN_GREY_EXTRA_LIGHT,
             TR::recovery__enter_each_word,
         ));
-        footer_instruction = TR::instructions__swipe_up.into();
-        footer_description = None;
+        None
     } else {
         pars_main.add(Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, text));
         if let Some(sub) = subtext {
             pars_main.add(Paragraph::new(&theme::TEXT_SUB_GREY, sub));
         }
-        footer_instruction = TR::instructions__swipe_up.into();
-        footer_description = Some(TR::instructions__enter_next_share.into());
-    }
+        Some(TR::instructions__enter_next_share.into())
+    };
 
     let content_main =
         Frame::left_aligned(title.into(), SwipeContent::new(pars_main.into_paragraphs()))
             .with_subtitle(TR::words__instructions.into())
             .with_menu_button()
-            .with_footer(footer_instruction, footer_description)
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipeup_footer(footer_description)
             .with_swipe(Direction::Left, SwipeSettings::default())
             .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(
@@ -210,11 +205,7 @@ pub fn new_continue_recovery_homepage(
     let content_cancel_intro =
         Frame::left_aligned(cancel_title.into(), SwipeContent::new(paragraphs_cancel))
             .with_cancel_button()
-            .with_footer(
-                TR::instructions__swipe_up.into(),
-                Some(TR::words__continue_anyway_question.into()),
-            )
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
             .with_swipe(Direction::Right, SwipeSettings::immediate())
             .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(

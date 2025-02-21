@@ -96,8 +96,7 @@ pub fn new_show_share_words(
         ),
     )
     .with_subtitle(TR::words__instructions.into())
-    .with_footer(TR::instructions__swipe_up.into(), text_footer)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(text_footer)
     .map_to_button_msg()
     .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
     .with_pages(move |_| nwords + 2);
@@ -130,8 +129,7 @@ pub fn new_show_share_words(
             TR::reset__check_backup_instructions,
         ))),
     )
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .map(|_| Some(FlowMsg::Confirmed));
 
     let res = SwipeFlow::new(&ShowShareWords::Instruction)?

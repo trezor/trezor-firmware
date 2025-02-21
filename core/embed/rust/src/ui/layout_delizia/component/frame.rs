@@ -198,6 +198,14 @@ where
         self
     }
 
+    #[cfg(feature = "translations")]
+    pub fn with_swipeup_footer(self, description: Option<TString<'static>>) -> Self {
+        use crate::translations::TR;
+
+        self.with_footer(TR::instructions__swipe_up.into(), description)
+            .with_swipe(Direction::Up, SwipeSettings::default())
+    }
+
     #[inline(never)]
     pub fn with_footer_counter(mut self, instruction: TString<'static>) -> Self {
         self.footer = Some(Footer::with_page_counter(instruction));
