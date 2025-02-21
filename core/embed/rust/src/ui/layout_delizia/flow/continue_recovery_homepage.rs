@@ -270,7 +270,7 @@ pub fn new_continue_recovery_homepage(
         .map(super::util::map_to_choice);
 
         let (footer_instruction, footer_description) = (
-            TR::instructions__swipe_up.into(),
+            TR::instructions__tap_to_continue.into(),
             TR::recovery__more_shares_needed.into(),
         );
         let n_remaining_shares = pages.as_ref().unwrap().len() / 2;

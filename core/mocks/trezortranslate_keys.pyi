@@ -400,6 +400,7 @@ class TR:
     instructions__swipe_horizontally: str = "Swipe horizontally"
     instructions__swipe_up: str = "Swipe up"
     instructions__tap_to_confirm: str = "Tap to confirm"
+    instructions__tap_to_continue: str = "Tap to continue"
     instructions__tap_to_start: str = "Tap to start"
     instructions__view_all_data: str = "View all data in the menu."
     joint__title: str = "Joint transaction"
