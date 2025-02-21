@@ -140,10 +140,7 @@ impl Menu {
         let choices = MenuChoiceFactory::new(firmware_present);
         Self {
             pad: Pad::with_background(BLD_BG).with_clear(),
-            choice_page: Child::new(
-                ChoicePage::new(choices)
-                    .with_only_one_item(true),
-            ),
+            choice_page: Child::new(ChoicePage::new(choices).with_only_one_item(true)),
         }
     }
 }
@@ -158,8 +155,8 @@ impl Component for Menu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match self.choice_page.event(ctx, event).map(|evt| evt.0) {
-            Some(ChoiceMsg::Choice({m, _})) => Some(m),
+        match self.choice_page.event(ctx, event) {
+            Some(ChoiceMsg::Choice { item, .. }) => Some(item),
             _ => None,
         }
     }
