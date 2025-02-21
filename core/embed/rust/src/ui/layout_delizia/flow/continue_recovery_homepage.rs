@@ -170,20 +170,19 @@ pub fn new_continue_recovery_homepage(
     };
 
     let mut pars_main = ParagraphVecShort::new();
-    let footer_description;
-    if show_instructions {
+    let footer_description = if show_instructions {
         pars_main.add(Paragraph::new(
             &theme::TEXT_MAIN_GREY_EXTRA_LIGHT,
             TR::recovery__enter_each_word,
         ));
-        footer_description = None;
+        None
     } else {
         pars_main.add(Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, text));
         if let Some(sub) = subtext {
             pars_main.add(Paragraph::new(&theme::TEXT_SUB_GREY, sub));
         }
-        footer_description = Some(TR::instructions__enter_next_share.into());
-    }
+        Some(TR::instructions__enter_next_share.into())
+    };
 
     let content_main =
         Frame::left_aligned(title.into(), SwipeContent::new(pars_main.into_paragraphs()))
