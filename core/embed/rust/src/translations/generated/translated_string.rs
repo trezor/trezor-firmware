@@ -1245,7 +1245,6 @@ pub enum TranslatedString {
     cardano__deposit = 851,  // "Deposit:"
     #[cfg(feature = "universal_fw")]
     cardano__vote_delegation = 852,  // "Vote delegation"
-    instructions__swipe_up = 853,  // "Swipe up"
     instructions__tap_to_confirm = 854,  // "Tap to confirm"
     instructions__hold_to_confirm = 855,  // "Hold to confirm"
     words__important = 856,  // "Important"
@@ -1311,7 +1310,7 @@ pub enum TranslatedString {
     tutorial__exit = 917,  // "Exit tutorial"
     tutorial__menu = 920,  // "Find context-specific actions and options in the menu."
     tutorial__ready_to_use_safe5 = 922,  // "You're all set to start using your device!"
-    tutorial__swipe_up_and_down = 924,  // "Swipe up & down\nto move through screens."
+    tutorial__swipe_up_and_down = 924,  // "Tap the lower half of the screen to continue, or swipe down to go back."
     tutorial__title_easy_navigation = 925,  // "Easy navigation"
     tutorial__welcome_safe5 = 926,  // "Welcome to\nTrezor Safe 5"
     words__good_to_know = 927,  // "Good to know"
@@ -2644,7 +2643,6 @@ impl TranslatedString {
             Self::cardano__deposit => "Deposit:",
             #[cfg(feature = "universal_fw")]
             Self::cardano__vote_delegation => "Vote delegation",
-            Self::instructions__swipe_up => "Swipe up",
             Self::instructions__tap_to_confirm => "Tap to confirm",
             Self::instructions__hold_to_confirm => "Hold to confirm",
             Self::words__important => "Important",
@@ -2710,7 +2708,7 @@ impl TranslatedString {
             Self::tutorial__exit => "Exit tutorial",
             Self::tutorial__menu => "Find context-specific actions and options in the menu.",
             Self::tutorial__ready_to_use_safe5 => "You're all set to start using your device!",
-            Self::tutorial__swipe_up_and_down => "Swipe up & down\nto move through screens.",
+            Self::tutorial__swipe_up_and_down => "Tap the lower half of the screen to continue, or swipe down to go back.",
             Self::tutorial__title_easy_navigation => "Easy navigation",
             Self::tutorial__welcome_safe5 => "Welcome to\nTrezor Safe 5",
             Self::words__good_to_know => "Good to know",
@@ -4042,7 +4040,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_cardano__deposit => Some(Self::cardano__deposit),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_cardano__vote_delegation => Some(Self::cardano__vote_delegation),
-            Qstr::MP_QSTR_instructions__swipe_up => Some(Self::instructions__swipe_up),
             Qstr::MP_QSTR_instructions__tap_to_confirm => Some(Self::instructions__tap_to_confirm),
             Qstr::MP_QSTR_instructions__hold_to_confirm => Some(Self::instructions__hold_to_confirm),
             Qstr::MP_QSTR_words__important => Some(Self::words__important),
