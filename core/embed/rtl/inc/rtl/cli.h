@@ -46,8 +46,16 @@ typedef struct cli cli_t;
 #define CLI_ERROR_LOCKED "locked"
 #define CLI_ERROR_NODATA "no-data"
 
+typedef enum {
+  UT_PASSED = 0,
+  UT_FAILED,
+} ut_status_t;
+
 // CLI command handler routine prototype
 typedef void (*cli_cmd_handler_t)(cli_t* cli);
+
+// CLI unit test handler routine prototype
+typedef ut_status_t (*cli_ut_handler_t)(cli_t* cli);
 
 // Structure describing the registration record for a CLI command handler
 typedef struct {
@@ -63,6 +71,16 @@ typedef struct {
   const char* args;
 } cli_command_t;
 
+// Structure describing the registration record for a CLI unit test handler
+typedef struct {
+  // Command name
+  const char* name;
+  // Command handler
+  cli_ut_handler_t func;
+  // Single line command description
+  const char* info;
+} cli_unit_test_t;
+
 #define CONCAT_INDIRECT(x, y) x##y
 #define CONCAT(x, y) CONCAT_INDIRECT(x, y)
 
@@ -72,6 +90,13 @@ typedef struct {
   __attribute__((used,                                                     \
                  section(".prodtest_cli_cmd"))) static const cli_command_t \
       CONCAT(_cli_cmd_handler, __COUNTER__) = {__VA_ARGS__};
+
+// Register a unit test handler by placing its registration structure
+// into a specially designated linker script section
+#define PRODTEST_CLI_UT(...)                                                \
+  __attribute__((used,                                                      \
+                 section(".prodtest_cli_ut"))) static const cli_unit_test_t \
+      CONCAT(_cli_ut_handler, __COUNTER__) = {__VA_ARGS__};
 
 // Callback for writing characters to console output
 typedef size_t (*cli_write_cb_t)(void* ctx, const char* buf, size_t len);
@@ -87,6 +112,10 @@ struct cli {
   // Registered command handlers
   const cli_command_t* cmd_array;
   size_t cmd_count;
+
+  // Registered unit test command handlers
+  const cli_unit_test_t* unit_test_array;
+  size_t unit_test_count;
 
   // Current line buffer
   char line_buffer[CLI_LINE_BUFFER_SIZE];
@@ -122,6 +151,10 @@ bool cli_init(cli_t* cli, cli_read_cb_t read, cli_write_cb_t write,
 // Registers the command handlers
 void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
                       size_t cmd_count);
+
+// Register the unit test handlers
+void cli_set_unit_tests(cli_t* cli, const cli_unit_test_t* unit_test_array,
+                        size_t unit_test_count);
 
 // Runs the CLI command loop
 void cli_run_loop(cli_t* cli);
