@@ -79,6 +79,7 @@ SOURCE_MOD += [
     'embed/rtl/error_handling.c',
     'embed/rtl/mini_printf.c',
     'embed/rtl/strutils.c',
+    'embed/rtl/unit_test.c',
     'vendor/micropython/lib/uzlib/adler32.c',
     'vendor/micropython/lib/uzlib/crc32.c',
     'vendor/micropython/lib/uzlib/tinflate.c',
@@ -124,6 +125,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
     'embed/projects/prodtest/cmd/prodtest_tropic.c',
+    'embed/projects/prodtest/cmd/prodtest_unit_test.c',
     'embed/projects/prodtest/cmd/prodtest_wpc.c',
 ]
 

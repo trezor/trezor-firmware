@@ -935,5 +935,25 @@ Example:
 nfc-write_card <timeout_seconds>
 # NFC reader on, put the card on the reader (timeout <timeout_seconds> s)
 # Writting URI to NFC tag 7AF403
+### unit-test-run
+Prodtest have capability to verify the overall firmware functionality by running built-in unit tests which should excercise the basic
+features of the firmware drivers. This command will run all registered unit tests and return 'OK' if all tests passed.
+
+Example:
+```
+# Running all unit tests...
+# ut-pmic-battery: PASSED
+# ut-pmic-init-deinit: PASSED
+OK
+```
+
+### unit-test-list
+List all build-in unit tests
+
+Example:
+```
+# List of all registered unit tests:
+# ut-pmic-battery - Test PMIC battery connection
+# ut-pmic-init-deinit - Test PMIC driver initialization and deinitialization
 OK
 ```
