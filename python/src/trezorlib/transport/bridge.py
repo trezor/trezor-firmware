@@ -14,11 +14,14 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
 import struct
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional
+from typing import TYPE_CHECKING, Any, Iterable
 
 import requests
+from typing_extensions import Self
 
 from ..log import DUMP_PACKETS
 from . import DeviceIsBusy, MessagePayload, Transport, TransportException
@@ -45,9 +48,11 @@ class BridgeException(TransportException):
         super().__init__(f"trezord: {path} failed with code {status}: {message}")
 
 
-def call_bridge(path: str, data: Optional[str] = None) -> requests.Response:
+def call_bridge(
+    path: str, data: str | None = None, timeout: float | None = None
+) -> requests.Response:
     url = TREZORD_HOST + "/" + path
-    r = CONNECTION.post(url, data=data)
+    r = CONNECTION.post(url, data=data, timeout=timeout)
     if r.status_code != 200:
         raise BridgeException(path, r.status_code, r.json()["error"])
     return r
@@ -63,7 +68,7 @@ class BridgeHandle:
     def __init__(self, transport: "BridgeTransport") -> None:
         self.transport = transport
 
-    def read_buf(self) -> bytes:
+    def read_buf(self, timeout: float | None = None) -> bytes:
         raise NotImplementedError
 
     def write_buf(self, buf: bytes) -> None:
@@ -75,8 +80,8 @@ class BridgeHandleModern(BridgeHandle):
         LOG.log(DUMP_PACKETS, f"sending message: {buf.hex()}")
         self.transport._call("post", data=buf.hex())
 
-    def read_buf(self) -> bytes:
-        data = self.transport._call("read")
+    def read_buf(self, timeout: float | None = None) -> bytes:
+        data = self.transport._call("read", timeout=timeout)
         LOG.log(DUMP_PACKETS, f"received message: {data.text}")
         return bytes.fromhex(data.text)
 
@@ -84,19 +89,19 @@ class BridgeHandleModern(BridgeHandle):
 class BridgeHandleLegacy(BridgeHandle):
     def __init__(self, transport: "BridgeTransport") -> None:
         super().__init__(transport)
-        self.request: Optional[str] = None
+        self.request: str | None = None
 
     def write_buf(self, buf: bytes) -> None:
         if self.request is not None:
             raise TransportException("Can't write twice on legacy Bridge")
         self.request = buf.hex()
 
-    def read_buf(self) -> bytes:
+    def read_buf(self, timeout: float | None = None) -> bytes:
         if self.request is None:
             raise TransportException("Can't read without write on legacy Bridge")
         try:
             LOG.log(DUMP_PACKETS, f"calling with message: {self.request}")
-            data = self.transport._call("call", data=self.request)
+            data = self.transport._call("call", data=self.request, timeout=timeout)
             LOG.log(DUMP_PACKETS, f"received response: {data.text}")
             return bytes.fromhex(data.text)
         finally:
@@ -112,13 +117,13 @@ class BridgeTransport(Transport):
     ENABLED: bool = True
 
     def __init__(
-        self, device: Dict[str, Any], legacy: bool, debug: bool = False
+        self, device: dict[str, Any], legacy: bool, debug: bool = False
     ) -> None:
         if legacy and debug:
             raise TransportException("Debugging not supported on legacy Bridge")
 
         self.device = device
-        self.session: Optional[str] = None
+        self.session: str | None = None
         self.debug = debug
         self.legacy = legacy
 
@@ -130,21 +135,26 @@ class BridgeTransport(Transport):
     def get_path(self) -> str:
         return f"{self.PATH_PREFIX}:{self.device['path']}"
 
-    def find_debug(self) -> "BridgeTransport":
+    def find_debug(self) -> Self:
         if not self.device.get("debug"):
             raise TransportException("Debug device not available")
-        return BridgeTransport(self.device, self.legacy, debug=True)
+        return self.__class__(self.device, self.legacy, debug=True)
 
-    def _call(self, action: str, data: Optional[str] = None) -> requests.Response:
+    def _call(
+        self,
+        action: str,
+        data: str | None = None,
+        timeout: float | None = None,
+    ) -> requests.Response:
         session = self.session or "null"
         uri = action + "/" + str(session)
         if self.debug:
             uri = "debug/" + uri
-        return call_bridge(uri, data=data)
+        return call_bridge(uri, data=data, timeout=timeout)
 
     @classmethod
     def enumerate(
-        cls, _models: Optional[Iterable["TrezorModel"]] = None
+        cls, _models: Iterable[TrezorModel] | None = None
     ) -> Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
@@ -173,8 +183,8 @@ class BridgeTransport(Transport):
         header = struct.pack(">HL", message_type, len(message_data))
         self.handle.write_buf(header + message_data)
 
-    def read(self) -> MessagePayload:
-        data = self.handle.read_buf()
+    def read(self, timeout: float | None = None) -> MessagePayload:
+        data = self.handle.read_buf(timeout=timeout)
         headerlen = struct.calcsize(">HL")
         msg_type, datalen = struct.unpack(">HL", data[:headerlen])
         return msg_type, data[headerlen : headerlen + datalen]
