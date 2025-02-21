@@ -8,6 +8,7 @@ use crate::{
         lerp::Lerp,
         shape::{self, Renderer, Text},
         util::Pager,
+        CommonUI, ModelUI,
     },
 };
 
@@ -55,8 +56,7 @@ impl<'a> Footer<'a> {
             swipe_allow_up: false,
             progress: 0,
             dir: Direction::Up,
-            virtual_button: Button::empty()
-                .with_expanded_touch_area(Insets::top(2 * Self::HEIGHT_DEFAULT)),
+            virtual_button: Button::empty(),
         }
     }
 
@@ -158,9 +158,12 @@ impl<'a> Component for Footer<'a> {
     type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
+        // place the button over the whole screen, leaving a gap for the header bar
+        let button_area = ModelUI::SCREEN.inset(Insets::top(theme::TITLE_HEIGHT));
+        self.virtual_button.place(button_area);
+
         assert!(bounds.height() == self.content.height());
         self.area = bounds;
-        self.virtual_button.place(bounds);
         self.area
     }
 
