@@ -1371,6 +1371,7 @@ pub enum TranslatedString {
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
+    instructions__tap_to_continue = 975,  // "Tap to continue"
 }
 
 impl TranslatedString {
@@ -2738,6 +2739,7 @@ impl TranslatedString {
             Self::misc__enable_labeling => "Enable labeling?",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
+            Self::instructions__tap_to_continue => "Tap to continue",
         }
     }
 
@@ -4104,6 +4106,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
+            Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
             _ => None,
         }
     }

@@ -144,7 +144,7 @@ pub fn new_confirm_fido(
     .with_footer_page_hint(
         TR::fido__more_credentials.into(),
         TR::buttons__go_back.into(),
-        TR::instructions__swipe_up.into(),
+        TR::instructions__tap_to_continue.into(),
         TR::instructions__swipe_down.into(),
     )
     .register_footer_update_fn(footer_update_fn)

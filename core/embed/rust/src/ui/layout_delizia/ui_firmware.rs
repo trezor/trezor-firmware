@@ -9,7 +9,6 @@ use crate::{
     ui::{
         component::{
             connect::Connect,
-            swipe_detect::SwipeSettings,
             text::{
                 op::OpTextLayout,
                 paragraphs::{
@@ -20,7 +19,7 @@ use crate::{
             },
             Border, CachedJpeg, ComponentExt, Empty, FormattedText, Never, Timeout,
         },
-        geometry::{self, Direction, Offset},
+        geometry::{self, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{PropsList, RecoveryType},
