@@ -6,10 +6,12 @@ use crate::ui::{
     util::include_res,
 };
 
-use super::super::{
-    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
-    fonts,
-    theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
+use super::{
+    super::{
+        component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
+        fonts,
+    },
+    BLACK, GREY_DARK, GREY_LIGHT, GREY_SUPER_DARK, WHITE,
 };
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x1E, 0xAD);
@@ -89,10 +91,36 @@ pub fn button_confirm() -> ButtonStyleSheet {
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: FG,
+            text_color: BLD_FG,
             button_color: GREY_DARK,
             icon_color: BLD_BG,
-            background_color: FG,
+            background_color: BLD_FG,
+        },
+    }
+}
+
+pub const fn button_header() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: BLD_BG,
+            icon_color: GREY_LIGHT,
+            background_color: BLD_BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_LIGHT,
+            background_color: BLD_BG,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: BLD_BG,
+            icon_color: GREY_LIGHT,
+            background_color: BLD_BG,
         },
     }
 }
@@ -141,10 +169,10 @@ pub fn button_wipe_confirm() -> ButtonStyleSheet {
         },
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: FG,
+            text_color: BLD_FG,
             button_color: GREY_DARK,
-            icon_color: FG,
-            background_color: FG,
+            icon_color: BLD_FG,
+            background_color: BLD_FG,
         },
     }
 }
@@ -260,4 +288,4 @@ pub const RESULT_WIPE: ResultStyle = ResultStyle::new(
 pub const RESULT_FW_INSTALL: ResultStyle = ResultStyle::new(BLD_FG, BLD_BG, BLD_BTN_COLOR);
 
 pub const RESULT_INITIAL: ResultStyle =
-    ResultStyle::new(FG, WELCOME_COLOR, WELCOME_HIGHLIGHT_COLOR);
+    ResultStyle::new(BLD_FG, WELCOME_COLOR, WELCOME_HIGHLIGHT_COLOR);
