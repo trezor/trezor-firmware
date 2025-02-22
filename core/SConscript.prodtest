@@ -117,6 +117,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_sdcard.c',
     'embed/projects/prodtest/cmd/prodtest_sbu.c',
     'embed/projects/prodtest/cmd/prodtest_touch.c',
+    'embed/projects/prodtest/cmd/prodtest_unit_test.c',
     'embed/projects/prodtest/cmd/prodtest_wpc.c',
 ]
 
