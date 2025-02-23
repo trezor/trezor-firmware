@@ -1279,7 +1279,7 @@ pub enum TranslatedString {
     haptic_feedback__enable = 885,  // "Enable haptic feedback?"
     haptic_feedback__subtitle = 886,  // "Setting"
     haptic_feedback__title = 887,  // "Haptic feedback"
-    instructions__continue_holding = 888,  // "Continue\nholding"
+    instructions__continue_holding = 888,  // {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"}
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
@@ -1402,8 +1402,7 @@ pub enum TranslatedString {
     solana__stake_on_question = 989,  // "Stake SOL on {0}?"
     sign_message__confirm_without_review = 990,  // "Confirm without review"
     instructions__tap_to_continue = 991,  // "Tap to continue"
-    instructions__keep_holding = 992,  // "Keep holding"
-    reset__share_words_first = 993,  // "Write down the first word from the backup."
+    reset__share_words_first = 992,  // "Write down the first word from the backup."
 }
 
 impl TranslatedString {
@@ -2686,7 +2685,14 @@ impl TranslatedString {
             Self::haptic_feedback__enable => "Enable haptic feedback?",
             Self::haptic_feedback__subtitle => "Setting",
             Self::haptic_feedback__title => "Haptic feedback",
+            #[cfg(feature = "layout_bolt")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_caesar")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_delizia")]
             Self::instructions__continue_holding => "Continue\nholding",
+            #[cfg(feature = "layout_eckhart")]
+            Self::instructions__continue_holding => "Keep holding",
             Self::instructions__enter_next_share => "Enter next share",
             Self::instructions__hold_to_continue => "Hold to continue",
             Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
@@ -2816,7 +2822,6 @@ impl TranslatedString {
             Self::solana__stake_on_question => "Stake SOL on {0}?",
             Self::sign_message__confirm_without_review => "Confirm without review",
             Self::instructions__tap_to_continue => "Tap to continue",
-            Self::instructions__keep_holding => "Keep holding",
             Self::reset__share_words_first => "Write down the first word from the backup.",
         }
     }
@@ -4215,7 +4220,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_solana__stake_on_question => Some(Self::solana__stake_on_question),
             Qstr::MP_QSTR_sign_message__confirm_without_review => Some(Self::sign_message__confirm_without_review),
             Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
-            Qstr::MP_QSTR_instructions__keep_holding => Some(Self::instructions__keep_holding),
             Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
             _ => None,
         }
