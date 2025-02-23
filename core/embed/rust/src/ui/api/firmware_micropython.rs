@@ -423,6 +423,8 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: Option<TString> = kwargs.get(Qstr::MP_QSTR_title)?.try_into_option()?;
         let subtitle: Option<TString> = kwargs.get(Qstr::MP_QSTR_subtitle)?.try_into_option()?;
+        let description: Option<TString> =
+            kwargs.get(Qstr::MP_QSTR_description)?.try_into_option()?;
         let message: Obj = kwargs.get(Qstr::MP_QSTR_message)?;
         let amount: Option<Obj> = kwargs.get(Qstr::MP_QSTR_amount)?.try_into_option()?;
         let chunkify: bool = kwargs.get_or(Qstr::MP_QSTR_chunkify, false)?;
@@ -466,6 +468,7 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let layout = ModelUI::flow_confirm_output(
             title,
             subtitle,
+            description,
             message,
             amount,
             chunkify,
@@ -1351,6 +1354,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     summary_br_code: ButtonRequestType | None = None,
     ///     summary_br_name: str | None = None,
     ///     cancel_text: str | None = None,
+    ///     description: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
     Qstr::MP_QSTR_flow_confirm_output => obj_fn_kw!(0, new_flow_confirm_output).as_obj(),

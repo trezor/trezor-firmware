@@ -160,6 +160,7 @@ pub trait FirmwareUI {
     fn flow_confirm_output(
         title: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
+        description: Option<TString<'static>>,
         message: Obj,        // TODO: replace Obj
         amount: Option<Obj>, // TODO: replace Obj
         chunkify: bool,
