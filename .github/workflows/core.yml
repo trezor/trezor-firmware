@@ -222,7 +222,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core build_unix_frozen"
       # Ensure that "cargo build" works when NOT executed through our makefiles,
       # indicating that it does not rely on particular envvars or other flags.
-      # This makes sure that rust-analyzer will work on our codebase.0
+      # This makes sure that rust-analyzer will work on our codebase.
       - run: nix-shell --run "cd core/embed/rust && cargo build"
       - run: nix-shell --run "poetry run make -C core clippy"
       - run: nix-shell --run "poetry run make -C core test_rust"
