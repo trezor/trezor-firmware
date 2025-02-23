@@ -144,7 +144,7 @@ impl ActionBar {
             .map(|dur| {
                 HoldToConfirmAnim::new()
                     .with_duration(dur)
-                    .with_header_overlay(TR::instructions__keep_holding.into())
+                    .with_header_overlay(TR::instructions__continue_holding.into())
             });
 
         Self {
