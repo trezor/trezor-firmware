@@ -64,32 +64,48 @@ impl ScreenBorder {
         self.side_bars[0].width()
     }
 
-    pub fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+    pub fn render<'s>(&'s self, alpha: u8, target: &mut impl Renderer<'s>) {
         let screen = constant::screen();
 
         // Draw the four side bars.
-        for bar in self.side_bars {
-            shape::Bar::new(bar)
+        self.side_bars.iter().for_each(|bar| {
+            shape::Bar::new(*bar)
                 .with_fg(self.color)
                 .with_thickness(2)
+                .with_alpha(alpha)
                 .render(target);
-        }
+        });
+
         // Draw the four corners.
-        shape::ToifImage::new(screen.bottom_left(), ICON_BORDER_BL.toif)
-            .with_fg(self.color)
-            .with_align(Alignment2D::BOTTOM_LEFT)
-            .render(target);
-        shape::ToifImage::new(screen.top_right(), ICON_BORDER_TR.toif)
-            .with_fg(self.color)
-            .with_align(Alignment2D::TOP_RIGHT)
-            .render(target);
-        shape::ToifImage::new(screen.top_left(), ICON_BORDER_TL.toif)
-            .with_fg(self.color)
-            .with_align(Alignment2D::TOP_LEFT)
-            .render(target);
-        shape::ToifImage::new(screen.bottom_right(), ICON_BORDER_BR.toif)
-            .with_fg(self.color)
-            .with_align(Alignment2D::BOTTOM_RIGHT)
-            .render(target);
+        [
+            (
+                screen.bottom_left(),
+                ICON_BORDER_BL.toif,
+                Alignment2D::BOTTOM_LEFT,
+            ),
+            (
+                screen.top_right(),
+                ICON_BORDER_TR.toif,
+                Alignment2D::TOP_RIGHT,
+            ),
+            (
+                screen.top_left(),
+                ICON_BORDER_TL.toif,
+                Alignment2D::TOP_LEFT,
+            ),
+            (
+                screen.bottom_right(),
+                ICON_BORDER_BR.toif,
+                Alignment2D::BOTTOM_RIGHT,
+            ),
+        ]
+        .iter()
+        .for_each(|(position, toif, alignment)| {
+            shape::ToifImage::new(*position, *toif)
+                .with_fg(self.color)
+                .with_align(*alignment)
+                .with_alpha(alpha)
+                .render(target);
+        });
     }
 }
