@@ -2274,6 +2274,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # hi priority warning
             hi_prio = (
                 TR.ethereum__unknown_contract_address,
+                TR.solana__stake_withdrawal_warning,
                 TR.addr_mismatch__wrong_derivation_path,
                 TR.send__receiving_to_multisig,
                 "witness path",
