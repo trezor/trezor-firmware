@@ -510,6 +510,7 @@ impl FirmwareUI for UIDelizia {
     fn flow_confirm_output(
         title: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
+        description: Option<TString<'static>>,
         message: Obj,
         amount: Option<Obj>,
         chunkify: bool,
@@ -527,13 +528,14 @@ impl FirmwareUI for UIDelizia {
         summary_br_name: Option<TString<'static>>,
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let confirm_main = ConfirmValue::new(title.unwrap_or(TString::empty()), message, None)
-            .with_subtitle(subtitle)
-            .with_menu_button()
-            .with_footer(TR::instructions__swipe_up.into(), None)
-            .with_chunkify(chunkify)
-            .with_text_mono(text_mono)
-            .with_swipe_up();
+        let confirm_main =
+            ConfirmValue::new(title.unwrap_or(TString::empty()), message, description)
+                .with_subtitle(subtitle)
+                .with_menu_button()
+                .with_footer(TR::instructions__swipe_up.into(), None)
+                .with_chunkify(chunkify)
+                .with_text_mono(text_mono)
+                .with_swipe_up();
 
         let confirm_amount = amount.map(|amount| {
             ConfirmValue::new(TR::words__amount.into(), amount, None)

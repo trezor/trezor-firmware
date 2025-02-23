@@ -678,6 +678,7 @@ impl FirmwareUI for UICaesar {
     fn flow_confirm_output(
         _title: Option<TString<'static>>,
         _subtitle: Option<TString<'static>>,
+        _description: Option<TString<'static>>,
         _message: Obj,
         _amount: Option<Obj>,
         _chunkify: bool,
