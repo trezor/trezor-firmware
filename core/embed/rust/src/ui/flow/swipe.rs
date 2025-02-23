@@ -98,7 +98,7 @@ pub struct SwipeFlow {
     /// Current state of the flow.
     state: FlowState,
     /// Store of all screens which are part of the flow.
-    store: Vec<GcBox<dyn FlowComponentDynTrait>, 12>,
+    store: Vec<GcBox<dyn FlowComponentDynTrait>, 16>,
     /// Swipe detector.
     swipe: SwipeDetect,
     /// Swipe allowed

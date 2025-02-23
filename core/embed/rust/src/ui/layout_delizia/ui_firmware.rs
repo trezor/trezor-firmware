@@ -518,8 +518,8 @@ impl FirmwareUI for UIDelizia {
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
-        address: Option<Obj>,
-        address_title: Option<TString<'static>>,
+        address_item: Option<(TString<'static>, Obj)>,
+        extra_item: Option<(TString<'static>, Obj)>,
         summary_items: Option<Obj>,
         fee_items: Option<Obj>,
         summary_title: Option<TString<'static>>,
@@ -527,8 +527,6 @@ impl FirmwareUI for UIDelizia {
         summary_br_name: Option<TString<'static>>,
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let address_title = address_title.unwrap_or(TR::words__address.into());
-
         let confirm_main = ConfirmValue::new(title.unwrap_or(TString::empty()), message, None)
             .with_subtitle(subtitle)
             .with_menu_button()
@@ -547,8 +545,16 @@ impl FirmwareUI for UIDelizia {
                 .with_swipe_down()
         });
 
-        let confirm_value = address.map(|address| {
+        let confirm_address = address_item.map(|(address_title, address)| {
             ConfirmValue::new(address_title, address, None)
+                .with_cancel_button()
+                .with_chunkify(true)
+                .with_text_mono(true)
+                .with_swipe_right()
+        });
+
+        let confirm_extra = extra_item.map(|(extra_title, extra)| {
+            ConfirmValue::new(extra_title, extra, None)
                 .with_cancel_button()
                 .with_chunkify(true)
                 .with_text_mono(true)
@@ -587,8 +593,8 @@ impl FirmwareUI for UIDelizia {
             br_name,
             br_code,
             confirm_amount,
-            confirm_value,
-            address_title,
+            confirm_address,
+            confirm_extra,
             summary_items_params,
             fee_items_params,
             summary_br_name,
