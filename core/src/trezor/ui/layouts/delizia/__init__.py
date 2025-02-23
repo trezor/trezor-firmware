@@ -377,6 +377,7 @@ async def confirm_output(
     source_account: str | None = None,
     source_account_path: str | None = None,
     cancel_text: str | None = None,
+    description: str | None = None,
 ) -> None:
     if address_label is not None:
         title = address_label
@@ -407,6 +408,7 @@ async def confirm_output(
             summary_br_name=None,
             summary_br_code=None,
             cancel_text=cancel_text,
+            description=description,
         ),
         br_name=None,
     )
@@ -789,6 +791,7 @@ if not utils.BITCOIN_ONLY:
                 summary_br_name="confirm_total",
                 summary_br_code=ButtonRequestType.SignTx,
                 cancel_text=TR.buttons__cancel,
+                description=None,
             ),
             None,
         )
@@ -835,6 +838,7 @@ if not utils.BITCOIN_ONLY:
                 summary_br_name="confirm_total",
                 summary_br_code=ButtonRequestType.SignTx,
                 cancel_text=TR.buttons__cancel,  # cancel staking
+                description=None,
             ),
             br_name=None,
         )
