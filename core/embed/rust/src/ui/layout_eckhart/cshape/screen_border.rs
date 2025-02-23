@@ -16,7 +16,7 @@ pub struct ScreenBorder {
 }
 
 impl ScreenBorder {
-    pub const WIDTH: i16 = 2;
+    pub const WIDTH: i16 = 4;
     pub fn new(color: Color) -> Self {
         let screen = constant::screen();
 
@@ -26,14 +26,14 @@ impl ScreenBorder {
             x0: screen.x0 + ICON_BORDER_TL.toif.width(),
             y0: screen.y0,
             x1: screen.x1 - ICON_BORDER_TR.toif.width(),
-            y1: screen.y0 + 2,
+            y1: screen.y0 + Self::WIDTH,
         };
 
         // Bottom bar: from the right edge of bottom-left icon to the left edge of
         // bottom-right icon.
         let bottom_bar_rect = Rect {
             x0: screen.x0 + ICON_BORDER_BL.toif.width(),
-            y0: screen.y1 - 2,
+            y0: screen.y1 - Self::WIDTH,
             x1: screen.x1 - ICON_BORDER_BR.toif.width(),
             y1: screen.y1,
         };
@@ -42,15 +42,15 @@ impl ScreenBorder {
         // bottom-left icon.
         let left_bar_rect = Rect {
             x0: screen.x0,
-            y0: screen.y0 + ICON_BORDER_TL.toif.height() - 1,
-            x1: screen.x0 + 2,
+            y0: screen.y0 + ICON_BORDER_TL.toif.height(),
+            x1: screen.x0 + Self::WIDTH,
             y1: screen.y1 - ICON_BORDER_BL.toif.height(),
         };
         // Right bar: from the bottom edge of top-right icon to the top edge of
         // bottom-right icon.
         let right_bar_rect = Rect {
-            x0: screen.x1 - 2,
-            y0: screen.y0 + ICON_BORDER_TR.toif.height() - 1,
+            x0: screen.x1 - Self::WIDTH,
+            y0: screen.y0 + ICON_BORDER_TR.toif.height(),
             x1: screen.x1,
             y1: screen.y1 - ICON_BORDER_BR.toif.height(),
         };
@@ -70,8 +70,7 @@ impl ScreenBorder {
         // Draw the four side bars.
         self.side_bars.iter().for_each(|bar| {
             shape::Bar::new(*bar)
-                .with_fg(self.color)
-                .with_thickness(2)
+                .with_bg(self.color)
                 .with_alpha(alpha)
                 .render(target);
         });
@@ -102,8 +101,8 @@ impl ScreenBorder {
         .iter()
         .for_each(|(position, toif, alignment)| {
             shape::ToifImage::new(*position, *toif)
-                .with_fg(self.color)
                 .with_align(*alignment)
+                .with_fg(self.color)
                 .with_alpha(alpha)
                 .render(target);
         });
