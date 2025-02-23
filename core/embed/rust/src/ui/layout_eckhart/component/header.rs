@@ -92,7 +92,7 @@ pub enum HeaderMsg {
 impl Header {
     pub const HEADER_HEIGHT: i16 = 96; // [px]
     pub const HEADER_BUTTON_WIDTH: i16 = 56; // [px]
-    const HEADER_INSETS: Insets = Insets::sides(24); // [px]
+    pub const HEADER_INSETS: Insets = Insets::sides(24); // [px]
 
     pub const fn new(title: TString<'static>) -> Self {
         Self {
