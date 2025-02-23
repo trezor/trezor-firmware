@@ -300,6 +300,10 @@ impl ConfirmValue {
             self.page_counter,
         )
     }
+
+    pub fn title(&self) -> TString<'static> {
+        self.title
+    }
 }
 
 pub struct ShowInfoParams {

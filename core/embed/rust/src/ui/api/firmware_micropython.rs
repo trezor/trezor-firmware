@@ -433,9 +433,22 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
         let br_code: u16 = kwargs.get(Qstr::MP_QSTR_br_code)?.try_into()?;
         let br_name: TString = kwargs.get(Qstr::MP_QSTR_br_name)?.try_into()?;
 
-        let address: Option<Obj> = kwargs.get(Qstr::MP_QSTR_address)?.try_into_option()?;
-        let address_title: Option<TString> =
-            kwargs.get(Qstr::MP_QSTR_address_title)?.try_into_option()?;
+        let address_item = kwargs
+            .get(Qstr::MP_QSTR_address_item)?
+            .try_into_option()?
+            .map(|item| -> Result<(TString, Obj), crate::error::Error> {
+                let pair: [Obj; 2] = util::iter_into_array(item)?;
+                Ok((pair[0].try_into()?, pair[1]))
+            })
+            .transpose()?;
+        let extra_item = kwargs
+            .get(Qstr::MP_QSTR_extra_item)?
+            .try_into_option()?
+            .map(|item| -> Result<(TString, Obj), crate::error::Error> {
+                let pair: [Obj; 2] = util::iter_into_array(item)?;
+                Ok((pair[0].try_into()?, pair[1]))
+            })
+            .transpose()?;
         let summary_items: Option<Obj> =
             kwargs.get(Qstr::MP_QSTR_summary_items)?.try_into_option()?;
         let fee_items: Option<Obj> = kwargs.get(Qstr::MP_QSTR_fee_items)?.try_into_option()?;
@@ -461,8 +474,8 @@ extern "C" fn new_flow_confirm_output(n_args: usize, args: *const Obj, kwargs: *
             account_path,
             br_code,
             br_name,
-            address,
-            address_title,
+            address_item,
+            extra_item,
             summary_items,
             fee_items,
             summary_title,
@@ -1330,8 +1343,8 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     account_path: str | None,
     ///     br_code: ButtonRequestType,
     ///     br_name: str,
-    ///     address: str | None,
-    ///     address_title: str | None,
+    ///     address_item: (str, str) | None,
+    ///     extra_item: (str, str) | None,
     ///     summary_items: Iterable[tuple[str, str]] | None = None,
     ///     fee_items: Iterable[tuple[str, str]] | None = None,
     ///     summary_title: str | None = None,
