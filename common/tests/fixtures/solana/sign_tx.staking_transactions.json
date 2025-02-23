@@ -1,0 +1,422 @@
+{
+  "setup": {
+    "mnemonic": "all all all all all all all all all all all all",
+    "passphrase": ""
+  },
+  "tests": [
+    {
+      "description": "Stake instructions",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111",
+            "SysvarStakeHistory1111111111111111111111111",
+            "StakeConfig11111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 5,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 6,
+              "accounts": {
+                "funding_account": 0,
+                "created_account": 1
+              },
+              "data": {
+                "instruction_id": 3,
+                "base": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "seed": {
+                  "length": 6,
+                  "chars": "seed:1"
+                },
+                "lamports": 20000000,
+                "space": 0,
+                "owner": "11111111111111111111111111111111"
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {
+                "uninitialized_stake_account": 1,
+                "rent_sysvar": 7
+              },
+              "data": {
+                "instruction_id": 0,
+                "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "unix_timestamp": 0,
+                "epoch": 0,
+                "custodian": "11111111111111111111111111111111"
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {
+                "initialized_stake_account": 1,
+                "vote_account": 2,
+                "clock_sysvar": 4,
+                "stake_history_sysvar": 8,
+                "config_account": 9,
+                "stake_authority": 0
+              },
+              "data": {
+                "instruction_id": 2
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "d38bf15aefa994ec712ae801ce35c6ebd54ef1df46a52e8577376baefefb4e842261e7d4c39f465a38caf9520cbbbd59a94313ccbe4c55ca16721f2f0674af0d"
+      }
+    },
+    {
+      "description": "Stake instructions on Everstake",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "9QU2QSxhb24FUX3Tu2FpczXjpK3VYrvRudywSZaM29mF",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111",
+            "SysvarStakeHistory1111111111111111111111111",
+            "StakeConfig11111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 5,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 6,
+              "accounts": {
+                "funding_account": 0,
+                "created_account": 1
+              },
+              "data": {
+                "instruction_id": 3,
+                "base": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "seed": {
+                  "length": 6,
+                  "chars": "seed:1"
+                },
+                "lamports": 20000000,
+                "space": 0,
+                "owner": "11111111111111111111111111111111"
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {
+                "uninitialized_stake_account": 1,
+                "rent_sysvar": 7
+              },
+              "data": {
+                "instruction_id": 0,
+                "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "withdrawer": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "unix_timestamp": 0,
+                "epoch": 0,
+                "custodian": "11111111111111111111111111111111"
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {
+                "initialized_stake_account": 1,
+                "vote_account": 2,
+                "clock_sysvar": 4,
+                "stake_history_sysvar": 8,
+                "config_account": 9,
+                "stake_authority": 0
+              },
+              "data": {
+                "instruction_id": 2
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "479530b87f2bf7b56c8894a1a842531837635b5aa2f9f17b875ef768b23190e97e0079c43b3981f06d20718f0dcd0f1b218557b16a525021b066f42f8d98510c"
+      }
+    },
+    {
+      "description": "Stake instructions with warning",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "ETxHeBBcuw9Yu4dGuP3oXrD12V5RECvmi8ogQ9PkjyVF",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111",
+            "11111111111111111111111111111111",
+            "SysvarRent111111111111111111111111111111111",
+            "SysvarStakeHistory1111111111111111111111111",
+            "StakeConfig11111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 5,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 6,
+              "accounts": {
+                "funding_account": 0,
+                "created_account": 1
+              },
+              "data": {
+                "instruction_id": 3,
+                "base": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "seed": {
+                  "length": 6,
+                  "chars": "seed:1"
+                },
+                "lamports": 20000000,
+                "space": 0,
+                "owner": "11111111111111111111111111111111"
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {
+                "uninitialized_stake_account": 1,
+                "rent_sysvar": 7
+              },
+              "data": {
+                "instruction_id": 0,
+                "staker": "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+                "withdrawer": "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq",
+                "unix_timestamp": 0,
+                "epoch": 0,
+                "custodian": "11111111111111111111111111111111"
+              }
+            },
+            {
+              "program_index": 3,
+              "accounts": {
+                "initialized_stake_account": 1,
+                "vote_account": 2,
+                "clock_sysvar": 4,
+                "stake_history_sysvar": 8,
+                "config_account": 9,
+                "stake_authority": 0
+              },
+              "data": {
+                "instruction_id": 2
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "e4bbe5bec49dbc9d3cdeaa00612facb67e7b1d1b2446600d6c0cddc61a89da4343d62be788ea72734b4a6818471eaf1a37fbbad34b33e7b6cdfe8c705c8c8701"
+      }
+    },
+    {
+      "description": "Unstake instructions",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "delegated_stake_account": 1,
+                "clock_sysvar": 3,
+                "stake_authority": 0
+              },
+              "data": {
+                "instruction_id": 5
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "c0a704d4702248f2f9c9c5a6e5f17523ac7bf12546d1a1447a5af22b56fe1a62901fd0074f5d7560cfecea635aa7d3594c9c5fb124bf47ab376fae487bdedd0e"
+      }
+    },
+    {
+      "description": "Claim instructions",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 3
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "stake_account": 1,
+                "recipient_account": 0,
+                "clock_sysvar": 3,
+                "stake_history_sysvar": 4,
+                "withdrawal_authority": 0,
+                "lockup_authority": 0
+              },
+              "data": {
+                "instruction_id": 4,
+                "lamports": 1000000
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "4edf71d1b4d075c6717617ef43cd896a80153f418dbe4cca5e66ee9f27bd5652bec67d30ee9a14e3bd7062dd72ed619cf238e6f5538b150dae34d24bee650303"
+      }
+    },
+    {
+      "description": "Claim instructions with warning",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 3
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111",
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "stake_account": 1,
+                "recipient_account": 5,
+                "clock_sysvar": 3,
+                "stake_history_sysvar": 4,
+                "withdrawal_authority": 0,
+                "lockup_authority": 0
+              },
+              "data": {
+                "instruction_id": 4,
+                "lamports": 1000000
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "53e953033988f8ce3cca4f7d1f94da41d8f3d1467724785f5cd9c4d16250198429a5d27bc474a66d4c1bf4a936c680f51973d54a3b16a2b73e62ecbb1f062104"
+      }
+    }
+  ]
+}

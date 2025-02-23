@@ -2270,16 +2270,11 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
                 for _ in range(br.pages - 1):
                     self.debug.swipe_up()
             layout = self.debug.read_layout()
-            text = layout.text_content().lower()
+            text = layout.footer().lower()
             # hi priority warning
             hi_prio = (
-                TR.ethereum__unknown_contract_address,
-                TR.addr_mismatch__wrong_derivation_path,
-                TR.send__receiving_to_multisig,
-                "witness path",
-                "certificate path",
-                "pool owner staking path",
-                "using different paths for different xpubs",
+                TR.words__cancel_and_exit,
+                TR.send__cancel_sign,
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(buttons.CORNER_BUTTON)
