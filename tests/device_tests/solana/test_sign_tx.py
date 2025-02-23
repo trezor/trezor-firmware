@@ -22,6 +22,7 @@ from trezorlib.solana import sign_tx
 from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
+from ...input_flows import InputFlowConfirmAllWarnings
 from .construct.instructions import PROGRAMS, UnknownInstruction
 from .construct.transaction import Message, RawInstruction
 
@@ -41,34 +42,38 @@ pytestmark = [
     "solana/sign_tx.token_program.json",
     "solana/sign_tx.unknown_instructions.json",
     "solana/sign_tx.predefined_transactions.json",
+    "solana/sign_tx.staking_transactions.json",
 )
 def test_solana_sign_tx(client: Client, parameters, result):
     client.init_device(new_session=True)
 
     serialized_tx = _serialize_tx(parameters["construct"])
 
-    actual_result = sign_tx(
-        client,
-        address_n=parse_path(parameters["address"]),
-        serialized_tx=serialized_tx,
-        additional_info=(
-            messages.SolanaTxAdditionalInfo(
-                token_accounts_infos=[
-                    messages.SolanaTxTokenAccountInfo(
-                        base_address=token_account["base_address"],
-                        token_program=token_account["token_program"],
-                        token_mint=token_account["token_mint"],
-                        token_account=token_account["token_account"],
-                    )
-                    for token_account in parameters["additional_info"][
-                        "token_accounts_infos"
+    with client:
+        IF = InputFlowConfirmAllWarnings(client)
+        client.set_input_flow(IF.get())
+        actual_result = sign_tx(
+            client,
+            address_n=parse_path(parameters["address"]),
+            serialized_tx=serialized_tx,
+            additional_info=(
+                messages.SolanaTxAdditionalInfo(
+                    token_accounts_infos=[
+                        messages.SolanaTxTokenAccountInfo(
+                            base_address=token_account["base_address"],
+                            token_program=token_account["token_program"],
+                            token_mint=token_account["token_mint"],
+                            token_account=token_account["token_account"],
+                        )
+                        for token_account in parameters["additional_info"][
+                            "token_accounts_infos"
+                        ]
                     ]
-                ]
-            )
-            if "additional_info" in parameters
-            else None
-        ),
-    )
+                )
+                if "additional_info" in parameters
+                else None
+            ),
+        )
 
     assert actual_result == bytes.fromhex(result["expected_signature"])
 
