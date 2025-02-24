@@ -316,13 +316,22 @@ def test_credential_phase(client: Client) -> None:
     client.debug.press_yes()
     protocol._read_message(ThpEndResponse)
 
-    # Connect using credential with confirmation and ask for autoconnect credential
+    # Delete channel from the device by sending badly encrypted message
+    # This is done to prevent channel replacement and trigerring of autoconnect false -> true
+    protocol.nonce_request = 250
+    protocol._send_message(ButtonAck())
+    with pytest.raises(Exception) as e:
+        protocol.read(1)
+    assert e.value.args[0] == "Received ThpError: DECRYPTION FAILED"
+
+    # Connect using credential with confirmation and ask for autoconnect credential.
     protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
     protocol._do_handshake(credential, host_static_privkey)
     protocol._send_message(
         ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=True)
     )
+    # Confirmation dialog is shown. (Channel replacement is not triggered.)
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "connection_request"
     protocol._send_message(ButtonAck())
@@ -333,7 +342,31 @@ def test_credential_phase(client: Client) -> None:
     protocol._send_message(ThpEndRequest())
     protocol._read_message(ThpEndResponse)
 
+    # Connect using credential with confirmation
+    protocol = _prepare_protocol(client)
+    protocol._do_channel_allocation()
+    protocol._do_handshake(credential, host_static_privkey)
+    # Confirmation dialog is not shown as channel in ENCRYPTED TRANSPORT state with the same
+    # host static public key is still available in Trezor's cache. (Channel replacement is triggered.)
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
+
     # Connect using autoconnect credential
+    protocol = _prepare_protocol(client)
+    protocol._do_channel_allocation()
+    protocol._do_handshake(credential_auto, host_static_privkey)
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
+
+    # Delete channel from the device by sending badly encrypted message
+    # This is done to prevent channel replacement and trigerring of autoconnect false -> true
+    protocol.nonce_request = 250
+    protocol._send_message(ButtonAck())
+    with pytest.raises(Exception) as e:
+        protocol.read(1)
+    assert e.value.args[0] == "Received ThpError: DECRYPTION FAILED"
+
+    # Connect using autoconnect credential - should work the same as above
     protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
     protocol._do_handshake(credential_auto, host_static_privkey)

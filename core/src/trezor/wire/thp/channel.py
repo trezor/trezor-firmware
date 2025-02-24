@@ -15,6 +15,7 @@ from storage.cache_thp import (
     ChannelCache,
     clear_sessions_with_channel_id,
     conditionally_replace_channel,
+    is_there_a_channel_to_replace,
 )
 from trezor import log, loop, protobuf, utils, workflow
 from trezor.wire.errors import WireBufferError
@@ -90,6 +91,7 @@ class Channel:
 
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
+        memory_manager.release_lock_if_owner(self.get_channel_id_int())
         self.channel_cache.clear()
 
     # ACCESS TO CHANNEL_DATA
@@ -120,6 +122,13 @@ class Channel:
             required_key=CHANNEL_HOST_STATIC_PUBKEY,
         )
         log.debug(__name__, "Was any channel replaced? %s", str(was_any_replaced))
+
+    def is_channel_to_replace(self) -> bool:
+        return is_there_a_channel_to_replace(
+            new_channel=self.channel_cache,
+            required_state=ChannelState.ENCRYPTED_TRANSPORT,
+            required_key=CHANNEL_HOST_STATIC_PUBKEY,
+        )
 
     # READ and DECRYPT
 
