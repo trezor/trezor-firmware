@@ -39,7 +39,7 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
 
     assert features.initialized is False
 
-    device_handler.run(
+    device_handler.run_with_session(
         device.setup,
         strength=128,
         backup_type=messages.BackupType.Bip39,

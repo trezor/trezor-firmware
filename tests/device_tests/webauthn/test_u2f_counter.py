@@ -17,15 +17,15 @@
 import pytest
 
 from trezorlib import fido
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 
 
 @pytest.mark.altcoin
-def test_u2f_counter(client: Client):
-    assert fido.get_next_counter(client) == 0
-    assert fido.get_next_counter(client) == 1
-    fido.set_counter(client, 111111)
-    assert fido.get_next_counter(client) == 111112
-    assert fido.get_next_counter(client) == 111113
-    fido.set_counter(client, 0)
-    assert fido.get_next_counter(client) == 1
+def test_u2f_counter(session: Session):
+    assert fido.get_next_counter(session) == 0
+    assert fido.get_next_counter(session) == 1
+    fido.set_counter(session, 111111)
+    assert fido.get_next_counter(session) == 111112
+    assert fido.get_next_counter(session) == 111113
+    fido.set_counter(session, 0)
+    assert fido.get_next_counter(session) == 1
