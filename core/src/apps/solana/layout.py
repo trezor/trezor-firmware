@@ -399,12 +399,24 @@ async def confirm_stake_transaction(
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
+    vote_account = base58.encode(delegate.vote_account[0])
+    KNOWN_ACCOUNTS = {
+        "9QU2QSxhb24FUX3Tu2FpczXjpK3VYrvRudywSZaM29mF": "Everstake",
+    }
+    vote_account_label = KNOWN_ACCOUNTS.get(vote_account)
+    if vote_account_label is None:
+        description = TR.solana__stake_question
+        vote_account_label = vote_account
+    else:
+        description = TR.solana__stake_on_question.format(vote_account_label)
+        vote_account_label = ""
+
     await confirm_solana_staking_tx(
         title=TR.solana__stake,
-        description=TR.solana__stake_question,
+        description=description,
         account=_format_path(signer_path),
         account_path=address_n_to_str(signer_path),
-        vote_account=base58.encode(delegate.vote_account[0]),
+        vote_account=vote_account_label,
         stake_item=(
             TR.solana__stake_account,
             base58.encode(delegate.initialized_stake_account[0]),
