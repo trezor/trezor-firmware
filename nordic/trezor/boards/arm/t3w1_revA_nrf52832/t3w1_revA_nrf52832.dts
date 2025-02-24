@@ -22,6 +22,7 @@
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
+                zephyr,bt-hci = &bt_hci_controller;
 	};
 
 	leds {
@@ -59,6 +60,14 @@
 		mcuboot-button0 = &button0;
 		watchdog0 = &wdt0;
 	};
+};
+
+&bt_hci_sdc {
+    status = "disabled";
+};
+
+&bt_hci_controller {
+    status = "okay";
 };
 
 &adc {
