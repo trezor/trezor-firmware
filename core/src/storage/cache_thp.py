@@ -267,6 +267,20 @@ def conditionally_replace_channel(
     return was_any_channel_replaced
 
 
+def is_there_a_channel_to_replace(
+    new_channel: ChannelCache, required_state: int, required_key: int
+) -> bool:
+    state = required_state.to_bytes(_CHANNEL_STATE_LENGTH, "big")
+    for channel in _CHANNELS:
+        if channel.channel_id == new_channel.channel_id:
+            continue
+        if channel.state == state and channel.get(required_key) == new_channel.get(
+            required_key
+        ):
+            return True
+    return False
+
+
 def _get_usage_counter_and_increment() -> int:
     global _usage_counter
     _usage_counter += 1

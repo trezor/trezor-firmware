@@ -159,6 +159,8 @@ async def handle_credential_phase(
 
     if credential is not None:
         autoconnect = is_credential_autoconnect(credential)
+        if not autoconnect:
+            autoconnect = ctx.channel_ctx.is_channel_to_replace()
         if credential.cred_metadata is not None:
             ctx.host_name = credential.cred_metadata.host_name
         if ctx.host_name is None:
