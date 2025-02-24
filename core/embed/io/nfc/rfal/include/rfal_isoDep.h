@@ -139,10 +139,10 @@
 #define RFAL_ISODEP_SPARAM_TAG_PCD2PICC_LEN     (2U)     /*!< S(PARAMETERS) bit rates from PICC to PCD Length                   */
 #define RFAL_ISODEP_SPARAM_TAG_BRACK_LEN        (0U)     /*!< S(PARAMETERS) tag Bit rates Acknowledgement Length                */
 
-#define RFAL_ISODEP_ATS_TA_DPL_212              (0x01U)  /*!< ATS TA DSI 212 kbps support bit mask                              */
-#define RFAL_ISODEP_ATS_TA_DPL_424              (0x02U)  /*!< ATS TA DSI 424 kbps support bit mask                              */
-#define RFAL_ISODEP_ATS_TA_DPL_848              (0x04U)  /*!< ATS TA DSI 848 kbps support bit mask                              */
-#define RFAL_ISODEP_ATS_TA_DLP_212              (0x10U)  /*!< ATS TA DSI 212 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DPL_212              (0x01U)  /*!< ATS TA DSI_ID 212 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DPL_424              (0x02U)  /*!< ATS TA DSI_ID 424 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DPL_848              (0x04U)  /*!< ATS TA DSI_ID 848 kbps support bit mask                              */
+#define RFAL_ISODEP_ATS_TA_DLP_212              (0x10U)  /*!< ATS TA DSI_ID 212 kbps support bit mask                              */
 #define RFAL_ISODEP_ATS_TA_DLP_424              (0x20U)  /*!< ATS TA DRI 424 kbps support bit mask                              */
 #define RFAL_ISODEP_ATS_TA_DLP_848              (0x40U)  /*!< ATS TA DRI 848 kbps support bit mask                              */
 #define RFAL_ISODEP_ATS_TA_SAME_D               (0x80U)  /*!< ATS TA same bit both directions bit mask                          */
@@ -238,7 +238,7 @@ typedef struct
 {
     uint8_t      PPSS;                              /*!< Start Byte: [ 1101b | CID[4b] ]          */
     uint8_t      PPS0;                              /*!< Parameter 0:[ 000b | PPS1[1n] | 0001b ]  */
-    uint8_t      PPS1;                              /*!< Parameter 1:[ 0000b | DSI[2b] | DRI[2b] ]*/    
+    uint8_t      PPS1;                              /*!< Parameter 1:[ 0000b | DSI_ID[2b] | DRI[2b] ]*/    
 } rfalIsoDepPpsReq;
 
 
@@ -318,7 +318,7 @@ typedef struct {
     uint8_t            FSxI;            /*!< Frame Size Device/Card Integer (FSDI or FSCI)        */
     uint16_t           FSx;             /*!< Frame Size Device/Card (FSD or FSC)                  */
     uint32_t           MBL;             /*!< Maximum Buffer Length (optional for NFC-B)           */
-    rfalBitRate        DSI;             /*!< Bit Rate coding from Listener (PICC) to Poller (PCD) */
+    rfalBitRate        DSI_ID;             /*!< Bit Rate coding from Listener (PICC) to Poller (PCD) */
     rfalBitRate        DRI;             /*!< Bit Rate coding from Poller (PCD) to Listener (PICC) */
     uint8_t            DID;             /*!< Device ID                                            */
     uint8_t            NAD;             /*!< Node ADdress                                         */
@@ -736,7 +736,7 @@ ReturnCode rfalIsoDepRATS( rfalIsoDepFSxI FSDI, uint8_t DID, rfalIsoDepAts *ats 
  *  Additionally checks if the received PPS response is valid
  *   
  *  \param[in]  DID    : Device ID
- *  \param[in]  DSI    : DSI code the divisor from Listener (PICC) to Poller (PCD)
+ *  \param[in]  DSI_ID    : DSI_ID code the divisor from Listener (PICC) to Poller (PCD)
  *  \param[in]  DRI    : DRI code the divisor from Poller (PCD) to Listener (PICC)
  *  \param[out] ppsRes : pointer to place the PPS Response
  *
@@ -751,7 +751,7 @@ ReturnCode rfalIsoDepRATS( rfalIsoDepFSxI FSDI, uint8_t DID, rfalIsoDepAts *ats 
  *  \return RFAL_ERR_NONE         : No error, PPS Response received
  *****************************************************************************
  */
-ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes );
+ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes );
 
 
 /*! 
@@ -763,7 +763,7 @@ ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIso
  *   
  *  \param[in]  nfcid0    : NFCID0 to be used for the ATTRIB 
  *  \param[in]  PARAM1    : ATTRIB PARAM1 byte (communication parameters) 
- *  \param[in]  DSI       : DSI code the divisor from Listener (PICC) to Poller (PCD)
+ *  \param[in]  DSI_ID       : DSI_ID code the divisor from Listener (PICC) to Poller (PCD)
  *  \param[in]  DRI       : DRI code the divisor from Poller (PCD) to Listener (PICC)
  *  \param[in]  FSDI      : PCD's Frame Size to be announced on the ATTRIB
  *  \param[in]  PARAM3    : ATTRIB PARAM1 byte (protocol type)
@@ -784,7 +784,7 @@ ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIso
  *  \return RFAL_ERR_NONE         : No error, ATTRIB Response received
  *****************************************************************************
  */
-ReturnCode rfalIsoDepATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen );
+ReturnCode rfalIsoDepATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen );
 
 
 /*! 

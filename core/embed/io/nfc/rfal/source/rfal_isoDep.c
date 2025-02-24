@@ -188,7 +188,7 @@
 #define RFAL_ISODEP_PPS0_VALID_MASK            (0xEFU)  /*!< PPS REQ PPS0 valid coding mask     ISO14443-4  5.4 */
 
 #define RFAL_ISODEP_CMD_ATTRIB                 (0x1DU)  /*!< ATTRIB command                 Digital 1.1  14.6.1 */
-#define RFAL_ISODEP_ATTRIB_PARAM2_DSI_SHIFT    (6U)     /*!< ATTRIB PARAM2 DSI shift        Digital 1.1  14.6.1 */
+#define RFAL_ISODEP_ATTRIB_PARAM2_DSI_SHIFT    (6U)     /*!< ATTRIB PARAM2 DSI_ID shift        Digital 1.1  14.6.1 */
 #define RFAL_ISODEP_ATTRIB_PARAM2_DRI_SHIFT    (4U)     /*!< ATTRIB PARAM2 DRI shift        Digital 1.1  14.6.1 */
 #define RFAL_ISODEP_ATTRIB_PARAM2_DXI_MASK     (0xF0U)  /*!< ATTRIB PARAM2 DxI mask         Digital 1.1  14.6.1 */
 #define RFAL_ISODEP_ATTRIB_PARAM2_FSDI_MASK    (0x0FU)  /*!< ATTRIB PARAM2 FSDI mask        Digital 1.1  14.6.1 */
@@ -224,9 +224,9 @@
 #define RFAL_ISODEP_PPS0_PPS1_PRESENT          (0x11U) /*!< PPS0 byte indicating that PPS1 is present            */
 #define RFAL_ISODEP_PPS0_PPS1_NOT_PRESENT      (0x01U) /*!< PPS0 byte indicating that PPS1 is NOT present        */
 #define RFAL_ISODEP_PPS1_DRI_MASK              (0x03U) /*!< PPS1 byte DRI mask bits                              */
-#define RFAL_ISODEP_PPS1_DSI_MASK              (0x0CU) /*!< PPS1 byte DSI mask bits                              */
-#define RFAL_ISODEP_PPS1_DSI_SHIFT             (2U)    /*!< PPS1 byte DSI shift                                  */
-#define RFAL_ISODEP_PPS1_DxI_MASK              (0x03U) /*!< PPS1 byte DSI/DRS mask bits                          */
+#define RFAL_ISODEP_PPS1_DSI_MASK              (0x0CU) /*!< PPS1 byte DSI_ID mask bits                              */
+#define RFAL_ISODEP_PPS1_DSI_SHIFT             (2U)    /*!< PPS1 byte DSI_ID shift                                  */
+#define RFAL_ISODEP_PPS1_DxI_MASK              (0x03U) /*!< PPS1 byte DSI_ID/DRS mask bits                          */
 
 
 /*! Delta Time for polling during Activation (ATS) : 20ms    Digital 1.0 11.7.1.1 & A.7    */
@@ -463,12 +463,12 @@ static void rfalIsoDepApdu2IBLockParam( rfalIsoDepApduTxRxParam apduParam, rfalI
     #if RFAL_FEATURE_NFCA
         static ReturnCode rfalIsoDepStartRATS( rfalIsoDepFSxI FSDI, uint8_t DID, rfalIsoDepAts *ats, uint8_t *atsLen );
         static ReturnCode rfalIsoDepGetRATSStatus( void );
-        static ReturnCode rfalIsoDepStartPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes );
+        static ReturnCode rfalIsoDepStartPPS( uint8_t DID, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes );
         static ReturnCode rfalIsoDepGetPPSSTatus( void );
     #endif /* RFAL_FEATURE_NFCA */
 
     #if RFAL_FEATURE_NFCB
-        static ReturnCode rfalIsoDepStartATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen );
+        static ReturnCode rfalIsoDepStartATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen );
         static ReturnCode rfalIsoDepGetATTRIBStatus( void );
     #endif /* RFAL_FEATURE_NFCB */
     
@@ -1296,7 +1296,7 @@ ReturnCode rfalIsoDepListenStartActivation( rfalIsoDepAtsParam *atsParam, const 
         actParam.isoDepDev->info.FSx  = gIsoDep.fsx;
         actParam.isoDepDev->info.FWT  = gIsoDep.fwt;
         actParam.isoDepDev->info.dFWT = 0;
-        actParam.isoDepDev->info.DSI  = gIsoDep.txBR;
+        actParam.isoDepDev->info.DSI_ID  = gIsoDep.txBR;
         actParam.isoDepDev->info.DRI  = gIsoDep.rxBR;
     }
     
@@ -1422,13 +1422,13 @@ ReturnCode rfalIsoDepListenGetActivationStatus( void )
             {
                 rfalSetBitRate( dsi, dri );
                 
-                gIsoDep.txBR = dsi;  /* DSI codes the divisor from PICC to PCD */
+                gIsoDep.txBR = dsi;  /* DSI_ID codes the divisor from PICC to PCD */
                 gIsoDep.rxBR = dri;  /* DRI codes the divisor from PCD to PICC */
                 
                 
                 if(gIsoDep.actvParam.isoDepDev != NULL)
                 {
-                    gIsoDep.actvParam.isoDepDev->info.DSI =  dsi;
+                    gIsoDep.actvParam.isoDepDev->info.DSI_ID =  dsi;
                     gIsoDep.actvParam.isoDepDev->info.DRI =  dri;
                 }
             }
@@ -1981,11 +1981,11 @@ ReturnCode rfalIsoDepRATS( rfalIsoDepFSxI FSDI, uint8_t DID, rfalIsoDepAts *ats 
 
 
 /*******************************************************************************/
-static ReturnCode rfalIsoDepStartPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes )
+static ReturnCode rfalIsoDepStartPPS( uint8_t DID, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes )
 {
     rfalTransceiveContext ctx;
     
-    if( (ppsRes == NULL) || (DSI > RFAL_BR_848) || (DRI > RFAL_BR_848) || ((DID > RFAL_ISODEP_DID_MAX) && (DID != RFAL_ISODEP_NO_DID)) )
+    if( (ppsRes == NULL) || (DSI_ID > RFAL_BR_848) || (DRI > RFAL_BR_848) || ((DID > RFAL_ISODEP_DID_MAX) && (DID != RFAL_ISODEP_NO_DID)) )
     {
         return RFAL_ERR_PARAM;
     }
@@ -1996,7 +1996,7 @@ static ReturnCode rfalIsoDepStartPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate 
     /* Compose PPS Request */
     gIsoDep.actv.ppsReq.PPSS = (RFAL_ISODEP_PPS_SB | (DID & RFAL_ISODEP_PPS_SB_DID_MASK));
     gIsoDep.actv.ppsReq.PPS0 = RFAL_ISODEP_PPS_PPS0_PPS1_PRESENT;
-    gIsoDep.actv.ppsReq.PPS1 = (RFAL_ISODEP_PPS_PPS1 | ((((uint8_t)DSI<<RFAL_ISODEP_PPS_PPS1_DSI_SHIFT) | (uint8_t)DRI) & RFAL_ISODEP_PPS_PPS1_DXI_MASK)); 
+    gIsoDep.actv.ppsReq.PPS1 = (RFAL_ISODEP_PPS_PPS1 | ((((uint8_t)DSI_ID<<RFAL_ISODEP_PPS_PPS1_DSI_SHIFT) | (uint8_t)DRI) & RFAL_ISODEP_PPS_PPS1_DXI_MASK)); 
     
     rfalCreateByteFlagsTxRxContext( ctx, (uint8_t*)&gIsoDep.actv.ppsReq, sizeof(rfalIsoDepPpsReq), (uint8_t*)ppsRes, sizeof(rfalIsoDepPpsRes), &gIsoDep.rxBufLen, RFAL_TXRX_FLAGS_DEFAULT, RFAL_ISODEP_T4T_FWT_ACTIVATION );
     return rfalStartTransceive( &ctx );
@@ -2024,11 +2024,11 @@ static ReturnCode rfalIsoDepGetPPSSTatus( void )
 
 
 /*******************************************************************************/
-ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes )
+ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepPpsRes *ppsRes )
 {
     ReturnCode ret;
     
-    RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartPPS(DID, DSI, DRI, ppsRes) );
+    RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartPPS(DID, DSI_ID, DRI, ppsRes) );
     rfalRunBlocking( ret, rfalIsoDepGetPPSSTatus() );
     
     return ret;
@@ -2039,11 +2039,11 @@ ReturnCode rfalIsoDepPPS( uint8_t DID, rfalBitRate DSI, rfalBitRate DRI, rfalIso
 
 #if RFAL_FEATURE_NFCB
 
-static ReturnCode rfalIsoDepStartATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen )
+static ReturnCode rfalIsoDepStartATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen )
 {
     rfalTransceiveContext ctx;
     
-    if( (attribRes == NULL) || (attribResLen == NULL) || (DSI > RFAL_BR_848) || (DRI > RFAL_BR_848) || ((DID > RFAL_ISODEP_DID_MAX) && (DID != RFAL_ISODEP_NO_DID)) )
+    if( (attribRes == NULL) || (attribResLen == NULL) || (DSI_ID > RFAL_BR_848) || (DRI > RFAL_BR_848) || ((DID > RFAL_ISODEP_DID_MAX) && (DID != RFAL_ISODEP_NO_DID)) )
     {
         return RFAL_ERR_NONE;
     }
@@ -2056,7 +2056,7 @@ static ReturnCode rfalIsoDepStartATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, 
     /* Compose ATTRIB command */
     gIsoDep.actv.attribReq.cmd          = RFAL_ISODEP_CMD_ATTRIB;
     gIsoDep.actv.attribReq.Param.PARAM1 = PARAM1;
-    gIsoDep.actv.attribReq.Param.PARAM2 = ( ((((uint8_t)DSI<<RFAL_ISODEP_ATTRIB_PARAM2_DSI_SHIFT) | ((uint8_t)DRI<<RFAL_ISODEP_ATTRIB_PARAM2_DRI_SHIFT)) & RFAL_ISODEP_ATTRIB_PARAM2_DXI_MASK) | ((uint8_t)FSDI & RFAL_ISODEP_ATTRIB_PARAM2_FSDI_MASK) );
+    gIsoDep.actv.attribReq.Param.PARAM2 = ( ((((uint8_t)DSI_ID<<RFAL_ISODEP_ATTRIB_PARAM2_DSI_SHIFT) | ((uint8_t)DRI<<RFAL_ISODEP_ATTRIB_PARAM2_DRI_SHIFT)) & RFAL_ISODEP_ATTRIB_PARAM2_DXI_MASK) | ((uint8_t)FSDI & RFAL_ISODEP_ATTRIB_PARAM2_FSDI_MASK) );
     gIsoDep.actv.attribReq.Param.PARAM3 = PARAM3;
     gIsoDep.actv.attribReq.Param.PARAM4 = (DID & RFAL_ISODEP_ATTRIB_PARAM4_DID_MASK);
     RFAL_MEMCPY(gIsoDep.actv.attribReq.nfcid0, nfcid0, RFAL_NFCB_NFCID0_LEN);
@@ -2101,11 +2101,11 @@ static ReturnCode rfalIsoDepGetATTRIBStatus( void )
 
 
 /*******************************************************************************/
-ReturnCode rfalIsoDepATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen )
+ReturnCode rfalIsoDepATTRIB( const uint8_t* nfcid0, uint8_t PARAM1, rfalBitRate DSI_ID, rfalBitRate DRI, rfalIsoDepFSxI FSDI, uint8_t PARAM3, uint8_t DID, const uint8_t* HLInfo, uint8_t HLInfoLen, uint32_t fwt, rfalIsoDepAttribRes *attribRes, uint8_t *attribResLen )
 {
     ReturnCode ret;
     
-    RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartATTRIB( nfcid0, PARAM1, DSI, DRI, FSDI, PARAM3, DID, HLInfo, HLInfoLen, fwt, attribRes, attribResLen ) );
+    RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartATTRIB( nfcid0, PARAM1, DSI_ID, DRI, FSDI, PARAM3, DID, HLInfo, HLInfoLen, fwt, attribRes, attribResLen ) );
     rfalRunBlocking( ret, rfalIsoDepGetATTRIBStatus() );
     
     return ret;
@@ -2144,7 +2144,7 @@ ReturnCode rfalIsoDepPollAStartActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rfa
     /* Start RATS Transceive */
     RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartRATS( FSDI, DID, &rfalIsoDepDev->activation.A.Listener.ATS, &rfalIsoDepDev->activation.A.Listener.ATSLen ) );
     
-    rfalIsoDepDev->info.DSI = maxBR;
+    rfalIsoDepDev->info.DSI_ID = maxBR;
     gIsoDep.actvDev     = rfalIsoDepDev;
     gIsoDep.cntRRetrys  = gIsoDep.maxRetriesRATS;
     gIsoDep.state       = ISODEP_ST_PCD_ACT_RATS;
@@ -2207,14 +2207,14 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void )
                 }
                 else /* ATS received */
                 {
-                    maxBR = gIsoDep.actvDev->info.DSI;             /* Retrieve requested max bitrate */
+                    maxBR = gIsoDep.actvDev->info.DSI_ID;             /* Retrieve requested max bitrate */
                     
                     /*******************************************************************************/
                     /* Process ATS Response                                                        */
                     gIsoDep.actvDev->info.FWI  = RFAL_ISODEP_FWI_DEFAULT; /* Default value   EMVCo 2.6  5.7.2.6  */
                     gIsoDep.actvDev->info.SFGI = 0U;
                     gIsoDep.actvDev->info.MBL  = 0U;
-                    gIsoDep.actvDev->info.DSI  = RFAL_BR_106;
+                    gIsoDep.actvDev->info.DSI_ID  = RFAL_BR_106;
                     gIsoDep.actvDev->info.DRI  = RFAL_BR_106;
                     gIsoDep.actvDev->info.FSxI = (uint8_t)RFAL_ISODEP_FSXI_32;     /* FSC default value is 32 bytes  ISO14443-A  5.2.3 */
                     
@@ -2234,7 +2234,7 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void )
                         /* Check if TA is present */
                         if( (gIsoDep.actvDev->activation.A.Listener.ATS.T0 & RFAL_ISODEP_ATS_T0_TA_PRESENCE_MASK) != 0U )
                         {
-                            rfalIsoDepCalcBitRate( maxBR, ((uint8_t*)&gIsoDep.actvDev->activation.A.Listener.ATS)[msgIt++], &gIsoDep.actvDev->info.DSI, &gIsoDep.actvDev->info.DRI );
+                            rfalIsoDepCalcBitRate( maxBR, ((uint8_t*)&gIsoDep.actvDev->activation.A.Listener.ATS)[msgIt++], &gIsoDep.actvDev->info.DSI_ID, &gIsoDep.actvDev->info.DRI );
                         }
                         
                         /* Check if TB is present */
@@ -2274,10 +2274,10 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void )
                     
                     /*******************************************************************************/
                     /* If higher bit rates are supported by both devices, send PPS                 */
-                    if( (gIsoDep.actvDev->info.DSI != RFAL_BR_106) || (gIsoDep.actvDev->info.DRI != RFAL_BR_106) )
+                    if( (gIsoDep.actvDev->info.DSI_ID != RFAL_BR_106) || (gIsoDep.actvDev->info.DRI != RFAL_BR_106) )
                     {
                         /* Send PPS */ /*  PRQA S 0310 1 # MISRA 11.3 - Intentional safe cast to avoiding buffer duplication */
-                        RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartPPS( gIsoDep.actvDev->info.DID, gIsoDep.actvDev->info.DSI, gIsoDep.actvDev->info.DRI, (rfalIsoDepPpsRes*)&gIsoDep.ctrlBuf ));
+                        RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartPPS( gIsoDep.actvDev->info.DID, gIsoDep.actvDev->info.DSI_ID, gIsoDep.actvDev->info.DRI, (rfalIsoDepPpsRes*)&gIsoDep.ctrlBuf ));
                         
                         gIsoDep.state = ISODEP_ST_PCD_ACT_PPS;
                         return RFAL_ERR_BUSY;
@@ -2297,14 +2297,14 @@ ReturnCode rfalIsoDepPollAGetActivationStatus( void )
                 /* Check whether PPS has been acknowledge */
                 if( ret == RFAL_ERR_NONE )
                 {
-                    /* DSI code the divisor from PICC to PCD */
+                    /* DSI_ID code the divisor from PICC to PCD */
                     /* DRI code the divisor from PCD to PICC */
-                    rfalSetBitRate( gIsoDep.actvDev->info.DRI, gIsoDep.actvDev->info.DSI );
+                    rfalSetBitRate( gIsoDep.actvDev->info.DRI, gIsoDep.actvDev->info.DSI_ID );
                 }
                 else
                 {
                     /* If PPS has faled keep activation bit rate */
-                    gIsoDep.actvDev->info.DSI = RFAL_BR_106;
+                    gIsoDep.actvDev->info.DSI_ID = RFAL_BR_106;
                     gIsoDep.actvDev->info.DRI = RFAL_BR_106;
                     
                     /* Ignore PPS response fail, proceed to data exchange */
@@ -2400,13 +2400,13 @@ ReturnCode rfalIsoDepPollBStartActivation( rfalIsoDepFSxI FSDI, uint8_t DID, rfa
     
     
     /* Calculate max Bit Rate */
-    rfalIsoDepCalcBitRate( maxBR, nfcbDev->sensbRes.protInfo.BRC, &rfalIsoDepDev->info.DSI, &rfalIsoDepDev->info.DRI );
+    rfalIsoDepCalcBitRate( maxBR, nfcbDev->sensbRes.protInfo.BRC, &rfalIsoDepDev->info.DSI_ID, &rfalIsoDepDev->info.DRI );
     
     /***************************************************************************/
     /* Send ATTRIB Command                                                     */
     RFAL_EXIT_ON_ERR( ret, rfalIsoDepStartATTRIB( (const uint8_t*)&nfcbDev->sensbRes.nfcid0,
                                (((nfcbDev->sensbRes.protInfo.FwiAdcFo & RFAL_NFCB_SENSB_RES_ADC_ADV_FEATURE_MASK) != 0U) ? PARAM1 : RFAL_ISODEP_ATTRIB_REQ_PARAM1_DEFAULT),
-                               rfalIsoDepDev->info.DSI,
+                               rfalIsoDepDev->info.DSI_ID,
                                rfalIsoDepDev->info.DRI,
                                FSDI,
                                (gIsoDep.compMode == RFAL_COMPLIANCE_MODE_EMV) ? RFAL_NFCB_SENSB_RES_PROTO_ISO_MASK : (nfcbDev->sensbRes.protInfo.FsciProType & ( (RFAL_NFCB_SENSB_RES_PROTO_TR2_MASK<<RFAL_NFCB_SENSB_RES_PROTO_TR2_SHIFT) | RFAL_NFCB_SENSB_RES_PROTO_ISO_MASK)),  /* EMVCo 2.6 6.4.1.9 */
@@ -2452,9 +2452,9 @@ ReturnCode rfalIsoDepPollBGetActivationStatus( void )
                 gIsoDep.actvDev->info.MBL = (gIsoDep.actvDev->info.FSx * ((uint32_t)1U<<(mbli-1U)));
             }
             
-            /* DSI code the divisor from PICC to PCD */
+            /* DSI_ID code the divisor from PICC to PCD */
             /* DRI code the divisor from PCD to PICC */
-            rfalSetBitRate( gIsoDep.actvDev->info.DRI, gIsoDep.actvDev->info.DSI );
+            rfalSetBitRate( gIsoDep.actvDev->info.DRI, gIsoDep.actvDev->info.DSI_ID );
             
             
             /* REMARK: SoF EoF TR0 and TR1 are not passed on to RF layer */
@@ -2466,7 +2466,7 @@ ReturnCode rfalIsoDepPollBGetActivationStatus( void )
         }
         else
         {
-            gIsoDep.actvDev->info.DSI = RFAL_BR_106;
+            gIsoDep.actvDev->info.DSI_ID = RFAL_BR_106;
             gIsoDep.actvDev->info.DRI = RFAL_BR_106;
         }
         
@@ -2599,7 +2599,7 @@ ReturnCode rfalIsoDepPollHandleSParameters( rfalIsoDepDevice *rfalIsoDepDev, rfa
     RFAL_EXIT_ON_ERR( ret, rfalSetBitRate( txBR, rxBR ) );
     
     rfalIsoDepDev->info.DRI = txBR;
-    rfalIsoDepDev->info.DSI = rxBR;
+    rfalIsoDepDev->info.DSI_ID = rxBR;
     
     return RFAL_ERR_NONE;
 }
