@@ -13,6 +13,7 @@ These include:
   uses RFC6979 for deterministic signatures)
 - ECDSA public key derivation
 - BIP340 Schnorr signature signing/verifying
+- eCash Schnorr variant signing/verifying
 - Base32 (RFC4648 and custom alphabets)
 - Base58 address representation
 - Ed25519 signing/verifying (also SHA3 and Keccak variants)
