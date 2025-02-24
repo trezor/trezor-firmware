@@ -393,9 +393,6 @@ async def _handle_credential_request(
         autoconnect=autoconnect,
     )
     credential = issue_credential(message.host_static_pubkey, credential_metadata)
-    ctx.channel_ctx.channel_cache.set_host_static_pubkey(
-        bytearray(message.host_static_pubkey)
-    )  # TODO This could raise an exception, should be handled?
 
     return await ctx.call_any(
         ThpCredentialResponse(
@@ -416,6 +413,7 @@ async def _handle_end_request(
 
 
 async def _end_pairing(ctx: PairingContext) -> ThpEndResponse:
+    ctx.channel_ctx.replace_old_channels_with_the_same_host_pubkey()
     ctx.channel_ctx.set_channel_state(ChannelState.ENCRYPTED_TRANSPORT)
     return ThpEndResponse()
 
