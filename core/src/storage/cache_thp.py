@@ -232,6 +232,41 @@ def create_or_replace_session(
     return _SESSIONS[index]
 
 
+def _migrate_sessions(old_channel: ChannelCache, new_channel: ChannelCache) -> None:
+    for session in _SESSIONS:
+        if session.channel_id == old_channel.channel_id:
+            session.channel_id[:] = new_channel.channel_id
+
+
+def _replace_channel(old_channel: ChannelCache, new_channel: ChannelCache) -> None:
+    _migrate_sessions(old_channel, new_channel)
+    old_channel.clear()
+
+
+def conditionally_replace_channel(
+    new_channel: ChannelCache, required_state: int, required_key: int
+) -> bool:
+    """Replaces "old channel" cache entry with a `new_channel` if two conditions are met:
+
+    1. The "old channel" is in a state `required_state`
+    2. The "old channel" has the same value for `required_key` as the `new_channel`
+
+
+    Returns: bool - whether any channel was replaced.
+    """
+    was_any_channel_replaced: bool = False
+    state = required_state.to_bytes(_CHANNEL_STATE_LENGTH, "big")
+    for channel in _CHANNELS:
+        if channel.channel_id == new_channel.channel_id:
+            continue
+        if channel.state == state and channel.get(required_key) == new_channel.get(
+            required_key
+        ):
+            _replace_channel(channel, new_channel)
+            was_any_channel_replaced = True
+    return was_any_channel_replaced
+
+
 def _get_usage_counter_and_increment() -> int:
     global _usage_counter
     _usage_counter += 1
@@ -343,7 +378,7 @@ def clear_all_except_one_session_keys(excluded: Tuple[bytes, bytes]) -> None:
             channel.clear()
 
     for session in _SESSIONS:
-        if session.channel_id != cid and session.session_id != sid:
+        if session.channel_id != cid or session.session_id != sid:
             session.clear()
         else:
             s_last_usage = session.last_usage

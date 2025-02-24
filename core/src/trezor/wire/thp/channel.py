@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 
 from storage.cache_common import (
     CHANNEL_HANDSHAKE_HASH,
+    CHANNEL_HOST_STATIC_PUBKEY,
     CHANNEL_KEY_RECEIVE,
     CHANNEL_KEY_SEND,
     CHANNEL_NONCE_RECEIVE,
@@ -13,6 +14,7 @@ from storage.cache_thp import (
     TAG_LENGTH,
     ChannelCache,
     clear_sessions_with_channel_id,
+    conditionally_replace_channel,
 )
 from trezor import log, loop, protobuf, utils, workflow
 from trezor.wire.errors import WireBufferError
@@ -110,6 +112,14 @@ class Channel:
         self.channel_cache.state = bytearray(state.to_bytes(1, "big"))
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("set_channel_state: ", state_to_str(state))
+
+    def replace_old_channels_with_the_same_host_pubkey(self) -> None:
+        was_any_replaced = conditionally_replace_channel(
+            new_channel=self.channel_cache,
+            required_state=ChannelState.ENCRYPTED_TRANSPORT,
+            required_key=CHANNEL_HOST_STATIC_PUBKEY,
+        )
+        log.debug(__name__, "Was any channel replaced? %s", str(was_any_replaced))
 
     # READ and DECRYPT
 
