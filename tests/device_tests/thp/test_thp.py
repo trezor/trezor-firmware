@@ -6,7 +6,8 @@ from hashlib import sha256
 import pytest
 import typing_extensions as tx
 
-from trezorlib import protobuf
+from tests.common import get_test_address
+from trezorlib import exceptions, protobuf
 from trezorlib.client import ProtocolV2Channel
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import (
@@ -47,18 +48,32 @@ def _prepare_protocol(client: Client) -> ProtocolV2Channel:
     protocol = client.protocol
     assert isinstance(protocol, ProtocolV2Channel)
     protocol._reset_sync_bits()
-    return protocol
-
-
-def _prepare_protocol_for_pairing(client: Client) -> ProtocolV2Channel:
-    protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
-    protocol._do_handshake()
     return protocol
 
 
-def _handle_pairing_request(client: Client, protocol: ProtocolV2Channel) -> None:
-    protocol._send_message(ThpPairingRequest())
+def _prepare_protocol_for_pairing(
+    client: Client, host_static_privkey: bytes | None = None
+) -> ProtocolV2Channel:
+    protocol = _prepare_protocol(client)
+    protocol._do_handshake(host_static_privkey=host_static_privkey)
+    return protocol
+
+
+def _get_encrypted_transport_protocol(
+    client: Client, host_static_privkey: bytes | None = None
+) -> ProtocolV2Channel:
+    protocol = _prepare_protocol_for_pairing(
+        client, host_static_privkey=host_static_privkey
+    )
+    protocol._do_pairing(client.debug)
+    return protocol
+
+
+def _handle_pairing_request(
+    client: Client, protocol: ProtocolV2Channel, host_name: str | None = None
+) -> None:
+    protocol._send_message(ThpPairingRequest(host_name=host_name))
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "pairing_request"
 
@@ -126,7 +141,7 @@ def test_handshake(client: Client) -> None:
 
 def test_pairing_qr_code(client: Client) -> None:
     protocol = _prepare_protocol_for_pairing(client)
-    _handle_pairing_request(client, protocol)
+    _handle_pairing_request(client, protocol, "TestTrezor QrCode")
     protocol._send_message(
         ThpSelectMethod(selected_pairing_method=ThpPairingMethod.QrCode)
     )
@@ -166,7 +181,7 @@ def test_pairing_qr_code(client: Client) -> None:
 def test_pairing_code_entry(client: Client) -> None:
     protocol = _prepare_protocol_for_pairing(client)
 
-    _handle_pairing_request(client, protocol)
+    _handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
 
     protocol._send_message(
         ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
@@ -232,9 +247,9 @@ def test_pairing_nfc(client: Client) -> None:
     protocol._has_valid_channel = True
 
 
-def _nfc_pairing(client: Client, protocol: ProtocolV2Channel):
+def _nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
 
-    _handle_pairing_request(client, protocol)
+    _handle_pairing_request(client, protocol, "TestTrezor NfcPairing")
 
     protocol._send_message(
         ThpSelectMethod(selected_pairing_method=ThpPairingMethod.NFC)
@@ -273,7 +288,7 @@ def _nfc_pairing(client: Client, protocol: ProtocolV2Channel):
     assert tag_trezor_msg.tag == computed_tag
 
 
-def test_credential_phase(client: Client):
+def test_credential_phase(client: Client) -> None:
     protocol = _prepare_protocol_for_pairing(client)
     _nfc_pairing(client, protocol)
 
@@ -324,3 +339,48 @@ def test_credential_phase(client: Client):
     protocol._do_handshake(credential_auto, host_static_privkey)
     protocol._send_message(ThpEndRequest())
     protocol._read_message(ThpEndResponse)
+
+
+@pytest.mark.setup_client(passphrase=True)
+def test_channel_replacement(client: Client) -> None:
+    assert client.features.passphrase_protection is True
+
+    host_static_privkey = curve25519.get_private_key(os.urandom(32))
+    host_static_privkey_2 = curve25519.get_private_key(os.urandom(32))
+
+    assert host_static_privkey != host_static_privkey_2
+
+    client.protocol = _get_encrypted_transport_protocol(client, host_static_privkey)
+
+    session = client.get_session(passphrase="TREZOR", session_id=20)
+    address = get_test_address(session)
+
+    session_2 = client.get_session(passphrase="ROZERT", session_id=30)
+    address_2 = get_test_address(session_2)
+    assert address != address_2
+
+    # create new channel using the same host_static_privkey
+    client.protocol = _get_encrypted_transport_protocol(client, host_static_privkey)
+    session_3 = client.get_session(passphrase="OKIDOKI", session_id=40)
+    address_3 = get_test_address(session_3)
+    assert address_3 != address_2
+
+    # test address on regenerated channel
+    new_address = get_test_address(session)
+    assert address == new_address
+    new_address_3 = get_test_address(session_3)
+    assert address_3 == new_address_3
+
+    # create new channel using different host_static_privkey
+    client.protocol = _get_encrypted_transport_protocol(client, host_static_privkey_2)
+    with pytest.raises(exceptions.TrezorFailure) as e_1:
+        _ = get_test_address(session)
+    assert str(e_1.value.message) == "Invalid session"
+
+    with pytest.raises(exceptions.TrezorFailure) as e_2:
+        _ = get_test_address(session_3)
+    assert str(e_2.value.message) == "Invalid session"
+
+    session_4 = client.get_session(passphrase="TREZOR", session_id=80)
+    super_new_address = get_test_address(session_4)
+    assert address == super_new_address
