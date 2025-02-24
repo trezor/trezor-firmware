@@ -942,6 +942,8 @@ if not utils.BITCOIN_ONLY:
     ) -> None:
         (amount_label, amount) = amount_item
         (fee_label, fee) = fee_item
+        if not fee_label and not fee:
+            amount_label = f"\n\n{amount_label}"
 
         items = (
             (f"{TR.words__account}:", account),
