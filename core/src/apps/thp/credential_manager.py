@@ -117,4 +117,4 @@ def _encode_message_into_new_buffer(msg: protobuf.MessageType) -> bytes:
     msg_len = protobuf.encoded_length(msg)
     new_buffer = bytearray(msg_len)
     protobuf.encode(new_buffer, msg)
-    return new_buffer
+    return bytes(new_buffer)
