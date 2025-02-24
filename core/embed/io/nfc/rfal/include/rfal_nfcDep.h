@@ -174,7 +174,7 @@
 #define rfalNfcDepDx2BRS( br )         ( (((uint8_t)(br) & RFAL_NFCDEP_BRS_Dx_MASK) << RFAL_NFCDEP_BRS_DSI_POS) | ((uint8_t)(br) & RFAL_NFCDEP_BRS_Dx_MASK) )
 
 #define rfalNfcDepBRS2DRI( brs )       (uint8_t)( (uint8_t)(brs) & RFAL_NFCDEP_BRS_Dx_MASK )                              /*!< Returns the DRI value from the given BRS byte */
-#define rfalNfcDepBRS2DSI( brs )       (uint8_t)( ((uint8_t)(brs) >> RFAL_NFCDEP_BRS_DSI_POS) & RFAL_NFCDEP_BRS_Dx_MASK ) /*!< Returns the DSI value from the given BRS byte */
+#define rfalNfcDepBRS2DSI( brs )       (uint8_t)( ((uint8_t)(brs) >> RFAL_NFCDEP_BRS_DSI_POS) & RFAL_NFCDEP_BRS_Dx_MASK ) /*!< Returns the DSI_ID value from the given BRS byte */
 
 #define rfalNfcDepPP2LR( PPx )         ( ((uint8_t)(PPx) & RFAL_NFCDEP_PP_LR_MASK ) >> RFAL_NFCDEP_PP_LR_SHIFT)  /*!< Returns the LR value from the given PPx byte  */
 #define rfalNfcDepLR2PP( LRx )         ( ((uint8_t)(LRx) << RFAL_NFCDEP_PP_LR_SHIFT) & RFAL_NFCDEP_PP_LR_MASK)   /*!< Returns the PP byte with the given LRx value  */
@@ -332,7 +332,7 @@ typedef struct {
     uint32_t          dFWT;       /*!< Delta FWT to be used (1/fc)                */
     uint8_t           LR;         /*!< Length Reduction coding the max payload    */
     uint16_t          FS;         /*!< Frame Size                                 */
-    rfalBitRate       DSI;        /*!< Bit Rate coding from Initiator  to Target  */
+    rfalBitRate       DSI_ID;        /*!< Bit Rate coding from Initiator  to Target  */
     rfalBitRate       DRI;        /*!< Bit Rate coding from Target to Initiator   */
     uint8_t           DID;        /*!< Device ID (RFAL_NFCDEP_DID_NO if no DID)   */
     uint8_t           NAD;        /*!< Node ADdress (RFAL_NFCDEP_NAD_NO if no NAD)*/

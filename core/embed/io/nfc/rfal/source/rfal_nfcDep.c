@@ -1928,7 +1928,7 @@ static ReturnCode nfcipTargetHandleActivation( rfalNfcDepDevice *nfcDepDev, uint
         {
             /* Update Bitrate info */
             /* PRQA S 4342 2 # MISRA 10.5 - Layout of enum rfalBitRate and definition of rfalNfcDepBRS2DSI guarantee no invalid enum values to be created */
-            nfcDepDev->info.DSI = (rfalBitRate)rfalNfcDepBRS2DSI( *outBRS );   /* DSI codes the bit rate from Initiator to Target */
+            nfcDepDev->info.DSI_ID = (rfalBitRate)rfalNfcDepBRS2DSI( *outBRS );   /* DSI_ID codes the bit rate from Initiator to Target */
             nfcDepDev->info.DRI = (rfalBitRate)rfalNfcDepBRS2DRI( *outBRS );   /* DRI codes the bit rate from Target to Initiator */
             
             /* Update Length Reduction and Frame Size */
@@ -1940,7 +1940,7 @@ static ReturnCode nfcipTargetHandleActivation( rfalNfcDepDevice *nfcDepDev, uint
             nfcDepDev->activation.Initiator.ATR_REQ.PPi |= rfalNfcDepLR2PP( gNfcip.cfg.lr );
         }
         
-        rfalSetBitRate( RFAL_BR_KEEP, gNfcip.nfcDepDev->info.DSI );
+        rfalSetBitRate( RFAL_BR_KEEP, gNfcip.nfcDepDev->info.DSI_ID );
         
         RFAL_EXIT_ON_ERR( ret, nfcipTx( NFCIP_CMD_PSL_RES, txBuf, NULL, 0, 0, NFCIP_NO_FWT ) );
     }
@@ -2264,7 +2264,7 @@ ReturnCode rfalNfcDepInitiatorHandleActivation( rfalNfcDepAtrParam* param, rfalB
     nfcDepDev->info.FWT   = rfalNfcDepCalculateRWT( nfcDepDev->info.WT );
     nfcDepDev->info.dFWT  = RFAL_NFCDEP_WT_DELTA;
     
-    rfalGetBitRate( &nfcDepDev->info.DSI, &nfcDepDev->info.DRI );
+    rfalGetBitRate( &nfcDepDev->info.DSI_ID, &nfcDepDev->info.DRI );
     
     
     
@@ -2272,7 +2272,7 @@ ReturnCode rfalNfcDepInitiatorHandleActivation( rfalNfcDepAtrParam* param, rfalB
     /* Check if a PSL needs to be sent                                                */
     /*******************************************************************************/
     sendPSL = false;
-    PSL_BRS = rfalNfcDepDx2BRS( nfcDepDev->info.DSI );  /* Set current bit rate divisor on both directions  */
+    PSL_BRS = rfalNfcDepDx2BRS( nfcDepDev->info.DSI_ID );  /* Set current bit rate divisor on both directions  */
     PSL_FSL = nfcDepDev->info.LR;                       /* Set current Frame Size                           */
     
     
@@ -2307,7 +2307,7 @@ ReturnCode rfalNfcDepInitiatorHandleActivation( rfalNfcDepAtrParam* param, rfalB
     /*******************************************************************************/
     /* Check Baud rates                                                            */
     /*******************************************************************************/
-    if( (nfcDepDev->info.DSI != desiredBR) && (desiredBR != RFAL_BR_KEEP) )    /* if desired BR is different    */
+    if( (nfcDepDev->info.DSI_ID != desiredBR) && (desiredBR != RFAL_BR_KEEP) )    /* if desired BR is different    */
     {
         if( nfcipDxIsSupported( (uint8_t)desiredBR, nfcDepDev->activation.Target.ATR_RES.BRt, nfcDepDev->activation.Target.ATR_RES.BSt ) )  /* if desired BR is supported     */    /* MISRA 13.5 */
         {
@@ -2331,10 +2331,10 @@ ReturnCode rfalNfcDepInitiatorHandleActivation( rfalNfcDepAtrParam* param, rfalB
         RFAL_EXIT_ON_ERR( ret, rfalNfcDepPSL(PSL_BRS, PSL_FSL) );
         
         /* Check if bit rate has been changed */
-        if( nfcDepDev->info.DSI != desiredBR )
+        if( nfcDepDev->info.DSI_ID != desiredBR )
         {
             /* Check if device was in Passive NFC-A and went to higher bit rates, use NFC-F */
-            if( (nfcDepDev->info.DSI == RFAL_BR_106) && (gNfcip.cfg.commMode == RFAL_NFCDEP_COMM_PASSIVE) )
+            if( (nfcDepDev->info.DSI_ID == RFAL_BR_106) && (gNfcip.cfg.commMode == RFAL_NFCDEP_COMM_PASSIVE) )
             {
                 
             #if RFAL_FEATURE_NFCF 
@@ -2346,10 +2346,10 @@ ReturnCode rfalNfcDepInitiatorHandleActivation( rfalNfcDepAtrParam* param, rfalB
                 
             }
             
-            nfcDepDev->info.DRI  = desiredBR;  /* DSI Bit Rate coding from Initiator  to Target  */
-            nfcDepDev->info.DSI  = desiredBR;  /* DRI Bit Rate coding from Target to Initiator   */
+            nfcDepDev->info.DRI  = desiredBR;  /* DSI_ID Bit Rate coding from Initiator  to Target  */
+            nfcDepDev->info.DSI_ID  = desiredBR;  /* DRI Bit Rate coding from Target to Initiator   */
             
-            rfalSetBitRate( nfcDepDev->info.DSI, nfcDepDev->info.DRI );
+            rfalSetBitRate( nfcDepDev->info.DSI_ID, nfcDepDev->info.DRI );
         }
         
         
@@ -2451,7 +2451,7 @@ ReturnCode rfalNfcDepListenStartActivation( const rfalNfcDepTargetParam *param, 
     rxParam.nfcDepDev->info.FWT   = NFCIP_NO_FWT;
     rxParam.nfcDepDev->info.dFWT  = NFCIP_NO_FWT;
     
-    rfalGetBitRate( &rxParam.nfcDepDev->info.DSI, &rxParam.nfcDepDev->info.DRI );
+    rfalGetBitRate( &rxParam.nfcDepDev->info.DSI_ID, &rxParam.nfcDepDev->info.DRI );
     
     
     /* Store Device Info location, updated upon a PSL  */
@@ -2523,16 +2523,16 @@ ReturnCode rfalNfcDepListenGetActivationStatus( void )
             
             if( BRS != RFAL_NFCDEP_BRS_MAINTAIN )
             {
-                /* DSI codes the bit rate from Initiator to Target */
+                /* DSI_ID codes the bit rate from Initiator to Target */
                 /* DRI codes the bit rate from Target to Initiator */
                 
                 if( gNfcip.cfg.commMode == RFAL_NFCDEP_COMM_ACTIVE )
                 {
-                    RFAL_EXIT_ON_ERR( err, rfalSetMode( RFAL_MODE_LISTEN_ACTIVE_P2P, gNfcip.nfcDepDev->info.DRI, gNfcip.nfcDepDev->info.DSI ));
+                    RFAL_EXIT_ON_ERR( err, rfalSetMode( RFAL_MODE_LISTEN_ACTIVE_P2P, gNfcip.nfcDepDev->info.DRI, gNfcip.nfcDepDev->info.DSI_ID ));
                 }
                 else
                 {
-                    RFAL_EXIT_ON_ERR( err, rfalSetMode( ((RFAL_BR_106 == gNfcip.nfcDepDev->info.DRI) ? RFAL_MODE_LISTEN_NFCA : RFAL_MODE_LISTEN_NFCF), gNfcip.nfcDepDev->info.DRI, gNfcip.nfcDepDev->info.DSI ));
+                    RFAL_EXIT_ON_ERR( err, rfalSetMode( ((RFAL_BR_106 == gNfcip.nfcDepDev->info.DRI) ? RFAL_MODE_LISTEN_NFCA : RFAL_MODE_LISTEN_NFCF), gNfcip.nfcDepDev->info.DRI, gNfcip.nfcDepDev->info.DSI_ID ));
                 }
             }
             break;
