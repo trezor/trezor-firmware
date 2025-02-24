@@ -321,6 +321,7 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
 
     # key is decoded in handshake._handle_th2_crypto
     host_static_pubkey = host_encrypted_static_pubkey[:PUBKEY_LENGTH]
+    ctx.channel_cache.set_host_static_pubkey(bytearray(host_static_pubkey))
 
     paired: bool = False
     trezor_state = _TREZOR_STATE_UNPAIRED
@@ -335,7 +336,6 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
             if paired:
                 trezor_state = _TREZOR_STATE_PAIRED
                 ctx.credential = credential
-                ctx.channel_cache.set_host_static_pubkey(bytearray(host_static_pubkey))
             else:
                 ctx.credential = None
         except DataError as e:
