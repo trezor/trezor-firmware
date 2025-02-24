@@ -177,6 +177,19 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/trezor-crypto/zkp_ecdsa.c',
         'vendor/trezor-crypto/zkp_bip340.c',
     ]
+    SOURCE_MOD_MLKEM = [
+        'vendor/mlkem-native/mlkem/compress.c',
+        'vendor/mlkem-native/mlkem/indcpa.c',
+        'vendor/mlkem-native/mlkem/kem.c',
+        'vendor/mlkem-native/mlkem/poly.c',
+        'vendor/mlkem-native/mlkem/poly_k.c',
+        'vendor/mlkem-native/mlkem/sampling.c',
+        'vendor/mlkem-native/mlkem/verify.c',
+        'vendor/mlkem-native/mlkem/fips202/fips202.c',
+        'vendor/mlkem-native/mlkem/fips202/fips202x4.c',
+        'vendor/mlkem-native/mlkem/fips202/keccakf1600.c',
+        'vendor/trezor-crypto/mlkem.c',
+    ]
 
 # AES-GCM
 if FEATURE_FLAGS["AES_GCM"]:
@@ -778,6 +791,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_UNIX))
+obj_program.extend(env.Object(source=SOURCE_MOD_MLKEM, CCFLAGS='$CCFLAGS'))
 if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 

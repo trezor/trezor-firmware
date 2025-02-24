@@ -143,6 +143,19 @@ SOURCE_MOD_CRYPTO += [
     'vendor/trezor-crypto/slip39_english.c',
     'vendor/trezor-crypto/tls_prf.c',
 ]
+SOURCE_MOD_MLKEM = [
+    'vendor/mlkem-native/mlkem/compress.c',
+    'vendor/mlkem-native/mlkem/indcpa.c',
+    'vendor/mlkem-native/mlkem/kem.c',
+    'vendor/mlkem-native/mlkem/poly.c',
+    'vendor/mlkem-native/mlkem/poly_k.c',
+    'vendor/mlkem-native/mlkem/sampling.c',
+    'vendor/mlkem-native/mlkem/verify.c',
+    'vendor/mlkem-native/mlkem/fips202/fips202.c',
+    'vendor/mlkem-native/mlkem/fips202/fips202x4.c',
+    'vendor/mlkem-native/mlkem/fips202/keccakf1600.c',
+    'vendor/trezor-crypto/mlkem.c',
+]
 if EVERYTHING:
     SOURCE_MOD_CRYPTO += [
         'vendor/trezor-crypto/cardano.c',
@@ -718,6 +731,7 @@ obj_program.extend(env.Object(source=SOURCE_FIRMWARE))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON))
 obj_program.extend(env.Object(source=SOURCE_MICROPYTHON_SPEED, COPT='-O3'))
 obj_program.extend(env.Object(source=SOURCE_HAL))
+obj_program.extend(env.Object(source=SOURCE_MOD_MLKEM))
 if FROZEN:
     obj_program.extend(env.Object(source=source_mpyc))
 

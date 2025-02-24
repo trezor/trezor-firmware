@@ -89,6 +89,20 @@ def sd_hotswap_enabled() -> bool:
 
 
 # upymod/modtrezorutils/modtrezorutils.c
+def zero_unused_stack() -> None:
+    """
+    Zero unused stack memory.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
+def estimate_unused_stack() -> int:
+    """
+    Estimate unused stack size.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
 def reboot_to_bootloader(
     boot_command : int = 0,
     boot_args : bytes | None = None,
