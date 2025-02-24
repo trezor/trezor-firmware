@@ -424,6 +424,29 @@ def test_label_too_long(client: Client):
 
 
 @pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.parametrize(
+    "value",
+    [
+        pytest.param(None, id="none_default"),
+        pytest.param(
+            -1,
+            marks=pytest.mark.xfail(),
+            id="negative_value",
+        ),
+        pytest.param(0, id="0_min_value"),
+        pytest.param(128, id="128"),
+        pytest.param(255, id="255_max_value"),
+        pytest.param(
+            256,
+            marks=pytest.mark.xfail(),
+            id="256_too_high",
+        ),
+    ],
+)
 @pytest.mark.setup_client(pin=None)
-def test_set_brightness(client: Client):
-    device.set_brightness(client, None)
+def test_set_brightness(client: Client, value: int | None):
+    with client:
+        device.set_brightness(
+            client,
+            value,
+        )
