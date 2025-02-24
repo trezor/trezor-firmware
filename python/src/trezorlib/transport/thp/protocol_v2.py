@@ -282,17 +282,9 @@ class ProtocolV2Channel(Channel):
         h = _sha256_of_two(h, tag_of_empty_string)
 
         # TODO: search for saved credentials
-        if host_static_privkey is not None and credential is not None:
-            host_static_pubkey = curve25519.get_public_key(host_static_privkey)
-        else:
-            credential = None
-            zeroes_32 = int.to_bytes(0, 32, "little")
-            temp_host_static_privkey = curve25519.get_private_key(zeroes_32)
-            temp_host_static_pubkey = curve25519.get_public_key(
-                temp_host_static_privkey
-            )
-            host_static_privkey = temp_host_static_privkey
-            host_static_pubkey = temp_host_static_pubkey
+        if host_static_privkey is None:
+            host_static_privkey = curve25519.get_private_key(os.urandom(32))
+        host_static_pubkey = curve25519.get_public_key(host_static_privkey)
 
         aes_ctx = AESGCM(k)
         encrypted_host_static_pubkey = aes_ctx.encrypt(IV_2, host_static_pubkey, h)
