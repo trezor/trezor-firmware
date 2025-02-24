@@ -1,3 +1,5 @@
+#[cfg(feature = "touch")]
+use crate::ui::event::TouchEvent;
 use crate::ui::{
     component::{base::Component, Qr},
     constant::screen,
@@ -9,6 +11,8 @@ use crate::ui::{
     shape::render_on_display,
     ui_prodtest::ProdtestUI,
 };
+#[cfg(feature = "touch")]
+use heapless::Vec;
 
 impl ProdtestUI for UICaesar {
     fn screen_prodtest_welcome() {
@@ -109,7 +113,15 @@ impl ProdtestUI for UICaesar {
         display::refresh();
     }
 
+    // currently has to be here due to clippy limitations
+    #[cfg(feature = "touch")]
     fn screen_prodtest_touch(_area: Rect) {
         unimplemented!();
+    }
+
+    // currently has to be here due to clippy limitations
+    #[cfg(feature = "touch")]
+    fn screen_prodtest_draw(events: Vec<TouchEvent, 256>) {
+        unimplemented!()
     }
 }

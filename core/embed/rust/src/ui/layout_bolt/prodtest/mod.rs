@@ -3,12 +3,17 @@ use crate::ui::{
     constant::screen,
     display,
     display::Color,
+    event::{
+        TouchEvent,
+        TouchEvent::{TouchEnd, TouchMove, TouchStart},
+    },
     geometry::{Alignment, Offset, Rect},
     layout_bolt::{fonts, theme, UIBolt},
     shape,
     shape::render_on_display,
     ui_prodtest::ProdtestUI,
 };
+use heapless::Vec;
 
 impl ProdtestUI for UIBolt {
     fn screen_prodtest_welcome() {
@@ -132,5 +137,36 @@ impl ProdtestUI for UIBolt {
 
         display::refresh();
         display::set_backlight(theme::backlight::get_backlight_normal());
+    }
+
+    fn screen_prodtest_draw(events: Vec<TouchEvent, 256>) {
+        display::sync();
+
+        render_on_display(None, Some(Color::black()), |target| {
+            for ev in events.iter() {
+                match ev {
+                    TouchStart(p) => {
+                        shape::Bar::new(Rect::from_center_and_size(*p, Offset::new(3, 3)))
+                            .with_fg(Color::rgb(0, 255, 0))
+                            .with_bg(Color::rgb(0, 255, 0))
+                            .render(target);
+                    }
+                    TouchMove(p) => {
+                        shape::Bar::new(Rect::from_center_and_size(*p, Offset::new(1, 1)))
+                            .with_fg(Color::white())
+                            .with_bg(Color::white())
+                            .render(target);
+                    }
+                    TouchEnd(p) => {
+                        shape::Bar::new(Rect::from_center_and_size(*p, Offset::new(3, 3)))
+                            .with_fg(Color::rgb(255, 0, 0))
+                            .with_bg(Color::rgb(255, 0, 0))
+                            .render(target);
+                    }
+                }
+            }
+        });
+
+        display::refresh();
     }
 }

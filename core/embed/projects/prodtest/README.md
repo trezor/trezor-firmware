@@ -211,6 +211,15 @@ haptic-test 3000
 OK
 ```
 
+### touch-draw
+Starts a drawing canvas, where user can draw with finger on pen. Canvas is exited by sending CTRL+C command.
+```
+touch-draw
+# Starting drawing canvas...
+# Press CTRL+C for exit.
+ERROR abort
+```
+
 ### touch-test
 Tests the functionality of the display's touch screen. It draws a filled rectangle in one of the four display quadrants and waits for user interaction.
 
