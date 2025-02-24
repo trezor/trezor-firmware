@@ -828,6 +828,7 @@
     "solana__priority_fee": "Taxa de prioridade",
     "solana__stake": "Stake",
     "solana__stake_account": "Conta de staking",
+    "solana__stake_on_question": "Fazer stake de SOL no {0}?",
     "solana__stake_provider": "Provedor",
     "solana__stake_question": "Fazer stake de SOL?",
     "solana__stake_withdrawal_warning": "A carteira atual não é a autoridade de saque do staking de SOL.",

@@ -829,6 +829,7 @@
     "solana__priority_fee": "Frais de priorité",
     "solana__stake": "Stake",
     "solana__stake_account": "Compte de staking",
+    "solana__stake_on_question": "Staker de l'SOL sur {0} ?",
     "solana__stake_provider": "Fournisseur",
     "solana__stake_question": "Staker de l'SOL ?",
     "solana__stake_withdrawal_warning": "Ce portefeuille ne pourra pas être utilisé pour retirer de ce staking.",

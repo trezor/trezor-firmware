@@ -787,6 +787,7 @@
     "solana__priority_fee": "Priority fee",
     "solana__stake": "Stake",
     "solana__stake_account": "Stake account",
+    "solana__stake_on_question": "Stake SOL on {0}?",
     "solana__stake_provider": "Provider",
     "solana__stake_question": "Stake SOL?",
     "solana__stake_withdrawal_warning": "The current wallet isn't the SOL staking withdraw authority.",

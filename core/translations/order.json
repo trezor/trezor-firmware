@@ -987,5 +987,6 @@
   "985": "solana__stake_withdrawal_warning_title",
   "986": "solana__unstake",
   "987": "solana__unstake_question",
-  "988": "solana__vote_account"
+  "988": "solana__vote_account",
+  "989": "solana__stake_on_question"
 }

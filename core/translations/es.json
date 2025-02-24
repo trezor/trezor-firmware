@@ -829,6 +829,7 @@
     "solana__priority_fee": "Comisión de prioridad",
     "solana__stake": "Hacer stake",
     "solana__stake_account": "Cuenta de stake",
+    "solana__stake_on_question": "¿Hacer stake de SOL en {0}?",
     "solana__stake_provider": "Proveedor",
     "solana__stake_question": "¿Hacer stake de SOL?",
     "solana__stake_withdrawal_warning": "El monedero actual no podrá retirar de este staking.",

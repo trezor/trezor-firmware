@@ -785,6 +785,7 @@ class TR:
     solana__priority_fee: str = "Priority fee"
     solana__stake: str = "Stake"
     solana__stake_account: str = "Stake account"
+    solana__stake_on_question: str = "Stake SOL on {0}?"
     solana__stake_provider: str = "Provider"
     solana__stake_question: str = "Stake SOL?"
     solana__stake_withdrawal_warning: str = "The current wallet isn't the SOL staking withdraw authority."

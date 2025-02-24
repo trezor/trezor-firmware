@@ -1399,6 +1399,8 @@ pub enum TranslatedString {
     solana__unstake_question = 987,  // "Unstake SOL from stake account?"
     #[cfg(feature = "universal_fw")]
     solana__vote_account = 988,  // "Vote account"
+    #[cfg(feature = "universal_fw")]
+    solana__stake_on_question = 989,  // "Stake SOL on {0}?"
 }
 
 impl TranslatedString {
@@ -2794,6 +2796,8 @@ impl TranslatedString {
             Self::solana__unstake_question => "Unstake SOL from stake account?",
             #[cfg(feature = "universal_fw")]
             Self::solana__vote_account => "Vote account",
+            #[cfg(feature = "universal_fw")]
+            Self::solana__stake_on_question => "Stake SOL on {0}?",
         }
     }
 
@@ -4188,6 +4192,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_solana__unstake_question => Some(Self::solana__unstake_question),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_solana__vote_account => Some(Self::solana__vote_account),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_solana__stake_on_question => Some(Self::solana__stake_on_question),
             _ => None,
         }
     }

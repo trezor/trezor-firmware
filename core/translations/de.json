@@ -829,6 +829,7 @@
     "solana__priority_fee": "Prioritätsgebühr",
     "solana__stake": "Stake",
     "solana__stake_account": "Staking-Konto",
+    "solana__stake_on_question": "SOL auf {0} staken?",
     "solana__stake_provider": "Anbieter",
     "solana__stake_question": "SOL Staken?",
     "solana__stake_withdrawal_warning": "Diese Wallet hat keine SOL-Staking Auszahlungsberechtigung.",

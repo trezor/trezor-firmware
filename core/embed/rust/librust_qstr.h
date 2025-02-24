@@ -1111,6 +1111,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__priority_fee;
   MP_QSTR_solana__stake;
   MP_QSTR_solana__stake_account;
+  MP_QSTR_solana__stake_on_question;
   MP_QSTR_solana__stake_provider;
   MP_QSTR_solana__stake_question;
   MP_QSTR_solana__stake_withdrawal_warning;
