@@ -30,6 +30,12 @@ _WRITE: int = const(1)
 # Access to buffer slices
 
 
+def release_lock_if_owner(channel_id: int) -> None:
+    global lock_owner_cid
+    if lock_owner_cid == channel_id:
+        lock_owner_cid = None
+
+
 def get_new_read_buffer(channel_id: int, length: int) -> memoryview:
     return _get_new_buffer(_READ, channel_id, length)
 
