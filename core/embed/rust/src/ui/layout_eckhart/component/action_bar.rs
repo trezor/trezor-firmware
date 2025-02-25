@@ -91,6 +91,13 @@ impl ActionBar {
         self
     }
 
+    pub fn set_touch_expansion(&mut self, expand: Insets) {
+        if let Some(btn) = &mut self.left_button {
+            btn.set_expanded_touch_area(expand);
+        }
+        self.right_button.set_expanded_touch_area(expand);
+    }
+
     pub fn update(&mut self, new_pager: Pager) {
         match &mut self.mode {
             Mode::Double { pager } => {
