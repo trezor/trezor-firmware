@@ -83,6 +83,8 @@ typedef struct {
 
   nrf_rx_callback_t service_listeners[NRF_SERVICE_CNT];
 
+  bool info_valid;
+  nrf_info_t info;
 } nrf_driver_t;
 
 static nrf_driver_t g_nrf_driver = {0};
@@ -140,6 +142,22 @@ static void nrf_stop(void) {
   HAL_SPI_DMAStop(&drv->spi);
   nrf_abort_urt_comm(drv);
   irq_unlock(key);
+}
+
+void nrf_management_rx_cb(const uint8_t *data, uint32_t len) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  switch (data[0]) {
+    case MGMT_RESP_INFO:
+      drv->info_valid = true;
+      memcpy(&drv->info, &data[1], sizeof(drv->info));
+      break;
+    default:
+      break;
+  }
 }
 
 void nrf_init(void) {
@@ -306,6 +324,8 @@ void nrf_init(void) {
 
   drv->tx_request_id = -1;
   drv->initialized = true;
+
+  nrf_register_listener(NRF_SERVICE_MANAGEMENT, nrf_management_rx_cb);
 
   nrf_start();
 }
@@ -524,14 +544,13 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
     } else if (drv->rx_idx >= UART_HEADER_SIZE &&
                drv->rx_idx < (drv->rx_len - 1)) {
       // receive the rest of the message
-
-      drv->rx_buffer.data[drv->rx_idx - UART_HEADER_SIZE] = drv->rx_byte;
-      drv->rx_idx++;
-
-      if (drv->rx_idx >= NRF_MAX_TX_DATA_SIZE) {
+      if (drv->rx_idx >= NRF_MAX_TX_DATA_SIZE + UART_HEADER_SIZE) {
         // message is too long, flush the line
         drv->rx_idx = 0;
         drv->rx_len = 0;
+      } else {
+        drv->rx_buffer.data[drv->rx_idx - UART_HEADER_SIZE] = drv->rx_byte;
+        drv->rx_idx++;
       }
 
     } else if (drv->rx_idx == (drv->rx_len - 1)) {
@@ -695,17 +714,31 @@ bool nrf_reboot_to_bootloader(void) {
 
   HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
 
-  systick_delay_ms(1000);
+  systick_delay_ms(100);
 
   return true;
 }
 
+void nrf_stay_in_bootloader(bool set) {
+  if (set) {
+    HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
+                      GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
+                      GPIO_PIN_RESET);
+  }
+}
+
+bool nrf_in_reserved_gpio(void) {
+  return HAL_GPIO_ReadPin(NRF_IN_GPIO0_PORT, NRF_IN_GPIO0_PIN) != 0;
+}
+
 bool nrf_reboot(void) {
-  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
                     GPIO_PIN_RESET);
   systick_delay_ms(50);
-  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
   return true;
 }
 
@@ -734,6 +767,31 @@ bool nrf_is_running(void) {
   }
 
   return drv->comm_running;
+}
+
+bool nrf_get_info(nrf_info_t *info) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  drv->info_valid = false;
+
+  uint8_t data[1] = {MGMT_CMD_INFO};
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
+    return false;
+  }
+
+  uint32_t timeout = ticks_timeout(100);
+
+  while (!ticks_expired(timeout)) {
+    if (drv->info_valid) {
+      memcpy(info, &drv->info, sizeof(nrf_info_t));
+      return true;
+    }
+  }
+
+  return false;
 }
 
 void nrf_set_dfu_mode(void) {

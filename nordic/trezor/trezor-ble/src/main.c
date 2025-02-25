@@ -39,7 +39,8 @@
 #include <zephyr/logging/log.h>
 
 #include <ble/ble.h>
-#include <power_management/power_management.h>
+#include <management/management.h>
+#include <prodtest/prodtest.h>
 #include <signals/signals.h>
 #include <trz_comm/trz_comm.h>
 
@@ -55,9 +56,11 @@ int main(void) {
 
   ble_init();
 
-  power_management_init();
+  management_init();
 
-  signals_fw_running(true);
+  prodtest_init();
+
+  signals_nrf_ready(true);
 
   for (;;) {
     k_sleep(K_FOREVER);

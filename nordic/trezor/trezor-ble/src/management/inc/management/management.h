@@ -19,29 +19,5 @@
 
 #pragma once
 
-#include <stdbool.h>
-
-// Initializes the Signals module
-bool signals_init(void);
-
-// INPUTS
-
-// Checks if the TRZ is ready to communicate
-bool signals_is_trz_ready(void);
-
-// Checks if the device should stay in the bootloader
-bool signals_is_stay_in_bootloader(void);
-
-// OUTPUTS
-
-// Signals that NRF firmware is running and initialized
-void signals_nrf_ready(bool set);
-
-// Sets the reserved output
-void signals_reserved(bool set);
-
-// Reads the current output setting
-bool signals_out_get_nrf_ready(void);
-
-// Reads the current output setting
-bool signals_out_get_reserved(void);
+// Initialize the management module
+void management_init(void);

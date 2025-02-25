@@ -41,10 +41,14 @@ typedef enum {
   BLE_REJECT_PAIRING = 6,  // Reject pairing request
 } ble_command_type_t;
 
+typedef struct {
+  uint8_t name[BLE_ADV_NAME_LEN];
+  bool static_mac;
+} ble_adv_start_cmd_data_t;
+
 typedef union {
   uint8_t raw[32];
-  uint8_t name[BLE_ADV_NAME_LEN];
-
+  ble_adv_start_cmd_data_t adv_start;
 } ble_command_data_t;
 
 typedef struct {
@@ -73,6 +77,7 @@ typedef struct {
   bool connectable;
   bool pairing;
   bool pairing_requested;
+  bool state_known;
   uint8_t peer_count;
 } ble_state_t;
 
@@ -138,5 +143,11 @@ bool ble_can_read(void);
 //
 // Returns the number of bytes actually read.
 uint32_t ble_read(uint8_t *data, uint16_t max_len);
+
+// Read MAC address of the device
+//
+// When not using static address, the address is random and may not correspond
+// to what is actually used for advertising
+bool ble_get_mac(uint8_t *mac, size_t max_len);
 
 #endif

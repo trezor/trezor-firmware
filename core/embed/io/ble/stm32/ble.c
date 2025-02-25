@@ -24,6 +24,7 @@
 #include <io/ble.h>
 #include <io/nrf.h>
 #include <sys/irq.h>
+#include <sys/systick.h>
 #include <sys/systimer.h>
 #include <util/tsqueue.h>
 #include <util/unit_properties.h>
@@ -66,7 +67,9 @@ typedef struct {
   tsqueue_entry_t ts_queue_entries[TX_QUEUE_LEN];
   tsqueue_t tx_queue;
 
-  char adv_name[BLE_ADV_NAME_LEN];
+  ble_adv_start_cmd_data_t adv_cmd;
+  uint8_t mac[6];
+  bool mac_ready;
   systimer_t *timer;
   uint16_t ping_cntr;
 } ble_driver_t;
@@ -90,8 +93,11 @@ static bool ble_send_advertising_on(ble_driver_t *drv, bool whitelist) {
       .cmd_id = INTERNAL_CMD_ADVERTISING_ON,
       .whitelist = whitelist ? 1 : 0,
       .color = props.color,
+      .static_addr = drv->adv_cmd.static_mac,
+      .device_code = HW_MODEL,
   };
-  memcpy(data.name, drv->adv_name, BLE_ADV_NAME_LEN);
+
+  memcpy(data.name, drv->adv_cmd.name, BLE_ADV_NAME_LEN);
 
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&data, sizeof(data),
                       NULL, NULL) >= 0;
@@ -140,6 +146,13 @@ static bool ble_send_pairing_accept(ble_driver_t *drv) {
   }
 
   return result;
+}
+
+static bool ble_send_mac_request(ble_driver_t *drv) {
+  (void)drv;
+  uint8_t cmd = INTERNAL_CMD_MAC_REQUEST;
+
+  return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
 
 static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
@@ -233,6 +246,16 @@ static void ble_process_rx_msg_pairing_cancelled(const uint8_t *data,
   drv->pairing_requested = false;
 }
 
+static void ble_process_rx_msg_mac(const uint8_t *data, uint32_t len) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  drv->mac_ready = true;
+  memcpy(drv->mac, &data[1], sizeof(drv->mac));
+}
+
 static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
   if (len < 1) {
     return;
@@ -248,6 +271,8 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
     case INTERNAL_EVENT_PAIRING_CANCELLED:
       ble_process_rx_msg_pairing_cancelled(data, len);
       break;
+    case INTERNAL_EVENT_MAC:
+      ble_process_rx_msg_mac(data, len);
     default:
       break;
   }
@@ -525,11 +550,11 @@ bool ble_issue_command(ble_command_t *command) {
       drv->mode_requested = BLE_MODE_OFF;
       break;
     case BLE_SWITCH_ON:
-      memcpy(drv->adv_name, command->data.name, sizeof(drv->adv_name));
+      memcpy(&drv->adv_cmd, &command->data.adv_start, sizeof(drv->adv_cmd));
       drv->mode_requested = BLE_MODE_CONNECTABLE;
       break;
     case BLE_PAIRING_MODE:
-      memcpy(drv->adv_name, command->data.name, sizeof(drv->adv_name));
+      memcpy(&drv->adv_cmd, &command->data.adv_start, sizeof(drv->adv_cmd));
       drv->mode_requested = BLE_MODE_PAIRING;
       break;
     case BLE_DISCONNECT:
@@ -585,8 +610,40 @@ void ble_get_state(ble_state_t *state) {
   state->pairing = drv->mode_current == BLE_MODE_PAIRING;
   state->connectable = drv->mode_current == BLE_MODE_CONNECTABLE;
   state->pairing_requested = drv->pairing_requested;
+  state->state_known = drv->status_valid;
 
   irq_unlock(key);
+}
+
+bool ble_get_mac(uint8_t *mac, size_t max_len) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (max_len < sizeof(drv->mac)) {
+    return false;
+  }
+
+  if (!drv->initialized) {
+    memset(mac, 0, max_len);
+    return false;
+  }
+
+  drv->mac_ready = false;
+
+  if (!ble_send_mac_request(drv)) {
+    return false;
+  }
+
+  uint32_t timeout = ticks_timeout(100);
+
+  while (!ticks_expired(timeout)) {
+    if (drv->mac_ready) {
+      memcpy(mac, drv->mac, sizeof(drv->mac));
+      return true;
+    }
+  }
+
+  memset(mac, 0, max_len);
+  return false;
 }
 
 #endif
