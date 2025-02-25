@@ -195,7 +195,6 @@ static void drivers_init(void) {
 #ifdef USE_BLE
   unit_properties_init();
   ble_init();
-  prodtest_ble_init();
 #endif
 }
 

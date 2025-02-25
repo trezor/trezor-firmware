@@ -615,8 +615,12 @@ void ble_get_state(ble_state_t *state) {
   irq_unlock(key);
 }
 
-bool ble_get_mac(uint8_t *mac, uint16_t max_len) {
+bool ble_get_mac(uint8_t *mac, size_t max_len) {
   ble_driver_t *drv = &g_ble_driver;
+
+  if (max_len < sizeof(drv->mac)) {
+    return false;
+  }
 
   if (!drv->initialized) {
     memset(mac, 0, max_len);
@@ -633,7 +637,7 @@ bool ble_get_mac(uint8_t *mac, uint16_t max_len) {
 
   while (!ticks_expired(timeout)) {
     if (drv->mac_ready) {
-      memcpy(mac, drv->mac, max_len);
+      memcpy(mac, drv->mac, sizeof(drv->mac));
       return true;
     }
   }

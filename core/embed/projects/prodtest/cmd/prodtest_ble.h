@@ -19,6 +19,8 @@
 
 #pragma once
 
-void prodtest_ble_init(void);
+#include <trezor_types.h>
 
-bool prodtest_ble_erase_bonds(void);
+#include <rtl/cli.h>
+
+bool prodtest_ble_erase_bonds(cli_t* cli);

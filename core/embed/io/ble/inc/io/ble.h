@@ -148,6 +148,6 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len);
 //
 // When not using static address, the address is random and may not correspond
 // to what is actually used for advertising
-bool ble_get_mac(uint8_t *mac, uint16_t max_len);
+bool ble_get_mac(uint8_t *mac, size_t max_len);
 
 #endif

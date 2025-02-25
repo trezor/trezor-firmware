@@ -55,7 +55,7 @@ static void prodtest_prodtest_wipe(cli_t* cli) {
 
 #ifdef USE_BLE
   cli_trace(cli, "Erasing BLE bonds...");
-  if (!prodtest_ble_erase_bonds()) {
+  if (!prodtest_ble_erase_bonds(cli)) {
     cli_error(cli, CLI_ERROR, "Failed to erase BLE bonds.");
     return;
   }

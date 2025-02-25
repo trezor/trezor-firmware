@@ -138,7 +138,8 @@ Starts BLE advertising. Accepts one parameter, advertising name. The command ret
 Example:
 ```
 ble-adv-start TREZOR_BLE
-# OK advertising started
+# Advertising started.
+OK
 ```
 
 ### ble-adv-stop
@@ -149,7 +150,8 @@ Stops BLE advertising. The command returns `OK` if the operation is successful.
 Example:
 ```
 ble-adv-stop
-# OK advertising stopped
+# Advertising stopped.
+OK
 ```
 
 ### ble-info
@@ -172,7 +174,8 @@ Erases all BLE bonds from the device.
 Example:
 ```
 ble-erase-bonds
-OK Bonds erased
+# Erased 2 bonds.
+OK
 ```
 
 ### button-test
