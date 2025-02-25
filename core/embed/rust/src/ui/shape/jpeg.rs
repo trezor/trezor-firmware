@@ -134,12 +134,12 @@ impl<'a> Shape<'a> for JpegImage<'a> {
             // Draw dimmed overlay.
             // This solution is suboptimal and might be replaced by
             // using faster alpha blending in the hardware.
-            canvas.fill_rect(clip, Color::black(), 255 - self.dim);
+            canvas.fill_rect(bounds, Color::black(), 255 - self.dim);
         }
 
         if self.blur_radius > 0 {
             // Blur the image
-            canvas.blur_rect(clip, self.blur_radius, cache);
+            canvas.blur_rect(bounds, self.blur_radius, cache);
         }
     }
 
