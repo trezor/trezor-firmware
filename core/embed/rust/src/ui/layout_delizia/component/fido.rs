@@ -3,6 +3,7 @@ use crate::{
     ui::{
         component::{
             image::Image,
+            paginated::SinglePage,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
             Component, Event, EventCtx,
         },
@@ -63,7 +64,7 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Event::Attach(_) = event {
-            self.text.inner_mut()[1].update((self.get_account)());
+            self.text.mutate(|p| p[1].update((self.get_account)()));
             ctx.request_paint();
         }
         self.app_icon.event(ctx, event);
@@ -76,6 +77,8 @@ impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
         self.text.render(target);
     }
 }
+
+impl<F: Fn() -> TString<'static>> SinglePage for FidoCredential<F> {}
 
 #[cfg(feature = "ui_debug")]
 impl<F: Fn() -> TString<'static>> crate::trace::Trace for FidoCredential<F> {

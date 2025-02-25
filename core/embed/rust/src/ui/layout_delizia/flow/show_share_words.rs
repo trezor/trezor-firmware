@@ -7,7 +7,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            ButtonRequestExt, ComponentExt, EventCtx,
+            ButtonRequestExt, ComponentExt, EventCtx, PaginateFull as _,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -20,8 +20,7 @@ use heapless::Vec;
 
 use super::super::{
     component::{
-        Footer, Frame, FrameMsg, Header, InternallySwipable, InternallySwipableContent,
-        PromptScreen, ShareWords, SwipeContent,
+        Footer, Frame, Header, InternallySwipableContent, PromptScreen, ShareWords, SwipeContent,
     },
     theme,
 };
@@ -74,9 +73,7 @@ fn footer_updating_func(
     ctx: &mut EventCtx,
     footer: &mut Footer,
 ) {
-    let current_page = content.inner().current_page();
-    let total_pages = content.inner().num_pages();
-    footer.update_page_counter(ctx, current_page, total_pages);
+    footer.update_pager(ctx, content.inner().pager());
 }
 
 pub fn new_show_share_words(
@@ -99,9 +96,8 @@ pub fn new_show_share_words(
         ),
     )
     .with_subtitle(TR::words__instructions.into())
-    .with_footer(TR::instructions__swipe_up.into(), text_footer)
-    .with_swipe(Direction::Up, SwipeSettings::default())
-    .map(|msg| matches!(msg, FrameMsg::Content(_)).then_some(FlowMsg::Confirmed))
+    .with_swipeup_footer(text_footer)
+    .map_to_button_msg()
     .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
     .with_pages(move |_| nwords + 2);
 
@@ -114,9 +110,9 @@ pub fn new_show_share_words(
     .with_vertical_pages()
     .with_subtitle(subtitle)
     .register_header_update_fn(header_updating_func)
-    .with_footer_counter(TR::instructions__swipe_up.into())
+    .with_footer_counter(TR::instructions__tap_to_continue.into())
     .register_footer_update_fn(footer_updating_func)
-    .map(|_| None);
+    .map_to_button_msg();
 
     let content_confirm = Frame::left_aligned(
         text_confirm,
@@ -133,8 +129,7 @@ pub fn new_show_share_words(
             TR::reset__check_backup_instructions,
         ))),
     )
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .map(|_| Some(FlowMsg::Confirmed));
 
     let res = SwipeFlow::new(&ShowShareWords::Instruction)?

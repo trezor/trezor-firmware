@@ -1,7 +1,8 @@
 use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Paginate},
+    component::{Component, Event, EventCtx, Never, PaginateFull},
     geometry::{Alignment, Offset, Rect},
     shape::Renderer,
+    util::Pager,
 };
 
 use super::{
@@ -15,6 +16,7 @@ pub struct FormattedText {
     vertical: Alignment,
     char_offset: usize,
     y_offset: i16,
+    pager: Pager,
 }
 
 impl FormattedText {
@@ -24,6 +26,7 @@ impl FormattedText {
             vertical: Alignment::Start,
             char_offset: 0,
             y_offset: 0,
+            pager: Pager::single_page(),
         }
     }
 
@@ -32,18 +35,9 @@ impl FormattedText {
         self
     }
 
-    pub(crate) fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
-        self.layout_content_with_offset(sink, self.char_offset, self.y_offset)
-    }
-
-    fn layout_content_with_offset(
-        &self,
-        sink: &mut dyn LayoutSink,
-        char_offset: usize,
-        y_offset: i16,
-    ) -> LayoutFit {
+    fn layout_content(&self, sink: &mut dyn LayoutSink) -> LayoutFit {
         self.op_layout
-            .layout_ops(char_offset, Offset::y(y_offset), sink)
+            .layout_ops(self.char_offset, Offset::y(self.y_offset), sink)
     }
 
     fn align_vertically(&mut self, content_height: i16) {
@@ -58,19 +52,79 @@ impl FormattedText {
             Alignment::End => bounds_height - content_height,
         }
     }
+
+    #[cfg(feature = "ui_debug")]
+    pub(crate) fn trace_lines_as_list(&self, l: &mut dyn crate::trace::ListTracer) -> LayoutFit {
+        use crate::ui::component::text::layout::trace::TraceSink;
+        let result = self.layout_content(&mut TraceSink(l));
+        result
+    }
 }
 
 // Pagination
-impl Paginate for FormattedText {
-    fn page_count(&self) -> usize {
+impl PaginateFull for FormattedText {
+    fn pager(&self) -> Pager {
+        self.pager
+    }
+
+    fn change_page(&mut self, to_page: u16) {
+        let to_page = to_page.min(self.pager.total() - 1);
+
+        // reset current position if needed and calculate how many pages forward we need
+        // to go
+        self.y_offset = 0;
+        let mut pages_remaining = if to_page < self.pager.current() {
+            self.char_offset = 0;
+            to_page
+        } else {
+            to_page - self.pager.current()
+        };
+
+        // move forward until we arrive at the wanted page
+        let mut fit = self.layout_content(&mut TextNoOp);
+        while pages_remaining > 0 {
+            match fit {
+                LayoutFit::Fitting { .. } => {
+                    break;
+                }
+                LayoutFit::OutOfBounds {
+                    processed_chars, ..
+                } => {
+                    pages_remaining -= 1;
+                    self.char_offset += processed_chars;
+                    fit = self.layout_content(&mut TextNoOp);
+                }
+            }
+        }
+        // Setting appropriate self.y_offset
+        self.align_vertically(fit.height());
+        // Update the pager
+        self.pager.set_current(to_page);
+    }
+}
+
+impl Component for FormattedText {
+    type Msg = Never;
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        if self.op_layout.layout.bounds == bounds {
+            // Skip placement logic (and resetting pager) if the bounds haven't changed.
+            return bounds;
+        }
+
+        self.op_layout.place(bounds);
+
+        // reset current position
+        self.char_offset = 0;
+        self.y_offset = 0;
+
         let mut page_count = 1; // There's always at least one page.
+        let mut first_fit = None;
 
-        let mut char_offset = 0;
-
-        // Looping through the content and counting pages
-        // until we finally fit.
+        // Looping through the content and counting pages until we finally fit.
         loop {
-            let fit = self.layout_content_with_offset(&mut TextNoOp, char_offset, 0);
+            let fit = self.layout_content(&mut TextNoOp);
+            first_fit.get_or_insert(fit);
             match fit {
                 LayoutFit::Fitting { .. } => {
                     break;
@@ -79,50 +133,18 @@ impl Paginate for FormattedText {
                     processed_chars, ..
                 } => {
                     page_count += 1;
-                    char_offset += processed_chars;
-                }
-            }
-        }
-
-        page_count
-    }
-
-    fn change_page(&mut self, to_page: usize) {
-        let mut active_page = 0;
-
-        // Make sure we're starting from the beginning.
-        self.char_offset = 0;
-        self.y_offset = 0;
-
-        // Looping through the content until we arrive at
-        // the wanted page.
-        let mut fit = self.layout_content(&mut TextNoOp);
-        while active_page < to_page {
-            match fit {
-                LayoutFit::Fitting { .. } => {
-                    break;
-                }
-                LayoutFit::OutOfBounds {
-                    processed_chars, ..
-                } => {
-                    active_page += 1;
                     self.char_offset += processed_chars;
-                    fit = self.layout_content(&mut TextNoOp);
                 }
             }
         }
-        // Setting appropriate self.y_offset
-        self.align_vertically(fit.height());
-    }
-}
 
-impl Component for FormattedText {
-    type Msg = Never;
+        // reset position to start
+        self.char_offset = 0;
+        // align vertically and set pager
+        let first_fit = unwrap!(first_fit);
+        self.align_vertically(first_fit.height());
+        self.pager = Pager::new(page_count);
 
-    fn place(&mut self, bounds: Rect) -> Rect {
-        self.op_layout.place(bounds);
-        let height = self.layout_content(&mut TextNoOp).height();
-        self.align_vertically(height);
         bounds
     }
 
@@ -140,12 +162,11 @@ impl Component for FormattedText {
 #[cfg(feature = "ui_debug")]
 impl crate::trace::Trace for FormattedText {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        use crate::ui::component::text::layout::trace::TraceSink;
         use core::cell::Cell;
         let fit: Cell<Option<LayoutFit>> = Cell::new(None);
         t.component("FormattedText");
         t.in_list("text", &|l| {
-            let result = self.layout_content(&mut TraceSink(l));
+            let result = self.trace_lines_as_list(l);
             fit.set(Some(result));
         });
         t.bool("fits", matches!(fit.get(), Some(LayoutFit::Fitting { .. })));

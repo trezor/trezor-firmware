@@ -5,7 +5,6 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -16,9 +15,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
-    },
+    component::{Frame, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -49,9 +46,11 @@ impl FlowController for ShowTutorial {
             (Self::StepMenu, Direction::Up) => Self::StepHold.swipe(direction),
             (Self::StepMenu, Direction::Down) => Self::StepNavigation.swipe(direction),
             (Self::StepMenu, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::StepHold, Direction::Down) => Self::StepMenu.swipe(direction),
             (Self::Menu, Direction::Left) => Self::DidYouKnow.swipe(direction),
             (Self::Menu, Direction::Right) => Self::StepMenu.swipe(direction),
             (Self::DidYouKnow, Direction::Right) => Self::Menu.swipe(direction),
+            (Self::HoldToExit, Direction::Down) => Self::StepMenu.swipe(direction),
             (Self::StepDone, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -78,10 +77,8 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         TR::tutorial__welcome_safe5.into(),
         SwipeContent::new(PromptScreen::new_tap_to_start()),
     )
-    .with_footer(TR::instructions__tap_to_start.into(), None)
-    .map(|msg| {
-        matches!(msg, FrameMsg::Content(PromptMsg::Confirmed)).then_some(FlowMsg::Confirmed)
-    });
+    .with_footer(TR::instructions__tap_to_continue.into(), None)
+    .map(super::util::map_to_confirm);
 
     let content_step_begin = Frame::left_aligned(
         TR::tutorial__title_lets_begin.into(),
@@ -90,12 +87,8 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             TR::tutorial__lets_begin,
         ))),
     )
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::tutorial__get_started.into()),
-    )
-    .with_swipe(Direction::Up, SwipeSettings::default())
-    .map(|_| None);
+    .with_swipeup_footer(None)
+    .map_to_button_msg();
 
     let content_step_navigation = Frame::left_aligned(
         TR::tutorial__title_easy_navigation.into(),
@@ -104,13 +97,9 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             TR::tutorial__swipe_up_and_down,
         ))),
     )
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::tutorial__continue.into()),
-    )
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .map(|_| None);
+    .map_to_button_msg();
 
     let content_step_menu = Frame::left_aligned(
         TR::tutorial__title_handy_menu.into(),
@@ -121,22 +110,17 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     )
     .with_menu_button()
     .button_styled(theme::button_warning_low())
-    .with_footer(
-        TR::instructions__swipe_up.into(),
-        Some(TR::buttons__continue.into()),
-    )
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Down, SwipeSettings::default())
-    .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+    .map_to_button_msg();
 
     let content_step_hold = Frame::left_aligned(
         TR::tutorial__title_hold.into(),
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
-    .map(|msg| {
-        matches!(msg, FrameMsg::Content(PromptMsg::Confirmed)).then_some(FlowMsg::Confirmed)
-    });
+    .with_swipe(Direction::Down, SwipeSettings::default())
+    .map(super::util::map_to_confirm);
 
     let content_step_done = Frame::left_aligned(
         TR::tutorial__title_well_done.into(),
@@ -145,9 +129,8 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
             TR::tutorial__ready_to_use_safe5,
         ))),
     )
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
-    .map(|_| None);
+    .with_swipeup_footer(None)
+    .map_to_button_msg();
 
     let content_menu = Frame::left_aligned(
         "".into(),
@@ -159,10 +142,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .with_swipe(Direction::Left, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     let content_did_you_know = Frame::left_aligned(
         "".into(),
@@ -173,16 +153,15 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled));
+    .map_to_button_msg();
 
     let content_hold_to_exit = Frame::left_aligned(
         TR::tutorial__title_hold.into(),
         SwipeContent::new(PromptScreen::new_hold_to_confirm_danger()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
-    .map(|msg| {
-        matches!(msg, FrameMsg::Content(PromptMsg::Confirmed)).then_some(FlowMsg::Confirmed)
-    });
+    .with_swipe(Direction::Down, SwipeSettings::default())
+    .map(super::util::map_to_confirm);
 
     let res = SwipeFlow::new(&ShowTutorial::StepWelcome)?
         .with_page(&ShowTutorial::StepWelcome, content_step_welcome)?

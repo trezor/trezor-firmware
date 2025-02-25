@@ -5,9 +5,10 @@ use crate::{
     translations::TR,
     ui::{
         component::{
+            paginated::PaginateFull as _,
             swipe_detect::SwipeSettings,
             text::paragraphs::{Paragraph, Paragraphs},
-            ComponentExt, EventCtx,
+            EventCtx,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -19,8 +20,7 @@ use crate::{
 
 use super::super::{
     component::{
-        FidoCredential, Footer, Frame, FrameMsg, InternallySwipable, PagedVerticalMenu, PromptMsg,
-        PromptScreen, SwipeContent, VerticalMenu, VerticalMenuChoiceMsg,
+        FidoCredential, Footer, Frame, PagedVerticalMenu, PromptScreen, SwipeContent, VerticalMenu,
     },
     theme,
 };
@@ -89,13 +89,11 @@ impl FlowController for ConfirmFido {
 }
 
 fn footer_update_fn(
-    content: &SwipeContent<SwipePage<PagedVerticalMenu<impl Fn(usize) -> TString<'static>>>>,
+    content: &SwipeContent<SwipePage<PagedVerticalMenu<impl Fn(u16) -> TString<'static>>>>,
     ctx: &mut EventCtx,
     footer: &mut Footer,
 ) {
-    let current_page = content.inner().inner().current_page();
-    let total_pages = content.inner().inner().num_pages();
-    footer.update_page_counter(ctx, current_page, total_pages);
+    footer.update_pager(ctx, content.inner().inner().pager());
 }
 
 fn single_cred() -> bool {
@@ -120,16 +118,15 @@ pub fn new_confirm_fido(
         ))),
     )
     .with_menu_button()
-    .with_footer(TR::instructions__swipe_up.into(), None)
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(None)
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info));
+    .map_to_button_msg();
 
     // Closure to lazy-load the information on given page index.
     // Done like this to allow arbitrarily many pages without
     // the need of any allocation here in Rust.
-    let label_fn = move |page_index| {
-        let account = unwrap!(accounts.get(page_index));
+    let label_fn = move |page_index: u16| {
+        let account = unwrap!(accounts.get(page_index as usize));
         account
             .try_into()
             .unwrap_or_else(|_| TString::from_str("-"))
@@ -147,17 +144,14 @@ pub fn new_confirm_fido(
     .with_footer_page_hint(
         TR::fido__more_credentials.into(),
         TR::buttons__go_back.into(),
-        TR::instructions__swipe_up.into(),
+        TR::instructions__tap_to_continue.into(),
         TR::instructions__swipe_down.into(),
     )
     .register_footer_update_fn(footer_update_fn)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .with_vertical_pages()
-    .map(|msg| match msg {
-        FrameMsg::Button(_) => Some(FlowMsg::Info),
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-    });
+    .map(super::util::map_to_choice);
 
     let get_account = move || {
         let current = CRED_SELECTED.load(Ordering::Relaxed);
@@ -168,29 +162,21 @@ pub fn new_confirm_fido(
         TR::fido__title_credential_details.into(),
         SwipeContent::new(FidoCredential::new(icon_name, app_name, get_account)),
     )
-    .with_footer(TR::instructions__swipe_up.into(), Some(title))
-    .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_swipeup_footer(Some(title))
     .with_swipe(Direction::Right, SwipeSettings::immediate());
     let content_details = if single_cred() {
         content_details.with_menu_button()
     } else {
         content_details.with_cancel_button()
     }
-    .map(|msg| match msg {
-        FrameMsg::Button(bm) => Some(bm),
-        _ => None,
-    });
+    .map_to_button_msg();
 
     let content_tap = Frame::left_aligned(title, PromptScreen::new_tap_to_confirm())
         .with_menu_button()
         .with_footer(TR::instructions__tap_to_confirm.into(), None)
         .with_swipe(Direction::Down, SwipeSettings::default())
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-            FrameMsg::Button(_) => Some(FlowMsg::Info),
-            _ => None,
-        });
+        .map(super::util::map_to_confirm);
 
     let content_menu = Frame::left_aligned(
         "".into(),
@@ -198,10 +184,7 @@ pub fn new_confirm_fido(
     )
     .with_cancel_button()
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-        FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-    });
+    .map(super::util::map_to_choice);
 
     let initial_page = if single_cred() {
         &ConfirmFido::Details

@@ -10,7 +10,7 @@ use crate::{
             text::paragraphs::{
                 Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort, Paragraphs, VecExt,
             },
-            ComponentExt, EventCtx,
+            ComponentExt, EventCtx, PaginateFull as _,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -22,10 +22,7 @@ use crate::{
 };
 
 use super::super::{
-    component::{
-        Footer, Frame, FrameMsg, PromptMsg, PromptScreen, SwipeContent, VerticalMenu,
-        VerticalMenuChoiceMsg,
-    },
+    component::{Footer, Frame, PromptScreen, SwipeContent, VerticalMenu},
     theme,
 };
 
@@ -147,11 +144,7 @@ fn footer_update_fn(
     ctx: &mut EventCtx,
     footer: &mut Footer,
 ) {
-    // FIXME: current_page is implemented for Paragraphs and we have to use Vec::len
-    // to get total pages instead of using Paginate because it borrows mutably
-    let current_page = content.inner().inner().current_page();
-    let total_pages = content.inner().inner().inner().len() / 2; // 2 paragraphs per page
-    footer.update_page_counter(ctx, current_page, total_pages);
+    footer.update_pager(ctx, content.inner().inner().pager());
 }
 
 pub fn new_continue_recovery_homepage(
@@ -177,32 +170,27 @@ pub fn new_continue_recovery_homepage(
     };
 
     let mut pars_main = ParagraphVecShort::new();
-    let footer_instruction;
-    let footer_description;
-    if show_instructions {
+    let footer_description = if show_instructions {
         pars_main.add(Paragraph::new(
             &theme::TEXT_MAIN_GREY_EXTRA_LIGHT,
             TR::recovery__enter_each_word,
         ));
-        footer_instruction = TR::instructions__swipe_up.into();
-        footer_description = None;
+        None
     } else {
         pars_main.add(Paragraph::new(&theme::TEXT_MAIN_GREY_EXTRA_LIGHT, text));
         if let Some(sub) = subtext {
             pars_main.add(Paragraph::new(&theme::TEXT_SUB_GREY, sub));
         }
-        footer_instruction = TR::instructions__swipe_up.into();
-        footer_description = Some(TR::instructions__enter_next_share.into());
-    }
+        Some(TR::instructions__enter_next_share.into())
+    };
 
     let content_main =
         Frame::left_aligned(title.into(), SwipeContent::new(pars_main.into_paragraphs()))
             .with_subtitle(TR::words__instructions.into())
             .with_menu_button()
-            .with_footer(footer_instruction, footer_description)
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipeup_footer(footer_description)
             .with_swipe(Direction::Left, SwipeSettings::default())
-            .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Info))
+            .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(
                 ButtonRequestCode::RecoveryHomepage,
                 "recovery".into(),
@@ -217,16 +205,9 @@ pub fn new_continue_recovery_homepage(
     let content_cancel_intro =
         Frame::left_aligned(cancel_title.into(), SwipeContent::new(paragraphs_cancel))
             .with_cancel_button()
-            .with_footer(
-                TR::instructions__swipe_up.into(),
-                Some(TR::words__continue_anyway_question.into()),
-            )
-            .with_swipe(Direction::Up, SwipeSettings::default())
+            .with_swipeup_footer(Some(TR::words__continue_anyway_question.into()))
             .with_swipe(Direction::Right, SwipeSettings::immediate())
-            .map(|msg| match msg {
-                FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-                _ => None,
-            })
+            .map_to_button_msg()
             .repeated_button_request(ButtonRequest::new(
                 ButtonRequestCode::ProtectCall,
                 "abort_recovery".into(),
@@ -240,11 +221,7 @@ pub fn new_continue_recovery_homepage(
     .with_footer(TR::instructions__tap_to_confirm.into(), None)
     .with_swipe(Direction::Down, SwipeSettings::default())
     .with_swipe(Direction::Right, SwipeSettings::immediate())
-    .map(|msg| match msg {
-        FrameMsg::Content(PromptMsg::Confirmed) => Some(FlowMsg::Confirmed),
-        FrameMsg::Button(FlowMsg::Cancelled) => Some(FlowMsg::Cancelled),
-        _ => None,
-    });
+    .map(super::util::map_to_confirm);
 
     let res = if show_instructions {
         let content_menu = Frame::left_aligned(
@@ -253,10 +230,7 @@ pub fn new_continue_recovery_homepage(
         )
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
+        .map(super::util::map_to_choice);
 
         SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?
             .with_page(&ContinueRecoveryBeforeShares::Main, content_main)?
@@ -268,10 +242,7 @@ pub fn new_continue_recovery_homepage(
         )
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
+        .map(super::util::map_to_choice);
 
         SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?
             .with_page(&ContinueRecoveryBetweenShares::Main, content_main)?
@@ -296,13 +267,10 @@ pub fn new_continue_recovery_homepage(
         )
         .with_cancel_button()
         .with_swipe(Direction::Right, SwipeSettings::immediate())
-        .map(|msg| match msg {
-            FrameMsg::Content(VerticalMenuChoiceMsg::Selected(i)) => Some(FlowMsg::Choice(i)),
-            FrameMsg::Button(_) => Some(FlowMsg::Cancelled),
-        });
+        .map(super::util::map_to_choice);
 
         let (footer_instruction, footer_description) = (
-            TR::instructions__swipe_up.into(),
+            TR::instructions__tap_to_continue.into(),
             TR::recovery__more_shares_needed.into(),
         );
         let n_remaining_shares = pages.as_ref().unwrap().len() / 2;
@@ -321,7 +289,7 @@ pub fn new_continue_recovery_homepage(
         .with_swipe(Direction::Up, SwipeSettings::default())
         .with_swipe(Direction::Left, SwipeSettings::default())
         .with_vertical_pages()
-        .map(|msg| matches!(msg, FrameMsg::Button(_)).then_some(FlowMsg::Cancelled))
+        .map_to_button_msg()
         .repeated_button_request(ButtonRequest::new(
             ButtonRequestCode::Other,
             "show_shares".into(),
