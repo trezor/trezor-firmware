@@ -1,3 +1,5 @@
+use core::cmp::Ordering;
+
 use crate::{
     error::Error,
     io::BinaryData,
@@ -8,11 +10,13 @@ use crate::{
         component::{
             text::{
                 op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
+                paragraphs::{
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
+                },
             },
             Empty, FormattedText,
         },
-        geometry::LinearPlacement,
+        geometry::{LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, RecoveryType, StrOrBytes},
@@ -521,12 +525,41 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_checklist(
-        _title: TString<'static>,
-        _button: TString<'static>,
-        _active: usize,
-        _items: [TString<'static>; MAX_CHECKLIST_ITEMS],
+        title: TString<'static>,
+        button: TString<'static>,
+        active: usize,
+        items: [TString<'static>; MAX_CHECKLIST_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let mut paragraphs = ParagraphVecShort::new();
+        for (i, item) in items.into_iter().enumerate() {
+            let style = match i.cmp(&active) {
+                Ordering::Less => &theme::TEXT_CHECKLIST_INACTIVE,
+                Ordering::Equal => &theme::TEXT_MEDIUM,
+                Ordering::Greater => &theme::TEXT_CHECKLIST_INACTIVE,
+            };
+            paragraphs.add(Paragraph::new(style, item));
+        }
+
+        let checklist_content = Checklist::from_paragraphs(
+            theme::ICON_CHEVRON_RIGHT_MINI,
+            theme::ICON_CHECKMARK_MINI,
+            active,
+            paragraphs.into_paragraphs().with_spacing(40),
+        )
+        .with_check_width(32)
+        .with_icon_done_color(theme::GREEN_LIGHT)
+        .with_done_offset(Offset::y(7))
+        .with_current_offset(Offset::y(4));
+
+        let layout = RootComponent::new(
+            TextScreen::new(checklist_content)
+                .with_header(Header::new(title).with_menu_button())
+                .with_action_bar(ActionBar::new_single(
+                    Button::with_text(button).styled(theme::button_default()),
+                )),
+        );
+
+        Ok(layout)
     }
 
     fn show_danger(
