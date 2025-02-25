@@ -222,6 +222,7 @@ fn get_cancel_page(
 #[allow(clippy::too_many_arguments)]
 pub fn new_confirm_output(
     confirm_main: ConfirmValue,
+    account_title: TString<'static>,
     account: Option<TString<'static>>,
     account_path: Option<TString<'static>>,
     br_name: TString<'static>,
@@ -271,7 +272,7 @@ pub fn new_confirm_output(
         });
 
     // AccountInfo
-    let ac = AddressDetails::new(TR::send__send_from.into(), account, account_path)?;
+    let ac = AddressDetails::new(account_title, account, account_path)?;
     let account_content = ac.map(|_| Some(FlowMsg::Cancelled));
 
     let res = if let Some(confirm_amount) = confirm_amount {

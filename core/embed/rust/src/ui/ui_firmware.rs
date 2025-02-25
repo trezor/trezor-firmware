@@ -165,6 +165,7 @@ pub trait FirmwareUI {
         amount: Option<Obj>, // TODO: replace Obj
         chunkify: bool,
         text_mono: bool,
+        account_title: TString<'static>,
         account: Option<TString<'static>>,
         account_path: Option<TString<'static>>,
         br_code: u16,
