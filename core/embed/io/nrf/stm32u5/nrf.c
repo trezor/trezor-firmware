@@ -548,10 +548,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *urt) {
         // message is too long, flush the line
         drv->rx_idx = 0;
         drv->rx_len = 0;
+      } else {
+        drv->rx_buffer.data[drv->rx_idx - UART_HEADER_SIZE] = drv->rx_byte;
+        drv->rx_idx++;
       }
-
-      drv->rx_buffer.data[drv->rx_idx - UART_HEADER_SIZE] = drv->rx_byte;
-      drv->rx_idx++;
 
     } else if (drv->rx_idx == (drv->rx_len - 1)) {
       // received last byte: CRC
