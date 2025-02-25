@@ -8,3 +8,5 @@ ColumnLimit: 80
 IncludeBlocks: Preserve
 # Insert New line at EOF if missing
 InsertNewlineAtEOF: true
+#Set EOL to LF unconditionally
+LineEnding: LF
