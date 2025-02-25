@@ -714,15 +714,35 @@
     "reset__slip39_checklist_more_info_threshold": "The threshold sets the minumum number of shares needed to recover your wallet.",
     "reset__slip39_checklist_more_info_threshold_example_template": "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.",
     "reset__slip39_checklist_num_groups": "Number of groups",
-    "reset__slip39_checklist_num_groups_x_template": "Number of groups: {0}",
+    "reset__slip39_checklist_num_groups_x_template": {
+      "Bolt": "Number of groups: {0}",
+      "Caesar": "Number of groups: {0}",
+      "Delizia": "Number of groups: {0}",
+      "Eckhart": "Number of groups {0}"
+    },
     "reset__slip39_checklist_num_shares": "Number of shares",
-    "reset__slip39_checklist_num_shares_x_template": "Number of shares: {0}",
+    "reset__slip39_checklist_num_shares_x_template": {
+      "Bolt": "Number of shares: {0}",
+      "Caesar": "Number of shares: {0}",
+      "Delizia": "Number of shares: {0}",
+      "Eckhart": "Number of shares {0}"
+    },
     "reset__slip39_checklist_set_num_groups": "Set number of groups",
     "reset__slip39_checklist_set_num_shares": "Set number of shares",
     "reset__slip39_checklist_set_sizes": "Set sizes and thresholds",
     "reset__slip39_checklist_set_sizes_longer": "Set size and threshold for each group",
-    "reset__slip39_checklist_set_threshold": "Set threshold",
-    "reset__slip39_checklist_threshold_x_template": "Recovery threshold: {0}",
+    "reset__slip39_checklist_set_threshold": {
+      "Bolt": "Set threshold",
+      "Caesar": "Set threshold",
+      "Delizia": "Set threshold",
+      "Eckhart": "Set recovery threshold"
+    },
+    "reset__slip39_checklist_threshold_x_template": {
+      "Bolt": "Recovery threshold: {0}",
+      "Caesar": "Recovery threshold: {0}",
+      "Delizia": "Recovery threshold: {0}",
+      "Eckhart": "Recovery threshold {0}"
+    },
     "reset__slip39_checklist_title": "Backup checklist",
     "reset__slip39_checklist_write_down": "Write down and check all shares",
     "reset__slip39_checklist_write_down_recovery": "Write down & check all wallet backup shares",
