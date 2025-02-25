@@ -669,6 +669,36 @@ powerctl-hibernate
 OK
 ```
 
+### tropic-get-riscv-fw-version
+
+Reads the version of the RISC-V firmware. The command returns `OK` followed by the version.
+
+Example:
+```
+tropic-get-riscv-fw-version
+OK 00020100
+```
+
+### tropic-get-spect-fw-version
+
+Reads the version of the SPECT firmware. The command returns `OK` followed by the version.
+
+Example:
+```
+tropic-get-spect-fw-version
+OK 00000300
+```
+
+### tropic-get-chip-id
+
+Reads the Tropic chip ID. The command returns `OK` followed by the chip ID.
+
+Example:
+```
+tropic-get-chip-id
+OK 00000001000000000000000000000000000000000000000000000000000000000000000001000000054400000000FFFFFFFFFFFF01F00F000544545354303103001300000B54524F50494330312D4553FFFFFFFF000100000000FFFF000100000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF13000300
+```
+
 ### wpc-init
 Reinitializes the wireless power receiver driver, restoring it to its default state.
 
