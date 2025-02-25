@@ -239,8 +239,10 @@ class ProtoMessage:
     def from_message(cls, descriptor: "Descriptor", message):
         message_type = find_by_name(descriptor.message_type_enum.value, message.name)
         thp_message_type = None
-        if not isinstance(descriptor.thp_message_type_enum,tuple):
-            thp_message_type = find_by_name(descriptor.thp_message_type_enum.value, message.name)
+        if not isinstance(descriptor.thp_message_type_enum, tuple):
+            thp_message_type = find_by_name(
+                descriptor.thp_message_type_enum.value, message.name
+            )
         # use extensions set on the message_type entry (if any)
         extensions = descriptor.get_extensions(message_type)
         # override with extensions set on the message itself
@@ -359,7 +361,9 @@ class Descriptor:
         top_level_enums = itertools.chain.from_iterable(f.enum_type for f in self.files)
         self.message_type_enum = find_by_name(top_level_enums, MESSAGE_TYPE_ENUM, ())
         top_level_enums = itertools.chain.from_iterable(f.enum_type for f in self.files)
-        self.thp_message_type_enum = find_by_name(top_level_enums, THP_MESSAGE_TYPE_ENUM, ())
+        self.thp_message_type_enum = find_by_name(
+            top_level_enums, THP_MESSAGE_TYPE_ENUM, ()
+        )
         self.convert_enum_value_names(self.message_type_enum)
         self.convert_enum_value_names(self.thp_message_type_enum)
 
@@ -430,7 +434,7 @@ class Descriptor:
             self._nested_types_from_message(nested.orig)
 
     def convert_enum_value_names(self, enum):
-        if isinstance(enum,tuple):
+        if isinstance(enum, tuple):
             return
         for value in enum.value:
             value.name = strip_enum_prefix(enum.name, value.name)
