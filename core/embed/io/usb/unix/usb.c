@@ -69,7 +69,7 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   return sectrue;
 }
 
-void usb_deinit(void) {}
+void usb_deinit(void) { usb_stop(); }
 
 secbool usb_start(void) {
   const char *ip = getenv("TREZOR_UDP_IP");
@@ -141,6 +141,10 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
 }
 
 static secbool usb_emulated_poll_read(uint8_t iface_num) {
+  if (usb_ifaces[iface_num].msg_len > 0) {
+    return sectrue;
+  }
+
   struct pollfd fds[] = {
       {usb_ifaces[iface_num].sock, POLLIN, 0},
   };
