@@ -336,6 +336,40 @@ static void prodtest_touch_test_sensitivity(cli_t* cli) {
   screen_prodtest_welcome();
 }
 
+static void prodtest_touch_draw(cli_t* cli) {
+#define MAX_EVENTS 256
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Starting drawing canvas...");
+  cli_trace(cli, "Press CTRL+C for exit.");
+
+  uint32_t events[MAX_EVENTS] = {0};
+  uint32_t idx = 0;
+
+  screen_prodtest_draw(events, 0);
+  display_set_backlight(150);
+
+  for (;;) {
+    uint32_t evt = touch_get_event();
+
+    if (evt != 0) {
+      events[idx] = evt;
+      idx = (idx + 1) % MAX_EVENTS;
+
+      screen_prodtest_draw(events, MAX_EVENTS);
+    }
+    if (cli_aborted(cli)) {
+      break;
+    }
+  }
+
+  screen_prodtest_welcome();
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -379,5 +413,12 @@ PRODTEST_CLI_CMD(
   .info = "Test the touch controller sensitivity",
   .args = "<sensitivity>"
 )
+
+PRODTEST_CLI_CMD(
+    .name = "touch-draw",
+    .func = prodtest_touch_draw,
+    .info = "Simple drawing canvas",
+    .args = ""
+  )
 
 #endif  // USE_TOUCH

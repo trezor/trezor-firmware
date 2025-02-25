@@ -52,8 +52,7 @@ fn button_eval() -> Option<ButtonEvent> {
 }
 
 #[cfg(feature = "touch")]
-fn touch_eval() -> Option<TouchEvent> {
-    let event = io_touch_get_event();
+pub fn touch_unpack(event: u32) -> Option<TouchEvent> {
     if event == 0 {
         return None;
     }
@@ -85,7 +84,7 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
         #[cfg(all(feature = "button", not(feature = "touch")))]
         let event = button_eval();
         #[cfg(feature = "touch")]
-        let event = touch_eval();
+        let event = touch_unpack(io_touch_get_event());
         if let Some(e) = event {
             let mut ctx = EventCtx::new();
             #[cfg(all(feature = "button", not(feature = "touch")))]
