@@ -559,6 +559,7 @@ impl FirmwareUI for UIBolt {
         _amount: Option<Obj>,
         _chunkify: bool,
         _text_mono: bool,
+        _account_title: TString<'static>,
         _account: Option<TString<'static>>,
         _account_path: Option<TString<'static>>,
         _br_code: u16,
