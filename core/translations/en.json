@@ -724,7 +724,12 @@
     "reset__slip39_checklist_set_num_shares": "Set number of shares",
     "reset__slip39_checklist_set_sizes": "Set sizes and thresholds",
     "reset__slip39_checklist_set_sizes_longer": "Set size and threshold for each group",
-    "reset__slip39_checklist_set_threshold": "Set threshold",
+    "reset__slip39_checklist_set_threshold": {
+      "Bolt": "Set threshold",
+      "Caesar": "Set threshold",
+      "Delizia": "Set threshold",
+      "Eckhart": "Set recovery threshold"
+    },
     "reset__slip39_checklist_threshold_x_template": "Recovery threshold: {0}",
     "reset__slip39_checklist_title": "Backup checklist",
     "reset__slip39_checklist_write_down": "Write down and check all shares",
