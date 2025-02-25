@@ -1286,7 +1286,7 @@ pub enum TranslatedString {
     haptic_feedback__enable = 885,  // "Enable haptic feedback?"
     haptic_feedback__subtitle = 886,  // "Setting"
     haptic_feedback__title = 887,  // "Haptic feedback"
-    instructions__continue_holding = 888,  // "Continue\nholding"
+    instructions__continue_holding = 888,  // {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"}
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
@@ -1382,8 +1382,7 @@ pub enum TranslatedString {
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
     ethereum__unknown_contract_address_short = 974,  // "Unknown contract address."
-    instructions__keep_holding = 975,  // "Keep holding"
-    reset__share_words_first = 976,  // "Write down the first word from the backup."
+    reset__share_words_first = 975,  // "Write down the first word from the backup."
 }
 
 impl TranslatedString {
@@ -2673,7 +2672,14 @@ impl TranslatedString {
             Self::haptic_feedback__enable => "Enable haptic feedback?",
             Self::haptic_feedback__subtitle => "Setting",
             Self::haptic_feedback__title => "Haptic feedback",
+            #[cfg(feature = "layout_bolt")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_caesar")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_delizia")]
             Self::instructions__continue_holding => "Continue\nholding",
+            #[cfg(feature = "layout_eckhart")]
+            Self::instructions__continue_holding => "Keep holding",
             Self::instructions__enter_next_share => "Enter next share",
             Self::instructions__hold_to_continue => "Hold to continue",
             Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
@@ -2776,7 +2782,6 @@ impl TranslatedString {
             Self::misc__enable_labeling => "Enable labeling?",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
-            Self::instructions__keep_holding => "Keep holding",
             Self::reset__share_words_first => "Write down the first word from the backup.",
         }
     }
@@ -4155,7 +4160,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
-            Qstr::MP_QSTR_instructions__keep_holding => Some(Self::instructions__keep_holding),
             Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
             _ => None,
         }
