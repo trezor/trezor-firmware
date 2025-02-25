@@ -45,9 +45,6 @@
 #endif
 
 int main(uint32_t cmd, void *arg) {
-  // This call will be removed in the future with DMA2D syscalls.
-  gfx_bitblt_init();
-
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
     rsod_gui(info);

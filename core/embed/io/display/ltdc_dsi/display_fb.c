@@ -69,10 +69,6 @@ void display_set_unpriv_access(bool unpriv) {
     tz_set_gfxmmu_unpriv(unpriv);
   }
 #endif
-
-#ifdef USE_DMA2D
-  tz_set_dma2d_unpriv(unpriv);
-#endif
 }
 #endif  //  USE_TRUSTZONE
 
