@@ -121,6 +121,9 @@ class Channel:
             required_state=ChannelState.ENCRYPTED_TRANSPORT,
             required_key=CHANNEL_HOST_STATIC_PUBKEY,
         )
+        if was_any_replaced:
+            # In case a channel was replaced, close all running workflows
+            workflow.close_others()
         log.debug(__name__, "Was any channel replaced? %s", str(was_any_replaced))
 
     def is_channel_to_replace(self) -> bool:
