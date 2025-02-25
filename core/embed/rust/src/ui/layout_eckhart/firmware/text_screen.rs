@@ -1,7 +1,7 @@
 use crate::ui::{
     component::{
         swipe_detect::SwipeConfig,
-        text::paragraphs::{ParagraphSource, Paragraphs},
+        text::paragraphs::{Checklist, ParagraphSource, Paragraphs},
         Component, Event, EventCtx, FormattedText, PaginateFull,
     },
     flow::Swipable,
@@ -151,6 +151,7 @@ where
 pub trait AllowedTextContent: Component + PaginateFull {}
 impl AllowedTextContent for FormattedText {}
 impl<'a, T> AllowedTextContent for Paragraphs<T> where T: ParagraphSource<'a> {}
+impl<'a, T> AllowedTextContent for Checklist<T> where T: ParagraphSource<'a> {}
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for TextScreen<T>
