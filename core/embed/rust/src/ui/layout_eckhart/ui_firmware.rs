@@ -8,7 +8,7 @@ use crate::{
         component::{
             text::{
                 op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
             },
             Empty, FormattedText,
         },
@@ -514,12 +514,19 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_info(
-        _title: TString<'static>,
-        _description: TString<'static>,
-        _button: TString<'static>,
+        title: TString<'static>,
+        description: TString<'static>,
+        button: TString<'static>,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let content = Paragraphs::new(Paragraph::new(&theme::TEXT_REGULAR, description))
+            .with_placement(LinearPlacement::vertical());
+
+        let screen = TextScreen::new(content)
+            .with_header(Header::new(title))
+            .with_action_bar(ActionBar::new_single(Button::with_text(button)));
+        let obj = LayoutObj::new(screen)?;
+        Ok(obj)
     }
 
     fn show_info_with_cancel(
