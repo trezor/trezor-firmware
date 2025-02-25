@@ -50,6 +50,14 @@ include_icon!(
     ICON_CHEVRON_DOWN_MINI,
     "layout_eckhart/res/chevron_down_mini.toif"
 );
+include_icon!(
+    ICON_CHEVRON_RIGHT_MINI,
+    "layout_eckhart/res/chevron_right_mini.toif"
+);
+include_icon!(
+    ICON_CHECKMARK_MINI,
+    "layout_eckhart/res/checkmark_mini.toif"
+);
 include_icon!(ICON_CHEVRON_LEFT, "layout_eckhart/res/chevron_left.toif");
 include_icon!(ICON_CHEVRON_RIGHT, "layout_eckhart/res/chevron_right.toif");
 include_icon!(ICON_CHEVRON_UP, "layout_eckhart/res/chevron_up.toif");
@@ -146,6 +154,14 @@ pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     BG,
     GREY_EXTRA_LIGHT,
     GREY_EXTRA_LIGHT,
+);
+
+pub const TEXT_CHECKLIST_INACTIVE: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
+    GREY_DARK,
+    BG,
+    GREY_DARK,
+    GREY_DARK,
 );
 
 /// Decide the text style of chunkified text according to its length.
