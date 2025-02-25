@@ -117,6 +117,14 @@ pub const TEXT_MONO_EXTRA_LIGHT: TextStyle = TextStyle::new(
     GREY_EXTRA_LIGHT,
 );
 
+pub const TEXT_CHECKLIST_INACTIVE: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
+    GREY_DARK,
+    BG,
+    GREY_DARK,
+    GREY_DARK,
+);
+
 // Macro for styles differing only in text color
 macro_rules! label_title {
     ($color:expr) => {
