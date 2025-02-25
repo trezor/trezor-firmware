@@ -515,6 +515,7 @@ impl FirmwareUI for UIDelizia {
         amount: Option<Obj>,
         chunkify: bool,
         text_mono: bool,
+        account_title: TString<'static>,
         account: Option<TString<'static>>,
         account_path: Option<TString<'static>>,
         br_code: u16,
@@ -590,6 +591,7 @@ impl FirmwareUI for UIDelizia {
 
         let flow = flow::confirm_output::new_confirm_output(
             confirm_main,
+            account_title,
             account,
             account_path,
             br_name,
