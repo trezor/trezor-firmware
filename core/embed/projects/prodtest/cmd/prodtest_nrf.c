@@ -27,37 +27,37 @@
 static void prodtest_nrf_communication(cli_t* cli) {
   cli_trace(cli, "Testing SPI communication...");
   if (!nrf_test_spi_comm()) {
-    cli_error(cli, CLI_ERROR, "SPI communication failed");
+    cli_error(cli, CLI_ERROR, "SPI communication failed.");
     return;
   }
 
   cli_trace(cli, "Testing UART communication...");
   if (!nrf_test_uart_comm()) {
-    cli_error(cli, CLI_ERROR, "UART communication failed");
+    cli_error(cli, CLI_ERROR, "UART communication failed.");
     return;
   }
 
   cli_trace(cli, "Testing reboot to bootloader...");
   if (!nrf_test_reboot_to_bootloader()) {
-    cli_error(cli, CLI_ERROR, "Reboot to bootloader failed");
+    cli_error(cli, CLI_ERROR, "Reboot to bootloader failed.");
     return;
   }
 
   cli_trace(cli, "Testing GPIO TRZ ready...");
   if (!nrf_test_gpio_trz_ready()) {
-    cli_error(cli, CLI_ERROR, "TRZ ready GPIO failed");
+    cli_error(cli, CLI_ERROR, "TRZ ready GPIO failed.");
     return;
   }
 
   cli_trace(cli, "Testing GPIO stay in bootloader...");
   if (!nrf_test_gpio_stay_in_bld()) {
-    cli_error(cli, CLI_ERROR, "Stay in bootloader GPIO failed");
+    cli_error(cli, CLI_ERROR, "Stay in bootloader GPIO failed.");
     return;
   }
 
   cli_trace(cli, "Testing GPIO reserved...");
   if (!nrf_test_gpio_reserved()) {
-    cli_error(cli, CLI_ERROR, "Reserved GPIO failed");
+    cli_error(cli, CLI_ERROR, "Reserved GPIO failed.");
     return;
   }
 
@@ -67,7 +67,7 @@ static void prodtest_nrf_communication(cli_t* cli) {
 static void prodtest_nrf_version(cli_t* cli) {
   nrf_info_t info = {0};
   if (!nrf_get_info(&info)) {
-    cli_error(cli, CLI_ERROR, "Could not read version");
+    cli_error(cli, CLI_ERROR, "Could not read version.");
     return;
   }
 
@@ -75,11 +75,20 @@ static void prodtest_nrf_version(cli_t* cli) {
          info.version_patch, info.version_tweak);
 }
 
-PRODTEST_CLI_CMD(.name = "nrf-communication",
-                 .func = prodtest_nrf_communication,
-                 .info = "Tests NRF communication and GPIOs", .args = "")
+// clang-format off
 
-PRODTEST_CLI_CMD(.name = "nrf-version", .func = prodtest_nrf_version,
-                 .info = "Reads NRF firmware version", .args = "")
+PRODTEST_CLI_CMD(
+  .name = "nrf-communication",
+  .func = prodtest_nrf_communication,
+  .info = "Tests NRF communication and GPIOs",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-version",
+  .func = prodtest_nrf_version,
+  .info = "Reads NRF firmware version",
+  .args = ""
+);
 
 #endif

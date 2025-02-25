@@ -66,7 +66,9 @@ bool nrf_test_spi_comm(void) {
 
   uint8_t data[1] = {PRODTEST_CMD_SPI_DATA};
 
-  nrf_send_msg(NRF_SERVICE_PRODTEST, data, 1, NULL, NULL);
+  if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, 1, NULL, NULL)) {
+    return false;
+  }
 
   uint32_t timeout = ticks_timeout(100);
 
@@ -86,7 +88,9 @@ bool nrf_test_uart_comm(void) {
 
   uint8_t data[1] = {PRODTEST_CMD_UART_DATA};
 
-  nrf_send_msg(NRF_SERVICE_PRODTEST, data, 1, NULL, NULL);
+  if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, 1, NULL, NULL)) {
+    return false;
+  }
 
   uint32_t timeout = ticks_timeout(100);
 
@@ -106,7 +110,9 @@ bool nrf_test_reboot_to_bootloader(void) {
     return false;
   }
 
-  nrf_reboot_to_bootloader();
+  if (!nrf_reboot_to_bootloader()) {
+    return false;
+  }
 
   uint32_t timeout = ticks_timeout(10);
 
@@ -121,7 +127,9 @@ bool nrf_test_reboot_to_bootloader(void) {
 
   // todo test UART communication with MCUboot
 
-  nrf_reboot();
+  if (!nrf_reboot()) {
+    return false;
+  }
 
   timeout = ticks_timeout(1000);
   while (!ticks_expired(timeout)) {
@@ -206,7 +214,9 @@ cleanup:
 bool nrf_test_gpio_reserved(void) {
   bool result = false;
   uint8_t data[2] = {PRODTEST_CMD_SET_OUTPUT, 0};
-  nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL);
+  if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL)) {
+    return false;
+  }
 
   systick_delay_ms(10);
 
@@ -216,7 +226,10 @@ bool nrf_test_gpio_reserved(void) {
   }
 
   data[1] = 1;
-  nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL);
+  if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL)) {
+    result = false;
+    goto cleanup;
+  }
 
   systick_delay_ms(10);
 
