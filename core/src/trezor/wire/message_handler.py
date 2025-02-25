@@ -51,25 +51,6 @@ def wrap_protobuf_load(
             raise DataError("Failed to decode message")
 
 
-if utils.USE_THP:
-    from trezor.enums import ThpMessageType
-
-    def get_msg_name(msg_type: int) -> str | None:
-        for name in dir(ThpMessageType):
-            if not name.startswith("__"):  # Skip built-in attributes
-                value = getattr(ThpMessageType, name)
-                if isinstance(value, int):
-                    if value == msg_type:
-                        return name
-        return None
-
-    def get_msg_type(msg_name: str) -> int | None:
-        value = getattr(ThpMessageType, msg_name)
-        if isinstance(value, int):
-            return value
-        return None
-
-
 async def handle_single_message(ctx: Context, msg: Message) -> bool:
     """Handle a message that was loaded from a WireInterface by the caller.
 
