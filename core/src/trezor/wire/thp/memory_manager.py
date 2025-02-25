@@ -4,7 +4,6 @@ from micropython import const
 from storage.cache_thp import SESSION_ID_LENGTH
 from trezor import protobuf, utils
 from trezor.wire.errors import WireBufferError
-from trezor.wire.message_handler import get_msg_type
 
 from . import ThpError
 from .writer import MAX_PAYLOAD_LEN, MESSAGE_TYPE_LENGTH
@@ -149,8 +148,6 @@ def encode_into_buffer(
 
     # cannot write message without wire type
     msg_type = msg.MESSAGE_WIRE_TYPE
-    if msg_type is None:
-        msg_type = get_msg_type(msg.MESSAGE_NAME)
     if msg_type is None:
         raise Exception("Message has no wire type.")
 

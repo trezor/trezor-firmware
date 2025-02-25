@@ -120,11 +120,7 @@ async def handle_pairing_request(
             await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
             raw_response = e.msg
-            name = message_handler.get_msg_name(raw_response.type)
-            if name is None:
-                req_type = protobuf.type_for_wire(raw_response.type)
-            else:
-                req_type = protobuf.type_for_name(name)
+            req_type = protobuf.type_for_wire(raw_response.type)
             response = message_handler.wrap_protobuf_load(raw_response.data, req_type)
 
         if Cancel.is_type_of(response):
