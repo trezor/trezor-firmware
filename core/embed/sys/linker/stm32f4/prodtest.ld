@@ -59,10 +59,9 @@ SECTIONS {
     _prodtest_cli_cmd_section_end = .;
     . = ALIGN(4);
 
-    _prodtest_cli_ut_section_start = .;
-    KEEP(*(.prodtest_cli_ut))
-    _prodtest_cli_ut_section_end = .;
-
+    _prodtest_unit_test_section_start = .;
+    KEEP(*(.prodtest_ut))
+    _prodtest_unit_test_section_end = .;
 
     . = ALIGN(128K);
   } >FLASH

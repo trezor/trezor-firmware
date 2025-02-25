@@ -22,26 +22,27 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <rtl/unit_test.h>
 
 static void prodtest_unit_test_list(cli_t* cli) {
-
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
- }
+  }
 
   cli_trace(cli, "List of all registered unit tests:");
 
-  for (size_t i = 0; i < cli->unit_test_count; i++) {
-    cli_trace(cli, " %s - %s ", cli->unit_test_array[i].name,
-              cli->unit_test_array[i].info);
+  ut_t* ut = ut_get_records_ptr();
+
+  for (size_t i = 0; i < ut->unit_test_count; i++) {
+    cli_trace(cli, " %s - %s ", ut->unit_test_array[i].name,
+              ut->unit_test_array[i].info);
   }
 
   cli_ok(cli, "");
 }
 
 static void prodtest_unit_test_run(cli_t* cli) {
-
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -51,10 +52,12 @@ static void prodtest_unit_test_run(cli_t* cli) {
 
   cli_trace(cli, "Running all unit tests...");
 
-  for (size_t i = 0; i < cli->unit_test_count; i++) {
-    ut_status_t test_result = cli->unit_test_array[i].func(cli);
+  ut_t* ut = ut_get_records_ptr();
 
-    cli_trace(cli, "%s: %s", cli->unit_test_array[i].name,
+  for (size_t i = 0; i < ut->unit_test_count; i++) {
+    ut_status_t test_result = ut->unit_test_array[i].func(cli);
+
+    cli_trace(cli, "%s: %s", ut->unit_test_array[i].name,
               test_result == UT_PASSED ? "PASSED" : "FAILED");
 
     if (test_result == UT_FAILED) {

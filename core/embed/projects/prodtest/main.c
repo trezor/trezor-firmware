@@ -23,6 +23,7 @@
 #include <io/display.h>
 #include <io/usb.h>
 #include <rtl/cli.h>
+#include <rtl/unit_test.h>
 #include <sys/system.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
@@ -202,16 +203,16 @@ int main(void) {
 
   extern cli_command_t _prodtest_cli_cmd_section_start;
   extern cli_command_t _prodtest_cli_cmd_section_end;
-  extern cli_unit_test_t _prodtest_cli_ut_section_start;
-  extern cli_unit_test_t _prodtest_cli_ut_section_end;
+  extern unit_test_record_t _prodtest_unit_test_section_start;
+  extern unit_test_record_t _prodtest_unit_test_section_end;
 
   cli_set_commands(
       &g_cli, &_prodtest_cli_cmd_section_start,
       &_prodtest_cli_cmd_section_end - &_prodtest_cli_cmd_section_start);
 
-  cli_set_unit_tests(
-      &g_cli, &_prodtest_cli_ut_section_start,
-      &_prodtest_cli_ut_section_end - &_prodtest_cli_ut_section_start);
+  ut_set_records(
+      &_prodtest_unit_test_section_start,
+      &_prodtest_unit_test_section_end - &_prodtest_unit_test_section_start);
 
 #ifdef USE_OPTIGA
   optiga_init();

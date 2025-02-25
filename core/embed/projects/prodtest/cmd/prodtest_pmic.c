@@ -22,6 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
+#include <rtl/unit_test.h>
 #include <sys/systick.h>
 
 #include <stdlib.h>
@@ -301,13 +302,13 @@ PRODTEST_CLI_CMD(
   .args = "[<count>] [<period>]"
 );
 
-PRODTEST_CLI_UT(
+PRODTEST_UNIT_TEST(
   .name = "ut-pmic-init-deinit",
   .func = ut_pmic_init_deinit,
   .info = "Test PMIC driver initialization and deinitialization",
 )
 
-PRODTEST_CLI_UT(
+PRODTEST_UNIT_TEST(
   .name = "ut-pmic-battery",
   .func = ut_pmic_battery,
   .info = "Test PMIC battery connection",
