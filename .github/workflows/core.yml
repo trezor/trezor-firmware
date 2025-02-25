@@ -5,14 +5,14 @@ on:
     types:
       - opened
       - reopened
-      - synchronize # branch head update
+      - synchronize  # branch head update
       - labeled
   workflow_dispatch:
   schedule:
-    - cron: "15 23 * * *" # every day @ 23:15
+    - cron: '15 23 * * *'  # every day @ 23:15
   push:
     branches:
-      - "release/**"
+      - 'release/**'
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -20,9 +20,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  id-token: write # for fetching the OIDC token
-  contents: read # for actions/checkout
-  pull-requests: write # For dflook comments on PR
+  id-token: write       # for fetching the OIDC token
+  contents: read        # for actions/checkout
+  pull-requests: write  # For dflook comments on PR
 
 env:
   PULL_COMMENT: |
@@ -411,6 +411,7 @@ jobs:
         continue-on-error: true
       - uses: ./.github/actions/upload-coverage
 
+
   # Upgrade tests.
   # See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
   core_upgrade_test:
@@ -450,6 +451,7 @@ jobs:
             tests/trezor.log
           retention-days: 7
         if: always()
+
 
   # Persistence tests - UI.
   core_persistence_test:
@@ -505,7 +507,7 @@ jobs:
 
   core_hwi_test:
     name: HWI tests
-    if: false # XXX currently failing
+    if: false  # XXX currently failing
     continue-on-error: true
     runs-on: ubuntu-latest
     needs: core_emu
@@ -522,7 +524,7 @@ jobs:
           name: core-emu-${{ matrix.model }}-universal-debuglink-noasan-protocol_v1
           path: core/build
       - run: chmod +x core/build/unix/trezor-emu-core*
-      - uses: ./.github/actions/environment # XXX poetry maybe not needed
+      - uses: ./.github/actions/environment  # XXX poetry maybe not needed
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
       # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
       - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
@@ -534,7 +536,7 @@ jobs:
 
   core_memory_profile:
     name: Memory allocation report
-    if: false # NOTE manual job, comment out to run
+    if: false  # NOTE manual job, comment out to run
     runs-on: ubuntu-latest
     env:
       TREZOR_MODEL: T2T1
@@ -570,14 +572,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1] # FIXME: checker.py lacks awareness of U5 flash layout
+        model: [T2T1]  # FIXME: checker.py lacks awareness of U5 flash layout
     steps:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
       - uses: actions/download-artifact@v4
         with:
-          name: core-firmware-${{ matrix.model }}-universal-normal-protocol_v1 # FIXME: s/normal/debuglink/
+          name: core-firmware-${{ matrix.model }}-universal-normal-protocol_v1  # FIXME: s/normal/debuglink/
           path: core/build
       - uses: ./.github/actions/environment
       - run: nix-shell --run "poetry run core/tools/size/checker.py core/build/firmware/firmware.elf"
@@ -593,7 +595,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1] # FIXME: T2T1 url is hardcoded in compare_master.py
+        model: [T2T1]  # FIXME: T2T1 url is hardcoded in compare_master.py
     steps:
       - uses: actions/checkout@v4
         with:
@@ -656,6 +658,7 @@ jobs:
         if: always()
       - uses: ./.github/actions/upload-coverage
 
+
   # Tests for U2F and HID.
   core_u2f_test:
     name: U2F test (${{ matrix.model }}, ${{ matrix.asan }}${{ matrix.protocol=='v2' && ', THP' || ''}})
@@ -706,7 +709,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3T1] # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T3T1]  # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         protocol: [v1]
         include:
@@ -815,7 +818,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sleep 1m # try avoiding github api rate limit
+      - run: sleep 1m  # try avoiding github api rate limit
       - uses: ./.github/actions/ui-comment
 
   core_upload_emu:
