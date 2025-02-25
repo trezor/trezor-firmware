@@ -108,11 +108,8 @@ class PairingContext(Context):
             raise UnexpectedMessageException(message)
 
         if expected_type is None:
-            name = message_handler.get_msg_name(message.type)
-            if name is None:
-                expected_type = protobuf.type_for_wire(message.type)
-            else:
-                expected_type = protobuf.type_for_name(name)
+            expected_type = protobuf.type_for_wire(message.type)
+            assert expected_type is not None
 
         return message_handler.wrap_protobuf_load(message.data, expected_type)
 
@@ -126,11 +123,6 @@ class PairingContext(Context):
         self, msg: protobuf.MessageType, expected_type: type[protobuf.MessageType]
     ) -> protobuf.MessageType:
         expected_wire_type = expected_type.MESSAGE_WIRE_TYPE
-        if expected_wire_type is None:
-            expected_wire_type = message_handler.get_msg_type(
-                expected_type.MESSAGE_NAME
-            )
-
         assert expected_wire_type is not None
 
         await self.write(msg)
@@ -271,11 +263,13 @@ async def handle_message(
     try:
         # Find a protobuf.MessageType subclass that describes this
         # message.  Raises if the type is not found.
-        name = message_handler.get_msg_name(msg.type)
-        if name is None:
-            req_type = protobuf.type_for_wire(msg.type)
-        else:
-            req_type = protobuf.type_for_name(name)
+        req_type = protobuf.type_for_wire(msg.type)
+
+        # name = message_handler.get_msg_name(msg.type)
+        # if name is None:
+        #     req_type = protobuf.type_for_wire(msg.type)
+        # else:
+        #     req_type = protobuf.type_for_name(name)
 
         # Try to decode the message according to schema from
         # `req_type`. Raises if the message is malformed.
