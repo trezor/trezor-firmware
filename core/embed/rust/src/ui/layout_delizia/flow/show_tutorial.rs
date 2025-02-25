@@ -46,9 +46,11 @@ impl FlowController for ShowTutorial {
             (Self::StepMenu, Direction::Up) => Self::StepHold.swipe(direction),
             (Self::StepMenu, Direction::Down) => Self::StepNavigation.swipe(direction),
             (Self::StepMenu, Direction::Left) => Self::Menu.swipe(direction),
+            (Self::StepHold, Direction::Down) => Self::StepMenu.swipe(direction),
             (Self::Menu, Direction::Left) => Self::DidYouKnow.swipe(direction),
             (Self::Menu, Direction::Right) => Self::StepMenu.swipe(direction),
             (Self::DidYouKnow, Direction::Right) => Self::Menu.swipe(direction),
+            (Self::HoldToExit, Direction::Down) => Self::StepMenu.swipe(direction),
             (Self::StepDone, Direction::Up) => self.return_msg(FlowMsg::Confirmed),
             _ => self.do_nothing(),
         }
@@ -117,6 +119,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         SwipeContent::new(PromptScreen::new_hold_to_confirm()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
+    .with_swipe(Direction::Down, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
     let content_step_done = Frame::left_aligned(
@@ -157,6 +160,7 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
         SwipeContent::new(PromptScreen::new_hold_to_confirm_danger()),
     )
     .with_footer(TR::instructions__hold_to_exit_tutorial.into(), None)
+    .with_swipe(Direction::Down, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
     let res = SwipeFlow::new(&ShowTutorial::StepWelcome)?
