@@ -763,6 +763,37 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
   return true;
 }
 
+bool dma2d_rgba8888_copy_mono8(const gfx_bitblt_t* bb) {
+  dma2d_driver_t* drv = &g_dma2d_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  dma2d_wait();
+
+  if (!dma2d_accessible(bb->dst_row) || !dma2d_accessible(bb->src_row)) {
+    return false;
+  }
+
+  drv->handle.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
+  drv->handle.Init.Mode = DMA2D_M2M_PFC;
+  drv->handle.Init.OutputOffset = bb->dst_stride / sizeof(uint32_t) - bb->width;
+  HAL_DMA2D_Init(&drv->handle);
+
+  drv->handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_A8;
+  drv->handle.LayerCfg[1].InputOffset = bb->src_stride - bb->width;
+  drv->handle.LayerCfg[1].AlphaMode = 0;
+  drv->handle.LayerCfg[1].InputAlpha = gfx_color_to_color32(bb->src_fg);
+  HAL_DMA2D_ConfigLayer(&drv->handle, 1);
+
+  HAL_DMA2D_Start(&drv->handle, (uint32_t)bb->src_row + bb->src_x,
+                  (uint32_t)bb->dst_row + bb->dst_x * sizeof(uint32_t),
+                  bb->width, bb->height);
+
+  return true;
+}
+
 bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb) {
   dma2d_driver_t* drv = &g_dma2d_driver;
 
@@ -846,6 +877,34 @@ bool dma2d_rgba8888_copy_ycbcr422(const gfx_bitblt_t* bb) {
 
 bool dma2d_rgba8888_copy_ycbcr444(const gfx_bitblt_t* bb) {
   return dma2d_rgba8888_copy_ycbcr(bb, DMA2D_NO_CSS);
+}
+
+bool dma2d_rgba8888_copy_y(const gfx_bitblt_t* bb) {
+  gfx_bitblt_t bb_copy = *bb;
+
+  if (bb->height % 8 != 0 || bb->width % 8 != 0) {
+    return false;
+  }
+
+  // src cotains only Y channel organized in 8x8 blocks
+
+  bb_copy.height = 8;
+  bb_copy.width = 8;
+  bb_copy.src_stride = 8;
+  bb_copy.src_fg = gfx_color_rgb(255, 255, 255);
+
+  for (uint16_t y = 0; y < bb->height; y += 8) {
+    bb_copy.dst_x = 0;
+    for (uint16_t x = 0; x < bb->width; x += 8) {
+      if (!dma2d_rgba8888_copy_mono8(&bb_copy)) {
+        return false;
+      }
+      bb_copy.dst_x += 8;
+      bb_copy.src_row = (uint8_t*)bb_copy.src_row + 64;
+    }
+    bb_copy.dst_y += 8;
+  }
+  return true;
 }
 
 // Temporary hack to invalidate CLUT cache used in jpeg decoder.
