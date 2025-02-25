@@ -26,8 +26,9 @@ use crate::{
 
 use super::{
     component::{
-        ActionBar, Bip39Input, Button, Header, HeaderMsg, Hint, MnemonicKeyboard, PinKeyboard,
-        SelectWordCountScreen, SelectWordScreen, Slip39Input, TextScreen,
+        ActionBar, Bip39Input, Button, Header, HeaderMsg, Hint, MnemonicKeyboard,
+        NumberInputScreen, PinKeyboard, SelectWordCountScreen, SelectWordScreen, Slip39Input,
+        TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -384,14 +385,20 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn request_number(
-        _title: TString<'static>,
-        _count: u32,
-        _min_count: u32,
-        _max_count: u32,
-        _description: Option<TString<'static>>,
+        title: TString<'static>,
+        count: u32,
+        min_count: u32,
+        max_count: u32,
+        description: Option<TString<'static>>,
         _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let description = description.unwrap_or(TString::empty());
+        let component = NumberInputScreen::new(min_count, max_count, count, description)
+            .with_header(Header::new(title).with_menu_button());
+
+        let layout = RootComponent::new(component);
+
+        Ok(layout)
     }
 
     fn request_pin(
