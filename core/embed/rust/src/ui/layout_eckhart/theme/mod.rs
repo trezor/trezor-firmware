@@ -156,6 +156,14 @@ pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     GREY_EXTRA_LIGHT,
 );
 
+pub const TEXT_CHECKLIST_INACTIVE: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
+    GREY_DARK,
+    BG,
+    GREY_DARK,
+    GREY_DARK,
+);
+
 /// Decide the text style of chunkified text according to its length.
 pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
     // TODO: implement properly for Eckhart, see Delizia implemenation
