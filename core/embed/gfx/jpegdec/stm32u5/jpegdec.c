@@ -457,6 +457,7 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
       break;
     case JPEGDEC_IMAGE_GRAYSCALE:
       result = dma2d_rgba8888_copy_y(&bb);
+      break;
     default:
       result = false;
       break;
