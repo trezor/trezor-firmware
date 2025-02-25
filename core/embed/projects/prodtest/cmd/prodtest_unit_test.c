@@ -24,6 +24,12 @@
 #include <rtl/cli.h>
 
 static void prodtest_unit_test_list(cli_t* cli) {
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+ }
+
   cli_trace(cli, "List of all registered unit tests:");
 
   for (size_t i = 0; i < cli->unit_test_count; i++) {
@@ -35,6 +41,12 @@ static void prodtest_unit_test_list(cli_t* cli) {
 }
 
 static void prodtest_unit_test_run(cli_t* cli) {
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
   bool ut_passed = true;
 
   cli_trace(cli, "Running all unit tests...");
