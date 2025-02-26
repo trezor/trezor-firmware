@@ -96,6 +96,11 @@ def configure(
         paths += ["embed/sec/consumption_mask/inc"]
         defines += [("USE_CONSUMPTION_MASK", "1")]
 
+    if "hw_revision" in features_wanted:
+        defines += [("USE_HW_REVISION", "1")]
+        paths += ["embed/util/hw_revision/inc"]
+        sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
+
     defines += [
         ("USE_HASH_PROCESSOR", "1"),
         ("USE_STORAGE_HWKEY", "1"),
