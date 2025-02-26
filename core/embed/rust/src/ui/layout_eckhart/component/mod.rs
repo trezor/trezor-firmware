@@ -27,6 +27,7 @@ pub use keyboard::{
     passphrase::{PassphraseKeyboard, PassphraseKeyboardMsg},
     pin::{PinKeyboard, PinKeyboardMsg},
     slip39::Slip39Input,
+    word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
 pub use result::{ResultFooter, ResultScreen, ResultStyle};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
