@@ -116,13 +116,11 @@ impl<'a> Component for Hint<'a> {
         let bounds = bounds.inset(Self::HINT_INSETS);
         match &mut self.content {
             HintContent::Instruction(instruction) => {
-                if let Some(icon) = instruction.icon {
-                    let icon_width = instruction.icon_width();
-                    let text_area = bounds.split_left(icon_width).1;
-                    instruction.label.place(text_area);
-                } else {
-                    instruction.label.place(bounds);
-                }
+                let text_area = match instruction.icon {
+                    Some(_) => bounds.split_left(instruction.icon_width()).1,
+                    None => bounds,
+                };
+                instruction.label.place(text_area);
             }
             _ => {}
         }
