@@ -217,7 +217,6 @@ async def try_confirm_staking_transaction(
     blockhash: bytes,
 ) -> bool:
     from .transaction.instructions import (
-        ComputeBudgetProgramSetComputeUnitPriceInstruction,
         StakeProgramDeactivateInstruction,
         StakeProgramDelegateStakeInstruction,
         StakeProgramInitializeInstruction,
@@ -225,7 +224,7 @@ async def try_confirm_staking_transaction(
         SystemProgramCreateAccountWithSeedInstruction,
     )
 
-    instructions = transaction.instructions
+    instructions = transaction.get_visible_instructions()
 
     def _match_instructions(*expected_types: Type[Instruction]) -> bool:
         if len(instructions) != len(expected_types):
@@ -236,14 +235,13 @@ async def try_confirm_staking_transaction(
         )
 
     if _match_instructions(
-        ComputeBudgetProgramSetComputeUnitPriceInstruction,
         SystemProgramCreateAccountWithSeedInstruction,
         StakeProgramInitializeInstruction,
         StakeProgramDelegateStakeInstruction,
     ):
         from .layout import confirm_stake_transaction, confirm_stake_withdrawer
 
-        _budget, create, init, delegate = instructions
+        create, init, delegate = instructions
         if signer_public_key != create.funding_account[0]:
             return False
         if signer_public_key != create.base:
@@ -274,12 +272,11 @@ async def try_confirm_staking_transaction(
         return True
 
     if _match_instructions(
-        ComputeBudgetProgramSetComputeUnitPriceInstruction,
         StakeProgramDeactivateInstruction,
     ):
         from .layout import confirm_unstake_transaction
 
-        _budget, deactivate = instructions
+        (deactivate,) = instructions
         if signer_public_key != deactivate.stake_authority[0]:
             return False
 
@@ -289,12 +286,11 @@ async def try_confirm_staking_transaction(
         return True
 
     if _match_instructions(
-        ComputeBudgetProgramSetComputeUnitPriceInstruction,
         StakeProgramWithdrawInstruction,
     ):
         from .layout import confirm_claim_recipient, confirm_claim_transaction
 
-        _budget, withdraw = instructions
+        (withdraw,) = instructions
         if signer_public_key != withdraw.withdrawal_authority[0]:
             return False
         if signer_public_key != withdraw.recipient_account[0]:
