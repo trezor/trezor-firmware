@@ -189,6 +189,11 @@ def configure(
         paths += ["embed/io/usb/inc"]
         defines += [("USE_USB", "1")]
 
+    if "hw_revision" in features_wanted:
+        defines += [("USE_HW_REVISION", "1")]
+        paths += ["embed/util/hw_revision/inc"]
+        sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
+
     defines += [
         "FRAMEBUFFER",
         "DISPLAY_RGBA8888",

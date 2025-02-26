@@ -86,6 +86,10 @@
 #include "cmd/prodtest_ble.h"
 #endif
 
+#ifdef USE_HW_REVISION
+#include <util/hw_revision.h>
+#endif
+
 #ifdef TREZOR_MODEL_T2T1
 #define MODEL_IDENTIFIER "TREZOR2-"
 #else
@@ -206,6 +210,9 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_TROPIC
   tropic_init();
+#endif
+#ifdef USE_HW_REVISION
+  hw_revision_init();
 #endif
 }
 
