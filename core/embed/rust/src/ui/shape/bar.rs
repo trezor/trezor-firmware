@@ -87,10 +87,46 @@ impl Shape<'_> for Bar {
                 // outline
                 if th > 0 {
                     let r = self.area;
-                    canvas.fill_rect(Rect { y1: r.y0 + th, ..r }, fg_color, self.alpha);
-                    canvas.fill_rect(Rect { x1: r.x0 + th, ..r }, fg_color, self.alpha);
-                    canvas.fill_rect(Rect { x0: r.x1 - th, ..r }, fg_color, self.alpha);
-                    canvas.fill_rect(Rect { y0: r.y1 - th, ..r }, fg_color, self.alpha);
+                    // top
+                    canvas.fill_rect(
+                        Rect {
+                            y1: r.y0 + th,
+                            x1: r.x1 - th,
+                            ..r
+                        },
+                        fg_color,
+                        self.alpha,
+                    );
+                    // left
+                    canvas.fill_rect(
+                        Rect {
+                            x1: r.x0 + th,
+                            y0: r.y0 + th,
+                            ..r
+                        },
+                        fg_color,
+                        self.alpha,
+                    );
+                    // right
+                    canvas.fill_rect(
+                        Rect {
+                            x0: r.x1 - th,
+                            y1: r.y1 - th,
+                            ..r
+                        },
+                        fg_color,
+                        self.alpha,
+                    );
+                    // bottom
+                    canvas.fill_rect(
+                        Rect {
+                            y0: r.y1 - th,
+                            x0: r.x0 + th,
+                            ..r
+                        },
+                        fg_color,
+                        self.alpha,
+                    );
                 }
             }
             if let Some(bg_color) = self.bg_color {
