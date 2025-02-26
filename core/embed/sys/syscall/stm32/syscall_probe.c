@@ -55,6 +55,12 @@ bool probe_read_access(const void *addr, size_t len) {
     return true;
   }
 
+#ifdef FRAMEBUFFER
+  if (mpu_inside_active_fb(addr, len)) {
+    return true;
+  }
+#endif
+
   if (inside_area(addr, len, &applet->layout.code1)) {
     return true;
   }
@@ -98,6 +104,12 @@ bool probe_write_access(void *addr, size_t len) {
   if (inside_area(addr, len, &applet->layout.data2)) {
     return true;
   }
+
+#ifdef FRAMEBUFFER
+  if (mpu_inside_active_fb(addr, len)) {
+    return true;
+  }
+#endif
 
   return false;
 }

@@ -850,4 +850,220 @@ access_violation:
 
 #endif  // USE_HW_JPEG_DECODER
 
+#ifdef USE_DMA2D
+
+bool dma2d_rgb565_fill__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgb565_fill(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgb565_copy_mono4__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgb565_copy_mono4(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgb565_copy_rgb565__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgb565_copy_rgb565(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgb565_blend_mono4__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgb565_blend_mono4(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgb565_blend_mono8__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgb565_blend_mono8(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgba8888_fill__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgba8888_fill(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgba8888_copy_mono4__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgba8888_copy_mono4(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgba8888_copy_rgb565__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgba8888_copy_rgb565(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgba8888_copy_rgba8888__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgba8888_copy_rgba8888(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgba8888_blend_mono4__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgba8888_blend_mono4(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+bool dma2d_rgba8888_blend_mono8__verified(const gfx_bitblt_t *bb) {
+  if (!probe_read_access(bb, sizeof(*bb))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(bb->dst_row, bb->dst_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(bb->src_row, bb->src_stride * bb->height)) {
+    goto access_violation;
+  }
+
+  return dma2d_rgba8888_blend_mono8(bb);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif
+
 #endif  // SYSCALL_DISPATCH

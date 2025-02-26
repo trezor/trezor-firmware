@@ -262,7 +262,7 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
-void mpu_set_active_fb(void* addr, size_t size) {
+void mpu_set_active_fb(const void* addr, size_t size) {
   mpu_driver_t* drv = &g_mpu_driver;
 
   if (!drv->initialized) {
@@ -277,6 +277,24 @@ void mpu_set_active_fb(void* addr, size_t size) {
   irq_unlock(lock);
 
   mpu_reconfig(drv->mode);
+}
+
+bool mpu_inside_active_fb(const void* addr, size_t size) {
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t lock = irq_lock();
+
+  bool result =
+      ((uintptr_t)addr >= drv->active_fb_addr) &&
+      ((uintptr_t)addr + size <= drv->active_fb_addr + drv->active_fb_size);
+
+  irq_unlock(lock);
+
+  return result;
 }
 
 mpu_mode_t mpu_reconfig(mpu_mode_t mode) {

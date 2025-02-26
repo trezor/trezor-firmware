@@ -20,7 +20,7 @@
 #include <gfx/gfx_bitblt.h>
 
 #if USE_DMA2D
-#include "dma2d_bitblt.h"
+#include <gfx/dma2d_bitblt.h>
 #endif
 
 void gfx_rgb565_fill(const gfx_bitblt_t* bb) {

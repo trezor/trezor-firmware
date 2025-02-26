@@ -198,8 +198,13 @@ mpu_mode_t mpu_get_mode(void) {
   return drv->mode;
 }
 
-void mpu_set_active_fb(void* addr, size_t size) {
+void mpu_set_active_fb(const void* addr, size_t size) {
   // Not implemented on STM32F4
+}
+
+bool mpu_inside_active_fb(const void* addr, size_t size) {
+  // Not implemented on STM32F4
+  return false;
 }
 
 // STM32F4xx memory map
