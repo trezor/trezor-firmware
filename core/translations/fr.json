@@ -43,7 +43,7 @@
   },
   "header": {
     "language": "fr-FR",
-    "version": "2.8.9"
+    "version": "2.8.10"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Contactez l'assistance Trezor à l'adr.",
@@ -442,8 +442,8 @@
     "instructions__shares_start_with_1": "Commencez avec le fragment #1",
     "instructions__swipe_down": "Glisser vers le bas",
     "instructions__swipe_horizontally": "Glisser horizontalement",
-    "instructions__tap_to_continue": "Appuyez pour continuer",
     "instructions__tap_to_confirm": "Appuyez pour confirmer",
+    "instructions__tap_to_continue": "Appuyez pour continuer",
     "instructions__tap_to_start": "Appuyez pour démarrer",
     "instructions__view_all_data": "Voir toutes les données dans le menu.",
     "joint__title": "Trans. commune",

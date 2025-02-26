@@ -43,7 +43,7 @@
   },
   "header": {
     "language": "pt-BR",
-    "version": "2.8.9"
+    "version": "2.8.10"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Entre em contato com o suporte Trezor em",
@@ -442,8 +442,8 @@
     "instructions__shares_start_with_1": "Começar com cota nº1",
     "instructions__swipe_down": "Deslizar para baixo",
     "instructions__swipe_horizontally": "Deslizar horizontalmente",
-    "instructions__tap_to_continue": "Toque para continuar",
     "instructions__tap_to_confirm": "Toque para confirmar",
+    "instructions__tap_to_continue": "Toque para continuar",
     "instructions__tap_to_start": "Toque para iniciar",
     "joint__title": "Transação conjunta",
     "joint__to_the_total_amount": "Até a quantia total:",

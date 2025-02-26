@@ -43,7 +43,7 @@
   },
   "header": {
     "language": "it-IT",
-    "version": "2.8.9"
+    "version": "2.8.10"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Contatta l'Assistenza di Trezor all'indirizzo",
@@ -442,8 +442,8 @@
     "instructions__shares_start_with_1": "Inizia con azione n. 1",
     "instructions__swipe_down": "Scorri in basso",
     "instructions__swipe_horizontally": "Scorri in orizzontale",
-    "instructions__tap_to_continue": "Tocca e continua",
     "instructions__tap_to_confirm": "Tocca e conferma",
+    "instructions__tap_to_continue": "Tocca e continua",
     "instructions__tap_to_start": "Tocca e inizia",
     "instructions__view_all_data": "Visualizza tutti i dati nel menu.",
     "joint__title": "Transaz. congiunta",
