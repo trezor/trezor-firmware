@@ -17,6 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Turning off the stack protector for this file improves
+// the performance of syscall dispatching.
+#pragma GCC optimize("no-stack-protector")
+
 #include <trezor_model.h>
 
 #include <sys/applet.h>
@@ -54,6 +58,12 @@ bool probe_read_access(const void *addr, size_t len) {
   if (inside_area(addr, len, &applet->layout.data2)) {
     return true;
   }
+
+#ifdef FRAMEBUFFER
+  if (mpu_inside_active_fb(addr, len)) {
+    return true;
+  }
+#endif
 
   if (inside_area(addr, len, &applet->layout.code1)) {
     return true;
@@ -98,6 +108,12 @@ bool probe_write_access(void *addr, size_t len) {
   if (inside_area(addr, len, &applet->layout.data2)) {
     return true;
   }
+
+#ifdef FRAMEBUFFER
+  if (mpu_inside_active_fb(addr, len)) {
+    return true;
+  }
+#endif
 
   return false;
 }

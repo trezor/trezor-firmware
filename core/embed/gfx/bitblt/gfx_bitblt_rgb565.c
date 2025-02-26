@@ -17,13 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Turning off the stack protector for this file improves
+// the performance of drawing operations when called frequently.
+#pragma GCC optimize("no-stack-protector")
+
 #include <gfx/gfx_bitblt.h>
 
 #if USE_DMA2D
-#include "dma2d_bitblt.h"
+#include <gfx/dma2d_bitblt.h>
 #endif
 
+#include <io/display.h>
+#include <sys/systick.h>
+
+volatile uint64_t g_gfx_cycles;
+
 void gfx_rgb565_fill(const gfx_bitblt_t* bb) {
+  // g_gfx_cycles = systick_cycles();
+  // display_get_orientation();
+  // g_gfx_cycles = systick_cycles() - g_gfx_cycles;
+
 #if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)
   if (!dma2d_rgb565_fill(bb))
 #endif

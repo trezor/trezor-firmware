@@ -69,10 +69,6 @@ void display_set_unpriv_access(bool unpriv) {
     tz_set_gfxmmu_unpriv(unpriv);
   }
 #endif
-
-#ifdef USE_DMA2D
-  tz_set_dma2d_unpriv(unpriv);
-#endif
 }
 #endif  //  USE_TRUSTZONE
 
@@ -99,8 +95,10 @@ static uint8_t *get_fb_ptr(int16_t index) {
   }
 }
 
-bool display_get_frame_buffer(display_fb_info_t *fb_dest) {
+bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
+
+  memset(fb, 0, sizeof(display_fb_info_t));
 
   if (!drv->initialized) {
     return false;
@@ -116,25 +114,14 @@ bool display_get_frame_buffer(display_fb_info_t *fb_dest) {
   int16_t fb_idx = fb_queue_peek(&drv->empty_frames);
 
   if (fb_idx < 0) {
-    fb_dest->ptr = NULL;
-    fb_dest->stride = 0;
     return false;
   }
 
-  uintptr_t addr = (uintptr_t)get_fb_ptr(fb_idx);
+  fb->ptr = get_fb_ptr(fb_idx);
+  fb->stride = FRAME_BUFFER_PIXELS_PER_LINE * FB_PIXEL_SIZE;
+  fb->size = fb->stride * DISPLAY_RESY;
 
-  uint32_t fb_stride = FRAME_BUFFER_PIXELS_PER_LINE * FB_PIXEL_SIZE;
-
-  display_fb_info_t fb = {
-      .ptr = (void *)addr,
-      .stride = fb_stride,
-  };
-
-  size_t fb_size = fb_stride * DISPLAY_RESY;
-
-  mpu_set_active_fb((void *)addr, fb_size);
-
-  memcpy(fb_dest, &fb, sizeof(display_fb_info_t));
+  mpu_set_active_fb(fb->ptr, fb->size);
 
   return true;
 }

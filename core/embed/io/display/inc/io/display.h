@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_XDISPLAY_H
-#define TREZORHAL_XDISPLAY_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -109,9 +108,10 @@ int display_get_orientation(void);
 typedef struct {
   // Pointer to the top-left pixel
   void *ptr;
+  // Framebuffer size in bytes
+  size_t size;
   // Stride in bytes
   size_t stride;
-
 } display_fb_info_t;
 
 // Provides pointer to the inactive (writeable) framebuffer.
@@ -163,5 +163,3 @@ void display_copy_mono1p(const gfx_bitblt_t *bb);
 const char *display_save(const char *prefix);
 void display_clear_save(void);
 #endif
-
-#endif  // TREZORHAL_XDISPLAY_H

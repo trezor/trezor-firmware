@@ -84,10 +84,6 @@ void display_set_unpriv_access(bool unpriv) {
   tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
                      PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
 #endif
-
-#ifdef USE_DMA2D
-  tz_set_dma2d_unpriv(unpriv);
-#endif
 }
 #endif  // USE_TRUSTZONE
 
@@ -174,9 +170,9 @@ void DISPLAY_TE_INTERRUPT_HANDLER(void) {
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 
+  memset(fb, 0, sizeof(display_fb_info_t));
+
   if (!drv->initialized) {
-    fb->ptr = NULL;
-    fb->stride = 0;
     return false;
   }
 
@@ -185,8 +181,9 @@ bool display_get_frame_buffer(display_fb_info_t *fb) {
 
   fb->ptr = get_fb_ptr(fb_idx);
   fb->stride = DISPLAY_RESX * sizeof(uint16_t);
+  fb->size = PHYSICAL_FRAME_BUFFER_SIZE;
   // Enable access to the frame buffer from the unprivileged code
-  mpu_set_active_fb(fb->ptr, PHYSICAL_FRAME_BUFFER_SIZE);
+  mpu_set_active_fb(fb->ptr, fb->size);
 
   return true;
 }
