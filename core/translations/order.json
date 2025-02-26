@@ -992,5 +992,7 @@
   "990": "sign_message__confirm_without_review",
   "991": "instructions__tap_to_continue",
   "992": "nostr__event_kind_template",
-  "993": "reset__share_words_first"
+  "993": "reset__share_words_first",
+  "994": "backup__not_recommend",
+  "995": "words__pay_attention"
 }
