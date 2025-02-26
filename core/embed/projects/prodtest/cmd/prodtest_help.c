@@ -56,6 +56,6 @@ static void prodtest_help(cli_t* cli) {
 PRODTEST_CLI_CMD(
   .name = "help",
   .func = prodtest_help,
-  .info = "Dsiplay the list of available commands",
+  .info = "Display the list of available commands",
   .args = "[<prefix>]"
 );
