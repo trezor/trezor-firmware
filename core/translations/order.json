@@ -995,5 +995,7 @@
   "993": "ble__unpair_all",
   "994": "ble__unpair_current",
   "995": "ble__unpair_title",
-  "996": "reset__share_words_first"
+  "996": "reset__share_words_first",
+  "997": "backup__not_recommend",
+  "998": "words__pay_attention"
 }
