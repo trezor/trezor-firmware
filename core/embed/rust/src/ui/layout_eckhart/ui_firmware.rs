@@ -8,7 +8,7 @@ use crate::{
         component::{
             text::{
                 op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
             },
             Empty, FormattedText,
         },
@@ -159,6 +159,7 @@ impl FirmwareUI for UIEckhart {
         _title: TString<'static>,
         _button: TString<'static>,
         _button_style_confirm: bool,
+        _hold: bool,
         _items: Obj,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
@@ -204,7 +205,7 @@ impl FirmwareUI for UIEckhart {
         chunkify: bool,
         page_counter: bool,
         _prompt_screen: bool,
-        cancel: bool,
+        _cancel: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
@@ -258,6 +259,7 @@ impl FirmwareUI for UIEckhart {
         _subtitle: Option<TString<'static>>,
         _verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
+        _hold: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
         Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
@@ -265,10 +267,10 @@ impl FirmwareUI for UIEckhart {
 
     fn confirm_with_info(
         _title: TString<'static>,
-        _button: TString<'static>,
-        _info_button: TString<'static>,
-        _verb_cancel: Option<TString<'static>>,
         _items: Obj,
+        _verb: TString<'static>,
+        _verb_info: TString<'static>,
+        _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
     }
@@ -302,8 +304,8 @@ impl FirmwareUI for UIEckhart {
         _account_path: Option<TString<'static>>,
         _br_code: u16,
         _br_name: TString<'static>,
-        _address: Option<Obj>,
-        _address_title: Option<TString<'static>>,
+        _address_item: Option<(TString<'static>, Obj)>,
+        _extra_item: Option<(TString<'static>, Obj)>,
         _summary_items: Option<Obj>,
         _fee_items: Option<Obj>,
         _summary_title: Option<TString<'static>>,
@@ -674,7 +676,7 @@ impl FirmwareUI for UIEckhart {
         value: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        danger: bool, // TODO: review if `danger` needed in all layouts since we have show_danger
+        _danger: bool, // TODO: review if `danger` needed in all layouts since we have show_danger
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ParagraphVecShort::from_iter([
             Paragraph::new(&theme::TEXT_SMALL, description),

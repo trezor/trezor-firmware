@@ -1,19 +1,16 @@
-use crate::{
-    strutil::TString,
-    ui::{
-        component::{
-            swipe_detect::SwipeConfig,
-            text::paragraphs::{ParagraphSource, Paragraphs},
-            Component, Event, EventCtx, FormattedText, PaginateFull,
-        },
-        flow::Swipable,
-        geometry::{Insets, Rect},
-        shape::Renderer,
-        util::Pager,
+use crate::ui::{
+    component::{
+        swipe_detect::SwipeConfig,
+        text::paragraphs::{ParagraphSource, Paragraphs},
+        Component, Event, EventCtx, FormattedText, PaginateFull,
     },
+    flow::Swipable,
+    geometry::{Insets, Rect},
+    shape::Renderer,
+    util::Pager,
 };
 
-use super::{action_bar::ActionBarMsg, button::Button, ActionBar, Header, HeaderMsg, Hint};
+pub(crate) use super::{action_bar::ActionBarMsg, ActionBar, Header, HeaderMsg, Hint};
 
 /// Full-screen component for rendering text.
 ///
