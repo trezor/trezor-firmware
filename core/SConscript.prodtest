@@ -10,7 +10,7 @@ BOOTLOADER_DEVEL = ARGUMENTS.get('BOOTLOADER_DEVEL', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
 
-FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble"]
+FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -108,6 +108,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_get_cpuid.c',
     'embed/projects/prodtest/cmd/prodtest_haptic.c',
     'embed/projects/prodtest/cmd/prodtest_help.c',
+    'embed/projects/prodtest/cmd/prodtest_hw_revision.c',
     'embed/projects/prodtest/cmd/prodtest_nfc.c',
     'embed/projects/prodtest/cmd/prodtest_nrf.c',
     'embed/projects/prodtest/cmd/prodtest_optiga.c',
