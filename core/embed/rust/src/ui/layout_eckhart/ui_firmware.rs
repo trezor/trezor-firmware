@@ -165,8 +165,9 @@ impl FirmwareUI for UIEckhart {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
     }
 
-    fn confirm_reset_device(_recovery: bool) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+    fn confirm_reset_device(recovery: bool) -> Result<impl LayoutMaybeTrace, Error> {
+        let flow = flow::confirm_reset::new_confirm_reset(recovery)?;
+        Ok(flow)
     }
 
     fn confirm_summary(
