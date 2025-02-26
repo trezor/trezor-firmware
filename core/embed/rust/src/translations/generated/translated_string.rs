@@ -29,7 +29,7 @@ pub enum TranslatedString {
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
     auto_lock__title = 16,  // "Auto-lock delay"
     backup__can_back_up_anytime = 17,  // "You can back up your Trezor once, at any time."
-    backup__it_should_be_backed_up = 18,  // "You should back up your new wallet right now."
+    backup__it_should_be_backed_up = 18,  // {"Bolt": "You should back up your new wallet right now.", "Caesar": "You should back up your new wallet right now.", "Delizia": "You should back up your new wallet right now.", "Eckhart": "Back up your new wallet now."}
     backup__it_should_be_backed_up_now = 19,  // "It should be backed up now!"
     backup__new_wallet_created = 20,  // "Wallet created.\n"
     backup__new_wallet_successfully_created = 21,  // "Wallet created successfully."
@@ -1249,7 +1249,7 @@ pub enum TranslatedString {
     instructions__hold_to_confirm = 855,  // "Hold to confirm"
     words__important = 856,  // "Important"
     reset__words_written_down_template = 857,  // "I wrote down all {0} words in order."
-    backup__create_backup_to_prevent_loss = 858,  // "Create a backup to avoid losing access to your funds"
+    backup__create_backup_to_prevent_loss = 858,  // {"Bolt": "Create a backup to avoid losing access to your funds", "Caesar": "Create a backup to avoid losing access to your funds", "Delizia": "Create a backup to avoid losing access to your funds", "Eckhart": "Create a wallet backup to avoid losing access to your funds."}
     reset__check_backup_instructions = 859,  // "Let's do a quick check of your backup."
     words__instructions = 860,  // "Instructions"
     words__not_recommended = 861,  // "Not recommended!"
@@ -1408,6 +1408,8 @@ pub enum TranslatedString {
     ble__unpair_current = 994,  // "Unpair connected device"
     ble__unpair_title = 995,  // "Unpair"
     reset__share_words_first = 996,  // "Write down the first word from the backup."
+    backup__not_recommend = 997,  // "We don't recommend to skip wallet backup creation."
+    words__pay_attention = 998,  // "Pay attention"
 }
 
 impl TranslatedString {
@@ -1433,7 +1435,14 @@ impl TranslatedString {
             Self::auto_lock__change_template => "Auto-lock Trezor after {0} of inactivity?",
             Self::auto_lock__title => "Auto-lock delay",
             Self::backup__can_back_up_anytime => "You can back up your Trezor once, at any time.",
+            #[cfg(feature = "layout_bolt")]
             Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
+            #[cfg(feature = "layout_caesar")]
+            Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
+            #[cfg(feature = "layout_delizia")]
+            Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
+            #[cfg(feature = "layout_eckhart")]
+            Self::backup__it_should_be_backed_up => "Back up your new wallet now.",
             Self::backup__it_should_be_backed_up_now => "It should be backed up now!",
             Self::backup__new_wallet_created => "Wallet created.\n",
             Self::backup__new_wallet_successfully_created => "Wallet created successfully.",
@@ -2674,7 +2683,14 @@ impl TranslatedString {
             Self::instructions__hold_to_confirm => "Hold to confirm",
             Self::words__important => "Important",
             Self::reset__words_written_down_template => "I wrote down all {0} words in order.",
+            #[cfg(feature = "layout_bolt")]
             Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
+            #[cfg(feature = "layout_caesar")]
+            Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
+            #[cfg(feature = "layout_delizia")]
+            Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
+            #[cfg(feature = "layout_eckhart")]
+            Self::backup__create_backup_to_prevent_loss => "Create a wallet backup to avoid losing access to your funds.",
             Self::reset__check_backup_instructions => "Let's do a quick check of your backup.",
             Self::words__instructions => "Instructions",
             Self::words__not_recommended => "Not recommended!",
@@ -2847,6 +2863,8 @@ impl TranslatedString {
             Self::ble__unpair_current => "Unpair connected device",
             Self::ble__unpair_title => "Unpair",
             Self::reset__share_words_first => "Write down the first word from the backup.",
+            Self::backup__not_recommend => "We don't recommend to skip wallet backup creation.",
+            Self::words__pay_attention => "Pay attention",
         }
     }
 
@@ -4250,6 +4268,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
             Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
             Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
+            Qstr::MP_QSTR_backup__not_recommend => Some(Self::backup__not_recommend),
+            Qstr::MP_QSTR_words__pay_attention => Some(Self::words__pay_attention),
             _ => None,
         }
     }
