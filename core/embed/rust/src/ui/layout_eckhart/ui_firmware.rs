@@ -575,12 +575,27 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
+    // TODO: This is a temporary implementation so the UI can be functional.
+    // TODO: This is a temporary implementation so the UI can be functional.
     fn show_progress(
-        _description: TString<'static>,
+        description: TString<'static>,
         _indeterminate: bool,
-        _title: Option<TString<'static>>,
+        title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let (title, description) = if let Some(title) = title {
+            (title, description)
+        } else {
+            (description, "".into())
+        };
+
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
+        let header = Header::new(title);
+        let screen = TextScreen::new(paragraphs).with_header(header);
+
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn show_progress_coinjoin(
