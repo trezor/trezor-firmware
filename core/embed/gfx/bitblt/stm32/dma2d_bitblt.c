@@ -17,6 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Turning off the stack protector for this file improves
+// the performance of drawing operations when called frequently.
+#pragma GCC optimize("no-stack-protector")
+
 #ifdef KERNEL_MODE
 
 #include <trezor_bsp.h>
