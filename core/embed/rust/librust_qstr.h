@@ -104,6 +104,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__it_should_be_backed_up_now;
   MP_QSTR_backup__new_wallet_created;
   MP_QSTR_backup__new_wallet_successfully_created;
+  MP_QSTR_backup__not_recommend;
   MP_QSTR_backup__recover_anytime;
   MP_QSTR_backup__title_backup_completed;
   MP_QSTR_backup__title_backup_wallet;
@@ -806,6 +807,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__not_recommended;
   MP_QSTR_words__operation_cancelled;
   MP_QSTR_words__outputs;
+  MP_QSTR_words__pay_attention;
   MP_QSTR_words__please_check_again;
   MP_QSTR_words__please_try_again;
   MP_QSTR_words__really_wanna;

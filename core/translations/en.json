@@ -30,10 +30,21 @@
     "auto_lock__title": "Auto-lock delay",
     "auto_lock__turned_on": "Auto-lock turned on",
     "backup__can_back_up_anytime": "You can back up your Trezor once, at any time.",
-    "backup__create_backup_to_prevent_loss": "Create a backup to avoid losing access to your funds",
+    "backup__create_backup_to_prevent_loss": {
+      "Bolt": "Create a backup to avoid losing access to your funds",
+      "Caesar": "Create a backup to avoid losing access to your funds",
+      "Delizia": "Create a backup to avoid losing access to your funds",
+      "Eckhart": "Create a wallet backup to avoid losing access to your funds."
+    },
+    "backup__not_recommend": "We don't recommend to skip wallet backup creation.",
     "backup__info_multi_share_backup": "Your wallet backup contains multiple lists of words in a specific order (shares).",
     "backup__info_single_share_backup": "Your wallet backup contains {0} words in a specific order.",
-    "backup__it_should_be_backed_up": "You should back up your new wallet right now.",
+    "backup__it_should_be_backed_up": {
+      "Bolt": "You should back up your new wallet right now.",
+      "Caesar": "You should back up your new wallet right now.",
+      "Delizia": "You should back up your new wallet right now.",
+      "Eckhart": "Back up your new wallet now."
+    },
     "backup__it_should_be_backed_up_now": "It should be backed up now!",
     "backup__new_wallet_created": "Wallet created.\n",
     "backup__new_wallet_successfully_created": "Wallet created successfully.",
@@ -981,6 +992,7 @@
     "words__good_to_know": "Good to know",
     "words__important": "Important",
     "words__instructions": "Instructions",
+    "words__pay_attention": "Pay attention",
     "words__keep_it_safe": "Keep it safe!",
     "words__know_what_your_doing": "Continue only if you know what you are doing!",
     "words__my_trezor": "My Trezor",
