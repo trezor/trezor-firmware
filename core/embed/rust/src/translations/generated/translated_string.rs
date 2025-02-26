@@ -820,7 +820,7 @@ pub enum TranslatedString {
     reset__any_x_of_y_template = 536,  // "any {0} of {1} shares"
     reset__button_create = 537,  // "Create wallet"
     reset__button_recover = 538,  // "Recover wallet"
-    reset__by_continuing = 539,  // "By continuing you agree to Trezor Company's terms and conditions."
+    reset__by_continuing = 539,  // {"Bolt": "By continuing you agree to Trezor Company's terms and conditions.", "Caesar": "By continuing you agree to Trezor Company's terms and conditions.", "Delizia": "By continuing you agree to Trezor Company's terms and conditions.", "Eckhart": "By continuing, you agree to Trezor Company's Terms of Use."}
     reset__check_backup_title = 540,  // "Check backup"
     reset__check_group_share_title_template = 541,  // "Check g{0} - share {1}"
     reset__check_wallet_backup_title = 542,  // "Check wallet backup"
@@ -878,7 +878,7 @@ pub enum TranslatedString {
     reset__title_set_number_of_shares = 595,  // "Set number of shares"
     reset__title_set_threshold = 596,  // "Set threshold"
     reset__to_form_group_template = 597,  // "to form Group {0}."
-    reset__tos_link = 598,  // "trezor.io/tos"
+    reset__tos_link = 598,  // {"Bolt": "trezor.io/tos", "Caesar": "trezor.io/tos", "Delizia": "trezor.io/tos", "Eckhart": "More at trezor.io/tos"}
     reset__total_number_of_shares_in_group_template = 599,  // "Set the total number of shares in Group {0}."
     reset__use_your_backup = 600,  // "Use your backup when you need to recover your wallet."
     reset__write_down_words_template = 601,  // "Write the following {0} words in order on your wallet backup card."
@@ -2224,7 +2224,14 @@ impl TranslatedString {
             Self::reset__any_x_of_y_template => "any {0} of {1} shares",
             Self::reset__button_create => "Create wallet",
             Self::reset__button_recover => "Recover wallet",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__by_continuing => "By continuing, you agree to Trezor Company's Terms of Use.",
             Self::reset__check_backup_title => "Check backup",
             Self::reset__check_group_share_title_template => "Check g{0} - share {1}",
             Self::reset__check_wallet_backup_title => "Check wallet backup",
@@ -2289,7 +2296,14 @@ impl TranslatedString {
             Self::reset__title_set_number_of_shares => "Set number of shares",
             Self::reset__title_set_threshold => "Set threshold",
             Self::reset__to_form_group_template => "to form Group {0}.",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__tos_link => "trezor.io/tos",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__tos_link => "trezor.io/tos",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__tos_link => "trezor.io/tos",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__tos_link => "More at trezor.io/tos",
             Self::reset__total_number_of_shares_in_group_template => "Set the total number of shares in Group {0}.",
             Self::reset__use_your_backup => "Use your backup when you need to recover your wallet.",
             Self::reset__write_down_words_template => "Write the following {0} words in order on your wallet backup card.",
