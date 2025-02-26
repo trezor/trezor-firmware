@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.8.9] (19th March 2025)
+
+### Added
+- Ability to cancel recovery on word count selection screen.  [#3503]
+- Account info for ETH transactions.  [#3536]
+- New UI for confirming long messages.  [#4541]
+- Solana staking confirmation dialogs.  [#4560]
+
+### Fixed
+- Cancelling device recovery after aborting from Suite.  [#3503]
+
 ## [2.8.8] (19th February 2025)
 
 ### Fixed
@@ -42,7 +53,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.8.4] (internal release)
 
-## [2.8.3] (unreleased)
+## [2.8.3] (18th September 2024)
 
 ### Added
 - Reduce the choices to select wordcount when unlocking repeated backup to 20 or 33.  [#4099]
@@ -63,18 +74,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - Improve precision of PIN timeout countdown.  [#4000]
 
+### Changed
+
 ### Fixed
 - Added a progress indicator for the formatting operation.  [#3035]
 - Solana: added support for deprecated AToken Create `rent_sysvar` argument.  [#3976]
 
-
 ## [2.8.0] (9th July 2024)
+
+### Added
 
 ### Changed
 - Reworked PIN processing.
 
 ### Removed
 - CoSi functionality.  [#3442]
+
+### Fixed
 
 
 ## [2.7.2] (14th June 2024)
@@ -947,6 +963,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3256]: https://github.com/trezor/trezor-firmware/pull/3256
 [#3296]: https://github.com/trezor/trezor-firmware/pull/3296
 [#3311]: https://github.com/trezor/trezor-firmware/pull/3311
+[#3324]: https://github.com/trezor/trezor-firmware/pull/3324
 [#3359]: https://github.com/trezor/trezor-firmware/pull/3359
 [#3370]: https://github.com/trezor/trezor-firmware/pull/3370
 [#3377]: https://github.com/trezor/trezor-firmware/pull/3377
@@ -960,6 +977,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3475]: https://github.com/trezor/trezor-firmware/pull/3475
 [#3477]: https://github.com/trezor/trezor-firmware/pull/3477
 [#3496]: https://github.com/trezor/trezor-firmware/pull/3496
+[#3503]: https://github.com/trezor/trezor-firmware/pull/3503
 [#3517]: https://github.com/trezor/trezor-firmware/pull/3517
 [#3520]: https://github.com/trezor/trezor-firmware/pull/3520
 [#3536]: https://github.com/trezor/trezor-firmware/pull/3536
@@ -1034,3 +1052,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4492]: https://github.com/trezor/trezor-firmware/pull/4492
 [#4500]: https://github.com/trezor/trezor-firmware/pull/4500
 [#4537]: https://github.com/trezor/trezor-firmware/pull/4537
+[#4541]: https://github.com/trezor/trezor-firmware/pull/4541
+[#4560]: https://github.com/trezor/trezor-firmware/pull/4560
+[#4571]: https://github.com/trezor/trezor-firmware/pull/4571
+[#1658739]: https://github.com/trezor/trezor-firmware/pull/1658739
