@@ -493,8 +493,8 @@ class DebugLink:
         )
         self.transport.write(msg_type, msg_bytes)
 
-    def _read(self) -> protobuf.MessageType:
-        ret_type, ret_bytes = self.transport.read()
+    def _read(self, timeout: float | None = None) -> protobuf.MessageType:
+        ret_type, ret_bytes = self.transport.read(timeout=timeout)
         LOG.log(
             DUMP_BYTES,
             f"received type {ret_type} ({len(ret_bytes)} bytes): {ret_bytes.hex()}",
@@ -513,9 +513,9 @@ class DebugLink:
         )
         return msg
 
-    def _call(self, msg: protobuf.MessageType) -> Any:
+    def _call(self, msg: protobuf.MessageType, timeout: float | None = None) -> Any:
         self._write(msg)
-        return self._read()
+        return self._read(timeout=timeout)
 
     def state(self, wait_type: DebugWaitType | None = None) -> messages.DebugLinkState:
         if wait_type is None:
@@ -640,7 +640,10 @@ class DebugLink:
         if self.model is models.T1B1:
             return
         # When the call below returns, we know that `decision` has been processed in Core.
-        self._call(messages.DebugLinkGetState(return_empty_state=True))
+        # XXX Due to a bug, the reply may get lost at the end of a workflow.
+        # We assume that no single input event takes more than 5 seconds to process,
+        # and give up waiting after that.
+        self._call(messages.DebugLinkGetState(return_empty_state=True), timeout=5)
 
     press_yes = _make_input_func(button=messages.DebugButton.YES)
     """Confirm current layout. See `_decision` for more details."""
