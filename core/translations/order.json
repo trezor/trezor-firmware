@@ -991,5 +991,7 @@
   "989": "solana__stake_on_question",
   "990": "sign_message__confirm_without_review",
   "991": "instructions__tap_to_continue",
-  "992": "reset__share_words_first"
+  "992": "reset__share_words_first",
+  "993": "backup__not_recommend",
+  "994": "words__pay_attention"
 }
