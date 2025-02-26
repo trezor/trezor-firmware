@@ -29,7 +29,7 @@ pub enum TranslatedString {
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
     auto_lock__title = 16,  // "Auto-lock delay"
     backup__can_back_up_anytime = 17,  // "You can back up your Trezor once, at any time."
-    backup__it_should_be_backed_up = 18,  // "You should back up your new wallet right now."
+    backup__it_should_be_backed_up = 18,  // {"Bolt": "You should back up your new wallet right now.", "Caesar": "You should back up your new wallet right now.", "Delizia": "You should back up your new wallet right now.", "Eckhart": "Back up your new wallet now."}
     backup__it_should_be_backed_up_now = 19,  // "It should be backed up now!"
     backup__new_wallet_created = 20,  // "Wallet created.\n"
     backup__new_wallet_successfully_created = 21,  // "Wallet created successfully."
@@ -1227,7 +1227,7 @@ pub enum TranslatedString {
     instructions__hold_to_confirm = 855,  // "Hold to confirm"
     words__important = 856,  // "Important"
     reset__words_written_down_template = 857,  // "I wrote down all {0} words in order."
-    backup__create_backup_to_prevent_loss = 858,  // "Create a backup to avoid losing access to your funds"
+    backup__create_backup_to_prevent_loss = 858,  // {"Bolt": "Create a backup to avoid losing access to your funds", "Caesar": "Create a backup to avoid losing access to your funds", "Delizia": "Create a backup to avoid losing access to your funds", "Eckhart": "Create a wallet backup to avoid losing access to your funds."}
     reset__check_backup_instructions = 859,  // "Let's do a quick check of your backup."
     words__instructions = 860,  // "Instructions"
     words__not_recommended = 861,  // "Not recommended!"

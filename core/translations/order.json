@@ -999,5 +999,7 @@
   "997": "solana__max_fees_rent",
   "998": "solana__max_rent_fee",
   "999": "solana__transaction_fee",
-  "1000": "reset__share_words_first"
+  "1000": "reset__share_words_first",
+  "1001": "backup__not_recommend",
+  "1002": "words__pay_attention"
 }
