@@ -695,7 +695,7 @@ class TR:
     reset__title_set_threshold: str = "Set threshold"
     reset__title_shamir_backup: str = "Multi-share backup"
     reset__to_form_group_template: str = "to form Group {0}."
-    reset__tos_link: str = "trezor.io/tos"
+    reset__tos_link: str = "https://trezor.io/tos/"
     reset__total_number_of_shares_in_group_template: str = "Set the total number of shares in Group {0}."
     reset__use_your_backup: str = "Use your backup when you need to recover your wallet."
     reset__words_may_repeat: str = "Words may repeat."
