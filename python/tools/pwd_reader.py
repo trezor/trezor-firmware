@@ -26,23 +26,24 @@ from urllib.parse import urlparse
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
-from trezorlib import misc, ui
+from trezorlib import misc
 from trezorlib.client import TrezorClient
 from trezorlib.tools import parse_path
 from trezorlib.transport import get_transport
+from trezorlib.transport.session import Session
 
 # Return path by BIP-32
 BIP32_PATH = parse_path("10016h/0")
 
 
 # Deriving master key
-def getMasterKey(client: TrezorClient) -> str:
+def getMasterKey(session: Session) -> str:
     bip32_path = BIP32_PATH
     ENC_KEY = "Activate TREZOR Password Manager?"
     ENC_VALUE = bytes.fromhex(
         "2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee2d650551248d792eabf628f451200d7f51cb63e46aadcbb1038aacb05e8c8aee"
     )
-    key = misc.encrypt_keyvalue(client, bip32_path, ENC_KEY, ENC_VALUE, True, True)
+    key = misc.encrypt_keyvalue(session, bip32_path, ENC_KEY, ENC_VALUE, True, True)
     return key.hex()
 
 
@@ -101,7 +102,7 @@ def decryptEntryValue(nonce: str, val: bytes) -> dict:
 
 
 # Decrypt give entry nonce
-def getDecryptedNonce(client: TrezorClient, entry: dict) -> str:
+def getDecryptedNonce(session: Session, entry: dict) -> str:
     print()
     print("Waiting for Trezor input ...")
     print()
@@ -117,7 +118,7 @@ def getDecryptedNonce(client: TrezorClient, entry: dict) -> str:
     ENC_KEY = f"Unlock {item} for user {entry['username']}?"
     ENC_VALUE = entry["nonce"]
     decrypted_nonce = misc.decrypt_keyvalue(
-        client, BIP32_PATH, ENC_KEY, bytes.fromhex(ENC_VALUE), False, True
+        session, BIP32_PATH, ENC_KEY, bytes.fromhex(ENC_VALUE), False, True
     )
     return decrypted_nonce.hex()
 
@@ -144,13 +145,14 @@ def main() -> None:
         print(e)
         return
 
-    client = TrezorClient(transport=transport, ui=ui.ClickUI())
+    client = TrezorClient(transport=transport)
+    session = client.get_seedless_session()
 
     print()
     print("Confirm operation on Trezor")
     print()
 
-    masterKey = getMasterKey(client)
+    masterKey = getMasterKey(session)
     # print('master key:', masterKey)
 
     fileName = getFileEncKey(masterKey)[0]
@@ -173,7 +175,7 @@ def main() -> None:
     entry_id = input("Select entry number to decrypt: ")
     entry_id = str(entry_id)
 
-    plain_nonce = getDecryptedNonce(client, entries[entry_id])
+    plain_nonce = getDecryptedNonce(session, entries[entry_id])
 
     pwdArr = entries[entry_id]["password"]["data"]
     pwdHex = "".join([hex(x)[2:].zfill(2) for x in pwdArr])

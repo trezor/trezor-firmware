@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -90,7 +90,7 @@ TXHASH_8e4af7 = bytes.fromhex(
 )
 
 
-def test_p2pkh_fee_bump(client: Client):
+def test_p2pkh_fee_bump(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/4"),
         amount=174_998,
@@ -116,8 +116,8 @@ def test_p2pkh_fee_bump(client: Client):
         orig_index=1,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
@@ -132,7 +132,7 @@ def test_p2pkh_fee_bump(client: Client):
                 request_meta(TXHASH_beafc7),
                 request_input(0, TXHASH_beafc7),
                 request_output(0, TXHASH_beafc7),
-                (is_core(client), request_orig_input(0, TXHASH_50f6f1)),
+                (is_core(session), request_orig_input(0, TXHASH_50f6f1)),
                 request_orig_input(0, TXHASH_50f6f1),
                 request_orig_output(0, TXHASH_50f6f1),
                 request_orig_output(1, TXHASH_50f6f1),
@@ -145,7 +145,7 @@ def test_p2pkh_fee_bump(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [inp1],
             [out1, out2],
@@ -159,7 +159,7 @@ def test_p2pkh_fee_bump(client: Client):
     )
 
 
-def test_p2wpkh_op_return_fee_bump(client: Client):
+def test_p2wpkh_op_return_fee_bump(session: Session):
     # Original input.
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/1h/0/14"),
@@ -190,9 +190,9 @@ def test_p2wpkh_op_return_fee_bump(client: Client):
         orig_index=1,
     )
 
-    with client:
+    with session:
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1],
             [out1, out2],
@@ -207,7 +207,7 @@ def test_p2wpkh_op_return_fee_bump(client: Client):
 
 
 # txid 48bc29fc42a64b43d043b0b7b99b21aa39654234754608f791c60bcbd91a8e92
-def test_p2tr_fee_bump(client: Client):
+def test_p2tr_fee_bump(session: Session):
     inp1 = messages.TxInputType(
         # tb1p8tvmvsvhsee73rhym86wt435qrqm92psfsyhy6a3n5gw455znnpqm8wald
         address_n=parse_path("m/86h/1h/0h/0/1"),
@@ -243,8 +243,8 @@ def test_p2tr_fee_bump(client: Client):
         orig_index=1,
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_8e4af7),
@@ -269,7 +269,7 @@ def test_p2tr_fee_bump(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
+            session, "Testnet", [inp1, inp2], [out1, out2], prev_txes=TX_CACHE_TESTNET
         )
 
     # Transaction does not exist on the blockchain, not using assert_tx_matches()
@@ -281,7 +281,7 @@ def test_p2tr_fee_bump(client: Client):
     )
 
 
-def test_p2wpkh_finalize(client: Client):
+def test_p2wpkh_finalize(session: Session):
     # Original input with disabled RBF opt-in, i.e. we finalize the transaction.
     inp1 = messages.TxInputType(
         address_n=parse_path("m/84h/1h/0h/0/2"),
@@ -312,8 +312,8 @@ def test_p2wpkh_finalize(client: Client):
         orig_index=1,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_70f987),
@@ -339,7 +339,7 @@ def test_p2wpkh_finalize(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1],
             [out1, out2],
@@ -401,7 +401,7 @@ def test_p2wpkh_finalize(client: Client):
     ),
 )
 def test_p2wpkh_payjoin(
-    client, out1_amount, out2_amount, copayer_witness, fee_confirm, expected_tx
+    session, out1_amount, out2_amount, copayer_witness, fee_confirm, expected_tx
 ):
     # Original input.
     inp1 = messages.TxInputType(
@@ -444,8 +444,8 @@ def test_p2wpkh_payjoin(
         orig_index=1,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_65b768),
@@ -478,7 +478,7 @@ def test_p2wpkh_payjoin(
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2],
             [out1, out2],
@@ -489,7 +489,7 @@ def test_p2wpkh_payjoin(
     assert serialized_tx.hex() == expected_tx
 
 
-def test_p2wpkh_in_p2sh_remove_change(client: Client):
+def test_p2wpkh_in_p2sh_remove_change(session: Session):
     # Test fee bump with change-output removal. Originally fee was 3780, now 98060.
 
     inp1 = messages.TxInputType(
@@ -520,8 +520,8 @@ def test_p2wpkh_in_p2sh_remove_change(client: Client):
         orig_index=0,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_334cd7),
@@ -553,7 +553,7 @@ def test_p2wpkh_in_p2sh_remove_change(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2],
             [out1],
@@ -567,7 +567,7 @@ def test_p2wpkh_in_p2sh_remove_change(client: Client):
     )
 
 
-def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
+def test_p2wpkh_in_p2sh_fee_bump_from_external(session: Session):
     # Use the change output and an external output to bump the fee.
     # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).
 
@@ -599,8 +599,8 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
         orig_index=0,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_334cd7),
@@ -634,7 +634,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2],
             [out1],
@@ -649,7 +649,7 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(client: Client):
 
 
 @pytest.mark.models("core")
-def test_tx_meld(client: Client):
+def test_tx_meld(session: Session):
     # Meld two original transactions into one, joining the change-outputs into a different one.
 
     inp1 = messages.TxInputType(
@@ -720,8 +720,8 @@ def test_tx_meld(client: Client):
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_334cd7),
@@ -785,7 +785,7 @@ def test_tx_meld(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2, inp3, inp4],
             [out1, out2, out3],
@@ -799,7 +799,7 @@ def test_tx_meld(client: Client):
     )
 
 
-def test_attack_steal_change(client: Client):
+def test_attack_steal_change(session: Session):
     # Attempt to steal amount equivalent to the change in the original transaction by
     # hiding the fact that an output in the original transaction is a change-output.
 
@@ -860,7 +860,7 @@ def test_attack_steal_change(client: Client):
         TrezorFailure, match="Original output is missing change-output parameters"
     ):
         btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2],
             [out1, out2, out3],
@@ -870,7 +870,7 @@ def test_attack_steal_change(client: Client):
 
 
 @pytest.mark.models("core")
-def test_attack_false_internal(client: Client):
+def test_attack_false_internal(session: Session):
     # Falsely claim that an external input is internal in the original transaction.
     # If this were possible, it would allow an attacker to make it look like the
     # user was spending more in the original than they actually were, making it
@@ -914,7 +914,7 @@ def test_attack_false_internal(client: Client):
         TrezorFailure, match="Original input does not match current input"
     ):
         btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2],
             [out1],
@@ -922,7 +922,7 @@ def test_attack_false_internal(client: Client):
         )
 
 
-def test_attack_fake_int_input_amount(client: Client):
+def test_attack_fake_int_input_amount(session: Session):
     # Give a fake input amount for an original internal input while giving the correct
     # amount for the replacement input. If an attacker could increase the amount of an
     # internal input in the original transaction, then they could bump the fee of the
@@ -968,7 +968,7 @@ def test_attack_fake_int_input_amount(client: Client):
         TrezorFailure, match="Original input does not match current input"
     ):
         btc.sign_tx(
-            client,
+            session,
             "Bitcoin",
             [inp1],
             [out1, out2],
@@ -977,7 +977,7 @@ def test_attack_fake_int_input_amount(client: Client):
 
 
 @pytest.mark.models("core")
-def test_attack_fake_ext_input_amount(client: Client):
+def test_attack_fake_ext_input_amount(session: Session):
     # Give a fake input amount for an original external input while giving the correct
     # amount for the replacement input. If an attacker could decrease the amount of an
     # external input in the original transaction, then they could steal the fee from
@@ -1044,7 +1044,7 @@ def test_attack_fake_ext_input_amount(client: Client):
         TrezorFailure, match="Original input does not match current input"
     ):
         btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1, inp2],
             [out1, out2],
@@ -1052,7 +1052,7 @@ def test_attack_fake_ext_input_amount(client: Client):
         )
 
 
-def test_p2wpkh_invalid_signature(client: Client):
+def test_p2wpkh_invalid_signature(session: Session):
     # Ensure that transaction replacement fails when the original signature is invalid.
 
     # Original input with disabled RBF opt-in, i.e. we finalize the transaction.
@@ -1096,7 +1096,7 @@ def test_p2wpkh_invalid_signature(client: Client):
 
     with pytest.raises(TrezorFailure, match="Invalid signature"):
         btc.sign_tx(
-            client,
+            session,
             "Testnet",
             [inp1],
             [out1, out2],
@@ -1105,7 +1105,7 @@ def test_p2wpkh_invalid_signature(client: Client):
         )
 
 
-def test_p2tr_invalid_signature(client: Client):
+def test_p2tr_invalid_signature(session: Session):
     # Ensure that transaction replacement fails when the original signature is invalid.
 
     inp1 = messages.TxInputType(
@@ -1151,4 +1151,4 @@ def test_p2tr_invalid_signature(client: Client):
     prev_txes = {TXHASH_8e4af7: prev_tx_invalid}
 
     with pytest.raises(TrezorFailure, match="Invalid signature"):
-        btc.sign_tx(client, "Testnet", [inp1, inp2], [out1, out2], prev_txes=prev_txes)
+        btc.sign_tx(session, "Testnet", [inp1, inp2], [out1, out2], prev_txes=prev_txes)
