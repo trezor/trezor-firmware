@@ -218,7 +218,7 @@ impl ConfirmValue {
             } else {
                 &theme::TEXT_NORMAL
             },
-            description_font: &theme::TEXT_NORMAL,
+            description_font: self.description_font,
             extra_font: &theme::TEXT_DEMIBOLD,
         }
         .into_paragraphs();
