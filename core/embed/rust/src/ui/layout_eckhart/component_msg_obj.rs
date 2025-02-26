@@ -15,7 +15,8 @@ use crate::{
 
 use super::component::{
     AllowedTextContent, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
-    PinKeyboardMsg, SelectWordMsg, SelectWordScreen, TextScreen, TextScreenMsg,
+    PinKeyboardMsg, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg, SelectWordScreen,
+    TextScreen, TextScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -86,6 +87,15 @@ impl ComponentMsgObj for SelectWordScreen {
         match msg {
             SelectWordMsg::Selected(i) => i.try_into(),
             SelectWordMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl ComponentMsgObj for SelectWordCountScreen {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            SelectWordCountMsg::Selected(i) => i.try_into(),
+            SelectWordCountMsg::Cancelled => Ok(CANCELLED.as_obj()),
         }
     }
 }
