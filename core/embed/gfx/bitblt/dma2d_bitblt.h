@@ -44,6 +44,7 @@ bool dma2d_rgb565_blend_mono8(const gfx_bitblt_t* bb);
 
 bool dma2d_rgba8888_fill(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_mono4(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_copy_mono8(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_rgb565(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_rgba8888(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_blend_mono4(const gfx_bitblt_t* bb);
@@ -53,4 +54,5 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_ycbcr420(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_ycbcr422(const gfx_bitblt_t* bb);
 bool dma2d_rgba8888_copy_ycbcr444(const gfx_bitblt_t* bb);
+bool dma2d_rgba8888_copy_y(const gfx_bitblt_t* bb);
 #endif

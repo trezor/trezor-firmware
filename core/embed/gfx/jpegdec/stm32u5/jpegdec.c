@@ -456,7 +456,8 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
       result = dma2d_rgba8888_copy_ycbcr444(&bb);
       break;
     case JPEGDEC_IMAGE_GRAYSCALE:
-      // Conversion from grayscale to RGBA8888 is not supported
+      result = dma2d_rgba8888_copy_y(&bb);
+      break;
     default:
       result = false;
       break;
