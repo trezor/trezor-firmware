@@ -15,7 +15,7 @@ def get_ui_module(model: str, stage: str):
 
     layout = models.get_model_ui(model)
 
-    if layout == "delizia" and stage == "prodtest":
+    if layout in ("delizia", "eckhart") and stage == "prodtest":
         layout = "bolt"
 
     return ui_modules[layout]
