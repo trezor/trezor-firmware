@@ -26,7 +26,7 @@ use crate::{
 use super::{
     component::{
         ActionBar, Bip39Input, Button, Header, HeaderMsg, Hint, MnemonicKeyboard, PinKeyboard,
-        SelectWordScreen, Slip39Input, TextScreen,
+        SelectWordCountScreen, SelectWordScreen, Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -430,8 +430,16 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn select_word_count(_recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+    fn select_word_count(recovery_type: RecoveryType) -> Result<impl LayoutMaybeTrace, Error> {
+        let description = TR::recovery__num_of_words.into();
+        let content = if matches!(recovery_type, RecoveryType::UnlockRepeatedBackup) {
+            SelectWordCountScreen::new_multi_share(description)
+        } else {
+            SelectWordCountScreen::new_single_share(description)
+        }
+        .with_header(Header::new(TR::recovery__title_recover.into()));
+        let layout = RootComponent::new(content);
+        Ok(layout)
     }
 
     fn set_brightness(_current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
