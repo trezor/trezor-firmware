@@ -314,6 +314,8 @@ def flow_confirm_output(
     title: str | None,
     subtitle: str | None,
     message: str,
+    description: str | None,
+    extra: str | None,
     amount: str | None,
     chunkify: bool,
     text_mono: bool,
@@ -330,7 +332,6 @@ def flow_confirm_output(
     summary_br_code: ButtonRequestType | None = None,
     summary_br_name: str | None = None,
     cancel_text: str | None = None,
-    description: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Confirm the recipient, (optionally) confirm the amount and (optionally) confirm the summary and present a Hold to Sign page."""
 
