@@ -37,6 +37,7 @@ pub struct ConfirmValue {
     description: Option<TString<'static>>,
     description_font: &'static TextStyle,
     extra: Option<TString<'static>>,
+    extra_font: &'static TextStyle,
     verb: Option<TString<'static>>,
     verb_cancel: TString<'static>,
     verb_info: Option<TString<'static>>,
@@ -66,6 +67,7 @@ impl ConfirmValue {
             description,
             description_font: &theme::TEXT_NORMAL,
             extra: None,
+            extra_font: &theme::TEXT_DEMIBOLD,
             verb: None,
             verb_cancel: TR::buttons__cancel.into(),
             verb_info: None,
@@ -87,6 +89,11 @@ impl ConfirmValue {
 
     pub const fn with_extra(mut self, extra: Option<TString<'static>>) -> Self {
         self.extra = extra;
+        self
+    }
+
+    pub const fn with_extra_font(mut self, extra_font: &'static TextStyle) -> Self {
+        self.extra_font = extra_font;
         self
     }
 
@@ -225,8 +232,8 @@ impl ConfirmValue {
             } else {
                 &theme::TEXT_NORMAL
             },
-            description_font: &theme::TEXT_NORMAL,
-            extra_font: &theme::TEXT_DEMIBOLD,
+            description_font: self.description_font,
+            extra_font: self.extra_font,
         }
         .into_paragraphs();
 
@@ -277,7 +284,7 @@ impl ConfirmValue {
                 &theme::TEXT_NORMAL
             },
             description_font: self.description_font,
-            extra_font: &theme::TEXT_DEMIBOLD,
+            extra_font: self.extra_font,
         }
         .into_paragraphs();
 

@@ -163,6 +163,7 @@ pub trait FirmwareUI {
         title: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
         description: Option<TString<'static>>,
+        extra: Option<TString<'static>>,
         message: Obj,        // TODO: replace Obj
         amount: Option<Obj>, // TODO: replace Obj
         chunkify: bool,

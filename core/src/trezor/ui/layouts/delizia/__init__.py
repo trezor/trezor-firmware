@@ -393,6 +393,7 @@ async def confirm_output(
             title=TR.words__address,
             subtitle=title,
             message=address,
+            extra=None,
             amount=amount,
             chunkify=chunkify,
             text_mono=True,
@@ -770,6 +771,8 @@ if not utils.BITCOIN_ONLY:
                     if not is_contract_interaction
                     else TR.ethereum__interaction_contract
                 ),
+                description=None,
+                extra=None,
                 message=(recipient or TR.ethereum__new_contract),
                 amount=None,
                 chunkify=(chunkify if recipient else False),
@@ -790,7 +793,6 @@ if not utils.BITCOIN_ONLY:
                 summary_br_name="confirm_total",
                 summary_br_code=ButtonRequestType.SignTx,
                 cancel_text=TR.buttons__cancel,
-                description=None,
             ),
             None,
         )
@@ -821,6 +823,8 @@ if not utils.BITCOIN_ONLY:
             trezorui_api.flow_confirm_output(
                 title=verb,
                 subtitle=None,
+                description=None,
+                extra=None,
                 message=intro_question,
                 amount=None,
                 chunkify=False,
@@ -838,7 +842,6 @@ if not utils.BITCOIN_ONLY:
                 summary_br_name="confirm_total",
                 summary_br_code=ButtonRequestType.SignTx,
                 cancel_text=TR.buttons__cancel,  # cancel staking
-                description=None,
             ),
             br_name=None,
         )
@@ -880,13 +883,12 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        if vote_account:
-            description = f"{description}\n\n{TR.solana__stake_provider}:"
         await raise_if_not_confirmed(
             trezorui_api.flow_confirm_output(
                 title=title,
                 subtitle=None,
                 description=description,
+                extra=f"\n{TR.solana__stake_provider}:" if vote_account else None,
                 message=vote_account,
                 amount=None,
                 chunkify=True,
