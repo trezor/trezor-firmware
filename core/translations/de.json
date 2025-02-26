@@ -43,7 +43,7 @@
   },
   "header": {
     "language": "de-DE",
-    "version": "2.8.9"
+    "version": "2.8.10"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Kontaktiere den Trezor Support unter",
@@ -442,8 +442,8 @@
     "instructions__shares_start_with_1": "Mit Share #1 beginnen",
     "instructions__swipe_down": "Nach unten wischen",
     "instructions__swipe_horizontally": "Zur Seite wischen",
-    "instructions__tap_to_continue": "Zum Fortfahren tippen",
     "instructions__tap_to_confirm": "Zum Bestätigen tippen",
+    "instructions__tap_to_continue": "Zum Fortfahren tippen",
     "instructions__tap_to_start": "Zum Beginnen tippen",
     "instructions__view_all_data": "Alle Daten im Menü sehen.",
     "joint__title": "Gemeins. transakt.",
