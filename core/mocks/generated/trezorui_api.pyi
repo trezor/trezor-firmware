@@ -317,6 +317,7 @@ def flow_confirm_output(
     amount: str | None,
     chunkify: bool,
     text_mono: bool,
+    account_title: str,
     account: str | None,
     account_path: str | None,
     br_code: ButtonRequestType,

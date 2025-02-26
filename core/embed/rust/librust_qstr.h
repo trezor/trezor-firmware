@@ -39,6 +39,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_account;
   MP_QSTR_account_items;
   MP_QSTR_account_path;
+  MP_QSTR_account_title;
   MP_QSTR_accounts;
   MP_QSTR_action;
   MP_QSTR_active;
