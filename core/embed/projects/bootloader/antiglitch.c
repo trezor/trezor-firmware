@@ -17,10 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_rtl.h>
 
-#include <trezor_types.h>
+// anti-glitch
+static volatile secbool continue_to_firmware = secfalse;
+static volatile secbool continue_to_firmware_backup = secfalse;
 
-#undef FIRMWARE_START
+secbool jump_is_allowed_1(void) { return continue_to_firmware; }
+secbool jump_is_allowed_2(void) { return continue_to_firmware_backup; }
 
-extern uint8_t *FIRMWARE_START;
+void jump_allow_1(void) { continue_to_firmware = sectrue; }
+void jump_allow_2(void) { continue_to_firmware_backup = sectrue; }
+
+void jump_reset(void) {
+  continue_to_firmware_backup = secfalse;
+  continue_to_firmware = secfalse;
+}
