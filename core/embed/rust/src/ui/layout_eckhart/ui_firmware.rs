@@ -351,7 +351,8 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let flow = flow::prompt_backup::new_prompt_backup()?;
+        Ok(flow)
     }
 
     fn request_bip39(
@@ -576,11 +577,24 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_progress(
-        _description: TString<'static>,
+        description: TString<'static>,
         _indeterminate: bool,
-        _title: Option<TString<'static>>,
+        title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let (title, description) = if let Some(title) = title {
+            (title, description)
+        } else {
+            (description, "".into())
+        };
+
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
+        let header = Header::new(title);
+        let screen = TextScreen::new(paragraphs).with_header(header);
+
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn show_progress_coinjoin(

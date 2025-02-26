@@ -1016,5 +1016,7 @@
   "1014": "instructions__tap",
   "1015": "solana__unknown_token",
   "1016": "solana__unknown_token_address",
-  "1017": "reset__share_words_first"
+  "1017": "reset__share_words_first",
+  "1018": "backup__not_recommend",
+  "1019": "words__pay_attention"
 }
