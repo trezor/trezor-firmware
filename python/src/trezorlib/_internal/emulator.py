@@ -14,6 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import atexit
 import logging
 import os
 import subprocess
@@ -27,6 +28,15 @@ from ..transport.udp import UdpTransport
 LOG = logging.getLogger(__name__)
 
 EMULATOR_WAIT_TIME = 60
+_RUNNING_PIDS = set()
+
+
+def _cleanup_pids():
+    for process in _RUNNING_PIDS:
+        process.kill()
+
+
+atexit.register(_cleanup_pids)
 
 
 def _rm_f(path: Path) -> None:
@@ -130,6 +140,7 @@ class Emulator:
     def wait(self, timeout: Optional[float] = None) -> int:
         assert self.process is not None, "Emulator not started"
         ret = self.process.wait(timeout=timeout)
+        _RUNNING_PIDS.remove(self.process)
         self.process = None
         self.stop()
         return ret
@@ -164,6 +175,7 @@ class Emulator:
                 return
 
         self.process = self.launch_process()
+        _RUNNING_PIDS.add(self.process)
         try:
             self.wait_until_ready()
         except TimeoutError:
@@ -197,6 +209,7 @@ class Emulator:
             except subprocess.TimeoutExpired:
                 LOG.info("Emulator seems stuck. Sending kill signal.")
                 self.process.kill()
+            _RUNNING_PIDS.remove(self.process)
 
         _rm_f(self.profile_dir / "trezor.pid")
         _rm_f(self.profile_dir / "trezor.port")
