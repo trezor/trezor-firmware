@@ -154,8 +154,28 @@ pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle
     &TEXT_MONO_MEDIUM
 }
 
+// Macro for styles differing only in text color
+macro_rules! label_title {
+    ($color:expr) => {
+        TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, $color, BG, $color, $color)
+            .with_line_spacing(-4)
+    };
+}
+
 pub const fn label_title_main() -> TextStyle {
-    TEXT_SMALL
+    label_title!(GREY)
+}
+
+pub const fn label_title_confirm() -> TextStyle {
+    label_title!(GREEN_LIGHT)
+}
+
+pub const fn label_title_danger() -> TextStyle {
+    label_title!(ORANGE)
+}
+
+pub const fn label_title_warning() -> TextStyle {
+    label_title!(YELLOW)
 }
 
 pub const fn label_menu_item_subtitle() -> TextStyle {
