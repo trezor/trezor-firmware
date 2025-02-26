@@ -268,6 +268,15 @@ haptic-test 3000
 OK
 ```
 
+### hw-revision
+Retrieves the hardware revision of the device. The command returns `OK` followed by the hardware revision.
+
+Example:
+```
+hw-revision
+OK 1
+```
+
 ### nrf-communication
 Tests the internal communication between the main MCU and NRF MCU. The command returns `OK` if the communication is successful.
 
