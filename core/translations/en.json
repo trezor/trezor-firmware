@@ -625,7 +625,12 @@
     "reset__any_x_of_y_template": "any {0} of {1} shares",
     "reset__button_create": "Create wallet",
     "reset__button_recover": "Recover wallet",
-    "reset__by_continuing": "By continuing you agree to Trezor Company's terms and conditions.",
+    "reset__by_continuing": {
+      "Bolt": "By continuing you agree to Trezor Company's terms and conditions.",
+      "Caesar": "By continuing you agree to Trezor Company's terms and conditions.",
+      "Delizia": "By continuing you agree to Trezor Company's terms and conditions.",
+      "Eckhart": "By continuing, you agree to Trezor Company's Terms of Use."
+    },
     "reset__cancel_create_wallet": "Cancel create wallet",
     "reset__check_backup_instructions": "Let's do a quick check of your backup.",
     "reset__check_backup_title": "Check backup",
@@ -711,7 +716,12 @@
     "reset__title_set_threshold": "Set threshold",
     "reset__title_shamir_backup": "Multi-share backup",
     "reset__to_form_group_template": "to form Group {0}.",
-    "reset__tos_link": "trezor.io/tos",
+    "reset__tos_link": {
+      "Bolt": "trezor.io/tos",
+      "Caesar": "trezor.io/tos",
+      "Delizia": "trezor.io/tos",
+      "Eckhart": "More at trezor.io/tos"
+    },
     "reset__total_number_of_shares_in_group_template": "Set the total number of shares in Group {0}.",
     "reset__use_your_backup": "Use your backup when you need to recover your wallet.",
     "reset__words_may_repeat": "Words may repeat.",
