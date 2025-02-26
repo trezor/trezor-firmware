@@ -139,6 +139,7 @@ class EmulatorWrapper:
         if logs_dir is not None:
             src = Path(self.profile_dir.name) / "trezor.log"
             dst = Path(logs_dir) / f"trezor-{self.worker_id}.log"
-            shutil.move(src, dst)
+            with open(src, "rb") as src, open(dst, "ab") as dst:
+                shutil.copyfileobj(src, dst)
 
         self.profile_dir.cleanup()
