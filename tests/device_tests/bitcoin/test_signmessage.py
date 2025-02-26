@@ -391,7 +391,6 @@ MESSAGE_LENGTHS = (
 @pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS)
 def test_signmessage_pagination(client: Client, message: str, is_long: bool):
     with client:
-        print("AAAA ", is_long)
         IF = (
             InputFlowSignVerifyMessageLong
             if is_long
