@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1, T3W1]
+        model: ${{ fromJSON(startsWith(github.ref, 'refs/heads/release/') && '["T2B1", "T2T1", "T3B1", "T3T1", "T3W1"]' || '["T2T1", "T3B1", "T3T1", "T3W1"]') }}
         coins: [universal, btconly]
         type: ${{ fromJSON(github.event_name == 'schedule' && '["normal", "debuglink", "production"]' || '["normal", "debuglink"]') }}
         include:
