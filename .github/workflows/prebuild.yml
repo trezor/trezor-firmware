@@ -83,7 +83,7 @@ jobs:
   # Checking the format of release commit messages.
   release_commit_msg_check:
     name: Release commit message check
-    if: ${{ startsWith(github.ref, 'refs/tags/release/') && github.repository == 'trezor/trezor-firmware' }}
+    if: ${{ startsWith(github.ref, 'refs/heads/release/') && github.repository == 'trezor/trezor-firmware' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
