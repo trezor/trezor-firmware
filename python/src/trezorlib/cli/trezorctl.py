@@ -325,8 +325,6 @@ def version() -> str:
 @with_session(empty_passphrase=True)
 def ping(session: "Session", message: str, button_protection: bool) -> str:
     """Send ping message."""
-
-    # TODO return short-circuit from old client for old Trezors
     return session.ping(message, button_protection)
 
 
