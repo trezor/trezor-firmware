@@ -16,10 +16,6 @@ MT = t.TypeVar("MT", bound=MessageType)
 
 
 class Session:
-    button_callback: t.Callable[[Session, t.Any], t.Any] | None = None
-    pin_callback: t.Callable[[Session, t.Any], t.Any] | None = None
-    passphrase_callback: t.Callable[[Session, t.Any], t.Any] | None = None
-
     def __init__(
         self, client: TrezorClient, id: bytes, passphrase: str | object | None = None
     ) -> None:
@@ -39,17 +35,17 @@ class Session:
 
         while True:
             if isinstance(resp, messages.PinMatrixRequest):
-                if self.pin_callback is None:
-                    raise Exception  # TODO
-                resp = self.pin_callback(self, resp)
+                if self.client.pin_callback is None:
+                    raise NotImplementedError("Missing pin_callback")
+                resp = self.client.pin_callback(self, resp)
             elif isinstance(resp, messages.PassphraseRequest):
-                if self.passphrase_callback is None:
-                    raise Exception  # TODO
-                resp = self.passphrase_callback(self, resp)
+                if self.client.passphrase_callback is None:
+                    raise NotImplementedError("Missing passphrase_callback")
+                resp = self.client.passphrase_callback(self, resp)
             elif isinstance(resp, messages.ButtonRequest):
-                if self.button_callback is None:
-                    raise Exception  # TODO
-                resp = self.button_callback(self, resp)
+                resp = (self.client.button_callback or default_button_callback)(
+                    self, resp
+                )
             elif isinstance(resp, messages.Failure):
                 if resp.code == messages.FailureType.ActionCancelled:
                     raise exceptions.Cancelled
@@ -123,7 +119,6 @@ class SessionV1(Session):
         assert isinstance(client.protocol, ProtocolV1Channel)
         session = SessionV1(client, id=session_id or b"")
 
-        session._init_callbacks()
         session.passphrase = passphrase
         session.derive_cardano = derive_cardano
         session.init_session(session.derive_cardano)
@@ -135,13 +130,6 @@ class SessionV1(Session):
         session = SessionV1(client, session_id)
         session.init_session()
         return session
-
-    def _init_callbacks(self) -> None:
-        self.button_callback = self.client.button_callback
-        if self.button_callback is None:
-            self.button_callback = _callback_button
-        self.pin_callback = self.client.pin_callback
-        self.passphrase_callback = self.client.passphrase_callback
 
     def _write(self, msg: t.Any) -> None:
         if t.TYPE_CHECKING:
@@ -161,11 +149,8 @@ class SessionV1(Session):
         resp: messages.Features = self.call_raw(
             messages.Initialize(session_id=session_id, derive_cardano=derive_cardano)
         )
-        if isinstance(self.passphrase, str):
-            self.passphrase_callback = self.client.passphrase_callback
         self._id = resp.session_id
 
 
-def _callback_button(session: Session, msg: t.Any) -> t.Any:
-    print("Please confirm action on your Trezor device.")  # TODO how to handle UI?
+def default_button_callback(session: Session, msg: t.Any) -> t.Any:
     return session.call(messages.ButtonAck())
