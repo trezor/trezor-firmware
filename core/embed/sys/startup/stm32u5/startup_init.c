@@ -69,6 +69,58 @@ uint32_t SystemCoreClock = DEFAULT_FREQ * 1000000U;
 #pragma GCC optimize( \
     "no-stack-protector")  // applies to all functions in this file
 
+// This function replaces calls to universal, but flash-wasting
+//  function HAL_RCC_OscConfig.
+//
+//  This is the configuration before the optimization:
+//   osc_init_def.OscillatorType = RCC_OSCILLATORTYPE_LSI;
+//  osc_init_def.LSIState = RCC_LSI_ON;
+//   HAL_RCC_OscConfig(&osc_init_def);
+void lsi_init(void) {
+  // Update LSI configuration in Backup Domain control register
+  // Requires to enable write access to Backup Domain of necessary
+
+  if (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP)) {
+    // Enable write access to Backup domain
+    SET_BIT(PWR->DBPR, PWR_DBPR_DBP);
+
+    // Wait for Backup domain Write protection disable
+    while (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP))
+      ;
+  }
+
+  uint32_t bdcr_temp = RCC->BDCR;
+
+  if (RCC_LSI_DIV1 != (bdcr_temp & RCC_BDCR_LSIPREDIV)) {
+    if (((bdcr_temp & RCC_BDCR_LSIRDY) == RCC_BDCR_LSIRDY) &&
+        ((bdcr_temp & RCC_BDCR_LSION) != RCC_BDCR_LSION)) {
+      // If LSIRDY is set while LSION is not enabled, LSIPREDIV can't be updated
+      // The LSIPREDIV cannot be changed if the LSI is used by the IWDG or by
+      // the RTC
+      return;
+    }
+
+    // Turn off LSI before changing RCC_BDCR_LSIPREDIV
+    if ((bdcr_temp & RCC_BDCR_LSION) == RCC_BDCR_LSION) {
+      __HAL_RCC_LSI_DISABLE();
+
+      // Wait till LSI is disabled
+      while (READ_BIT(RCC->BDCR, RCC_BDCR_LSIRDY) != 0U)
+        ;
+    }
+
+    // Set LSI division factor
+    MODIFY_REG(RCC->BDCR, RCC_BDCR_LSIPREDIV, 0);
+  }
+
+  // Enable the Internal Low Speed oscillator (LSI)
+  __HAL_RCC_LSI_ENABLE();
+
+  // Wait till LSI is ready
+  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSIRDY) == 0U)
+    ;
+}
+
 void SystemInit(void) {
   // set flash wait states for an increasing HCLK frequency
 
@@ -170,6 +222,12 @@ void SystemInit(void) {
 
   // enable power supply for GPIOG 2 to 15
   PWR->SVMCR |= PWR_SVMCR_IO2SV;
+
+#ifdef USE_LSE
+  // TODO
+#else
+  lsi_init();
+#endif
 
   __HAL_RCC_PWR_CLK_DISABLE();
 

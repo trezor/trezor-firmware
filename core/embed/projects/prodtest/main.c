@@ -90,6 +90,10 @@
 #include <util/hw_revision.h>
 #endif
 
+#ifdef USE_TAMPER
+#include <sys/tamper.h>
+#endif
+
 #ifdef TREZOR_MODEL_T2T1
 #define MODEL_IDENTIFIER "TREZOR2-"
 #else
@@ -180,6 +184,9 @@ static void drivers_init(void) {
 
   display_init(DISPLAY_RESET_CONTENT);
 
+#ifdef USE_TAMPER
+  tamper_init();
+#endif
 #ifdef USE_STORAGE_HWKEY
   secure_aes_init();
 #endif
