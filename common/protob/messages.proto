@@ -79,7 +79,6 @@ enum MessageType {
     MessageType_NextU2FCounter = 81 [(wire_out) = true];
 
     // Deprecated messages, kept for protobuf compatibility.
-    // Both are marked wire_out so that we don't need to implement incoming handler for legacy
     MessageType_Deprecated_PassphraseStateRequest = 77 [deprecated = true];
     MessageType_Deprecated_PassphraseStateAck = 78 [deprecated = true];
 
