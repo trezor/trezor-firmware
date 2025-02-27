@@ -502,7 +502,10 @@ impl KeypadGrid {
 mod tests {
 
     use super::{
-        super::{super::constant::SCREEN, common::INPUT_TOUCH_HEIGHT},
+        super::{
+            super::constant::SCREEN,
+            common::{INPUT_TOUCH_HEIGHT, KEYPAD_VISIBLE_HEIGHT},
+        },
         *,
     };
 
@@ -516,8 +519,7 @@ mod tests {
 
         assert_eq!(
             (ROWS as i16) * KeypadGrid::BUTTON_HEIGHT,
-            KeypadGrid::KEYPAD_TOUCH_HEIGHT
-                + (ROWS as i16 - 1) * KeypadGrid::VERTICAL_BUTTON_SPACING,
+            KEYPAD_VISIBLE_HEIGHT + (ROWS as i16 - 1) * KeypadGrid::VERTICAL_BUTTON_SPACING,
             "Keypad height does not match expected layout constraints"
         );
 
