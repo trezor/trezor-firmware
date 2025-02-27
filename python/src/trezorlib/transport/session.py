@@ -174,4 +174,13 @@ class SessionV1(Session):
 
 
 def default_button_callback(session: Session, msg: t.Any) -> t.Any:
-    return session.call(messages.ButtonAck())
+    return session.call_raw(messages.ButtonAck())
+
+
+def derive_seed(session: Session) -> None:
+
+    from ..btc import get_address
+    from ..client import PASSPHRASE_TEST_PATH
+
+    get_address(session, "Testnet", PASSPHRASE_TEST_PATH)
+    session.refresh_features()
