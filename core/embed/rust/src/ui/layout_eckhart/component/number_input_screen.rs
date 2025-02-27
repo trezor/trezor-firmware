@@ -49,7 +49,8 @@ impl NumberInputScreen {
             action_bar: ActionBar::new_double(
                 Button::with_icon(theme::ICON_CHEVRON_UP),
                 Button::with_text(TR::buttons__continue.into()),
-            ),
+            )
+            .without_touch_expansion(),
             number_input: NumberInput::new(min, max, init_value),
             description: Label::new(text, Alignment::Start, theme::TEXT_MEDIUM),
             swipe: SwipeDetect::new(),
@@ -80,11 +81,7 @@ impl Component for NumberInputScreen {
         let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
         let (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
         let (description_area, rest) = rest.split_top(Self::DESCRIPTION_HEIGHT);
-        let (input_area, rest) = rest.split_top(Self::INPUT_HEIGHT);
-
-        // Set touch expansion for the action bar not to overlap with the input area
-        self.action_bar
-            .set_touch_expansion(Insets::top(rest.height()));
+        let (input_area, _) = rest.split_top(Self::INPUT_HEIGHT);
 
         let description_area = description_area.inset(Insets::sides(24));
 

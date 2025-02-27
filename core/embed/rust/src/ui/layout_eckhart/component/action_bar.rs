@@ -91,11 +91,15 @@ impl ActionBar {
         self
     }
 
-    pub fn set_touch_expansion(&mut self, expand: Insets) {
-        if let Some(btn) = &mut self.left_button {
-            btn.set_expanded_touch_area(expand);
-        }
-        self.right_button.set_expanded_touch_area(expand);
+    pub fn without_touch_expansion(mut self) -> Self {
+        self.right_button = self
+            .right_button
+            .with_expanded_touch_area(Insets::uniform(0));
+        // Modify left_button if it exists
+        self.left_button = self
+            .left_button
+            .map(|btn| btn.with_expanded_touch_area(Insets::uniform(0)));
+        self
     }
 
     pub fn update(&mut self, new_pager: Pager) {
