@@ -34,7 +34,7 @@ class Session:
         raise NotImplementedError
 
     def call(self, msg: MessageType, expect: type[MT] = MessageType) -> MT:
-        # TODO self.check_firmware_version()
+        self.client.check_firmware_version()
         resp = self.call_raw(msg)
 
         while True:
