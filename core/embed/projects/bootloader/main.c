@@ -63,6 +63,9 @@
 #ifdef USE_HASH_PROCESSOR
 #include <sec/hash_processor.h>
 #endif
+#ifdef USE_TAMPER
+#include <sys/tamper.h>
+#endif
 
 #include <io/usb.h>
 #include "version.h"
@@ -101,18 +104,26 @@ static void drivers_init(secbool *touch_initialized) {
   display_init(DISPLAY_RESET_CONTENT);
   unit_properties_init();
 
-#ifdef USE_TOUCH
-  secbool allow_touchless_mode = secfalse;
-#if defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1
-  // on T3T1 and T3W1, tester needs to run without touch, so making an exception
-  // until unit variant is written in OTP
+#if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
+  // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
+  // an exception until unit variant is written in OTP
   const secbool manufacturing_mode =
       unit_properties()->locked ? secfalse : sectrue;
-  allow_touchless_mode = manufacturing_mode;
-
+#else
+  const secbool manufacturing_mode = secfalse;
+  (void)manufacturing_mode;  // suppress unused variable warning
 #endif
+
+#ifdef USE_TAMPER
+  tamper_init();
+  if (manufacturing_mode != sectrue) {
+    tamper_external_enable();
+  }
+#endif
+
+#ifdef USE_TOUCH
   *touch_initialized = touch_init();
-  if (allow_touchless_mode != sectrue) {
+  if (manufacturing_mode != sectrue) {
     ensure(*touch_initialized, "Touch screen panel was not loaded properly.");
   }
 #endif
