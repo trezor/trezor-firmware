@@ -274,12 +274,13 @@ pub fn new_confirm_output(
             .into_layout()?
             .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
-        SwipeFlow::new(&ConfirmOutputWithAmount::Address)?
-            .with_page(&ConfirmOutputWithAmount::Address, main_content)?
-            .with_page(&ConfirmOutputWithAmount::Amount, confirm_amount)?
-            .with_page(&ConfirmOutputWithAmount::Menu, content_main_menu)?
-            .with_page(&ConfirmOutputWithAmount::AccountInfo, account_content)?
-            .with_page(&ConfirmOutputWithAmount::CancelTap, get_cancel_page())?
+        let mut flow = SwipeFlow::new(&ConfirmOutputWithAmount::Address)?;
+        flow.add_page(&ConfirmOutputWithAmount::Address, main_content)?
+            .add_page(&ConfirmOutputWithAmount::Amount, confirm_amount)?
+            .add_page(&ConfirmOutputWithAmount::Menu, content_main_menu)?
+            .add_page(&ConfirmOutputWithAmount::AccountInfo, account_content)?
+            .add_page(&ConfirmOutputWithAmount::CancelTap, get_cancel_page())?;
+        flow
     } else if let Some(summary_items_params) = summary_items_params {
         // Summary
         let content_summary = summary_items_params
@@ -344,45 +345,45 @@ pub fn new_confirm_output(
             .with_swipe(Direction::Right, SwipeSettings::immediate())
             .map(super::util::map_to_choice);
 
-        let mut flow = SwipeFlow::new(&ConfirmOutputWithSummary::Main)?
-            .with_page(&ConfirmOutputWithSummary::Main, main_content)?
-            .with_page(&ConfirmOutputWithSummary::MainMenu, content_main_menu)?
-            .with_page(&ConfirmOutputWithSummary::MainMenuCancel, get_cancel_page())?;
+        let mut flow = SwipeFlow::new(&ConfirmOutputWithSummary::Main)?;
+        flow.add_page(&ConfirmOutputWithSummary::Main, main_content)?
+            .add_page(&ConfirmOutputWithSummary::MainMenu, content_main_menu)?
+            .add_page(&ConfirmOutputWithSummary::MainMenuCancel, get_cancel_page())?;
         if let Some(confirm_address) = confirm_address {
             let address_content = confirm_address.into_layout()?;
-            flow = flow.with_page(&ConfirmOutputWithSummary::AddressInfo, address_content)?;
+            flow.add_page(&ConfirmOutputWithSummary::AddressInfo, address_content)?;
         } else {
             // dummy page - this will never be shown since there is no menu item pointing to
             // it, but the page has to exist in the flow
-            flow = flow.with_page(
+            flow.add_page(
                 &ConfirmOutputWithSummary::AddressInfo,
                 Frame::left_aligned(TString::empty(), VerticalMenu::empty())
                     .map(|_| Some(FlowMsg::Cancelled)),
             )?;
         }
-        flow = flow
-            .with_page(&ConfirmOutputWithSummary::Summary, content_summary)?
-            .with_page(&ConfirmOutputWithSummary::SummaryMenu, content_summary_menu)?
-            .with_page(
+        flow.add_page(&ConfirmOutputWithSummary::Summary, content_summary)?
+            .add_page(&ConfirmOutputWithSummary::SummaryMenu, content_summary_menu)?
+            .add_page(
                 &ConfirmOutputWithSummary::SummaryMenuCancel,
                 get_cancel_page(),
             )?
-            .with_page(&ConfirmOutputWithSummary::FeeInfo, content_fee)?
-            .with_page(&ConfirmOutputWithSummary::Hold, content_hold)?
-            .with_page(&ConfirmOutputWithSummary::HoldMenu, content_hold_menu)?
-            .with_page(&ConfirmOutputWithSummary::HoldMenuCancel, get_cancel_page())?
-            .with_page(&ConfirmOutputWithSummary::AccountInfo, account_content)?;
+            .add_page(&ConfirmOutputWithSummary::FeeInfo, content_fee)?
+            .add_page(&ConfirmOutputWithSummary::Hold, content_hold)?
+            .add_page(&ConfirmOutputWithSummary::HoldMenu, content_hold_menu)?
+            .add_page(&ConfirmOutputWithSummary::HoldMenuCancel, get_cancel_page())?
+            .add_page(&ConfirmOutputWithSummary::AccountInfo, account_content)?;
         if let Some(confirm_extra) = confirm_extra {
             let extra_content = confirm_extra.into_layout()?;
-            flow = flow.with_page(&ConfirmOutputWithSummary::ExtraInfo, extra_content)?
+            flow.add_page(&ConfirmOutputWithSummary::ExtraInfo, extra_content)?;
         }
         flow
     } else {
-        SwipeFlow::new(&ConfirmOutput::Address)?
-            .with_page(&ConfirmOutput::Address, main_content)?
-            .with_page(&ConfirmOutput::Menu, content_main_menu)?
-            .with_page(&ConfirmOutput::AccountInfo, account_content)?
-            .with_page(&ConfirmOutput::CancelTap, get_cancel_page())?
+        let mut flow = SwipeFlow::new(&ConfirmOutput::Address)?;
+        flow.add_page(&ConfirmOutput::Address, main_content)?
+            .add_page(&ConfirmOutput::Menu, content_main_menu)?
+            .add_page(&ConfirmOutput::AccountInfo, account_content)?
+            .add_page(&ConfirmOutput::CancelTap, get_cancel_page())?;
+        flow
     };
 
     Ok(res)
