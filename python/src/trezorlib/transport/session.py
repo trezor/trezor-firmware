@@ -75,6 +75,22 @@ class Session:
         self._write(messages.Cancel())
 
     def ping(self, message: str, button_protection: bool | None = None) -> str:
+        # We would like ping to work on any valid TrezorClient instance, but
+        # due to the protection modes, we need to go through self.call, and that will
+        # raise an exception if the firmware is too old.
+        # So we short-circuit the simplest variant of ping with call_raw.
+        if not button_protection:
+            resp = self.call_raw(messages.Ping(message=message))
+            if isinstance(resp, messages.ButtonRequest):
+                # device is PIN-locked.
+                # respond and hope for the best
+                resp = (self.client.button_callback or default_button_callback)(
+                    self, resp
+                )
+            resp = messages.Success.ensure_isinstance(resp)
+            assert resp.message is not None
+            return resp.message
+
         resp = self.call(
             messages.Ping(message=message, button_protection=button_protection),
             expect=messages.Success,
