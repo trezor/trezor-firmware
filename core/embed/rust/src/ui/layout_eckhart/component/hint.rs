@@ -338,8 +338,7 @@ impl<'a> crate::trace::Trace for Hint<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::{super::constant, *};
-    use crate::strutil::TString;
+    use super::*;
 
     #[test]
     fn test_instruction_hint_height() {
