@@ -759,6 +759,17 @@ powerctl-hibernate
 OK
 ```
 
+### tamper-read
+Reads the state of the tamper detection inputs.
+Up to 8 inputs can be read, each represented by a single bit in the response.
+A set bit indicates active inputs.
+
+Example:
+```
+tamper-read
+OK 2
+```
+
 ### tropic-get-riscv-fw-version
 
 Reads the version of the RISC-V firmware. The command returns `OK` followed by the version.
