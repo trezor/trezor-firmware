@@ -18,6 +18,7 @@ from __future__ import annotations
 import logging
 import os
 import typing as t
+import warnings
 from enum import IntEnum
 
 from . import exceptions, mapping, messages, models
@@ -135,6 +136,7 @@ class TrezorClient:
     def features(self) -> messages.Features:
         if self._features is None:
             self._features = self.protocol.get_features()
+            self.check_firmware_version(warn_only=True)
         assert self._features is not None
         return self._features
 
@@ -168,11 +170,24 @@ class TrezorClient:
     def refresh_features(self) -> messages.Features:
         self.protocol.update_features()
         self._features = self.protocol.get_features()
+        self.check_firmware_version(warn_only=True)
         return self._features
 
     def _get_protocol(self) -> Channel:
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
         return protocol
+
+    def is_outdated(self) -> bool:
+        if self.features.bootloader_mode:
+            return False
+        return self.version < self.model.minimum_version
+
+    def check_firmware_version(self, warn_only: bool = False) -> None:
+        if self.is_outdated():
+            if warn_only:
+                warnings.warn("Firmware is out of date", stacklevel=2)
+            else:
+                raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
 
 
 def get_default_client(
