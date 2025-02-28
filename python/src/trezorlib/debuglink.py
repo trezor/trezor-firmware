@@ -1341,8 +1341,10 @@ class TrezorClientDebugLink(TrezorClient):
                 return send_passphrase(on_device=True)
 
         # else process host-entered passphrase
+        if passphrase is None:
+            passphrase = ""
         if not isinstance(passphrase, str):
-            raise RuntimeError("Passphrase must be a str")
+            raise RuntimeError(f"Passphrase must be a str {type(passphrase)}")
         passphrase = Mnemonic.normalize_string(passphrase)
         if len(passphrase) > MAX_PASSPHRASE_LENGTH:
             session.call_raw(messages.Cancel())
@@ -1360,15 +1362,19 @@ class TrezorClientDebugLink(TrezorClient):
 
     def get_session(
         self,
-        passphrase: str | object | None = "",
+        passphrase: str | object | None = None,
         derive_cardano: bool = False,
         session_id: bytes | None = None,
     ) -> SessionDebugWrapper:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
-        return SessionDebugWrapper(
-            super().get_session(passphrase, derive_cardano, session_id)
+        session = SessionDebugWrapper(
+            super().get_session(
+                passphrase, derive_cardano, session_id, should_derive=False
+            )
         )
+        session.passphrase = passphrase
+        return session
 
     def get_seedless_session(
         self, *args: t.Any, **kwargs: t.Any
