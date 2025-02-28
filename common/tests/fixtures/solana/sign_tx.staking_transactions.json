@@ -316,6 +316,65 @@
       }
     },
     {
+      "description": "Multiple unstake instructions",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 2
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111",
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "delegated_stake_account": 1,
+                "clock_sysvar": 3,
+                "stake_authority": 0
+              },
+              "data": {
+                "instruction_id": 5
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "delegated_stake_account": 5,
+                "clock_sysvar": 3,
+                "stake_authority": 0
+              },
+              "data": {
+                "instruction_id": 5
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "b60391297924981ff312647ac63902b39fb22f76fd134c6ba57ffdd36966706c6ce5675d4ee82a1cdc567d15b0b4b4f6cdd6f98e4c0ab390013ff98d5fb39200"
+      }
+    },
+    {
       "description": "Claim instructions",
       "parameters": {
         "address": "m/44'/501'/0'/0'",
@@ -364,6 +423,73 @@
       },
       "result": {
         "expected_signature": "4edf71d1b4d075c6717617ef43cd896a80153f418dbe4cca5e66ee9f27bd5652bec67d30ee9a14e3bd7062dd72ed619cf238e6f5538b150dae34d24bee650303"
+      }
+    },
+    {
+      "description": "Multiple claim instructions",
+      "parameters": {
+        "address": "m/44'/501'/0'/0'",
+        "construct": {
+          "version": null,
+          "header": {
+            "signers": 1,
+            "readonly_signers": 0,
+            "readonly_non_signers": 3
+          },
+          "accounts": [
+            "14CCvQzQzHCVgZM3j9soPnXuJXh1RmCfwLVUcdfbZVBS",
+            "ATFXMD5cYiw9yHkvexgx3nf9LNSouEViB5BZBsgwunAv",
+            "Stake11111111111111111111111111111111111111",
+            "SysvarC1ock11111111111111111111111111111111",
+            "ComputeBudget111111111111111111111111111111",
+            "AeDJ1BqA7ruBbd6mEcS1QNxFbT8FQbiBVuN9NqK94Taq"
+          ],
+          "blockhash": "2p4rYZAaFfV5Uk5ugdG5KPNty9Uda9B3b4gWB8qnNqak",
+          "instructions": [
+            {
+              "program_index": 4,
+              "accounts": {},
+              "data": {
+                "instruction_id": 3,
+                "lamports": 8000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "stake_account": 1,
+                "recipient_account": 0,
+                "clock_sysvar": 3,
+                "stake_history_sysvar": 4,
+                "withdrawal_authority": 0,
+                "lockup_authority": 0
+              },
+              "data": {
+                "instruction_id": 4,
+                "lamports": 1000000
+              }
+            },
+            {
+              "program_index": 2,
+              "accounts": {
+                "stake_account": 5,
+                "recipient_account": 0,
+                "clock_sysvar": 3,
+                "stake_history_sysvar": 4,
+                "withdrawal_authority": 0,
+                "lockup_authority": 0
+              },
+              "data": {
+                "instruction_id": 4,
+                "lamports": 1000000
+              }
+            }
+          ],
+          "luts": []
+        }
+      },
+      "result": {
+        "expected_signature": "87a376794de2e69b6bd46b2f48081aa915d97139706a1fa9aef9d5efd95615bb1f71c8bc64155b2d602cb259a2ac5d3a91a0cc6d95afc0d573bcf17f2bbc2e09"
       }
     },
     {

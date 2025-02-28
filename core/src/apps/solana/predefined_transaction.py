@@ -225,6 +225,8 @@ async def try_confirm_staking_transaction(
     )
 
     instructions = transaction.get_visible_instructions()
+    if not instructions:
+        return False
 
     def _match_instructions(*expected_types: Type[Instruction]) -> bool:
         if len(instructions) != len(expected_types):
@@ -271,33 +273,34 @@ async def try_confirm_staking_transaction(
         )
         return True
 
-    if _match_instructions(
-        StakeProgramDeactivateInstruction,
-    ):
+    if all(map(StakeProgramDeactivateInstruction.is_type_of, instructions)):
         from .layout import confirm_unstake_transaction
 
-        (deactivate,) = instructions
-        if signer_public_key != deactivate.stake_authority[0]:
-            return False
+        for deactivate in instructions:
+            if signer_public_key != deactivate.stake_authority[0]:
+                return False
 
         await confirm_unstake_transaction(
-            fee=fee, signer_path=signer_path, blockhash=blockhash, deactivate=deactivate
+            fee=fee, signer_path=signer_path, blockhash=blockhash
         )
         return True
 
-    if _match_instructions(
-        StakeProgramWithdrawInstruction,
-    ):
+    if all(map(StakeProgramWithdrawInstruction.is_type_of, instructions)):
         from .layout import confirm_claim_recipient, confirm_claim_transaction
 
-        (withdraw,) = instructions
-        if signer_public_key != withdraw.withdrawal_authority[0]:
-            return False
-        if signer_public_key != withdraw.recipient_account[0]:
-            await confirm_claim_recipient(withdraw.recipient_account[0])
+        total_amount = 0
+        for withdraw in instructions:
+            if signer_public_key != withdraw.withdrawal_authority[0]:
+                return False
+            if signer_public_key != withdraw.recipient_account[0]:
+                await confirm_claim_recipient(withdraw.recipient_account[0])
+            total_amount += withdraw.lamports
 
         await confirm_claim_transaction(
-            fee=fee, signer_path=signer_path, blockhash=blockhash, withdraw=withdraw
+            fee=fee,
+            signer_path=signer_path,
+            blockhash=blockhash,
+            total_amount=total_amount,
         )
 
         return True

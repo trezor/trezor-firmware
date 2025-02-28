@@ -953,7 +953,7 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: tuple[str, str],
+        stake_item: tuple[str, str] | None,
         amount_item: tuple[str, str],
         fee_item: tuple[str, str],
         fee_details: Iterable[tuple[str, str]],
@@ -966,12 +966,14 @@ if not utils.BITCOIN_ONLY:
         if not fee_label and not fee:
             amount_label = f"\n\n{amount_label}"
 
-        items = (
+        items = [
             (f"{TR.words__account}:", account),
             (f"{TR.address_details__derivation_path}:", account_path),
-            stake_item,
-            blockhash_item,
-        )
+        ]
+        if stake_item is not None:
+            items.append(stake_item)
+        items.append(blockhash_item)
+
         if vote_account:
             description = f"{description}\n{TR.solana__stake_provider}:"
         else:
