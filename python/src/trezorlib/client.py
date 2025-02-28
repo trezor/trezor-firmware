@@ -112,13 +112,14 @@ class TrezorClient:
         passphrase: str | object | None = None,
         derive_cardano: bool = False,
         session_id: bytes | None = None,
+        should_derive: bool = True,
     ) -> Session:
         """
         Returns initialized session (with derived seed).
 
         Will fail if the device is not initialized
         """
-        from .transport.session import SessionV1
+        from .transport.session import SessionV1, derive_seed
 
         if isinstance(self.protocol, ProtocolV1Channel):
             session = SessionV1.new(
@@ -158,11 +159,7 @@ class TrezorClient:
         if not new_session and self._seedless_session is not None:
             return self._seedless_session
         if isinstance(self.protocol, ProtocolV1Channel):
-            self._seedless_session = SessionV1.new(
-                client=self,
-                passphrase="",
-                derive_cardano=False,
-            )
+            self._seedless_session = SessionV1.new(client=self, derive_cardano=False)
         assert self._seedless_session is not None
         return self._seedless_session
 
@@ -249,3 +246,13 @@ def get_default_client(
     transport.open()
 
     return TrezorClient(transport, **kwargs)
+
+
+def get_callback_passphrase_v1(
+    passphrase: str = "",
+) -> t.Callable[[Session, t.Any], t.Any] | None:
+
+    def _callback_passphrase_v1(session: Session, msg: t.Any) -> t.Any:
+        return session.call(messages.PassphraseAck(passphrase=passphrase))
+
+    return _callback_passphrase_v1
