@@ -163,14 +163,11 @@ class SessionV1(Session):
     def new(
         cls,
         client: TrezorClient,
-        passphrase: str | object = "",
         derive_cardano: bool = False,
         session_id: bytes | None = None,
     ) -> SessionV1:
         assert isinstance(client.protocol, ProtocolV1Channel)
         session = SessionV1(client, id=session_id or b"")
-
-        session.passphrase = passphrase
         session.derive_cardano = derive_cardano
         session.init_session(derive_cardano=session.derive_cardano)
         return session
@@ -202,7 +199,7 @@ class SessionV1(Session):
             assert isinstance(self.client.protocol, ProtocolV1Channel)
         return self.client.protocol.read()
 
-    def init_session(self, derive_cardano: bool | None = None):
+    def init_session(self, derive_cardano: bool | None = None) -> None:
         if self.id == b"":
             new_session = True
             session_id = None
