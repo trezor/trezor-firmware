@@ -161,11 +161,8 @@ class TrezorConnection:
         else:
             available_on_device = Capability.PassphraseEntry in features.capabilities
             passphrase = get_passphrase(available_on_device, self.passphrase_on_host)
-            # TODO handle case when PASSPHRASE_ON_DEVICE is returned from get_passphrase func
-        if not isinstance(passphrase, str):
-            raise RuntimeError("Passphrase must be a str")
         session = client.get_session(
-            passphrase=passphrase, derive_cardano=derive_cardano
+            passphrase=passphrase, derive_cardano=derive_cardano, should_derive=True
         )
         return session
 
