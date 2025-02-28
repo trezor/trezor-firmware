@@ -196,13 +196,6 @@ def configure_logging(verbose: int) -> None:
     "--record",
     help="Record screen changes into a specified directory.",
 )
-@click.option(
-    "-n",
-    "--no-store",
-    is_flag=True,
-    help="Do not store channels data between commands.",
-    default=False,
-)
 @click.version_option(version=__version__)
 @click.pass_context
 def cli_main(
@@ -214,9 +207,9 @@ def cli_main(
     script: bool,
     session_id: Optional[str],
     record: Optional[str],
-    no_store: bool,
 ) -> None:
     configure_logging(verbose)
+
     bytes_session_id: Optional[bytes] = None
     if session_id is not None:
         try:
