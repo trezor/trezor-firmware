@@ -168,6 +168,10 @@ static void reboot_with_args_phase_2(uint32_t arg1, uint32_t arg2) {
   if (command == BOOT_COMMAND_NONE) {
     NVIC_SystemReset();
   } else {
+#ifndef FIXED_HW_DEINIT
+    SysTick_Config(HAL_RCC_GetSysClockFreq() / 1000U);
+    NVIC_SetPriority(SysTick_IRQn, 0);
+#endif
     jump_to_vectbl(BOOTLOADER_START + IMAGE_HEADER_SIZE, command);
   }
 #else
