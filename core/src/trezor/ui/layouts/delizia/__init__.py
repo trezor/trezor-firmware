@@ -872,7 +872,7 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: tuple[str, str],
+        stake_item: tuple[str, str] | None,
         amount_item: tuple[str, str],
         fee_item: tuple[str, str],
         fee_details: Iterable[tuple[str, str]],
