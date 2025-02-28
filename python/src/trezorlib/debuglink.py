@@ -946,11 +946,17 @@ class SessionDebugWrapper(Session):
     def __init__(self, session: Session) -> None:
         if isinstance(session, SessionDebugWrapper):
             raise Exception("Cannot wrap already wrapped session!")
-        self._session = session
+        self.__dict__["_session"] = session
         self.reset_debug_features()
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._session, name)
+
+    def __setattr__(self, name: str, value: t.Any) -> None:
+        if hasattr(self._session, name):
+            setattr(self._session, name, value)
+        else:
+            self.__dict__[name] = value
 
     @property
     def protocol_version(self) -> int:

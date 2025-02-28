@@ -149,7 +149,9 @@ class SessionV1(Session):
         resp: messages.Features = self.call_raw(
             messages.Initialize(session_id=session_id, derive_cardano=derive_cardano)
         )
-        self._id = resp.session_id
+        assert isinstance(resp, messages.Features)
+        if resp.session_id is not None:
+            self.id = resp.session_id
 
 
 def default_button_callback(session: Session, msg: t.Any) -> t.Any:
