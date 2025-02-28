@@ -147,19 +147,16 @@ impl ProdtestUI for UIBolt {
                 match ev {
                     TouchStart(p) => {
                         shape::Bar::new(Rect::from_center_and_size(*p, Offset::new(3, 3)))
-                            .with_fg(Color::rgb(0, 255, 0))
                             .with_bg(Color::rgb(0, 255, 0))
                             .render(target);
                     }
                     TouchMove(p) => {
                         shape::Bar::new(Rect::from_center_and_size(*p, Offset::new(1, 1)))
-                            .with_fg(Color::white())
                             .with_bg(Color::white())
                             .render(target);
                     }
                     TouchEnd(p) => {
                         shape::Bar::new(Rect::from_center_and_size(*p, Offset::new(3, 3)))
-                            .with_fg(Color::rgb(255, 0, 0))
                             .with_bg(Color::rgb(255, 0, 0))
                             .render(target);
                     }
