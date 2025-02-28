@@ -22,10 +22,10 @@ import typing as t
 import click
 
 from .. import messages, nostr, tools
-from . import with_client
+from . import with_session
 
 if t.TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 
 PATH_TEMPLATE = "m/44h/1237h/{}h/0/0"
@@ -38,9 +38,9 @@ def cli() -> None:
 
 @cli.command()
 @click.option("-a", "--account", default=0, help="Account index")
-@with_client
+@with_session
 def get_pubkey(
-    client: "TrezorClient",
+    session: "Session",
     account: int,
 ) -> str:
     """Return the pubkey derived by the given path."""
@@ -48,7 +48,7 @@ def get_pubkey(
     address_n = tools.parse_path(PATH_TEMPLATE.format(account))
 
     return nostr.get_pubkey(
-        client,
+        session,
         address_n,
     ).hex()
 
@@ -56,9 +56,9 @@ def get_pubkey(
 @cli.command()
 @click.option("-a", "--account", default=0, help="Account index")
 @click.argument("event")
-@with_client
+@with_session
 def sign_event(
-    client: "TrezorClient",
+    session: "Session",
     account: int,
     event: str,
 ) -> dict[str, str]:
@@ -69,7 +69,7 @@ def sign_event(
     address_n = tools.parse_path(PATH_TEMPLATE.format(account))
 
     res = nostr.sign_event(
-        client,
+        session,
         messages.NostrSignEvent(
             address_n=address_n,
             created_at=event_json["created_at"],
