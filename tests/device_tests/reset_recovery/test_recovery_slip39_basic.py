@@ -121,16 +121,15 @@ def test_abort(session: Session):
 
 @pytest.mark.models(skip=["legacy", "safe3"])
 @pytest.mark.setup_client(uninitialized=True)
-def test_abort_on_number_of_words(client: Client):
+def test_abort_on_number_of_words(session: Session):
     # on Caesar, test_abort actually aborts on the # of words selection
-    with client:
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
-            device.recover(client, pin_protection=False, label="label")
-        client.init_device()
-        assert client.features.initialized is False
-        assert client.features.recovery_status is messages.RecoveryStatus.Nothing
+            device.recover(session, pin_protection=False, label="label")
+        assert session.features.initialized is False
+        assert session.features.recovery_status is messages.RecoveryStatus.Nothing
 
 
 @pytest.mark.setup_client(uninitialized=True)
