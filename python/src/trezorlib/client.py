@@ -212,3 +212,13 @@ def get_default_client(
     transport.open()
 
     return TrezorClient(transport, **kwargs)
+
+
+def get_callback_passphrase_v1(
+    passphrase: str = "",
+) -> t.Callable[[Session, t.Any], t.Any] | None:
+
+    def _callback_passphrase_v1(session: Session, msg: t.Any) -> t.Any:
+        return session.call(messages.PassphraseAck(passphrase=passphrase))
+
+    return _callback_passphrase_v1
