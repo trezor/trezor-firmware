@@ -121,6 +121,40 @@ void lsi_init(void) {
     ;
 }
 
+// This function replaces calls to universal, but flash-wasting
+// function HAL_RCC_OscConfig.
+//
+// This is the configuration before the optimization:
+//  osc_init_def.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+//  osc_init_def.LSEState = RCC_LSE_ON;
+//  HAL_RCC_OscConfig(&osc_init_def);
+void lse_init(void) {
+  // Update LSE configuration in Backup Domain control register
+  // Requires to enable write access to Backup Domain of necessary */
+
+  if (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP)) {
+    // Enable write access to Backup domain
+    SET_BIT(PWR->DBPR, PWR_DBPR_DBP);
+
+    while (HAL_IS_BIT_CLR(PWR->DBPR, PWR_DBPR_DBP))
+      ;
+  }
+
+  // LSE oscillator enable
+  SET_BIT(RCC->BDCR, RCC_BDCR_LSEON);
+
+  // Wait till LSE is ready
+  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSERDY) == 0U)
+    ;
+
+  // Make sure LSESYSEN/LSESYSRDY are reset
+  CLEAR_BIT(RCC->BDCR, RCC_BDCR_LSESYSEN);
+
+  // Wait till LSESYSRDY is cleared
+  while (READ_BIT(RCC->BDCR, RCC_BDCR_LSESYSRDY) != 0U)
+    ;
+}
+
 void SystemInit(void) {
   // set flash wait states for an increasing HCLK frequency
 
@@ -224,7 +258,7 @@ void SystemInit(void) {
   PWR->SVMCR |= PWR_SVMCR_IO2SV;
 
 #ifdef USE_LSE
-  // TODO
+  lse_init();
 #else
   lsi_init();
 #endif
