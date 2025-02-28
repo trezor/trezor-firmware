@@ -149,9 +149,11 @@ class TrezorConnection:
 
         features = client.protocol.get_features()
 
-        passphrase_enabled = True  # TODO what to do here?
+        passphrase_protection = features.passphrase_protection
+        if passphrase_protection is None:
+            raise RuntimeError("Device is locked")
 
-        if not passphrase_enabled:
+        if not passphrase_protection:
             return client.get_session(derive_cardano=derive_cardano)
 
         if empty_passphrase:
