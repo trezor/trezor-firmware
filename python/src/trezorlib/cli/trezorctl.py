@@ -340,9 +340,8 @@ def ping(session: "Session", message: str, button_protection: bool) -> str:
 
 @cli.command()
 @click.pass_obj
-def get_session(
-    obj: TrezorConnection, passphrase: str = "", derive_cardano: bool = False
-) -> str:
+@click.option("-c", "derive_cardano", is_flag=True, help="Derive Cardano session.")
+def get_session(obj: TrezorConnection, derive_cardano: bool = False) -> str:
     """Get a session ID for subsequent commands.
 
     Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
@@ -361,14 +360,11 @@ def get_session(
                 "Upgrade your firmware to enable session support."
             )
 
-        # client.ensure_unlocked()
-        session = client.get_session(
-            passphrase=passphrase, derive_cardano=derive_cardano
-        )
-        if session.id is None:
-            raise click.ClickException("Passphrase not enabled or firmware too old.")
-        else:
-            return session.id.hex()
+    session = obj.get_session(derive_cardano=derive_cardano)
+    if session.id is None:
+        raise click.ClickException("Passphrase not enabled or firmware too old.")
+    else:
+        return session.id.hex()
 
 
 @cli.command()
