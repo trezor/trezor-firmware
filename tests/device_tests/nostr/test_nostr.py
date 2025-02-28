@@ -20,6 +20,7 @@ from hashlib import sha256
 import pytest
 
 from trezorlib import messages, nostr
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.models("core", skip=["eckhart"])]
@@ -87,9 +88,9 @@ SIGN_TEST_EVENT = messages.NostrSignEvent(
 
 
 @pytest.mark.parametrize("pubkey_hex,_", VECTORS)
-def test_get_pubkey(client, pubkey_hex, _):
+def test_get_pubkey(session: Session, pubkey_hex, _):
     response = nostr.get_pubkey(
-        client,
+        session,
         n=parse_path("m/44h/1237h/0h/0/0"),
     )
 
@@ -97,8 +98,8 @@ def test_get_pubkey(client, pubkey_hex, _):
 
 
 @pytest.mark.parametrize("pubkey_hex,expected_sig", VECTORS)
-def test_sign_event(client, pubkey_hex, expected_sig):
-    response = nostr.sign_event(client, SIGN_TEST_EVENT)
+def test_sign_event(session: Session, pubkey_hex, expected_sig):
+    response = nostr.sign_event(session, SIGN_TEST_EVENT)
 
     assert response.pubkey == bytes.fromhex(pubkey_hex)
 
