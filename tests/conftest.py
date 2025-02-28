@@ -317,13 +317,6 @@ def _client_unlocked(
             # Get a new client
             _raw_client = _raw_client.get_new_client()
 
-    _raw_client.protocol = None
-    _raw_client.__init__(
-        transport=_raw_client.transport,
-        auto_interact=_raw_client.debug.allow_interactions,
-        open_transport=False,
-        debug_transport=_raw_client.debug.transport,
-    )
     if not _raw_client.features.bootloader_mode:
         _raw_client.refresh_features()
 
@@ -364,6 +357,7 @@ def _client_unlocked(
 
         if request.node.get_closest_marker("experimental"):
             apply_settings(session, experimental_features=True)
+        session.end()
 
     yield _raw_client
 
@@ -400,9 +394,9 @@ def session(
         with ui_tests.screen_recording(_client_unlocked, request):
             yield session
     finally:
-        pass
-        # TODO
+        # Not really needed since the device gets wiped later anyway.
         # session.end()
+        pass
 
 
 def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
