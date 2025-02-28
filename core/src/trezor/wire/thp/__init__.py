@@ -157,7 +157,7 @@ def _get_device_properties(iface: WireInterface) -> ThpDeviceProperties:
     return ThpDeviceProperties(
         pairing_methods=get_enabled_pairing_methods(iface),
         internal_model=utils.INTERNAL_MODEL,
-        model_variant=0,
+        model_variant=None,
         protocol_version_major=2,
         protocol_version_minor=0,
     )
