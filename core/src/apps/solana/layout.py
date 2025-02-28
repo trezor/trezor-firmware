@@ -435,7 +435,6 @@ async def confirm_unstake_transaction(
     fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
-    deactivate: Instruction,
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
@@ -445,10 +444,7 @@ async def confirm_unstake_transaction(
         account=_format_path(signer_path),
         account_path=address_n_to_str(signer_path),
         vote_account="",
-        stake_item=(
-            TR.solana__stake_account,
-            base58.encode(deactivate.delegated_stake_account[0]),
-        ),
+        stake_item=None,
         amount_item=_fee_summary(fee),
         fee_item=("", ""),
         fee_details=_fee_details(fee),
@@ -460,7 +456,7 @@ async def confirm_claim_transaction(
     fee: Fee,
     signer_path: list[int],
     blockhash: bytes,
-    withdraw: Instruction,
+    total_amount: int,
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
@@ -470,13 +466,10 @@ async def confirm_claim_transaction(
         account=_format_path(signer_path),
         account_path=address_n_to_str(signer_path),
         vote_account="",
-        stake_item=(
-            TR.solana__stake_account,
-            base58.encode(withdraw.stake_account[0]),
-        ),
+        stake_item=None,
         amount_item=(
             f"{TR.words__amount}:",
-            f"{format_amount(withdraw.lamports, 9)} SOL",
+            f"{format_amount(total_amount, 9)} SOL",
         ),
         fee_item=_fee_summary(fee),
         fee_details=_fee_details(fee),

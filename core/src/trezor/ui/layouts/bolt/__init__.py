@@ -983,7 +983,7 @@ if not utils.BITCOIN_ONLY:
         account: str,
         account_path: str,
         vote_account: str,
-        stake_item: tuple[str, str],
+        stake_item: tuple[str, str] | None,
         amount_item: tuple[str, str],
         fee_item: tuple[str, str],
         fee_details: Iterable[tuple[str, str]],
@@ -1003,14 +1003,17 @@ if not utils.BITCOIN_ONLY:
             info=True,
         )
 
+        items = [
+            (f"{TR.words__account}:", account),
+            (f"{TR.address_details__derivation_path}:", account_path),
+        ]
+        if stake_item is not None:
+            items.append(stake_item)
+        items.append(blockhash_item)
+
         info_layout = trezorui_api.show_info_with_cancel(
             title=title,
-            items=(
-                (f"{TR.words__account}:", account),
-                (f"{TR.address_details__derivation_path}:", account_path),
-                stake_item,
-                blockhash_item,
-            ),
+            items=items,
             horizontal=True,
         )
 
