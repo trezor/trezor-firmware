@@ -5,6 +5,7 @@
 .mypy_cache/
 .pytest_cache/
 .vscode/
+.cursor/
 __pycache__/
 *.pyc
 /build
