@@ -256,7 +256,7 @@ impl Button {
                 let y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => self.area.left_center() + self.content_offset,
-                    Alignment::Center => self.area.center(),
+                    Alignment::Center => self.area.center() + self.content_offset,
                     Alignment::End => self.area.right_center() - self.content_offset,
                 } + y_offset;
                 text.map(|text| {
@@ -273,7 +273,7 @@ impl Button {
                 let subtext_y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => self.area.left_center() + self.content_offset,
-                    Alignment::Center => self.area.center(),
+                    Alignment::Center => self.area.center() + self.content_offset,
                     Alignment::End => self.area.right_center() - self.content_offset,
                 };
                 let text_baseline = start_of_baseline - text_y_offset;
@@ -296,7 +296,7 @@ impl Button {
                 });
             }
             ButtonContent::Icon(icon) => {
-                shape::ToifImage::new(self.area.center(), icon.toif)
+                shape::ToifImage::new(self.area.center() + self.content_offset, icon.toif)
                     .with_align(Alignment2D::CENTER)
                     .with_fg(style.icon_color)
                     .with_alpha(alpha)
