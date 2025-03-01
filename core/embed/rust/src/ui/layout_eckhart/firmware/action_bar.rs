@@ -22,9 +22,8 @@ pub struct ActionBar {
     /// Optional left button, can be shorter than the right one
     left_button: Option<Button>,
     area: Rect,
-    /// Whether the left button is short
+    /// Whether the left button is short (default: true)
     left_short: bool,
-    // TODO: review cloning() of those fields
     // Storage of original button content for paginated component
     left_original: Option<(ButtonContent, ButtonStyleSheet)>,
     right_original: Option<(ButtonContent, ButtonStyleSheet)>,
@@ -55,7 +54,6 @@ impl ActionBar {
     pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
     const SPACER_WIDTH: i16 = 4; // [px]
     const LEFT_SMALL_BUTTON_WIDTH: i16 = 120; // [px]
-    /// TODO: use this offset
     /// offset for button content to move it towards center
     const BUTTON_CONTENT_OFFSET: Offset = Offset::x(12); // [px]
     const BUTTON_EXPAND_TOUCH: Insets = Insets::top(Self::ACTION_BAR_HEIGHT);
@@ -81,8 +79,13 @@ impl ActionBar {
             Mode::Double {
                 pager: Pager::single_page(),
             },
-            Some(left.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)),
-            right.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH),
+            Some(
+                left.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                    .with_content_offset(Self::BUTTON_CONTENT_OFFSET),
+            ),
+            right
+                .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg()),
         )
     }
 
@@ -99,8 +102,11 @@ impl ActionBar {
     }
 
     pub fn update(&mut self, new_pager: Pager) {
+        // TODO: review `clone()` of `left_content`/`right_content`
         match &mut self.mode {
             Mode::Double { pager } => {
+                let old_is_last = pager.is_last();
+                let new_is_last = new_pager.is_last();
                 *pager = new_pager;
                 // Update left button - show original content/style only on first page
                 if let Some(btn) = &mut self.left_button {
@@ -123,13 +129,16 @@ impl ActionBar {
                     self.right_button.set_content(Self::PAGINATE_RIGHT_CONTENT);
                     self.right_button.set_stylesheet(*Self::PAGINATE_STYLESHEET);
                 }
+
+                // If we're entering or leaving the last page and left_short is true,
+                // we need to update the button placement
+                if self.left_short && (old_is_last != new_is_last) {
+                    self.place_buttons(self.area);
+                }
             }
             _ => {}
         }
     }
-
-    // TODO: changing the left button to short/equal on paginated last page?
-    // TODO: single button which is disabled for "Continue in the app" screen
 
     fn new(mode: Mode, left_button: Option<Button>, right_button: Button) -> Self {
         let (left_original, right_original) = match mode {
@@ -159,20 +168,20 @@ impl ActionBar {
             right_button,
             left_button,
             area: Rect::zero(),
-            left_short: false,
+            left_short: true,
             left_original,
             right_original,
             htc_anim,
         }
     }
 
-    /// Handle right button at the last page, this includes:
+    /// Handle event of the right button at the last page, this includes:
     ///     - Single button mode
     ///     - Double button mode at single page component
     ///     - Double button mode at last page of paginated component
     /// The function takes care about triggering the correct action to
     /// HoldToConfirm or returning the correct message out of the ActionBar.
-    fn right_button_at_last_page(
+    fn event_right_button_at_last_page(
         &mut self,
         ctx: &mut EventCtx,
         msg: ButtonMsg,
@@ -213,6 +222,28 @@ impl ActionBar {
         }
         None
     }
+
+    fn place_buttons(&mut self, bounds: Rect) {
+        match &self.mode {
+            Mode::Single => {
+                self.right_button.place(bounds);
+            }
+            Mode::Double { pager } => {
+                let (left_area, right_area) = if self.left_short && pager.is_last() {
+                    // Small left button when on last page
+                    let (left, rest) = bounds.split_left(Self::LEFT_SMALL_BUTTON_WIDTH);
+                    let (_, right) = rest.split_left(Self::SPACER_WIDTH);
+                    (left, right)
+                } else {
+                    // Standard equal-sized buttons
+                    let (left, _, right) = bounds.split_center(Self::SPACER_WIDTH);
+                    (left, right)
+                };
+                self.left_button.place(left_area);
+                self.right_button.place(right_area);
+            }
+        }
+    }
 }
 
 impl Component for ActionBar {
@@ -220,27 +251,7 @@ impl Component for ActionBar {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         debug_assert_eq!(bounds.height(), Self::ACTION_BAR_HEIGHT);
-
-        match &self.mode {
-            Mode::Single => {
-                self.right_button.place(bounds);
-            }
-            Mode::Double { .. } => {
-                let (left, right) = if self.left_short {
-                    let (left, rest) = bounds.split_left(Self::LEFT_SMALL_BUTTON_WIDTH);
-                    let (_, right) = rest.split_left(Self::SPACER_WIDTH);
-                    (left, right)
-                } else {
-                    let (left, _spacer, right) = bounds.split_center(Self::SPACER_WIDTH);
-                    (left, right)
-                };
-                if let Some(btn) = &mut self.left_button {
-                    btn.place(left);
-                }
-                self.right_button.place(right);
-            }
-        }
-
+        self.place_buttons(bounds);
         self.area = bounds;
         bounds
     }
@@ -251,7 +262,7 @@ impl Component for ActionBar {
             Mode::Single => {
                 // Only handle confirm button
                 if let Some(msg) = self.right_button.event(ctx, event) {
-                    return self.right_button_at_last_page(ctx, msg);
+                    return self.event_right_button_at_last_page(ctx, msg);
                 }
             }
             Mode::Double { pager } => {
@@ -261,7 +272,7 @@ impl Component for ActionBar {
                         return Some(ActionBarMsg::Cancelled);
                     }
                     if let Some(msg) = self.right_button.event(ctx, event) {
-                        return self.right_button_at_last_page(ctx, msg);
+                        return self.event_right_button_at_last_page(ctx, msg);
                     }
                 } else if pager.is_first() && !pager.is_single() {
                     // First page of multiple - go back and next page
@@ -277,7 +288,7 @@ impl Component for ActionBar {
                         return Some(ActionBarMsg::Prev);
                     }
                     if let Some(msg) = self.right_button.event(ctx, event) {
-                        return self.right_button_at_last_page(ctx, msg);
+                        return self.event_right_button_at_last_page(ctx, msg);
                     }
                 } else {
                     // Middle pages - navigations up/down
