@@ -124,9 +124,9 @@ where
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
-        self.content.render(target);
         self.hint.render(target);
         self.action_bar.render(target);
+        self.content.render(target);
     }
 }
 
