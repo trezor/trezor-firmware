@@ -38,7 +38,7 @@ impl FirmwareUI for UIEckhart {
         title: TString<'static>,
         action: Option<TString<'static>>,
         description: Option<TString<'static>>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         hold: bool,
@@ -48,22 +48,28 @@ impl FirmwareUI for UIEckhart {
         _prompt_title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let action = action.unwrap_or("".into());
-        let description = description.unwrap_or("".into());
         let formatted_text = {
-            let ops = if !reverse {
-                OpTextLayout::new(theme::TEXT_NORMAL)
+            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+            if !reverse {
+                ops = ops
                     .color(theme::GREY_LIGHT)
-                    .text(action, fonts::FONT_SATOSHI_REGULAR_38)
-                    .newline()
-                    .color(theme::GREY)
-                    .text(description, fonts::FONT_SATOSHI_REGULAR_22)
+                    .text(action, fonts::FONT_SATOSHI_REGULAR_38);
+                if let Some(description) = description {
+                    ops = ops
+                        .newline()
+                        .color(theme::GREY)
+                        .text(description, fonts::FONT_SATOSHI_REGULAR_22);
+                }
             } else {
-                OpTextLayout::new(theme::TEXT_NORMAL)
-                    .color(theme::GREY)
-                    .text(description, fonts::FONT_SATOSHI_REGULAR_22)
-                    .newline()
+                if let Some(description) = description {
+                    ops = ops
+                        .color(theme::GREY)
+                        .text(description, fonts::FONT_SATOSHI_REGULAR_22)
+                        .newline();
+                }
+                ops = ops
                     .color(theme::GREY_LIGHT)
-                    .text(action, fonts::FONT_SATOSHI_REGULAR_38)
+                    .text(action, fonts::FONT_SATOSHI_REGULAR_38);
             };
             FormattedText::new(ops).vertically_centered()
         };
@@ -74,13 +80,15 @@ impl FirmwareUI for UIEckhart {
         } else {
             Button::with_text(verb)
         };
-        let screen = TextScreen::new(formatted_text)
+        let mut screen = TextScreen::new(formatted_text)
             .with_header(Header::new(title).with_menu_button())
-            .with_hint(Hint::new_instruction(description, None))
             .with_action_bar(ActionBar::new_double(
                 Button::with_icon(theme::ICON_CHEVRON_LEFT),
                 right_button,
             ));
+        if let Some(subtitle) = subtitle {
+            screen = screen.with_hint(Hint::new_instruction(subtitle, None));
+        }
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
