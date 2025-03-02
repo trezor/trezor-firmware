@@ -181,7 +181,8 @@ impl HoldToConfirm {
         let button = Button::new(ButtonContent::Empty)
             .styled(theme::button_default())
             .with_long_press(Duration::from_millis(2200))
-            .without_haptics();
+            .without_haptics()
+            .initially_enabled(false);
         Self {
             title: Label::new(
                 TR::instructions__continue_holding.into(),
@@ -256,19 +257,35 @@ impl Component for HoldToConfirm {
             _ => (),
         }
 
-        if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-            if self.anim.is_active() {
+        match event {
+            Event::Attach(_) => {
+                // Reset state on attach and disable button
+                self.anim.reset();
+                self.button.disable(ctx);
                 ctx.request_anim_frame();
                 ctx.request_paint();
-
-                if self.anim.is_locked() && !self.finalizing {
-                    self.finalizing = true;
-                    #[cfg(feature = "haptic")]
-                    haptic::play(HapticEffect::HoldToConfirm);
-                }
-            } else if self.anim.is_locked() {
-                return Some(());
             }
+            Event::Timer(EventCtx::ANIM_FRAME_TIMER) => {
+                // Handle animation frames
+                if !self.button.is_enabled() && !self.anim.is_active() {
+                    self.button.enable(ctx);
+                    ctx.request_paint();
+                }
+
+                if self.anim.is_active() {
+                    ctx.request_anim_frame();
+                    ctx.request_paint();
+
+                    if self.anim.is_locked() && !self.finalizing {
+                        self.finalizing = true;
+                        #[cfg(feature = "haptic")]
+                        haptic::play(HapticEffect::HoldToConfirm);
+                    }
+                } else if self.anim.is_locked() {
+                    return Some(());
+                }
+            }
+            _ => {}
         }
         None
     }
