@@ -415,25 +415,6 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
 #endif
 }
 
-void display_copy_mono4(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row =
-      (uint8_t *)drv->buffer->pixels + (drv->buffer->pitch * bb_new.dst_y);
-  bb_new.dst_stride = drv->buffer->pitch;
-
-#ifdef UI_COLOR_32BIT
-  gfx_rgba8888_copy_mono4(&bb_new);
-#else
-  gfx_rgb565_copy_mono4(&bb_new);
-#endif
-}
-
 #else  // DISPLAY_MONO
 
 void display_fill(const gfx_bitblt_t *bb) {

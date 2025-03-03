@@ -49,17 +49,4 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
   gfx_rgba8888_copy_mono1p(&bb_new);
 }
 
-void display_copy_mono4(const gfx_bitblt_t *bb) {
-  display_fb_info_t fb;
-
-  if (!display_get_frame_buffer(&fb)) {
-    return;
-  }
-
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = (uint8_t *)fb.ptr + (fb.stride * bb_new.dst_y);
-  bb_new.dst_stride = fb.stride;
-
-  gfx_rgba8888_copy_mono4(&bb_new);
-}
 #endif
