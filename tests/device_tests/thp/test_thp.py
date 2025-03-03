@@ -34,7 +34,6 @@ from trezorlib.messages import (
 )
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
-from trezorlib.transport.thp.protocol_v2 import _hkdf
 
 if t.TYPE_CHECKING:
     P = tx.ParamSpec("P")
@@ -53,18 +52,18 @@ def _prepare_protocol(client: Client) -> ProtocolV2Channel:
 
 
 def _prepare_protocol_for_pairing(
-    client: Client, host_static_privkey: bytes | None = None
+    client: Client, host_static_randomness: bytes | None = None
 ) -> ProtocolV2Channel:
     protocol = _prepare_protocol(client)
-    protocol._do_handshake(host_static_privkey=host_static_privkey)
+    protocol._do_handshake(host_static_randomness=host_static_randomness)
     return protocol
 
 
 def _get_encrypted_transport_protocol(
-    client: Client, host_static_privkey: bytes | None = None
+    client: Client, host_static_randomness: bytes | None = None
 ) -> ProtocolV2Channel:
     protocol = _prepare_protocol_for_pairing(
-        client, host_static_privkey=host_static_privkey
+        client, host_static_randomness=host_static_randomness
     )
     protocol._do_pairing(client.debug)
     return protocol
@@ -105,38 +104,23 @@ def test_allocate_channel(client: Client) -> None:
 def test_handshake(client: Client) -> None:
     protocol = _prepare_protocol(client)
 
-    host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
-    host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
+    randomness_static = os.urandom(32)
 
     protocol._do_channel_allocation()
-    protocol._send_handshake_init_request(host_ephemeral_pubkey)
-    protocol._read_ack()
-    init_response = protocol._read_handshake_init_response()
-
-    trezor_ephemeral_pubkey = init_response[:32]
-    encrypted_trezor_static_pubkey = init_response[32:80]
-    noise_tag = init_response[80:96]
-
-    # TODO check noise_tag is valid
-
-    ck = protocol._send_handshake_completion_request(
-        host_ephemeral_pubkey,
-        host_ephemeral_privkey,
-        trezor_ephemeral_pubkey,
-        encrypted_trezor_static_pubkey,
+    protocol._init_noise(
+        randomness_static=randomness_static,
     )
+    protocol._send_handshake_init_request()
+    protocol._read_ack()
+    protocol._read_handshake_init_response()
+
+    protocol._send_handshake_completion_request()
     protocol._read_ack()
     protocol._read_handshake_completion_response()
-    protocol.key_request, protocol.key_response = _hkdf(ck, b"")
-    protocol.nonce_request = 0
-    protocol.nonce_response = 1
 
     # TODO - without pairing, the client is damaged and results in fail of the following test
     # so far no luck in solving it - it should be also tackled in FW, as it causes unexpected FW error
     protocol._do_pairing(client.debug)
-
-    # TODO the following is just to make style checker happy
-    assert noise_tag is not None
 
 
 def test_pairing_qr_code(client: Client) -> None:
@@ -293,7 +277,8 @@ def test_credential_phase(client: Client) -> None:
     _nfc_pairing(client, protocol)
 
     # Request credential with confirmation after pairing
-    host_static_privkey = curve25519.get_private_key(os.urandom(32))
+    randomness_static = os.urandom(32)
+    host_static_privkey = curve25519.get_private_key(randomness_static)
     host_static_pubkey = curve25519.get_public_key(host_static_privkey)
     protocol._send_message(
         ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
@@ -308,7 +293,7 @@ def test_credential_phase(client: Client) -> None:
     # Connect using credential with confirmation
     protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
-    protocol._do_handshake(credential, host_static_privkey)
+    protocol._do_handshake(credential, randomness_static)
     protocol._send_message(ThpEndRequest())
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "connection_request"
@@ -318,7 +303,8 @@ def test_credential_phase(client: Client) -> None:
 
     # Delete channel from the device by sending badly encrypted message
     # This is done to prevent channel replacement and trigerring of autoconnect false -> true
-    protocol.nonce_request = 250
+    protocol.noise.noise_protocol.cipher_state_encrypt.n = 250
+
     protocol._send_message(ButtonAck())
     with pytest.raises(Exception) as e:
         protocol.read(1)
@@ -327,7 +313,7 @@ def test_credential_phase(client: Client) -> None:
     # Connect using credential with confirmation and ask for autoconnect credential.
     protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
-    protocol._do_handshake(credential, host_static_privkey)
+    protocol._do_handshake(credential, randomness_static)
     protocol._send_message(
         ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=True)
     )
@@ -345,7 +331,7 @@ def test_credential_phase(client: Client) -> None:
     # Connect using credential with confirmation
     protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
-    protocol._do_handshake(credential, host_static_privkey)
+    protocol._do_handshake(credential, randomness_static)
     # Confirmation dialog is not shown as channel in ENCRYPTED TRANSPORT state with the same
     # host static public key is still available in Trezor's cache. (Channel replacement is triggered.)
     protocol._send_message(ThpEndRequest())
@@ -354,13 +340,14 @@ def test_credential_phase(client: Client) -> None:
     # Connect using autoconnect credential
     protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
-    protocol._do_handshake(credential_auto, host_static_privkey)
+    protocol._do_handshake(credential_auto, randomness_static)
     protocol._send_message(ThpEndRequest())
     protocol._read_message(ThpEndResponse)
 
     # Delete channel from the device by sending badly encrypted message
     # This is done to prevent channel replacement and trigerring of autoconnect false -> true
-    protocol.nonce_request = 250
+    protocol.noise.noise_protocol.cipher_state_encrypt.n = 100
+
     protocol._send_message(ButtonAck())
     with pytest.raises(Exception) as e:
         protocol.read(1)
@@ -369,7 +356,7 @@ def test_credential_phase(client: Client) -> None:
     # Connect using autoconnect credential - should work the same as above
     protocol = _prepare_protocol(client)
     protocol._do_channel_allocation()
-    protocol._do_handshake(credential_auto, host_static_privkey)
+    protocol._do_handshake(credential_auto, randomness_static)
     protocol._send_message(ThpEndRequest())
     protocol._read_message(ThpEndResponse)
 
@@ -378,23 +365,25 @@ def test_credential_phase(client: Client) -> None:
 def test_channel_replacement(client: Client) -> None:
     assert client.features.passphrase_protection is True
 
-    host_static_privkey = curve25519.get_private_key(os.urandom(32))
-    host_static_privkey_2 = curve25519.get_private_key(os.urandom(32))
+    host_static_randomness = os.urandom(32)
+    host_static_randomness_2 = os.urandom(32)
+    host_static_privkey = curve25519.get_private_key(host_static_randomness)
+    host_static_privkey_2 = curve25519.get_private_key(host_static_randomness_2)
 
     assert host_static_privkey != host_static_privkey_2
 
-    client.protocol = _get_encrypted_transport_protocol(client, host_static_privkey)
+    client.protocol = _get_encrypted_transport_protocol(client, host_static_randomness)
 
-    session = client.get_session(passphrase="TREZOR", session_id=20)
+    session = client.get_session(passphrase="TREZOR", session_id=b"\x10")
     address = get_test_address(session)
 
-    session_2 = client.get_session(passphrase="ROZERT", session_id=30)
+    session_2 = client.get_session(passphrase="ROZERT", session_id=b"\x20")
     address_2 = get_test_address(session_2)
     assert address != address_2
 
     # create new channel using the same host_static_privkey
-    client.protocol = _get_encrypted_transport_protocol(client, host_static_privkey)
-    session_3 = client.get_session(passphrase="OKIDOKI", session_id=40)
+    client.protocol = _get_encrypted_transport_protocol(client, host_static_randomness)
+    session_3 = client.get_session(passphrase="OKIDOKI", session_id=b"\x30")
     address_3 = get_test_address(session_3)
     assert address_3 != address_2
 
@@ -405,7 +394,9 @@ def test_channel_replacement(client: Client) -> None:
     assert address_3 == new_address_3
 
     # create new channel using different host_static_privkey
-    client.protocol = _get_encrypted_transport_protocol(client, host_static_privkey_2)
+    client.protocol = _get_encrypted_transport_protocol(
+        client, host_static_randomness_2
+    )
     with pytest.raises(exceptions.TrezorFailure) as e_1:
         _ = get_test_address(session)
     assert str(e_1.value.message) == "Invalid session"
@@ -414,6 +405,6 @@ def test_channel_replacement(client: Client) -> None:
         _ = get_test_address(session_3)
     assert str(e_2.value.message) == "Invalid session"
 
-    session_4 = client.get_session(passphrase="TREZOR", session_id=80)
+    session_4 = client.get_session(passphrase="TREZOR", session_id=b"\x40")
     super_new_address = get_test_address(session_4)
     assert address == super_new_address
