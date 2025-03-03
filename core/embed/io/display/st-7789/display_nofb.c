@@ -79,6 +79,27 @@ static inline void set_window(const gfx_bitblt_t* bb) {
                            bb->dst_y + bb->height + 1);
 }
 
+// Checks if the destination rectangle is withing the display bounds
+static inline bool gfx_bitblt_check_dst_xy(const gfx_bitblt_t* bb) {
+  if (bb->dst_x + bb->width < bb->dst_x) {  // overflow check
+    return false;
+  }
+
+  if (bb->dst_x + bb->width > DISPLAY_RESX) {
+    return false;
+  }
+
+  if (bb->dst_y + bb->height < bb->dst_y) {  // overflow check
+    return false;
+  }
+
+  if (bb->dst_y + bb->height > DISPLAY_RESY) {
+    return false;
+  }
+
+  return true;
+}
+
 // For future notice, if we ever want to do a new model using progressive
 // rendering.
 //
@@ -88,6 +109,10 @@ static inline void set_window(const gfx_bitblt_t* bb) {
 // to one with DMA2D while copying the other to the display with DMA.
 
 void display_fill(const gfx_bitblt_t* bb) {
+  if (!gfx_bitblt_check_dst_xy(bb)) {
+    return;
+  }
+
   set_window(bb);
 
   uint16_t height = bb->height;
@@ -100,6 +125,10 @@ void display_fill(const gfx_bitblt_t* bb) {
 }
 
 void display_copy_rgb565(const gfx_bitblt_t* bb) {
+  if (!gfx_bitblt_check_dst_xy(bb) || !gfx_bitblt_check_src_x(bb, 16)) {
+    return;
+  }
+
   set_window(bb);
 
   uint16_t* src_ptr = (uint16_t*)bb->src_row + bb->src_x;
@@ -114,6 +143,10 @@ void display_copy_rgb565(const gfx_bitblt_t* bb) {
 }
 
 void display_copy_mono1p(const gfx_bitblt_t* bb) {
+  if (!gfx_bitblt_check_dst_xy(bb) || !gfx_bitblt_check_src_x(bb, 1)) {
+    return;
+  }
+
   set_window(bb);
 
   uint8_t* src = (uint8_t*)bb->src_row;

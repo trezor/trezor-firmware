@@ -165,6 +165,11 @@ void display_fill(const gfx_bitblt_t *bb) {
   bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
 
+  if (!gfx_bitblt_check_dst_x(&bb_new, 16) ||
+      !gfx_bitblt_check_dst_y(&bb_new, FRAME_BUFFER_SIZE)) {
+    return;
+  }
+
   gfx_rgb565_fill(&bb_new);
 }
 
@@ -179,6 +184,12 @@ void display_copy_rgb565(const gfx_bitblt_t *bb) {
   bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
 
+  if (!gfx_bitblt_check_dst_x(&bb_new, 16) ||
+      !gfx_bitblt_check_src_x(&bb_new, 16) ||
+      !gfx_bitblt_check_dst_y(&bb_new, FRAME_BUFFER_SIZE)) {
+    return;
+  }
+
   gfx_rgb565_copy_rgb565(&bb_new);
 }
 
@@ -192,6 +203,12 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
   gfx_bitblt_t bb_new = *bb;
   bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
   bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
+
+  if (!gfx_bitblt_check_dst_x(&bb_new, 16) ||
+      !gfx_bitblt_check_src_x(&bb_new, 1) ||
+      !gfx_bitblt_check_dst_y(&bb_new, FRAME_BUFFER_SIZE)) {
+    return;
+  }
 
   gfx_rgb565_copy_mono1p(&bb_new);
 }
