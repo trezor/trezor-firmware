@@ -31,6 +31,7 @@ pub fn refresh() {
 pub fn get_frame_buffer() -> Option<(&'static mut [u8], usize)> {
     let mut fb_info = ffi::display_fb_info_t {
         ptr: ptr::null_mut(),
+        size: 0,
         stride: 0,
     };
 
@@ -40,12 +41,7 @@ pub fn get_frame_buffer() -> Option<(&'static mut [u8], usize)> {
         return None;
     }
 
-    let fb = unsafe {
-        core::slice::from_raw_parts_mut(
-            fb_info.ptr as *mut u8,
-            DISPLAY_RESY as usize * fb_info.stride,
-        )
-    };
+    let fb = unsafe { core::slice::from_raw_parts_mut(fb_info.ptr as *mut u8, fb_info.size) };
 
     Some((fb, fb_info.stride))
 }
