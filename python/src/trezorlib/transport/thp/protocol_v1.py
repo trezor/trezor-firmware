@@ -56,8 +56,12 @@ class ProtocolV1Channel(Channel):
     def _write(self, message_type: int, message_data: bytes) -> None:
         chunk_size = self.transport.CHUNK_SIZE
         header = struct.pack(">HL", message_type, len(message_data))
-        buffer = bytearray(b"##" + header + message_data)
 
+        if chunk_size is None:
+            self.transport.write_chunk(header + message_data)
+            return
+
+        buffer = bytearray(b"##" + header + message_data)
         while buffer:
             # Report ID, data padded to 63 bytes
             chunk = b"?" + buffer[: chunk_size - 1]
@@ -66,6 +70,9 @@ class ProtocolV1Channel(Channel):
             buffer = buffer[63:]
 
     def _read(self) -> t.Tuple[int, bytes]:
+        if self.transport.CHUNK_SIZE is None:
+            return self.read_chunkless()
+
         buffer = bytearray()
         # Read header with first part of message data
         msg_type, datalen, first_chunk = self.read_first()
@@ -76,6 +83,11 @@ class ProtocolV1Channel(Channel):
             buffer.extend(self.read_next())
 
         return msg_type, buffer[:datalen]
+
+    def read_chunkless(self) -> t.Tuple[int, bytes]:
+        data = self.transport.read_chunk()
+        msg_type, datalen = struct.unpack(">HL", data[: self.HEADER_LEN])
+        return msg_type, data[self.HEADER_LEN : self.HEADER_LEN + datalen]
 
     def read_first(self) -> t.Tuple[int, int, bytes]:
         chunk = self.transport.read_chunk()

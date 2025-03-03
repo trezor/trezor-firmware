@@ -88,7 +88,7 @@ class Transport:
     def ping(self) -> bool:
         raise NotImplementedError
 
-    CHUNK_SIZE: t.ClassVar[int]
+    CHUNK_SIZE: t.ClassVar[int | None]
 
 
 def all_transports() -> t.Iterable[t.Type["Transport"]]:

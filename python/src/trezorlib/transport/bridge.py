@@ -17,14 +17,12 @@
 from __future__ import annotations
 
 import logging
-import struct
 import typing as t
 
 import requests
 
-from ..client import ProtocolVersion
 from ..log import DUMP_PACKETS
-from . import DeviceIsBusy, MessagePayload, Transport, TransportException
+from . import DeviceIsBusy, Transport, TransportException
 
 if t.TYPE_CHECKING:
     from ..models import TrezorModel
@@ -63,35 +61,6 @@ def get_bridge_version() -> t.Tuple[int, ...]:
 
 def is_legacy_bridge() -> bool:
     return get_bridge_version() < TREZORD_VERSION_MODERN
-
-
-def detect_protocol_version(transport: "BridgeTransport") -> int:
-    from .. import mapping, messages
-
-    protocol_version = ProtocolVersion.PROTOCOL_V1
-    request_type, request_data = mapping.DEFAULT_MAPPING.encode(messages.Initialize())
-    transport.deprecated_begin_session()
-    transport.deprecated_write(request_type, request_data)
-
-    response_type, response_data = transport.deprecated_read()
-    _ = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
-    transport.deprecated_begin_session()
-
-    return protocol_version
-
-
-def _is_transport_valid(transport: "BridgeTransport") -> bool:
-    is_valid = detect_protocol_version(transport) == ProtocolVersion.PROTOCOL_V1
-    if not is_valid:
-        LOG.warning("Detected unsupported Bridge transport!")
-    return is_valid
-
-
-def filter_invalid_bridge_transports(
-    transports: t.Iterable["BridgeTransport"],
-) -> t.Sequence["BridgeTransport"]:
-    """Filters out invalid bridge transports. Keeps only valid ones."""
-    return [t for t in transports if _is_transport_valid(t)]
 
 
 class BridgeHandle:
@@ -145,6 +114,7 @@ class BridgeTransport(Transport):
 
     PATH_PREFIX = "bridge"
     ENABLED: bool = True
+    CHUNK_SIZE = None
 
     def __init__(
         self, device: t.Dict[str, t.Any], legacy: bool, debug: bool = False
@@ -182,16 +152,13 @@ class BridgeTransport(Transport):
     ) -> t.Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
-            return filter_invalid_bridge_transports(
-                [
-                    BridgeTransport(dev, legacy)
-                    for dev in call_bridge("enumerate").json()
-                ]
-            )
+            return [
+                BridgeTransport(dev, legacy) for dev in call_bridge("enumerate").json()
+            ]
         except Exception:
             return []
 
-    def deprecated_begin_session(self) -> None:
+    def open(self) -> None:
         try:
             data = self._call("acquire/" + self.device["path"])
         except BridgeException as e:
@@ -200,35 +167,17 @@ class BridgeTransport(Transport):
             raise
         self.session = data.json()["session"]
 
-    def deprecated_end_session(self) -> None:
+    def close(self) -> None:
         if not self.session:
             return
         self._call("release")
         self.session = None
 
-    def deprecated_write(self, message_type: int, message_data: bytes) -> None:
-        header = struct.pack(">HL", message_type, len(message_data))
-        self.handle.write_buf(header + message_data)
-
-    def deprecated_read(self) -> MessagePayload:
-        data = self.handle.read_buf()
-        headerlen = struct.calcsize(">HL")
-        msg_type, datalen = struct.unpack(">HL", data[:headerlen])
-        return msg_type, data[headerlen : headerlen + datalen]
-
-    def open(self) -> None:
-        pass
-        # TODO self.handle.open()
-
-    def close(self) -> None:
-        pass
-        # TODO self.handle.close()
-
-    def write_chunk(self, chunk: bytes) -> None:  # TODO check if it works :)
+    def write_chunk(self, chunk: bytes) -> None:
         self.handle.write_buf(chunk)
 
-    def read_chunk(self) -> bytes:  # TODO check if it works :)
+    def read_chunk(self) -> bytes:
         return self.handle.read_buf()
 
     def ping(self) -> bool:
-        return True
+        return self.session is not None
