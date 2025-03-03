@@ -17,11 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Turning off the stack protector for this file improves
+// the performance of drawing operations when called frequently.
+#pragma GCC optimize("no-stack-protector")
+
 #include <gfx/gfx_bitblt.h>
 
 #if USE_DMA2D
 #include <gfx/dma2d_bitblt.h>
 #endif
+
+volatile uint64_t g_gfx_cycles;
 
 void gfx_rgb565_fill(const gfx_bitblt_t* bb) {
 #if defined(USE_DMA2D) && !defined(TREZOR_EMULATOR)

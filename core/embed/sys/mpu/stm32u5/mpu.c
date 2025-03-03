@@ -17,6 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Turning off the stack protector for this file significantly improves
+// the performance of the syscall dispatching and interrupt handling.
+#pragma GCC optimize("no-stack-protector")
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -175,6 +179,19 @@ mpu_driver_t g_mpu_driver = {
     .mode = MPU_MODE_DISABLED,
 };
 
+static inline void mpu_disable(void) {
+  __DMB();
+  SCB->SHCSR &= ~SCB_SHCSR_MEMFAULTENA_Msk;
+  MPU->CTRL = 0;
+}
+
+static inline void mpu_enable(void) {
+  MPU->CTRL = LL_MPU_CTRL_HARDFAULT_NMI | MPU_CTRL_ENABLE_Msk;
+  SCB->SHCSR |= SCB_SHCSR_MEMFAULTENA_Msk;
+  __DSB();
+  __ISB();
+}
+
 static void mpu_init_fixed_regions(void) {
   // Regions #0 to #5 are fixed for all targets
 
@@ -240,7 +257,7 @@ void mpu_init(void) {
 
   irq_key_t irq_key = irq_lock();
 
-  HAL_MPU_Disable();
+  mpu_disable();
 
   mpu_set_attributes();
 
@@ -308,7 +325,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
   irq_key_t irq_key = irq_lock();
 
-  HAL_MPU_Disable();
+  mpu_disable();
 
   // Region #5 is banked
 
@@ -394,7 +411,7 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
   // clang-format on
 
   if (mode != MPU_MODE_DISABLED) {
-    HAL_MPU_Enable(LL_MPU_CTRL_HARDFAULT_NMI);
+    mpu_enable();
   }
 
   mpu_mode_t prev_mode = drv->mode;
