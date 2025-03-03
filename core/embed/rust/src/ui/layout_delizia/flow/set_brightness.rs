@@ -6,12 +6,13 @@ use crate::{
     translations::TR,
     trezorhal::display,
     ui::{
-        component::{swipe_detect::SwipeSettings, FlowMsg},
+        component::{swipe_detect::SwipeSettings, EventCtx, FlowMsg},
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, SwipeFlow,
         },
         geometry::Direction,
+        layout_delizia::component::Footer,
     },
 };
 
@@ -63,6 +64,20 @@ impl FlowController for SetBrightness {
 
 static BRIGHTNESS: AtomicU8 = AtomicU8::new(0);
 
+fn footer_update_fn(
+    content: &NumberInputSliderDialog,
+    ctx: &mut EventCtx,
+    footer: &mut Footer<'static>,
+) {
+    if content.value() == content.init_value() || content.touching() {
+        footer.update_instruction(ctx, TR::instructions__swipe_horizontally);
+        footer.update_description(ctx, TR::setting__adjust);
+    } else {
+        footer.update_instruction(ctx, TR::instructions__tap_to_continue);
+        footer.update_description(ctx, TR::setting__apply);
+    }
+}
+
 pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     let brightness = brightness.unwrap_or(theme::backlight::get_backlight_normal());
     let content_slider = Frame::left_aligned(
@@ -76,6 +91,11 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     .with_subtitle(TR::homescreen__settings_subtitle.into())
     .with_menu_button()
     .with_swipe(Direction::Up, SwipeSettings::default())
+    .with_footer(
+        TR::instructions__swipe_horizontally.into(),
+        Some(TR::setting__adjust.into()),
+    )
+    .register_footer_update_fn(footer_update_fn)
     .map(|msg| match msg {
         NumberInputSliderDialogMsg::Changed(n) => {
             display::backlight(n as _);
