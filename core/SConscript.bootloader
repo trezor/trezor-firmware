@@ -11,7 +11,7 @@ PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
 
-FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d"]
+FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d", "ble"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -116,8 +116,10 @@ SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/workflow/wf_empty_device.c',
     'embed/projects/bootloader/workflow/wf_auto_update.c',
     'embed/projects/bootloader/workflow/wf_host_control.c',
+    'embed/projects/bootloader/workflow/wf_ble_pairing_request.c',
     'embed/projects/bootloader/wire/codec_v1.c',
     'embed/projects/bootloader/wire/wire_iface_usb.c',
+    'embed/projects/bootloader/wire/wire_iface_ble.c',
     'embed/projects/bootloader/protob/protob.c',
     'embed/projects/bootloader/protob/pb/messages.pb.c',
     'embed/projects/bootloader/version_check.c',

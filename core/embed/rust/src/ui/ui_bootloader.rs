@@ -48,4 +48,7 @@ pub trait BootloaderUI {
         vendor_img: &'static [u8],
         wait: i32,
     );
+
+    #[cfg(feature = "ble")]
+    fn screen_confirm_pairing(code: &str) -> u32;
 }

@@ -521,9 +521,9 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
   while (true) {
     uint16_t ifaces[1] = {protob_get_iface_flag(iface) | MODE_READ};
     poll_event_t e = {0};
-    uint8_t i = poll_events(ifaces, 1, &e, 100);
+    uint16_t i = poll_events(ifaces, 1, &e, 100);
 
-    if (e.type == EVENT_NONE || i != protob_get_iface_flag(iface)) {
+    if (i < 0 || i != protob_get_iface_flag(iface)) {
       continue;
     }
 

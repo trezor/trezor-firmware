@@ -144,3 +144,10 @@ extern "C" fn screen_wipe_success() {
 extern "C" fn screen_wipe_fail() {
     ModelUI::screen_wipe_fail()
 }
+
+#[no_mangle]
+extern "C" fn screen_confirm_pairing(code: *const cty::c_char) -> u32 {
+    let code = unwrap!(unsafe { from_c_array(code, 6) });
+
+    ModelUI::screen_confirm_pairing(code)
+}

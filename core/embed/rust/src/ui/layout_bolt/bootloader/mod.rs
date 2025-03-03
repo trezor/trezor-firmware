@@ -439,4 +439,18 @@ impl BootloaderUI for UIBolt {
 
         display::refresh();
     }
+
+    #[cfg(feature = "ble")]
+    fn screen_confirm_pairing(code: &str) -> u32 {
+        let title = Label::centered("Pair device".into(), TEXT_NORMAL);
+
+        let msg = Label::centered(code.into(), TEXT_NORMAL);
+
+        let right = Button::with_text("CONFIRM".into()).styled(button_confirm());
+        let left = Button::with_text("REJECT".into()).styled(button_bld());
+
+        let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg);
+
+        run(&mut frame)
+    }
 }

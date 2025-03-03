@@ -66,3 +66,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
                                        const image_header *const hdr);
+
+#ifdef USE_BLE
+workflow_result_t workflow_ble_pairing_request(const uint8_t *data);
+#endif
