@@ -22,13 +22,10 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <gfx/dma2d_bitblt.h>
 #include <gfx/jpegdec.h>
 #include <rtl/sizedefs.h>
 #include <sys/systick.h>
-
-#include <../bitblt/dma2d_bitblt.h>
-
-#include <sys/trustzone.h>
 
 // Fixes of STMicro bugs in cmsis-device-u5
 #undef JPEG_BASE_S
@@ -441,10 +438,6 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
 
   bool result = false;
 
-#ifdef KERNEL
-  tz_set_dma2d_unpriv(false);
-#endif
-
   switch (dec->image.format) {
     case JPEGDEC_IMAGE_YCBCR420:
       result = dma2d_rgba8888_copy_ycbcr420(&bb);
@@ -466,10 +459,6 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
   // Wait until the DMA transfer is complete so that the caller can use
   // data in the `rgba8888` buffer immediately.
   dma2d_wait();
-
-#ifdef KERNEL
-  tz_set_dma2d_unpriv(true);
-#endif
 
   return result;
 }

@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef GFX_BITBLT_H
-#define GFX_BITBLT_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -78,11 +77,15 @@ typedef struct {
 
 } gfx_bitblt_t;
 
+#ifdef KERNEL_MODE
+
 // Initializes bitblt operations
 void gfx_bitblt_init(void);
 
 // Deinitializes bitblt operations
 void gfx_bitblt_deinit(void);
+
+#endif  // KERNEL_MODE
 
 // If the bitblt operation is asynchronous, waits until it's finished
 void gfx_bitblt_wait(void);
@@ -133,5 +136,3 @@ void gfx_mono8_blend_mono1p(const gfx_bitblt_t* bb);
 // Blends a mono bitmap (with 4-bit alpha channel)
 // with the destination bitmap
 void gfx_mono8_blend_mono4(const gfx_bitblt_t* bb);
-
-#endif  // GFX_BITBLT_H
