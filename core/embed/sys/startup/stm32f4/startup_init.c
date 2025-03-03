@@ -191,20 +191,20 @@ void SystemInit(void) {
 
 #ifdef TREZOR_MODEL_T2T1
 void set_core_clock(clock_settings_t settings) {
-  /* Enable HSI clock */
+  // Enable HSI clock
   RCC->CR |= RCC_CR_HSION;
 
-  /* Wait till HSI is ready */
+  // Wait till HSI is ready
   while (!(RCC->CR & RCC_CR_HSIRDY))
     ;
 
-  /* Select HSI clock as main clock */
+  // Select HSI clock as main clock
   RCC->CFGR = (RCC->CFGR & ~(RCC_CFGR_SW)) | RCC_CFGR_SW_HSI;
 
-  /* Disable PLL */
+  // Disable PLL
   RCC->CR &= ~RCC_CR_PLLON;
 
-  /* Set PLL settings */
+  // Set PLL settings
   clock_conf_t conf = clock_conf[settings];
   RCC->PLLCFGR =
       (RCC_PLLCFGR_RST_VALUE & ~RCC_PLLCFGR_PLLQ & ~RCC_PLLCFGR_PLLSRC &
@@ -215,14 +215,14 @@ void set_core_clock(clock_settings_t settings) {
       (conf.plln << RCC_PLLCFGR_PLLN_Pos) | (conf.pllm << RCC_PLLCFGR_PLLM_Pos);
   SystemCoreClock = conf.freq * 1000000U;
 
-  /* Enable PLL */
+  // Enable PLL
   RCC->CR |= RCC_CR_PLLON;
 
-  /* Wait till PLL is ready */
+  // Wait till PLL is ready
   while (!(RCC->CR & RCC_CR_PLLRDY))
     ;
 
-  /* Enable PLL as main clock */
+  // Enable PLL as main clock
   RCC->CFGR = (RCC->CFGR & ~(RCC_CFGR_SW)) | RCC_CFGR_SW_PLL;
 
   systick_update_freq();
