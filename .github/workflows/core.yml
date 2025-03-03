@@ -84,6 +84,7 @@ jobs:
       - run: nix-shell --run "poetry run make -C core build_prodtest"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
       - run: nix-shell --run "poetry run make -C core build_firmware"
+      - run: nix-shell --run "poetry run ./tools/print-rust-stack-sizes.py | sort -k1 -n | tail -n 50"
       - run: nix-shell --run "poetry run make -C core sizecheck"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
       - run: nix-shell --run "poetry run ./tools/check-bitcoin-only core/build/firmware/firmware.bin"
