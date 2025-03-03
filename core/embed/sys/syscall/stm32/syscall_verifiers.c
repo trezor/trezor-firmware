@@ -815,6 +815,7 @@ jpegdec_state_t jpegdec_process__verified(jpegdec_input_t *input) {
   return jpegdec_process(input);
 
 access_violation:
+  apptask_access_violation();
   return JPEGDEC_STATE_ERROR;
 }
 
@@ -826,6 +827,7 @@ bool jpegdec_get_info__verified(jpegdec_image_t *image) {
   return jpegdec_get_info(image);
 
 access_violation:
+  apptask_access_violation();
   return false;
 }
 
@@ -842,6 +844,7 @@ bool jpegdec_get_slice_rgba8888__verified(void *rgba8888,
   return jpegdec_get_slice_rgba8888(rgba8888, slice);
 
 access_violation:
+  apptask_access_violation();
   return false;
 }
 
