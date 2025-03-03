@@ -110,8 +110,13 @@ class Handshake:
         encrypted_trezor_static_pubkey = aes_ctx.encrypt(trezor_masked_static_pubkey)
         if __debug__:
             log.debug(
-                __name__, "th1 - enc (key: %s, nonce: %d)", get_bytes_as_str(self.k), 0
+                __name__,
+                "th1 - enc (key: %s, nonce: %d, handshake_hash %s)",
+                get_bytes_as_str(self.k),
+                0,
+                get_bytes_as_str(self.h),
             )
+
         aes_ctx.auth(self.h)
         tag_to_encrypted_key = aes_ctx.finish()
         encrypted_trezor_static_pubkey = (
