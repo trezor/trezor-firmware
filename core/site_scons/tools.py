@@ -167,6 +167,8 @@ def add_rust_lib(
         # - https://github.com/japaric/stack-sizes/
         env.Append(ENV={"RUSTFLAGS": "-Z emit-stack-sizes"})
 
+        env.Append(ENV={"RUSTFLAGS": "-Z move-size-limit=1000"})
+
         bindgen_macros = get_bindgen_defines(env.get("CPPDEFINES"), all_paths)
 
         return (
