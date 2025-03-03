@@ -278,18 +278,20 @@ int display_get_orientation(void) {
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 
+  memset(fb, 0, sizeof(display_fb_info_t));
+
   if (!drv->initialized) {
-    fb->ptr = NULL;
-    fb->stride = 0;
     return false;
   }
 
 #ifdef DISPLAY_MONO
   fb->ptr = drv->mono_framebuf;
   fb->stride = DISPLAY_RESX;
+  fb->size = DISPLAY_RESX * DISPLAY_RESY;
 #else
   fb->ptr = drv->buffer->pixels;
   fb->stride = DISPLAY_RESX * PIXEL_SIZE;
+  fb->size = DISPLAY_RESX * DISPLAY_RESY * PIXEL_SIZE;
 #endif
   return true;
 }

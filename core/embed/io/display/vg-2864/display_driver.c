@@ -391,15 +391,16 @@ int display_get_orientation(void) {
 bool display_get_frame_buffer(display_fb_info_t *fb) {
   display_driver_t *drv = &g_display_driver;
 
+  memset(fb, 0, sizeof(display_fb_info_t));
+
   if (!drv->initialized) {
-    fb->ptr = NULL;
-    fb->stride = 0;
     return false;
   } else {
     fb->ptr = &drv->framebuf[0];
+    fb->size = FRAME_BUFFER_SIZE;
     fb->stride = DISPLAY_RESX;
     // Enable access to the frame buffer from the unprivileged code
-    mpu_set_active_fb(fb->ptr, FRAME_BUFFER_SIZE);
+    mpu_set_active_fb(fb->ptr, fb->size);
     return true;
   }
 }
