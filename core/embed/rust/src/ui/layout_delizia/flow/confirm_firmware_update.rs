@@ -107,10 +107,10 @@ pub fn new_confirm_firmware_update(
     .with_swipe(Direction::Left, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
-    let res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?
-        .with_page(&ConfirmFirmwareUpdate::Intro, content_intro)?
-        .with_page(&ConfirmFirmwareUpdate::Menu, content_menu)?
-        .with_page(&ConfirmFirmwareUpdate::Fingerprint, content_fingerprint)?
-        .with_page(&ConfirmFirmwareUpdate::Confirm, content_confirm)?;
+    let mut res = SwipeFlow::new(&ConfirmFirmwareUpdate::Intro)?;
+    res.add_page(&ConfirmFirmwareUpdate::Intro, content_intro)?
+        .add_page(&ConfirmFirmwareUpdate::Menu, content_menu)?
+        .add_page(&ConfirmFirmwareUpdate::Fingerprint, content_fingerprint)?
+        .add_page(&ConfirmFirmwareUpdate::Confirm, content_confirm)?;
     Ok(res)
 }

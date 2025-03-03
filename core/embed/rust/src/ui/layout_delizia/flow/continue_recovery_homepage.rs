@@ -232,9 +232,10 @@ pub fn new_continue_recovery_homepage(
         .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(super::util::map_to_choice);
 
-        SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?
-            .with_page(&ContinueRecoveryBeforeShares::Main, content_main)?
-            .with_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?
+        let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
+        res.add_page(&ContinueRecoveryBeforeShares::Main, content_main)?
+            .add_page(&ContinueRecoveryBeforeShares::Menu, content_menu)?;
+        res
     } else if pages.is_none() {
         let content_menu = Frame::left_aligned(
             TString::empty(),
@@ -244,17 +245,18 @@ pub fn new_continue_recovery_homepage(
         .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map(super::util::map_to_choice);
 
-        SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?
-            .with_page(&ContinueRecoveryBetweenShares::Main, content_main)?
-            .with_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
-            .with_page(
+        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenShares::Main)?;
+        res.add_page(&ContinueRecoveryBetweenShares::Main, content_main)?
+            .add_page(&ContinueRecoveryBetweenShares::Menu, content_menu)?
+            .add_page(
                 &ContinueRecoveryBetweenShares::CancelIntro,
                 content_cancel_intro,
             )?
-            .with_page(
+            .add_page(
                 &ContinueRecoveryBetweenShares::CancelConfirm,
                 content_cancel_confirm,
-            )?
+            )?;
+        res
     } else {
         let content_menu = Frame::left_aligned(
             TString::empty(),
@@ -296,21 +298,22 @@ pub fn new_continue_recovery_homepage(
         ))
         .with_pages(move |_| n_remaining_shares);
 
-        SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main)?
-            .with_page(&ContinueRecoveryBetweenSharesAdvanced::Main, content_main)?
-            .with_page(&ContinueRecoveryBetweenSharesAdvanced::Menu, content_menu)?
-            .with_page(
+        let mut res = SwipeFlow::new(&ContinueRecoveryBetweenSharesAdvanced::Main)?;
+        res.add_page(&ContinueRecoveryBetweenSharesAdvanced::Main, content_main)?
+            .add_page(&ContinueRecoveryBetweenSharesAdvanced::Menu, content_menu)?
+            .add_page(
                 &ContinueRecoveryBetweenSharesAdvanced::CancelIntro,
                 content_cancel_intro,
             )?
-            .with_page(
+            .add_page(
                 &ContinueRecoveryBetweenSharesAdvanced::CancelConfirm,
                 content_cancel_confirm,
             )?
-            .with_page(
+            .add_page(
                 &ContinueRecoveryBetweenSharesAdvanced::RemainingShares,
                 content_remaining_shares,
-            )?
+            )?;
+        res
     };
     Ok(res)
 }

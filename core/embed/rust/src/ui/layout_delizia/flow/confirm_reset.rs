@@ -127,9 +127,10 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     .map(super::util::map_to_choice);
 
     let res = if recovery {
-        SwipeFlow::new(&ConfirmResetRecover::Intro)?
-            .with_page(&ConfirmResetRecover::Intro, content_intro)?
-            .with_page(&ConfirmResetRecover::Menu, content_menu)?
+        let mut res = SwipeFlow::new(&ConfirmResetRecover::Intro)?;
+        res.add_page(&ConfirmResetRecover::Intro, content_intro)?
+            .add_page(&ConfirmResetRecover::Menu, content_menu)?;
+        res
     } else {
         let content_confirm = Frame::left_aligned(
             TR::reset__title_create_wallet.into(),
@@ -142,10 +143,11 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .map(super::util::map_to_confirm)
         .one_button_request(ButtonRequestCode::ResetDevice.with_name("confirm_setup_device"));
 
-        SwipeFlow::new(&ConfirmResetCreate::Intro)?
-            .with_page(&ConfirmResetCreate::Intro, content_intro)?
-            .with_page(&ConfirmResetCreate::Menu, content_menu)?
-            .with_page(&ConfirmResetCreate::Confirm, content_confirm)?
+        let mut res = SwipeFlow::new(&ConfirmResetCreate::Intro)?;
+        res.add_page(&ConfirmResetCreate::Intro, content_intro)?
+            .add_page(&ConfirmResetCreate::Menu, content_menu)?
+            .add_page(&ConfirmResetCreate::Confirm, content_confirm)?;
+        res
     };
     Ok(res)
 }

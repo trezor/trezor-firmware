@@ -104,10 +104,10 @@ pub fn new_set_new_pin(
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
-    let res = SwipeFlow::new(&SetNewPin::Intro)?
-        .with_page(&SetNewPin::Intro, content_intro)?
-        .with_page(&SetNewPin::Menu, content_menu)?
-        .with_page(&SetNewPin::CancelPinIntro, content_cancel_intro)?
-        .with_page(&SetNewPin::CancelPinConfirm, content_cancel_confirm)?;
+    let mut res = SwipeFlow::new(&SetNewPin::Intro)?;
+    res.add_page(&SetNewPin::Intro, content_intro)?
+        .add_page(&SetNewPin::Menu, content_menu)?
+        .add_page(&SetNewPin::CancelPinIntro, content_cancel_intro)?
+        .add_page(&SetNewPin::CancelPinConfirm, content_cancel_confirm)?;
     Ok(res)
 }

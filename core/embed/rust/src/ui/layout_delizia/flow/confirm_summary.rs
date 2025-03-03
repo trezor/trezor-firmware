@@ -150,21 +150,21 @@ pub fn new_confirm_summary(
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
-    let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?
-        .with_page(&ConfirmSummary::Summary, content_summary)?
-        .with_page(&ConfirmSummary::Hold, content_hold)?
-        .with_page(&ConfirmSummary::Menu, content_menu)?;
+    let mut res = SwipeFlow::new(&ConfirmSummary::Summary)?;
+    res.add_page(&ConfirmSummary::Summary, content_summary)?
+        .add_page(&ConfirmSummary::Hold, content_hold)?
+        .add_page(&ConfirmSummary::Menu, content_menu)?;
     if let Some(content_extra) = content_extra {
-        res = res.with_page(&ConfirmSummary::ExtraInfo, content_extra)?
+        res.add_page(&ConfirmSummary::ExtraInfo, content_extra)?;
     } else {
-        res = res.with_page(&ConfirmSummary::ExtraInfo, dummy_page())?
+        res.add_page(&ConfirmSummary::ExtraInfo, dummy_page())?;
     };
     if let Some(content_account) = content_account {
-        res = res.with_page(&ConfirmSummary::AccountInfo, content_account)?
+        res.add_page(&ConfirmSummary::AccountInfo, content_account)?;
     } else {
-        res = res.with_page(&ConfirmSummary::AccountInfo, dummy_page())?
+        res.add_page(&ConfirmSummary::AccountInfo, dummy_page())?;
     };
-    res = res.with_page(&ConfirmSummary::CancelTap, content_cancel_tap)?;
+    res.add_page(&ConfirmSummary::CancelTap, content_cancel_tap)?;
 
     Ok(res)
 }

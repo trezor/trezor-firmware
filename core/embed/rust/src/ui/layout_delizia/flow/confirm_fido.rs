@@ -191,10 +191,11 @@ pub fn new_confirm_fido(
     } else {
         &ConfirmFido::Intro
     };
-    SwipeFlow::new(initial_page)?
-        .with_page(&ConfirmFido::Intro, content_intro)?
-        .with_page(&ConfirmFido::ChooseCredential, content_choose_credential)?
-        .with_page(&ConfirmFido::Details, content_details)?
-        .with_page(&ConfirmFido::Tap, content_tap)?
-        .with_page(&ConfirmFido::Menu, content_menu)
+    let mut flow = SwipeFlow::new(initial_page)?;
+    flow.add_page(&ConfirmFido::Intro, content_intro)?
+        .add_page(&ConfirmFido::ChooseCredential, content_choose_credential)?
+        .add_page(&ConfirmFido::Details, content_details)?
+        .add_page(&ConfirmFido::Tap, content_tap)?
+        .add_page(&ConfirmFido::Menu, content_menu)?;
+    Ok(flow)
 }

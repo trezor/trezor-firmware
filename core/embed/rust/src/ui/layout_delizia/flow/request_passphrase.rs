@@ -61,8 +61,8 @@ pub fn new_request_passphrase() -> Result<SwipeFlow, error::Error> {
         PassphraseKeyboardMsg::Cancelled => Some(FlowMsg::Cancelled),
     });
 
-    let res = SwipeFlow::new(&RequestPassphrase::Keypad)?
-        .with_page(&RequestPassphrase::Keypad, content_keypad)?
-        .with_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
+    let mut res = SwipeFlow::new(&RequestPassphrase::Keypad)?;
+    res.add_page(&RequestPassphrase::Keypad, content_keypad)?
+        .add_page(&RequestPassphrase::ConfirmEmpty, content_confirm_empty)?;
     Ok(res)
 }

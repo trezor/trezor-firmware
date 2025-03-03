@@ -105,9 +105,9 @@ pub fn new_request_number(
         .with_swipe(Direction::Right, SwipeSettings::immediate())
         .map_to_button_msg();
 
-    let res = SwipeFlow::new(&RequestNumber::Number)?
-        .with_page(&RequestNumber::Number, content_number_input)?
-        .with_page(&RequestNumber::Menu, content_menu)?
-        .with_page(&RequestNumber::Info, content_info)?;
+    let mut res = SwipeFlow::new(&RequestNumber::Number)?;
+    res.add_page(&RequestNumber::Number, content_number_input)?
+        .add_page(&RequestNumber::Menu, content_menu)?
+        .add_page(&RequestNumber::Info, content_info)?;
     Ok(res)
 }

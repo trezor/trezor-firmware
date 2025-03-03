@@ -101,9 +101,9 @@ pub fn new_show_danger(
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREY_DARK)
     .map(|_| Some(FlowMsg::Cancelled));
 
-    let res = SwipeFlow::new(&ShowDanger::Message)?
-        .with_page(&ShowDanger::Message, content_message)?
-        .with_page(&ShowDanger::Menu, content_menu)?
-        .with_page(&ShowDanger::Cancelled, content_cancelled)?;
+    let mut res = SwipeFlow::new(&ShowDanger::Message)?;
+    res.add_page(&ShowDanger::Message, content_message)?
+        .add_page(&ShowDanger::Menu, content_menu)?
+        .add_page(&ShowDanger::Cancelled, content_cancelled)?;
     Ok(res)
 }
