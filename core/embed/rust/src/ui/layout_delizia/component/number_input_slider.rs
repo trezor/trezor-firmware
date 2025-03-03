@@ -1,7 +1,6 @@
-use super::{theme, Footer};
+use super::theme;
 use crate::{
-    strutil::{ShortString, TString},
-    translations::TR,
+    strutil::ShortString,
     ui::{
         component::{paginated::SinglePage, Component, Event, EventCtx},
         constant::screen,
@@ -18,7 +17,6 @@ pub enum NumberInputSliderDialogMsg {
 pub struct NumberInputSliderDialog {
     area: Rect,
     input: NumberInputSlider,
-    footer: Footer<'static>,
     min: u16,
     max: u16,
     val: u16,
@@ -30,10 +28,6 @@ impl NumberInputSliderDialog {
         Self {
             area: Rect::zero(),
             input: NumberInputSlider::new(min, max, init_value),
-            footer: Footer::new::<TString<'static>>(
-                TR::instructions__swipe_horizontally.into(),
-                Some(TR::setting__adjust.into()),
-            ),
             min,
             max,
             val: init_value,
@@ -43,6 +37,14 @@ impl NumberInputSliderDialog {
 
     pub fn value(&self) -> u16 {
         self.input.value
+    }
+
+    pub fn init_value(&self) -> u16 {
+        self.init_val
+    }
+
+    pub fn touching(&self) -> bool {
+        self.input.touching
     }
 }
 
@@ -54,12 +56,7 @@ impl Component for NumberInputSliderDialog {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
 
-        let whole_area = self.area.inset(Insets::bottom(theme::SPACING));
-        let (remaining, footer_area) = whole_area.split_bottom(self.footer.height());
-        self.footer.place(footer_area);
-        let content_area = remaining;
-
-        let used_area = content_area
+        let used_area = bounds
             .inset(Insets::sides(theme::SPACING))
             .inset(Insets::bottom(theme::SPACING));
 
@@ -77,18 +74,6 @@ impl Component for NumberInputSliderDialog {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg_opt = self.input.event(ctx, event);
 
-        if self.val == self.init_val || self.input.touching {
-            self.footer
-                .update_instruction(ctx, TR::instructions__swipe_horizontally);
-            self.footer.update_description(ctx, TR::setting__adjust);
-            ctx.request_paint();
-        } else {
-            self.footer
-                .update_instruction(ctx, TR::instructions__tap_to_continue);
-            self.footer.update_description(ctx, TR::setting__apply);
-            ctx.request_paint();
-        }
-
         msg_opt.map(|value| {
             self.val = value;
             Self::Msg::Changed(value)
@@ -97,7 +82,6 @@ impl Component for NumberInputSliderDialog {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.input.render(target);
-        self.footer.render(target);
     }
 }
 
