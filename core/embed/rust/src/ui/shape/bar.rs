@@ -77,13 +77,22 @@ impl Shape<'_> for Bar {
 
         // TODO: fatal_error! in unsupported scenarious
 
-        let th = match self.fg_color {
-            Some(_) => self.thickness,
-            None => 0,
+        let (fg_color, bg_color, th) = if self.fg_color.is_some() {
+            let th = self.thickness;
+            if th * 2 < self.area.width() && th * 2 < self.area.height() {
+                // Draw a rectangle with a border
+                (self.fg_color, self.bg_color, th)
+            } else {
+                // Too thick border => draw a filled rectangle
+                (None, self.fg_color, 0)
+            }
+        } else {
+            // No foreground color => draw a filled rectangle
+            (None, self.bg_color, 0)
         };
 
         if self.radius == 0 {
-            if let Some(fg_color) = self.fg_color {
+            if let Some(fg_color) = fg_color {
                 // outline
                 if th > 0 {
                     let r = self.area;
@@ -129,13 +138,13 @@ impl Shape<'_> for Bar {
                     );
                 }
             }
-            if let Some(bg_color) = self.bg_color {
+            if let Some(bg_color) = bg_color {
                 // background
                 let bg_r = self.area.shrink(th);
                 canvas.fill_rect(bg_r, bg_color, self.alpha);
             }
         } else {
-            if let Some(fg_color) = self.fg_color {
+            if let Some(fg_color) = fg_color {
                 if th > 0 {
                     if self.bg_color.is_some() {
                         canvas.fill_round_rect(self.area, self.radius, fg_color, self.alpha);
@@ -145,7 +154,7 @@ impl Shape<'_> for Bar {
                     }
                 }
             }
-            if let Some(bg_color) = self.bg_color {
+            if let Some(bg_color) = bg_color {
                 let bg_r = self.area.shrink(th);
                 canvas.fill_round_rect(bg_r, self.radius, bg_color, self.alpha);
             }
