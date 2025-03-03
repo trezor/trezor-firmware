@@ -32,4 +32,14 @@ int zkp_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
 ecdsa_tweak_pubkey_result zkp_ecdsa_tweak_pubkey(
     const ecdsa_curve *curve, const uint8_t *public_key_bytes,
     const uint8_t *tweak_bytes, uint8_t *tweaked_public_key_bytes);
+int zkp_ecdsa_anti_exfil_sign_digest(const ecdsa_curve *curve,
+                                     const uint8_t *private_key_bytes,
+                                     const uint8_t *digest,
+                                     const uint8_t *entropy,
+                                     uint8_t *signature_bytes);
+int zkp_ecdsa_anti_exfil_commit_nonce(const ecdsa_curve *curve,
+                                      const uint8_t *private_key_bytes,
+                                      const uint8_t *digest,
+                                      const uint8_t *entropy_commitment,
+                                      uint8_t *nonce_commitment);
 #endif
