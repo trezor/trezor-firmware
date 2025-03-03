@@ -128,18 +128,6 @@ impl SwipeFlow {
     /// Add a page to the flow.
     ///
     /// Pages must be inserted in the order of the flow state index.
-    pub fn with_page(
-        mut self,
-        state: &'static dyn FlowController,
-        page: impl FlowComponentDynTrait + 'static,
-    ) -> Result<Self, error::Error> {
-        self.add_page(state, page)?;
-        Ok(self)
-    }
-
-    /// Add a page to the flow.
-    ///
-    /// Pages must be inserted in the order of the flow state index.
     pub fn add_page(
         &mut self,
         state: &'static dyn FlowController,

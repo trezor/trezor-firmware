@@ -310,9 +310,10 @@ fn new_confirm_action_uni<T: Component + PaginateFull + MaybeTrace + 'static>(
         .map_to_button_msg()
         .with_pages(move |intro_pages| intro_pages + prompt_pages);
 
-    let flow = flow?.with_page(page, content)?;
-    let flow = create_menu(flow, &extra, prompt_screen)?;
-    let flow = create_confirm(flow, &extra, strings.subtitle, hold, prompt_screen)?;
+    let mut flow = flow?;
+    flow.add_page(page, content)?;
+    create_menu(&mut flow, &extra, prompt_screen)?;
+    create_confirm(&mut flow, &extra, strings.subtitle, hold, prompt_screen)?;
 
     Ok(flow)
 }
@@ -346,10 +347,10 @@ fn create_flow(
 }
 
 fn create_menu(
-    flow: SwipeFlow,
+    flow: &mut SwipeFlow,
     extra: &ConfirmActionExtra,
     prompt_screen: Option<TString<'static>>,
-) -> Result<SwipeFlow, Error> {
+) -> Result<(), Error> {
     if let ConfirmActionExtra::Menu(menu_strings) = extra {
         let mut menu = VerticalMenu::empty();
         let mut menu_items = Vec::<usize, 2>::new();
@@ -374,23 +375,22 @@ fn create_menu(
         });
 
         if prompt_screen.is_some() {
-            flow.with_page(&ConfirmActionWithMenuAndConfirmation::Menu, content_menu)
+            flow.add_page(&ConfirmActionWithMenuAndConfirmation::Menu, content_menu)?;
         } else {
-            flow.with_page(&ConfirmActionWithMenu::Menu, content_menu)
+            flow.add_page(&ConfirmActionWithMenu::Menu, content_menu)?;
         }
-    } else {
-        Ok(flow) // no menu being added
     }
+    Ok(())
 }
 
 // Create the extra confirmation screen (optional).
 fn create_confirm(
-    flow: SwipeFlow,
+    flow: &mut SwipeFlow,
     extra: &ConfirmActionExtra,
     subtitle: Option<TString<'static>>,
     hold: bool,
     prompt_screen: Option<TString<'static>>,
-) -> Result<SwipeFlow, Error> {
+) -> Result<(), Error> {
     if let Some(prompt_title) = prompt_screen {
         let (prompt, prompt_action) = if hold {
             (
@@ -419,13 +419,12 @@ fn create_confirm(
 
         let content_confirm = content_confirm.map(super::util::map_to_confirm);
 
-        flow.with_page(
+        flow.add_page(
             &ConfirmActionWithMenuAndConfirmation::Confirmation,
             content_confirm,
-        )
-    } else {
-        Ok(flow)
+        )?;
     }
+    Ok(())
 }
 
 #[inline(never)]

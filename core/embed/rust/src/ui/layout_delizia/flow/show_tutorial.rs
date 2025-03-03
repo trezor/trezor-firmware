@@ -163,15 +163,15 @@ pub fn new_show_tutorial() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Down, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
-    let res = SwipeFlow::new(&ShowTutorial::StepWelcome)?
-        .with_page(&ShowTutorial::StepWelcome, content_step_welcome)?
-        .with_page(&ShowTutorial::StepBegin, content_step_begin)?
-        .with_page(&ShowTutorial::StepNavigation, content_step_navigation)?
-        .with_page(&ShowTutorial::StepMenu, content_step_menu)?
-        .with_page(&ShowTutorial::StepHold, content_step_hold)?
-        .with_page(&ShowTutorial::StepDone, content_step_done)?
-        .with_page(&ShowTutorial::Menu, content_menu)?
-        .with_page(&ShowTutorial::DidYouKnow, content_did_you_know)?
-        .with_page(&ShowTutorial::HoldToExit, content_hold_to_exit)?;
+    let mut res = SwipeFlow::new(&ShowTutorial::StepWelcome)?;
+    res.add_page(&ShowTutorial::StepWelcome, content_step_welcome)?
+        .add_page(&ShowTutorial::StepBegin, content_step_begin)?
+        .add_page(&ShowTutorial::StepNavigation, content_step_navigation)?
+        .add_page(&ShowTutorial::StepMenu, content_step_menu)?
+        .add_page(&ShowTutorial::StepHold, content_step_hold)?
+        .add_page(&ShowTutorial::StepDone, content_step_done)?
+        .add_page(&ShowTutorial::Menu, content_menu)?
+        .add_page(&ShowTutorial::DidYouKnow, content_did_you_know)?
+        .add_page(&ShowTutorial::HoldToExit, content_hold_to_exit)?;
     Ok(res)
 }

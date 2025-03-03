@@ -107,10 +107,10 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
-    let res = SwipeFlow::new(&PromptBackup::Intro)?
-        .with_page(&PromptBackup::Intro, content_intro)?
-        .with_page(&PromptBackup::Menu, content_menu)?
-        .with_page(&PromptBackup::SkipBackupIntro, content_skip_intro)?
-        .with_page(&PromptBackup::SkipBackupConfirm, content_skip_confirm)?;
+    let mut res = SwipeFlow::new(&PromptBackup::Intro)?;
+    res.add_page(&PromptBackup::Intro, content_intro)?
+        .add_page(&PromptBackup::Menu, content_menu)?
+        .add_page(&PromptBackup::SkipBackupIntro, content_skip_intro)?
+        .add_page(&PromptBackup::SkipBackupConfirm, content_skip_confirm)?;
     Ok(res)
 }

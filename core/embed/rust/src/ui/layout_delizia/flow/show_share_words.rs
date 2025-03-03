@@ -132,11 +132,11 @@ pub fn new_show_share_words(
     .with_swipeup_footer(None)
     .map(|_| Some(FlowMsg::Confirmed));
 
-    let res = SwipeFlow::new(&ShowShareWords::Instruction)?
-        .with_page(&ShowShareWords::Instruction, content_instruction)?
-        .with_page(&ShowShareWords::Words, content_words)?
-        .with_page(&ShowShareWords::Confirm, content_confirm)?
-        .with_page(
+    let mut res = SwipeFlow::new(&ShowShareWords::Instruction)?;
+    res.add_page(&ShowShareWords::Instruction, content_instruction)?
+        .add_page(&ShowShareWords::Words, content_words)?
+        .add_page(&ShowShareWords::Confirm, content_confirm)?
+        .add_page(
             &ShowShareWords::CheckBackupIntro,
             content_check_backup_intro,
         )?;

@@ -84,9 +84,9 @@ pub fn new_confirm_homescreen(
     .with_swipe(Direction::Left, SwipeSettings::default())
     .map(super::util::map_to_confirm);
 
-    let res = SwipeFlow::new(&ConfirmHomescreen::Homescreen)?
-        .with_page(&ConfirmHomescreen::Homescreen, content_homescreen)?
-        .with_page(&ConfirmHomescreen::Menu, content_menu)?
-        .with_page(&ConfirmHomescreen::Confirm, content_confirm)?;
+    let mut res = SwipeFlow::new(&ConfirmHomescreen::Homescreen)?;
+    res.add_page(&ConfirmHomescreen::Homescreen, content_homescreen)?
+        .add_page(&ConfirmHomescreen::Menu, content_menu)?
+        .add_page(&ConfirmHomescreen::Confirm, content_confirm)?;
     Ok(res)
 }

@@ -197,14 +197,14 @@ pub fn new_get_address(
     .with_swipe(Direction::Right, SwipeSettings::immediate())
     .map(super::util::map_to_confirm);
 
-    let res = SwipeFlow::new(&GetAddress::Address)?
-        .with_page(&GetAddress::Address, content_address)?
-        .with_page(&GetAddress::Tap, content_tap)?
-        .with_page(&GetAddress::Confirmed, content_confirmed)?
-        .with_page(&GetAddress::Menu, content_menu)?
-        .with_page(&GetAddress::QrCode, content_qr)?
-        .with_page(&GetAddress::AccountInfo, content_account)?
-        .with_page(&GetAddress::Cancel, content_cancel_info)?
-        .with_page(&GetAddress::CancelTap, content_cancel_tap)?;
+    let mut res = SwipeFlow::new(&GetAddress::Address)?;
+    res.add_page(&GetAddress::Address, content_address)?
+        .add_page(&GetAddress::Tap, content_tap)?
+        .add_page(&GetAddress::Confirmed, content_confirmed)?
+        .add_page(&GetAddress::Menu, content_menu)?
+        .add_page(&GetAddress::QrCode, content_qr)?
+        .add_page(&GetAddress::AccountInfo, content_account)?
+        .add_page(&GetAddress::Cancel, content_cancel_info)?
+        .add_page(&GetAddress::CancelTap, content_cancel_tap)?;
     Ok(res)
 }

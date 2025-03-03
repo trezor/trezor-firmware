@@ -119,11 +119,11 @@ pub fn new_set_brightness(brightness: Option<u8>) -> Result<SwipeFlow, Error> {
     .with_result_icon(theme::ICON_BULLET_CHECKMARK, theme::GREEN_LIGHT)
     .map(move |_msg| Some(FlowMsg::Confirmed));
 
-    let res = SwipeFlow::new(&SetBrightness::Slider)?
-        .with_page(&SetBrightness::Slider, content_slider)?
-        .with_page(&SetBrightness::Menu, content_menu)?
-        .with_page(&SetBrightness::Confirm, content_confirm)?
-        .with_page(&SetBrightness::Confirmed, content_confirmed)?;
+    let mut res = SwipeFlow::new(&SetBrightness::Slider)?;
+    res.add_page(&SetBrightness::Slider, content_slider)?
+        .add_page(&SetBrightness::Menu, content_menu)?
+        .add_page(&SetBrightness::Confirm, content_confirm)?
+        .add_page(&SetBrightness::Confirmed, content_confirmed)?;
 
     Ok(res)
 }
