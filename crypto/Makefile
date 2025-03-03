@@ -73,7 +73,7 @@ ZKP_CFLAGS = \
 	-DENABLE_MODULE_ECDH
 ZKP_PATH = ../vendor/secp256k1-zkp
 # this is specific for 64-bit builds
-CFLAGS += -DSECP256K1_CONTEXT_SIZE=208
+CFLAGS += -DSECP256K1_CONTEXT_SIZE=216
 
 VALGRIND ?= 1
 ifeq ($(VALGRIND),1)
