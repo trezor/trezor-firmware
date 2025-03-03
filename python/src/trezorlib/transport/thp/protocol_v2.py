@@ -9,6 +9,7 @@ from binascii import hexlify
 
 import click
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from noise.connection import Keypair, NoiseConnection
 
 from ... import exceptions, messages, protobuf
 from ...mapping import ProtobufMapping
@@ -83,6 +84,8 @@ class ProtocolV2Channel(Channel):
             self.sync_bit_send = channel_data.sync_bit_send
             self.handshake_hash = bytes.fromhex(channel_data.handshake_hash)
             self._has_valid_channel = True
+        self.noise = NoiseConnection.from_name(b"Noise_XX_25519_AESGCM_SHA256")
+        self.noise.set_as_initiator()
 
     def get_channel(self, helper_debug: DebugLink | None = None) -> ProtocolV2Channel:
         if not self._has_valid_channel:
@@ -191,8 +194,17 @@ class ProtocolV2Channel(Channel):
     def _do_handshake(
         self, credential: bytes | None = None, host_static_privkey: bytes | None = None
     ):
-        host_ephemeral_privkey = curve25519.get_private_key(os.urandom(32))
+        randomness = os.urandom(32)
+        host_ephemeral_privkey = curve25519.get_private_key(randomness)
         host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
+
+        if host_static_privkey is None:
+            host_static_privkey = curve25519.get_private_key(os.urandom(32))
+
+        self.noise.set_keypair_from_private_bytes(Keypair.STATIC, host_static_privkey)
+        self.noise.set_keypair_from_private_bytes(Keypair.EPHEMERAL, randomness)
+        self.noise.set_prologue(bytes(self.device_properties))
+        self.noise.start_handshake()
 
         self._send_handshake_init_request(host_ephemeral_pubkey)
         self._read_ack()
@@ -201,6 +213,17 @@ class ProtocolV2Channel(Channel):
         trezor_ephemeral_pubkey = init_response[:32]
         encrypted_trezor_static_pubkey = init_response[32:80]
         noise_tag = init_response[80:96]
+        print(
+            "trezor_ephemeral_pubkey:     ", hexlify(trezor_ephemeral_pubkey).decode()
+        )
+        print(
+            "encrypted_trezor_static_pubkey:",
+            hexlify(encrypted_trezor_static_pubkey).decode(),
+        )
+        print("noise_tag:                   ", hexlify(noise_tag).decode())
+
+        recv = self.noise.read_message(init_response)
+        print("recv:                        ", hexlify(recv).decode())
         LOG.debug("noise_tag: %s", hexlify(noise_tag).decode())
 
         # TODO check noise_tag is valid
@@ -221,6 +244,9 @@ class ProtocolV2Channel(Channel):
 
     def _send_handshake_init_request(self, host_ephemeral_pubkey: bytes) -> None:
         ha_init_req_header = MessageHeader(0, self.channel_id, 36)
+        message = self.noise.write_message()
+        print("message:" + hexlify(message).decode())
+        print("hep    :" + hexlify(host_ephemeral_pubkey).decode())
 
         thp_io.write_payload_to_wire_and_add_checksum(
             self.transport, ha_init_req_header, host_ephemeral_pubkey
