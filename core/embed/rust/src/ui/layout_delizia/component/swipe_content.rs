@@ -17,7 +17,11 @@ use crate::{
 
 #[derive(Default, Clone)]
 pub struct SwipeAttachAnimation {
-    pub timer: Stopwatch,
+    /// Animation timer for time elapsed since the first animation frame tick
+    /// after the attach event. Stopped state indicates animation initial
+    /// state; after the animation duration elapses, the stopwatch continues
+    /// to run.
+    timer: Stopwatch,
     pub attach_type: Option<AttachType>,
     pub show_attach_anim: bool,
 }
@@ -33,13 +37,20 @@ impl SwipeAttachAnimation {
         }
     }
 
+    /// Checks if the attach animation is active.
+    ///
+    /// The animation is considered "active" from attach event (timer stopped),
+    /// through the first animation frame (timer started), until the timer
+    /// exceeds animation duration.
     pub fn is_active(&self) -> bool {
         if animation_disabled() {
             return false;
         }
 
-        self.timer
-            .is_running_within(Duration::from_millis(Self::DURATION_MS))
+        !self.timer.is_running()
+            || self
+                .timer
+                .is_running_within(Duration::from_millis(Self::DURATION_MS))
     }
 
     pub fn eval(&self) -> f32 {
@@ -93,14 +104,19 @@ impl SwipeAttachAnimation {
         u8::lerp(0, 255, value.eval(t))
     }
 
-    pub fn start(&mut self) {
-        self.timer.start();
-    }
-
-    pub fn reset(&mut self) {
+    /// Reset the animation to initial state.
+    fn reset(&mut self) {
         self.timer = Stopwatch::new_stopped();
     }
 
+    /// Lazily start the animation.
+    ///
+    /// Attach event will reset but not start the timer; the timer is started by
+    /// the first animation frame, to avoid any discontinuity in case Attach
+    /// precedes the first animation frame by a noticeable interval.
+    ///
+    /// While the animation is active, that is, from the first Attach to until
+    /// the timer runs out, no touch events are allowed through.
     pub fn lazy_start(
         &mut self,
         ctx: &mut EventCtx,
