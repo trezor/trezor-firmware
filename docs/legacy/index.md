@@ -70,6 +70,12 @@ poetry run ./script/cibuild
 A built device firmware will be located in `legacy/firmware/trezor.bin`. A built emulator will be
 located in `legacy/firmware/trezor.elf`.
 
+### ⚠️ Disclaimer ⚠️
+
+The emulator is for *development purposes only*. It uses a pseudo random number generator, and thus no guarantee on its entropy is made. No security or hardening efforts are made here. It is, and will continue to be, intended for development purposes only. Security and hardening efforts are only made available on [physical Trezor hardware](https://shop.trezor.io/).
+
+Any other usage of the emulator is discouraged. Doing so runs the risk of losing funds.
+
 ### Common errors
 
 * **"Exception: bootloader has to be smaller than 32736 bytes"**: if you didn't modify the bootloader

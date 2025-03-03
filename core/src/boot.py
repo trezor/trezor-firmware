@@ -104,6 +104,10 @@ async def bootscreen() -> None:
             utils.halt(e.__class__.__name__)
 
 
+# Display emulator warning.
+if utils.EMULATOR:
+    print("\x1b[1;31m*** TREZOR EMULATOR IS FOR DEVELOPMENT PURPOSES ONLY ***\x1b[0m")
+
 # Ignore all automated PIN messages in the boot-phase (turned off in `bootscreen()`), unless Optiga throttling delays are active.
 if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
     ignore_nonpin_loader_messages()

@@ -168,6 +168,12 @@ def cli(
 
     By default, emulator output goes to stdout. If silenced with -q, it is redirected
     to $TREZOR_PROFILE_DIR/trezor.log. You can also specify a custom path with -o.
+
+    This emulator is for development purposes only. Any other usage of the emulator is
+    discouraged. Doing so runs the risk of losing funds. It uses a pseudo random number
+    generator, and thus no guarantee on its entropy is made. Security and hardening
+    efforts are only made available on physical Trezor hardware.
+
     """
     if executable:
         executable = Path(executable)
