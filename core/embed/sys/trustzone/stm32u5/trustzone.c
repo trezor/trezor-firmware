@@ -349,12 +349,6 @@ void tz_set_tamper_unpriv(bool unpriv) {
       unpriv ? GTZC_TZSC_PERIPH_NPRIV : GTZC_TZSC_PERIPH_PRIV);
 }
 
-void tz_set_dma2d_unpriv(bool unpriv) {
-  HAL_GTZC_TZSC_ConfigPeriphAttributes(
-      GTZC_PERIPH_DMA2D,
-      unpriv ? GTZC_TZSC_PERIPH_NPRIV : GTZC_TZSC_PERIPH_PRIV);
-}
-
 #if defined STM32U5A9xx || defined STM32U5G9xx
 void tz_set_gfxmmu_unpriv(bool unpriv) {
   HAL_GTZC_TZSC_ConfigPeriphAttributes(

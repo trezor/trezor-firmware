@@ -84,10 +84,6 @@ void display_set_unpriv_access(bool unpriv) {
   tz_set_sram_unpriv((uint32_t)physical_frame_buffer_1,
                      PHYSICAL_FRAME_BUFFER_SIZE, unpriv);
 #endif
-
-#ifdef USE_DMA2D
-  tz_set_dma2d_unpriv(unpriv);
-#endif
 }
 #endif  // USE_TRUSTZONE
 

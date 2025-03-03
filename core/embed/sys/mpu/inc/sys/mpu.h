@@ -76,7 +76,11 @@ void mpu_restore(mpu_mode_t mode);
 //
 // Addr and size must be aligned to the 32-byte boundary.
 // If addr == 0, the framebuffer is not accessible.
-void mpu_set_active_fb(void* addr, size_t size);
+void mpu_set_active_fb(const void* addr, size_t size);
+
+// Returns true if the given address and size are inside
+// the active framebuffer previously set by `mpu_set_active_fb()`.
+bool mpu_inside_active_fb(const void* addr, size_t size);
 
 #endif  // KERNEL_MODE
 

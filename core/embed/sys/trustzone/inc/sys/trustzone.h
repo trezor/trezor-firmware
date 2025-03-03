@@ -55,9 +55,6 @@ void tz_set_saes_unpriv(bool unpriv);
 // Sets unprivileged access to the TAMP peripheral.
 void tz_set_tamper_unpriv(bool unpriv);
 
-// Sets unprivileged access to the DMA2D peripheral.
-void tz_set_dma2d_unpriv(bool unpriv);
-
 // Sets unprivileged access to the GFXMMU peripheral.
 void tz_set_gfxmmu_unpriv(bool unpriv);
 

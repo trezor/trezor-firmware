@@ -226,4 +226,33 @@ bool jpegdec_get_slice_rgba8888__verified(void *rgba8888,
 
 #endif  // USE_HW_JPEG_DECODER
 
+// ---------------------------------------------------------------------
+#ifdef USE_DMA2D
+
+#include <gfx/dma2d_bitblt.h>
+
+bool dma2d_rgb565_fill__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgb565_copy_mono4__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgb565_copy_rgb565__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgb565_blend_mono4__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgb565_blend_mono8__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgba8888_fill__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgba8888_copy_mono4__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgba8888_copy_rgb565__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgba8888_copy_rgba8888__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgba8888_blend_mono4__verified(const gfx_bitblt_t *bb);
+
+bool dma2d_rgba8888_blend_mono8__verified(const gfx_bitblt_t *bb);
+
+#endif
+
 #endif  // SYSCALL_DISPATCH

@@ -17,12 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
+#include <gfx/dma2d_bitblt.h>
 #include <gfx/gfx_color.h>
-
-#include "../dma2d_bitblt.h"
 
 // Number of DMA2D layers - background (0) and foreground (1)
 #define DMA2D_LAYER_COUNT 2
@@ -907,14 +908,6 @@ bool dma2d_rgba8888_copy_y(const gfx_bitblt_t* bb) {
   return true;
 }
 
-// Temporary hack to invalidate CLUT cache used in jpeg decoder.
-// This function should be removed in the future with DMA2D syscalls.
-void dma2d_invalidate_clut(void) {
-  dma2d_driver_t* drv = &g_dma2d_driver;
-  if (!drv->initialized) {
-    return;
-  }
-  drv->clut_valid = false;
-}
-
 #endif  // USE_HW_JPEG_DECODER
+
+#endif  // KERNEL_MODE
