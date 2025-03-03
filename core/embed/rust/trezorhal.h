@@ -7,6 +7,7 @@
 #include <io/usb.h>
 #include <rtl/secbool.h>
 #include <sec/entropy.h>
+#include <sys/poll.h>
 #include <sys/systick.h>
 #include <util/flash.h>
 #include <util/translations.h>
@@ -41,6 +42,7 @@
 #include "slip39.h"
 
 #include "uzlib.h"
+
 
 // force bindgen to include these constants
 const uint32_t DISPLAY_RESX_ = DISPLAY_RESX;

@@ -1,9 +1,12 @@
 #[cfg(feature = "bootloader")]
 use crate::trezorhal::secbool::secbool;
+use crate::ui::component::Event;
 
 #[cfg(feature = "bootloader")]
 pub trait BootloaderUI {
-    fn screen_welcome();
+    fn screen_welcome(buf: &mut [u8]);
+
+    fn screen_welcome_event(buf: &mut [u8], event: Option<Event>) -> u32;
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool);
 
@@ -35,7 +38,9 @@ pub trait BootloaderUI {
 
     fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool);
 
-    fn screen_connect(initial_setup: bool);
+    fn screen_connect(initial_setup: bool, buf: &mut [u8]);
+
+    fn screen_connect_event(buf: &mut [u8], event: Option<Event>) -> u32;
 
     fn screen_wipe_success();
 
@@ -48,4 +53,10 @@ pub trait BootloaderUI {
         vendor_img: &'static [u8],
         wait: i32,
     );
+
+    #[cfg(feature = "ble")]
+    fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32;
+
+    #[cfg(feature = "ble")]
+    fn screen_pairing_mode(initial_setup: bool) -> u32;
 }

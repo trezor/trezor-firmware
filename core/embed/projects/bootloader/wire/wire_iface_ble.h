@@ -17,25 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_model.h>
-#include <trezor_rtl.h>
+#pragma once
 
-#include <util/image.h>
+#include "codec_v1.h"
 
-#include "bootui.h"
-#include "rust_ui_bootloader.h"
-#include "workflow.h"
+void ble_iface_init(wire_iface_t* iface);
 
-workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
-                                       const image_header *const hdr) {
-  ui_set_initial_setup(true);
-  uint8_t buf[1024] = {0};
-  screen_connect(true, buf, sizeof(buf));
+void ble_iface_deinit(wire_iface_t* iface);
 
-  workflow_result_t res = WF_CANCELLED;
-  while (res == WF_CANCELLED) {
-    res = workflow_host_control(vhdr, hdr, screen_connect_event, buf,
-                                sizeof(buf));
-  }
-  return res;
-}
+void ble_iface_start_pairing(void);

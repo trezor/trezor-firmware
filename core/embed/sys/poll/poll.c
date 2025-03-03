@@ -20,9 +20,8 @@
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
-#include "poll.h"
-
 #include <io/usb.h>
+#include <sys/poll.h>
 #include <sys/systick.h>
 
 #ifdef USE_BLE
