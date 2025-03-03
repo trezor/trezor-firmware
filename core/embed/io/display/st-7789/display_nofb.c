@@ -130,23 +130,4 @@ void display_copy_mono1p(const gfx_bitblt_t* bb) {
   }
 }
 
-void display_copy_mono4(const gfx_bitblt_t* bb) {
-  set_window(bb);
-
-  const gfx_color16_t* gradient =
-      gfx_color16_gradient_a4(bb->src_fg, bb->src_bg);
-
-  uint8_t* src_row = (uint8_t*)bb->src_row;
-  uint16_t height = bb->height;
-
-  while (height-- > 0) {
-    for (int x = 0; x < bb->width; x++) {
-      uint8_t fg_data = src_row[(x + bb->src_x) / 2];
-      uint8_t fg_lum = (x + bb->src_x) & 1 ? fg_data >> 4 : fg_data & 0xF;
-      ISSUE_PIXEL_DATA(gradient[fg_lum]);
-    }
-    src_row += bb->src_stride / sizeof(*src_row);
-  }
-}
-
 #endif  // KERNEL_MODE

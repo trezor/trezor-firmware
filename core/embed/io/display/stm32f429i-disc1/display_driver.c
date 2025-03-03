@@ -196,18 +196,4 @@ void display_copy_mono1p(const gfx_bitblt_t *bb) {
   gfx_rgb565_copy_mono1p(&bb_new);
 }
 
-void display_copy_mono4(const gfx_bitblt_t *bb) {
-  display_driver_t *drv = &g_display_driver;
-
-  if (!drv->initialized) {
-    return;
-  }
-
-  gfx_bitblt_t bb_new = *bb;
-  bb_new.dst_row = drv->framebuf + (DISPLAY_RESX * bb_new.dst_y);
-  bb_new.dst_stride = DISPLAY_RESX * sizeof(uint16_t);
-
-  gfx_rgb565_copy_mono4(&bb_new);
-}
-
 #endif

@@ -150,9 +150,6 @@ void display_fill(const gfx_bitblt_t *bb);
 // Copies an RGB565 bitmap.
 // This function is supported by RGB displays only.
 void display_copy_rgb565(const gfx_bitblt_t *bb);
-// Copies a MONO4 bitmap (supported only with RGB displays).
-// This function is supported by RGB displays only.
-void display_copy_mono4(const gfx_bitblt_t *bb);
 // Copies a MONO1P bitmap.
 // This function is supported by all types of displays.
 void display_copy_mono1p(const gfx_bitblt_t *bb);
