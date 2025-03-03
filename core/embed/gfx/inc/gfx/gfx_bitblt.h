@@ -87,6 +87,27 @@ void gfx_bitblt_deinit(void);
 
 #endif  // KERNEL_MODE
 
+// Checks if src_x and width are within the bounds of the source bitmap
+static inline bool gfx_bitblt_check_src_x(const gfx_bitblt_t* bb,
+                                          size_t pixel_bits) {
+  return (bb->src_x + bb->width >= bb->src_x) &&  // overflow check
+         (((bb->src_x + bb->width) * pixel_bits + 7) / 8 <= bb->src_stride);
+}
+
+// Checks if dst_x and width are within the bounds of the destination bitmap
+static inline bool gfx_bitblt_check_dst_x(const gfx_bitblt_t* bb,
+                                          size_t pixel_bits) {
+  return (bb->dst_x + bb->width >= bb->dst_x) &&  // overflow check
+         (((bb->dst_x + bb->width) * pixel_bits + 7) / 8 <= bb->dst_stride);
+}
+
+// Checks if dst_y and height are within the bounds of the destination bitmap
+static inline bool gfx_bitblt_check_dst_y(const gfx_bitblt_t* bb,
+                                          size_t fb_size) {
+  return (bb->dst_y + bb->height >= bb->dst_y) &&  // overflow check
+         (bb->dst_y + bb->height) * bb->dst_stride <= fb_size;
+}
+
 // If the bitblt operation is asynchronous, waits until it's finished
 void gfx_bitblt_wait(void);
 
