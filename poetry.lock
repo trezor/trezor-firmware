@@ -1164,6 +1164,17 @@ files = [
 ]
 
 [[package]]
+name = "pyelftools"
+version = "0.32"
+description = "Library for analyzing ELF files and DWARF debugging information"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pyelftools-0.32-py3-none-any.whl", hash = "sha256:013df952a006db5e138b1edf6d8a68ecc50630adbd0d83a2d41e7f846163d738"},
+    {file = "pyelftools-0.32.tar.gz", hash = "sha256:6de90ee7b8263e740c8715a925382d4099b354f29ac48ea40d840cf7aa14ace5"},
+]
+
+[[package]]
 name = "pyflakes"
 version = "3.2.0"
 description = "passive checker of Python programs"
@@ -1905,4 +1916,4 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-it
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "dc9c84386e9b6cf621114845c095bba59d9a5cc169b1622208de2b270d71cbb8"
+content-hash = "1257cb4cd905c3a00c46535ffa5767cf7bc5af0ac33b80f0adbd5776a8c49d31"
