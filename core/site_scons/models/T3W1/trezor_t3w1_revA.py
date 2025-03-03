@@ -84,6 +84,7 @@ def configure(
         features_available.append("ble")
         defines += [("USE_BLE", "1")]
         sources += ["embed/io/nrf/stm32u5/nrf.c"]
+        sources += ["embed/io/nrf/stm32u5/nrf_test.c"]
         sources += ["embed/io/nrf/crc8.c"]
         paths += ["embed/io/nrf/inc"]
         sources += [
@@ -118,7 +119,6 @@ def configure(
         paths += ["embed/io/nfc/rfal/source"]
         paths += ["embed/io/nfc/rfal/source/st25r3916"]
         paths += ["embed/io/nfc/rfal/include/"]
-        features_available.append("nfc")
         defines += [("USE_NFC", "1")]
 
     if "optiga" in features_wanted:
