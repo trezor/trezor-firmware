@@ -167,6 +167,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'ENABLE_MODULE_SCHNORRSIG',
         'ENABLE_MODULE_EXTRAKEYS',
         'ENABLE_MODULE_ECDH',
+        'ENABLE_MODULE_ECDSA_S2C',
     ]
     SOURCE_MOD_SECP256K1_ZKP = [
         'vendor/secp256k1-zkp/src/secp256k1.c',
