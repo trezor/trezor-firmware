@@ -236,7 +236,6 @@ def get_default_client(
 
     If path is specified, does a prefix-search for the specified device. Otherwise, uses
     the value of TREZOR_PATH env variable, or finds first connected Trezor.
-    If no UI is supplied, instantiates the default CLI UI.
     """
 
     if path is None:

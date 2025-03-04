@@ -27,7 +27,7 @@ from contextlib import contextmanager
 import click
 
 from .. import exceptions, transport, ui
-from ..client import ProtocolVersion, TrezorClient
+from ..client import PASSPHRASE_ON_DEVICE, ProtocolVersion, TrezorClient
 from ..messages import Capability
 from ..transport import Transport
 from ..transport.session import Session, SessionV1
@@ -72,7 +72,7 @@ def get_passphrase(
     available_on_device: bool, passphrase_on_host: bool
 ) -> t.Union[str, object]:
     if available_on_device and not passphrase_on_host:
-        return ui.PASSPHRASE_ON_DEVICE
+        return PASSPHRASE_ON_DEVICE
 
     env_passphrase = os.getenv("PASSPHRASE")
     if env_passphrase is not None:
@@ -158,6 +158,8 @@ class TrezorConnection:
 
         if empty_passphrase:
             passphrase = ""
+        elif self.script:
+            passphrase = None
         else:
             available_on_device = Capability.PassphraseEntry in features.capabilities
             passphrase = get_passphrase(available_on_device, self.passphrase_on_host)
@@ -188,7 +190,17 @@ class TrezorConnection:
         return _TRANSPORT
 
     def get_client(self) -> TrezorClient:
-        return get_client(self.get_transport())
+        client = get_client(self.get_transport())
+        if self.script:
+            client.button_callback = ui.ScriptUI.button_request
+            client.passphrase_callback = ui.ScriptUI.get_passphrase
+            client.pin_callback = ui.ScriptUI.get_pin
+        else:
+            click_ui = ui.ClickUI()
+            client.button_callback = click_ui.button_request
+            client.passphrase_callback = click_ui.get_passphrase
+            client.pin_callback = click_ui.get_pin
+        return client
 
     def get_seedless_session(self) -> Session:
         client = self.get_client()
