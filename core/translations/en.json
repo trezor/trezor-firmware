@@ -695,7 +695,7 @@
       "Bolt": "Select {0} word",
       "Caesar": "Select {0} word",
       "Delizia": "Select {0} word",
-      "Eckhart": "Select word no. {0} from your wallet backup"
+      "Eckhart": "Select word #{0} from your wallet backup"
     },
     "reset__select_word_x_of_y_template": "Select word {0} of {1}:",
     "reset__set_it_to_count_template": "Set it to {0} and you will need ",
