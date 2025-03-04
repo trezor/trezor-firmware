@@ -39,10 +39,10 @@ pub const TEXT_BIG: TextStyle = TextStyle::new(
 /// TT Satoshi Regular - 38 (Screen text, Menu item label)
 pub const TEXT_REGULAR: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_REGULAR_38,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 /// TT Satoshi Medium - 26 (Screen text, Button label, Input value)
 pub const TEXT_MEDIUM: TextStyle = TextStyle::new(
@@ -104,6 +104,14 @@ pub const TEXT_MONO_ADDRESS: TextStyle = TEXT_MONO_LIGHT
 pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
     &TEXT_MONO_ADDRESS_CHUNKS
 }
+
+pub const TEXT_MONO_EXTRA_LIGHT: TextStyle = TextStyle::new(
+    fonts::FONT_MONO_LIGHT_30,
+    GREY_EXTRA_LIGHT,
+    BG,
+    GREY_EXTRA_LIGHT,
+    GREY_EXTRA_LIGHT,
+);
 
 // Macro for styles differing only in text color
 macro_rules! label_title {
