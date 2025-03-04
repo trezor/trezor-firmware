@@ -145,6 +145,7 @@ def main() -> None:
         print(e)
         return
 
+    transport.open()
     client = TrezorClient(transport=transport)
     session = client.get_seedless_session()
 
@@ -184,6 +185,8 @@ def main() -> None:
     safeNoteArr = entries[entry_id]["safe_note"]["data"]
     safeNoteHex = "".join([hex(x)[2:].zfill(2) for x in safeNoteArr])
     print("safe_note:", decryptEntryValue(plain_nonce, bytes.fromhex(safeNoteHex)))
+
+    client.transport.close()
 
 
 if __name__ == "__main__":

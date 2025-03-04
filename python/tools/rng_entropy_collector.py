@@ -14,7 +14,9 @@ from trezorlib.transport import get_transport
 
 def main() -> None:
     try:
-        client = TrezorClient(get_transport())
+        transport = get_transport()
+        transport.open()
+        client = TrezorClient(transport)
         session = client.get_seedless_session()
     except Exception as e:
         print(e)
@@ -28,6 +30,8 @@ def main() -> None:
         for _ in range(0, arg2, step):
             entropy = misc.get_entropy(session, step)
             f.write(entropy)
+
+    transport.close()
 
 
 if __name__ == "__main__":

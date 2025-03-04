@@ -34,6 +34,9 @@ def main() -> None:
     address = btc.get_address(session, "Bitcoin", bip32_path, True)
     print("Bitcoin address:", address)
 
+    # Release underlying transport (USB/BLE/UDP)
+    client.transport.close()
+
 
 if __name__ == "__main__":
     main()

@@ -70,16 +70,18 @@ def choose_device(devices: Sequence["Transport"]) -> "Transport":
     sys.stderr.write("Available devices:\n")
     for d in devices:
         try:
+            d.open()
             client = TrezorClient(d)
         except IOError:
             sys.stderr.write("[-] <device is currently in use>\n")
             continue
-
-        if client.features.label:
-            sys.stderr.write(f"[{i}] {client.features.label}\n")
         else:
-            sys.stderr.write(f"[{i}] <no label>\n")
-        # TODO client.close()
+            if client.features.label:
+                sys.stderr.write(f"[{i}] {client.features.label}\n")
+            else:
+                sys.stderr.write(f"[{i}] <no label>\n")
+        finally:
+            d.close()
         i += 1
 
     sys.stderr.write("----------------------------\n")
@@ -105,6 +107,7 @@ def main() -> None:
 
     devices = wait_for_devices()
     transport = choose_device(devices)
+    transport.open()
     client = TrezorClient(transport)
     session = client.get_seedless_session()
 
@@ -151,6 +154,7 @@ def main() -> None:
         False,
         True,
     )
+    transport.close()
 
     print(passw)
 

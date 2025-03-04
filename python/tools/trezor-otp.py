@@ -33,19 +33,23 @@ BIP32_PATH = parse_path("10016h/0")
 
 def encrypt(type: str, domain: str, secret: str) -> str:
     transport = get_transport()
+    transport.open()
     client = TrezorClient(transport)
     session = client.get_seedless_session()
     dom = type.upper() + ": " + domain
     enc = encrypt_keyvalue(session, BIP32_PATH, dom, secret.encode(), False, True)
+    transport.close()
     return enc.hex()
 
 
 def decrypt(type: str, domain: str, secret: bytes) -> bytes:
     transport = get_transport()
+    transport.open()
     client = TrezorClient(transport)
     session = client.get_seedless_session()
     dom = type.upper() + ": " + domain
     dec = decrypt_keyvalue(session, BIP32_PATH, dom, secret, False, True)
+    transport.close()
     return dec
 
 
