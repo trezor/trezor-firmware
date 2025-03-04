@@ -338,9 +338,6 @@ def get_session(obj: TrezorConnection, derive_cardano: bool = False) -> str:
     Unlocks Trezor with a passphrase and returns a session ID. Use this session ID with
     `trezorctl -s SESSION_ID`, or set it to an environment variable `TREZOR_SESSION_ID`,
     to avoid having to enter passphrase for subsequent commands.
-
-    The session ID is valid until another client starts using Trezor, until the next
-    get-session call, or until Trezor is disconnected.
     """
     # make sure session is not resumed
     obj.session_id = None
