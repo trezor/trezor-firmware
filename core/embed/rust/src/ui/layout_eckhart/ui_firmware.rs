@@ -498,12 +498,15 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_danger(
-        _title: TString<'static>,
-        _description: TString<'static>,
-        _value: TString<'static>,
-        _verb_cancel: Option<TString<'static>>,
+        title: TString<'static>,
+        description: TString<'static>,
+        value: TString<'static>,
+        menu_title: Option<TString<'static>>,
+        verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let flow =
+            flow::show_danger::new_show_danger(title, description, value, menu_title, verb_cancel)?;
+        Ok(flow)
     }
 
     fn show_error(
