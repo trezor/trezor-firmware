@@ -280,6 +280,7 @@ pub trait FirmwareUI {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
