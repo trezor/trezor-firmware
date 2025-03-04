@@ -80,7 +80,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::empty().item(
             Button::with_text(TR::buttons__cancel.into())
-                .styled(theme::menu_item_title_red())
+                .styled(theme::menu_item_title_orange())
                 .with_text_align(Alignment::Start)
                 .with_content_offset(Offset::x(12)),
         ),
