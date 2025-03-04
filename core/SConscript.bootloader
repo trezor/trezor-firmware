@@ -192,12 +192,13 @@ if UI_DEBUG_OVERLAY:
     features.append('ui_debug_overlay')
 
 rust = tools.add_rust_lib(
-    env,
-    'bootloader',
-    'release',
-    features,
-    ALLPATHS,
-    str(Dir('.').abspath))
+    env=env,
+    build='bootloader',
+    profile='release',
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
 
 
 #
