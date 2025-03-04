@@ -1018,5 +1018,7 @@
   "1016": "solana__unknown_token_address",
   "1017": "reset__share_words_first",
   "1018": "backup__not_recommend",
-  "1019": "words__pay_attention"
+  "1019": "words__pay_attention",
+  "1020": "address__check_with_source",
+  "1021": "words__receive"
 }

@@ -1231,7 +1231,7 @@ pub enum TranslatedString {
     words__not_recommended = 861,  // "Not recommended!"
     address_details__account_info = 862,  // "Account info"
     address__cancel_contact_support = 863,  // "If receive address doesn't match, contact Trezor Support at trezor.io/support."
-    address__cancel_receive = 864,  // "Cancel receive"
+    address__cancel_receive = 864,  // {"Bolt": "Cancel receive", "Caesar": "Cancel receive", "Delizia": "Cancel receive", "Eckhart": "Cancel receive?"}
     address__qr_code = 865,  // "QR code"
     address_details__derivation_path = 866,  // "Derivation path"
     instructions__continue_in_app = 867,  // "Continue in the app"

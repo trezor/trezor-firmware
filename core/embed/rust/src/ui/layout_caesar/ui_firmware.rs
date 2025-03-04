@@ -993,6 +993,7 @@ impl FirmwareUI for UICaesar {
         title: TString<'static>,
         description: TString<'static>,
         _value: TString<'static>,
+        _menu_title: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let get_page = move |page_index| {
