@@ -39,10 +39,10 @@ pub const TEXT_BIG: TextStyle = TextStyle::new(
 /// TT Satoshi Regular - 38 (Screen text, Menu item label)
 pub const TEXT_REGULAR: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_REGULAR_38,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
     BG,
-    GREY_EXTRA_LIGHT,
-    GREY_EXTRA_LIGHT,
+    GREY_LIGHT,
+    GREY_LIGHT,
 );
 /// TT Satoshi Medium - 26 (Screen text, Button label, Input value)
 pub const TEXT_MEDIUM: TextStyle = TextStyle::new(

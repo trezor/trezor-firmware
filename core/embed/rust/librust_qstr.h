@@ -66,6 +66,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address;
   MP_QSTR_address__cancel_contact_support;
   MP_QSTR_address__cancel_receive;
+  MP_QSTR_address__check_with_source;
   MP_QSTR_address__confirmed;
   MP_QSTR_address__public_key;
   MP_QSTR_address__public_key_confirmed;
@@ -347,6 +348,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
+  MP_QSTR_menu_title;
   MP_QSTR_message;
   MP_QSTR_min_count;
   MP_QSTR_misc__decrypt_value;
@@ -812,6 +814,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__please_check_again;
   MP_QSTR_words__please_try_again;
   MP_QSTR_words__really_wanna;
+  MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
