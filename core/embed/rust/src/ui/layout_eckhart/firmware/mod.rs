@@ -4,6 +4,7 @@ mod hint;
 mod hold_to_confirm;
 mod keyboard;
 mod number_input_screen;
+mod qr_screen;
 mod select_word_screen;
 mod share_words;
 mod text_screen;
@@ -24,6 +25,7 @@ pub use keyboard::{
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
 pub use number_input_screen::{NumberInputScreen, NumberInputScreenMsg};
+pub use qr_screen::{QrMsg, QrScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 #[cfg(feature = "translations")]
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
