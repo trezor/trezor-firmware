@@ -188,7 +188,6 @@ def get_ownership_id(
     ).ownership_id
 
 
-# TODO this is used by tests only
 def get_ownership_proof(
     session: "Session",
     coin_name: str,
