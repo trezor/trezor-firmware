@@ -129,6 +129,8 @@ def confirm_path_warning(
         "path_warning",
         description,
         value=path,
+        title=TR.words__pay_attention,
+        menu_title=TR.words__receive,
         verb_cancel=TR.words__cancel_and_exit,
         br_code=ButtonRequestType.UnknownDerivationPath,
     )
@@ -138,7 +140,8 @@ def confirm_multisig_warning() -> Awaitable[None]:
     return show_danger(
         "warning_multisig",
         TR.send__receiving_to_multisig,
-        title=TR.words__important,
+        title=TR.words__pay_attention,
+        menu_title=TR.words__receive,
         verb_cancel=TR.words__cancel_and_exit,
     )
 
@@ -146,8 +149,9 @@ def confirm_multisig_warning() -> Awaitable[None]:
 def confirm_multisig_different_paths_warning() -> Awaitable[None]:
     return raise_if_not_confirmed(
         trezorui_api.show_danger(
-            title=f"{TR.words__important}!",
+            title=TR.words__pay_attention,
             description="Using different paths for different XPUBs.",
+            menu_title=TR.words__receive,
         ),
         "warning_multisig_different_paths",
         br_code=ButtonRequestType.Warning,
@@ -336,6 +340,7 @@ def show_danger(
     content: str,
     value: str | None = None,
     title: str | None = None,
+    menu_title: str | None = None,
     verb_cancel: str | None = None,
     br_code: ButtonRequestType = ButtonRequestType.Warning,
 ) -> Awaitable[None]:
@@ -346,6 +351,7 @@ def show_danger(
             title=title,
             description=content,
             value=(value or ""),
+            menu_title=menu_title,
             verb_cancel=verb_cancel,
         ),
         br_name,
