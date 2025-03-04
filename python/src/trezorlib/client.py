@@ -122,10 +122,13 @@ class TrezorClient:
             )
             if should_derive:
                 if isinstance(passphrase, str):
+                    temporary = self.passphrase_callback
                     self.passphrase_callback = get_callback_passphrase_v1(
                         passphrase=passphrase
                     )
-                derive_seed(session)
+                    derive_seed(session)
+                    self.passphrase_callback = temporary
+
             return session
         raise NotImplementedError
 
