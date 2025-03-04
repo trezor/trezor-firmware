@@ -24,11 +24,10 @@ import click
 import requests
 
 from .. import device, messages, toif
-from ..transport.session import Session
 from . import AliasedGroup, ChoiceType, with_session
 
 if TYPE_CHECKING:
-    pass
+    from ..transport.session import Session
 
 try:
     from PIL import Image

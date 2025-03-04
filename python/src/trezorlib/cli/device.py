@@ -88,9 +88,7 @@ def wipe(session: "Session", bootloader: bool) -> None:
             click.echo("Wiping user data!")
 
     try:
-        device.wipe(
-            session
-        )  # TODO decide where the wipe should happen - management or regular session
+        device.wipe(session)
     except exceptions.TrezorFailure as e:
         click.echo("Action failed: {} {}".format(*e.args))
         sys.exit(3)

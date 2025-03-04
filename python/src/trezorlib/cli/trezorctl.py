@@ -25,7 +25,6 @@ from typing import TYPE_CHECKING, Any, Callable, Iterable, Optional, TypeVar, ca
 import click
 
 from .. import __version__, log, messages, protobuf
-from ..client import TrezorClient
 from ..transport import DeviceIsBusy, enumerate_devices
 from ..transport.session import Session
 from ..transport.udp import UdpTransport
@@ -51,7 +50,6 @@ from . import (
     solana,
     stellar,
     tezos,
-    with_client,
     with_session,
 )
 
@@ -373,10 +371,10 @@ def clear_session(session: "Session") -> None:
 
 
 @cli.command()
-@with_client
-def get_features(client: "TrezorClient") -> messages.Features:
+@with_session(seedless=True)
+def get_features(session: "Session") -> messages.Features:
     """Retrieve device features and settings."""
-    return client.features
+    return session.features
 
 
 @cli.command()

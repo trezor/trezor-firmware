@@ -323,42 +323,6 @@ def with_session(
     return decorator
 
 
-def with_client(
-    func: "t.Callable[Concatenate[TrezorClient, P], R]",
-) -> "t.Callable[P, R]":
-    """Wrap a Click command in `with obj.client_context() as client`.
-
-    Sessions are handled transparently. The user is warned when session did not resume
-    cleanly. The session is closed after the command completes - unless the session
-    was resumed, in which case it should remain open.
-    """
-
-    @click.pass_obj
-    @functools.wraps(func)
-    def trezorctl_command_with_client(
-        obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
-    ) -> "R":
-        with obj.client_context() as client:
-            # session_was_resumed = obj.session_id == client.session_id
-            # if not session_was_resumed and obj.session_id is not None:
-            #     # tried to resume but failed
-            #     click.echo("Warning: failed to resume session.", err=True)
-            click.echo(
-                "Warning: resume session detection is not implemented yet!", err=True
-            )
-            try:
-                return func(client, *args, **kwargs)
-            finally:
-                pass
-                # if not session_was_resumed:
-                #     try:
-                #         client.end_session()
-                #     except Exception:
-                #         pass
-
-    return trezorctl_command_with_client
-
-
 class AliasedGroup(click.Group):
     """Command group that handles aliases and Click 6.x compatibility.
 
