@@ -494,6 +494,7 @@ def show_danger(
     title: str,
     description: str,
     value: str = "",
+    menu_title: str | None = None,
     verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Warning modal that makes it easier to cancel than to continue."""

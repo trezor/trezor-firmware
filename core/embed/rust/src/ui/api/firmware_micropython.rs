@@ -736,12 +736,16 @@ extern "C" fn new_show_danger(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
+        let menu_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_menu_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let layout = ModelUI::show_danger(title, description, value, verb_cancel)?;
+        let layout = ModelUI::show_danger(title, description, value, menu_title, verb_cancel)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -1522,6 +1526,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     value: str = "",
+    ///     menu_title: str | None = None,
     ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal that makes it easier to cancel than to continue."""
