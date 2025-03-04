@@ -548,14 +548,17 @@ bool ble_issue_command(ble_command_t *command) {
   switch (command->cmd_type) {
     case BLE_SWITCH_OFF:
       drv->mode_requested = BLE_MODE_OFF;
+      result = true;
       break;
     case BLE_SWITCH_ON:
       memcpy(&drv->adv_cmd, &command->data.adv_start, sizeof(drv->adv_cmd));
       drv->mode_requested = BLE_MODE_CONNECTABLE;
+      result = true;
       break;
     case BLE_PAIRING_MODE:
       memcpy(&drv->adv_cmd, &command->data.adv_start, sizeof(drv->adv_cmd));
       drv->mode_requested = BLE_MODE_PAIRING;
+      result = true;
       break;
     case BLE_DISCONNECT:
       result = ble_send_disconnect(drv);
