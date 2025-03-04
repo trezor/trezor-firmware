@@ -7,7 +7,7 @@ use crate::ui::{
 };
 
 use super::super::{
-    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
+    component::{ButtonStyle, ButtonStyleSheet},
     fonts,
     theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
 };
@@ -273,14 +273,3 @@ pub const TEXT_WIPE_NORMAL: TextStyle = TextStyle::new(
     BLD_WIPE_TEXT_COLOR,
     BLD_WIPE_TEXT_COLOR,
 );
-
-pub const RESULT_WIPE: ResultStyle = ResultStyle::new(
-    BLD_WIPE_TEXT_COLOR,
-    BLD_WIPE_COLOR,
-    BLD_WIPE_CANCEL_BTN_COLOR,
-);
-
-pub const RESULT_FW_INSTALL: ResultStyle = ResultStyle::new(BLD_FG, BLD_BG, BLD_BTN_COLOR);
-
-pub const RESULT_INITIAL: ResultStyle =
-    ResultStyle::new(FG, WELCOME_COLOR, WELCOME_HIGHLIGHT_COLOR);

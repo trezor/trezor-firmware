@@ -23,9 +23,8 @@ use super::{
         backlight,
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40,
-            DOWNLOAD24, FIRE32, FIRE40, RESULT_FW_INSTALL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL,
-            TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, TEXT_BOLD,
+            TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WELCOME_COLOR,
         },
         GREEN_LIGHT, GREY,
     },

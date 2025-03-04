@@ -9,7 +9,7 @@ pub use firmware::*;
 use crate::ui::{display::Color, util::include_icon};
 
 use super::{
-    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
+    component::{ButtonStyle, ButtonStyleSheet},
     fonts,
 };
 
@@ -121,10 +121,3 @@ pub const fn button_default() -> ButtonStyleSheet {
         },
     }
 }
-
-// Result constants
-pub const RESULT_PADDING: i16 = 6;
-pub const RESULT_FOOTER_START: i16 = 171;
-pub const RESULT_FOOTER_HEIGHT: i16 = 62;
-pub const RESULT_ERROR: ResultStyle =
-    ResultStyle::new(FG, FATAL_ERROR_COLOR, FATAL_ERROR_HIGHLIGHT_COLOR);

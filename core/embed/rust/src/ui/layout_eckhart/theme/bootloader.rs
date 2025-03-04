@@ -3,16 +3,13 @@ use crate::ui::{
     constant::{HEIGHT, WIDTH},
     display::Color,
     geometry::{Offset, Point, Rect},
-    util::include_res,
 };
 
-use super::{
-    super::{
-        component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
-        fonts,
-    },
-    BLACK, GREY_DARK, GREY_LIGHT, GREY_SUPER_DARK, WHITE,
+use super::super::{
+    component::{ButtonStyle, ButtonStyleSheet},
+    fonts,
 };
+use super::{BLACK, GREY_DARK, GREY_LIGHT, GREY_SUPER_DARK, WHITE};
 
 pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;
@@ -56,20 +53,6 @@ pub const CORNER_BUTTON_AREA: Rect = Rect::from_top_left_and_size(
 );
 pub const BUTTON_AREA_START: i16 = HEIGHT - 56;
 pub const BUTTON_HEIGHT: i16 = 50;
-
-// BLD icons
-pub const X24: &[u8] = include_res!("layout_delizia/res/x24.toif");
-pub const X32: &[u8] = include_res!("layout_delizia/res/x32.toif");
-pub const FIRE24: &[u8] = include_res!("layout_delizia/res/fire24.toif");
-pub const FIRE32: &[u8] = include_res!("layout_delizia/res/fire32.toif");
-pub const FIRE40: &[u8] = include_res!("layout_delizia/res/fire40.toif");
-pub const REFRESH24: &[u8] = include_res!("layout_delizia/res/refresh24.toif");
-pub const MENU32: &[u8] = include_res!("layout_delizia/res/menu32.toif");
-pub const INFO32: &[u8] = include_res!("layout_delizia/res/info32.toif");
-pub const DOWNLOAD24: &[u8] = include_res!("layout_delizia/res/download24.toif");
-pub const WARNING40: &[u8] = include_res!("layout_delizia/res/warning40.toif");
-pub const CHECK24: &[u8] = include_res!("layout_delizia/res/check24.toif");
-pub const CHECK40: &[u8] = include_res!("layout_delizia/res/check40.toif");
 
 pub fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -276,14 +259,3 @@ pub const TEXT_WIPE_NORMAL: TextStyle = TextStyle::new(
     BLD_WIPE_TEXT_COLOR,
     BLD_WIPE_TEXT_COLOR,
 );
-
-pub const RESULT_WIPE: ResultStyle = ResultStyle::new(
-    BLD_WIPE_TEXT_COLOR,
-    BLD_WIPE_COLOR,
-    BLD_WIPE_CANCEL_BTN_COLOR,
-);
-
-pub const RESULT_FW_INSTALL: ResultStyle = ResultStyle::new(BLD_FG, BLD_BG, BLD_BTN_COLOR);
-
-pub const RESULT_INITIAL: ResultStyle =
-    ResultStyle::new(BLD_FG, WELCOME_COLOR, WELCOME_HIGHLIGHT_COLOR);
