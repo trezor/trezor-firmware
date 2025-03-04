@@ -316,6 +316,7 @@ impl<'a> SignTxProgress<'a> {
             TxRequestType::TXORIGOUTPUT |
             TxRequestType::TXPAYMENTREQ => unimplemented!(),
             TxRequestType::TXFINISHED => unreachable!(),
+            TxRequestType::TXENTROPY => unimplemented!(),
         }?;
         self.ack_msg(ack)
     }
