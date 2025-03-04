@@ -1,7 +1,7 @@
 use crate::{
     translations::TR,
     ui::{
-        component::{Component, Event, EventCtx},
+        component::{Component, Event, EventCtx, Timeout},
         geometry::{Alignment2D, Insets, Offset, Rect},
         shape::{self, Renderer},
         util::{animation_disabled, Pager},
@@ -29,6 +29,8 @@ pub struct ActionBar {
     right_original: Option<(ButtonContent, ButtonStyleSheet)>,
     /// Hold to confirm animation
     htc_anim: Option<HoldToConfirmAnim>,
+    /// Timeout
+    timeout: Option<Timeout>,
 }
 
 pub enum ActionBarMsg {
@@ -48,6 +50,8 @@ enum Mode {
     Single,
     /// Cancel and confirm button; Up/Down navigation for paginated content
     Double { pager: Pager },
+    /// Automatic confirmation after a timeout
+    Timeout,
 }
 
 impl ActionBar {
@@ -68,6 +72,18 @@ impl ActionBar {
             Mode::Single,
             None,
             button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH),
+            None,
+        )
+    }
+
+    /// Create action bar with single button confirming the layout
+    pub fn new_timeout(button: Button, timeout_ms: u32) -> Self {
+        Self::new(
+            Mode::Timeout,
+            None,
+            button
+                .initially_enabled(false),
+            Some(Timeout::new(timeout_ms)),
         )
     }
 
@@ -86,6 +102,7 @@ impl ActionBar {
             right
                 .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
                 .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg()),
+            None,
         )
     }
 
@@ -140,7 +157,12 @@ impl ActionBar {
         }
     }
 
-    fn new(mode: Mode, left_button: Option<Button>, right_button: Button) -> Self {
+    fn new(
+        mode: Mode,
+        left_button: Option<Button>,
+        right_button: Button,
+        timeout: Option<Timeout>,
+    ) -> Self {
         let (left_original, right_original) = match mode {
             Mode::Double { .. } => (
                 left_button
@@ -172,6 +194,7 @@ impl ActionBar {
             left_original,
             right_original,
             htc_anim,
+            timeout,
         }
     }
 
@@ -225,7 +248,7 @@ impl ActionBar {
 
     fn place_buttons(&mut self, bounds: Rect) {
         match &self.mode {
-            Mode::Single => {
+            Mode::Single | Mode::Timeout => {
                 self.right_button.place(bounds);
             }
             Mode::Double { pager } => {
@@ -259,6 +282,16 @@ impl Component for ActionBar {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.htc_anim.event(ctx, event);
         match &self.mode {
+            Mode::Timeout => {
+                if self
+                    .timeout
+                    .as_mut()
+                    .and_then(|t| t.event(ctx, event))
+                    .is_some()
+                {
+                    return Some(ActionBarMsg::Confirmed);
+                }
+            }
             Mode::Single => {
                 // Only handle confirm button
                 if let Some(msg) = self.right_button.event(ctx, event) {
