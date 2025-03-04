@@ -778,12 +778,13 @@ if UI_DEBUG_OVERLAY:
     features.append('ui_debug_overlay')
 
 rust = tools.add_rust_lib(
-    env,
-    'firmware',
-    'release',
-    features,
-    ALLPATHS,
-    str(Dir('.').abspath))
+    env=env,
+    build='firmware',
+    profile='release',
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
 
 
 env.Depends(rust, protobuf_blobs)

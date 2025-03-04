@@ -232,12 +232,14 @@ else:
     profile = 'release'
 
 rust = tools.add_rust_lib(
-    env,
-    'bootloader_emu',
-    profile,
-    features,
-    ALLPATHS,
-    str(Dir('.').abspath))
+    env=env,
+    build='bootloader_emu',
+    profile=profile,
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
+
 
 env.Append(LINKFLAGS='-lm')
 env.Append(LINKFLAGS='-Wl,' + ('-dead_strip' if env['PLATFORM'] == 'darwin' else '--gc-sections'))

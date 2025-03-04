@@ -844,12 +844,13 @@ if EVERYTHING:
     features.append('universal_fw')
 
 rust = tools.add_rust_lib(
-    env,
-    'firmware',
-    profile,
-    features,
-    ALLPATHS,
-    str(Dir('.').abspath))
+    env=env,
+    build='unix',
+    profile=profile,
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
 
 
 env.Depends(rust, protobuf_blobs)
