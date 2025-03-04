@@ -1,4 +1,10 @@
-use crate::{time::Duration, ui::component::text::TextStyle};
+use crate::{
+    time::Duration,
+    ui::component::text::{
+        layout::{Chunks, LineBreaking, PageBreaking},
+        TextStyle,
+    },
+};
 
 use super::{
     super::{
@@ -61,16 +67,42 @@ pub const TEXT_MONO_MEDIUM: TextStyle = TextStyle::new(
 /// Roboto Mono Light - 30 (Address, data)
 pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_MONO_LIGHT_30,
+    GREY_LIGHT,
+    BG,
+    GREY_LIGHT,
+    GREY_LIGHT,
+);
+
+pub const TEXT_MEDIUM_EXTRA_LIGHT: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
     GREY_EXTRA_LIGHT,
     BG,
     GREY_EXTRA_LIGHT,
     GREY_EXTRA_LIGHT,
 );
 
+pub const TEXT_SMALL_LIGHT: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_REGULAR_22,
+    GREY_LIGHT,
+    BG,
+    GREY_LIGHT,
+    GREY_LIGHT,
+)
+.with_line_spacing(-4);
+
+/// Makes sure that the displayed text (usually address) will get divided into
+/// smaller chunks.
+pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_LIGHT
+    .with_chunks(Chunks::new(4, 8))
+    .with_line_spacing(24);
+
+pub const TEXT_MONO_ADDRESS: TextStyle = TEXT_MONO_LIGHT
+    .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsis);
+
 /// Decide the text style of chunkified text according to its length.
 pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
-    // TODO: implement properly for Eckhart, see Delizia implemenation
-    &TEXT_MONO_MEDIUM
+    &TEXT_MONO_ADDRESS_CHUNKS
 }
 
 // Macro for styles differing only in text color
@@ -243,8 +275,8 @@ pub const fn menu_item_title_yellow() -> ButtonStyleSheet {
     menu_item_title!(YELLOW)
 }
 
-pub const fn menu_item_title_red() -> ButtonStyleSheet {
-    menu_item_title!(RED)
+pub const fn menu_item_title_orange() -> ButtonStyleSheet {
+    menu_item_title!(ORANGE)
 }
 
 pub const fn button_select_word() -> ButtonStyleSheet {
