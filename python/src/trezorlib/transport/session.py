@@ -152,7 +152,7 @@ class SessionV1(Session):
 
 
 def default_button_callback(session: Session, msg: t.Any) -> t.Any:
-    return session.call(messages.ButtonAck())
+    return session.call_raw(messages.ButtonAck())
 
 
 def derive_seed(session: Session) -> None:
