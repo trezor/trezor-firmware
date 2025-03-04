@@ -113,9 +113,9 @@ pub const fn button_default() -> ButtonStyleSheet {
         disabled: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
+            button_color: BG,
             icon_color: GREY_LIGHT,
-            background_color: GREY_DARK,
+            background_color: BG,
         },
     }
 }
