@@ -738,6 +738,7 @@ if TYPE_CHECKING:
         decred_staking_spend: "DecredStakingSpendType | None"
         script_pubkey: "bytes | None"
         coinjoin_flags: "int"
+        entropy_commitment: "bytes | None"
 
         def __init__(
             self,
@@ -759,6 +760,7 @@ if TYPE_CHECKING:
             decred_staking_spend: "DecredStakingSpendType | None" = None,
             script_pubkey: "bytes | None" = None,
             coinjoin_flags: "int | None" = None,
+            entropy_commitment: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -794,6 +796,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TxOutput"]:
+            return isinstance(msg, cls)
+
+    class TxEntropy(protobuf.MessageType):
+        entropy: "bytes | None"
+
+        def __init__(
+            self,
+            *,
+            entropy: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TxEntropy"]:
             return isinstance(msg, cls)
 
     class PrevTx(protobuf.MessageType):
@@ -972,6 +988,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraData"]:
             return isinstance(msg, cls)
 
+    class TxAckEntropy(protobuf.MessageType):
+        tx: "TxAckEntropyWrapper"
+
+        def __init__(
+            self,
+            *,
+            tx: "TxAckEntropyWrapper",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TxAckEntropy"]:
+            return isinstance(msg, cls)
+
     class GetOwnershipProof(protobuf.MessageType):
         address_n: "list[int]"
         coin_name: "str"
@@ -1085,6 +1115,7 @@ if TYPE_CHECKING:
         tx_hash: "bytes | None"
         extra_data_len: "int | None"
         extra_data_offset: "int | None"
+        nonce_commitment: "bytes | None"
 
         def __init__(
             self,
@@ -1093,6 +1124,7 @@ if TYPE_CHECKING:
             tx_hash: "bytes | None" = None,
             extra_data_len: "int | None" = None,
             extra_data_offset: "int | None" = None,
+            nonce_commitment: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -1254,6 +1286,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraDataWrapper"]:
+            return isinstance(msg, cls)
+
+    class TxAckEntropyWrapper(protobuf.MessageType):
+        entropy: "TxEntropy"
+
+        def __init__(
+            self,
+            *,
+            entropy: "TxEntropy",
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TxAckEntropyWrapper"]:
             return isinstance(msg, cls)
 
     class CardanoBlockchainPointerType(protobuf.MessageType):
