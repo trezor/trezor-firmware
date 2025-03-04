@@ -85,6 +85,7 @@ jobs:
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
       - run: nix-shell --run "poetry run make -C core build_firmware"
       - run: nix-shell --run "poetry run ./tools/print-rust-stack-sizes.py | sort -k1 -n | tail -n 50"
+      - run: nix-shell --run "poetry run ./tools/print-rust-type-sizes.sh core/build/firmware/rust-type-sizes.log" | awk '$1 >= 1000' | sort -k1 -n
       - run: nix-shell --run "poetry run make -C core sizecheck"
         if: matrix.coins == 'universal' && matrix.type != 'debuglink'
       - run: nix-shell --run "poetry run ./tools/check-bitcoin-only core/build/firmware/firmware.bin"
@@ -99,6 +100,7 @@ jobs:
             core/build/prodtest/*.bin
             core/build/firmware/firmware.elf
             core/build/firmware/firmware-*.bin
+            core/build/firmware/rust-type-sizes.log
           retention-days: 7
 
   core_emu:
