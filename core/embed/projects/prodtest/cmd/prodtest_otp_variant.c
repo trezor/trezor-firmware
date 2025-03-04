@@ -126,7 +126,7 @@ static void prodtest_otp_variant_write(cli_t* cli) {
   }
 #endif
 
-  if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_BATCH)) {
+  if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_DEVICE_VARIANT)) {
     cli_error(cli, CLI_ERROR_LOCKED,
               "OTP block is locked and cannot be written again.");
     return;
