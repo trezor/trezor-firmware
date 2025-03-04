@@ -15,12 +15,15 @@ use heapless::String;
 use ufmt::uwrite;
 
 use super::{
-    bootloader::{BldMenuScreen, BldWelcomeScreen, ConfirmScreen, ConfirmTitle, IntroScreen},
-    component::{Button, ResultScreen, WelcomeScreen},
-    cshape::{render_loader, LoaderRange},
+    bootloader::{
+        BldActionBar, BldHeader, BldMenuScreen, BldTextScreen, BldWelcomeScreen, ConfirmScreen,
+        ConfirmTitle, IntroScreen,
+    },
+    component::{Button, WelcomeScreen},
+    cshape::{render_loader, LoaderRange, ScreenBorder},
     fonts,
     theme::{
-        backlight,
+        self, backlight,
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
             BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, TEXT_BOLD,
@@ -143,15 +146,19 @@ impl BootloaderUI for UIEckhart {
     }
 
     fn screen_install_fail() {
-        let mut frame = ResultScreen::new(
-            &RESULT_FW_INSTALL,
-            Icon::new(WARNING40),
+        // TODO: action bar style
+        let mut screen = BldTextScreen::new(Label::new(
             "Firmware installation was not successful".into(),
-            Label::centered(RECONNECT_MESSAGE.into(), RESULT_FW_INSTALL.title_style())
-                .vertically_centered(),
-            true,
-        );
-        show(&mut frame, true);
+            Alignment::Start,
+            TEXT_NORMAL,
+        ))
+        .with_header(BldHeader::new_pay_attention())
+        .with_action_bar(BldActionBar::new_single(
+            Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
+        ))
+        .with_screen_border(ScreenBorder::new(theme::BLUE));
+
+        show(&mut screen, true);
     }
 
     fn screen_install_confirm(
@@ -260,15 +267,18 @@ impl BootloaderUI for UIEckhart {
     }
 
     fn screen_unlock_bootloader_success() {
-        let mut frame = ResultScreen::new(
-            &RESULT_FW_INSTALL,
-            Icon::new(CHECK40),
+        let mut screen = BldTextScreen::new(Label::new(
             "Bootloader unlocked".into(),
-            Label::centered(RECONNECT_MESSAGE.into(), RESULT_FW_INSTALL.title_style())
-                .vertically_centered(),
-            true,
-        );
-        show(&mut frame, true);
+            Alignment::Start,
+            TEXT_NORMAL,
+        ))
+        .with_header(BldHeader::new_pay_attention())
+        .with_action_bar(BldActionBar::new_single(
+            Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
+        ))
+        .with_screen_border(ScreenBorder::new(theme::BLUE));
+
+        show(&mut screen, true);
     }
 
     fn screen_menu(firmware_present: secbool) -> u32 {
@@ -350,27 +360,32 @@ impl BootloaderUI for UIEckhart {
     }
 
     fn screen_wipe_success() {
-        let mut frame = ResultScreen::new(
-            &RESULT_WIPE,
-            Icon::new(CHECK40),
-            "Trezor reset\nsuccessfully".into(),
-            Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
-                .vertically_centered(),
-            true,
-        );
-        show(&mut frame, true);
+        let mut screen = BldTextScreen::new(Label::new(
+            "Trezor reset successfully".into(),
+            Alignment::Start,
+            TEXT_NORMAL,
+        ))
+        .with_header(BldHeader::new("Done".into()).with_icon(theme::ICON_DONE, theme::GREY))
+        .with_action_bar(BldActionBar::new_single(
+            Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
+        ))
+        .with_screen_border(ScreenBorder::new(theme::RED));
+
+        show(&mut screen, true);
     }
 
     fn screen_wipe_fail() {
-        let mut frame = ResultScreen::new(
-            &RESULT_WIPE,
-            Icon::new(WARNING40),
+        let mut screen = BldTextScreen::new(Label::new(
             "Trezor reset was\nnot successful".into(),
-            Label::centered(RECONNECT_MESSAGE.into(), RESULT_WIPE.title_style())
-                .vertically_centered(),
-            true,
-        );
-        show(&mut frame, true);
+            Alignment::Start,
+            TEXT_NORMAL,
+        ))
+        .with_header(BldHeader::new_pay_attention())
+        .with_action_bar(BldActionBar::new_single(
+            Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
+        ))
+        .with_screen_border(ScreenBorder::new(theme::RED));
+        show(&mut screen, true);
     }
 
     fn screen_boot(
