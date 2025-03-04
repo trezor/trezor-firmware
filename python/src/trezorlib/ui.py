@@ -17,11 +17,10 @@
 from __future__ import annotations
 
 import sys
-from typing import Any, Callable, Optional, Union
+import typing as t
 
 import click
 from mnemonic import Mnemonic
-from typing_extensions import Protocol
 
 from . import device, messages
 from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
@@ -63,19 +62,11 @@ WIPE_CODE_CONFIRM = PinMatrixRequestType.WipeCodeSecond
 CAN_HANDLE_HIDDEN_INPUT = sys.stdin and sys.stdin.isatty()
 
 
-class TrezorClientUI(Protocol):
-    def button_request(self, br: messages.ButtonRequest) -> None: ...
-
-    def get_pin(self, code: Optional[PinMatrixRequestType]) -> str: ...
-
-    def get_passphrase(self, available_on_device: bool) -> Union[str, object]: ...
-
-
-def echo(*args: Any, **kwargs: Any) -> None:
+def echo(*args: t.Any, **kwargs: t.Any) -> None:
     return click.echo(*args, err=True, **kwargs)
 
 
-def prompt(text: str, *, hide_input: bool = False, **kwargs: Any) -> Any:
+def prompt(text: str, *, hide_input: bool = False, **kwargs: t.Any) -> t.Any:
     # Disallowing hidden input and warning user when it would cause issues
     if not CAN_HANDLE_HIDDEN_INPUT and hide_input:
         hide_input = False
@@ -200,7 +191,7 @@ class ScriptUI:
 
 def mnemonic_words(
     expand: bool = False, language: str = "english"
-) -> Callable[[WordRequestType], str]:
+) -> t.Callable[[WordRequestType], str]:
     if expand:
         wordlist = Mnemonic(language).wordlist
     else:
