@@ -77,7 +77,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::empty().item(
             Button::with_text(TR::backup__title_skip.into())
-                .styled(theme::menu_item_title_red())
+                .styled(theme::menu_item_title_orange())
                 .with_text_align(Alignment::Start)
                 .with_content_offset(Offset::x(12)),
         ),
