@@ -17,10 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_model.h>
+#include <trezor_rtl.h>
 
-#include <trezor_types.h>
+#include <sec/secret.h>
 
-#undef FIRMWARE_START
+#include "bootui.h"
+#include "protob.h"
+#include "rust_ui.h"
+#include "workflow.h"
 
-extern uint8_t *FIRMWARE_START;
+workflow_result_t workflow_unlock_bootloader(protob_io_t *iface) {
+  ui_result_t response = ui_screen_unlock_bootloader_confirm();
+  if (UI_RESULT_CONFIRM != response) {
+    send_user_abort(iface, "Bootloader unlock cancelled");
+    return WF_CANCELLED;
+  }
+  secret_optiga_erase();
+  send_msg_success(iface, NULL);
+
+  screen_unlock_bootloader_success();
+  return WF_OK;
+}

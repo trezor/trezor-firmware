@@ -139,7 +139,6 @@ def configure(
         ("USE_STORAGE_HWKEY", "1"),
         ("USE_TAMPER", "1"),
         ("USE_FLASH_BURST", "1"),
-        ("USE_RESET_TO_BOOT", "1"),
         ("USE_OEM_KEYS_CHECK", "1"),
         ("USE_PVD", "1"),
     ]
