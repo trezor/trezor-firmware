@@ -825,6 +825,7 @@ impl FirmwareUI for UIDelizia {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        _menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::show_danger::new_show_danger(title, description, value, verb_cancel)?;
