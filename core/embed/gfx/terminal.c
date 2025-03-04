@@ -27,8 +27,25 @@
 
 #include "fonts/font_bitmap.h"
 
-#define TERMINAL_COLS (DISPLAY_RESX / 6)
-#define TERMINAL_ROWS (DISPLAY_RESY / 8)
+#ifndef TERMINAL_FONT_SCALE
+#define TERMINAL_FONT_SCALE 1
+#endif
+
+#ifndef TERMINAL_X_PADDING
+#define TERMINAL_X_PADDING 0
+#endif
+
+#ifndef TERMINAL_Y_PADDING
+#define TERMINAL_Y_PADDING 0
+#endif
+
+#define TERMINAL_GLYPH_WIDTH (6 * TERMINAL_FONT_SCALE)
+#define TERMINAL_GLYPH_HEIGHT (8 * TERMINAL_FONT_SCALE)
+
+#define TERMINAL_COLS \
+  ((DISPLAY_RESX - 2 * TERMINAL_X_PADDING) / TERMINAL_GLYPH_WIDTH)
+#define TERMINAL_ROWS \
+  ((DISPLAY_RESY - 2 * TERMINAL_Y_PADDING) / TERMINAL_GLYPH_HEIGHT)
 
 static char terminal_fb[TERMINAL_ROWS][TERMINAL_COLS];
 static gfx_color_t terminal_fgcolor = COLOR_WHITE;
@@ -40,16 +57,25 @@ void term_set_color(gfx_color_t fgcolor, gfx_color_t bgcolor) {
   terminal_bgcolor = bgcolor;
 }
 
+typedef struct {
+#if (TERMINAL_FONT_SCALE == 1)
+  // 6x8 bitmap
+  uint8_t bytes[TERMINAL_GLYPH_HEIGHT];
+#elif (TERMINAL_FONT_SCALE == 2)
+  // 12x16 bitmap
+  uint16_t words[TERMINAL_GLYPH_HEIGHT];
+#endif
+} term_glyph_bits_t;
+
 // Font_Bitmap contains 96 (0x20 - 0x7F) 5x7 glyphs
 // Each glyph consists of 5 bytes (each byte represents one column)
 //
 // This function converts the glyph into the format compatible
 // with `display_copy_mono1p()` functions.
-static uint64_t term_glyph_bits(char ch) {
-  union {
-    uint64_t u64;
-    uint8_t bytes[8];
-  } result = {0};
+
+#if (TERMINAL_FONT_SCALE == 1)
+static term_glyph_bits_t term_glyph_bits(char ch) {
+  term_glyph_bits_t result = {0};
 
   if (ch > 32 && (uint8_t)ch < 128) {
     const uint8_t *b = &Font_Bitmap[(ch - ' ') * 5];
@@ -61,15 +87,42 @@ static uint64_t term_glyph_bits(char ch) {
                          ((b[4] & mask) ? 8 : 0);
     }
   }
-  return result.u64;
+  return result;
 }
+#endif
+
+#if (TERMINAL_FONT_SCALE == 2)
+static term_glyph_bits_t term_glyph_bits(char ch) {
+  term_glyph_bits_t result = {0};
+
+  if (ch > 32 && (uint8_t)ch < 128) {
+    const uint8_t *b = &Font_Bitmap[(ch - ' ') * 5];
+
+    for (int y = 0; y < 7; y++) {
+      uint8_t mask = 1 << y;
+
+      result.words[2 * y] |= ((b[0] & mask) ? 0b11000000 << 0 : 0) +
+                             ((b[1] & mask) ? 0b00110000 << 0 : 0) +
+                             ((b[2] & mask) ? 0b00001100 << 0 : 0) +
+                             ((b[3] & mask) ? 0b00000011 << 0 : 0) +
+                             ((b[4] & mask) ? 0b11000000 << 8 : 0);
+    }
+
+    // Duplicate rows
+    for (int y = 0; y < 7; y++) {
+      result.words[2 * y + 1] = result.words[2 * y];
+    }
+  }
+  return result;
+}
+#endif
 
 // Redraws specified rows to the display
 static void term_redraw_rows(int start_row, int row_count) {
-  uint64_t glyph_bits = 0;
+  term_glyph_bits_t glyph_bits = {0};
   gfx_bitblt_t bb = {
-      .height = 8,
-      .width = 6,
+      .height = TERMINAL_GLYPH_HEIGHT,
+      .width = TERMINAL_GLYPH_WIDTH,
       .dst_row = NULL,
       .dst_x = 0,
       .dst_y = 0,
@@ -78,17 +131,17 @@ static void term_redraw_rows(int start_row, int row_count) {
       .src_row = &glyph_bits,
       .src_x = 0,
       .src_y = 0,
-      .src_stride = 8,
+      .src_stride = ((TERMINAL_GLYPH_WIDTH - 1) | 0x07) + 1,
       .src_fg = terminal_fgcolor,
       .src_bg = terminal_bgcolor,
       .src_alpha = 255,
   };
 
   for (int y = start_row; y < start_row + row_count; y++) {
-    bb.dst_y = y * 8;
+    bb.dst_y = y * TERMINAL_GLYPH_HEIGHT + TERMINAL_Y_PADDING;
     for (int x = 0; x < TERMINAL_COLS; x++) {
       glyph_bits = term_glyph_bits(terminal_fb[y][x]);
-      bb.dst_x = x * 6;
+      bb.dst_x = x * TERMINAL_GLYPH_WIDTH + TERMINAL_X_PADDING;
       display_copy_mono1p(&bb);
     }
   }
@@ -134,11 +187,25 @@ void term_print(const char *text, int textlen) {
 
   term_redraw_rows(0, TERMINAL_ROWS);
 
-  // redraw residual area of the display
-  gfx_draw_bar(gfx_rect(0, TERMINAL_ROWS * 8, DISPLAY_RESX, DISPLAY_RESY),
-               terminal_bgcolor);
-  gfx_draw_bar(gfx_rect(TERMINAL_COLS * 6, 0, DISPLAY_RESX, DISPLAY_RESY),
-               terminal_bgcolor);
+  gfx_rect_t r;
+
+  // redraw residual area of the display top side
+  r = gfx_rect_wh(0, 0, DISPLAY_RESX, TERMINAL_Y_PADDING);
+  gfx_draw_bar(r, terminal_bgcolor);
+
+  // redraw residual area of the display bottom side
+  r.y0 += TERMINAL_ROWS * TERMINAL_GLYPH_HEIGHT;
+  r.y1 = DISPLAY_RESY;
+  gfx_draw_bar(r, terminal_bgcolor);
+
+  // redraw residual area of the display left side
+  r = gfx_rect_wh(0, 0, TERMINAL_X_PADDING, DISPLAY_RESY);
+  gfx_draw_bar(r, terminal_bgcolor);
+
+  // redraw residual area of the display right side
+  r.x0 += TERMINAL_COLS * TERMINAL_GLYPH_WIDTH;
+  r.x1 = DISPLAY_RESX;
+  gfx_draw_bar(r, terminal_bgcolor);
 
   display_refresh();
 }

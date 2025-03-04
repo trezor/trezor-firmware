@@ -38,6 +38,9 @@ def configure(
         ("USE_HSE", "1"),
         ("USE_LSE", "1"),
         ("FIXED_HW_DEINIT", "1"),
+        ("TERMINAL_FONT_SCALE", "2"),
+        ("TERMINAL_X_PADDING", "4"),
+        ("TERMINAL_Y_PADDING", "12"),
     ]
 
     sources += [
