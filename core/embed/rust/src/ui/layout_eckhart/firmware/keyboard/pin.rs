@@ -57,7 +57,7 @@ impl<'a> PinKeyboard<'a> {
                 .vertically_centered(),
             major_warning: major_warning
                 .map(|text| Label::left_aligned(text, theme::TEXT_SMALL).vertically_centered()),
-            input: PinInput::new(theme::TEXT_MONO_LIGHT),
+            input: PinInput::new(),
             keypad: Keypad::new_numeric(true),
             warning_timer: Timer::new(),
         }
@@ -258,7 +258,6 @@ pub enum PinInputMsg {
 
 struct PinInput {
     area: Rect,
-    style: TextStyle,
     digits: ShortString,
     display_style: DisplayStyle,
     last_digit_timer: Timer,
@@ -278,10 +277,9 @@ impl PinInput {
     const ICON_WIDTH: i16 = Self::PIN_ICON.toif.width();
     const ICON_SPACE: i16 = 12;
 
-    fn new(style: TextStyle) -> Self {
+    fn new() -> Self {
         Self {
             area: Rect::zero(),
-            style,
             digits: ShortString::new(),
             display_style: DisplayStyle::Hidden,
             last_digit_timer: Timer::new(),
