@@ -250,11 +250,6 @@ class TrezorConnection:
                     empty_passphrase=empty_passphrase,
                     must_resume=must_resume,
                 )
-        except exceptions.DeviceLockedException:
-            click.echo(
-                "Device is locked, enter a pin on the device.",
-                err=True,
-            )
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
             sys.exit(1)
