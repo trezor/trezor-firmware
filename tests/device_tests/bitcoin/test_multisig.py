@@ -475,10 +475,10 @@ def test_attack_change_input(session: Session):
     )
 
     # Transaction can be signed without the attack processor
-    with session.client as client:
+    with session:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         btc.sign_tx(
             session,
             "Testnet",

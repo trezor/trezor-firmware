@@ -56,12 +56,12 @@ def _assert_protection(
     session: Session, pin: bool = True, passphrase: bool = True
 ) -> Session:
     """Make sure PIN and passphrase protection have expected values"""
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.ensure_unlocked()
-        client.refresh_features()
-        assert client.features.pin_protection is pin
-        assert client.features.passphrase_protection is passphrase
+        session.client.refresh_features()
+        assert session.client.features.pin_protection is pin
+        assert session.client.features.passphrase_protection is passphrase
         session.lock()
         # session.end()
     if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
@@ -70,8 +70,8 @@ def _assert_protection(
 
 
 def test_initialize(session: Session):
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.ensure_unlocked()
     session = _assert_protection(session)
     with session:
@@ -86,8 +86,8 @@ def test_passphrase_reporting(session: Session, passphrase):
     """On TT, passphrase_protection is a private setting, so a locked device should
     report passphrase_protection=None.
     """
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         device.apply_settings(session, use_passphrase=passphrase)
 
     session.lock()
@@ -108,8 +108,8 @@ def test_passphrase_reporting(session: Session, passphrase):
 def test_apply_settings(session: Session):
     session = _assert_protection(session)
 
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses(
             [
                 _pin_request(session),
@@ -124,8 +124,8 @@ def test_apply_settings(session: Session):
 @pytest.mark.models("legacy")
 def test_change_pin_t1(session: Session):
     session = _assert_protection(session)
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4, PIN4, PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4, PIN4, PIN4])
         session.set_expected_responses(
             [
                 messages.ButtonRequest,
@@ -141,8 +141,8 @@ def test_change_pin_t1(session: Session):
 @pytest.mark.models("core")
 def test_change_pin_t2(session: Session):
     session = _assert_protection(session)
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4, PIN4, PIN4, PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4, PIN4, PIN4, PIN4])
         session.set_expected_responses(
             [
                 _pin_request(session),
@@ -172,8 +172,8 @@ def test_ping(session: Session):
 
 def test_get_entropy(session: Session):
     session = _assert_protection(session)
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses(
             [
                 _pin_request(session),
@@ -187,8 +187,8 @@ def test_get_entropy(session: Session):
 def test_get_public_key(session: Session):
     session = _assert_protection(session)
 
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         expected_responses = [_pin_request(session)]
 
         if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
@@ -202,8 +202,8 @@ def test_get_public_key(session: Session):
 def test_get_address(session: Session):
     session = _assert_protection(session)
 
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         expected_responses = [_pin_request(session)]
         if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
             expected_responses.append(messages.PassphraseRequest)
@@ -221,8 +221,8 @@ def test_wipe_device(session: Session):
         device.wipe(session)
     client = session.client.get_new_client()
     session = client.get_seedless_session()
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses([messages.Features])
         session.call(messages.GetFeatures())
 
@@ -301,8 +301,8 @@ def test_recovery_device(session: Session):
 def test_sign_message(session: Session):
     session = _assert_protection(session)
 
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
 
         expected_responses = [_pin_request(session)]
 
@@ -350,8 +350,8 @@ def test_verify_message_t1(session: Session):
 @pytest.mark.models("core")
 def test_verify_message_t2(session: Session):
     session = _assert_protection(session)
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses(
             [
                 _pin_request(session),
@@ -389,8 +389,8 @@ def test_signtx(session: Session):
     )
 
     session = _assert_protection(session)
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         expected_responses = [_pin_request(session)]
         if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
             expected_responses.append(messages.PassphraseRequest)
@@ -430,8 +430,8 @@ def test_unlocked(session: Session):
 
     session = _assert_protection(session, passphrase=False)
 
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses([_pin_request(session), messages.Address])
         get_test_address(session)
 

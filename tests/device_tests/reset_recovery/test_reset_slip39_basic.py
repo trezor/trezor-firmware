@@ -34,9 +34,9 @@ pytestmark = pytest.mark.models("core")
 def reset_device(session: Session, strength: int):
     member_threshold = 3
 
-    with session.client as client:
-        IF = InputFlowSlip39BasicResetRecovery(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicResetRecovery(session.client)
+        session.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.setup(
@@ -89,9 +89,9 @@ def test_reset_entropy_check(session: Session):
 
     strength = 128  # 20 words
 
-    with session.client as client:
-        IF = InputFlowSlip39BasicResetRecovery(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicResetRecovery(session.client)
+        session.set_input_flow(IF.get())
 
         # No PIN, no passphrase.
         path_xpubs = device.setup(

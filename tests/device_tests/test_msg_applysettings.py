@@ -345,12 +345,12 @@ def test_safety_checks(session: Session):
 
         assert session.features.safety_checks == messages.SafetyCheckLevel.PromptAlways
 
-        with session, session.client as client:
+        with session:
             session.set_expected_responses(
                 [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
             )
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
             get_bad_address()
 
     with session:
@@ -371,13 +371,13 @@ def test_safety_checks(session: Session):
 
     assert session.features.safety_checks == messages.SafetyCheckLevel.PromptTemporarily
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(
             [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
         )
         if session.model is not models.T1B1:
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         get_bad_address()
 
 
@@ -412,8 +412,8 @@ def test_experimental_features(session: Session):
 
     # relock and try again
     session.lock()
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses([messages.ButtonRequest, messages.Nonce])
         experimental_call()
 

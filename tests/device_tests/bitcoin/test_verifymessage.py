@@ -40,9 +40,9 @@ def test_message_long_legacy(session: Session):
 
 @pytest.mark.models("core")
 def test_message_long_core(session: Session):
-    with session.client as client:
-        IF = InputFlowSignVerifyMessageLong(client, verify=True)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSignVerifyMessageLong(session.client, verify=True)
+        session.set_input_flow(IF.get())
         ret = btc.verify_message(
             session,
             "Bitcoin",

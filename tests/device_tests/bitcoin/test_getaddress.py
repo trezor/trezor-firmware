@@ -270,10 +270,10 @@ def test_multisig(session: Session):
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        with session.client as client:
+        with session:
             if is_core(session):
-                IF = InputFlowConfirmAllWarnings(client)
-                client.set_input_flow(IF.get())
+                IF = InputFlowConfirmAllWarnings(session.client)
+                session.set_input_flow(IF.get())
             assert (
                 btc.get_address(
                     session,
@@ -321,10 +321,10 @@ def test_multisig_missing(session: Session, show_display):
     )
 
     for multisig in (multisig1, multisig2):
-        with session.client as client, pytest.raises(TrezorFailure):
+        with pytest.raises(TrezorFailure), session:
             if is_core(session):
-                IF = InputFlowConfirmAllWarnings(client)
-                client.set_input_flow(IF.get())
+                IF = InputFlowConfirmAllWarnings(session.client)
+                session.set_input_flow(IF.get())
             btc.get_address(
                 session,
                 "Bitcoin",
@@ -345,10 +345,10 @@ def test_bch_multisig(session: Session):
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        with session.client as client:
+        with session:
             if is_core(session):
-                IF = InputFlowConfirmAllWarnings(client)
-                client.set_input_flow(IF.get())
+                IF = InputFlowConfirmAllWarnings(session.client)
+                session.set_input_flow(IF.get())
             assert (
                 btc.get_address(
                     session,
@@ -406,7 +406,7 @@ def test_unknown_path(session: Session):
     # disable safety checks
     device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(
             [
                 messages.ButtonRequest(
@@ -417,8 +417,8 @@ def test_unknown_path(session: Session):
             ]
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         # try again with a warning
         btc.get_address(session, "Bitcoin", UNKNOWN_PATH, show_display=True)
 
@@ -455,10 +455,10 @@ def test_multisig_different_paths(session: Session):
     with pytest.raises(
         Exception, match="Using different paths for different xpubs is not allowed"
     ):
-        with session.client as client, session:
+        with session:
             if is_core(session):
-                IF = InputFlowConfirmAllWarnings(client)
-                client.set_input_flow(IF.get())
+                IF = InputFlowConfirmAllWarnings(session.client)
+                session.set_input_flow(IF.get())
             btc.get_address(
                 session,
                 "Bitcoin",
@@ -469,10 +469,10 @@ def test_multisig_different_paths(session: Session):
             )
 
     device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
-    with session.client as client:
+    with session:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         btc.get_address(
             session,
             "Bitcoin",
