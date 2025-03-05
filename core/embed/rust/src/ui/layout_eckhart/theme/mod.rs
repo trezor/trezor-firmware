@@ -6,7 +6,7 @@ pub mod firmware;
 #[cfg(feature = "micropython")]
 pub use firmware::*;
 
-use crate::ui::{display::Color, util::include_icon};
+use crate::ui::{component::text::TextStyle, display::Color, geometry::Insets, util::include_icon};
 
 use super::{
     component::{ButtonStyle, ButtonStyleSheet},
@@ -43,6 +43,11 @@ pub const BLUE: Color = Color::rgb(0x00, 0x46, 0xFF);
 pub const RED: Color = Color::rgb(0xFF, 0x30, 0x30);
 pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
+
+// Common constants
+pub const HEADER_HEIGHT: i16 = 96; // [px]
+pub const SIDE_INSETS: Insets = Insets::sides(24); // [px]
+pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
 
 // UI icons (white color).
 include_icon!(ICON_CHEVRON_DOWN, "layout_eckhart/res/chevron_down.toif");
@@ -95,6 +100,13 @@ include_icon!(ICON_BORDER_TR, "layout_eckhart/res/border/TR.toif");
 // Icons for number input screen
 include_icon!(ICON_PLUS, "layout_eckhart/res/plus.toif");
 include_icon!(ICON_MINUS, "layout_eckhart/res/minus.toif");
+
+// Common text styles and button styles must use fonts accessible from both bootloader and firmware
+
+pub const TEXT_NORMAL: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, GREY_EXTRA_LIGHT, BG, FG, FG);
+pub const TEXT_SMALL: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY_EXTRA_LIGHT, BG, FG, FG);
 
 pub const fn button_default() -> ButtonStyleSheet {
     ButtonStyleSheet {

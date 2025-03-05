@@ -36,6 +36,8 @@ pub const WELCOME_COLOR: Color = BLACK;
 pub const WELCOME_HIGHLIGHT_COLOR: Color = Color::rgb(0x28, 0x28, 0x28);
 
 // Commonly used constants for UI elements.
+pub const TEXT_VERTICAL_SPACING: i16 = 24;
+
 pub const CONTENT_PADDING: i16 = 6;
 pub const TITLE_AREA: Rect = Rect::new(
     Point::new(CONTENT_PADDING, CONTENT_PADDING),
@@ -227,6 +229,15 @@ pub const TEXT_NORMAL: TextStyle = TextStyle::new(
     BLD_FG,
     BLD_FG,
 );
+
+pub const TEXT_SMALL: TextStyle = TextStyle::new(
+    fonts::FONT_SATOSHI_MEDIUM_26,
+    BLD_FG,
+    BLD_BG,
+    BLD_FG,
+    BLD_FG,
+);
+
 pub const TEXT_WARNING: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_REGULAR_38,
     BLD_WARN_COLOR,
@@ -238,24 +249,3 @@ pub const fn text_fingerprint(bg: Color) -> TextStyle {
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, BLD_FG, bg, BLD_FG, BLD_FG)
         .with_line_breaking(BreakWordsNoHyphen)
 }
-pub const TEXT_BOLD: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_REGULAR_38,
-    BLD_FG,
-    BLD_BG,
-    BLD_FG,
-    BLD_FG,
-);
-pub const TEXT_WIPE_BOLD: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_REGULAR_38,
-    BLD_WIPE_TEXT_COLOR,
-    BLD_WIPE_COLOR,
-    BLD_WIPE_TEXT_COLOR,
-    BLD_WIPE_TEXT_COLOR,
-);
-pub const TEXT_WIPE_NORMAL: TextStyle = TextStyle::new(
-    fonts::FONT_SATOSHI_REGULAR_38,
-    BLD_WIPE_TEXT_COLOR,
-    BLD_WIPE_COLOR,
-    BLD_WIPE_TEXT_COLOR,
-    BLD_WIPE_TEXT_COLOR,
-);
