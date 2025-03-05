@@ -323,12 +323,12 @@ def click_info_button_bolt(debug: "DebugLink") -> Generator[Any, Any, ButtonRequ
 
 def click_info_button_delizia(debug: "DebugLink"):
     """Click Shamir backup info button and return back."""
-    debug.click(buttons.CORNER_BUTTON)
+    debug.click(buttons.corner_button(debug.layout_type))
     layout = debug.read_layout()
     assert "VerticalMenu" in layout.all_components()
-    debug.click(buttons.VERTICAL_MENU[0])
-    debug.click(buttons.CORNER_BUTTON)
-    debug.click(buttons.CORNER_BUTTON)
+    debug.click(buttons.vertical_menu(debug.layout_type)[0])
+    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(buttons.corner_button(debug.layout_type))
 
 
 def check_pin_backoff_time(attempts: int, start: float) -> None:

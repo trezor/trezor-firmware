@@ -139,7 +139,7 @@ def prepare(
 
     if debug.layout_type is LayoutType.Delizia and tap:
         go_next(debug)
-        debug.click(buttons.TAP_TO_CONFIRM)
+        debug.click(buttons.tap_to_confirm(debug.layout_type))
     else:
         go_next(debug)
 
@@ -159,7 +159,7 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
         digits_order = debug.read_layout().tt_pin_digits_order()
         for digit in pin:
             digit_index = digits_order.index(digit)
-            coords = buttons.pin_passphrase_index(digit_index)
+            coords = buttons.pin_passphrase_index(digit_index, debug.layout_type)
             debug.click(coords)
     elif debug.layout_type is LayoutType.Caesar:
         for digit in pin:
@@ -173,7 +173,7 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        debug.click(buttons.TOP_ROW)
+        debug.click(buttons.input(debug.layout_type))
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
 
@@ -185,7 +185,7 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 
     for _ in range(digits_to_delete):
         if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-            debug.click(buttons.pin_passphrase_grid(9))
+            debug.click(buttons.pin_passphrase_grid(9, debug.layout_type))
         elif debug.layout_type is LayoutType.Caesar:
             navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS)
 
@@ -197,7 +197,7 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 def _delete_all(debug: "DebugLink", check: bool = True) -> None:
     """Navigate to "DELETE" and hold it until all digits are deleted"""
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        debug.click(buttons.pin_passphrase_grid(9), hold_ms=1500)
+        debug.click(buttons.pin_passphrase_grid(9, debug.layout_type), hold_ms=1500)
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS, hold_ms=1000)
 
@@ -221,7 +221,7 @@ def _cancel_pin(debug: "DebugLink") -> None:
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        debug.click(buttons.pin_passphrase_grid(11))
+        debug.click(buttons.pin_passphrase_grid(11, debug.layout_type))
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, ENTER, TR_PIN_ACTIONS)
 
