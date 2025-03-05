@@ -15,16 +15,10 @@ extern "C" fn screen_prodtest_welcome() {
 }
 
 #[no_mangle]
-extern "C" fn screen_prodtest_info(
-    id: *const cty::c_char,
-    id_len: u8,
-    date: *const cty::c_char,
-    date_len: u8,
-) {
+extern "C" fn screen_prodtest_info(id: *const cty::c_char, id_len: u8) {
     let id = unwrap!(unsafe { from_c_array(id, id_len as usize) });
-    let date = unwrap!(unsafe { from_c_array(date, date_len as usize) });
 
-    ModelUI::screen_prodtest_info(id, date);
+    ModelUI::screen_prodtest_info(id);
 }
 
 #[no_mangle]

@@ -165,13 +165,11 @@ static void usb_init_all(void) {
 }
 
 static void show_welcome_screen(void) {
-  char dom[32] = {0};
-  // format: {MODEL_IDENTIFIER}YYMMDD
-  if ((sectrue ==
-           flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, (uint8_t *)dom, 32) &&
-       dom[31] == 0 && cstr_starts_with(dom, MODEL_IDENTIFIER))) {
-    screen_prodtest_info(dom, strlen(dom), dom + sizeof(MODEL_IDENTIFIER) - 1,
-                         strlen(dom) - sizeof(MODEL_IDENTIFIER) + 1);
+  char device_id[32] = {0};
+  if ((sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
+                                 (uint8_t *)device_id, 32) &&
+       device_id[31] == 0)) {
+    screen_prodtest_info(device_id, strlen(device_id));
   } else {
     screen_prodtest_welcome();
   }

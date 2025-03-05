@@ -7,7 +7,7 @@ use heapless::Vec;
 pub trait ProdtestUI {
     fn screen_prodtest_welcome();
 
-    fn screen_prodtest_info(id: &str, date: &str);
+    fn screen_prodtest_info(id: &str);
 
     fn screen_prodtest_show_text(text: &str);
 
