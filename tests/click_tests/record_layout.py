@@ -140,14 +140,16 @@ def send_clicks(dest):
                 DEBUGLINK.input(input_str)
             elif key.startswith("g"):
                 x, y = [int(s) - 1 for s in key[1:].split(",")]
-                output = f"debug.click(buttons.grid35({x}, {y}))"
-                DEBUGLINK.click(buttons.grid35(x, y))
+                output = (
+                    f"debug.click(buttons.grid35({x}, {y}, {DEBUGLINK.layout_type}))"
+                )
+                DEBUGLINK.click(buttons.grid35(x, y, DEBUGLINK.layout_type))
             elif key == "y":
-                output = "debug.click(buttons.OK)"
-                DEBUGLINK.click(buttons.OK)
+                output = "debug.click(buttons.ok(layout_type))"
+                DEBUGLINK.click(buttons.ok(DEBUGLINK.layout_type))
             elif key == "n":
-                output = "debug.click(buttons.CANCEL)"
-                DEBUGLINK.click(buttons.CANCEL)
+                output = "debug.click(buttons.cancel(layout_type))"
+                DEBUGLINK.click(buttons.cancel(DEBUGLINK.layout_type))
             elif key in "0123456789":
                 if key == "0":
                     x, y = 1, 4
@@ -155,8 +157,10 @@ def send_clicks(dest):
                     i = int(key) - 1
                     x = i % 3
                     y = 3 - (i // 3)  # trust me
-                output = f"debug.click(buttons.grid35({x}, {y}))"
-                DEBUGLINK.click(buttons.grid35(x, y))
+                output = (
+                    f"debug.click(buttons.grid35({x}, {y}, {DEBUGLINK.layout_type}))"
+                )
+                DEBUGLINK.click(buttons.grid35(x, y, DEBUGLINK.layout_type))
             elif key == "stop":
                 return
             else:

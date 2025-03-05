@@ -21,6 +21,7 @@ from typing import TYPE_CHECKING, Generator, Optional, Tuple
 import pytest
 
 from trezorlib import exceptions
+from trezorlib.debuglink import LayoutType
 
 from .. import buttons
 from ..common import get_test_address
@@ -85,11 +86,11 @@ def get_passphrase_choices(char: str) -> tuple[str, ...]:
         return PASSPHRASE_SPECIAL
 
 
-def passphrase(char: str) -> Tuple[buttons.Coords, int]:
+def passphrase(char: str, layout_type: LayoutType) -> Tuple[buttons.Coords, int]:
     choices = get_passphrase_choices(char)
     idx = next(i for i, letters in enumerate(choices) if char in letters)
     click_amount = choices[idx].index(char) + 1
-    return buttons.pin_passphrase_index(idx), click_amount
+    return buttons.pin_passphrase_index(idx, layout_type), click_amount
 
 
 @contextmanager
@@ -146,7 +147,7 @@ def press_char(debug: "DebugLink", char: str) -> None:
 
     go_to_category(debug, char_category)
 
-    coords, amount = passphrase(char)
+    coords, amount = passphrase(char, debug.layout_type)
     # If the button is the same as for the previous char,
     # waiting a second before pressing it again.
     if coords == COORDS_PREV:
@@ -170,15 +171,15 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     is_empty: bool = len(debug.read_layout().passphrase()) == 0
-    coords = buttons.CORNER_BUTTON  # top-right corner
+    coords = buttons.corner_button(debug.layout_type)  # top-right corner
     debug.click(coords)
     if is_empty:
-        debug.click(buttons.YES_UI_DELIZIA)
+        debug.click(buttons.ui_yes(debug.layout_type))
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    coords = buttons.pin_passphrase_grid(9)
+    coords = buttons.pin_passphrase_grid(9, debug.layout_type)
     debug.click(coords)
 
 
@@ -249,7 +250,7 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
         debug.read_layout()
 
         enter_passphrase(debug)
-        coords = buttons.pin_passphrase_grid(11)
+        coords = buttons.pin_passphrase_grid(11, debug.layout_type)
         debug.click(coords)
 
 
@@ -258,7 +259,7 @@ def test_passphrase_click_same_button_many_times(
     device_handler: "BackgroundDeviceHandler",
 ):
     with prepare_passphrase_dialogue(device_handler) as debug:
-        a_coords, _ = buttons.passphrase("a")
+        a_coords, _ = buttons.passphrase("a", debug.layout_type)
         for _ in range(10):
             debug.click(a_coords)
 

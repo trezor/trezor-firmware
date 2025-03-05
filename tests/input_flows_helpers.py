@@ -144,12 +144,12 @@ class RecoveryFlow:
                 self.debug.press_no()
         elif self.client.layout_type is LayoutType.Delizia:
             assert TR.recovery__enter_each_word in self._text_content()
-            self.debug.click(buttons.CORNER_BUTTON)
+            self.debug.click(buttons.corner_button(self.client.layout_type))
             self.debug.synchronize_at("VerticalMenu")
             if confirm:
-                self.debug.click(buttons.VERTICAL_MENU[0])
+                self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
             else:
-                self.debug.click(buttons.CORNER_BUTTON)
+                self.debug.click(buttons.corner_button(self.client.layout_type))
         else:
             assert TR.recovery__enter_any_share in self._text_content()
             self.debug.press_no()
@@ -175,14 +175,14 @@ class RecoveryFlow:
             assert TR.regexp("recovery__x_of_y_entered_template").search(
                 self._text_content()
             )
-            self.debug.click(buttons.CORNER_BUTTON)
+            self.debug.click(buttons.corner_button(self.client.layout_type))
             self.debug.synchronize_at("VerticalMenu")
-            self.debug.click(buttons.VERTICAL_MENU[0])
+            self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
             assert (yield).name == "abort_recovery"
             self.debug.swipe_up()
             layout = self.debug.read_layout()
             assert layout.title() == TR.recovery__title_cancel_recovery
-            self.debug.click(buttons.TAP_TO_CONFIRM)
+            self.debug.click(buttons.tap_to_confirm(self.client.layout_type))
         else:
             assert TR.regexp("recovery__x_of_y_entered_template").search(
                 self._text_content()
@@ -338,15 +338,15 @@ class RecoveryFlow:
 
     def click_info_delizia(self) -> BRGeneratorType:
         # Moving through the menu into the show_shares screen
-        self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.click(buttons.corner_button(self.client.layout_type))
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(buttons.VERTICAL_MENU[0])
+        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
         br = yield
         assert br.name == "show_shares"
         assert br.code == B.Other
         # Getting back to the homepage
-        self.debug.click(buttons.CORNER_BUTTON)
-        self.debug.click(buttons.CORNER_BUTTON)
+        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(buttons.corner_button(self.client.layout_type))
 
 
 class EthereumFlow:
@@ -481,17 +481,17 @@ class EthereumFlow:
             self.debug.press_yes()
             assert (yield).name == "confirm_ethereum_tx"
         if info:
-            self.debug.click(buttons.CORNER_BUTTON)
+            self.debug.click(buttons.corner_button(self.client.layout_type))
             self.debug.synchronize_at("VerticalMenu")
-            self.debug.click(buttons.VERTICAL_MENU[0])
+            self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
             text = self.debug.read_layout().text_content()
             assert TR.ethereum__gas_limit in text
             assert TR.ethereum__gas_price in text
-            self.debug.click(buttons.CORNER_BUTTON)
-            self.debug.click(buttons.CORNER_BUTTON)
+            self.debug.click(buttons.corner_button(self.client.layout_type))
+            self.debug.click(buttons.corner_button(self.client.layout_type))
         self.debug.swipe_up()
         self.debug.read_layout()
-        self.debug.click(buttons.TAP_TO_CONFIRM)
+        self.debug.click(buttons.tap_to_confirm(self.client.layout_type))
         assert (yield).name == "confirm_ethereum_tx"
 
     def confirm_tx(
@@ -530,7 +530,7 @@ class EthereumFlow:
             # confirm intro
             if info:
                 self.debug.click(
-                    buttons.CORNER_BUTTON,
+                    buttons.corner_button(self.client.layout_type),
                 )
                 assert self.debug.read_layout().title() in (
                     TR.ethereum__staking_stake_address,
@@ -554,15 +554,15 @@ class EthereumFlow:
         elif self.client.layout_type is LayoutType.Delizia:
             # confirm intro
             if info:
-                self.debug.click(buttons.CORNER_BUTTON)
+                self.debug.click(buttons.corner_button(self.client.layout_type))
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(buttons.VERTICAL_MENU[0])
+                self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
                 assert self.debug.read_layout().title() in (
                     TR.ethereum__staking_stake_address,
                     TR.ethereum__staking_claim_address,
                 )
-                self.debug.click(buttons.CORNER_BUTTON)
-                self.debug.click(buttons.CORNER_BUTTON)
+                self.debug.click(buttons.corner_button(self.client.layout_type))
+                self.debug.click(buttons.corner_button(self.client.layout_type))
 
             self.debug.swipe_up()
             br = yield
@@ -571,13 +571,13 @@ class EthereumFlow:
 
             # confirm summary
             if info:
-                self.debug.click(buttons.CORNER_BUTTON)
+                self.debug.click(buttons.corner_button(self.client.layout_type))
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(buttons.VERTICAL_MENU[0])
+                self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
                 assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
                 assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
-                self.debug.click(buttons.CORNER_BUTTON)
-                self.debug.click(buttons.CORNER_BUTTON)
+                self.debug.click(buttons.corner_button(self.client.layout_type))
+                self.debug.click(buttons.corner_button(self.client.layout_type))
             self.debug.swipe_up()
             # br = yield  # FIXME: no BR on sign transaction
 
