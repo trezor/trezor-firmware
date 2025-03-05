@@ -73,6 +73,11 @@ class TrezorClient:
         protobuf_mapping: ProtobufMapping | None = None,
         protocol: Channel | None = None,
     ) -> None:
+        """
+        Transport needs to be opened before calling a method (or accessing
+        an attribute) for the first time. It should be closed after you're
+        done using the client.
+        """
         self._is_invalidated: bool = False
         self.transport = transport
 
@@ -225,6 +230,8 @@ def get_default_client(
 
     Returns a TrezorClient instance with minimum fuss.
 
+    Transport is opened and should be closed after you're done with the client.
+
     If path is specified, does a prefix-search for the specified device. Otherwise, uses
     the value of TREZOR_PATH env variable, or finds first connected Trezor.
     If no UI is supplied, instantiates the default CLI UI.
@@ -234,6 +241,7 @@ def get_default_client(
         path = os.getenv("TREZOR_PATH")
 
     transport = get_transport(path, prefix_search=True)
+    transport.open()
 
     return TrezorClient(transport, **kwargs)
 
