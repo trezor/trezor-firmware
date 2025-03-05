@@ -97,7 +97,7 @@ def test_passphrase_reporting(session: Session, passphrase):
     """On TT, passphrase_protection is a private setting, so a locked device should
     report passphrase_protection=None.
     """
-    with session, session.client as client:
+    with session.client as client:
         client.use_pin_sequence([PIN4])
         device.apply_settings(session, use_passphrase=passphrase)
 
@@ -164,7 +164,7 @@ def test_change_pin_t2(client: Client):
                 _pin_request(client),
                 _pin_request(client),
                 (
-                    session.client.layout_type is LayoutType.Caesar,
+                    client.layout_type is LayoutType.Caesar,
                     messages.ButtonRequest,
                 ),
                 _pin_request(client),
@@ -238,7 +238,7 @@ def test_wipe_device(client: Client):
         session = client.get_session()
         client.set_expected_responses([messages.ButtonRequest, messages.Success])
         device.wipe(session)
-    client = session.client.get_new_client()
+    client = client.get_new_client()
     session = client.get_seedless_session()
     with client:
         client.set_expected_responses([messages.Features])
@@ -251,8 +251,8 @@ def test_wipe_device(client: Client):
 def test_reset_device(session: Session):
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [messages.ButtonRequest]
             + [messages.EntropyRequest]
             + [messages.ButtonRequest] * 24
@@ -289,8 +289,8 @@ def test_recovery_device(session: Session, uninitialized_session=True):
     assert session.features.pin_protection is False
     assert session.features.passphrase_protection is False
     session.client.use_mnemonic(MNEMONIC12)
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [messages.ButtonRequest]
             + [messages.WordRequest] * 24
             + [messages.Success]  # , messages.Features]
@@ -302,7 +302,7 @@ def test_recovery_device(session: Session, uninitialized_session=True):
             False,
             False,
             "label",
-            input_callback=session.client.mnemonic_callback,
+            input_callback=client.mnemonic_callback,
         )
 
     with pytest.raises(TrezorFailure):

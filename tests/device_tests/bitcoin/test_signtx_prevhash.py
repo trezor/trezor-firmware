@@ -130,8 +130,8 @@ def test_invalid_prev_hash_attack(session: Session, prev_hash):
         msg.tx.inputs[0].prev_hash = prev_hash
         return msg
 
-    with session, session.client as client, pytest.raises(TrezorFailure) as e:
-        session.set_filter(messages.TxAck, attack_filter)
+    with session.client as client, pytest.raises(TrezorFailure) as e:
+        client.set_filter(messages.TxAck, attack_filter)
         if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -168,9 +168,9 @@ def test_invalid_prev_hash_in_prevtx(session: Session, prev_hash):
     tx_hash = hash_tx(serialize_tx(prev_tx))
     inp0.prev_hash = tx_hash
 
-    with session, session.client as client, pytest.raises(TrezorFailure) as e:
+    with session.client as client, pytest.raises(TrezorFailure) as e:
         if session.model is not models.T1B1:
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         btc.sign_tx(session, "Bitcoin", [inp0], [out1], prev_txes={tx_hash: prev_tx})
     _check_error_message(prev_hash, session.model, e.value.message)
