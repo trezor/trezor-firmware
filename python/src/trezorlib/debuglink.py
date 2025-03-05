@@ -788,6 +788,7 @@ class DebugUI:
         self.input_flow: t.Union[
             t.Generator[None, messages.ButtonRequest, None], object, None
         ] = None
+        self.input_flow_loops_forever = False
 
     def _default_input_flow(self, br: messages.ButtonRequest) -> None:
         if br.code == messages.ButtonRequestType.PinEntry:
@@ -955,12 +956,10 @@ class SessionDebugWrapper(Session):
         return self.client.protocol_version
 
     def _write(self, msg: t.Any) -> None:
-        print("writing message:", msg.__class__.__name__)
         self._session._write(self._filter_message(msg))
 
     def _read(self) -> t.Any:
         resp = self._filter_message(self._session._read())
-        print("reading message:", resp.__class__.__name__)
         if self.actual_responses is not None:
             self.actual_responses.append(resp)
         return resp
@@ -1063,6 +1062,7 @@ class SessionDebugWrapper(Session):
 
         Clears all debugging state that might have been modified by a testcase.
         """
+        self.client.ui: DebugUI = DebugUI(self.client.debug)  # is in main
         self.in_with_statement = False
         self.expected_responses: list[MessageFilter] | None = None
         self.actual_responses: list[protobuf.MessageType] | None = None
@@ -1090,8 +1090,10 @@ class SessionDebugWrapper(Session):
             self.client.ui, DebugUI
         ):
             input_flow = self.client.ui.input_flow
+            input_flow_loops_forever = self.client.ui.input_flow_loops_forever
         else:
             input_flow = None
+            input_flow_loops_forever = False
 
         self.reset_debug_features()
 
@@ -1099,6 +1101,14 @@ class SessionDebugWrapper(Session):
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
             self._verify_responses(expected_responses, actual_responses)
+            if isinstance(input_flow, t.Generator) and not input_flow_loops_forever:
+                # Ensure that the input flow is exhausted
+                try:
+                    input_flow.throw(
+                        AssertionError("input flow continues past end of test")
+                    )
+                except StopIteration:
+                    pass
 
         elif isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in
@@ -1159,6 +1169,47 @@ class SessionDebugWrapper(Session):
         output.append("")
         return output
 
+    def set_input_flow(
+        self,
+        input_flow: InputFlowType | t.Callable[[], InputFlowType],
+    ) -> None:
+        """Configure a sequence of input events for the current with-block.
+
+        The `input_flow` must be a generator function. A `yield` statement in the
+        input flow function waits for a ButtonRequest from the device, and returns
+        its code.
+
+        Example usage:
+
+        >>> def input_flow():
+        >>>     # wait for first button prompt
+        >>>     code = yield
+        >>>     assert code == ButtonRequestType.Other
+        >>>     # press No
+        >>>     client.debug.press_no()
+        >>>
+        >>>     # wait for second button prompt
+        >>>     yield
+        >>>     # press Yes
+        >>>     client.debug.press_yes()
+        >>>
+        >>> with session:
+        >>>     session.set_input_flow(input_flow)
+        >>>     some_call(session)
+        """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
+        if hasattr(input_flow, "loops_forever"):
+            self.client.ui.input_flow_loops_forever = input_flow.loops_forever
+        if callable(input_flow):
+            input_flow = input_flow()
+        if not hasattr(input_flow, "send"):
+            raise RuntimeError("input_flow should be a generator function")
+        self.client.ui.input_flow = input_flow
+
+        next(input_flow)  # start the generator
+
 
 class TrezorClientDebugLink(TrezorClient):
     # This class implements automatic responses
@@ -1200,7 +1251,7 @@ class TrezorClientDebugLink(TrezorClient):
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
-        self.reset_debug_features()
+        # self.reset_debug_features()
         self._seedless_session = self.get_seedless_session(new_session=True)
         self.sync_responses()
 
@@ -1224,15 +1275,6 @@ class TrezorClientDebugLink(TrezorClient):
         new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
         new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
         return new_client
-
-    def reset_debug_features(self) -> None:
-        """
-        Prepare the debugging client for a new testcase.
-
-        Clears all debugging state that might have been modified by a testcase.
-        """
-        self.ui: DebugUI = DebugUI(self.debug)
-        self.in_with_statement = False
 
     def button_callback(self, session: Session, msg: messages.ButtonRequest) -> t.Any:
         __tracebackhide__ = True  # for pytest # pylint: disable=W0612
@@ -1362,43 +1404,6 @@ class TrezorClientDebugLink(TrezorClient):
         else:
             return SessionDebugWrapper(super().resume_session(session))
 
-    def set_input_flow(
-        self, input_flow: InputFlowType | t.Callable[[], InputFlowType]
-    ) -> None:
-        """Configure a sequence of input events for the current with-block.
-
-        The `input_flow` must be a generator function. A `yield` statement in the
-        input flow function waits for a ButtonRequest from the device, and returns
-        its code.
-
-        Example usage:
-
-        >>> def input_flow():
-        >>>     # wait for first button prompt
-        >>>     code = yield
-        >>>     assert code == ButtonRequestType.Other
-        >>>     # press No
-        >>>     client.debug.press_no()
-        >>>
-        >>>     # wait for second button prompt
-        >>>     yield
-        >>>     # press Yes
-        >>>     client.debug.press_yes()
-        >>>
-        >>> with client:
-        >>>     client.set_input_flow(input_flow)
-        >>>     some_call(client)
-        """
-        if not self.in_with_statement:
-            raise RuntimeError("Must be called inside 'with' statement")
-
-        if callable(input_flow):
-            input_flow = input_flow()
-        if not hasattr(input_flow, "send"):
-            raise RuntimeError("input_flow should be a generator function")
-        self.ui.input_flow = input_flow
-        next(input_flow)  # start the generator
-
     def watch_layout(self, watch: bool = True) -> None:
         """Enable or disable watching layout changes.
 
@@ -1412,29 +1417,6 @@ class TrezorClientDebugLink(TrezorClient):
             # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
             self.debug.watch_layout(watch)
 
-    def __enter__(self) -> "TrezorClientDebugLink":
-        # For usage in with/expected_responses
-        if self.in_with_statement:
-            raise RuntimeError("Do not nest!")
-        self.in_with_statement = True
-        return self
-
-    def __exit__(self, exc_type: t.Any, value: t.Any, traceback: t.Any) -> None:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-
-        # grab a copy of the inputflow generator to raise an exception through it
-        if isinstance(self.ui, DebugUI):
-            input_flow = self.ui.input_flow
-        else:
-            input_flow = None
-
-        self.reset_debug_features()
-
-        if exc_type is not None and isinstance(input_flow, t.Generator):
-            # Propagate the exception through the input flow, so that we see in
-            # traceback where it is stuck.
-            input_flow.throw(exc_type, value, traceback)
-
     def use_pin_sequence(self, pins: t.Iterable[str]) -> None:
         """Respond to PIN prompts from device with the provided PINs.
         The sequence must be at least as long as the expected number of PIN prompts.
@@ -1445,25 +1427,6 @@ class TrezorClientDebugLink(TrezorClient):
         """Use the provided mnemonic to respond to device.
         Only applies to T1, where device prompts the host for mnemonic words."""
         self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
-
-    @staticmethod
-    def _expectation_lines(expected: list[MessageFilter], current: int) -> list[str]:
-        start_at = max(current - EXPECTED_RESPONSES_CONTEXT_LINES, 0)
-        stop_at = min(current + EXPECTED_RESPONSES_CONTEXT_LINES + 1, len(expected))
-        output: list[str] = []
-        output.append("Expected responses:")
-        if start_at > 0:
-            output.append(f"    (...{start_at} previous responses omitted)")
-        for i in range(start_at, stop_at):
-            exp = expected[i]
-            prefix = "    " if i != current else ">>> "
-            output.append(textwrap.indent(exp.to_string(), prefix))
-        if stop_at < len(expected):
-            omitted = len(expected) - stop_at
-            output.append(f"    (...{omitted} following responses omitted)")
-
-        output.append("")
-        return output
 
     def sync_responses(self) -> None:
         """Synchronize Trezor device receiving with caller.
@@ -1499,6 +1462,12 @@ class TrezorClientDebugLink(TrezorClient):
             return self.mnemonic[pos - 1]
 
         raise RuntimeError("Unexpected call")
+
+    def __enter__(self) -> "TrezorClientDebugLink":
+        return self
+
+    def __exit__(self, exc_type: t.Any, value: t.Any, traceback: t.Any) -> None:
+        pass
 
 
 def load_device(

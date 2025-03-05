@@ -38,9 +38,10 @@ B = messages.ButtonRequestType
 
 
 class InputFlowBase:
-    def __init__(self, client: Client):
+    def __init__(self, client: Client, loops_forever: bool = False):
         self.client = client
         self.debug: DebugLink = client.debug
+        self.loops_forever = loops_forever
         self.PIN = PinFlow(self.client)
         self.REC = RecoveryFlow(self.client)
         self.BAK = BackupFlow(self.client)
@@ -51,15 +52,18 @@ class InputFlowBase:
 
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
-            return getattr(self, "input_flow_common")
+            flow = getattr(self, "input_flow_common")
         elif self.client.layout_type is LayoutType.Bolt:
-            return self.input_flow_bolt
+            flow = self.input_flow_bolt
         elif self.client.layout_type is LayoutType.Caesar:
-            return self.input_flow_caesar
+            flow = self.input_flow_caesar
         elif self.client.layout_type is LayoutType.Delizia:
-            return self.input_flow_delizia
+            flow = self.input_flow_delizia
         else:
             raise ValueError("Unknown model")
+
+        flow.__dict__["loops_forever"] = self.loops_forever
+        return flow
 
     def input_flow_bolt(self) -> BRGeneratorType:
         """Special for TT"""
@@ -372,7 +376,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.click(buttons.VERTICAL_MENU[1])
         # address mismatch? yes!
         self.debug.swipe_up()
-        yield
+        yield  # ?
 
 
 class InputFlowShowAddressQRCode(InputFlowBase):
@@ -2358,7 +2362,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
     def __init__(self, client: Client):
-        super().__init__(client)
+        super().__init__(client, loops_forever=True)
 
     def input_flow_bolt(self) -> BRGeneratorType:
         br = yield
@@ -2403,7 +2407,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
 
 class InputFlowFidoConfirm(InputFlowBase):
     def __init__(self, client: Client, cancel: bool = False):
-        super().__init__(client)
+        super().__init__(client, loops_forever=True)
         self.cancel = cancel
 
     def input_flow_bolt(self) -> BRGeneratorType:

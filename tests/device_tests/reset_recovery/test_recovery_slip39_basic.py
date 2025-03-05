@@ -73,9 +73,9 @@ VECTORS = (
 def test_secret(
     session: Session, shares: list[str], secret: str, backup_type: messages.BackupType
 ):
-    with session.client as client:
-        IF = InputFlowSlip39BasicRecovery(client, shares)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicRecovery(session.client, shares)
+        session.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
 
     # Workflow successfully ended
@@ -89,11 +89,11 @@ def test_secret(
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_recover_with_pin_passphrase(session: Session):
-    with session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecovery(
-            client, MNEMONIC_SLIP39_BASIC_20_3of6, pin="654"
+            session.client, MNEMONIC_SLIP39_BASIC_20_3of6, pin="654"
         )
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         device.recover(
             session,
             pin_protection=True,
@@ -109,9 +109,9 @@ def test_recover_with_pin_passphrase(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(session: Session):
-    with session.client as client:
-        IF = InputFlowSlip39BasicRecoveryAbort(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicRecoveryAbort(session.client)
+        session.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
         session.refresh_features()
@@ -123,9 +123,9 @@ def test_abort(session: Session):
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort_on_number_of_words(session: Session):
     # on Caesar, test_abort actually aborts on the # of words selection
-    with session.client as client:
-        IF = InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(session.client)
+        session.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
         assert session.features.initialized is False
@@ -134,11 +134,11 @@ def test_abort_on_number_of_words(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort_between_shares(session: Session):
-    with session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryAbortBetweenShares(
-            client, MNEMONIC_SLIP39_BASIC_20_3of6
+            session.client, MNEMONIC_SLIP39_BASIC_20_3of6
         )
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
         session.refresh_features()
@@ -148,9 +148,11 @@ def test_abort_between_shares(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(session: Session):
-    with session.client as client:
-        IF = InputFlowSlip39BasicRecoveryNoAbort(client, MNEMONIC_SLIP39_BASIC_20_3of6)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicRecoveryNoAbort(
+            session.client, MNEMONIC_SLIP39_BASIC_20_3of6
+        )
+        session.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
         session.refresh_features()
         assert session.features.initialized is True
@@ -158,9 +160,9 @@ def test_noabort(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_invalid_mnemonic_first_share(session: Session):
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryInvalidFirstShare(session)
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
         session.refresh_features()
@@ -169,11 +171,11 @@ def test_invalid_mnemonic_first_share(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_invalid_mnemonic_second_share(session: Session):
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryInvalidSecondShare(
             session, MNEMONIC_SLIP39_BASIC_20_3of6
         )
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
         session.refresh_features()
@@ -184,9 +186,9 @@ def test_invalid_mnemonic_second_share(session: Session):
 @pytest.mark.parametrize("nth_word", range(3))
 def test_wrong_nth_word(session: Session, nth_word: int):
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryWrongNthWord(session, share, nth_word)
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
 
@@ -194,18 +196,18 @@ def test_wrong_nth_word(session: Session, nth_word: int):
 @pytest.mark.setup_client(uninitialized=True)
 def test_same_share(session: Session):
     share = MNEMONIC_SLIP39_BASIC_20_3of6[0].split(" ")
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoverySameShare(session, share)
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
 
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_1of1(session: Session):
-    with session.client as client:
-        IF = InputFlowSlip39BasicRecovery(client, MNEMONIC_SLIP39_BASIC_20_1of1)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicRecovery(session.client, MNEMONIC_SLIP39_BASIC_20_1of1)
+        session.set_input_flow(IF.get())
         device.recover(
             session,
             pin_protection=False,

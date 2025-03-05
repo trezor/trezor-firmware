@@ -420,8 +420,8 @@ def test_hide_passphrase_from_host(client: Client):
             else:
                 raise KeyError
 
-        client.watch_layout()
-        client.set_input_flow(input_flow)
+        session.client.watch_layout()
+        session.set_input_flow(input_flow)
         session.set_expected_responses(
             [
                 messages.PassphraseRequest,
@@ -454,8 +454,8 @@ def test_hide_passphrase_from_host(client: Client):
             assert passphrase in client.debug.read_layout().text_content()
             client.debug.press_yes()
 
-        client.watch_layout()
-        client.set_input_flow(input_flow)
+        session.client.watch_layout()
+        session.set_input_flow(input_flow)
         session.set_expected_responses(
             [
                 messages.PassphraseRequest,

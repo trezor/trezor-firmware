@@ -34,7 +34,7 @@ pytestmark = pytest.mark.models("legacy")
 
 def _set_wipe_code(session: Session, pin, wipe_code):
     # Set/change wipe code.
-    with session.client as client, session:
+    with session:
         if session.features.pin_protection:
             pins = [pin, wipe_code, wipe_code]
             pin_matrices = [
@@ -49,7 +49,7 @@ def _set_wipe_code(session: Session, pin, wipe_code):
                 messages.PinMatrixRequest(type=PinType.WipeCodeSecond),
             ]
 
-        client.use_pin_sequence(pins)
+        session.client.use_pin_sequence(pins)
         session.set_expected_responses(
             [messages.ButtonRequest()] + pin_matrices + [messages.Success]
         )
@@ -58,8 +58,8 @@ def _set_wipe_code(session: Session, pin, wipe_code):
 
 def _change_pin(session: Session, old_pin, new_pin):
     assert session.features.pin_protection is True
-    with session.client as client:
-        client.use_pin_sequence([old_pin, new_pin, new_pin])
+    with session:
+        session.client.use_pin_sequence([old_pin, new_pin, new_pin])
         try:
             return device.change_pin(session)
         except exceptions.TrezorFailure as f:
@@ -96,8 +96,8 @@ def test_set_remove_wipe_code(session: Session):
     _check_wipe_code(session, PIN4, WIPE_CODE6)
 
     # Test remove wipe code.
-    with session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         device.change_wipe_code(session, remove=True)
 
     # Check that there's no wipe code protection now.
@@ -111,8 +111,8 @@ def test_set_wipe_code_mismatch(session: Session):
     assert session.features.wipe_code_protection is False
 
     # Let's set a new wipe code.
-    with session.client as client, session:
-        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE6])
+    with session:
+        session.client.use_pin_sequence([WIPE_CODE4, WIPE_CODE6])
         session.set_expected_responses(
             [
                 messages.ButtonRequest(),
@@ -125,8 +125,8 @@ def test_set_wipe_code_mismatch(session: Session):
             device.change_wipe_code(session)
 
     # Check that there is no wipe code protection.
-    client.refresh_features()
-    assert client.features.wipe_code_protection is False
+    session.client.refresh_features()
+    assert session.client.features.wipe_code_protection is False
 
 
 @pytest.mark.setup_client(pin=PIN4)
@@ -135,8 +135,8 @@ def test_set_wipe_code_to_pin(session: Session):
     assert session.features.wipe_code_protection is None
 
     # Let's try setting the wipe code to the curent PIN value.
-    with session.client as client, session:
-        client.use_pin_sequence([PIN4, PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4, PIN4])
         session.set_expected_responses(
             [
                 messages.ButtonRequest(),
@@ -149,8 +149,8 @@ def test_set_wipe_code_to_pin(session: Session):
             device.change_wipe_code(session)
 
     # Check that there is no wipe code protection.
-    client.refresh_features()
-    assert client.features.wipe_code_protection is False
+    session.client.refresh_features()
+    assert session.client.features.wipe_code_protection is False
 
 
 def test_set_pin_to_wipe_code(session: Session):
@@ -159,8 +159,8 @@ def test_set_pin_to_wipe_code(session: Session):
     _set_wipe_code(session, None, WIPE_CODE4)
 
     # Try to set the PIN to the current wipe code value.
-    with session.client as client, session:
-        client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
+    with session:
+        session.client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
         session.set_expected_responses(
             [
                 messages.ButtonRequest(),

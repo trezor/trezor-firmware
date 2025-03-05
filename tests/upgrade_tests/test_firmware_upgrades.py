@@ -397,8 +397,9 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
         assert emu.client.features.backup_availability == BackupAvailability.Required
         with emu.client:
             IF = InputFlowSlip39BasicBackup(emu.client, False)
-            emu.client.set_input_flow(IF.get())
-            device.backup(emu.client.get_session())
+            session = emu.client.get_session()
+            session.set_input_flow(IF.get())
+            device.backup(session)
         assert (
             emu.client.features.backup_availability == BackupAvailability.NotAvailable
         )

@@ -80,10 +80,10 @@ def test_invalid_path_prompt(session: Session):
         session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
 
-    with session.client as client:
+    with session:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
 
         btc.sign_tx(session, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
 
@@ -106,10 +106,10 @@ def test_invalid_path_pass_forkid(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
+    with session:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
 
         btc.sign_tx(session, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
 
