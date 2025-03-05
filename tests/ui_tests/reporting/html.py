@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 from dominate import document
-from dominate.tags import a, i, img, table, td, th, tr
+from dominate.tags import a, i, img, span, table, td, th, tr
 
 from ..common import UI_TESTS_DIR
 
@@ -92,13 +92,51 @@ def image_link(
     )
 
 
+def diff_row(
+    left: str | None,
+    right: str | None,
+    cur_dir: Path,
+    bgcolor: str,
+    hidden: bool = False,
+):
+    with tr(bgcolor=bgcolor, _class="hidden" if hidden else ""):
+        image_column(left, cur_dir)
+        image_column(right, cur_dir)
+        diff_column()
+
+
+def collapsible_rows(rows, cur_dir):
+    collapse = len(rows) > 0
+    color = "yellow" if collapse else "white"
+    for left, right in rows:
+        diff_row(left, right, cur_dir, color, collapse)
+    if collapse:
+        with tr(bgcolor="yellow"):
+            with td(colspan=3, _class="showLink"):
+                span(f"{len(rows)} hidden")
+                a("show all", href="#", onclick="showAllHidden();")
+
+
 def diff_table(diff: Iterable[tuple[str | None, str | None]], cur_dir: Path) -> None:
-    for left, right in diff:
-        if left == right:
-            background = "white"
-        else:
-            background = "red"
-        with tr(bgcolor=background, onclick="createDiff(this)"):
-            image_column(left, cur_dir)
-            image_column(right, cur_dir)
-            diff_column()
+    has_diff = False
+    rows = []
+    for l, r in diff:
+        if l != r:
+            has_diff = True
+        rows.append((l, r))
+
+    if not has_diff or len(rows) <= 10:  # show all without collapsing
+        for left, right in rows:
+            color = "red" if left != right else "white"
+            diff_row(left, right, cur_dir, color)
+    else:
+        unchanged_buffer = []
+        for left, right in rows:
+            is_diff = left != right
+            if not is_diff:
+                unchanged_buffer.append((left, right))
+            else:
+                collapsible_rows(unchanged_buffer, cur_dir)
+                unchanged_buffer.clear()
+                diff_row(left, right, cur_dir, "red")
+        collapsible_rows(unchanged_buffer, cur_dir)
