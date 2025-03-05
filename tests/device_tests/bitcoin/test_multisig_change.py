@@ -288,7 +288,7 @@ def test_external_internal(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(
             _responses(
                 session,
@@ -299,8 +299,8 @@ def test_external_internal(session: Session):
             )
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         btc.sign_tx(
             session,
             "Bitcoin",
@@ -324,7 +324,7 @@ def test_internal_external(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(
             _responses(
                 session,
@@ -335,8 +335,8 @@ def test_internal_external(session: Session):
             )
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         btc.sign_tx(
             session,
             "Bitcoin",
