@@ -68,9 +68,9 @@ def test_reset_recovery(client: Client):
 
 
 def reset(session: Session, strength: int = 128) -> list[str]:
-    with session.client as client:
-        IF = InputFlowSlip39AdvancedResetRecovery(client, False)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39AdvancedResetRecovery(session.client, False)
+        session.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.setup(
@@ -97,9 +97,9 @@ def reset(session: Session, strength: int = 128) -> list[str]:
 
 
 def recover(session: Session, shares: list[str]):
-    with session.client as client:
-        IF = InputFlowSlip39AdvancedRecovery(client, shares, False)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39AdvancedRecovery(session.client, shares, False)
+        session.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
 
     # Workflow successfully ended

@@ -37,9 +37,9 @@ def test_getaddress(session: Session, parameters, result):
 @pytest.mark.models("core", reason="No input flow for T1")
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
 def test_getaddress_chunkify_details(session: Session, parameters, result):
-    with session.client as client:
-        IF = InputFlowShowAddressQRCode(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowShowAddressQRCode(session.client)
+        session.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         assert (
             ethereum.get_address(session, address_n, show_display=True, chunkify=True)

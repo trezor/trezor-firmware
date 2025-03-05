@@ -23,6 +23,10 @@ udp.SOCKET_TIMEOUT = 0.1
 
 class NullUI:
     @staticmethod
+    def clear(*args, **kwargs):
+        pass
+
+    @staticmethod
     def button_request(code):
         pass
 

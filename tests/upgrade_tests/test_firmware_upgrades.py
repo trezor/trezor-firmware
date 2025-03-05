@@ -96,7 +96,7 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
         assert client.features.initialized
         assert client.features.label == LABEL
         session = client.get_session()
-        with client, session:
+        with session:
             client.use_pin_sequence([PIN])
             assert btc.get_address(session, "Bitcoin", PATH) == ADDRESS
 
@@ -395,10 +395,11 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
 
         # Create a backup of the encrypted master secret.
         assert emu.client.features.backup_availability == BackupAvailability.Required
-        with emu.client:
+        session = emu.client.get_session()
+        with session:
             IF = InputFlowSlip39BasicBackup(emu.client, False)
-            emu.client.set_input_flow(IF.get())
-            device.backup(emu.client.get_session())
+            session.set_input_flow(IF.get())
+            device.backup(session)
         assert (
             emu.client.features.backup_availability == BackupAvailability.NotAvailable
         )
