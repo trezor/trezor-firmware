@@ -45,8 +45,8 @@ def test_sd_no_format(session: Session):
         yield  # format SD card
         debug.press_no()
 
-    with session, session.client as client, pytest.raises(TrezorFailure) as e:
-        client.set_input_flow(input_flow)
+    with session, pytest.raises(TrezorFailure) as e:
+        session.set_input_flow(input_flow)
         device.sd_protect(session, Op.ENABLE)
 
     assert e.value.code == messages.FailureType.ProcessError
@@ -76,9 +76,9 @@ def test_sd_protect_unlock(session: Session):
         assert TR.sd_card__enabled in layout().text_content()
         debug.press_yes()
 
-    with session, session.client as client:
-        client.watch_layout()
-        client.set_input_flow(input_flow_enable_sd_protect)
+    with session:
+        session.client.watch_layout()
+        session.set_input_flow(input_flow_enable_sd_protect)
         device.sd_protect(session, Op.ENABLE)
 
     def input_flow_change_pin():
@@ -102,9 +102,9 @@ def test_sd_protect_unlock(session: Session):
         assert TR.pin__changed in layout().text_content()
         debug.press_yes()
 
-    with session, session.client as client:
-        client.watch_layout()
-        client.set_input_flow(input_flow_change_pin)
+    with session:
+        session.client.watch_layout()
+        session.set_input_flow(input_flow_change_pin)
         device.change_pin(session)
 
     debug.erase_sd_card(format=False)
@@ -125,9 +125,9 @@ def test_sd_protect_unlock(session: Session):
         )
         debug.press_no()  # close
 
-    with session, session.client as client, pytest.raises(TrezorFailure) as e:
-        client.watch_layout()
-        client.set_input_flow(input_flow_change_pin_format)
+    with session, pytest.raises(TrezorFailure) as e:
+        session.client.watch_layout()
+        session.set_input_flow(input_flow_change_pin_format)
         device.change_pin(session)
 
     assert e.value.code == messages.FailureType.ProcessError

@@ -47,9 +47,9 @@ pytestmark = [
 def test_solana_sign_tx(session: Session, parameters, result):
     serialized_tx = _serialize_tx(parameters["construct"])
 
-    with session.client as client:
-        IF = InputFlowConfirmAllWarnings(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowConfirmAllWarnings(session.client)
+        session.set_input_flow(IF.get())
         actual_result = sign_tx(
             session,
             address_n=parse_path(parameters["address"]),

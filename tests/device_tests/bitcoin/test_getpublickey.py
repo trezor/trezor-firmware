@@ -119,9 +119,9 @@ def test_get_public_node(session: Session, coin_name, xpub_magic, path, xpub):
 @pytest.mark.models("core")
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
 def test_get_public_node_show(session: Session, coin_name, xpub_magic, path, xpub):
-    with session.client as client:
-        IF = InputFlowShowXpubQRCode(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowShowXpubQRCode(session.client)
+        session.set_input_flow(IF.get())
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub
@@ -158,14 +158,14 @@ def test_get_public_node_show_legacy(
         client.debug.press_yes()  # finish the flow
         yield
 
-    with client:
+    with session:
         # test XPUB display flow (without showing QR code)
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub
 
         # test XPUB QR code display using the input flow above
-        client.set_input_flow(input_flow)
+        session.set_input_flow(input_flow)
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
         assert bip32.serialize(res.node, xpub_magic) == xpub

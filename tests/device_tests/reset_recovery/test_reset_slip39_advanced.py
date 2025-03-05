@@ -34,10 +34,10 @@ def test_reset_device_slip39_advanced(client: Client):
     strength = 128
     member_threshold = 3
 
-    with client:
+    session = client.get_seedless_session()
+    with session:
         IF = InputFlowSlip39AdvancedResetRecovery(client, False)
-        client.set_input_flow(IF.get())
-        session = client.get_seedless_session()
+        session.set_input_flow(IF.get())
         # No PIN, no passphrase, don't display random
         device.setup(
             session,
