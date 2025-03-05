@@ -45,7 +45,7 @@ def test_tezos_get_address_chunkify_details(
     session: Session, path: str, expected_address: str
 ):
     with session.client as client:
-        IF = InputFlowShowAddressQRCode(client)
+        IF = InputFlowShowAddressQRCode(session.client)
         client.set_input_flow(IF.get())
         address = get_address(
             session, parse_path(path), show_display=True, chunkify=True

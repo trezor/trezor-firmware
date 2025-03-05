@@ -99,8 +99,8 @@ def test_spend_v4_input(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -147,8 +147,8 @@ def test_send_to_multisig(session: Session):
         script_type=messages.OutputScriptType.PAYTOSCRIPTHASH,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -194,8 +194,8 @@ def test_spend_v5_input(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -247,8 +247,8 @@ def test_one_two(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -305,8 +305,8 @@ def test_unified_address(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -369,8 +369,8 @@ def test_external_presigned(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -493,8 +493,8 @@ def test_spend_multisig(session: Session):
         request_finished(),
     ]
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         signatures1, _ = btc.sign_tx(
             session,
             "Zcash Testnet",
@@ -533,8 +533,8 @@ def test_spend_multisig(session: Session):
         multisig=multisig,
     )
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         signatures2, serialized_tx = btc.sign_tx(
             session,
             "Zcash Testnet",

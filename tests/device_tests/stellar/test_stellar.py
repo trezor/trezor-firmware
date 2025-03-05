@@ -124,7 +124,7 @@ def test_get_address(session: Session, parameters, result):
 @parametrize_using_common_fixtures("stellar/get_address.json")
 def test_get_address_chunkify_details(session: Session, parameters, result):
     with session.client as client:
-        IF = InputFlowShowAddressQRCode(client)
+        IF = InputFlowShowAddressQRCode(session.client)
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         address = stellar.get_address(

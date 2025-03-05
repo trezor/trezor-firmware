@@ -72,8 +72,8 @@ def test_send_bch_change(session: Session):
         amount=73_452,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -124,8 +124,8 @@ def test_send_bch_nochange(session: Session):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -182,8 +182,8 @@ def test_send_bch_oldaddr(session: Session):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -252,9 +252,9 @@ def test_attack_change_input(session: Session):
 
         return msg
 
-    with session:
-        session.set_filter(messages.TxAck, attack_processor)
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_filter(messages.TxAck, attack_processor)
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -327,8 +327,8 @@ def test_send_bch_multisig_wrongchange(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
         amount=23_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -395,8 +395,8 @@ def test_send_bch_multisig_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOMULTISIG,
         amount=24_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -434,8 +434,8 @@ def test_send_bch_multisig_change(session: Session):
     )
     out2.address_n[2] = H_(1)
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -496,8 +496,8 @@ def test_send_bch_external_presigned(session: Session):
         amount=1_934_960,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),

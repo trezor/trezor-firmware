@@ -42,7 +42,7 @@ def test_getaddress(session: Session, parameters, result):
 @parametrize_using_common_fixtures("ethereum/getaddress.json")
 def test_getaddress_chunkify_details(session: Session, parameters, result):
     with session.client as client:
-        IF = InputFlowShowAddressQRCode(client)
+        IF = InputFlowShowAddressQRCode(session.client)
         client.set_input_flow(IF.get())
         address_n = parse_path(parameters["path"])
         assert (

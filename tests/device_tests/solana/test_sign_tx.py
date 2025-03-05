@@ -48,7 +48,7 @@ def test_solana_sign_tx(session: Session, parameters, result):
     serialized_tx = _serialize_tx(parameters["construct"])
 
     with session.client as client:
-        IF = InputFlowConfirmAllWarnings(client)
+        IF = InputFlowConfirmAllWarnings(session.client)
         client.set_input_flow(IF.get())
         actual_result = sign_tx(
             session,

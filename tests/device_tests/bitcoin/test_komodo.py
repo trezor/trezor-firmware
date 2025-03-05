@@ -61,8 +61,8 @@ def test_one_one_fee_sapling(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -125,8 +125,8 @@ def test_one_one_rewards_claim(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),

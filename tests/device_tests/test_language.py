@@ -80,7 +80,7 @@ def _check_ping_screen_texts(session: Session, title: str, right_button: str) ->
     if session.model in (models.T2T1, models.T3T1):
         right_button = "-"
 
-    with session, session.client as client:
+    with session.client as client:
         client.watch_layout(True)
         client.set_input_flow(ping_input_flow(session, title, right_button))
         ping = session.call(messages.Ping(message="ahoj!", button_protection=True))
@@ -94,7 +94,7 @@ def test_error_too_long(session: Session):
     max_length = MAX_DATA_LENGTH[session.model]
     with pytest.raises(
         exceptions.TrezorFailure, match="Translations too long"
-    ), session:
+    ), session.client:
         bad_data = (max_length + 1) * b"a"
         device.change_language(session, language_data=bad_data)
     assert session.features.language == "en-US"
@@ -105,7 +105,9 @@ def test_error_invalid_data_length(session: Session):
     assert session.features.language == "en-US"
     # Invalid data length
     # Sending more data than advertised in the header
-    with pytest.raises(exceptions.TrezorFailure, match="Invalid data length"), session:
+    with pytest.raises(
+        exceptions.TrezorFailure, match="Invalid data length"
+    ), session.client:
         good_data = build_and_sign_blob("cs", session)
         bad_data = good_data + b"abcd"
         device.change_language(session, language_data=bad_data)
@@ -119,7 +121,7 @@ def test_error_invalid_header_magic(session: Session):
     # Does not match the expected magic
     with pytest.raises(
         exceptions.TrezorFailure, match="Invalid translations data"
-    ), session:
+    ), session.client:
         good_data = build_and_sign_blob("cs", session)
         bad_data = 4 * b"a" + good_data[4:]
         device.change_language(session, language_data=bad_data)
@@ -133,7 +135,7 @@ def test_error_invalid_data_hash(session: Session):
     # Changing the data after their hash has been calculated
     with pytest.raises(
         exceptions.TrezorFailure, match="Translation data verification failed"
-    ), session:
+    ), session.client:
         good_data = build_and_sign_blob("cs", session)
         bad_data = good_data[:-8] + 8 * b"a"
         device.change_language(
@@ -150,7 +152,7 @@ def test_error_version_mismatch(session: Session):
     # Change the version to one not matching the current device
     with pytest.raises(
         exceptions.TrezorFailure, match="Translations version mismatch"
-    ), session:
+    ), session.client:
         blob = prepare_blob("cs", session.model, (3, 5, 4, 0))
         device.change_language(
             session,
@@ -166,7 +168,7 @@ def test_error_invalid_signature(session: Session):
     # Changing the data in the signature section
     with pytest.raises(
         exceptions.TrezorFailure, match="Invalid translations data"
-    ), session:
+    ), session.client:
         blob = prepare_blob("cs", session.model, session.version)
         blob.proof = translations.Proof(
             merkle_proof=[],
@@ -275,7 +277,7 @@ def test_reject_update(session: Session):
         yield
         session.client.debug.press_no()
 
-    with pytest.raises(exceptions.Cancelled), session, session.client as client:
+    with pytest.raises(exceptions.Cancelled), session.client as client:
         client.set_input_flow(input_flow_reject)
         device.change_language(session, language_data)
 
@@ -312,8 +314,8 @@ def _maybe_confirm_set_language(
     else:
         expected_responses = expected_responses_silent
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         device.change_language(session, language_data, show_display=show_display)
         assert session.features.language is not None
         assert session.features.language[:2] == lang
@@ -321,9 +323,9 @@ def _maybe_confirm_set_language(
         # explicitly handle the cases when expected_responses are correct for
         # change_language but incorrect for selected is_displayed mode (otherwise the
         # user would get an unhelpful generic expected_responses mismatch)
-        if is_displayed and session.actual_responses == expected_responses_silent:
+        if is_displayed and client.actual_responses == expected_responses_silent:
             raise AssertionError("Change should have been visible but was silent")
-        if not is_displayed and session.actual_responses == expected_responses_confirm:
+        if not is_displayed and client.actual_responses == expected_responses_confirm:
             raise AssertionError("Change should have been silent but was visible")
         # if the expected_responses do not match either, the generic error message will
         # be raised by the session context manager

@@ -42,7 +42,7 @@ EXTRA_GROUP_SHARE = [
 def test_2of3_dryrun(session: Session):
     with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
-            client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
+            session.client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
         client.set_input_flow(IF.get())
         device.recover(
@@ -61,7 +61,7 @@ def test_2of3_invalid_seed_dryrun(session: Session):
         TrezorFailure, match=r"The seed does not match the one in the device"
     ):
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
-            client, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True
+            session.client, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True
         )
         client.set_input_flow(IF.get())
         device.recover(

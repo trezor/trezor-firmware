@@ -65,8 +65,8 @@ def _get_xpub(
     else:
         expected_responses = [messages.PublicKey]
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         result = session.call_raw(XPUB_REQUEST)
         if passphrase is not None:
             result = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
@@ -430,7 +430,7 @@ def test_passphrase_length(client: Client):
 def test_hide_passphrase_from_host(client: Client):
     # Without safety checks, turning it on fails
     session = client.get_seedless_session()
-    with pytest.raises(TrezorFailure, match="Safety checks are strict"), client:
+    with pytest.raises(TrezorFailure, match="Safety checks are strict"):
         device.apply_settings(session, hide_passphrase_from_host=True)
 
     device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
@@ -440,7 +440,7 @@ def test_hide_passphrase_from_host(client: Client):
 
     passphrase = "abc"
     session = _get_session(client)
-    with session:
+    with client:
 
         def input_flow():
             yield
@@ -459,9 +459,9 @@ def test_hide_passphrase_from_host(client: Client):
             else:
                 raise KeyError
 
-        client.watch_layout()
+        session.client.watch_layout()
         client.set_input_flow(input_flow)
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.PassphraseRequest,
                 messages.ButtonRequest,
@@ -480,7 +480,7 @@ def test_hide_passphrase_from_host(client: Client):
     # Starting new session, otherwise the passphrase would be cached
     session = _get_session(client)
 
-    with client, session:
+    with client:
 
         def input_flow():
             yield
@@ -495,9 +495,9 @@ def test_hide_passphrase_from_host(client: Client):
             assert passphrase in client.debug.read_layout().text_content()
             client.debug.press_yes()
 
-        client.watch_layout()
+        session.client.watch_layout()
         client.set_input_flow(input_flow)
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.PassphraseRequest,
                 messages.ButtonRequest,

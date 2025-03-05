@@ -61,7 +61,7 @@ def test_signtx_testnet(session: Session, amount_unit):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=100_000 - 40_000 - 10_000,
     )
-    with session:
+    with session.client:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -95,7 +95,7 @@ def test_signtx_btc(session: Session, amount_unit):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client:
         _, serialized_tx = btc.sign_tx(
             session,
             "Bitcoin",

@@ -330,7 +330,7 @@ def test_signmessage_long(
     signature: str,
 ):
     with session.client as client:
-        IF = InputFlowSignVerifyMessageLong(client)
+        IF = InputFlowSignVerifyMessageLong(session.client)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
             session,
@@ -359,7 +359,7 @@ def test_signmessage_info(
     signature: str,
 ):
     with session.client as client, pytest.raises(Cancelled):
-        IF = InputFlowSignMessageInfo(client)
+        IF = InputFlowSignMessageInfo(session.client)
         client.set_input_flow(IF.get())
         sig = btc.sign_message(
             session,
@@ -397,7 +397,7 @@ def test_signmessage_pagination(session: Session, message: str, is_long: bool):
             InputFlowSignVerifyMessageLong
             if is_long
             else InputFlowSignMessagePagination
-        )(client)
+        )(session.client)
         client.set_input_flow(IF.get())
         btc.sign_message(
             session,
@@ -423,8 +423,8 @@ def test_signmessage_pagination_trailing_newline(session: Session):
     message = "THIS\nMUST\nNOT\nBE\nPAGINATED\n"
     # The trailing newline must not cause a new paginated screen to appear.
     # The UI must be a single dialog without pagination.
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 # expect address confirmation
                 message_filters.ButtonRequest(code=messages.ButtonRequestType.Other),
@@ -444,8 +444,8 @@ def test_signmessage_pagination_trailing_newline(session: Session):
 def test_signmessage_path_warning(session: Session):
     message = "This is an example of a signed message."
 
-    with session, session.client as client:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 # expect a path warning
                 message_filters.ButtonRequest(
@@ -457,7 +457,7 @@ def test_signmessage_path_warning(session: Session):
             ]
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         btc.sign_message(
             session,

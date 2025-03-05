@@ -142,7 +142,7 @@ def test_p2pkh_presigned(session: Session):
     )
 
     # Test with first input as pre-signed external.
-    with session:
+    with session.client:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -155,7 +155,7 @@ def test_p2pkh_presigned(session: Session):
     assert serialized_tx.hex() == expected_tx
 
     # Test with second input as pre-signed external.
-    with session:
+    with session.client:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -216,8 +216,8 @@ def test_p2wpkh_in_p2sh_presigned(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -267,8 +267,8 @@ def test_p2wpkh_in_p2sh_presigned(session: Session):
 
     # Test corrupted script hash in scriptsig.
     inp1.script_sig[10] ^= 1
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -339,7 +339,7 @@ def test_p2wpkh_presigned(session: Session):
     )
 
     # Test with second input as pre-signed external.
-    with session:
+    with session.client:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -399,8 +399,8 @@ def test_p2wsh_external_presigned(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -444,8 +444,8 @@ def test_p2wsh_external_presigned(session: Session):
 
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -509,8 +509,8 @@ def test_p2tr_external_presigned(session: Session):
         amount=4_600,
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -541,8 +541,8 @@ def test_p2tr_external_presigned(session: Session):
 
     # Test corrupted signature in witness.
     inp2.witness[10] ^= 1
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -610,9 +610,9 @@ def test_p2wpkh_with_proof(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client as client:
         is_t1 = session.model is models.T1B1
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -703,9 +703,9 @@ def test_p2tr_with_proof(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client as client:
         is_t1 = session.model is models.T1B1
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -770,8 +770,8 @@ def test_p2wpkh_with_false_proof(session: Session):
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),

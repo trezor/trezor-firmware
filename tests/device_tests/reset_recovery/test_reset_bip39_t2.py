@@ -36,7 +36,7 @@ pytestmark = pytest.mark.models("core")
 def reset_device(session: Session, strength: int):
     debug = session.client.debug
     with session.client as client:
-        IF = InputFlowBip39ResetBackup(client)
+        IF = InputFlowBip39ResetBackup(session.client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -92,7 +92,7 @@ def test_reset_device_pin(session: Session):
     strength = 256  # 24 words
 
     with session.client as client:
-        IF = InputFlowBip39ResetPIN(client)
+        IF = InputFlowBip39ResetPIN(session.client)
         client.set_input_flow(IF.get())
 
         # PIN, passphrase, display random
@@ -130,7 +130,7 @@ def test_reset_entropy_check(session: Session):
     strength = 128  # 12 words
 
     with session.client as client:
-        IF = InputFlowBip39ResetBackup(client)
+        IF = InputFlowBip39ResetBackup(session.client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase
@@ -146,7 +146,7 @@ def test_reset_entropy_check(session: Session):
         )
 
     # Generate the mnemonic locally.
-    internal_entropy = client.debug.state().reset_entropy
+    internal_entropy = session.client.debug.state().reset_entropy
     assert internal_entropy is not None
     entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
     expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
@@ -177,7 +177,7 @@ def test_reset_failed_check(session: Session):
     strength = 256  # 24 words
 
     with session.client as client:
-        IF = InputFlowBip39ResetFailedCheck(client)
+        IF = InputFlowBip39ResetFailedCheck(session.client)
         client.set_input_flow(IF.get())
 
         # PIN, passphrase, display random
@@ -264,8 +264,8 @@ def test_already_initialized(session: Session):
 @pytest.mark.uninitialized_session
 def test_entropy_check(session: Session):
     with session.client as client:
-        delizia = client.debug.layout_type is LayoutType.Delizia
-        delizia_eckhart = client.debug.layout_type in (
+        delizia = session.client.debug.layout_type is LayoutType.Delizia
+        delizia_eckhart = session.client.debug.layout_type in (
             LayoutType.Delizia,
             LayoutType.Eckhart,
         )
@@ -305,11 +305,11 @@ def test_entropy_check(session: Session):
 @pytest.mark.uninitialized_session
 def test_no_entropy_check(session: Session):
     with session.client as client:
-        delizia_eckhart = client.debug.layout_type in (
+        delizia_eckhart = session.client.debug.layout_type in (
             LayoutType.Delizia,
             LayoutType.Eckhart,
         )
-        delizia = client.debug.layout_type is LayoutType.Delizia
+        delizia = session.client.debug.layout_type is LayoutType.Delizia
         client.set_expected_responses(
             [
                 messages.ButtonRequest(name="setup_device"),

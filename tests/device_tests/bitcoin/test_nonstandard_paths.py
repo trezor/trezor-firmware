@@ -117,7 +117,7 @@ def test_getaddress(
     for script_type in script_types:
         with session.client as client:
             if is_core(session):
-                IF = InputFlowConfirmAllWarnings(client)
+                IF = InputFlowConfirmAllWarnings(session.client)
                 client.set_input_flow(IF.get())
             res = btc.get_address(
                 session,
@@ -138,7 +138,7 @@ def test_signmessage(
     for script_type in script_types:
         with session.client as client:
             if is_core(session):
-                IF = InputFlowConfirmAllWarnings(client)
+                IF = InputFlowConfirmAllWarnings(session.client)
                 client.set_input_flow(IF.get())
 
             sig = btc.sign_message(
@@ -179,7 +179,7 @@ def test_signtx(
 
         with session.client as client:
             if is_core(session):
-                IF = InputFlowConfirmAllWarnings(client)
+                IF = InputFlowConfirmAllWarnings(session.client)
                 client.set_input_flow(IF.get())
             _, serialized_tx = btc.sign_tx(
                 session, "Bitcoin", [inp1], [out1], prev_txes={prevhash: prevtx}
@@ -206,7 +206,7 @@ def test_getaddress_multisig(
 
     with session.client as client:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         address = btc.get_address(
             session,
@@ -265,7 +265,7 @@ def test_signtx_multisig(session: Session, paths: list[str], address_index: list
 
     with session.client as client:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         sig, _ = btc.sign_tx(
             session, "Bitcoin", [inp1], [out1], prev_txes={prevhash: prevtx}

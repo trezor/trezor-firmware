@@ -59,7 +59,7 @@ def test_reset_recovery(client: Client):
 
 def reset(session: Session, strength: int = 128) -> list[str]:
     with session.client as client:
-        IF = InputFlowSlip39BasicResetRecovery(client)
+        IF = InputFlowSlip39BasicResetRecovery(session.client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -88,7 +88,7 @@ def reset(session: Session, strength: int = 128) -> list[str]:
 
 def recover(session: Session, shares: t.Sequence[str]):
     with session.client as client:
-        IF = InputFlowSlip39BasicRecovery(client, shares)
+        IF = InputFlowSlip39BasicRecovery(session.client, shares)
         client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
 

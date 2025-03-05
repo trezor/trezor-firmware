@@ -172,7 +172,7 @@ def test_descriptors(
     session: Session, coin, account, purpose, script_type, descriptors
 ):
     with session.client as client:
-        IF = InputFlowShowXpubQRCode(client)
+        IF = InputFlowShowXpubQRCode(session.client)
         client.set_input_flow(IF.get())
 
         address_n = _address_n(purpose, coin, account, script_type)
@@ -195,8 +195,8 @@ def test_descriptors_trezorlib(
     session: Session, coin, account, purpose, script_type, descriptors
 ):
     with session.client as client:
-        if client.model != models.T1B1:
-            IF = InputFlowShowXpubQRCode(client)
+        if session.client.model != models.T1B1:
+            IF = InputFlowShowXpubQRCode(session.client)
             client.set_input_flow(IF.get())
         res = btc_cli._get_descriptor(
             session, coin, account, purpose, script_type, show_display=True

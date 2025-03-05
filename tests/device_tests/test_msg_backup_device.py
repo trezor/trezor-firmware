@@ -45,7 +45,7 @@ def test_backup_bip39(session: Session):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.client as client:
-        IF = InputFlowBip39Backup(client)
+        IF = InputFlowBip39Backup(session.client)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -68,13 +68,13 @@ def test_backup_bip39(session: Session):
 def test_backup_slip39_basic(session: Session, click_info: bool):
     if click_info and session.client.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
-    if click_info and client.layout_type is LayoutType.Eckhart:
+    if click_info and session.client.layout_type is LayoutType.Eckhart:
         pytest.skip("click_info not yet implemented on T3W1")
 
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.client as client:
-        IF = InputFlowSlip39BasicBackup(client, click_info)
+        IF = InputFlowSlip39BasicBackup(session.client, click_info)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -99,7 +99,7 @@ def test_backup_slip39_single(session: Session):
 
     with session.client as client:
         IF = InputFlowBip39Backup(
-            client,
+            session.client,
             confirm_success=(
                 client.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart)
             ),
@@ -128,13 +128,13 @@ def test_backup_slip39_single(session: Session):
 def test_backup_slip39_advanced(session: Session, click_info: bool):
     if click_info and session.client.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
-    if click_info and client.layout_type is LayoutType.Eckhart:
+    if click_info and session.client.layout_type is LayoutType.Eckhart:
         pytest.skip("click_info not yet implemented on T3W1")
 
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.client as client:
-        IF = InputFlowSlip39AdvancedBackup(client, click_info)
+        IF = InputFlowSlip39AdvancedBackup(session.client, click_info)
         client.set_input_flow(IF.get())
         device.backup(session)
 
@@ -165,7 +165,7 @@ def test_backup_slip39_custom(session: Session, share_threshold, share_count):
     assert session.features.backup_availability == messages.BackupAvailability.Required
 
     with session.client as client:
-        IF = InputFlowSlip39CustomBackup(client, share_count)
+        IF = InputFlowSlip39CustomBackup(session.client, share_count)
         client.set_input_flow(IF.get())
         device.backup(
             session, group_threshold=1, groups=[(share_threshold, share_count)]

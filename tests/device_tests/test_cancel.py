@@ -40,8 +40,8 @@ def test_cancel_message_via_cancel(session: Session, message):
         yield
         session.cancel()
 
-    with session, session.client as client, pytest.raises(Cancelled):
-        session.set_expected_responses([m.ButtonRequest(), m.Failure()])
+    with session.client as client, pytest.raises(Cancelled):
+        client.set_expected_responses([m.ButtonRequest(), m.Failure()])
         client.set_input_flow(input_flow)
         session.call(message)
 
