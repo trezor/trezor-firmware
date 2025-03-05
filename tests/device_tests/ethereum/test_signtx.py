@@ -73,10 +73,10 @@ def _do_test_signtx(
     input_flow=None,
     chunkify: bool = False,
 ):
-    with session.client as client:
+    with session:
         if input_flow:
-            client.watch_layout()
-            client.set_input_flow(input_flow)
+            session.client.watch_layout()
+            session.set_input_flow(input_flow)
         sig_v, sig_r, sig_s = ethereum.sign_tx(
             session,
             n=parse_path(parameters["path"]),
@@ -151,9 +151,9 @@ def test_signtx_go_back_from_summary(session: Session):
 def test_signtx_eip1559(
     session: Session, chunkify: bool, parameters: dict, result: dict
 ):
-    with session, session.client as client:
-        if not client.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+    with session:
+        if not session.client.debug.legacy_debug:
+            session.set_input_flow(InputFlowConfirmAllWarnings(session.client).get())
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
             n=parse_path(parameters["path"]),
@@ -456,15 +456,15 @@ def test_signtx_data_pagination(session: Session, flow):
             data=bytes.fromhex(HEXDATA),
         )
 
-    with session, session.client as client:
-        client.watch_layout()
-        client.set_input_flow(flow(client))
+    with session:
+        session.client.watch_layout()
+        session.set_input_flow(flow(session.client))
         _sign_tx_call()
 
     if flow is not input_flow_data_scroll_down:
-        with session, session.client as client, pytest.raises(exceptions.Cancelled):
-            client.watch_layout()
-            client.set_input_flow(flow(client, cancel=True))
+        with session, pytest.raises(exceptions.Cancelled):
+            session.client.watch_layout()
+            session.set_input_flow(flow(session.client, cancel=True))
             _sign_tx_call()
 
 

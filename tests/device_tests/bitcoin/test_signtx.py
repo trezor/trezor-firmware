@@ -666,9 +666,9 @@ def test_fee_high_hardfail(session: Session):
     device.apply_settings(
         session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
-    with session.client as client:
-        IF = InputFlowSignTxHighFee(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSignTxHighFee(session.client)
+        session.set_input_flow(IF.get())
 
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET
@@ -1469,9 +1469,9 @@ def test_lock_time_blockheight(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
-        IF = InputFlowLockTimeBlockHeight(client, "499999999")
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowLockTimeBlockHeight(session.client, "499999999")
+        session.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1508,9 +1508,9 @@ def test_lock_time_datetime(session: Session, lock_time_str: str):
     lock_time_utc = lock_time_naive.replace(tzinfo=timezone.utc)
     lock_time_timestamp = int(lock_time_utc.timestamp())
 
-    with session.client as client:
-        IF = InputFlowLockTimeDatetime(client, lock_time_str)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowLockTimeDatetime(session.client, lock_time_str)
+        session.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1540,9 +1540,9 @@ def test_information(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
-        IF = InputFlowSignTxInformation(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSignTxInformation(session.client)
+        session.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1575,9 +1575,9 @@ def test_information_mixed(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client:
-        IF = InputFlowSignTxInformationMixed(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSignTxInformationMixed(session.client)
+        session.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1606,9 +1606,9 @@ def test_information_cancel(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session.client as client, pytest.raises(Cancelled):
-        IF = InputFlowSignTxInformationCancel(client)
-        client.set_input_flow(IF.get())
+    with session, pytest.raises(Cancelled):
+        IF = InputFlowSignTxInformationCancel(session.client)
+        session.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1656,9 +1656,9 @@ def test_information_replacement(session: Session):
         orig_index=0,
     )
 
-    with session.client as client:
-        IF = InputFlowSignTxInformationReplacement(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSignTxInformationReplacement(session.client)
+        session.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,

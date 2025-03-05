@@ -95,9 +95,11 @@ def test_cardano_get_address(session: Session, chunkify: bool, parameters, resul
     "cardano/get_public_key.derivations.json",
 )
 def test_cardano_get_public_key(session: Session, parameters, result):
-    with session, session.client as client:
-        IF = InputFlowShowXpubQRCode(client, passphrase=bool(session.passphrase))
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowShowXpubQRCode(
+            session.client, passphrase=bool(session.passphrase)
+        )
+        session.set_input_flow(IF.get())
         # session.init_device(new_session=True, derive_cardano=True)
 
         derivation_type = CardanoDerivationType.__members__[
