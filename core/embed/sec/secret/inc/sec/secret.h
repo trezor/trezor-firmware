@@ -1,5 +1,23 @@
-#ifndef TREZORHAL_SECRET_H
-#define TREZORHAL_SECRET_H
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#pragma once
 
 #include <trezor_types.h>
 
@@ -27,7 +45,7 @@ secbool secret_read(uint8_t* data, uint32_t offset, uint32_t len);
 // Checks if the secret storage has been wiped
 secbool secret_wiped(void);
 
-// Verifies that the secret storage has correct header
+// Verifies that the secret storage has the correct header
 secbool secret_verify_header(void);
 
 // Erases the entire secret storage
@@ -69,7 +87,8 @@ void secret_bhk_regenerate(void);
 // Provisions secrets/keys to the firmware, depending on the trust level
 // Disables access to the secret storage until next reset, if possible
 // This function is called by the bootloader before starting the firmware
-void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all);
+void secret_prepare_fw(secbool allow_run_with_secret,
+                       secbool allow_provisioning_access);
 
 // Prepares the secret storage for running the boardloader and next stages
 // Ensures that secret storage access is enabled
@@ -82,5 +101,3 @@ void secret_init(void);
 // pairing secret on platforms where access to the secret storage cannot be
 // restricted for unofficial firmware
 secbool secret_bootloader_locked(void);
-
-#endif  // TREZORHAL_SECRET_H
