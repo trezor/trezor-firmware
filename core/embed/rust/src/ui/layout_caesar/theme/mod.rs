@@ -42,9 +42,15 @@ pub const TEXT_MONO: TextStyle = TextStyle::new(fonts::FONT_MONO, FG, BG, FG, FG
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_NEXT_PAGE, ELLIPSIS_ICON_MARGIN)
     .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
+pub const TEXT_MONO_WITH_CLASSIC_ELLIPSIS: TextStyle =
+    TextStyle::new(fonts::FONT_MONO, FG, BG, FG, FG)
+        .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
+        .with_prev_page_icon(ICON_PREV_PAGE, PREV_PAGE_ICON_MARGIN);
 /// Mono data text does not have hyphens
 pub const TEXT_MONO_DATA: TextStyle =
     TEXT_MONO.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+pub const TEXT_MONO_DATA_WITH_CLASSIC_ELLIPSIS: TextStyle =
+    TEXT_MONO_WITH_CLASSIC_ELLIPSIS.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_DATA
     .with_chunks(MONO_CHUNKS)
     .with_line_spacing(2)
