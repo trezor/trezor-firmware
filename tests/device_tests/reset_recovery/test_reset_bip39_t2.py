@@ -36,9 +36,9 @@ pytestmark = pytest.mark.models("core")
 
 def reset_device(session: Session, strength: int):
     debug = session.client.debug
-    with session.client as client:
-        IF = InputFlowBip39ResetBackup(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowBip39ResetBackup(session.client)
+        session.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.setup(
@@ -92,9 +92,9 @@ def test_reset_device_pin(session: Session):
     debug = session.client.debug
     strength = 256  # 24 words
 
-    with session.client as client:
-        IF = InputFlowBip39ResetPIN(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowBip39ResetPIN(session.client)
+        session.set_input_flow(IF.get())
 
         # PIN, passphrase, display random
         device.setup(
@@ -130,9 +130,9 @@ def test_reset_device_pin(session: Session):
 def test_reset_entropy_check(session: Session):
     strength = 128  # 12 words
 
-    with session.client as client:
-        IF = InputFlowBip39ResetBackup(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowBip39ResetBackup(session.client)
+        session.set_input_flow(IF.get())
 
         # No PIN, no passphrase
         path_xpubs = device.setup(
@@ -147,7 +147,7 @@ def test_reset_entropy_check(session: Session):
         )
 
     # Generate the mnemonic locally.
-    internal_entropy = client.debug.state().reset_entropy
+    internal_entropy = session.client.debug.state().reset_entropy
     assert internal_entropy is not None
     entropy = generate_entropy(strength, internal_entropy, EXTERNAL_ENTROPY)
     expected_mnemonic = Mnemonic("english").to_mnemonic(entropy)
@@ -156,7 +156,7 @@ def test_reset_entropy_check(session: Session):
     assert IF.mnemonic == expected_mnemonic
 
     # Check that the device is properly initialized.
-    if client.protocol_version is ProtocolVersion.PROTOCOL_V1:
+    if session.client.protocol_version is ProtocolVersion.PROTOCOL_V1:
         features = session.call_raw(messages.Initialize())
     else:
         session.refresh_features()
@@ -181,9 +181,9 @@ def test_reset_failed_check(session: Session):
     debug = session.client.debug
     strength = 256  # 24 words
 
-    with session.client as client:
-        IF = InputFlowBip39ResetFailedCheck(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowBip39ResetFailedCheck(session.client)
+        session.set_input_flow(IF.get())
 
         # PIN, passphrase, display random
         device.setup(

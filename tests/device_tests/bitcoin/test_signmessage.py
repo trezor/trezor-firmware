@@ -327,9 +327,9 @@ def test_signmessage_long(
     message: str,
     signature: str,
 ):
-    with session.client as client:
-        IF = InputFlowSignVerifyMessageLong(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSignVerifyMessageLong(session.client)
+        session.set_input_flow(IF.get())
         sig = btc.sign_message(
             session,
             coin_name=coin_name,
@@ -356,9 +356,9 @@ def test_signmessage_info(
     message: str,
     signature: str,
 ):
-    with session.client as client, pytest.raises(Cancelled):
-        IF = InputFlowSignMessageInfo(client)
-        client.set_input_flow(IF.get())
+    with session, pytest.raises(Cancelled):
+        IF = InputFlowSignMessageInfo(session.client)
+        session.set_input_flow(IF.get())
         sig = btc.sign_message(
             session,
             coin_name=coin_name,
@@ -390,13 +390,13 @@ MESSAGE_LENGTHS = (
 @pytest.mark.models("core")
 @pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS)
 def test_signmessage_pagination(session: Session, message: str, is_long: bool):
-    with session.client as client:
+    with session:
         IF = (
             InputFlowSignVerifyMessageLong
             if is_long
             else InputFlowSignMessagePagination
-        )(client)
-        client.set_input_flow(IF.get())
+        )(session.client)
+        session.set_input_flow(IF.get())
         btc.sign_message(
             session,
             coin_name="Bitcoin",
@@ -438,7 +438,7 @@ def test_signmessage_pagination_trailing_newline(session: Session):
 def test_signmessage_path_warning(session: Session):
     message = "This is an example of a signed message."
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(
             [
                 # expect a path warning
@@ -451,8 +451,8 @@ def test_signmessage_path_warning(session: Session):
             ]
         )
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         btc.sign_message(
             session,
             coin_name="Bitcoin",
