@@ -32,9 +32,9 @@ from ...input_flows import (
 
 
 def backup_flow_bip39(session: Session) -> bytes:
-    with session.client as client:
-        IF = InputFlowBip39Backup(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowBip39Backup(session.client)
+        session.set_input_flow(IF.get())
         device.backup(session)
 
     assert IF.mnemonic is not None
@@ -42,9 +42,9 @@ def backup_flow_bip39(session: Session) -> bytes:
 
 
 def backup_flow_slip39_basic(session: Session):
-    with session.client as client:
-        IF = InputFlowSlip39BasicBackup(client, False)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicBackup(session.client, False)
+        session.set_input_flow(IF.get())
         device.backup(session)
 
     groups = shamir.decode_mnemonics(IF.mnemonics[:3])
@@ -53,9 +53,9 @@ def backup_flow_slip39_basic(session: Session):
 
 
 def backup_flow_slip39_advanced(session: Session):
-    with session.client as client:
-        IF = InputFlowSlip39AdvancedBackup(client, False)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39AdvancedBackup(session.client, False)
+        session.set_input_flow(IF.get())
         device.backup(session)
 
     mnemonics = IF.mnemonics[0:3] + IF.mnemonics[5:8] + IF.mnemonics[10:13]
@@ -116,9 +116,9 @@ def test_skip_backup_msg(session: Session, backup_type, backup_flow):
 def test_skip_backup_manual(session: Session, backup_type: BackupType, backup_flow):
     assert session.features.initialized is False
 
-    with session, session.client as client:
-        IF = InputFlowResetSkipBackup(client)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowResetSkipBackup(session.client)
+        session.set_input_flow(IF.get())
         device.setup(
             session,
             pin_protection=False,

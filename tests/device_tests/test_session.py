@@ -41,7 +41,7 @@ def test_clear_session(client: Client):
     cached_responses = [messages.PublicKey]
     session = client.get_session()
     session.lock()
-    with client, session:
+    with session:
         client.use_pin_sequence([PIN4])
         session.set_expected_responses(init_responses + cached_responses)
         assert get_public_node(session, ADDRESS_N).xpub == XPUB
@@ -57,7 +57,7 @@ def test_clear_session(client: Client):
     session = client.get_session()
 
     # session cache is cleared
-    with client, session:
+    with session:
         client.use_pin_sequence([PIN4])
         session.set_expected_responses(init_responses + cached_responses)
         assert get_public_node(session, ADDRESS_N).xpub == XPUB
@@ -76,7 +76,7 @@ def test_end_session(client: Client):
     assert session.id is not None
 
     # get_address will succeed
-    with session:
+    with session as session:
         session.set_expected_responses([messages.Address])
         get_test_address(session)
 
@@ -135,7 +135,7 @@ def test_end_session_only_current(client: Client):
 @pytest.mark.setup_client(passphrase=True)
 def test_session_recycling(client: Client):
     session = client.get_session(passphrase="TREZOR")
-    with client, session:
+    with session:
         session.set_expected_responses(
             [
                 messages.PassphraseRequest,
@@ -152,7 +152,7 @@ def test_session_recycling(client: Client):
         session_x.end()
 
     # it should still be possible to resume the original session
-    with client, session:
+    with session:
         # passphrase should still be cached
         session.set_expected_responses([messages.Address] * 3)
         client.resume_session(session)

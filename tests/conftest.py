@@ -288,7 +288,7 @@ def _client_unlocked(
 
     test_ui = request.config.getoption("ui")
 
-    _raw_client.reset_debug_features()
+    # _raw_client.reset_debug_features()
     if isinstance(_raw_client.protocol, ProtocolV1Channel):
         try:
             _raw_client.sync_responses()

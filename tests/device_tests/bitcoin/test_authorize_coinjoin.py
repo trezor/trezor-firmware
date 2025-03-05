@@ -65,8 +65,8 @@ def test_sign_tx(session: Session, chunkify: bool):
     assert session.features.unlocked is False
     commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
 
-    with session.client as client:
-        client.use_pin_sequence([PIN])
+    with session:
+        session.client.use_pin_sequence([PIN])
         btc.authorize_coinjoin(
             session,
             coordinator="www.example.com",
