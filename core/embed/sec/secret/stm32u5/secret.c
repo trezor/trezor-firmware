@@ -1,3 +1,22 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -316,7 +335,8 @@ void secret_erase(void) {
   mpu_restore(mpu_mode);
 }
 
-void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
+void secret_prepare_fw(secbool allow_run_with_secret,
+                       secbool allow_provisioning_access) {
   /**
    * The BHK is copied to the backup registers, which are accessible by the SAES
    * peripheral. The BHK register is locked, so the BHK can't be accessed by the
@@ -336,7 +356,7 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
   secret_optiga_uncache();
   secbool optiga_secret_present = secret_optiga_present();
   secbool optiga_secret_writable = secret_optiga_writable();
-  if (sectrue == trust_all && sectrue == allow_run_with_secret &&
+  if (sectrue == allow_provisioning_access &&
       sectrue == optiga_secret_writable && secfalse == optiga_secret_present) {
     // Secret is not present and the secret sector is writable.
     // This means the U5 chip is unprovisioned.
@@ -350,17 +370,13 @@ void secret_prepare_fw(secbool allow_run_with_secret, secbool trust_all) {
   }
   // Disable access unconditionally.
   secret_disable_access();
-  if (sectrue != trust_all && sectrue == optiga_secret_present) {
+  if (sectrue != allow_run_with_secret && sectrue == optiga_secret_present) {
     // Untrusted firmware, locked bootloader. Show the restricted screen.
     show_install_restricted_screen();
   }
 #else
   secret_disable_access();
 #endif
-
-  if (sectrue != trust_all) {
-    secret_disable_access();
-  }
 }
 
 void secret_init(void) {

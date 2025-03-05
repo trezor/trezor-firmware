@@ -1,0 +1,1 @@
+Allow running firmware on locked bootloader device based on allow_run_with_secret flag.
