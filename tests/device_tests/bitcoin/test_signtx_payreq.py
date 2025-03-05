@@ -204,7 +204,7 @@ def test_payment_request_details(session: Session):
     ]
 
     with session.client as client:
-        IF = InputFlowPaymentRequestDetails(client, outputs)
+        IF = InputFlowPaymentRequestDetails(session.client, outputs)
         client.set_input_flow(IF.get())
 
         _, serialized_tx = btc.sign_tx(

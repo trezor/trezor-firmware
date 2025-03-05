@@ -50,15 +50,17 @@ class InputFlowBase:
 
         # There could be one common input flow for all models
         if hasattr(self, "input_flow_common"):
-            return getattr(self, "input_flow_common")
+            flow = getattr(self, "input_flow_common")
         elif self.client.layout_type is LayoutType.Bolt:
-            return self.input_flow_bolt
+            flow = self.input_flow_bolt
         elif self.client.layout_type is LayoutType.Caesar:
-            return self.input_flow_caesar
+            flow = self.input_flow_caesar
         elif self.client.layout_type is LayoutType.Delizia:
-            return self.input_flow_delizia
+            flow = self.input_flow_delizia
         else:
             raise ValueError("Unknown model")
+
+        return flow
 
     def input_flow_bolt(self) -> BRGeneratorType:
         """Special for TT"""
@@ -371,7 +373,7 @@ class InputFlowSignMessageInfo(InputFlowBase):
         self.debug.click(self.client.debug.screen_buttons.vertical_menu_items()[1])
         # address mismatch? yes!
         self.debug.swipe_up()
-        yield
+        yield  # ?
 
 
 class InputFlowShowAddressQRCode(InputFlowBase):

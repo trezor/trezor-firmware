@@ -101,8 +101,8 @@ def test_2_of_3(session: Session, chunkify: bool):
         request_finished(),
     ]
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
 
         # Now we have first signature
         signatures1, _ = btc.sign_tx(
@@ -143,8 +143,8 @@ def test_2_of_3(session: Session, chunkify: bool):
         multisig=multisig,
     )
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         signatures2, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp3], [out1], prev_txes=TX_API_TESTNET
         )
@@ -362,7 +362,7 @@ def test_15_of_15(session: Session):
             multisig=multisig,
         )
 
-        with session:
+        with session.client:
             sig, serialized_tx = btc.sign_tx(
                 session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
             )
@@ -424,6 +424,7 @@ def test_attack_change_input(session: Session):
     attacker to provide a 1-of-2 multisig change address. When `input_real`
     is provided in the signing phase, an error must occur.
     """
+    client = session.client
     address_n = parse_path("m/48h/1h/0h/1h/0/0")  # 2NErUdruXmM8o8bQySrzB3WdBRcmc5br4E8
     attacker_multisig_public_key = bytes.fromhex(
         "03653a148b68584acb97947344a7d4fd6a6f8b8485cad12987ff8edac874268088"
@@ -475,7 +476,7 @@ def test_attack_change_input(session: Session):
     )
 
     # Transaction can be signed without the attack processor
-    with session.client as client:
+    with client:
         if is_core(session):
             IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
@@ -497,8 +498,8 @@ def test_attack_change_input(session: Session):
             attack_count -= 1
         return msg
 
-    with session:
-        session.set_filter(messages.TxAck, attack_processor)
+    with client:
+        client.set_filter(messages.TxAck, attack_processor)
         with pytest.raises(TrezorFailure):
             btc.sign_tx(
                 session,

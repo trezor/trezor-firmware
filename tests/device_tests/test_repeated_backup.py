@@ -34,12 +34,13 @@ pytestmark = pytest.mark.models("core")
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_repeated_backup(session: Session):
+    client = session.client
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicBackup(client, False)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -56,7 +57,7 @@ def test_repeated_backup(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
             client, mnemonics[:3], unlock_repeated_backup=True
         )
@@ -69,7 +70,7 @@ def test_repeated_backup(session: Session):
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we can now perform another backup
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -85,6 +86,7 @@ def test_repeated_backup(session: Session):
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_SINGLE_EXT_20)
 def test_repeated_backup_upgrade_single(session: Session):
+    client = session.client
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
@@ -92,7 +94,7 @@ def test_repeated_backup_upgrade_single(session: Session):
     assert session.features.backup_type == messages.BackupType.Slip39_Single_Extendable
 
     # unlock repeated backup by entering the single share
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
             client, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
         )
@@ -105,7 +107,7 @@ def test_repeated_backup_upgrade_single(session: Session):
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we can now perform another backup
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -123,12 +125,13 @@ def test_repeated_backup_upgrade_single(session: Session):
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_repeated_backup_cancel(session: Session):
+    client = session.client
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicBackup(client, False)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -145,7 +148,7 @@ def test_repeated_backup_cancel(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
             client, mnemonics[:3], unlock_repeated_backup=True
         )
@@ -157,7 +160,7 @@ def test_repeated_backup_cancel(session: Session):
         )
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
-    layout = session.client.debug.read_layout()
+    layout = client.debug.read_layout()
     assert TR.recovery__unlock_repeated_backup in layout.text_content()
 
     # send a Cancel message
@@ -178,12 +181,13 @@ def test_repeated_backup_cancel(session: Session):
 
 @pytest.mark.setup_client(needs_backup=True, mnemonic=MNEMONIC_SLIP39_BASIC_20_3of6)
 def test_repeated_backup_send_disallowed_message(session: Session):
+    client = session.client
     assert session.features.backup_availability == messages.BackupAvailability.Required
     assert session.features.recovery_status == messages.RecoveryStatus.Nothing
 
     # initial device backup
     mnemonics = []
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicBackup(client, False)
         client.set_input_flow(IF.get())
         device.backup(session)
@@ -200,7 +204,7 @@ def test_repeated_backup_send_disallowed_message(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with session, session.client as client:
+    with client:
         IF = InputFlowSlip39BasicRecoveryDryRun(
             client, mnemonics[:3], unlock_repeated_backup=True
         )
@@ -212,7 +216,7 @@ def test_repeated_backup_send_disallowed_message(session: Session):
         )
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
-    layout = session.client.debug.read_layout()
+    layout = client.debug.read_layout()
     assert TR.recovery__unlock_repeated_backup in layout.text_content()
 
     # send a GetAddress message
@@ -233,8 +237,7 @@ def test_repeated_backup_send_disallowed_message(session: Session):
 
     # we are still on the confirmation screen!
     assert (
-        TR.recovery__unlock_repeated_backup
-        in session.client.debug.read_layout().text_content()
+        TR.recovery__unlock_repeated_backup in client.debug.read_layout().text_content()
     )
     with pytest.raises(exceptions.Cancelled):
         session.call(messages.Cancel())

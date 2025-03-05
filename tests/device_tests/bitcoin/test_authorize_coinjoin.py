@@ -66,7 +66,7 @@ def test_sign_tx(session: Session, chunkify: bool):
     commitment_data = b"\x0fwww.example.com" + (1).to_bytes(ROUND_ID_LEN, "big")
 
     with session.client as client:
-        client.use_pin_sequence([PIN])
+        session.client.use_pin_sequence([PIN])
         btc.authorize_coinjoin(
             session,
             coordinator="www.example.com",
@@ -80,8 +80,8 @@ def test_sign_tx(session: Session, chunkify: bool):
 
     session.call(messages.LockDevice())
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
         btc.get_ownership_proof(
@@ -94,8 +94,8 @@ def test_sign_tx(session: Session, chunkify: bool):
             preauthorized=True,
         )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [messages.PreauthorizedRequest, messages.OwnershipProof]
         )
         btc.get_ownership_proof(
@@ -207,8 +207,8 @@ def test_sign_tx(session: Session, chunkify: bool):
         no_fee_indices=[],
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.PreauthorizedRequest(),
                 request_input(0),
@@ -452,8 +452,8 @@ def test_sign_tx_spend(session: Session):
             prev_txes=TX_CACHE_TESTNET,
         )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
@@ -526,8 +526,8 @@ def test_sign_tx_migration(session: Session):
             prev_txes=TX_CACHE_TESTNET,
         )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
@@ -666,8 +666,8 @@ def test_get_public_key(session: Session):
         )
 
     # Get unlock path MAC.
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
@@ -689,8 +689,8 @@ def test_get_public_key(session: Session):
         )
 
     # Ensure that user does not need to confirm access when path unlock is requested with MAC.
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.UnlockedPathRequest,
                 messages.PublicKey,
@@ -720,8 +720,8 @@ def test_get_address(session: Session):
         )
 
     # Unlock CoinJoin path.
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(code=B.Other),
                 messages.UnlockedPathRequest,
