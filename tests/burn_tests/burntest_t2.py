@@ -56,7 +56,7 @@ def pin_input_flow(client: Client, old_pin: str, new_pin: str):
 if __name__ == "__main__":
     wirelink = get_device()
     client = Client(wirelink)
-    client.open()
+    session = client.get_seedless_session()
 
     i = 0
 
@@ -83,3 +83,5 @@ if __name__ == "__main__":
 
         print(f"iteration {i}")
         i = i + 1
+
+    wirelink.close()

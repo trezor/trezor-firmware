@@ -69,7 +69,7 @@ def test_reset_recovery(client: Client):
 
 def reset(session: Session, strength: int = 128) -> list[str]:
     with session.client as client:
-        IF = InputFlowSlip39AdvancedResetRecovery(client, False)
+        IF = InputFlowSlip39AdvancedResetRecovery(session.client, False)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random

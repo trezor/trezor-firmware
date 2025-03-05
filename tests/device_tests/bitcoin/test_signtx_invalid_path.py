@@ -82,7 +82,7 @@ def test_invalid_path_prompt(session: Session):
 
     with session.client as client:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
 
         btc.sign_tx(session, "Litecoin", [inp1], [out1], prev_txes=PREV_TXES)
@@ -108,7 +108,7 @@ def test_invalid_path_pass_forkid(session: Session):
 
     with session.client as client:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
 
         btc.sign_tx(session, "Bcash", [inp1], [out1], prev_txes=PREV_TXES)
@@ -178,8 +178,8 @@ def test_attack_path_segwit(session: Session):
 
         return msg
 
-    with session:
-        session.set_filter(messages.TxAck, attack_processor)
+    with session.client as client:
+        client.set_filter(messages.TxAck, attack_processor)
         with pytest.raises(TrezorFailure):
             btc.sign_tx(
                 session, "Testnet", [inp1, inp2], [out1], prev_txes={prev_hash: prev_tx}
@@ -202,8 +202,8 @@ def test_invalid_path_fail_asap(session: Session):
         script_type=messages.OutputScriptType.PAYTOWITNESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 messages.Failure(code=messages.FailureType.DataError),

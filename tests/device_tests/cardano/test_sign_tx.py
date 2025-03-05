@@ -63,7 +63,7 @@ def test_cardano_sign_tx(session: Session, parameters, result):
     response = call_sign_tx(
         session,
         parameters,
-        input_flow=lambda client: InputFlowConfirmAllWarnings(client).get(),
+        input_flow=lambda client: InputFlowConfirmAllWarnings(session.client).get(),
     )
     assert response == _transform_expected_result(result)
 
@@ -124,8 +124,8 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
 
     with session.client as client:
         if input_flow is not None:
-            client.watch_layout()
-            client.set_input_flow(input_flow(client))
+            session.client.watch_layout()
+            client.set_input_flow(input_flow(session.client))
 
         return cardano.sign_tx(
             session=session,
