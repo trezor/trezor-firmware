@@ -221,5 +221,13 @@ function createRowDiff(row) {
     row.querySelector("td:nth-child(3)").replaceChildren(difImg)
 }
 
+function showAllHidden() {
+    for (let elem of Array.from(document.getElementsByClassName("hidden"))) {
+        elem.classList.remove("hidden");
+    }
+    for (let elem of Array.from(document.getElementsByClassName("showLink"))) {
+        elem.remove();
+    }
+}
 
 window.onload = onLoad
