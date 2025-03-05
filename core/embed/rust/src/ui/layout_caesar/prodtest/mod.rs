@@ -29,7 +29,7 @@ impl ProdtestUI for UICaesar {
         display::refresh();
     }
 
-    fn screen_prodtest_info(id: &str, date: &str) {
+    fn screen_prodtest_info(id: &str) {
         display::sync();
         let qr = Qr::new(id, true);
         let mut qr = unwrap!(qr).with_border(1);
@@ -43,7 +43,7 @@ impl ProdtestUI for UICaesar {
         render_on_display(None, Some(Color::black()), |target| {
             qr.render(target);
 
-            shape::Text::new(screen().bottom_center(), date, fonts::FONT_BOLD_UPPER)
+            shape::Text::new(screen().bottom_center(), id, fonts::FONT_BOLD_UPPER)
                 .with_fg(Color::white())
                 .with_align(Alignment::Center)
                 .render(target);

@@ -1,7 +1,6 @@
 #include <trezor_types.h>
 
-void screen_prodtest_info(char* id, uint8_t id_len, char* date,
-                          uint8_t date_len);
+void screen_prodtest_info(char* id, uint8_t id_len);
 
 void screen_prodtest_welcome(void);
 
