@@ -23,7 +23,7 @@
 #include <rtl/cli.h>
 #include <util/flash_otp.h>
 
-static void prodtest_otp_batch_read(cli_t* cli) {
+static void prodtest_otp_read(cli_t* cli, uint8_t block_num) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -33,8 +33,7 @@ static void prodtest_otp_batch_read(cli_t* cli) {
 
   cli_trace(cli, "Reading device OTP memory...");
 
-  if (sectrue !=
-      flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, block, sizeof(block))) {
+  if (sectrue != flash_otp_read(block_num, 0, block, sizeof(block))) {
     cli_error(cli, CLI_ERROR, "Failed to read OTP memory.");
     return;
   }
@@ -64,7 +63,7 @@ static void prodtest_otp_batch_read(cli_t* cli) {
   }
 }
 
-static void prodtest_otp_batch_write(cli_t* cli) {
+static void prodtest_otp_write(cli_t* cli, uint8_t block_num) {
   const char* data = cli_arg(cli, "text");
 
   if (strlen(data) == 0 || strlen(data) > FLASH_OTP_BLOCK_SIZE - 1) {
@@ -111,18 +110,17 @@ static void prodtest_otp_batch_write(cli_t* cli) {
     return;
   }
 
-  if (sectrue == flash_otp_is_locked(FLASH_OTP_BLOCK_BATCH)) {
+  if (sectrue == flash_otp_is_locked(block_num)) {
     cli_error(cli, CLI_ERROR_LOCKED,
               "OTP block is locked and cannot be written again.");
     return;
   }
 
-  cli_trace(cli, "Writing device batch info into OTP memory...");
+  cli_trace(cli, "Writing info into OTP memory...");
   cli_trace(cli, "Bytes written: %s", block_hex);
 
   if (!dry_run) {
-    if (sectrue !=
-        flash_otp_write(FLASH_OTP_BLOCK_BATCH, 0, block, sizeof(block))) {
+    if (sectrue != flash_otp_write(block_num, 0, block, sizeof(block))) {
       cli_error(cli, CLI_ERROR, "Failed to write OTP block.");
       return;
     }
@@ -131,7 +129,7 @@ static void prodtest_otp_batch_write(cli_t* cli) {
   cli_trace(cli, "Locking OTP block...");
 
   if (!dry_run) {
-    if (sectrue != flash_otp_lock(FLASH_OTP_BLOCK_BATCH)) {
+    if (sectrue != flash_otp_lock(block_num)) {
       cli_error(cli, CLI_ERROR, "Failed to lock the OTP block.");
       return;
     }
@@ -139,6 +137,22 @@ static void prodtest_otp_batch_write(cli_t* cli) {
 
   // Respond with an OK message
   cli_ok(cli, "");
+}
+
+static void prodtest_otp_batch_read(cli_t* cli) {
+  prodtest_otp_read(cli, FLASH_OTP_BLOCK_BATCH);
+}
+
+static void prodtest_otp_batch_write(cli_t* cli) {
+  prodtest_otp_write(cli, FLASH_OTP_BLOCK_BATCH);
+}
+
+static void prodtest_otp_device_id_read(cli_t* cli) {
+  prodtest_otp_read(cli, FLASH_OTP_BLOCK_DEVICE_ID);
+}
+
+static void prodtest_otp_device_id_write(cli_t* cli) {
+  prodtest_otp_write(cli, FLASH_OTP_BLOCK_DEVICE_ID);
 }
 
 // clang-format off
@@ -154,5 +168,19 @@ PRODTEST_CLI_CMD(
   .name = "otp-batch-write",
   .func = prodtest_otp_batch_write,
   .info = "Write the device batch info into OTP memory",
+  .args = "<text> [--execute | --dry-run]"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "otp-device-id-read",
+  .func = prodtest_otp_device_id_read,
+  .info = "Read the device ID from OTP memory",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "otp-device-id-write",
+  .func = prodtest_otp_device_id_write,
+  .info = "Write the device ID into OTP memory",
   .args = "<text> [--execute | --dry-run]"
 );
