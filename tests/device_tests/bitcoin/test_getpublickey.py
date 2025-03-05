@@ -120,7 +120,7 @@ def test_get_public_node(session: Session, coin_name, xpub_magic, path, xpub):
 @pytest.mark.parametrize("coin_name, xpub_magic, path, xpub", VECTORS_BITCOIN)
 def test_get_public_node_show(session: Session, coin_name, xpub_magic, path, xpub):
     with session.client as client:
-        IF = InputFlowShowXpubQRCode(client)
+        IF = InputFlowShowXpubQRCode(session.client)
         client.set_input_flow(IF.get())
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
@@ -158,7 +158,7 @@ def test_get_public_node_show_legacy(
         client.debug.press_yes()  # finish the flow
         yield
 
-    with client:
+    with session.client as client:
         # test XPUB display flow (without showing QR code)
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub

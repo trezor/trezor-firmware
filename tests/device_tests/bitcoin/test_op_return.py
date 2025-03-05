@@ -63,8 +63,8 @@ def test_opreturn(session: Session):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -110,8 +110,8 @@ def test_nonzero_opreturn(session: Session):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [request_input(0), request_output(0), messages.Failure()]
         )
 
@@ -136,8 +136,8 @@ def test_opreturn_address(session: Session):
         script_type=messages.OutputScriptType.PAYTOOPRETURN,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [request_input(0), request_output(0), messages.Failure()]
         )
         with pytest.raises(
