@@ -38,8 +38,8 @@ def pin_request(session: Session):
 
 
 def set_autolock_delay(session: Session, delay):
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses(
             [
                 pin_request(session),
@@ -61,8 +61,8 @@ def test_apply_auto_lock_delay(session: Session):
         get_test_address(session)
 
     time.sleep(10.5)  # sleep more than auto-lock delay
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses([pin_request(session), messages.Address])
         get_test_address(session)
 
@@ -85,8 +85,8 @@ def test_apply_auto_lock_delay_valid(session: Session, seconds):
 
 def test_autolock_default_value(session: Session):
     assert session.features.auto_lock_delay_ms is None
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         device.apply_settings(session, label="pls unlock")
         session.refresh_features()
     assert session.features.auto_lock_delay_ms == 60 * 10 * 1000
@@ -98,8 +98,8 @@ def test_autolock_default_value(session: Session):
 )
 def test_apply_auto_lock_delay_out_of_range(session: Session, seconds):
 
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
+    with session:
+        session.client.use_pin_sequence([PIN4])
         session.set_expected_responses(
             [
                 pin_request(session),

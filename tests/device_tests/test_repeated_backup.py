@@ -39,9 +39,9 @@ def test_repeated_backup(session: Session):
 
     # initial device backup
     mnemonics = []
-    with session, session.client as client:
-        IF = InputFlowSlip39BasicBackup(client, False)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicBackup(session.client, False)
+        session.set_input_flow(IF.get())
         device.backup(session)
         mnemonics = IF.mnemonics
 
@@ -56,11 +56,11 @@ def test_repeated_backup(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, mnemonics[:3], unlock_repeated_backup=True
+            session.client, mnemonics[:3], unlock_repeated_backup=True
         )
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             session.features.backup_availability
@@ -69,9 +69,9 @@ def test_repeated_backup(session: Session):
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we can now perform another backup
-    with session, session.client as client:
-        IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicBackup(session.client, False, repeated=True)
+        session.set_input_flow(IF.get())
         device.backup(session)
 
     # the backup feature is locked again...
@@ -92,11 +92,11 @@ def test_repeated_backup_upgrade_single(session: Session):
     assert session.features.backup_type == messages.BackupType.Slip39_Single_Extendable
 
     # unlock repeated backup by entering the single share
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
+            session.client, MNEMONIC_SLIP39_SINGLE_EXT_20, unlock_repeated_backup=True
         )
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             session.features.backup_availability
@@ -105,9 +105,9 @@ def test_repeated_backup_upgrade_single(session: Session):
         assert session.features.recovery_status == messages.RecoveryStatus.Backup
 
     # we can now perform another backup
-    with session, session.client as client:
-        IF = InputFlowSlip39BasicBackup(client, False, repeated=True)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicBackup(session.client, False, repeated=True)
+        session.set_input_flow(IF.get())
         device.backup(session)
 
     # backup type was upgraded:
@@ -128,9 +128,9 @@ def test_repeated_backup_cancel(session: Session):
 
     # initial device backup
     mnemonics = []
-    with session, session.client as client:
-        IF = InputFlowSlip39BasicBackup(client, False)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicBackup(session.client, False)
+        session.set_input_flow(IF.get())
         device.backup(session)
         mnemonics = IF.mnemonics
 
@@ -145,11 +145,11 @@ def test_repeated_backup_cancel(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, mnemonics[:3], unlock_repeated_backup=True
+            session.client, mnemonics[:3], unlock_repeated_backup=True
         )
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             session.features.backup_availability
@@ -183,9 +183,9 @@ def test_repeated_backup_send_disallowed_message(session: Session):
 
     # initial device backup
     mnemonics = []
-    with session, session.client as client:
-        IF = InputFlowSlip39BasicBackup(client, False)
-        client.set_input_flow(IF.get())
+    with session:
+        IF = InputFlowSlip39BasicBackup(session.client, False)
+        session.set_input_flow(IF.get())
         device.backup(session)
         mnemonics = IF.mnemonics
 
@@ -200,11 +200,11 @@ def test_repeated_backup_send_disallowed_message(session: Session):
         device.backup(session)
 
     # unlock repeated backup by entering 3 of the 5 shares we have got
-    with session, session.client as client:
+    with session:
         IF = InputFlowSlip39BasicRecoveryDryRun(
-            client, mnemonics[:3], unlock_repeated_backup=True
+            session.client, mnemonics[:3], unlock_repeated_backup=True
         )
-        client.set_input_flow(IF.get())
+        session.set_input_flow(IF.get())
         device.recover(session, type=messages.RecoveryType.UnlockRepeatedBackup)
         assert (
             session.features.backup_availability

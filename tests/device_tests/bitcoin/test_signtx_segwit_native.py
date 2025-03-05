@@ -611,11 +611,11 @@ def test_send_multisig_3_change(session: Session):
         request_finished(),
     ]
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -626,11 +626,11 @@ def test_send_multisig_3_change(session: Session):
     inp1.address_n[2] = H_(3)
     out1.address_n[2] = H_(3)
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -703,11 +703,11 @@ def test_send_multisig_4_change(session: Session):
         request_finished(),
     ]
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -718,11 +718,11 @@ def test_send_multisig_4_change(session: Session):
     inp1.address_n[2] = H_(3)
     out1.address_n[2] = H_(3)
 
-    with session, session.client as client:
+    with session:
         session.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
-            client.set_input_flow(IF.get())
+            IF = InputFlowConfirmAllWarnings(session.client)
+            session.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )

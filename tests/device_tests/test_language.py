@@ -79,9 +79,9 @@ def _check_ping_screen_texts(session: Session, title: str, right_button: str) ->
     if session.model in (models.T2T1, models.T3T1):
         right_button = "-"
 
-    with session, session.client as client:
-        client.watch_layout(True)
-        client.set_input_flow(ping_input_flow(session, title, right_button))
+    with session:
+        session.client.watch_layout(True)
+        session.set_input_flow(ping_input_flow(session, title, right_button))
         ping = session.call(messages.Ping(message="ahoj!", button_protection=True))
         assert ping == messages.Success(message="ahoj!")
 
@@ -274,8 +274,8 @@ def test_reject_update(session: Session):
         yield
         session.client.debug.press_no()
 
-    with pytest.raises(exceptions.Cancelled), session, session.client as client:
-        client.set_input_flow(input_flow_reject)
+    with pytest.raises(exceptions.Cancelled), session:
+        session.set_input_flow(input_flow_reject)
         device.change_language(session, language_data)
 
     assert session.features.language == "en-US"
