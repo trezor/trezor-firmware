@@ -115,7 +115,8 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
     if (i == IFACE_BLE_EVENT) {
       switch (e.event.ble_event.type) {
         case BLE_PAIRING_REQUEST:
-          workflow_ble_pairing_request(e.event.ble_event.data);
+          workflow_ble_pairing_request((char *)e.event.ble_event.data);
+          redraw_wait_screen();
           continue;
         default:
           break;

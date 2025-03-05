@@ -28,4 +28,4 @@ void screen_boot(bool warning, const char* vendor_str, size_t vendor_str_len,
                  uint32_t version, const void* vendor_img,
                  size_t vendor_img_len, int wait);
 
-uint32_t screen_confirm_pairing(const uint8_t* code);
+uint32_t screen_confirm_pairing(const char* code, bool initial_setup);

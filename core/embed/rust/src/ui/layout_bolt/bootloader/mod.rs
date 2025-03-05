@@ -41,7 +41,7 @@ use crate::ui::{
 
 use ufmt::uwrite;
 
-use super::theme::bootloader::BLD_WARN_COLOR;
+use super::theme::bootloader::{button_confirm_initial, button_initial, BLD_WARN_COLOR};
 
 use intro::Intro;
 use menu::Menu;
@@ -441,15 +441,25 @@ impl BootloaderUI for UIBolt {
     }
 
     #[cfg(feature = "ble")]
-    fn screen_confirm_pairing(code: &str) -> u32 {
+    fn screen_confirm_pairing(code: &str, initial_setup: bool) -> u32 {
+        let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
         let title = Label::centered("Pair device".into(), TEXT_NORMAL);
 
         let msg = Label::centered(code.into(), TEXT_NORMAL);
 
-        let right = Button::with_text("CONFIRM".into()).styled(button_confirm());
-        let left = Button::with_text("REJECT".into()).styled(button_bld());
+        let (right, left) = if initial_setup {
+            (
+                Button::with_text("CONFIRM".into()).styled(button_confirm_initial()),
+                Button::with_text("REJECT".into()).styled(button_initial()),
+            )
+        } else {
+            (
+                Button::with_text("CONFIRM".into()).styled(button_confirm()),
+                Button::with_text("REJECT".into()).styled(button_bld()),
+            )
+        };
 
-        let mut frame = Confirm::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg);
+        let mut frame = Confirm::new(bg, left, right, ConfirmTitle::Text(title), msg);
 
         run(&mut frame)
     }

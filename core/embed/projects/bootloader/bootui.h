@@ -95,3 +95,7 @@ void ui_screen_boot_stage_1(bool fading);
 #ifdef USE_OPTIGA
 uint32_t ui_screen_unlock_bootloader_confirm(void);
 #endif
+
+#ifdef USE_BLE
+uint32_t ui_screen_confirm_pairing(const char* code);
+#endif

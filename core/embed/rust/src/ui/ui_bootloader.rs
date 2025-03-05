@@ -50,5 +50,5 @@ pub trait BootloaderUI {
     );
 
     #[cfg(feature = "ble")]
-    fn screen_confirm_pairing(code: &str) -> u32;
+    fn screen_confirm_pairing(code: &str, initial_setup: bool) -> u32;
 }

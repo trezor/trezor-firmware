@@ -24,11 +24,10 @@
 #include <io/ble.h>
 
 #include "bootui.h"
-#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
-workflow_result_t workflow_ble_pairing_request(const uint8_t *data) {
-  ui_result_t result = screen_confirm_pairing(data);
+workflow_result_t workflow_ble_pairing_request(const char *code) {
+  ui_result_t result = ui_screen_confirm_pairing(code);
 
   if (result == UI_RESULT_CONFIRM) {
     ble_command_t cmd = {
@@ -42,7 +41,6 @@ workflow_result_t workflow_ble_pairing_request(const uint8_t *data) {
     ble_issue_command(&cmd);
   }
 
-  screen_connect(false);
   return WF_OK;
 }
 

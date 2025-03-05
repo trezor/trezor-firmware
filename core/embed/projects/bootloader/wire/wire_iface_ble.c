@@ -25,6 +25,12 @@
 #include <io/ble.h>
 #include <sys/systick.h>
 
+static bool is_connected(void) {
+  ble_state_t state = {0};
+  ble_get_state(&state);
+  return state.connected;
+}
+
 static bool ble_write_(uint8_t* data, size_t size) {
   if (size != BLE_TX_PACKET_SIZE) {
     return false;
@@ -34,6 +40,9 @@ static bool ble_write_(uint8_t* data, size_t size) {
 
   while (true) {
     if (ticks_expired(deadline)) {
+      return false;
+    }
+    if (!is_connected()) {
       return false;
     }
     if (ble_can_write()) {
@@ -53,6 +62,9 @@ static int ble_read_(uint8_t* buffer, size_t buffer_size) {
 
   while (true) {
     if (ticks_expired(deadline)) {
+      return false;
+    }
+    if (!is_connected()) {
       return false;
     }
     if (ble_can_read()) {
@@ -92,6 +104,11 @@ void ble_iface_init(wire_iface_t* iface) {
     if (state.peer_count > 0) {
       ble_command_t cmd = {
           .cmd_type = BLE_SWITCH_ON,
+          .data = {.adv_start =
+                       {
+                           .name = "Trezor Bootloader",
+                           .static_mac = false,
+                       }},
       };
       ble_issue_command(&cmd);
     } else {

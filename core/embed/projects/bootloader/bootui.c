@@ -182,3 +182,9 @@ void ui_screen_install_restricted(void) { screen_install_fail(); }
 void ui_fadein(void) { display_fade(0, BACKLIGHT_NORMAL, 1000); }
 
 void ui_fadeout(void) { display_fade(BACKLIGHT_NORMAL, 0, 500); }
+
+#ifdef USE_BLE
+uint32_t ui_screen_confirm_pairing(const char *code) {
+  return screen_confirm_pairing(code, initial_setup);
+}
+#endif
