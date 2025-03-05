@@ -86,7 +86,7 @@ def test_reset_slip39_advanced(
     if group_count < 5:
         reset.set_selection(debug, buttons.reset_minus(model_name), 5 - group_count)
     else:
-        reset.set_selection(debug, buttons.reset_plus(model_name), group_count - 5)
+        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), group_count - 5)
 
     # confirm checklist
     # TR.assert_in_multiple(
@@ -102,9 +102,9 @@ def test_reset_slip39_advanced(
     # set group threshold
     # TODO: could make it general as well
     if group_count == 2 and group_threshold == 2:
-        reset.set_selection(debug, buttons.reset_plus(model_name), 0)
+        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 0)
     elif group_count == 16 and group_threshold == 16:
-        reset.set_selection(debug, buttons.reset_plus(model_name), 11)
+        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 11)
     else:
         raise RuntimeError("not a supported combination")
 
@@ -124,14 +124,14 @@ def test_reset_slip39_advanced(
         if share_count < 5:
             reset.set_selection(debug, buttons.reset_minus(model_name), 5 - share_count)
         else:
-            reset.set_selection(debug, buttons.reset_plus(model_name), share_count - 5)
+            reset.set_selection(debug, buttons.reset_plus(debug.layout_type), share_count - 5)
 
         # set share threshold
         # TODO: could make it general as well
         if share_count == 2 and share_threshold == 2:
-            reset.set_selection(debug, buttons.reset_plus(model_name), 0)
+            reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 0)
         elif share_count == 16 and share_threshold == 16:
-            reset.set_selection(debug, buttons.reset_plus(model_name), 11)
+            reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 11)
         else:
             raise RuntimeError("not a supported combination")
 

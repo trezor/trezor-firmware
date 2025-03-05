@@ -42,8 +42,8 @@ def show_details_input_flow(client: Client):
         client.debug.press_yes()
     elif client.layout_type is LayoutType.Delizia:
         # Delizia - "Show all" button from context menu
-        client.debug.click(buttons.CORNER_BUTTON)
-        client.debug.click(buttons.VERTICAL_MENU[0])
+        client.debug.click(buttons.corner_button(client.layout_type))
+        client.debug.click(buttons.vertical_menu(client.layout_type)[0])
     else:
         raise NotImplementedError
     # reset ui flow to continue "automatically"

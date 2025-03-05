@@ -108,7 +108,7 @@ TXHASH_efaa41 = bytes.fromhex(
     "efaa41ff3e67edf508846c1a1ed56894cfd32725c590300108f40c9edc1aac35"
 )
 
-CORNER_BUTTON = (215, 25)
+corner_button(layout_type) = (215, 25)
 
 
 def test_one_one_fee(client: Client):

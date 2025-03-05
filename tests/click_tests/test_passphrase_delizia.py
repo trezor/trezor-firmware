@@ -27,7 +27,7 @@ from ..common import get_test_address
 from .common import CommonPass, PassphraseCategory, get_char_category
 
 if TYPE_CHECKING:
-    from trezorlib.debuglink import DebugLink
+    from trezorlib.debuglink import DebugLink, LayoutType
 
     from ..device_handler import BackgroundDeviceHandler
 
@@ -85,11 +85,11 @@ def get_passphrase_choices(char: str) -> tuple[str, ...]:
         return PASSPHRASE_SPECIAL
 
 
-def passphrase(char: str) -> Tuple[buttons.Coords, int]:
+def passphrase(char: str, layout_type: LayoutType) -> Tuple[buttons.Coords, int]:
     choices = get_passphrase_choices(char)
     idx = next(i for i, letters in enumerate(choices) if char in letters)
     click_amount = choices[idx].index(char) + 1
-    return buttons.pin_passphrase_index(idx), click_amount
+    return buttons.pin_passphrase_index(idx, layout_type), click_amount
 
 
 @contextmanager
@@ -170,7 +170,7 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     is_empty: bool = len(debug.read_layout().passphrase()) == 0
-    coords = buttons.CORNER_BUTTON  # top-right corner
+    coords = buttons.corner_button(debug.layout_type)  # top-right corner
     debug.click(coords)
     if is_empty:
         debug.click(buttons.YES_UI_DELIZIA)
@@ -178,7 +178,7 @@ def enter_passphrase(debug: "DebugLink") -> None:
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    coords = buttons.pin_passphrase_grid(9)
+    coords = buttons.pin_passphrase_grid(9, debug.layout_type)
     debug.click(coords)
 
 
@@ -249,7 +249,7 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
         debug.read_layout()
 
         enter_passphrase(debug)
-        coords = buttons.pin_passphrase_grid(11)
+        coords = buttons.pin_passphrase_grid(11, debug.layout_type)
         debug.click(coords)
 
 

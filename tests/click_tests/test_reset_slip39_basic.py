@@ -84,7 +84,7 @@ def test_reset_slip39_basic(
     if num_of_shares < 5:
         reset.set_selection(debug, buttons.reset_minus(model_name), 5 - num_of_shares)
     else:
-        reset.set_selection(debug, buttons.reset_plus(model_name), num_of_shares - 5)
+        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), num_of_shares - 5)
 
     # confirm checklist
     # TR.assert_in(
@@ -95,9 +95,9 @@ def test_reset_slip39_basic(
     # set threshold
     # TODO: could make it general as well
     if num_of_shares == 1 and threshold == 1:
-        reset.set_selection(debug, buttons.reset_plus(model_name), 0)
+        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 0)
     elif num_of_shares == 16 and threshold == 16:
-        reset.set_selection(debug, buttons.reset_plus(model_name), 11)
+        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 11)
     else:
         raise RuntimeError("not a supported combination")
 

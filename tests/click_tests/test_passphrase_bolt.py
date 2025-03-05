@@ -141,13 +141,13 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
-    coords = buttons.pin_passphrase_grid(11)
+    coords = buttons.pin_passphrase_grid(11, debug.layout_type)
     debug.click(coords)
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    coords = buttons.pin_passphrase_grid(9)
+    coords = buttons.pin_passphrase_grid(9, debug.layout_type)
     debug.click(coords)
 
 
@@ -216,7 +216,7 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             go_to_category(debug, category)
 
         enter_passphrase(debug)
-        coords = buttons.pin_passphrase_grid(11)
+        coords = buttons.pin_passphrase_grid(11, debug.layout_type)
         debug.click(coords)
 
 

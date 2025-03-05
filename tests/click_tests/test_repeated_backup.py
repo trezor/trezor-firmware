@@ -70,7 +70,7 @@ def test_repeated_backup(
     # confirm checklist
     reset.confirm_read(debug)
     # threshold=1
-    reset.set_selection(debug, buttons.reset_plus(model_name), 0)
+    reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 0)
     # confirm checklist
     reset.confirm_read(debug)
     # confirm backup warning
