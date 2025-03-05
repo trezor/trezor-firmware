@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 @pytest.mark.models("core")
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data(session: Session, parameters, result):
-    with session:
+    with session.client:
         address_n = parse_path(parameters["path"])
         ret = ethereum.sign_typed_data(
             session,
@@ -44,7 +44,7 @@ def test_ethereum_sign_typed_data(session: Session, parameters, result):
 @pytest.mark.models("legacy")
 @parametrize_using_common_fixtures("ethereum/sign_typed_data.json")
 def test_ethereum_sign_typed_data_blind(session: Session, parameters, result):
-    with session:
+    with session.client:
         address_n = parse_path(parameters["path"])
         ret = ethereum.sign_typed_data_hash(
             session,
@@ -112,8 +112,8 @@ def test_ethereum_sign_typed_data_show_more_button(session: Session):
 @pytest.mark.models("core")
 def test_ethereum_sign_typed_data_cancel(session: Session):
     with session.client as client, pytest.raises(exceptions.Cancelled):
-        client.watch_layout()
-        IF = InputFlowEIP712Cancel(client)
+        session.client.watch_layout()
+        IF = InputFlowEIP712Cancel(session.client)
         client.set_input_flow(IF.get())
         ethereum.sign_typed_data(
             session,

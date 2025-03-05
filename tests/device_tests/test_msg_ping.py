@@ -19,13 +19,14 @@ from trezorlib.debuglink import SessionDebugWrapper as Session
 
 
 def test_ping(session: Session):
-    with session:
-        session.set_expected_responses([messages.Success])
+    client = session.client
+    with client:
+        client.set_expected_responses([messages.Success])
         res = session.call(messages.Ping(message="random data"))
         assert res.message == "random data"
 
-    with session:
-        session.set_expected_responses(
+    with client:
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.ProtectCall),
                 messages.Success,

@@ -116,8 +116,8 @@ def test_p2pkh_fee_bump(session: Session):
         orig_index=1,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_50f6f1),
@@ -190,7 +190,7 @@ def test_p2wpkh_op_return_fee_bump(session: Session):
         orig_index=1,
     )
 
-    with session:
+    with session.client:
         _, serialized_tx = btc.sign_tx(
             session,
             "Testnet",
@@ -243,8 +243,8 @@ def test_p2tr_fee_bump(session: Session):
         orig_index=1,
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_8e4af7),
@@ -312,8 +312,8 @@ def test_p2wpkh_finalize(session: Session):
         orig_index=1,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_70f987),
@@ -444,8 +444,8 @@ def test_p2wpkh_payjoin(
         orig_index=1,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_65b768),
@@ -520,8 +520,8 @@ def test_p2wpkh_in_p2sh_remove_change(session: Session):
         orig_index=0,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_334cd7),
@@ -599,8 +599,8 @@ def test_p2wpkh_in_p2sh_fee_bump_from_external(session: Session):
         orig_index=0,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_334cd7),
@@ -720,8 +720,8 @@ def test_tx_meld(session: Session):
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_meta(TXHASH_334cd7),

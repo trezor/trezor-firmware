@@ -35,7 +35,7 @@ pytestmark = pytest.mark.models("legacy")
 
 def _set_wipe_code(session: Session, pin, wipe_code):
     # Set/change wipe code.
-    with session.client as client, session:
+    with session.client as client:
         if session.features.pin_protection:
             pins = [pin, wipe_code, wipe_code]
             pin_matrices = [
@@ -51,7 +51,7 @@ def _set_wipe_code(session: Session, pin, wipe_code):
             ]
 
         client.use_pin_sequence(pins)
-        session.set_expected_responses(
+        client.set_expected_responses(
             [messages.ButtonRequest()] + pin_matrices + [messages.Success]
         )
         device.change_wipe_code(session)
@@ -112,9 +112,9 @@ def test_set_wipe_code_mismatch(session: Session):
     assert session.features.wipe_code_protection is False
 
     # Let's set a new wipe code.
-    with session.client as client, session:
+    with session.client as client:
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE6])
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(),
                 messages.PinMatrixRequest(type=PinType.WipeCodeFirst),
@@ -136,9 +136,9 @@ def test_set_wipe_code_to_pin(session: Session):
     assert session.features.wipe_code_protection is None
 
     # Let's try setting the wipe code to the curent PIN value.
-    with session.client as client, session:
+    with session.client as client:
         client.use_pin_sequence([PIN4, PIN4])
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(),
                 messages.PinMatrixRequest(type=PinType.Current),
@@ -160,9 +160,9 @@ def test_set_pin_to_wipe_code(session: Session):
     _set_wipe_code(session, None, WIPE_CODE4)
 
     # Try to set the PIN to the current wipe code value.
-    with session.client as client, session:
+    with session.client as client:
         client.use_pin_sequence([WIPE_CODE4, WIPE_CODE4])
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(),
                 messages.PinMatrixRequest(type=PinType.NewFirst),
