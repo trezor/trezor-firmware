@@ -31,8 +31,8 @@ RK_CAPACITY = 100
 @pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_add_remove(session: Session):
-    with session, session.client as client:
-        IF = InputFlowFidoConfirm(client)
+    with session.client as client:
+        IF = InputFlowFidoConfirm(session.client)
         client.set_input_flow(IF.get())
 
         # Remove index 0 should fail.

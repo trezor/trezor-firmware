@@ -76,8 +76,8 @@ def test_send_decred(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -133,8 +133,8 @@ def test_purchase_ticket_decred(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -197,8 +197,8 @@ def test_spend_from_stake_generation_and_revocation_decred(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -278,8 +278,8 @@ def test_send_decred_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -384,8 +384,8 @@ def test_decred_multisig_change(session: Session):
             script_type=messages.OutputScriptType.PAYTOADDRESS,
         )
 
-        with session:
-            session.set_expected_responses(
+        with session.client as client:
+            client.set_expected_responses(
                 [
                     request_input(0),
                     request_input(1),

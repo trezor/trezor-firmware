@@ -37,13 +37,13 @@ pytestmark = pytest.mark.models("core")
 
 def _check_pin(session: Session, pin: str):
 
-    with session, session.client as client:
-        client.ui.__init__(client.debug)
+    with session.client as client:
+        client.ui.__init__(session.client.debug)
         client.use_pin_sequence([pin, pin, pin, pin, pin, pin])
         session.lock()
         assert session.features.pin_protection is True
         assert session.features.unlocked is False
-        session.set_expected_responses([messages.ButtonRequest, messages.Address])
+        client.set_expected_responses([messages.ButtonRequest, messages.Address])
         btc.get_address(session, "Testnet", PASSPHRASE_TEST_PATH)
 
 
@@ -51,8 +51,8 @@ def _check_no_pin(session: Session):
     session.lock()
     assert session.features.pin_protection is False
 
-    with session:
-        session.set_expected_responses([messages.Address])
+    with session.client as client:
+        client.set_expected_responses([messages.Address])
         btc.get_address(session, "Testnet", PASSPHRASE_TEST_PATH)
 
 
@@ -63,13 +63,13 @@ def test_set_pin(session: Session):
     _check_no_pin(session)
 
     # Let's set new PIN
-    with session, session.client as client:
+    with session.client as client:
         if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 4
         client.use_pin_sequence([PIN_MAX, PIN_MAX])
-        session.set_expected_responses(
+        client.set_expected_responses(
             [messages.ButtonRequest] * br_count + [messages.Success]
         )
         device.change_pin(session)
@@ -86,13 +86,13 @@ def test_change_pin(session: Session):
     _check_pin(session, PIN4)
 
     # Let's change PIN
-    with session, session.client as client:
+    with session.client as client:
         client.use_pin_sequence([PIN4, PIN_MAX, PIN_MAX])
         if client.layout_type is LayoutType.Caesar:
             br_count = 6
         else:
             br_count = 5
-        session.set_expected_responses(
+        client.set_expected_responses(
             [messages.ButtonRequest] * br_count
             + [messages.Success]  # , messages.Features]
         )
@@ -113,11 +113,9 @@ def test_remove_pin(session: Session):
     _check_pin(session, PIN4)
 
     # Let's remove PIN
-    with session, session.client as client:
+    with session.client as client:
         client.use_pin_sequence([PIN4])
-        session.set_expected_responses(
-            [messages.ButtonRequest] * 3 + [messages.Success]
-        )
+        client.set_expected_responses([messages.ButtonRequest] * 3 + [messages.Success])
         device.change_pin(session, remove=True)
 
     # Check that there's no PIN protection now
@@ -132,8 +130,8 @@ def test_set_failed(session: Session):
     # Check that there's no PIN protection
     _check_no_pin(session)
 
-    with session, session.client as client, pytest.raises(TrezorFailure):
-        IF = InputFlowNewCodeMismatch(client, PIN4, PIN60, what="pin")
+    with session.client as client, pytest.raises(TrezorFailure):
+        IF = InputFlowNewCodeMismatch(session.client, PIN4, PIN60, what="pin")
         client.set_input_flow(IF.get())
 
         device.change_pin(session)
@@ -151,7 +149,7 @@ def test_change_failed(session: Session):
     # Check current PIN value
     _check_pin(session, PIN4)
 
-    with session, session.client as client, pytest.raises(Cancelled):
+    with session.client as client, pytest.raises(Cancelled):
         IF = InputFlowCodeChangeFail(session, PIN4, "457891", "381847")
         client.set_input_flow(IF.get())
 
@@ -170,8 +168,8 @@ def test_change_invalid_current(session: Session):
     # Check current PIN value
     _check_pin(session, PIN4)
 
-    with session, session.client as client, pytest.raises(TrezorFailure):
-        IF = InputFlowWrongPIN(client, PIN60)
+    with session.client as client, pytest.raises(TrezorFailure):
+        IF = InputFlowWrongPIN(session.client, PIN60)
         client.set_input_flow(IF.get())
 
         device.change_pin(session)
@@ -200,7 +198,7 @@ def test_pin_menu_cancel_setup(session: Session):
         # tap to confirm
         debug.click(debug.screen_buttons.tap_to_confirm())
 
-    with session, session.client as client, pytest.raises(Cancelled):
+    with session.client as client, pytest.raises(Cancelled):
         client.set_input_flow(cancel_pin_setup_input_flow)
         session.call(messages.ChangePin())
     _check_no_pin(session)
