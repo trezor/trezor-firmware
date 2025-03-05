@@ -59,6 +59,10 @@ tr.bad a:visited {
     border-color: red;
 }
 
+.hidden {
+    display: none;
+}
+
 .script-hidden {
     display: none;
 }
