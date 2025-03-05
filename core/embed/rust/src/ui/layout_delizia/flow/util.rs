@@ -48,6 +48,7 @@ pub struct ConfirmValue {
     text_mono: bool,
     page_counter: bool,
     page_limit: Option<u16>,
+    classic_ellipsis: bool,
     swipe_up: bool,
     swipe_down: bool,
     swipe_right: bool,
@@ -77,6 +78,7 @@ impl ConfirmValue {
             text_mono: true,
             page_counter: false,
             page_limit: None,
+            classic_ellipsis: false,
             swipe_up: false,
             swipe_down: false,
             swipe_right: false,
@@ -201,6 +203,11 @@ impl ConfirmValue {
         self
     }
 
+    pub const fn with_classic_ellipsis(mut self, classic_ellipsis: bool) -> Self {
+        self.classic_ellipsis = classic_ellipsis;
+        self
+    }
+
     pub const fn with_description_font(mut self, description_font: &'static TextStyle) -> Self {
         self.description_font = description_font;
         self
@@ -221,7 +228,11 @@ impl ConfirmValue {
                 let value: TString = self.value.try_into()?;
                 theme::get_chunkified_text_style(value.len())
             } else if self.text_mono {
-                &theme::TEXT_MONO
+                if self.classic_ellipsis {
+                    &theme::TEXT_MONO_WITH_CLASSIC_ELLIPSIS
+                } else {
+                    &theme::TEXT_MONO
+                }
             } else {
                 &theme::TEXT_NORMAL
             },
@@ -272,7 +283,11 @@ impl ConfirmValue {
                 let value: TString = self.value.try_into()?;
                 theme::get_chunkified_text_style(value.len())
             } else if self.text_mono {
-                &theme::TEXT_MONO
+                if self.classic_ellipsis {
+                    &theme::TEXT_MONO_WITH_CLASSIC_ELLIPSIS
+                } else {
+                    &theme::TEXT_MONO
+                }
             } else {
                 &theme::TEXT_NORMAL
             },
