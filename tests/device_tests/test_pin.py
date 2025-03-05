@@ -33,17 +33,17 @@ pytestmark = pytest.mark.setup_client(pin=PIN4)
 
 @pytest.mark.setup_client(pin=None)
 def test_no_protection(session: Session):
-    with session:
-        session.set_expected_responses([messages.Address])
+    with session.client as client:
+        client.set_expected_responses([messages.Address])
         get_test_address(session)
 
 
 def test_correct_pin(session: Session):
-    with session, session.client as client:
+    with session.client as client:
         client.use_pin_sequence([PIN4])
         # Expected responses differ between T1 and TT
         is_t1 = session.model is models.T1B1
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 (is_t1, messages.PinMatrixRequest),
                 (
@@ -65,10 +65,10 @@ def test_incorrect_pin_t1(session: Session):
 
 @pytest.mark.models("core")
 def test_incorrect_pin_t2(session: Session):
-    with session, session.client as client:
+    with session.client as client:
         # After first incorrect attempt, TT will not raise an error, but instead ask for another attempt
         client.use_pin_sequence([BAD_PIN, PIN4])
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.PinEntry),
                 messages.ButtonRequest(code=messages.ButtonRequestType.PinEntry),
@@ -82,7 +82,7 @@ def test_incorrect_pin_t2(session: Session):
 def test_exponential_backoff_t1(session: Session):
     for attempt in range(3):
         start = time.time()
-        with session, session.client as client, pytest.raises(PinException):
+        with session.client as client, pytest.raises(PinException):
             client.use_pin_sequence([BAD_PIN])
             get_test_address(session)
         check_pin_backoff_time(attempt, start)

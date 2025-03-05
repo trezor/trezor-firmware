@@ -70,7 +70,7 @@ def set_language(session: Session, lang: str, *, force: bool = False):
         language_data = b""
     else:
         language_data = build_and_sign_blob(lang, session)
-    with session:
+    with session.client:
         if not session.features.language.startswith(lang) or force:
             device.change_language(session, language_data)  # type: ignore
     _CURRENT_TRANSLATION.LAYOUT = session.client.layout_type

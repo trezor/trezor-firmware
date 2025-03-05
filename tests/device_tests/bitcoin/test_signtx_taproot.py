@@ -79,8 +79,8 @@ def test_send_p2tr(session: Session, chunkify: bool):
         amount=4_450,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -133,8 +133,8 @@ def test_send_two_with_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
         amount=6_800 + 13_000 - 200 - 15_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -222,8 +222,8 @@ def test_send_mixed(session: Session):
         script_type=messages.OutputScriptType.PAYTOTAPROOT,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 # process inputs
                 request_input(0),
@@ -353,9 +353,9 @@ def test_attack_script_type(session: Session):
 
         return msg
 
-    with session:
-        session.set_filter(messages.TxAck, attack_processor)
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_filter(messages.TxAck, attack_processor)
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -406,8 +406,8 @@ def test_send_invalid_address(session: Session, address: str):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session, pytest.raises(TrezorFailure):
-        session.set_expected_responses(
+    with session.client as client, pytest.raises(TrezorFailure):
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),

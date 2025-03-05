@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.altcoin, pytest.mark.tezos, pytest.mark.models("core")
 
 
 def test_tezos_sign_tx_proposal(session: Session):
-    with session:
+    with session.client:
         resp = tezos.sign_tx(
             session,
             TEZOS_PATH_10,
@@ -60,7 +60,7 @@ def test_tezos_sign_tx_proposal(session: Session):
 
 
 def test_tezos_sign_tx_multiple_proposals(session: Session):
-    with session:
+    with session.client:
         resp = tezos.sign_tx(
             session,
             TEZOS_PATH_10,

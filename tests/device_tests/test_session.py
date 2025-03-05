@@ -71,9 +71,9 @@ def test_clear_session(client: Client):
         assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
     session.resume()
-    with session:
+    with client:
         # pin and passphrase are cached
-        session.set_expected_responses(cached_responses)
+        client.set_expected_responses(cached_responses)
         assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
     session.lock()
@@ -87,9 +87,9 @@ def test_clear_session(client: Client):
         assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
     session.resume()
-    with session:
+    with client:
         # pin and passphrase are cached
-        session.set_expected_responses(cached_responses)
+        client.set_expected_responses(cached_responses)
         assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
 
@@ -100,8 +100,8 @@ def test_end_session(client: Client):
     assert session.id is not None
 
     # get_address will succeed
-    with session:
-        session.set_expected_responses([messages.Address])
+    with client:
+        client.set_expected_responses([messages.Address])
         get_test_address(session)
 
     session.end()
@@ -113,13 +113,13 @@ def test_end_session(client: Client):
 
     session = client.get_session()
     assert session.id is not None
-    with session:
-        session.set_expected_responses([messages.Address])
+    with client:
+        client.set_expected_responses([messages.Address])
         get_test_address(session)
 
-    with session as session:
+    with client:
         # end_session should succeed on empty session too
-        session.set_expected_responses([messages.Success] * 2)
+        client.set_expected_responses([messages.Success] * 2)
         session.end()
         session.end()
 
@@ -162,8 +162,8 @@ def test_end_session_only_current(client: Client):
 @pytest.mark.setup_client(passphrase=True)
 def test_session_recycling(client: Client):
     session = client.get_session(passphrase="TREZOR")
-    with session:
-        session.set_expected_responses([messages.Address])
+    with client:
+        client.set_expected_responses([messages.Address])
         address = get_test_address(session)
 
     # create and close 100 sessions - more than the session limit
@@ -172,7 +172,7 @@ def test_session_recycling(client: Client):
         session_x.end()
 
     # it should still be possible to resume the original session
-    with client, session:
+    with client:
         # passphrase should still be cached
         expected_responses = [messages.Address] * 3
         if client.protocol_version == ProtocolVersion.V1:

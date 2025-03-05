@@ -82,8 +82,8 @@ def test_send_p2sh(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -137,8 +137,8 @@ def test_send_p2sh_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -190,8 +190,8 @@ def test_send_native(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=100_000 - 40_000 - 10_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -244,7 +244,7 @@ def test_send_to_taproot(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=10_000 - 7_000 - 200,
     )
-    with session:
+    with session.client:
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
         )
@@ -277,8 +277,8 @@ def test_send_native_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOWITNESS,
         amount=100_000 - 40_000 - 10_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -344,8 +344,8 @@ def test_send_both(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -449,8 +449,8 @@ def test_send_multisig_1(session: Session):
         request_finished(),
     ]
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -460,8 +460,8 @@ def test_send_multisig_1(session: Session):
     # sign with third key
     inp1.address_n[2] = H_(3)
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -526,8 +526,8 @@ def test_send_multisig_2(session: Session):
         request_finished(),
     ]
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -537,8 +537,8 @@ def test_send_multisig_2(session: Session):
     # sign with first key
     inp1.address_n[2] = H_(1)
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -611,10 +611,10 @@ def test_send_multisig_3_change(session: Session):
         request_finished(),
     ]
 
-    with session, session.client as client:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
@@ -626,10 +626,10 @@ def test_send_multisig_3_change(session: Session):
     inp1.address_n[2] = H_(3)
     out1.address_n[2] = H_(3)
 
-    with session, session.client as client:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
@@ -703,10 +703,10 @@ def test_send_multisig_4_change(session: Session):
         request_finished(),
     ]
 
-    with session, session.client as client:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
@@ -718,10 +718,10 @@ def test_send_multisig_4_change(session: Session):
     inp1.address_n[2] = H_(3)
     out1.address_n[2] = H_(3)
 
-    with session, session.client as client:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
@@ -788,8 +788,8 @@ def test_multisig_mismatch_inputs_single(session: Session):
         amount=100_000 + 100_000 - 50_000 - 10_000,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),

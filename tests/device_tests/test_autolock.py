@@ -38,9 +38,9 @@ def pin_request(session: Session):
 
 
 def set_autolock_delay(session: Session, delay):
-    with session, session.client as client:
+    with session.client as client:
         client.use_pin_sequence([PIN4])
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 pin_request(session),
                 messages.ButtonRequest,
@@ -52,18 +52,19 @@ def set_autolock_delay(session: Session, delay):
 
 
 def test_apply_auto_lock_delay(session: Session):
+    client = session.client
     set_autolock_delay(session, 10 * 1000)
 
     time.sleep(0.1)  # sleep less than auto-lock delay
-    with session:
+    with client:
         # No PIN protection is required.
-        session.set_expected_responses([messages.Address])
+        client.set_expected_responses([messages.Address])
         get_test_address(session)
 
     time.sleep(10.5)  # sleep more than auto-lock delay
-    with session, session.client as client:
+    with client:
         client.use_pin_sequence([PIN4])
-        session.set_expected_responses([pin_request(session), messages.Address])
+        client.set_expected_responses([pin_request(session), messages.Address])
         get_test_address(session)
 
 
@@ -85,7 +86,7 @@ def test_apply_auto_lock_delay_valid(session: Session, seconds):
 
 def test_autolock_default_value(session: Session):
     assert session.features.auto_lock_delay_ms is None
-    with session, session.client as client:
+    with session.client as client:
         client.use_pin_sequence([PIN4])
         device.apply_settings(session, label="pls unlock")
         session.refresh_features()
@@ -98,9 +99,9 @@ def test_autolock_default_value(session: Session):
 )
 def test_apply_auto_lock_delay_out_of_range(session: Session, seconds):
 
-    with session, session.client as client:
-        client.use_pin_sequence([PIN4])
-        session.set_expected_responses(
+    with session.client as client:
+        session.client.use_pin_sequence([PIN4])
+        client.set_expected_responses(
             [
                 pin_request(session),
                 messages.Failure(code=messages.FailureType.ProcessError),

@@ -76,7 +76,7 @@ def test_show_segwit(session: Session):
 def test_show_segwit_altcoin(session: Session):
     with session.client as client:
         if is_core(session):
-            IF = InputFlowConfirmAllWarnings(client)
+            IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         assert (
             btc.get_address(

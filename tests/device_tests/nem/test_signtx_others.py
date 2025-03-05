@@ -32,7 +32,7 @@ pytestmark = [
 
 # assertion data from T1
 def test_nem_signtx_importance_transfer(session: Session):
-    with session:
+    with session.client:
         tx = nem.sign_tx(
             session,
             parse_path("m/44h/1h/0h/0h/0h"),

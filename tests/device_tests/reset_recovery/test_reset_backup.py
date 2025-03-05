@@ -78,7 +78,7 @@ VECTORS = [
 def test_skip_backup_msg(session: Session, backup_type, backup_flow):
     assert session.features.initialized is False
 
-    with session:
+    with session.client:
         device.setup(
             session,
             skip_backup=True,
@@ -116,7 +116,7 @@ def test_skip_backup_msg(session: Session, backup_type, backup_flow):
 def test_skip_backup_manual(session: Session, backup_type: BackupType, backup_flow):
     assert session.features.initialized is False
 
-    with session, session.client as client:
+    with session.client as client:
         IF = InputFlowResetSkipBackup(client)
         client.set_input_flow(IF.get())
         device.setup(

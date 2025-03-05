@@ -30,7 +30,7 @@ from ...input_flows import InputFlowShowXpubQRCode
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_eos_get_public_key(session: Session):
     with session.client as client:
-        IF = InputFlowShowXpubQRCode(client)
+        IF = InputFlowShowXpubQRCode(session.client)
         client.set_input_flow(IF.get())
         public_key = get_public_key(
             session, parse_path("m/44h/194h/0h/0/0"), show_display=True
