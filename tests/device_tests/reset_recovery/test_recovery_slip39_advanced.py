@@ -49,7 +49,9 @@ def _test_secret(
     session: Session, shares: list[str], secret: str, click_info: bool = False
 ):
     with session.client as client:
-        IF = InputFlowSlip39AdvancedRecovery(client, shares, click_info=click_info)
+        IF = InputFlowSlip39AdvancedRecovery(
+            session.client, shares, click_info=click_info
+        )
         client.set_input_flow(IF.get())
         device.recover(
             session,
@@ -90,7 +92,7 @@ def test_extra_share_entered(session: Session):
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(session: Session):
     with session.client as client:
-        IF = InputFlowSlip39AdvancedRecoveryAbort(client)
+        IF = InputFlowSlip39AdvancedRecoveryAbort(session.client)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
@@ -102,7 +104,7 @@ def test_abort(session: Session):
 def test_noabort(session: Session):
     with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryNoAbort(
-            client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
+            session.client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
         client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
@@ -118,7 +120,7 @@ def test_same_share(session: Session):
     # second share is first 4 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[1].split(" ")[:4]
 
-    with session, session.client as client:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(
             session, first_share, second_share
         )
@@ -134,7 +136,7 @@ def test_group_threshold_reached(session: Session):
     # second share is first 3 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")[:3]
 
-    with session, session.client as client:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryThresholdReached(
             session, first_share, second_share
         )

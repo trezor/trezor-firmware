@@ -33,7 +33,7 @@ BINANCE_PATH = parse_path("m/44h/714h/0h/0/0")
 )
 def test_binance_get_public_key(session: Session):
     with session.client as client:
-        IF = InputFlowShowXpubQRCode(client)
+        IF = InputFlowShowXpubQRCode(session.client)
         client.set_input_flow(IF.get())
         sig = binance.get_public_key(session, BINANCE_PATH, show_display=True)
         assert (

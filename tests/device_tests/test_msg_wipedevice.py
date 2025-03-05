@@ -45,9 +45,8 @@ def test_wipe_device(client: Client):
 @pytest.mark.setup_client(pin=PIN4)
 def test_autolock_not_retained(session: Session):
     client = session.client
-    with client:
-        client.use_pin_sequence([PIN4])
-        device.apply_settings(session, auto_lock_delay_ms=10_000)
+    client.use_pin_sequence([PIN4])
+    device.apply_settings(session, auto_lock_delay_ms=10_000)
 
     assert session.features.auto_lock_delay_ms == 10_000
 
@@ -57,21 +56,20 @@ def test_autolock_not_retained(session: Session):
 
     assert client.features.auto_lock_delay_ms > 10_000
 
-    with client:
-        client.use_pin_sequence([PIN4, PIN4])
-        device.setup(
-            session,
-            skip_backup=True,
-            pin_protection=True,
-            passphrase_protection=False,
-            entropy_check_count=0,
-            backup_type=messages.BackupType.Bip39,
-        )
+    client.use_pin_sequence([PIN4, PIN4])
+    device.setup(
+        session,
+        skip_backup=True,
+        pin_protection=True,
+        passphrase_protection=False,
+        entropy_check_count=0,
+        backup_type=messages.BackupType.Bip39,
+    )
 
     time.sleep(10.5)
     session = client.get_session()
 
-    with session, client:
+    with session.client as client:
         # after sleeping for the pre-wipe autolock amount, Trezor must still be unlocked
-        session.set_expected_responses([messages.Address])
+        client.set_expected_responses([messages.Address])
         get_test_address(session)

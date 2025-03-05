@@ -48,7 +48,7 @@ def test_reset_recovery(client: Client):
 
 def reset(session: Session, strength: int = 128, skip_backup: bool = False) -> str:
     with session.client as client:
-        IF = InputFlowBip39ResetBackup(client)
+        IF = InputFlowBip39ResetBackup(session.client)
         client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
@@ -78,9 +78,9 @@ def reset(session: Session, strength: int = 128, skip_backup: bool = False) -> s
 def recover(session: Session, mnemonic: str):
     words = mnemonic.split(" ")
     with session.client as client:
-        IF = InputFlowBip39Recovery(client, words)
+        IF = InputFlowBip39Recovery(session.client, words)
         client.set_input_flow(IF.get())
-        client.watch_layout()
+        session.client.watch_layout()
         device.recover(session, pin_protection=False, label="label")
 
     # Workflow successfully ended

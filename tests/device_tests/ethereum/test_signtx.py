@@ -147,9 +147,9 @@ def test_signtx_go_back_from_summary(session: Session):
 def test_signtx_eip1559(
     session: Session, chunkify: bool, parameters: dict, result: dict
 ):
-    with session, session.client as client:
-        if not client.debug.legacy_debug:
-            client.set_input_flow(InputFlowConfirmAllWarnings(client).get())
+    with session.client as client:
+        if not session.client.debug.legacy_debug:
+            client.set_input_flow(InputFlowConfirmAllWarnings(session.client).get())
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
             n=parse_path(parameters["path"]),
@@ -218,8 +218,8 @@ def test_data_streaming(session: Session):
     """Only verifying the expected responses, the signatures are
     checked in vectorized function above.
     """
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
                 messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
@@ -266,7 +266,7 @@ def test_data_streaming(session: Session):
 
 
 def test_signtx_eip1559_access_list(session: Session):
-    with session:
+    with session.client:
 
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
@@ -305,7 +305,7 @@ def test_signtx_eip1559_access_list(session: Session):
 
 
 def test_signtx_eip1559_access_list_larger(session: Session):
-    with session:
+    with session.client:
 
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
@@ -438,6 +438,8 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 )
 @pytest.mark.models("core")
 def test_signtx_data_pagination(session: Session, flow):
+    client = session.client
+
     def _sign_tx_call():
         ethereum.sign_tx(
             session,
@@ -452,15 +454,15 @@ def test_signtx_data_pagination(session: Session, flow):
             data=bytes.fromhex(HEXDATA),
         )
 
-    with session, session.client as client:
+    with client:
         client.watch_layout()
-        client.set_input_flow(flow(client))
+        client.set_input_flow(flow(session.client))
         _sign_tx_call()
 
     if flow is not input_flow_data_scroll_down:
-        with session, session.client as client, pytest.raises(exceptions.Cancelled):
+        with client, pytest.raises(exceptions.Cancelled):
             client.watch_layout()
-            client.set_input_flow(flow(client, cancel=True))
+            client.set_input_flow(flow(session.client, cancel=True))
             _sign_tx_call()
 
 
@@ -499,7 +501,7 @@ def test_signtx_staking_bad_inputs(session: Session, parameters: dict, result: d
 
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking_eip1559.json")
 def test_signtx_staking_eip1559(session: Session, parameters: dict, result: dict):
-    with session:
+    with session.client:
         sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
             session,
             n=parse_path(parameters["path"]),
