@@ -26,10 +26,9 @@ use super::{
         self, backlight,
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, TEXT_BOLD,
-            TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WELCOME_COLOR,
+            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, WELCOME_COLOR,
         },
-        GREEN_LIGHT, GREY,
+        GREEN_LIGHT, GREY, TEXT_NORMAL,
     },
     UIEckhart,
 };
@@ -187,11 +186,11 @@ impl BootloaderUI for UIEckhart {
         } else {
             "DOWNGRADE FW"
         };
-        let title = Label::left_aligned(title_str.into(), TEXT_BOLD).vertically_centered();
+        let title = Label::left_aligned(title_str.into(), TEXT_NORMAL).vertically_centered();
         let msg = Label::left_aligned(version_str.as_str().into(), TEXT_NORMAL);
         let alert = (!should_keep_seed).then_some(Label::left_aligned(
             "SEED WILL BE ERASED!".into(),
-            TEXT_BOLD,
+            TEXT_NORMAL,
         ));
 
         let (left, right) = if should_keep_seed {
@@ -231,9 +230,9 @@ impl BootloaderUI for UIEckhart {
 
         let msg = Label::centered(
             "Are you sure you want to factory reset the device?".into(),
-            TEXT_WIPE_NORMAL,
+            TEXT_NORMAL,
         );
-        let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!".into(), TEXT_WIPE_BOLD);
+        let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!".into(), TEXT_NORMAL);
 
         let right = Button::with_text("RESET".into())
             .styled(button_wipe_confirm())
@@ -251,7 +250,7 @@ impl BootloaderUI for UIEckhart {
 
     fn screen_unlock_bootloader_confirm() -> u32 {
         let title =
-            Label::left_aligned("UNLOCK BOOTLOADER".into(), TEXT_BOLD).vertically_centered();
+            Label::left_aligned("UNLOCK BOOTLOADER".into(), TEXT_NORMAL).vertically_centered();
         let msg = Label::centered("This action cannot be undone!".into(), TEXT_NORMAL);
 
         let right = Button::with_text("UNLOCK".into())
