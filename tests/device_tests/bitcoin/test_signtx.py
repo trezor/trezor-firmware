@@ -38,6 +38,7 @@ from ...input_flows import (
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
+    request_entropy,
     request_finished,
     request_input,
     request_meta,
@@ -1783,4 +1784,282 @@ def test_information_replacement(session: Session):
             [inp1, inp2],
             [out1],
             prev_txes=TX_CACHE_TESTNET,
+        )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil(session: Session):
+    # input tx: ac4ca0e7827a1228f44449cb57b4b9a809a667ca044dc43bb124627fed4bc10a
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
+        amount=10_000,
+        prev_hash=TXHASH_ac4ca0,
+        prev_index=1,
+    )
+
+    inp2 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
+        amount=83_130,
+        prev_hash=TXHASH_ac4ca0,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=84_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with session.test_ctx as client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_ac4ca0),
+                request_input(0, TXHASH_ac4ca0),
+                request_output(0, TXHASH_ac4ca0),
+                request_output(1, TXHASH_ac4ca0),
+                request_input(1),
+                request_meta(TXHASH_ac4ca0),
+                request_input(0, TXHASH_ac4ca0),
+                request_output(0, TXHASH_ac4ca0),
+                request_output(1, TXHASH_ac4ca0),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_entropy(
+                    0,
+                    bytes.fromhex(
+                        "02a074272d26050d54558629b1a244009c0defd1b6e952ee39c59b09db1e8a6f2f"
+                    ),
+                ),
+                request_input(0),
+                request_input(1),
+                request_output(0),
+                request_entropy(
+                    1,
+                    bytes.fromhex(
+                        "03d6f3d27db0cbb69b81dc9efa58d95d0c7a5c870884c9ba3d9979ef0b8696ae92"
+                    ),
+                ),
+                request_finished(),
+            ]
+        )
+
+        anti_exfil_signatures = btc.sign_tx_new(
+            session,
+            "Bitcoin",
+            [inp1, inp2],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32), bytes(32)],
+        )
+
+    assert anti_exfil_signatures == [
+        btc.AntiExfilSignature(
+            signature=bytes.fromhex(
+                "634093bd3220abbbed7d9ff1eea22c3d54629cf25ddf67ac3fde7f22dcb4db3c54025717900b37f99fcc71af80a570527ea6a06c54be2b89305bf00078221f23"
+            ),
+            entropy=bytes.fromhex(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            nonce_commitment=bytes.fromhex(
+                "02a074272d26050d54558629b1a244009c0defd1b6e952ee39c59b09db1e8a6f2f"
+            ),
+        ),
+        btc.AntiExfilSignature(
+            signature=bytes.fromhex(
+                "77d02293e81d15851ddad45d8d0f5f2e0d201b8cffe11f526c07975042a0495e3bc6d12b823ca5c9c521c6d809f8e6f98bf2f3ab6d54beac4fc6a70a9f8a0925"
+            ),
+            entropy=bytes.fromhex(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            nonce_commitment=bytes.fromhex(
+                "03d6f3d27db0cbb69b81dc9efa58d95d0c7a5c870884c9ba3d9979ef0b8696ae92"
+            ),
+        ),
+    ]
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil_wrong_entropy_list_length(session: Session):
+    # input tx: ac4ca0e7827a1228f44449cb57b4b9a809a667ca044dc43bb124627fed4bc10a
+
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
+        amount=10_000,
+        prev_hash=TXHASH_ac4ca0,
+        prev_index=1,
+    )
+
+    inp2 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/0h/1/7"),  # 16hgR6bjr99X6NhrsWuDR6NLpCLEacUNk
+        amount=83_130,
+        prev_hash=TXHASH_ac4ca0,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=84_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="The length of the entropy list doesn't match the number of inputs",
+    ):
+        btc.sign_tx_new(
+            session,
+            "Bitcoin",
+            [inp1, inp2],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32)],
+        )
+
+    with pytest.raises(
+        ValueError,
+        match="The length of the entropy list doesn't match the number of inputs",
+    ):
+        btc.sign_tx_new(
+            session,
+            "Bitcoin",
+            [inp1, inp2],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32), bytes(32), bytes(32)],
+        )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil_attack_1(session: Session):
+    # This test verifies that the host detects if the signature returned by the device is invalid.
+
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    def attack_processor(msg):
+        # Simulate the device is providing an invalid signature
+        if msg.serialized and msg.serialized.signature:
+            msg.serialized.signature = bytes(64)
+        return msg
+
+    with (
+        session.test_ctx as client,
+        pytest.raises(ValueError, match="Invalid signature for index 0"),
+    ):
+        # Set up attack processors
+        client.set_filter(messages.TxRequest, attack_processor)
+
+        _ = btc.sign_tx_new(
+            session,
+            "Bitcoin",
+            [inp1],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32)],
+        )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil_attack_2(session: Session):
+    # This test verifies that the host detects if the device asks for the entropy but not provides the nonce commitment.
+
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    def attack_processor(msg):
+        # Simulate the device is not providing the nonce commitment
+        if msg.request_type == messages.RequestType.TXENTROPY:
+            msg.details.nonce_commitment = None
+        return msg
+
+    with (
+        session.test_ctx as client,
+        pytest.raises(ValueError, match="Nonce commitment for index 0 not provided"),
+    ):
+        client.set_filter(messages.TxRequest, attack_processor)
+
+        _ = btc.sign_tx_new(
+            session,
+            "Bitcoin",
+            [inp1],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32)],
+        )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil_attack_3(session: Session):
+    # This test verifies that the protocol fails gracefully if the device provides an entropy not matching the entropy commitment.
+
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    def attack_processor(msg):
+        # Simulate the device is providing an invalid entropy
+        if msg.tx.entropy:
+            msg.tx.entropy.entropy = bytes(32 * [0xFF])
+        return msg
+
+    with (
+        session.test_ctx as client,
+        pytest.raises(ValueError, match="Invalid signature for index 0"),
+    ):
+        client.set_filter(messages.TxAck, attack_processor)
+
+        _ = btc.sign_tx_new(
+            session,
+            "Bitcoin",
+            [inp1],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32)],
         )
