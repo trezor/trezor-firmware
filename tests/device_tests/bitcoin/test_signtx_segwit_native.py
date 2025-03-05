@@ -26,6 +26,7 @@ from ...input_flows import InputFlowConfirmAllWarnings
 from ...tx_cache import TxCache
 from .signtx import (
     assert_tx_matches,
+    request_entropy,
     request_finished,
     request_input,
     request_meta,
@@ -832,3 +833,66 @@ def test_multisig_mismatch_inputs_single(client: Client):
         hash_link="https://tbtc1.trezor.io/api/tx/d3b2ec2a540363ffbb231c6cf0a311ec84c8404c7ec2819c146dfb90a69c593a",
         tx_hex="01000000000102b5da4da56cabc57097abb376af10e843c3f2c8427c612acfc88baaa39d2d021c0100000000ffffffffb5da4da56cabc57097abb376af10e843c3f2c8427c612acfc88baaa39d2d021c0200000000ffffffff0250c300000000000017a9147a55d61848e77ca266e79a39bfc85c580a6426c987e022020000000000220020733ecfbbe7e47a74dde6c7645b60cdf627e90a585cde7733bc7fdaf9fe30b3740247304402207076385a688713bd380d7e01858254161c11981a0f549098c77ab8afbaec38b40220713854182527e3f32e6910b7a4c5154969039e665bdec0ab4e12e2d3a9543e65012103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86203004730440220096cf4bff1590e005ff86cf10462b320b9b0eccfc45b8ea4badd276ad9cc536702207502c0dc037f64c58fde74925b4593dcd842d76085538083b6450bf9e73384420147512103505f0d82bbdd251511591b34f36ad5eea37d3220c2b81a1189084431ddb3aa3d2103adc58245cf28406af0ef5cc24b8afba7f1be6c72f279b642d85c48798685f86252ae00000000",
     )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil(client: Client):
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/49h/1h/0h/1/0"),
+        # 2N1LGaGg836mqSQqiuUBLfcyGBhyZbremDX
+        amount=123_456_789,
+        prev_hash=TXHASH_20912f,
+        prev_index=0,
+        script_type=messages.InputScriptType.SPENDP2SHWITNESS,
+    )
+    out1 = messages.TxOutputType(
+        address="tb1qqzv60m9ajw8drqulta4ld4gfx0rdh82un5s65s",
+        amount=123_456_789 - 11_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(TXHASH_20912f),
+                request_input(0, TXHASH_20912f),
+                request_output(0, TXHASH_20912f),
+                request_output(1, TXHASH_20912f),
+                request_input(0),
+                request_entropy(
+                    0,
+                    bytes.fromhex(
+                        "031b25a130a4ef74a9dc9224c3203a1b81fffa0f7ad8550ed6eb702dc610b3b80c"
+                    ),
+                ),
+                request_finished(),
+            ]
+        )
+        anti_exfil_signatures = btc.sign_tx_new(
+            client,
+            "Testnet",
+            [inp1],
+            [out1],
+            prev_txes=TX_API_TESTNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32)],
+        )
+
+    assert anti_exfil_signatures == [
+        btc.AntiExfilSignature(
+            signature=bytes.fromhex(
+                "e594458850cda408cd8d65f90494bfece139f389e66ca0f8c45d4fdaf9b363af48f7608c2e7de857a3d94469686cfb83d2838d73afe4e7f921cc2e86da46e018"
+            ),
+            entropy=bytes.fromhex(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            nonce_commitment=bytes.fromhex(
+                "031b25a130a4ef74a9dc9224c3203a1b81fffa0f7ad8550ed6eb702dc610b3b80c"
+            ),
+        )
+    ]

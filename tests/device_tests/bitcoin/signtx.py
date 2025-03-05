@@ -19,6 +19,13 @@ def request_input(n: int, tx_hash: bytes = None) -> messages.TxRequest:
     )
 
 
+def request_entropy(n: int, nonce: bytes) -> messages.TxRequest:
+    return messages.TxRequest(
+        request_type=T.TXENTROPY,
+        details=messages.TxRequestDetailsType(request_index=n, nonce_commitment=nonce),
+    )
+
+
 def request_output(n: int, tx_hash: bytes = None) -> messages.TxRequest:
     return messages.TxRequest(
         request_type=T.TXOUTPUT,
