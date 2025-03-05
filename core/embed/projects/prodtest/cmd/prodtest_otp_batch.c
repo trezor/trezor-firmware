@@ -36,6 +36,7 @@ static void prodtest_otp_batch_read(cli_t* cli) {
   if (sectrue !=
       flash_otp_read(FLASH_OTP_BLOCK_BATCH, 0, block, sizeof(block))) {
     cli_error(cli, CLI_ERROR, "Failed to read OTP memory.");
+    return;
   }
 
   char block_hex[FLASH_OTP_BLOCK_SIZE * 2 + 1];
