@@ -741,6 +741,11 @@ pub const TEXT_MONO: TextStyle = TextStyle::new(fonts::FONT_MONO, GREY_EXTRA_LIG
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
     .with_prev_page_icon(ICON_PAGE_PREV, 0);
+pub const TEXT_MONO_WITH_CLASSIC_ELLIPSIS: TextStyle =
+    TextStyle::new(fonts::FONT_MONO, GREY_EXTRA_LIGHT, BG, GREY, GREY)
+        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+        .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
+        .with_prev_page_icon(ICON_PAGE_PREV, 0);
 pub const TEXT_MONO_GREY_LIGHT: TextStyle = TextStyle {
     text_color: GREY_LIGHT,
     ..TEXT_MONO

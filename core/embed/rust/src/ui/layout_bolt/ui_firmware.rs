@@ -476,7 +476,7 @@ impl FirmwareUI for UIBolt {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
-                &theme::TEXT_MONO
+                &theme::TEXT_MONO_WITH_CLASSIC_ELLIPSIS
             } else {
                 &theme::TEXT_NORMAL
             };

@@ -607,6 +607,11 @@ pub const TEXT_MONO: TextStyle = TextStyle::new(fonts::FONT_MONO, FG, BG, GREY_L
     .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
     .with_ellipsis_icon(ICON_PAGE_NEXT, 0)
     .with_prev_page_icon(ICON_PAGE_PREV, 0);
+pub const TEXT_MONO_WITH_CLASSIC_ELLIPSIS: TextStyle =
+    TextStyle::new(fonts::FONT_MONO, FG, BG, GREY_LIGHT, GREY_LIGHT)
+        .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
+        .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth)
+        .with_prev_page_icon(ICON_PAGE_PREV, 0);
 /// Makes sure that the displayed text (usually address) will get divided into
 /// smaller chunks.
 pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO

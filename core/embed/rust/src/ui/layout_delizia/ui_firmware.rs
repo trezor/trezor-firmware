@@ -142,6 +142,7 @@ impl FirmwareUI for UIDelizia {
             .with_footer_description(verb)
             .with_chunkify(chunkify)
             .with_page_limit(Some(1))
+            .with_classic_ellipsis(true)
             .with_frame_margin(CONFIRM_VALUE_INTRO_MARGIN)
             .with_hold(hold)
             .into_flow()
