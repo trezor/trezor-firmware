@@ -52,8 +52,8 @@ def do_recover_legacy(session: Session, mnemonic: list[str]):
 
 def do_recover_core(session: Session, mnemonic: list[str], mismatch: bool = False):
     with session.client as client:
-        client.watch_layout()
-        IF = InputFlowBip39RecoveryDryRun(client, mnemonic, mismatch=mismatch)
+        session.client.watch_layout()
+        IF = InputFlowBip39RecoveryDryRun(session.client, mnemonic, mismatch=mismatch)
         client.set_input_flow(IF.get())
         return device.recover(session, type=messages.RecoveryType.DryRun)
 
@@ -87,8 +87,8 @@ def test_invalid_seed_t1(session: Session):
 
 @pytest.mark.models("core")
 def test_invalid_seed_core(session: Session):
-    with session, session.client as client:
-        client.watch_layout()
+    with session.client as client:
+        session.client.watch_layout()
         IF = InputFlowBip39RecoveryDryRunInvalid(session)
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):

@@ -66,8 +66,8 @@ def test_send_p2sh(session: Session, chunkify: bool):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -124,8 +124,8 @@ def test_send_p2sh_change(session: Session):
         script_type=messages.OutputScriptType.PAYTOP2SHWITNESS,
         amount=123_456_789 - 11_000 - 12_300_000,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -179,8 +179,8 @@ def test_testnet_segwit_big_amount(session: Session):
         amount=2**32 + 1,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -254,8 +254,8 @@ def test_send_multisig_1(session: Session):
         request_finished(),
     ]
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         signatures, _ = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -265,8 +265,8 @@ def test_send_multisig_1(session: Session):
     # sign with third key
     inp1.address_n[2] = H_(3)
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_API_TESTNET
         )
@@ -282,6 +282,7 @@ def test_attack_change_input_address(session: Session):
     # Simulates an attack where the user is coerced into unknowingly
     # transferring funds from one account to another one of their accounts,
     # potentially resulting in privacy issues.
+    client = session.client
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/49h/1h/0h/1/0"),
@@ -303,8 +304,8 @@ def test_attack_change_input_address(session: Session):
     )
 
     # Test if the transaction can be signed normally.
-    with session:
-        session.set_expected_responses(
+    with client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -349,8 +350,8 @@ def test_attack_change_input_address(session: Session):
         return msg
 
     # Now run the attack, must trigger the exception
-    with session:
-        session.set_filter(messages.TxAck, attack_processor)
+    with client:
+        client.set_filter(messages.TxAck, attack_processor)
         with pytest.raises(TrezorFailure):
             btc.sign_tx(
                 session, "Testnet", [inp1], [out1, out2], prev_txes=TX_API_TESTNET
@@ -360,6 +361,7 @@ def test_attack_change_input_address(session: Session):
 def test_attack_mixed_inputs(session: Session):
     TRUE_AMOUNT = 123_456_789
     FAKE_AMOUNT = 120_000_000
+    client = session.client
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/0"),
@@ -421,10 +423,10 @@ def test_attack_mixed_inputs(session: Session):
         # T1 asks for first input for witness again
         expected_responses.insert(-2, request_input(0))
 
-    with session:
+    with client:
         # Sign unmodified transaction.
         # "Fee over threshold" warning is displayed - fee is the whole TRUE_AMOUNT
-        session.set_expected_responses(expected_responses)
+        client.set_expected_responses(expected_responses)
         btc.sign_tx(
             session,
             "Testnet",
@@ -446,8 +448,8 @@ def test_attack_mixed_inputs(session: Session):
             expected_responses[:4] + expected_responses[5:16] + [messages.Failure()]
         )
 
-    with pytest.raises(TrezorFailure) as e, session:
-        session.set_expected_responses(expected_responses)
+    with pytest.raises(TrezorFailure) as e, client:
+        client.set_expected_responses(expected_responses)
         btc.sign_tx(
             session,
             "Testnet",
