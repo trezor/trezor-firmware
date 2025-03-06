@@ -1001,5 +1001,7 @@
   "999": "solana__transaction_fee",
   "1000": "reset__share_words_first",
   "1001": "backup__not_recommend",
-  "1002": "words__pay_attention"
+  "1002": "words__pay_attention",
+  "1003": "address__check_with_source",
+  "1004": "words__receive"
 }
