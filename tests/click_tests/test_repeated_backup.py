@@ -20,7 +20,6 @@ import pytest
 
 from trezorlib import device, exceptions, messages
 
-from .. import buttons
 from ..common import MOCK_GET_ENTROPY
 from . import recovery, reset
 from .common import go_next
@@ -63,11 +62,11 @@ def test_repeated_backup(
     # confirm checklist
     reset.confirm_read(debug)
     # shares=1
-    reset.set_selection(debug, buttons.reset_minus(debug.layout_type), 5 - 1)
+    reset.set_selection(debug, 1 - 5)
     # confirm checklist
     reset.confirm_read(debug)
     # threshold=1
-    reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 0)
+    reset.set_selection(debug, 0)
     # confirm checklist
     reset.confirm_read(debug)
     # confirm backup warning
@@ -129,11 +128,11 @@ def test_repeated_backup(
     # confirm checklist
     reset.confirm_read(debug)
     # shares=3
-    reset.set_selection(debug, buttons.reset_minus(debug.layout_type), 5 - 3)
+    reset.set_selection(debug, 3 - 5)
     # confirm checklist
     reset.confirm_read(debug)
     # threshold=2
-    reset.set_selection(debug, buttons.reset_minus(debug.layout_type), 1)
+    reset.set_selection(debug, 2 - 3)
     # confirm checklist
     reset.confirm_read(debug)
     # confirm backup warning
