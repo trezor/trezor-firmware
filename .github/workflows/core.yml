@@ -225,6 +225,7 @@ jobs:
       # indicating that it does not rely on particular envvars or other flags.
       # This makes sure that rust-analyzer will work on our codebase.
       - run: nix-shell --run "cd core/embed/rust && cargo build"
+        if: matrix.asan == 'noasan'
       - run: nix-shell --run "poetry run make -C core clippy"
       - run: nix-shell --run "poetry run make -C core test_rust"
 
