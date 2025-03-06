@@ -226,43 +226,39 @@ impl BootloaderUI for UIEckhart {
     }
 
     fn screen_wipe_confirm() -> u32 {
-        let icon = Icon::new(FIRE40);
-
-        let msg = Label::centered(
+        let msg = Label::left_aligned(
             "Are you sure you want to factory reset the device?".into(),
             TEXT_NORMAL,
         );
-        let alert = Label::centered("SEED AND FIRMWARE\nWILL BE ERASED!".into(), TEXT_NORMAL);
+        let alert = Label::centered("SEED and FIRMWARE will be erased!".into(), TEXT_NORMAL);
 
-        let right = Button::with_text("RESET".into())
-            .styled(button_wipe_confirm())
-            .with_text_align(Alignment::Center);
-        let left = Button::with_text("CANCEL".into())
-            .styled(button_wipe_cancel())
-            .with_text_align(Alignment::Center);
+        let right = Button::with_text("RESET".into()).styled(button_wipe_confirm());
+        let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_wipe_cancel());
 
-        let mut frame =
-            ConfirmScreen::new(BLD_WIPE_COLOR, left, right, ConfirmTitle::Icon(icon), msg)
-                .with_alert(alert);
+        let mut screen = BldTextScreen::new(msg)
+            .with_label2(alert)
+            .with_header(BldHeader::new_pay_attention())
+            .with_action_bar(BldActionBar::new_double(left, right))
+            .with_screen_border(ScreenBorder::new(RED));
 
-        run(&mut frame)
+        run(&mut screen)
     }
 
     fn screen_unlock_bootloader_confirm() -> u32 {
-        let title =
+        let msg1 =
             Label::left_aligned("UNLOCK BOOTLOADER".into(), TEXT_NORMAL).vertically_centered();
-        let msg = Label::centered("This action cannot be undone!".into(), TEXT_NORMAL);
+        let msg2 = Label::centered("This action cannot be undone!".into(), TEXT_NORMAL);
 
-        let right = Button::with_text("UNLOCK".into())
-            .styled(button_confirm())
-            .with_text_align(Alignment::Center);
-        let left = Button::with_text("CANCEL".into())
-            .styled(button_bld())
-            .with_text_align(Alignment::Center);
+        let right = Button::with_text("UNLOCK".into()).styled(button_confirm());
+        let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_bld());
 
-        let mut frame = ConfirmScreen::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg);
+        let mut screen = BldTextScreen::new(msg1)
+            .with_label2(msg2)
+            .with_header(BldHeader::new_pay_attention())
+            .with_action_bar(BldActionBar::new_double(left, right))
+            .with_screen_border(ScreenBorder::new(RED));
 
-        run(&mut frame)
+        run(&mut screen)
     }
 
     fn screen_unlock_bootloader_success() {
@@ -348,14 +344,14 @@ impl BootloaderUI for UIEckhart {
     }
 
     fn screen_connect(initial_setup: bool) {
-        let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let mut frame = Connect::new(
-            "Waiting for host...",
-            fonts::FONT_SATOSHI_REGULAR_38,
-            BLD_TITLE_COLOR,
-            bg,
-        );
-        show(&mut frame, true);
+        // NOTE: other layouts use a Connect component. Eckhart uses a BldTextScreen so that the
+        // ScreenBorder can be shown and alignment can be adjusted.
+        let mut screen = BldTextScreen::new(Label::left_aligned(
+            "Waiting for host...".into(),
+            TEXT_NORMAL,
+        ))
+        .with_screen_border(ScreenBorder::new(BLUE));
+        show(&mut screen, true);
     }
 
     fn screen_wipe_success() {
