@@ -113,6 +113,7 @@ jobs:
     name: Device test
     runs-on: ubuntu-latest
     needs: legacy_emu
+    timeout-minutes: 30
     strategy:
       matrix:
         coins: [universal, btconly]
@@ -120,6 +121,7 @@ jobs:
     env:
       EMULATOR: 1
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'universal' && '0' || '1' }}
+      TESTOPTS: "--timeout 120"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -148,6 +150,7 @@ jobs:
     name: Upgrade test
     runs-on: ubuntu-latest
     needs: legacy_emu
+    timeout-minutes: 10
     strategy:
       matrix:
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
@@ -164,7 +167,7 @@ jobs:
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
       - run: nix-shell --run "tests/download_emulators.sh"
-      - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+      - run: nix-shell --run "poetry run pytest --timeout 120 tests/upgrade_tests"
 
   legacy_hwi_test:
     name: HWI test
