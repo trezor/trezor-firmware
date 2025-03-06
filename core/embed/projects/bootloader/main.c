@@ -62,6 +62,10 @@
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>
+#include "../sys/powerctl/npm1300/npm1300.h"
+#endif
 
 #include "antiglitch.h"
 #include "bootui.h"
@@ -78,7 +82,7 @@ void failed_jump_to_firmware(void);
 CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
-static void drivers_init(secbool *touch_initialized) {
+static secbool drivers_init(secbool *touch_initialized) {
   random_delays_init();
 #ifdef USE_PVD
   pvd_init();
@@ -113,6 +117,7 @@ static void drivers_init(secbool *touch_initialized) {
   }
 #endif
 
+
 #ifdef USE_OPTIGA
   optiga_hal_init();
 #endif
@@ -128,6 +133,8 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_BLE
   ble_init();
 #endif
+
+  return manufacturing_mode;
 }
 
 static void drivers_deinit(void) {
@@ -251,7 +258,7 @@ int bootloader_main(void) {
 
   system_init(&rsod_panic_handler);
 
-  drivers_init(&touch_initialized);
+  secbool manufacturing_mode = drivers_init(&touch_initialized);
 
   ui_screen_boot_stage_1(false);
 
@@ -318,6 +325,12 @@ int bootloader_main(void) {
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
     firmware_present_backup = firmware_present;
   }
+
+#ifdef USE_POWERCTL
+  if (sectrue != manufacturing_mode || sectrue != firmware_present) {
+    npm1300_set_charging(true);
+  }
+#endif
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader

@@ -59,6 +59,7 @@
 
 #ifdef USE_POWERCTL
 #include <sys/powerctl.h>
+#include "../sys/powerctl/npm1300/npm1300.h"
 #endif
 
 #ifdef USE_PVD
@@ -92,6 +93,7 @@
 void drivers_init() {
 #ifdef USE_POWERCTL
   powerctl_init();
+  npm1300_set_charging(true);
 #endif
 
 #ifdef USE_TAMPER
