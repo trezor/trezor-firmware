@@ -144,7 +144,12 @@ class TrezorConnection:
             if must_resume:
                 if session.id != self.session_id or session.id is None:
                     click.echo("Failed to resume session")
-                    RuntimeError("Failed to resume session - no session id provided")
+                    env_var = os.environ.get("TREZOR_SESSION_ID")
+                    if env_var and bytes.fromhex(env_var) == self.session_id:
+                        click.echo(
+                            "Session-id stored in TREZOR_SESSION_ID is no longer valid. Call 'unset TREZOR_SESSION_ID' to clear it."
+                        )
+                    raise exceptions.FailedSessionResumption()
             return session
 
         features = client.protocol.get_features()
@@ -265,6 +270,8 @@ class TrezorConnection:
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
             sys.exit(1)
+        except exceptions.FailedSessionResumption:
+            sys.exit(1)
         except Exception:
             click.echo("Failed to find a Trezor device.")
             if self.path is not None:
@@ -306,17 +313,19 @@ def with_session(
         def function_with_session(
             obj: TrezorConnection, *args: "P.args", **kwargs: "P.kwargs"
         ) -> "R":
+            is_resume_mandatory = must_resume or obj.session_id is not None
+
             with obj.session_context(
                 empty_passphrase=empty_passphrase,
                 derive_cardano=derive_cardano,
                 seedless=seedless,
-                must_resume=must_resume,
+                must_resume=is_resume_mandatory,
             ) as session:
                 try:
                     return func(session, *args, **kwargs)
 
                 finally:
-                    if not must_resume:
+                    if not is_resume_mandatory:
                         session.end()
 
         return function_with_session
