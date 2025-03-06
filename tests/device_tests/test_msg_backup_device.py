@@ -182,7 +182,7 @@ def test_backup_slip39_custom(session: Session, share_threshold, share_count):
 # we only test this with bip39 because the code path is always the same
 @pytest.mark.setup_client(no_backup=True)
 def test_no_backup_fails(session: Session):
-    # TODO ?? session.ensure_unlocked()
+    session.ensure_unlocked()
     assert session.features.initialized is True
     assert session.features.no_backup is True
     assert (
