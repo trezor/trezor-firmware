@@ -295,8 +295,6 @@ def with_session(
     based on the parameters provided.
 
     If default parameters are ok, this decorator can be used without parentheses.
-
-    TODO: handle resumption of sessions and their (potential) closure.
     """
 
     def decorator(
@@ -318,8 +316,8 @@ def with_session(
                     return func(session, *args, **kwargs)
 
                 finally:
-                    pass
-                    # TODO try end session if not resumed
+                    if not must_resume:
+                        session.end()
 
         return function_with_session
 
