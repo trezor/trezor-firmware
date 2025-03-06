@@ -71,6 +71,9 @@ class Session:
     def end(self) -> t.Any:
         return self.call(messages.EndSession())
 
+    def cancel(self) -> None:
+        self._write(messages.Cancel())
+
     def ping(self, message: str, button_protection: bool | None = None) -> str:
         resp = self.call(
             messages.Ping(message=message, button_protection=button_protection),

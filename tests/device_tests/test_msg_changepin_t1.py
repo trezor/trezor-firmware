@@ -142,7 +142,6 @@ def test_set_mismatch(session: Session):
         device.change_pin(session)
 
     # Check that there's still no PIN protection now
-    # TODO change session.init_device()
     session.refresh_features()
     assert session.features.pin_protection is False
     _check_no_pin(session)
@@ -169,7 +168,6 @@ def test_change_mismatch(session: Session):
         device.change_pin(session)
 
     # Check that there's still old PIN protection
-    # TODO change session.init_device()
     session.refresh_features()
     assert session.features.pin_protection is True
     _check_pin(session, PIN4)
@@ -195,8 +193,7 @@ def test_set_invalid(session: Session, invalid_pin):
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no PIN protection now
-    # TODO change session.init_device()
-    session.init_session()
+    session.refresh_features()
     assert session.features.pin_protection is False
     _check_no_pin(session)
 

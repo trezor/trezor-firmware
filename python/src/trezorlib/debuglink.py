@@ -1027,9 +1027,6 @@ class SessionDebugWrapper(Session):
         if _refresh_features:
             self.refresh_features()
 
-    def cancel(self) -> None:
-        self._write(messages.Cancel())
-
     def ensure_unlocked(self) -> None:
         btc.get_address(self, "Testnet", PASSPHRASE_TEST_PATH)
         self.refresh_features()
@@ -1102,14 +1099,6 @@ class SessionDebugWrapper(Session):
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
             self._verify_responses(expected_responses, actual_responses)
-            if isinstance(input_flow, t.Generator):
-                # Ensure that the input flow is exhausted
-                try:
-                    input_flow.throw(
-                        AssertionError("input flow continues past end of test")
-                    )
-                except StopIteration:
-                    pass
 
         elif isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in

@@ -114,7 +114,7 @@ def test_abort(session: Session):
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
-        # TODO remove? session.init_device()
+        session.refresh_features()
         assert session.features.initialized is False
         assert session.features.recovery_status is messages.RecoveryStatus.Nothing
 
@@ -141,7 +141,7 @@ def test_abort_between_shares(session: Session):
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
-        # TODO remove? session.init_device()
+        session.refresh_features()
         assert session.features.initialized is False
         assert session.features.recovery_status is messages.RecoveryStatus.Nothing
 
@@ -152,7 +152,7 @@ def test_noabort(session: Session):
         IF = InputFlowSlip39BasicRecoveryNoAbort(client, MNEMONIC_SLIP39_BASIC_20_3of6)
         client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
-        # TODO remove? session.init_device()
+        session.refresh_features()
         assert session.features.initialized is True
 
 
@@ -163,7 +163,7 @@ def test_invalid_mnemonic_first_share(session: Session):
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
-        # TODO remove? session.init_device()
+        session.refresh_features()
         assert session.features.initialized is False
 
 
@@ -176,7 +176,7 @@ def test_invalid_mnemonic_second_share(session: Session):
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
-        # TODO remove? session.init_device()
+        session.refresh_features()
         assert session.features.initialized is False
 
 

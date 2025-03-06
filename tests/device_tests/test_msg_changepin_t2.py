@@ -100,8 +100,7 @@ def test_change_pin(session: Session):
         device.change_pin(session)
 
     # Check that there's still PIN protection now
-    # TODO change session.init_device()
-    # session.refresh_features()
+    session.refresh_features()
     assert session.features.pin_protection is True
     # Check that the PIN is correct
     _check_pin(session, PIN_MAX)
@@ -123,7 +122,6 @@ def test_remove_pin(session: Session):
         device.change_pin(session, remove=True)
 
     # Check that there's no PIN protection now
-    # TODO change session.init_device()
     session.refresh_features()
     assert session.features.pin_protection is False
     _check_no_pin(session)
@@ -161,8 +159,7 @@ def test_change_failed(session: Session):
         device.change_pin(session)
 
     # Check that there's still old PIN protection
-    # TODO change session.init_device()
-    # session.refresh_features()
+    session.refresh_features()
     assert session.features.pin_protection is True
     _check_pin(session, PIN4)
 
@@ -181,7 +178,6 @@ def test_change_invalid_current(session: Session):
         device.change_pin(session)
 
     # Check that there's still old PIN protection
-    # TODO change session.init_device()
     session.refresh_features()
     assert session.features.pin_protection is True
     _check_pin(session, PIN4)

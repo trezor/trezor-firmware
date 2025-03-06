@@ -50,7 +50,7 @@ def test_backup_bip39(session: Session):
         device.backup(session)
 
     assert IF.mnemonic == MNEMONIC12
-    # TODO remove session.init_device()
+    session.refresh_features()
     assert session.features.initialized is True
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable
@@ -76,7 +76,7 @@ def test_backup_slip39_basic(session: Session, click_info: bool):
         client.set_input_flow(IF.get())
         device.backup(session)
 
-    # TODO remove session.init_device()
+    session.refresh_features()
     assert session.features.initialized is True
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable
@@ -131,7 +131,7 @@ def test_backup_slip39_advanced(session: Session, click_info: bool):
         client.set_input_flow(IF.get())
         device.backup(session)
 
-    # TODO remove session.init_device()
+    session.refresh_features()
     assert session.features.initialized is True
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable
@@ -164,7 +164,7 @@ def test_backup_slip39_custom(session: Session, share_threshold, share_count):
             session, group_threshold=1, groups=[(share_threshold, share_count)]
         )
 
-    # TODO remove session.init_device()
+    session.refresh_features()
     assert session.features.initialized is True
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable

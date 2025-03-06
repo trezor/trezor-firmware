@@ -360,7 +360,7 @@ def sign_typed_data(
             member_typename = data["primaryType"]
             member_data = data["message"]
         else:
-            # TODO session.cancel()
+            session.cancel()
             raise exceptions.TrezorException("Root index can only be 0 or 1")
 
         # It can be asking for a nested structure (the member path being [X, Y, Z, ...])

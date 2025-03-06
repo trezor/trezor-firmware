@@ -287,7 +287,6 @@ def _client_unlocked(
     if isinstance(_raw_client.protocol, ProtocolV1Channel):
         try:
             _raw_client.sync_responses()
-            # TODO _raw_client.init_device()
         except Exception:
             request.session.shouldstop = "Failed to communicate with Trezor"
             pytest.fail("Failed to communicate with Trezor")

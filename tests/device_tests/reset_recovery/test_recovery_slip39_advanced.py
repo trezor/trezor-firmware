@@ -94,7 +94,7 @@ def test_abort(session: Session):
         client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
-        # TODO remove? session.init_device()
+        session.refresh_features()
         assert session.features.initialized is False
 
 
@@ -106,7 +106,7 @@ def test_noabort(session: Session):
         )
         client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
-        # TODO remove? session.init_device()
+        session.refresh_features()
         assert session.features.initialized is True
 
 

@@ -199,6 +199,6 @@ def test_set_wipe_code_invalid(session: Session, invalid_wipe_code: str):
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no wipe code protection.
-    session.init_session()  # why no response on GetFeatures?
+    session.refresh_features()
     session.ensure_unlocked()
     assert session.features.wipe_code_protection is False
