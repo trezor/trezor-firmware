@@ -63,9 +63,17 @@ def cancel_backup(
         debug.press_left()
 
 
-def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> None:
+def set_selection(debug: "DebugLink", diff: int) -> None:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         assert "NumberInputDialog" in debug.read_layout().all_components()
+
+        button = (
+            buttons.reset_minus(debug.layout_type)
+            if diff < 0
+            else buttons.reset_plus(debug.layout_type)
+        )
+        diff = abs(diff)
+
         for _ in range(diff):
             debug.click(button)
         if debug.layout_type is LayoutType.Bolt:
@@ -82,8 +90,8 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
             debug.press_right()
             layout = debug.read_layout()
         assert "NumberInput" in layout.all_components()
-        if button == buttons.reset_minus(debug.layout_type):
-            for _ in range(diff):
+        if diff < 0:
+            for _ in range(abs(diff)):
                 debug.press_left()
         else:
             for _ in range(diff):
