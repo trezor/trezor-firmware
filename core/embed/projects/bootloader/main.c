@@ -259,6 +259,7 @@ int bootloader_main(void) {
   system_init(&rsod_panic_handler);
 
   secbool manufacturing_mode = drivers_init(&touch_initialized);
+  (void)manufacturing_mode; // can be unused on some models
 
   ui_screen_boot_stage_1(false);
 
