@@ -11,7 +11,12 @@
     "addr_mismatch__wrong_derivation_path": "Wrong derivation path for selected account.",
     "addr_mismatch__xpub_mismatch": "XPUB mismatch?",
     "address__cancel_contact_support": "If receive address doesn't match, contact Trezor Support at trezor.io/support.",
-    "address__cancel_receive": "Cancel receive",
+    "address__cancel_receive": {
+      "Bolt": "Cancel receive",
+      "Caesar": "Cancel receive",
+      "Delizia": "Cancel receive",
+      "Eckhart": "Cancel receive?"
+    },
     "address__confirmed": "Receive address confirmed",
     "address__public_key": "Public key",
     "address__public_key_confirmed": "Public key confirmed",
@@ -19,6 +24,7 @@
     "address__title_cosigner": "Cosigner",
     "address__title_receive_address": "Receive address",
     "address__title_yours": "Yours",
+    "address__check_with_source": "Check the address with source.",
     "address_details__account_info": "Account info",
     "address_details__derivation_path": "Derivation path",
     "address_details__derivation_path_colon": "Derivation path:",
@@ -407,7 +413,12 @@
     "inputs__return": "RETURN",
     "inputs__show": "SHOW",
     "inputs__space": "SPACE",
-    "instructions__continue_holding": {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"},
+    "instructions__continue_holding": {
+      "Bolt": "",
+      "Caesar": "",
+      "Delizia": "Continue\nholding",
+      "Eckhart": "Keep holding"
+    },
     "instructions__continue_in_app": "Continue in the app",
     "instructions__enter_next_share": "Enter next share",
     "instructions__hold_to_confirm": "Hold to confirm",
@@ -1013,6 +1024,7 @@
     "words__please_check_again": "Please check again",
     "words__please_try_again": "Please try again",
     "words__really_wanna": "Do you really want to",
+    "words__receive": "Receive",
     "words__recipient": "Recipient",
     "words__settings": "Settings",
     "words__sign": "Sign",
