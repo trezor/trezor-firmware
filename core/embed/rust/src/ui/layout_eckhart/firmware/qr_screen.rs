@@ -28,7 +28,7 @@ pub struct QrScreen {
 impl QrScreen {
     const QR_PADDING: i16 = 8;
     const QR_HEIGHT: i16 = 300;
-    const QR_PAD_RADIUS: u8 = 12;
+    const QR_PAD_RADIUS: i16 = 12;
 
     pub fn new(qr: Qr) -> Self {
         Self {
