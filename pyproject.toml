@@ -8,6 +8,7 @@ authors = ["SatoshiLabs <info@satoshilabs.com>"]
 # all
 python = "^3.9"
 trezor = {path = "./python", develop = true}
+tvl = {path = "./vendor/ts-tvl", develop = true}
 scons = "*"
 protobuf = "*"
 nanopb = "^0.4.3"
