@@ -4,10 +4,10 @@ on:
   pull_request:
   workflow_dispatch:
   schedule:
-    - cron: '35 22 * * *'  # every day @ 22:35
+    - cron: "35 22 * * *" # every day @ 22:35
   push:
     branches:
-      - 'release/**'
+      - "release/**"
 
 # cancel any previous runs on the same PR
 concurrency:
@@ -15,9 +15,9 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  id-token: write       # for fetching the OIDC token
-  contents: read        # for actions/checkout
-  pull-requests: write  # For dflook comments on PR
+  id-token: write # for fetching the OIDC token
+  contents: read # for actions/checkout
+  pull-requests: write # For dflook comments on PR
 
 env:
   PULL_COMMENT: |
@@ -167,11 +167,11 @@ jobs:
       - run: chmod +x legacy/firmware/*.elf
       - uses: ./.github/actions/environment
       - run: nix-shell --run "tests/download_emulators.sh"
-      - run: nix-shell --run "poetry run pytest tests/upgrade_tests"
+      - run: nix-shell --run "poetry run pytest --timeout 120 tests/upgrade_tests"
 
   legacy_hwi_test:
     name: HWI test
-    if: false  # XXX currently failing
+    if: false # XXX currently failing
     continue-on-error: true
     runs-on: ubuntu-latest
     needs: legacy_emu
