@@ -75,9 +75,6 @@ def configure(
         sources += ["embed/io/sdcard/stm32f4/sdcard.c"]
         sources += ["embed/upymod/modtrezorio/ff.c"]
         sources += ["embed/upymod/modtrezorio/ffunicode.c"]
-        sources += [
-            "vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_dma.c"
-        ]
         paths += ["embed/io/sdcard/inc"]
         features_available.append("sd_card")
         defines += [("USE_SD_CARD", "1")]
