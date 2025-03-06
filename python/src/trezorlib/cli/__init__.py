@@ -69,7 +69,7 @@ class ChoiceType(click.Choice):
 
 
 def get_passphrase(
-    passphrase_on_host: bool, available_on_device: bool
+    available_on_device: bool, passphrase_on_host: bool
 ) -> t.Union[str, object]:
     if available_on_device and not passphrase_on_host:
         return PASSPHRASE_ON_DEVICE
