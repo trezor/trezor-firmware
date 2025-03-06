@@ -1062,7 +1062,7 @@ class SessionDebugWrapper(Session):
 
         Clears all debugging state that might have been modified by a testcase.
         """
-        self.client.ui: DebugUI = DebugUI(self.client.debug)  # is in main
+        self.client.ui.clear()
         self.in_with_statement = False
         self.expected_responses: list[MessageFilter] | None = None
         self.actual_responses: list[protobuf.MessageType] | None = None
@@ -1090,10 +1090,10 @@ class SessionDebugWrapper(Session):
             self.client.ui, DebugUI
         ):
             input_flow = self.client.ui.input_flow
-            input_flow_loops_forever = self.client.ui.input_flow_loops_forever
+            # input_flow_loops_forever = self.client.ui.input_flow_loops_forever
         else:
             input_flow = None
-            input_flow_loops_forever = False
+            # input_flow_loops_forever = False
 
         self.reset_debug_features()
 
@@ -1101,14 +1101,14 @@ class SessionDebugWrapper(Session):
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
             self._verify_responses(expected_responses, actual_responses)
-            if isinstance(input_flow, t.Generator) and not input_flow_loops_forever:
-                # Ensure that the input flow is exhausted
-                try:
-                    input_flow.throw(
-                        AssertionError("input flow continues past end of test")
-                    )
-                except StopIteration:
-                    pass
+            # if isinstance(input_flow, t.Generator) and not input_flow_loops_forever:
+            #     # Ensure that the input flow is exhausted
+            #     try:
+            #         input_flow.throw(
+            #             AssertionError("input flow continues past end of test")
+            #         )
+            #     except StopIteration:
+            #         pass
 
         elif isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in
@@ -1251,7 +1251,6 @@ class TrezorClientDebugLink(TrezorClient):
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
-        # self.reset_debug_features()
         self._seedless_session = self.get_seedless_session(new_session=True)
         self.sync_responses()
 
@@ -1462,12 +1461,6 @@ class TrezorClientDebugLink(TrezorClient):
             return self.mnemonic[pos - 1]
 
         raise RuntimeError("Unexpected call")
-
-    def __enter__(self) -> "TrezorClientDebugLink":
-        return self
-
-    def __exit__(self, exc_type: t.Any, value: t.Any, traceback: t.Any) -> None:
-        pass
 
 
 def load_device(

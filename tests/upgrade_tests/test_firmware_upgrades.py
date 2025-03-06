@@ -395,9 +395,9 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
 
         # Create a backup of the encrypted master secret.
         assert emu.client.features.backup_availability == BackupAvailability.Required
-        with emu.client:
+        session = emu.client.get_session()
+        with session:
             IF = InputFlowSlip39BasicBackup(emu.client, False)
-            session = emu.client.get_session()
             session.set_input_flow(IF.get())
             device.backup(session)
         assert (

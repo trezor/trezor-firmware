@@ -395,7 +395,7 @@ def test_passphrase_length(client: Client):
 def test_hide_passphrase_from_host(client: Client):
     # Without safety checks, turning it on fails
     session = client.get_seedless_session()
-    with pytest.raises(TrezorFailure, match="Safety checks are strict"), client:
+    with pytest.raises(TrezorFailure, match="Safety checks are strict"):
         device.apply_settings(session, hide_passphrase_from_host=True)
 
     device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
@@ -405,7 +405,7 @@ def test_hide_passphrase_from_host(client: Client):
 
     passphrase = "abc"
     session = client.get_session(passphrase=passphrase)
-    with client, session:
+    with session:
 
         def input_flow():
             yield
@@ -439,7 +439,7 @@ def test_hide_passphrase_from_host(client: Client):
     # Starting new session, otherwise the passphrase would be cached
     session = client.get_session(passphrase=passphrase)
 
-    with client, session:
+    with session:
 
         def input_flow():
             yield

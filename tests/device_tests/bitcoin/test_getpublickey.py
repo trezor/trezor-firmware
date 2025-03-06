@@ -158,7 +158,7 @@ def test_get_public_node_show_legacy(
         client.debug.press_yes()  # finish the flow
         yield
 
-    with client:
+    with session:
         # test XPUB display flow (without showing QR code)
         res = btc.get_public_node(session, path, coin_name=coin_name, show_display=True)
         assert res.xpub == xpub
