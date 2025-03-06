@@ -135,6 +135,8 @@ class TrezorClient:
                     )
                     derive_seed(session)
                     self.passphrase_callback = temporary
+                elif passphrase is PASSPHRASE_ON_DEVICE:
+                    derive_seed(session)
 
             return session
         raise NotImplementedError
