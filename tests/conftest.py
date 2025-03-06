@@ -381,15 +381,12 @@ def session(
         session = _client_unlocked.get_session(
             derive_cardano=derive_cardano, passphrase=passphrase
         )
-    try:
-        if _client_unlocked._setup_pin is not None:
-            session.lock()
-        with ui_tests.screen_recording(_client_unlocked, request):
-            yield session
-    finally:
-        # Not really needed since the device gets wiped later anyway.
-        # session.end()
-        pass
+
+    if _client_unlocked._setup_pin is not None:
+        session.lock()
+    with ui_tests.screen_recording(_client_unlocked, request):
+        yield session
+    # Calling session.end() is not needed since the device gets wiped later anyway.
 
 
 def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
