@@ -994,5 +994,7 @@
   "992": "nostr__event_kind_template",
   "993": "reset__share_words_first",
   "994": "backup__not_recommend",
-  "995": "words__pay_attention"
+  "995": "words__pay_attention",
+  "996": "address__check_with_source",
+  "997": "words__receive"
 }
