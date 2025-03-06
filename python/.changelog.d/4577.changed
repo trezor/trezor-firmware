@@ -1,1 +1,1 @@
-Changed trezorlib to session-based. Changes affect also trezorctl and tests.
+Changed trezorlib to session-based. Changes affect also trezorctl, python tools, and tests.
