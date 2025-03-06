@@ -36,6 +36,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: "recursive"
       - uses: ./.github/actions/environment
       - name: "Run style check"
         run: nix-shell --run "poetry run make style_check"
