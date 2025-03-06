@@ -997,5 +997,7 @@
   "995": "ble__unpair_title",
   "996": "reset__share_words_first",
   "997": "backup__not_recommend",
-  "998": "words__pay_attention"
+  "998": "words__pay_attention",
+  "999": "address__check_with_source",
+  "1000": "words__receive"
 }
