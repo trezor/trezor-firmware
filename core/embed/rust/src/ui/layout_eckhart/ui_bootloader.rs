@@ -1,10 +1,11 @@
 use crate::{
     trezorhal::secbool::secbool,
     ui::{
-        component::{connect::Connect, Label},
-        display::{self, toif::Toif, Color, Icon, LOADER_MAX},
+        component::Label,
+        display::{self, toif::Toif, Color},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::simplified::{run, show},
+        layout_eckhart::theme::ICON_CLOSE,
         shape::{self, render_on_display},
         ui_bootloader::BootloaderUI,
         CommonUI,
@@ -16,19 +17,19 @@ use ufmt::uwrite;
 
 use super::{
     bootloader::{
-        BldActionBar, BldHeader, BldMenuScreen, BldTextScreen, BldWelcomeScreen, ConfirmScreen,
-        ConfirmTitle, IntroScreen,
+        BldActionBar, BldHeader, BldHeaderMsg, BldMenuScreen, BldTextScreen, BldWelcomeScreen,
+        IntroScreen,
     },
     component::{Button, WelcomeScreen},
-    cshape::{render_loader, LoaderRange, ScreenBorder},
+    cshape::{render_loader, ScreenBorder},
     fonts,
     theme::{
         self, backlight,
         bootloader::{
-            button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, WELCOME_COLOR,
+            button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG, BLD_FG,
+            BLD_WARN_COLOR, BLD_WIPE_COLOR, WELCOME_COLOR,
         },
-        GREEN_LIGHT, GREY, TEXT_NORMAL,
+        BLUE, GREY, ICON_CHECKMARK, ICON_CROSS, RED, TEXT_NORMAL,
     },
     UIEckhart,
 };
@@ -38,16 +39,16 @@ pub type BootloaderString = String<128>;
 const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
 
 const SCREEN: Rect = UIEckhart::SCREEN;
-const PROGRESS_TEXT_ORIGIN: Point = Point::new(2, 28);
+// TODO: adjust offset
+const PROGRESS_TEXT_ORIGIN: Point = SCREEN.top_left().ofs(Offset::new(24, 48));
+const SCREEN_BORDER_BLUE: ScreenBorder = ScreenBorder::new(BLUE);
 
 impl UIEckhart {
     fn screen_progress(
         text: &str,
         progress: u16,
         initialize: bool,
-        fg_color: Color,
         bg_color: Color,
-        icon: Option<(Icon, Color)>,
         center_text: Option<&str>,
     ) {
         if initialize {
@@ -57,44 +58,17 @@ impl UIEckhart {
 
         render_on_display(None, Some(bg_color), |target| {
             shape::Text::new(PROGRESS_TEXT_ORIGIN, text, fonts::FONT_SATOSHI_REGULAR_38)
+                .with_align(Alignment::Start)
                 .with_fg(BLD_FG)
                 .render(target);
 
-            let loader_offset: i16 = 19;
-            let center_text_offset: i16 = 10;
-            let center = SCREEN.center() + Offset::y(loader_offset);
-            let inactive_color = bg_color.blend(fg_color, 85);
-            let end = 360.0 * progress as f32 / 1000.0;
-
-            render_loader(
-                center,
-                inactive_color,
-                fg_color,
-                bg_color,
-                if progress >= LOADER_MAX {
-                    LoaderRange::Full
-                } else {
-                    LoaderRange::FromTo(0.0, end)
-                },
-                target,
-            );
-
-            if let Some((icon, color)) = icon {
-                shape::ToifImage::new(center, icon.toif)
-                    .with_align(Alignment2D::CENTER)
-                    .with_fg(color)
-                    .render(target);
-            }
+            render_loader(progress, &SCREEN_BORDER_BLUE, target);
 
             if let Some(center_text) = center_text {
-                shape::Text::new(
-                    SCREEN.center() + Offset::y(loader_offset + center_text_offset),
-                    center_text,
-                    fonts::FONT_SATOSHI_REGULAR_38,
-                )
-                .with_align(Alignment::Center)
-                .with_fg(GREY)
-                .render(target);
+                shape::Text::new(SCREEN.center(), center_text, fonts::FONT_SATOSHI_REGULAR_38)
+                    .with_align(Alignment::Center)
+                    .with_fg(GREY)
+                    .render(target);
             }
         });
 
@@ -114,7 +88,6 @@ impl BootloaderUI for UIEckhart {
         let mut reboot_msg = BootloaderString::new();
 
         let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let fg_color = if initial_setup { GREEN_LIGHT } else { BLD_FG };
 
         if restart_seconds >= 1 {
             // in practice, restart_seconds is 5 or less so this is fine
@@ -126,21 +99,11 @@ impl BootloaderUI for UIEckhart {
                 "Restarting device",
                 progress,
                 complete_draw,
-                fg_color,
                 bg_color,
-                None,
                 Some(reboot_msg.as_str()),
             );
         } else {
-            Self::screen_progress(
-                "Firmware installed",
-                1000,
-                complete_draw,
-                fg_color,
-                bg_color,
-                Some((Icon::new(CHECK24), BLD_FG)),
-                None,
-            );
+            Self::screen_progress("Firmware installed", 1000, complete_draw, bg_color, None);
         }
     }
 
@@ -320,27 +283,16 @@ impl BootloaderUI for UIEckhart {
             "Resetting Trezor",
             progress,
             initialize,
-            BLD_FG,
             BLD_WIPE_COLOR,
-            Some((Icon::new(FIRE32), BLD_FG)),
             None,
         )
     }
 
     fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
         let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let fg_color = if initial_setup { GREEN_LIGHT } else { BLD_FG };
         let icon_color = BLD_FG;
 
-        Self::screen_progress(
-            "Installing firmware",
-            progress,
-            initialize,
-            fg_color,
-            bg_color,
-            Some((Icon::new(DOWNLOAD24), icon_color)),
-            None,
-        )
+        Self::screen_progress("Installing firmware", progress, initialize, bg_color, None)
     }
 
     fn screen_connect(initial_setup: bool) {
