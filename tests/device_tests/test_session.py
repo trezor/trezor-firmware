@@ -76,7 +76,7 @@ def test_end_session(client: Client):
     assert session.id is not None
 
     # get_address will succeed
-    with session as session:
+    with session:
         session.set_expected_responses([messages.Address])
         get_test_address(session)
 
@@ -89,7 +89,7 @@ def test_end_session(client: Client):
 
     session = client.get_session()
     assert session.id is not None
-    with session as session:
+    with session:
         session.set_expected_responses([messages.Address])
         get_test_address(session)
 
