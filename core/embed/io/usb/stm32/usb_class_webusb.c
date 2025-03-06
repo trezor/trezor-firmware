@@ -23,10 +23,14 @@
 
 #include <io/usb_webusb.h>
 #include <sec/random_delays.h>
+#include <sys/dbg_printf.h>
+#include <sys/systick.h>
 
 #include "usb_internal.h"
 
 #define USB_CLASS_WEBUSB 0xFF
+
+volatile uint32_t g_sof_count = 0;
 
 typedef struct __attribute__((packed)) {
   usb_interface_descriptor_t iface;
@@ -180,6 +184,12 @@ int usb_webusb_read(uint8_t iface_num, uint8_t *buf, uint32_t len) {
   }
   memcpy(buf, state->rx_buffer, last_read_len);
 
+  dbg_printf(
+      "%08d: read: sof=%06d, l=%d, d=%02X %02X %02X %02X %02X %02X %02X "
+      "%02X...\n",
+      systick_ms(), g_sof_count, last_read_len, buf[0], buf[1], buf[2], buf[3],
+      buf[4], buf[5], buf[6], buf[7]);
+
   // Reset the length to indicate we are ready to read next packet
   state->last_read_len = 0;
 
@@ -199,6 +209,12 @@ int usb_webusb_write(uint8_t iface_num, const uint8_t *buf, uint32_t len) {
   if (state->dev_handle == NULL) {
     return -1;  // Class driver not initialized
   }
+
+  dbg_printf(
+      "%08d: write: sof=%06d, l=%d, d=%02X %02X %02X %02X %02X %02X %02X "
+      "%02X...\n",
+      systick_ms(), g_sof_count, len, buf[0], buf[1], buf[2], buf[3], buf[4],
+      buf[5], buf[6], buf[7]);
 
   state->ep_in_is_idle = 0;
   USBD_LL_Transmit(state->dev_handle, state->ep_in, UNCONST(buf),
@@ -321,6 +337,8 @@ static uint8_t usb_webusb_class_data_in(USBD_HandleTypeDef *dev,
   if ((ep_num | USB_EP_DIR_IN) == state->ep_in) {
     wait_random();
     state->ep_in_is_idle = 1;
+
+    dbg_printf("%08d: sent: sof=%d\n", systick_ms(), g_sof_count);
   }
 
   return USBD_OK;
@@ -335,8 +353,21 @@ static uint8_t usb_webusb_class_data_out(USBD_HandleTypeDef *dev,
     // Save the report length to indicate we have read something, but don't
     // schedule next reading until user reads this one
     state->last_read_len = USBD_LL_GetRxDataSize(dev, ep_num);
+
+    dbg_printf("%08d: rcv: sof=%06d, l=%d\n", systick_ms(), g_sof_count,
+               state->last_read_len);
   }
 
+  return USBD_OK;
+}
+
+static uint8_t usb_class_sof(USBD_HandleTypeDef *dev) {
+  {
+    g_sof_count++;
+    if (g_sof_count % 1000 == 0) {
+      dbg_printf("%08d: sof: sof=%06d\n", systick_ms(), g_sof_count);
+    }
+  }
   return USBD_OK;
 }
 
@@ -348,7 +379,7 @@ static const USBD_ClassTypeDef usb_webusb_class = {
     .EP0_RxReady = NULL,
     .DataIn = usb_webusb_class_data_in,
     .DataOut = usb_webusb_class_data_out,
-    .SOF = NULL,
+    .SOF = usb_class_sof,
     .IsoINIncomplete = NULL,
     .IsoOUTIncomplete = NULL,
     .GetHSConfigDescriptor = NULL,
