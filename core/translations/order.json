@@ -1016,5 +1016,7 @@
   "1014": "instructions__tap",
   "1015": "reset__share_words_first",
   "1016": "backup__not_recommend",
-  "1017": "words__pay_attention"
+  "1017": "words__pay_attention",
+  "1018": "address__check_with_source",
+  "1019": "words__receive"
 }
