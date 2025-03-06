@@ -335,21 +335,36 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn flow_get_address(
-        _address: Obj,
-        _title: TString<'static>,
-        _description: Option<TString<'static>>,
-        _extra: Option<TString<'static>>,
-        _chunkify: bool,
-        _address_qr: TString<'static>,
-        _case_sensitive: bool,
-        _account: Option<TString<'static>>,
-        _path: Option<TString<'static>>,
-        _xpubs: Obj,
-        _title_success: TString<'static>,
-        _br_code: u16,
-        _br_name: TString<'static>,
+        address: Obj,
+        title: TString<'static>,
+        description: Option<TString<'static>>,
+        extra: Option<TString<'static>>,
+        chunkify: bool,
+        address_qr: TString<'static>,
+        case_sensitive: bool,
+        account: Option<TString<'static>>,
+        path: Option<TString<'static>>,
+        xpubs: Obj,
+        title_success: TString<'static>,
+        br_code: u16,
+        br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let flow = flow::get_address::new_get_address(
+            title,
+            description,
+            extra,
+            address,
+            chunkify,
+            address_qr,
+            case_sensitive,
+            account,
+            path,
+            xpubs,
+            title_success,
+            br_code,
+            br_name,
+        )?;
+        Ok(flow)
     }
 
     fn multiple_pages_texts(
