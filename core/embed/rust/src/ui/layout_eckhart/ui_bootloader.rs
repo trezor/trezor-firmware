@@ -36,7 +36,7 @@ use super::{
 
 pub type BootloaderString = String<128>;
 
-const RECONNECT_MESSAGE: &str = "PLEASE RECONNECT\nTHE DEVICE";
+const RECONNECT_MESSAGE: &str = "Please reconnect\nthe device";
 
 const SCREEN: Rect = UIEckhart::SCREEN;
 // TODO: adjust offset

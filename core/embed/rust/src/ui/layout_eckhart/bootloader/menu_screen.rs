@@ -3,17 +3,19 @@ use crate::{
     ui::{
         component::{Child, Component, Event, EventCtx, Label, Pad},
         constant::{screen, WIDTH},
-        display::Icon,
         geometry::{Insets, Point, Rect},
         shape::Renderer,
     },
 };
 
 use super::super::{
-    component::{Button, ButtonMsg::Clicked, IconText},
-    theme::bootloader::{
-        button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
-        CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, FIRE24, REFRESH24, TITLE_AREA, X32,
+    component::{Button, ButtonMsg::Clicked},
+    theme::{
+        bootloader::{
+            button_bld, button_bld_menu, text_title, BLD_BG, BUTTON_HEIGHT, CONTENT_PADDING,
+            CORNER_BUTTON_AREA, CORNER_BUTTON_TOUCH_EXPANSION, TITLE_AREA,
+        },
+        ICON_CLOSE,
     },
 };
 
@@ -32,31 +34,30 @@ pub struct BldMenuScreen {
     bg: Pad,
     title: Child<Label<'static>>,
     close: Child<Button>,
-    reboot: Child<Button>,
-    reset: Child<Button>,
+    header: BldHeader<'static>,
+    bluetooth: Button,
+    reboot: Button,
+    reset: Button,
 }
 
 impl BldMenuScreen {
     pub fn new(firmware_present: secbool) -> Self {
-        let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
-        let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
-
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
             title: Child::new(
-                Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG)).vertically_centered(),
+                Label::left_aligned("Bootloader".into(), text_title(BLD_BG)).vertically_centered(),
             ),
             close: Child::new(
-                Button::with_icon(Icon::new(X32))
+                Button::with_icon(ICON_CLOSE)
                     .styled(button_bld_menu())
                     .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
             ),
             reboot: Child::new(
-                Button::with_icon_and_text(content_reboot)
+                Button::with_text("Reboot Trezor".into())
                     .styled(button_bld())
                     .initially_enabled(sectrue == firmware_present),
             ),
-            reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
+            reset: Child::new(Button::with_text("Factory reset".into()).styled(button_bld())),
         };
         instance.bg.clear();
         instance

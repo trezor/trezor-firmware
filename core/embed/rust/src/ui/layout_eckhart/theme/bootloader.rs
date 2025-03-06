@@ -9,7 +9,7 @@ use super::super::{
     component::{ButtonStyle, ButtonStyleSheet},
     fonts,
 };
-use super::{BLACK, GREY_DARK, GREY_LIGHT, GREY_SUPER_DARK, WHITE};
+use super::{BLACK, GREY, GREY_DARK, GREY_LIGHT, GREY_SUPER_DARK, WHITE};
 
 pub const BLD_BG: Color = BLACK;
 pub const BLD_FG: Color = WHITE;
@@ -30,14 +30,10 @@ pub const BLD_INSTALL_BTN_COLOR_ACTIVE: Color = Color::rgb(0xCD, 0xD2, 0xEF);
 pub const BLD_BTN_COLOR: Color = Color::rgb(0x2D, 0x42, 0xBF);
 pub const BLD_BTN_COLOR_ACTIVE: Color = Color::rgb(0x04, 0x10, 0x58);
 
-pub const BLD_TITLE_COLOR: Color = WHITE;
-
 pub const WELCOME_COLOR: Color = BLACK;
 pub const WELCOME_HIGHLIGHT_COLOR: Color = Color::rgb(0x28, 0x28, 0x28);
 
 // Commonly used constants for UI elements.
-pub const TEXT_VERTICAL_SPACING: i16 = 24;
-
 pub const CONTENT_PADDING: i16 = 6;
 pub const TITLE_AREA: Rect = Rect::new(
     Point::new(CONTENT_PADDING, CONTENT_PADDING),
@@ -104,32 +100,6 @@ pub const fn button_header() -> ButtonStyleSheet {
             button_color: BLD_BG,
             icon_color: GREY_LIGHT,
             background_color: BLD_BG,
-        },
-    }
-}
-
-pub fn button_wipe_cancel() -> ButtonStyleSheet {
-    ButtonStyleSheet {
-        normal: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: WHITE,
-            button_color: BLD_WIPE_CANCEL_BTN_COLOR,
-            icon_color: WHITE,
-            background_color: BLD_WIPE_COLOR,
-        },
-        active: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: WHITE,
-            button_color: BLD_WIPE_CANCEL_BTN_COLOR_ACTIVE,
-            icon_color: WHITE,
-            background_color: BLD_WIPE_COLOR,
-        },
-        disabled: &ButtonStyle {
-            font: fonts::FONT_SATOSHI_MEDIUM_26,
-            text_color: GREY_LIGHT,
-            button_color: GREY_DARK,
-            icon_color: GREY_LIGHT,
-            background_color: WHITE,
         },
     }
 }
@@ -213,13 +183,7 @@ pub fn button_bld() -> ButtonStyleSheet {
 }
 
 pub const fn text_title(bg: Color) -> TextStyle {
-    TextStyle::new(
-        fonts::FONT_SATOSHI_MEDIUM_26,
-        BLD_TITLE_COLOR,
-        bg,
-        BLD_TITLE_COLOR,
-        BLD_TITLE_COLOR,
-    )
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY, bg, GREY, GREY)
 }
 
 pub const TEXT_NORMAL: TextStyle = TextStyle::new(

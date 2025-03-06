@@ -48,6 +48,7 @@ pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 pub const HEADER_HEIGHT: i16 = 96; // [px]
 pub const SIDE_INSETS: Insets = Insets::sides(24); // [px]
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
+pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
 
 // UI icons (white color).
 include_icon!(ICON_CHEVRON_DOWN, "layout_eckhart/res/chevron_down.toif");
