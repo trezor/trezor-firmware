@@ -34,6 +34,7 @@
 // misc
 #define FLASH_START 0x0C004000
 #define NORCOW_SECTOR_SIZE (8 * 8 * 1024)  // 64 kB
+#define NORCOW_MIN_VERSION 0x00000000
 
 // FLASH layout
 #define SECRET_START 0x0C000000
