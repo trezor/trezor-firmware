@@ -193,7 +193,7 @@ def test_set_invalid(session: Session, invalid_pin):
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no PIN protection now
-    session.refresh_features()
+    session = session.client.resume_session(session)
     assert session.features.pin_protection is False
     _check_no_pin(session)
 
