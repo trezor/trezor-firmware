@@ -85,3 +85,10 @@ class UnexpectedMessageError(TrezorException):
         self.expected = expected
         self.actual = actual
         super().__init__(f"Expected {expected.__name__} but Trezor sent {actual}")
+
+
+class FailedSessionResumption(TrezorException):
+    """Provided session_id is not valid / session cannot be resumed.
+
+    Raised when `trezorctl -s <sesssion_id>` is used or `TREZOR_SESSION_ID = <session_id>`
+    is set and resumption of session with the `session_id` fails."""
