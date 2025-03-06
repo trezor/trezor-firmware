@@ -36,6 +36,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Initialize and update ts-tvl
+        run: |
+          git submodule update --init --recursive vendor/ts-tvl
       - uses: ./.github/actions/environment
       - name: "Run style check"
         run: nix-shell --run "poetry run make style_check"
