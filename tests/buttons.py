@@ -125,9 +125,6 @@ def ui_no(layout_type: LayoutType) -> Coords:
 def reset_minus(layout_type: LayoutType) -> Coords:
     if layout_type is LayoutType.Bolt:
         return (left(layout_type), grid(display_height(layout_type), 5, 1))
-    elif layout_type is LayoutType.Caesar:
-        # TODO temporary workaround to make the 'set_selection' function work
-        return (left(layout_type), grid(display_height(layout_type), 5, 1))
     elif layout_type is LayoutType.Delizia:
         return (left(layout_type), grid(display_height(layout_type), 5, 3))
     else:
@@ -136,9 +133,6 @@ def reset_minus(layout_type: LayoutType) -> Coords:
 
 def reset_plus(layout_type: LayoutType) -> Coords:
     if layout_type is LayoutType.Bolt:
-        return (right(layout_type), grid(display_height(layout_type), 5, 1))
-    elif layout_type is LayoutType.Caesar:
-        # TODO temporary workaround to make the 'set_selection' function work
         return (right(layout_type), grid(display_height(layout_type), 5, 1))
     elif layout_type is LayoutType.Delizia:
         return (right(layout_type), grid(display_height(layout_type), 5, 3))

@@ -20,7 +20,6 @@ import pytest
 
 from trezorlib import device, messages
 
-from .. import buttons
 from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from . import reset
 
@@ -79,14 +78,7 @@ def test_reset_slip39_basic(
     reset.confirm_read(debug)
 
     # set num of shares - default is 5
-    if num_of_shares < 5:
-        reset.set_selection(
-            debug, buttons.reset_minus(debug.layout_type), 5 - num_of_shares
-        )
-    else:
-        reset.set_selection(
-            debug, buttons.reset_plus(debug.layout_type), num_of_shares - 5
-        )
+    reset.set_selection(debug, num_of_shares - 5)
 
     # confirm checklist
     # TR.assert_in(
@@ -97,9 +89,9 @@ def test_reset_slip39_basic(
     # set threshold
     # TODO: could make it general as well
     if num_of_shares == 1 and threshold == 1:
-        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 0)
+        reset.set_selection(debug, 0)
     elif num_of_shares == 16 and threshold == 16:
-        reset.set_selection(debug, buttons.reset_plus(debug.layout_type), 11)
+        reset.set_selection(debug, 11)
     else:
         raise RuntimeError("not a supported combination")
 
