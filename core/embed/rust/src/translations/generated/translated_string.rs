@@ -1255,7 +1255,7 @@ pub enum TranslatedString {
     words__not_recommended = 861,  // "Not recommended!"
     address_details__account_info = 862,  // "Account info"
     address__cancel_contact_support = 863,  // "If receive address doesn't match, contact Trezor Support at trezor.io/support."
-    address__cancel_receive = 864,  // "Cancel receive"
+    address__cancel_receive = 864,  // {"Bolt": "Cancel receive", "Caesar": "Cancel receive", "Delizia": "Cancel receive", "Eckhart": "Cancel receive?"}
     address__qr_code = 865,  // "QR code"
     address_details__derivation_path = 866,  // "Derivation path"
     instructions__continue_in_app = 867,  // "Continue in the app"
@@ -1407,6 +1407,8 @@ pub enum TranslatedString {
     reset__share_words_first = 993,  // "Write down the first word from the backup."
     backup__not_recommend = 994,  // "We don't recommend to skip wallet backup creation."
     words__pay_attention = 995,  // "Pay attention"
+    address__check_with_source = 996,  // "Check the address with source."
+    words__receive = 997,  // "Receive"
 }
 
 impl TranslatedString {
@@ -2693,7 +2695,14 @@ impl TranslatedString {
             Self::words__not_recommended => "Not recommended!",
             Self::address_details__account_info => "Account info",
             Self::address__cancel_contact_support => "If receive address doesn't match, contact Trezor Support at trezor.io/support.",
+            #[cfg(feature = "layout_bolt")]
             Self::address__cancel_receive => "Cancel receive",
+            #[cfg(feature = "layout_caesar")]
+            Self::address__cancel_receive => "Cancel receive",
+            #[cfg(feature = "layout_delizia")]
+            Self::address__cancel_receive => "Cancel receive",
+            #[cfg(feature = "layout_eckhart")]
+            Self::address__cancel_receive => "Cancel receive?",
             Self::address__qr_code => "QR code",
             Self::address_details__derivation_path => "Derivation path",
             Self::instructions__continue_in_app => "Continue in the app",
@@ -2880,6 +2889,8 @@ impl TranslatedString {
             Self::reset__share_words_first => "Write down the first word from the backup.",
             Self::backup__not_recommend => "We don't recommend to skip wallet backup creation.",
             Self::words__pay_attention => "Pay attention",
+            Self::address__check_with_source => "Check the address with source.",
+            Self::words__receive => "Receive",
         }
     }
 
@@ -4282,6 +4293,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
             Qstr::MP_QSTR_backup__not_recommend => Some(Self::backup__not_recommend),
             Qstr::MP_QSTR_words__pay_attention => Some(Self::words__pay_attention),
+            Qstr::MP_QSTR_address__check_with_source => Some(Self::address__check_with_source),
+            Qstr::MP_QSTR_words__receive => Some(Self::words__receive),
             _ => None,
         }
     }
