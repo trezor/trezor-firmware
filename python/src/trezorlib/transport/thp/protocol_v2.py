@@ -213,20 +213,21 @@ class ProtocolV2Channel(Channel):
         trezor_ephemeral_pubkey = init_response[:32]
         encrypted_trezor_static_pubkey = init_response[32:80]
         noise_tag = init_response[80:96]
-        print(
-            "trezor_ephemeral_pubkey:     ", hexlify(trezor_ephemeral_pubkey).decode()
-        )
+        print("trezor_ephemeral_pubkey:     ", hexlify(trezor_ephemeral_pubkey))
         print(
             "encrypted_trezor_static_pubkey:",
-            hexlify(encrypted_trezor_static_pubkey).decode(),
+            hexlify(encrypted_trezor_static_pubkey),
         )
-        print("noise_tag:                   ", hexlify(noise_tag).decode())
-
-        recv = self.noise.read_message(init_response)
-        print("recv:                        ", hexlify(recv).decode())
-        LOG.debug("noise_tag: %s", hexlify(noise_tag).decode())
+        print("noise_tag:                   ", hexlify(noise_tag))
 
         # TODO check noise_tag is valid
+        print("init_response:               ", hexlify(init_response))
+        print("init_response[:32]:          ", hexlify(init_response[:32]))
+        print("init_response[32:80]:        ", hexlify(init_response[32:80]))
+        recv = self.noise.read_message(init_response)
+        print("recv:                        ", hexlify(recv).decode())
+
+        LOG.debug("noise_tag: %s", hexlify(noise_tag).decode())
 
         ck = self._send_handshake_completion_request(
             host_ephemeral_pubkey,
