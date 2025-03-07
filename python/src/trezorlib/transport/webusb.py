@@ -26,7 +26,7 @@ from typing_extensions import Self
 
 from ..log import DUMP_PACKETS
 from ..models import TREZORS, TrezorModel
-from . import UDEV_RULES_STR, DeviceIsBusy, TransportException
+from . import UDEV_RULES_STR, DeviceIsBusy, Timeout, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
@@ -109,20 +109,16 @@ class WebUsbHandle:
                 chunk = self.handle.interruptRead(
                     endpoint, WEBUSB_CHUNK_SIZE, USB_COMM_TIMEOUT_MS
                 )
-                if chunk:
-                    break
-                else:
-                    if timeout is not None and time.time() - start > timeout:
-                        raise TransportException("Timeout reading WebUSB packet")
-                    time.sleep(0.001)
+                LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
+                if len(chunk) != WEBUSB_CHUNK_SIZE:
+                    raise TransportException(f"Unexpected chunk size: {len(chunk)}")
+                return chunk
             except usb1.USBErrorTimeout:
-                pass
+                if timeout is not None and time.time() - start > timeout:
+                    raise Timeout("Timeout reading WebUSB packet")
+                time.sleep(0.001)
             except Exception as e:
                 raise TransportException(f"USB read failed: {e}") from e
-        LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
-        if len(chunk) != WEBUSB_CHUNK_SIZE:
-            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
-        return chunk
 
 
 class WebUsbTransport(ProtocolBasedTransport):

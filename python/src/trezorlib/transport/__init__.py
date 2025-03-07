@@ -45,6 +45,10 @@ class DeviceIsBusy(TransportException):
     pass
 
 
+class Timeout(TransportException):
+    pass
+
+
 class Transport:
     """Raw connection to a Trezor device.
 
