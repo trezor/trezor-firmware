@@ -24,12 +24,6 @@
 #include <stm32u5xx_hal_cryp.h>
 
 #include <sec/secure_aes.h>
-#include <sys/mpu.h>
-#include <sys/syscall.h>
-
-#ifdef USE_TRUSTZONE
-#include <sys/trustzone.h>
-#endif
 
 #include "memzero.h"
 
@@ -37,8 +31,6 @@
 #define AES_BLOCK_SIZE 16
 
 #ifdef KERNEL_MODE
-
-#include <sys/irq.h>
 
 static void secure_aes_load_bhk(void) {
   TAMP->BKP0R;
@@ -76,7 +68,17 @@ static secbool is_key_supported(secure_aes_keysel_t key) {
   }
 }
 
+#if NORCOW_MIN_VERSION <= 5
 #ifdef SYSCALL_DISPATCH
+
+#include <sys/mpu.h>
+#include <sys/syscall.h>
+
+#ifdef USE_TRUSTZONE
+#include <sys/trustzone.h>
+#endif
+
+#include <sys/irq.h>
 
 __attribute__((section(".udata")))
 uint32_t saes_input[SAES_DATA_SIZE_WITH_UPRIV_KEY / sizeof(uint32_t)];
@@ -220,13 +222,16 @@ secbool unpriv_encrypt(const uint8_t* input, size_t size, uint8_t* output,
   return retval;
 }
 #endif
+#endif
 
 secbool secure_aes_ecb_encrypt_hw(const uint8_t* input, size_t size,
                                   uint8_t* output, secure_aes_keysel_t key) {
+#if NORCOW_MIN_VERSION <= 5
 #ifdef SYSCALL_DISPATCH
   if (key == SECURE_AES_KEY_XORK_SN) {
     return unpriv_encrypt(input, size, output, key);
   }
+#endif
 #endif
 
   if (sectrue != is_key_supported(key)) {
