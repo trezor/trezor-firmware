@@ -87,10 +87,11 @@ def get_passphrase_choices(char: str) -> tuple[str, ...]:
 
 
 def passphrase(char: str, layout_type: LayoutType) -> Tuple[buttons.Coords, int]:
+    btns = buttons.ScreenButtons(layout_type)
     choices = get_passphrase_choices(char)
     idx = next(i for i, letters in enumerate(choices) if char in letters)
     click_amount = choices[idx].index(char) + 1
-    return buttons.pin_passphrase_index(idx, layout_type), click_amount
+    return btns.pin_passphrase_index(idx), click_amount
 
 
 @contextmanager
@@ -171,16 +172,16 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     is_empty: bool = len(debug.read_layout().passphrase()) == 0
-    coords = buttons.corner_button(debug.layout_type)  # top-right corner
-    debug.click(coords)
+    btns = buttons.ScreenButtons(debug.layout_type)
+    debug.click(btns.passphrase_confirm())
     if is_empty:
-        debug.click(buttons.ui_yes(debug.layout_type))
+        debug.click(btns.ui_yes())
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    coords = buttons.pin_passphrase_grid(9, debug.layout_type)
-    debug.click(coords)
+    btns = buttons.ScreenButtons(debug.layout_type)
+    debug.click(btns.pin_passphrase_erase())
 
 
 VECTORS = (  # passphrase, address
@@ -250,8 +251,8 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
         debug.read_layout()
 
         enter_passphrase(debug)
-        coords = buttons.pin_passphrase_grid(11, debug.layout_type)
-        debug.click(coords)
+        btns = buttons.ScreenButtons(debug.layout_type)
+        debug.click(btns.passphrase_confirm())
 
 
 @pytest.mark.setup_client(passphrase=True)
@@ -259,7 +260,8 @@ def test_passphrase_click_same_button_many_times(
     device_handler: "BackgroundDeviceHandler",
 ):
     with prepare_passphrase_dialogue(device_handler) as debug:
-        a_coords, _ = buttons.passphrase("a", debug.layout_type)
+        actions = buttons.ButtonActions(debug.layout_type)
+        a_coords, _ = actions.passphrase("a")
         for _ in range(10):
             debug.click(a_coords)
 

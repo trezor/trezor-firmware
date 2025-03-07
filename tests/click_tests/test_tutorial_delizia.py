@@ -36,10 +36,11 @@ pytestmark = [
 
 def test_tutorial_ignore_menu(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
+    btns = buttons.ScreenButtons(debug.layout_type)
     device_handler.run(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_lets_begin
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_easy_navigation
@@ -47,7 +48,7 @@ def test_tutorial_ignore_menu(device_handler: "BackgroundDeviceHandler"):
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -56,24 +57,25 @@ def test_tutorial_ignore_menu(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_open_close(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
+    btns = buttons.ScreenButtons(debug.layout_type)
     device_handler.run(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_lets_begin
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_easy_navigation
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
 
-    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(btns.menu())
     assert TR.tutorial__did_you_know in debug.read_layout().text_content()
-    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(btns.menu())
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
 
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -82,21 +84,22 @@ def test_tutorial_menu_open_close(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_exit(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
+    btns = buttons.ScreenButtons(debug.layout_type)
     device_handler.run(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_lets_begin
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_easy_navigation
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
 
-    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(btns.menu())
     assert TR.tutorial__did_you_know in debug.read_layout().text_content()
-    debug.click(buttons.vertical_menu(debug.layout_type)[2])
+    debug.click(btns.vertical_menu_items()[2])
     assert TR.instructions__hold_to_exit_tutorial in debug.read_layout().footer()
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -105,19 +108,20 @@ def test_tutorial_menu_exit(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_repeat(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
+    btns = buttons.ScreenButtons(debug.layout_type)
     device_handler.run(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_lets_begin
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_easy_navigation
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
 
-    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(btns.menu())
     assert TR.tutorial__did_you_know in debug.read_layout().text_content()
-    debug.click(buttons.vertical_menu(debug.layout_type)[1])
+    debug.click(btns.vertical_menu_items()[1])
 
     assert debug.read_layout().title() == TR.tutorial__title_lets_begin
     debug.swipe_up()
@@ -126,7 +130,7 @@ def test_tutorial_menu_repeat(device_handler: "BackgroundDeviceHandler"):
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 
@@ -135,31 +139,32 @@ def test_tutorial_menu_repeat(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_funfact(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
+    btns = buttons.ScreenButtons(debug.layout_type)
     device_handler.run(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_lets_begin
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_easy_navigation
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
 
-    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(btns.menu())
     assert TR.tutorial__did_you_know in debug.read_layout().text_content()
-    debug.click(buttons.vertical_menu(debug.layout_type)[0])
+    debug.click(btns.vertical_menu_items()[0])
     assert debug.read_layout().text_content() in TR.tutorial__first_wallet.replace(
         "\n", " "
     )
 
-    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(btns.menu())
     assert TR.tutorial__did_you_know in debug.read_layout().text_content()
-    debug.click(buttons.corner_button(debug.layout_type))
+    debug.click(btns.menu())
     assert debug.read_layout().title() == TR.tutorial__title_handy_menu
 
     debug.swipe_up()
     assert debug.read_layout().title() == TR.tutorial__title_hold
-    debug.click(buttons.tap_to_confirm(debug.layout_type))
+    debug.click(btns.tap_to_confirm())
     assert debug.read_layout().title() == TR.tutorial__title_well_done
     debug.swipe_up()
 

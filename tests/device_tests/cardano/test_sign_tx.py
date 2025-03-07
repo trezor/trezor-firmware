@@ -41,9 +41,10 @@ def show_details_input_flow(client: Client):
         # Caesar - right button for "Show all"
         client.debug.press_yes()
     elif client.layout_type is LayoutType.Delizia:
+        btns = buttons.ScreenButtons(client.layout_type)
         # Delizia - "Show all" button from context menu
-        client.debug.click(buttons.corner_button(client.layout_type))
-        client.debug.click(buttons.vertical_menu(client.layout_type)[0])
+        client.debug.click(btns.menu())
+        client.debug.click(btns.vertical_menu_items()[0])
     else:
         raise NotImplementedError
     # reset ui flow to continue "automatically"
