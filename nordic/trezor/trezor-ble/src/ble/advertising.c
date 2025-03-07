@@ -74,6 +74,8 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
     name_len = DEVICE_NAME_LEN;
   }
 
+  int bonds_count = bonds_get_count();
+
   manufacturer_data[3] = color;
   manufacturer_data[4] = (device_code >> 24) & 0xff;
   manufacturer_data[5] = (device_code >> 16) & 0xff;
@@ -115,7 +117,11 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
   } else {
     LOG_INF("Advertising no whitelist");
 
-    manufacturer_data[2] = 0x01;
+    if (CONFIG_BT_MAX_PAIRED == bonds_count) {
+      manufacturer_data[2] = 0x02;
+    } else {
+      manufacturer_data[2] = 0x01;
+    }
 
     uint32_t options = BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_SCANNABLE;
     if (static_addr) {
