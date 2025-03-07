@@ -21,7 +21,7 @@ import struct
 
 from typing_extensions import Protocol as StructuralType
 
-from . import MessagePayload, Transport
+from . import MessagePayload, Timeout, Transport
 
 REPLEN = 64
 
@@ -82,6 +82,14 @@ class Protocol:
     def begin_session(self) -> None:
         if self.session_counter == 0:
             self.handle.open()
+            try:
+                # Drop queued responses to old requests
+                while True:
+                    msg = self.handle.read_chunk(timeout=0.1)
+                    LOG.warning("ignored: %s", msg)
+            except Timeout:
+                pass
+
         self.session_counter += 1
 
     def end_session(self) -> None:
