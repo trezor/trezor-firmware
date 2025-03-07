@@ -170,6 +170,8 @@ def configure(
         "embed/sys/powerctl/stm32u5/powerctl.c",
         "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
         "embed/sys/powerctl/wakeup_flags.c",
+        "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
+        "embed/sys/powerctl/fuel_gauge/battery_lookup_tables.c",
     ]
     paths += ["embed/sys/powerctl/inc"]
     defines += [("USE_POWERCTL", "1")]
