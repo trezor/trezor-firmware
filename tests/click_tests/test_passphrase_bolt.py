@@ -117,7 +117,8 @@ def press_char(debug: "DebugLink", char: str) -> None:
 
     go_to_category(debug, char_category)
 
-    coords, amount = buttons.passphrase(char, debug.layout_type)
+    actions = buttons.ButtonActions(debug.layout_type)
+    coords, amount = actions.passphrase(char)
     # If the button is the same as for the previous char,
     # waiting a second before pressing it again.
     # (not for a space)
@@ -141,13 +142,15 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
-    coords = buttons.pin_passphrase_grid(11, debug.layout_type)
+    btns = buttons.ScreenButtons(debug.layout_type)
+    coords = btns.passphrase_confirm()
     debug.click(coords)
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    coords = buttons.pin_passphrase_grid(9, debug.layout_type)
+    btns = buttons.ScreenButtons(debug.layout_type)
+    coords = btns.pin_passphrase_erase()
     debug.click(coords)
 
 
@@ -216,8 +219,8 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             go_to_category(debug, category)
 
         enter_passphrase(debug)
-        coords = buttons.pin_passphrase_grid(11, debug.layout_type)
-        debug.click(coords)
+        btns = buttons.ScreenButtons(debug.layout_type)
+        debug.click(btns.passphrase_confirm())
 
 
 @pytest.mark.setup_client(passphrase=True)
@@ -225,7 +228,8 @@ def test_passphrase_click_same_button_many_times(
     device_handler: "BackgroundDeviceHandler",
 ):
     with prepare_passphrase_dialogue(device_handler) as debug:
-        a_coords, _ = buttons.passphrase("a", debug.layout_type)
+        actions = buttons.ButtonActions(debug.layout_type)
+        a_coords, _ = actions.passphrase("a")
         for _ in range(10):
             debug.click(a_coords)
 

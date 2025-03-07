@@ -91,7 +91,8 @@ CLICKS_HELP = """\
 Type 'y' or just press Enter to click the right button (usually "OK")
 Type 'n' to click the left button (usually "Cancel")
 Type a digit (0-9) to click the appropriate button as if on a numpad.
-Type 'g1,2' to click button in column 1 and row 2 of 3x5 grid (letter A on mnemonic keyboard).
+Type 'm1,2' to click button in column 1 and row 2 of mnemonic keyboard (letter J).
+Type 'p2,1' to click button in column 2 and row 1 of pin/passphrase keyboard (letter D).
 Type 'i 1234' to send text "1234" without clicking (useful for PIN, passphrase, etc.)
 Type 'u' or 'j' to swipe up, 'd' or 'k' to swipe down.
 Type 'confirm' for hold-to-confirm (or a confirmation signal without clicking).
@@ -138,29 +139,37 @@ def send_clicks(dest):
                 input_str = key[2:]
                 output = f"debug.input({input_str!r})"
                 DEBUGLINK.input(input_str)
-            elif key.startswith("g"):
+            elif key.startswith("m"):
                 x, y = [int(s) - 1 for s in key[1:].split(",")]
                 output = (
-                    f"debug.click(buttons.grid35({x}, {y}, {DEBUGLINK.layout_type}))"
+                    f"debug.click(ScreenButtons(layout_type).mnemonic_grid({x}, {y}))"
                 )
-                DEBUGLINK.click(buttons.grid35(x, y, DEBUGLINK.layout_type))
+                DEBUGLINK.click(
+                    buttons.ScreenButtons(DEBUGLINK.layout_type).mnemonic_grid(x, y)
+                )
+
+            elif key.startswith("p"):
+                x, y = [int(s) - 1 for s in key[1:].split(",")]
+                output = f"debug.click(ScreenButtons(layout_type).pin_passphrase_grid({x}, {y}))"
+                DEBUGLINK.click(
+                    buttons.ScreenButtons(DEBUGLINK.layout_type).pin_passphrase_grid(
+                        x, y
+                    )
+                )
             elif key == "y":
-                output = "debug.click(buttons.ok(layout_type))"
-                DEBUGLINK.click(buttons.ok(DEBUGLINK.layout_type))
+                output = "debug.click(ScreenButtons(layout_type).ok())"
+                DEBUGLINK.click(buttons.ScreenButtons(DEBUGLINK.layout_type).ok())
             elif key == "n":
-                output = "debug.click(buttons.cancel(layout_type))"
-                DEBUGLINK.click(buttons.cancel(DEBUGLINK.layout_type))
+                output = "debug.click(ScreenButtons(layout_type).cancel())"
+                DEBUGLINK.click(buttons.ScreenButtons(DEBUGLINK.layout_type).cancel())
             elif key in "0123456789":
-                if key == "0":
-                    x, y = 1, 4
-                else:
-                    i = int(key) - 1
-                    x = i % 3
-                    y = 3 - (i // 3)  # trust me
-                output = (
-                    f"debug.click(buttons.grid35({x}, {y}, {DEBUGLINK.layout_type}))"
+                index = int(key)
+                output = f"debug.click(ScreenButtons(layout_type).pin_passphrase_index({index}))"
+                DEBUGLINK.click(
+                    buttons.ScreenButtons(DEBUGLINK.layout_type).pin_passphrase_index(
+                        index
+                    )
                 )
-                DEBUGLINK.click(buttons.grid35(x, y, DEBUGLINK.layout_type))
             elif key == "stop":
                 return
             else:
