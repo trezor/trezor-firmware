@@ -316,12 +316,13 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
         layouts: list[LayoutContent] = []
 
         br = yield  # confirm address
+        btns = buttons.ScreenButtons(self.client.layout_type)
         self.debug.read_layout()
         self.debug.press_yes()
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
+        self.debug.click(btns.vertical_menu_items()[0])
 
         br = yield
         self.debug.read_layout()
@@ -351,8 +352,9 @@ class InputFlowSignMessageInfo(InputFlowBase):
     def input_flow_bolt(self) -> BRGeneratorType:
         yield
         # signing address/message info
-        self.debug.click(buttons.corner_button(self.client.layout_type))
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        btns = buttons.ScreenButtons(self.client.layout_type)
+        self.debug.click(btns.menu())
+        self.debug.click(btns.menu())
         # signing address "x"
         self.debug.press_no()
         self.debug.synchronize_at("IconDialog")
@@ -363,10 +365,11 @@ class InputFlowSignMessageInfo(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
         # show address/message info
-        self.debug.click(buttons.corner_button(self.client.layout_type))
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
-        self.debug.click(buttons.corner_button(self.client.layout_type))
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[1])
+        btns = buttons.ScreenButtons(self.client.layout_type)
+        self.debug.click(btns.menu())
+        self.debug.click(btns.vertical_menu_items()[0])
+        self.debug.click(btns.menu())
+        self.debug.click(btns.vertical_menu_items()[1])
         # address mismatch? yes!
         self.debug.swipe_up()
         yield
@@ -378,14 +381,15 @@ class InputFlowShowAddressQRCode(InputFlowBase):
 
     def input_flow_bolt(self) -> BRGeneratorType:
         yield
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        btns = buttons.ScreenButtons(self.client.layout_type)
+        self.debug.click(btns.menu())
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("SimplePage")
 
         self.debug.swipe_left()
         self.debug.swipe_right()
         self.debug.swipe_left()
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         self.debug.press_no()
         self.debug.press_no()
         self.debug.press_yes()
@@ -413,26 +417,27 @@ class InputFlowShowAddressQRCode(InputFlowBase):
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        btns = buttons.ScreenButtons(self.client.layout_type)
+        self.debug.click(btns.menu())
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
+        self.debug.click(btns.vertical_menu_items()[0])
         self.debug.synchronize_at("Qr")
         # qr code
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[1])
+        self.debug.click(btns.vertical_menu_items()[1])
         # address details
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[2])
+        self.debug.click(btns.vertical_menu_items()[2])
         # cancel
         self.debug.swipe_up()
         # really cancel
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # menu
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
 
         layout = self.debug.read_layout()
         while "PromptScreen" not in layout.all_components():
@@ -440,7 +445,7 @@ class InputFlowShowAddressQRCode(InputFlowBase):
             layout = self.debug.read_layout()
         self.debug.synchronize_at("PromptScreen")
         # tap to confirm
-        self.debug.click(buttons.tap_to_confirm(self.client.layout_type))
+        self.debug.click(btns.tap_to_confirm())
 
 
 class InputFlowShowAddressQRCodeCancel(InputFlowBase):
@@ -449,12 +454,13 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
 
     def input_flow_bolt(self) -> BRGeneratorType:
         yield
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        btns = buttons.ScreenButtons(self.client.layout_type)
+        self.debug.click(btns.menu())
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("SimplePage")
 
         self.debug.swipe_left()
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         self.debug.press_no()
         self.debug.press_yes()
 
@@ -475,25 +481,26 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        btns = buttons.ScreenButtons(self.client.layout_type)
+        self.debug.click(btns.menu())
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
+        self.debug.click(btns.vertical_menu_items()[0])
         self.debug.synchronize_at("Qr")
         # qr code
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[1])
+        self.debug.click(btns.vertical_menu_items()[1])
         # address details
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[2])
+        self.debug.click(btns.vertical_menu_items()[2])
         # cancel
         self.debug.swipe_up()
         self.debug.synchronize_at("PromptScreen")
         # really cancel
-        self.debug.click(buttons.tap_to_confirm(self.client.layout_type))
+        self.debug.click(btns.tap_to_confirm())
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
@@ -513,6 +520,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
     def input_flow_bolt(self) -> BRGeneratorType:
         yield  # multisig address warning
+        btns = buttons.ScreenButtons(self.client.layout_type)
         self.debug.press_yes()
 
         yield  # show address
@@ -521,7 +529,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         assert "Qr" in self.all_components()
 
         self.debug.swipe_left()
@@ -538,7 +546,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
             content = layout.text_content().replace(" ", "")
             assert self.xpubs[xpub_num] in content
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # show address
         self.debug.press_no()
         # address mismatch
@@ -590,26 +598,27 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield  # multisig address warning
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        btns = buttons.ScreenButtons(self.client.layout_type)
+        self.debug.click(btns.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[1])
+        self.debug.click(btns.vertical_menu_items()[1])
 
         yield  # show address
         layout = self.debug.read_layout()
         assert TR.address__title_receive_address in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
+        self.debug.click(btns.vertical_menu_items()[0])
         self.debug.synchronize_at("Qr")
         # qr code
         assert "Qr" in self.all_components()
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[1])
+        self.debug.click(btns.vertical_menu_items()[1])
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
@@ -620,17 +629,17 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
             self.debug.swipe_left()
             self.debug.swipe_left()
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[2])
+        self.debug.click(btns.vertical_menu_items()[2])
         # cancel
         self.debug.swipe_up()
         # really cancel
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         layout = self.debug.synchronize_at("Paragraphs")
         # address
         while "PromptScreen" not in layout.all_components():
@@ -647,6 +656,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.passphrase = passphrase
 
     def input_flow_bolt(self) -> BRGeneratorType:
+        btns = buttons.ScreenButtons(self.client.layout_type)
         if self.passphrase:
             yield
             self.debug.press_yes()
@@ -659,14 +669,14 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             self.debug.press_yes()
             br = yield
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # synchronize; TODO get rid of this once we have single-global-layout
         self.debug.synchronize_at("SimplePage")
 
         self.debug.swipe_left()
         self.debug.swipe_right()
         self.debug.swipe_left()
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         self.debug.press_no()
         self.debug.press_no()
         for _ in range(br.pages - 1):
@@ -701,6 +711,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.press_middle()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        btns = buttons.ScreenButtons(self.client.layout_type)
         if self.passphrase:
             yield
             self.debug.press_yes()
@@ -716,32 +727,32 @@ class InputFlowShowXpubQRCode(InputFlowBase):
 
         assert layout.title() in (TR.address__public_key, "XPUB")
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         assert "VerticalMenu" in self.all_components()
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
+        self.debug.click(btns.vertical_menu_items()[0])
         self.debug.synchronize_at("Qr")
         # qr code
         assert "Qr" in self.all_components()
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         # menu
         assert "VerticalMenu" in self.all_components()
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[1])
+        self.debug.click(btns.vertical_menu_items()[1])
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert TR.address_details__derivation_path in layout.screen_content()
 
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         layout = self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[2])
+        self.debug.click(btns.vertical_menu_items()[2])
         # cancel
         self.debug.swipe_up()
         # really cancel
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         layout = self.debug.synchronize_at("VerticalMenu")
         # menu
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         layout = self.debug.synchronize_at("Paragraphs")
         # address
         while "PromptScreen" not in layout.all_components():
@@ -854,6 +865,7 @@ class InputFlowSignTxHighFee(InputFlowBase):
 
 
 def sign_tx_go_to_info(client: Client) -> Generator[None, messages.ButtonRequest, str]:
+    btns = buttons.ScreenButtons(client.layout_type)
     yield  # confirm output
     client.debug.read_layout()
     client.debug.press_yes()
@@ -868,7 +880,7 @@ def sign_tx_go_to_info(client: Client) -> Generator[None, messages.ButtonRequest
     layout = client.debug.read_layout()
     content = layout.text_content()
 
-    client.debug.click(buttons.corner_button(client.layout_type))
+    client.debug.click(btns.menu())
 
     return content
 
@@ -876,6 +888,7 @@ def sign_tx_go_to_info(client: Client) -> Generator[None, messages.ButtonRequest
 def sign_tx_go_to_info_t3t1(
     client: Client, multi_account: bool = False
 ) -> Generator[None, messages.ButtonRequest, str]:
+    btns = buttons.ScreenButtons(client.layout_type)
     yield  # confirm output
     client.debug.read_layout()
     client.debug.swipe_up()
@@ -890,22 +903,22 @@ def sign_tx_go_to_info_t3t1(
 
     yield  # confirm transaction
     client.debug.read_layout()
-    client.debug.click(buttons.corner_button(client.layout_type))
+    client.debug.click(btns.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(buttons.vertical_menu(client.layout_type)[0])
+    client.debug.click(btns.vertical_menu_items()[0])
 
     layout = client.debug.read_layout()
     content = layout.text_content()
 
-    client.debug.click(buttons.corner_button(client.layout_type))
+    client.debug.click(btns.menu())
     client.debug.synchronize_at("VerticalMenu")
-    client.debug.click(buttons.vertical_menu(client.layout_type)[1])
+    client.debug.click(btns.vertical_menu_items()[1])
 
     layout = client.debug.read_layout()
     content += " " + layout.text_content()
 
-    client.debug.click(buttons.corner_button(client.layout_type))
-    client.debug.click(buttons.corner_button(client.layout_type))
+    client.debug.click(btns.menu())
+    client.debug.click(btns.menu())
 
     return content
 
@@ -1018,11 +1031,12 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
         self.debug.press_left()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        btns = buttons.ScreenButtons(self.client.layout_type)
         yield from sign_tx_go_to_info_t3t1(self.client)
-        self.debug.click(buttons.corner_button(self.client.layout_type))
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[2])
+        self.debug.click(btns.menu())
+        self.debug.click(btns.vertical_menu_items()[2])
         self.debug.synchronize_at("PromptScreen")
-        self.debug.click(buttons.tap_to_confirm(self.client.layout_type))
+        self.debug.click(btns.tap_to_confirm())
 
 
 class InputFlowSignTxInformationReplacement(InputFlowBase):
@@ -1030,6 +1044,7 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         super().__init__(client)
 
     def input_flow_bolt(self) -> BRGeneratorType:
+        btns = buttons.ScreenButtons(self.client.layout_type)
         yield  # confirm txid
         self.debug.press_yes()
         yield  # confirm address
@@ -1043,8 +1058,8 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         self.debug.press_yes()
 
         yield  # transaction summary, press info
-        self.debug.click(buttons.corner_button(self.client.layout_type))
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
+        self.debug.click(btns.menu())
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
@@ -2326,17 +2341,18 @@ class InputFlowResetSkipBackup(InputFlowBase):
         self.debug.press_no()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        btns = buttons.ScreenButtons(self.client.layout_type)
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
         assert TR.backup__new_wallet_created in self.text_content()
         self.debug.swipe_up()
         yield
-        self.debug.click(buttons.corner_button(self.client.layout_type))
+        self.debug.click(btns.menu())
         self.debug.synchronize_at("VerticalMenu")
-        self.debug.click(buttons.vertical_menu(self.client.layout_type)[0])
+        self.debug.click(btns.vertical_menu_items()[0])
         self.debug.swipe_up()
         self.debug.synchronize_at("PromptScreen")
-        self.debug.click(buttons.tap_to_confirm(self.client.layout_type))
+        self.debug.click(btns.tap_to_confirm())
 
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
@@ -2355,6 +2371,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
         return self.input_flow_bolt()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        btns = buttons.ScreenButtons(self.client.layout_type)
         br = yield
         while True:
             # wait for homescreen to go away
@@ -2372,9 +2389,9 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
                 TR.send__cancel_sign,
             )
             if any(needle.lower() in text for needle in hi_prio):
-                self.debug.click(buttons.corner_button(self.client.layout_type))
+                self.debug.click(btns.menu())
                 self.debug.synchronize_at("VerticalMenu")
-                self.debug.click(buttons.vertical_menu(self.client.layout_type)[1])
+                self.debug.click(btns.vertical_menu_items()[1])
             elif "PromptScreen" in layout.all_components():
                 self.debug.press_yes()
             elif "SwipeContent" in layout.all_components():
@@ -2398,7 +2415,8 @@ class InputFlowFidoConfirm(InputFlowBase):
         yield from self.input_flow_bolt()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        btns = buttons.ScreenButtons(self.client.layout_type)
         while True:
             yield
             self.debug.swipe_up()
-            self.debug.click(buttons.tap_to_confirm(self.client.layout_type))
+            self.debug.click(btns.tap_to_confirm())

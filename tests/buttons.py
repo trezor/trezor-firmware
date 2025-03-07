@@ -6,167 +6,237 @@ from trezorlib.debuglink import LayoutType
 Coords = Tuple[int, int]
 
 
-# display dimensions
-def display_height(layout_type):
+def _width(layout_type: LayoutType) -> int:
     if layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         return 240
     else:
         raise ValueError("Wrong layout type")
 
 
-def display_width(layout_type):
+def _height(layout_type: LayoutType) -> int:
     if layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         return 240
     else:
         raise ValueError("Wrong layout type")
 
 
-# grid coordinates
-def grid(dim: int, grid_cells: int, cell: int) -> int:
+def _grid(dim: int, grid_cells: int, cell: int) -> int:
+    assert cell < grid_cells
     step = dim // grid_cells
     ofs = step // 2
     return cell * step + ofs
 
 
-def grid35(x: int, y: int, layout_type: LayoutType) -> Coords:
-    return grid(display_width(layout_type), 3, x), grid(
-        display_height(layout_type), 5, y
-    )
+class ScreenButtons:
+    def __init__(self, layout_type: LayoutType):
+        self.layout_type = layout_type
+        self.width = _width(layout_type)
+        self.height = _height(layout_type)
 
+    # 3 columns, 4 rows, 1st row is input area
+    def _grid35(self, x: int, y: int) -> Coords:
+        return _grid(self.width, 3, x), _grid(self.height, 5, y)
 
-def grid34(x: int, y: int, layout_type: LayoutType) -> Coords:
-    assert layout_type in (LayoutType.Bolt, LayoutType.Delizia)
-    return grid(display_width(layout_type), 3, x), grid(
-        display_height(layout_type), 4, y
-    )
+    # TODO: do not expose this
+    # 3 columns, 3 rows, 1st row is input area
+    def grid34(self, x: int, y: int) -> Coords:
+        return _grid(self.width, 3, x), _grid(self.height, 4, y)
 
+    # Horizontal coordinates
+    def _left(self) -> int:
+        return _grid(self.width, 3, 0)
 
-def _grid34_from_index(idx: int, layout_type: LayoutType) -> Coords:
-    grid_x = idx % 3
-    grid_y = idx // 3 + 1  # first line is empty
-    return grid34(grid_x, grid_y, layout_type)
+    def _mid(self) -> int:
+        return _grid(self.width, 3, 1)
 
+    def _right(self) -> int:
+        return _grid(self.width, 3, 2)
 
-# Horizontal coordinates
-def left(layout_type: LayoutType):
-    return grid(display_width(layout_type), 3, 0)
+    # Vertical coordinates
+    def _top(self):
+        return _grid(self.height, 6, 0)
 
+    def _bottom(self):
+        return _grid(self.height, 6, 5)
 
-def mid(layout_type: LayoutType):
-    return grid(display_width(layout_type), 3, 1)
+    # Buttons
 
+    # Right bottom
+    def ok(self) -> Coords:
+        return (self._right(), self._bottom())
 
-def right(layout_type: LayoutType):
-    return grid(display_width(layout_type), 3, 2)
+    # Left bottom
+    def cancel(self) -> Coords:
+        return (self._left(), self._bottom())
 
+    # Mid bottom
+    def info(self) -> Coords:
+        return (self._mid(), self._bottom())
 
-# Vertical coordinates
-def top(layout_type: LayoutType):
-    return grid(display_height(layout_type), 6, 0)
+    # Menu/close menu button
+    def menu(self) -> Coords:
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return (215, 25)
+        else:
+            raise ValueError("Wrong layout type")
 
+    # Center of the screen
+    def tap_to_confirm(self) -> Coords:
+        assert self.layout_type is LayoutType.Delizia
+        return (_grid(self.width, 1, 0), _grid(self.width, 1, 0))
 
-def bottom(layout_type: LayoutType):
-    return grid(display_height(layout_type), 6, 5)
+    # Yes/No decision component
+    def ui_yes(self) -> Coords:
+        assert self.layout_type is LayoutType.Delizia
+        return self.grid34(2, 2)
 
+    def ui_no(self) -> Coords:
+        assert self.layout_type is LayoutType.Delizia
+        return self.grid34(0, 2)
 
-# Buttons
+    # +/- buttons in number input component
+    def number_input_minus(self) -> Coords:
+        if self.layout_type is LayoutType.Bolt:
+            return (self._left(), _grid(self.height, 5, 1))
+        elif self.layout_type is LayoutType.Delizia:
+            return (self._left(), _grid(self.height, 5, 3))
+        else:
+            raise ValueError("Wrong layout type")
 
+    def number_input_plus(self) -> Coords:
+        if self.layout_type is LayoutType.Bolt:
+            return (self._right(), _grid(self.height, 5, 1))
+        elif self.layout_type is LayoutType.Delizia:
+            return (self._right(), _grid(self.height, 5, 3))
+        else:
+            raise ValueError("Wrong layout type")
 
-def ok(layout_type: LayoutType) -> Coords:
-    return (right(layout_type), bottom(layout_type))
+    def word_count_all_word(self, word_count) -> Coords:
+        assert word_count in (12, 18, 20, 24, 33)
+        if self.layout_type is LayoutType.Bolt:
+            coords_map = {
+                12: self.grid34(0, 2),
+                18: self.grid34(1, 2),
+                20: self.grid34(2, 2),
+                24: self.grid34(1, 3),
+                33: self.grid34(2, 3),
+            }
+        elif self.layout_type is LayoutType.Delizia:
+            coords_map = {
+                12: self.grid34(0, 1),
+                18: self.grid34(2, 1),
+                20: self.grid34(0, 2),
+                24: self.grid34(2, 2),
+                33: self.grid34(2, 3),
+            }
+        else:
+            raise ValueError("Wrong layout type")
 
+        return coords_map.get(word_count)
 
-def cancel(layout_type: LayoutType) -> Coords:
-    return (left(layout_type), bottom(layout_type))
+    def word_count_all_cancel(self) -> Coords:
+        if self.layout_type is LayoutType.Bolt:
+            return self.grid34(0, 3)
 
+        elif self.layout_type is LayoutType.Delizia:
+            return self.grid34(0, 3)
 
-def info(layout_type: LayoutType) -> Coords:
-    return (mid(layout_type), bottom(layout_type))
+        else:
+            raise ValueError("Wrong layout type")
 
+    def word_count_rep_word(self, word_count) -> Coords:
+        assert word_count in (20, 33)
+        if self.layout_type is LayoutType.Bolt:
+            coords_map = {
+                20: self.grid34(1, 2),
+                33: self.grid34(2, 2),
+            }
+        elif self.layout_type is LayoutType.Delizia:
+            coords_map = {
+                20: self.grid34(0, 1),
+                33: self.grid34(2, 1),
+            }
+        else:
+            raise ValueError("Wrong layout type")
 
-def recovery_delete(layout_type: LayoutType) -> Coords:
-    if layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        return (left(layout_type), top(layout_type))
-    else:
-        raise ValueError("Wrong layout type")
+        return coords_map.get(word_count)
 
+    def word_count_rep_cancel(self) -> Coords:
+        if self.layout_type is LayoutType.Bolt:
+            return self.grid34(0, 2)
 
-def corner_button(layout_type: LayoutType) -> Coords:
-    if layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        return (215, 25)
-    else:
-        raise ValueError("Wrong layout type")
+        elif self.layout_type is LayoutType.Delizia:
+            return self.grid34(0, 3)
 
+        else:
+            raise ValueError("Wrong layout type")
 
-def confirm_word(layout_type: LayoutType) -> Coords:
-    if layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        return (mid(layout_type), top(layout_type))
-    else:
-        raise ValueError("Wrong layout type")
+    # select word component buttons
+    def word_check_words(self) -> Coords:
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return [
+                (self._mid(), _grid(self.height, 5, 2)),
+                (self._mid(), _grid(self.height, 5, 3)),
+                (self._mid(), _grid(self.height, 5, 4)),
+            ]
+        else:
+            raise ValueError("Wrong layout type")
 
+    # vertical menu buttons
+    def vertical_menu_items(self) -> list[Coords]:
+        assert self.layout_type is LayoutType.Delizia
 
-# PIN/passphrase input
-def input(layout_type: LayoutType) -> Coords:
-    return (mid(layout_type), top(layout_type))
-
-
-# Yes/No decision component
-def ui_yes(layout_type: LayoutType) -> Coords:
-    assert layout_type is LayoutType.Delizia
-    return grid34(2, 2, layout_type)
-
-
-def ui_no(layout_type: LayoutType) -> Coords:
-    assert layout_type is LayoutType.Delizia
-    return grid34(0, 2, layout_type)
-
-
-# +/- buttons in number input component
-def reset_minus(layout_type: LayoutType) -> Coords:
-    if layout_type is LayoutType.Bolt:
-        return (left(layout_type), grid(display_height(layout_type), 5, 1))
-    elif layout_type is LayoutType.Delizia:
-        return (left(layout_type), grid(display_height(layout_type), 5, 3))
-    else:
-        raise ValueError("Wrong layout type")
-
-
-def reset_plus(layout_type: LayoutType) -> Coords:
-    if layout_type is LayoutType.Bolt:
-        return (right(layout_type), grid(display_height(layout_type), 5, 1))
-    elif layout_type is LayoutType.Delizia:
-        return (right(layout_type), grid(display_height(layout_type), 5, 3))
-    else:
-        raise ValueError("Wrong layout type")
-
-
-# select word component buttons
-def reset_word_check(layout_type: LayoutType) -> Coords:
-    if layout_type in (LayoutType.Bolt, LayoutType.Delizia):
         return [
-            (mid(layout_type), grid(display_height(layout_type), 5, 2)),
-            (mid(layout_type), grid(display_height(layout_type), 5, 3)),
-            (mid(layout_type), grid(display_height(layout_type), 5, 4)),
+            (self._mid(), _grid(self.height, 4, 1)),
+            (self._mid(), _grid(self.height, 4, 2)),
+            (self._mid(), _grid(self.height, 4, 3)),
         ]
-    else:
-        raise ValueError("Wrong layout type")
 
+    # Pin/passphrase keyboards
+    def pin_passphrase_index(self, idx: int) -> Coords:
+        assert idx < 10
+        if idx == 9:
+            idx = 10  # last digit is in the middle
+        return self.pin_passphrase_grid(idx % 3, idx // 3)
 
-# vertical menu buttons
-def vertical_menu(layout_type: LayoutType) -> Coords:
-    if layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        return [
-            (mid(layout_type), grid(display_height(layout_type), 4, 1)),
-            (mid(layout_type), grid(display_height(layout_type), 4, 2)),
-            (mid(layout_type), grid(display_height(layout_type), 4, 3)),
-        ]
-    else:
-        raise ValueError("Wrong layout type")
+    def pin_passphrase_grid(self, x: int, y: int) -> Coords:
+        assert x < 3, y < 4
+        y += 1  # first line is empty
+        return self._grid35(x, y)
 
+    # PIN/passphrase input
+    def pin_passphrase_input(self) -> Coords:
+        return (self._mid(), self._top())
 
-def tap_to_confirm(layout_type: LayoutType) -> Coords:
-    assert layout_type is LayoutType.Delizia
-    return vertical_menu(layout_type)[1]
+    def pin_passphrase_erase(self) -> Coords:
+        return self.pin_passphrase_grid(0, 3)
+
+    def passphrase_confirm(self) -> Coords:
+        if self.layout_type is LayoutType.Bolt:
+            return self.pin_passphrase_grid(2, 3)
+        elif self.layout_type is LayoutType.Delizia:
+            return (215, 25)
+        else:
+            raise ValueError("Wrong layout type")
+
+    def pin_confirm(self) -> Coords:
+        return self.pin_passphrase_grid(2, 3)
+
+    # Mnemonic keyboard
+    def mnemonic_from_index(self, idx: int) -> Coords:
+        return self.mnemonic_grid(idx)
+
+    def mnemonic_grid(self, idx: int) -> Coords:
+        assert idx < 9
+        grid_x = idx % 3
+        grid_y = idx // 3 + 1  # first line is empty
+        return self.grid34(grid_x, grid_y)
+
+    def mnemonic_erase(self) -> Coords:
+        return (self._left(), self._top())
+
+    def mnemonic_confirm(self) -> Coords:
+        return (self._mid(), self._top())
 
 
 BUTTON_LETTERS_BIP39 = ("abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx", "yz")
@@ -194,57 +264,48 @@ def get_passphrase_choices(char: str) -> tuple[str, ...]:
         return PASSPHRASE_SPECIAL
 
 
-def passphrase(char: str, layout_type: LayoutType) -> Tuple[Coords, int]:
-    choices = get_passphrase_choices(char)
-    idx = next(i for i, letters in enumerate(choices) if char in letters)
-    click_amount = choices[idx].index(char) + 1
-    return pin_passphrase_index(idx, layout_type), click_amount
+class ButtonActions:
+    def __init__(self, layout_type: LayoutType):
+        self.layout_type = layout_type
+        self.width = _width(layout_type)
+        self.height = _height(layout_type)
+        self.buttons = ScreenButtons(layout_type)
 
+    def passphrase(self, char: str) -> Tuple[Coords, int]:
+        choices = get_passphrase_choices(char)
+        idx = next(i for i, letters in enumerate(choices) if char in letters)
+        click_amount = choices[idx].index(char) + 1
+        return self.buttons.pin_passphrase_index(idx), click_amount
 
-def pin_passphrase_index(idx: int, layout_type: LayoutType) -> Coords:
-    if idx == 9:
-        idx = 10  # last digit is in the middle
-    return pin_passphrase_grid(idx, layout_type)
+    def type_word(self, word: str, is_slip39: bool = False) -> Iterator[Coords]:
+        if is_slip39:
+            yield from self._type_word_slip39(word)
+        else:
+            yield from self._type_word_bip39(word)
 
+    def _type_word_slip39(self, word: str) -> Iterator[Coords]:
+        for l in word:
+            idx = next(
+                i for i, letters in enumerate(BUTTON_LETTERS_SLIP39) if l in letters
+            )
+            yield self.buttons.mnemonic_from_index(idx)
 
-def pin_passphrase_grid(idx: int, layout_type: LayoutType) -> Coords:
-    grid_x = idx % 3
-    grid_y = idx // 3 + 1  # first line is empty
-    return grid35(grid_x, grid_y, layout_type)
+    def _type_word_bip39(self, word: str) -> Iterator[Coords]:
+        coords_prev: Coords | None = None
+        for letter in word:
+            time.sleep(0.1)  # not being so quick to miss something
+            coords, amount = self._letter_coords_and_amount(letter)
+            # If the button is the same as for the previous letter,
+            # waiting a second before pressing it again.
+            if coords == coords_prev:
+                time.sleep(1.1)
+            coords_prev = coords
+            for _ in range(amount):
+                yield coords
 
-
-def type_word(
-    word: str, layout_type: LayoutType, is_slip39: bool = False
-) -> Iterator[Coords]:
-    if is_slip39:
-        yield from _type_word_slip39(word, layout_type)
-    else:
-        yield from _type_word_bip39(word, layout_type)
-
-
-def _type_word_slip39(word: str, layout_type: LayoutType) -> Iterator[Coords]:
-    for l in word:
-        idx = next(i for i, letters in enumerate(BUTTON_LETTERS_SLIP39) if l in letters)
-        yield _grid34_from_index(idx, layout_type)
-
-
-def _type_word_bip39(word: str, layout_type: LayoutType) -> Iterator[Coords]:
-    coords_prev: Coords | None = None
-    for letter in word:
-        time.sleep(0.1)  # not being so quick to miss something
-        coords, amount = _letter_coords_and_amount(letter, layout_type)
-        # If the button is the same as for the previous letter,
-        # waiting a second before pressing it again.
-        if coords == coords_prev:
-            time.sleep(1.1)
-        coords_prev = coords
-        for _ in range(amount):
-            yield coords
-
-
-def _letter_coords_and_amount(
-    letter: str, layout_type: LayoutType
-) -> Tuple[Coords, int]:
-    idx = next(i for i, letters in enumerate(BUTTON_LETTERS_BIP39) if letter in letters)
-    click_amount = BUTTON_LETTERS_BIP39[idx].index(letter) + 1
-    return _grid34_from_index(idx, layout_type), click_amount
+    def _letter_coords_and_amount(self, letter: str) -> Tuple[Coords, int]:
+        idx = next(
+            i for i, letters in enumerate(BUTTON_LETTERS_BIP39) if letter in letters
+        )
+        click_amount = BUTTON_LETTERS_BIP39[idx].index(letter) + 1
+        return self.buttons.mnemonic_from_index(idx), click_amount
