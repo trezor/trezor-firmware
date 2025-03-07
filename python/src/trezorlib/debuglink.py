@@ -47,6 +47,7 @@ from .client import TrezorClient
 from .exceptions import TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
 from .messages import DebugWaitType
+from .transport import Timeout
 
 if TYPE_CHECKING:
     from typing_extensions import Protocol
@@ -1259,6 +1260,13 @@ class TrezorClientDebugLink(TrezorClient):
         cancel_msg = mapping.DEFAULT_MAPPING.encode(messages.Cancel())
         self.transport.begin_session()
         try:
+            try:
+                while True:
+                    msg = self.transport.read(timeout=0.1)
+                    LOG.warning("ignored: %s", msg)
+            except Timeout:
+                pass
+
             self.transport.write(*cancel_msg)
 
             message = "SYNC" + secrets.token_hex(8)
