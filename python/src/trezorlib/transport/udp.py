@@ -28,7 +28,7 @@ from .protocol import ProtocolBasedTransport, ProtocolV1
 if TYPE_CHECKING:
     from ..models import TrezorModel
 
-SOCKET_TIMEOUT = 10
+SOCKET_TIMEOUT = 0.1
 
 LOG = logging.getLogger(__name__)
 
