@@ -139,17 +139,16 @@ impl BootloaderUI for UIEckhart {
         unwrap!(version_str.push_str(vendor));
 
         let title_str = if is_newinstall {
-            "INSTALL FIRMWARE"
+            "Install firmware"
         } else if is_newvendor {
-            "CHANGE FW\nVENDOR"
+            "Change fw vendor"
         } else if version_cmp > 0 {
-            "UPDATE FIRMWARE"
+            "Update firmware"
         } else if version_cmp == 0 {
-            "REINSTALL FW"
+            "Reinstall firmware"
         } else {
-            "DOWNGRADE FW"
+            "Downgrade firmware"
         };
-        let title = Label::left_aligned(title_str.into(), TEXT_NORMAL).vertically_centered();
         let msg = Label::left_aligned(version_str.as_str().into(), TEXT_NORMAL);
         let alert = (!should_keep_seed).then_some(Label::left_aligned(
             "SEED WILL BE ERASED!".into(),
@@ -157,35 +156,41 @@ impl BootloaderUI for UIEckhart {
         ));
 
         let (left, right) = if should_keep_seed {
-            let l = Button::with_text("CANCEL".into())
+            let l = Button::with_text("Cancel".into())
                 .styled(button_bld())
                 .with_text_align(Alignment::Center);
-            let r = Button::with_text("INSTALL".into())
+            let r = Button::with_text("Install".into())
                 .styled(button_confirm())
                 .with_text_align(Alignment::Center);
             (l, r)
         } else {
-            let l = Button::with_icon(Icon::new(X24))
+            let l = Button::with_icon(ICON_CROSS)
                 .styled(button_bld())
                 .with_text_align(Alignment::Center);
-            let r = Button::with_icon(Icon::new(CHECK24))
+            let r = Button::with_icon(ICON_CHECKMARK)
                 .styled(button_confirm())
                 .with_text_align(Alignment::Center);
             (l, r)
         };
 
-        let mut frame = ConfirmScreen::new(BLD_BG, left, right, ConfirmTitle::Text(title), msg)
-            .with_info(
-                "FW FINGERPRINT".into(),
-                fingerprint.into(),
-                button_bld_menu(),
+        let mut screen = BldTextScreen::new(msg)
+            .with_header(BldHeader::new(title_str.into()).with_right_button(
+                Button::with_icon(theme::ICON_MENU).styled(theme::button_default()),
+                BldHeaderMsg::Menu,
+            ))
+            .with_action_bar(BldActionBar::new_double(left, right))
+            .with_screen_border(ScreenBorder::new(BLUE))
+            .with_more_info(
+                BldHeader::new("FW Fingerprint".into())
+                    .with_right_button(Button::with_icon(ICON_CLOSE), BldHeaderMsg::Cancelled),
+                Label::left_aligned(fingerprint.into(), TEXT_NORMAL),
             );
 
         if let Some(alert) = alert {
-            frame = frame.with_alert(alert);
+            screen = screen.with_label2(alert);
         }
 
-        run(&mut frame)
+        run(&mut screen)
     }
 
     fn screen_wipe_confirm() -> u32 {
