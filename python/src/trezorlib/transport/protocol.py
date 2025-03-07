@@ -143,7 +143,7 @@ class ProtocolV1(Protocol):
 
         # Read the rest of the message
         while len(buffer) < datalen:
-            buffer.extend(self.read_next())
+            buffer.extend(self.read_next(timeout=timeout))
 
         return msg_type, buffer[:datalen]
 

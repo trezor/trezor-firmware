@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import atexit
 import logging
+import os
 import sys
 import time
 from typing import Iterable
@@ -26,7 +27,7 @@ from typing_extensions import Self
 
 from ..log import DUMP_PACKETS
 from ..models import TREZORS, TrezorModel
-from . import UDEV_RULES_STR, DeviceIsBusy, TransportException
+from . import UDEV_RULES_STR, DeviceIsBusy, Timeout, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
@@ -46,6 +47,10 @@ DEBUG_ENDPOINT = 2
 
 USB_COMM_TIMEOUT_MS = 300
 WEBUSB_CHUNK_SIZE = 64
+
+DEFAULT_READ_TIMEOUT = float(
+    os.environ.get("TREZOR_WEBUSB_DEFAULT_READ_TIMEOUT", "inf")
+)
 
 
 class WebUsbHandle:
@@ -101,28 +106,27 @@ class WebUsbHandle:
             return
 
     def read_chunk(self, timeout: float | None = None) -> bytes:
+        if timeout is None:
+            timeout = DEFAULT_READ_TIMEOUT
+
         assert self.handle is not None
         endpoint = 0x80 | self.endpoint
-        start = time.time()
+        deadline = time.time() + timeout
         while True:
             try:
                 chunk = self.handle.interruptRead(
                     endpoint, WEBUSB_CHUNK_SIZE, USB_COMM_TIMEOUT_MS
                 )
-                if chunk:
-                    break
-                else:
-                    if timeout is not None and time.time() - start > timeout:
-                        raise TransportException("Timeout reading WebUSB packet")
-                    time.sleep(0.001)
+                LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
+                if len(chunk) != WEBUSB_CHUNK_SIZE:
+                    raise TransportException(f"Unexpected chunk size: {len(chunk)}")
+                return chunk
             except usb1.USBErrorTimeout:
-                pass
+                if time.time() > deadline:
+                    raise Timeout("Timeout reading WebUSB packet")
+                time.sleep(0.001)
             except Exception as e:
                 raise TransportException(f"USB read failed: {e}") from e
-        LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
-        if len(chunk) != WEBUSB_CHUNK_SIZE:
-            raise TransportException(f"Unexpected chunk size: {len(chunk)}")
-        return chunk
 
 
 class WebUsbTransport(ProtocolBasedTransport):

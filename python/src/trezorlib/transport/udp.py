@@ -22,7 +22,7 @@ import time
 from typing import TYPE_CHECKING, Iterable
 
 from ..log import DUMP_PACKETS
-from . import TransportException
+from . import Timeout, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 if TYPE_CHECKING:
@@ -108,7 +108,7 @@ class UdpTransport(ProtocolBasedTransport):
                     break
                 elapsed = time.monotonic() - start
                 if elapsed >= timeout:
-                    raise TransportException("Timed out waiting for connection.")
+                    raise Timeout("Timed out waiting for connection.")
 
                 time.sleep(0.05)
         finally:
@@ -151,7 +151,7 @@ class UdpTransport(ProtocolBasedTransport):
                 break
             except socket.timeout:
                 if timeout is not None and time.time() - start > timeout:
-                    raise TransportException("Timeout reading UDP packet")
+                    raise Timeout("Timeout reading UDP packet")
                 time.sleep(0.001)
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:

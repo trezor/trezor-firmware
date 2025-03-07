@@ -23,7 +23,7 @@ from typing import Any, Dict, Iterable
 
 from ..log import DUMP_PACKETS
 from ..models import TREZOR_ONE, TrezorModel
-from . import UDEV_RULES_STR, TransportException
+from . import UDEV_RULES_STR, Timeout, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ class HidHandle:
                 break
             else:
                 if timeout is not None and time.time() - start > timeout:
-                    raise TransportException("Timeout reading HID packet")
+                    raise Timeout("Timeout reading HID packet")
                 time.sleep(0.001)
 
         LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
