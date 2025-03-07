@@ -31,21 +31,22 @@ Follow these steps to set up the project on your local machine.
 
 Using nrfutil, install the required toolchain for the nRF Connect SDK:
 ```sh
-nrfutil toolchain-manager install --ncs-version v2.6.2
+nrfutil toolchain-manager install --ncs-version v2.9.0
 ```
 
 ### Launch the nRF Shell
 
-First, launch the nRF shell using the `nrfutil` toolchain manager:
+First, launch the nRF shell using the `nrfutil` toolchain manager and set the NCS to chosen version:
 
 ```sh
 nrfutil toolchain-manager launch --shell
+west init -m https://github.com/nrfconnect/sdk-nrf --mr v2.9.0 v2.9.0
 ```
 
 ### Initialize the Workspace
 Initialize your West workspace for the Trezor BLE Gateway project:
 ```sh
-cd west
+cd nordic
 west init -l ./trezor
 ```
 
