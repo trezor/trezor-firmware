@@ -1,11 +1,10 @@
 use crate::{
-    trezorhal::secbool::secbool,
+    trezorhal::secbool::{secbool, sectrue},
     ui::{
         component::Label,
         display::{self, toif::Toif, Color},
         geometry::{Alignment, Alignment2D, Offset, Point, Rect},
         layout::simplified::{run, show},
-        layout_eckhart::theme::ICON_CLOSE,
         shape::{self, render_on_display},
         ui_bootloader::BootloaderUI,
         CommonUI,
@@ -18,7 +17,6 @@ use ufmt::uwrite;
 use super::{
     bootloader::{
         BldActionBar, BldHeader, BldHeaderMsg, BldMenuScreen, BldTextScreen, BldWelcomeScreen,
-        IntroScreen,
     },
     component::{Button, WelcomeScreen},
     cshape::{render_loader, ScreenBorder},
@@ -26,10 +24,10 @@ use super::{
     theme::{
         self, backlight,
         bootloader::{
-            button_bld, button_confirm, button_wipe_cancel, button_wipe_confirm, BLD_BG, BLD_FG,
-            BLD_WARN_COLOR, BLD_WIPE_COLOR, WELCOME_COLOR,
+            button_cancel, button_confirm, button_wipe_confirm, BLD_BG, BLD_FG, BLD_WARN_COLOR,
+            TEXT_FW_FINGERPRINT, TEXT_WARNING, WELCOME_COLOR,
         },
-        BLUE, GREY, ICON_CHECKMARK, ICON_CROSS, RED, TEXT_NORMAL,
+        button_default, BLUE, GREY, ICON_CHECKMARK, ICON_CLOSE, ICON_CROSS, RED, TEXT_NORMAL,
     },
     UIEckhart,
 };
@@ -42,6 +40,7 @@ const SCREEN: Rect = UIEckhart::SCREEN;
 // TODO: adjust offset
 const PROGRESS_TEXT_ORIGIN: Point = SCREEN.top_left().ofs(Offset::new(24, 48));
 const SCREEN_BORDER_BLUE: ScreenBorder = ScreenBorder::new(BLUE);
+const SCREEN_BORDER_RED: ScreenBorder = ScreenBorder::new(RED);
 
 impl UIEckhart {
     fn screen_progress(
@@ -62,7 +61,11 @@ impl UIEckhart {
                 .with_fg(BLD_FG)
                 .render(target);
 
-            render_loader(progress, &SCREEN_BORDER_BLUE, target);
+            let border: &ScreenBorder = match bg_color {
+                RED => &SCREEN_BORDER_RED,
+                _ => &SCREEN_BORDER_BLUE,
+            };
+            render_loader(progress, border, target);
 
             if let Some(center_text) = center_text {
                 shape::Text::new(SCREEN.center(), center_text, fonts::FONT_SATOSHI_REGULAR_38)
@@ -118,7 +121,7 @@ impl BootloaderUI for UIEckhart {
         .with_action_bar(BldActionBar::new_single(
             Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
         ))
-        .with_screen_border(ScreenBorder::new(theme::BLUE));
+        .with_screen_border(SCREEN_BORDER_BLUE);
 
         show(&mut screen, true);
     }
@@ -157,7 +160,7 @@ impl BootloaderUI for UIEckhart {
 
         let (left, right) = if should_keep_seed {
             let l = Button::with_text("Cancel".into())
-                .styled(button_bld())
+                .styled(button_cancel())
                 .with_text_align(Alignment::Center);
             let r = Button::with_text("Install".into())
                 .styled(button_confirm())
@@ -165,7 +168,7 @@ impl BootloaderUI for UIEckhart {
             (l, r)
         } else {
             let l = Button::with_icon(ICON_CROSS)
-                .styled(button_bld())
+                .styled(button_cancel())
                 .with_text_align(Alignment::Center);
             let r = Button::with_icon(ICON_CHECKMARK)
                 .styled(button_confirm())
@@ -175,15 +178,15 @@ impl BootloaderUI for UIEckhart {
 
         let mut screen = BldTextScreen::new(msg)
             .with_header(BldHeader::new(title_str.into()).with_right_button(
-                Button::with_icon(theme::ICON_MENU).styled(theme::button_default()),
-                BldHeaderMsg::Menu,
+                Button::with_icon(theme::ICON_INFO).styled(theme::button_default()),
+                BldHeaderMsg::Info,
             ))
             .with_action_bar(BldActionBar::new_double(left, right))
-            .with_screen_border(ScreenBorder::new(BLUE))
+            .with_screen_border(SCREEN_BORDER_BLUE)
             .with_more_info(
                 BldHeader::new("FW Fingerprint".into())
                     .with_right_button(Button::with_icon(ICON_CLOSE), BldHeaderMsg::Cancelled),
-                Label::left_aligned(fingerprint.into(), TEXT_NORMAL),
+                Label::left_aligned(fingerprint.into(), TEXT_FW_FINGERPRINT),
             );
 
         if let Some(alert) = alert {
@@ -198,16 +201,16 @@ impl BootloaderUI for UIEckhart {
             "Are you sure you want to factory reset the device?".into(),
             TEXT_NORMAL,
         );
-        let alert = Label::centered("SEED and FIRMWARE will be erased!".into(), TEXT_NORMAL);
+        let alert = Label::left_aligned("SEED and FIRMWARE will be erased!".into(), TEXT_NORMAL);
 
         let right = Button::with_text("RESET".into()).styled(button_wipe_confirm());
-        let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_wipe_cancel());
+        let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_default());
 
         let mut screen = BldTextScreen::new(msg)
             .with_label2(alert)
             .with_header(BldHeader::new_pay_attention())
             .with_action_bar(BldActionBar::new_double(left, right))
-            .with_screen_border(ScreenBorder::new(RED));
+            .with_screen_border(SCREEN_BORDER_RED);
 
         run(&mut screen)
     }
@@ -218,13 +221,13 @@ impl BootloaderUI for UIEckhart {
         let msg2 = Label::centered("This action cannot be undone!".into(), TEXT_NORMAL);
 
         let right = Button::with_text("UNLOCK".into()).styled(button_confirm());
-        let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_bld());
+        let left = Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(button_cancel());
 
         let mut screen = BldTextScreen::new(msg1)
             .with_label2(msg2)
             .with_header(BldHeader::new_pay_attention())
             .with_action_bar(BldActionBar::new_double(left, right))
-            .with_screen_border(ScreenBorder::new(RED));
+            .with_screen_border(SCREEN_BORDER_RED);
 
         run(&mut screen)
     }
@@ -239,18 +242,18 @@ impl BootloaderUI for UIEckhart {
         .with_action_bar(BldActionBar::new_single(
             Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
         ))
-        .with_screen_border(ScreenBorder::new(theme::BLUE));
+        .with_screen_border(SCREEN_BORDER_BLUE);
 
         show(&mut screen, true);
     }
 
     fn screen_menu(firmware_present: secbool) -> u32 {
-        run(&mut BldMenuScreen::new(firmware_present))
+        run(&mut BldMenuScreen::new(firmware_present == sectrue))
     }
 
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
         let mut title_str: BootloaderString = String::new();
-        unwrap!(title_str.push_str("BOOTLOADER "));
+        unwrap!(title_str.push_str("Bootloader "));
         unwrap!(title_str.push_str(bld_version));
 
         let mut version_str: BootloaderString = String::new();
@@ -259,13 +262,24 @@ impl BootloaderUI for UIEckhart {
         unwrap!(version_str.push_str(" by "));
         unwrap!(version_str.push_str(vendor));
 
-        let mut frame = IntroScreen::new(
-            title_str.as_str().into(),
+        let mut screen = BldTextScreen::new(Label::left_aligned(
             version_str.as_str().into(),
-            fw_ok,
-        );
+            TEXT_NORMAL,
+        ))
+        .with_header(BldHeader::new(title_str.as_str().into()).with_menu_button())
+        .with_action_bar(BldActionBar::new_single(
+            Button::with_text("Connect to host device".into()).styled(button_confirm()),
+        ))
+        .with_screen_border(SCREEN_BORDER_BLUE);
 
-        run(&mut frame)
+        if !fw_ok {
+            screen = screen.with_label2(
+                Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_WARNING)
+                    .vertically_centered(),
+            );
+        }
+
+        run(&mut screen)
     }
 
     fn screen_boot_stage_1(fading: bool) {
@@ -284,30 +298,21 @@ impl BootloaderUI for UIEckhart {
     }
 
     fn screen_wipe_progress(progress: u16, initialize: bool) {
-        Self::screen_progress(
-            "Resetting Trezor",
-            progress,
-            initialize,
-            BLD_WIPE_COLOR,
-            None,
-        )
+        Self::screen_progress("Resetting Trezor", progress, initialize, RED, None)
     }
 
-    fn screen_install_progress(progress: u16, initialize: bool, initial_setup: bool) {
-        let bg_color = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let icon_color = BLD_FG;
-
-        Self::screen_progress("Installing firmware", progress, initialize, bg_color, None)
+    fn screen_install_progress(progress: u16, initialize: bool, _initial_setup: bool) {
+        Self::screen_progress("Installing firmware", progress, initialize, BLD_BG, None)
     }
 
-    fn screen_connect(initial_setup: bool) {
+    fn screen_connect(_initial_setup: bool) {
         // NOTE: other layouts use a Connect component. Eckhart uses a BldTextScreen so that the
         // ScreenBorder can be shown and alignment can be adjusted.
         let mut screen = BldTextScreen::new(Label::left_aligned(
             "Waiting for host...".into(),
             TEXT_NORMAL,
         ))
-        .with_screen_border(ScreenBorder::new(BLUE));
+        .with_screen_border(SCREEN_BORDER_BLUE);
         show(&mut screen, true);
     }
 
@@ -321,7 +326,7 @@ impl BootloaderUI for UIEckhart {
         .with_action_bar(BldActionBar::new_single(
             Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
         ))
-        .with_screen_border(ScreenBorder::new(theme::RED));
+        .with_screen_border(SCREEN_BORDER_RED);
 
         show(&mut screen, true);
     }
@@ -336,7 +341,7 @@ impl BootloaderUI for UIEckhart {
         .with_action_bar(BldActionBar::new_single(
             Button::with_text(RECONNECT_MESSAGE.into()).initially_enabled(false),
         ))
-        .with_screen_border(ScreenBorder::new(theme::RED));
+        .with_screen_border(SCREEN_BORDER_RED);
         show(&mut screen, true);
     }
 
