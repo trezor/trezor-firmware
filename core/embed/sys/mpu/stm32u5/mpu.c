@@ -143,6 +143,7 @@ _Static_assert(NORCOW_SECTOR_SIZE == STORAGE_2_MAXSIZE, "norcow misconfigured");
 
 #ifdef KERNEL
 
+#ifdef KERNEL_FLASH_U_START
 extern uint8_t _uflash_start;
 extern uint8_t _uflash_end;
 #define KERNEL_FLASH_U_START (uint32_t) & _uflash_start
@@ -158,6 +159,20 @@ extern uint32_t _codelen;
   (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE) - KERNEL_FLASH_U_SIZE)
 #define COREAPP_FLASH_SIZE \
   (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - KERNEL_FLASH_START))
+
+#else
+
+extern uint32_t _codelen;
+#define KERNEL_SIZE (uint32_t) & _codelen
+
+#define KERNEL_FLASH_START KERNEL_START
+#define KERNEL_FLASH_SIZE KERNEL_SIZE
+
+#define COREAPP_FLASH_START \
+  (COREAPP_CODE_ALIGN(KERNEL_FLASH_START + KERNEL_SIZE))
+#define COREAPP_FLASH_SIZE \
+  (FIRMWARE_MAXSIZE - (COREAPP_FLASH_START - KERNEL_FLASH_START))
+#endif
 
 #endif
 
@@ -401,7 +416,9 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       //      REGION   ADDRESS                 SIZE                TYPE       WRITE   UNPRIV
 #ifdef KERNEL
     case MPU_MODE_SAES:
+#ifdef SAES_RAM_START
       SET_REGION( 7, SAES_RAM_START,           SAES_RAM_SIZE,      SRAM,        YES,   YES ); // Unprivileged kernel SRAM
+#endif
       break;
 #endif
     default:
