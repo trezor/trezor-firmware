@@ -1,13 +1,13 @@
 mod bld_actionbar;
 mod bld_header;
 mod bld_text_screen;
-mod intro;
-mod menu;
-mod welcome;
+mod bld_menu;
+mod bld_menu_screen;
+mod welcome_screen;
 
 pub use bld_actionbar::{BldActionBar, BldActionBarMsg};
 pub use bld_header::{BldHeader, BldHeaderMsg};
 pub use bld_text_screen::BldTextScreen;
-pub use intro::IntroScreen;
-pub use menu::BldMenuScreen;
-pub use welcome::BldWelcomeScreen;
+pub use bld_menu::BldMenu;
+pub use bld_menu_screen::BldMenuScreen;
+pub use welcome_screen::BldWelcomeScreen;
