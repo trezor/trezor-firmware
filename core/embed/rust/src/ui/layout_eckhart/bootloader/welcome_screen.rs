@@ -11,8 +11,9 @@ use super::super::{
     theme::{BLACK, GREY, WHITE},
 };
 
-const TEXT_ORIGIN: Point = Point::new(0, 105);
-const STRIDE: i16 = 22;
+// TODO: adjust the origin
+const TEXT_ORIGIN: Point = Point::new(24, 205);
+const STRIDE: i16 = 38;
 
 /// Bootloader welcome screen
 pub struct BldWelcomeScreen {

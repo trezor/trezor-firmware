@@ -1,16 +1,16 @@
 use crate::ui::{
     component::{Component, Event, EventCtx, Never},
-    geometry::{Alignment, Alignment2D, Offset, Rect},
+    geometry::{Alignment, Offset, Rect},
     shape,
     shape::Renderer,
 };
 
-use super::super::{fonts, theme};
+use super::super::{
+    fonts,
+    theme::{GREY_LIGHT, TEXT_VERTICAL_SPACING},
+};
 
-const TEXT_BOTTOM_MARGIN: i16 = 54;
-const ICON_TOP_MARGIN: i16 = 48;
-
-use crate::trezorhal::model;
+const TEXT_OFFSET: Offset = Offset::new(30, 40);
 
 /// Firmware welcome screen
 pub struct WelcomeScreen {
@@ -36,23 +36,22 @@ impl Component for WelcomeScreen {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        shape::ToifImage::new(
-            self.area.top_center() + Offset::y(ICON_TOP_MARGIN),
-            theme::ICON_LOGO.toif,
-        )
-        .with_align(Alignment2D::TOP_CENTER)
-        .with_fg(theme::FG)
-        .with_bg(theme::BG)
-        .render(target);
+        // TODO: should we use `model::FULL_NAME`?
+        // use crate::trezorhal::model;
 
-        shape::Text::new(
-            self.area.bottom_center() - Offset::y(TEXT_BOTTOM_MARGIN),
-            model::FULL_NAME,
-            fonts::FONT_SATOSHI_REGULAR_38,
-        )
-        .with_align(Alignment::Center)
-        .with_fg(theme::FG)
-        .render(target);
+        const NAME_PARTS: [&str; 3] = ["Trezor", "Safe", "5"];
+
+        let font = fonts::FONT_SATOSHI_REGULAR_38;
+        let mut cursor = self.area.top_left() + TEXT_OFFSET;
+        let row_height = font.text_height() + TEXT_VERTICAL_SPACING;
+
+        for part in &NAME_PARTS {
+            shape::Text::new(cursor, part, font)
+                .with_align(Alignment::Start)
+                .with_fg(GREY_LIGHT)
+                .render(target);
+            cursor = cursor + Offset::y(row_height);
+        }
     }
 }
 
