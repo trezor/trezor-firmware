@@ -180,7 +180,7 @@ class ModelsFilter:
         "t1": {models.T1B1},
         "t2": {models.T2T1},
         "tt": {models.T2T1},
-        "safe": {models.T2B1, models.T3T1, models.T3B1},
+        "safe": {models.T2B1, models.T3T1, models.T3B1, models.T3W1},
         "safe3": {models.T2B1, models.T3B1},
         "safe5": {models.T3T1},
         "delizia": {models.T3T1},

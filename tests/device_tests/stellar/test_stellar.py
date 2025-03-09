@@ -64,6 +64,7 @@ from ...input_flows import InputFlowShowAddressQRCode
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.stellar,
+    pytest.mark.models(skip=["eckhart"]),
 ]
 
 
