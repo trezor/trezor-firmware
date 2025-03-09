@@ -190,7 +190,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         session.set_filter(messages.TxAck, None)
         return msg
 
-    with session, device_handler.client:
+    with session:
         session.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
         if debug.layout_type is LayoutType.Bolt:

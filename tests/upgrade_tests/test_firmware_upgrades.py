@@ -96,7 +96,7 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
         assert client.features.initialized
         assert client.features.label == LABEL
         session = client.get_session()
-        with client, session:
+        with session:
             client.use_pin_sequence([PIN])
             assert btc.get_address(session, "Bitcoin", PATH) == ADDRESS
 
