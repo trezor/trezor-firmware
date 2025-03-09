@@ -15,11 +15,15 @@ DELETE_BTN_TEXTS = ("inputs__delete", "inputs__previous")
 def enter_word(
     debug: "DebugLink", word: str, is_slip39: bool = False
 ) -> "LayoutContent":
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         typed_word = word[:4]
         for coords in debug.button_actions.type_word(typed_word, is_slip39=is_slip39):
             debug.click(coords)
-        if debug.layout_type is LayoutType.Delizia and not is_slip39 and len(word) > 4:
+        if (
+            debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart)
+            and not is_slip39
+            and len(word) > 4
+        ):
             # T3T1 (delizia) BIP39 keyboard allows to "confirm" only if the word is fully written, you need to click the word to auto-complete
             debug.click(debug.screen_buttons.mnemonic_confirm())
         debug.click(debug.screen_buttons.mnemonic_confirm())
@@ -53,7 +57,7 @@ def enter_word(
 def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
     layout = debug.read_layout()
     assert TR.translate(title) == layout.title()
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
@@ -80,7 +84,7 @@ def cancel_select_number_of_words(
         assert layout.title() == TR.word_count__title
         # navigate to the number and confirm it
         debug.press_left()
-    elif debug.layout_type is LayoutType.Delizia:
+    elif debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         # click the button from ValuePad
         if unlock_repeated_backup:
             coords = debug.screen_buttons.word_count_repeated_cancel()
@@ -99,7 +103,12 @@ def select_number_of_words(
     layout = debug.read_layout()
     assert TR.recovery__num_of_words in layout.text_content()
 
-    def select_bolt() -> "LayoutContent":
+    def select_bde() -> "LayoutContent":
+        assert debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        )
         # click the button from ValuePad
         if unlock_repeated_backup:
             coords = debug.screen_buttons.word_count_repeated_word(num_of_words)
@@ -110,6 +119,7 @@ def select_number_of_words(
         return debug.read_layout()
 
     def select_caesar() -> "LayoutContent":
+        assert debug.layout_type is LayoutType.Caesar
         # navigate to the number and confirm it
         word_options = (20, 33) if unlock_repeated_backup else (12, 18, 20, 24, 33)
         index = word_options.index(num_of_words)
@@ -118,24 +128,13 @@ def select_number_of_words(
         debug.press_middle()
         return debug.read_layout()
 
-    def select_delizia() -> "LayoutContent":
-        # click the button from ValuePad
-        if unlock_repeated_backup:
-            coords = debug.screen_buttons.word_count_repeated_word(num_of_words)
-        else:
-            coords = debug.screen_buttons.word_count_all_word(num_of_words)
-        debug.click(coords)
-        return debug.read_layout()
-
-    if debug.layout_type is LayoutType.Bolt:
-        layout = select_bolt()
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        layout = select_bde()
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         layout = debug.read_layout()
         assert layout.title() == TR.word_count__title
         layout = select_caesar()
-    elif debug.layout_type is LayoutType.Delizia:
-        layout = select_delizia()
     else:
         raise ValueError("Unknown model")
 
@@ -168,7 +167,11 @@ def enter_share(
     is_first: bool = True,
     before_title: str = "recovery__title_recover",
 ) -> "LayoutContent":
-    if debug.layout_type is LayoutType.Caesar:
+    if debug.layout_type is LayoutType.Bolt:
+        assert TR.translate(before_title) in debug.read_layout().title()
+        debug.click(debug.screen_buttons.ok())
+        layout = debug.read_layout()
+    elif debug.layout_type is LayoutType.Caesar:
         assert TR.translate(before_title) in debug.read_layout().title()
         layout = debug.read_layout()
         for _ in range(layout.page_count()):
@@ -177,10 +180,11 @@ def enter_share(
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
         layout = debug.read_layout()
-    else:
-        assert TR.translate(before_title) in debug.read_layout().title()
+    elif debug.layout_type is LayoutType.Eckhart:
         debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
+    else:
+        raise ValueError("Unknown model")
 
     assert "MnemonicKeyboard" in layout.all_components()
 
@@ -210,12 +214,18 @@ def enter_shares(
         )
         if index < len(shares) - 1:
             # FIXME: when ui-t3t1 done for shamir, we want to check the template below
-            assert TR.translate(enter_share_before_title) in debug.read_layout().title()
-            # TR.assert_in(
-            #     debug.read_layout().text_content(),
-            #     "recovery__x_of_y_entered_template",
-            #     template=(index + 1, len(shares)),
-            # )
+            if debug.layout_type is LayoutType.Eckhart:
+                assert (
+                    TR.translate("recovery__x_of_y_entered_template").format(
+                        index + 1, len(shares)
+                    )
+                    in debug.read_layout().text_content()
+                )
+            else:
+                assert (
+                    TR.translate(enter_share_before_title)
+                    in debug.read_layout().title()
+                )
 
     assert TR.translate(after_layout_text) in debug.read_layout().text_content()
 
@@ -231,7 +241,6 @@ def enter_seed(
 
     for word in seed_words:
         enter_word(debug, word, is_slip39=is_slip39)
-
     assert TR.translate(after_layout_text) in debug.read_layout().text_content()
 
 
@@ -272,8 +281,8 @@ def enter_seed_previous_correct(
                         layout = debug.read_layout()
                     debug.press_middle()
                     layout = debug.read_layout()
-            elif debug.layout_type is LayoutType.Delizia:
-                debug.click(debug.screen_buttons.mnemonic_erase())  # Top-left
+            elif debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+                debug.click(debug.screen_buttons.mnemonic_erase())
                 for _ in range(len(bad_word)):
                     debug.click(debug.screen_buttons.mnemonic_erase())
             continue
@@ -299,7 +308,7 @@ def prepare_enter_seed(
         or TR.recovery__enter_each_word in debug.read_layout().text_content()
         or TR.translate(layout_text) in debug.read_layout().text_content()
     )
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
@@ -310,6 +319,8 @@ def prepare_enter_seed(
         debug.press_right()
         layout = debug.read_layout()
         assert "MnemonicKeyboard" in layout.all_components()
+    else:
+        raise ValueError("Unknown model")
 
 
 def finalize(debug: "DebugLink") -> None:
@@ -336,7 +347,7 @@ def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
         assert cancel_title in layout.title()
         for _ in range(layout.page_count()):
             debug.press_right()
-    elif debug.layout_type is LayoutType.Delizia:
+    elif debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         # go to menu
         debug.click(debug.screen_buttons.menu())
         layout = debug.read_layout()

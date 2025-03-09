@@ -21,6 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 
 @pytest.mark.altcoin
+@pytest.mark.models(skip=["eckhart"])
 def test_u2f_counter(client: Client):
     assert fido.get_next_counter(client) == 0
     assert fido.get_next_counter(client) == 1
