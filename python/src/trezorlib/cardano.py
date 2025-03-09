@@ -35,7 +35,7 @@ from . import messages as m
 from . import tools
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
+    from .transport.session import Session
 
 PROTOCOL_MAGICS = {
     "mainnet": 764824073,
@@ -818,7 +818,7 @@ def _get_collateral_inputs_items(
 
 
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address_parameters: m.CardanoAddressParametersType,
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
     network_id: int = NETWORK_IDS["mainnet"],
@@ -826,7 +826,7 @@ def get_address(
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     chunkify: bool = False,
 ) -> str:
-    return client.call(
+    return session.call(
         m.CardanoGetAddress(
             address_parameters=address_parameters,
             protocol_magic=protocol_magic,
@@ -840,12 +840,12 @@ def get_address(
 
 
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address_n: List[int],
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     show_display: bool = False,
 ) -> m.CardanoPublicKey:
-    return client.call(
+    return session.call(
         m.CardanoGetPublicKey(
             address_n=address_n,
             derivation_type=derivation_type,
@@ -856,12 +856,12 @@ def get_public_key(
 
 
 def get_native_script_hash(
-    client: "TrezorClient",
+    session: "Session",
     native_script: m.CardanoNativeScript,
     display_format: m.CardanoNativeScriptHashDisplayFormat = m.CardanoNativeScriptHashDisplayFormat.HIDE,
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
 ) -> m.CardanoNativeScriptHash:
-    return client.call(
+    return session.call(
         m.CardanoGetNativeScriptHash(
             script=native_script,
             display_format=display_format,
@@ -872,7 +872,7 @@ def get_native_script_hash(
 
 
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     signing_mode: m.CardanoTxSigningMode,
     inputs: List[InputWithPath],
     outputs: List[OutputWithData],
@@ -907,7 +907,7 @@ def sign_tx(
         signing_mode,
     )
 
-    response = client.call(
+    response = session.call(
         m.CardanoSignTxInit(
             signing_mode=signing_mode,
             inputs_count=len(inputs),
@@ -942,12 +942,12 @@ def sign_tx(
         _get_certificates_items(certificates),
         withdrawals,
     ):
-        response = client.call(tx_item, expect=m.CardanoTxItemAck)
+        response = session.call(tx_item, expect=m.CardanoTxItemAck)
 
     sign_tx_response: Dict[str, Any] = {}
 
     if auxiliary_data is not None:
-        auxiliary_data_supplement = client.call(
+        auxiliary_data_supplement = session.call(
             auxiliary_data, expect=m.CardanoTxAuxiliaryDataSupplement
         )
         if (
@@ -958,25 +958,25 @@ def sign_tx(
                 auxiliary_data_supplement.__dict__
             )
 
-        response = client.call(m.CardanoTxHostAck(), expect=m.CardanoTxItemAck)
+        response = session.call(m.CardanoTxHostAck(), expect=m.CardanoTxItemAck)
 
     for tx_item in chain(
         _get_mint_items(mint),
         _get_collateral_inputs_items(collateral_inputs),
         required_signers,
     ):
-        response = client.call(tx_item, expect=m.CardanoTxItemAck)
+        response = session.call(tx_item, expect=m.CardanoTxItemAck)
 
     if collateral_return is not None:
         for tx_item in _get_output_items(collateral_return):
-            response = client.call(tx_item, expect=m.CardanoTxItemAck)
+            response = session.call(tx_item, expect=m.CardanoTxItemAck)
 
     for reference_input in reference_inputs:
-        response = client.call(reference_input, expect=m.CardanoTxItemAck)
+        response = session.call(reference_input, expect=m.CardanoTxItemAck)
 
     sign_tx_response["witnesses"] = []
     for witness_request in witness_requests:
-        response = client.call(witness_request, expect=m.CardanoTxWitnessResponse)
+        response = session.call(witness_request, expect=m.CardanoTxWitnessResponse)
         sign_tx_response["witnesses"].append(
             {
                 "type": response.type,
@@ -986,9 +986,9 @@ def sign_tx(
             }
         )
 
-    response = client.call(m.CardanoTxHostAck(), expect=m.CardanoTxBodyHash)
+    response = session.call(m.CardanoTxHostAck(), expect=m.CardanoTxBodyHash)
     sign_tx_response["tx_hash"] = response.tx_hash
 
-    response = client.call(m.CardanoTxHostAck(), expect=m.CardanoSignTxFinished)
+    response = session.call(m.CardanoTxHostAck(), expect=m.CardanoSignTxFinished)
 
     return sign_tx_response

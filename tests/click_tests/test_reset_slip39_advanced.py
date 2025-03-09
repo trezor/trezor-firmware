@@ -51,7 +51,7 @@ def test_reset_slip39_advanced(
 
     assert features.initialized is False
 
-    device_handler.run(
+    device_handler.run_with_session(
         device.setup,
         backup_type=messages.BackupType.Slip39_Advanced,
         pin_protection=False,
