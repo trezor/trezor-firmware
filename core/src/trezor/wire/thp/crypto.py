@@ -98,6 +98,7 @@ class Handshake:
         trezor_ephemeral_pubkey = curve25519.publickey(self.trezor_ephemeral_privkey)
         self.h = _hash_of_two(PROTOCOL_NAME, device_properties)
         self.h = _hash_of_two(self.h, host_ephemeral_pubkey)
+        self.h = _hash_of_two(self.h, b"")
         self.h = _hash_of_two(self.h, trezor_ephemeral_pubkey)
         point = curve25519.multiply(
             self.trezor_ephemeral_privkey, host_ephemeral_pubkey
@@ -165,7 +166,7 @@ class Handshake:
         if tag != encrypted_payload[-16:]:
             raise ThpDecryptionError()
 
-        self.h = _hash_of_two(self.h, memoryview(encrypted_payload)[:-16])
+        self.h = _hash_of_two(self.h, memoryview(encrypted_payload))
         self.key_receive, self.key_send = _hkdf(self.ck, b"")
         if __debug__:
             log.debug(
