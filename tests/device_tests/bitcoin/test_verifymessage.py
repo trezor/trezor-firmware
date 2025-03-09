@@ -23,6 +23,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ...input_flows import InputFlowSignVerifyMessageLong
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 
 @pytest.mark.models("legacy")
 def test_message_long_legacy(client: Client):

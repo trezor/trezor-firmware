@@ -49,7 +49,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
         models.T3B1: 1200,
         models.T2T1: 3500,
         models.T3T1: 3500,
-        models.T3W1: 3500,
+        models.T3W1: 2000,
     }[debug.model]
 
     def hold(duration: int) -> None:
@@ -58,7 +58,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
         elif debug.layout_type is LayoutType.Delizia:
             debug.click(debug.screen_buttons.tap_to_confirm(), hold_ms=duration)
         else:
-            debug.click((13, 37), hold_ms=duration)
+            debug.click(debug.screen_buttons.grid34(1, 1), hold_ms=duration)
 
     assert device_handler.features().unlocked is False
 

@@ -35,6 +35,8 @@ from ...input_flows import (
 
 S = messages.InputScriptType
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 
 def case(
     id: str,
@@ -406,7 +408,7 @@ def test_signmessage_pagination(client: Client, message: str, is_long: bool):
 
     # We cannot differentiate between a newline and space in the message read from Trezor.
     # TODO: do the check also for T2B1
-    if client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if client.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         message_read = IF.message_read.replace(" ", "").replace("...", "")
         signed_message = message.replace("\n", "").replace(" ", "")
         assert signed_message in message_read

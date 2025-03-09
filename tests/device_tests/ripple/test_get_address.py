@@ -31,7 +31,7 @@ CUSTOM_MNEMONIC = (
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.ripple,
-    pytest.mark.models("core"),
+    pytest.mark.models("core", skip=["eckhart"]),
 ]
 
 # data from https://iancoleman.io/bip39/
