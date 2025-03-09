@@ -89,64 +89,69 @@ async def show_native_script(
     key_hash = script.key_hash  # local_cache_attribute
     scripts = script.scripts  # local_cache_attribute
 
-    script_heading = "Script"
     if indices is None:
         indices = []
-    if indices:
-        script_heading += " " + ".".join(str(i) for i in indices)
 
-    script_type_name_suffix = ""
-    if script_type == CNST.PUB_KEY:
-        if key_path:
-            script_type_name_suffix = "path"
-        elif key_hash:
-            script_type_name_suffix = "hash"
+    async def confirm_native_script() -> None:
+        script_heading = "Script"
+        if indices:
+            script_heading += " " + ".".join(str(i) for i in indices)
 
-    props: list[PropertyType] = [
-        (
-            f"{script_heading} - {SCRIPT_TYPE_NAMES[script_type]} {script_type_name_suffix}:",
-            None,
-        )
-    ]
-    append = props.append  # local_cache_attribute
+        script_type_name_suffix = ""
+        if script_type == CNST.PUB_KEY:
+            if key_path:
+                script_type_name_suffix = "path"
+            elif key_hash:
+                script_type_name_suffix = "hash"
 
-    if script_type == CNST.PUB_KEY:
-        assert key_hash is not None or key_path  # validate_script
-        if key_hash:
-            append((None, bech32.encode(bech32.HRP_SHARED_KEY_HASH, key_hash)))
-        elif key_path:
-            append((address_n_to_str(key_path), None))
-    elif script_type == CNST.N_OF_K:
-        assert script.required_signatures_count is not None  # validate_script
-        append(
+        props: list[PropertyType] = [
             (
-                TR.cardano__x_of_y_signatures_template.format(
-                    script.required_signatures_count, len(scripts)
-                ),
+                f"{script_heading} - {SCRIPT_TYPE_NAMES[script_type]} {script_type_name_suffix}:",
                 None,
             )
+        ]
+        append = props.append  # local_cache_attribute
+
+        if script_type == CNST.PUB_KEY:
+            assert key_hash is not None or key_path  # validate_script
+            if key_hash:
+                append((None, bech32.encode(bech32.HRP_SHARED_KEY_HASH, key_hash)))
+            elif key_path:
+                append((address_n_to_str(key_path), None))
+        elif script_type == CNST.N_OF_K:
+            assert script.required_signatures_count is not None  # validate_script
+            append(
+                (
+                    TR.cardano__x_of_y_signatures_template.format(
+                        script.required_signatures_count, len(scripts)
+                    ),
+                    None,
+                )
+            )
+        elif script_type == CNST.INVALID_BEFORE:
+            assert script.invalid_before is not None  # validate_script
+            append((str(script.invalid_before), None))
+        elif script_type == CNST.INVALID_HEREAFTER:
+            assert script.invalid_hereafter is not None  # validate_script
+            append((str(script.invalid_hereafter), None))
+
+        if script_type in (
+            CNST.ALL,
+            CNST.ANY,
+            CNST.N_OF_K,
+        ):
+            assert scripts  # validate_script
+            append((TR.cardano__nested_scripts_template.format(len(scripts)), None))
+
+        await confirm_properties(
+            "verify_script",
+            TR.cardano__verify_script,
+            props,
+            br_code=BRT_Other,
         )
-    elif script_type == CNST.INVALID_BEFORE:
-        assert script.invalid_before is not None  # validate_script
-        append((str(script.invalid_before), None))
-    elif script_type == CNST.INVALID_HEREAFTER:
-        assert script.invalid_hereafter is not None  # validate_script
-        append((str(script.invalid_hereafter), None))
 
-    if script_type in (
-        CNST.ALL,
-        CNST.ANY,
-        CNST.N_OF_K,
-    ):
-        assert scripts  # validate_script
-        append((TR.cardano__nested_scripts_template.format(len(scripts)), None))
-
-    await confirm_properties(
-        "verify_script",
-        TR.cardano__verify_script,
-        props,
-        br_code=BRT_Other,
-    )
+    # Allow GC to free local variables after confirmation is over
+    await confirm_native_script()
 
     for i, sub_script in enumerate(scripts):
         await show_native_script(sub_script, indices + [i + 1])
