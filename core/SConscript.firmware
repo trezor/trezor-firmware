@@ -19,6 +19,7 @@ HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 SCM_REVISION = ARGUMENTS.get('SCM_REVISION', None)
 THP = ARGUMENTS.get('THP', '0') == '1' # Trezor-Host Protocol
 BENCHMARK = ARGUMENTS.get('BENCHMARK', '0') == '1'
+LOG_HEAP_USAGE=ARGUMENTS.get('LOG_HEAP_USAGE', '0') == '1'
 LOG_STACK_USAGE=ARGUMENTS.get('LOG_STACK_USAGE', '0') == '1'
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
@@ -32,6 +33,10 @@ if STORAGE_INSECURE_TESTING_MODE:
 
 if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
+  exit(1)
+
+if LOG_HEAP_USAGE and PYOPT != '0':
+  print("LOG_HEAP_USAGE=1 works only with PYOPT=0.")
   exit(1)
 
 if LOG_STACK_USAGE and PYOPT != '0':
@@ -88,6 +93,7 @@ CPPDEFINES_MOD += [
     ('USE_EOS', '1' if (EVERYTHING and TREZOR_MODEL == "T2T1") else '0'),
     ('DISABLE_ANIMATION', '1' if DISABLE_ANIMATION else '0'),
     ('LOG_STACK_USAGE', '1' if LOG_STACK_USAGE else '0'),
+    ('MICROPY_GC_LOG', '1' if LOG_HEAP_USAGE else '0'),
 ]
 SOURCE_MOD += [
     'embed/upymod/trezorobj.c',
