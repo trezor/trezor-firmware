@@ -80,7 +80,7 @@ def test_backup_slip39_custom(
     # confirm backup configuration
     if share_count > 1:
         assert TR.regexp("reset__create_x_of_y_multi_share_backup_template").match(
-            debug.read_layout().text_content()
+            debug.read_layout().text_content().strip()
         )
     else:
         assert TR.regexp("backup__info_single_share_backup").match(
@@ -106,9 +106,12 @@ def test_backup_slip39_custom(
         all_words.append(" ".join(words))
 
     # confirm backup done
-    if debug.layout_type is LayoutType.Delizia and share_count > 1:
+    if (
+        debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart)
+        and share_count > 1
+    ):
         reset.confirm_read(debug)
-    elif debug.layout_type is not LayoutType.Delizia:
+    elif debug.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart):
         reset.confirm_read(debug)
 
     # generate secret locally
