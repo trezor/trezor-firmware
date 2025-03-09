@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Optional, TextIO
 import click
 
 from .. import messages, solana, tools
-from . import with_client
+from . import with_session
 
 if TYPE_CHECKING:
-    from ..client import TrezorClient
+    from ..transport.session import Session
 
 PATH_HELP = "BIP-32 path to key, e.g. m/44h/501h/0h/0h"
 DEFAULT_PATH = "m/44h/501h/0h/0h"
@@ -21,40 +21,40 @@ def cli() -> None:
 @cli.command()
 @click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
-@with_client
+@with_session
 def get_public_key(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     show_display: bool,
 ) -> bytes:
     """Get Solana public key."""
     address_n = tools.parse_path(address)
-    return solana.get_public_key(client, address_n, show_display)
+    return solana.get_public_key(session, address_n, show_display)
 
 
 @cli.command()
 @click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
 @click.option("-d", "--show-display", is_flag=True)
 @click.option("-C", "--chunkify", is_flag=True)
-@with_client
+@with_session
 def get_address(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     show_display: bool,
     chunkify: bool,
 ) -> str:
     """Get Solana address."""
     address_n = tools.parse_path(address)
-    return solana.get_address(client, address_n, show_display, chunkify)
+    return solana.get_address(session, address_n, show_display, chunkify)
 
 
 @cli.command()
 @click.argument("serialized_tx", type=str)
 @click.option("-n", "--address", default=DEFAULT_PATH, help=PATH_HELP)
 @click.option("-a", "--additional-information-file", type=click.File("r"))
-@with_client
+@with_session
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     address: str,
     serialized_tx: str,
     additional_information_file: Optional[TextIO],
@@ -78,7 +78,7 @@ def sign_tx(
         )
 
     return solana.sign_tx(
-        client,
+        session,
         address_n,
         bytes.fromhex(serialized_tx),
         additional_information,
