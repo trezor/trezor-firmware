@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = pytest.mark.models("t2t1", "delizia")
+pytestmark = pytest.mark.models("t2t1", "delizia", "eckhart")
 
 KEYBOARD_CATEGORIES_BOLT = [
     PassphraseCategory.DIGITS,
@@ -40,7 +40,8 @@ KEYBOARD_CATEGORIES_BOLT = [
     PassphraseCategory.SPECIAL,
 ]
 
-KEYBOARD_CATEGORIES_DELIZIA = [
+# Common for Delizia and Eckhart
+KEYBOARD_CATEGORIES_DE = [
     PassphraseCategory.LOWERCASE,
     PassphraseCategory.UPPERCASE,
     PassphraseCategory.DIGITS,
@@ -90,8 +91,8 @@ def prepare_passphrase_dialogue(
 def keyboard_categories(layout_type: LayoutType) -> list[PassphraseCategory]:
     if layout_type is LayoutType.Bolt:
         return KEYBOARD_CATEGORIES_BOLT
-    elif layout_type is LayoutType.Delizia:
-        return KEYBOARD_CATEGORIES_DELIZIA
+    elif layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        return KEYBOARD_CATEGORIES_DE
     else:
         raise ValueError("Wrong layout type")
 
@@ -157,7 +158,7 @@ def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     is_empty: bool = len(debug.read_layout().passphrase()) == 0
     debug.click(debug.screen_buttons.passphrase_confirm())
-    if is_empty and debug.layout_type is LayoutType.Delizia:
+    if is_empty and debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ui_yes())
 
 
@@ -200,7 +201,7 @@ def test_passphrase_delete(device_handler: "BackgroundDeviceHandler"):
 
         for _ in range(4):
             delete_char(debug)
-        if debug.layout_type is LayoutType.Delizia:
+        if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             debug.read_layout()
 
         input_passphrase(debug, CommonPass.SHORT[8 - 4 :])
@@ -231,7 +232,7 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             PassphraseCategory.SPECIAL,
         ):
             go_to_category(debug, category)
-        if debug.layout_type is LayoutType.Delizia:
+        if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             debug.read_layout()
 
         enter_passphrase(debug)

@@ -25,7 +25,7 @@ from ...common import parametrize_using_common_fixtures
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.solana,
-    pytest.mark.models("core"),
+    pytest.mark.models("core", skip=["eckhart"]),
 ]
 
 

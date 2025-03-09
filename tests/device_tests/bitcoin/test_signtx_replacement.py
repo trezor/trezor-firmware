@@ -32,6 +32,8 @@ from .signtx import (
     request_output,
 )
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 B = messages.ButtonRequestType
 
 TX_CACHE_TESTNET = TxCache("Testnet")
