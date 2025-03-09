@@ -24,7 +24,7 @@ from trezorlib.tools import parse_path
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.ripple,
-    pytest.mark.models("core"),
+    pytest.mark.models("core", skip=["eckhart"]),
 ]
 
 

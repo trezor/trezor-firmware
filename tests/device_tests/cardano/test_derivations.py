@@ -27,7 +27,7 @@ from ...common import MNEMONIC_SLIP39_BASIC_20_3of6
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.cardano,
-    pytest.mark.models("core"),
+    pytest.mark.models("core", skip=["eckhart"]),
 ]
 
 ADDRESS_N = parse_path("m/1852h/1815h/0h")

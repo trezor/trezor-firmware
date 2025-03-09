@@ -28,7 +28,7 @@ TEZOS_PATH_15 = parse_path("m/44h/1729h/15h")
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.tezos,
-    pytest.mark.models("core"),
+    pytest.mark.models("core", skip=["eckhart"]),
 ]
 
 

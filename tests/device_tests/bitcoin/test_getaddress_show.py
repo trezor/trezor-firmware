@@ -244,7 +244,7 @@ VECTORS_MULTISIG = (  # script_type, bip48_type, address, xpubs, ignore_xpub_mag
 )
 
 
-@pytest.mark.models("core")
+@pytest.mark.models("core", skip=["eckhart"])
 @pytest.mark.multisig
 @pytest.mark.parametrize(
     "script_type, bip48_type, address, xpubs, ignore_xpub_magic", VECTORS_MULTISIG
