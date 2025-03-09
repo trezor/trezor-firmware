@@ -80,4 +80,12 @@ void hasher_Final(Hasher *hasher, uint8_t hash[HASHER_DIGEST_LENGTH]);
 void hasher_Raw(HasherType type, const uint8_t *data, size_t length,
                 uint8_t hash[HASHER_DIGEST_LENGTH]);
 
+// Update the hash with an integer and also (statically) check that it has the
+// expected size.
+#define HASHER_UPDATE_INT(ctx, val, expected_type)                            \
+  do {                                                                        \
+    hasher_Update(ctx, (const uint8_t *)&(val), sizeof(val));                 \
+    _Static_assert(sizeof(val) == sizeof(expected_type), "invalid int size"); \
+  } while (0)
+
 #endif
