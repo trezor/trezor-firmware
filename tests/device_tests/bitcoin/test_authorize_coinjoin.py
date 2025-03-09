@@ -462,7 +462,10 @@ def test_sign_tx_spend(client: Client):
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (
+                    is_core(client),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -536,7 +539,10 @@ def test_sign_tx_migration(client: Client):
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (
+                    is_core(client),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_2cc3c1),

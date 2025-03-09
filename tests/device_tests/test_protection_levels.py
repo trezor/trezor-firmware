@@ -371,7 +371,10 @@ def test_signtx(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (
+                    is_core(client),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_50f6f1),

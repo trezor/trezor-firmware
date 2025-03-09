@@ -89,7 +89,10 @@ def test_2_of_3(client: Client, chunkify: bool):
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+        (
+            is_core(client),
+            messages.ButtonRequest(code=B.ConfirmOutput),
+        ),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_meta(TXHASH_6b07c1),

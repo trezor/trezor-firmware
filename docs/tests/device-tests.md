@@ -120,6 +120,7 @@ Arguments can be a list of internal model names, or one of the following shortcu
 * `safe` - Trezor Safe family
 * `safe3` - Trezor Safe 3 (covers T2B1 and T2T1)
 * `delizia` - covers the `delizia` UI (currently T3T1 only)
+* `eckhart` - covers the `eckhart` UI (currently T3W1 only)
 
 You can specify a list as positional arguments, and exclude from it via `skip` keyword argument.
 
