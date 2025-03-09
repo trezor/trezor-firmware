@@ -24,7 +24,7 @@ from .common import (
     BRGeneratorType,
     check_pin_backoff_time,
     click_info_button_bolt,
-    click_info_button_delizia,
+    click_info_button_delizia_eckhart,
     click_through,
     get_text_possible_pagination,
     read_and_confirm_mnemonic,
@@ -56,6 +56,8 @@ class InputFlowBase:
             return self.input_flow_caesar
         elif self.client.layout_type is LayoutType.Delizia:
             return self.input_flow_delizia
+        elif self.client.layout_type is LayoutType.Eckhart:
+            return self.input_flow_eckhart
         else:
             raise ValueError("Unknown model")
 
@@ -69,6 +71,10 @@ class InputFlowBase:
 
     def input_flow_delizia(self) -> BRGeneratorType:
         """Special for T3T1"""
+        raise NotImplementedError
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        """Special for T3W1"""
         raise NotImplementedError
 
     def text_content(self) -> str:
@@ -250,6 +256,9 @@ class InputFlowSignMessagePagination(InputFlowBase):
 
         self.debug.press_yes()
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowSignVerifyMessageLong(InputFlowBase):
     def __init__(self, client: Client, verify=False):
@@ -342,6 +351,9 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
             self.debug.press_yes()
             br = yield
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowSignMessageInfo(InputFlowBase):
     def __init__(self, client: Client):
@@ -369,6 +381,9 @@ class InputFlowSignMessageInfo(InputFlowBase):
         # address mismatch? yes!
         self.debug.swipe_up()
         yield
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
 
 
 class InputFlowShowAddressQRCode(InputFlowBase):
@@ -441,6 +456,9 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         # tap to confirm
         self.debug.click(self.client.debug.screen_buttons.tap_to_confirm())
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowShowAddressQRCodeCancel(InputFlowBase):
     def __init__(self, client: Client):
@@ -493,6 +511,9 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         self.debug.synchronize_at("PromptScreen")
         # really cancel
         self.debug.click(self.client.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
 
 
 class InputFlowShowMultisigXPUBs(InputFlowBase):
@@ -639,6 +660,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # tap to confirm
         self.debug.press_yes()
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowShowXpubQRCode(InputFlowBase):
     def __init__(self, client: Client, passphrase: bool = False):
@@ -750,6 +774,9 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         # tap to confirm
         self.debug.press_yes()
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowPaymentRequestDetails(InputFlowBase):
     def __init__(self, client: Client, outputs: list[messages.TxOutputType]):
@@ -803,6 +830,9 @@ class InputFlowPaymentRequestDetails(InputFlowBase):
         self.debug.swipe_up()
         self.debug.press_yes()
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowSignTxHighFee(InputFlowBase):
     def __init__(self, client: Client):
@@ -850,6 +880,9 @@ class InputFlowSignTxHighFee(InputFlowBase):
                 self.debug.press_yes()
 
         self.finished = True
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
 
 
 def sign_tx_go_to_info(client: Client) -> Generator[None, messages.ButtonRequest, str]:
@@ -968,6 +1001,9 @@ class InputFlowSignTxInformation(InputFlowBase):
         self.debug.swipe_up()
         self.debug.press_yes()
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowSignTxInformationMixed(InputFlowBase):
     def __init__(self, client: Client):
@@ -1003,6 +1039,9 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         self.debug.swipe_up()
         self.debug.press_yes()
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowSignTxInformationCancel(InputFlowBase):
     def __init__(self, client: Client):
@@ -1022,6 +1061,9 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
         self.debug.click(self.client.debug.screen_buttons.vertical_menu_items()[2])
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.client.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
 
 
 class InputFlowSignTxInformationReplacement(InputFlowBase):
@@ -1061,6 +1103,7 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         self.debug.press_right()
 
     input_flow_delizia = input_flow_bolt
+    input_flow_eckhart = input_flow_bolt
 
 
 def lock_time_input_flow_bolt(
@@ -1152,6 +1195,9 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
             self.debug, self.assert_func, double_confirm=True
         )
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowLockTimeDatetime(InputFlowBase):
     def __init__(self, client: Client, lock_time_str: str):
@@ -1172,6 +1218,9 @@ class InputFlowLockTimeDatetime(InputFlowBase):
     def input_flow_delizia(self) -> BRGeneratorType:
         yield from lock_time_input_flow_delizia(self.debug, self.assert_func)
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowEIP712ShowMore(InputFlowBase):
     SHOW_MORE = (143, 167)
@@ -1182,7 +1231,11 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             self.debug.click(self.SHOW_MORE)
         elif self.client.layout_type is LayoutType.Caesar:
             self.debug.press_right()
@@ -1386,6 +1439,17 @@ class InputFlowBip39ResetBackup(InputFlowBase):
         # mnemonic phrases and rest
         self.mnemonic = yield from get_mnemonic(self.debug)
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        # 1. Confirm Reset
+        # 2. Wallet created
+        # 3. Backup your seed
+        # 4. Backup intro
+        # 5. Confirm warning
+        yield from click_through(self.debug, screens=5, code=B.ResetDevice)
+
+        # mnemonic phrases and rest
+        self.mnemonic = yield from get_mnemonic(self.debug)
+
 
 class InputFlowBip39ResetPIN(InputFlowBase):
     def __init__(self, client: Client):
@@ -1399,7 +1463,7 @@ class InputFlowBip39ResetPIN(InputFlowBase):
 
         yield from self.PIN.setup_new_pin("654")
 
-        if self.debug.layout_type is LayoutType.Delizia:
+        if self.debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             br = yield  # Wallet created
             assert br.code == B.ResetDevice
             self.debug.press_yes()
@@ -1434,9 +1498,13 @@ class InputFlowBip39ResetFailedCheck(InputFlowBase):
         self.mnemonic = None
 
     def input_flow_common(self) -> BRGeneratorType:
-        screens = 5 if self.debug.layout_type is LayoutType.Delizia else 4
+        screens = (
+            5
+            if self.debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart)
+            else 4
+        )
         # 1. Confirm Reset
-        # 1a. (T3T1) Walet Creation done
+        # 1a. (T3T1, T3W1) Walet Creation done
         # 2. Confirm backup prompt
         # 3. Backup your seed
         # 4. Confirm warning
@@ -1566,18 +1634,50 @@ class InputFlowSlip39BasicBackup(InputFlowBase):
         self.debug.swipe_up()
         assert (yield).name == "slip39_shares"
         if self.click_info:
-            click_info_button_delizia(self.debug)
+            click_info_button_delizia_eckhart(self.debug)
         self.debug.swipe_up()
         assert (yield).name == "slip39_checklist"
         self.debug.swipe_up()
         assert (yield).name == "slip39_threshold"
         if self.click_info:
-            click_info_button_delizia(self.debug)
+            click_info_button_delizia_eckhart(self.debug)
         self.debug.swipe_up()
         assert (yield).name == "slip39_checklist"
         self.debug.swipe_up()
         assert (yield).name == "backup_warning"
         self.debug.swipe_up()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        if self.repeated:
+            # intro confirmation screen
+            assert (yield).name == "confirm_repeated_backup"
+            self.debug.press_yes()
+
+        assert (yield).name == "backup_intro"
+        self.debug.press_yes()
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+        assert (yield).name == "slip39_shares"
+        if self.click_info:
+            click_info_button_delizia_eckhart(self.debug)
+        self.debug.press_yes()
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+        assert (yield).name == "slip39_threshold"
+        if self.click_info:
+            click_info_button_delizia_eckhart(self.debug)
+        self.debug.press_yes()
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+        assert (yield).name == "backup_warning"
+        self.debug.press_yes()
 
         # Mnemonic phrases
         self.mnemonics = yield from load_N_shares(self.debug, 5)
@@ -1662,6 +1762,26 @@ class InputFlowSlip39BasicResetRecovery(InputFlowBase):
         assert br.code == B.Success
         self.debug.press_yes()
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        # 1. Confirm Reset
+        # 2. Wallet Created
+        # 3. Backup your seed
+        # 4. Backup intro
+        # 5. Set & Confirm number of shares
+        # 6. threshold info
+        # 7. Set & confirm threshold value
+        # 8. Confirm show seeds
+        # 9. Warning
+        # 10. Instructions
+        yield from click_through(self.debug, screens=10, code=B.ResetDevice)
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_shares(self.debug, 5)
+
+        br = yield  # success screen
+        assert br.code == B.Success
+        self.debug.press_yes()
+
 
 class InputFlowSlip39CustomBackup(InputFlowBase):
     def __init__(self, client: Client, share_count: int, repeated: bool = False):
@@ -1715,6 +1835,28 @@ class InputFlowSlip39CustomBackup(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        if self.repeated:
+            yield
+            self.debug.press_yes()
+
+        if self.share_count > 1:
+            yield  # Checklist
+            self.debug.press_yes()
+        else:
+            yield  # Backup intro
+            self.debug.press_yes()
+
+        yield  # Confirm show seeds
+        self.debug.press_yes()
+
+        # Mnemonic phrases
+        self.mnemonics = yield from load_N_shares(self.debug, self.share_count)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
         if self.repeated:
             yield
             self.debug.press_yes()
@@ -1840,25 +1982,61 @@ class InputFlowSlip39AdvancedBackup(InputFlowBase):
         self.debug.swipe_up()
         assert (yield).name == "slip39_groups"
         if self.click_info:
-            click_info_button_delizia(self.debug)
+            click_info_button_delizia_eckhart(self.debug)
         self.debug.swipe_up()
         assert (yield).name == "slip39_checklist"
         self.debug.swipe_up()
         assert (yield).name == "slip39_group_threshold"
         if self.click_info:
-            click_info_button_delizia(self.debug)
+            click_info_button_delizia_eckhart(self.debug)
         self.debug.swipe_up()
         assert (yield).name == "slip39_checklist"
         self.debug.swipe_up()
         for _i in range(5):  # for each of 5 groups
             assert (yield).name == "slip39_shares"
             if self.click_info:
-                click_info_button_delizia(self.debug)
+                click_info_button_delizia_eckhart(self.debug)
             self.debug.swipe_up()
             assert (yield).name == "slip39_threshold"
             if self.click_info:
-                click_info_button_delizia(self.debug)
+                click_info_button_delizia_eckhart(self.debug)
             self.debug.swipe_up()
+        assert (yield).name == "backup_warning"
+        self.debug.press_yes()
+
+        # Mnemonic phrases - show & confirm shares for all groups
+        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+
+        br = yield  # Confirm backup
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert (yield).name == "backup_intro"
+        self.debug.press_yes()
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+        assert (yield).name == "slip39_groups"
+        if self.click_info:
+            click_info_button_delizia_eckhart(self.debug)
+        self.debug.press_yes()
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+        assert (yield).name == "slip39_group_threshold"
+        if self.click_info:
+            click_info_button_delizia_eckhart(self.debug)
+        self.debug.press_yes()
+        assert (yield).name == "slip39_checklist"
+        self.debug.press_yes()
+        for _i in range(5):  # for each of 5 groups
+            assert (yield).name == "slip39_shares"
+            if self.click_info:
+                click_info_button_delizia_eckhart(self.debug)
+            self.debug.press_yes()
+            assert (yield).name == "slip39_threshold"
+            if self.click_info:
+                click_info_button_delizia_eckhart(self.debug)
+            self.debug.press_yes()
         assert (yield).name == "backup_warning"
         self.debug.press_yes()
 
@@ -1935,6 +2113,29 @@ class InputFlowSlip39AdvancedResetRecovery(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_delizia(self) -> BRGeneratorType:
+        # 1. Confirm Reset
+        # 2. Wallet Created
+        # 3. Prompt Backup
+        # 4. Backup intro
+        # 5. Confirm warning
+        # 6. shares info
+        # 7. Set & Confirm number of groups
+        # 8. threshold info
+        # 9. Set & confirm group threshold value
+        # 10-19: for each of 5 groups:
+        #   1. Set & Confirm number of shares
+        #   2. Set & confirm share threshold value
+        # 20. Confirm show seeds
+        yield from click_through(self.debug, screens=20, code=B.ResetDevice)
+
+        # Mnemonic phrases - show & confirm shares for all groups
+        self.mnemonics = yield from load_5_groups_5_shares(self.debug)
+
+        br = yield  # safety warning
+        assert br.code == B.Success
+        self.debug.press_yes()
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
         # 1. Confirm Reset
         # 2. Wallet Created
         # 3. Prompt Backup
@@ -2043,7 +2244,11 @@ class InputFlowSlip39AdvancedRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -2056,7 +2261,11 @@ class InputFlowSlip39AdvancedRecoveryNoAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:
@@ -2165,7 +2374,11 @@ class InputFlowSlip39BasicRecoveryAbortOnNumberOfWords(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             yield from self.REC.input_number_of_words(None)
 
 
@@ -2175,7 +2388,11 @@ class InputFlowSlip39BasicRecoveryAbort(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             yield from self.REC.input_number_of_words(20)
         yield from self.REC.abort_recovery(True)
 
@@ -2188,7 +2405,11 @@ class InputFlowSlip39BasicRecoveryAbortBetweenShares(InputFlowBase):
 
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             yield from self.REC.input_number_of_words(20)
         else:
             yield from self.REC.recovery_homescreen_caesar()
@@ -2208,7 +2429,11 @@ class InputFlowSlip39BasicRecoveryNoAbort(InputFlowBase):
     def input_flow_common(self) -> BRGeneratorType:
         yield from self.REC.confirm_recovery()
 
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             yield from self.REC.input_number_of_words(self.word_count)
             yield from self.REC.abort_recovery(False)
         else:
@@ -2337,6 +2562,17 @@ class InputFlowResetSkipBackup(InputFlowBase):
         self.debug.synchronize_at("PromptScreen")
         self.debug.click(self.client.debug.screen_buttons.tap_to_confirm())
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        yield from self.BAK.confirm_new_wallet()
+        yield  # Skip Backup
+        assert TR.backup__new_wallet_created in self.text_content()
+        self.debug.press_yes()
+        yield
+        self.debug.click(self.client.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.click(self.client.debug.screen_buttons.vertical_menu_items()[0])
+        self.debug.press_no()
+
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
     def __init__(self, client: Client):
@@ -2384,6 +2620,9 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
                 self.debug.press_yes()
             br = yield
 
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
+
 
 class InputFlowFidoConfirm(InputFlowBase):
     def __init__(self, client: Client, cancel: bool = False):
@@ -2403,3 +2642,6 @@ class InputFlowFidoConfirm(InputFlowBase):
             yield
             self.debug.swipe_up()
             self.debug.click(self.client.debug.screen_buttons.tap_to_confirm())
+
+    def input_flow_eckhart(self) -> BRGeneratorType:
+        assert False, "Not implemented"
