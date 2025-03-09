@@ -23,7 +23,7 @@ udp.SOCKET_TIMEOUT = 0.1
 
 class NullUI:
     @staticmethod
-    def clear():
+    def clear(*args, **kwargs):
         pass
 
     @staticmethod

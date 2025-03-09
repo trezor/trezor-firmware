@@ -782,13 +782,13 @@ class DebugUI:
         self.debuglink = debuglink
         self.clear()
 
-    def clear(self) -> None:
-        self.pins: t.Iterator[str] | None = None
+    def clear(self, keep_pin: bool = False) -> None:
+        if not keep_pin:
+            self.pins: t.Iterator[str] | None = None
         self.passphrase = None
         self.input_flow: t.Union[
             t.Generator[None, messages.ButtonRequest, None], object, None
         ] = None
-        self.input_flow_loops_forever = False
 
     def _default_input_flow(self, br: messages.ButtonRequest) -> None:
         if br.code == messages.ButtonRequestType.PinEntry:
@@ -1057,12 +1057,12 @@ class SessionDebugWrapper(Session):
         else:
             return msg
 
-    def reset_debug_features(self) -> None:
+    def reset_debug_features(self, keep_pin: bool = False) -> None:
         """Prepare the debugging session for a new testcase.
 
         Clears all debugging state that might have been modified by a testcase.
         """
-        self.client.ui.clear()
+        self.client.ui.clear(keep_pin)  # type: ignore [Cannot access attribute]
         self.in_with_statement = False
         self.expected_responses: list[MessageFilter] | None = None
         self.actual_responses: list[protobuf.MessageType] | None = None
@@ -1090,26 +1090,15 @@ class SessionDebugWrapper(Session):
             self.client.ui, DebugUI
         ):
             input_flow = self.client.ui.input_flow
-            # input_flow_loops_forever = self.client.ui.input_flow_loops_forever
         else:
             input_flow = None
-            # input_flow_loops_forever = False
 
-        self.reset_debug_features()
+        self.reset_debug_features(keep_pin=True)
 
         if exc_type is None:
             # If no other exception was raised, evaluate missed responses
             # (raises AssertionError on mismatch)
             self._verify_responses(expected_responses, actual_responses)
-            # if isinstance(input_flow, t.Generator) and not input_flow_loops_forever:
-            #     # Ensure that the input flow is exhausted
-            #     try:
-            #         input_flow.throw(
-            #             AssertionError("input flow continues past end of test")
-            #         )
-            #     except StopIteration:
-            #         pass
-
         elif isinstance(input_flow, t.Generator):
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
@@ -1200,13 +1189,11 @@ class SessionDebugWrapper(Session):
         if not self.in_with_statement:
             raise RuntimeError("Must be called inside 'with' statement")
 
-        if hasattr(input_flow, "loops_forever"):
-            self.client.ui.input_flow_loops_forever = input_flow.loops_forever
         if callable(input_flow):
             input_flow = input_flow()
         if not hasattr(input_flow, "send"):
             raise RuntimeError("input_flow should be a generator function")
-        self.client.ui.input_flow = input_flow
+        self.client.ui.input_flow = input_flow  # type: ignore [Cannot access attribute]
 
         next(input_flow)  # start the generator
 

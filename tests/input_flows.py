@@ -38,10 +38,9 @@ B = messages.ButtonRequestType
 
 
 class InputFlowBase:
-    def __init__(self, client: Client, loops_forever: bool = False):
+    def __init__(self, client: Client):
         self.client = client
         self.debug: DebugLink = client.debug
-        self.loops_forever = loops_forever
         self.PIN = PinFlow(self.client)
         self.REC = RecoveryFlow(self.client)
         self.BAK = BackupFlow(self.client)
@@ -62,7 +61,6 @@ class InputFlowBase:
         else:
             raise ValueError("Unknown model")
 
-        flow.__dict__["loops_forever"] = self.loops_forever
         return flow
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -2362,7 +2360,7 @@ class InputFlowResetSkipBackup(InputFlowBase):
 
 class InputFlowConfirmAllWarnings(InputFlowBase):
     def __init__(self, client: Client):
-        super().__init__(client, loops_forever=True)
+        super().__init__(client)
 
     def input_flow_bolt(self) -> BRGeneratorType:
         br = yield
@@ -2407,7 +2405,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
 
 class InputFlowFidoConfirm(InputFlowBase):
     def __init__(self, client: Client, cancel: bool = False):
-        super().__init__(client, loops_forever=True)
+        super().__init__(client)
         self.cancel = cancel
 
     def input_flow_bolt(self) -> BRGeneratorType:
