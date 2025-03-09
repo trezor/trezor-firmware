@@ -403,6 +403,20 @@ class LayoutContent(UnstructuredJSONReader):
             return ""
         return footer.get("description", "") + " " + footer.get("instruction", "")
 
+    def action_bar(self) -> str:
+        action_bar = self.find_unique_object_with_key_and_value(
+            "component", "ActionBar"
+        )
+        if not action_bar:
+            return ""
+        right_button = action_bar.get("right_button", "")
+        left_button = action_bar.get("left_button", "")
+        if isinstance(left_button, dict):
+            left_button = left_button.get("text", "")
+        if isinstance(right_button, dict):
+            right_button = right_button.get("text", "")
+        return left_button + " " + right_button
+
 
 def multipage_content(layouts: list[LayoutContent]) -> str:
     """Get overall content from multiple-page layout."""
@@ -829,7 +843,10 @@ class DebugUI:
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
-                    self.debuglink.swipe_up()
+                    if self.debuglink.model is models.T3W1:
+                        self.debuglink.click(self.debuglink.screen_buttons.ok())
+                    else:
+                        self.debuglink.swipe_up()
 
             if self.debuglink.model is models.T3T1:
                 layout = self.debuglink.read_layout()
@@ -837,6 +854,12 @@ class DebugUI:
                     self.debuglink.press_yes()
                 elif "SwipeContent" in layout.all_components():
                     self.debuglink.swipe_up()
+                else:
+                    self.debuglink.press_yes()
+            elif self.debuglink.model is models.T3W1:
+                layout = self.debuglink.read_layout()
+                if "TextComponent" in layout.all_components():
+                    self.debuglink.click(self.debuglink.screen_buttons.ok())
                 else:
                     self.debuglink.press_yes()
             else:
@@ -1413,14 +1436,24 @@ def optiga_set_sec_max(client: "TrezorClient") -> None:
 
 class ScreenButtons:
     def __init__(self, layout_type: LayoutType):
-        assert layout_type in (LayoutType.Bolt, LayoutType.Delizia)
+        assert layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart)
         self.layout_type = layout_type
 
     def _width(self) -> int:
-        return 240
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return 240
+        elif self.layout_type is LayoutType.Eckhart:
+            return 380
+        else:
+            raise ValueError("Wrong layout type")
 
     def _height(self) -> int:
-        return 240
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return 240
+        elif self.layout_type is LayoutType.Eckhart:
+            return 520
+        else:
+            raise ValueError("Wrong layout type")
 
     def _grid(self, dim: int, grid_cells: int, cell: int) -> int:
         assert cell < grid_cells
@@ -1430,12 +1463,23 @@ class ScreenButtons:
 
     # 3 columns, 4 rows, 1st row is input area
     def _grid35(self, x: int, y: int) -> Coords:
+        assert x < 3, y < 5
         return self._grid(self._width(), 3, x), self._grid(self._height(), 5, y)
+
+    def _grid55(self, x: int, y: int) -> Coords:
+        assert x < 5, y < 5
+        return self._grid(self._width(), 5, x), self._grid(self._height(), 5, y)
 
     # TODO: do not expose this
     # 3 columns, 3 rows, 1st row is input area
     def grid34(self, x: int, y: int) -> Coords:
+        assert x < 3, y < 4
         return self._grid(self._width(), 3, x), self._grid(self._height(), 4, y)
+
+    # 2 columns, 3 rows, first two are header and description
+    def _grid25(self, x: int, y: int) -> Coords:
+        assert x < 2, y < 5
+        return self._grid(self._width(), 2, x), self._grid(self._height(), 5, y)
 
     # Horizontal coordinates
     def _left(self) -> int:
@@ -1470,10 +1514,7 @@ class ScreenButtons:
 
     # Menu/close menu button
     def menu(self) -> Coords:
-        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-            return (215, 25)
-        else:
-            raise ValueError("Wrong layout type")
+        return self._grid55(4, 0)
 
     # Center of the screen
     def tap_to_confirm(self) -> Coords:
@@ -1482,12 +1523,20 @@ class ScreenButtons:
 
     # Yes/No decision component
     def ui_yes(self) -> Coords:
-        assert self.layout_type is LayoutType.Delizia
-        return self.grid34(2, 2)
+        if self.layout_type is LayoutType.Delizia:
+            return self.grid34(2, 2)
+        elif self.layout_type is LayoutType.Eckhart:
+            return self.ok()
+        else:
+            raise ValueError("Wrong layout type")
 
     def ui_no(self) -> Coords:
-        assert self.layout_type is LayoutType.Delizia
-        return self.grid34(0, 2)
+        if self.layout_type is LayoutType.Delizia:
+            return self.grid34(0, 2)
+        elif self.layout_type is LayoutType.Eckhart:
+            return self.cancel()
+        else:
+            raise ValueError("Wrong layout type")
 
     # +/- buttons in number input component
     def number_input_minus(self) -> Coords:
@@ -1495,6 +1544,8 @@ class ScreenButtons:
             return (self._left(), self._grid(self._height(), 5, 1))
         elif self.layout_type is LayoutType.Delizia:
             return (self._left(), self._grid(self._height(), 5, 3))
+        elif self.layout_type is LayoutType.Eckhart:
+            return self.grid34(0, 2)
         else:
             raise ValueError("Wrong layout type")
 
@@ -1503,6 +1554,8 @@ class ScreenButtons:
             return (self._right(), self._grid(self._height(), 5, 1))
         elif self.layout_type is LayoutType.Delizia:
             return (self._right(), self._grid(self._height(), 5, 3))
+        elif self.layout_type is LayoutType.Eckhart:
+            return self.grid34(2, 2)
         else:
             raise ValueError("Wrong layout type")
 
@@ -1524,6 +1577,14 @@ class ScreenButtons:
                 24: self.grid34(2, 2),
                 33: self.grid34(2, 3),
             }
+        elif self.layout_type is LayoutType.Eckhart:
+            coords_map = {
+                12: self._grid35(0, 2),
+                18: self._grid35(2, 2),
+                20: self._grid35(0, 3),
+                24: self._grid35(2, 3),
+                33: self._grid35(2, 4),
+            }
         else:
             raise ValueError("Wrong layout type")
 
@@ -1532,10 +1593,10 @@ class ScreenButtons:
     def word_count_all_cancel(self) -> Coords:
         if self.layout_type is LayoutType.Bolt:
             return self.grid34(0, 3)
-
         elif self.layout_type is LayoutType.Delizia:
             return self.grid34(0, 3)
-
+        elif self.layout_type is LayoutType.Eckhart:
+            return self._grid35(0, 4)
         else:
             raise ValueError("Wrong layout type")
 
@@ -1551,6 +1612,11 @@ class ScreenButtons:
                 20: self.grid34(0, 1),
                 33: self.grid34(2, 1),
             }
+        elif self.layout_type is LayoutType.Eckhart:
+            coords_map = {
+                20: self._grid35(1, 2),
+                33: self._grid35(1, 3),
+            }
         else:
             raise ValueError("Wrong layout type")
 
@@ -1559,16 +1625,22 @@ class ScreenButtons:
     def word_count_repeated_cancel(self) -> Coords:
         if self.layout_type is LayoutType.Bolt:
             return self.grid34(0, 2)
-
         elif self.layout_type is LayoutType.Delizia:
             return self.grid34(0, 3)
-
+        elif self.layout_type is LayoutType.Eckhart:
+            return self._grid35(1, 4)
         else:
             raise ValueError("Wrong layout type")
 
     # select word component buttons
     def word_check_words(self) -> "list[Coords]":
         if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return [
+                (self._mid(), self._grid(self._height(), 4, 1)),
+                (self._mid(), self._grid(self._height(), 4, 2)),
+                (self._mid(), self._grid(self._height(), 4, 3)),
+            ]
+        elif self.layout_type is LayoutType.Eckhart:
             return [
                 (self._mid(), self._grid(self._height(), 5, 2)),
                 (self._mid(), self._grid(self._height(), 5, 3)),
@@ -1579,13 +1651,20 @@ class ScreenButtons:
 
     # vertical menu buttons
     def vertical_menu_items(self) -> "list[Coords]":
-        assert self.layout_type is LayoutType.Delizia
-
-        return [
-            (self._mid(), self._grid(self._height(), 4, 1)),
-            (self._mid(), self._grid(self._height(), 4, 2)),
-            (self._mid(), self._grid(self._height(), 4, 3)),
-        ]
+        if self.layout_type is LayoutType.Delizia:
+            return [
+                (self._mid(), self._grid(self._height(), 4, 1)),
+                (self._mid(), self._grid(self._height(), 4, 2)),
+                (self._mid(), self._grid(self._height(), 4, 3)),
+            ]
+        elif self.layout_type is LayoutType.Eckhart:
+            return [
+                (self._mid(), self._grid(self._height(), 5, 1)),
+                (self._mid(), self._grid(self._height(), 5, 2)),
+                (self._mid(), self._grid(self._height(), 5, 3)),
+            ]
+        else:
+            raise ValueError("Wrong layout type")
 
     # Pin/passphrase keyboards
     def pin_passphrase_index(self, idx: int) -> Coords:
@@ -1595,7 +1674,6 @@ class ScreenButtons:
         return self.pin_passphrase_grid(idx % 3, idx // 3)
 
     def pin_passphrase_grid(self, x: int, y: int) -> Coords:
-        assert x < 3, y < 4
         y += 1  # first line is empty
         return self._grid35(x, y)
 
@@ -1607,10 +1685,10 @@ class ScreenButtons:
         return self.pin_passphrase_grid(0, 3)
 
     def passphrase_confirm(self) -> Coords:
-        if self.layout_type is LayoutType.Bolt:
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
             return self.pin_passphrase_grid(2, 3)
         elif self.layout_type is LayoutType.Delizia:
-            return (215, 25)
+            return self._grid55(4, 0)
         else:
             raise ValueError("Wrong layout type")
 
@@ -1619,19 +1697,34 @@ class ScreenButtons:
 
     # Mnemonic keyboard
     def mnemonic_from_index(self, idx: int) -> Coords:
+        assert idx < 9
         return self.mnemonic_grid(idx)
 
     def mnemonic_grid(self, idx: int) -> Coords:
-        assert idx < 9
         grid_x = idx % 3
         grid_y = idx // 3 + 1  # first line is empty
-        return self.grid34(grid_x, grid_y)
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return self.grid34(grid_x, grid_y)
+        elif self.layout_type is LayoutType.Eckhart:
+            return self._grid35(grid_x, grid_y)
+        else:
+            raise ValueError("Wrong layout type")
 
     def mnemonic_erase(self) -> Coords:
-        return (self._left(), self._top())
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return (self._left(), self._top())
+        elif self.layout_type is LayoutType.Eckhart:
+            return self._grid35(0, 4)
+        else:
+            raise ValueError("Wrong layout type")
 
     def mnemonic_confirm(self) -> Coords:
-        return (self._mid(), self._top())
+        if self.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            return (self._mid(), self._top())
+        elif self.layout_type is LayoutType.Eckhart:
+            return self._grid35(2, 4)
+        else:
+            raise ValueError("Wrong layout type")
 
 
 BUTTON_LETTERS_BIP39 = ("abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx", "yz")
@@ -1639,9 +1732,9 @@ BUTTON_LETTERS_SLIP39 = ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "
 
 # fmt: off
 PASSPHRASE_LOWERCASE_BOLT = (" ", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz", "*#")
-PASSPHRASE_LOWERCASE_DELIZIA = ("abc", "def", "ghi", "jkl", "mno", "pq", "rst", "uvw", "xyz", " *#")
+PASSPHRASE_LOWERCASE_DE = ("abc", "def", "ghi", "jkl", "mno", "pq", "rst", "uvw", "xyz", " *#")
 PASSPHRASE_UPPERCASE_BOLT = (" ", "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ", "*#")
-PASSPHRASE_UPPERCASE_DELIZIA = ("ABC", "DEF", "GHI", "JKL", "MNO", "PQ", "RST", "UVW", "XYZ", " *#")
+PASSPHRASE_UPPERCASE_DE = ("ABC", "DEF", "GHI", "JKL", "MNO", "PQ", "RST", "UVW", "XYZ", " *#")
 PASSPHRASE_DIGITS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
 PASSPHRASE_SPECIAL = ("_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^=")
 # fmt: on
@@ -1655,15 +1748,15 @@ class ButtonActions:
         if char in " *#" or char.islower():
             if self.buttons.layout_type is LayoutType.Bolt:
                 return PASSPHRASE_LOWERCASE_BOLT
-            elif self.buttons.layout_type is LayoutType.Delizia:
-                return PASSPHRASE_LOWERCASE_DELIZIA
+            elif self.buttons.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+                return PASSPHRASE_LOWERCASE_DE
             else:
                 raise ValueError("Wrong layout type")
         elif char.isupper():
             if self.buttons.layout_type is LayoutType.Bolt:
                 return PASSPHRASE_UPPERCASE_BOLT
-            elif self.buttons.layout_type is LayoutType.Delizia:
-                return PASSPHRASE_UPPERCASE_DELIZIA
+            elif self.buttons.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+                return PASSPHRASE_UPPERCASE_DE
             else:
                 raise ValueError("Wrong layout type")
         elif char.isdigit():
