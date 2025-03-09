@@ -85,8 +85,6 @@ class ProtocolV2Channel(Channel):
             self.sync_bit_send = channel_data.sync_bit_send
             self.handshake_hash = bytes.fromhex(channel_data.handshake_hash)
             self._has_valid_channel = True
-        self.noise = NoiseConnection.from_name(b"Noise_XX_25519_AESGCM_SHA256")
-        self.noise.set_as_initiator()
 
     def get_channel(self, helper_debug: DebugLink | None = None) -> ProtocolV2Channel:
         if not self._has_valid_channel:
@@ -195,19 +193,15 @@ class ProtocolV2Channel(Channel):
     def _do_handshake(
         self, credential: bytes | None = None, host_static_privkey: bytes | None = None
     ):
-        randomness = os.urandom(32)
-        host_ephemeral_privkey = curve25519.get_private_key(randomness)
-        host_ephemeral_pubkey = curve25519.get_public_key(host_ephemeral_privkey)
-
+        self.noise = NoiseConnection.from_name(b"Noise_XX_25519_AESGCM_SHA256")
+        self.noise.set_as_initiator()
         if host_static_privkey is None:
             host_static_privkey = curve25519.get_private_key(os.urandom(32))
-
         self.noise.set_keypair_from_private_bytes(Keypair.STATIC, host_static_privkey)
-        self.noise.set_keypair_from_private_bytes(Keypair.EPHEMERAL, randomness)
         self.noise.set_prologue(bytes(self.device_properties))
         self.noise.start_handshake()
 
-        self._send_handshake_init_request(host_ephemeral_pubkey)
+        self._send_handshake_init_request()
         self._read_ack()
         init_response = self._read_handshake_init_response()
 
@@ -215,27 +209,25 @@ class ProtocolV2Channel(Channel):
         encrypted_trezor_static_pubkey = init_response[32:80]
         noise_tag = init_response[80:96]
         # TODO check noise tag is valid
-        ck = self._send_handshake_completion_request(
-            host_ephemeral_pubkey,
-            host_ephemeral_privkey,
-            trezor_ephemeral_pubkey,
-            encrypted_trezor_static_pubkey,
+        self._send_handshake_completion_request(
+            # trezor_ephemeral_pubkey,
+            # encrypted_trezor_static_pubkey,
             credential,
             host_static_privkey,
             init_response,
         )
         self._read_ack()
         self._read_handshake_completion_response()
-        self.key_request, self.key_response = _hkdf(ck, b"")
+        # self.key_request, self.key_response = _hkdf(ck, b"")
+        self.key_request = self.noise.noise_protocol.cipher_state_encrypt.k
+        self.key_response = self.noise.noise_protocol.cipher_state_decrypt.k
+        self.handshake_hash = self.noise.get_handshake_hash()
         self.nonce_request = 0
         self.nonce_response = 1
 
-    def _send_handshake_init_request(self, host_ephemeral_pubkey: bytes) -> None:
+    def _send_handshake_init_request(self) -> None:
         ha_init_req_header = MessageHeader(0, self.channel_id, 36)
-        # message = self.noise.write_message()
-
-        # print("message:" + hexlify(message).decode())
-        # print("hep    :" + hexlify(host_ephemeral_pubkey).decode())
+        host_ephemeral_pubkey = self.noise.write_message()
 
         thp_io.write_payload_to_wire_and_add_checksum(
             self.transport, ha_init_req_header, host_ephemeral_pubkey
@@ -260,62 +252,60 @@ class ProtocolV2Channel(Channel):
 
     def _send_handshake_completion_request(
         self,
-        host_ephemeral_pubkey: bytes,
-        host_ephemeral_privkey: bytes,
-        trezor_ephemeral_pubkey: bytes,
-        encrypted_trezor_static_pubkey: bytes,
+        # trezor_ephemeral_pubkey: bytes,
+        # encrypted_trezor_static_pubkey: bytes,
         credential: bytes | None = None,
         host_static_privkey: bytes | None = None,
         init_response: bytes = b"",
     ) -> bytes:
-        PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
-        IV_1 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-        IV_2 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
-        h = _sha256_of_two(PROTOCOL_NAME, self.device_properties)
-        h = _sha256_of_two(h, host_ephemeral_pubkey)
-        h = _sha256_of_two(h, b"")
+        # PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
+        # IV_1 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+        # IV_2 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
+        # h = _sha256_of_two(PROTOCOL_NAME, self.device_properties)
+        # h = _sha256_of_two(h, host_ephemeral_pubkey)
+        # h = _sha256_of_two(h, b"")
 
-        h = _sha256_of_two(h, trezor_ephemeral_pubkey)
-        ck, k = _hkdf(
-            PROTOCOL_NAME,
-            curve25519.multiply(host_ephemeral_privkey, trezor_ephemeral_pubkey),
-        )
-        message = self.noise.write_message()
+        # h = _sha256_of_two(h, trezor_ephemeral_pubkey)
+        # ck, k = _hkdf(
+        #     PROTOCOL_NAME,
+        #     curve25519.multiply(host_ephemeral_privkey, trezor_ephemeral_pubkey),
+        # )
+        # message = self.noise.write_message()
 
         recv = self.noise.read_message(init_response)
         print(
             "TREZOR's static pubkey:",
             self.noise.noise_protocol.handshake_state.rs.public.public_bytes_raw(),
         )
-        aes_ctx = AESGCM(k)
-        try:
-            trezor_masked_static_pubkey = aes_ctx.decrypt(
-                IV_1, encrypted_trezor_static_pubkey, h
-            )
-        except Exception as e:
-            click.echo(
-                f"Exception of type{type(e)}", err=True
-            )  # TODO how to handle potential exceptions? Q for Matejcik
-        h = _sha256_of_two(h, encrypted_trezor_static_pubkey)
-        ck, k = _hkdf(
-            ck, curve25519.multiply(host_ephemeral_privkey, trezor_masked_static_pubkey)
-        )
-        aes_ctx = AESGCM(k)
+        # aes_ctx = AESGCM(k)
+        # try:
+        #     trezor_masked_static_pubkey = aes_ctx.decrypt(
+        #         IV_1, encrypted_trezor_static_pubkey, h
+        #     )
+        # except Exception as e:
+        #     click.echo(
+        #         f"Exception of type{type(e)}", err=True
+        #     )  # TODO how to handle potential exceptions? Q for Matejcik
+        # h = _sha256_of_two(h, encrypted_trezor_static_pubkey)
+        # ck, k = _hkdf(
+        #     ck, curve25519.multiply(host_ephemeral_privkey, trezor_masked_static_pubkey)
+        # )
+        # aes_ctx = AESGCM(k)
 
-        tag_of_empty_string = aes_ctx.encrypt(IV_1, b"", h)
-        h = _sha256_of_two(h, tag_of_empty_string)
+        # tag_of_empty_string = aes_ctx.encrypt(IV_1, b"", h)
+        # h = _sha256_of_two(h, tag_of_empty_string)
 
         # TODO: search for saved credentials
         if host_static_privkey is None:
             host_static_privkey = curve25519.get_private_key(os.urandom(32))
         host_static_pubkey = curve25519.get_public_key(host_static_privkey)
 
-        aes_ctx = AESGCM(k)
-        encrypted_host_static_pubkey = aes_ctx.encrypt(IV_2, host_static_pubkey, h)
-        h = _sha256_of_two(h, encrypted_host_static_pubkey)
-        ck, k = _hkdf(
-            ck, curve25519.multiply(host_static_privkey, trezor_ephemeral_pubkey)
-        )
+        # aes_ctx = AESGCM(k)
+        # encrypted_host_static_pubkey = aes_ctx.encrypt(IV_2, host_static_pubkey, h)
+        # h = _sha256_of_two(h, encrypted_host_static_pubkey)
+        # ck, k = _hkdf(
+        #     ck, curve25519.multiply(host_static_privkey, trezor_ephemeral_pubkey)
+        # )
         msg_data = self.mapping.encode_without_wire_type(
             messages.ThpHandshakeCompletionReqNoisePayload(
                 host_pairing_credential=credential,
@@ -323,24 +313,23 @@ class ProtocolV2Channel(Channel):
         )
         message2 = self.noise.write_message(payload=msg_data)
 
-        aes_ctx = AESGCM(k)
+        # aes_ctx = AESGCM(k)
 
-        encrypted_payload = aes_ctx.encrypt(IV_1, msg_data, h)
-        h = _sha256_of_two(h, encrypted_payload[:-16])
+        # encrypted_payload = aes_ctx.encrypt(IV_1, msg_data, h)
+        # h = _sha256_of_two(h, encrypted_payload[:-16])
         ha_completion_req_header = MessageHeader(
             0x12,
             self.channel_id,
-            len(encrypted_host_static_pubkey)
-            + len(encrypted_payload)
-            + CHECKSUM_LENGTH,
+            # 48  # len(encrypted_host_static_pubkey)
+            +len(message2) + CHECKSUM_LENGTH,  # len(encrypted_payload) + 48
         )
         thp_io.write_payload_to_wire_and_add_checksum(
             self.transport,
             ha_completion_req_header,
-            encrypted_host_static_pubkey + encrypted_payload,
+            message2,
         )
-        self.handshake_hash = h
-        return ck
+        self.handshake_hash = self.noise.get_handshake_hash()
+        return
 
     def _read_handshake_completion_response(self) -> None:
         # Read handshake completion response, ignore payload as we do not care about the state

@@ -229,8 +229,8 @@ class TrezorConnection:
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
             sys.exit(1)
-        except Exception:
-            click.echo("Failed to find a Trezor device.")
+        except Exception as e:
+            click.echo(f"Failed to find a Trezor device.{str(e)}")
             if self.path is not None:
                 click.echo(f"Using path: {self.path}")
             sys.exit(1)
@@ -280,8 +280,8 @@ class TrezorConnection:
             sys.exit(1)
         except exceptions.FailedSessionResumption:
             sys.exit(1)
-        except Exception:
-            click.echo("Failed to find a Trezor device.")
+        except Exception as e:
+            click.echo(f"Failed to find a Trezor devi.{e.args}")
             if self.path is not None:
                 click.echo(f"Using path: {self.path}")
             sys.exit(1)

@@ -268,6 +268,8 @@ def _nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
     handshake_hash_trezor = pairing_info.handshake_hash
     nfc_secret_trezor = pairing_info.nfc_secret_trezor
 
+    assert handshake_hash_trezor == protocol.handshake_hash
+
     assert handshake_hash_trezor[:16] == protocol.handshake_hash[:16]
 
     # Compute tag for response
