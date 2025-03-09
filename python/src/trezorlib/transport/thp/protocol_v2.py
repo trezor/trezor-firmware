@@ -34,6 +34,7 @@ MT = t.TypeVar("MT", bound=protobuf.MessageType)
 def _sha256_of_two(val_1: bytes, val_2: bytes) -> bytes:
     hash = hashlib.sha256(val_1)
     hash.update(val_2)
+
     return hash.digest()
 
 
@@ -213,22 +214,7 @@ class ProtocolV2Channel(Channel):
         trezor_ephemeral_pubkey = init_response[:32]
         encrypted_trezor_static_pubkey = init_response[32:80]
         noise_tag = init_response[80:96]
-        print("trezor_ephemeral_pubkey:     ", hexlify(trezor_ephemeral_pubkey))
-        print(
-            "encrypted_trezor_static_pubkey:",
-            hexlify(encrypted_trezor_static_pubkey),
-        )
-        print("noise_tag:                   ", hexlify(noise_tag))
-
-        # TODO check noise_tag is valid
-        print("init_response:               ", hexlify(init_response))
-        print("init_response[:32]:          ", hexlify(init_response[:32]))
-        print("init_response[32:80]:        ", hexlify(init_response[32:80]))
-        recv = self.noise.read_message(init_response)
-        print("recv:                        ", hexlify(recv).decode())
-
-        LOG.debug("noise_tag: %s", hexlify(noise_tag).decode())
-
+        # TODO check noise tag is valid
         ck = self._send_handshake_completion_request(
             host_ephemeral_pubkey,
             host_ephemeral_privkey,
@@ -236,6 +222,7 @@ class ProtocolV2Channel(Channel):
             encrypted_trezor_static_pubkey,
             credential,
             host_static_privkey,
+            init_response,
         )
         self._read_ack()
         self._read_handshake_completion_response()
@@ -245,9 +232,10 @@ class ProtocolV2Channel(Channel):
 
     def _send_handshake_init_request(self, host_ephemeral_pubkey: bytes) -> None:
         ha_init_req_header = MessageHeader(0, self.channel_id, 36)
-        message = self.noise.write_message()
-        print("message:" + hexlify(message).decode())
-        print("hep    :" + hexlify(host_ephemeral_pubkey).decode())
+        # message = self.noise.write_message()
+
+        # print("message:" + hexlify(message).decode())
+        # print("hep    :" + hexlify(host_ephemeral_pubkey).decode())
 
         thp_io.write_payload_to_wire_and_add_checksum(
             self.transport, ha_init_req_header, host_ephemeral_pubkey
@@ -278,18 +266,27 @@ class ProtocolV2Channel(Channel):
         encrypted_trezor_static_pubkey: bytes,
         credential: bytes | None = None,
         host_static_privkey: bytes | None = None,
+        init_response: bytes = b"",
     ) -> bytes:
         PROTOCOL_NAME = b"Noise_XX_25519_AESGCM_SHA256\x00\x00\x00\x00"
         IV_1 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
         IV_2 = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01"
         h = _sha256_of_two(PROTOCOL_NAME, self.device_properties)
         h = _sha256_of_two(h, host_ephemeral_pubkey)
+        h = _sha256_of_two(h, b"")
+
         h = _sha256_of_two(h, trezor_ephemeral_pubkey)
         ck, k = _hkdf(
             PROTOCOL_NAME,
             curve25519.multiply(host_ephemeral_privkey, trezor_ephemeral_pubkey),
         )
+        message = self.noise.write_message()
 
+        recv = self.noise.read_message(init_response)
+        print(
+            "TREZOR's static pubkey:",
+            self.noise.noise_protocol.handshake_state.rs.public.public_bytes_raw(),
+        )
         aes_ctx = AESGCM(k)
         try:
             trezor_masked_static_pubkey = aes_ctx.decrypt(
@@ -324,6 +321,7 @@ class ProtocolV2Channel(Channel):
                 host_pairing_credential=credential,
             )
         )
+        message2 = self.noise.write_message(payload=msg_data)
 
         aes_ctx = AESGCM(k)
 
@@ -346,12 +344,15 @@ class ProtocolV2Channel(Channel):
 
     def _read_handshake_completion_response(self) -> None:
         # Read handshake completion response, ignore payload as we do not care about the state
-        header, _ = self._read_until_valid_crc_check()
+        header, data = self._read_until_valid_crc_check()
         if not header.is_handshake_comp_response():
             click.echo(
                 "Received message is not a valid handshake completion response",
                 err=True,
             )
+
+        trezor_state = self.noise.decrypt(bytes(data))
+        print("trezor state:", trezor_state)
         self._send_ack_1()
 
     def _do_pairing(self, helper_debug: DebugLink | None):
