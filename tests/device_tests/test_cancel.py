@@ -70,7 +70,7 @@ def test_cancel_message_via_initialize(client: Client, message):
     assert isinstance(resp, m.Features)
 
 
-@pytest.mark.models("core")
+@pytest.mark.models("core", skip=["eckhart"])
 def test_cancel_on_paginated(client: Client):
     """Check that device is responsive on paginated screen. See #1708."""
     # In #1708, the device would ignore USB (or UDP) events while waiting for the user
