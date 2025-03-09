@@ -106,9 +106,12 @@ def test_backup_slip39_custom(
         all_words.append(" ".join(words))
 
     # confirm backup done
-    if debug.layout_type is LayoutType.Delizia and share_count > 1:
+    if (
+        debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart)
+        and share_count > 1
+    ):
         reset.confirm_read(debug)
-    elif debug.layout_type is not LayoutType.Delizia:
+    elif debug.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart):
         reset.confirm_read(debug)
 
     # generate secret locally
