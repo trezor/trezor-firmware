@@ -91,7 +91,7 @@ T3B1 = TrezorModel(
 )
 
 T3W1 = TrezorModel(
-    name="T3W1",
+    name="Safe 7",
     internal_name="T3W1",
     minimum_version=(2, 1, 0),
     vendors=VENDORS,

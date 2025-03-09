@@ -22,7 +22,7 @@ import pytest
 from trezorlib import messages, nostr
 from trezorlib.tools import parse_path
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.models("core")]
+pytestmark = [pytest.mark.altcoin, pytest.mark.models("core", skip=["eckhart"])]
 
 # test data from NIP-06: https://github.com/nostr-protocol/nips/blob/master/06.md
 
