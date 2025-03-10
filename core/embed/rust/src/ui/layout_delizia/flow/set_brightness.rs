@@ -12,14 +12,13 @@ use crate::{
             FlowController, SwipeFlow,
         },
         geometry::Direction,
-        layout_delizia::component::Footer,
     },
 };
 
 use super::super::{
     component::{
         number_input_slider::{NumberInputSliderDialog, NumberInputSliderDialogMsg},
-        Frame, PromptMsg, PromptScreen, StatusScreen, SwipeContent, VerticalMenu,
+        Footer, Frame, PromptMsg, PromptScreen, StatusScreen, SwipeContent, VerticalMenu,
     },
     theme,
 };
