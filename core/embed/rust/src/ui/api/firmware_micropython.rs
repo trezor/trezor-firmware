@@ -736,12 +736,16 @@ extern "C" fn new_show_danger(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
+        let menu_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_menu_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let layout = ModelUI::show_danger(title, description, value, verb_cancel)?;
+        let layout = ModelUI::show_danger(title, description, value, menu_title, verb_cancel)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -907,7 +911,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_share_words_delizia(
+extern "C" fn new_show_share_words_extended(
     n_args: usize,
     args: *const Obj,
     kwargs: *mut Map,
@@ -927,7 +931,7 @@ extern "C" fn new_show_share_words_delizia(
 
         let words: Vec<TString, 33> = util::iter_into_vec(words)?;
 
-        let layout = ModelUI::show_share_words_delizia(
+        let layout = ModelUI::show_share_words_extended(
             words,
             subtitle,
             instructions,
@@ -1518,6 +1522,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     value: str = "",
+    ///     menu_title: str | None = None,
     ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal that makes it easier to cancel than to continue."""
@@ -1623,7 +1628,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Show mnemonic for backup."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
-    /// def show_share_words_delizia(
+    /// def show_share_words_extended(
     ///     *,
     ///     words: Iterable[str],
     ///     subtitle: str | None,
@@ -1633,7 +1638,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     ///     confirmation screen."""
-    Qstr::MP_QSTR_show_share_words_delizia => obj_fn_kw!(0, new_show_share_words_delizia).as_obj(),
+    Qstr::MP_QSTR_show_share_words_extended => obj_fn_kw!(0, new_show_share_words_extended).as_obj(),
 
     /// def show_simple(
     ///     *,
@@ -1649,7 +1654,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     button: str,
     ///     description: str = "",
-    ///     allow_cancel: bool = True,
+    ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> LayoutObj[UiResult]:
     ///     """Success modal. No buttons shown when `button` is empty string."""

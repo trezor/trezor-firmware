@@ -52,6 +52,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address;
   MP_QSTR_address__cancel_contact_support;
   MP_QSTR_address__cancel_receive;
+  MP_QSTR_address__check_with_source;
   MP_QSTR_address__confirmed;
   MP_QSTR_address__public_key;
   MP_QSTR_address__public_key_confirmed;
@@ -90,6 +91,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__it_should_be_backed_up_now;
   MP_QSTR_backup__new_wallet_created;
   MP_QSTR_backup__new_wallet_successfully_created;
+  MP_QSTR_backup__not_recommend;
   MP_QSTR_backup__recover_anytime;
   MP_QSTR_backup__title_backup_completed;
   MP_QSTR_backup__title_backup_wallet;
@@ -321,6 +323,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
+  MP_QSTR_menu_title;
   MP_QSTR_message;
   MP_QSTR_min_count;
   MP_QSTR_misc__decrypt_value;
@@ -531,6 +534,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__set_it_to_count_template;
   MP_QSTR_reset__share_checked_successfully_template;
   MP_QSTR_reset__share_completed_template;
+  MP_QSTR_reset__share_words_first;
   MP_QSTR_reset__share_words_title;
   MP_QSTR_reset__slip39_checklist_more_info_threshold;
   MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template;
@@ -648,7 +652,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
-  MP_QSTR_show_share_words_delizia;
+  MP_QSTR_show_share_words_extended;
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
   MP_QSTR_show_wait_text;
@@ -774,9 +778,11 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__not_recommended;
   MP_QSTR_words__operation_cancelled;
   MP_QSTR_words__outputs;
+  MP_QSTR_words__pay_attention;
   MP_QSTR_words__please_check_again;
   MP_QSTR_words__please_try_again;
   MP_QSTR_words__really_wanna;
+  MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;

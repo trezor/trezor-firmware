@@ -29,7 +29,7 @@ pub enum TranslatedString {
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
     auto_lock__title = 16,  // "Auto-lock delay"
     backup__can_back_up_anytime = 17,  // "You can back up your Trezor once, at any time."
-    backup__it_should_be_backed_up = 18,  // "You should back up your new wallet right now."
+    backup__it_should_be_backed_up = 18,  // {"Bolt": "You should back up your new wallet right now.", "Caesar": "You should back up your new wallet right now.", "Delizia": "You should back up your new wallet right now.", "Eckhart": "Back up your new wallet now."}
     backup__it_should_be_backed_up_now = 19,  // "It should be backed up now!"
     backup__new_wallet_created = 20,  // "Wallet created.\n"
     backup__new_wallet_successfully_created = 21,  // "Wallet created successfully."
@@ -820,7 +820,7 @@ pub enum TranslatedString {
     reset__any_x_of_y_template = 536,  // "any {0} of {1} shares"
     reset__button_create = 537,  // "Create wallet"
     reset__button_recover = 538,  // "Recover wallet"
-    reset__by_continuing = 539,  // "By continuing you agree to Trezor Company's terms and conditions."
+    reset__by_continuing = 539,  // {"Bolt": "By continuing you agree to Trezor Company's terms and conditions.", "Caesar": "By continuing you agree to Trezor Company's terms and conditions.", "Delizia": "By continuing you agree to Trezor Company's terms and conditions.", "Eckhart": "By continuing, you agree to Trezor Company's Terms of Use."}
     reset__check_backup_title = 540,  // "Check backup"
     reset__check_group_share_title_template = 541,  // "Check g{0} - share {1}"
     reset__check_wallet_backup_title = 542,  // "Check wallet backup"
@@ -851,7 +851,7 @@ pub enum TranslatedString {
     reset__recovery_share_title_template = 567,  // "Recovery share #{0}"
     reset__required_number_of_groups = 568,  // "The required number of groups for recovery."
     reset__select_correct_word = 569,  // "Select the correct word for each position."
-    reset__select_word_template = 570,  // "Select {0} word"
+    reset__select_word_template = 570,  // {"Bolt": "Select {0} word", "Caesar": "Select {0} word", "Delizia": "Select {0} word", "Eckhart": "Select word #{0} from your wallet backup"}
     reset__select_word_x_of_y_template = 571,  // "Select word {0} of {1}:"
     reset__set_it_to_count_template = 572,  // "Set it to {0} and you will need "
     reset__share_checked_successfully_template = 573,  // "Share #{0} checked successfully."
@@ -878,7 +878,7 @@ pub enum TranslatedString {
     reset__title_set_number_of_shares = 595,  // "Set number of shares"
     reset__title_set_threshold = 596,  // "Set threshold"
     reset__to_form_group_template = 597,  // "to form Group {0}."
-    reset__tos_link = 598,  // "trezor.io/tos"
+    reset__tos_link = 598,  // {"Bolt": "https://trezor.io/tos/", "Caesar": "https://trezor.io/tos/", "Delizia": "https://trezor.io/tos/", "Eckhart": "More at trezor.io/tos"}
     reset__total_number_of_shares_in_group_template = 599,  // "Set the total number of shares in Group {0}."
     reset__use_your_backup = 600,  // "Use your backup when you need to recover your wallet."
     reset__write_down_words_template = 601,  // "Write the following {0} words in order on your wallet backup card."
@@ -1249,13 +1249,13 @@ pub enum TranslatedString {
     instructions__hold_to_confirm = 855,  // "Hold to confirm"
     words__important = 856,  // "Important"
     reset__words_written_down_template = 857,  // "I wrote down all {0} words in order."
-    backup__create_backup_to_prevent_loss = 858,  // "Create a backup to avoid losing access to your funds"
+    backup__create_backup_to_prevent_loss = 858,  // {"Bolt": "Create a backup to avoid losing access to your funds", "Caesar": "Create a backup to avoid losing access to your funds", "Delizia": "Create a backup to avoid losing access to your funds", "Eckhart": "Create a wallet backup to avoid losing access to your funds."}
     reset__check_backup_instructions = 859,  // "Let's do a quick check of your backup."
     words__instructions = 860,  // "Instructions"
     words__not_recommended = 861,  // "Not recommended!"
     address_details__account_info = 862,  // "Account info"
     address__cancel_contact_support = 863,  // "If receive address doesn't match, contact Trezor Support at trezor.io/support."
-    address__cancel_receive = 864,  // "Cancel receive"
+    address__cancel_receive = 864,  // {"Bolt": "Cancel receive", "Caesar": "Cancel receive", "Delizia": "Cancel receive", "Eckhart": "Cancel receive?"}
     address__qr_code = 865,  // "QR code"
     address_details__derivation_path = 866,  // "Derivation path"
     instructions__continue_in_app = 867,  // "Continue in the app"
@@ -1273,13 +1273,13 @@ pub enum TranslatedString {
     auto_lock__turned_on = 879,  // "Auto-lock turned on"
     backup__info_multi_share_backup = 880,  // "Your wallet backup contains multiple lists of words in a specific order (shares)."
     backup__info_single_share_backup = 881,  // "Your wallet backup contains {0} words in a specific order."
-    backup__title_backup_completed = 882,  // "Wallet backup completed"
+    backup__title_backup_completed = 882,  // {"Bolt": "Wallet backup completed", "Caesar": "Wallet backup completed", "Delizia": "Wallet backup completed", "Eckhart": "Wallet backup completed."}
     backup__title_create_wallet_backup = 883,  // "Create wallet backup"
     haptic_feedback__disable = 884,  // "Disable haptic feedback?"
     haptic_feedback__enable = 885,  // "Enable haptic feedback?"
     haptic_feedback__subtitle = 886,  // "Setting"
     haptic_feedback__title = 887,  // "Haptic feedback"
-    instructions__continue_holding = 888,  // "Continue\nholding"
+    instructions__continue_holding = 888,  // {"Bolt": "", "Caesar": "", "Delizia": "Continue\nholding", "Eckhart": "Keep holding"}
     instructions__enter_next_share = 889,  // "Enter next share"
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
@@ -1297,7 +1297,7 @@ pub enum TranslatedString {
     recovery__info_about_disconnect = 904,  // "It's safe to disconnect your Trezor while recovering your wallet and continue later."
     recovery__share_does_not_match = 905,  // "Share doesn't match"
     reset__cancel_create_wallet = 906,  // "Cancel create wallet"
-    reset__incorrect_word_selected = 907,  // "Incorrect word selected"
+    reset__incorrect_word_selected = 907,  // {"Bolt": "Incorrect word selected", "Caesar": "Incorrect word selected", "Delizia": "Incorrect word selected", "Eckhart": "Incorrect word selected."}
     reset__more_at = 908,  // "More at"
     reset__num_of_shares_how_many = 909,  // "How many wallet backup shares do you want to create?"
     reset__num_of_shares_long_info_template = 910,  // "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."
@@ -1316,7 +1316,7 @@ pub enum TranslatedString {
     words__good_to_know = 927,  // "Good to know"
     words__operation_cancelled = 928,  // "Operation cancelled"
     words__settings = 929,  // "Settings"
-    words__try_again = 930,  // "Try again."
+    words__try_again = 930,  // {"Bolt": "Try again.", "Caesar": "Try again.", "Delizia": "Try again.", "Eckhart": "Try again"}
     reset__slip39_checklist_num_groups_x_template = 931,  // "Number of groups: {0}"
     brightness__title = 932,  // "Display brightness"
     recovery__title_unlock_repeated_backup = 933,  // "Multi-share backup"
@@ -1327,7 +1327,7 @@ pub enum TranslatedString {
     reset__repeat_for_all_shares = 938,  // "Repeat for all shares."
     homescreen__settings_subtitle = 939,  // "Settings"
     homescreen__settings_title = 940,  // "Homescreen"
-    reset__the_word_is_repeated = 941,  // "The word is repeated"
+    reset__the_word_is_repeated = 941,  // {"Bolt": "The word is repeated", "Caesar": "The word is repeated", "Delizia": "The word is repeated", "Eckhart": "The word appears multiple times in the backup."}
     tutorial__title_lets_begin = 942,  // "Let's begin"
     tutorial__did_you_know = 943,  // "Did you know?"
     tutorial__first_wallet = 944,  // "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."
@@ -1404,6 +1404,11 @@ pub enum TranslatedString {
     instructions__tap_to_continue = 991,  // "Tap to continue"
     #[cfg(feature = "universal_fw")]
     nostr__event_kind_template = 992,  // "Event kind: {0}"
+    reset__share_words_first = 993,  // "Write down the first word from the backup."
+    backup__not_recommend = 994,  // "We don't recommend to skip wallet backup creation."
+    words__pay_attention = 995,  // "Pay attention"
+    address__check_with_source = 996,  // "Check the address with source."
+    words__receive = 997,  // "Receive"
 }
 
 impl TranslatedString {
@@ -1429,7 +1434,14 @@ impl TranslatedString {
             Self::auto_lock__change_template => "Auto-lock Trezor after {0} of inactivity?",
             Self::auto_lock__title => "Auto-lock delay",
             Self::backup__can_back_up_anytime => "You can back up your Trezor once, at any time.",
+            #[cfg(feature = "layout_bolt")]
             Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
+            #[cfg(feature = "layout_caesar")]
+            Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
+            #[cfg(feature = "layout_delizia")]
+            Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
+            #[cfg(feature = "layout_eckhart")]
+            Self::backup__it_should_be_backed_up => "Back up your new wallet now.",
             Self::backup__it_should_be_backed_up_now => "It should be backed up now!",
             Self::backup__new_wallet_created => "Wallet created.\n",
             Self::backup__new_wallet_successfully_created => "Wallet created successfully.",
@@ -2220,7 +2232,14 @@ impl TranslatedString {
             Self::reset__any_x_of_y_template => "any {0} of {1} shares",
             Self::reset__button_create => "Create wallet",
             Self::reset__button_recover => "Recover wallet",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__by_continuing => "By continuing, you agree to Trezor Company's Terms of Use.",
             Self::reset__check_backup_title => "Check backup",
             Self::reset__check_group_share_title_template => "Check g{0} - share {1}",
             Self::reset__check_wallet_backup_title => "Check wallet backup",
@@ -2251,7 +2270,14 @@ impl TranslatedString {
             Self::reset__recovery_share_title_template => "Recovery share #{0}",
             Self::reset__required_number_of_groups => "The required number of groups for recovery.",
             Self::reset__select_correct_word => "Select the correct word for each position.",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__select_word_template => "Select {0} word",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__select_word_template => "Select {0} word",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__select_word_template => "Select {0} word",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__select_word_template => "Select word #{0} from your wallet backup",
             Self::reset__select_word_x_of_y_template => "Select word {0} of {1}:",
             Self::reset__set_it_to_count_template => "Set it to {0} and you will need ",
             Self::reset__share_checked_successfully_template => "Share #{0} checked successfully.",
@@ -2278,7 +2304,14 @@ impl TranslatedString {
             Self::reset__title_set_number_of_shares => "Set number of shares",
             Self::reset__title_set_threshold => "Set threshold",
             Self::reset__to_form_group_template => "to form Group {0}.",
-            Self::reset__tos_link => "trezor.io/tos",
+            #[cfg(feature = "layout_bolt")]
+            Self::reset__tos_link => "https://trezor.io/tos/",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__tos_link => "https://trezor.io/tos/",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__tos_link => "https://trezor.io/tos/",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__tos_link => "More at trezor.io/tos",
             Self::reset__total_number_of_shares_in_group_template => "Set the total number of shares in Group {0}.",
             Self::reset__use_your_backup => "Use your backup when you need to recover your wallet.",
             Self::reset__write_down_words_template => "Write the following {0} words in order on your wallet backup card.",
@@ -2649,13 +2682,27 @@ impl TranslatedString {
             Self::instructions__hold_to_confirm => "Hold to confirm",
             Self::words__important => "Important",
             Self::reset__words_written_down_template => "I wrote down all {0} words in order.",
+            #[cfg(feature = "layout_bolt")]
             Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
+            #[cfg(feature = "layout_caesar")]
+            Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
+            #[cfg(feature = "layout_delizia")]
+            Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
+            #[cfg(feature = "layout_eckhart")]
+            Self::backup__create_backup_to_prevent_loss => "Create a wallet backup to avoid losing access to your funds.",
             Self::reset__check_backup_instructions => "Let's do a quick check of your backup.",
             Self::words__instructions => "Instructions",
             Self::words__not_recommended => "Not recommended!",
             Self::address_details__account_info => "Account info",
             Self::address__cancel_contact_support => "If receive address doesn't match, contact Trezor Support at trezor.io/support.",
+            #[cfg(feature = "layout_bolt")]
             Self::address__cancel_receive => "Cancel receive",
+            #[cfg(feature = "layout_caesar")]
+            Self::address__cancel_receive => "Cancel receive",
+            #[cfg(feature = "layout_delizia")]
+            Self::address__cancel_receive => "Cancel receive",
+            #[cfg(feature = "layout_eckhart")]
+            Self::address__cancel_receive => "Cancel receive?",
             Self::address__qr_code => "QR code",
             Self::address_details__derivation_path => "Derivation path",
             Self::instructions__continue_in_app => "Continue in the app",
@@ -2673,13 +2720,27 @@ impl TranslatedString {
             Self::auto_lock__turned_on => "Auto-lock turned on",
             Self::backup__info_multi_share_backup => "Your wallet backup contains multiple lists of words in a specific order (shares).",
             Self::backup__info_single_share_backup => "Your wallet backup contains {0} words in a specific order.",
+            #[cfg(feature = "layout_bolt")]
             Self::backup__title_backup_completed => "Wallet backup completed",
+            #[cfg(feature = "layout_caesar")]
+            Self::backup__title_backup_completed => "Wallet backup completed",
+            #[cfg(feature = "layout_delizia")]
+            Self::backup__title_backup_completed => "Wallet backup completed",
+            #[cfg(feature = "layout_eckhart")]
+            Self::backup__title_backup_completed => "Wallet backup completed.",
             Self::backup__title_create_wallet_backup => "Create wallet backup",
             Self::haptic_feedback__disable => "Disable haptic feedback?",
             Self::haptic_feedback__enable => "Enable haptic feedback?",
             Self::haptic_feedback__subtitle => "Setting",
             Self::haptic_feedback__title => "Haptic feedback",
+            #[cfg(feature = "layout_bolt")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_caesar")]
+            Self::instructions__continue_holding => "",
+            #[cfg(feature = "layout_delizia")]
             Self::instructions__continue_holding => "Continue\nholding",
+            #[cfg(feature = "layout_eckhart")]
+            Self::instructions__continue_holding => "Keep holding",
             Self::instructions__enter_next_share => "Enter next share",
             Self::instructions__hold_to_continue => "Hold to continue",
             Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
@@ -2697,7 +2758,14 @@ impl TranslatedString {
             Self::recovery__info_about_disconnect => "It's safe to disconnect your Trezor while recovering your wallet and continue later.",
             Self::recovery__share_does_not_match => "Share doesn't match",
             Self::reset__cancel_create_wallet => "Cancel create wallet",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__incorrect_word_selected => "Incorrect word selected",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__incorrect_word_selected => "Incorrect word selected",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__incorrect_word_selected => "Incorrect word selected",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__incorrect_word_selected => "Incorrect word selected.",
             Self::reset__more_at => "More at",
             Self::reset__num_of_shares_how_many => "How many wallet backup shares do you want to create?",
             Self::reset__num_of_shares_long_info_template => "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
@@ -2716,7 +2784,14 @@ impl TranslatedString {
             Self::words__good_to_know => "Good to know",
             Self::words__operation_cancelled => "Operation cancelled",
             Self::words__settings => "Settings",
+            #[cfg(feature = "layout_bolt")]
             Self::words__try_again => "Try again.",
+            #[cfg(feature = "layout_caesar")]
+            Self::words__try_again => "Try again.",
+            #[cfg(feature = "layout_delizia")]
+            Self::words__try_again => "Try again.",
+            #[cfg(feature = "layout_eckhart")]
+            Self::words__try_again => "Try again",
             Self::reset__slip39_checklist_num_groups_x_template => "Number of groups: {0}",
             Self::brightness__title => "Display brightness",
             Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
@@ -2727,7 +2802,14 @@ impl TranslatedString {
             Self::reset__repeat_for_all_shares => "Repeat for all shares.",
             Self::homescreen__settings_subtitle => "Settings",
             Self::homescreen__settings_title => "Homescreen",
+            #[cfg(feature = "layout_bolt")]
             Self::reset__the_word_is_repeated => "The word is repeated",
+            #[cfg(feature = "layout_caesar")]
+            Self::reset__the_word_is_repeated => "The word is repeated",
+            #[cfg(feature = "layout_delizia")]
+            Self::reset__the_word_is_repeated => "The word is repeated",
+            #[cfg(feature = "layout_eckhart")]
+            Self::reset__the_word_is_repeated => "The word appears multiple times in the backup.",
             Self::tutorial__title_lets_begin => "Let's begin",
             Self::tutorial__did_you_know => "Did you know?",
             Self::tutorial__first_wallet => "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
@@ -2804,6 +2886,11 @@ impl TranslatedString {
             Self::instructions__tap_to_continue => "Tap to continue",
             #[cfg(feature = "universal_fw")]
             Self::nostr__event_kind_template => "Event kind: {0}",
+            Self::reset__share_words_first => "Write down the first word from the backup.",
+            Self::backup__not_recommend => "We don't recommend to skip wallet backup creation.",
+            Self::words__pay_attention => "Pay attention",
+            Self::address__check_with_source => "Check the address with source.",
+            Self::words__receive => "Receive",
         }
     }
 
@@ -4203,6 +4290,11 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_nostr__event_kind_template => Some(Self::nostr__event_kind_template),
+            Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
+            Qstr::MP_QSTR_backup__not_recommend => Some(Self::backup__not_recommend),
+            Qstr::MP_QSTR_words__pay_attention => Some(Self::words__pay_attention),
+            Qstr::MP_QSTR_address__check_with_source => Some(Self::address__check_with_source),
+            Qstr::MP_QSTR_words__receive => Some(Self::words__receive),
             _ => None,
         }
     }

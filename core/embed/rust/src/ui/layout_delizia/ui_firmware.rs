@@ -829,6 +829,7 @@ impl FirmwareUI for UIDelizia {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        _menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::show_danger::new_show_danger(title, description, value, verb_cancel)?;
@@ -998,11 +999,11 @@ impl FirmwareUI for UIDelizia {
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"use show_share_words_delizia instead",
+            c"use show_share_words_extended instead",
         ))
     }
 
-    fn show_share_words_delizia(
+    fn show_share_words_extended(
         words: heapless::Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,

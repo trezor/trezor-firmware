@@ -986,6 +986,7 @@ impl FirmwareUI for UICaesar {
         _title: TString<'static>,
         _description: TString<'static>,
         _value: TString<'static>,
+        _menu_title: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_danger not supported"))
@@ -1144,7 +1145,7 @@ impl FirmwareUI for UICaesar {
         Ok(layout)
     }
 
-    fn show_share_words_delizia(
+    fn show_share_words_extended(
         _words: heapless::Vec<TString<'static>, 33>,
         _subtitle: Option<TString<'static>>,
         _instructions: Obj,
