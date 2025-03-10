@@ -34,6 +34,7 @@ jobs:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
+      TREZOR_DEFAULT_READ_TIMEOUT: 10  # default single RPC timeout
       PYTEST_TIMEOUT: 600  # 10m single test timeout
       PYOPT: 0
       DISABLE_OPTIGA: 1
