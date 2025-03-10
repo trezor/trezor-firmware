@@ -10,7 +10,7 @@ use crate::ui::{
     util::Pager,
 };
 
-use super::{action_bar::ActionBarMsg, ActionBar, Header, HeaderMsg, Hint};
+use super::{action_bar::ActionBarMsg, ActionBar, Header, HeaderMsg, Hint, theme::SIDE_INSETS};
 
 /// Full-screen component for rendering text.
 ///
@@ -39,7 +39,7 @@ impl<T> TextScreen<T>
 where
     T: AllowedTextContent,
 {
-    const CONTENT_INSETS: Insets = Insets::sides(24);
+    const CONTENT_INSETS: Insets = SIDE_INSETS;
 
     pub fn new(content: T) -> Self {
         Self {
