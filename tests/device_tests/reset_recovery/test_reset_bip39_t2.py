@@ -255,6 +255,10 @@ def test_already_initialized(client: Client):
 def test_entropy_check(client: Client):
     with client:
         delizia = client.debug.layout_type is LayoutType.Delizia
+        delizia_eckhart = client.debug.layout_type in (
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        )
         client.set_expected_responses(
             [
                 messages.ButtonRequest(name="setup_device"),
@@ -271,7 +275,7 @@ def test_entropy_check(client: Client):
                 messages.EntropyCheckReady,
                 messages.PublicKey,
                 messages.PublicKey,
-                (delizia, messages.ButtonRequest(name="backup_device")),
+                (delizia_eckhart, messages.ButtonRequest(name="backup_device")),
                 messages.Success,
                 messages.Features,
             ]
@@ -291,13 +295,17 @@ def test_entropy_check(client: Client):
 @pytest.mark.setup_client(uninitialized=True)
 def test_no_entropy_check(client: Client):
     with client:
+        delizia_eckhart = client.debug.layout_type in (
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        )
         delizia = client.debug.layout_type is LayoutType.Delizia
         client.set_expected_responses(
             [
                 messages.ButtonRequest(name="setup_device"),
                 (delizia, messages.ButtonRequest(name="confirm_setup_device")),
                 messages.EntropyRequest,
-                (delizia, messages.ButtonRequest(name="backup_device")),
+                (delizia_eckhart, messages.ButtonRequest(name="backup_device")),
                 messages.Success,
                 messages.Features,
             ]
