@@ -116,7 +116,6 @@ class WebUsbHandle:
             except usb1.USBErrorTimeout:
                 if timeout is not None and time.time() - start > timeout:
                     raise Timeout("Timeout reading WebUSB packet")
-                time.sleep(0.001)
             except Exception as e:
                 raise TransportException(f"USB read failed: {e}") from e
 

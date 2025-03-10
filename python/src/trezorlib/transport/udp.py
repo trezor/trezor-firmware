@@ -152,7 +152,6 @@ class UdpTransport(ProtocolBasedTransport):
             except socket.timeout:
                 if timeout is not None and time.time() - start > timeout:
                     raise Timeout("Timeout reading UDP packet")
-                time.sleep(0.001)
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
