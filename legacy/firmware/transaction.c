@@ -548,7 +548,7 @@ bool tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
   for (int i = 0; i < input->address_n_count; ++i) {
     HASHER_UPDATE_INT(hasher, input->address_n[i], uint32_t);
   }
-  hasher_Update(hasher, input->prev_hash.bytes, sizeof(input->prev_hash.bytes));
+  HASHER_UPDATE_BYTES(hasher, input->prev_hash.bytes, 32);
   HASHER_UPDATE_INT(hasher, input->prev_index, uint32_t);
   tx_script_hash(hasher, input->script_sig.size, input->script_sig.bytes);
   HASHER_UPDATE_INT(hasher, input->sequence, uint32_t);
@@ -561,11 +561,11 @@ bool tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
       return false;
     }
   }
-  hasher_Update(hasher, multisig_fp, sizeof(multisig_fp));
+  HASHER_UPDATE_BYTES(hasher, multisig_fp, 32);
   HASHER_UPDATE_INT(hasher, input->amount, uint64_t);
   tx_script_hash(hasher, input->witness.size, input->witness.bytes);
   HASHER_UPDATE_INT(hasher, input->has_orig_hash, uint8_t);
-  hasher_Update(hasher, input->orig_hash.bytes, sizeof(input->orig_hash.bytes));
+  HASHER_UPDATE_BYTES(hasher, input->orig_hash.bytes, 32);
   HASHER_UPDATE_INT(hasher, input->orig_index, uint32_t);
   tx_script_hash(hasher, input->script_pubkey.size, input->script_pubkey.bytes);
   return true;
@@ -670,7 +670,7 @@ uint32_t tx_serialize_header_hash(TxStruct *tx) {
     }
 #endif
     if (tx->is_segwit) {
-      hasher_Update(&(tx->hasher), segwit_header, 2);
+      HASHER_UPDATE_BYTES(&(tx->hasher), segwit_header, 2);
       r += 2;
     }
   }

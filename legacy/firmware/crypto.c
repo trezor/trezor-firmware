@@ -477,8 +477,8 @@ int cryptoMultisigFingerprint(const MultisigRedeemScriptType *multisig,
     SHA256_UPDATE_INT(&ctx, pubnodes[i]->depth, uint32_t);
     SHA256_UPDATE_INT(&ctx, pubnodes[i]->fingerprint, uint32_t);
     SHA256_UPDATE_INT(&ctx, pubnodes[i]->child_num, uint32_t);
-    sha256_Update(&ctx, pubnodes[i]->chain_code.bytes, 32);
-    sha256_Update(&ctx, pubnodes[i]->public_key.bytes, 33);
+    SHA256_UPDATE_BYTES(&ctx, pubnodes[i]->chain_code.bytes, 32);
+    SHA256_UPDATE_BYTES(&ctx, pubnodes[i]->public_key.bytes, 33);
   }
   SHA256_UPDATE_INT(&ctx, n, uint32_t);
   sha256_Final(&ctx, hash);

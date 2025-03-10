@@ -2668,9 +2668,9 @@ static void signing_hash_bip143(const TxInfo *tx_info,
   // nVersion
   HASHER_UPDATE_INT(&hasher_preimage, tx_info->version, uint32_t);
   // hashPrevouts
-  hasher_Update(&hasher_preimage, tx_info->hash_prevouts143, 32);
+  HASHER_UPDATE_BYTES(&hasher_preimage, tx_info->hash_prevouts143, 32);
   // hashSequence
-  hasher_Update(&hasher_preimage, tx_info->hash_sequence143, 32);
+  HASHER_UPDATE_BYTES(&hasher_preimage, tx_info->hash_sequence143, 32);
   // outpoint
   tx_prevout_hash(&hasher_preimage, txinput);
   // scriptCode
@@ -2681,7 +2681,7 @@ static void signing_hash_bip143(const TxInfo *tx_info,
   // nSequence
   tx_sequence_hash(&hasher_preimage, txinput);
   // hashOutputs
-  hasher_Update(&hasher_preimage, tx_info->hash_outputs143, 32);
+  HASHER_UPDATE_BYTES(&hasher_preimage, tx_info->hash_outputs143, 32);
   // nLockTime
   HASHER_UPDATE_INT(&hasher_preimage, tx_info->lock_time, uint32_t);
   // nHashType
@@ -2704,15 +2704,15 @@ static void signing_hash_bip341(const TxInfo *tx_info, uint32_t i,
   // nLockTime
   HASHER_UPDATE_INT(&sigmsg_hasher, tx_info->lock_time, uint32_t);
   // sha_prevouts
-  hasher_Update(&sigmsg_hasher, tx_info->hash_prevouts, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_prevouts, 32);
   // sha_amounts
-  hasher_Update(&sigmsg_hasher, tx_info->hash_amounts, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_amounts, 32);
   // sha_scriptpubkeys
-  hasher_Update(&sigmsg_hasher, tx_info->hash_scriptpubkeys, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_scriptpubkeys, 32);
   // sha_sequences
-  hasher_Update(&sigmsg_hasher, tx_info->hash_sequences, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_sequences, 32);
   // sha_outputs
-  hasher_Update(&sigmsg_hasher, tx_info->hash_outputs, 32);
+  HASHER_UPDATE_BYTES(&sigmsg_hasher, tx_info->hash_outputs, 32);
   // spend_type 0 (no tapscript message extension, no annex)
   hasher_Update(&sigmsg_hasher, &zero, 1);
   // input_index
@@ -2739,11 +2739,11 @@ static void signing_hash_zip243(const TxInfo *tx_info,
   // 2. nVersionGroupId
   HASHER_UPDATE_INT(&hasher_preimage, tx_info->version_group_id, uint32_t);
   // 3. hashPrevouts
-  hasher_Update(&hasher_preimage, tx_info->hash_prevouts, 32);
+  HASHER_UPDATE_BYTES(&hasher_preimage, tx_info->hash_prevouts, 32);
   // 4. hashSequence
-  hasher_Update(&hasher_preimage, tx_info->hash_sequences, 32);
+  HASHER_UPDATE_BYTES(&hasher_preimage, tx_info->hash_sequences, 32);
   // 5. hashOutputs
-  hasher_Update(&hasher_preimage, tx_info->hash_outputs, 32);
+  HASHER_UPDATE_BYTES(&hasher_preimage, tx_info->hash_outputs, 32);
   // 6. hashJoinSplits
   hasher_Update(&hasher_preimage, null_bytes, 32);
   // 7. hashShieldedSpends
@@ -2800,20 +2800,17 @@ static void signing_hash_zip244(const TxInfo *tx_info,
   // S.2a: hash_type (1 byte)
   hasher_Update(&hasher, (const uint8_t *)&hash_type, 1);
   // S.2b: prevouts_sig_digest (32-byte hash)
-  hasher_Update(&hasher, tx_info->hash_prevouts,
-                sizeof(tx_info->hash_prevouts));
+  HASHER_UPDATE_BYTES(&hasher, tx_info->hash_prevouts, 32);
   // S.2c: amounts_sig_digest (32-byte hash)
-  hasher_Update(&hasher, tx_info->hash_amounts, sizeof(tx_info->hash_amounts));
+  HASHER_UPDATE_BYTES(&hasher, tx_info->hash_amounts, 32);
   // S.2d: scriptpubkeys_sig_digest (32-byte hash)
-  hasher_Update(&hasher, tx_info->hash_scriptpubkeys,
-                sizeof(tx_info->hash_scriptpubkeys));
+  HASHER_UPDATE_BYTES(&hasher, tx_info->hash_scriptpubkeys, 32);
   // S.2e: sequence_sig_digest (32-byte hash)
-  hasher_Update(&hasher, tx_info->hash_sequences,
-                sizeof(tx_info->hash_sequences));
+  HASHER_UPDATE_BYTES(&hasher, tx_info->hash_sequences, 32);
   // S.2f: outputs_sig_digest (32-byte hash)
-  hasher_Update(&hasher, tx_info->hash_outputs, sizeof(tx_info->hash_outputs));
+  HASHER_UPDATE_BYTES(&hasher, tx_info->hash_outputs, 32);
   // S.2g: txin_sig_digest (32-byte hash)
-  hasher_Update(&hasher, txin_sig_digest, sizeof(txin_sig_digest));
+  HASHER_UPDATE_BYTES(&hasher, txin_sig_digest, 32);
   hasher_Final(&hasher, transparent_sig_digest);
 
   // `S.3: sapling_digest` field. Empty Sapling bundle.
@@ -2834,14 +2831,13 @@ static void signing_hash_zip244(const TxInfo *tx_info,
   hasher_InitParam(&hasher, HASHER_BLAKE2B_PERSONAL, personal,
                    sizeof(personal));
   // S.1: header_digest (32-byte hash output)
-  hasher_Update(&hasher, tx_info->hash_header, sizeof(tx_info->hash_header));
+  HASHER_UPDATE_BYTES(&hasher, tx_info->hash_header, 32);
   // S.2: transparent_sig_digest (32-byte hash output)
-  hasher_Update(&hasher, transparent_sig_digest,
-                sizeof(transparent_sig_digest));
+  HASHER_UPDATE_BYTES(&hasher, transparent_sig_digest, 32);
   // S.3: sapling_digest (32-byte hash output)
-  hasher_Update(&hasher, sapling_digest, sizeof(sapling_digest));
+  HASHER_UPDATE_BYTES(&hasher, sapling_digest, 32);
   // S.4: orchard_digest (32-byte hash output)
-  hasher_Update(&hasher, orchard_digest, sizeof(orchard_digest));
+  HASHER_UPDATE_BYTES(&hasher, orchard_digest, 32);
   hasher_Final(&hasher, hash);
 }
 #endif
@@ -3130,12 +3126,12 @@ static void phase1_request_orig_output(void) {
 
 #if !BITCOIN_ONLY
 static void signing_hash_decred(const TxInputType *txinput,
-                                const uint8_t *hash_witness, uint8_t *hash) {
+                                const uint8_t hash_witness[32], uint8_t *hash) {
   uint32_t hash_type = signing_hash_type(txinput);
   Hasher hasher_preimage = {0};
   hasher_Init(&hasher_preimage, coin->curve->hasher_sign);
   HASHER_UPDATE_INT(&hasher_preimage, hash_type, uint32_t);
-  hasher_Update(&hasher_preimage, decred_hash_prefix, 32);
+  HASHER_UPDATE_BYTES(&hasher_preimage, decred_hash_prefix, 32);
   hasher_Update(&hasher_preimage, hash_witness, 32);
   hasher_Final(&hasher_preimage, hash);
 }

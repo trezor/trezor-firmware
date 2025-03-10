@@ -86,8 +86,16 @@ char* sha256_Data(const uint8_t*, size_t, char[SHA256_DIGEST_STRING_LENGTH]);
 // expected size.
 #define SHA256_UPDATE_INT(ctx, val, expected_type)                            \
   do {                                                                        \
-    sha256_Update(ctx, (const uint8_t *)&(val), sizeof(val));                 \
+    sha256_Update((ctx), (const uint8_t *)&(val), sizeof(val));               \
     _Static_assert(sizeof(val) == sizeof(expected_type), "invalid int size"); \
+  } while (0)
+
+// Byte array version of the macro above.
+#define SHA256_UPDATE_BYTES(ctx, val, expected_size)                    \
+  do {                                                                  \
+    sha256_Update((ctx), (val), sizeof(val));                           \
+    _Static_assert(sizeof(val) == expected_size, "invalid value size"); \
+    _Static_assert(sizeof((val)[0]) == 1, "not a byte array");          \
   } while (0)
 
 void sha384_Raw(const uint8_t*, size_t, uint8_t[SHA384_DIGEST_LENGTH]);

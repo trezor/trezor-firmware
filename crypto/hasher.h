@@ -84,8 +84,16 @@ void hasher_Raw(HasherType type, const uint8_t *data, size_t length,
 // expected size.
 #define HASHER_UPDATE_INT(ctx, val, expected_type)                            \
   do {                                                                        \
-    hasher_Update(ctx, (const uint8_t *)&(val), sizeof(val));                 \
+    hasher_Update((ctx), (const uint8_t *)&(val), sizeof(val));               \
     _Static_assert(sizeof(val) == sizeof(expected_type), "invalid int size"); \
+  } while (0)
+
+// Byte array version of the macro above.
+#define HASHER_UPDATE_BYTES(ctx, val, expected_size)                    \
+  do {                                                                  \
+    hasher_Update((ctx), (val), sizeof(val));                           \
+    _Static_assert(sizeof(val) == expected_size, "invalid value size"); \
+    _Static_assert(sizeof((val)[0]) == 1, "not a byte array");          \
   } while (0)
 
 #endif
