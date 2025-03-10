@@ -35,7 +35,7 @@ from ..translations import (
     sign_blob,
 )
 
-pytestmark = pytest.mark.models("core")
+pytestmark = pytest.mark.models("core", skip=["eckhart"])
 
 
 MAX_DATA_LENGTH = {

@@ -34,6 +34,7 @@ from ...input_flows import (
     InputFlowSlip39BasicRecoveryInvalidSecondShare,
     InputFlowSlip39BasicRecoveryNoAbort,
     InputFlowSlip39BasicRecoverySameShare,
+    InputFlowSlip39BasicRecoveryShareInfoBetweenShares,
     InputFlowSlip39BasicRecoveryWrongNthWord,
 )
 
@@ -145,6 +146,20 @@ def test_abort_between_shares(client: Client):
         client.init_device()
         assert client.features.initialized is False
         assert client.features.recovery_status is messages.RecoveryStatus.Nothing
+
+
+@pytest.mark.models("eckhart")
+@pytest.mark.setup_client(uninitialized=True)
+def test_share_info_between_shares(client: Client):
+    with client:
+        IF = InputFlowSlip39BasicRecoveryShareInfoBetweenShares(
+            client, MNEMONIC_SLIP39_BASIC_20_3of6
+        )
+        client.set_input_flow(IF.get())
+        with pytest.raises(exceptions.Cancelled):
+            device.recover(client, pin_protection=False, label="label")
+        client.init_device()
+        assert client.features.initialized is False
 
 
 @pytest.mark.setup_client(uninitialized=True)

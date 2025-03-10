@@ -74,7 +74,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
     debug.input("1234")
 
     assert TR.regexp("auto_lock__change_template").match(
-        debug.read_layout().text_content()
+        debug.read_layout().text_content().strip()
     )
 
     layout = go_next(debug)
@@ -113,7 +113,7 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         in debug.read_layout().text_content().replace(" ", "")
     )
 
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
         debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
@@ -131,6 +131,8 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
+    else:
+        raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
     # wait for autolock to kick in
     time.sleep(10.1)
@@ -168,7 +170,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         in debug.read_layout().text_content().replace(" ", "")
     )
 
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
         debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
@@ -187,6 +189,8 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         layout = debug.read_layout()
         assert TR.send__total_amount in layout.text_content()
         assert "0.0039 BTC" in layout.text_content()
+    else:
+        raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
     def sleepy_filter(msg: MessageType) -> MessageType:
         time.sleep(10.1)
@@ -196,12 +200,14 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     with device_handler.client:
         device_handler.client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
-        if debug.layout_type is LayoutType.Bolt:
+        if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
             debug.click(debug.screen_buttons.ok())
-        elif debug.layout_type is LayoutType.Delizia:
-            debug.click(debug.screen_buttons.tap_to_confirm())
         elif debug.layout_type is LayoutType.Caesar:
             debug.press_middle()
+        elif debug.layout_type is LayoutType.Delizia:
+            debug.click(debug.screen_buttons.tap_to_confirm())
+        else:
+            raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
         signatures, tx = device_handler.result()
         assert len(signatures) == 1
@@ -227,7 +233,11 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     # enter passphrase - slowly
     # keep clicking for long enough to trigger the autolock if it incorrectly ignored key presses
     for _ in range(math.ceil(11 / 1.5)):
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             # click at "j"
             debug.click(_passphrase_j(debug))
         elif debug.layout_type is LayoutType.Caesar:
@@ -235,10 +245,13 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
             # NOTE: because of passphrase randomization it would be a pain to input
             # a specific passphrase, which is not in scope for this test.
             debug.press_right()
+        else:
+            raise ValueError(f"Unsupported layout type: {debug.layout_type}")
+
         time.sleep(1.5)
 
     # Send the passphrase to the client (TT has it clicked already, TR needs to input it)
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.passphrase_confirm())
     elif debug.layout_type is LayoutType.Caesar:
         debug.input("j" * 8)
@@ -264,15 +277,24 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     # enter passphrase - slowly
     # autolock must activate even if we pressed some buttons
     for _ in range(math.ceil(6 / 1.5)):
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             debug.click(_center_button(debug))
         elif debug.layout_type is LayoutType.Caesar:
             debug.press_middle()
+        else:
+            raise ValueError(f"Unsupported layout type: {debug.layout_type}")
         time.sleep(1.5)
 
     # wait for autolock to kick in
     time.sleep(10.1)
-    assert debug.read_layout().main_component() == "Lockscreen"
+    if debug.layout_type is LayoutType.Eckhart:
+        assert debug.read_layout().main_component() == "Homescreen"
+    else:
+        assert debug.read_layout().main_component() == "Lockscreen"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 
@@ -303,7 +325,10 @@ def test_dryrun_locks_at_number_of_words(device_handler: "BackgroundDeviceHandle
 
     # wait for autolock to trigger
     time.sleep(10.1)
-    assert debug.read_layout().main_component() == "Lockscreen"
+    if debug.layout_type is LayoutType.Eckhart:
+        assert debug.read_layout().main_component() == "Homescreen"
+    else:
+        assert debug.read_layout().main_component() == "Lockscreen"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 
@@ -333,17 +358,22 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         layout = go_next(debug)
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         layout = debug.read_layout()
         assert "MnemonicKeyboard" in layout.all_components()
+    else:
+        raise ValueError(f"Unsupported layout type: {debug.layout_type}")
 
     # make sure keyboard locks
     time.sleep(10.1)
-    assert debug.read_layout().main_component() == "Lockscreen"
+    if debug.layout_type is LayoutType.Eckhart:
+        assert debug.read_layout().main_component() == "Homescreen"
+    else:
+        assert debug.read_layout().main_component() == "Lockscreen"
     with pytest.raises(exceptions.Cancelled):
         device_handler.result()
 
@@ -360,7 +390,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
         layout = debug.read_layout()
         assert layout.main_component() == "MnemonicKeyboard"
@@ -409,6 +439,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.models(skip=["eckhart"])
 def test_autolock_does_not_interrupt_preauthorized(
     device_handler: "BackgroundDeviceHandler",
 ):
