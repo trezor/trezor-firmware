@@ -33,17 +33,7 @@ void tropic_init(void) {
   uint8_t tropic_secret_tropic_pubkey[SECRET_TROPIC_KEY_LEN] = {0};
   uint8_t tropic_secret_trezor_privkey[SECRET_TROPIC_KEY_LEN] = {0};
 
-  lt_ret_t ret = LT_FAIL;
-
-  ret = lt_init(&lt_handle);
-
-#if !defined(TREZOR_EMULATOR)
-  ensure((ret == LT_OK) * sectrue, "lt_init failed");
-#else
-  if (ret != LT_OK) {
-    printf("Warning: lt_init failed: %d\n", ret);
-  }
-#endif
+  ensure((lt_init(&lt_handle) == LT_OK) * sectrue, "lt_init failed");
 
   ensure(secret_tropic_get_tropic_pubkey(tropic_secret_tropic_pubkey),
          "secret_tropic_get_tropic_pubkey failed");
@@ -53,16 +43,11 @@ void tropic_init(void) {
   uint8_t trezor_pubkey[SECRET_TROPIC_KEY_LEN] = {};
   curve25519_scalarmult_basepoint(trezor_pubkey, tropic_secret_trezor_privkey);
 
+  lt_ret_t ret = LT_FAIL;
   ret =
       lt_session_start(&lt_handle, tropic_secret_tropic_pubkey, PKEY_INDEX_BYTE,
                        tropic_secret_trezor_privkey, trezor_pubkey);
   memzero(tropic_secret_trezor_privkey, sizeof(tropic_secret_trezor_privkey));
 
-#if !defined(TREZOR_EMULATOR)
   ensure((ret == LT_OK) * sectrue, "lt_session_start failed");
-#else
-  if (ret != LT_OK) {
-    printf("Warning: lt_session_start failed: %d\n", ret);
-  }
-#endif
 }
