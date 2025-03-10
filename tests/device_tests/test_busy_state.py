@@ -88,7 +88,7 @@ def test_busy_expiry_core(client: Client):
     _assert_busy(client, False)
 
 
-@pytest.mark.flaky(max_runs=5)
+@pytest.mark.flaky(reruns=5)
 @pytest.mark.models("legacy")
 def test_busy_expiry_legacy(client: Client):
     _assert_busy(client, False)
