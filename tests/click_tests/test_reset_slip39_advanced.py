@@ -20,7 +20,6 @@ import pytest
 
 from trezorlib import device, messages
 
-from .. import buttons
 from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
 from . import reset
 
@@ -81,12 +80,7 @@ def test_reset_slip39_advanced(
     reset.confirm_read(debug)
 
     # set num of groups - default is 5
-    assert debug.model is not None
-    model_name: str = debug.model.internal_name
-    if group_count < 5:
-        reset.set_selection(debug, buttons.reset_minus(model_name), 5 - group_count)
-    else:
-        reset.set_selection(debug, buttons.reset_plus(model_name), group_count - 5)
+    reset.set_selection(debug, group_count - 5)
 
     # confirm checklist
     # TR.assert_in_multiple(
@@ -102,9 +96,9 @@ def test_reset_slip39_advanced(
     # set group threshold
     # TODO: could make it general as well
     if group_count == 2 and group_threshold == 2:
-        reset.set_selection(debug, buttons.reset_plus(model_name), 0)
+        reset.set_selection(debug, 0)
     elif group_count == 16 and group_threshold == 16:
-        reset.set_selection(debug, buttons.reset_plus(model_name), 11)
+        reset.set_selection(debug, 11)
     else:
         raise RuntimeError("not a supported combination")
 
@@ -121,17 +115,14 @@ def test_reset_slip39_advanced(
     # set share num and threshold for groups
     for _ in range(group_count):
         # set num of shares - default is 5
-        if share_count < 5:
-            reset.set_selection(debug, buttons.reset_minus(model_name), 5 - share_count)
-        else:
-            reset.set_selection(debug, buttons.reset_plus(model_name), share_count - 5)
+        reset.set_selection(debug, share_count - 5)
 
         # set share threshold
         # TODO: could make it general as well
         if share_count == 2 and share_threshold == 2:
-            reset.set_selection(debug, buttons.reset_plus(model_name), 0)
+            reset.set_selection(debug, 0)
         elif share_count == 16 and share_threshold == 16:
-            reset.set_selection(debug, buttons.reset_plus(model_name), 11)
+            reset.set_selection(debug, 11)
         else:
             raise RuntimeError("not a supported combination")
 

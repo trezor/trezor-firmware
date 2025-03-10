@@ -96,7 +96,7 @@ def prepare(
         # Any action triggering the PIN dialogue
         device_handler.run(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
         tap = True
-    if situation == Situation.PIN_INPUT_CANCEL:
+    elif situation == Situation.PIN_INPUT_CANCEL:
         # Any action triggering the PIN dialogue
         device_handler.run(device.apply_settings, auto_lock_delay_ms=300_000)  # type: ignore
     elif situation == Situation.PIN_SETUP:
@@ -106,13 +106,19 @@ def prepare(
             TR.pin__turn_on in debug.read_layout().text_content()
             or TR.pin__info in debug.read_layout().text_content()
         )
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             go_next(debug)
         elif debug.layout_type is LayoutType.Caesar:
             go_next(debug)
             go_next(debug)
             go_next(debug)
             go_next(debug)
+        else:
+            raise RuntimeError("Unknown model")
     elif situation == Situation.PIN_CHANGE:
         # Change PIN
         device_handler.run(device.change_pin)  # type: ignore
@@ -138,8 +144,9 @@ def prepare(
     yield debug
 
     if debug.layout_type is LayoutType.Delizia and tap:
+        btns = buttons.ScreenButtons(debug.layout_type)
         go_next(debug)
-        debug.click(buttons.TAP_TO_CONFIRM)
+        debug.click(btns.tap_to_confirm())
     else:
         go_next(debug)
 
@@ -154,16 +161,18 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
     """Input the PIN"""
     if check:
         before = debug.read_layout().pin()
-
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        btns = buttons.ScreenButtons(debug.layout_type)
         digits_order = debug.read_layout().tt_pin_digits_order()
         for digit in pin:
             digit_index = digits_order.index(digit)
-            coords = buttons.pin_passphrase_index(digit_index)
+            coords = btns.pin_passphrase_index(digit_index)
             debug.click(coords)
     elif debug.layout_type is LayoutType.Caesar:
         for digit in pin:
             navigate_to_action_and_press(debug, digit, TR_PIN_ACTIONS)
+    else:
+        raise RuntimeError("Unknown model")
 
     if check:
         after = debug.read_layout().pin()
@@ -172,10 +181,13 @@ def _input_pin(debug: "DebugLink", pin: str, check: bool = False) -> None:
 
 def _see_pin(debug: "DebugLink") -> None:
     """Navigate to "SHOW" and press it"""
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        debug.click(buttons.TOP_ROW)
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        btns = buttons.ScreenButtons(debug.layout_type)
+        debug.click(btns.pin_passphrase_input())
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, SHOW, TR_PIN_ACTIONS)
+    else:
+        raise RuntimeError("Unknown model")
 
 
 def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -> None:
@@ -184,10 +196,17 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
         before = debug.read_layout().pin()
 
     for _ in range(digits_to_delete):
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-            debug.click(buttons.pin_passphrase_grid(9))
+        if debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
+            btns = buttons.ScreenButtons(debug.layout_type)
+            debug.click(btns.pin_passphrase_erase())
         elif debug.layout_type is LayoutType.Caesar:
             navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS)
+        else:
+            raise RuntimeError("Unknown model")
 
     if check:
         after = debug.read_layout().pin()
@@ -196,10 +215,16 @@ def _delete_pin(debug: "DebugLink", digits_to_delete: int, check: bool = True) -
 
 def _delete_all(debug: "DebugLink", check: bool = True) -> None:
     """Navigate to "DELETE" and hold it until all digits are deleted"""
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        debug.click(buttons.pin_passphrase_grid(9), hold_ms=1500)
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        btns = buttons.ScreenButtons(debug.layout_type)
+        debug.click(
+            btns.pin_passphrase_erase(),
+            hold_ms=1500,
+        )
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, DELETE, TR_PIN_ACTIONS, hold_ms=1000)
+    else:
+        raise RuntimeError("Unknown model")
 
     if check:
         after = debug.read_layout().pin()
@@ -220,10 +245,13 @@ def _cancel_pin(debug: "DebugLink") -> None:
 
 def _confirm_pin(debug: "DebugLink") -> None:
     """Navigate to "ENTER" and press it"""
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
-        debug.click(buttons.pin_passphrase_grid(11))
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
+        btns = buttons.ScreenButtons(debug.layout_type)
+        debug.click(btns.pin_confirm())
     elif debug.layout_type is LayoutType.Caesar:
         navigate_to_action_and_press(debug, ENTER, TR_PIN_ACTIONS)
+    else:
+        raise RuntimeError("Unknown model")
 
 
 def _input_see_confirm(debug: "DebugLink", pin: str) -> None:
@@ -325,15 +353,18 @@ def test_pin_setup(device_handler: "BackgroundDeviceHandler"):
 def test_pin_setup_mismatch(device_handler: "BackgroundDeviceHandler"):
     with PIN_CANCELLED, prepare(device_handler, Situation.PIN_SETUP) as debug:
         _enter_two_times(debug, "1", "2")
-        if debug.layout_type is LayoutType.Bolt:
+        if debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             go_next(debug)
             _cancel_pin(debug)
         elif debug.layout_type is LayoutType.Caesar:
             debug.press_middle()
             debug.press_no()
-        elif debug.layout_type is LayoutType.Delizia:
-            go_next(debug)
-            _cancel_pin(debug)
+        else:
+            raise RuntimeError("Unknown model")
 
 
 @pytest.mark.setup_client(pin="1")

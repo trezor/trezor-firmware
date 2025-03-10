@@ -16,11 +16,11 @@
 
 import time
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Generator, Optional, Tuple
+from typing import TYPE_CHECKING, Generator, Optional
 
 import pytest
 
-from trezorlib import exceptions
+from trezorlib.debuglink import LayoutType
 
 from .. import buttons
 from ..common import get_test_address
@@ -32,23 +32,22 @@ if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
 
-pytestmark = pytest.mark.models("delizia")
+pytestmark = pytest.mark.models("t2t1", "delizia", "eckhart")
 
-PASSPHRASE_CANCELLED = pytest.raises(exceptions.Cancelled, match="")
+KEYBOARD_CATEGORIES_BOLT = [
+    PassphraseCategory.DIGITS,
+    PassphraseCategory.LOWERCASE,
+    PassphraseCategory.UPPERCASE,
+    PassphraseCategory.SPECIAL,
+]
 
-KEYBOARD_CATEGORIES = [
+# Common for Delizia and Eckhart
+KEYBOARD_CATEGORIES_DE = [
     PassphraseCategory.LOWERCASE,
     PassphraseCategory.UPPERCASE,
     PassphraseCategory.DIGITS,
     PassphraseCategory.SPECIAL,
 ]
-
-# fmt: off
-PASSPHRASE_LOWERCASE = ("abc", "def", "ghi", "jkl", "mno", "pq", "rst", "uvw", "xyz", " *#")
-PASSPHRASE_UPPERCASE = ("ABC", "DEF", "GHI", "JKL", "MNO", "PQ", "RST", "UVW", "XYZ", " *#")
-PASSPHRASE_DIGITS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
-PASSPHRASE_SPECIAL = ("_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^=")
-# fmt: on
 
 # TODO: better read this from the trace
 KEYBOARD_CATEGORY = PassphraseCategory.LOWERCASE
@@ -71,34 +70,12 @@ assert len(DA_51) == 51
 assert DA_51_ADDRESS == DA_50_ADDRESS
 
 
-def get_passphrase_choices(char: str) -> tuple[str, ...]:
-    if char in " *#":
-        return PASSPHRASE_LOWERCASE
-
-    if char.islower():
-        return PASSPHRASE_LOWERCASE
-    elif char.isupper():
-        return PASSPHRASE_UPPERCASE
-    elif char.isdigit():
-        return PASSPHRASE_DIGITS
-    else:
-        return PASSPHRASE_SPECIAL
-
-
-def passphrase(char: str) -> Tuple[buttons.Coords, int]:
-    choices = get_passphrase_choices(char)
-    idx = next(i for i, letters in enumerate(choices) if char in letters)
-    click_amount = choices[idx].index(char) + 1
-    return buttons.pin_passphrase_index(idx), click_amount
-
-
 @contextmanager
 def prepare_passphrase_dialogue(
     device_handler: "BackgroundDeviceHandler", address: Optional[str] = None
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
     device_handler.run(get_test_address)  # type: ignore
-    # TODO
     assert debug.read_layout().main_component() == "PassphraseKeyboard"
 
     # Resetting the category as it could have been changed by previous tests
@@ -112,6 +89,15 @@ def prepare_passphrase_dialogue(
         assert result == address
 
 
+def keyboard_categories(layout_type: LayoutType) -> list[PassphraseCategory]:
+    if layout_type is LayoutType.Bolt:
+        return KEYBOARD_CATEGORIES_BOLT
+    elif layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        return KEYBOARD_CATEGORIES_DE
+    else:
+        raise ValueError("Wrong layout type")
+
+
 def go_to_category(debug: "DebugLink", category: PassphraseCategory) -> None:
     """Go to a specific category"""
     global KEYBOARD_CATEGORY
@@ -121,8 +107,8 @@ def go_to_category(debug: "DebugLink", category: PassphraseCategory) -> None:
     if KEYBOARD_CATEGORY == category:
         return
 
-    current_index = KEYBOARD_CATEGORIES.index(KEYBOARD_CATEGORY)
-    target_index = KEYBOARD_CATEGORIES.index(category)
+    current_index = keyboard_categories(debug.layout_type).index(KEYBOARD_CATEGORY)
+    target_index = keyboard_categories(debug.layout_type).index(category)
     if target_index > current_index:
         for _ in range(target_index - current_index):
             debug.swipe_left()
@@ -146,10 +132,13 @@ def press_char(debug: "DebugLink", char: str) -> None:
 
     go_to_category(debug, char_category)
 
-    coords, amount = passphrase(char)
+    actions = buttons.ButtonActions(debug.layout_type)
+    coords, amount = actions.passphrase(char)
     # If the button is the same as for the previous char,
     # waiting a second before pressing it again.
-    if coords == COORDS_PREV:
+    # (not for a space in Bolt layout)
+    is_bolt_space = debug.layout_type is LayoutType.Bolt and char == " "
+    if coords == COORDS_PREV and not is_bolt_space:
         time.sleep(1.1)
     COORDS_PREV = coords  # type: ignore
     for _ in range(amount):
@@ -170,16 +159,16 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     is_empty: bool = len(debug.read_layout().passphrase()) == 0
-    coords = buttons.CORNER_BUTTON  # top-right corner
-    debug.click(coords)
-    if is_empty:
-        debug.click(buttons.YES_UI_DELIZIA)
+    btns = buttons.ScreenButtons(debug.layout_type)
+    debug.click(btns.passphrase_confirm())
+    if is_empty and debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        debug.click(btns.ui_yes())
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    coords = buttons.pin_passphrase_grid(9)
-    debug.click(coords)
+    btns = buttons.ScreenButtons(debug.layout_type)
+    debug.click(btns.pin_passphrase_erase())
 
 
 VECTORS = (  # passphrase, address
@@ -216,7 +205,8 @@ def test_passphrase_delete(device_handler: "BackgroundDeviceHandler"):
 
         for _ in range(4):
             delete_char(debug)
-        debug.read_layout()
+        if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            debug.read_layout()
 
         input_passphrase(debug, CommonPass.SHORT[8 - 4 :])
         enter_passphrase(debug)
@@ -246,11 +236,12 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             PassphraseCategory.SPECIAL,
         ):
             go_to_category(debug, category)
-        debug.read_layout()
+        if debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+            debug.read_layout()
 
         enter_passphrase(debug)
-        coords = buttons.pin_passphrase_grid(11)
-        debug.click(coords)
+        btns = buttons.ScreenButtons(debug.layout_type)
+        debug.click(btns.passphrase_confirm())
 
 
 @pytest.mark.setup_client(passphrase=True)
@@ -258,7 +249,8 @@ def test_passphrase_click_same_button_many_times(
     device_handler: "BackgroundDeviceHandler",
 ):
     with prepare_passphrase_dialogue(device_handler) as debug:
-        a_coords, _ = buttons.passphrase("a")
+        actions = buttons.ButtonActions(debug.layout_type)
+        a_coords, _ = actions.passphrase("a")
         for _ in range(10):
             debug.click(a_coords)
 

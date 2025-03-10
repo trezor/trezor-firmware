@@ -13,7 +13,7 @@ use crate::{
 };
 
 use super::{
-    theme::{self, TITLE_HEIGHT},
+    theme::{self, HEADER_HEIGHT},
     Button, ButtonContent, ButtonMsg,
 };
 
@@ -210,7 +210,7 @@ impl Component for HoldToConfirm {
             Offset::uniform(80),
             Alignment2D::CENTER,
         ));
-        self.title.place(screen().split_top(TITLE_HEIGHT).0);
+        self.title.place(screen().split_top(HEADER_HEIGHT).0);
         bounds
     }
 
