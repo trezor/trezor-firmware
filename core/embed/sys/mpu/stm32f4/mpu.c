@@ -353,7 +353,10 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
 
     default:
       DIS_REGION( 5 );
-      DIS_REGION( 6 );
+      // Assets (Privileged, Read-Only, Non-Executable)
+      // Subregion: 32KB = 64KB except 2/8 at start and 2/8 at end
+      // By default, the kernel needs to have the same access to assets as the app
+      SET_REGION( 6, FLASH_BASE + 0x104000, SIZE_64KB, 0xC3, FLASH_DATA, PRIV_RO );
       break;
   }
   // clang-format on
