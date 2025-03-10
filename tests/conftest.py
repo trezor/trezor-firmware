@@ -20,17 +20,21 @@ import os
 import typing as t
 from enum import IntEnum
 from pathlib import Path
+from time import sleep
 
+import cryptography
 import pytest
 import xdist
 from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
 from trezorlib import debuglink, log, models
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
 from trezorlib.transport import enumerate_devices, get_transport
+from trezorlib.transport.thp.protocol_v1 import ProtocolV1Channel
 
 # register rewrites before importing from local package
 # so that we see details of failed asserts from this module
@@ -48,6 +52,7 @@ if t.TYPE_CHECKING:
     from _pytest.terminal import TerminalReporter
 
     from trezorlib._internal.emulator import Emulator
+    from trezorlib.debuglink import SessionDebugWrapper
 
 
 HERE = Path(__file__).resolve().parent
@@ -77,7 +82,7 @@ def core_emulator(request: pytest.FixtureRequest) -> t.Iterator[Emulator]:
     """Fixture returning default core emulator with possibility of screen recording."""
     with EmulatorWrapper("core", main_args=_emulator_wrapper_main_args()) as emu:
         # Modifying emu.client to add screen recording (when --ui=test is used)
-        with ui_tests.screen_recording(emu.client, request) as _:
+        with ui_tests.screen_recording(emu.client, request, lambda: emu.client) as _:
             yield emu
 
 
@@ -126,7 +131,15 @@ def emulator(request: pytest.FixtureRequest) -> t.Generator["Emulator", None, No
 
 
 @pytest.fixture(scope="session")
-def _raw_client(request: pytest.FixtureRequest) -> Client:
+def _raw_client(request: pytest.FixtureRequest) -> t.Generator[Client, None, None]:
+    client = _get_raw_client(request)
+    try:
+        yield client
+    finally:
+        client.close_transport()
+
+
+def _get_raw_client(request: pytest.FixtureRequest) -> Client:
     # In case tests run in parallel, each process has its own emulator/client.
     # Requesting the emulator fixture only if relevant.
     if request.session.config.getoption("control_emulators"):
@@ -148,7 +161,7 @@ def _client_from_path(
 ) -> Client:
     try:
         transport = get_transport(path)
-        return Client(transport, auto_interact=not interact)
+        return Client(transport, auto_interact=not interact, open_transport=True)
     except Exception as e:
         request.session.shouldstop = "Failed to communicate with Trezor"
         raise RuntimeError(f"Failed to open debuglink for {path}") from e
@@ -157,10 +170,7 @@ def _client_from_path(
 def _find_client(request: pytest.FixtureRequest, interact: bool) -> Client:
     devices = enumerate_devices()
     for device in devices:
-        try:
-            return Client(device, auto_interact=not interact)
-        except Exception:
-            pass
+        return Client(device, auto_interact=not interact, open_transport=True)
 
     request.session.shouldstop = "Failed to communicate with Trezor"
     raise RuntimeError("No debuggable device found")
@@ -235,7 +245,7 @@ class ModelsFilter:
 
 
 @pytest.fixture(scope="function")
-def client(
+def _client_unlocked(
     request: pytest.FixtureRequest, _raw_client: Client
 ) -> t.Generator[Client, None, None]:
     """Client fixture.
@@ -265,6 +275,29 @@ def client(
     if _raw_client.model not in models_filter:
         pytest.skip(f"Skipping test for model {_raw_client.model.internal_name}")
 
+    protocol_marker: Mark | None = request.node.get_closest_marker("protocol")
+    if protocol_marker:
+        args = protocol_marker.args
+        protocol_version = _raw_client.protocol_version
+
+        if (
+            protocol_version == ProtocolVersion.PROTOCOL_V1
+            and "protocol_v1" not in args
+        ):
+            pytest.skip(
+                f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
+            )
+
+        if (
+            protocol_version == ProtocolVersion.PROTOCOL_V2
+            and "protocol_v2" not in args
+        ):
+            pytest.skip(
+                f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
+            )
+
+    if _raw_client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+        pass
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
         raise RuntimeError(
@@ -276,13 +309,13 @@ def client(
     test_ui = request.config.getoption("ui")
 
     _raw_client.reset_debug_features()
-    _raw_client.open()
-    try:
-        _raw_client.sync_responses()
-        _raw_client.init_device()
-    except Exception:
-        request.session.shouldstop = "Failed to communicate with Trezor"
-        pytest.fail("Failed to communicate with Trezor")
+    if isinstance(_raw_client.protocol, ProtocolV1Channel):
+        try:
+            _raw_client.sync_responses()
+        except Exception:
+            request.session.shouldstop = "Failed to communicate with Trezor"
+            pytest.fail("Failed to communicate with Trezor")
+    _raw_client._seedless_session = _raw_client.get_seedless_session(new_session=True)
 
     # Resetting all the debug events to not be influenced by previous test
     _raw_client.debug.reset_debug_events()
@@ -295,13 +328,32 @@ def client(
         should_format = sd_marker.kwargs.get("formatted", True)
         _raw_client.debug.erase_sd_card(format=should_format)
 
-    wipe_device(_raw_client)
+    while True:
+        try:
+            if _raw_client.is_invalidated:
+                _raw_client = _raw_client.get_new_client()
+            session = _raw_client.get_seedless_session()
+            wipe_device(session)
+            sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
+            break
+        except cryptography.exceptions.InvalidTag:
+            # Get a new client
+            _raw_client = _get_raw_client(request)
+
+    _raw_client.protocol = None
+    _raw_client.__init__(
+        transport=_raw_client.transport,
+        auto_interact=_raw_client.debug.allow_interactions,
+    )
+
+    if not _raw_client.features.bootloader_mode:
+        _raw_client.refresh_features()
 
     # Load language again, as it got erased in wipe
     if _raw_client.model is not models.T1B1:
         lang = request.session.config.getoption("lang") or "en"
         assert isinstance(lang, str)
-        translations.set_language(_raw_client, lang)
+        translations.set_language(_raw_client.get_seedless_session(), lang)
 
     setup_params = dict(
         uninitialized=False,
@@ -319,10 +371,10 @@ def client(
     use_passphrase = setup_params["passphrase"] is True or isinstance(
         setup_params["passphrase"], str
     )
-
     if not setup_params["uninitialized"]:
+        session = _raw_client.get_seedless_session(new_session=True)
         debuglink.load_device(
-            _raw_client,
+            session,
             mnemonic=setup_params["mnemonic"],  # type: ignore
             pin=setup_params["pin"],  # type: ignore
             passphrase_protection=use_passphrase,
@@ -330,19 +382,47 @@ def client(
             needs_backup=setup_params["needs_backup"],  # type: ignore
             no_backup=setup_params["no_backup"],  # type: ignore
         )
+        _raw_client._setup_pin = setup_params["pin"]
 
         if request.node.get_closest_marker("experimental"):
-            apply_settings(_raw_client, experimental_features=True)
+            apply_settings(session, experimental_features=True)
+        session.end()
 
-        if use_passphrase and isinstance(setup_params["passphrase"], str):
-            _raw_client.use_passphrase(setup_params["passphrase"])
+    yield _raw_client
 
-        _raw_client.clear_session()
 
-    with ui_tests.screen_recording(_raw_client, request):
-        yield _raw_client
+@pytest.fixture(scope="function")
+def client(
+    request: pytest.FixtureRequest, _client_unlocked: Client
+) -> t.Generator[Client, None, None]:
+    _client_unlocked.lock()
+    with ui_tests.screen_recording(_client_unlocked, request):
+        yield _client_unlocked
 
-    _raw_client.close()
+
+@pytest.fixture(scope="function")
+def session(
+    request: pytest.FixtureRequest, _client_unlocked: Client
+) -> t.Generator[SessionDebugWrapper, None, None]:
+    if bool(request.node.get_closest_marker("uninitialized_session")):
+        session = _client_unlocked.get_seedless_session()
+    else:
+        derive_cardano = bool(request.node.get_closest_marker("cardano"))
+        passphrase = ""
+        marker = request.node.get_closest_marker("setup_client")
+        if marker and isinstance(marker.kwargs.get("passphrase"), str):
+            passphrase = marker.kwargs["passphrase"]
+        if _client_unlocked._setup_pin is not None:
+            _client_unlocked.use_pin_sequence([_client_unlocked._setup_pin])
+        session = _client_unlocked.get_session(
+            derive_cardano=derive_cardano, passphrase=passphrase
+        )
+
+    if _client_unlocked._setup_pin is not None:
+        session.lock()
+    with ui_tests.screen_recording(_client_unlocked, request):
+        yield session
+    # Calling session.end() is not needed since the device gets wiped later anyway.
 
 
 def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
@@ -453,6 +533,10 @@ def pytest_configure(config: "Config") -> None:
     config.addinivalue_line(
         "markers",
         'setup_client(mnemonic="all all all...", pin=None, passphrase=False, uninitialized=False): configure the client instance',
+    )
+    config.addinivalue_line(
+        "markers",
+        "uninitialized_session: use uninitialized session instance",
     )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:

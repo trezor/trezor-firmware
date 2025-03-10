@@ -36,7 +36,7 @@ pytestmark = [
 
 def test_tutorial_ignore_menu(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
     debug.click(buttons.TAP_TO_CONFIRM)
@@ -56,7 +56,7 @@ def test_tutorial_ignore_menu(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_open_close(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
     debug.click(buttons.TAP_TO_CONFIRM)
@@ -82,7 +82,7 @@ def test_tutorial_menu_open_close(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_exit(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
     debug.click(buttons.TAP_TO_CONFIRM)
@@ -105,7 +105,7 @@ def test_tutorial_menu_exit(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_repeat(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
     debug.click(buttons.TAP_TO_CONFIRM)
@@ -135,7 +135,7 @@ def test_tutorial_menu_repeat(device_handler: "BackgroundDeviceHandler"):
 
 def test_tutorial_menu_funfact(device_handler: "BackgroundDeviceHandler"):
     debug = device_handler.debuglink()
-    device_handler.run(device.show_device_tutorial)
+    device_handler.run_with_session(device.show_device_tutorial)
 
     assert debug.read_layout().title() == TR.tutorial__welcome_safe5
     debug.click(buttons.TAP_TO_CONFIRM)
