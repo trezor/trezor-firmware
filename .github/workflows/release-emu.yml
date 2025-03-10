@@ -19,15 +19,16 @@ jobs:
       models: ${{ steps.get_models.outputs.models }}
       version: ${{ steps.get_models.outputs.version }}
     steps:
+      - uses: actions/checkout@v4
       - name: Get models from releases.json
         id: get_models
         run: |
           if [[ $GITHUB_REF == refs/tags/core/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/core/v}
-            MODELS=$(jq -r --arg version "$VERSION" '.firmware[$version] | join(",")' common/releases.json)
+            MODELS=$(jq -r --arg version "$VERSION" '.firmware[$version] | join(",")' ./common/releases.json)
           elif [[ $GITHUB_REF == refs/tags/legacy/* ]]; then
             VERSION=${GITHUB_REF#refs/tags/legacy/v}
-            MODELS=$(jq -r --arg version "$VERSION" '.firmware[$version] | join(",")' common/releases.json)
+            MODELS=$(jq -r --arg version "$VERSION" '.firmware[$version] | join(",")' ./common/releases.json)
           fi
           echo "models=$MODELS" >> $GITHUB_OUTPUT
           echo "version=$VERSION" >> $GITHUB_OUTPUT
