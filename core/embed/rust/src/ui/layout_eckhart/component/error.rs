@@ -1,52 +1,44 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Component, Event, EventCtx, Label, Never, Pad},
-        constant::screen,
-        geometry::{Alignment2D, Point, Rect},
-        shape,
+        component::{Component, Event, EventCtx, Label, Never},
+        constant::SCREEN,
+        geometry::{Insets, Rect},
         shape::Renderer,
     },
 };
 
-use super::{
-    super::{
-        constant::WIDTH,
-        theme::{FATAL_ERROR_COLOR, ICON_WARNING40, RESULT_FOOTER_START, RESULT_PADDING, WHITE},
+use super::super::{
+    cshape::ScreenBorder,
+    theme::{
+        ACTION_BAR_HEIGHT, HEADER_HEIGHT, RED, SIDE_INSETS, TEXT_NORMAL, TEXT_SMALL,
+        TEXT_SMALL_GREY, TEXT_SMALL_RED, TEXT_VERTICAL_SPACING,
     },
-    ResultFooter, ResultStyle,
 };
 
-const ICON_TOP: i16 = 23;
-const TITLE_AREA_START: i16 = 70;
-const MESSAGE_AREA_START: i16 = 90;
-
-#[cfg(feature = "bootloader")]
-const STYLE: &ResultStyle = &crate::ui::layout_eckhart::theme::bootloader::RESULT_WIPE;
-#[cfg(not(feature = "bootloader"))]
-const STYLE: &ResultStyle = &super::super::theme::RESULT_ERROR;
-
+/// Full-screen component showing Eckhart RSOD. To keep it minimal, this screen
+/// does not use any other components.
 pub struct ErrorScreen<'a> {
-    bg: Pad,
+    header: Label<'a>,
     title: Label<'a>,
     message: Label<'a>,
-    footer: ResultFooter<'a>,
+    footer: Label<'a>,
+    screen_border: ScreenBorder,
 }
 
 impl<'a> ErrorScreen<'a> {
     pub fn new(title: TString<'a>, message: TString<'a>, footer: TString<'a>) -> Self {
-        let title = Label::centered(title, STYLE.title_style());
-        let message = Label::centered(message, STYLE.message_style()).vertically_centered();
-        let footer = ResultFooter::new(
-            Label::centered(footer, STYLE.title_style()).vertically_centered(),
-            STYLE,
-        );
+        let header = Label::left_aligned("Failure".into(), TEXT_SMALL_RED).vertically_centered();
+        let title = Label::left_aligned(title, TEXT_NORMAL);
+        let message = Label::left_aligned(message, TEXT_SMALL);
+        let footer = Label::centered(footer, TEXT_SMALL_GREY).vertically_centered();
 
         Self {
-            bg: Pad::with_background(FATAL_ERROR_COLOR).with_clear(),
+            header,
             title,
             message,
             footer,
+            screen_border: ScreenBorder::new(RED),
         }
     }
 }
@@ -55,24 +47,23 @@ impl<'a> Component for ErrorScreen<'a> {
     type Msg = Never;
 
     fn place(&mut self, _bounds: Rect) -> Rect {
-        self.bg.place(screen());
+        let area = SCREEN.inset(SIDE_INSETS);
 
-        let title_area = Rect::new(
-            Point::new(RESULT_PADDING, TITLE_AREA_START),
-            Point::new(WIDTH - RESULT_PADDING, MESSAGE_AREA_START),
-        );
+        let (header_area, area) = area.split_top(HEADER_HEIGHT);
+        let (area, footer_area) = area.split_bottom(ACTION_BAR_HEIGHT);
+
+        let title_height = self.title.text_height(area.width());
+        let message_height = self.message.text_height(area.width());
+        let (title_area, area) = area.split_top(title_height);
+        let (message_area, _) = area
+            .inset(Insets::top(TEXT_VERTICAL_SPACING))
+            .split_top(message_height);
+
+        self.header.place(header_area);
         self.title.place(title_area);
-
-        let message_area = Rect::new(
-            Point::new(RESULT_PADDING, MESSAGE_AREA_START),
-            Point::new(WIDTH - RESULT_PADDING, RESULT_FOOTER_START),
-        );
         self.message.place(message_area);
-
-        let (_, bottom_area) = ResultFooter::<'a>::split_bounds();
-        self.footer.place(bottom_area);
-
-        screen()
+        self.footer.place(footer_area);
+        SCREEN
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
@@ -80,17 +71,10 @@ impl<'a> Component for ErrorScreen<'a> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.bg.render(target);
-
-        let icon = ICON_WARNING40;
-        shape::ToifImage::new(Point::new(screen().center().x, ICON_TOP), icon.toif)
-            .with_fg(WHITE)
-            .with_bg(FATAL_ERROR_COLOR)
-            .with_align(Alignment2D::TOP_CENTER)
-            .render(target);
-
+        self.header.render(target);
         self.title.render(target);
         self.message.render(target);
         self.footer.render(target);
+        self.screen_border.render(u8::MAX, target);
     }
 }
