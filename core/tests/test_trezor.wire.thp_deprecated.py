@@ -4,7 +4,6 @@ import ustruct
 from typing import TYPE_CHECKING
 
 from mock_wire_interface import MockHID
-from storage.cache_thp import BROADCAST_CHANNEL_ID
 from trezor import io
 from trezor.utils import chunks
 from trezor.wire.protocol_common import Message
@@ -15,6 +14,8 @@ if utils.USE_THP:
     from trezor.wire.thp import alternating_bit_protocol as ABP
     from trezor.wire.thp import checksum, thp_main
     from trezor.wire.thp.checksum import CHECKSUM_LENGTH
+    from storage.cache_thp import BROADCAST_CHANNEL_ID
+
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
