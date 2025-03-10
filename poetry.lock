@@ -550,17 +550,6 @@ tomli = {version = ">=1.2.1", markers = "python_version < \"3.11\""}
 pyproject = ["Flake8-pyproject"]
 
 [[package]]
-name = "flaky"
-version = "3.8.1"
-description = "Plugin for pytest that automatically reruns flaky tests."
-optional = false
-python-versions = ">=3.5"
-files = [
-    {file = "flaky-3.8.1-py2.py3-none-any.whl", hash = "sha256:194ccf4f0d3a22b2de7130f4b62e45e977ac1b5ccad74d4d48f3005dcc38815e"},
-    {file = "flaky-3.8.1.tar.gz", hash = "sha256:47204a81ec905f3d5acfbd61daeabcada8f9d4031616d9bcb0618461729699f5"},
-]
-
-[[package]]
 name = "graphviz"
 version = "0.19.1"
 description = "Simple Python interface for Graphviz"
@@ -1295,6 +1284,21 @@ files = [
 pytest = ">=3.0.0"
 
 [[package]]
+name = "pytest-rerunfailures"
+version = "15.0"
+description = "pytest plugin to re-run tests to eliminate flaky failures"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "pytest-rerunfailures-15.0.tar.gz", hash = "sha256:2d9ac7baf59f4c13ac730b47f6fa80e755d1ba0581da45ce30b72fb3542b4474"},
+    {file = "pytest_rerunfailures-15.0-py3-none-any.whl", hash = "sha256:dd150c4795c229ef44320adc9a0c0532c51b78bb7a6843a8c53556b9a611df1a"},
+]
+
+[package.dependencies]
+packaging = ">=17.1"
+pytest = ">=7.4,<8.2.2 || >8.2.2"
+
+[[package]]
 name = "pytest-timeout"
 version = "2.3.1"
 description = "pytest plugin to abort hanging tests"
@@ -1916,4 +1920,4 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-it
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "1257cb4cd905c3a00c46535ffa5767cf7bc5af0ac33b80f0adbd5776a8c49d31"
+content-hash = "c1e9b094e97f629a43034cf7d81051443b2345af342db123b0e5038845dc9c03"

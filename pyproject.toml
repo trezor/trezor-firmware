@@ -15,7 +15,6 @@ nanopb = "^0.4.3"
 ## test tools
 pytest = "^8"
 coverage = "<5"  # coverage 5+ uses binary sqlite format
-flaky = ">3.6.1"  # https://github.com/box/flaky/issues/156
 pytest-ordering = "*"
 pytest-random-order = "*"
 pytest-timeout = "*"
@@ -77,6 +76,7 @@ trezor-pylint-plugin = {path = "./tools/trezor-pylint-plugin", develop = true}
 trezor-core-tools = {path = "./core/tools", develop = true}
 flake8-annotations = "^3.1.1"
 pyelftools = "^0.32"
+pytest-rerunfailures = "^15.0"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"
