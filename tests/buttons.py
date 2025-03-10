@@ -243,25 +243,13 @@ BUTTON_LETTERS_BIP39 = ("abc", "def", "ghi", "jkl", "mno", "pqr", "stu", "vwx", 
 BUTTON_LETTERS_SLIP39 = ("ab", "cd", "ef", "ghij", "klm", "nopq", "rs", "tuv", "wxyz")
 
 # fmt: off
-PASSPHRASE_LOWERCASE = (" ", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz", "*#")
-PASSPHRASE_UPPERCASE = (" ", "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ", "*#")
+PASSPHRASE_LOWERCASE_BOLT = (" ", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz", "*#")
+PASSPHRASE_LOWERCASE_DELIZIA = ("abc", "def", "ghi", "jkl", "mno", "pq", "rst", "uvw", "xyz", " *#")
+PASSPHRASE_UPPERCASE_BOLT = (" ", "ABC", "DEF", "GHI", "JKL", "MNO", "PQRS", "TUV", "WXYZ", "*#")
+PASSPHRASE_UPPERCASE_DELIZIA = ("ABC", "DEF", "GHI", "JKL", "MNO", "PQ", "RST", "UVW", "XYZ", " *#")
 PASSPHRASE_DIGITS = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
 PASSPHRASE_SPECIAL = ("_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^=")
 # fmt: on
-
-
-def get_passphrase_choices(char: str) -> tuple[str, ...]:
-    if char in " *#":
-        return PASSPHRASE_LOWERCASE
-
-    if char.islower():
-        return PASSPHRASE_LOWERCASE
-    elif char.isupper():
-        return PASSPHRASE_UPPERCASE
-    elif char.isdigit():
-        return PASSPHRASE_DIGITS
-    else:
-        return PASSPHRASE_SPECIAL
 
 
 class ButtonActions:
@@ -271,8 +259,28 @@ class ButtonActions:
         self.height = _height(layout_type)
         self.buttons = ScreenButtons(layout_type)
 
+    def _passphrase_choices(self, char: str) -> tuple[str, ...]:
+        if char in " *#" or char.islower():
+            if self.layout_type is LayoutType.Bolt:
+                return PASSPHRASE_LOWERCASE_BOLT
+            elif self.layout_type is LayoutType.Delizia:
+                return PASSPHRASE_LOWERCASE_DELIZIA
+            else:
+                raise ValueError("Wrong layout type")
+        elif char.isupper():
+            if self.layout_type is LayoutType.Bolt:
+                return PASSPHRASE_UPPERCASE_BOLT
+            elif self.layout_type is LayoutType.Delizia:
+                return PASSPHRASE_UPPERCASE_DELIZIA
+            else:
+                raise ValueError("Wrong layout type")
+        elif char.isdigit():
+            return PASSPHRASE_DIGITS
+        else:
+            return PASSPHRASE_SPECIAL
+
     def passphrase(self, char: str) -> Tuple[Coords, int]:
-        choices = get_passphrase_choices(char)
+        choices = self._passphrase_choices(char)
         idx = next(i for i, letters in enumerate(choices) if char in letters)
         click_amount = choices[idx].index(char) + 1
         return self.buttons.pin_passphrase_index(idx), click_amount
