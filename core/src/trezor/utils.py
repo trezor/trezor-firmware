@@ -19,6 +19,7 @@ from trezorutils import (  # noqa: F401
     USE_SD_CARD,
     USE_THP,
     USE_TOUCH,
+    USE_TROPIC,
     VERSION,
     bootloader_locked,
     check_firmware_header,

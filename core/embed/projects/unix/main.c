@@ -56,6 +56,11 @@
 #include <io/touch.h>
 #endif
 
+#ifdef USE_TROPIC
+#include <sec/secret.h>
+#include <sec/tropic_transport.h>
+#endif
+
 #include "py/builtin.h"
 #include "py/compile.h"
 #include "py/gc.h"
@@ -498,6 +503,12 @@ static int sdl_event_filter(void *userdata, SDL_Event *event) {
   return 1;
 }
 
+void drivers_init() {
+#ifdef USE_TROPIC
+  tropic_init();
+#endif
+}
+
 MP_NOINLINE int main_(int argc, char **argv) {
 #ifdef SIGPIPE
   // Do not raise SIGPIPE, instead return EPIPE. Otherwise, e.g. writing
@@ -518,6 +529,8 @@ MP_NOINLINE int main_(int argc, char **argv) {
   pre_process_options(argc, argv);
 
   system_init(&rsod_panic_handler);
+
+  drivers_init();
 
   SDL_SetEventFilter(sdl_event_filter, NULL);
 
