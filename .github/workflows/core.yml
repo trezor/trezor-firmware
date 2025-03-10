@@ -208,7 +208,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_MODEL: ${{ matrix.model }}
@@ -263,7 +263,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         coins: [universal, btconly]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
@@ -316,7 +316,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
     env:
@@ -397,7 +397,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -434,7 +434,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
     steps:
       - uses: actions/checkout@v4
         with:
