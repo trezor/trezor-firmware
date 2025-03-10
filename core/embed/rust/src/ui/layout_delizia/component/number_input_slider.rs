@@ -17,9 +17,6 @@ pub enum NumberInputSliderDialogMsg {
 pub struct NumberInputSliderDialog {
     area: Rect,
     input: NumberInputSlider,
-    min: u16,
-    max: u16,
-    val: u16,
     init_val: u16,
 }
 
@@ -28,9 +25,6 @@ impl NumberInputSliderDialog {
         Self {
             area: Rect::zero(),
             input: NumberInputSlider::new(min, max, init_value),
-            min,
-            max,
-            val: init_value,
             init_val: init_value,
         }
     }
@@ -73,11 +67,7 @@ impl Component for NumberInputSliderDialog {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         let msg_opt = self.input.event(ctx, event);
-
-        msg_opt.map(|value| {
-            self.val = value;
-            Self::Msg::Changed(value)
-        })
+        msg_opt.map(Self::Msg::Changed)
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
