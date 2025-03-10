@@ -108,8 +108,6 @@ TXHASH_efaa41 = bytes.fromhex(
     "efaa41ff3e67edf508846c1a1ed56894cfd32725c590300108f40c9edc1aac35"
 )
 
-CORNER_BUTTON = (215, 25)
-
 
 def test_one_one_fee(client: Client):
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
