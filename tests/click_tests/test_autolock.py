@@ -116,7 +116,7 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
         in debug.read_layout().text_content().replace(" ", "")
     )
 
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         btns = buttons.ScreenButtons(debug.layout_type)
         debug.click(btns.ok())
         debug.click(btns.ok())
@@ -172,7 +172,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
         in debug.read_layout().text_content().replace(" ", "")
     )
 
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         btns = buttons.ScreenButtons(debug.layout_type)
         debug.click(btns.ok())
         debug.click(btns.ok())
@@ -202,7 +202,7 @@ def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHa
     with device_handler.client:
         device_handler.client.set_filter(messages.TxAck, sleepy_filter)
         # confirm transaction
-        if debug.layout_type is LayoutType.Bolt:
+        if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
             debug.click(btns.ok())
         elif debug.layout_type is LayoutType.Delizia:
             debug.click(btns.tap_to_confirm())
@@ -233,7 +233,11 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     # enter passphrase - slowly
     # keep clicking for long enough to trigger the autolock if it incorrectly ignored key presses
     for _ in range(math.ceil(11 / 1.5)):
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             # click at "j"
             debug.click(_passphrase_j(debug))
         elif debug.layout_type is LayoutType.Caesar:
@@ -244,7 +248,7 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
         time.sleep(1.5)
 
     # Send the passphrase to the client (TT has it clicked already, TR needs to input it)
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         btns = buttons.ScreenButtons(debug.layout_type)
         debug.click(btns.passphrase_confirm())
     elif debug.layout_type is LayoutType.Caesar:
@@ -271,7 +275,11 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     # enter passphrase - slowly
     # autolock must activate even if we pressed some buttons
     for _ in range(math.ceil(6 / 1.5)):
-        if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if debug.layout_type in (
+            LayoutType.Bolt,
+            LayoutType.Delizia,
+            LayoutType.Eckhart,
+        ):
             debug.click(_center_button(debug))
         elif debug.layout_type is LayoutType.Caesar:
             debug.press_middle()
@@ -340,7 +348,7 @@ def test_dryrun_locks_at_word_entry(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         layout = go_next(debug)
         assert layout.main_component() == "MnemonicKeyboard"
     elif debug.layout_type is LayoutType.Caesar:
@@ -367,7 +375,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
     # select 20 words
     recovery.select_number_of_words(debug, 20)
 
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         btns = buttons.ScreenButtons(debug.layout_type)
         actions = buttons.ButtonActions(debug.layout_type)
         debug.click(btns.ok())
