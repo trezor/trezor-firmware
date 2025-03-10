@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.8.9] (19th March 2025)
+
+### Added
+- Ability to cancel recovery on word count selection screen.  [#3503]
+- [T2T1] Account info for ETH transactions.  [#3536]
+- New UI for confirming long messages.  [#4541]
+- Solana staking confirmation dialogs.  [#4560]
+- [T3T1] Upgrade bundled bootloader to 2.1.10.  [#4665]
+
+### Changed
+- Changed "swipe to continue" to "tap to continue". Screens still respond to swipe-up, but the preferred interaction method is now tapping the lower part of the screen.  [#4571]
+
+### Fixed
+- Cancelling device recovery after aborting from Suite.  [#3503]
+
 ## [2.8.8] (19th February 2025)
 
 ### Fixed
@@ -1028,6 +1043,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#3475]: https://github.com/trezor/trezor-firmware/pull/3475
 [#3477]: https://github.com/trezor/trezor-firmware/pull/3477
 [#3496]: https://github.com/trezor/trezor-firmware/pull/3496
+[#3503]: https://github.com/trezor/trezor-firmware/pull/3503
 [#3517]: https://github.com/trezor/trezor-firmware/pull/3517
 [#3520]: https://github.com/trezor/trezor-firmware/pull/3520
 [#3536]: https://github.com/trezor/trezor-firmware/pull/3536
@@ -1102,3 +1118,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4492]: https://github.com/trezor/trezor-firmware/pull/4492
 [#4500]: https://github.com/trezor/trezor-firmware/pull/4500
 [#4537]: https://github.com/trezor/trezor-firmware/pull/4537
+[#4541]: https://github.com/trezor/trezor-firmware/pull/4541
+[#4560]: https://github.com/trezor/trezor-firmware/pull/4560
+[#4571]: https://github.com/trezor/trezor-firmware/pull/4571
+[#4665]: https://github.com/trezor/trezor-firmware/pull/4665
