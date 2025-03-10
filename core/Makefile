@@ -48,6 +48,10 @@ STORAGE_INSECURE_TESTING_MODE ?= 0
 RUST_PRINT_TYPES_SIZES ?= 0
 UI_DEBUG_OVERLAY ?= 0
 
+# If set, VCP writes will be blocking, in order to allow reliable debug data transmission over VCP.
+# Disabled by default, to prevent debug firmware from getting stuck while writing log messages (if the host is not reading them).
+BLOCK_ON_VCP ?= 0
+
 # OpenOCD interface default. Alternative: ftdi/olimex-arm-usb-tiny-h
 OPENOCD_INTERFACE ?= stlink
 # OpenOCD transport default. Alternative: jtag
@@ -135,7 +139,8 @@ SCONS_VARS = \
 	TREZOR_EMULATOR_DEBUGGABLE=$(TREZOR_EMULATOR_DEBUGGABLE) \
 	TREZOR_MEMPERF="$(TREZOR_MEMPERF)" \
 	TREZOR_MODEL="$(TREZOR_MODEL)" \
-	UI_DEBUG_OVERLAY="$(UI_DEBUG_OVERLAY)"
+	UI_DEBUG_OVERLAY="$(UI_DEBUG_OVERLAY)" \
+	BLOCK_ON_VCP="$(BLOCK_ON_VCP)"
 
 SCONS_OPTS = -Q -j $(JOBS)
 ifeq ($(QUIET_MODE),1)
