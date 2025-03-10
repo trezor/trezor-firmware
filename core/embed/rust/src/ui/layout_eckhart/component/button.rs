@@ -41,7 +41,7 @@ impl Button {
     #[cfg(not(feature = "bootloader"))]
     const SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
     #[cfg(feature = "bootloader")]
-    const SUBTEXT_STYLE: TextStyle = theme::bootloader::TEXT_NORMAL;
+    const SUBTEXT_STYLE: TextStyle = theme::TEXT_NORMAL;
 
     pub const fn new(content: ButtonContent) -> Self {
         Self {

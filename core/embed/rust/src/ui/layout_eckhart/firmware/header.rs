@@ -89,7 +89,7 @@ pub enum HeaderMsg {
 }
 
 impl Header {
-    pub const HEADER_HEIGHT: i16 = 96; // [px]
+    pub const HEADER_HEIGHT: i16 = theme::HEADER_HEIGHT; // [px]
     pub const HEADER_BUTTON_WIDTH: i16 = 56; // [px]
     pub const HEADER_INSETS: Insets = Insets::sides(24); // [px]
 

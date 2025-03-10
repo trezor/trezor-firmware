@@ -213,7 +213,7 @@ struct Instruction<'a> {
 
 impl<'a> Instruction<'a> {
     /// default style for instruction text
-    const STYLE_INSTRUCTION: &'static TextStyle = &theme::TEXT_SMALL;
+    const STYLE_INSTRUCTION: &'static TextStyle = &theme::firmware::TEXT_SMALL;
     /// margin between icon and text
     const ICON_OFFSET: Offset = Offset::x(24); // [px]
 
