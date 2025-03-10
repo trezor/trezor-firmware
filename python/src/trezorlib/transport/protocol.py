@@ -14,9 +14,11 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
+import os
 import struct
-from typing import Tuple
 
 from typing_extensions import Protocol as StructuralType
 
@@ -30,6 +32,10 @@ V2_BEGIN_SESSION = 0x03
 V2_END_SESSION = 0x04
 
 LOG = logging.getLogger(__name__)
+
+DEFAULT_READ_TIMEOUT = os.environ.get("TREZOR_DEFAULT_READ_TIMEOUT")
+if DEFAULT_READ_TIMEOUT is not None:
+    DEFAULT_READ_TIMEOUT = float(DEFAULT_READ_TIMEOUT)
 
 
 class Handle(StructuralType):
@@ -48,7 +54,7 @@ class Handle(StructuralType):
 
     def close(self) -> None: ...
 
-    def read_chunk(self) -> bytes: ...
+    def read_chunk(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> bytes: ...
 
     def write_chunk(self, chunk: bytes) -> None: ...
 
@@ -86,7 +92,7 @@ class Protocol:
         if self.session_counter == 0:
             self.handle.close()
 
-    def read(self) -> MessagePayload:
+    def read(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> MessagePayload:
         raise NotImplementedError
 
     def write(self, message_type: int, message_data: bytes) -> None:
@@ -106,8 +112,8 @@ class ProtocolBasedTransport(Transport):
     def write(self, message_type: int, message_data: bytes) -> None:
         self.protocol.write(message_type, message_data)
 
-    def read(self) -> MessagePayload:
-        return self.protocol.read()
+    def read(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> MessagePayload:
+        return self.protocol.read(timeout=timeout)
 
     def begin_session(self) -> None:
         self.protocol.begin_session()
@@ -134,20 +140,20 @@ class ProtocolV1(Protocol):
             self.handle.write_chunk(chunk)
             buffer = buffer[63:]
 
-    def read(self) -> MessagePayload:
+    def read(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> MessagePayload:
         buffer = bytearray()
         # Read header with first part of message data
-        msg_type, datalen, first_chunk = self.read_first()
+        msg_type, datalen, first_chunk = self.read_first(timeout=timeout)
         buffer.extend(first_chunk)
 
         # Read the rest of the message
         while len(buffer) < datalen:
-            buffer.extend(self.read_next())
+            buffer.extend(self.read_next(timeout=timeout))
 
         return msg_type, buffer[:datalen]
 
-    def read_first(self) -> Tuple[int, int, bytes]:
-        chunk = self.handle.read_chunk()
+    def read_first(self, timeout: float | None = None) -> tuple[int, int, bytes]:
+        chunk = self.handle.read_chunk(timeout=timeout)
         if chunk[:3] != b"?##":
             raise RuntimeError(f"Unexpected magic characters: {chunk.hex()}")
         try:
@@ -158,8 +164,8 @@ class ProtocolV1(Protocol):
         data = chunk[3 + self.HEADER_LEN :]
         return msg_type, datalen, data
 
-    def read_next(self) -> bytes:
-        chunk = self.handle.read_chunk()
+    def read_next(self, timeout: float | None = None) -> bytes:
+        chunk = self.handle.read_chunk(timeout=timeout)
         if chunk[:1] != b"?":
             raise RuntimeError(f"Unexpected magic characters: {chunk.hex()}")
         return chunk[1:]
