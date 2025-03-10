@@ -17,7 +17,7 @@ pub struct ScreenBorder {
 
 impl ScreenBorder {
     pub const WIDTH: i16 = 4;
-    pub fn new(color: Color) -> Self {
+    pub const fn new(color: Color) -> Self {
         let screen = constant::screen();
 
         // Top bar: from the right edge of top-left icon to the left edge of top-right
