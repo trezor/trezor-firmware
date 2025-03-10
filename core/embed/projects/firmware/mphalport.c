@@ -36,9 +36,10 @@ int mp_hal_stdin_rx_chr(void) {
 
 void mp_hal_stdout_tx_strn(const char *str, size_t len) {
   if (vcp_iface_num >= 0) {
-    // The write timeout is set to 0, because otherwise when the VCP receive
+    // The write timeout defaults to 0, because otherwise when the VCP receive
     // buffer on the host gets full, the timeout will block device operation.
-    int r = usb_vcp_write_blocking(vcp_iface_num, (const uint8_t *)str, len, 0);
+    int r = usb_vcp_write_blocking(vcp_iface_num, (const uint8_t *)str, len,
+                                   BLOCK_ON_VCP ? 1000 : 0);
     (void)r;
   }
 }
