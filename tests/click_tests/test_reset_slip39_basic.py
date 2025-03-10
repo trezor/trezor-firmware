@@ -91,7 +91,8 @@ def test_reset_slip39_basic(
     if num_of_shares == 1 and threshold == 1:
         reset.set_selection(debug, 0)
     elif num_of_shares == 16 and threshold == 16:
-        reset.set_selection(debug, 11)
+        # set threshold - dialog starts at 9
+        reset.set_selection(debug, 7)
     else:
         raise RuntimeError("not a supported combination")
 
