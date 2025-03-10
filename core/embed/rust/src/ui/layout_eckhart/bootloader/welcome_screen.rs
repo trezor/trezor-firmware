@@ -6,19 +6,21 @@ use crate::ui::{
     shape::Renderer,
 };
 
-use super::{
-    super::theme::{BLACK, GREY, WHITE},
+use super::super::{
     fonts,
+    theme::{BLACK, GREY, WHITE},
 };
 
-const TEXT_ORIGIN: Point = Point::new(0, 105);
-const STRIDE: i16 = 22;
+// TODO: adjust the origin
+const TEXT_ORIGIN: Point = Point::new(24, 205);
+const STRIDE: i16 = 38;
 
-pub struct Welcome {
+/// Bootloader welcome screen
+pub struct BldWelcomeScreen {
     bg: Pad,
 }
 
-impl Welcome {
+impl BldWelcomeScreen {
     pub fn new() -> Self {
         Self {
             bg: Pad::with_background(BLACK).with_clear(),
@@ -26,7 +28,7 @@ impl Welcome {
     }
 }
 
-impl Component for Welcome {
+impl Component for BldWelcomeScreen {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -40,7 +42,6 @@ impl Component for Welcome {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
-
         let font = fonts::FONT_SATOSHI_REGULAR_38;
         shape::Text::new(TEXT_ORIGIN, "Get started", font)
             .with_fg(GREY)
