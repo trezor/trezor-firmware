@@ -31,6 +31,7 @@ env:
     |T2T1 Model T   |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/status.png" width="24" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T2T1-en-core_persistence_test/master_diff.html))||
     |T3B1 Safe 3    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_diff.html))||
     |T3T1 Safe 5    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_diff.html))||
+    |T3W1           |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3W1-en-core_persistence_test/master_diff.html))||
     |All            |<img src="https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/status.png" width="20px" height="20px" /> [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/index.html)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html)) ||
   TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
 
@@ -213,7 +214,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_MODEL: ${{ matrix.model }}
@@ -268,7 +269,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         coins: [universal, btconly]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
@@ -321,7 +322,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
     env:
@@ -409,7 +410,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -453,7 +454,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -561,7 +562,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -601,7 +602,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -636,7 +637,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3T1]  # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T3T1, T3W1]  # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
@@ -674,7 +675,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3B1, T3T1]
+        model: [T2T1, T3B1, T3T1, T3W1]
         # T3B1 fails due to https://github.com/trezor/trezor-firmware/issues/3280
         # remove after single global layout is implemented (or bug above fixed):
         exclude:
