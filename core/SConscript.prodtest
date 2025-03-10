@@ -221,12 +221,13 @@ if UI_DEBUG_OVERLAY:
 
 
 rust = tools.add_rust_lib(
-    env,
-    'prodtest',
-    'release',
-    features,
-    ALLPATHS,
-    str(Dir('.').abspath))
+    env=env,
+    build='prodtest',
+    profile='release',
+    features=features,
+    all_paths=ALLPATHS,
+    build_dir=str(Dir('.').abspath),
+)
 
 
 if (vh := ARGUMENTS.get("VENDOR_HEADER", None)):

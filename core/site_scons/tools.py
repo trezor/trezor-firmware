@@ -129,7 +129,7 @@ def embed_raw_binary(obj_program, env, section, target_, file):
 
 
 def add_rust_lib(
-    env, build, profile, features, all_paths, build_dir, print_types_sizes=False
+    *, env, build, profile, features, all_paths, build_dir, print_types_sizes=False
 ):
     RUST_LIB = "trezor_lib"
     RUST_TARGET = env.get("ENV")["RUST_TARGET"]
@@ -157,21 +157,26 @@ def add_rust_lib(
             "-Z build-std-features=panic_immediate_abort",
         ]
 
+        rustc_flags = []
+
         if print_types_sizes:
             # see https://nnethercote.github.io/perf-book/type-sizes.html#measuring-type-sizes for more details
-            env.Append(ENV={"RUSTFLAGS": "-Z print-type-sizes"})
+            rustc_flags.append("print-type-sizes")
 
         # Adds an ELF section with Rust functions' stack sizes. See the following links for more details:
         # - https://doc.rust-lang.org/nightly/unstable-book/compiler-flags/emit-stack-sizes.html
         # - https://blog.japaric.io/stack-analysis/
         # - https://github.com/japaric/stack-sizes/
-        env.Append(ENV={"RUSTFLAGS": "-Z emit-stack-sizes"})
+        rustc_flags.append("emit-stack-sizes")
+
+        env.Append(ENV={"RUSTFLAGS": " ".join(f"-Z {f}" for f in rustc_flags)})
 
         bindgen_macros = get_bindgen_defines(env.get("CPPDEFINES"), all_paths)
 
         return (
-            f"export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; export BUILD_DIR='{build_dir}'; cd embed/rust; cargo build {profile} "
-            + " ".join(cargo_opts)
+            f"export BINDGEN_MACROS={shlex.quote(bindgen_macros)}; "
+            f"export BUILD_DIR='{build_dir}'; "
+            f"cd embed/rust; cargo build {profile} " + " ".join(cargo_opts)
         )
 
     rust = env.Command(
