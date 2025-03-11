@@ -40,7 +40,6 @@ First, launch the nRF shell using the `nrfutil` toolchain manager and set the NC
 
 ```sh
 nrfutil toolchain-manager launch --shell
-west init -m https://github.com/nrfconnect/sdk-nrf --mr v2.9.0 v2.9.0
 ```
 
 ### Initialize the Workspace
@@ -63,6 +62,8 @@ west update
 cd trezor
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild
 ```
+
+When building for first time, add `--pristine=always` so that NCS versions and their cached files don't mix and fubar each other.
 
 Debug builds can be built using the debug overlay configuration:
 Build the application for the t3w1_revA_nrf52832 board:
