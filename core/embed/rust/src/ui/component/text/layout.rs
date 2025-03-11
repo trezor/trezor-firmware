@@ -264,7 +264,7 @@ impl TextLayout {
 
         // Check if bounding box is high enough for at least one line.
         if cursor.y > self.bottom_y() {
-            sink.out_of_bounds();
+            sink.out_of_bounds(text);
             return LayoutFit::OutOfBounds {
                 processed_chars: 0,
                 height: 0,
@@ -387,7 +387,7 @@ impl TextLayout {
                     }
 
                     // Report we are out of bounds and quit.
-                    sink.out_of_bounds();
+                    sink.out_of_bounds(text);
 
                     return LayoutFit::OutOfBounds {
                         processed_chars: text.len() - remaining_text.len(),
@@ -470,7 +470,7 @@ pub trait LayoutSink {
     /// Line break - a newline.
     fn line_break(&mut self, _cursor: Point) {}
     /// Content cannot fit on the screen.
-    fn out_of_bounds(&mut self) {}
+    fn out_of_bounds(&mut self, text: &str) {}
 }
 
 /// `LayoutSink` without any functionality.
@@ -553,6 +553,11 @@ where
                 .with_alpha(self.alpha)
                 .render(self.renderer);
         }
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn out_of_bounds(&mut self, text: &str) {
+        fatal_error!(&uformat!(len: 128, "Text too long: '{}'", text));
     }
 }
 
