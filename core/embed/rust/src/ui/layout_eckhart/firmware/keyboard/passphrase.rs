@@ -443,7 +443,7 @@ impl PassphraseInput {
     }
 
     fn passphrase(&self) -> &str {
-        &self.textbox.content()
+        self.textbox.content()
     }
 
     fn update_shown_area(&mut self) {

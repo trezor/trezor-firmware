@@ -89,13 +89,10 @@ impl<'a> Hint<'a> {
     }
 
     pub fn update(&mut self, pager: Pager) {
-        match &mut self.content {
-            HintContent::PageCounter(counter) => {
-                counter.update(pager);
-                self.swipe_allow_down = counter.pager.is_first();
-                self.swipe_allow_up = counter.pager.is_last();
-            }
-            _ => {}
+        if let HintContent::PageCounter(counter) = &mut self.content {
+            counter.update(pager);
+            self.swipe_allow_down = counter.pager.is_first();
+            self.swipe_allow_up = counter.pager.is_last();
         }
     }
 
@@ -113,15 +110,12 @@ impl<'a> Component for Hint<'a> {
         debug_assert!(bounds.width() == screen().width());
         debug_assert!(bounds.height() == self.content.height());
         let bounds = bounds.inset(Self::HINT_INSETS);
-        match &mut self.content {
-            HintContent::Instruction(instruction) => {
-                let text_area = match instruction.icon {
-                    Some(_) => bounds.split_left(instruction.icon_width()).1,
-                    None => bounds,
-                };
-                instruction.label.place(text_area);
-            }
-            _ => {}
+        if let HintContent::Instruction(instruction) = &mut self.content {
+            let text_area = match instruction.icon {
+                Some(_) => bounds.split_left(instruction.icon_width()).1,
+                None => bounds,
+            };
+            instruction.label.place(text_area);
         }
         self.area = bounds;
         self.area
@@ -222,7 +216,7 @@ impl<'a> Instruction<'a> {
         icon: Option<Icon>,
         icon_color: Option<Color>,
     ) -> Self {
-        let mut text_style = Self::STYLE_INSTRUCTION.clone();
+        let mut text_style = *Self::STYLE_INSTRUCTION;
         text_style.text_color = text_color;
         Self {
             label: Label::left_aligned(text, text_style).vertically_centered(),
