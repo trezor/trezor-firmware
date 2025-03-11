@@ -375,9 +375,8 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         emu.client.watch_layout(True)
         debug = device_handler.debuglink()
 
-        session = emu.client.get_seedless_session()
-        device_handler.run_with_provided_session(
-            session, device.recover, pin_protection=False
+        device_handler.run_with_session(
+            device.recover, seedless=True, pin_protection=False
         )
 
         recovery_old.confirm_recovery(debug)
