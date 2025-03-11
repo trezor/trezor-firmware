@@ -89,11 +89,8 @@ impl Component for NumberInputScreen {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.number_input.event(ctx, event);
 
-        if let Some(msg) = self.header.event(ctx, event) {
-            match msg {
-                HeaderMsg::Menu => return Some(NumberInputScreenMsg::Menu),
-                _ => {}
-            }
+        if let Some(HeaderMsg::Menu) = self.header.event(ctx, event) {
+            return Some(NumberInputScreenMsg::Menu);
         }
 
         if let Some(msg) = self.action_bar.event(ctx, event) {
