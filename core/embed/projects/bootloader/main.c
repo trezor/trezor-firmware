@@ -64,7 +64,9 @@
 #endif
 #ifdef USE_POWERCTL
 #include <sys/powerctl.h>
+#ifndef TREZOR_EMULATOR
 #include "../sys/powerctl/npm1300/npm1300.h"
+#endif
 #endif
 
 #include "antiglitch.h"
@@ -328,9 +330,11 @@ int bootloader_main(void) {
   }
 
 #ifdef USE_POWERCTL
+  #ifndef TREZOR_EMULATOR
   if (sectrue != manufacturing_mode || sectrue != firmware_present) {
     npm1300_set_charging(true);
   }
+  #endif
 #endif
 
 #if PRODUCTION && !defined STM32U5
