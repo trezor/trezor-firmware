@@ -64,13 +64,14 @@ def build_and_sign_blob(
     return sign_blob(blob)
 
 
-def set_language(client: Client, lang: str):
+def set_language(client: Client, lang: str, *, force: bool = True):
     if lang.startswith("en"):
         language_data = b""
     else:
         language_data = build_and_sign_blob(lang, client)
     with client:
-        device.change_language(client, language_data)  # type: ignore
+        if not client.features.language.startswith(lang) or force:
+            device.change_language(client, language_data)  # type: ignore
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
