@@ -172,7 +172,7 @@ impl<'a> PinEntry<'a> {
             choice_page: ChoicePage::new(ChoiceFactoryPIN)
                 .with_initial_page_counter(get_random_digit_position())
                 .with_controls(ChoiceControls::Carousel),
-            header_line: Child::new(Title::new(header_line_content)),
+            header_line: Child::new(Title::new(header_line_content).with_centered()),
             pin_line: Child::new(pin_line),
             subprompt,
             prompt,
@@ -253,7 +253,8 @@ impl Component for PinEntry<'_> {
     type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let header_height = Title::height();
+        // same adjustment of height as in ChangingTextLine::needed_height()
+        let header_height = Title::height() + 2;
         let (header_area, rest) = bounds.split_top(header_height);
         let pin_height = self.pin_line.inner().needed_height();
         let (pin_area, choice_area) = rest.split_top(pin_height);
