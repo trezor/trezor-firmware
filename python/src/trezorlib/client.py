@@ -218,11 +218,9 @@ class TrezorClient:
 
     def _get_protocol(self) -> Channel:
         protocol = ProtocolV1Channel(self.transport, mapping.DEFAULT_MAPPING)
-
         protocol.write(messages.Initialize())
-
         response = protocol.read()
-        self.transport.close()
+
         if isinstance(response, messages.Failure):
             if response.code == messages.FailureType.InvalidProtocol:
                 LOG.debug("Protocol V2 detected")
