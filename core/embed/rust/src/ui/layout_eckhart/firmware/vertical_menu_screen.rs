@@ -61,13 +61,13 @@ impl VerticalMenuScreen {
             Event::Touch(touch_event) => {
                 let shifted_event = match touch_event {
                     TouchEvent::TouchStart(point) if self.menu.area().contains(point) => Some(
-                        TouchEvent::TouchStart(point.ofs(Offset::y(self.menu.get_offset())).into()),
+                        TouchEvent::TouchStart(point.ofs(Offset::y(self.menu.get_offset()))),
                     ),
                     TouchEvent::TouchMove(point) if self.menu.area().contains(point) => Some(
-                        TouchEvent::TouchMove(point.ofs(Offset::y(self.menu.get_offset())).into()),
+                        TouchEvent::TouchMove(point.ofs(Offset::y(self.menu.get_offset()))),
                     ),
                     TouchEvent::TouchEnd(point) if self.menu.area().contains(point) => Some(
-                        TouchEvent::TouchEnd(point.ofs(Offset::y(self.menu.get_offset())).into()),
+                        TouchEvent::TouchEnd(point.ofs(Offset::y(self.menu.get_offset()))),
                     ),
                     _ => None, // Ignore touch events outside the bounds
                 };

@@ -147,7 +147,7 @@ impl Keypad {
         // Make sure the content fits the keypad.
         debug_assert!(keypad_content.len() <= Self::MAX_KEYS);
 
-        for (i, key_content) in keypad_content.into_iter().enumerate() {
+        for (i, key_content) in keypad_content.iter().enumerate() {
             self.keys[i].inner_mut().set_content(key_content.clone());
         }
         self
@@ -158,7 +158,7 @@ impl Keypad {
         // Make sure the index is within bounds.
         debug_assert!(idx < Self::MAX_KEYS);
 
-        &self.keys[idx].inner().content()
+        self.keys[idx].inner().content()
     }
 
     /// Set the state of the keypad.
