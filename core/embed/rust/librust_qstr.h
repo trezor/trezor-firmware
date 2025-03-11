@@ -211,6 +211,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_connections;
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
   MP_QSTR_current;
@@ -223,6 +224,19 @@ static void _librust_qstrs(void) {
   MP_QSTR_deinit;
   MP_QSTR_description;
   MP_QSTR_details_title;
+  MP_QSTR_device_menu;
+  MP_QSTR_device_menu__1_connection;
+  MP_QSTR_device_menu__about;
+  MP_QSTR_device_menu__active_connections;
+  MP_QSTR_device_menu__backup_failed_description;
+  MP_QSTR_device_menu__backup_failed_title;
+  MP_QSTR_device_menu__battery_low_description;
+  MP_QSTR_device_menu__battery_low_title;
+  MP_QSTR_device_menu__bluetooth;
+  MP_QSTR_device_menu__brightness;
+  MP_QSTR_device_menu__connections_title;
+  MP_QSTR_device_menu__fw_version;
+  MP_QSTR_device_menu__language;
   MP_QSTR_device_name__change_template;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
@@ -238,6 +252,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_extra_item;
   MP_QSTR_extra_items;
   MP_QSTR_extra_title;
+  MP_QSTR_failed_backup;
   MP_QSTR_fee;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
@@ -319,6 +334,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_lockscreen__tap_to_unlock;
   MP_QSTR_lockscreen__title_locked;
   MP_QSTR_lockscreen__title_not_connected;
+  MP_QSTR_low_battery;
   MP_QSTR_max_count;
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
