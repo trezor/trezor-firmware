@@ -228,24 +228,32 @@ impl TextLayout {
 
     /// Trying to fit the content on the current screen.
     pub fn fit_text(&self, text: &str) -> LayoutFit {
-        self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp)
+        self.layout_text(text, &mut self.initial_cursor(), &mut TextNoOp, false)
     }
 
     /// Draw as much text as possible on the current screen.
-    pub fn render_text<'s>(&self, text: &str, target: &mut impl Renderer<'s>) -> LayoutFit {
-        self.render_text_with_alpha(text, target, 255)
+    pub fn render_text<'s>(
+        &self,
+        text: &str,
+        target: &mut impl Renderer<'s>,
+        must_fit: bool,
+    ) -> LayoutFit {
+        self.render_text_with_alpha(text, target, 255, must_fit)
     }
+
     /// Draw as much text as possible on the current screen.
     pub fn render_text_with_alpha<'s>(
         &self,
         text: &str,
         target: &mut impl Renderer<'s>,
         alpha: u8,
+        must_fit: bool,
     ) -> LayoutFit {
         self.layout_text(
             text,
             &mut self.initial_cursor(),
             &mut TextRenderer::new(target).with_alpha(alpha),
+            must_fit,
         )
     }
 
@@ -257,6 +265,7 @@ impl TextLayout {
         text: &str,
         cursor: &mut Point,
         sink: &mut dyn LayoutSink,
+        must_fit: bool,
     ) -> LayoutFit {
         let init_cursor = *cursor;
         let mut remaining_text = text;
@@ -264,7 +273,7 @@ impl TextLayout {
 
         // Check if bounding box is high enough for at least one line.
         if cursor.y > self.bottom_y() {
-            sink.out_of_bounds(text);
+            sink.out_of_bounds(text, must_fit);
             return LayoutFit::OutOfBounds {
                 processed_chars: 0,
                 height: 0,
@@ -387,7 +396,7 @@ impl TextLayout {
                     }
 
                     // Report we are out of bounds and quit.
-                    sink.out_of_bounds(text);
+                    sink.out_of_bounds(text, must_fit);
 
                     return LayoutFit::OutOfBounds {
                         processed_chars: text.len() - remaining_text.len(),
@@ -470,7 +479,7 @@ pub trait LayoutSink {
     /// Line break - a newline.
     fn line_break(&mut self, _cursor: Point) {}
     /// Content cannot fit on the screen.
-    fn out_of_bounds(&mut self, text: &str) {}
+    fn out_of_bounds(&mut self, text: &str, must_fit: bool) {}
 }
 
 /// `LayoutSink` without any functionality.
@@ -556,8 +565,10 @@ where
     }
 
     #[cfg(feature = "ui_debug")]
-    fn out_of_bounds(&mut self, text: &str) {
-        fatal_error!(&uformat!(len: 128, "Text too long: '{}'", text));
+    fn out_of_bounds(&mut self, text: &str, must_fit: bool) {
+        if must_fit {
+            fatal_error!(&uformat!("Text too long: {}", &text[..15]));
+        }
     }
 }
 
