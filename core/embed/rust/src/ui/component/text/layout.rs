@@ -273,7 +273,7 @@ impl TextLayout {
 
         // Check if bounding box is high enough for at least one line.
         if cursor.y > self.bottom_y() {
-            sink.out_of_bounds(text, must_fit);
+            sink.out_of_bounds(text, *cursor, self, must_fit);
             return LayoutFit::OutOfBounds {
                 processed_chars: 0,
                 height: 0,
@@ -396,7 +396,7 @@ impl TextLayout {
                     }
 
                     // Report we are out of bounds and quit.
-                    sink.out_of_bounds(text, must_fit);
+                    sink.out_of_bounds(text, *cursor, self, must_fit);
 
                     return LayoutFit::OutOfBounds {
                         processed_chars: text.len() - remaining_text.len(),
@@ -479,7 +479,7 @@ pub trait LayoutSink {
     /// Line break - a newline.
     fn line_break(&mut self, _cursor: Point) {}
     /// Content cannot fit on the screen.
-    fn out_of_bounds(&mut self, text: &str, must_fit: bool) {}
+    fn out_of_bounds(&mut self, text: &str, _cursor: Point, layout: &TextLayout, must_fit: bool) {}
 }
 
 /// `LayoutSink` without any functionality.
@@ -565,9 +565,13 @@ where
     }
 
     #[cfg(feature = "ui_debug")]
-    fn out_of_bounds(&mut self, text: &str, must_fit: bool) {
+    fn out_of_bounds(&mut self, text: &str, cursor: Point, layout: &TextLayout, must_fit: bool) {
         if must_fit {
-            fatal_error!(&uformat!("Text too long: {}", &text[..15]));
+            shape::Text::new(cursor, "|", layout.style.text_font)
+                .with_fg(layout.style.hyphen_color)
+                .with_alpha(self.alpha)
+                .render(self.renderer);
+            //fatal_error!(&uformat!("Text too long: {}", &text[..15]));
         }
     }
 }
