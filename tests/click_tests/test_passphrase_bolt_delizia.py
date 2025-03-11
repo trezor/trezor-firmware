@@ -22,7 +22,6 @@ import pytest
 
 from trezorlib.debuglink import LayoutType
 
-from .. import buttons
 from ..common import get_test_address
 from .common import CommonPass, PassphraseCategory, get_char_category
 
@@ -50,7 +49,7 @@ KEYBOARD_CATEGORIES_DELIZIA = [
 
 # TODO: better read this from the trace
 KEYBOARD_CATEGORY = PassphraseCategory.LOWERCASE
-COORDS_PREV: buttons.Coords = (0, 0)
+COORDS_PREV: tuple[int, int] = (0, 0)
 
 # Testing the maximum length is really 50
 
@@ -131,8 +130,7 @@ def press_char(debug: "DebugLink", char: str) -> None:
 
     go_to_category(debug, char_category)
 
-    actions = buttons.ButtonActions(debug.layout_type)
-    coords, amount = actions.passphrase(char)
+    coords, amount = debug.button_actions.passphrase(char)
     # If the button is the same as for the previous char,
     # waiting a second before pressing it again.
     # (not for a space in Bolt layout)
@@ -158,16 +156,14 @@ def input_passphrase(debug: "DebugLink", passphrase: str, check: bool = True) ->
 def enter_passphrase(debug: "DebugLink") -> None:
     """Enter a passphrase"""
     is_empty: bool = len(debug.read_layout().passphrase()) == 0
-    btns = buttons.ScreenButtons(debug.layout_type)
-    debug.click(btns.passphrase_confirm())
+    debug.click(debug.screen_buttons.passphrase_confirm())
     if is_empty and debug.layout_type is LayoutType.Delizia:
-        debug.click(btns.ui_yes())
+        debug.click(debug.screen_buttons.ui_yes())
 
 
 def delete_char(debug: "DebugLink") -> None:
     """Deletes the last char"""
-    btns = buttons.ScreenButtons(debug.layout_type)
-    debug.click(btns.pin_passphrase_erase())
+    debug.click(debug.screen_buttons.pin_passphrase_erase())
 
 
 VECTORS = (  # passphrase, address
@@ -239,8 +235,7 @@ def test_passphrase_loop_all_characters(device_handler: "BackgroundDeviceHandler
             debug.read_layout()
 
         enter_passphrase(debug)
-        btns = buttons.ScreenButtons(debug.layout_type)
-        debug.click(btns.passphrase_confirm())
+        debug.click(debug.screen_buttons.passphrase_confirm())
 
 
 @pytest.mark.setup_client(passphrase=True)
@@ -248,8 +243,7 @@ def test_passphrase_click_same_button_many_times(
     device_handler: "BackgroundDeviceHandler",
 ):
     with prepare_passphrase_dialogue(device_handler) as debug:
-        actions = buttons.ButtonActions(debug.layout_type)
-        a_coords, _ = actions.passphrase("a")
+        a_coords, _ = debug.button_actions.passphrase("a")
         for _ in range(10):
             debug.click(a_coords)
 

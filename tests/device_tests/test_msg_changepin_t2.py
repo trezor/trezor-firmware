@@ -22,7 +22,6 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import Cancelled, TrezorFailure
 
-from .. import buttons
 from ..input_flows import (
     InputFlowCodeChangeFail,
     InputFlowNewCodeMismatch,
@@ -187,18 +186,17 @@ def test_change_invalid_current(client: Client):
 def test_pin_menu_cancel_setup(client: Client):
     def cancel_pin_setup_input_flow():
         yield
-        btns = buttons.ScreenButtons(client.layout_type)
         # enter context menu
-        client.debug.click(btns.menu())
+        client.debug.click(client.debug.screen_buttons.menu())
         client.debug.synchronize_at("VerticalMenu")
         # click "Cancel PIN setup"
-        client.debug.click(btns.vertical_menu_items()[0])
+        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
         client.debug.synchronize_at("Paragraphs")
         # swipe through info screen
         client.debug.swipe_up()
         client.debug.synchronize_at("PromptScreen")
         # tap to confirm
-        client.debug.click(btns.tap_to_confirm())
+        client.debug.click(client.debug.screen_buttons.tap_to_confirm())
 
     with client, pytest.raises(Cancelled):
         client.set_input_flow(cancel_pin_setup_input_flow)

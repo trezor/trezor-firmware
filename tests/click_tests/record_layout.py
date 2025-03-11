@@ -10,7 +10,6 @@ import inspect
 import sys
 import threading
 import time
-from pathlib import Path
 
 import click
 
@@ -34,12 +33,6 @@ from trezorlib import (
 from trezorlib.cli.trezorctl import cli as main
 
 from trezorlib import cli, debuglink, protobuf  # isort:skip
-
-
-# make /tests part of sys.path so that we can import buttons.py as a module
-ROOT = Path(__file__).resolve().parent.parent
-sys.path.append(str(ROOT))
-import buttons  # isort:skip
 
 MODULES = (
     binance,
@@ -142,34 +135,24 @@ def send_clicks(dest):
             elif key.startswith("m"):
                 x, y = [int(s) - 1 for s in key[1:].split(",")]
                 output = (
-                    f"debug.click(ScreenButtons(layout_type).mnemonic_grid({x}, {y}))"
+                    f"debug.click(DEBUGLINK.screen_buttons.mnemonic_grid({x}, {y}))"
                 )
-                DEBUGLINK.click(
-                    buttons.ScreenButtons(DEBUGLINK.layout_type).mnemonic_grid(x, y)
-                )
+                DEBUGLINK.click(DEBUGLINK.screen_buttons.mnemonic_grid(x, y))
 
             elif key.startswith("p"):
                 x, y = [int(s) - 1 for s in key[1:].split(",")]
-                output = f"debug.click(ScreenButtons(layout_type).pin_passphrase_grid({x}, {y}))"
-                DEBUGLINK.click(
-                    buttons.ScreenButtons(DEBUGLINK.layout_type).pin_passphrase_grid(
-                        x, y
-                    )
-                )
+                output = f"debug.click(DEBUGLINK.screen_buttons.pin_passphrase_grid({x}, {y}))"
+                DEBUGLINK.click(DEBUGLINK.screen_buttons.pin_passphrase_grid(x, y))
             elif key == "y":
-                output = "debug.click(ScreenButtons(layout_type).ok())"
-                DEBUGLINK.click(buttons.ScreenButtons(DEBUGLINK.layout_type).ok())
+                output = "debug.click(DEBUGLINK.screen_buttons.ok())"
+                DEBUGLINK.click(DEBUGLINK.screen_buttons.ok())
             elif key == "n":
-                output = "debug.click(ScreenButtons(layout_type).cancel())"
-                DEBUGLINK.click(buttons.ScreenButtons(DEBUGLINK.layout_type).cancel())
+                output = "debug.click(DEBUGLINK.screen_buttons.cancel())"
+                DEBUGLINK.click(DEBUGLINK.screen_buttons.cancel())
             elif key in "0123456789":
                 index = int(key)
-                output = f"debug.click(ScreenButtons(layout_type).pin_passphrase_index({index}))"
-                DEBUGLINK.click(
-                    buttons.ScreenButtons(DEBUGLINK.layout_type).pin_passphrase_index(
-                        index
-                    )
-                )
+                output = f"debug.click(DEBUGLINK.screen_buttons.pin_passphrase_index({index}))"
+                DEBUGLINK.click(DEBUGLINK.screen_buttons.pin_passphrase_index(index))
             elif key == "stop":
                 return
             else:
