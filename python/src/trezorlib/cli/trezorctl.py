@@ -295,8 +295,8 @@ def list_devices(no_resolve: bool) -> Optional[Iterable["Transport"]]:
 
     for transport in enumerate_devices():
         try:
-            client = get_client(transport)
             transport.open()
+            client = get_client(transport)
             description = format_device_name(client.features)
         except DeviceIsBusy:
             description = "Device is in use by another process"
