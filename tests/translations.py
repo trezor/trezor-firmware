@@ -70,7 +70,8 @@ def set_language(client: Client, lang: str):
     else:
         language_data = build_and_sign_blob(lang, client)
     with client:
-        device.change_language(client, language_data)  # type: ignore
+        if not client.features.language.startswith(lang):
+            device.change_language(client, language_data)  # type: ignore
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
