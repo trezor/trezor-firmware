@@ -115,13 +115,13 @@ impl ValueKeypad {
 
     pub fn new_single_share() -> Self {
         const NUMBERS: [u32; 5] = [12, 24, 18, 20, 33];
-        const LABELS: [&'static str; 5] = ["12", "24", "18", "20", "33"];
+        const LABELS: [&str; 5] = ["12", "24", "18", "20", "33"];
         Self::new(&LABELS, &NUMBERS)
     }
 
     pub fn new_multi_share() -> Self {
         const NUMBERS: [u32; 2] = [20, 33];
-        const LABELS: [&'static str; 2] = ["20", "33"];
+        const LABELS: [&str; 2] = ["20", "33"];
         Self::new(&LABELS, &NUMBERS)
     }
 
