@@ -34,6 +34,7 @@ typedef enum {
   MENU_EXIT = 0xAABBCCDD,
   MENU_REBOOT = 0x11223344,
   MENU_WIPE = 0x55667788,
+  MENU_TURN_OFF = 0x99AABBCC,
 } menu_result_t;
 
 // todo: use bindgen to tie this to rust

@@ -1,7 +1,7 @@
 use crate::{
     trezorhal::secbool::{secbool, sectrue},
     ui::{
-        component::{Child, Component, Event, EventCtx, Label, Pad},
+        component::{Component, Event, EventCtx, Label, Pad},
         constant::{screen, WIDTH},
         display::Icon,
         geometry::{Insets, Point, Rect},
@@ -26,14 +26,16 @@ pub enum MenuMsg {
     Close = 0xAABBCCDD,
     Reboot = 0x11223344,
     FactoryReset = 0x55667788,
+    TurnOff = 0x99AABBCC,
 }
 
 pub struct Menu {
     bg: Pad,
-    title: Child<Label<'static>>,
-    close: Child<Button>,
-    reboot: Child<Button>,
-    reset: Child<Button>,
+    title: Label<'static>,
+    close: Button,
+    reboot: Button,
+    reset: Button,
+    turn_off: Option<Button>,
 }
 
 impl Menu {
@@ -41,22 +43,29 @@ impl Menu {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
 
+        let turn_off = IconText::new("TURN OFF", Icon::new(FIRE24));
+
+        #[cfg(not(feature = "powerctl"))]
+        let turn_off_menu_item = false;
+        #[cfg(feature = "powerctl")]
+        let turn_off_menu_item = true;
+
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(
-                Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG)).vertically_centered(),
-            ),
-            close: Child::new(
-                Button::with_icon(Icon::new(X32))
-                    .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-            ),
-            reboot: Child::new(
-                Button::with_icon_and_text(content_reboot)
-                    .styled(button_bld())
-                    .initially_enabled(sectrue == firmware_present),
-            ),
-            reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
+            title: Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG))
+                .vertically_centered(),
+            close: Button::with_icon(Icon::new(X32))
+                .styled(button_bld_menu())
+                .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+            reboot: Button::with_icon_and_text(content_reboot)
+                .styled(button_bld())
+                .initially_enabled(sectrue == firmware_present),
+            reset: Button::with_icon_and_text(content_reset).styled(button_bld()),
+            turn_off: if turn_off_menu_item {
+                Some(Button::with_icon_and_text(turn_off).styled(button_bld()))
+            } else {
+                None
+            },
         };
         instance.bg.clear();
         instance
@@ -84,6 +93,16 @@ impl Component for Menu {
                 BUTTON_AREA_START + 2 * BUTTON_HEIGHT + BUTTON_SPACING,
             ),
         ));
+        self.turn_off.place(Rect::new(
+            Point::new(
+                CONTENT_PADDING,
+                BUTTON_AREA_START + 2 * BUTTON_HEIGHT + 2 * BUTTON_SPACING,
+            ),
+            Point::new(
+                WIDTH - CONTENT_PADDING,
+                BUTTON_AREA_START + 3 * BUTTON_HEIGHT + 2 * BUTTON_SPACING,
+            ),
+        ));
         bounds
     }
 
@@ -97,6 +116,9 @@ impl Component for Menu {
         if let Some(Clicked) = self.reset.event(ctx, event) {
             return Some(Self::Msg::FactoryReset);
         }
+        if let Some(Clicked) = self.turn_off.event(ctx, event) {
+            return Some(Self::Msg::TurnOff);
+        }
 
         None
     }
@@ -107,5 +129,6 @@ impl Component for Menu {
         self.close.render(target);
         self.reboot.render(target);
         self.reset.render(target);
+        self.turn_off.render(target);
     }
 }

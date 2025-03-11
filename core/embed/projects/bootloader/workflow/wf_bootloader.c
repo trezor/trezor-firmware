@@ -23,6 +23,10 @@
 #include <sys/types.h>
 #include <util/image.h>
 
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>
+#endif
+
 #include "antiglitch.h"
 #include "bootui.h"
 #include "workflow.h"
@@ -79,6 +83,11 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
           }
           return WF_ERROR_FATAL;
         }
+        #ifdef USE_POWERCTL
+        if (menu_result == MENU_TURN_OFF) {
+          powerctl_hibernate();
+          }
+#endif
         break;
       case SCREEN_WAIT_FOR_HOST:
         workflow_result_t res =
