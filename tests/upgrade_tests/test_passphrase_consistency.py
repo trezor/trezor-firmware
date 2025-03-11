@@ -82,7 +82,7 @@ def test_passphrase_works(emulator: Emulator):
             messages.PassphraseRequest,
             messages.Address,
         ]
-    else:
+    elif protocol_v1:
         expected_responses = [
             (protocol_v1, messages.Features),
             messages.PassphraseRequest,
@@ -90,6 +90,8 @@ def test_passphrase_works(emulator: Emulator):
             messages.ButtonRequest,
             messages.Address,
         ]
+    else:
+        expected_responses = [messages.Address]
     with emulator.client as client:
         client.set_expected_responses(expected_responses)
         if protocol_v1:
@@ -132,12 +134,18 @@ def test_init_device(emulator: Emulator):
             messages.Features,
             messages.Address,
         ]
-    else:
+    elif protocol_v1:
         expected_responses = [
             (protocol_v1, messages.Features),
             messages.PassphraseRequest,
             messages.ButtonRequest,
             messages.ButtonRequest,
+            messages.Address,
+            messages.Features,
+            messages.Address,
+        ]
+    else:
+        expected_responses = [
             messages.Address,
             messages.Features,
             messages.Address,
@@ -168,6 +176,8 @@ def test_init_device(emulator: Emulator):
         session_id = session.id
         if protocol_v1:
             session.call(messages.Initialize(session_id=session_id))
+        else:
+            session.call(messages.GetFeatures())
         btc.get_address(
             session,
             "Testnet",
