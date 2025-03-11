@@ -8,7 +8,7 @@ use crate::{
         component::{
             swipe_detect::SwipeSettings,
             text::{
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
                 TextStyle,
             },
             Component,
@@ -330,7 +330,7 @@ pub struct ShowInfoParams {
     chunkify: bool,
     swipe_up: bool,
     swipe_down: bool,
-    items: Vec<(TString<'static>, TString<'static>), 4>,
+    items: Vec<(TString<'static>, TString<'static>), 3>,
 }
 
 impl ShowInfoParams {
@@ -412,7 +412,7 @@ impl ShowInfoParams {
     pub fn into_layout(
         self,
     ) -> Result<impl Component<Msg = FlowMsg> + Swipable + MaybeTrace, Error> {
-        let mut paragraphs = ParagraphVecLong::new();
+        let mut paragraphs = ParagraphVecShort::new();
         let mut first: bool = true;
         for item in self.items {
             // FIXME: padding:
