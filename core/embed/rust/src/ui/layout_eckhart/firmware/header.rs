@@ -230,10 +230,10 @@ impl Component for Header {
         }
 
         if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
-            return Some(self.left_button_msg.clone());
+            return Some(self.left_button_msg);
         };
         if let Some(ButtonMsg::Clicked) = self.right_button.event(ctx, event) {
-            return Some(self.right_button_msg.clone());
+            return Some(self.right_button_msg);
         };
 
         None

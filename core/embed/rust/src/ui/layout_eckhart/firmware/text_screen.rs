@@ -10,7 +10,7 @@ use crate::ui::{
     util::Pager,
 };
 
-use super::{action_bar::ActionBarMsg, ActionBar, Header, HeaderMsg, Hint, theme::SIDE_INSETS};
+use super::{action_bar::ActionBarMsg, theme::SIDE_INSETS, ActionBar, Header, HeaderMsg, Hint};
 
 /// Full-screen component for rendering text.
 ///
@@ -68,8 +68,12 @@ where
     fn update_page(&mut self, page_idx: u16) {
         self.content.change_page(page_idx);
         let pager = self.content.pager();
-        self.hint.as_mut().map(|h| h.update(pager));
-        self.action_bar.as_mut().map(|ab| ab.update(pager));
+        if let Some(hint) = self.hint.as_mut() {
+            hint.update(pager);
+        }
+        if let Some(ab) = self.action_bar.as_mut() {
+            ab.update(pager)
+        };
     }
 }
 
@@ -155,9 +159,15 @@ where
 {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("TextComponent");
-        self.header.as_ref().map(|header| header.trace(t));
+        if let Some(header) = self.header.as_ref() {
+            header.trace(t);
+        }
         self.content.trace(t);
-        self.hint.as_ref().map(|hint| hint.trace(t));
-        self.action_bar.as_ref().map(|ab| ab.trace(t));
+        if let Some(hint) = self.hint.as_ref() {
+            hint.trace(t);
+        }
+        if let Some(ab) = self.action_bar.as_ref() {
+            ab.trace(t);
+        }
     }
 }

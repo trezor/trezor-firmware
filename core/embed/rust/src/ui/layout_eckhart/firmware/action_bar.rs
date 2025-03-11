@@ -81,8 +81,7 @@ impl ActionBar {
         Self::new(
             Mode::Timeout,
             None,
-            button
-                .initially_enabled(false),
+            button.initially_enabled(false),
             Some(Timeout::new(timeout_ms)),
         )
     }
@@ -120,40 +119,37 @@ impl ActionBar {
 
     pub fn update(&mut self, new_pager: Pager) {
         // TODO: review `clone()` of `left_content`/`right_content`
-        match &mut self.mode {
-            Mode::Double { pager } => {
-                let old_is_last = pager.is_last();
-                let new_is_last = new_pager.is_last();
-                *pager = new_pager;
-                // Update left button - show original content/style only on first page
-                if let Some(btn) = &mut self.left_button {
-                    if pager.is_first() {
-                        let (content, style) = unwrap!(self.left_original.clone());
-                        btn.set_content(content);
-                        btn.set_stylesheet(style);
-                    } else {
-                        btn.set_content(Self::PAGINATE_LEFT_CONTENT);
-                        btn.set_stylesheet(*Self::PAGINATE_STYLESHEET);
-                    }
-                }
-
-                // Update right button - show original content/style only on last page
-                if pager.is_last() {
-                    let (content, style) = unwrap!(self.right_original.clone());
-                    self.right_button.set_content(content);
-                    self.right_button.set_stylesheet(style);
+        if let Mode::Double { pager } = &mut self.mode {
+            let old_is_last = pager.is_last();
+            let new_is_last = new_pager.is_last();
+            *pager = new_pager;
+            // Update left button - show original content/style only on first page
+            if let Some(btn) = &mut self.left_button {
+                if pager.is_first() {
+                    let (content, style) = unwrap!(self.left_original.clone());
+                    btn.set_content(content);
+                    btn.set_stylesheet(style);
                 } else {
-                    self.right_button.set_content(Self::PAGINATE_RIGHT_CONTENT);
-                    self.right_button.set_stylesheet(*Self::PAGINATE_STYLESHEET);
-                }
-
-                // If we're entering or leaving the last page and left_short is true,
-                // we need to update the button placement
-                if self.left_short && (old_is_last != new_is_last) {
-                    self.place_buttons(self.area);
+                    btn.set_content(Self::PAGINATE_LEFT_CONTENT);
+                    btn.set_stylesheet(*Self::PAGINATE_STYLESHEET);
                 }
             }
-            _ => {}
+
+            // Update right button - show original content/style only on last page
+            if pager.is_last() {
+                let (content, style) = unwrap!(self.right_original.clone());
+                self.right_button.set_content(content);
+                self.right_button.set_stylesheet(style);
+            } else {
+                self.right_button.set_content(Self::PAGINATE_RIGHT_CONTENT);
+                self.right_button.set_stylesheet(*Self::PAGINATE_STYLESHEET);
+            }
+
+            // If we're entering or leaving the last page and left_short is true,
+            // we need to update the button placement
+            if self.left_short && (old_is_last != new_is_last) {
+                self.place_buttons(self.area);
+            }
         }
     }
 
@@ -167,11 +163,8 @@ impl ActionBar {
             Mode::Double { .. } => (
                 left_button
                     .as_ref()
-                    .map(|b| (b.content().clone(), b.style_sheet().clone())),
-                Some((
-                    right_button.content().clone(),
-                    right_button.style_sheet().clone(),
-                )),
+                    .map(|b| (b.content().clone(), *b.style_sheet())),
+                Some((right_button.content().clone(), *right_button.style_sheet())),
             ),
             _ => (None, None),
         };

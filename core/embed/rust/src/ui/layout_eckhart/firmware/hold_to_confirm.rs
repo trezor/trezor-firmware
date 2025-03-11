@@ -136,7 +136,7 @@ impl Component for HoldToConfirmAnim {
                 .rollback
                 .duration
                 .checked_add(rollback_elapsed)
-                .unwrap_or(Duration::default());
+                .unwrap_or_default();
             let (clip, top_gap) = self.get_clips(rollback_duration_progressed);
             let top_back_rollback = self.get_top_gap_rollback(rollback_elapsed);
             let top_gap = top_gap.union(top_back_rollback);

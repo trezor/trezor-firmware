@@ -138,7 +138,7 @@ impl VerticalMenu {
                     button
                         .area()
                         .top_left()
-                        .ofs(Offset::x(button.content_offset().x).into()),
+                        .ofs(Offset::x(button.content_offset().x)),
                     Offset::new(button.area().width() - 2 * button.content_offset().x, 1),
                 );
                 Bar::new(separator)

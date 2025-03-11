@@ -169,11 +169,8 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match event {
-            Event::Attach(_) => {
-                self.on_input_change(ctx);
-            }
-            _ => {}
+        if let Event::Attach(_) = event {
+            self.on_input_change(ctx);
         }
 
         match self.input.event(ctx, event) {

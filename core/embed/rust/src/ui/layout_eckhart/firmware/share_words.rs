@@ -154,11 +154,8 @@ impl<'a> Component for ShareWordsScreen<'a> {
             return None;
         }
 
-        if let Some(msg) = self.header.event(ctx, event) {
-            match msg {
-                HeaderMsg::Cancelled => return Some(ShareWordsScreenMsg::Cancelled),
-                _ => {}
-            }
+        if let Some(HeaderMsg::Cancelled) = self.header.event(ctx, event) {
+            return Some(ShareWordsScreenMsg::Cancelled);
         }
 
         if let Some(msg) = self.action_bar.event(ctx, event) {
