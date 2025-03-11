@@ -21,9 +21,9 @@ use super::{
         self,
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32,
-            FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL,
-            TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40,
+            DOWNLOAD32, FIRE32, FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD,
+            TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
         },
         FG,
     },
@@ -41,7 +41,8 @@ use crate::ui::{
 
 use ufmt::uwrite;
 
-use super::theme::bootloader::{button_confirm_initial, button_initial, BLD_WARN_COLOR};
+#[cfg(feature = "ble")]
+use super::theme::bootloader::{button_confirm_initial, button_initial};
 
 use intro::Intro;
 use menu::Menu;

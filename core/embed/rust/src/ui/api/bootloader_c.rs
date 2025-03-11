@@ -145,6 +145,7 @@ extern "C" fn screen_wipe_fail() {
     ModelUI::screen_wipe_fail()
 }
 
+#[cfg(feature = "ble")]
 #[no_mangle]
 extern "C" fn screen_confirm_pairing(code: *const cty::c_char, initial_setup: bool) -> u32 {
     let code = unwrap!(unsafe { from_c_array(code, 6) });
