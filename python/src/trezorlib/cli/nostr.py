@@ -33,7 +33,7 @@ PATH_TEMPLATE = "m/44h/1237h/{}h/0/0"
 
 @click.group(name="nostr")
 def cli() -> None:
-    pass
+    """Nostr commands."""
 
 
 @cli.command()
