@@ -19,6 +19,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.client import ProtocolVersion
 
 from .. import translations as TR
 from ..common import EXTERNAL_ENTROPY, MOCK_GET_ENTROPY, generate_entropy
@@ -51,6 +52,7 @@ def test_reset_slip39_basic(
     device_handler.run_with_provided_session(
         session,
         device.setup,
+        seedless=True,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
         pin_protection=False,
@@ -58,6 +60,8 @@ def test_reset_slip39_basic(
         entropy_check_count=0,
         _get_entropy=MOCK_GET_ENTROPY,
     )
+    if device_handler.client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+        reset.confirm_read(debug, middle_r=True)
 
     # confirm new wallet
     reset.confirm_new_wallet(debug)
