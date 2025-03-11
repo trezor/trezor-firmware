@@ -93,6 +93,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 #if !BITCOIN_ONLY
 
 static int ethereum_is_canonical(uint8_t v, uint8_t signature[64]) {
+  // This condition states that the x-coordinate of the public nonce should be
+  // less than the curve order (refer to
+  // https://github.com/trezor/trezor-firmware/blob/b08f5fb0f66c4a9bebceb7d538e28f129aec8c4f/crypto/ecdsa.c#L724).
+  // For the secp256k1 curve, the probability of this occurring is less than
+  // 2^-127.
   (void)signature;
   return (v & 2) == 0;
 }
