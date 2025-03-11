@@ -10,8 +10,8 @@ use crate::{
 };
 
 use super::super::{
-    firmware::{theme, ActionBar, Header, HeaderMsg},
     constant::SCREEN,
+    firmware::{theme, ActionBar, Header, HeaderMsg},
 };
 
 pub enum QrMsg {
