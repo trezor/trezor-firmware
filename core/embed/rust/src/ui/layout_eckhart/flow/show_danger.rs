@@ -39,10 +39,8 @@ impl FlowController for ShowDanger {
         *self as usize
     }
 
-    fn handle_swipe(&'static self, direction: Direction) -> Decision {
-        match (self, direction) {
-            _ => self.do_nothing(),
-        }
+    fn handle_swipe(&'static self, _direction: Direction) -> Decision {
+        self.do_nothing()
     }
 
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
