@@ -69,28 +69,32 @@ def emulator(gen: str, tag: str) -> Iterator[Emulator]:
 )
 def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
-    if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
+    model = emulator.client.features.model
+    firmware_version = emulator.client.version
+    protocol_version = emulator.client.protocol_version
+
+    if model == "T" and firmware_version < (2, 3, 0):
         expected_responses = [
             messages.PassphraseRequest,
             messages.Deprecated_PassphraseStateRequest,
             messages.Address,
         ]
-    elif (
-        emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
-    ) or (
-        emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
+    elif (model == "T" and firmware_version < (2, 3, 3)) or (
+        model == "1" and firmware_version < (1, 9, 3)
     ):
         expected_responses = [
             messages.PassphraseRequest,
             messages.Address,
         ]
-    else:
+    elif protocol_version is ProtocolVersion.PROTOCOL_V1:
         expected_responses = [
             messages.PassphraseRequest,
             messages.ButtonRequest,
             messages.ButtonRequest,
             messages.Address,
         ]
+    else:
+        expected_responses = [messages.Address]
     emu_session = emulator.client.get_session(passphrase="TREZOR")
     with emu_session as session:
         session.set_expected_responses(expected_responses)
@@ -105,7 +109,11 @@ def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across
     supported versions.
     """
-    if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
+    model = emulator.client.features.model
+    firmware_version = emulator.client.version
+    protocol_version = emulator.client.protocol_version
+
+    if model == "T" and firmware_version < (2, 3, 0):
         expected_responses = [
             messages.PassphraseRequest,
             messages.Deprecated_PassphraseStateRequest,
@@ -113,10 +121,8 @@ def test_init_device(emulator: Emulator):
             messages.Features,
             messages.Address,
         ]
-    elif (
-        emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
-    ) or (
-        emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
+    elif (model == "T" and firmware_version < (2, 3, 3)) or (
+        model == "1" and firmware_version < (1, 9, 3)
     ):
         expected_responses = [
             messages.PassphraseRequest,
@@ -124,11 +130,17 @@ def test_init_device(emulator: Emulator):
             messages.Features,
             messages.Address,
         ]
-    else:
+    elif protocol_version is ProtocolVersion.PROTOCOL_V1:
         expected_responses = [
             messages.PassphraseRequest,
             messages.ButtonRequest,
             messages.ButtonRequest,
+            messages.Address,
+            messages.Features,
+            messages.Address,
+        ]
+    else:
+        expected_responses = [
             messages.Address,
             messages.Features,
             messages.Address,
@@ -141,8 +153,10 @@ def test_init_device(emulator: Emulator):
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
         # in TT < 2.3.0 session_id will only be available after PassphraseStateRequest
         session_id = session.id
-        if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if protocol_version == ProtocolVersion.PROTOCOL_V1:
             session.call(messages.Initialize(session_id=session_id))
+        else:
+            session.call(messages.GetFeatures())
         btc.get_address(
             session,
             "Testnet",

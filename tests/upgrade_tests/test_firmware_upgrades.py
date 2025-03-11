@@ -253,7 +253,7 @@ def test_upgrade_reset_skip_backup(gen: str, tag: str):
 
     with EmulatorWrapper(gen, tag) as emu:
         device.setup(
-            emu.client.get_session(),
+            emu.client.get_seedless_session(),
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
@@ -286,7 +286,7 @@ def test_upgrade_reset_no_backup(gen: str, tag: str):
 
     with EmulatorWrapper(gen, tag) as emu:
         device.setup(
-            emu.client.get_session(),
+            emu.client.get_seedless_session(),
             strength=STRENGTH,
             passphrase_protection=False,
             pin_protection=False,
@@ -317,7 +317,9 @@ def test_upgrade_shamir_recovery(gen: str, tag: Optional[str]):
         emu.client.watch_layout(True)
         debug = device_handler.debuglink()
 
-        device_handler.run_with_session(device.recover, pin_protection=False)
+        device_handler.run_with_session(
+            device.recover, seedless=True, pin_protection=False
+        )
 
         recovery_old.confirm_recovery(debug)
         recovery_old.select_number_of_words(debug, version_from_tag(tag))
