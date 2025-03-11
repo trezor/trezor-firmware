@@ -193,7 +193,7 @@ static inline void mpu_enable(void) {
 }
 
 static void mpu_init_fixed_regions(void) {
-  // Regions #0 to #5 are fixed for all targets
+  // Regions #0 to #4 are fixed for all targets
 
   // clang-format off
 #if defined(BOARDLOADER)
@@ -240,7 +240,7 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
 #endif
 
-  // Regions #6 and #7 are banked
+  // Regions #5 to #7 are banked
 
   DIS_REGION( 5 );
   DIS_REGION( 6 );
@@ -389,7 +389,8 @@ mpu_mode_t mpu_reconfig(mpu_mode_t mode) {
       SET_REGION( 6, BOOTARGS_START,           BOOTARGS_SIZE,      SRAM,        YES,    NO );
       break;
     default:
-      DIS_REGION( 6 );
+      // By default, the kernel needs to have the same access to assets as the app
+      SET_REGION( 6, ASSETS_START,             ASSETS_MAXSIZE,     FLASH_DATA,   NO,    NO );
       break;
   }
   // clang-format on
