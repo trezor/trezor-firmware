@@ -14,8 +14,8 @@ use crate::{
 };
 
 use super::super::{
-    super::fonts, theme, ButtonDetails, ButtonLayout, CancelConfirmMsg, ChangingTextLine,
-    ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
+    super::fonts, theme, title::Title, ButtonDetails, ButtonLayout, CancelConfirmMsg,
+    ChangingTextLine, ChoiceControls, ChoiceFactory, ChoiceItem, ChoiceMsg, ChoicePage,
 };
 
 #[derive(Clone, Copy)]
@@ -136,9 +136,9 @@ impl ChoiceFactory for ChoiceFactoryPIN {
 /// Component for entering a PIN.
 pub struct PinEntry<'a> {
     choice_page: ChoicePage<ChoiceFactoryPIN, PinAction>,
-    header_line: Child<ChangingTextLine>,
+    header_line: Child<Title>,
     pin_line: Child<ChangingTextLine>,
-    prompt: TString<'a>,
+    prompt: TString<'static>,
     subprompt: TString<'a>,
     /// Whether we already show the "real" prompt (not the warning).
     showing_real_prompt: bool,
@@ -149,7 +149,7 @@ pub struct PinEntry<'a> {
 }
 
 impl<'a> PinEntry<'a> {
-    pub fn new(prompt: TString<'a>, subprompt: TString<'a>) -> Self {
+    pub fn new(prompt: TString<'static>, subprompt: TString<'a>) -> Self {
         // When subprompt is not empty, it means that the user has entered bad PIN
         // before. In this case we show the warning together with the subprompt
         // at the beginning. (WRONG PIN will be replaced by real prompt after
@@ -172,12 +172,7 @@ impl<'a> PinEntry<'a> {
             choice_page: ChoicePage::new(ChoiceFactoryPIN)
                 .with_initial_page_counter(get_random_digit_position())
                 .with_controls(ChoiceControls::Carousel),
-            header_line: Child::new(
-                header_line_content
-                    .map(|s| ChangingTextLine::center_bold(s, MAX_PIN_LENGTH))
-                    .without_ellipsis()
-                    .with_text_at_the_top(),
-            ),
+            header_line: Child::new(Title::new(header_line_content).with_centered()),
             pin_line: Child::new(pin_line),
             subprompt,
             prompt,
@@ -236,7 +231,7 @@ impl<'a> PinEntry<'a> {
     /// Showing the real prompt instead of WRONG PIN
     fn show_prompt(&mut self, ctx: &mut EventCtx) {
         self.header_line.mutate(ctx, |ctx, header_line| {
-            self.prompt.map(|s| header_line.update_text(s));
+            header_line.set_text(ctx, self.prompt);
             header_line.request_complete_repaint(ctx);
         });
     }
@@ -258,7 +253,8 @@ impl Component for PinEntry<'_> {
     type Msg = CancelConfirmMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
-        let header_height = self.header_line.inner().needed_height();
+        // same adjustment of height as in ChangingTextLine::needed_height()
+        let header_height = Title::height() + 2;
         let (header_area, rest) = bounds.split_top(header_height);
         let pin_height = self.pin_line.inner().needed_height();
         let (pin_area, choice_area) = rest.split_top(pin_height);
@@ -269,6 +265,9 @@ impl Component for PinEntry<'_> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.header_line.mutate(ctx, |ctx, title| {
+            title.event(ctx, event);
+        });
         match event {
             // Timeout for showing the last digit.
             Event::Timer(_) if self.timeout_timer.expire(event) => {

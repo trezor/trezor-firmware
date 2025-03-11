@@ -51,14 +51,17 @@ impl Title {
         }
     }
 
+    pub fn height() -> i16 {
+        theme::FONT_HEADER.text_height()
+    }
+
     /// Display title/header at the top left of the given area.
     pub fn render_header_left<'s>(
         target: &mut impl Renderer<'s>,
         title: &TString<'static>,
         area: Rect,
     ) {
-        let text_height = theme::FONT_HEADER.text_height();
-        let title_baseline = area.top_left() + Offset::y(text_height - 1);
+        let title_baseline = area.top_left() + Offset::y(Self::height() - 1);
         title.map(|s| {
             shape::Text::new(title_baseline, s, theme::FONT_HEADER)
                 .with_fg(theme::FG)
@@ -72,8 +75,7 @@ impl Title {
         title: &TString<'static>,
         area: Rect,
     ) {
-        let text_height = theme::FONT_HEADER.text_height();
-        let title_baseline = area.top_center() + Offset::y(text_height - 1);
+        let title_baseline = area.top_center() + Offset::y(Self::height() - 1);
         title.map(|s| {
             shape::Text::new(title_baseline, s, theme::FONT_HEADER)
                 .with_align(Alignment::Center)
