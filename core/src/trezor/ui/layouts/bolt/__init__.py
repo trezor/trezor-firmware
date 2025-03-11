@@ -1407,14 +1407,23 @@ def confirm_set_new_pin(
     )
 
 
-def confirm_firmware_update(description: str, fingerprint: str) -> Awaitable[None]:
-    return raise_if_not_confirmed(
-        trezorui_api.confirm_firmware_update(
-            description=description, fingerprint=fingerprint
-        ),
-        "firmware_update",
-        BR_CODE_OTHER,
+async def confirm_firmware_update(description: str, fingerprint: str) -> None:
+    main = trezorui_api.confirm_value(
+        title=TR.firmware_update__title,
+        description=description,
+        value="",
+        verb=TR.buttons__install,
+        info=True,
     )
+    info = trezorui_api.confirm_value(
+        title=TR.firmware_update__title_fingerprint,
+        value=fingerprint,
+        description=None,
+        chunkify=True,
+        info=False,
+        cancel=True,
+    )
+    await with_info(main, info, "firmware_update", BR_CODE_OTHER)
 
 
 async def set_brightness(current: int | None = None) -> None:
