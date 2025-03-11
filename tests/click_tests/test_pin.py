@@ -103,8 +103,8 @@ def prepare(
         # Set new PIN
         device_handler.run(device.change_pin)  # type: ignore
         assert (
-            TR.pin__turn_on in debug.read_layout().text_content()
-            or TR.pin__info in debug.read_layout().text_content()
+            TR.pin__turn_on(debug.layout_type) in debug.read_layout().text_content()
+            or TR.pin__info(debug.layout_type) in debug.read_layout().text_content()
         )
         if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
             go_next(debug)
@@ -117,7 +117,7 @@ def prepare(
         # Change PIN
         device_handler.run(device.change_pin)  # type: ignore
         _input_see_confirm(debug, old_pin)
-        assert TR.pin__change in debug.read_layout().text_content()
+        assert TR.pin__change(debug.layout_type) in debug.read_layout().text_content()
         go_next(debug)
         _input_see_confirm(debug, old_pin)
     elif situation == Situation.WIPE_CODE_SETUP:
@@ -125,7 +125,10 @@ def prepare(
         device_handler.run(device.change_wipe_code)  # type: ignore
         if old_pin:
             _input_see_confirm(debug, old_pin)
-        assert TR.wipe_code__turn_on in debug.read_layout().text_content()
+        assert (
+            TR.wipe_code__turn_on(debug.layout_type)
+            in debug.read_layout().text_content()
+        )
         go_next(debug)
         if debug.layout_type is LayoutType.Caesar:
             go_next(debug)

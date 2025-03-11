@@ -20,6 +20,7 @@ FONTS_DIR = TRANSLATIONS_DIR / "fonts"
 ORDER_FILE = TRANSLATIONS_DIR / "order.json"
 
 LANGUAGES = [file.stem for file in TRANSLATIONS_DIR.glob("??.json")]
+LAYOUTS = ["Bolt", "Caesar", "Delizia", "Eckhart"]
 
 _CURRENT_TRANSLATION = threading.local()
 
@@ -94,13 +95,18 @@ class Translation:
     def translations(self) -> dict[str, str]:
         return self.lang_json["translations"]
 
-    def _translate_raw(self, key: str, _stacklevel: int = 0) -> str:
+    def _translate_raw(self, key: str, layout_type: str, _stacklevel: int = 0) -> str:
+        assert layout_type in LAYOUTS
         tr = self.translations.get(key)
+        if type(tr) is dict:
+            return tr[layout_type]
+        elif type(tr) is str:
+            return tr
         if tr is not None:
             return tr
         if self.lang != "en":
             # check if the key exists in English first
-            retval = TRANSLATIONS["en"]._translate_raw(key)
+            retval = TRANSLATIONS["en"]._translate_raw(key, layout_type)
             # if not, a KeyError was raised so we fall through.
             # otherwise, warn that the key is untranslated in target language.
             warnings.warn(
@@ -110,12 +116,12 @@ class Translation:
             return retval
         raise KeyError(key)
 
-    def translate(self, key: str, _stacklevel: int = 0) -> str:
-        tr = self._translate_raw(key, _stacklevel=_stacklevel + 1)
+    def translate(self, key: str, layout_type: str, _stacklevel: int = 0) -> str:
+        tr = self._translate_raw(key, layout_type, _stacklevel=_stacklevel + 1)
         return tr.replace("\xa0", " ").strip()
 
-    def as_regexp(self, key: str, _stacklevel: int = 0) -> re.Pattern:
-        tr = self.translate(key, _stacklevel=_stacklevel + 1)
+    def as_regexp(self, key: str, layout_type: str, _stacklevel: int = 0) -> re.Pattern:
+        tr = self.translate(key, layout_type, _stacklevel=_stacklevel + 1)
         re_safe = re.escape(tr)
         return re.compile(self.FORMAT_STR_RE.sub(r".*?", re_safe))
 
@@ -124,16 +130,27 @@ TRANSLATIONS = {lang: Translation(lang) for lang in LANGUAGES}
 _CURRENT_TRANSLATION.TR = TRANSLATIONS["en"]
 
 
-def translate(key: str, _stacklevel: int = 0) -> str:
-    return _CURRENT_TRANSLATION.TR.translate(key, _stacklevel=_stacklevel + 1)
+def translate(key: str, layout_type: str, _stacklevel: int = 0) -> str:
+    return _CURRENT_TRANSLATION.TR.translate(
+        key, layout_type, _stacklevel=_stacklevel + 1
+    )
 
 
-def regexp(key: str) -> re.Pattern:
-    return _CURRENT_TRANSLATION.TR.as_regexp(key, _stacklevel=1)
+def regexp(
+    key: str,
+    layout_type: str,
+) -> re.Pattern:
+    return _CURRENT_TRANSLATION.TR.as_regexp(key, layout_type, _stacklevel=1)
 
 
-def __getattr__(key: str) -> str:
-    try:
-        return translate(key, _stacklevel=1)
-    except KeyError as e:
-        raise AttributeError(f"Translation key '{key}' not found") from e
+def __getattr__(self, key: str):
+    def translation_function(layout_type):
+        assert layout_type in LAYOUTS
+        try:
+            return translate(key, layout_type, _stacklevel=1)
+        except KeyError as e:
+            raise AttributeError(
+                f"Translation key '{key}' for layout '{layout_type}' not found"
+            ) from e
+
+    return translation_function

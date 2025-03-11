@@ -59,7 +59,7 @@ def test_sd_protect_unlock(client: Client):
         client.debug.input("1234")
 
         yield  # do you really want to enable SD protection
-        assert TR.sd_card__enable in layout().text_content()
+        assert TR.sd_card__enable(client.debug.layout_type) in layout().text_content()
         client.debug.press_yes()
 
         yield  # enter current PIN
@@ -67,7 +67,7 @@ def test_sd_protect_unlock(client: Client):
         client.debug.input("1234")
 
         yield  # you have successfully enabled SD protection
-        assert TR.sd_card__enabled in layout().text_content()
+        assert TR.sd_card__enabled(client.debug.layout_type) in layout().text_content()
         client.debug.press_yes()
 
     with client:
@@ -77,7 +77,7 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin():
         yield  # do you really want to change PIN?
-        assert layout().title() == TR.pin__title_settings
+        assert layout().title() == TR.pin__title_settings(client.debug.layout_type)
         client.debug.press_yes()
 
         yield  # enter current PIN
@@ -93,7 +93,7 @@ def test_sd_protect_unlock(client: Client):
         client.debug.input("1234")
 
         yield  # Pin change successful
-        assert TR.pin__changed in layout().text_content()
+        assert TR.pin__changed(client.debug.layout_type) in layout().text_content()
         client.debug.press_yes()
 
     with client:
@@ -105,7 +105,7 @@ def test_sd_protect_unlock(client: Client):
 
     def input_flow_change_pin_format():
         yield  # do you really want to change PIN?
-        assert layout().title() == TR.pin__title_settings
+        assert layout().title() == TR.pin__title_settings(client.debug.layout_type)
         client.debug.press_yes()
 
         yield  # enter current PIN
@@ -114,8 +114,10 @@ def test_sd_protect_unlock(client: Client):
 
         yield  # SD card problem
         assert (
-            TR.sd_card__unplug_and_insert_correct in layout().text_content()
-            or TR.sd_card__insert_correct_card in layout().text_content()
+            TR.sd_card__unplug_and_insert_correct(client.debug.layout_type)
+            in layout().text_content()
+            or TR.sd_card__insert_correct_card(client.debug.layout_type)
+            in layout().text_content()
         )
         client.debug.press_no()  # close
 

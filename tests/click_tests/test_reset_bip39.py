@@ -61,7 +61,7 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
 
     # confirm backup intro
     # parametrized string
-    assert TR.regexp("backup__info_single_share_backup").match(
+    assert TR.regexp("backup__info_single_share_backup", debug.layout_type).match(
         debug.read_layout().text_content()
     )
     reset.confirm_read(debug)

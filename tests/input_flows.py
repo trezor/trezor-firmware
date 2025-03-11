@@ -507,9 +507,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         expected_title = f"MULTISIG XPUB #{xpub_num + 1}"
         assert expected_title in title
         if self.index == xpub_num:
-            assert TR.address__title_yours in title
+            assert TR.address__title_yours(self.client.layout_type) in title
         else:
-            assert TR.address__title_cosigner in title
+            assert TR.address__title_cosigner(self.client.layout_type) in title
 
     def input_flow_bolt(self) -> BRGeneratorType:
         yield  # multisig address warning
@@ -517,7 +517,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.read_layout()
-        assert TR.address__title_receive_address in layout.title()
+        assert (
+            TR.address__title_receive_address(self.client.layout_type) in layout.title()
+        )
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
@@ -528,7 +530,10 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         layout = self.debug.read_layout()
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
-        assert TR.address_details__derivation_path in layout.screen_content()
+        assert (
+            TR.address_details__derivation_path(self.client.layout_type)
+            in layout.screen_content()
+        )
 
         # Three xpub pages with the same testing logic
         for xpub_num in range(3):
@@ -552,7 +557,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.read_layout()
-        assert TR.address__title_receive_address in layout.title()
+        assert (
+            TR.address__title_receive_address(self.client.layout_type) in layout.title()
+        )
         assert "(MULTISIG)" in layout.title()
         assert layout.text_content().replace(" ", "") == self.address
 
@@ -596,7 +603,9 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
         yield  # show address
         layout = self.debug.read_layout()
-        assert TR.address__title_receive_address in layout.title()
+        assert (
+            TR.address__title_receive_address(self.client.layout_type) in layout.title()
+        )
         assert layout.text_content().replace(" ", "") == self.address
 
         self.debug.click(buttons.CORNER_BUTTON)
@@ -613,7 +622,10 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
-        assert TR.address_details__derivation_path in layout.screen_content()
+        assert (
+            TR.address_details__derivation_path(self.client.layout_type)
+            in layout.screen_content()
+        )
 
         # three xpub pages with the same testing logic
         for _xpub_num in range(3):
@@ -714,7 +726,10 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
             layout = self.debug.read_layout()
 
-        assert layout.title() in (TR.address__public_key, "XPUB")
+        assert layout.title() in (
+            TR.address__public_key(self.client.layout_type),
+            "XPUB",
+        )
 
         self.debug.click(buttons.CORNER_BUTTON)
         assert "VerticalMenu" in self.all_components()
@@ -729,7 +744,10 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.click(buttons.VERTICAL_MENU[1])
         layout = self.debug.synchronize_at("AddressDetails")
         # address details
-        assert TR.address_details__derivation_path in layout.screen_content()
+        assert (
+            TR.address_details__derivation_path(self.client.layout_type)
+            in layout.screen_content()
+        )
 
         self.debug.click(buttons.CORNER_BUTTON)
         layout = self.debug.synchronize_at("VerticalMenu")
@@ -947,9 +965,9 @@ class InputFlowSignTxInformation(InputFlowBase):
         super().__init__(client)
 
     def assert_content(self, content: str, title_path: str) -> None:
-        assert TR.translate(title_path) in content
+        assert TR.translate(title_path, self.client.layout_type) in content
         assert "Legacy #6" in content
-        assert TR.confirm_total__fee_rate in content
+        assert TR.confirm_total__fee_rate(self.client.layout_type) in content
         assert "71.56 sat" in content
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -975,9 +993,9 @@ class InputFlowSignTxInformationMixed(InputFlowBase):
         super().__init__(client)
 
     def assert_content(self, content: str, title_path: str) -> None:
-        assert TR.translate(title_path) in content
-        assert TR.bitcoin__multiple_accounts in content
-        assert TR.confirm_total__fee_rate in content
+        assert TR.translate(title_path, self.client.layout_type) in content
+        assert TR.bitcoin__multiple_accounts(self.client.layout_type) in content
+        assert TR.confirm_total__fee_rate(self.client.layout_type) in content
         assert "18.33 sat" in content
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -1137,7 +1155,10 @@ class InputFlowLockTimeBlockHeight(InputFlowBase):
 
     def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
         layout_text = get_text_possible_pagination(debug, br)
-        assert TR.bitcoin__locktime_set_to_blockheight in layout_text
+        assert (
+            TR.bitcoin__locktime_set_to_blockheight(self.client.layout_type)
+            in layout_text
+        )
         assert self.block_height in layout_text
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -1161,7 +1182,7 @@ class InputFlowLockTimeDatetime(InputFlowBase):
 
     def assert_func(self, debug: DebugLink, br: messages.ButtonRequest) -> None:
         layout_text = get_text_possible_pagination(debug, br)
-        assert TR.bitcoin__locktime_set_to in layout_text
+        assert TR.bitcoin__locktime_set_to(self.client.layout_type) in layout_text
         assert self.lock_time_str.replace(" ", "") in layout_text.replace(" ", "")
 
     def input_flow_bolt(self) -> BRGeneratorType:
@@ -2309,26 +2330,35 @@ class InputFlowResetSkipBackup(InputFlowBase):
     def input_flow_bolt(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        assert TR.backup__new_wallet_successfully_created in self.text_content()
+        assert (
+            TR.backup__new_wallet_successfully_created(self.client.layout_type)
+            in self.text_content()
+        )
         self.debug.press_no()
         yield  # Confirm skip backup
-        assert TR.backup__want_to_skip in self.text_content()
+        assert TR.backup__want_to_skip(self.client.layout_type) in self.text_content()
         self.debug.press_no()
 
     def input_flow_caesar(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        assert TR.backup__new_wallet_created in self.text_content()
+        assert (
+            TR.backup__new_wallet_created(self.client.layout_type)
+            in self.text_content()
+        )
         self.debug.press_right()
         self.debug.press_no()
         yield  # Confirm skip backup
-        assert TR.backup__want_to_skip in self.text_content()
+        assert TR.backup__want_to_skip(self.client.layout_type) in self.text_content()
         self.debug.press_no()
 
     def input_flow_delizia(self) -> BRGeneratorType:
         yield from self.BAK.confirm_new_wallet()
         yield  # Skip Backup
-        assert TR.backup__new_wallet_created in self.text_content()
+        assert (
+            TR.backup__new_wallet_created(self.client.layout_type)
+            in self.text_content()
+        )
         self.debug.swipe_up()
         yield
         self.debug.click(buttons.CORNER_BUTTON)
@@ -2368,8 +2398,8 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             text = layout.footer().lower()
             # hi priority warning
             hi_prio = (
-                TR.words__cancel_and_exit,
-                TR.send__cancel_sign,
+                TR.words__cancel_and_exit(self.client.layout_type),
+                TR.send__cancel_sign(self.client.layout_type),
             )
             if any(needle.lower() in text for needle in hi_prio):
                 self.debug.click(buttons.CORNER_BUTTON)

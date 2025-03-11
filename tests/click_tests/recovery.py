@@ -53,7 +53,7 @@ def enter_word(
 
 def confirm_recovery(debug: "DebugLink", title: str = "recovery__title") -> None:
     layout = debug.read_layout()
-    assert TR.translate(title) == layout.title()
+    assert TR.translate(title, debug.layout_type) == layout.title()
     if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.Delizia:
@@ -68,7 +68,9 @@ def cancel_select_number_of_words(
     unlock_repeated_backup=False,
 ) -> None:
     if debug.layout_type is LayoutType.Bolt:
-        assert debug.read_layout().text_content() == TR.recovery__num_of_words
+        assert debug.read_layout().text_content() == TR.recovery__num_of_words(
+            debug.layout_type
+        )
         # click the button from ValuePad
         if unlock_repeated_backup:
             coords = buttons.grid34(0, 2)
@@ -78,7 +80,7 @@ def cancel_select_number_of_words(
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         layout = debug.read_layout()
-        assert layout.title() == TR.word_count__title
+        assert layout.title() == TR.word_count__title(debug.layout_type)
         # navigate to the number and confirm it
         debug.press_left()
     elif debug.layout_type is LayoutType.Delizia:
@@ -98,7 +100,7 @@ def select_number_of_words(
     unlock_repeated_backup=False,
 ) -> None:
     layout = debug.read_layout()
-    assert TR.recovery__num_of_words in layout.text_content()
+    assert TR.recovery__num_of_words(debug.layout_type) in layout.text_content()
 
     def select_bolt() -> "LayoutContent":
         # click the button from ValuePad
@@ -150,7 +152,7 @@ def select_number_of_words(
     elif debug.layout_type is LayoutType.Caesar:
         debug.press_right()
         layout = debug.read_layout()
-        assert layout.title() == TR.word_count__title
+        assert layout.title() == TR.word_count__title(debug.layout_type)
         layout = select_caesar()
     elif debug.layout_type is LayoutType.Delizia:
         layout = select_delizia()
@@ -159,24 +161,28 @@ def select_number_of_words(
 
     if unlock_repeated_backup:
         if debug.layout_type is LayoutType.Caesar:
-            assert TR.recovery__enter_backup in layout.text_content()
+            assert TR.recovery__enter_backup(debug.layout_type) in layout.text_content()
         else:
             assert (
-                TR.recovery__only_first_n_letters in layout.text_content()
-                or TR.recovery__enter_each_word in layout.text_content()
+                TR.recovery__only_first_n_letters(debug.layout_type)
+                in layout.text_content()
+                or TR.recovery__enter_each_word(debug.layout_type)
+                in layout.text_content()
             )
     elif num_of_words in (20, 33):
         assert (
-            TR.recovery__enter_backup in layout.text_content()
-            or TR.recovery__enter_any_share in layout.text_content()
-            or TR.recovery__only_first_n_letters in layout.text_content()
-            or TR.recovery__enter_each_word in layout.text_content()
+            TR.recovery__enter_backup(debug.layout_type) in layout.text_content()
+            or TR.recovery__enter_any_share(debug.layout_type) in layout.text_content()
+            or TR.recovery__only_first_n_letters(debug.layout_type)
+            in layout.text_content()
+            or TR.recovery__enter_each_word(debug.layout_type) in layout.text_content()
         )
     else:  # BIP-39
         assert (
-            TR.recovery__enter_backup in layout.text_content()
-            or TR.recovery__only_first_n_letters in layout.text_content()
-            or TR.recovery__enter_each_word in layout.text_content()
+            TR.recovery__enter_backup(debug.layout_type) in layout.text_content()
+            or TR.recovery__only_first_n_letters(debug.layout_type)
+            in layout.text_content()
+            or TR.recovery__enter_each_word(debug.layout_type) in layout.text_content()
         )
 
 
@@ -187,7 +193,9 @@ def enter_share(
     before_title: str = "recovery__title_recover",
 ) -> "LayoutContent":
     if debug.layout_type is LayoutType.Caesar:
-        assert TR.translate(before_title) in debug.read_layout().title()
+        assert (
+            TR.translate(before_title, debug.layout_type) in debug.read_layout().title()
+        )
         layout = debug.read_layout()
         for _ in range(layout.page_count()):
             debug.press_right()
@@ -196,7 +204,9 @@ def enter_share(
         debug.swipe_up()
         layout = debug.read_layout()
     else:
-        assert TR.translate(before_title) in debug.read_layout().title()
+        assert (
+            TR.translate(before_title, debug.layout_type) in debug.read_layout().title()
+        )
         debug.click(buttons.OK)
         layout = debug.read_layout()
 
@@ -216,11 +226,15 @@ def enter_shares(
     after_layout_text: str = "recovery__wallet_recovered",
 ) -> None:
     assert (
-        TR.recovery__enter_backup in debug.read_layout().text_content()
-        or TR.recovery__enter_any_share in debug.read_layout().text_content()
-        or TR.recovery__only_first_n_letters in debug.read_layout().text_content()
-        or TR.recovery__enter_each_word in debug.read_layout().text_content()
-        or TR.translate(text) in debug.read_layout().text_content()
+        TR.recovery__enter_backup(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.recovery__enter_any_share(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.recovery__only_first_n_letters(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.recovery__enter_each_word(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.translate(text, debug.layout_type) in debug.read_layout().text_content()
     )
     for index, share in enumerate(shares):
         enter_share(
@@ -228,14 +242,20 @@ def enter_shares(
         )
         if index < len(shares) - 1:
             # FIXME: when ui-t3t1 done for shamir, we want to check the template below
-            assert TR.translate(enter_share_before_title) in debug.read_layout().title()
+            assert (
+                TR.translate(enter_share_before_title, debug.layout_type)
+                in debug.read_layout().title()
+            )
             # TR.assert_in(
             #     debug.read_layout().text_content(),
             #     "recovery__x_of_y_entered_template",
             #     template=(index + 1, len(shares)),
             # )
 
-    assert TR.translate(after_layout_text) in debug.read_layout().text_content()
+    assert (
+        TR.translate(after_layout_text, debug.layout_type)
+        in debug.read_layout().text_content()
+    )
 
 
 def enter_seed(
@@ -250,7 +270,10 @@ def enter_seed(
     for word in seed_words:
         enter_word(debug, word, is_slip39=is_slip39)
 
-    assert TR.translate(after_layout_text) in debug.read_layout().text_content()
+    assert (
+        TR.translate(after_layout_text, debug.layout_type)
+        in debug.read_layout().text_content()
+    )
 
 
 def enter_seed_previous_correct(
@@ -258,7 +281,7 @@ def enter_seed_previous_correct(
 ) -> None:
     prepare_enter_seed(debug)
 
-    DELETE_BTNS = [TR.translate(btn) for btn in DELETE_BTN_TEXTS]
+    DELETE_BTNS = [TR.translate(btn, debug.layout_type) for btn in DELETE_BTN_TEXTS]
 
     i = 0
     go_back = False
@@ -312,10 +335,14 @@ def prepare_enter_seed(
     debug: "DebugLink", layout_text: str = "recovery__enter_backup"
 ) -> None:
     assert (
-        TR.recovery__enter_backup in debug.read_layout().text_content()
-        or TR.recovery__only_first_n_letters in debug.read_layout().text_content()
-        or TR.recovery__enter_each_word in debug.read_layout().text_content()
-        or TR.translate(layout_text) in debug.read_layout().text_content()
+        TR.recovery__enter_backup(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.recovery__only_first_n_letters(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.recovery__enter_each_word(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.translate(layout_text, debug.layout_type)
+        in debug.read_layout().text_content()
     )
     if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
@@ -337,8 +364,10 @@ def finalize(debug: "DebugLink") -> None:
 
 
 def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
-    title = TR.translate(f"recovery__title_{recovery_type}")
-    cancel_title = TR.translate(f"recovery__title_cancel_{recovery_type}")
+    title = TR.translate(f"recovery__title_{recovery_type}", debug.layout_type)
+    cancel_title = TR.translate(
+        f"recovery__title_cancel_{recovery_type}", debug.layout_type
+    )
 
     layout = debug.read_layout()
     assert title in layout.title()
@@ -359,7 +388,8 @@ def cancel_recovery(debug: "DebugLink", recovery_type: str = "dry_run") -> None:
         debug.click(buttons.CORNER_BUTTON)
         layout = debug.read_layout()
         assert (
-            TR.translate(f"recovery__cancel_{recovery_type}") in layout.text_content()
+            TR.translate(f"recovery__cancel_{recovery_type}", debug.layout_type)
+            in layout.text_content()
         )
         debug.click(buttons.VERTICAL_MENU[0])
     else:

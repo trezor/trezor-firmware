@@ -82,15 +82,15 @@ def navigate_to_action_and_press(
     """Navigate to the button with certain action and press it"""
     # Orient
     try:
-        _get_action_index(wanted_action, all_actions)
+        _get_action_index(wanted_action, all_actions, debug.layout_type)
     except ValueError:
         raise ValueError(f"Action {wanted_action} is not supported in {all_actions}")
 
     # Navigate
     layout = debug.read_layout()
     current_action = layout.get_middle_choice()
-    current_index = _get_action_index(current_action, all_actions)
-    wanted_index = _get_action_index(wanted_action, all_actions)
+    current_index = _get_action_index(current_action, all_actions, debug.layout_type)
+    wanted_index = _get_action_index(wanted_action, all_actions, debug.layout_type)
 
     if not is_carousel:
         steps = wanted_index - current_index
@@ -126,7 +126,9 @@ def unlock_gesture(debug: "DebugLink") -> LayoutContent:
     return debug.read_layout()
 
 
-def _get_action_index(wanted_action: str, all_actions: AllActionsType) -> int:
+def _get_action_index(
+    wanted_action: str, all_actions: AllActionsType, layout_type: LayoutType
+) -> int:
     """Get index of the action in the list of all actions"""
     if wanted_action in all_actions:
         return all_actions.index(wanted_action)
@@ -135,7 +137,7 @@ def _get_action_index(wanted_action: str, all_actions: AllActionsType) -> int:
             action = (action,)
         for subaction in action:
             try:
-                tr = TR.translate(subaction)
+                tr = TR.translate(subaction, layout_type)
             except KeyError:
                 continue
             if tr == wanted_action:

@@ -13,7 +13,9 @@ if TYPE_CHECKING:
 
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
-    assert debug.read_layout().title() == TR.reset__title_create_wallet
+    assert debug.read_layout().title() == TR.reset__title_create_wallet(
+        debug.layout_type
+    )
     if debug.layout_type is LayoutType.Bolt:
         debug.click(buttons.OK)
     elif debug.layout_type is LayoutType.Delizia:
@@ -23,8 +25,10 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
         debug.press_right()
         debug.press_right()
     assert (
-        TR.backup__new_wallet_successfully_created in debug.read_layout().text_content()
-        or TR.backup__new_wallet_created in debug.read_layout().text_content()
+        TR.backup__new_wallet_successfully_created(debug.layout_type)
+        in debug.read_layout().text_content()
+        or TR.backup__new_wallet_created(debug.layout_type)
+        in debug.read_layout().text_content()
     )
     if debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
@@ -74,10 +78,9 @@ def set_selection(debug: "DebugLink", button: tuple[int, int], diff: int) -> Non
             debug.swipe_up()
     elif debug.layout_type is LayoutType.Caesar:
         layout = debug.read_layout()
-        if (
-            layout.title()
-            in TR.reset__title_number_of_shares + TR.words__title_threshold
-        ):
+        if layout.title() in TR.reset__title_number_of_shares(
+            debug.layout_type
+        ) + TR.words__title_threshold(debug.layout_type):
             # Special info screens
             debug.press_right()
             layout = debug.read_layout()
@@ -134,7 +137,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
 
     layout = debug.read_layout()
     if debug.layout_type is LayoutType.Bolt:
-        assert TR.regexp("reset__select_word_x_of_y_template").match(
+        assert TR.regexp("reset__select_word_x_of_y_template", debug.layout_type).match(
             layout.text_content()
         )
         for _ in range(3):
@@ -152,7 +155,9 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             debug.click(buttons.RESET_WORD_CHECK[button_pos])
             layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Delizia:
-        assert TR.regexp("reset__select_word_x_of_y_template").match(layout.subtitle())
+        assert TR.regexp("reset__select_word_x_of_y_template", debug.layout_type).match(
+            layout.subtitle()
+        )
         for _ in range(3):
             # "Select word 3 of 20"
             #              ^
@@ -168,7 +173,7 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             debug.click(buttons.VERTICAL_MENU[button_pos])
             layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Caesar:
-        assert TR.reset__select_correct_word in layout.text_content()
+        assert TR.reset__select_correct_word(debug.layout_type) in layout.text_content()
         debug.press_right()
         layout = debug.read_layout()
         for _ in range(3):
