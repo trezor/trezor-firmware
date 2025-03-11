@@ -43,7 +43,7 @@ impl Menu {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
 
-        let turn_off = IconText::new("TURN OFF", Icon::new(FIRE24));
+        let turn_off = IconText::new("POWER OFF", Icon::new(FIRE24));
 
         #[cfg(not(feature = "powerctl"))]
         let turn_off_menu_item = false;
