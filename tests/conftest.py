@@ -333,6 +333,7 @@ def client(
             label="test",
             needs_backup=setup_params["needs_backup"],  # type: ignore
             no_backup=setup_params["no_backup"],  # type: ignore
+            _skip_init_device=True,
         )
 
         if request.node.get_closest_marker("experimental"):
@@ -341,7 +342,8 @@ def client(
         if use_passphrase and isinstance(setup_params["passphrase"], str):
             _raw_client.use_passphrase(setup_params["passphrase"])
 
-        _raw_client.clear_session()
+        _raw_client.lock(_refresh_features=False)
+        _raw_client.init_device(new_session=True)
 
     with ui_tests.screen_recording(_raw_client, request):
         yield _raw_client

@@ -1309,6 +1309,7 @@ def load_device(
     skip_checksum: bool = False,
     needs_backup: bool = False,
     no_backup: bool = False,
+    _skip_init_device: bool = False,
 ) -> None:
     if isinstance(mnemonic, str):
         mnemonic = [mnemonic]
@@ -1332,7 +1333,8 @@ def load_device(
         ),
         expect=messages.Success,
     )
-    client.init_device()
+    if not _skip_init_device:
+        client.init_device()
 
 
 # keep the old name for compatibility
