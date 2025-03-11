@@ -95,9 +95,13 @@ class LayoutType(Enum):
             return cls.Eckhart
         if model in (models.T1B1,):
             return cls.T1
-        if model in (models.T3W1,):
-            return cls.Eckhart
         raise ValueError(f"Unknown model: {model}")
+
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return f"LayoutType.{self.name}"
 
 
 class UnstructuredJSONReader:
