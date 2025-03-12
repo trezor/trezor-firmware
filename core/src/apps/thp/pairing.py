@@ -93,8 +93,10 @@ async def handle_pairing_request(
     if not ThpPairingRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
 
-    ctx.host_name = message.host_name or ""
+    if not message.host_name:
+        raise Exception("Missing host_name.")
 
+    ctx.host_name = message.host_name
     await ctx.show_pairing_dialogue()
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
     select_method_msg = await ctx.read(
@@ -384,6 +386,27 @@ async def _handle_credential_request(
     autoconnect: bool = False
     if message.autoconnect is not None:
         autoconnect = message.autoconnect
+
+    if autoconnect:
+        # Cannot ask for autoconnect=True credential directly after pairing
+        if ctx.channel_ctx.credential is None:
+            raise Exception("Cannot ask for autoconnect credential after pairing!")
+        from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
+
+        from .credential_manager import validate_credential
+
+        host_static_pubkey = ctx.channel_ctx.channel_cache.get(
+            CHANNEL_HOST_STATIC_PUBKEY
+        )
+
+        if not host_static_pubkey or not validate_credential(
+            credential=ctx.channel_ctx.credential, host_static_pubkey=host_static_pubkey
+        ):
+            raise Exception(
+                "Cannot ask for autoconnect credential without a valid credential!"
+            )
+
+        await ctx.show_autoconnec_credential_confirmation_screen()
 
     trezor_static_pubkey = crypto.get_trezor_static_pubkey()
     credential_metadata = ThpCredentialMetadata(

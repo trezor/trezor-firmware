@@ -142,15 +142,20 @@ class PairingContext(Context):
             raise Exception("Not allowed to set this method")
         self.selected_method = selected_method
 
-    async def show_pairing_dialogue(self) -> None:
+    async def show_pairing_dialogue(self, device_name: str | None = None) -> None:
         from trezor.messages import ThpPairingRequestApproved
         from trezor.ui.layouts.common import interact
 
+        if not device_name:
+            action_string = f"Allow {self.host_name} to pair with this Trezor?"
+        else:
+            action_string = (
+                f"Allow {self.host_name} on {device_name} to pair with this Trezor?"
+            )
+
         result = await interact(
             trezorui_api.confirm_action(
-                title="Pairing dialogue",
-                action="Do you want to start pairing?",
-                description="Choose wisely!",
+                title="Before you continue", action=action_string, description=None
             ),
             br_name="pairing_request",
             br_code=ButtonRequestType.Other,
@@ -158,16 +163,33 @@ class PairingContext(Context):
         if result == trezorui_api.CONFIRMED:
             await self.write(ThpPairingRequestApproved())
 
-    async def show_connection_dialogue(self) -> None:
+    async def show_connection_dialogue(self, device_name: str | None = None) -> None:
+        from trezor.ui.layouts.common import interact
+
+        if not device_name:
+            action_string = f"Allow {self.host_name} to pair with this Trezor?"
+        else:
+            action_string = (
+                f"Allow {self.host_name} on {device_name} to pair with this Trezor?"
+            )
+        await interact(
+            trezorui_api.confirm_action(
+                title="Connection dialogue", action=action_string, description=None
+            ),
+            br_name="connection_request",
+            br_code=ButtonRequestType.Other,
+        )
+
+    async def show_autoconnec_credential_confirmation_screen(self) -> None:
         from trezor.ui.layouts.common import interact
 
         await interact(
             trezorui_api.confirm_action(
-                title="Connection dialogue",
-                action="Do you want previously connected device to connect?",
-                description="Choose wisely! (or not)",
+                title="Autoconnect credential",
+                action=f"Do you want to pair with {self.host_name} without confirmation?",
+                description=None,
             ),
-            br_name="connection_request",
+            br_name="autoconnect_credential_request",
             br_code=ButtonRequestType.Other,
         )
 
@@ -192,8 +214,8 @@ class PairingContext(Context):
 
         return await interact(
             trezorui_api.show_simple(
-                title="Copy the following",
-                text=self._get_code_code_entry_str(),
+                title="One more step",
+                text=f"Enter this one-time security code on {self.host_name}\n{self._get_code_code_entry_str()}",
                 button="Cancel",
             ),
             br_name=None,
@@ -204,8 +226,8 @@ class PairingContext(Context):
 
         return await interact(
             trezorui_api.show_simple(
-                title="NFC Pairing",
-                text="Move your device close to Trezor",
+                title=None,
+                text="Keep your Trezor near your phone to complete the setup.",
                 button="Cancel",
             ),
             br_name=None,
