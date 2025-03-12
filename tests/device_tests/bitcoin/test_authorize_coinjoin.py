@@ -19,6 +19,7 @@ import time
 import pytest
 
 from trezorlib import btc, device, messages
+from trezorlib.debuglink import ProtocolVersion
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
@@ -809,7 +810,11 @@ def test_multisession_authorization(client: Client):
     )
 
     # Open a second session.
-    session2 = client.get_session()
+    if client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+        session_id = b"\x02"
+    else:
+        session_id = None
+    session2 = client.get_session(session_id=session_id)
 
     # Authorize CoinJoin with www.example2.com in session 2.
     btc.authorize_coinjoin(
