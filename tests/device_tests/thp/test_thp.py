@@ -317,11 +317,17 @@ def test_credential_phase(client: Client) -> None:
     protocol._send_message(
         ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=True)
     )
-    # Confirmation dialog is shown. (Channel replacement is not triggered.)
+    # Connection confirmation dialog is shown. (Channel replacement is not triggered.)
     button_req = protocol._read_message(ButtonRequest)
     assert button_req.name == "connection_request"
     protocol._send_message(ButtonAck())
     client.debug.press_yes()
+    # Autoconnect issuance confirmation dialog is shown.
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "autoconnect_credential_request"
+    protocol._send_message(ButtonAck())
+    client.debug.press_yes()
+    # Autoconnect credential is received
     credential_response_2 = protocol._read_message(ThpCredentialResponse)
     assert credential_response_2.credential is not None
     credential_auto = credential_response_2.credential
