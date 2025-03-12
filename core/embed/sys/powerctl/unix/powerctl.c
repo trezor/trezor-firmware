@@ -1,5 +1,5 @@
 /*
-* This file is part of the Trezor project, https://trezor.io/
+ * This file is part of the Trezor project, https://trezor.io/
  *
  * Copyright (c) SatoshiLabs
  *
@@ -19,12 +19,9 @@
 
 #include <trezor_rtl.h>
 
-
 #include <SDL.h>
 
 bool powerctl_hibernate(void) {
-
   exit(1);
   return true;
 }
-
