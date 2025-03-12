@@ -58,43 +58,51 @@ bool button_init(void) {
   return true;
 }
 
-uint32_t button_get_event(void) {
+bool button_get_event(button_event_t *event) {
   button_driver_t *drv = &g_button_driver;
+
+  memset(event, 0, sizeof(button_event_t));
 
   if (!drv->initialized) {
     return 0;
   }
 
-  SDL_Event event;
+  SDL_Event sdl_event;
 
-  if (SDL_PollEvent(&event) > 0 &&
-      (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) &&
-      !event.key.repeat) {
-    bool down = (event.type == SDL_KEYDOWN);
-    uint32_t evt = down ? BTN_EVT_DOWN : BTN_EVT_UP;
+  if (SDL_PollEvent(&sdl_event) > 0 &&
+      (sdl_event.type == SDL_KEYDOWN || sdl_event.type == SDL_KEYUP) &&
+      !sdl_event.key.repeat) {
+    bool down = (sdl_event.type == SDL_KEYDOWN);
+    uint32_t evt_type = down ? BTN_EVENT_DOWN : BTN_EVENT_UP;
 
-    switch (event.key.keysym.sym) {
+    switch (sdl_event.key.keysym.sym) {
 #ifdef BTN_LEFT_KEY
       case BTN_LEFT_KEY:
         drv->left_down = down;
-        return evt | BTN_LEFT;
+        event->event_type = evt_type;
+        event->button = BTN_LEFT;
+        return true;
 #endif
 #ifdef BTN_RIGHT_KEY
       case BTN_RIGHT_KEY:
         drv->right_down = down;
-        return evt | BTN_RIGHT;
+        event->event_type = evt_type;
+        event->button = BTN_RIGHT;
+        return true;
 #endif
 #ifdef BTN_POWER_KEY
       case BTN_POWER_KEY:
         drv->power_down = down;
-        return evt | BTN_POWER;
+        event->event_type = evt_type;
+        event->button = BTN_POWER;
+        return true;
 #endif
       default:
         break;
     }
   }
 
-  return 0;
+  return false;
 }
 
 bool button_is_down(button_t button) {

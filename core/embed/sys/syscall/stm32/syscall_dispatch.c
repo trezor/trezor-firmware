@@ -420,7 +420,8 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
 #ifdef USE_BUTTON
     case SYSCALL_BUTTON_GET_EVENT: {
-      args[0] = button_get_event();
+      button_event_t *event = (button_event_t *)args[0];
+      args[0] = button_get_event__verified(event);
     } break;
 #endif
 

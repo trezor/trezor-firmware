@@ -861,6 +861,8 @@ access_violation:
 
 #endif  // USE_HW_JPEG_DECODER
 
+// ---------------------------------------------------------------------
+
 #ifdef USE_DMA2D
 
 bool dma2d_rgb565_fill__verified(const gfx_bitblt_t *bb) {
@@ -1042,6 +1044,26 @@ bool dma2d_rgba8888_blend_mono8__verified(const gfx_bitblt_t *bb) {
   CHECK_BB_SRC(&bb_copy);
 
   return dma2d_rgba8888_blend_mono8(&bb_copy);
+
+access_violation:
+  apptask_access_violation();
+  return false;
+}
+
+#endif
+
+// ---------------------------------------------------------------------
+
+#ifdef USE_BUTTON
+
+#include <io/button.h>
+
+bool button_get_event__verified(button_event_t *event) {
+  if (!probe_write_access(event, sizeof(*event))) {
+    goto access_violation;
+  }
+
+  return button_get_event(event);
 
 access_violation:
   apptask_access_violation();

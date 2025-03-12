@@ -255,4 +255,13 @@ bool dma2d_rgba8888_blend_mono8__verified(const gfx_bitblt_t *bb);
 
 #endif
 
+// ---------------------------------------------------------------------
+#ifdef USE_BUTTON
+
+#include <io/button.h>
+
+bool button_get_event__verified(button_event_t *event);
+
+#endif
+
 #endif  // SYSCALL_DISPATCH
