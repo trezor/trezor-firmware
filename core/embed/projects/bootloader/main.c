@@ -119,7 +119,6 @@ static secbool drivers_init(secbool *touch_initialized) {
   }
 #endif
 
-
 #ifdef USE_OPTIGA
   optiga_hal_init();
 #endif
@@ -261,7 +260,7 @@ int bootloader_main(void) {
   system_init(&rsod_panic_handler);
 
   secbool manufacturing_mode = drivers_init(&touch_initialized);
-  (void)manufacturing_mode; // can be unused on some models
+  (void)manufacturing_mode;  // can be unused on some models
 
   ui_screen_boot_stage_1(false);
 
@@ -330,11 +329,11 @@ int bootloader_main(void) {
   }
 
 #ifdef USE_POWERCTL
-  #ifndef TREZOR_EMULATOR
+#ifndef TREZOR_EMULATOR
   if (sectrue != manufacturing_mode || sectrue != firmware_present) {
     npm1300_set_charging(true);
   }
-  #endif
+#endif
 #endif
 
 #if PRODUCTION && !defined STM32U5
