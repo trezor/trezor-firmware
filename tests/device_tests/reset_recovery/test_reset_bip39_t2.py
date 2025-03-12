@@ -224,10 +224,11 @@ def test_failed_pin(session: Session):
 
     session._write(messages.ButtonAck())
     debug.press_yes()
+    session._read()
 
     # Enter PIN for first time
     debug.input("654")
-    ret = session.call_raw(messages.ButtonAck())  # XXX stuck here
+    ret = session.call_raw(messages.ButtonAck())
 
     # Re-enter PIN for TR
     if session.client.layout_type is LayoutType.Caesar:
