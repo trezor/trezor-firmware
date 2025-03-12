@@ -51,16 +51,14 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
   usb_iface_init(&usb_iface,
                  (vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
 
-
   protob_init(&protob_usb_iface, &usb_iface);
 
-  #ifdef USE_BLE
+#ifdef USE_BLE
   wire_iface_t ble_iface = {0};
   protob_io_t protob_ble_iface = {0};
   ble_iface_init(&ble_iface);
   protob_init(&protob_ble_iface, &ble_iface);
-  #endif
-
+#endif
 
   workflow_result_t result = WF_ERROR_FATAL;
 
