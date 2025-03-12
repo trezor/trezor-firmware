@@ -266,7 +266,7 @@ class ProtocolV2Channel(Channel):
 
     def _do_pairing(self, helper_debug: DebugLink | None):
 
-        self._send_message(messages.ThpPairingRequest())
+        self._send_message(messages.ThpPairingRequest(host_name="Trezorlib"))
         self._read_message(messages.ButtonRequest)
         self._send_message(messages.ButtonAck())
 
