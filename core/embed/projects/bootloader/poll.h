@@ -49,13 +49,6 @@ typedef enum {
 } ble_data_event_type_t;
 #endif
 
-#ifdef USE_BUTTON
-typedef struct {
-  uint32_t type;
-  button_t button;
-} button_event_t;
-#endif
-
 typedef struct {
   union {
     usb_data_event_type_t usb_data_event;

@@ -83,12 +83,7 @@ int16_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
 #endif
 #ifdef USE_BUTTON
       if (iface_num == IFACE_BUTTON) {
-        uint32_t btn_event = button_get_event();
-        uint32_t etype = (btn_event >> 24) & 0x3U;  // button down/up
-        uint32_t btn_number = btn_event & 0xFFFF;
-        if (etype != 0) {
-          event->event.button_event.type = etype;
-          event->event.button_event.button = btn_number;
+        if (button_get_event(&event->event.button_event)) {
           return iface_num;
         }
       }
