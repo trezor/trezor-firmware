@@ -128,8 +128,8 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
     }
 #ifdef USE_BUTTON
     if (i == IFACE_BUTTON) {
-      switch (e.event.button_event.type) {
-        case (BTN_EVT_DOWN >> 24):
+      switch (e.event.button_event.event_type) {
+        case (BTN_EVENT_DOWN >> 24):
           ble_iface_start_pairing();
         default:
           continue;
