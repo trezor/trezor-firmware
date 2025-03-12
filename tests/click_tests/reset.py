@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 def confirm_new_wallet(debug: "DebugLink") -> None:
     assert debug.read_layout().title() == TR.reset__title_create_wallet
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
@@ -30,10 +30,8 @@ def confirm_new_wallet(debug: "DebugLink") -> None:
 
 
 def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.ok())
-    elif debug.layout_type is LayoutType.Delizia:
-        debug.swipe_up()
     elif debug.layout_type is LayoutType.Caesar:
         page_count = debug.read_layout().page_count()
         if page_count > 1:
@@ -43,27 +41,31 @@ def confirm_read(debug: "DebugLink", middle_r: bool = False) -> None:
             debug.press_middle()
         else:
             debug.press_right()
+    elif debug.layout_type is LayoutType.Delizia:
+        debug.swipe_up()
+    else:
+        raise RuntimeError("Unknown model")
 
 
 def cancel_backup(
     debug: "DebugLink", middle_r: bool = False, confirm: bool = False
 ) -> None:
-    if debug.layout_type is LayoutType.Bolt:
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
         debug.click(debug.screen_buttons.cancel())
         debug.click(debug.screen_buttons.cancel())
+    elif debug.layout_type is LayoutType.Caesar:
+        debug.press_left()
+        debug.press_left()
     elif debug.layout_type is LayoutType.Delizia:
         debug.click(debug.screen_buttons.menu())
         debug.click(debug.screen_buttons.vertical_menu_items()[0])
         if confirm:
             debug.swipe_up()
             debug.click(debug.screen_buttons.tap_to_confirm())
-    elif debug.layout_type is LayoutType.Caesar:
-        debug.press_left()
-        debug.press_left()
 
 
 def set_selection(debug: "DebugLink", diff: int) -> None:
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         assert "NumberInputDialog" in debug.read_layout().all_components()
 
         button = (
@@ -96,6 +98,8 @@ def set_selection(debug: "DebugLink", diff: int) -> None:
             for _ in range(diff):
                 debug.press_right()
         debug.press_middle()
+    else:
+        raise RuntimeError("Unknown model")
 
 
 def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
@@ -105,15 +109,21 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
         debug.press_right()
     elif debug.layout_type is LayoutType.Delizia:
         debug.swipe_up()
+    elif debug.layout_type is LayoutType.Eckhart:
+        debug.click(debug.screen_buttons.ok())
 
     # Swiping through all the pages and loading the words
     layout = debug.read_layout()
     for _ in range(layout.page_count() - 1):
         words.extend(layout.seed_words())
-        debug.swipe_up()
+        if debug.layout_type is LayoutType.Eckhart:
+            debug.click(debug.screen_buttons.ok())
+        else:
+            debug.swipe_up()
+
         layout = debug.read_layout()
         assert layout is not None
-    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+    if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         words.extend(layout.seed_words())
 
     if debug.layout_type is LayoutType.Delizia:
@@ -121,7 +131,7 @@ def read_words(debug: "DebugLink", do_htc: bool = True) -> list[str]:
 
     # There is hold-to-confirm button
     if do_htc:
-        if debug.layout_type is LayoutType.Bolt:
+        if debug.layout_type in (LayoutType.Bolt, LayoutType.Eckhart):
             debug.click(debug.screen_buttons.ok(), hold_ms=1500)
         elif debug.layout_type is LayoutType.Delizia:
             debug.click(debug.screen_buttons.tap_to_confirm())
@@ -158,22 +168,6 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
             button_pos = btn_texts.index(wanted_word)
             debug.click(debug.screen_buttons.word_check_words()[button_pos])
             layout = debug.read_layout()
-    elif debug.layout_type is LayoutType.Delizia:
-        assert TR.regexp("reset__select_word_x_of_y_template").match(layout.subtitle())
-        for _ in range(3):
-            # "Select word 3 of 20"
-            #              ^
-            word_pos_match = re.search(r"\d+", debug.read_layout().subtitle())
-            assert word_pos_match is not None
-            word_pos = int(word_pos_match.group(0))
-            # Unifying both the buttons and words to lowercase
-            btn_texts = [
-                text.lower() for text in layout.tt_check_seed_button_contents()
-            ]
-            wanted_word = words[word_pos - 1].lower()
-            button_pos = btn_texts.index(wanted_word)
-            debug.click(debug.screen_buttons.vertical_menu_items()[button_pos])
-            layout = debug.read_layout()
     elif debug.layout_type is LayoutType.Caesar:
         assert TR.reset__select_correct_word in layout.text_content()
         debug.press_right()
@@ -193,6 +187,24 @@ def confirm_words(debug: "DebugLink", words: list[str]) -> None:
 
             debug.press_middle()
             layout = debug.read_layout()
+    elif debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
+        assert TR.regexp("reset__select_word_x_of_y_template").match(layout.subtitle())
+        for _ in range(3):
+            # "Select word 3 of 20"
+            #              ^
+            word_pos_match = re.search(r"\d+", debug.read_layout().subtitle())
+            assert word_pos_match is not None
+            word_pos = int(word_pos_match.group(0))
+            # Unifying both the buttons and words to lowercase
+            btn_texts = [
+                text.lower() for text in layout.tt_check_seed_button_contents()
+            ]
+            wanted_word = words[word_pos - 1].lower()
+            button_pos = btn_texts.index(wanted_word)
+            debug.click(debug.screen_buttons.vertical_menu_items()[button_pos])
+            layout = debug.read_layout()
+    else:
+        raise RuntimeError("Unknown model")
 
 
 def validate_mnemonics(mnemonics: list[str], expected_ems: bytes) -> None:
