@@ -83,10 +83,10 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
           }
           return WF_ERROR_FATAL;
         }
-        #ifdef USE_POWERCTL
+#ifdef USE_POWERCTL
         if (menu_result == MENU_TURN_OFF) {
           powerctl_hibernate();
-          }
+        }
 #endif
         break;
       case SCREEN_WAIT_FOR_HOST:
