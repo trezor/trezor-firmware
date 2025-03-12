@@ -77,9 +77,12 @@ typedef struct {
 typedef size_t (*cli_write_cb_t)(void* ctx, const char* buf, size_t len);
 // Callback for reading characters from console input
 typedef size_t (*cli_read_cb_t)(void* ctx, char* buf, size_t len);
+// Callback for can read assessment
+typedef bool (*cli_can_read_cb_t)(void* ctx);
 
 struct cli {
   // I/O callbacks
+  cli_can_read_cb_t can_read;
   cli_read_cb_t read;
   cli_write_cb_t write;
   void* callback_context;
@@ -116,8 +119,8 @@ struct cli {
 };
 
 // Initializes the command line structure
-bool cli_init(cli_t* cli, cli_read_cb_t read, cli_write_cb_t write,
-              void* callback_context);
+bool cli_init(cli_t* cli, cli_can_read_cb_t can_read, cli_read_cb_t read,
+              cli_write_cb_t write, void* callback_context);
 
 // Registers the command handlers
 void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,

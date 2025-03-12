@@ -11,9 +11,10 @@
 #define ESC_COLOR_GRAY "\e[37m"
 #define ESC_COLOR_RESET "\e[39m"
 
-bool cli_init(cli_t* cli, cli_read_cb_t read, cli_write_cb_t write,
-              void* callback_context) {
+bool cli_init(cli_t* cli, cli_can_read_cb_t can_read, cli_read_cb_t read,
+              cli_write_cb_t write, void* callback_context) {
   memset(cli, 0, sizeof(cli_t));
+  cli->can_read = can_read;
   cli->read = read;
   cli->write = write;
   cli->callback_context = callback_context;
@@ -527,77 +528,79 @@ static bool cli_split_args(cli_t* cli) {
 }
 
 void cli_run_loop(cli_t* cli) {
-  while (true) {
+  if (!cli->can_read(cli->callback_context)) {
+    return;
+  }
+
+  if (cli->interactive) {
+    if (cli->final_status) {
+      // Finalize the last command with an empty line
+      cli_printf(cli, "\r\n");
+    }
+    // Print the prompt
+    cli_printf(cli, "> ");
+  }
+
+  cli->final_status = false;
+  cli->aborted = false;
+
+  // Read the next line
+  if (!cli_readln(cli)) {
+    cli_error(cli, CLI_ERROR_FATAL, "Input line too long.");
+    return;
+  }
+
+  cli_history_add(cli, cli->line_buffer);
+
+  // Split command line into arguments
+  if (!cli_split_args(cli)) {
+    cli_error(cli, CLI_ERROR_FATAL, "Too many arguments.");
+    return;
+  }
+
+  // Empty line?
+  if (*cli->cmd_name == '\0') {
+    // Switch to interactive mode if two empty lines are entered
+    if (++cli->empty_lines >= 2 && !cli->interactive) {
+      cli->interactive = true;
+      // Print the welcome message
+      const cli_command_t* cmd = cli_find_command(cli, "$intro");
+      if (cmd != NULL) {
+        cmd->func(cli);
+      }
+    }
+    return;
+  }
+  cli->empty_lines = 0;
+
+  // Quit interactive mode on `.+ENTER`
+  if ((strcmp(cli->cmd_name, ".") == 0)) {
     if (cli->interactive) {
-      if (cli->final_status) {
-        // Finalize the last command with an empty line
-        cli_printf(cli, "\r\n");
-      }
-      // Print the prompt
-      cli_printf(cli, "> ");
+      cli->interactive = false;
+      cli_trace(cli, "Exiting interactive mode...");
     }
+    return;
+  }
 
-    cli->final_status = false;
-    cli->aborted = false;
+  // Find the command handler
+  cli->current_cmd = cli_find_command(cli, cli->cmd_name);
 
-    // Read the next line
-    if (!cli_readln(cli)) {
-      cli_error(cli, CLI_ERROR_FATAL, "Input line too long.");
-      continue;
-    }
+  if (cli->current_cmd == NULL) {
+    cli_error(cli, CLI_ERROR_INVALID_CMD, "Invalid command '%s', try 'help'.",
+              cli->cmd_name);
+    return;
+  }
 
-    cli_history_add(cli, cli->line_buffer);
+  // Call the command handler
+  cli->current_cmd->func(cli);
 
-    // Split command line into arguments
-    if (!cli_split_args(cli)) {
-      cli_error(cli, CLI_ERROR_FATAL, "Too many arguments.");
-      continue;
-    }
-
-    // Empty line?
-    if (*cli->cmd_name == '\0') {
-      // Switch to interactive mode if two empty lines are entered
-      if (++cli->empty_lines >= 2 && !cli->interactive) {
-        cli->interactive = true;
-        // Print the welcome message
-        const cli_command_t* cmd = cli_find_command(cli, "$intro");
-        if (cmd != NULL) {
-          cmd->func(cli);
-        }
-      }
-      continue;
-    }
-    cli->empty_lines = 0;
-
-    // Quit interactive mode on `.+ENTER`
-    if ((strcmp(cli->cmd_name, ".") == 0)) {
-      if (cli->interactive) {
-        cli->interactive = false;
-        cli_trace(cli, "Exiting interactive mode...");
-      }
-      continue;
-    }
-
-    // Find the command handler
-    cli->current_cmd = cli_find_command(cli, cli->cmd_name);
-
-    if (cli->current_cmd == NULL) {
-      cli_error(cli, CLI_ERROR_INVALID_CMD, "Invalid command '%s', try 'help'.",
-                cli->cmd_name);
-      continue;
-    }
-
-    // Call the command handler
-    cli->current_cmd->func(cli);
-
-    if (!cli->final_status) {
-      // Command handler hasn't send final status
-      if (cli->aborted) {
-        cli_error(cli, CLI_ERROR_ABORT, "");
-      } else {
-        cli_error(cli, CLI_ERROR_FATAL,
-                  "Command handler didn't finish properly.");
-      }
+  if (!cli->final_status) {
+    // Command handler hasn't send final status
+    if (cli->aborted) {
+      cli_error(cli, CLI_ERROR_ABORT, "");
+    } else {
+      cli_error(cli, CLI_ERROR_FATAL,
+                "Command handler didn't finish properly.");
     }
   }
 }

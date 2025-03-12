@@ -23,6 +23,29 @@
 
 #include <io/rgb_led.h>
 #include <rtl/cli.h>
+#include <sys/systimer.h>
+
+static bool g_prodtest_rgbled_start = false;
+
+static void prodtest_rgbled_timer_cb(void* context) {
+  if (g_prodtest_rgbled_start) {
+    rgb_led_set_color(0);
+    g_prodtest_rgbled_start = false;
+  }
+}
+
+void prodtest_rgbled_init(void) {
+  static systimer_t* timer = NULL;
+
+  timer = systimer_create(prodtest_rgbled_timer_cb, NULL);
+
+  if (timer == NULL) {
+    return;
+  }
+  systimer_set(timer, 1000);
+  rgb_led_set_color(0xFF00);
+  g_prodtest_rgbled_start = true;
+}
 
 static void prodtest_rgbled_set(cli_t* cli) {
   uint32_t r = 0;
@@ -53,6 +76,7 @@ static void prodtest_rgbled_set(cli_t* cli) {
 
   uint32_t rgb = (r << 16) | (g << 8) | b;
 
+  g_prodtest_rgbled_start = false;
   rgb_led_set_color(rgb);
 
   cli_ok(cli, "");

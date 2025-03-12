@@ -24,6 +24,7 @@
 #include <io/usb.h>
 #include <rtl/cli.h>
 #include <sys/system.h>
+#include <sys/systick.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -66,6 +67,7 @@
 
 #ifdef USE_RGB_LED
 #include <io/rgb_led.h>
+#include "cmd/prodtest_rgbled.h"
 #endif
 
 #ifdef USE_HASH_PROCESSOR
@@ -104,6 +106,10 @@
 cli_t g_cli = {0};
 
 #define VCP_IFACE 0
+
+static bool console_can_read(void *context) {
+  return usb_vcp_can_read(VCP_IFACE);
+}
 
 static size_t console_read(void *context, char *buf, size_t size) {
   return usb_vcp_read_blocking(VCP_IFACE, (uint8_t *)buf, size, -1);
@@ -208,6 +214,7 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();
+  prodtest_rgbled_init();
 #endif
 #ifdef USE_BLE
   unit_properties_init();
@@ -232,7 +239,7 @@ int main(void) {
   show_welcome_screen();
 
   // Initialize command line interface
-  cli_init(&g_cli, console_read, console_write, NULL);
+  cli_init(&g_cli, console_can_read, console_read, console_write, NULL);
 
   extern cli_command_t _prodtest_cli_cmd_section_start;
   extern cli_command_t _prodtest_cli_cmd_section_end;
@@ -247,7 +254,35 @@ int main(void) {
   pair_optiga(&g_cli);
 #endif
 
-  cli_run_loop(&g_cli);
+  while (true) {
+    cli_run_loop(&g_cli);
+
+    button_event_t btn_event = {0};
+
+    bool btn = button_get_event(&btn_event);
+
+    if (btn) {
+      bool hibernate = true;
+      uint32_t deadline = ticks_timeout(1000);
+      while (!ticks_expired(deadline)) {
+        button_get_event(&btn_event);
+        if (!button_is_down(BTN_POWER)) {
+          hibernate = false;
+          break;
+        }
+      }
+
+      if (hibernate) {
+        // todo only
+        rgb_led_set_color(0xff0000);
+        systick_delay_ms(1000);
+        powerctl_hibernate();
+        rgb_led_set_color(0xffff00);
+        systick_delay_ms(1000);
+        rgb_led_set_color(0);
+      }
+    }
+  }
 
   return 0;
 }
