@@ -236,7 +236,7 @@ where
             &self.visible,
             self.offset,
             &mut |layout, content| {
-                layout.render_text(content, target, false);
+                layout.render_text(content, target);
             },
         )
     }
@@ -292,7 +292,6 @@ pub mod trace {
                                 content,
                                 &mut layout.initial_cursor(),
                                 &mut TraceSink(par),
-                                false,
                             );
                         });
                     },

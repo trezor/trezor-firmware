@@ -111,7 +111,7 @@ impl<'a> Label<'a> {
 
     pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
         self.text
-            .map(|c| self.layout.render_text_with_alpha(c, target, alpha, true));
+            .map(|c| self.layout.render_text_with_alpha(c, target, alpha));
     }
 }
 
@@ -137,7 +137,7 @@ impl Component for Label<'_> {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        self.text.map(|c| self.layout.render_text(c, target, true));
+        self.text.map(|c| self.layout.render_text(c, target));
     }
 }
 

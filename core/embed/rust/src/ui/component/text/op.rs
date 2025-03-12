@@ -117,7 +117,7 @@ impl<'a> OpTextLayout<'a> {
                     layout.continues_from_prev_page = continued;
                     layout.style.text_font = font;
 
-                    let fit = text.map(|t| layout.layout_text(t, cursor, sink, false));
+                    let fit = text.map(|t| layout.layout_text(t, cursor, sink));
 
                     match fit {
                         LayoutFit::Fitting {
