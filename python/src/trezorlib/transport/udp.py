@@ -136,6 +136,7 @@ class UdpTransport(ProtocolBasedTransport):
         return resp == b"PONGPONG"
 
     def write_chunk(self, chunk: bytes) -> None:
+        time.sleep(0.0001)
         assert self.socket is not None
         if len(chunk) != 64:
             raise TransportException("Unexpected data length")
