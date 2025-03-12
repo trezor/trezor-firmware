@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_BUTTON_H
-#define TREZORHAL_BUTTON_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -31,9 +30,10 @@
 //
 //
 
-// Button events
-#define BTN_EVT_DOWN (1U << 24)
-#define BTN_EVT_UP (1U << 25)
+typedef enum {
+  BTN_EVENT_UP,
+  BTN_EVENT_DOWN,
+} button_event_type_t;
 
 // Button identifiers
 typedef enum {
@@ -41,6 +41,11 @@ typedef enum {
   BTN_RIGHT = 1,
   BTN_POWER = 2,
 } button_t;
+
+typedef struct {
+  button_event_type_t event_type;
+  button_t button;
+} button_event_t;
 
 #ifdef KERNEL_MODE
 
@@ -59,8 +64,8 @@ void button_deinit(void);
 // It's expected there's just one consumer of the button events,
 // e.g. the main loop
 //
-// Returns 0 if no event is available
-uint32_t button_get_event(void);
+// Returns false if no event is available
+bool button_get_event(button_event_t* event);
 
 // Checks if the specified button is currently pressed
 //
@@ -68,5 +73,3 @@ uint32_t button_get_event(void);
 // `button_get_event()` was called. In the future, we may fix this limitation.
 // For now, `button_get_event()` must be called before `button_is_down()`.
 bool button_is_down(button_t button);
-
-#endif  // TREZORHAL_BUTTON_H

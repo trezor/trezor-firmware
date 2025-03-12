@@ -363,8 +363,8 @@ secbool secret_bootloader_locked(void) {
 
 #include <io/button.h>
 
-uint32_t button_get_event(void) {
-  return syscall_invoke0(SYSCALL_BUTTON_GET_EVENT);
+bool button_get_event(button_event_t *event) {
+  return syscall_invoke1(SYSCALL_BUTTON_GET_EVENT, (uint32_t)event);
 }
 
 #endif
