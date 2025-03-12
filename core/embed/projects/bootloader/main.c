@@ -535,7 +535,8 @@ int bootloader_main(void) {
     }
   }
 #elif defined USE_BUTTON
-  button_get_event();
+  button_event_t btn_evt = {0};
+  button_get_event(&btn_evt);
   if (button_is_down(BTN_LEFT)) {
     touched = 1;
   }

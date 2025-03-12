@@ -110,11 +110,13 @@ void button_deinit(void) {
 #endif
 }
 
-uint32_t button_get_event(void) {
+bool button_get_event(button_event_t *event) {
   button_driver_t *drv = &g_button_driver;
 
+  memset(event, 0, sizeof(*event));
+
   if (!drv->initialized) {
-    return 0;
+    return false;
   }
 
 #ifdef BTN_LEFT_PIN
@@ -124,9 +126,13 @@ uint32_t button_get_event(void) {
   if (drv->left_down != left_down) {
     drv->left_down = left_down;
     if (left_down) {
-      return BTN_EVT_DOWN | BTN_LEFT;
+      event->button = BTN_LEFT;
+      event->event_type = BTN_EVENT_DOWN;
+      return true;
     } else {
-      return BTN_EVT_UP | BTN_LEFT;
+      event->button = BTN_LEFT;
+      event->event_type = BTN_EVENT_UP;
+      return true;
     }
   }
 #endif
@@ -138,9 +144,13 @@ uint32_t button_get_event(void) {
   if (drv->right_down != right_down) {
     drv->right_down = right_down;
     if (right_down) {
-      return BTN_EVT_DOWN | BTN_RIGHT;
+      event->button = BTN_RIGHT;
+      event->event_type = BTN_EVENT_DOWN;
+      return true;
     } else {
-      return BTN_EVT_UP | BTN_RIGHT;
+      event->button = BTN_RIGHT;
+      event->event_type = BTN_EVENT_UP;
+      return true;
     }
   }
 #endif
@@ -152,9 +162,13 @@ uint32_t button_get_event(void) {
   if (drv->power_down != power_down) {
     drv->power_down = power_down;
     if (power_down) {
-      return BTN_EVT_DOWN | BTN_POWER;
+      event->button = BTN_POWER;
+      event->event_type = BTN_EVENT_DOWN;
+      return true;
     } else {
-      return BTN_EVT_UP | BTN_POWER;
+      event->button = BTN_POWER;
+      event->event_type = BTN_EVENT_UP;
+      return true;
     }
   }
 #endif

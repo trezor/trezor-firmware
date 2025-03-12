@@ -155,11 +155,12 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       }
 #if USE_BUTTON
       else if (iface == BUTTON_IFACE) {
-        const uint32_t evt = button_get_event();
-        if (evt & (BTN_EVT_DOWN | BTN_EVT_UP)) {
+        button_event_t btn_event = {0};
+        const bool btn = button_get_event(&btn_event);
+        if (btn) {
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-          uint32_t etype = (evt >> 24) & 0x3U;  // button down/up
-          uint32_t en = evt & 0xFFFF;           // button number
+          uint32_t etype = btn_event.event_type;
+          uint32_t en = btn_event.button;
           if (display_get_orientation() == 180) {
             en = (en == BTN_LEFT) ? BTN_RIGHT : BTN_LEFT;
           }

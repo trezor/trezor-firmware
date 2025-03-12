@@ -4,11 +4,12 @@ use core::{
     marker::PhantomData,
     ops::{Deref, DerefMut},
 };
+use num_traits::FromPrimitive;
 
 #[cfg(feature = "touch")]
 use crate::ui::{event::TouchEvent, geometry::Direction};
 #[cfg(feature = "touch")]
-use num_traits::{FromPrimitive, ToPrimitive};
+use num_traits::ToPrimitive;
 
 #[cfg(feature = "ble")]
 use crate::micropython::buffer::get_buffer;
@@ -16,8 +17,12 @@ use crate::micropython::buffer::get_buffer;
 use crate::ui::event::BLEEvent;
 
 #[cfg(feature = "button")]
-use crate::ui::event::ButtonEvent;
+use crate::{
+    trezorhal::button::{PhysicalButton, PhysicalButtonEvent},
+    ui::event::ButtonEvent,
+};
 
+use super::base::{Layout, LayoutState};
 use crate::{
     error::Error,
     maybe_trace::MaybeTrace,
@@ -45,8 +50,6 @@ use crate::{
         CommonUI, ModelUI,
     },
 };
-
-use super::base::{Layout, LayoutState};
 
 impl AttachType {
     fn to_obj(self) -> Obj {
@@ -516,7 +519,13 @@ extern "C" fn ui_layout_button_event(n_args: usize, args: *const Obj) -> Obj {
             return Err(Error::TypeError);
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
-        let event = ButtonEvent::new(args[1].try_into()?, args[2].try_into()?)?;
+        let event_type_num: u8 = args[1].try_into()?;
+        let button_num: u8 = args[2].try_into()?;
+
+        let event_type = unwrap!(PhysicalButtonEvent::from_u8(event_type_num));
+        let button = unwrap!(PhysicalButton::from_u8(button_num));
+
+        let event = ButtonEvent::new(event_type, button)?;
         let msg = this.inner_mut().obj_event(Event::Button(event))?;
         Ok(msg)
     };
