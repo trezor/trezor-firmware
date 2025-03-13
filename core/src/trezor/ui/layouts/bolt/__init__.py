@@ -1415,22 +1415,16 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
         verb=TR.buttons__install,
         info=True,
     )
-    info = trezorui_api.confirm_value(
+    info = trezorui_api.show_info_with_cancel(
         title=TR.firmware_update__title_fingerprint,
-        value=fingerprint,
-        description=None,
+        items=(("", fingerprint),),
         chunkify=True,
-        verb=TR.buttons__install,
-        verb_cancel="<",
-        info=False,
-        cancel=True,
     )
     await with_info(
         main,
         info,
         br_name="firmware_update",
         br_code=BR_CODE_OTHER,
-        info_layout_can_confirm=True,
     )
 
 
