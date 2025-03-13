@@ -549,6 +549,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__number_of_shares_info;
   MP_QSTR_reset__one_share;
   MP_QSTR_reset__only_one_share_will_be_created;
+  MP_QSTR_reset__recovery_share_description;
+  MP_QSTR_reset__recovery_share_number;
   MP_QSTR_reset__recovery_share_title_template;
   MP_QSTR_reset__recovery_wallet_backup_title;
   MP_QSTR_reset__repeat_for_all_shares;
@@ -815,6 +817,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__really_wanna;
   MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
+  MP_QSTR_words__recovery_share;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;

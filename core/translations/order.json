@@ -1003,5 +1003,8 @@
   "1001": "backup__not_recommend",
   "1002": "words__pay_attention",
   "1003": "address__check_with_source",
-  "1004": "words__receive"
+  "1004": "words__receive",
+  "1005": "reset__recovery_share_description",
+  "1006": "reset__recovery_share_number",
+  "1007": "words__recovery_share"
 }
