@@ -14,16 +14,18 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
-import struct
-from typing import TYPE_CHECKING, Any, Dict, Iterable, Optional
+import typing as t
 
 import requests
 
+from ..client import ProtocolVersion
 from ..log import DUMP_PACKETS
-from . import DeviceIsBusy, MessagePayload, Transport, TransportException
+from . import DeviceIsBusy, Transport, TransportException
 
-if TYPE_CHECKING:
+if t.TYPE_CHECKING:
     from ..models import TrezorModel
 
 LOG = logging.getLogger(__name__)
@@ -32,6 +34,7 @@ TREZORD_HOST = "http://127.0.0.1:21325"
 TREZORD_ORIGIN_HEADER = {"Origin": "https://python.trezor.io"}
 
 TREZORD_VERSION_MODERN = (2, 0, 25)
+TREZORD_VERSION_THP_SUPPORT = (2, 0, 31)  # TODO add correct value
 
 CONNECTION = requests.Session()
 CONNECTION.headers.update(TREZORD_ORIGIN_HEADER)
@@ -45,7 +48,7 @@ class BridgeException(TransportException):
         super().__init__(f"trezord: {path} failed with code {status}: {message}")
 
 
-def call_bridge(path: str, data: Optional[str] = None) -> requests.Response:
+def call_bridge(path: str, data: str | None = None) -> requests.Response:
     url = TREZORD_HOST + "/" + path
     r = CONNECTION.post(url, data=data)
     if r.status_code != 200:
@@ -53,10 +56,51 @@ def call_bridge(path: str, data: Optional[str] = None) -> requests.Response:
     return r
 
 
-def is_legacy_bridge() -> bool:
+def get_bridge_version() -> t.Tuple[int, ...]:
     config = call_bridge("configure").json()
-    version_tuple = tuple(map(int, config["version"].split(".")))
-    return version_tuple < TREZORD_VERSION_MODERN
+    return tuple(map(int, config["version"].split(".")))
+
+
+def is_legacy_bridge() -> bool:
+    return get_bridge_version() < TREZORD_VERSION_MODERN
+
+
+def supports_protocolV2() -> bool:
+    return get_bridge_version() >= TREZORD_VERSION_THP_SUPPORT
+
+
+def detect_protocol_version(transport: "BridgeTransport") -> int:
+    from .. import mapping, messages
+    from ..messages import FailureType
+
+    protocol_version = ProtocolVersion.PROTOCOL_V1
+    request_type, request_data = mapping.DEFAULT_MAPPING.encode(messages.Initialize())
+    transport.open()
+    transport.write_chunk(request_type.to_bytes(2, "big") + request_data)
+    response = transport.read_chunk()
+    response_type = int.from_bytes(response[:2], "big")
+    response_data = response[2:]
+    response = mapping.DEFAULT_MAPPING.decode(response_type, response_data)
+    if isinstance(response, messages.Failure):
+        if response.code == FailureType.InvalidProtocol:
+            LOG.debug("Protocol V2 detected")
+            protocol_version = ProtocolVersion.PROTOCOL_V2
+
+    return protocol_version
+
+
+def _is_transport_valid(transport: "BridgeTransport") -> bool:
+    is_valid = detect_protocol_version(transport) == ProtocolVersion.PROTOCOL_V1
+    if not is_valid:
+        LOG.warning("Detected unsupported Bridge transport!")
+    return is_valid
+
+
+def filter_invalid_bridge_transports(
+    transports: t.Iterable["BridgeTransport"],
+) -> t.Sequence["BridgeTransport"]:
+    """Filters out invalid bridge transports. Keeps only valid ones."""
+    return [t for t in transports if _is_transport_valid(t)]
 
 
 class BridgeHandle:
@@ -84,7 +128,7 @@ class BridgeHandleModern(BridgeHandle):
 class BridgeHandleLegacy(BridgeHandle):
     def __init__(self, transport: "BridgeTransport") -> None:
         super().__init__(transport)
-        self.request: Optional[str] = None
+        self.request: str | None = None
 
     def write_buf(self, buf: bytes) -> None:
         if self.request is not None:
@@ -110,15 +154,15 @@ class BridgeTransport(Transport):
 
     PATH_PREFIX = "bridge"
     ENABLED: bool = True
+    CHUNK_SIZE = None
 
     def __init__(
-        self, device: Dict[str, Any], legacy: bool, debug: bool = False
+        self, device: t.Dict[str, t.Any], legacy: bool, debug: bool = False
     ) -> None:
         if legacy and debug:
             raise TransportException("Debugging not supported on legacy Bridge")
-
         self.device = device
-        self.session: Optional[str] = None
+        self.session: str | None = device["session"]
         self.debug = debug
         self.legacy = legacy
 
@@ -135,7 +179,7 @@ class BridgeTransport(Transport):
             raise TransportException("Debug device not available")
         return BridgeTransport(self.device, self.legacy, debug=True)
 
-    def _call(self, action: str, data: Optional[str] = None) -> requests.Response:
+    def _call(self, action: str, data: str | None = None) -> requests.Response:
         session = self.session or "null"
         uri = action + "/" + str(session)
         if self.debug:
@@ -144,17 +188,20 @@ class BridgeTransport(Transport):
 
     @classmethod
     def enumerate(
-        cls, _models: Optional[Iterable["TrezorModel"]] = None
-    ) -> Iterable["BridgeTransport"]:
+        cls, _models: t.Iterable["TrezorModel"] | None = None
+    ) -> t.Iterable["BridgeTransport"]:
         try:
             legacy = is_legacy_bridge()
-            return [
-                BridgeTransport(dev, legacy) for dev in call_bridge("enumerate").json()
-            ]
+            return filter_invalid_bridge_transports(
+                [
+                    BridgeTransport(dev, legacy)
+                    for dev in call_bridge("enumerate").json()
+                ]
+            )
         except Exception:
             return []
 
-    def begin_session(self) -> None:
+    def open(self) -> None:
         try:
             data = self._call("acquire/" + self.device["path"])
         except BridgeException as e:
@@ -163,18 +210,17 @@ class BridgeTransport(Transport):
             raise
         self.session = data.json()["session"]
 
-    def end_session(self) -> None:
+    def close(self) -> None:
         if not self.session:
             return
         self._call("release")
         self.session = None
 
-    def write(self, message_type: int, message_data: bytes) -> None:
-        header = struct.pack(">HL", message_type, len(message_data))
-        self.handle.write_buf(header + message_data)
+    def write_chunk(self, chunk: bytes) -> None:
+        self.handle.write_buf(chunk)
 
-    def read(self) -> MessagePayload:
-        data = self.handle.read_buf()
-        headerlen = struct.calcsize(">HL")
-        msg_type, datalen = struct.unpack(">HL", data[:headerlen])
-        return msg_type, data[headerlen : headerlen + datalen]
+    def read_chunk(self) -> bytes:
+        return self.handle.read_buf()
+
+    def ping(self) -> bool:
+        return self.session is not None
