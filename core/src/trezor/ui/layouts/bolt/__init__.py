@@ -1420,10 +1420,18 @@ async def confirm_firmware_update(description: str, fingerprint: str) -> None:
         value=fingerprint,
         description=None,
         chunkify=True,
+        verb=TR.buttons__install,
+        verb_cancel="<",
         info=False,
         cancel=True,
     )
-    await with_info(main, info, "firmware_update", BR_CODE_OTHER)
+    await with_info(
+        main,
+        info,
+        br_name="firmware_update",
+        br_code=BR_CODE_OTHER,
+        info_layout_can_confirm=True,
+    )
 
 
 async def set_brightness(current: int | None = None) -> None:
