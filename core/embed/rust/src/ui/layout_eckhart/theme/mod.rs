@@ -45,8 +45,9 @@ pub const FATAL_ERROR_COLOR: Color = Color::rgb(0xE7, 0x0E, 0x0E);
 pub const FATAL_ERROR_HIGHLIGHT_COLOR: Color = Color::rgb(0xFF, 0x41, 0x41);
 
 // Common constants
+pub const PADDING: i16 = 24; // px
 pub const HEADER_HEIGHT: i16 = 96; // [px]
-pub const SIDE_INSETS: Insets = Insets::sides(24); // [px]
+pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
 
