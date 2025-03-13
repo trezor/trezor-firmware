@@ -302,7 +302,7 @@ def test_credential_phase(client: Client) -> None:
 
     # Delete channel from the device by sending badly encrypted message
     # This is done to prevent channel replacement and trigerring of autoconnect false -> true
-    protocol.noise.noise_protocol.cipher_state_encrypt.n = 250
+    protocol._noise.noise_protocol.cipher_state_encrypt.n = 250
 
     protocol._send_message(ButtonAck())
     with pytest.raises(Exception) as e:
@@ -351,7 +351,7 @@ def test_credential_phase(client: Client) -> None:
 
     # Delete channel from the device by sending badly encrypted message
     # This is done to prevent channel replacement and trigerring of autoconnect false -> true
-    protocol.noise.noise_protocol.cipher_state_encrypt.n = 100
+    protocol._noise.noise_protocol.cipher_state_encrypt.n = 100
 
     protocol._send_message(ButtonAck())
     with pytest.raises(Exception) as e:
