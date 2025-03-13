@@ -8,8 +8,7 @@ use super::{
         component::{ButtonStyle, ButtonStyleSheet},
         fonts,
     },
-    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK,
-    RED, WHITE,
+    BLACK, BLUE, GREY, GREY_DARK, GREY_EXTRA_LIGHT, GREY_LIGHT, GREY_SUPER_DARK, RED, WHITE,
 };
 
 pub const BLD_BG: Color = BLACK;
