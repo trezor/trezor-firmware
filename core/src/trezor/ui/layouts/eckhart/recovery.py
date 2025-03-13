@@ -99,7 +99,7 @@ async def show_group_share_success(share_index: int, group_index: int) -> None:
 
 
 async def continue_recovery(
-    _button_label: str,  # unused on delizia
+    _button_label: str,  # unused on eckhart
     text: str,
     subtext: str | None,
     recovery_type: RecoveryType,
