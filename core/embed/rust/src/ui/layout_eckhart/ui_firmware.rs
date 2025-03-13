@@ -620,9 +620,19 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_group_share_success(
-        _lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
+        lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_REGULAR, lines[0]).centered(),
+            Paragraph::new(&theme::TEXT_REGULAR, lines[1]).centered(),
+            Paragraph::new(&theme::TEXT_REGULAR, lines[2]).centered(),
+            Paragraph::new(&theme::TEXT_REGULAR, lines[3]).centered(),
+        ])
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
+
+        let layout = RootComponent::new(TextScreen::new(paragraphs));
+        Ok(layout)
     }
 
     fn show_homescreen(
