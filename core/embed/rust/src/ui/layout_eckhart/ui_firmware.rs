@@ -27,8 +27,9 @@ use crate::{
 use super::{
     component::Button,
     firmware::{
-        ActionBar, Bip39Input, Header, HeaderMsg, Hint, MnemonicKeyboard, NumberInputScreen,
-        PinKeyboard, SelectWordCountScreen, SelectWordScreen, Slip39Input, TextScreen,
+        ActionBar, Bip39Input, ConfirmHomescreen, Header, HeaderMsg, Hint, Homescreen,
+        MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen, SelectWordScreen,
+        Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -105,10 +106,12 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_homescreen(
-        _title: TString<'static>,
-        _image: BinaryData<'static>,
+        title: TString<'static>,
+        image: BinaryData<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let screen = ConfirmHomescreen::new(title, image)?;
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn confirm_coinjoin(
@@ -314,8 +317,8 @@ impl FirmwareUI for UIEckhart {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
     }
 
-    fn check_homescreen_format(_image: BinaryData, _accept_toif: bool) -> bool {
-        false // not implemented
+    fn check_homescreen_format(image: BinaryData, _accept_toif: bool) -> bool {
+        super::firmware::check_homescreen_format(image)
     }
 
     fn continue_recovery_homepage(
@@ -570,20 +573,22 @@ impl FirmwareUI for UIEckhart {
 
     fn show_homescreen(
         label: TString<'static>,
-        _hold: bool,
+        hold: bool,
         notification: Option<TString<'static>>,
-        _notification_level: u8,
+        notification_level: u8,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_NORMAL, label),
-            Paragraph::new(
-                &theme::TEXT_NORMAL,
-                notification.unwrap_or(TString::empty()),
-            ),
-        ])
-        .into_paragraphs();
-
-        let layout = RootComponent::new(paragraphs);
+        let locked = false;
+        let bootscreen = false;
+        let coinjoin_authorized = false;
+        let notification = notification.map(|w| (w, notification_level));
+        let layout = RootComponent::new(Homescreen::new(
+            label,
+            hold,
+            locked,
+            bootscreen,
+            coinjoin_authorized,
+            notification,
+        )?);
         Ok(layout)
     }
 
@@ -632,11 +637,22 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_lockscreen(
-        _label: TString<'static>,
-        _bootscreen: bool,
-        _coinjoin_authorized: bool,
+        label: TString<'static>,
+        bootscreen: bool,
+        coinjoin_authorized: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let locked = true;
+        let notification = None;
+        let hold = false;
+        let layout = RootComponent::new(Homescreen::new(
+            label,
+            hold,
+            locked,
+            bootscreen,
+            coinjoin_authorized,
+            notification,
+        )?);
+        Ok(layout)
     }
 
     fn show_mismatch(title: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
