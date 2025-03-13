@@ -17,7 +17,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import struct
 
 from typing_extensions import Protocol as StructuralType
@@ -33,9 +32,7 @@ V2_END_SESSION = 0x04
 
 LOG = logging.getLogger(__name__)
 
-DEFAULT_READ_TIMEOUT = os.environ.get("TREZOR_DEFAULT_READ_TIMEOUT")
-if DEFAULT_READ_TIMEOUT is not None:
-    DEFAULT_READ_TIMEOUT = float(DEFAULT_READ_TIMEOUT)
+_DEFAULT_READ_TIMEOUT: float | None = None
 
 
 class Handle(StructuralType):
@@ -54,7 +51,7 @@ class Handle(StructuralType):
 
     def close(self) -> None: ...
 
-    def read_chunk(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> bytes: ...
+    def read_chunk(self, timeout: float | None = None) -> bytes: ...
 
     def write_chunk(self, chunk: bytes) -> None: ...
 
@@ -100,7 +97,7 @@ class Protocol:
         if self.session_counter == 0:
             self.handle.close()
 
-    def read(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> MessagePayload:
+    def read(self, timeout: float | None = None) -> MessagePayload:
         raise NotImplementedError
 
     def write(self, message_type: int, message_data: bytes) -> None:
@@ -120,7 +117,7 @@ class ProtocolBasedTransport(Transport):
     def write(self, message_type: int, message_data: bytes) -> None:
         self.protocol.write(message_type, message_data)
 
-    def read(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> MessagePayload:
+    def read(self, timeout: float | None = None) -> MessagePayload:
         return self.protocol.read(timeout=timeout)
 
     def begin_session(self) -> None:
@@ -148,7 +145,10 @@ class ProtocolV1(Protocol):
             self.handle.write_chunk(chunk)
             buffer = buffer[63:]
 
-    def read(self, timeout: float | None = DEFAULT_READ_TIMEOUT) -> MessagePayload:
+    def read(self, timeout: float | None = None) -> MessagePayload:
+        if timeout is None:
+            timeout = _DEFAULT_READ_TIMEOUT
+
         buffer = bytearray()
         # Read header with first part of message data
         msg_type, datalen, first_chunk = self.read_first(timeout=timeout)

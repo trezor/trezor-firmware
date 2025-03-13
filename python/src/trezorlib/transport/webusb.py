@@ -115,7 +115,7 @@ class WebUsbHandle:
                 return chunk
             except usb1.USBErrorTimeout:
                 if timeout is not None and time.time() - start > timeout:
-                    raise Timeout("Timeout reading WebUSB packet")
+                    raise Timeout(f"Timeout reading WebUSB packet ({timeout}s)")
             except Exception as e:
                 raise TransportException(f"USB read failed: {e}") from e
 

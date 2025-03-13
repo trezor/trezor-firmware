@@ -102,7 +102,7 @@ class HidHandle:
                 break
             else:
                 if timeout is not None and time.time() - start > timeout:
-                    raise Timeout("Timeout reading HID packet")
+                    raise Timeout(f"Timeout reading HID packet ({timeout}s)")
                 time.sleep(0.001)
 
         LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
