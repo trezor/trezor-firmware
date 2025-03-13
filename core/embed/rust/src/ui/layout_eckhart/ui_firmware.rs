@@ -11,7 +11,8 @@ use crate::{
             text::{
                 op::OpTextLayout,
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
+                    Paragraphs, VecExt,
                 },
             },
             Empty, FormattedText,
@@ -326,14 +327,33 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn continue_recovery_homepage(
-        _text: TString<'static>,
-        _subtext: Option<TString<'static>>,
+        text: TString<'static>,
+        subtext: Option<TString<'static>>,
         _button: Option<TString<'static>>,
-        _recovery_type: RecoveryType,
-        _show_instructions: bool,
-        _remaining_shares: Option<Obj>,
+        recovery_type: RecoveryType,
+        show_instructions: bool,
+        remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let pages_vec = if let Some(pages_obj) = remaining_shares {
+            let mut vec = ParagraphVecLong::new();
+            for page in IterBuf::new().try_iterate(pages_obj)? {
+                let [title, description]: [TString; 2] = util::iter_into_array(page)?;
+                vec.add(Paragraph::new(&theme::TEXT_REGULAR, title))
+                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, description).break_after());
+            }
+            Some(vec)
+        } else {
+            None
+        };
+
+        let flow = flow::continue_recovery_homepage::new_continue_recovery_homepage(
+            text,
+            subtext,
+            recovery_type,
+            show_instructions,
+            pages_vec,
+        )?;
+        LayoutObj::new_root(flow)
     }
 
     fn flow_confirm_output(

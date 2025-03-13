@@ -999,5 +999,8 @@
   "997": "backup__not_recommend",
   "998": "words__pay_attention",
   "999": "address__check_with_source",
-  "1000": "words__receive"
+  "1000": "words__receive",
+  "1001": "reset__recovery_share_description",
+  "1002": "reset__recovery_share_number",
+  "1003": "words__recovery_share"
 }
