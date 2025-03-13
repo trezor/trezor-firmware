@@ -246,7 +246,7 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       {NPM1300_BCHGISETLSB, bchg_iset & 1},
       {NPM1300_BCHGISETDISCHARGEMSB, bchg_iset_discharge >> 1},
       {NPM1300_BCHGISETDISCHARGELSB, bchg_iset_discharge & 1},
-      {NPM1300_BCHGDISABLECLR, NPM1300_BCHGDISABLECLR_USENTC},
+      {NPM1300_BCHGDISABLESET, NPM1300_BCHGDISABLESET_IGNORENTC},
       {NPM1300_BCHGDISABLECLR, NPM1300_BCHGDISABLECLR_ENABLERCHRG},
       {NPM1300_BCHGCONFIG, 0},
       // Disable charging
@@ -610,6 +610,13 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
     .flags = I2C_FLAG_RX, .size = 1, .ptr = &g_npm1300_driver.field, \
   }
 
+
+static const i2c_op_t npm1300_ops_charging_err_reset[] = {
+    NPM_WRITE_CONST(NPM1300_TASKCLEARCHGERR, 1),
+    NPM_WRITE_CONST(NPM1300_TASKRELEASEERR, 1),
+  };
+
+
 // I2C operations for enabling of the charging
 static const i2c_op_t npm1300_ops_charging_enable[] = {
     NPM_WRITE_CONST(NPM1300_BCHGENABLESET, NPM1300_BCHGENABLESET_ENABLECHG),
@@ -681,6 +688,7 @@ static const i2c_op_t npm1300_ops_adc_readout[] = {
 #define npm1300_i2c_submit(drv, ops) \
   _npm1300_i2c_submit(drv, ops, ARRAY_LENGTH(ops))
 
+
 // helper function for submitting I2C operations
 static void _npm1300_i2c_submit(npm1300_driver_t* drv, const i2c_op_t* ops,
                                 size_t op_count) {
@@ -700,6 +708,18 @@ static void _npm1300_i2c_submit(npm1300_driver_t* drv, const i2c_op_t* ops,
     // This should never happen
     error_shutdown("npm1300 I2C submit error");
   }
+}
+
+bool npm1300_clear_charger_errors(){
+
+  npm1300_driver_t* drv = &g_npm1300_driver;
+
+  irq_key_t irq_key = irq_lock();
+  npm1300_i2c_submit(drv, npm1300_ops_charging_err_reset);
+  irq_unlock(irq_key);
+
+  return true;
+
 }
 
 // npm1300 driver timer callback invoked when `drv->timer` expires.

@@ -45,6 +45,79 @@ static void prodtest_pmic_init(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_pmic_battery_reincarnate(cli_t* cli){
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Battery reincarnation");
+
+  if (!npm1300_set_charging(true)) {
+    cli_error(cli, CLI_ERROR, "Failed to enable battery charging.");
+    return;
+  }
+
+  npm1300_report_t report;
+
+  uint16_t trial_counter = 0;
+  bool charging = false;
+
+  if (!npm1300_measure_sync(&report)) {
+    cli_error(cli, CLI_ERROR, "Failed to get NPM1300 report.");
+    return;
+  }
+
+  // bool ibat_discharging = ((report.ibat_meas_status >> 2) & 0x03) == 1;
+  bool ibat_charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
+
+
+  if (ibat_charging) {
+    charging = true;
+  }
+
+  while(!charging){
+
+    if (cli_aborted(cli)) {
+      return;
+    }
+
+    cli_trace(cli, "Trial %d", trial_counter++);
+
+
+    npm1300_clear_charger_errors();
+
+    if (!npm1300_set_charging(true)) {
+      cli_error(cli, CLI_ERROR, "Failed to enable battery charging.");
+      return;
+    }
+
+    uint32_t ticks = hal_ticks_ms();
+    while(!ticks_expired(ticks + 100)){
+
+    }
+
+    if (!npm1300_measure_sync(&report)) {
+      cli_error(cli, CLI_ERROR, "Failed to get NPM1300 report.");
+      return;
+    }
+
+    // bool ibat_discharging = ((report.ibat_meas_status >> 2) & 0x03) == 1;
+    bool ibat_charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
+
+    if (ibat_charging) {
+      charging = true;
+    }
+
+  }
+
+  cli_trace(cli, "Success!");
+
+  cli_ok(cli, "");
+
+}
+
 static void prodtest_pmic_charge_enable(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -204,6 +277,13 @@ PRODTEST_CLI_CMD(
   .name = "pmic-init",
   .func = prodtest_pmic_init,
   .info = "Initialize the PMIC driver",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "pmic-battery-reincarnate",
+  .func = prodtest_pmic_battery_reincarnate,
+  .info = "Battery reincarnation",
   .args = ""
 );
 

@@ -80,6 +80,9 @@ uint8_t npm1300_restart_cause(void);
 // management).
 bool npm1300_enter_shipmode(void);
 
+
+bool npm1300_clear_charger_errors();
+
 // Starts the asynchronous measurement
 //
 // The measurement is started as soon as possible and finished in
