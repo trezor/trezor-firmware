@@ -62,12 +62,23 @@ impl<'a> Hint<'a> {
             Instruction::new(text.into(), theme::GREY, icon, Some(theme::GREY_LIGHT));
         Self::from_content(HintContent::Instruction(instruction_component))
     }
+
     pub fn new_instruction_green<T: Into<TString<'static>>>(text: T, icon: Option<Icon>) -> Self {
         let instruction_component = Instruction::new(
             text.into(),
             theme::GREEN_LIME,
             icon,
             Some(theme::GREEN_LIME),
+        );
+        Self::from_content(HintContent::Instruction(instruction_component))
+    }
+
+    pub fn new_warning_severe<T: Into<TString<'static>>>(text: T) -> Self {
+        let instruction_component = Instruction::new(
+            text.into(),
+            theme::RED,
+            Some(theme::ICON_WARNING),
+            Some(theme::RED),
         );
         Self::from_content(HintContent::Instruction(instruction_component))
     }

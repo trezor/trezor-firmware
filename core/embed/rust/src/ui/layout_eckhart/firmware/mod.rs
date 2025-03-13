@@ -1,7 +1,9 @@
 mod action_bar;
+mod confirm_homescreen;
 mod header;
 mod hint;
 mod hold_to_confirm;
+mod homescreen;
 mod keyboard;
 mod number_input_screen;
 mod qr_screen;
@@ -12,10 +14,11 @@ mod vertical_menu;
 mod vertical_menu_screen;
 
 pub use action_bar::{ActionBar, ActionBarMsg};
+pub use confirm_homescreen::{ConfirmHomescreen, ConfirmHomescreenMsg};
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;
-#[cfg(feature = "translations")]
+pub use homescreen::{check_homescreen_format, Homescreen, HomescreenMsg};
 pub use keyboard::{
     bip39::Bip39Input,
     mnemonic::{MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg},
@@ -27,7 +30,6 @@ pub use keyboard::{
 pub use number_input_screen::{NumberInputScreen, NumberInputScreenMsg};
 pub use qr_screen::{QrMsg, QrScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
-#[cfg(feature = "translations")]
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
 pub use vertical_menu::{VerticalMenu, VerticalMenuMsg, MENU_MAX_ITEMS};
