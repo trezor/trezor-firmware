@@ -91,10 +91,11 @@ async def confirm_output(
         assert output.address is not None
         address_short = addresses.address_short(coin, output.address)
         if output.payment_req_index is not None:
-            title = TR.bitcoin__title_confirm_details
+            subtitle = TR.bitcoin__title_confirm_details
         else:
-            title = None
+            subtitle = None
 
+        title = None
         address_label = None
         if output.address_n and not output.multisig:
             from trezor import utils
@@ -104,6 +105,7 @@ async def confirm_output(
             # all models that use the layout?
             show_account_str = utils.UI_LAYOUT == "CAESAR"
             script_type = CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[output.script_type]
+            title = TR.send__address_path
             address_label = (
                 address_n_to_name(
                     coin,
@@ -111,13 +113,14 @@ async def confirm_output(
                     script_type,
                     show_account_str=show_account_str,
                 )
-                or f"{TR.send__address_path} {address_n_to_str(output.address_n)}"
+                or address_n_to_str(output.address_n)
             )
 
         layout = layouts.confirm_output(
             address_short,
             format_coin_amount(output.amount, coin, amount_unit),
             title=title,
+            subtitle=subtitle,
             address_label=address_label,
             output_index=output_index,
             chunkify=chunkify,
