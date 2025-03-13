@@ -1,5 +1,4 @@
 import os
-import random
 import typing as t
 from hashlib import sha256
 
@@ -86,7 +85,7 @@ def _handle_pairing_request(
 def test_allocate_channel(client: Client) -> None:
     protocol = _prepare_protocol(client)
 
-    nonce = random.randbytes(8)
+    nonce = os.urandom(8)
 
     # Use valid nonce
     protocol._send_channel_allocation_request(nonce)
@@ -96,7 +95,7 @@ def test_allocate_channel(client: Client) -> None:
     protocol._send_channel_allocation_request(nonce)
     with pytest.raises(Exception, match="Invalid channel allocation response."):
         protocol._read_channel_allocation_response(
-            expected_nonce=b"\xDE\xAD\xBE\xEF\xDE\xAD\xBE\xEF"
+            expected_nonce=b"\xde\xad\xbe\xef\xde\xad\xbe\xef"
         )
     client.invalidate()
 
@@ -174,7 +173,7 @@ def test_pairing_code_entry(client: Client) -> None:
     commitment_msg = protocol._read_message(ThpCodeEntryCommitment)
     commitment = commitment_msg.commitment
 
-    challenge = random.randbytes(16)
+    challenge = os.urandom(16)
     protocol._send_message(ThpCodeEntryChallenge(challenge=challenge))
 
     cpace_trezor = protocol._read_message(ThpCodeEntryCpaceTrezor)
@@ -188,7 +187,7 @@ def test_pairing_code_entry(client: Client) -> None:
     code = pairing_info.code_entry_code
 
     cpace = Cpace(handshake_hash=protocol.handshake_hash)
-    cpace.random_bytes = random.randbytes
+    cpace.random_bytes = os.urandom
     cpace.generate_keys_and_secret(code.to_bytes(6, "big"), cpace_trezor_public_key)
     sha_ctx = sha256(cpace.shared_secret)
     tag = sha_ctx.digest()
@@ -242,7 +241,7 @@ def _nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
 
     # NFC screen shown
 
-    nfc_secret_host = random.randbytes(16)
+    nfc_secret_host = os.urandom(16)
     # Read `nfc_secret` and `handshake_hash` from Trezor using debuglink
     pairing_info = client.debug.pairing_info(
         thp_channel_id=protocol.channel_id.to_bytes(2, "big"),
