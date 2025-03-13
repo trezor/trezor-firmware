@@ -105,6 +105,13 @@ impl ActionBar {
         )
     }
 
+    pub fn new_cancel_confirm() -> Self {
+        Self::new_double(
+            Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
+            Button::with_text(TR::buttons__confirm.into()),
+        )
+    }
+
     pub fn with_left_short(mut self, left_short: bool) -> Self {
         self.left_short = left_short;
         self
