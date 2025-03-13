@@ -806,14 +806,14 @@ pub enum TranslatedString {
     recovery__title_recover = 522,  // "Recover wallet"
     recovery__title_remaining_shares = 523,  // "Remaining shares"
     recovery__type_word_x_of_y_template = 524,  // "Type word {0} of {1}"
-    recovery__wallet_recovered = 525,  // "Wallet recovery completed"
+    recovery__wallet_recovered = 525,  // {"Bolt": "Wallet recovery completed", "Caesar": "Wallet recovery completed", "Delizia": "Wallet recovery completed", "Eckhart": "Wallet recovery completed."}
     recovery__wanna_cancel_dry_run = 526,  // "Are you sure you want to cancel the backup check?"
     recovery__wanna_cancel_recovery = 527,  // "Are you sure you want to cancel the recovery process?"
     recovery__word_count_template = 528,  // "({0} words)"
     recovery__word_x_of_y_template = 529,  // "Word {0} of {1}"
     recovery__x_more_items_starting_template_plural = 530,  // "{count} more {plural} starting"
     recovery__x_more_shares_needed_template_plural = 531,  // "{count} more {plural} needed"
-    recovery__x_of_y_entered_template = 532,  // "{0} of {1} shares entered"
+    recovery__x_of_y_entered_template = 532,  // {"Bolt": "{0} of {1} shares entered", "Caesar": "{0} of {1} shares entered", "Delizia": "{0} of {1} shares entered", "Eckhart": "{0} of {1} shares entered."}
     recovery__you_have_entered = 533,  // "You have entered"
     reset__advanced_group_threshold_info = 534,  // "The group threshold specifies the number of groups required to recover your wallet."
     reset__all_x_of_y_template = 535,  // "all {0} of {1} shares"
@@ -1412,6 +1412,9 @@ pub enum TranslatedString {
     words__pay_attention = 998,  // "Pay attention"
     address__check_with_source = 999,  // "Check the address with source."
     words__receive = 1000,  // "Receive"
+    reset__recovery_share_description = 1001,  // "A recovery share is a list of words you wrote down when setting up your Trezor."
+    reset__recovery_share_number = 1002,  // "Your wallet backup consists of 1 to 16 shares."
+    words__recovery_share = 1003,  // "Recovery share"
 }
 
 impl TranslatedString {
@@ -2221,14 +2224,28 @@ impl TranslatedString {
             Self::recovery__title_recover => "Recover wallet",
             Self::recovery__title_remaining_shares => "Remaining shares",
             Self::recovery__type_word_x_of_y_template => "Type word {0} of {1}",
+            #[cfg(feature = "layout_bolt")]
             Self::recovery__wallet_recovered => "Wallet recovery completed",
+            #[cfg(feature = "layout_caesar")]
+            Self::recovery__wallet_recovered => "Wallet recovery completed",
+            #[cfg(feature = "layout_delizia")]
+            Self::recovery__wallet_recovered => "Wallet recovery completed",
+            #[cfg(feature = "layout_eckhart")]
+            Self::recovery__wallet_recovered => "Wallet recovery completed.",
             Self::recovery__wanna_cancel_dry_run => "Are you sure you want to cancel the backup check?",
             Self::recovery__wanna_cancel_recovery => "Are you sure you want to cancel the recovery process?",
             Self::recovery__word_count_template => "({0} words)",
             Self::recovery__word_x_of_y_template => "Word {0} of {1}",
             Self::recovery__x_more_items_starting_template_plural => "{count} more {plural} starting",
             Self::recovery__x_more_shares_needed_template_plural => "{count} more {plural} needed",
+            #[cfg(feature = "layout_bolt")]
             Self::recovery__x_of_y_entered_template => "{0} of {1} shares entered",
+            #[cfg(feature = "layout_caesar")]
+            Self::recovery__x_of_y_entered_template => "{0} of {1} shares entered",
+            #[cfg(feature = "layout_delizia")]
+            Self::recovery__x_of_y_entered_template => "{0} of {1} shares entered",
+            #[cfg(feature = "layout_eckhart")]
+            Self::recovery__x_of_y_entered_template => "{0} of {1} shares entered.",
             Self::recovery__you_have_entered => "You have entered",
             Self::reset__advanced_group_threshold_info => "The group threshold specifies the number of groups required to recover your wallet.",
             Self::reset__all_x_of_y_template => "all {0} of {1} shares",
@@ -2904,6 +2921,9 @@ impl TranslatedString {
             Self::words__pay_attention => "Pay attention",
             Self::address__check_with_source => "Check the address with source.",
             Self::words__receive => "Receive",
+            Self::reset__recovery_share_description => "A recovery share is a list of words you wrote down when setting up your Trezor.",
+            Self::reset__recovery_share_number => "Your wallet backup consists of 1 to 16 shares.",
+            Self::words__recovery_share => "Recovery share",
         }
     }
 
@@ -4311,6 +4331,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_words__pay_attention => Some(Self::words__pay_attention),
             Qstr::MP_QSTR_address__check_with_source => Some(Self::address__check_with_source),
             Qstr::MP_QSTR_words__receive => Some(Self::words__receive),
+            Qstr::MP_QSTR_reset__recovery_share_description => Some(Self::reset__recovery_share_description),
+            Qstr::MP_QSTR_reset__recovery_share_number => Some(Self::reset__recovery_share_number),
+            Qstr::MP_QSTR_words__recovery_share => Some(Self::words__recovery_share),
             _ => None,
         }
     }
