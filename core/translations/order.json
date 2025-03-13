@@ -1020,5 +1020,8 @@
   "1018": "backup__not_recommend",
   "1019": "words__pay_attention",
   "1020": "address__check_with_source",
-  "1021": "words__receive"
+  "1021": "words__receive",
+  "1022": "reset__recovery_share_description",
+  "1023": "reset__recovery_share_number",
+  "1024": "words__recovery_share"
 }

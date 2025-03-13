@@ -784,14 +784,14 @@ pub enum TranslatedString {
     recovery__title_recover = 522,  // "Recover wallet"
     recovery__title_remaining_shares = 523,  // "Remaining shares"
     recovery__type_word_x_of_y_template = 524,  // "Type word {0} of {1}"
-    recovery__wallet_recovered = 525,  // "Wallet recovery completed"
+    recovery__wallet_recovered = 525,  // {"Bolt": "Wallet recovery completed", "Caesar": "Wallet recovery completed", "Delizia": "Wallet recovery completed", "Eckhart": "Wallet recovery completed."}
     recovery__wanna_cancel_dry_run = 526,  // "Are you sure you want to cancel the backup check?"
     recovery__wanna_cancel_recovery = 527,  // "Are you sure you want to cancel the recovery process?"
     recovery__word_count_template = 528,  // "({0} words)"
     recovery__word_x_of_y_template = 529,  // "Word {0} of {1}"
     recovery__x_more_items_starting_template_plural = 530,  // "{count} more {plural} starting"
     recovery__x_more_shares_needed_template_plural = 531,  // "{count} more {plural} needed"
-    recovery__x_of_y_entered_template = 532,  // "{0} of {1} shares entered"
+    recovery__x_of_y_entered_template = 532,  // {"Bolt": "{0} of {1} shares entered", "Caesar": "{0} of {1} shares entered", "Delizia": "{0} of {1} shares entered", "Eckhart": "{0} of {1} shares entered."}
     recovery__you_have_entered = 533,  // "You have entered"
     reset__advanced_group_threshold_info = 534,  // "The group threshold specifies the number of groups required to recover your wallet."
     reset__all_x_of_y_template = 535,  // "all {0} of {1} shares"
