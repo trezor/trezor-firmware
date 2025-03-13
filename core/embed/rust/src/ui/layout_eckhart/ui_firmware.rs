@@ -119,11 +119,39 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_emphasized(
-        _title: TString<'static>,
-        _items: Obj,
-        _verb: Option<TString<'static>>,
+        title: TString<'static>,
+        items: Obj,
+        verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let font = fonts::FONT_SATOSHI_REGULAR_38;
+        let text_style = theme::firmware::TEXT_REGULAR;
+        let mut ops = OpTextLayout::new(text_style);
+
+        for item in IterBuf::new().try_iterate(items)? {
+            if item.is_str() {
+                ops = ops.text(TString::try_from(item)?, font)
+            } else {
+                let [emphasis, text]: [Obj; 2] = util::iter_into_array(item)?;
+                let text: TString = text.try_into()?;
+                if emphasis.try_into()? {
+                    ops = ops.color(theme::WHITE);
+                    ops = ops.text(text, font);
+                    ops = ops.color(text_style.text_color);
+                } else {
+                    ops = ops.text(text, font);
+                }
+            }
+        }
+        let text = FormattedText::new(ops);
+        let action_bar = ActionBar::new_double(
+            Button::with_icon(theme::ICON_CROSS),
+            Button::with_text(verb.unwrap_or(TR::buttons__confirm.into())),
+        );
+        let screen = TextScreen::new(text)
+            .with_header(Header::new(title))
+            .with_action_bar(action_bar);
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn confirm_fido(
