@@ -3833,6 +3833,7 @@ if TYPE_CHECKING:
         tx_type: "int | None"
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
+        entropy_commitment: "bytes | None"
 
         def __init__(
             self,
@@ -3849,6 +3850,7 @@ if TYPE_CHECKING:
             tx_type: "int | None" = None,
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
+            entropy_commitment: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -3870,6 +3872,7 @@ if TYPE_CHECKING:
         access_list: "list[EthereumAccessList]"
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
+        entropy_commitment: "bytes | None"
 
         def __init__(
             self,
@@ -3887,6 +3890,7 @@ if TYPE_CHECKING:
             data_initial_chunk: "bytes | None" = None,
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
+            entropy_commitment: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -3899,6 +3903,7 @@ if TYPE_CHECKING:
         signature_v: "int | None"
         signature_r: "bytes | None"
         signature_s: "bytes | None"
+        nonce_commitment: "bytes | None"
 
         def __init__(
             self,
@@ -3907,6 +3912,7 @@ if TYPE_CHECKING:
             signature_v: "int | None" = None,
             signature_r: "bytes | None" = None,
             signature_s: "bytes | None" = None,
+            nonce_commitment: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -3916,11 +3922,13 @@ if TYPE_CHECKING:
 
     class EthereumTxAck(protobuf.MessageType):
         data_chunk: "bytes"
+        entropy: "bytes | None"
 
         def __init__(
             self,
             *,
             data_chunk: "bytes",
+            entropy: "bytes | None" = None,
         ) -> None:
             pass
 
