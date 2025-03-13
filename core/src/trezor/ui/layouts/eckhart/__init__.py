@@ -359,14 +359,16 @@ def show_success(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
+    time_ms: int = 0,
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
     return raise_if_not_confirmed(
         trezorui_api.show_success(
-            title=subheader if subheader else "",
+            title=subheader if subheader else TR.words__title_done,
             button=button,
             description=content,
             allow_cancel=False,
+            time_ms=time_ms,
         ),
         br_name,
         ButtonRequestType.Success,

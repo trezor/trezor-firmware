@@ -11,7 +11,8 @@ use crate::{
             text::{
                 op::OpTextLayout,
                 paragraphs::{
-                    Checklist, Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt,
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
+                    Paragraphs, VecExt,
                 },
             },
             Empty, FormattedText,
@@ -326,14 +327,33 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn continue_recovery_homepage(
-        _text: TString<'static>,
-        _subtext: Option<TString<'static>>,
+        text: TString<'static>,
+        subtext: Option<TString<'static>>,
         _button: Option<TString<'static>>,
-        _recovery_type: RecoveryType,
-        _show_instructions: bool,
-        _remaining_shares: Option<Obj>,
+        recovery_type: RecoveryType,
+        show_instructions: bool,
+        remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let pages_vec = if let Some(pages_obj) = remaining_shares {
+            let mut vec = ParagraphVecLong::new();
+            for page in IterBuf::new().try_iterate(pages_obj)? {
+                let [title, description]: [TString; 2] = util::iter_into_array(page)?;
+                vec.add(Paragraph::new(&theme::TEXT_REGULAR, title))
+                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, description).break_after());
+            }
+            Some(vec)
+        } else {
+            None
+        };
+
+        let flow = flow::continue_recovery_homepage::new_continue_recovery_homepage(
+            text,
+            subtext,
+            recovery_type,
+            show_instructions,
+            pages_vec,
+        )?;
+        LayoutObj::new_root(flow)
     }
 
     fn flow_confirm_output(
@@ -600,9 +620,24 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_group_share_success(
-        _lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
+        lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, lines[0])
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical());
+
+        let layout = RootComponent::new(
+            TextScreen::new(paragraphs)
+                .with_header(
+                    Header::new(TR::words__title_done.into())
+                        .with_icon(theme::ICON_DONE, theme::GREEN_LIGHT)
+                        .with_text_style(theme::label_title_confirm()),
+                )
+                .with_action_bar(ActionBar::new_single(Button::with_text(
+                    TR::buttons__continue.into(),
+                ))),
+        );
+        Ok(layout)
     }
 
     fn show_homescreen(
@@ -797,7 +832,7 @@ impl FirmwareUI for UIEckhart {
         button: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        _time_ms: u32,
+        time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description)
             .into_paragraphs()
@@ -810,6 +845,8 @@ impl FirmwareUI for UIEckhart {
                 Button::with_icon(theme::ICON_CROSS),
                 Button::with_text(button),
             )
+        } else if time_ms > 0 {
+            ActionBar::new_timeout(Button::with_text(button), time_ms)
         } else {
             ActionBar::new_single(Button::with_text(button))
         };
