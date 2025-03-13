@@ -923,6 +923,8 @@ pub struct EthereumSignTx {
     pub chunkify: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignTx.payment_req)
     pub payment_req: ::protobuf::MessageField<super::messages_common::PaymentRequest>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignTx.entropy_commitment)
+    pub entropy_commitment: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum.EthereumSignTx.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1231,8 +1233,44 @@ impl EthereumSignTx {
         self.chunkify = ::std::option::Option::Some(v);
     }
 
+    // optional bytes entropy_commitment = 15;
+
+    pub fn entropy_commitment(&self) -> &[u8] {
+        match self.entropy_commitment.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entropy_commitment(&mut self) {
+        self.entropy_commitment = ::std::option::Option::None;
+    }
+
+    pub fn has_entropy_commitment(&self) -> bool {
+        self.entropy_commitment.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entropy_commitment(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entropy_commitment = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entropy_commitment(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entropy_commitment.is_none() {
+            self.entropy_commitment = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entropy_commitment.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entropy_commitment(&mut self) -> ::std::vec::Vec<u8> {
+        self.entropy_commitment.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(13);
+        let mut fields = ::std::vec::Vec::with_capacity(14);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -1298,6 +1336,11 @@ impl EthereumSignTx {
             "payment_req",
             |m: &EthereumSignTx| { &m.payment_req },
             |m: &mut EthereumSignTx| { &mut m.payment_req },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entropy_commitment",
+            |m: &EthereumSignTx| { &m.entropy_commitment },
+            |m: &mut EthereumSignTx| { &mut m.entropy_commitment },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumSignTx>(
             "EthereumSignTx",
@@ -1378,6 +1421,9 @@ impl ::protobuf::Message for EthereumSignTx {
                 114 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment_req)?;
                 },
+                122 => {
+                    self.entropy_commitment = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -1431,6 +1477,9 @@ impl ::protobuf::Message for EthereumSignTx {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.entropy_commitment.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(15, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -1476,6 +1525,9 @@ impl ::protobuf::Message for EthereumSignTx {
         if let Some(v) = self.payment_req.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(14, v, os)?;
         }
+        if let Some(v) = self.entropy_commitment.as_ref() {
+            os.write_bytes(15, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -1506,6 +1558,7 @@ impl ::protobuf::Message for EthereumSignTx {
         self.definitions.clear();
         self.chunkify = ::std::option::Option::None;
         self.payment_req.clear();
+        self.entropy_commitment = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -1524,6 +1577,7 @@ impl ::protobuf::Message for EthereumSignTx {
             definitions: ::protobuf::MessageField::none(),
             chunkify: ::std::option::Option::None,
             payment_req: ::protobuf::MessageField::none(),
+            entropy_commitment: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1579,6 +1633,8 @@ pub struct EthereumSignTxEIP1559 {
     pub chunkify: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignTxEIP1559.payment_req)
     pub payment_req: ::protobuf::MessageField<super::messages_common::PaymentRequest>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumSignTxEIP1559.entropy_commitment)
+    pub entropy_commitment: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum.EthereumSignTxEIP1559.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -1904,8 +1960,44 @@ impl EthereumSignTxEIP1559 {
         self.chunkify = ::std::option::Option::Some(v);
     }
 
+    // optional bytes entropy_commitment = 15;
+
+    pub fn entropy_commitment(&self) -> &[u8] {
+        match self.entropy_commitment.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entropy_commitment(&mut self) {
+        self.entropy_commitment = ::std::option::Option::None;
+    }
+
+    pub fn has_entropy_commitment(&self) -> bool {
+        self.entropy_commitment.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entropy_commitment(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entropy_commitment = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entropy_commitment(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entropy_commitment.is_none() {
+            self.entropy_commitment = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entropy_commitment.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entropy_commitment(&mut self) -> ::std::vec::Vec<u8> {
+        self.entropy_commitment.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(14);
+        let mut fields = ::std::vec::Vec::with_capacity(15);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -1976,6 +2068,11 @@ impl EthereumSignTxEIP1559 {
             "payment_req",
             |m: &EthereumSignTxEIP1559| { &m.payment_req },
             |m: &mut EthereumSignTxEIP1559| { &mut m.payment_req },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entropy_commitment",
+            |m: &EthereumSignTxEIP1559| { &m.entropy_commitment },
+            |m: &mut EthereumSignTxEIP1559| { &mut m.entropy_commitment },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumSignTxEIP1559>(
             "EthereumSignTxEIP1559",
@@ -2076,6 +2173,9 @@ impl ::protobuf::Message for EthereumSignTxEIP1559 {
                 114 => {
                     ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment_req)?;
                 },
+                122 => {
+                    self.entropy_commitment = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2133,6 +2233,9 @@ impl ::protobuf::Message for EthereumSignTxEIP1559 {
             let len = v.compute_size();
             my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
         }
+        if let Some(v) = self.entropy_commitment.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(15, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2181,6 +2284,9 @@ impl ::protobuf::Message for EthereumSignTxEIP1559 {
         if let Some(v) = self.payment_req.as_ref() {
             ::protobuf::rt::write_message_field_with_cached_size(14, v, os)?;
         }
+        if let Some(v) = self.entropy_commitment.as_ref() {
+            os.write_bytes(15, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -2212,6 +2318,7 @@ impl ::protobuf::Message for EthereumSignTxEIP1559 {
         self.definitions.clear();
         self.chunkify = ::std::option::Option::None;
         self.payment_req.clear();
+        self.entropy_commitment = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2231,6 +2338,7 @@ impl ::protobuf::Message for EthereumSignTxEIP1559 {
             definitions: ::protobuf::MessageField::none(),
             chunkify: ::std::option::Option::None,
             payment_req: ::protobuf::MessageField::none(),
+            entropy_commitment: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2448,6 +2556,8 @@ pub struct EthereumTxRequest {
     pub signature_r: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumTxRequest.signature_s)
     pub signature_s: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumTxRequest.nonce_commitment)
+    pub nonce_commitment: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum.EthereumTxRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2574,8 +2684,44 @@ impl EthereumTxRequest {
         self.signature_s.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes nonce_commitment = 5;
+
+    pub fn nonce_commitment(&self) -> &[u8] {
+        match self.nonce_commitment.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_nonce_commitment(&mut self) {
+        self.nonce_commitment = ::std::option::Option::None;
+    }
+
+    pub fn has_nonce_commitment(&self) -> bool {
+        self.nonce_commitment.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nonce_commitment(&mut self, v: ::std::vec::Vec<u8>) {
+        self.nonce_commitment = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_nonce_commitment(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.nonce_commitment.is_none() {
+            self.nonce_commitment = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.nonce_commitment.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_nonce_commitment(&mut self) -> ::std::vec::Vec<u8> {
+        self.nonce_commitment.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(4);
+        let mut fields = ::std::vec::Vec::with_capacity(5);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "data_length",
@@ -2596,6 +2742,11 @@ impl EthereumTxRequest {
             "signature_s",
             |m: &EthereumTxRequest| { &m.signature_s },
             |m: &mut EthereumTxRequest| { &mut m.signature_s },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nonce_commitment",
+            |m: &EthereumTxRequest| { &m.nonce_commitment },
+            |m: &mut EthereumTxRequest| { &mut m.nonce_commitment },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumTxRequest>(
             "EthereumTxRequest",
@@ -2627,6 +2778,9 @@ impl ::protobuf::Message for EthereumTxRequest {
                 34 => {
                     self.signature_s = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                42 => {
+                    self.nonce_commitment = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2651,6 +2805,9 @@ impl ::protobuf::Message for EthereumTxRequest {
         if let Some(v) = self.signature_s.as_ref() {
             my_size += ::protobuf::rt::bytes_size(4, &v);
         }
+        if let Some(v) = self.nonce_commitment.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2668,6 +2825,9 @@ impl ::protobuf::Message for EthereumTxRequest {
         }
         if let Some(v) = self.signature_s.as_ref() {
             os.write_bytes(4, v)?;
+        }
+        if let Some(v) = self.nonce_commitment.as_ref() {
+            os.write_bytes(5, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2690,6 +2850,7 @@ impl ::protobuf::Message for EthereumTxRequest {
         self.signature_v = ::std::option::Option::None;
         self.signature_r = ::std::option::Option::None;
         self.signature_s = ::std::option::Option::None;
+        self.nonce_commitment = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2699,6 +2860,7 @@ impl ::protobuf::Message for EthereumTxRequest {
             signature_v: ::std::option::Option::None,
             signature_r: ::std::option::Option::None,
             signature_s: ::std::option::Option::None,
+            nonce_commitment: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -2728,6 +2890,8 @@ pub struct EthereumTxAck {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumTxAck.data_chunk)
     pub data_chunk: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ethereum.EthereumTxAck.entropy)
+    pub entropy: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ethereum.EthereumTxAck.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2780,13 +2944,54 @@ impl EthereumTxAck {
         self.data_chunk.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes entropy = 2;
+
+    pub fn entropy(&self) -> &[u8] {
+        match self.entropy.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entropy(&mut self) {
+        self.entropy = ::std::option::Option::None;
+    }
+
+    pub fn has_entropy(&self) -> bool {
+        self.entropy.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entropy(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entropy = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entropy(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entropy.is_none() {
+            self.entropy = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entropy.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entropy(&mut self) -> ::std::vec::Vec<u8> {
+        self.entropy.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "data_chunk",
             |m: &EthereumTxAck| { &m.data_chunk },
             |m: &mut EthereumTxAck| { &mut m.data_chunk },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entropy",
+            |m: &EthereumTxAck| { &m.entropy },
+            |m: &mut EthereumTxAck| { &mut m.entropy },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<EthereumTxAck>(
             "EthereumTxAck",
@@ -2812,6 +3017,9 @@ impl ::protobuf::Message for EthereumTxAck {
                 10 => {
                     self.data_chunk = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                18 => {
+                    self.entropy = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2827,6 +3035,9 @@ impl ::protobuf::Message for EthereumTxAck {
         if let Some(v) = self.data_chunk.as_ref() {
             my_size += ::protobuf::rt::bytes_size(1, &v);
         }
+        if let Some(v) = self.entropy.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2835,6 +3046,9 @@ impl ::protobuf::Message for EthereumTxAck {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.data_chunk.as_ref() {
             os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.entropy.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2854,12 +3068,14 @@ impl ::protobuf::Message for EthereumTxAck {
 
     fn clear(&mut self) {
         self.data_chunk = ::std::option::Option::None;
+        self.entropy = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static EthereumTxAck {
         static instance: EthereumTxAck = EthereumTxAck {
             data_chunk: ::std::option::Option::None,
+            entropy: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4473,7 +4689,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x01(\x08R\x08chunkify\"c\n\x0fEthereumAddress\x12$\n\x0c_old_address\
     \x18\x01\x20\x01(\x0cR\nOldAddressB\x02\x18\x01\x12\x18\n\x07address\x18\
     \x02\x20\x01(\tR\x07address\x12\x10\n\x03mac\x18\x03\x20\x01(\x0cR\x03ma\
-    c\"\xed\x03\n\x0eEthereumSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
+    c\"\x9c\x04\n\x0eEthereumSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
     \x08addressN\x12\x16\n\x05nonce\x18\x02\x20\x01(\x0c:\0R\x05nonce\x12\
     \x1b\n\tgas_price\x18\x03\x20\x02(\x0cR\x08gasPrice\x12\x1b\n\tgas_limit\
     \x18\x04\x20\x02(\x0cR\x08gasLimit\x12\x10\n\x02to\x18\x0b\x20\x01(\t:\0\
@@ -4484,7 +4700,8 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     R\x06txType\x12R\n\x0bdefinitions\x18\x0c\x20\x01(\x0b20.hw.trezor.messa\
     ges.ethereum.EthereumDefinitionsR\x0bdefinitions\x12\x1a\n\x08chunkify\
     \x18\r\x20\x01(\x08R\x08chunkify\x12J\n\x0bpayment_req\x18\x0e\x20\x01(\
-    \x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentReq\"\xbc\x05\n\
+    \x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentReq\x12-\n\x12e\
+    ntropy_commitment\x18\x0f\x20\x01(\x0cR\x11entropyCommitment\"\xeb\x05\n\
     \x15EthereumSignTxEIP1559\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08ad\
     dressN\x12\x14\n\x05nonce\x18\x02\x20\x02(\x0cR\x05nonce\x12\x1e\n\x0bma\
     x_gas_fee\x18\x03\x20\x02(\x0cR\tmaxGasFee\x12(\n\x10max_priority_fee\
@@ -4498,34 +4715,36 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x12R\n\x0bdefinitions\x18\x0c\x20\x01(\x0b20.hw.trezor.messages.ethereu\
     m.EthereumDefinitionsR\x0bdefinitions\x12\x1a\n\x08chunkify\x18\r\x20\
     \x01(\x08R\x08chunkify\x12J\n\x0bpayment_req\x18\x0e\x20\x01(\x0b2).hw.t\
-    rezor.messages.common.PaymentRequestR\npaymentReq\x1aQ\n\x12EthereumAcce\
+    rezor.messages.common.PaymentRequestR\npaymentReq\x12-\n\x12entropy_comm\
+    itment\x18\x0f\x20\x01(\x0cR\x11entropyCommitment\x1aQ\n\x12EthereumAcce\
     ssList\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12!\n\x0csto\
-    rage_keys\x18\x02\x20\x03(\x0cR\x0bstorageKeys\"\x97\x01\n\x11EthereumTx\
+    rage_keys\x18\x02\x20\x03(\x0cR\x0bstorageKeys\"\xc2\x01\n\x11EthereumTx\
     Request\x12\x1f\n\x0bdata_length\x18\x01\x20\x01(\rR\ndataLength\x12\x1f\
     \n\x0bsignature_v\x18\x02\x20\x01(\rR\nsignatureV\x12\x1f\n\x0bsignature\
     _r\x18\x03\x20\x01(\x0cR\nsignatureR\x12\x1f\n\x0bsignature_s\x18\x04\
-    \x20\x01(\x0cR\nsignatureS\".\n\rEthereumTxAck\x12\x1d\n\ndata_chunk\x18\
-    \x01\x20\x02(\x0cR\tdataChunk\"\x91\x01\n\x13EthereumSignMessage\x12\x1b\
-    \n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x18\n\x07message\x18\
-    \x02\x20\x02(\x0cR\x07message\x12'\n\x0fencoded_network\x18\x03\x20\x01(\
-    \x0cR\x0eencodedNetwork\x12\x1a\n\x08chunkify\x18\x04\x20\x01(\x08R\x08c\
-    hunkify\"R\n\x18EthereumMessageSignature\x12\x1c\n\tsignature\x18\x02\
-    \x20\x02(\x0cR\tsignature\x12\x18\n\x07address\x18\x03\x20\x02(\tR\x07ad\
-    dress\"\x85\x01\n\x15EthereumVerifyMessage\x12\x1c\n\tsignature\x18\x02\
-    \x20\x02(\x0cR\tsignature\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07\
-    message\x12\x18\n\x07address\x18\x04\x20\x02(\tR\x07address\x12\x1a\n\
-    \x08chunkify\x18\x05\x20\x01(\x08R\x08chunkify\"\xb4\x01\n\x15EthereumSi\
-    gnTypedHash\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x122\n\
-    \x15domain_separator_hash\x18\x02\x20\x02(\x0cR\x13domainSeparatorHash\
-    \x12!\n\x0cmessage_hash\x18\x03\x20\x01(\x0cR\x0bmessageHash\x12'\n\x0fe\
-    ncoded_network\x18\x04\x20\x01(\x0cR\x0eencodedNetwork\"T\n\x1aEthereumT\
-    ypedDataSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
-    \x12\x18\n\x07address\x18\x02\x20\x02(\tR\x07address\"\xa8\x01\n\x13Ethe\
-    reumDefinitions\x12'\n\x0fencoded_network\x18\x01\x20\x01(\x0cR\x0eencod\
-    edNetwork\x12#\n\rencoded_token\x18\x02\x20\x01(\x0cR\x0cencodedToken\
-    \x12C\n\x1eencoded_erc7730_display_format\x18\x03\x20\x01(\x0cR\x1bencod\
-    edErc7730DisplayFormatB<\n#com.satoshilabs.trezor.lib.protobufB\x15Trezo\
-    rMessageEthereum\
+    \x20\x01(\x0cR\nsignatureS\x12)\n\x10nonce_commitment\x18\x05\x20\x01(\
+    \x0cR\x0fnonceCommitment\"H\n\rEthereumTxAck\x12\x1d\n\ndata_chunk\x18\
+    \x01\x20\x02(\x0cR\tdataChunk\x12\x18\n\x07entropy\x18\x02\x20\x01(\x0cR\
+    \x07entropy\"\x91\x01\n\x13EthereumSignMessage\x12\x1b\n\taddress_n\x18\
+    \x01\x20\x03(\rR\x08addressN\x12\x18\n\x07message\x18\x02\x20\x02(\x0cR\
+    \x07message\x12'\n\x0fencoded_network\x18\x03\x20\x01(\x0cR\x0eencodedNe\
+    twork\x12\x1a\n\x08chunkify\x18\x04\x20\x01(\x08R\x08chunkify\"R\n\x18Et\
+    hereumMessageSignature\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsigna\
+    ture\x12\x18\n\x07address\x18\x03\x20\x02(\tR\x07address\"\x85\x01\n\x15\
+    EthereumVerifyMessage\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignat\
+    ure\x12\x18\n\x07message\x18\x03\x20\x02(\x0cR\x07message\x12\x18\n\x07a\
+    ddress\x18\x04\x20\x02(\tR\x07address\x12\x1a\n\x08chunkify\x18\x05\x20\
+    \x01(\x08R\x08chunkify\"\xb4\x01\n\x15EthereumSignTypedHash\x12\x1b\n\ta\
+    ddress_n\x18\x01\x20\x03(\rR\x08addressN\x122\n\x15domain_separator_hash\
+    \x18\x02\x20\x02(\x0cR\x13domainSeparatorHash\x12!\n\x0cmessage_hash\x18\
+    \x03\x20\x01(\x0cR\x0bmessageHash\x12'\n\x0fencoded_network\x18\x04\x20\
+    \x01(\x0cR\x0eencodedNetwork\"T\n\x1aEthereumTypedDataSignature\x12\x1c\
+    \n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\x12\x18\n\x07address\x18\
+    \x02\x20\x02(\tR\x07address\"\xa8\x01\n\x13EthereumDefinitions\x12'\n\
+    \x0fencoded_network\x18\x01\x20\x01(\x0cR\x0eencodedNetwork\x12#\n\renco\
+    ded_token\x18\x02\x20\x01(\x0cR\x0cencodedToken\x12C\n\x1eencoded_erc773\
+    0_display_format\x18\x03\x20\x01(\x0cR\x1bencodedErc7730DisplayFormatB<\
+    \n#com.satoshilabs.trezor.lib.protobufB\x15TrezorMessageEthereum\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

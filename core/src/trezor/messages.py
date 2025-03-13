@@ -3981,6 +3981,7 @@ if TYPE_CHECKING:
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
+        entropy_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -3998,6 +3999,7 @@ if TYPE_CHECKING:
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
             payment_req: "PaymentRequest | None" = None,
+            entropy_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4020,6 +4022,7 @@ if TYPE_CHECKING:
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
         payment_req: "PaymentRequest | None"
+        entropy_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -4038,6 +4041,7 @@ if TYPE_CHECKING:
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
             payment_req: "PaymentRequest | None" = None,
+            entropy_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4050,6 +4054,7 @@ if TYPE_CHECKING:
         signature_v: "int | None"
         signature_r: "AnyBytes | None"
         signature_s: "AnyBytes | None"
+        nonce_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -4058,6 +4063,7 @@ if TYPE_CHECKING:
             signature_v: "int | None" = None,
             signature_r: "AnyBytes | None" = None,
             signature_s: "AnyBytes | None" = None,
+            nonce_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
@@ -4067,11 +4073,13 @@ if TYPE_CHECKING:
 
     class EthereumTxAck(protobuf.MessageType):
         data_chunk: "AnyBytes"
+        entropy: "AnyBytes | None"
 
         def __init__(
             self,
             *,
             data_chunk: "AnyBytes",
+            entropy: "AnyBytes | None" = None,
         ) -> None:
             pass
 

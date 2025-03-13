@@ -5488,6 +5488,7 @@ class EthereumSignTx(protobuf.MessageType):
         12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
         13: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
         14: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
+        15: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5506,6 +5507,7 @@ class EthereumSignTx(protobuf.MessageType):
         definitions: Optional["EthereumDefinitions"] = None,
         chunkify: Optional["bool"] = None,
         payment_req: Optional["PaymentRequest"] = None,
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.gas_price = gas_price
@@ -5520,6 +5522,7 @@ class EthereumSignTx(protobuf.MessageType):
         self.definitions = definitions
         self.chunkify = chunkify
         self.payment_req = payment_req
+        self.entropy_commitment = entropy_commitment
 
 
 class EthereumSignTxEIP1559(protobuf.MessageType):
@@ -5539,6 +5542,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
         13: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
         14: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
+        15: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5558,6 +5562,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         definitions: Optional["EthereumDefinitions"] = None,
         chunkify: Optional["bool"] = None,
         payment_req: Optional["PaymentRequest"] = None,
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
@@ -5573,6 +5578,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         self.definitions = definitions
         self.chunkify = chunkify
         self.payment_req = payment_req
+        self.entropy_commitment = entropy_commitment
 
 
 class EthereumTxRequest(protobuf.MessageType):
@@ -5582,6 +5588,7 @@ class EthereumTxRequest(protobuf.MessageType):
         2: protobuf.Field("signature_v", "uint32", repeated=False, required=False, default=None),
         3: protobuf.Field("signature_r", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("signature_s", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("nonce_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5591,25 +5598,30 @@ class EthereumTxRequest(protobuf.MessageType):
         signature_v: Optional["int"] = None,
         signature_r: Optional["bytes"] = None,
         signature_s: Optional["bytes"] = None,
+        nonce_commitment: Optional["bytes"] = None,
     ) -> None:
         self.data_length = data_length
         self.signature_v = signature_v
         self.signature_r = signature_r
         self.signature_s = signature_s
+        self.nonce_commitment = nonce_commitment
 
 
 class EthereumTxAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 60
     FIELDS = {
         1: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
+        2: protobuf.Field("entropy", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         data_chunk: "bytes",
+        entropy: Optional["bytes"] = None,
     ) -> None:
         self.data_chunk = data_chunk
+        self.entropy = entropy
 
 
 class EthereumSignMessage(protobuf.MessageType):
