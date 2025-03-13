@@ -6,9 +6,23 @@ use crate::{
     },
 };
 
-/// Size of image buffer in bytes
-/// (up to 240x240 pixel, 16-bit RGB565 image)
-const IMAGE_BUFFER_SIZE: usize = 240 * 240 * 2;
+#[cfg(not(feature = "layout_eckhart"))]
+mod buffer_size {
+    pub use crate::ui::constant::{HEIGHT, WIDTH};
+    /// 16-bit RGB565 color format (2 bytes per pixel)
+    pub const BYTES_PER_PIXEL: usize = 2;
+}
+
+#[cfg(feature = "layout_eckhart")]
+mod buffer_size {
+    pub use crate::ui::constant::{HEIGHT, WIDTH};
+    /// 32-bit RGBA8888 color format (4 bytes per pixel)
+    pub const BYTES_PER_PIXEL: usize = 4;
+}
+
+/// Size of image buffer in bytes based on display dimensions and color format
+const IMAGE_BUFFER_SIZE: usize =
+    buffer_size::WIDTH as usize * buffer_size::HEIGHT as usize * buffer_size::BYTES_PER_PIXEL;
 
 #[repr(align(16))]
 struct AlignedBuffer {
