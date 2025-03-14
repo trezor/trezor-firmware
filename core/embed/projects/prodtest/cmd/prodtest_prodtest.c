@@ -33,8 +33,9 @@
 #include <version.h>
 
 static void prodtest_prodtest_intro(cli_t* cli) {
-  cli_trace(cli, "Welcome to Trezor %s Production Test Firmware v%d.%d.%d.",
-            MODEL_NAME, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+  cli_trace(cli, "Welcome to Trezor %s Production Test Firmware v%d.%d.%d.%d.",
+            MODEL_NAME, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH,
+            VERSION_BUILD);
   cli_trace(cli, "");
   cli_trace(cli, "Type 'help' to view all available commands.");
   cli_trace(cli, "");
@@ -46,7 +47,8 @@ static void prodtest_prodtest_version(cli_t* cli) {
     return;
   }
 
-  cli_ok(cli, "%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+  cli_ok(cli, "%d.%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH,
+         VERSION_BUILD);
 }
 
 static void prodtest_prodtest_wipe(cli_t* cli) {
