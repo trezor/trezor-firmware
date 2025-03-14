@@ -71,13 +71,12 @@ static void prodtest_pmic_charge_enable(cli_t* cli) {
 
     bool charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
 
-    cli_trace(
-    cli, "Trying to start charging: %d.%03d %d.%03d %d.%03d 0x%02X 0x%02X",
-    (int)report.vbat, (int)(report.vbat * 1000) % 1000,
-    (int)report.ibat, (int)abs(report.ibat * 1000) % 1000,
-    (int)report.ntc_temp, (int)abs(report.ntc_temp * 1000) % 1000,
-    report.ibat_meas_status, report.buck_status);
-
+    cli_trace(cli,
+              "Trying to start charging: %d.%03d %d.%03d %d.%03d 0x%02X 0x%02X",
+              (int)report.vbat, (int)(report.vbat * 1000) % 1000,
+              (int)report.ibat, (int)abs(report.ibat * 1000) % 1000,
+              (int)report.ntc_temp, (int)abs(report.ntc_temp * 1000) % 1000,
+              report.ibat_meas_status, report.buck_status);
 
     if (charging) {
       systick_delay_ms(100);
@@ -279,7 +278,6 @@ static void prodtest_pmic_report(cli_t* cli) {
 //
 //   cli_ok(cli, "");
 // }
-
 
 // clang-format off
 
