@@ -612,6 +612,8 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
 
 // I2C operations for enabling of the charging
 static const i2c_op_t npm1300_ops_charging_enable[] = {
+    NPM_WRITE_CONST(NPM1300_TASKCLEARCHGERR, 1),
+    NPM_WRITE_CONST(NPM1300_TASKRELEASEERR, 1),
     NPM_WRITE_CONST(NPM1300_BCHGENABLESET, NPM1300_BCHGENABLESET_ENABLECHG),
 };
 

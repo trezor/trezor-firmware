@@ -51,12 +51,49 @@ static void prodtest_pmic_charge_enable(cli_t* cli) {
     return;
   }
 
+  npm1300_report_t report = {0};
+
   cli_trace(cli, "Enabling battery charging @ %dmA...",
             npm1300_get_charging_limit());
 
-  if (!npm1300_set_charging(true)) {
-    cli_error(cli, CLI_ERROR, "Failed to enable battery charging.");
-    return;
+  while (true) {
+    if (!npm1300_set_charging(true)) {
+      cli_error(cli, CLI_ERROR, "Failed to enable battery charging.");
+      return;
+    }
+
+    systick_delay_ms(10);
+
+    if (!npm1300_measure_sync(&report)) {
+      cli_error(cli, CLI_ERROR, "Failed to get NPM1300 report.");
+      return;
+    }
+
+    bool charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
+
+    cli_trace(
+    cli, "Trying to start charging: %d.%03d %d.%03d %d.%03d 0x%02X 0x%02X",
+    (int)report.vbat, (int)(report.vbat * 1000) % 1000,
+    (int)report.ibat, (int)abs(report.ibat * 1000) % 1000,
+    (int)report.ntc_temp, (int)abs(report.ntc_temp * 1000) % 1000,
+    report.ibat_meas_status, report.buck_status);
+
+
+    if (charging) {
+      systick_delay_ms(100);
+      // confirm that we are still charging after some delay
+      npm1300_measure_sync(&report);
+
+      charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
+
+      if (charging) {
+        break;
+      }
+    }
+
+    if (cli_aborted(cli)) {
+      return;
+    }
   }
 
   cli_ok(cli, "");
@@ -198,6 +235,52 @@ static void prodtest_pmic_report(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+//
+// static void prodtest_pmic_resurrect(cli_t* cli) {
+//
+//
+//   if (cli_arg_count(cli) > 0) {
+//     cli_error_arg_count(cli);
+//     return;
+//   }
+//
+//
+//   while (true) {
+//     npm1300_report_t report;
+//
+//     if (!npm1300_measure_sync(&report)) {
+//       cli_error(cli, CLI_ERROR, "Failed to get NPM1300 report.");
+//       return;
+//     }
+//
+//     npm1300_set_charging(true);
+//
+//     bool ibat_charging = ((report.ibat_meas_status >> 2) & 0x03) == 3;
+//     if (ibat_charging) {
+//       cli_trace(cli, "Charging established");
+//       //break;
+//     }
+//
+//     cli_progress(
+//     cli, "%d.%03d %d.%03d %d.%03d %d.%03d %d.%03d 0x%02X 0x%02X",
+//     (int)report.vbat, (int)(report.vbat * 1000) % 1000,
+//     (int)report.ibat, (int)abs(report.ibat * 1000) % 1000,
+//     (int)report.ntc_temp, (int)abs(report.ntc_temp * 1000) % 1000,
+//     (int)report.vsys, (int)(report.vsys * 1000) % 1000,
+//     (int)report.die_temp, (int)abs(report.die_temp * 1000) % 1000,
+//     report.ibat_meas_status, report.buck_status);
+//
+//
+//     if (cli_aborted(cli)) {
+//       return;
+//     }
+//
+//   }
+//
+//   cli_ok(cli, "");
+// }
+
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -240,6 +323,6 @@ PRODTEST_CLI_CMD(
   .func = prodtest_pmic_report,
   .info = "Retrieve PMIC report",
   .args = "[<count>] [<period>]"
-);
+  );
 
 #endif  // USE_POWERCTL

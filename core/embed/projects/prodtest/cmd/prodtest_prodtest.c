@@ -44,7 +44,7 @@ static void prodtest_prodtest_version(cli_t* cli) {
     return;
   }
 
-  cli_ok(cli, "%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+  cli_ok(cli, "%d.%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_BUILD);
 }
 
 static void prodtest_prodtest_wipe(cli_t* cli) {
