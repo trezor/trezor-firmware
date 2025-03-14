@@ -5,7 +5,6 @@ import os
 import typing as t
 from binascii import hexlify
 
-import click
 from noise.connection import Keypair, NoiseConnection
 
 from ... import exceptions, messages, protobuf
@@ -175,12 +174,7 @@ class ProtocolV2Channel(Channel):
                 raise exceptions.DeviceLockedException()
 
         if not header.is_handshake_init_response():
-            LOG.debug("Received message is not a valid handshake init response message")
-
-            click.echo(
-                "Received message is not a valid handshake init response message",
-                err=True,
-            )
+            LOG.error("Received message is not a valid handshake init response message")
         self._noise.read_message(payload)
         return payload
 
@@ -217,10 +211,7 @@ class ProtocolV2Channel(Channel):
         # Read handshake completion response, ignore payload as we do not care about the state
         header, data = self._read_until_valid_crc_check()
         if not header.is_handshake_comp_response():
-            click.echo(
-                "Received message is not a valid handshake completion response",
-                err=True,
-            )
+            LOG.error("Received message is not a valid handshake completion response")
         trezor_state = self._noise.decrypt(bytes(data))
         # TODO handle trezor_state
         print("trezor state:", trezor_state)
@@ -249,7 +240,7 @@ class ProtocolV2Channel(Channel):
     def _read_ack(self):
         header, payload = self._read_until_valid_crc_check()
         if not header.is_ack() or len(payload) > 0:
-            click.echo("Received message is not a valid ACK", err=True)
+            LOG.error("Received message is not a valid ACK")
 
     def _send_ack_0(self):
         LOG.debug("sending ack 0")
@@ -297,11 +288,10 @@ class ProtocolV2Channel(Channel):
             err = _get_error_from_int(raw_payload[0])
             raise Exception("Received ThpError: " + err)
         if not header.is_encrypted_transport():
-            click.echo(
+            LOG.error(
                 "Trying to decrypt not encrypted message! ("
                 + hexlify(header.to_bytes_init() + raw_payload).decode()
-                + ")",
-                err=True,
+                + ")"
             )
 
         if not control_byte.is_ack(header.ctrl_byte):
@@ -334,10 +324,9 @@ class ProtocolV2Channel(Channel):
         while not is_valid:
             is_valid = checksum.is_valid(chksum, header.to_bytes_init() + payload)
             if not is_valid:
-                click.echo(
+                LOG.error(
                     "Received a message with an invalid checksum:"
-                    + hexlify(header.to_bytes_init() + payload + chksum).decode(),
-                    err=True,
+                    + hexlify(header.to_bytes_init() + payload + chksum).decode()
                 )
                 header, payload, chksum = thp_io.read(self.transport)
 
@@ -347,17 +336,13 @@ class ProtocolV2Channel(Channel):
         self, header: MessageHeader, payload: bytes, original_nonce: bytes
     ) -> bool:
         if not header.is_channel_allocation_response():
-            click.echo(
-                "Received message is not a channel allocation response", err=True
-            )
+            LOG.error("Received message is not a channel allocation response")
             return False
         if len(payload) < 10:
-            click.echo("Invalid channel allocation response payload", err=True)
+            LOG.error("Invalid channel allocation response payload")
             return False
         if payload[:8] != original_nonce:
-            click.echo(
-                "Invalid channel allocation response payload (nonce mismatch)", err=True
-            )
+            LOG.error("Invalid channel allocation response payload (nonce mismatch)")
             return False
         return True
 
