@@ -70,7 +70,9 @@ class ProtocolV2Channel(Channel):
         message_type, message_data = self.mapping.encode(message)
         self.session_id: int = DEFAULT_SESSION_ID
         self._encrypt_and_write(DEFAULT_SESSION_ID, message_type, message_data)
-        _ = self._read_until_valid_crc_check()  # TODO check ACK
+        header, _payload = self._read_until_valid_crc_check()
+        if not header.is_ack():
+            raise exceptions.TrezorException("ACK expected")
         _, msg_type, msg_data = self.read_and_decrypt()
         features = self.mapping.decode(msg_type, msg_data)
         if not isinstance(features, messages.Features):
