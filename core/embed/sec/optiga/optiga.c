@@ -37,7 +37,7 @@
 // Digest of the stretched PIN (OID 0xF1D4).
 #define OID_STRETCHED_PIN (OPTIGA_OID_DATA + 4)
 
-// Counter-protected key for HMAC-SHA256 PIN stretching step (OID 0xF1D5).
+// Counter-protected key for HMAC-SHA256 PIN stretching step (OID 0xF1D8).
 #define OID_PIN_HMAC (OPTIGA_OID_DATA + 8)
 
 // Counter which limits the guesses at OID_STRETCHED_PIN (OID 0xE120).
@@ -745,7 +745,8 @@ optiga_pin_result optiga_pin_verify_v4(
 
   ui_progress();
 
-  // Authorise using OID_PIN_SECRET so that we can write to OID_PIN_COUNTER.
+  // Authorise using OID_PIN_SECRET so that we can write to
+  // OID_STRETCHED_PIN_CTR.
   if (optiga_set_auto_state(OPTIGA_OID_SESSION_CTX, OID_PIN_SECRET, out_secret,
                             OPTIGA_PIN_SECRET_SIZE) != OPTIGA_SUCCESS) {
     ret = OPTIGA_PIN_ERROR;

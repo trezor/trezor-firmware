@@ -24,6 +24,7 @@
     - [SLIP-39](core/misc/slip0039.md)
     - [Translation data format](core/misc/translations.md)
     - [UI Layout lifecycle](core/misc/layout-lifecycle.md)
+    - [Optiga configuration](core/misc/optiga.md)
 - [Legacy](legacy/index.md)
     - [Firmware format](legacy/firmware-format.md)
 - [Python](python/index.md)
