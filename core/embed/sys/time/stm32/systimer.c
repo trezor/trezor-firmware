@@ -29,7 +29,7 @@
 //
 // Consider different implementation (i.e. priority queue
 // using binary heap if MAX_SYSTIMERS exceeds 10 or more)
-#define MAX_SYSTIMERS 8
+#define MAX_SYSTIMERS 16
 
 // User timer instance
 struct systimer {
