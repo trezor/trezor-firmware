@@ -141,11 +141,15 @@ class Channel:
 
         self._handle_received_packet(packet)
 
+        if self.expected_payload_length == 0:  # Reading failed TODO
+            from trezor.wire.thp import ThpErrorType
+
+            return self.write_error(ThpErrorType.TRANSPORT_BUSY)
+
         try:
             buffer = memory_manager.get_existing_read_buffer(self.get_channel_id_int())
         except WireBufferError:
             pass  # TODO ??
-
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             try:
                 self._log("self.buffer: ", get_bytes_as_str(buffer))
@@ -204,7 +208,14 @@ class Channel:
 
             self.fallback_decrypt = True
 
-            self._prepare_fallback()
+            try:
+                self._prepare_fallback()
+            except Exception:
+                self.fallback_decrypt = False
+                self.expected_payload_length = 0
+                self.bytes_read = 0
+                print("FAILED TO FALLBACK")
+                return
 
             to_read_len = min(len(packet) - INIT_HEADER_LENGTH, payload_length)
             buf = memoryview(self.buffer)[:to_read_len]
@@ -417,7 +428,8 @@ class Channel:
                 buffer, msg, session_id
             )
         except WireBufferError:
-            from trezor.messages import Failure, FailureType
+            from trezor.enums import FailureType
+            from trezor.messages import Failure
 
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 self._log("Failed to get write buffer, killing channel.")
