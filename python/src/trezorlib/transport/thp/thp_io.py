@@ -24,7 +24,6 @@ def write_payload_to_wire_and_add_checksum(
 def write_payload_to_wire(
     transport: Transport, header: MessageHeader, transport_payload: bytes
 ):
-    transport.open()
     buffer = bytearray(transport_payload)
     if transport.CHUNK_SIZE is None:
         transport.write_chunk(buffer)
