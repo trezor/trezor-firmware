@@ -14,14 +14,16 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
 import sys
 import time
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable
 
 from ..log import DUMP_PACKETS
 from ..models import TREZOR_ONE, TrezorModel
-from . import UDEV_RULES_STR, TransportException
+from . import UDEV_RULES_STR, Timeout, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 LOG = logging.getLogger(__name__)
@@ -91,13 +93,16 @@ class HidHandle:
         LOG.log(DUMP_PACKETS, f"writing packet: {chunk.hex()}")
         self.handle.write(chunk)
 
-    def read_chunk(self) -> bytes:
+    def read_chunk(self, timeout: float | None = None) -> bytes:
+        start = time.time()
         while True:
             # hidapi seems to return lists of ints instead of bytes
             chunk = bytes(self.handle.read(64))
             if chunk:
                 break
             else:
+                if timeout is not None and time.time() - start > timeout:
+                    raise Timeout(f"Timeout reading HID packet ({timeout}s)")
                 time.sleep(0.001)
 
         LOG.log(DUMP_PACKETS, f"read packet: {chunk.hex()}")
@@ -134,13 +139,13 @@ class HidTransport(ProtocolBasedTransport):
 
     @classmethod
     def enumerate(
-        cls, models: Optional[Iterable["TrezorModel"]] = None, debug: bool = False
-    ) -> Iterable["HidTransport"]:
+        cls, models: Iterable[TrezorModel] | None = None, debug: bool = False
+    ) -> Iterable[HidTransport]:
         if models is None:
             models = {TREZOR_ONE}
         usb_ids = [id for model in models for id in model.usb_ids]
 
-        devices: List["HidTransport"] = []
+        devices: list[HidTransport] = []
         for dev in hid.enumerate(0, 0):
             usb_id = (dev["vendor_id"], dev["product_id"])
             if usb_id not in usb_ids:
@@ -154,7 +159,7 @@ class HidTransport(ProtocolBasedTransport):
             devices.append(HidTransport(dev))
         return devices
 
-    def find_debug(self) -> "HidTransport":
+    def find_debug(self) -> HidTransport:
         # For v1 protocol, find debug USB interface for the same serial number
         for debug in HidTransport.enumerate(debug=True):
             if debug.device["serial_number"] == self.device["serial_number"]:

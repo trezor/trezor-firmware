@@ -14,17 +14,10 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
-from typing import (
-    TYPE_CHECKING,
-    Iterable,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    TypeVar,
-)
+from typing import TYPE_CHECKING, Iterable, Sequence, Tuple, TypeVar
 
 from ..exceptions import TrezorException
 
@@ -49,6 +42,10 @@ class TransportException(TrezorException):
 
 
 class DeviceIsBusy(TransportException):
+    pass
+
+
+class Timeout(TransportException):
     pass
 
 
@@ -84,23 +81,23 @@ class Transport:
     def end_session(self) -> None:
         raise NotImplementedError
 
-    def read(self) -> MessagePayload:
+    def read(self, timeout: float | None = None) -> MessagePayload:
         raise NotImplementedError
 
     def write(self, message_type: int, message_data: bytes) -> None:
         raise NotImplementedError
 
-    def find_debug(self: "T") -> "T":
+    def find_debug(self: T) -> T:
         raise NotImplementedError
 
     @classmethod
     def enumerate(
-        cls: Type["T"], models: Optional[Iterable["TrezorModel"]] = None
-    ) -> Iterable["T"]:
+        cls: type[T], models: Iterable[TrezorModel] | None = None
+    ) -> Iterable[T]:
         raise NotImplementedError
 
     @classmethod
-    def find_by_path(cls: Type["T"], path: str, prefix_search: bool = False) -> "T":
+    def find_by_path(cls: type[T], path: str, prefix_search: bool = False) -> T:
         for device in cls.enumerate():
             if (
                 path is None
@@ -112,13 +109,13 @@ class Transport:
         raise TransportException(f"{cls.PATH_PREFIX} device not found: {path}")
 
 
-def all_transports() -> Iterable[Type["Transport"]]:
+def all_transports() -> Iterable[type["Transport"]]:
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
     from .webusb import WebUsbTransport
 
-    transports: Tuple[Type["Transport"], ...] = (
+    transports: Tuple[type["Transport"], ...] = (
         BridgeTransport,
         HidTransport,
         UdpTransport,
@@ -128,9 +125,9 @@ def all_transports() -> Iterable[Type["Transport"]]:
 
 
 def enumerate_devices(
-    models: Optional[Iterable["TrezorModel"]] = None,
-) -> Sequence["Transport"]:
-    devices: List["Transport"] = []
+    models: Iterable[TrezorModel] | None = None,
+) -> Sequence[Transport]:
+    devices: list[Transport] = []
     for transport in all_transports():
         name = transport.__name__
         try:
@@ -145,9 +142,7 @@ def enumerate_devices(
     return devices
 
 
-def get_transport(
-    path: Optional[str] = None, prefix_search: bool = False
-) -> "Transport":
+def get_transport(path: str | None = None, prefix_search: bool = False) -> Transport:
     if path is None:
         try:
             return next(iter(enumerate_devices()))

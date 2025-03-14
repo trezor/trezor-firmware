@@ -14,19 +14,21 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import logging
 import socket
 import time
-from typing import TYPE_CHECKING, Iterable, Optional
+from typing import TYPE_CHECKING, Iterable
 
 from ..log import DUMP_PACKETS
-from . import TransportException
+from . import Timeout, TransportException
 from .protocol import ProtocolBasedTransport, ProtocolV1
 
 if TYPE_CHECKING:
     from ..models import TrezorModel
 
-SOCKET_TIMEOUT = 10
+SOCKET_TIMEOUT = 0.1
 
 LOG = logging.getLogger(__name__)
 
@@ -38,7 +40,7 @@ class UdpTransport(ProtocolBasedTransport):
     PATH_PREFIX = "udp"
     ENABLED: bool = True
 
-    def __init__(self, device: Optional[str] = None) -> None:
+    def __init__(self, device: str | None = None) -> None:
         if not device:
             host = UdpTransport.DEFAULT_HOST
             port = UdpTransport.DEFAULT_PORT
@@ -47,7 +49,7 @@ class UdpTransport(ProtocolBasedTransport):
             host = devparts[0]
             port = int(devparts[1]) if len(devparts) > 1 else UdpTransport.DEFAULT_PORT
         self.device = (host, port)
-        self.socket: Optional[socket.socket] = None
+        self.socket: socket.socket | None = None
 
         super().__init__(protocol=ProtocolV1(self))
 
@@ -77,7 +79,7 @@ class UdpTransport(ProtocolBasedTransport):
 
     @classmethod
     def enumerate(
-        cls, _models: Optional[Iterable["TrezorModel"]] = None
+        cls, _models: Iterable["TrezorModel"] | None = None
     ) -> Iterable["UdpTransport"]:
         default_path = f"{cls.DEFAULT_HOST}:{cls.DEFAULT_PORT}"
         try:
@@ -94,10 +96,8 @@ class UdpTransport(ProtocolBasedTransport):
             if not prefix_search:
                 raise
 
-        if prefix_search:
-            return super().find_by_path(path, prefix_search)
-        else:
-            raise TransportException(f"No UDP device at {path}")
+        assert prefix_search  # otherwise we would have raised above
+        return super().find_by_path(path, prefix_search)
 
     def wait_until_ready(self, timeout: float = 10) -> None:
         try:
@@ -108,7 +108,7 @@ class UdpTransport(ProtocolBasedTransport):
                     break
                 elapsed = time.monotonic() - start
                 if elapsed >= timeout:
-                    raise TransportException("Timed out waiting for connection.")
+                    raise Timeout("Timed out waiting for connection.")
 
                 time.sleep(0.05)
         finally:
@@ -142,14 +142,16 @@ class UdpTransport(ProtocolBasedTransport):
         LOG.log(DUMP_PACKETS, f"sending packet: {chunk.hex()}")
         self.socket.sendall(chunk)
 
-    def read_chunk(self) -> bytes:
+    def read_chunk(self, timeout: float | None = None) -> bytes:
         assert self.socket is not None
+        start = time.time()
         while True:
             try:
                 chunk = self.socket.recv(64)
                 break
             except socket.timeout:
-                continue
+                if timeout is not None and time.time() - start > timeout:
+                    raise Timeout(f"Timeout reading UDP packet ({timeout}s)")
         LOG.log(DUMP_PACKETS, f"received packet: {chunk.hex()}")
         if len(chunk) != 64:
             raise TransportException(f"Unexpected chunk size: {len(chunk)}")
