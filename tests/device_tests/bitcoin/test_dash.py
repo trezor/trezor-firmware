@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
 from ...common import is_core
@@ -43,7 +43,7 @@ TXHASH_15575a = bytes.fromhex(
 pytestmark = [pytest.mark.altcoin, pytest.mark.models("t1b1", "t2t1")]
 
 
-def test_send_dash(client: Client):
+def test_send_dash(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/5h/0h/0/0"),
         # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
@@ -57,13 +57,13 @@ def test_send_dash(client: Client):
         amount=999_999_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),
@@ -77,7 +77,9 @@ def test_send_dash(client: Client):
                 request_finished(),
             ]
         )
-        _, serialized_tx = btc.sign_tx(client, "Dash", [inp1], [out1], prev_txes=TX_API)
+        _, serialized_tx = btc.sign_tx(
+            session, "Dash", [inp1], [out1], prev_txes=TX_API
+        )
 
     assert (
         serialized_tx.hex()
@@ -85,7 +87,7 @@ def test_send_dash(client: Client):
     )
 
 
-def test_send_dash_dip2_input(client: Client):
+def test_send_dash_dip2_input(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/5h/0h/0/0"),
         # dash:XdTw4G5AWW4cogGd7ayybyBNDbuB45UpgH
@@ -104,14 +106,14 @@ def test_send_dash_dip2_input(client: Client):
         amount=95_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(inp1.prev_hash),
@@ -128,7 +130,7 @@ def test_send_dash_dip2_input(client: Client):
             ]
         )
         _, serialized_tx = btc.sign_tx(
-            client, "Dash", [inp1], [out1, out2], prev_txes=TX_API
+            session, "Dash", [inp1], [out1, out2], prev_txes=TX_API
         )
 
     assert (

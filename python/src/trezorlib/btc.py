@@ -25,11 +25,11 @@ from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
 from typing_extensions import Protocol, TypedDict
 
 from . import exceptions, messages
-from .tools import _return_success, prepare_message_bytes, session
+from .tools import _return_success, prepare_message_bytes
 
 if TYPE_CHECKING:
-    from .client import TrezorClient
     from .tools import Address
+    from .transport.session import Session
 
     class ScriptSig(TypedDict):
         asm: str
@@ -105,7 +105,7 @@ def from_json(json_dict: "Transaction") -> messages.TransactionType:
 
 
 def get_public_node(
-    client: "TrezorClient",
+    session: "Session",
     n: "Address",
     ecdsa_curve_name: Optional[str] = None,
     show_display: bool = False,
@@ -116,12 +116,12 @@ def get_public_node(
     unlock_path_mac: Optional[bytes] = None,
 ) -> messages.PublicKey:
     if unlock_path:
-        client.call(
+        session.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
             expect=messages.UnlockedPathRequest,
         )
 
-    return client.call(
+    return session.call(
         messages.GetPublicKey(
             address_n=n,
             ecdsa_curve_name=ecdsa_curve_name,
@@ -139,7 +139,7 @@ def get_address(*args: Any, **kwargs: Any) -> str:
 
 
 def get_authenticated_address(
-    client: "TrezorClient",
+    session: "Session",
     coin_name: str,
     n: "Address",
     show_display: bool = False,
@@ -151,12 +151,12 @@ def get_authenticated_address(
     chunkify: bool = False,
 ) -> messages.Address:
     if unlock_path:
-        client.call(
+        session.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
             expect=messages.UnlockedPathRequest,
         )
 
-    return client.call(
+    return session.call(
         messages.GetAddress(
             address_n=n,
             coin_name=coin_name,
@@ -171,13 +171,13 @@ def get_authenticated_address(
 
 
 def get_ownership_id(
-    client: "TrezorClient",
+    session: "Session",
     coin_name: str,
     n: "Address",
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> bytes:
-    return client.call(
+    return session.call(
         messages.GetOwnershipId(
             address_n=n,
             coin_name=coin_name,
@@ -189,7 +189,7 @@ def get_ownership_id(
 
 
 def get_ownership_proof(
-    client: "TrezorClient",
+    session: "Session",
     coin_name: str,
     n: "Address",
     multisig: Optional[messages.MultisigRedeemScriptType] = None,
@@ -200,9 +200,9 @@ def get_ownership_proof(
     preauthorized: bool = False,
 ) -> Tuple[bytes, bytes]:
     if preauthorized:
-        client.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
+        session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
-    res = client.call(
+    res = session.call(
         messages.GetOwnershipProof(
             address_n=n,
             coin_name=coin_name,
@@ -219,7 +219,7 @@ def get_ownership_proof(
 
 
 def sign_message(
-    client: "TrezorClient",
+    session: "Session",
     coin_name: str,
     n: "Address",
     message: AnyStr,
@@ -227,7 +227,7 @@ def sign_message(
     no_script_type: bool = False,
     chunkify: bool = False,
 ) -> messages.MessageSignature:
-    return client.call(
+    return session.call(
         messages.SignMessage(
             coin_name=coin_name,
             address_n=n,
@@ -241,7 +241,7 @@ def sign_message(
 
 
 def verify_message(
-    client: "TrezorClient",
+    session: "Session",
     coin_name: str,
     address: str,
     signature: bytes,
@@ -249,7 +249,7 @@ def verify_message(
     chunkify: bool = False,
 ) -> bool:
     try:
-        client.call(
+        session.call(
             messages.VerifyMessage(
                 address=address,
                 signature=signature,
@@ -264,9 +264,8 @@ def verify_message(
         return False
 
 
-@session
 def sign_tx(
-    client: "TrezorClient",
+    session: "Session",
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
@@ -314,14 +313,14 @@ def sign_tx(
                 setattr(signtx, name, value)
 
     if unlock_path:
-        client.call(
+        session.call(
             messages.UnlockPath(address_n=unlock_path, mac=unlock_path_mac),
             expect=messages.UnlockedPathRequest,
         )
     elif preauthorized:
-        client.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
+        session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
-    res = client.call(signtx, expect=messages.TxRequest)
+    res = session.call(signtx, expect=messages.TxRequest)
 
     # Prepare structure for signatures
     signatures: List[Optional[bytes]] = [None] * len(inputs)
@@ -380,7 +379,7 @@ def sign_tx(
         if res.request_type == R.TXPAYMENTREQ:
             assert res.details.request_index is not None
             msg = payment_reqs[res.details.request_index]
-            res = client.call(msg, expect=messages.TxRequest)
+            res = session.call(msg, expect=messages.TxRequest)
         else:
             msg = messages.TransactionType()
             if res.request_type == R.TXMETA:
@@ -410,7 +409,7 @@ def sign_tx(
                     f"Unknown request type - {res.request_type}."
                 )
 
-            res = client.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
+            res = session.call(messages.TxAck(tx=msg), expect=messages.TxRequest)
 
     for i, sig in zip(inputs, signatures):
         if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
@@ -420,7 +419,7 @@ def sign_tx(
 
 
 def authorize_coinjoin(
-    client: "TrezorClient",
+    session: "Session",
     coordinator: str,
     max_rounds: int,
     max_coordinator_fee_rate: int,
@@ -429,7 +428,7 @@ def authorize_coinjoin(
     coin_name: str,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
 ) -> str | None:
-    resp = client.call(
+    resp = session.call(
         messages.AuthorizeCoinJoin(
             coordinator=coordinator,
             max_rounds=max_rounds,
