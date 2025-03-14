@@ -368,7 +368,6 @@ def show_success(
 async def confirm_output(
     address: str,
     amount: str | None = None,
-    title: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,
@@ -378,20 +377,22 @@ async def confirm_output(
     source_account_path: str | None = None,
     cancel_text: str | None = None,
     description: str | None = None,
+    title: str | None = None,
+    subtitle: str | None = None,
 ) -> None:
     if address_label is not None:
-        title = address_label
-    elif title is not None:
+        subtitle = address_label
+    elif subtitle is not None:
         pass
     elif output_index is not None:
-        title = f"{TR.words__recipient} #{output_index + 1}"
+        subtitle = f"{TR.words__recipient} #{output_index + 1}"
     else:
-        title = TR.send__title_sending_to
+        subtitle = TR.send__title_sending_to
 
     await raise_if_not_confirmed(
         trezorui_api.flow_confirm_output(
-            title=TR.words__address,
-            subtitle=title,
+            title=title or TR.words__address,
+            subtitle=subtitle,
             message=address,
             extra=None,
             amount=amount,

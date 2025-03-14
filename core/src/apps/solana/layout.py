@@ -92,8 +92,12 @@ async def confirm_instruction(
 
             await confirm_properties(
                 "confirm_instruction",
-                f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
+                f"{instruction_index}/{instructions_count}",
                 (
+                    (
+                        instruction.ui_name,
+                        ""
+                    ),
                     (
                         ui_property.display_name,
                         property_template.format(instruction, value),
@@ -132,9 +136,10 @@ async def confirm_instruction(
             else:
                 raise ValueError  # Invalid account value
 
+            account_data.insert(0, (instruction.ui_name, ""))
             await confirm_properties(
                 "confirm_instruction",
-                f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
+                f"{instruction_index}/{instructions_count}",
                 account_data,
             )
         else:
@@ -156,9 +161,11 @@ async def confirm_instruction(
                 )
             )
 
+        signers.insert(0, (instruction.ui_name, ""))
+
         await confirm_properties(
             "confirm_instruction",
-            f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
+            f"{instruction_index}/{instructions_count}",
             signers,
         )
 
