@@ -130,7 +130,9 @@ class ProtocolV2Channel(Channel):
         device_properties = payload[10:]
         return (channel_id, device_properties)
 
-    def _init_noise(self, randomness_static: bytes) -> None:
+    def _init_noise(self, randomness_static: bytes | None = None) -> None:
+        if randomness_static is None:
+            randomness_static = os.urandom(32)
         self._noise = NoiseConnection.from_name(b"Noise_XX_25519_AESGCM_SHA256")
         self._noise.set_as_initiator()
         self._noise.set_keypair_from_private_bytes(Keypair.STATIC, randomness_static)
