@@ -467,6 +467,7 @@ async def confirm_output(
     address: str,
     amount: str,
     title: str | None = None,
+    subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,

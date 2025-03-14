@@ -368,7 +368,6 @@ def show_success(
 async def confirm_output(
     address: str,
     amount: str | None = None,
-    subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
     address_label: str | None = None,
@@ -379,6 +378,7 @@ async def confirm_output(
     cancel_text: str | None = None,
     description: str | None = None,
     title: str | None = None,
+    subtitle: str | None = None,
 ) -> None:
     if address_label is not None:
         subtitle = address_label
