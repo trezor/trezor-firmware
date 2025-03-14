@@ -196,6 +196,15 @@ class TrezorClient:
                 protocol = ProtocolV2Channel(self.transport, self.mapping)
         return protocol
 
+    def reset_protocol(self):
+        if self._protocol_version == ProtocolVersion.PROTOCOL_V1:
+            self.protocol = ProtocolV1Channel(self.transport, self.mapping)
+        elif self._protocol_version == ProtocolVersion.PROTOCOL_V2:
+            self.protocol = ProtocolV2Channel(self.transport, self.mapping)
+        else:
+            assert False
+        self._features = None
+
     def is_outdated(self) -> bool:
         if self.features.bootloader_mode:
             return False
