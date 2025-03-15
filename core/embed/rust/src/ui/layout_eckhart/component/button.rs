@@ -75,6 +75,11 @@ impl Button {
         Self::new(ButtonContent::IconAndText(content))
     }
 
+    #[cfg(feature = "micropython")]
+    pub const fn with_homebar_content(text: Option<TString<'static>>) -> Self {
+        Self::new(ButtonContent::HomeBar(text))
+    }
+
     pub const fn empty() -> Self {
         Self::new(ButtonContent::Empty)
     }
@@ -189,6 +194,8 @@ impl Button {
                     + Self::LINE_SPACING
                     + Self::SUBTEXT_STYLE.text_font.allcase_text_height()
             }
+            #[cfg(feature = "micropython")]
+            ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
         }
     }
 
@@ -304,6 +311,39 @@ impl Button {
             }
             ButtonContent::IconAndText(child) => {
                 child.render(target, self.area, self.style(), self.content_offset, alpha);
+            }
+            #[cfg(feature = "micropython")]
+            ButtonContent::HomeBar(text) => {
+                let baseline = self.area.center();
+                if let Some(text) = text {
+                    const OFFSET_Y: Offset = Offset::y(25);
+                    text.map(|text| {
+                        shape::Text::new(baseline, text, style.font)
+                            .with_fg(style.text_color)
+                            .with_align(Alignment::Center)
+                            .with_alpha(alpha)
+                            .render(target);
+                    });
+                    shape::ToifImage::new(
+                        self.area.center() + OFFSET_Y,
+                        theme::ICON_DASH_HORIZONTAL.toif,
+                    )
+                    .with_fg(style.icon_color)
+                    .with_align(Alignment2D::CENTER)
+                    .render(target);
+                } else {
+                    // double dash icon in the middle
+                    const OFFSET_Y: Offset = Offset::y(5);
+                    shape::ToifImage::new(baseline - OFFSET_Y, theme::ICON_DASH_HORIZONTAL.toif)
+                        .with_fg(theme::GREY_LIGHT)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target);
+
+                    shape::ToifImage::new(baseline + OFFSET_Y, theme::ICON_DASH_HORIZONTAL.toif)
+                        .with_fg(theme::GREY_LIGHT)
+                        .with_align(Alignment2D::CENTER)
+                        .render(target);
+                }
             }
         }
     }
@@ -444,6 +484,8 @@ impl crate::trace::Trace for Button {
             ButtonContent::TextAndSubtext(text, _) => {
                 t.string("text", *text);
             }
+            #[cfg(feature = "micropython")]
+            ButtonContent::HomeBar(text) => t.string("text", text.unwrap_or(TString::empty())),
         }
     }
 }
@@ -463,6 +505,8 @@ pub enum ButtonContent {
     TextAndSubtext(TString<'static>, TString<'static>),
     Icon(Icon),
     IconAndText(IconText),
+    #[cfg(feature = "micropython")]
+    HomeBar(Option<TString<'static>>),
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
