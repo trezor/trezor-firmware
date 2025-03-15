@@ -142,14 +142,12 @@ impl PassphraseKeyboard {
         }
     }
 
-    fn key_text(content: &ButtonContent) -> TString<'static> {
+    fn key_text(content: &ButtonContent) -> Option<TString<'static>> {
         match content {
-            ButtonContent::Text(text) => *text,
-            ButtonContent::TextAndSubtext(_, _) => "".into(),
-            ButtonContent::Icon(theme::ICON_SPECIAL_CHARS) => " *#".into(),
-            ButtonContent::Icon(_) => " ".into(),
-            ButtonContent::IconAndText(_) => " ".into(),
-            ButtonContent::Empty => "".into(),
+            ButtonContent::Text(text) => Some(*text),
+            ButtonContent::Icon(theme::ICON_SPECIAL_CHARS) => Some(" *#".into()),
+            ButtonContent::Icon(_) => Some(" ".into()),
+            _ => None,
         }
     }
 
@@ -312,23 +310,24 @@ impl Component for PassphraseKeyboard {
 
         match self.keypad.event(ctx, event) {
             Some(KeypadMsg::Key(idx)) => {
-                let text = Self::key_text(self.keypad.get_key_content(idx));
-                let edit = text.map(|c| self.multi_tap.click_key(ctx, idx, c));
-                self.input.textbox.apply(ctx, edit);
-                if text.len() == 1 {
-                    // If the key has just one character, it is immediately applied and the last
-                    // digit timer should be started
-                    self.input.marker = false;
-                    self.input
-                        .last_char_timer
-                        .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
-                } else {
-                    // multi tap timer is runnig, the last digit timer should be stopped
-                    self.input.last_char_timer.stop();
-                    self.input.marker = true;
+                if let Some(text) = Self::key_text(self.keypad.get_key_content(idx)) {
+                    let edit = text.map(|c| self.multi_tap.click_key(ctx, idx, c));
+                    self.input.textbox.apply(ctx, edit);
+                    if text.len() == 1 {
+                        // If the key has just one character, it is immediately applied and the last
+                        // digit timer should be started
+                        self.input.marker = false;
+                        self.input
+                            .last_char_timer
+                            .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
+                    } else {
+                        // multi tap timer is runnig, the last digit timer should be stopped
+                        self.input.last_char_timer.stop();
+                        self.input.marker = true;
+                    }
+                    self.input.display_style = DisplayStyle::LastOnly;
+                    self.update_keypad_state(ctx);
                 }
-                self.input.display_style = DisplayStyle::LastOnly;
-                self.update_keypad_state(ctx);
                 return None;
             }
             Some(KeypadMsg::EraseShort) => {
