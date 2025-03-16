@@ -365,11 +365,13 @@ def show_success(
     subheader: str | None = None,
     button: str | None = None,
 ) -> Awaitable[None]:
+    button = button or TR.buttons__continue  # def_arg
     return raise_if_not_confirmed(
         trezorui_api.show_success(
             title=subheader if subheader else "",
-            button=button if button else "",
+            button=button,
             description=content,
+            allow_cancel=False,
         ),
         br_name,
         ButtonRequestType.Success,
@@ -1000,9 +1002,8 @@ def request_pin_on_device(
 
 
 async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
-    # FIXME: not implemented
-    # not supported on mercury either?
-    raise NotImplementedError
+    """Not supported for Eckhart."""
+    pass
 
 
 def pin_mismatch_popup(is_wipe_code: bool = False) -> Awaitable[ui.UiResult]:

@@ -73,6 +73,9 @@ pub const TEXT_MONO_LIGHT: TextStyle = TextStyle::new(
     GREY_LIGHT,
 );
 
+pub const TEXT_REGULAR_WARNING: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_38, RED, BG, GREY, GREY);
+
 pub const TEXT_MEDIUM_EXTRA_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_SATOSHI_MEDIUM_26,
     GREY_EXTRA_LIGHT,

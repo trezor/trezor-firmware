@@ -72,7 +72,7 @@ impl FirmwareUI for UIEckhart {
                     .color(theme::GREY_LIGHT)
                     .text(action, fonts::FONT_SATOSHI_REGULAR_38);
             };
-            FormattedText::new(ops).vertically_centered()
+            FormattedText::new(ops)
         };
 
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
@@ -359,10 +359,11 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn flow_confirm_set_new_pin(
-        _title: TString<'static>,
-        _description: TString<'static>,
+        title: TString<'static>,
+        description: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let flow = flow::confirm_set_new_pin::new_set_new_pin(title, description)?;
+        Ok(flow)
     }
 
     fn flow_get_address(
