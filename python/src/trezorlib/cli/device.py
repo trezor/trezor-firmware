@@ -310,10 +310,7 @@ def sd_protect(
 @cli.command()
 @click.pass_obj
 def reboot_to_bootloader(obj: "TrezorConnection") -> None:
-    """Reboot device into bootloader mode.
-
-    Currently only supported on Trezor Model One.
-    """
+    """Reboot device into bootloader mode."""
     # avoid using @with_client because it closes the session afterwards,
     # which triggers double prompt on device
     with obj.client_context() as client:
