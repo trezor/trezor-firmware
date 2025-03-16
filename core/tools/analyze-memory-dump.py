@@ -30,7 +30,8 @@ Generators and closures are painful :(
 
 
 with open(sys.argv[1]) as f:
-    MEMMAP = json.load(f)
+    MEMMAP = iter(json.load(f))
+    (min_ptr, max_ptr, bytes_per_block) = next(MEMMAP)
 
 
 # filter out notices and comments
@@ -57,7 +58,13 @@ def ptr_or_shortval(maybe_ptr):
 
 
 def is_ignored_ptr(ptr):
-    return (ptr == "(nil)" or ptr.startswith("0x5") or ptr.startswith("0x6"))
+    if ptr == "(nil)":
+        return True
+
+    if isinstance(ptr, str):
+        ptr = int(ptr, 16)
+
+    return not (min_ptr <= ptr < max_ptr)
 
 
 def deref_or_shortval(maybe_ptr):
@@ -155,13 +162,6 @@ for item in MEMORY.values():
 
 allobjs = list(MEMORY.values())
 allobjs.sort(key=lambda x: x.ptr)
-min_ptr = min(
-    item.ptrval()
-    for item in allobjs
-    if not is_ignored_ptr(item.ptr)
-)
-max_ptr = max(item.ptrval() for item in allobjs if item.ptr != "(nil)")
-
 
 types = {
     "anystr": "S",
@@ -201,9 +201,10 @@ types = {
 pixels_per_line = len(
     "................................................................"
 )
-pixelsize = 0x800 // pixels_per_line
-maxline = ((max_ptr - min_ptr) & ~0x7FF) + (0x800 * 2)
-pixelmap = [None] * (maxline // pixelsize)
+pixelsize = bytes_per_block
+bytes_per_line = bytes_per_block * pixels_per_line
+maxline = ((max_ptr - min_ptr) & ~(bytes_per_line - 1)) + (bytes_per_line * 2)
+pixelmap = [None] * 2*(maxline // pixelsize)
 
 
 def pixel_index(ptrval):

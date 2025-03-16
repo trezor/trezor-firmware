@@ -284,6 +284,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_estimate_unused_stack_obj,
 #if MICROPY_OOM_CALLBACK
 static void gc_oom_callback(void) {
   gc_dump_info();
+#if BLOCK_ON_VCP || TREZOR_EMULATOR
+  dump_meminfo_json(NULL);  // dump to stdout
+#endif
 }
 
 /// if __debug__:

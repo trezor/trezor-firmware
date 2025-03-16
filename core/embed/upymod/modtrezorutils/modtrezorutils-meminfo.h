@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !TREZOR_EMULATOR || PYOPT
+#if PYOPT
 #define MEMINFO_DICT_ENTRIES /* empty */
 
 #else
@@ -37,6 +37,14 @@
 #include <io/usb.h>
 #include "embed/rust/librust.h"
 #include "embed/upymod/trezorobj.h"
+
+#if !TREZOR_EMULATOR
+#define fopen(path, mode) &mp_plat_print
+#define fprintf mp_printf
+#define fflush(f)
+#define fclose(f)
+#define FILE const mp_print_t
+#endif
 
 #define WORDS_PER_BLOCK ((MICROPY_BYTES_PER_GC_BLOCK) / MP_BYTES_PER_OBJ_WORD)
 #define BYTES_PER_BLOCK (MICROPY_BYTES_PER_GC_BLOCK)
@@ -149,9 +157,29 @@ bool is_short(mp_const_obj_t value) {
          mp_obj_is_small_int(value) || !VERIFY_PTR(value);
 }
 
+static void escape_and_dump_string(FILE *out, const char *unescaped) {
+  fprintf(out, "\"");
+  for (; *unescaped; ++unescaped) {
+    char c = *unescaped;
+    if (c == '\n') {
+      fprintf(out, "\\n");
+    } else if (c == '\r') {
+      fprintf(out, "\\r");
+    } else if (c == '\"') {
+      fprintf(out, "\\\"");
+    } else if (c == '\\') {
+      fprintf(out, "\\\\");
+    } else if (c >= 0x20 && c < 0x7F) {
+      fprintf(out, "%c", c);
+    } else {
+      fprintf(out, "\\u%04x", c);
+    }
+  }
+  fprintf(out, "\"");
+}
+
 static void print_type(FILE *out, const char *typename, const char *shortval,
                        const void *ptr, bool end) {
-  static char unescaped[1000];
   size_t size = 0;
   if (!is_short(ptr)) {
     size = find_allocated_size(ptr);
@@ -159,14 +187,8 @@ static void print_type(FILE *out, const char *typename, const char *shortval,
   fprintf(out, "{\"type\": \"%s\", \"alloc\": %ld, \"ptr\": \"%p\"", typename,
           size, ptr);
   if (shortval) {
-    assert(strlen(shortval) < 1000);
-    char *c = unescaped;
-    while (*shortval) {
-      if (*shortval == '\\' || *shortval == '"') *c++ = '\\';
-      *c++ = *shortval++;
-    }
-    *c = 0;
-    fprintf(out, ", \"shortval\": \"%s\"", unescaped);
+    fprintf(out, ", \"shortval\": ");
+    escape_and_dump_string(out, shortval);
   } else {
     fprintf(out, ", \"shortval\": null");
   }
@@ -199,7 +221,7 @@ void dump_short(FILE *out, mp_const_obj_t value) {
 
   } else if (mp_obj_is_small_int(value)) {
     static char num_buf[100];
-    snprintf(num_buf, 100, "%ld", MP_OBJ_SMALL_INT_VALUE(value));
+    snprintf(num_buf, 100, INT_FMT, MP_OBJ_SMALL_INT_VALUE(value));
     print_type(out, "smallint", num_buf, NULL, true);
 
   } else if (!VERIFY_PTR(value)) {
@@ -680,10 +702,11 @@ void dump_qstr_pool(FILE *out, const qstr_pool_t *pool) {
   for (const char *const *q = pool->qstrs, *const *q_top =
                                                pool->qstrs + pool->len;
        q < q_top; q++) {
+    escape_and_dump_string(out, Q_GET_DATA(*q));
     if (q < (q_top - 1))
-      fprintf(out, "\"%s\",\n", Q_GET_DATA(*q));
+      fprintf(out, ",\n");
     else
-      fprintf(out, "\"%s\"]\n", Q_GET_DATA(*q));
+      fprintf(out, "]\n");
   }
   fprintf(out, "},\n");
   for (const char *const *q = pool->qstrs, *const *q_top =
@@ -709,15 +732,19 @@ void dump_qstrdata(FILE *out) {
   }
 }
 
-/// def meminfo(filename: str) -> None:
-///     """Dumps map of micropython GC arena to a file.
-///     The JSON file can be decoded by analyze-memory-dump.py
-///     Only available in the emulator.
-///      """
-STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
-  size_t fn_len;
-  FILE *out = fopen(mp_obj_str_get_data(filename, &fn_len), "w");
-  fprintf(out, "[");
+static void dump_meminfo_json(FILE *out) {
+  bool should_close = true;
+  if (out == NULL) {
+    should_close = false;
+#if TREZOR_EMULATOR
+    out = stdout;
+#else
+    out = &mp_plat_print;
+#endif
+  }
+  fprintf(out, "\n[\n[" UINT_FMT ", " UINT_FMT ", " UINT_FMT "],\n",
+          (mp_uint_t)MP_STATE_MEM(gc_pool_start),
+          (mp_uint_t)MP_STATE_MEM(gc_pool_end), BYTES_PER_BLOCK);
 
   // void **ptrs = (void **)(void *)&mp_state_ctx;
   // size_t root_start = offsetof(mp_state_ctx_t, thread.dict_locals);
@@ -768,8 +795,12 @@ STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
     pool = pool->prev;
   }
 
-  fprintf(out, "null]\n");
-  fclose(out);
+  fprintf(out, "null\n]\n");
+  if (should_close) {
+    fclose(out);
+  } else {
+    fflush(out);
+  }
   for (size_t block = 0;
        block < MP_STATE_MEM(gc_alloc_table_byte_len) * BLOCKS_PER_ATB;
        block++) {
@@ -779,6 +810,19 @@ STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
   }
 
   gc_dump_alloc_table();
+}
+
+/// def meminfo(filename: str | None) -> None:
+///     """Dumps map of micropython GC arena to a file.
+///     The JSON file can be decoded by analyze-memory-dump.py
+///      """
+STATIC mp_obj_t mod_trezorutils_meminfo(mp_obj_t filename) {
+  size_t fn_len;
+  FILE *out = (filename == mp_const_none)
+                  ? NULL
+                  : fopen(mp_obj_str_get_data(filename, &fn_len), "w");
+  (void)fn_len;
+  dump_meminfo_json(out);
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_meminfo_obj,

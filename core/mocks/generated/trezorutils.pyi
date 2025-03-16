@@ -2,10 +2,9 @@ from typing import *
 
 
 # upymod/modtrezorutils/modtrezorutils-meminfo.h
-def meminfo(filename: str) -> None:
+def meminfo(filename: str | None) -> None:
     """Dumps map of micropython GC arena to a file.
     The JSON file can be decoded by analyze-memory-dump.py
-    Only available in the emulator.
      """
 
 
