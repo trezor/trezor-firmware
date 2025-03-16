@@ -100,6 +100,11 @@ def estimate_unused_stack() -> int:
     """
     Estimate unused stack size.
     """
+if __debug__:
+    def enable_oom_dump() -> None:
+        """
+        Dump GC info in case of an OOM.
+        """
 
 
 # upymod/modtrezorutils/modtrezorutils.c

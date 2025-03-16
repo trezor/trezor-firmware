@@ -125,6 +125,13 @@ def presize_module(modname: str, size: int) -> None:
 if __debug__:
     from ubinascii import hexlify
 
+    try:
+        from trezorutils import enable_oom_dump
+
+        enable_oom_dump()
+    except ImportError:
+        pass
+
     def mem_dump(filename: str) -> None:
         from micropython import mem_info
 

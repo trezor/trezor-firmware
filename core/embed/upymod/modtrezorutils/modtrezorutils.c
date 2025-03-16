@@ -20,6 +20,9 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#if MICROPY_OOM_CALLBACK
+#include <py/gc.h>
+#endif
 #include "py/objstr.h"
 #include "py/runtime.h"
 
@@ -243,7 +246,8 @@ STATIC mp_obj_t mod_trezorutils_sd_hotswap_enabled(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_sd_hotswap_enabled_obj,
                                  mod_trezorutils_sd_hotswap_enabled);
 
-#if !PYOPT && LOG_STACK_USAGE
+#if !PYOPT
+#if LOG_STACK_USAGE
 /// def zero_unused_stack() -> None:
 ///     """
 ///     Zero unused stack memory.
@@ -275,7 +279,27 @@ STATIC mp_obj_t mod_trezorutils_estimate_unused_stack(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_estimate_unused_stack_obj,
                                  mod_trezorutils_estimate_unused_stack);
 
-#endif  // !PYOPT && LOG_STACK_USAGE
+#endif  // LOG_STACK_USAGE
+
+#if MICROPY_OOM_CALLBACK
+static void gc_oom_callback(void) {
+  gc_dump_info();
+}
+
+/// if __debug__:
+///     def enable_oom_dump() -> None:
+///         """
+///         Dump GC info in case of an OOM.
+///         """
+STATIC mp_obj_t mod_trezorutils_enable_oom_dump(void) {
+  gc_set_oom_callback(gc_oom_callback);
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
+                                 mod_trezorutils_enable_oom_dump);
+#endif  // MICROPY_OOM_CALLBACK
+
+#endif  // !PYOPT
 
 /// def reboot_to_bootloader(
 ///     boot_command : int = 0,
@@ -482,11 +506,17 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_PTR(&mod_trezorutils_unit_packaging_obj)},
     {MP_ROM_QSTR(MP_QSTR_unit_btconly),
      MP_ROM_PTR(&mod_trezorutils_unit_btconly_obj)},
-#if !PYOPT && LOG_STACK_USAGE
+#if !PYOPT
+#if LOG_STACK_USAGE
     {MP_ROM_QSTR(MP_QSTR_zero_unused_stack),
      MP_ROM_PTR(&mod_trezorutils_zero_unused_stack_obj)},
     {MP_ROM_QSTR(MP_QSTR_estimate_unused_stack),
      MP_ROM_PTR(&mod_trezorutils_estimate_unused_stack_obj)},
+#endif
+#if MICROPY_OOM_CALLBACK
+    {MP_ROM_QSTR(MP_QSTR_enable_oom_dump),
+     MP_ROM_PTR(&mod_trezorutils_enable_oom_dump_obj)},
+#endif
 #endif
     {MP_ROM_QSTR(MP_QSTR_sd_hotswap_enabled),
      MP_ROM_PTR(&mod_trezorutils_sd_hotswap_enabled_obj)},
