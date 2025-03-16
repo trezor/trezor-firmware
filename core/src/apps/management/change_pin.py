@@ -71,7 +71,7 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
         return confirm_action(
             "disable_pin",
             TR.pin__title_settings,
-            description=TR.pin__turn_off,
+            action=TR.pin__turn_off,
             verb=TR.buttons__turn_off,
         )
 
@@ -79,7 +79,7 @@ def _require_confirm_change_pin(msg: ChangePin) -> Awaitable[None]:
         return confirm_action(
             "change_pin",
             TR.pin__title_settings,
-            description=TR.pin__change,
+            action=TR.pin__change,
             verb=TR.buttons__change,
             prompt_screen=False,
         )
