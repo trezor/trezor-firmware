@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from buffer_types import AnyBytes
     from typing import Any, Coroutine, Iterable
 
-    from trezor.messages import EthereumSignTx, EthereumTxAck
+    from trezor.messages import EthereumSignTx
     from trezor.ui.layouts import StrPropertyType
 
     from apps.common.keychain import Keychain
@@ -165,8 +165,7 @@ async def confirm_data_and_summary(
 
         data_left = data_length - len(initial_data)
         while data_left > 0:
-            resp = await _send_request_chunk(data_left)
-            chunk = resp.data_chunk
+            chunk = await send_request_chunk(data_left)
             await confirm_data_chunk(chunk)
             data_left -= len(chunk)
             sha.extend(chunk)
@@ -197,8 +196,7 @@ async def request_initial_data(msg: MsgInSignTx, sha: HashWriter) -> AnyBytes:
         while (
             data_left > 0 and initial_data_length + _DATA_CHUNK_SIZE <= _MAX_DATA_STORED
         ):
-            resp = await _send_request_chunk(data_left)
-            chunk = resp.data_chunk
+            chunk = await send_request_chunk(data_left)
             initial_data[initial_data_length : initial_data_length + len(chunk)] = chunk
             data_left -= len(chunk)
             initial_data_length += len(chunk)
@@ -358,13 +356,15 @@ def _get_digest_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def _send_request_chunk(data_left: int) -> EthereumTxAck:
+async def send_request_chunk(data_left: int) -> AnyBytes:
     from trezor.messages import EthereumTxAck
     from trezor.wire.context import call
 
     req = EthereumTxRequest()
     req.data_length = min(data_left, _DATA_CHUNK_SIZE)
-    return await call(req, EthereumTxAck)
+    resp = await call(req, EthereumTxAck)
+    assert resp.data_chunk is not None
+    return resp.data_chunk
 
 
 def _sign_digest(
