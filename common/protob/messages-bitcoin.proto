@@ -638,6 +638,25 @@ message GetOwnershipProof {
     optional bool user_confirmation = 5 [default=false];                // show a confirmation dialog and set the "user confirmation" bit in the proof
     repeated bytes ownership_ids = 6;                                   // list of ownership identifiers in case of multisig
     optional bytes commitment_data = 7 [default=''];                    // additional data to which the proof should commit
+    optional bytes entropy_commitment = 8;                              // commitment to host's entropy, non-empty value indicates anti-exfil protocol will be used
+}
+
+/**
+ * Response: Contains the commitment to the signature nonce, used in anti-exfil protocol
+ * @next OwnershipProofEntropy
+ * @next Failure
+ */
+message OwnershipProofNonceCommitment {
+    optional bytes nonce_commitment = 1;                                // commitment to signature nonce, used in anti-exfil protocol
+}
+
+/**
+ * Request: Contains the host's entropy, used in anti-exfil protocol
+ * @next OwnershipProof
+ * @next Failure
+ */
+message OwnershipProofEntropy {
+    optional bytes entropy = 1;                                         // host's entropy, used in anti-exfil protocol
 }
 
 /**

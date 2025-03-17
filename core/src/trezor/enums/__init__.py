@@ -427,6 +427,8 @@ if TYPE_CHECKING:
         GetOwnershipProof = 49
         OwnershipProof = 50
         AuthorizeCoinJoin = 51
+        OwnershipProofNonceCommitment = 606
+        OwnershipProofEntropy = 607
         CipherKeyValue = 23
         CipheredKeyValue = 48
         SignIdentity = 53

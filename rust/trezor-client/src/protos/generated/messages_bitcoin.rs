@@ -12865,6 +12865,8 @@ pub struct GetOwnershipProof {
     pub ownership_ids: ::std::vec::Vec<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetOwnershipProof.commitment_data)
     pub commitment_data: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.GetOwnershipProof.entropy_commitment)
+    pub entropy_commitment: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.GetOwnershipProof.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -12994,8 +12996,44 @@ impl GetOwnershipProof {
         self.commitment_data.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
+    // optional bytes entropy_commitment = 8;
+
+    pub fn entropy_commitment(&self) -> &[u8] {
+        match self.entropy_commitment.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entropy_commitment(&mut self) {
+        self.entropy_commitment = ::std::option::Option::None;
+    }
+
+    pub fn has_entropy_commitment(&self) -> bool {
+        self.entropy_commitment.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entropy_commitment(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entropy_commitment = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entropy_commitment(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entropy_commitment.is_none() {
+            self.entropy_commitment = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entropy_commitment.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entropy_commitment(&mut self) -> ::std::vec::Vec<u8> {
+        self.entropy_commitment.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -13031,6 +13069,11 @@ impl GetOwnershipProof {
             "commitment_data",
             |m: &GetOwnershipProof| { &m.commitment_data },
             |m: &mut GetOwnershipProof| { &mut m.commitment_data },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entropy_commitment",
+            |m: &GetOwnershipProof| { &m.entropy_commitment },
+            |m: &mut GetOwnershipProof| { &mut m.entropy_commitment },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<GetOwnershipProof>(
             "GetOwnershipProof",
@@ -13079,6 +13122,9 @@ impl ::protobuf::Message for GetOwnershipProof {
                 58 => {
                     self.commitment_data = ::std::option::Option::Some(is.read_bytes()?);
                 },
+                66 => {
+                    self.entropy_commitment = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -13113,6 +13159,9 @@ impl ::protobuf::Message for GetOwnershipProof {
         if let Some(v) = self.commitment_data.as_ref() {
             my_size += ::protobuf::rt::bytes_size(7, &v);
         }
+        if let Some(v) = self.entropy_commitment.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(8, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -13140,6 +13189,9 @@ impl ::protobuf::Message for GetOwnershipProof {
         if let Some(v) = self.commitment_data.as_ref() {
             os.write_bytes(7, v)?;
         }
+        if let Some(v) = self.entropy_commitment.as_ref() {
+            os.write_bytes(8, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -13164,6 +13216,7 @@ impl ::protobuf::Message for GetOwnershipProof {
         self.user_confirmation = ::std::option::Option::None;
         self.ownership_ids.clear();
         self.commitment_data = ::std::option::Option::None;
+        self.entropy_commitment = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -13176,6 +13229,7 @@ impl ::protobuf::Message for GetOwnershipProof {
             user_confirmation: ::std::option::Option::None,
             ownership_ids: ::std::vec::Vec::new(),
             commitment_data: ::std::option::Option::None,
+            entropy_commitment: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -13196,6 +13250,322 @@ impl ::std::fmt::Display for GetOwnershipProof {
 }
 
 impl ::protobuf::reflect::ProtobufValue for GetOwnershipProof {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.OwnershipProofNonceCommitment)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct OwnershipProofNonceCommitment {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.OwnershipProofNonceCommitment.nonce_commitment)
+    pub nonce_commitment: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.OwnershipProofNonceCommitment.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a OwnershipProofNonceCommitment {
+    fn default() -> &'a OwnershipProofNonceCommitment {
+        <OwnershipProofNonceCommitment as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl OwnershipProofNonceCommitment {
+    pub fn new() -> OwnershipProofNonceCommitment {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes nonce_commitment = 1;
+
+    pub fn nonce_commitment(&self) -> &[u8] {
+        match self.nonce_commitment.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_nonce_commitment(&mut self) {
+        self.nonce_commitment = ::std::option::Option::None;
+    }
+
+    pub fn has_nonce_commitment(&self) -> bool {
+        self.nonce_commitment.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nonce_commitment(&mut self, v: ::std::vec::Vec<u8>) {
+        self.nonce_commitment = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_nonce_commitment(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.nonce_commitment.is_none() {
+            self.nonce_commitment = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.nonce_commitment.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_nonce_commitment(&mut self) -> ::std::vec::Vec<u8> {
+        self.nonce_commitment.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nonce_commitment",
+            |m: &OwnershipProofNonceCommitment| { &m.nonce_commitment },
+            |m: &mut OwnershipProofNonceCommitment| { &mut m.nonce_commitment },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<OwnershipProofNonceCommitment>(
+            "OwnershipProofNonceCommitment",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for OwnershipProofNonceCommitment {
+    const NAME: &'static str = "OwnershipProofNonceCommitment";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.nonce_commitment = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.nonce_commitment.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.nonce_commitment.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> OwnershipProofNonceCommitment {
+        OwnershipProofNonceCommitment::new()
+    }
+
+    fn clear(&mut self) {
+        self.nonce_commitment = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static OwnershipProofNonceCommitment {
+        static instance: OwnershipProofNonceCommitment = OwnershipProofNonceCommitment {
+            nonce_commitment: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for OwnershipProofNonceCommitment {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("OwnershipProofNonceCommitment").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for OwnershipProofNonceCommitment {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for OwnershipProofNonceCommitment {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+// @@protoc_insertion_point(message:hw.trezor.messages.bitcoin.OwnershipProofEntropy)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct OwnershipProofEntropy {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.bitcoin.OwnershipProofEntropy.entropy)
+    pub entropy: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.bitcoin.OwnershipProofEntropy.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a OwnershipProofEntropy {
+    fn default() -> &'a OwnershipProofEntropy {
+        <OwnershipProofEntropy as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl OwnershipProofEntropy {
+    pub fn new() -> OwnershipProofEntropy {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes entropy = 1;
+
+    pub fn entropy(&self) -> &[u8] {
+        match self.entropy.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_entropy(&mut self) {
+        self.entropy = ::std::option::Option::None;
+    }
+
+    pub fn has_entropy(&self) -> bool {
+        self.entropy.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_entropy(&mut self, v: ::std::vec::Vec<u8>) {
+        self.entropy = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_entropy(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.entropy.is_none() {
+            self.entropy = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.entropy.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_entropy(&mut self) -> ::std::vec::Vec<u8> {
+        self.entropy.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "entropy",
+            |m: &OwnershipProofEntropy| { &m.entropy },
+            |m: &mut OwnershipProofEntropy| { &mut m.entropy },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<OwnershipProofEntropy>(
+            "OwnershipProofEntropy",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for OwnershipProofEntropy {
+    const NAME: &'static str = "OwnershipProofEntropy";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.entropy = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.entropy.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.entropy.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> OwnershipProofEntropy {
+        OwnershipProofEntropy::new()
+    }
+
+    fn clear(&mut self) {
+        self.entropy = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static OwnershipProofEntropy {
+        static instance: OwnershipProofEntropy = OwnershipProofEntropy {
+            entropy: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for OwnershipProofEntropy {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("OwnershipProofEntropy").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for OwnershipProofEntropy {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for OwnershipProofEntropy {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
@@ -14449,7 +14819,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x0b2<.hw.trezor.messages.bitcoin.TxAckEntropy.TxAckEntropyWrapperR\x02t\
     x\x1aV\n\x13TxAckEntropyWrapper\x12?\n\x07entropy\x18\x0f\x20\x02(\x0b2%\
     .hw.trezor.messages.bitcoin.TxEntropyR\x07entropy:\x04\x90\xb2\x19\x16\"\
-    \x88\x03\n\x11GetOwnershipProof\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
+    \xb7\x03\n\x11GetOwnershipProof\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
     \x08addressN\x12$\n\tcoin_name\x18\x02\x20\x01(\t:\x07BitcoinR\x08coinNa\
     me\x12Z\n\x0bscript_type\x18\x03\x20\x01(\x0e2+.hw.trezor.messages.bitco\
     in.InputScriptType:\x0cSPENDWITNESSR\nscriptType\x12P\n\x08multisig\x18\
@@ -14457,31 +14827,34 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x08multisig\x122\n\x11user_confirmation\x18\x05\x20\x01(\x08:\x05falseR\
     \x10userConfirmation\x12#\n\rownership_ids\x18\x06\x20\x03(\x0cR\x0cowne\
     rshipIds\x12)\n\x0fcommitment_data\x18\x07\x20\x01(\x0c:\0R\x0ecommitmen\
-    tData\"W\n\x0eOwnershipProof\x12'\n\x0fownership_proof\x18\x01\x20\x02(\
-    \x0cR\x0eownershipProof\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsign\
-    ature\"\xab\x03\n\x11AuthorizeCoinJoin\x12\x20\n\x0bcoordinator\x18\x01\
-    \x20\x02(\tR\x0bcoordinator\x12\x1d\n\nmax_rounds\x18\x02\x20\x02(\x04R\
-    \tmaxRounds\x127\n\x18max_coordinator_fee_rate\x18\x03\x20\x02(\rR\x15ma\
-    xCoordinatorFeeRate\x12+\n\x12max_fee_per_kvbyte\x18\x04\x20\x02(\rR\x0f\
-    maxFeePerKvbyte\x12\x1b\n\taddress_n\x18\x05\x20\x03(\rR\x08addressN\x12\
-    $\n\tcoin_name\x18\x06\x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\x0bscr\
-    ipt_type\x18\x07\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptTy\
-    pe:\x0cSPENDADDRESSR\nscriptType\x12P\n\x0bamount_unit\x18\x08\x20\x01(\
-    \x0e2&.hw.trezor.messages.bitcoin.AmountUnit:\x07BITCOINR\namountUnit*\
-    \x9d\x01\n\x0fInputScriptType\x12\x10\n\x0cSPENDADDRESS\x10\0\x12\x11\n\
-    \rSPENDMULTISIG\x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\x12\x10\n\x0cSPEND\
-    WITNESS\x10\x03\x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\x12\x10\n\x0cSPEND\
-    TAPROOT\x10\x05\x12\x1d\n\x19SPENDADDRESS_UNCOMPRESSED\x10\x06*\x99\x01\
-    \n\x10OutputScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYT\
-    OSCRIPTHASH\x10\x01\x12\x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYTOOPR\
-    ETURN\x10\x03\x12\x10\n\x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2SHWI\
-    TNESS\x10\x05\x12\x10\n\x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStakingSpen\
-    dType\x12\t\n\x05SSGen\x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUnit\
-    \x12\x0b\n\x07BITCOIN\x10\0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\
-    \x0cMICROBITCOIN\x10\x02\x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPub\
-    keysOrder\x12\r\n\tPRESERVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#\
-    com.satoshilabs.trezor.lib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\
-    \x01\
+    tData\x12-\n\x12entropy_commitment\x18\x08\x20\x01(\x0cR\x11entropyCommi\
+    tment\"J\n\x1dOwnershipProofNonceCommitment\x12)\n\x10nonce_commitment\
+    \x18\x01\x20\x01(\x0cR\x0fnonceCommitment\"1\n\x15OwnershipProofEntropy\
+    \x12\x18\n\x07entropy\x18\x01\x20\x01(\x0cR\x07entropy\"W\n\x0eOwnership\
+    Proof\x12'\n\x0fownership_proof\x18\x01\x20\x02(\x0cR\x0eownershipProof\
+    \x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\xab\x03\n\x11Au\
+    thorizeCoinJoin\x12\x20\n\x0bcoordinator\x18\x01\x20\x02(\tR\x0bcoordina\
+    tor\x12\x1d\n\nmax_rounds\x18\x02\x20\x02(\x04R\tmaxRounds\x127\n\x18max\
+    _coordinator_fee_rate\x18\x03\x20\x02(\rR\x15maxCoordinatorFeeRate\x12+\
+    \n\x12max_fee_per_kvbyte\x18\x04\x20\x02(\rR\x0fmaxFeePerKvbyte\x12\x1b\
+    \n\taddress_n\x18\x05\x20\x03(\rR\x08addressN\x12$\n\tcoin_name\x18\x06\
+    \x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\x07\x20\
+    \x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPENDADDRESSR\
+    \nscriptType\x12P\n\x0bamount_unit\x18\x08\x20\x01(\x0e2&.hw.trezor.mess\
+    ages.bitcoin.AmountUnit:\x07BITCOINR\namountUnit*\x9d\x01\n\x0fInputScri\
+    ptType\x12\x10\n\x0cSPENDADDRESS\x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\
+    \x12\x0c\n\x08EXTERNAL\x10\x02\x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\
+    \n\x10SPENDP2SHWITNESS\x10\x04\x12\x10\n\x0cSPENDTAPROOT\x10\x05\x12\x1d\
+    \n\x19SPENDADDRESS_UNCOMPRESSED\x10\x06*\x99\x01\n\x10OutputScriptType\
+    \x12\x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\x01\
+    \x12\x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\x03\x12\
+    \x10\n\x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\x05\x12\
+    \x10\n\x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStakingSpendType\x12\t\n\x05\
+    SSGen\x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\x07BITCOI\
+    N\x10\0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBITCOIN\x10\
+    \x02\x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\x12\r\n\tP\
+    RESERVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satoshilabs.trez\
+    or.lib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -14501,7 +14874,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             let mut deps = ::std::vec::Vec::with_capacity(2);
             deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(49);
+            let mut messages = ::std::vec::Vec::with_capacity(51);
             messages.push(MultisigRedeemScriptType::generated_message_descriptor_data());
             messages.push(GetPublicKey::generated_message_descriptor_data());
             messages.push(PublicKey::generated_message_descriptor_data());
@@ -14530,6 +14903,8 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(TxAckPrevExtraData::generated_message_descriptor_data());
             messages.push(TxAckEntropy::generated_message_descriptor_data());
             messages.push(GetOwnershipProof::generated_message_descriptor_data());
+            messages.push(OwnershipProofNonceCommitment::generated_message_descriptor_data());
+            messages.push(OwnershipProofEntropy::generated_message_descriptor_data());
             messages.push(OwnershipProof::generated_message_descriptor_data());
             messages.push(AuthorizeCoinJoin::generated_message_descriptor_data());
             messages.push(multisig_redeem_script_type::HDNodePathType::generated_message_descriptor_data());

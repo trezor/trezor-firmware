@@ -480,6 +480,8 @@ class MessageType(IntEnum):
     GetOwnershipProof = 49
     OwnershipProof = 50
     AuthorizeCoinJoin = 51
+    OwnershipProofNonceCommitment = 606
+    OwnershipProofEntropy = 607
     CipherKeyValue = 23
     CipheredKeyValue = 48
     SignIdentity = 53
@@ -1763,6 +1765,7 @@ class GetOwnershipProof(protobuf.MessageType):
         5: protobuf.Field("user_confirmation", "bool", repeated=False, required=False, default=False),
         6: protobuf.Field("ownership_ids", "bytes", repeated=True, required=False, default=None),
         7: protobuf.Field("commitment_data", "bytes", repeated=False, required=False, default=b''),
+        8: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1775,6 +1778,7 @@ class GetOwnershipProof(protobuf.MessageType):
         multisig: Optional["MultisigRedeemScriptType"] = None,
         user_confirmation: Optional["bool"] = False,
         commitment_data: Optional["bytes"] = b'',
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.ownership_ids: Sequence["bytes"] = ownership_ids if ownership_ids is not None else []
@@ -1783,6 +1787,35 @@ class GetOwnershipProof(protobuf.MessageType):
         self.multisig = multisig
         self.user_confirmation = user_confirmation
         self.commitment_data = commitment_data
+        self.entropy_commitment = entropy_commitment
+
+
+class OwnershipProofNonceCommitment(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 606
+    FIELDS = {
+        1: protobuf.Field("nonce_commitment", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce_commitment: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce_commitment = nonce_commitment
+
+
+class OwnershipProofEntropy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 607
+    FIELDS = {
+        1: protobuf.Field("entropy", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entropy: Optional["bytes"] = None,
+    ) -> None:
+        self.entropy = entropy
 
 
 class OwnershipProof(protobuf.MessageType):
