@@ -13,12 +13,7 @@ from .keychain import with_keychain_from_chain_id
 if TYPE_CHECKING:
     from typing import Iterable
 
-    from trezor.messages import (
-        EthereumNetworkInfo,
-        EthereumSignTx,
-        EthereumTokenInfo,
-        EthereumTxAck,
-    )
+    from trezor.messages import EthereumNetworkInfo, EthereumSignTx, EthereumTokenInfo
 
     from apps.common.keychain import Keychain
 
@@ -97,9 +92,9 @@ async def sign_tx(
     progress_obj.report(60)
 
     while data_left > 0:
-        resp = await send_request_chunk(data_left)
-        data_left -= len(resp.data_chunk)
-        sha.extend(resp.data_chunk)
+        data = await send_request_chunk(data_left)
+        data_left -= len(data)
+        sha.extend(data)
 
     # eip 155 replay protection
     rlp.write(sha, msg.chain_id)
@@ -246,14 +241,16 @@ def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def send_request_chunk(data_left: int) -> EthereumTxAck:
+async def send_request_chunk(data_left: int) -> bytes:
     from trezor.messages import EthereumTxAck
     from trezor.wire.context import call
 
     # TODO: layoutProgress ?
     req = EthereumTxRequest()
     req.data_length = min(data_left, 1024)
-    return await call(req, EthereumTxAck)
+    resp = await call(req, EthereumTxAck)
+    assert resp.data_chunk is not None
+    return resp.data_chunk
 
 
 def _sign_digest(

@@ -103,9 +103,9 @@ async def sign_tx_eip1559(
         sha.extend(data)
 
     while data_left > 0:
-        resp = await send_request_chunk(data_left)
-        data_left -= len(resp.data_chunk)
-        sha.extend(resp.data_chunk)
+        data_chunk = await send_request_chunk(data_left)
+        data_left -= len(data_chunk)
+        sha.extend(data_chunk)
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
