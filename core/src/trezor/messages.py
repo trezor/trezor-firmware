@@ -899,6 +899,7 @@ if TYPE_CHECKING:
         user_confirmation: "bool"
         ownership_ids: "list[AnyBytes]"
         commitment_data: "AnyBytes"
+        entropy_commitment: "AnyBytes | None"
 
         def __init__(
             self,
@@ -910,11 +911,40 @@ if TYPE_CHECKING:
             multisig: "MultisigRedeemScriptType | None" = None,
             user_confirmation: "bool | None" = None,
             commitment_data: "AnyBytes | None" = None,
+            entropy_commitment: "AnyBytes | None" = None,
         ) -> None:
             pass
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["GetOwnershipProof"]:
+            return isinstance(msg, cls)
+
+    class OwnershipProofNonceCommitment(protobuf.MessageType):
+        nonce_commitment: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            nonce_commitment: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["OwnershipProofNonceCommitment"]:
+            return isinstance(msg, cls)
+
+    class OwnershipProofEntropy(protobuf.MessageType):
+        entropy: "AnyBytes | None"
+
+        def __init__(
+            self,
+            *,
+            entropy: "AnyBytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["OwnershipProofEntropy"]:
             return isinstance(msg, cls)
 
     class OwnershipProof(protobuf.MessageType):
