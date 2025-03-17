@@ -1,7 +1,7 @@
 #ifndef MODELS_MODEL_T3W1_H_
 #define MODELS_MODEL_T3W1_H_
 
-// #include "bootloaders/bootloader_hashes.h"
+#include "bootloaders/bootloader_hashes.h"
 
 #include <rtl/sizedefs.h>
 

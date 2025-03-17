@@ -7,7 +7,7 @@ from hashlib import blake2s
 
 from trezorlib.firmware.core import FirmwareImage, Model
 
-ALIGNED_SIZE = 128 * 1024
+ALIGNED_SIZE = 192 * 1024
 
 HERE = Path(__file__).parent
 BOOTLOADERS = HERE / ".." / "embed" / "models"

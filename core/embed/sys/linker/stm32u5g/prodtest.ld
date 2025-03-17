@@ -61,6 +61,9 @@ SECTIONS {
     . = ALIGN(4);
     *(.rodata*);
     . = ALIGN(4);
+    KEEP(*(.bootloader));
+    *(.bootloader*);
+    . = ALIGN(4);
 
     _prodtest_cli_cmd_section_start = .;
     KEEP(*(.prodtest_cli_cmd))

@@ -25,6 +25,8 @@
 #include <rtl/cli.h>
 #include <sys/system.h>
 #include <sys/systick.h>
+#include <util/bl_check.h>
+#include <util/board_capabilities.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -227,6 +229,11 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_HW_REVISION
   hw_revision_init();
+#endif
+
+#if BOOTLOADER_QA
+  parse_boardloader_capabilities();
+  check_and_replace_bootloader();
 #endif
 }
 
