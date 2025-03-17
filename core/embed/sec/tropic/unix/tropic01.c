@@ -16,10 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
-#ifndef TREZORHAL_TROPIC_TRANSPORT_H
-#define TREZORHAL_TROPIC_TRANSPORT_H
+#include <trezor_rtl.h>
 
-void tropic_init(void);
+bool tropic_hal_init(void) { return true; }
+
+void tropic_hal_deinit(void) {}
 
 #endif

@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
@@ -50,10 +51,9 @@
 typedef struct {
   bool initialized;
   SPI_HandleTypeDef spi;
-  lt_handle_t handle;
-} tropic01_driver_t;
+} tropic01_hal_driver_t;
 
-static tropic01_driver_t g_tropic01_driver = {.initialized = false};
+static tropic01_hal_driver_t g_tropic01_hal_driver = {.initialized = false};
 
 void tropic01_reset(void) {
   HAL_GPIO_WritePin(TROPIC01_PWR_PORT, TROPIC01_PWR_PIN, GPIO_PIN_SET);
@@ -62,8 +62,8 @@ void tropic01_reset(void) {
   systick_delay_ms(10);
 }
 
-bool tropic_init(void) {
-  tropic01_driver_t *drv = &g_tropic01_driver;
+bool tropic_hal_init(void) {
+  tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (drv->initialized) {
     return true;
@@ -137,24 +137,13 @@ bool tropic_init(void) {
 
   HAL_SPI_Init(&drv->spi);
 
-  if (LT_OK != lt_init(&drv->handle)) {
-    goto cleanup;
-  }
-
   drv->initialized = true;
 
   return true;
-
-cleanup:
-  tropic_deinit();
-
-  return false;
 }
 
-void tropic_deinit(void) {
-  tropic01_driver_t *drv = &g_tropic01_driver;
-
-  lt_deinit(&drv->handle);
+void tropic_hal_deinit(void) {
+  tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   HAL_SPI_DeInit(&drv->spi);
   __HAL_RCC_SPI2_FORCE_RESET();
@@ -202,7 +191,7 @@ lt_ret_t lt_port_spi_csn_high(lt_handle_t *h) {
 
 lt_ret_t lt_port_spi_transfer(lt_handle_t *h, uint8_t offset, uint16_t tx_len,
                               uint32_t timeout) {
-  tropic01_driver_t *drv = &g_tropic01_driver;
+  tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
   if (offset + tx_len > LT_L1_LEN_MAX) {
     return LT_L1_DATA_LEN_ERROR;
@@ -235,46 +224,4 @@ lt_ret_t lt_port_random_bytes(uint32_t *buff, uint16_t len) {
   return LT_OK;
 }
 
-bool tropic_get_spect_fw_version(uint8_t *version_buffer, uint16_t max_len) {
-  tropic01_driver_t *drv = &g_tropic01_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  if (LT_OK != lt_get_info_spect_fw_ver(&drv->handle, (uint8_t *)version_buffer,
-                                        max_len)) {
-    return false;
-  }
-
-  return true;
-}
-
-bool tropic_get_riscv_fw_version(uint8_t *version_buffer, uint16_t max_len) {
-  tropic01_driver_t *drv = &g_tropic01_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  if (LT_OK != lt_get_info_riscv_fw_ver(&drv->handle, (uint8_t *)version_buffer,
-                                        max_len)) {
-    return false;
-  }
-
-  return true;
-}
-
-bool tropic_get_chip_id(uint8_t *chip_id, uint16_t max_len) {
-  tropic01_driver_t *drv = &g_tropic01_driver;
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  if (LT_OK != lt_get_info_chip_id(&drv->handle, (uint8_t *)chip_id, max_len)) {
-    return false;
-  }
-
-  return true;
-}
+#endif

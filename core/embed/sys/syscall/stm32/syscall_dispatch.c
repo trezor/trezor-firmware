@@ -825,6 +825,37 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 #endif  // USE_DMA2D
 
+#ifdef USE_TROPIC
+    case SYSCALL_TROPIC_PING: {
+      const uint8_t *msg_out = (const uint8_t *)args[0];
+      uint8_t *msg_in = (uint8_t *)args[1];
+      uint16_t msg_len = (uint16_t)args[2];
+      args[0] = tropic_ping__verified(msg_out, msg_in, msg_len);
+    } break;
+
+    case SYSCALL_TROPIC_GET_CERT: {
+      uint8_t *buf = (uint8_t *)args[0];
+      uint16_t buf_size = (uint16_t)args[1];
+      args[0] = tropic_get_cert__verified(buf, buf_size);
+    } break;
+    case SYSCALL_TROPIC_ECC_KEY_GENERATE: {
+      uint16_t slot_index = (uint16_t)args[0];
+      args[0] = tropic_ecc_key_generate__verified(slot_index);
+
+    } break;
+    case SYSCALL_TROPIC_ECC_SIGN: {
+      uint16_t key_slot_index = (uint16_t)args[0];
+      const uint8_t *dig = (const uint8_t *)args[1];
+      uint16_t dig_len = (uint16_t)args[2];
+      uint8_t *sig = (uint8_t *)args[3];
+      uint16_t sig_len = (uint16_t)args[4];
+
+      args[0] =
+          tropic_ecc_sign__verified(key_slot_index, dig, dig_len, sig, sig_len);
+
+    } break;
+#endif
+
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);
       break;

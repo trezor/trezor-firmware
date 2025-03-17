@@ -27,10 +27,10 @@ FEATURE_FLAGS = {
     "RDI": True,
     "SECP256K1_ZKP": True,  # required for trezor.crypto.curve.bip340 (BIP340/Taproot)
     "SYSTEM_VIEW": False,
-    "AES_GCM": False,
+    "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic", "ble"]
+FEATURES_WANTED = ["input", "sd_card", "rgb_led", "dma2d", "consumption_mask", "usb" ,"optiga", "haptic", "ble", "tropic"]
 if DISABLE_OPTIGA:
     # TODO use PYOPT instead of PRODUCTION, same as in firmware, blocked on #4253
     if PRODUCTION:
@@ -177,17 +177,6 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/trezor-crypto/zkp_bip340.c',
     ]
 
-# AES-GCM
-if FEATURE_FLAGS["AES_GCM"]:
-    CPPDEFINES_MOD += [
-        'USE_AES_GCM',
-        'AES_VAR',
-    ]
-    SOURCE_MOD_CRYPTO += [
-        'vendor/trezor-crypto/aes/gf128mul.c',
-        'vendor/trezor-crypto/aes/aesgcm.c',
-    ]
-
 SOURCE_MOD += [
     'embed/gfx/bitblt/gfx_bitblt.c',
     'embed/gfx/bitblt/gfx_bitblt_rgb565.c',
@@ -257,6 +246,19 @@ env = Environment(
 )
 
 FEATURES_AVAILABLE = models.configure_board(TREZOR_MODEL, HW_REVISION, FEATURES_WANTED, env, CPPDEFINES_HAL, SOURCE_HAL, PATH_HAL)
+
+FEATURE_FLAGS["AES_GCM"] = FEATURE_FLAGS["AES_GCM"] or "tropic" in FEATURES_AVAILABLE
+
+# AES-GCM
+if FEATURE_FLAGS["AES_GCM"]:
+    CPPDEFINES_MOD += [
+        'USE_AES_GCM',
+        'AES_VAR',
+    ]
+    SOURCE_MOD_CRYPTO += [
+        'vendor/trezor-crypto/aes/gf128mul.c',
+        'vendor/trezor-crypto/aes/aesgcm.c',
+    ]
 
 SOURCE_FIRMWARE = [
     'embed/projects/kernel/main.c',

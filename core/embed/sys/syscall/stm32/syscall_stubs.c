@@ -783,4 +783,29 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t *bb) {
 
 #endif  // USE_DMA2D
 
+#ifdef USE_TROPIC
+
+bool tropic_ping(const uint8_t *msg_in, uint8_t *msg_out, uint16_t msg_len) {
+  return (bool)syscall_invoke3((uint32_t)msg_in, (uint32_t)msg_out, msg_len,
+                               SYSCALL_TROPIC_PING);
+}
+
+bool tropic_get_cert(uint8_t *buf, uint16_t buf_size) {
+  return (bool)syscall_invoke2((uint32_t)buf, buf_size,
+                               SYSCALL_TROPIC_GET_CERT);
+}
+
+bool tropic_ecc_key_generate(uint16_t slot_index) {
+  return (bool)syscall_invoke1((uint32_t)slot_index,
+                               SYSCALL_TROPIC_ECC_KEY_GENERATE);
+}
+
+bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
+                     uint16_t dig_len, uint8_t *sig, uint16_t sig_len) {
+  return (bool)syscall_invoke5((uint32_t)key_slot_index, (uint32_t)dig, dig_len,
+                               (uint32_t)sig, sig_len, SYSCALL_TROPIC_ECC_SIGN);
+}
+
+#endif
+
 #endif  // KERNEL_MODE
