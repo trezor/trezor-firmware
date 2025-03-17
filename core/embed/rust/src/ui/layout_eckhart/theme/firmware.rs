@@ -120,6 +120,7 @@ macro_rules! label_title {
             .with_line_spacing(-4)
     };
 }
+pub(crate) use label_title;
 
 pub const fn label_title_main() -> TextStyle {
     label_title!(GREY)
@@ -274,8 +275,9 @@ macro_rules! menu_item_title {
         }
     };
 }
+pub(crate) use menu_item_title;
 
-pub const fn menu_item_title() -> ButtonStyleSheet {
+pub const fn menu_item_title_default() -> ButtonStyleSheet {
     menu_item_title!(GREY_LIGHT)
 }
 
