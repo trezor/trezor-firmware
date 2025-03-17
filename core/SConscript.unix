@@ -51,7 +51,6 @@ SOURCE_MOD = [
     'vendor/micropython/extmod/vfs_posix_file.c',
 ]
 SOURCE_MOD_CRYPTO = []
-SOURCE_MOD_TROPIC = []
 RUST_UI_FEATURES = []
 
 # modtrezorconfig
@@ -255,13 +254,8 @@ SOURCE_MOD += [
     'embed/upymod/modutime.c',
 ]
 
-SOURCE_MOD_TROPIC += [
-    'vendor/libtropic/src/libtropic.c',
-]
-
 CPPDEFINES_MOD += ['USE_TREZOR_CRYPTO']
 
-CPPPATH_MOD += ['vendor/libtropic/src/', 'vendor/libtropic/include/']
 
 SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modubinascii.c',
@@ -790,7 +784,7 @@ if FROZEN:
 #
 
 obj_program = []
-source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MOD_TROPIC + SOURCE_MICROPYTHON + SOURCE_UNIX
+source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_MICROPYTHON + SOURCE_UNIX
 obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
 if FEATURE_FLAGS["SECP256K1_ZKP"]:

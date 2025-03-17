@@ -57,6 +57,10 @@
 #include <sec/optiga_config.h>
 #endif
 
+#ifdef USE_TROPIC
+#include <sec/tropic.h>
+#endif
+
 #ifdef USE_POWERCTL
 #include <sys/powerctl.h>
 #endif
@@ -166,6 +170,10 @@ void drivers_init() {
 
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
+#endif
+
+#ifdef USE_TROPIC
+  tropic_init();
 #endif
 }
 

@@ -295,6 +295,16 @@ static void secret_optiga_uncache(void) {
 }
 #endif
 
+#ifdef USE_TROPIC
+secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]) {
+  return secfalse;
+}
+
+secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]) {
+  return secfalse;
+}
+#endif
+
 void secret_optiga_erase(void) {
   uint8_t value[SECRET_OPTIGA_KEY_LEN] = {0};
   secret_write(value, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);

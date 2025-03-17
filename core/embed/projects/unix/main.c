@@ -58,7 +58,7 @@
 
 #ifdef USE_TROPIC
 #include <sec/secret.h>
-#include <sec/tropic_transport.h>
+#include <sec/tropic.h>
 #endif
 
 #include "py/builtin.h"

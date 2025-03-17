@@ -137,6 +137,7 @@ def configure(
         defines += [("USE_OPTIGA", "1")]
 
     if "tropic" in features_wanted:
+        sources += ["embed/sec/tropic/tropic.c"]
         sources += ["embed/sec/tropic/stm32/tropic01.c"]
         sources += ["vendor/libtropic/src/libtropic.c"]
         sources += ["vendor/libtropic/src/lt_crc16.c"]
