@@ -538,13 +538,28 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_error(
-        _title: TString<'static>,
-        _button: TString<'static>,
-        _description: TString<'static>,
-        _allow_cancel: bool,
+        title: TString<'static>,
+        button: TString<'static>,
+        description: TString<'static>,
+        allow_cancel: bool,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let content = Paragraphs::new(Paragraph::new(&theme::firmware::TEXT_REGULAR, description))
+            .with_placement(LinearPlacement::vertical());
+
+        let action_bar = if allow_cancel {
+            ActionBar::new_single(Button::with_text(button))
+        } else {
+            ActionBar::new_double(
+                Button::with_icon(theme::ICON_CLOSE),
+                Button::with_text(button),
+            )
+        };
+        let screen = TextScreen::new(content)
+            .with_header(Header::new(title).with_icon(theme::ICON_WARNING, theme::RED))
+            .with_action_bar(action_bar);
+        let obj = LayoutObj::new(screen)?;
+        Ok(obj)
     }
 
     fn show_group_share_success(
