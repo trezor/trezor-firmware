@@ -329,10 +329,9 @@ int bootloader_main(void) {
   }
 
 #ifdef USE_POWERCTL
+  powerctl_init();
 #ifndef TREZOR_EMULATOR
-  if (sectrue != manufacturing_mode || sectrue != firmware_present) {
-    npm1300_set_charging(true);
-  }
+  npm1300_set_charging(true);
 #endif
 #endif
 
