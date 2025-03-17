@@ -76,6 +76,7 @@
 
 #ifdef USE_POWERCTL
 #include <sys/powerctl.h>
+#include "../../sys/powerctl/npm1300/npm1300.h"
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -184,6 +185,7 @@ static void show_welcome_screen(void) {
 static void drivers_init(void) {
 #ifdef USE_POWERCTL
   powerctl_init();
+  npm1300_set_charging(true);
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);
