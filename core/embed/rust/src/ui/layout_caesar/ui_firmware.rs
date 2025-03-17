@@ -489,7 +489,7 @@ impl FirmwareUI for UICaesar {
         amount_label: TString<'static>,
         fee: TString<'static>,
         fee_label: TString<'static>,
-        _title: Option<TString<'static>>,
+        title: Option<TString<'static>>,
         account_items: Option<Obj>,
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
@@ -550,7 +550,11 @@ impl FirmwareUI for UICaesar {
                     // Total amount + fee
                     let (btn_layout, btn_actions) = btns_summary_page(!info_pages.is_empty());
 
-                    let mut ops = OpTextLayout::new(theme::TEXT_MONO)
+                    let mut ops = OpTextLayout::new(theme::TEXT_MONO);
+                    if let Some(title) = title {
+                        ops = ops.text(title, fonts::FONT_BOLD_UPPER).newline();
+                    }
+                    ops = ops
                         .text(amount_label, fonts::FONT_BOLD)
                         .newline()
                         .text(amount, fonts::FONT_MONO);
