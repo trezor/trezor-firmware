@@ -946,7 +946,7 @@ if not utils.BITCOIN_ONLY:
         )
 
     async def confirm_solana_staking_tx(
-        title: str,
+        title: str | None,
         description: str,
         account: str,
         account_path: str,
@@ -972,17 +972,20 @@ if not utils.BITCOIN_ONLY:
             items.append(stake_item)
         items.append(blockhash_item)
 
+        extra_title = title
         if vote_account:
             description = f"{description}\n{TR.solana__stake_provider}:"
+            title = None  # so the layout will fit in a single page
         else:
-            description = f"\n\n{description}"
+            description = f"\n{description}"
         await raise_if_not_confirmed(
             trezorui_api.confirm_summary(
+                title=title,
                 amount=vote_account,
                 amount_label=description,
                 fee="",
                 fee_label="",
-                extra_title=title,
+                extra_title=extra_title,
                 extra_items=items,
             ),
             br_name,
@@ -996,7 +999,6 @@ if not utils.BITCOIN_ONLY:
                 fee=fee,
                 fee_label=fee_label,
                 account_items=None,
-                title=title,
                 extra_title=TR.confirm_total__title_fee,
                 extra_items=fee_details,
             ),
