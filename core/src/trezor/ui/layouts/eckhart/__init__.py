@@ -369,7 +369,7 @@ def show_success(
     button = button or TR.buttons__continue  # def_arg
     return raise_if_not_confirmed(
         trezorui_api.show_success(
-            title=subheader if subheader else "",
+            title=subheader if subheader else TR.words__title_done,
             button=button,
             description=content,
             allow_cancel=False,
