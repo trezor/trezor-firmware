@@ -340,11 +340,7 @@ def _client_unlocked(
             # Get a new client
             _raw_client = _get_raw_client(request)
 
-    _raw_client.protocol = None
-    _raw_client.__init__(
-        transport=_raw_client.transport,
-        auto_interact=_raw_client.debug.allow_interactions,
-    )
+    _raw_client.reset_protocol()
 
     if not _raw_client.features.bootloader_mode:
         _raw_client.refresh_features()

@@ -1471,6 +1471,10 @@ class TrezorClientDebugLink(TrezorClient):
 
         raise RuntimeError("Unexpected call")
 
+    def reset_protocol(self):
+        super().reset_protocol()
+        self._seedless_session = self.get_seedless_session(new_session=True)
+
 
 def load_device(
     session: "Session",
