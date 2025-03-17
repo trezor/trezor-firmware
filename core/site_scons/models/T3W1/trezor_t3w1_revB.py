@@ -250,6 +250,7 @@ def configure(
     ]
     paths += ["embed/sys/powerctl/inc"]
     defines += [("USE_POWERCTL", "1")]
+    features_available.append("powerctl")
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

@@ -23,6 +23,13 @@
 #include <sys/types.h>
 #include <util/image.h>
 
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>
+#endif
+
+#include <io/display.h>
+#include <io/display_utils.h>
+
 #include "antiglitch.h"
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
@@ -51,6 +58,14 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
 #ifdef USE_BLE
     if (menu_result == MENU_BLUETOOTH) {
       workflow_ble_pairing_request(vhdr, hdr);
+      continue;
+    }
+#endif
+#ifdef USE_POWERCTL
+    if (menu_result == MENU_POWER_OFF) {  // reboot
+      display_fade(display_get_backlight(), 0, 200);
+      powerctl_hibernate();
+      // in case hibernation failed, continue with menu
       continue;
     }
 #endif
