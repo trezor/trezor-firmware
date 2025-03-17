@@ -4,6 +4,8 @@ import trezorui_api
 from trezor import TR, ui
 from trezor.enums import ButtonRequestType
 
+from apps.common import backup_types
+
 from ..common import interact
 
 if TYPE_CHECKING:
@@ -188,6 +190,45 @@ async def continue_recovery(
                 return False
 
 
+async def show_invalid_mnemonic(word_count: int) -> None:
+    if backup_types.is_slip39_word_count(word_count):
+        await show_recovery_warning(
+            "warning_invalid_share",
+            TR.words__please_try_again,
+            TR.recovery__invalid_share_entered,
+        )
+    else:
+        await show_recovery_warning(
+            "warning_invalid_seed",
+            TR.words__please_try_again,
+            TR.recovery__invalid_wallet_backup_entered,
+        )
+
+
+async def show_identifier_mismatch() -> None:
+    await show_recovery_warning(
+        "warning_mismatched_share",
+        "",
+        TR.recovery__share_from_another_multi_share_backup,
+    )
+
+
+async def show_already_added() -> None:
+    await show_recovery_warning(
+        "warning_known_share",
+        TR.recovery__share_already_entered,
+        TR.recovery__enter_different_share,
+    )
+
+
+async def show_group_thresholod() -> None:
+    await show_recovery_warning(
+        "warning_group_threshold",
+        TR.recovery__group_threshold_reached,
+        TR.recovery__enter_share_from_diff_group,
+    )
+
+
 def show_recovery_warning(
     br_name: str,
     content: str,
@@ -207,3 +248,22 @@ def show_recovery_warning(
         br_name,
         br_code,
     )
+
+
+async def show_dry_run_result(result: bool, is_slip39: bool) -> None:
+    from trezor.ui.layouts import show_success
+
+    if result:
+        if is_slip39:
+            text = TR.recovery__dry_run_slip39_valid_match
+        else:
+            text = TR.recovery__dry_run_bip39_valid_match
+        await show_success("success_dry_recovery", text, button=TR.buttons__continue)
+    else:
+        if is_slip39:
+            text = TR.recovery__dry_run_slip39_valid_mismatch
+        else:
+            text = TR.recovery__dry_run_bip39_valid_mismatch
+        await show_recovery_warning(
+            "warning_dry_recovery", "", text, button=TR.buttons__continue
+        )
