@@ -67,6 +67,7 @@ typedef enum {
   MENU_REBOOT = 0x11223344,
   MENU_WIPE = 0x55667788,
   MENU_BLUETOOTH = 0x99AABBCC,
+  MENU_POWER_OFF = 0x751A5BEF,
 } menu_result_t;
 void screen_menu(bool initial_setup, secbool firmware_present,
                  c_layout_t* layout);
