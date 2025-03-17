@@ -93,7 +93,7 @@ pub fn new_show_danger(
             .with_separators()
             .item(
                 Button::with_text(verb_cancel)
-                    .styled(theme::menu_item_title())
+                    .styled(theme::menu_item_title_default())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )

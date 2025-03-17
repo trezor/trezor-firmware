@@ -135,13 +135,13 @@ pub fn new_get_address(
         VerticalMenu::empty()
             .item(
                 Button::with_text(TR::address__qr_code.into())
-                    .styled(theme::menu_item_title())
+                    .styled(theme::menu_item_title_default())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
             .item(
                 Button::with_text(TR::address_details__account_info.into())
-                    .styled(theme::menu_item_title())
+                    .styled(theme::menu_item_title_default())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
