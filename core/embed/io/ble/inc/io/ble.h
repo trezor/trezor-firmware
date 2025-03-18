@@ -32,13 +32,14 @@
 #define BLE_ADV_NAME_LEN 20
 
 typedef enum {
-  BLE_SWITCH_OFF = 0,      // Turn off BLE advertising, disconnect
-  BLE_SWITCH_ON = 1,       // Turn on BLE advertising
-  BLE_PAIRING_MODE = 2,    // Enter pairing mode
-  BLE_DISCONNECT = 3,      // Disconnect from the connected device
-  BLE_ERASE_BONDS = 4,     // Erase all bonding information
-  BLE_ALLOW_PAIRING = 5,   // Accept pairing request
-  BLE_REJECT_PAIRING = 6,  // Reject pairing request
+  BLE_SWITCH_OFF = 0,       // Turn off BLE advertising, disconnect
+  BLE_SWITCH_ON = 1,        // Turn on BLE advertising
+  BLE_PAIRING_MODE = 2,     // Enter pairing mode
+  BLE_DISCONNECT = 3,       // Disconnect from the connected device
+  BLE_ERASE_BONDS = 4,      // Erase all bonding information
+  BLE_ALLOW_PAIRING = 5,    // Accept pairing request
+  BLE_REJECT_PAIRING = 6,   // Reject pairing request
+  BLE_EMULATOR_PONG = 255,  // Ping reply, emulator only
 } ble_command_type_t;
 
 typedef struct {
@@ -63,11 +64,12 @@ typedef enum {
   BLE_DISCONNECTED = 2,       // Disconnected from a device
   BLE_PAIRING_REQUEST = 3,    // Pairing request received
   BLE_PAIRING_CANCELLED = 4,  // Pairing was cancelled by host
+  BLE_EMULATOR_PING = 255,    // Ping, emulator only
 } ble_event_type_t;
 
 typedef struct {
   ble_event_type_t type;
-  int connection_id;
+  int connection_id;  // XXX seems unused
   uint8_t data_len;
   uint8_t data[6];
 } ble_event_t;
