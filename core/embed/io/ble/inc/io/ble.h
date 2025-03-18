@@ -67,7 +67,7 @@ typedef enum {
 
 typedef struct {
   ble_event_type_t type;
-  int connection_id;
+  int connection_id;  // XXX seems unused
   uint8_t data_len;
   uint8_t data[6];
 } ble_event_t;
