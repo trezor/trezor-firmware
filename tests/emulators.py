@@ -85,7 +85,8 @@ def _get_port(worker_id: int) -> int:
     """
     # One emulator instance occupies 3 consecutive ports:
     # 1. normal link, 2. debug link and 3. webauthn fake interface
-    return 20000 + worker_id * 3
+    # 4. USB serial 5. ble-emulator-data 6. ble-emulator-events
+    return 20000 + worker_id * 6
 
 
 class EmulatorWrapper:

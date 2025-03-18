@@ -107,6 +107,9 @@ typedef enum {
   BLE_PAIRING_NOT_NEEDED = 6, /**< Pairing is not needed */
   BLE_CONNECTION_CHANGED =
       7, /**< Connection change (e.g. different device connected) */
+#ifdef TREZOR_EMULATOR
+  BLE_EMULATOR_PING = 255, /**< Ping request, emulator only */
+#endif
 } ble_event_type_t;
 
 /**
