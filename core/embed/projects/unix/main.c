@@ -59,6 +59,10 @@
 #include <io/touch.h>
 #endif
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #ifdef USE_TROPIC
 #include <sec/tropic.h>
 #endif
@@ -525,6 +529,10 @@ void drivers_init(uint16_t tropic_model_port) {
 #endif
 
   usb_configure(NULL);
+
+#ifdef USE_BLE
+  ble_init();
+#endif
 }
 
 // Initialize the system and drivers for running tests in the Rust code.
