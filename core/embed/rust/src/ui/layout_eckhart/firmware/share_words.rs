@@ -58,7 +58,8 @@ impl<'a> ShareWordsScreen<'a> {
 
         let header = Header::new(TR::reset__recovery_wallet_backup_title.into());
 
-        let hint = Hint::new_instruction(TR::reset__share_words_first, Some(theme::ICON_INFO));
+        let mut hint = Hint::new_page_counter();
+        hint.update(content.pager());
 
         Self {
             content,
