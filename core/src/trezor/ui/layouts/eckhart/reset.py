@@ -377,7 +377,7 @@ def show_share_confirmation_failure() -> Awaitable[None]:
     return show_reset_warning(
         "warning_backup_check",
         TR.reset__incorrect_word_selected,
-        TR.words__pay_attention,
+        TR.words__important,
         TR.words__try_again,
         ButtonRequestType.ResetDevice,
     )

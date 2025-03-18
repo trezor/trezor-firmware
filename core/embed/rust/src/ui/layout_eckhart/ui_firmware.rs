@@ -473,7 +473,7 @@ impl FirmwareUI for UIEckhart {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let description = description.unwrap_or(TString::empty());
         let component = NumberInputScreen::new(min_count, max_count, count, description)
-            .with_header(Header::new(title).with_menu_button());
+            .with_header(Header::new(title));
 
         let layout = RootComponent::new(component);
 
@@ -573,9 +573,10 @@ impl FirmwareUI for UIEckhart {
 
         let layout = RootComponent::new(
             TextScreen::new(checklist_content)
-                .with_header(Header::new(title).with_menu_button())
-                .with_action_bar(ActionBar::new_single(
-                    Button::with_text(button).styled(theme::button_default()),
+                .with_header(Header::new(title))
+                .with_action_bar(ActionBar::new_double(
+                    Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
+                    Button::with_text(button),
                 )),
         );
 
