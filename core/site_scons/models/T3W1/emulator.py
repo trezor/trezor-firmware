@@ -85,6 +85,18 @@ def configure(
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]
 
+        ### 2025-03: emulator does not support both at the same time
+        # sources += ["embed/io/button/unix/button.c"]
+        # paths += ["embed/io/button/inc"]
+        # features_available.append("button")
+        # defines += [("USE_BUTTON", "1")]
+
+    if "ble" in features_wanted:
+        sources += ["embed/io/ble/unix/ble.c"]
+        paths += ["embed/io/ble/inc"]
+        features_available.append("ble")
+        defines += [("USE_BLE", "1")]
+
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 
