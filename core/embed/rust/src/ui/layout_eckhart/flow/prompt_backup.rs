@@ -99,7 +99,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
 
     let content_skip_intro = TextScreen::new(paragraphs_skip_intro)
         .with_header(
-            Header::new(TR::words__pay_attention.into())
+            Header::new(TR::words__important.into())
                 .with_icon(theme::ICON_WARNING, theme::ORANGE)
                 .with_text_style(theme::label_title_danger()),
         )
