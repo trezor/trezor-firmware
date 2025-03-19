@@ -416,6 +416,7 @@ impl FirmwareUI for UIDelizia {
 
     fn confirm_properties(
         title: TString<'static>,
+        subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -429,7 +430,7 @@ impl FirmwareUI for UIDelizia {
         let flow = flow::new_confirm_action_simple(
             paragraphs.into_paragraphs(),
             ConfirmActionExtra::Menu(ConfirmActionMenuStrings::new()),
-            ConfirmActionStrings::new(title, None, None, hold.then_some(title)),
+            ConfirmActionStrings::new(title, subtitle, None, hold.then_some(title)),
             hold,
             None,
             0,
