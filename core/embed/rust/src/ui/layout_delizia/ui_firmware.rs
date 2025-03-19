@@ -415,7 +415,7 @@ impl FirmwareUI for UIDelizia {
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let paragraphs = PropsList::new(
             items,
-            &theme::TEXT_NORMAL,
+            &theme::TEXT_SUB_GREY_LIGHT,
             &theme::TEXT_MONO,
             &theme::TEXT_MONO,
         )?;
