@@ -161,14 +161,14 @@ where
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("TextComponent");
         if let Some(header) = self.header.as_ref() {
-            header.trace(t);
+            t.child("Header", header);
         }
-        self.content.trace(t);
+        t.child("Content", &self.content);
         if let Some(hint) = self.hint.as_ref() {
-            hint.trace(t);
+            t.child("Hint", hint);
         }
         if let Some(ab) = self.action_bar.as_ref() {
-            ab.trace(t);
+            t.child("ActionBar", ab);
         }
     }
 }
