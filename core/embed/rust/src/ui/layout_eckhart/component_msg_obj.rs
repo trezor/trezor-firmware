@@ -74,6 +74,7 @@ impl ComponentMsgObj for Homescreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
             HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
+            HomescreenMsg::Menu => Ok(INFO.as_obj()),
         }
     }
 }
