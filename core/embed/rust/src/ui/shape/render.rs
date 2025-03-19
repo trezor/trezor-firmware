@@ -58,6 +58,12 @@ pub trait Renderer<'a> {
         inner(self);
         self.set_viewport(original);
     }
+
+    #[cfg(feature = "ui_debug")]
+    fn raise_overflow_exception(&mut self);
+
+    #[cfg(feature = "ui_debug")]
+    fn should_raise_overflow_exception(&self) -> bool;
 }
 
 // ==========================================================================
@@ -73,6 +79,9 @@ where
     canvas: &'a mut C,
     /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
+
+    #[cfg(feature = "ui_debug")]
+    overflow: bool,
 }
 
 impl<'a, 'alloc, C> DirectRenderer<'a, 'alloc, C>
@@ -92,7 +101,12 @@ where
         // TODO: consider storing original canvas.viewport
         //       and restoring it by drop() function
 
-        Self { canvas, cache }
+        Self {
+            canvas,
+            cache,
+            #[cfg(feature = "ui_debug")]
+            overflow: false,
+        }
     }
 }
 
@@ -116,6 +130,16 @@ where
             shape.draw(self.canvas, self.cache);
             shape.cleanup(self.cache);
         }
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn raise_overflow_exception(&mut self) {
+        self.overflow = true;
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn should_raise_overflow_exception(&self) -> bool {
+        self.overflow
     }
 }
 
@@ -163,5 +187,15 @@ where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         self.renderer.render_shape(shape);
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn raise_overflow_exception(&mut self) {
+        self.renderer.raise_overflow_exception();
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn should_raise_overflow_exception(&self) -> bool {
+        self.renderer.should_raise_overflow_exception()
     }
 }
