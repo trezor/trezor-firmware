@@ -484,7 +484,7 @@ class InputFlowShowAddressQRCode(InputFlowBase):
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
-        self.debug.synchronize_at("TextComponent")
+        self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
         # continue to the app
         self.debug.press_yes()
@@ -558,7 +558,7 @@ class InputFlowShowAddressQRCodeCancel(InputFlowBase):
         # menu
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
         # cancel
-        self.debug.synchronize_at("TextComponent")
+        self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
 
 
@@ -728,7 +728,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # menu
         assert "VerticalMenu" in self.all_components()
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
-        layout = self.debug.synchronize_at("TextComponent")
+        layout = self.debug.synchronize_at("TextScreen")
         # address details
         assert "Multisig 2 of 3" in layout.screen_content()
         assert TR.address_details__derivation_path in layout.screen_content()
@@ -740,7 +740,7 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
-        layout = self.debug.synchronize_at("TextComponent")
+        layout = self.debug.synchronize_at("TextScreen")
         self.debug.press_yes()
 
 
@@ -881,7 +881,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         # menu
         assert "VerticalMenu" in self.all_components()
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
-        layout = self.debug.synchronize_at("TextComponent")
+        layout = self.debug.synchronize_at("TextScreen")
         # address details
         assert TR.address_details__derivation_path in layout.screen_content()
 
@@ -892,7 +892,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         # cancel
         self.debug.click(self.debug.screen_buttons.cancel())
         # address
-        layout = self.debug.synchronize_at("TextComponent")
+        layout = self.debug.synchronize_at("TextScreen")
         self.debug.press_yes()
 
 
@@ -1241,7 +1241,7 @@ class InputFlowSignTxInformationCancel(InputFlowBase):
         yield from sign_tx_go_to_info_eckhart(self.client)
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[2])
-        self.debug.synchronize_at("TextComponent")
+        self.debug.synchronize_at("TextScreen")
         self.debug.click(self.debug.screen_buttons.ok())
         self.debug.click(self.debug.screen_buttons.ok())
 

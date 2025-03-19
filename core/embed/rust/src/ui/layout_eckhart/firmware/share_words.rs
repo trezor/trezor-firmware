@@ -192,11 +192,11 @@ impl<'a> Component for ShareWordsScreen<'a> {
 #[cfg(feature = "ui_debug")]
 impl<'a> crate::trace::Trace for ShareWordsScreen<'a> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("TextComponent");
-        self.header.trace(t);
-        self.content.trace(t);
-        self.hint.trace(t);
-        self.action_bar.trace(t);
+        t.component("TextScreen");
+        t.child("Header", &self.header);
+        t.child("Content", &self.content);
+        t.child("Hint", &self.hint);
+        t.child("ActionBar", &self.action_bar);
     }
 }
 
