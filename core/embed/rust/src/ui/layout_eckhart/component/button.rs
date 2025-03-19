@@ -221,6 +221,11 @@ impl Button {
         self.area
     }
 
+    pub fn touch_area(&self) -> Rect {
+        self.touch_expand
+            .map_or(self.area, |expand| self.area.outset(expand))
+    }
+
     fn set(&mut self, ctx: &mut EventCtx, state: State) {
         if self.state != state {
             self.state = state;
@@ -364,12 +369,7 @@ impl Component for Button {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        let touch_area = if let Some(expand) = self.touch_expand {
-            self.area.outset(expand)
-        } else {
-            self.area
-        };
-
+        let touch_area = self.touch_area();
         match event {
             Event::Touch(TouchEvent::TouchStart(pos)) => {
                 match self.state {
