@@ -58,6 +58,10 @@ pub trait Renderer<'a> {
         inner(self);
         self.set_viewport(original);
     }
+
+    fn raise_overflow_exception(&mut self);
+
+    fn should_raise_overflow_exception(&self) -> bool;
 }
 
 // ==========================================================================
@@ -73,6 +77,8 @@ where
     canvas: &'a mut C,
     /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
+
+    overflow: bool,
 }
 
 impl<'a, 'alloc, C> DirectRenderer<'a, 'alloc, C>
@@ -92,7 +98,11 @@ where
         // TODO: consider storing original canvas.viewport
         //       and restoring it by drop() function
 
-        Self { canvas, cache }
+        Self {
+            canvas,
+            cache,
+            overflow: false,
+        }
     }
 }
 
@@ -117,6 +127,14 @@ where
             shape.cleanup(self.cache);
         }
     }
+
+    fn raise_overflow_exception(&mut self) {
+        self.overflow = true;
+    }
+
+    fn should_raise_overflow_exception(&self) -> bool {
+        self.overflow
+    }
 }
 
 pub struct ScopedRenderer<'alloc, 'env, T>
@@ -127,6 +145,7 @@ where
     pub renderer: T,
     _env: core::marker::PhantomData<&'env mut &'env ()>,
     _alloc: core::marker::PhantomData<&'alloc ()>,
+    overflow: bool,
 }
 
 impl<'alloc, T> ScopedRenderer<'alloc, '_, T>
@@ -138,6 +157,7 @@ where
             renderer,
             _env: core::marker::PhantomData,
             _alloc: core::marker::PhantomData,
+            overflow: false,
         }
     }
 
@@ -163,5 +183,13 @@ where
         S: Shape<'alloc> + ShapeClone<'alloc>,
     {
         self.renderer.render_shape(shape);
+    }
+
+    fn raise_overflow_exception(&mut self) {
+        self.overflow = true;
+    }
+
+    fn should_raise_overflow_exception(&self) -> bool {
+        self.overflow
     }
 }
