@@ -30,7 +30,7 @@ pub struct Button {
     content: ButtonContent,
     styles: ButtonStyleSheet,
     state: State,
-    long_press: Option<Duration>,
+    long_press: Duration,
     long_timer: Timer,
     haptics: bool,
 }
@@ -47,7 +47,7 @@ impl Button {
             touch_expand: None,
             styles: theme::button_default(),
             state: State::Initial,
-            long_press: None,
+            long_press: Duration::ZERO,
             long_timer: Timer::new(),
             haptics: true,
         }
@@ -84,7 +84,7 @@ impl Button {
     }
 
     pub fn with_long_press(mut self, duration: Duration) -> Self {
-        self.long_press = Some(duration);
+        self.long_press = duration;
         self
     }
 
@@ -244,8 +244,8 @@ impl Component for Button {
                                 haptic::play(HapticEffect::ButtonPress);
                             }
                             self.set(ctx, State::Pressed);
-                            if let Some(duration) = self.long_press {
-                                self.long_timer.start(ctx, duration)
+                            if self.long_press != Duration::ZERO {
+                                self.long_timer.start(ctx, self.long_press)
                             }
                             return Some(ButtonMsg::Pressed);
                         }
