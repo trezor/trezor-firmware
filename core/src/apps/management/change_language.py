@@ -63,40 +63,46 @@ async def do_change_language(
     import storage.device
     from trezor import utils
 
-    if data_length > translations.area_bytesize():
-        raise DataError("Translations too long")
+    async def _confirm_request() -> tuple[bytes, bool]:
+        if data_length > translations.area_bytesize():
+            raise DataError("Translations too long")
 
-    # Getting and parsing the header
-    header_data = await _get_data_chunk(data_length, 0)
-    try:
-        header = translations.TranslationsHeader(header_data)
-    except (ValueError, EOFError):
-        raise DataError("Invalid translations data")
+        # Getting and parsing the header
+        header_data = await _get_data_chunk(data_length, 0)
+        try:
+            header = translations.TranslationsHeader(header_data)
+        except (ValueError, EOFError):
+            raise DataError("Invalid translations data")
 
-    # Verifying header information
-    if header.total_len != data_length:
-        raise DataError("Invalid data length")
+        # Verifying header information
+        if header.total_len != data_length:
+            raise DataError("Invalid data length")
 
-    if header.version != expected_version:
-        raise DataError("Translations version mismatch")
+        if header.version != expected_version:
+            raise DataError("Translations version mismatch")
 
-    current_header = translations.TranslationsHeader.load_from_flash()
-    if current_header is None:
-        # if no blob is present, but the device is set up, we consider the language
-        # being ""explicitly set"" to English
-        silent_install = not storage.device.is_initialized()
-    else:
-        # if a blob is present, it can only be silently upgraded to expected_version
-        silent_install = (
-            current_header.language == header.language
-            and current_header.version != expected_version
-        )
+        current_header = translations.TranslationsHeader.load_from_flash()
+        if current_header is None:
+            # if no blob is present, but the device is set up, we consider the language
+            # being ""explicitly set"" to English
+            silent_install = not storage.device.is_initialized()
+        else:
+            # if a blob is present, it can only be silently upgraded to expected_version
+            silent_install = (
+                current_header.language == header.language
+                and current_header.version != expected_version
+            )
 
-    # Confirm with user
-    await _require_confirm_change_language(header, silent_install, show_display)
+        # Confirm with user
+        await _require_confirm_change_language(header, silent_install, show_display)
 
-    # Initiate loader
-    report(0)
+        # Initiate loader
+        report(0)
+
+        return header_data, silent_install
+
+    # Allow GC to free all the above objects before allocating the blob below
+    header_data, silent_install = await _confirm_request()
 
     # Loading all the data at once, so we can verify its fingerprint
     # If we saved it gradually to the storage and only checked the fingerprint at the end
