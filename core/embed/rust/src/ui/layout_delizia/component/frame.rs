@@ -410,13 +410,11 @@ fn frame_place(
     bounds: Rect,
     margin: usize,
 ) -> Rect {
-    let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
-    content_area = content_area
+    let header_area = header.place(bounds);
+    let mut content_area = bounds
+        .inset(Insets::top(header_area.height().max(TITLE_HEIGHT)))
         .inset(Insets::top(theme::SPACING))
         .inset(Insets::top(margin as i16));
-    header_area = header_area.inset(Insets::sides(theme::SPACING));
-
-    header.place(header_area);
 
     if let Some(footer) = footer {
         // FIXME: spacer at the bottom might be applied also for usage without footer
