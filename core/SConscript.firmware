@@ -713,6 +713,7 @@ if FROZEN:
         bitcoin_only=BITCOIN_ONLY,
         backlight='backlight' in FEATURES_AVAILABLE,
         optiga='optiga' in FEATURES_AVAILABLE,
+        use_ble='ble' in FEATURES_AVAILABLE,
         use_button='button' in FEATURES_AVAILABLE,
         use_touch='touch' in FEATURES_AVAILABLE,
         ui_layout=ui.get_ui_layout(TREZOR_MODEL),
