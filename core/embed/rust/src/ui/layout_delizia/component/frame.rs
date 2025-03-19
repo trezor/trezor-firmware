@@ -20,7 +20,7 @@ use crate::{
     },
 };
 
-use super::super::theme::TITLE_HEIGHT;
+use super::super::theme::HEADER_HEIGHT;
 
 #[derive(Clone)]
 pub struct HorizontalSwipe {
@@ -402,7 +402,7 @@ fn frame_place(
     bounds: Rect,
     margin: usize,
 ) -> Rect {
-    let (mut header_area, mut content_area) = bounds.split_top(TITLE_HEIGHT);
+    let (mut header_area, mut content_area) = bounds.split_top(HEADER_HEIGHT);
     content_area = content_area
         .inset(Insets::top(theme::SPACING))
         .inset(Insets::top(margin as i16));

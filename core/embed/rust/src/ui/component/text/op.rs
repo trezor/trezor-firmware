@@ -204,6 +204,10 @@ impl<'a> OpTextLayout<'a> {
         self.with_new_item(Op::Text(text.into(), font, false))
     }
 
+    pub fn color(self, color: Color) -> Self {
+        self.with_new_item(Op::Color(color))
+    }
+
     pub fn newline(self) -> Self {
         let font = self.layout.style.text_font;
         self.text("\n", font)

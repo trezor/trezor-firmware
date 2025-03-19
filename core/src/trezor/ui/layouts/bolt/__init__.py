@@ -1353,7 +1353,7 @@ async def request_pin_on_device(
 
 
 async def confirm_reenter_pin(is_wipe_code: bool = False) -> None:
-    """Not supported for TT."""
+    """Not supported for Bolt."""
     pass
 
 

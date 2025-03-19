@@ -491,6 +491,7 @@ def show_danger(
     title: str,
     description: str,
     value: str = "",
+    menu_title: str | None = None,
     verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Warning modal that makes it easier to cancel than to continue."""
@@ -608,7 +609,7 @@ def show_share_words(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_share_words_delizia(
+def show_share_words_extended(
     *,
     words: Iterable[str],
     subtitle: str | None,
@@ -636,7 +637,7 @@ def show_success(
     title: str,
     button: str,
     description: str = "",
-    allow_cancel: bool = True,
+    allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> LayoutObj[UiResult]:
     """Success modal. No buttons shown when `button` is empty string."""

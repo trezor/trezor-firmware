@@ -97,6 +97,12 @@ class LayoutType(Enum):
             return cls.T1
         raise ValueError(f"Unknown model: {model}")
 
+    def __str__(self) -> str:
+        return self.name
+
+    def __repr__(self) -> str:
+        return f"LayoutType.{self.name}"
+
 
 class UnstructuredJSONReader:
     """Contains data-parsing helpers for JSON data that have unknown structure."""
