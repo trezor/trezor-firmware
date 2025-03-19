@@ -21,6 +21,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 VECTORS = (  # coin, path, script_type, address
     (
         "Testnet",

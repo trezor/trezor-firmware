@@ -37,6 +37,7 @@ if TYPE_CHECKING:
 
     from ..device_handler import BackgroundDeviceHandler
 
+
 TX_CACHE_MAINNET = TxCache("Bitcoin")
 TX_CACHE_TESTNET = TxCache("Testnet")
 
@@ -86,6 +87,7 @@ def set_autolock_delay(device_handler: "BackgroundDeviceHandler", delay_ms: int)
 
 
 @pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.models(skip=["eckhart"])
 def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
     """Autolock will lock the device that is waiting for the user
     to confirm transaction."""
@@ -141,6 +143,7 @@ def test_autolock_interrupts_signing(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.models(skip=["eckhart"])
 def test_autolock_does_not_interrupt_signing(device_handler: "BackgroundDeviceHandler"):
     """Autolock will NOT lock the device once transaction is confirmed."""
     set_autolock_delay(device_handler, 10_000)
@@ -439,6 +442,7 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(pin=PIN4)
+@pytest.mark.models(skip=["eckhart"])
 def test_autolock_does_not_interrupt_preauthorized(
     device_handler: "BackgroundDeviceHandler",
 ):

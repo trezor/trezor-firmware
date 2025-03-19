@@ -27,7 +27,7 @@ from ...input_flows import InputFlowConfirmAllWarnings
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.cardano,
-    pytest.mark.models("core"),
+    pytest.mark.models("core", skip=["eckhart"]),
 ]
 
 

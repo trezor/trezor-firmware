@@ -24,6 +24,8 @@ from trezorlib.tools import parse_path
 from ... import bip32
 from ...input_flows import InputFlowShowXpubQRCode
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 VECTORS_BITCOIN = (  # coin_name, xpub_magic, path, xpub
     (
         "Bitcoin",

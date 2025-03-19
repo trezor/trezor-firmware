@@ -28,6 +28,8 @@ from ...input_flows import (
     InputFlowShowMultisigXPUBs,
 )
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 VECTORS = (  # path, script_type, address
     (
         "m/44h/0h/12h/0/0",

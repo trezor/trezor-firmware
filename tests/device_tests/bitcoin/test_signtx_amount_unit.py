@@ -23,6 +23,8 @@ from trezorlib.tools import parse_path
 from ...tx_cache import TxCache
 from .signtx import assert_tx_matches
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 TX_API = TxCache("Testnet")
 
 TXHASH_b36780 = bytes.fromhex(

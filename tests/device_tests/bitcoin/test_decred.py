@@ -53,7 +53,7 @@ FAKE_TXHASH_1f00fc = bytes.fromhex(
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.decred,
-    pytest.mark.models("t1b1", "t2t1"),
+    pytest.mark.models("t1b1", "t2t1", skip=["eckhart"]),
 ]
 
 

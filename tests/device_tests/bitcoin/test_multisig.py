@@ -50,7 +50,7 @@ TXHASH_0d5b56 = bytes.fromhex(
     "0d5b5648d47b5650edea1af3d47bbe5624213abb577cf1b1c96f98321f75cdbc"
 )
 
-pytestmark = pytest.mark.multisig
+pytestmark = [pytest.mark.multisig, pytest.mark.models(skip=["eckhart"])]
 
 
 @pytest.mark.multisig

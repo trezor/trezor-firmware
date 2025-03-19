@@ -54,7 +54,11 @@ FAKE_TXHASH_v4 = bytes.fromhex(
     "cb3c1190798dc7909f182ae9ae23e7c473d849ba5b933eb34538b9957fa87975"
 )
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.zcash]
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.zcash,
+    pytest.mark.models(skip=["eckhart"]),
+]
 
 
 def test_v3_not_supported(client: Client):

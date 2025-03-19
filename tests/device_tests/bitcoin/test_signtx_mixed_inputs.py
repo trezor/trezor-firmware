@@ -13,6 +13,7 @@
 #
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
+import pytest
 
 from trezorlib import btc, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
@@ -20,6 +21,8 @@ from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
 from .signtx import assert_tx_matches
+
+pytestmark = pytest.mark.models(skip=["eckhart"])
 
 TX_API = TxCache("Testnet")
 
