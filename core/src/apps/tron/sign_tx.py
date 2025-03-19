@@ -74,7 +74,7 @@ async def sign_tx(msg: TronSignTx, keychain: Keychain) -> TronSignature:
 
     # https://tronprotocol.github.io/documentation-en/mechanism-algorithm/account/#algorithm
     signature = secp256k1.sign_recoverable(node.private_key(), w_hash, False)
-    signature = signature[1:65] + signature[0:1]  # r || s || v
+    signature = signature[1:65] + bytes([signature[0] + 27])  # r || s || v
 
     show_continue_in_app(TR.send__transaction_signed)
     return messages.TronSignature(signature=signature)
