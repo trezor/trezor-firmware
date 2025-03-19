@@ -19,7 +19,7 @@ type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
 pub struct VerticalMenu {
     /// Bounds the sliding window of the menu.
     bounds: Rect,
-    /// FUll bounds of the menu, including off-screen items.
+    /// Full bounds of the menu, including off-screen items.
     virtual_bounds: Rect,
     /// Menu items.
     buttons: VerticalMenuButtons,
@@ -39,7 +39,7 @@ pub enum VerticalMenuMsg {
 }
 
 impl VerticalMenu {
-    const SIDE_INSETS: Insets = Insets::sides(12);
+    const SIDE_INSETS: Insets = theme::SIDE_INSETS;
     const DEFAULT_PADDING: i16 = 28;
     const MIN_PADDING: i16 = 2;
 
