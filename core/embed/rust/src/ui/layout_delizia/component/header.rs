@@ -93,7 +93,7 @@ impl Header {
     pub const fn new(alignment: Alignment, title: TString<'static>) -> Self {
         Self {
             area: Rect::zero(),
-            title: Label::new(title, alignment, theme::label_title_main()).vertically_centered(),
+            title: Label::new(title, alignment, theme::label_title_main()),
             subtitle: None,
             button: None,
             anim: None,
@@ -185,23 +185,32 @@ impl Component for Header {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let header_area = if let Some(b) = &mut self.button {
-            let (rest, button_area) = bounds.split_right(TITLE_HEIGHT);
+            let (rest, button_area) = bounds.split_right(TITLE_HEIGHT + theme::SPACING * 2);
+            let (button_area, _under_button_area) = button_area.split_top(TITLE_HEIGHT);
             b.place(button_area);
             rest
         } else {
             bounds
-        };
+        }
+        .inset(Insets::sides(theme::SPACING));
 
         if self.subtitle.is_some() {
             let title_area = self.title.place(header_area);
             let remaining = header_area.inset(Insets::top(title_area.height()));
-            let _subtitle_area = self.subtitle.place(remaining);
+            let subtitle_area = self.subtitle.place(remaining);
+            self.area = title_area.outset(Insets::top(subtitle_area.height()));
         } else {
-            self.title.place(header_area);
-        }
+            let title_area = self.title.place(header_area);
+            if title_area.height() < header_area.height() / 10 {
+                self.title
+                    .place(title_area.translate(Offset::y(title_area.height() / 2)));
+            } else {
+                self.title
+                    .place(title_area.translate(Offset::y(-theme::SPACING)));
+            }
+        };
 
-        self.area = bounds;
-        bounds
+        self.area
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
@@ -238,7 +247,7 @@ impl Component for Header {
 
         self.button.render(target);
 
-        target.in_clip(self.area.split_left(offset.x).0, &|target| {
+        target.in_clip(self.title.area().split_left(offset.x).0, &|target| {
             if let Some(icon) = self.icon {
                 let color = self.color.unwrap_or(theme::GREEN);
                 shape::ToifImage::new(self.title.area().left_center(), icon.toif)
