@@ -349,7 +349,7 @@ def _client_unlocked(
             label="test",
             needs_backup=setup_params["needs_backup"],  # type: ignore
             no_backup=setup_params["no_backup"],  # type: ignore
-            _skip_init_device=True,
+            _skip_init_device=not use_passphrase,
         )
         _raw_client._setup_pin = setup_params["pin"]
 
