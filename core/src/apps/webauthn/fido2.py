@@ -1304,13 +1304,13 @@ def _msg_register(req: Msg, dialog_mgr: DialogManager) -> Cmd:
 
 
 def basic_attestation_sign(data: Iterable[bytes]) -> bytes:
-    from trezor.crypto import der
+    from trezor.crypto.signature import encode_der_signature
 
     dig = hashlib.sha256()
     for segment in data:
         dig.update(segment)
     sig = nist256p1.sign_recoverable(_FIDO_ATT_PRIV_KEY, dig.digest(), False)
-    return der.encode_seq((sig[1:33], sig[33:]))
+    return encode_der_signature(sig)
 
 
 def _msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:

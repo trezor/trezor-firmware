@@ -11,9 +11,9 @@ if TYPE_CHECKING:
 # NOTE: it is one big function because that way it is the most flash-space-efficient
 @auto_keychain(__name__)
 async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
-    from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha512
+    from trezor.crypto.signature import encode_der_signature
     from trezor.messages import RippleSignedTx
     from trezor.wire import ProcessError
 
@@ -55,7 +55,7 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
     # Signs and encodes signature into DER format
     first_half_of_sha512 = sha512(to_sign).digest()[:32]
     sig = secp256k1.sign_recoverable(node.private_key(), first_half_of_sha512)
-    sig_encoded = der.encode_seq((sig[1:33], sig[33:65]))
+    sig_encoded = encode_der_signature(sig)
 
     tx = serialize(msg, source_address, node.public_key(), sig_encoded)
     return RippleSignedTx(signature=sig_encoded, serialized_tx=tx)

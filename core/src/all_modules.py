@@ -91,6 +91,8 @@ trezor.crypto.rlp
 import trezor.crypto.rlp
 trezor.crypto.scripts
 import trezor.crypto.scripts
+trezor.crypto.signature
+import trezor.crypto.signature
 trezor.crypto.slip39
 import trezor.crypto.slip39
 trezor.enums.AmountUnit

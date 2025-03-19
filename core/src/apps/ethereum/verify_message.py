@@ -14,13 +14,13 @@ async def verify_message(msg: EthereumVerifyMessage) -> Success:
 
     from apps.common.signverify import decode_message
 
-    from .helpers import address_from_bytes, bytes_from_address
+    from .helpers import address_from_bytes, bytes_from_address, decode_signature
     from .sign_message import message_digest
 
     digest = message_digest(msg.message)
     if len(msg.signature) != 65:
         raise DataError("Invalid signature")
-    sig = bytearray([msg.signature[64]]) + msg.signature[:64]
+    sig = decode_signature(msg.signature)
 
     pubkey = secp256k1.verify_recover(sig, digest)
 

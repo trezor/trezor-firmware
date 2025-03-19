@@ -105,11 +105,11 @@ NONSEGWIT_INPUT_SCRIPT_TYPES = (
 
 
 def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
-    from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
+    from trezor.crypto.signature import encode_der_signature
 
     sig = secp256k1.sign_recoverable(node.private_key(), digest)
-    sigder = der.encode_seq((sig[1:33], sig[33:65]))
+    sigder = encode_der_signature(sig)
     return sigder
 
 

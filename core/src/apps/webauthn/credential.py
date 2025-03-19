@@ -7,6 +7,7 @@ import storage.device as storage_device
 from trezor import utils
 from trezor.crypto import chacha20poly1305, der, hashlib, hmac, random
 from trezor.crypto.curve import ed25519, nist256p1
+from trezor.crypto.signature import encode_der_signature
 
 from apps.common import cbor, seed
 from apps.common.paths import HARDENED
@@ -95,7 +96,7 @@ class Credential:
         for segment in data:
             dig.update(segment)
         sig = nist256p1.sign_recoverable(self._private_key(), dig.digest(), False)
-        return der.encode_seq((sig[1:33], sig[33:]))
+        return encode_der_signature(sig)
 
     def bogus_signature(self) -> bytes:
         raise NotImplementedError

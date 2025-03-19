@@ -33,7 +33,7 @@ async def sign_typed_data(
 
     from apps.common import paths
 
-    from .helpers import address_from_bytes
+    from .helpers import address_from_bytes, encode_signature
     from .layout import require_confirm_address
 
     await paths.validate_path(keychain, msg.address_n)
@@ -54,7 +54,7 @@ async def sign_typed_data(
 
     return EthereumTypedDataSignature(
         address=address_from_bytes(address_bytes, defs.network),
-        signature=signature[1:] + signature[0:1],
+        signature=encode_signature(signature),
     )
 
 
