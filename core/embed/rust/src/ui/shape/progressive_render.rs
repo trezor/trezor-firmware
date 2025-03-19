@@ -30,6 +30,9 @@ where
     bg_color: Option<Color>,
     /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
+
+    #[cfg(feature = "ui_debug")]
+    overflow: bool,
 }
 
 impl<'a, 'alloc, T, C> ProgressiveRenderer<'a, 'alloc, T, C>
@@ -53,6 +56,8 @@ where
             viewport,
             bg_color,
             cache,
+            #[cfg(feature = "ui_debug")]
+            overflow: false,
         }
     }
 
@@ -139,5 +144,15 @@ where
             };
             unwrap!(self.shapes.push(holder), "Shape list full");
         }
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn raise_overflow_exception(&mut self) {
+        self.overflow = true;
+    }
+
+    #[cfg(feature = "ui_debug")]
+    fn should_raise_overflow_exception(&self) -> bool {
+        self.overflow
     }
 }

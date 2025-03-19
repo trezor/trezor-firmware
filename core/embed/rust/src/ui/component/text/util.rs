@@ -32,7 +32,7 @@ pub fn text_multiline<'s>(
     let text_layout = TextLayout::new(text_style)
         .with_bounds(area)
         .with_align(alignment);
-    let layout_fit = text.map(|t| text_layout.render_text(t, target));
+    let layout_fit = text.map(|t| text_layout.render_text(t, target, false));
     match layout_fit {
         LayoutFit::Fitting { height, .. } => Some(area.split_top(height).1),
         LayoutFit::OutOfBounds { .. } => None,
@@ -60,11 +60,11 @@ pub fn text_multiline_bottom<'s>(
         LayoutFit::Fitting { height, .. } => {
             let (top, bottom) = area.split_bottom(height);
             text_layout = text_layout.with_bounds(bottom);
-            text_layout.render_text(t, target);
+            text_layout.render_text(t, target, false);
             Some(top)
         }
         LayoutFit::OutOfBounds { .. } => {
-            text_layout.render_text(t, target);
+            text_layout.render_text(t, target, false);
             None
         }
     })
