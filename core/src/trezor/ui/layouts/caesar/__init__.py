@@ -731,6 +731,7 @@ def confirm_properties(
     br_name: str,
     title: str,
     props: Iterable[PropertyType],
+    subtitle: str | None = None,
     hold: bool = False,
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
@@ -745,6 +746,9 @@ def confirm_properties(
             # to not include hyphens
             is_data = value and " " not in value
             return (key, value, bool(is_data))
+
+    if subtitle:
+        title += ": " + subtitle
 
     return raise_if_not_confirmed(
         trezorui_api.confirm_properties(
@@ -972,6 +976,7 @@ if not utils.BITCOIN_ONLY:
             "confirm_ethereum_approve",
             TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
             properties,
+            None,
             False,
         )
 
