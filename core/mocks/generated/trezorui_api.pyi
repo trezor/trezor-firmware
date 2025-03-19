@@ -26,7 +26,7 @@ class LayoutObj(Generic[T]):
         """Receive a progress event."""
     def usb_event(self, connected: bool) -> LayoutState | None:
         """Receive a USB connect/disconnect event."""
-    def ble_event(self, event: tuple[int, bytes]) -> LayoutState | None:
+    def ble_event(self, event: tuple[int, int | None]) -> LayoutState | None:
         """Receive a BLE event."""
     def timer(self, token: int) -> LayoutState | None:
         """Callback for the timer set by `attach_timer_fn`.

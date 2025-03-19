@@ -1068,7 +1068,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     def usb_event(self, connected: bool) -> LayoutState | None:
     ///         """Receive a USB connect/disconnect event."""
     ///
-    ///     def ble_event(self, event: tuple[int, bytes]) -> LayoutState | None:
+    ///     def ble_event(self, event: tuple[int, int | None]) -> LayoutState | None:
     ///         """Receive a BLE event."""
     ///
     ///     def timer(self, token: int) -> LayoutState | None:

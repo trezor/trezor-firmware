@@ -12,8 +12,6 @@ use crate::ui::{event::TouchEvent, geometry::Direction};
 use num_traits::ToPrimitive;
 
 #[cfg(feature = "ble")]
-use crate::micropython::buffer::get_buffer;
-#[cfg(feature = "ble")]
 use crate::ui::event::BLEEvent;
 
 #[cfg(feature = "button")]
@@ -545,11 +543,7 @@ extern "C" fn ui_layout_ble_event(n_args: usize, args: *const Obj) -> Obj {
         }
         let this: Gc<LayoutObj> = args[0].try_into()?;
 
-        let data = unsafe { get_buffer(args[2]) };
-
-        let data = unwrap!(data);
-
-        let event = BLEEvent::new(args[1].try_into()?, data)?;
+        let event = BLEEvent::new(args[1].try_into()?, args[2].try_into_option()?)?;
         let msg = this.inner_mut().obj_event(Event::BLE(event))?;
         Ok(msg)
     };

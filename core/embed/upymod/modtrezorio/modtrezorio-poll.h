@@ -48,6 +48,31 @@
 
 extern uint32_t last_touch_sample_time;
 
+#ifdef USE_BLE
+
+static mp_obj_t parse_ble_event_data(const ble_event_t *event) {
+  if (event->data_len == 0) {
+    return mp_const_none;
+  }
+  if (event->type != BLE_PAIRING_REQUEST) {
+    return mp_const_none;
+  }
+  // Parse pairing code
+  _Static_assert(sizeof(event->data) <= 6);
+  uint32_t code = 0;
+  for (int i = 0; i < event->data_len; ++i) {
+    uint8_t byte = event->data[i];
+    if (byte >= '0' && byte <= '9') {
+      code = 10 * code + (byte - '0');
+    } else {
+      mp_raise_ValueError("Invalid pairing code");
+    }
+  }
+  return mp_obj_new_int_from_uint(code);
+}
+
+#endif
+
 /// package: trezorio.__init__
 
 /// def poll(ifaces: Iterable[int], list_ref: list, timeout_ms: int) -> bool:
@@ -208,13 +233,9 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         ble_event_t event = {0};
         bool read = ble_get_event(&event);
         if (read) {
-          mp_obj_t data = mp_const_empty_bytes;
-          if (event.data_len > 0) {
-            data = mp_obj_new_bytes(event.data, event.data_len);
-          }
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
           tuple->items[0] = MP_OBJ_NEW_SMALL_INT(event.type);
-          tuple->items[1] = data;
+          tuple->items[1] = parse_ble_event_data(&event);
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
           ret->items[1] = MP_OBJ_FROM_PTR(tuple);
           return mp_const_true;
