@@ -582,15 +582,15 @@ impl FirmwareUI for UIEckhart {
         let bootscreen = false;
         let coinjoin_authorized = false;
         let notification = notification.map(|w| (w, notification_level));
-        let layout = RootComponent::new(Homescreen::new(
+        let flow = flow::homescreen::new_home(
             label,
             hold,
             locked,
             bootscreen,
             coinjoin_authorized,
             notification,
-        )?);
-        Ok(layout)
+        )?;
+        Ok(flow)
     }
 
     fn show_info(

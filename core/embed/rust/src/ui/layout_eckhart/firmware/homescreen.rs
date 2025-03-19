@@ -4,19 +4,26 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
+        component::{
+            swipe_detect::SwipeConfig, text::TextStyle, Component, Event, EventCtx, Label, Never,
+        },
         display::image::ImageInfo,
+        flow::Swipable,
         geometry::{Insets, Offset, Rect},
         layout::util::get_user_custom_image,
         shape::{self, Renderer},
+        util::{animation_disabled, Pager},
     },
 };
 
 use super::{
-    super::{component::Button, fonts},
+    super::{
+        component::{Button, ButtonMsg},
+        fonts,
+    },
     constant::{HEIGHT, SCREEN, WIDTH},
     theme::{self, firmware::button_homebar_style, BLACK, GREEN_DARK, GREEN_EXTRA_DARK},
-    ActionBar, ActionBarMsg, Hint,
+    ActionBar, ActionBarMsg, Hint, HoldToConfirmAnim,
 };
 
 /// Full-screen component for the homescreen and lockscreen.
@@ -33,10 +40,15 @@ pub struct Homescreen {
     lockable: bool,
     /// Whether the homescreen is locked
     locked: bool,
+    /// Hold to lock button placed everywhere except the `action_bar`
+    virtual_locking_button: Button,
+    /// Hold to lock animation
+    htc_anim: Option<HoldToConfirmAnim>,
 }
 
 pub enum HomescreenMsg {
     Dismissed,
+    Menu,
 }
 
 impl Homescreen {
@@ -81,6 +93,20 @@ impl Homescreen {
             Button::with_homebar_content(None).styled(button_style)
         };
 
+        let lock_duration = theme::LOCK_HOLD_DURATION;
+
+        // Locking animation
+        let htc_anim = if lockable && !animation_disabled() {
+            Some(
+                HoldToConfirmAnim::new()
+                    .with_color(theme::GREY_LIGHT)
+                    .with_duration(lock_duration)
+                    .with_header_overlay(TR::progress__locking_device.into()),
+            )
+        } else {
+            None
+        };
+
         Ok(Self {
             label: HomeLabel::new(label),
             hint,
@@ -88,7 +114,48 @@ impl Homescreen {
             image,
             lockable,
             locked,
+            virtual_locking_button: Button::empty().with_long_press(lock_duration),
+            htc_anim,
         })
+    }
+
+    fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
+        self.htc_anim.event(ctx, event);
+        if let Some(msg) = self.virtual_locking_button.event(ctx, event) {
+            match msg {
+                ButtonMsg::Pressed => {
+                    if let Some(htc_anim) = &mut self.htc_anim {
+                        htc_anim.start();
+                        ctx.request_anim_frame();
+                        ctx.request_paint();
+                        ctx.disable_swipe();
+                    }
+                }
+                ButtonMsg::Clicked => {
+                    if let Some(htc_anim) = &mut self.htc_anim {
+                        htc_anim.stop();
+                        ctx.request_anim_frame();
+                        ctx.request_paint();
+                        ctx.enable_swipe();
+                    } else {
+                        // Animations disabled
+                        return true;
+                    }
+                }
+                ButtonMsg::Released => {
+                    if let Some(htc_anim) = &mut self.htc_anim {
+                        htc_anim.stop();
+                        ctx.request_anim_frame();
+                        ctx.request_paint();
+                        ctx.enable_swipe();
+                    }
+                }
+                ButtonMsg::LongPressed => {
+                    return true;
+                }
+            }
+        }
+        false
     }
 }
 
@@ -114,6 +181,9 @@ impl Component for Homescreen {
 
         self.label.place(label_area);
         self.action_bar.place(bar_area);
+        // Locking button is placed everywhere except the action bar
+        let locking_area = bounds.inset(Insets::bottom(self.action_bar.touch_area().height()));
+        self.virtual_locking_button.place(locking_area);
         bounds
     }
 
@@ -122,13 +192,14 @@ impl Component for Homescreen {
             if self.locked {
                 return Some(HomescreenMsg::Dismissed);
             } else {
-                // TODO: Show menu and handle "lock" action differently
-                if self.lockable {
-                    return Some(HomescreenMsg::Dismissed);
-                }
+                return Some(HomescreenMsg::Menu);
             }
         }
-        None
+        if self.lockable {
+            Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
+        } else {
+            None
+        }
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -142,6 +213,7 @@ impl Component for Homescreen {
         self.label.render(target);
         self.hint.render(target);
         self.action_bar.render(target);
+        self.htc_anim.render(target);
     }
 }
 
@@ -225,6 +297,17 @@ fn get_homescreen_image() -> Option<BinaryData<'static>> {
         }
     }
     None
+}
+
+#[cfg(feature = "micropython")]
+impl Swipable for Homescreen {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        SwipeConfig::default()
+    }
+
+    fn get_pager(&self) -> Pager {
+        Pager::single_page()
+    }
 }
 
 #[cfg(feature = "ui_debug")]
