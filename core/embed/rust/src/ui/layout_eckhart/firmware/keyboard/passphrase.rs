@@ -210,17 +210,34 @@ impl PassphraseKeyboard {
                     cancel: ButtonState::Hidden,
                     confirm: ButtonState::Disabled,
                     keys: ButtonState::Disabled,
+                    exception_key: None,
+                    exception_state: None,
                 }
             }
             _ => {
                 if self.passphrase().len() == MAX_LENGTH {
-                    // Disable all except of confirm and erase buttons
-                    KeypadState {
-                        back: ButtonState::Hidden,
-                        erase: ButtonState::Enabled,
-                        cancel: ButtonState::Hidden,
-                        confirm: ButtonState::Enabled,
-                        keys: ButtonState::Disabled,
+                    if let Some(pending_key) = self.multi_tap.pending_key() {
+                        // Disable all except of confirm, erase and the pending key
+                        KeypadState {
+                            back: ButtonState::Hidden,
+                            erase: ButtonState::Enabled,
+                            cancel: ButtonState::Hidden,
+                            confirm: ButtonState::Enabled,
+                            keys: ButtonState::Disabled,
+                            exception_key: Some(pending_key),
+                            exception_state: Some(ButtonState::Enabled),
+                        }
+                    } else {
+                        // Disable all except of confirm and erase buttons
+                        KeypadState {
+                            back: ButtonState::Hidden,
+                            erase: ButtonState::Enabled,
+                            cancel: ButtonState::Hidden,
+                            confirm: ButtonState::Enabled,
+                            keys: ButtonState::Disabled,
+                            exception_key: None,
+                            exception_state: None,
+                        }
                     }
                 } else if self.input.textbox.is_empty() {
                     // Disable all except of confirm and erase buttons
@@ -230,6 +247,8 @@ impl PassphraseKeyboard {
                         cancel: ButtonState::Hidden,
                         confirm: ButtonState::Enabled,
                         keys: ButtonState::Enabled,
+                        exception_key: None,
+                        exception_state: None,
                     }
                 } else {
                     KeypadState {
@@ -238,6 +257,8 @@ impl PassphraseKeyboard {
                         cancel: ButtonState::Hidden,
                         confirm: ButtonState::Enabled,
                         keys: ButtonState::Enabled,
+                        exception_key: None,
+                        exception_state: None,
                     }
                 }
             }
@@ -292,6 +313,7 @@ impl Component for PassphraseKeyboard {
                     .last_char_timer
                     .start(ctx, Duration::from_secs(LAST_DIGIT_TIMEOUT_S));
                 self.input.marker = false;
+                self.update_keypad_state(ctx);
                 return None;
             }
 

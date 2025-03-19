@@ -40,6 +40,8 @@ pub struct KeypadState {
     pub cancel: ButtonState,
     pub confirm: ButtonState,
     pub keys: ButtonState,
+    pub exception_key: Option<usize>,
+    pub exception_state: Option<ButtonState>,
 }
 
 pub struct Keypad {
@@ -167,7 +169,7 @@ impl Keypad {
         Self::apply_button_state(&mut self.erase, &state.erase, ctx);
         Self::apply_button_state(&mut self.cancel, &state.cancel, ctx);
         Self::apply_button_state(&mut self.confirm, &state.confirm, ctx);
-        self.set_keys_state(ctx, &state.keys);
+        self.set_keys_state(ctx, &state.keys, state.exception_key, state.exception_state);
     }
 
     /// Set the content of a key at the specified index.
@@ -222,9 +224,31 @@ impl Keypad {
     }
 
     /// Set the state of all key buttons
-    pub fn set_keys_state(&mut self, ctx: &mut EventCtx, state: &ButtonState) {
-        for btn in self.keys.iter_mut() {
+    pub fn set_keys_state(
+        &mut self,
+        ctx: &mut EventCtx,
+        state: &ButtonState,
+        exception_key: Option<usize>,
+        exception_state: Option<ButtonState>,
+    ) {
+        // Apply the state to all keys except the exception key.
+        for (idx, btn) in self.keys.iter_mut().enumerate() {
+            if let Some(exception_key) = exception_key {
+                if exception_key == idx {
+                    continue;
+                }
+            }
             Self::apply_button_state(btn, state, ctx);
+        }
+        // Apply the exception state if any.
+        if let Some(exception_idx) = exception_key {
+            if let Some(exception_state) = exception_state {
+                Self::apply_button_state(
+                    self.get_button_mut(&KeypadButton::Key(exception_idx)),
+                    &exception_state,
+                    ctx,
+                );
+            }
         }
     }
 
