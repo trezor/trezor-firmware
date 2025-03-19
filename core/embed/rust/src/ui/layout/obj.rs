@@ -146,10 +146,12 @@ where
         self.returned_value.as_ref()
     }
 
-    fn paint(&mut self) {
+    fn paint(&mut self) -> Result<(), Error> {
         render_on_display(None, Some(Color::black()), |target| {
             self.inner.render(target);
         });
+
+        Ok(())
     }
 }
 
@@ -305,15 +307,14 @@ impl LayoutObjInner {
 
     /// Run a paint pass over the component tree. Returns true if any component
     /// actually requested painting since last invocation of the function.
-    fn obj_paint_if_requested(&mut self) -> bool {
+    fn obj_paint_if_requested(&mut self) -> Result<bool, Error> {
         display::sync();
 
         if self.repaint != Repaint::None {
             self.repaint = Repaint::None;
-            self.root_mut().paint();
-            true
+            self.root_mut().paint().map(|_| true)
         } else {
-            false
+            Ok(false)
         }
     }
 
@@ -597,8 +598,8 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let painted = this.inner_mut().obj_paint_if_requested().into();
-        Ok(painted)
+        let painted = this.inner_mut().obj_paint_if_requested();
+        Ok(painted?.into())
     };
     unsafe { util::try_or_raise(block) }
 }

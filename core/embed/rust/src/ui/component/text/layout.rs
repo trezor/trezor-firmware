@@ -232,21 +232,35 @@ impl TextLayout {
     }
 
     /// Draw as much text as possible on the current screen.
-    pub fn render_text<'s>(&self, text: &str, target: &mut impl Renderer<'s>) -> LayoutFit {
-        self.render_text_with_alpha(text, target, 255)
+    pub fn render_text<'s>(
+        &self,
+        text: &str,
+        target: &mut impl Renderer<'s>,
+        must_fit: bool,
+    ) -> LayoutFit {
+        self.render_text_with_alpha(text, target, 255, must_fit)
     }
+
     /// Draw as much text as possible on the current screen.
     pub fn render_text_with_alpha<'s>(
         &self,
         text: &str,
         target: &mut impl Renderer<'s>,
         alpha: u8,
+        must_fit: bool,
     ) -> LayoutFit {
-        self.layout_text(
+        let fit = self.layout_text(
             text,
             &mut self.initial_cursor(),
             &mut TextRenderer::new(target).with_alpha(alpha),
-        )
+        );
+
+        #[cfg(feature = "ui_debug")]
+        if must_fit && matches!(fit, LayoutFit::OutOfBounds { .. }) {
+            target.raise_overflow_exception();
+        }
+
+        fit
     }
 
     /// Loop through the `text` and try to fit it on the current screen,
