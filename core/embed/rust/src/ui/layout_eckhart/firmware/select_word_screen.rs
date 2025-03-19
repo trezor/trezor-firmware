@@ -105,6 +105,9 @@ impl Component for SelectWordScreen {
 impl crate::trace::Trace for SelectWordScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("SelectWordScreen");
+        t.child("Header", &self.header);
+        t.child("subtitle", &self.description);
+        t.child("Content", &self.menu);
     }
 }
 
