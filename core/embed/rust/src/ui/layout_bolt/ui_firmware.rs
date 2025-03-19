@@ -376,6 +376,7 @@ impl FirmwareUI for UIBolt {
 
     fn confirm_properties(
         title: TString<'static>,
+        _subtitle: Option<TString<'static>>,
         items: Obj,
         hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
