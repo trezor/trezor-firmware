@@ -124,6 +124,13 @@ impl ActionBar {
         self.right_button.set_expanded_touch_area(expand);
     }
 
+    pub fn touch_area(&self) -> Rect {
+        let right_area = self.right_button.touch_area();
+        self.left_button
+            .as_ref()
+            .map_or(right_area, |left| right_area.union(left.touch_area()))
+    }
+
     pub fn update(&mut self, new_pager: Pager) {
         // TODO: review `clone()` of `left_content`/`right_content`
         if let Mode::Double { pager } = &mut self.mode {
@@ -347,9 +354,7 @@ impl Component for ActionBar {
             btn.render(target);
         }
         self.right_button.render(target);
-        if let Some(htc_anim) = &self.htc_anim {
-            htc_anim.render(target);
-        }
+        self.htc_anim.render(target);
     }
 }
 
