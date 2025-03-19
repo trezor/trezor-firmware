@@ -208,9 +208,13 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
         ble_event_t event = {0};
         bool read = ble_get_event(&event);
         if (read) {
+          mp_obj_t data = mp_const_empty_bytes;
+          if (event.data_len > 0) {
+            data = mp_obj_new_bytes(event.data, event.data_len);
+          }
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
           tuple->items[0] = MP_OBJ_NEW_SMALL_INT(event.type);
-          tuple->items[1] = mp_obj_new_bytes(event.data, event.data_len);
+          tuple->items[1] = data;
           ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
           ret->items[1] = MP_OBJ_FROM_PTR(tuple);
           return mp_const_true;
