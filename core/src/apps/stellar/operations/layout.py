@@ -190,7 +190,7 @@ async def confirm_path_payment_strict_receive_op(
     await confirm_output(
         op.destination_account,
         format_amount(op.destination_amount, op.destination_asset),
-        title=TR.stellar__path_pay,
+        TR.stellar__path_pay,
     )
     await confirm_asset_issuer(op.destination_asset)
     # confirm what the sender is using to pay
@@ -209,7 +209,7 @@ async def confirm_path_payment_strict_send_op(
     await confirm_output(
         op.destination_account,
         format_amount(op.destination_min, op.destination_asset),
-        title=TR.stellar__path_pay_at_least,
+        TR.stellar__path_pay_at_least,
     )
     await confirm_asset_issuer(op.destination_asset)
     # confirm what the sender is using to pay
