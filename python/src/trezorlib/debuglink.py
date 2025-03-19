@@ -858,7 +858,7 @@ class DebugUI:
                     self.debuglink.press_yes()
             elif self.debuglink.model is models.T3W1:
                 layout = self.debuglink.read_layout()
-                if "TextComponent" in layout.all_components():
+                if "TextScreen" in layout.all_components():
                     self.debuglink.click(self.debuglink.screen_buttons.ok())
                 else:
                     self.debuglink.press_yes()
