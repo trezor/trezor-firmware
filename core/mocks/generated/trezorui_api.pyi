@@ -257,6 +257,7 @@ def confirm_properties(
     *,
     title: str,
     items: list[tuple[str | None, str | bytes | None, bool]],
+    subtitle: str | None = None,
     hold: bool = False,
 ) -> LayoutObj[UiResult]:
     """Confirm list of key-value pairs. The third component in the tuple should be True if
