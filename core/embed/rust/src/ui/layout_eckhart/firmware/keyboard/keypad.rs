@@ -34,12 +34,20 @@ pub enum ButtonState {
 const KEYPAD_MAX_KEYS: usize = 10;
 type KeypadKeys = [Maybe<Button>; KEYPAD_MAX_KEYS];
 
+/// Represents the state of a keypad, including individual button states.
 pub struct KeypadState {
+    /// State of the "Back" button.
     pub back: ButtonState,
+    /// State of the "Erase" button.
     pub erase: ButtonState,
+    /// State of the "Cancel" button.
     pub cancel: ButtonState,
+    /// State of the "Confirm" button.
     pub confirm: ButtonState,
+    /// Common state of the keypad generic keys.
     pub keys: ButtonState,
+    /// Optional override for one key, containing the index and state.
+    pub override_key: Option<(usize, ButtonState)>,
 }
 
 pub struct Keypad {
@@ -167,7 +175,7 @@ impl Keypad {
         Self::apply_button_state(&mut self.erase, &state.erase, ctx);
         Self::apply_button_state(&mut self.cancel, &state.cancel, ctx);
         Self::apply_button_state(&mut self.confirm, &state.confirm, ctx);
-        self.set_keys_state(ctx, &state.keys);
+        self.set_keys_state(ctx, &state.keys, state.override_key);
     }
 
     /// Set the content of a key at the specified index.
@@ -221,10 +229,30 @@ impl Keypad {
         }
     }
 
-    /// Set the state of all key buttons
-    pub fn set_keys_state(&mut self, ctx: &mut EventCtx, state: &ButtonState) {
-        for btn in self.keys.iter_mut() {
+    /// Sets the state of all key buttons, except for an optional override key.
+    pub fn set_keys_state(
+        &mut self,
+        ctx: &mut EventCtx,
+        state: &ButtonState,
+        override_key: Option<(usize, ButtonState)>,
+    ) {
+        // Apply the state to all keys except the override key.
+        for (idx, btn) in self.keys.iter_mut().enumerate() {
+            if let Some((override_idx, _)) = override_key {
+                if override_idx == idx {
+                    continue; // Skip setting the state for the override key
+                }
+            }
             Self::apply_button_state(btn, state, ctx);
+        }
+
+        // Apply the override state if any.
+        if let Some((override_idx, override_state)) = override_key {
+            Self::apply_button_state(
+                self.get_button_mut(&KeypadButton::Key(override_idx)),
+                &override_state,
+                ctx,
+            );
         }
     }
 
