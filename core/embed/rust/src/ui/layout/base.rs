@@ -3,6 +3,8 @@ use crate::ui::{
     component::{base::AttachType, Event, EventCtx},
 };
 
+use crate::error::Error;
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum LayoutState {
     Initial,
@@ -15,7 +17,7 @@ pub trait Layout<T> {
     fn place(&mut self);
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<LayoutState>;
     fn value(&self) -> Option<&T>;
-    fn paint(&mut self);
+    fn paint(&mut self) -> Result<(), Error>;
 }
 
 #[cfg(feature = "micropython")]
