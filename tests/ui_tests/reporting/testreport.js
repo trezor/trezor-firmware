@@ -213,7 +213,7 @@ function createRowDiff(row) {
 
     // Process differences
     const difData = difCtx.createImageData(width, height);
-    options = {threshold: 0.0, includeAA: true};
+    options = {threshold: 0.0, includeAA: true, diffColorAlt: [0, 255, 0]};
     pixelmatch(recData.data, curData.data, difData.data, width, height, options);
     difCtx.putImageData(difData, 0, 0);
 
