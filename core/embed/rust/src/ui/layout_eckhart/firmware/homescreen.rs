@@ -147,9 +147,6 @@ impl Homescreen {
                         ctx.request_anim_frame();
                         ctx.request_paint();
                         ctx.enable_swipe();
-                    } else {
-                        // Animations disabled
-                        return true;
                     }
                 }
                 ButtonMsg::Released => {
