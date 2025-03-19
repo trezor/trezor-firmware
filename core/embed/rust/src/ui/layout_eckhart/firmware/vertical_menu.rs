@@ -19,7 +19,7 @@ type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
 pub struct VerticalMenu {
     /// Bounds the sliding window of the menu.
     bounds: Rect,
-    /// FUll bounds of the menu, including off-screen items.
+    /// Full bounds of the menu, including off-screen items.
     virtual_bounds: Rect,
     /// Menu items.
     buttons: VerticalMenuButtons,
