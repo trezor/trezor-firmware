@@ -92,13 +92,14 @@ async def confirm_instruction(
 
             await confirm_properties(
                 "confirm_instruction",
-                f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
+                f"{instruction_index}/{instructions_count}",
                 (
                     (
                         ui_property.display_name,
                         property_template.format(instruction, value),
                     ),
                 ),
+                instruction.ui_name,
             )
         elif ui_property.account is not None:
             account_template = instruction.get_account_template(ui_property.account)
@@ -134,8 +135,9 @@ async def confirm_instruction(
 
             await confirm_properties(
                 "confirm_instruction",
-                f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
+                f"{instruction_index}/{instructions_count}",
                 account_data,
+                instruction.ui_name,
             )
         else:
             raise ValueError  # Invalid ui property
@@ -158,8 +160,9 @@ async def confirm_instruction(
 
         await confirm_properties(
             "confirm_instruction",
-            f"{instruction_index}/{instructions_count}: {instruction.ui_name}",
+            f"{instruction_index}/{instructions_count}",
             signers,
+            instruction.ui_name,
         )
 
 
