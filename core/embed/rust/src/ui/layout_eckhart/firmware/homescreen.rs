@@ -4,8 +4,11 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
-        component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
+        component::{
+            swipe_detect::SwipeConfig, text::TextStyle, Component, Event, EventCtx, Label, Never,
+        },
         display::image::ImageInfo,
+        flow::Swipable,
         geometry::{Insets, Offset, Rect},
         layout::util::get_user_custom_image,
         shape::{self, Renderer},
@@ -14,7 +17,10 @@ use crate::{
 };
 
 use super::{
-    super::{component::Button, fonts},
+    super::{
+        component::{Button, ButtonMsg},
+        fonts,
+    },
     constant::{HEIGHT, SCREEN, WIDTH},
     theme::{self, firmware::button_homebar_style, BLACK, GREEN_DARK, GREEN_EXTRA_DARK},
     ActionBar, ActionBarMsg, Hint, HoldToConfirmAnim,
@@ -291,6 +297,17 @@ fn get_homescreen_image() -> Option<BinaryData<'static>> {
         }
     }
     None
+}
+
+#[cfg(feature = "micropython")]
+impl Swipable for Homescreen {
+    fn get_swipe_config(&self) -> SwipeConfig {
+        SwipeConfig::default()
+    }
+
+    fn get_pager(&self) -> Pager {
+        Pager::single_page()
+    }
 }
 
 #[cfg(feature = "ui_debug")]

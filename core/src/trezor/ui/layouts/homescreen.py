@@ -56,8 +56,8 @@ class HomescreenBase(ui.Layout):
         if not self.should_resume:
             super()._first_paint()
             storage_cache.homescreen_shown = self.RENDER_INDICATOR
-        # else:
-        #     self._paint()
+        else:
+            self._paint()
 
 
 class Homescreen(HomescreenBase):
