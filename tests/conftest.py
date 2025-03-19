@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import typing as t
 from enum import IntEnum
@@ -441,6 +442,12 @@ def pytest_addoption(parser: "Parser") -> None:
         choices=translations.LANGUAGES,
         help="Run tests with a specified language: 'en' is the default",
     )
+    parser.addoption(
+        "--verbose-log-file",
+        action="store",
+        default=None,
+        help="File path for verbose logging",
+    )
 
 
 def pytest_configure(config: "Config") -> None:
@@ -468,6 +475,11 @@ def pytest_configure(config: "Config") -> None:
     verbosity = config.getoption("verbose")
     if verbosity:
         log.enable_debug_output(verbosity)
+
+        verbose_log_file = config.getoption("verbose_log_file")
+        if verbose_log_file:
+            handler = logging.FileHandler(verbose_log_file)
+            log.enable_debug_output(verbosity, handler)
 
     idval_orig = IdMaker._idval_from_value
 
