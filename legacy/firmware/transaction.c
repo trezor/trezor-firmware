@@ -544,19 +544,16 @@ bool tx_sign_bip340(const uint8_t *private_key, const uint8_t *hash,
 
 // tx methods
 bool tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
-  hasher_Update(hasher, (const uint8_t *)&input->address_n_count,
-                sizeof(input->address_n_count));
-  for (int i = 0; i < input->address_n_count; ++i)
-    hasher_Update(hasher, (const uint8_t *)&input->address_n[i],
-                  sizeof(input->address_n[0]));
-  hasher_Update(hasher, input->prev_hash.bytes, sizeof(input->prev_hash.bytes));
-  hasher_Update(hasher, (const uint8_t *)&input->prev_index,
-                sizeof(input->prev_index));
+  HASHER_UPDATE_INT(hasher, input->address_n_count, uint16_t);
+  for (int i = 0; i < input->address_n_count; ++i) {
+    HASHER_UPDATE_INT(hasher, input->address_n[i], uint32_t);
+  }
+  HASHER_UPDATE_BYTES(hasher, input->prev_hash.bytes, 32);
+  HASHER_UPDATE_INT(hasher, input->prev_index, uint32_t);
   tx_script_hash(hasher, input->script_sig.size, input->script_sig.bytes);
-  hasher_Update(hasher, (const uint8_t *)&input->sequence,
-                sizeof(input->sequence));
-  hasher_Update(hasher, (const uint8_t *)&input->script_type,
-                sizeof(input->script_type));
+  HASHER_UPDATE_INT(hasher, input->sequence, uint32_t);
+  uint32_t script_type = input->script_type;
+  HASHER_UPDATE_INT(hasher, script_type, uint32_t);
   uint8_t multisig_fp[32] = {0};
   if (input->has_multisig) {
     if (cryptoMultisigFingerprint(&input->multisig, multisig_fp) == 0) {
@@ -564,14 +561,12 @@ bool tx_input_check_hash(Hasher *hasher, const TxInputType *input) {
       return false;
     }
   }
-  hasher_Update(hasher, multisig_fp, sizeof(multisig_fp));
-  hasher_Update(hasher, (const uint8_t *)&input->amount, sizeof(input->amount));
+  HASHER_UPDATE_BYTES(hasher, multisig_fp, 32);
+  HASHER_UPDATE_INT(hasher, input->amount, uint64_t);
   tx_script_hash(hasher, input->witness.size, input->witness.bytes);
-  hasher_Update(hasher, (const uint8_t *)&input->has_orig_hash,
-                sizeof(input->has_orig_hash));
-  hasher_Update(hasher, input->orig_hash.bytes, sizeof(input->orig_hash.bytes));
-  hasher_Update(hasher, (const uint8_t *)&input->orig_index,
-                sizeof(input->orig_index));
+  HASHER_UPDATE_INT(hasher, input->has_orig_hash, uint8_t);
+  HASHER_UPDATE_BYTES(hasher, input->orig_hash.bytes, 32);
+  HASHER_UPDATE_INT(hasher, input->orig_index, uint32_t);
   tx_script_hash(hasher, input->script_pubkey.size, input->script_pubkey.bytes);
   return true;
 }
@@ -580,12 +575,12 @@ uint32_t tx_prevout_hash(Hasher *hasher, const TxInputType *input) {
   for (int i = 0; i < 32; i++) {
     hasher_Update(hasher, &(input->prev_hash.bytes[31 - i]), 1);
   }
-  hasher_Update(hasher, (const uint8_t *)&input->prev_index, 4);
+  HASHER_UPDATE_INT(hasher, input->prev_index, uint32_t);
   return 36;
 }
 
 uint32_t tx_amount_hash(Hasher *hasher, const TxInputType *input) {
-  hasher_Update(hasher, (const uint8_t *)&input->amount, 8);
+  HASHER_UPDATE_INT(hasher, input->amount, uint64_t);
   return 8;
 }
 
@@ -596,18 +591,18 @@ uint32_t tx_script_hash(Hasher *hasher, uint32_t size, const uint8_t *data) {
 }
 
 uint32_t tx_sequence_hash(Hasher *hasher, const TxInputType *input) {
-  hasher_Update(hasher, (const uint8_t *)&input->sequence, 4);
+  HASHER_UPDATE_INT(hasher, input->sequence, uint32_t);
   return 4;
 }
 
 uint32_t tx_output_hash(Hasher *hasher, const TxOutputBinType *output,
                         bool decred) {
   uint32_t r = 0;
-  hasher_Update(hasher, (const uint8_t *)&output->amount, 8);
+  HASHER_UPDATE_INT(hasher, output->amount, uint64_t);
   r += 8;
   if (decred) {
     uint16_t script_version = output->decred_script_version & 0xFFFF;
-    hasher_Update(hasher, (const uint8_t *)&script_version, 2);
+    HASHER_UPDATE_INT(hasher, script_version, uint16_t);
     r += 2;
   }
   r += tx_script_hash(hasher, output->script_pubkey.size,
@@ -662,20 +657,20 @@ uint32_t tx_serialize_header_hash(TxStruct *tx) {
 #if !BITCOIN_ONLY
   if (tx->is_zcashlike && tx->version >= 3) {
     uint32_t ver = tx->version | TX_OVERWINTERED;
-    hasher_Update(&(tx->hasher), (const uint8_t *)&ver, 4);
-    hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version_group_id), 4);
+    HASHER_UPDATE_INT(&(tx->hasher), ver, uint32_t);
+    HASHER_UPDATE_INT(&(tx->hasher), tx->version_group_id, uint32_t);
     r += 4;
   } else
 #endif
   {
-    hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->version), 4);
+    HASHER_UPDATE_INT(&(tx->hasher), tx->version, uint32_t);
 #if !BITCOIN_ONLY
     if (tx->timestamp) {
-      hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->timestamp), 4);
+      HASHER_UPDATE_INT(&(tx->hasher), tx->timestamp, uint32_t);
     }
 #endif
     if (tx->is_segwit) {
-      hasher_Update(&(tx->hasher), segwit_header, 2);
+      HASHER_UPDATE_BYTES(&(tx->hasher), segwit_header, 2);
       r += 2;
     }
   }
@@ -852,14 +847,14 @@ uint32_t tx_serialize_footer(TxStruct *tx, uint8_t *out) {
 }
 
 uint32_t tx_serialize_footer_hash(TxStruct *tx) {
-  hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->lock_time), 4);
+  HASHER_UPDATE_INT(&(tx->hasher), tx->lock_time, uint32_t);
 #if !BITCOIN_ONLY
   if (tx->is_zcashlike && tx->version >= 3) {
-    hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->expiry), 4);
+    HASHER_UPDATE_INT(&(tx->hasher), tx->expiry, uint32_t);
     return 8;
   }
   if (tx->is_decred) {
-    hasher_Update(&(tx->hasher), (const uint8_t *)&(tx->expiry), 4);
+    HASHER_UPDATE_INT(&(tx->hasher), tx->expiry, uint32_t);
     return 8;
   }
 #endif
