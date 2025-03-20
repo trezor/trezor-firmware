@@ -24,6 +24,7 @@
 #include <io/usb.h>
 #include <rtl/cli.h>
 #include <sys/system.h>
+#include <sys/systick.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -176,6 +177,11 @@ static void show_welcome_screen(void) {
   }
 }
 
+// Set if the RGB LED must not be controlled by the main loop
+static bool g_rgbled_control_disabled = false;
+
+void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
+
 static void drivers_init(void) {
 #ifdef USE_POWERCTL
   powerctl_init();
@@ -248,10 +254,44 @@ int main(void) {
   pair_optiga(&g_cli);
 #endif
 
+#if defined USE_BUTTON && defined USE_POWERCTL
+  uint32_t btn_deadline = 0;
+#endif
+
+#ifdef USE_RGB_LED
+  uint32_t led_start_deadline = ticks_timeout(1000);
+  rgb_led_set_color(RGBLED_GREEN);
+#endif
+
   while (true) {
     if (usb_vcp_can_read(VCP_IFACE)) {
       cli_process_io(&g_cli);
     }
+
+#if defined USE_BUTTON && defined USE_POWERCTL
+    button_event_t btn_event = {0};
+    if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
+      if (btn_event.event_type == BTN_EVENT_DOWN) {
+        btn_deadline = ticks_timeout(1000);
+      } else if (btn_event.event_type == BTN_EVENT_UP) {
+        if (ticks_expired(btn_deadline)) {
+          powerctl_hibernate();
+          rgb_led_set_color(RGBLED_YELLOW);
+          systick_delay_ms(1000);
+          rgb_led_set_color(0);
+        }
+      }
+    }
+    if (button_is_down(BTN_POWER) && ticks_expired(btn_deadline)) {
+      rgb_led_set_color(RGBLED_RED);
+    }
+#endif
+
+#ifdef USE_RGB_LED
+    if (ticks_expired(led_start_deadline) && !g_rgbled_control_disabled) {
+      rgb_led_set_color(0);
+    }
+#endif
   }
 
   return 0;

@@ -24,6 +24,8 @@
 #include <io/rgb_led.h>
 #include <rtl/cli.h>
 
+#include "../prodtest.h"
+
 static void prodtest_rgbled_set(cli_t* cli) {
   uint32_t r = 0;
   uint32_t g = 0;
@@ -50,6 +52,9 @@ static void prodtest_rgbled_set(cli_t* cli) {
   }
 
   cli_trace(cli, "Setting the RGB LED color to [%d, %d, %d]...", r, g, b);
+
+  // Disable automatic control of RGB LED in prodtest main loop
+  prodtest_disable_rgbled_control();
 
   uint32_t rgb = (r << 16) | (g << 8) | b;
 
