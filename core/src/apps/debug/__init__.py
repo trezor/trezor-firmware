@@ -357,8 +357,6 @@ if __debug__:
     async def _no_op(_msg: Any) -> Success:
         return Success()
 
-    WIRE_BUFFER_DEBUG = bytearray(1024)
-
     async def handle_session(iface: WireInterface) -> None:
         from trezor import protobuf, wire
         from trezor.wire.codec import codec_v1
@@ -366,7 +364,7 @@ if __debug__:
 
         global DEBUG_CONTEXT
 
-        DEBUG_CONTEXT = ctx = CodecContext(iface, WIRE_BUFFER_DEBUG)
+        DEBUG_CONTEXT = ctx = CodecContext(iface, wire.BufferProvider(1024), "Debug")
 
         if storage.layout_watcher:
             try:

@@ -47,13 +47,28 @@ if TYPE_CHECKING:
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
 
-def setup(iface: WireInterface, buffer: bytearray) -> None:
+class BufferProvider:
+    def __init__(self, size):
+        self.buf = bytearray(size)
+        self.owner = None
+
+    def take(self, owner: str) -> bytearray | None:
+        if self.buf is None:
+            return None
+
+        buf = self.buf
+        self.buf = None
+        self.owner = owner
+        return buf
+
+
+def setup(iface: WireInterface, buffer_provider: BufferProvider, name: str) -> None:
     """Initialize the wire stack on the provided WireInterface."""
-    loop.schedule(handle_session(iface, buffer))
+    loop.schedule(handle_session(iface, buffer_provider, name))
 
 
-async def handle_session(iface: WireInterface, buffer: bytearray) -> None:
-    ctx = CodecContext(iface, buffer)
+async def handle_session(iface: WireInterface, buffer_provider: BufferProvider, name: str) -> None:
+    ctx = CodecContext(iface, buffer_provider, name)
     next_msg: protocol_common.Message | None = None
 
     # Take a mark of modules that are imported at this point, so we can

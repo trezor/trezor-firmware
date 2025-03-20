@@ -6,12 +6,7 @@ from trezor import log, loop, utils, wire, workflow
 import apps.base
 import usb
 
-_PROTOBUF_BUFFER_SIZE = const(8192)
-USB_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
-
-if utils.USE_BLE:
-    BLE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
-
+buffer_provider = wire.BufferProvider(8192)
 
 apps.base.boot()
 
@@ -30,13 +25,13 @@ apps.base.set_homescreen()
 workflow.start_default()
 
 # initialize the wire codec over USB
-wire.setup(usb.iface_wire, USB_BUFFER)
+wire.setup(usb.iface_wire, buffer_provider, "USB")
 
 if utils.USE_BLE:
     import bluetooth
 
     # initialize the wire codec over BLE
-    wire.setup(bluetooth.iface_ble, BLE_BUFFER)
+    wire.setup(bluetooth.iface_ble, buffer_provider, "BLE")
 
 # start the event loop
 loop.run()
