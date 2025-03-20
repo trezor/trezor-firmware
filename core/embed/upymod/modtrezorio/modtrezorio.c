@@ -100,7 +100,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 
 #ifdef USE_BLE
     {MP_ROM_QSTR(MP_QSTR_ble), MP_ROM_PTR(&mod_trezorio_BLE_module)},
-    {MP_ROM_QSTR(MP_QSTR_BLE), MP_ROM_INT(BLE_IFACE)},
     {MP_ROM_QSTR(MP_QSTR_BLE_EVENT), MP_ROM_INT(BLE_EVENT_IFACE)},
 #endif
 #ifdef USE_TOUCH

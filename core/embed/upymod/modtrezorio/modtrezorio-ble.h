@@ -73,61 +73,7 @@
 // STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_update_chunk_obj,
 //                                  mod_trezorio_BLE_update_chunk);
 
-/// def write(msg: bytes) -> int:
-///     """
-///     Sends message over BLE
-///     """
-STATIC mp_obj_t mod_trezorio_BLE_write(mp_obj_t msg) {
-  mp_buffer_info_t buf = {0};
-  mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
-  bool success = ble_write(buf.buf, buf.len);
-  if (success) {
-    return MP_OBJ_NEW_SMALL_INT(buf.len);
-  } else {
-    return MP_OBJ_NEW_SMALL_INT(-1);
-  }
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_write_obj,
-                                 mod_trezorio_BLE_write);
-
-/// def read(buf: bytearray, offset: int = 0) -> int:
-///     """
-///     Reads message using BLE (device).
-///     """
-STATIC mp_obj_t mod_trezorio_BLE_read(size_t n_args, const mp_obj_t *args) {
-  mp_buffer_info_t buf = {0};
-  mp_get_buffer_raise(args[0], &buf, MP_BUFFER_WRITE);
-
-  int offset = 0;
-  if (n_args >= 1) {
-    offset = mp_obj_get_int(args[1]);
-  }
-
-  if (offset < 0) {
-    mp_raise_ValueError("Negative offset not allowed");
-  }
-
-  if (offset > buf.len) {
-    mp_raise_ValueError("Offset out of bounds");
-  }
-
-  uint32_t buffer_space = buf.len - offset;
-
-  if (buffer_space < BLE_RX_PACKET_SIZE) {
-    mp_raise_ValueError("Buffer too small");
-  }
-
-  uint32_t r = ble_read(&((uint8_t *)buf.buf)[offset], BLE_RX_PACKET_SIZE);
-
-  if (r != BLE_RX_PACKET_SIZE) {
-    mp_raise_msg(&mp_type_RuntimeError, "Unexpected read length");
-  }
-
-  return MP_OBJ_NEW_SMALL_INT(r);
-}
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_BLE_read_obj, 1, 2,
-                                           mod_trezorio_BLE_read);
-
+///
 /// def erase_bonds() -> bool:
 ///     """
 ///     Erases all BLE bonds
@@ -221,11 +167,120 @@ STATIC mp_obj_t mod_trezorio_BLE_peer_count(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_peer_count_obj,
                                  mod_trezorio_BLE_peer_count);
 
+/// class BleInterface:
+///     """
+///     BLE interface wrapper.
+///     """
+typedef struct _mp_obj_BleInterface_t {
+  mp_obj_base_t base;
+} mp_obj_BleInterface_t;
+
+/// def __init__(
+///     self,
+/// ) -> None:
+///     """
+///     Initialize BLE interface.
+///     """
+STATIC mp_obj_t mod_trezorio_BleInterface_make_new(const mp_obj_type_t *type,
+                                                   size_t n_args, size_t n_kw,
+                                                   const mp_obj_t *args) {
+  mp_arg_check_num(n_args, n_kw, 0, 0, false);
+  mp_obj_BleInterface_t *o = mp_obj_malloc(mp_obj_BleInterface_t, type);
+  return MP_OBJ_FROM_PTR(o);
+}
+
+/// def iface_num(self) -> int:
+///     """
+///     Returns the configured number of this interface.
+///     """
+STATIC mp_obj_t mod_trezorio_BleInterface_iface_num(mp_obj_t self) {
+  return MP_OBJ_NEW_SMALL_INT(BLE_IFACE);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BleInterface_iface_num_obj,
+                                 mod_trezorio_BleInterface_iface_num);
+
+/// def write(self, msg: bytes) -> int:
+///     """
+///     Sends message over BLE
+///     """
+STATIC mp_obj_t mod_trezorio_BleInterface_write(mp_obj_t self, mp_obj_t msg) {
+  mp_buffer_info_t buf = {0};
+  mp_get_buffer_raise(msg, &buf, MP_BUFFER_READ);
+  bool success = ble_write(buf.buf, buf.len);
+  if (success) {
+    return MP_OBJ_NEW_SMALL_INT(buf.len);
+  } else {
+    return MP_OBJ_NEW_SMALL_INT(-1);
+  }
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_BleInterface_write_obj,
+                                 mod_trezorio_BleInterface_write);
+
+/// def read(self, buf: bytearray, offset: int = 0) -> int:
+///     """
+///     Reads message using BLE (device).
+///     """
+STATIC mp_obj_t mod_trezorio_BleInterface_read(size_t n_args,
+                                               const mp_obj_t *args) {
+  mp_buffer_info_t buf = {0};
+  mp_get_buffer_raise(args[1], &buf, MP_BUFFER_WRITE);
+
+  int offset = 0;
+  if (n_args >= 2) {
+    offset = mp_obj_get_int(args[2]);
+  }
+
+  if (offset < 0) {
+    mp_raise_ValueError("Negative offset not allowed");
+  }
+
+  if (offset > buf.len) {
+    mp_raise_ValueError("Offset out of bounds");
+  }
+
+  uint32_t buffer_space = buf.len - offset;
+
+  if (buffer_space < BLE_RX_PACKET_SIZE) {
+    mp_raise_ValueError("Buffer too small");
+  }
+
+  uint32_t r = ble_read(&((uint8_t *)buf.buf)[offset], BLE_RX_PACKET_SIZE);
+
+  if (r != BLE_RX_PACKET_SIZE) {
+    mp_raise_msg(&mp_type_RuntimeError, "Unexpected read length");
+  }
+
+  return MP_OBJ_NEW_SMALL_INT(r);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorio_BleInterface_read_obj,
+                                           2, 3,
+                                           mod_trezorio_BleInterface_read);
+
 /// RX_PACKET_LEN: int
 /// """Length of one BLE RX packet."""
 
 /// TX_PACKET_LEN: int
 /// """Length of one BLE TX packet."""
+
+STATIC const mp_rom_map_elem_t mod_trezorio_BleInterface_locals_dict_table[] = {
+    {MP_ROM_QSTR(MP_QSTR_iface_num),
+     MP_ROM_PTR(&mod_trezorio_BleInterface_iface_num_obj)},
+    {MP_ROM_QSTR(MP_QSTR_write),
+     MP_ROM_PTR(&mod_trezorio_BleInterface_write_obj)},
+    {MP_ROM_QSTR(MP_QSTR_read),
+     MP_ROM_PTR(&mod_trezorio_BleInterface_read_obj)},
+    {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(BLE_RX_PACKET_SIZE)},
+    {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(BLE_TX_PACKET_SIZE)},
+};
+STATIC MP_DEFINE_CONST_DICT(mod_trezorio_BleInterface_locals_dict,
+                            mod_trezorio_BleInterface_locals_dict_table);
+
+STATIC const mp_obj_type_t mod_trezorio_BleInterface_type = {
+    {&mp_type_type},
+    .name = MP_QSTR_BleInterface,
+    .make_new = mod_trezorio_BleInterface_make_new,
+    .locals_dict = (void *)&mod_trezorio_BleInterface_locals_dict,
+};
 
 STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ble)},
@@ -233,8 +288,6 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     //  MP_ROM_PTR(&mod_trezorio_BLE_update_init_obj)},
     // {MP_ROM_QSTR(MP_QSTR_update_chunk),
     //  MP_ROM_PTR(&mod_trezorio_BLE_update_chunk_obj)},
-    {MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&mod_trezorio_BLE_write_obj)},
-    {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_BLE_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_erase_bonds),
      MP_ROM_PTR(&mod_trezorio_BLE_erase_bonds_obj)},
     {MP_ROM_QSTR(MP_QSTR_start_comm),
@@ -247,8 +300,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_BLE_disconnect_obj)},
     {MP_ROM_QSTR(MP_QSTR_peer_count),
      MP_ROM_PTR(&mod_trezorio_BLE_peer_count_obj)},
-    {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(BLE_RX_PACKET_SIZE)},
-    {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(BLE_TX_PACKET_SIZE)},
+    {MP_ROM_QSTR(MP_QSTR_BleInterface),
+     MP_ROM_PTR(&mod_trezorio_BleInterface_type)},
 };
 STATIC MP_DEFINE_CONST_DICT(mod_trezorio_BLE_globals,
                             mod_trezorio_BLE_globals_table);

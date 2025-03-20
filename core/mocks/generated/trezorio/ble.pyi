@@ -1,19 +1,6 @@
 from typing import *
 
 
-# upymod/modtrezorio/modtrezorio-ble.h
-def write(msg: bytes) -> int:
-    """
-    Sends message over BLE
-    """
-
-
-# upymod/modtrezorio/modtrezorio-ble.h
-def read(buf: bytearray, offset: int = 0) -> int:
-    """
-    Reads message using BLE (device).
-    """
-
 
 # upymod/modtrezorio/modtrezorio-ble.h
 def erase_bonds() -> bool:
@@ -55,7 +42,36 @@ def peer_count() -> int:
     """
     Get peer count (number of bonded devices)
     """
-RX_PACKET_LEN: int
-"""Length of one BLE RX packet."""
-TX_PACKET_LEN: int
-"""Length of one BLE TX packet."""
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+class BleInterface:
+    """
+    BLE interface wrapper.
+    """
+
+    def __init__(
+        self,
+    ) -> None:
+        """
+        Initialize BLE interface.
+        """
+
+    def iface_num(self) -> int:
+        """
+        Returns the configured number of this interface.
+        """
+
+    def write(self, msg: bytes) -> int:
+        """
+        Sends message over BLE
+        """
+
+    def read(self, buf: bytearray, offset: int = 0) -> int:
+        """
+        Reads message using BLE (device).
+        """
+    RX_PACKET_LEN: int
+    """Length of one BLE RX packet."""
+    TX_PACKET_LEN: int
+    """Length of one BLE TX packet."""
