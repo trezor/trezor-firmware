@@ -105,6 +105,8 @@ def sign_challenge(
     sigtype: str | coininfo.CoinInfo,
     curve: str,
 ) -> bytes:
+    from trezor.crypto.signature import encode_bip137_signature
+    from trezor.enums import InputScriptType
     from trezor.wire import DataError
 
     from apps.common.signverify import message_digest
@@ -149,5 +151,7 @@ def sign_challenge(
         signature = b"\x00" + signature
     elif sigtype in ("gpg", "ssh"):
         signature = b"\x00" + signature[1:]
+    else:
+        signature = encode_bip137_signature(signature, InputScriptType.SPENDADDRESS)
 
     return signature

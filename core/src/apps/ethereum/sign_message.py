@@ -49,7 +49,6 @@ async def sign_message(
     signature = secp256k1.sign_recoverable(
         node.private_key(),
         message_digest(msg.message),
-        False,
         secp256k1.CANONICAL_SIG_ETHEREUM,
     )
 

@@ -17,7 +17,7 @@ def publickey(secret_key: bytes, compressed: bool = True) -> bytes:
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
 def sign_recoverable(
-    secret_key: bytes, digest: bytes, compressed: bool = True
+    secret_key: bytes, digest: bytes
 ) -> bytes:
     """
     Uses secret key to produce the signature of the digest.
@@ -33,8 +33,7 @@ def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
-def verify_recover(signature: bytes, digest: bytes, compressed: bool = True)
--> bytes:
+def verify_recover(signature: bytes, digest: bytes) -> bytes:
     """
     Uses signature of the digest to verify the digest and recover the public
     key. Returns public key on success, None if the signature is invalid.

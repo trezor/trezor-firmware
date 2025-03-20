@@ -95,7 +95,7 @@ class Credential:
         dig = hashlib.sha256()
         for segment in data:
             dig.update(segment)
-        sig = nist256p1.sign_recoverable(self._private_key(), dig.digest(), False)
+        sig = nist256p1.sign_recoverable(self._private_key(), dig.digest())
         return encode_der_signature(sig)
 
     def bogus_signature(self) -> bytes:

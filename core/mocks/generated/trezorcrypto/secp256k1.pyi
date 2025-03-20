@@ -21,7 +21,6 @@ CANONICAL_SIG_EOS: int = 2
 def sign_recoverable(
     secret_key: bytes,
     digest: bytes,
-    compressed: bool = True,
     canonical: int | None = None,
 ) -> bytes:
     """

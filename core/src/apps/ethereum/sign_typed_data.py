@@ -49,7 +49,7 @@ async def sign_typed_data(
     )
 
     signature = secp256k1.sign_recoverable(
-        node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
+        node.private_key(), data_hash, secp256k1.CANONICAL_SIG_ETHEREUM
     )
 
     return EthereumTypedDataSignature(

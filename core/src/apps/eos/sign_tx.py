@@ -52,7 +52,7 @@ async def sign_tx(msg: EosSignTx, keychain: Keychain) -> EosSignedTx:
 
     digest = sha.get_digest()
     signature = secp256k1.sign_recoverable(
-        node.private_key(), digest, False, secp256k1.CANONICAL_SIG_EOS
+        node.private_key(), digest, secp256k1.CANONICAL_SIG_EOS
     )
 
     return EosSignedTx(signature=encode_signature(signature))

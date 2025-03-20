@@ -117,7 +117,6 @@ enum {
 /// def sign_recoverable(
 ///     secret_key: bytes,
 ///     digest: bytes,
-///     compressed: bool = True,
 ///     canonical: int | None = None,
 /// ) -> bytes:
 ///     """
@@ -129,10 +128,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign_recoverable(
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
-  bool compressed = (n_args < 3) || (args[2] == mp_const_true);
   int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
 #if !BITCOIN_ONLY
-  mp_int_t canonical = (n_args > 3) ? mp_obj_get_int(args[3]) : 0;
+  mp_int_t canonical = (n_args > 2) ? mp_obj_get_int(args[2]) : 0;
   switch (canonical) {
     case CANONICAL_SIG_ETHEREUM:
       is_canonical = ethereum_is_canonical;
@@ -157,11 +155,11 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign_recoverable(
     vstr_clear(&sig);
     mp_raise_ValueError("Signing failed");
   }
-  sig.buf[0] = 27 + pby + compressed * 4;
+  sig.buf[0] = 27 + pby;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
-    mod_trezorcrypto_secp256k1_sign_recoverable_obj, 2, 4,
+    mod_trezorcrypto_secp256k1_sign_recoverable_obj, 2, 3,
     mod_trezorcrypto_secp256k1_sign_recoverable);
 
 /// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:

@@ -159,7 +159,7 @@ def _sign_digest(
 
     node = keychain.derive(msg.address_n)
     signature = secp256k1.sign_recoverable(
-        node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
+        node.private_key(), digest, secp256k1.CANONICAL_SIG_ETHEREUM
     )
 
     req = EthereumTxRequest()

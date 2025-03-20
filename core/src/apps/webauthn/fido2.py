@@ -1309,7 +1309,7 @@ def basic_attestation_sign(data: Iterable[bytes]) -> bytes:
     dig = hashlib.sha256()
     for segment in data:
         dig.update(segment)
-    sig = nist256p1.sign_recoverable(_FIDO_ATT_PRIV_KEY, dig.digest(), False)
+    sig = nist256p1.sign_recoverable(_FIDO_ATT_PRIV_KEY, dig.digest())
     return encode_der_signature(sig)
 
 
