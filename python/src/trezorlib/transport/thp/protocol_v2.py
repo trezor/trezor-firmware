@@ -171,9 +171,12 @@ class ProtocolV2Channel(Channel):
         header, payload = self._read_until_valid_crc_check()
         self._send_ack_0()
 
-        if header.ctrl_byte == 0x42:
+        if control_byte.is_error(header.ctrl_byte):
             if payload == b"\x05":
                 raise exceptions.DeviceLockedException()
+            else:
+                err = _get_error_from_int(payload[0])
+                raise Exception("Received ThpError: " + err)
 
         if not header.is_handshake_init_response():
             LOG.error("Received message is not a valid handshake init response message")
@@ -214,6 +217,9 @@ class ProtocolV2Channel(Channel):
         header, data = self._read_until_valid_crc_check()
         if not header.is_handshake_comp_response():
             LOG.error("Received message is not a valid handshake completion response")
+            if control_byte.is_error(header.ctrl_byte):
+                err = _get_error_from_int(data[0])
+                raise Exception("Received ThpError: " + err)
         trezor_state = self._noise.decrypt(bytes(data))
         # TODO handle trezor_state
         print("trezor state:", trezor_state)
@@ -243,6 +249,9 @@ class ProtocolV2Channel(Channel):
         header, payload = self._read_until_valid_crc_check()
         if not header.is_ack() or len(payload) > 0:
             LOG.error("Received message is not a valid ACK")
+            if control_byte.is_error(header.ctrl_byte):
+                err = _get_error_from_int(payload[0])
+                raise Exception("Received ThpError: " + err)
 
     def _send_ack_0(self):
         LOG.debug("sending ack 0")
