@@ -256,8 +256,6 @@ SOURCE_MOD_TROPIC += [
     'vendor/libtropic/src/libtropic.c',
 ]
 
-CPPDEFINES_MOD += ['USE_TREZOR_CRYPTO']
-
 CPPPATH_MOD += ['vendor/libtropic/src/', 'vendor/libtropic/include/']
 
 SOURCE_MICROPYTHON = [

@@ -65,16 +65,16 @@ def configure(
             "vendor/libtropic/src/lt_l2_frame_check.c",
             "vendor/libtropic/src/lt_l3.c",
             "vendor/libtropic/src/lt_random.c",
-            "vendor/libtropic/hal/port/unix/lt_port_unix.c",
+            "vendor/libtropic/hal/port/unix/lt_port_unix_tcp.c",
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_aesgcm.c",
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_ed25519.c",
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_sha256.c",
             "vendor/libtropic/hal/crypto/trezor_crypto/lt_crypto_trezor_x25519.c",
         ]
         paths += ["embed/sec/tropic/inc"]
-        defines += ["USE_TREZOR_CRYPTO"]
+        defines += [("LT_USE_TREZOR_CRYPTO", "1")]
         features_available.append("tropic")
-        defines += ["USE_TROPIC=1"]
+        defines += [("USE_TROPIC", "1")]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/unix/touch.c"]
