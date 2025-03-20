@@ -140,4 +140,10 @@ where
             unwrap!(self.shapes.push(holder), "Shape list full");
         }
     }
+
+    fn raise_overflow_exception(&mut self) {}
+
+    fn should_raise_overflow_exception(&self) -> bool {
+        false
+    }
 }
