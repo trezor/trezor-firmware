@@ -17,28 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_RGB_LED_H
-#define TREZORHAL_RGB_LED_H
+#pragma once
 
-#include <trezor_types.h>
-
-#ifdef KERNEL_MODE
-
-// Initialize RGB LED driver
-void rgb_led_init(void);
-
-// Deinitialize RGB LED driver
-void rgb_led_deinit(void);
-
-#endif
-
-#define RGBLED_GREEN 0x00FF00
-#define RGBLED_RED 0xFF0000
-#define RGBLED_BLUE 0x0000FF
-#define RGBLED_YELLOW 0xFFFF00
-
-// Set RGB LED color
-// color: 24-bit RGB color, 0x00RRGGBB
-void rgb_led_set_color(uint32_t color);
-
-#endif  // TREZORHAL_RGB_LED_H
+// Disable automatic control of RGB LED in prodtest main loop
+void prodtest_disable_rgbled_control(void);
