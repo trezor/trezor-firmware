@@ -229,8 +229,8 @@ class EmuBleTransport(Transport):
         try:
             self.event_socket.sendall(Event.new(EventType.EMULATOR_PING).build())
             resp = self.read_command()
-        except Exception:
-            pass
+        except Exception as e:
+            print("Ping failed:", e)
         return (resp is not None) and (resp.command_type == CommandType.EMULATOR_PONG)
 
     def ble_connected(self) -> None:
@@ -256,6 +256,7 @@ class EmuBleTransport(Transport):
         assert self.event_socket is not None
         try:
             data = self.event_socket.recv(64)
-        except TimeoutError:
+        except TimeoutError as e:
+            print("Timeout:", e)
             return None
         return Command.parse(data)

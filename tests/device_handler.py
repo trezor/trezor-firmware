@@ -18,7 +18,7 @@ if t.TYPE_CHECKING:
     P = tx.ParamSpec("P")
 
 
-udp.SOCKET_TIMEOUT = 0.1
+udp.SOCKET_TIMEOUT = 1
 
 
 class NullUI:

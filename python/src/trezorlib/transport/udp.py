@@ -27,7 +27,7 @@ from . import Timeout, Transport, TransportException
 if TYPE_CHECKING:
     from ..models import TrezorModel
 
-SOCKET_TIMEOUT = 0.1
+SOCKET_TIMEOUT = 10
 
 LOG = logging.getLogger(__name__)
 
@@ -99,6 +99,7 @@ class UdpTransport(Transport):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.connect(self.device)
         self.socket.settimeout(SOCKET_TIMEOUT)
+        LOG.info("timeout: %s", self.socket.gettimeout())
 
     def close(self) -> None:
         if self.socket is not None:
@@ -151,8 +152,11 @@ class UdpTransport(Transport):
         assert self.socket is not None
         resp = None
         try:
+            LOG.info("sending ping")
             self.socket.sendall(b"PINGPING")
             resp = self.socket.recv(8)
-        except Exception:
-            pass
+            print("Pong:", resp)
+        except Exception as e:
+            print("Ping failed:", e)
+        LOG.info("ping is over: %s", self.socket.gettimeout())
         return resp == b"PONGPONG"
