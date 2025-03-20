@@ -197,7 +197,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_unix"
+      - run: nix-shell --run "export DISABLE_TROPIC=0; poetry run make -C core build_unix"
       - run: nix-shell --run "cd vendor/ts-tvl/tvl/server/model_config && poetry install && poetry run model_server tcp -c model_config.yml &"
       - run: nix-shell --run "poetry run make -C core test"
 
