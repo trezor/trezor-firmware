@@ -93,7 +93,7 @@ if not PROTOC:
 PROTOC_PREFIX = Path(PROTOC).resolve().parent.parent
 
 
-ENUM_ENTRY = c.PrefixedArray(c.Byte, c.Int16ul)
+ENUM_ENTRY = c.PrefixedArray(c.Int16ul, c.Int16ul)
 
 FIELD_STRUCT = c.Struct(
     "tag" / c.Byte,
