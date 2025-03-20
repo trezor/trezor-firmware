@@ -164,7 +164,7 @@ def configure(
         paths += ["vendor/libtropic/include"]
         paths += ["vendor/libtropic/src"]
         defines += [("USE_TROPIC", "1")]
-        defines += [("USE_TREZOR_CRYPTO", "1")]
+        defines += [("LT_USE_TREZOR_CRYPTO", "1")]
 
     if "sbu" in features_wanted:
         sources += ["embed/io/sbu/stm32/sbu.c"]

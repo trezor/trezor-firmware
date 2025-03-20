@@ -254,9 +254,6 @@ SOURCE_MOD += [
     'embed/upymod/modutime.c',
 ]
 
-CPPDEFINES_MOD += ['USE_TREZOR_CRYPTO']
-
-
 SOURCE_MICROPYTHON = [
     'vendor/micropython/extmod/modubinascii.c',
     'vendor/micropython/extmod/moductypes.c',
