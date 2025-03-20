@@ -84,7 +84,7 @@ class ProtocolV1Channel(Channel):
             chunk = b"?" + buffer[: chunk_size - 1]
             chunk = chunk.ljust(chunk_size, b"\x00")
             self.transport.write_chunk(chunk)
-            buffer = buffer[chunk_size - 1:]
+            buffer = buffer[chunk_size - 1 :]
 
     def _read(self, timeout: float | None = None) -> t.Tuple[int, bytes]:
         if timeout is None:
