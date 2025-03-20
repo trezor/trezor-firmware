@@ -528,8 +528,18 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn set_brightness(_current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+    fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
+        let component = NumberInputScreen::new(
+            0,
+            100,
+            current_brightness.unwrap_or(50) as u32,
+            TR::brightness__change_title.into(),
+        )
+        .with_header(Header::new(TR::brightness__title.into()).with_menu_button());
+
+        let layout = RootComponent::new(component);
+
+        Ok(layout)
     }
 
     fn show_address_details(
