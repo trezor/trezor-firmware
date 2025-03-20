@@ -3,9 +3,10 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
+        button_request::ButtonRequestCode,
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort},
-            ComponentExt,
+            ButtonRequestExt, ComponentExt,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -63,6 +64,7 @@ pub fn new_show_share_words_flow(
     instructions_paragraphs: ParagraphVecShort<'static>,
     text_confirm: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
+    let nwords = words.len();
     let instruction = TextScreen::new(
         instructions_paragraphs
             .into_paragraphs()
@@ -76,7 +78,9 @@ pub fn new_show_share_words_flow(
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
         _ => Some(FlowMsg::Cancelled),
-    });
+    })
+    .one_button_request(ButtonRequestCode::ResetDevice.with_name("share_words"))
+    .with_pages(move |_| nwords + 2);
 
     let share_words = ShareWordsScreen::new(words).map(|msg| match msg {
         ShareWordsScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
