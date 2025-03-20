@@ -2,7 +2,8 @@ use crate::{
     error,
     translations::TR,
     ui::{
-        component::{text::op::OpTextLayout, ComponentExt, FormattedText},
+        button_request::ButtonRequestCode,
+        component::{text::op::OpTextLayout, ButtonRequestExt, ComponentExt, FormattedText},
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
@@ -48,10 +49,16 @@ impl FlowController for ConfirmReset {
 }
 
 pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
-    let title = if recovery {
-        TR::recovery__title_recover.into()
+    let (title, br) = if recovery {
+        (
+            TR::recovery__title_recover.into(),
+            ButtonRequestCode::ProtectCall.with_name("recover_device"),
+        )
     } else {
-        TR::reset__title_create_wallet.into()
+        (
+            TR::reset__title_create_wallet.into(),
+            ButtonRequestCode::ResetDevice.with_name("setup_device"),
+        )
     };
 
     let op = OpTextLayout::new(theme::TEXT_REGULAR)
@@ -73,7 +80,8 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
             TextScreenMsg::Menu => Some(FlowMsg::Info),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             _ => None,
-        });
+        })
+        .one_button_request(br);
 
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::empty().item(
