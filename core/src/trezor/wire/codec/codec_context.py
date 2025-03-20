@@ -10,7 +10,7 @@ from trezor.wire.protocol_common import Context, Message
 if TYPE_CHECKING:
     from typing import TypeVar
 
-    from trezor.wire import WireInterface
+    from trezor.wire import BufferProvider, WireInterface
 
     LoadedMessageType = TypeVar("LoadedMessageType", bound=protobuf.MessageType)
 
@@ -21,14 +21,20 @@ class CodecContext(Context):
     def __init__(
         self,
         iface: WireInterface,
-        buffer: bytearray,
+        buffer_provider: BufferProvider,
     ) -> None:
-        self.buffer = buffer
+        self.buffer_provider = buffer_provider
+        self._buffer = None
         super().__init__(iface)
+
+    def _get_buffer(self) -> bytearray | None:
+        if self._buffer is None:
+            self._buffer = self.buffer_provider.take()
+        return self._buffer
 
     def read_from_wire(self) -> Awaitable[Message]:
         """Read a whole message from the wire without parsing it."""
-        return codec_v1.read_message(self.iface, self.buffer)
+        return codec_v1.read_message(self.iface, self._get_buffer)
 
     async def read(
         self,
@@ -81,10 +87,15 @@ class CodecContext(Context):
 
         msg_size = protobuf.encoded_length(msg)
 
-        if msg_size <= len(self.buffer):
-            # reuse preallocated
-            buffer = self.buffer
-        else:
+        buffer = self._get_buffer()
+        if buffer is None:
+            if msg_size > 128:
+                raise IOError
+            # allow sending small responses (for error reporting when another session is in progress)
+            buffer = bytearray(msg_size)
+
+        # try to reuse reallocated buffer
+        if msg_size > len(buffer):
             # message is too big, we need to allocate a new buffer
             buffer = bytearray(msg_size)
 
