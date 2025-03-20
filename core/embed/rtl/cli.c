@@ -277,7 +277,11 @@ static int cli_readch(cli_t* cli) {
 
   for (;;) {
     char ch;
-    cli->read(cli->callback_context, &ch, 1);
+    size_t len = cli->read(cli->callback_context, &ch, 1);
+
+    if (len != 1) {
+      return 0;
+    }
 
     if (ch == '\e') {
       // Escape sequence start
@@ -331,163 +335,168 @@ static char cli_autocomplete(cli_t* cli, const char* prefix) {
   return next_char;
 }
 
-// Reads a line from the console input and stores it in the `cli->line` buffer
+// Processes a received character
 //
-// Returns false if the input line is too long
-static bool cli_readln(cli_t* cli) {
+// Returns 1 if the input line is complete,
+// returns 0 if more characters are needed,
+// returns negative value if the input line is too long
+static int cli_process_char(cli_t* cli, int ch) {
   char* buf = cli->line_buffer;
-  int len = 0;     // number of characters in the buffer (excluding '\0')
-  int cursor = 0;  // cursor position in the buffer
 
-  int hist_idx = 0;
-  int hist_prefix = 0;
-
-  buf[0] = '\0';
-
-  for (;;) {
-    int ch = cli_readch(cli);
-
-    switch (ch) {
-      case ESC_SEQ('A'):  // ESC[A
-        // Up arrow - search history backwards
-        if (hist_idx == 0) {
-          hist_prefix = len;
+  switch (ch) {
+    case ESC_SEQ('A'):  // ESC[A
+      // Up arrow - search history backwards
+      if (cli->hist_idx == 0) {
+        cli->hist_prefix = cli->line_len;
+      }
+      const char* hist_line =
+          cli_history_rev(cli, &cli->hist_idx, buf, cli->hist_prefix);
+      if (hist_line != NULL) {
+        if (cli->line_cursor > 0) {
+          // Move the cursor to the beginning of the line
+          cli_printf(cli, "\e[%dD", cli->line_cursor);
         }
+        // Replace original text
+        strcpy(buf, hist_line);
+        cli->line_len = cli->line_cursor = strlen(buf);
+        cli_printf(cli, "%s\e[K", buf);
+      }
+      return 0;
+
+    case ESC_SEQ('B'):  // ESC[B
+      // Down arrow - search history forwards
+      if (cli->hist_idx > 0) {
         const char* hist_line =
-            cli_history_rev(cli, &hist_idx, buf, hist_prefix);
+            cli_history_fwd(cli, &cli->hist_idx, buf, cli->hist_prefix);
         if (hist_line != NULL) {
-          if (cursor > 0) {
+          if (cli->line_cursor > 0) {
             // Move the cursor to the beginning of the line
-            cli_printf(cli, "\e[%dD", cursor);
+            cli_printf(cli, "\e[%dD", cli->line_cursor);
           }
           // Replace original text
           strcpy(buf, hist_line);
-          len = cursor = strlen(buf);
+          cli->line_len = cli->line_cursor = strlen(buf);
           cli_printf(cli, "%s\e[K", buf);
-        }
-        continue;
-
-      case ESC_SEQ('B'):  // ESC[B
-        // Down arrow - search history forwards
-        if (hist_idx > 0) {
-          const char* hist_line =
-              cli_history_fwd(cli, &hist_idx, buf, hist_prefix);
-          if (hist_line != NULL) {
-            if (cursor > 0) {
-              // Move the cursor to the beginning of the line
-              cli_printf(cli, "\e[%dD", cursor);
-            }
-            // Replace original text
-            strcpy(buf, hist_line);
-            len = cursor = strlen(buf);
-            cli_printf(cli, "%s\e[K", buf);
-          } else {
-            if (cursor > hist_prefix) {
-              cli_printf(cli, "\e[%dD", cursor - hist_prefix);
-            }
-            cli_printf(cli, "\e[K");
-            len = cursor = hist_prefix;
-            buf[len] = '\0';
+        } else {
+          if (cli->line_cursor > cli->hist_prefix) {
+            cli_printf(cli, "\e[%dD", cli->line_cursor - cli->hist_prefix);
           }
+          cli_printf(cli, "\e[K");
+          cli->line_len = cli->line_cursor = cli->hist_prefix;
+          buf[cli->line_len] = '\0';
         }
-        continue;
-    }
+      }
+      return 0;
+  }
 
-    // Reset the history index, if the user types something else
-    hist_idx = 0;
+  // Reset the history index, if the user types something else
+  cli->hist_idx = 0;
 
-    switch (ch) {
-      case ESC_SEQ('C'):  // ESC[C
-        // Right arrow
-        if (cursor < len) {
-          if (cli->interactive) {
-            cli_printf(cli, "\e[C");
-          }
-          cursor++;
-        }
-        break;
-
-      case ESC_SEQ('D'):  // ESC[D
-        // Left arrow
-        if (cursor > 0) {
-          if (cli->interactive) {
-            cli_printf(cli, "\e[D");
-          }
-          cursor--;
-        }
-        break;
-
-      case '\b':
-      case 0x7F:
-        // backspace => delete last character
-        if (cursor == 0) break;
+  switch (ch) {
+    case ESC_SEQ('C'):  // ESC[C
+      // Right arrow
+      if (cli->line_cursor < cli->line_len) {
         if (cli->interactive) {
-          // Move the cursor left
+          cli_printf(cli, "\e[C");
+        }
+        cli->line_cursor++;
+      }
+      break;
+
+    case ESC_SEQ('D'):  // ESC[D
+      // Left arrow
+      if (cli->line_cursor > 0) {
+        if (cli->interactive) {
           cli_printf(cli, "\e[D");
         }
-        --cursor;
-        // do not break, fall through
+        cli->line_cursor--;
+      }
+      break;
 
-      case ESC_SEQ(3):  // ESC[3~
-        // Delete
-        if (cursor < len) {
-          // Delete the character at the cursor
-          memmove(&buf[cursor], &buf[cursor + 1], len - cursor);
-          --len;
-          if (cli->interactive) {
-            // Print the rest of the line and move the cursor back
-            cli_printf(cli, "%s \b", &buf[cursor]);
-            if (cursor < len) {
-              cli_printf(cli, "\e[%dD", len - cursor);
-            }
-          }
-        }
-        break;
+    case '\b':
+    case 0x7F:
+      // backspace => delete last character
+      if (cli->line_cursor == 0) break;
+      if (cli->interactive) {
+        // Move the cursor left
+        cli_printf(cli, "\e[D");
+      }
+      --cli->line_cursor;
+      // do not break, fall through
 
-      case '\r':
-      case '\n':
-        // end of line
+    case ESC_SEQ(3):  // ESC[3~
+      // Delete
+      if (cli->line_cursor < cli->line_len) {
+        // Delete the character at the cursor
+        memmove(&buf[cli->line_cursor], &buf[cli->line_cursor + 1],
+                cli->line_len - cli->line_cursor);
+        --cli->line_len;
         if (cli->interactive) {
-          cli_printf(cli, "\r\n");
-        }
-        return len < CLI_LINE_BUFFER_SIZE;
-
-      case '\t':
-        // tab => autocomplete
-        if (cli->interactive && len == cursor) {
-          char ch;
-          while ((ch = cli_autocomplete(cli, buf)) != '\0') {
-            if (len < CLI_LINE_BUFFER_SIZE - 1) {
-              cli_printf(cli, "%c", ch);
-              buf[len++] = ch;
-              buf[len] = '\0';
-              cursor++;
-            }
+          // Print the rest of the line and move the cursor back
+          cli_printf(cli, "%s \b", &buf[cli->line_cursor]);
+          if (cli->line_cursor < cli->line_len) {
+            cli_printf(cli, "\e[%dD", cli->line_len - cli->line_cursor);
           }
         }
-        break;
+      }
+      break;
 
-      default:
-        if (ch >= 0x20 && ch <= 0x7E) {
-          // Printable character
-          if (len < CLI_LINE_BUFFER_SIZE - 1) {
-            // Insert the character at the cursor
-            ++len;
-            memmove(&buf[cursor + 1], &buf[cursor], len - cursor);
-            buf[cursor] = ch;
-            // Print new character and the rest of the line
-            if (cli->interactive) {
-              cli_printf(cli, "%s", &buf[cursor]);
-            }
-            ++cursor;
-            if (cli->interactive && cursor < len) {
-              // Move the cursor back
-              cli_printf(cli, "\e[%dD", len - cursor);
-            }
+    case '\r':
+    case '\n':
+      // end of line
+      if (cli->interactive) {
+        cli_printf(cli, "\r\n");
+      }
+      if (cli->line_len < CLI_LINE_BUFFER_SIZE) {
+        return 1;
+      }
+      return -1;
+
+    case '\t':
+      // tab => autocomplete
+      if (cli->interactive && cli->line_len == cli->line_cursor) {
+        char ch;
+        while ((ch = cli_autocomplete(cli, buf)) != '\0') {
+          if (cli->line_len < CLI_LINE_BUFFER_SIZE - 1) {
+            cli_printf(cli, "%c", ch);
+            buf[cli->line_len++] = ch;
+            buf[cli->line_len] = '\0';
+            cli->line_cursor++;
           }
         }
-    }
+      }
+      break;
+
+    default:
+      if (ch >= 0x20 && ch <= 0x7E) {
+        // Printable character
+        if (cli->line_len < CLI_LINE_BUFFER_SIZE - 1) {
+          // Insert the character at the cursor
+          ++cli->line_len;
+          memmove(&buf[cli->line_cursor + 1], &buf[cli->line_cursor],
+                  cli->line_len - cli->line_cursor);
+          buf[cli->line_cursor] = ch;
+          // Print new character and the rest of the line
+          if (cli->interactive) {
+            cli_printf(cli, "%s", &buf[cli->line_cursor]);
+          }
+          ++cli->line_cursor;
+          if (cli->interactive && cli->line_cursor < cli->line_len) {
+            // Move the cursor back
+            cli_printf(cli, "\e[%dD", cli->line_len - cli->line_cursor);
+          }
+        }
+      }
   }
+  return 0;
+}
+
+static void cli_clear_line(cli_t* cli) {
+  cli->line_len = 0;
+  cli->line_cursor = 0;
+  cli->hist_idx = 0;
+  cli->hist_prefix = 0;
+  memset(cli->line_buffer, 0, sizeof(cli->line_buffer));
 }
 
 // Splits the command line into arguments
@@ -526,80 +535,92 @@ static bool cli_split_args(cli_t* cli) {
   return *cstr_skip_whitespace(buf) == '\0';
 }
 
-void cli_run_loop(cli_t* cli) {
-  while (true) {
-    if (cli->interactive) {
-      if (cli->final_status) {
-        // Finalize the last command with an empty line
-        cli_printf(cli, "\r\n");
-      }
-      // Print the prompt
-      cli_printf(cli, "> ");
+static void cli_process_command(cli_t* cli, const cli_command_t* cmd) {
+  cli->current_cmd = cmd;
+  cli->final_status = false;
+  cli->aborted = false;
+
+  // Call the command handler
+  cmd->func(cli);
+
+  if (!cli->final_status) {
+    // Command handler hasn't sent final status
+    if (cli->aborted) {
+      cli_error(cli, CLI_ERROR_ABORT, "");
+    } else {
+      cli_error(cli, CLI_ERROR_FATAL,
+                "Command handler didn't finish properly.");
     }
-
-    cli->final_status = false;
-    cli->aborted = false;
-
-    // Read the next line
-    if (!cli_readln(cli)) {
-      cli_error(cli, CLI_ERROR_FATAL, "Input line too long.");
-      continue;
-    }
-
-    cli_history_add(cli, cli->line_buffer);
-
-    // Split command line into arguments
-    if (!cli_split_args(cli)) {
-      cli_error(cli, CLI_ERROR_FATAL, "Too many arguments.");
-      continue;
-    }
-
-    // Empty line?
-    if (*cli->cmd_name == '\0') {
-      // Switch to interactive mode if two empty lines are entered
-      if (++cli->empty_lines >= 2 && !cli->interactive) {
-        cli->interactive = true;
-        // Print the welcome message
-        const cli_command_t* cmd = cli_find_command(cli, "$intro");
-        if (cmd != NULL) {
-          cmd->func(cli);
-        }
-      }
-      continue;
-    }
-    cli->empty_lines = 0;
-
-    // Quit interactive mode on `.+ENTER`
-    if ((strcmp(cli->cmd_name, ".") == 0)) {
-      if (cli->interactive) {
-        cli->interactive = false;
-        cli_trace(cli, "Exiting interactive mode...");
-      }
-      continue;
-    }
-
-    // Find the command handler
-    cli->current_cmd = cli_find_command(cli, cli->cmd_name);
-
-    if (cli->current_cmd == NULL) {
-      cli_error(cli, CLI_ERROR_INVALID_CMD, "Invalid command '%s', try 'help'.",
-                cli->cmd_name);
-      continue;
-    }
-
-    // Call the command handler
-    cli->current_cmd->func(cli);
-
-    if (!cli->final_status) {
-      // Command handler hasn't send final status
-      if (cli->aborted) {
-        cli_error(cli, CLI_ERROR_ABORT, "");
-      } else {
-        cli_error(cli, CLI_ERROR_FATAL,
-                  "Command handler didn't finish properly.");
-      }
-    }
+  } else {
+    // Finalize the last command with an empty line
+    cli_printf(cli, "\r\n");
   }
+}
+
+void cli_process_io(cli_t* cli) {
+  int res;
+  do {
+    int ch = cli_readch(cli);
+    if (ch == 0) {
+      return;
+    }
+    res = cli_process_char(cli, ch);
+  } while (res == 0);
+
+  if (res < 0) {
+    cli_error(cli, CLI_ERROR_FATAL, "Input line too long.");
+    goto cleanup;
+  }
+
+  cli_history_add(cli, cli->line_buffer);
+
+  // Split command line into arguments
+  if (!cli_split_args(cli)) {
+    cli_error(cli, CLI_ERROR_FATAL, "Too many arguments.");
+    goto cleanup;
+  }
+
+  // Empty line?
+  if (*cli->cmd_name == '\0') {
+    // Switch to interactive mode if two empty lines are entered
+    if (++cli->empty_lines >= 2 && !cli->interactive) {
+      cli->interactive = true;
+      // Print the welcome message
+      const cli_command_t* cmd = cli_find_command(cli, "$intro");
+      if (cmd != NULL) {
+        cmd->func(cli);
+      }
+    }
+    goto cleanup;
+  }
+  cli->empty_lines = 0;
+
+  // Quit interactive mode on `.+ENTER`
+  if ((strcmp(cli->cmd_name, ".") == 0)) {
+    if (cli->interactive) {
+      cli->interactive = false;
+      cli_trace(cli, "Exiting interactive mode...");
+    }
+    goto cleanup;
+  }
+
+  // Find the command handler
+  const cli_command_t* cmd = cli_find_command(cli, cli->cmd_name);
+
+  if (cmd == NULL) {
+    cli_error(cli, CLI_ERROR_INVALID_CMD, "Invalid command '%s', try 'help'.",
+              cli->cmd_name);
+    goto cleanup;
+  }
+
+  cli_process_command(cli, cmd);
+
+cleanup:
+  if (cli->interactive) {
+    // Print the prompt
+    cli_printf(cli, "> ");
+  }
+  cli_clear_line(cli);
 }
 
 // Return position of the argument with the given name in
