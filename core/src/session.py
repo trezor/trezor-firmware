@@ -20,8 +20,14 @@ if __debug__:
 apps.base.set_homescreen()
 workflow.start_default()
 
-# initialize the wire codec
+# initialize the wire codec over USB
 wire.setup(usb.iface_wire)
+
+if utils.USE_BLE:
+    import bluetooth
+
+    # initialize the wire codec over BLE
+    wire.setup(bluetooth.iface_ble)
 
 # start the event loop
 loop.run()

@@ -7,6 +7,7 @@ from trezor import io
 from trezor.loop import wait
 from trezor.utils import chunks
 from trezor.wire.codec import codec_v1
+from trezor.wire.protocol_common import WireError
 
 
 class MockHID:
@@ -76,7 +77,7 @@ class TestWireCodecV1(unittest.TestCase):
         message_packet = make_header(mtype=MESSAGE_TYPE, length=0)
         buffer = bytearray(64)
 
-        gen = codec_v1.read_message(self.interface, buffer)
+        gen = codec_v1.read_message(self.interface, lambda: buffer)
 
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -92,6 +93,17 @@ class TestWireCodecV1(unittest.TestCase):
         # message should have been read into the buffer
         self.assertEqual(buffer, b"\x00" * 64)
 
+    def test_read_no_buffer(self):
+        # zero length message - just a header
+        message_packet = make_header(mtype=MESSAGE_TYPE, length=0)
+        gen = codec_v1.read_message(self.interface, lambda: None)
+
+        query = gen.send(None)
+        self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
+
+        with self.assertRaises(WireError):
+            self.interface.mock_read(message_packet, gen)
+
     def test_read_many_packets(self):
         message = bytes(range(256))
 
@@ -106,7 +118,7 @@ class TestWireCodecV1(unittest.TestCase):
         ]
 
         buffer = bytearray(256)
-        gen = codec_v1.read_message(self.interface, buffer)
+        gen = codec_v1.read_message(self.interface, lambda: buffer)
         query = gen.send(None)
         for packet in packets[:-1]:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -135,7 +147,7 @@ class TestWireCodecV1(unittest.TestCase):
         buffer = bytearray(1)
         self.assertTrue(len(buffer) <= len(packet))
 
-        gen = codec_v1.read_message(self.interface, buffer)
+        gen = codec_v1.read_message(self.interface, lambda: buffer)
         query = gen.send(None)
         self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
         with self.assertRaises(StopIteration) as e:
@@ -203,7 +215,7 @@ class TestWireCodecV1(unittest.TestCase):
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_WRITE))
 
         buffer = bytearray(1024)
-        gen = codec_v1.read_message(self.interface, buffer)
+        gen = codec_v1.read_message(self.interface, lambda: buffer)
         query = gen.send(None)
         for packet in self.interface.data[:-1]:
             self.assertObjectEqual(query, self.interface.wait_object(io.POLL_READ))
@@ -227,7 +239,7 @@ class TestWireCodecV1(unittest.TestCase):
         packet = header + b"\x00" * HEADER_PAYLOAD_LENGTH
 
         buffer = bytearray(65536)
-        gen = codec_v1.read_message(self.interface, buffer)
+        gen = codec_v1.read_message(self.interface, lambda: buffer)
 
         query = gen.send(None)
         for _ in range(PACKET_COUNT - 1):
