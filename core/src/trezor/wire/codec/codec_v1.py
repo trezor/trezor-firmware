@@ -7,6 +7,7 @@ from trezor.wire.protocol_common import Message, WireError
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
+    from typing import Callable
 
 _REP_MARKER = const(63)  # ord('?')
 _REP_MAGIC = const(35)  # org('#')
@@ -19,7 +20,9 @@ class CodecError(WireError):
     pass
 
 
-async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Message:
+async def read_message(
+    iface: WireInterface, buffer_getter: Callable[[], bytearray | None]
+) -> Message:
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     report = bytearray(iface.RX_PACKET_LEN)
 
@@ -32,6 +35,12 @@ async def read_message(iface: WireInterface, buffer: utils.BufferType) -> Messag
     _, magic1, magic2, mtype, msize = ustruct.unpack(_REP_INIT, report)
     if magic1 != _REP_MAGIC or magic2 != _REP_MAGIC:
         raise CodecError("Invalid magic")
+
+    buffer = buffer_getter()  # will throw if other session is in progress
+    if buffer is None:
+        # The exception should be caught by and handled by `wire.handle_session()` task.
+        # It doesn't terminate the current session (to allow sending error responses).
+        raise WireError("Another session in progress")
 
     read_and_throw_away = False
 
