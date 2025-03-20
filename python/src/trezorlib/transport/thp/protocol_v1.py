@@ -80,11 +80,11 @@ class ProtocolV1Channel(Channel):
 
         buffer = bytearray(b"##" + header + message_data)
         while buffer:
-            # Report ID, data padded to 63 bytes
+            # Report ID, data padded to (chunk_size - 1) bytes
             chunk = b"?" + buffer[: chunk_size - 1]
             chunk = chunk.ljust(chunk_size, b"\x00")
             self.transport.write_chunk(chunk)
-            buffer = buffer[63:]
+            buffer = buffer[chunk_size - 1:]
 
     def _read(self, timeout: float | None = None) -> t.Tuple[int, bytes]:
         if timeout is None:
