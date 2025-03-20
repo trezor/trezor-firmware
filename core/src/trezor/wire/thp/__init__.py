@@ -48,6 +48,10 @@ class ThpDeviceLockedError(ThpError):
     pass
 
 
+class ThpUnallocatedChannelError(ThpError):
+    pass
+
+
 class ThpUnallocatedSessionError(ThpError):
 
     def __init__(self, session_id: int) -> None:
