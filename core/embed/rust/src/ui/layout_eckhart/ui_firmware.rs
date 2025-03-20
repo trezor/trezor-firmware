@@ -1,3 +1,5 @@
+use core::cmp::Ordering;
+
 use crate::{
     error::Error,
     io::BinaryData,
@@ -8,11 +10,14 @@ use crate::{
         component::{
             text::{
                 op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs, VecExt},
+                paragraphs::{
+                    Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
+                    Paragraphs, VecExt,
+                },
             },
             Empty, FormattedText,
         },
-        geometry::LinearPlacement,
+        geometry::{LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, RecoveryType, StrOrBytes},
@@ -322,14 +327,33 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn continue_recovery_homepage(
-        _text: TString<'static>,
-        _subtext: Option<TString<'static>>,
+        text: TString<'static>,
+        subtext: Option<TString<'static>>,
         _button: Option<TString<'static>>,
-        _recovery_type: RecoveryType,
-        _show_instructions: bool,
-        _remaining_shares: Option<Obj>,
+        recovery_type: RecoveryType,
+        show_instructions: bool,
+        remaining_shares: Option<Obj>,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let pages_vec = if let Some(pages_obj) = remaining_shares {
+            let mut vec = ParagraphVecLong::new();
+            for page in IterBuf::new().try_iterate(pages_obj)? {
+                let [title, description]: [TString; 2] = util::iter_into_array(page)?;
+                vec.add(Paragraph::new(&theme::TEXT_REGULAR, title))
+                    .add(Paragraph::new(&theme::TEXT_MONO_LIGHT, description).break_after());
+            }
+            Some(vec)
+        } else {
+            None
+        };
+
+        let flow = flow::continue_recovery_homepage::new_continue_recovery_homepage(
+            text,
+            subtext,
+            recovery_type,
+            show_instructions,
+            pages_vec,
+        )?;
+        LayoutObj::new_root(flow)
     }
 
     fn flow_confirm_output(
@@ -521,12 +545,41 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_checklist(
-        _title: TString<'static>,
-        _button: TString<'static>,
-        _active: usize,
-        _items: [TString<'static>; MAX_CHECKLIST_ITEMS],
+        title: TString<'static>,
+        button: TString<'static>,
+        active: usize,
+        items: [TString<'static>; MAX_CHECKLIST_ITEMS],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let mut paragraphs = ParagraphVecShort::new();
+        for (i, item) in items.into_iter().enumerate() {
+            let style = match i.cmp(&active) {
+                Ordering::Less => &theme::TEXT_CHECKLIST_INACTIVE,
+                Ordering::Equal => &theme::TEXT_MEDIUM,
+                Ordering::Greater => &theme::TEXT_CHECKLIST_INACTIVE,
+            };
+            paragraphs.add(Paragraph::new(style, item));
+        }
+
+        let checklist_content = Checklist::from_paragraphs(
+            theme::ICON_CHEVRON_RIGHT_MINI,
+            theme::ICON_CHECKMARK_MINI,
+            active,
+            paragraphs.into_paragraphs().with_spacing(40),
+        )
+        .with_check_width(32)
+        .with_icon_done_color(theme::GREEN_LIGHT)
+        .with_done_offset(Offset::y(7))
+        .with_current_offset(Offset::y(4));
+
+        let layout = RootComponent::new(
+            TextScreen::new(checklist_content)
+                .with_header(Header::new(title).with_menu_button())
+                .with_action_bar(ActionBar::new_single(
+                    Button::with_text(button).styled(theme::button_default()),
+                )),
+        );
+
+        Ok(layout)
     }
 
     fn show_danger(
@@ -567,9 +620,19 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn show_group_share_success(
-        _lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
+        lines: [TString<'static>; MAX_GROUP_SHARE_LINES],
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_REGULAR, lines[0]).centered(),
+            Paragraph::new(&theme::TEXT_REGULAR, lines[1]).centered(),
+            Paragraph::new(&theme::TEXT_REGULAR, lines[2]).centered(),
+            Paragraph::new(&theme::TEXT_REGULAR, lines[3]).centered(),
+        ])
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
+
+        let layout = RootComponent::new(TextScreen::new(paragraphs));
+        Ok(layout)
     }
 
     fn show_homescreen(
