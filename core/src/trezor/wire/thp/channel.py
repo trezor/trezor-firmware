@@ -214,7 +214,12 @@ class Channel:
                 self.fallback_decrypt = False
                 self.expected_payload_length = 0
                 self.bytes_read = 0
-                print("FAILED TO FALLBACK")
+                if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                    from ubinascii import hexlify
+
+                    log.debug(
+                        __name__, "FAILED TO FALLBACK: %s", hexlify(packet).decode()
+                    )
                 return
 
             to_read_len = min(len(packet) - INIT_HEADER_LENGTH, payload_length)
