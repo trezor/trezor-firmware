@@ -35,6 +35,7 @@ from . import (
     ThpError,
     ThpErrorType,
     ThpInvalidDataError,
+    ThpUnallocatedChannelError,
     ThpUnallocatedSessionError,
 )
 from . import alternating_bit_protocol as ABP
@@ -129,6 +130,9 @@ async def handle_received_message(
     except ThpUnallocatedSessionError as e:
         error_message = Failure(code=FailureType.ThpUnallocatedSession)
         await ctx.write(error_message, e.session_id)
+    except ThpUnallocatedChannelError:
+        await ctx.write_error(ThpErrorType.UNALLOCATED_CHANNEL)
+        ctx.clear()
     except ThpDecryptionError:
         await ctx.write_error(ThpErrorType.DECRYPTION_FAILED)
         ctx.clear()
@@ -271,8 +275,11 @@ async def _handle_state_TH2(ctx: Channel, message_length: int, ctrl_byte: int) -
         log.debug(__name__, "handle_state_TH2")
     if not control_byte.is_handshake_comp_req(ctrl_byte):
         raise ThpError("Message received is not a handshake completion request!")
+
     if ctx.handshake is None:
-        raise Exception("Handshake object is not prepared. Retry handshake.")
+        raise ThpUnallocatedChannelError(
+            "Handshake object is not prepared. Create new channel."
+        )
 
     if not config.is_unlocked():
         raise ThpDeviceLockedError
