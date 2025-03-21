@@ -1,7 +1,7 @@
 #[cfg(feature = "button")]
-use crate::trezorhal::io::io_button_get_event;
+use crate::trezorhal::button::button_get_event;
 #[cfg(feature = "touch")]
-use crate::trezorhal::io::io_touch_get_event;
+use crate::trezorhal::touch::touch_get_event;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 #[cfg(feature = "touch")]
@@ -35,14 +35,8 @@ where
 }
 #[cfg(feature = "button")]
 fn button_eval() -> Option<ButtonEvent> {
-    let event = io_button_get_event();
-    if event == 0 {
-        return None;
-    }
-
-    let event_type = event >> 24;
-    let event_btn = event & 0xFFFFFF;
-
+    let event = button_get_event();
+    let (event_btn, event_type) = event?;
     let event = ButtonEvent::new(event_type, event_btn);
 
     if let Ok(event) = event {
@@ -84,7 +78,7 @@ pub fn run(frame: &mut impl Component<Msg = impl ReturnToC>) -> u32 {
         #[cfg(all(feature = "button", not(feature = "touch")))]
         let event = button_eval();
         #[cfg(feature = "touch")]
-        let event = touch_unpack(io_touch_get_event());
+        let event = touch_unpack(touch_get_event());
         if let Some(e) = event {
             let mut ctx = EventCtx::new();
             #[cfg(all(feature = "button", not(feature = "touch")))]

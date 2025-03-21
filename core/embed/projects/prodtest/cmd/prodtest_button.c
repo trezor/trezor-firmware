@@ -30,7 +30,9 @@ static void test_single_button(cli_t* cli, uint32_t timeout, button_t btn) {
 
   cli_trace(cli, "Waiting for the button press...");
 
-  while (button_get_event() != (btn | BTN_EVT_DOWN)) {
+  button_event_t btn_event = {0};
+  while (!button_get_event(&btn_event) || (btn_event.button != btn) ||
+         (btn_event.event_type != BTN_EVENT_DOWN)) {
     if (ticks_expired(expire_time)) {
       cli_error(cli, CLI_ERROR_TIMEOUT, "");
       return;
@@ -43,7 +45,8 @@ static void test_single_button(cli_t* cli, uint32_t timeout, button_t btn) {
 
   cli_trace(cli, "Waiting for the button release...");
 
-  while (button_get_event() != (btn | BTN_EVT_UP)) {
+  while (!button_get_event(&btn_event) || (btn_event.button != btn) ||
+         (btn_event.event_type != BTN_EVENT_UP)) {
     if (ticks_expired(expire_time)) {
       cli_error(cli, CLI_ERROR_TIMEOUT, "");
       return;
@@ -65,7 +68,8 @@ static void test_button_combination(cli_t* cli, uint32_t timeout, button_t btn1,
 
   while (true) {
     // Event must be read before calling `button_is_down()`
-    button_get_event();
+    button_event_t e = {0};
+    button_get_event(&e);
 
     if (button_is_down(btn1) && button_is_down(btn2)) {
       break;
@@ -81,7 +85,8 @@ static void test_button_combination(cli_t* cli, uint32_t timeout, button_t btn1,
 
   while (true) {
     // Event must be read before calling `button_is_down()`
-    button_get_event();
+    button_event_t e = {0};
+    button_get_event(&e);
 
     if (!button_is_down(btn1) && !button_is_down(btn2)) {
       break;

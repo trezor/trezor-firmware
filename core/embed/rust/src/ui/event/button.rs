@@ -1,7 +1,7 @@
 use crate::error::Error;
-use num_traits::FromPrimitive;
 
-pub use crate::trezorhal::io::PhysicalButton;
+pub use crate::trezorhal::button::PhysicalButton;
+use crate::trezorhal::button::PhysicalButtonEvent;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -19,15 +19,10 @@ pub enum ButtonEvent {
 }
 
 impl ButtonEvent {
-    pub fn new(event: u32, button: u32) -> Result<Self, Error> {
-        let button = PhysicalButton::from_u32(button);
-
-        let button = button.ok_or(Error::OutOfRange)?;
-
-        let result = match event & 0xFF {
-            1 => Self::ButtonPressed(button),
-            2 => Self::ButtonReleased(button),
-            _ => return Err(Error::OutOfRange),
+    pub fn new(event: PhysicalButtonEvent, button: PhysicalButton) -> Result<Self, Error> {
+        let result = match event {
+            PhysicalButtonEvent::Down => Self::ButtonPressed(button),
+            PhysicalButtonEvent::Up => Self::ButtonReleased(button),
         };
         Ok(result)
     }

@@ -92,13 +92,15 @@ void ui_click(void) {
 
 void ui_click(void) {
   for (;;) {
-    button_get_event();
+    button_event_t event = {0};
+    button_get_event(&event);
     if (button_is_down(BTN_LEFT) && button_is_down(BTN_RIGHT)) {
       break;
     }
   }
   for (;;) {
-    button_get_event();
+    button_event_t event = {0};
+    button_get_event(&event);
     if (!button_is_down(BTN_LEFT) && !button_is_down(BTN_RIGHT)) {
       break;
     }

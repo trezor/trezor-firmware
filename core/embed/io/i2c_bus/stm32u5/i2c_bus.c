@@ -132,6 +132,21 @@ static const i2c_bus_def_t g_i2c_bus_def[I2C_COUNT] = {
         .guard_time = I2C_INSTANCE_3_GUARD_TIME,
     },
 #endif
+#ifdef I2C_INSTANCE_4
+    {
+        .regs = I2C_INSTANCE_4,
+        .scl_port = I2C_INSTANCE_4_SCL_PORT,
+        .sda_port = I2C_INSTANCE_4_SDA_PORT,
+        .scl_pin = I2C_INSTANCE_4_SCL_PIN,
+        .sda_pin = I2C_INSTANCE_4_SDA_PIN,
+        .pin_af = I2C_INSTANCE_4_PIN_AF,
+        .reset_reg = I2C_INSTANCE_4_RESET_REG,
+        .reset_bit = I2C_INSTANCE_4_RESET_BIT,
+        .ev_irq = I2C_INSTANCE_4_EV_IRQn,
+        .er_irq = I2C_INSTANCE_4_ER_IRQn,
+        .guard_time = I2C_INSTANCE_4_GUARD_TIME,
+    },
+#endif
 };
 
 struct i2c_bus {
@@ -294,6 +309,13 @@ static bool i2c_bus_init(i2c_bus_t* bus, int bus_index) {
       I2C_INSTANCE_3_CLK_EN();
       I2C_INSTANCE_3_SCL_CLK_EN();
       I2C_INSTANCE_3_SDA_CLK_EN();
+      break;
+#endif
+#ifdef I2C_INSTANCE_4
+    case 4:
+      I2C_INSTANCE_4_CLK_EN();
+      I2C_INSTANCE_4_SCL_CLK_EN();
+      I2C_INSTANCE_4_SDA_CLK_EN();
       break;
 #endif
     default:
@@ -954,6 +976,24 @@ void I2C_INSTANCE_3_ER_IRQHandler(void) {
   IRQ_LOG_ENTER();
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
   i2c_bus_er_handler(&g_i2c_bus_driver[3]);
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
+}
+#endif
+
+#ifdef I2C_INSTANCE_4
+void I2C_INSTANCE_4_EV_IRQHandler(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+  i2c_bus_ev_handler(&g_i2c_bus_driver[4]);
+  mpu_restore(mpu_mode);
+  IRQ_LOG_EXIT();
+}
+
+void I2C_INSTANCE_4_ER_IRQHandler(void) {
+  IRQ_LOG_ENTER();
+  mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
+  i2c_bus_er_handler(&g_i2c_bus_driver[4]);
   mpu_restore(mpu_mode);
   IRQ_LOG_EXIT();
 }

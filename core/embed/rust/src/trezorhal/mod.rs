@@ -12,7 +12,11 @@ mod ffi;
 #[cfg(feature = "haptic")]
 pub mod haptic;
 
-pub mod io;
+#[cfg(feature = "button")]
+pub mod button;
+
+#[cfg(feature = "touch")]
+pub mod touch;
 
 #[cfg(feature = "hw_jpeg_decoder")]
 pub mod jpegdec;

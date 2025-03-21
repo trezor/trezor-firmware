@@ -1,5 +1,4 @@
-#ifndef TREZOR_T3W1_REVA_H_
-#define TREZOR_T3W1_REVA_H_
+#pragma once
 
 #define VDD_1V8 1
 #define USE_SMPS 1
@@ -199,5 +198,3 @@
 #define HW_REVISION_2_CLOCK_ENABLE() __HAL_RCC_GPIOI_CLK_ENABLE()
 
 #define TAMPER_INPUT_2 1
-
-#endif  // TREZOR_T3W1_REVA_H_
