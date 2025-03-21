@@ -73,6 +73,12 @@ west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild -- -DOVERLAY_CONFIG=deb
 ```
 
 
+### Build Radio test application
+```sh
+cd trezor
+west build ./radio_test/ -b t3w1_revA_nrf52832 --sysbuild --pristine
+```
+
 ### Flashing the Application
 Flash the compiled application onto the board:
 ```sh
