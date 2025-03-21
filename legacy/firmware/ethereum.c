@@ -277,8 +277,8 @@ static void send_signature(void) {
   }
 
   keccak_Final(&keccak_ctx, hash);
-  if (ecdsa_sign_digest(&secp256k1, privkey, hash, sig, &v,
-                        ethereum_is_canonic) != 0) {
+  if (ecdsa_sign_digest_recoverable(&secp256k1, privkey, hash, sig, &v,
+                                    ethereum_is_canonic) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
     ethereum_signing_abort();
     return;
@@ -913,8 +913,9 @@ void ethereum_message_sign(const EthereumSignMessage *msg, const HDNode *node,
   ethereum_message_hash(msg->message.bytes, msg->message.size, hash);
 
   uint8_t v = 0;
-  if (ecdsa_sign_digest(&secp256k1, node->private_key, hash,
-                        resp->signature.bytes, &v, ethereum_is_canonic) != 0) {
+  if (ecdsa_sign_digest_recoverable(&secp256k1, node->private_key, hash,
+                                    resp->signature.bytes, &v,
+                                    ethereum_is_canonic) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
     return;
   }
@@ -996,8 +997,9 @@ void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
                       msg->has_message_hash, hash);
 
   uint8_t v = 0;
-  if (ecdsa_sign_digest(&secp256k1, node->private_key, hash,
-                        resp->signature.bytes, &v, ethereum_is_canonic) != 0) {
+  if (ecdsa_sign_digest_recoverable(&secp256k1, node->private_key, hash,
+                                    resp->signature.bytes, &v,
+                                    ethereum_is_canonic) != 0) {
     fsm_sendFailure(FailureType_Failure_ProcessError, _("Signing failed"));
     return;
   }

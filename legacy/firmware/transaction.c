@@ -522,7 +522,8 @@ uint32_t serialize_p2tr_witness(const uint8_t *signature,
 bool tx_sign_ecdsa(const ecdsa_curve *curve, const uint8_t *private_key,
                    const uint8_t *hash, uint8_t *out, pb_size_t *size) {
   uint8_t signature[64] = {0};
-  if (ecdsa_sign_digest(curve, private_key, hash, signature, NULL, NULL) != 0) {
+  if (ecdsa_sign_digest_recoverable(curve, private_key, hash, signature, NULL,
+                                    NULL) != 0) {
     return false;
   }
 

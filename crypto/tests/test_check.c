@@ -4123,10 +4123,10 @@ START_TEST(test_rfc6979) {
 }
 END_TEST
 
-static void test_ecdsa_sign_digest_deterministic_helper(
-    int (*ecdsa_sign_digest_fn)(const ecdsa_curve *, const uint8_t *,
-                                const uint8_t *, uint8_t *, uint8_t *,
-                                int (*)(uint8_t by, uint8_t sig[64]))) {
+static void test_ecdsa_sign_digest_deterministic_helper(int (
+    *ecdsa_sign_digest_recoverable_fn)(const ecdsa_curve *, const uint8_t *,
+                                       const uint8_t *, uint8_t *, uint8_t *,
+                                       int (*)(uint8_t by, uint8_t sig[64]))) {
   static struct {
     const char *priv_key;
     const char *digest;
@@ -4154,20 +4154,21 @@ static void test_ecdsa_sign_digest_deterministic_helper(
     memcpy(digest, fromhex(tests[i].digest), 32);
     memcpy(expected_sig, fromhex(tests[i].sig), 64);
 
-    res =
-        ecdsa_sign_digest_fn(curve, priv_key, digest, computed_sig, NULL, NULL);
+    res = ecdsa_sign_digest_recoverable_fn(curve, priv_key, digest,
+                                           computed_sig, NULL, NULL);
     ck_assert_int_eq(res, 0);
     ck_assert_mem_eq(expected_sig, computed_sig, 64);
   }
 }
 
-START_TEST(test_tc_ecdsa_sign_digest_deterministic) {
-  test_ecdsa_sign_digest_deterministic_helper(tc_ecdsa_sign_digest);
+START_TEST(test_tc_ecdsa_sign_digest_recoverable_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(tc_ecdsa_sign_digest_recoverable);
 }
 END_TEST
 
-START_TEST(test_zkp_ecdsa_sign_digest_deterministic) {
-  test_ecdsa_sign_digest_deterministic_helper(zkp_ecdsa_sign_digest);
+START_TEST(test_zkp_ecdsa_sign_digest_recoverable_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(
+      zkp_ecdsa_sign_digest_recoverable);
 }
 END_TEST
 
@@ -11520,8 +11521,8 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_zkp_ecdh_multiply);
   tcase_add_test(tc, test_zkp_ecdsa_tweak_pubkey);
 #if USE_RFC6979
-  tcase_add_test(tc, test_tc_ecdsa_sign_digest_deterministic);
-  tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
+  tcase_add_test(tc, test_tc_ecdsa_sign_digest_recoverable_deterministic);
+  tcase_add_test(tc, test_zkp_ecdsa_sign_digest_recoverable_deterministic);
 #endif
   suite_add_tcase(s, tc);
 

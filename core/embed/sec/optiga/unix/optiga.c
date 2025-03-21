@@ -56,8 +56,8 @@ optiga_sign_result optiga_sign(uint8_t index, const uint8_t *digest,
   }
 
   uint8_t raw_signature[64] = {0};
-  int ret = ecdsa_sign_digest(&nist256p1, DEVICE_PRIV_KEY, digest,
-                              raw_signature, NULL, NULL);
+  int ret = ecdsa_sign_digest_recoverable(&nist256p1, DEVICE_PRIV_KEY, digest,
+                                          raw_signature, NULL, NULL);
   if (ret != 0) {
     return OPTIGA_SIGN_ERROR;
   }

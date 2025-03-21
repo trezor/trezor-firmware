@@ -89,8 +89,8 @@ void openssl_check(unsigned int iterations, int nid, const ecdsa_curve *curve) {
     BN_free(K);
 
     // use our ECDSA signer to sign the message with the key
-    if (ecdsa_sign(curve, HASHER_SHA2, priv_key, msg, msg_len, sig, NULL,
-                   NULL) != 0) {
+    if (ecdsa_sign_recoverable(curve, HASHER_SHA2, priv_key, msg, msg_len, sig,
+                               NULL, NULL) != 0) {
       printf("trezor-crypto signing failed\n");
       return;
     }

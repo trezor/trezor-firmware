@@ -151,9 +151,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign_recoverable(
   vstr_t sig = {0};
   vstr_init_len(&sig, 65);
   uint8_t pby = 0;
-  if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
-                             (const uint8_t *)dig.buf, (uint8_t *)sig.buf + 1,
-                             &pby, is_canonical)) {
+  if (0 != ecdsa_sign_digest_recoverable(
+               &secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf,
+               (uint8_t *)sig.buf + 1, &pby, is_canonical)) {
     vstr_clear(&sig);
     mp_raise_ValueError("Signing failed");
   }

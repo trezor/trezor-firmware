@@ -173,7 +173,7 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 // signature_bytes has 64 bytes
 // pby is one byte
 // returns 0 on success
-int zkp_ecdsa_sign_digest(
+int zkp_ecdsa_sign_digest_recoverable(
     const ecdsa_curve *curve, const uint8_t *private_key_bytes,
     const uint8_t *digest, uint8_t *signature_bytes, uint8_t *pby,
     int (*is_canonical)(uint8_t by, uint8_t signature_bytes[64])) {

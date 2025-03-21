@@ -736,7 +736,7 @@ int fuzz_shamir_interpolate(void) {
   return 0;
 }
 
-int fuzz_ecdsa_sign_digest_functions(void) {
+int fuzz_ecdsa_sign_digest_recoverable_functions(void) {
   // bug result reference: https://github.com/trezor/trezor-firmware/pull/1697
 
   uint8_t curve_decider = 0;
@@ -765,12 +765,13 @@ int fuzz_ecdsa_sign_digest_functions(void) {
   int res = 0;
 
   // IDEA optionally set a function for is_canonical() callback
-  int res1 = tc_ecdsa_sign_digest(curve, priv_key, digest, sig1, &pby1, NULL);
+  int res1 = tc_ecdsa_sign_digest_recoverable(curve, priv_key, digest, sig1,
+                                              &pby1, NULL);
 
   // the zkp function variant is only defined for a specific curve
   if (curve == &secp256k1) {
-    int res2 =
-        zkp_ecdsa_sign_digest(curve, priv_key, digest, sig2, &pby2, NULL);
+    int res2 = zkp_ecdsa_sign_digest_recoverable(curve, priv_key, digest, sig2,
+                                                 &pby2, NULL);
     if ((res1 == 0 && res2 != 0) || (res1 != 0 && res2 == 0)) {
       // one variant succeeded where the other did not
       crash();
@@ -1548,7 +1549,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
 #ifdef FUZZ_ALLOW_SLOW
       zkp_initialize_context_or_crash();
       // slow through expensive bignum operations
-      target_result = fuzz_ecdsa_sign_digest_functions();
+      target_result = fuzz_ecdsa_sign_digest_recoverable_functions();
 #endif
       break;
     case 24:
