@@ -234,67 +234,21 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli){
     return;
   }
 
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  // Deinitialize BLE module
+  ble_deinit();
 
-  // UART3 settings
-  // UART connected to NRF via unmeasurable wires, TX line for some reason do not work
-  // RAD TX (PB10 - P0.09)
-  // RAD RX (PA5  - P0.06)
 
   /* Enable clock for USART1 */
   __HAL_RCC_USART3_FORCE_RESET();
   __HAL_RCC_USART3_RELEASE_RESET();
   __HAL_RCC_USART3_CLK_ENABLE();
 
-  /* Enable clock for GPIO port */
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOG_CLK_ENABLE();
 
-  // RAD_RX PA5   USART3_RX AF7
-  GPIO_InitStruct.Pin = GPIO_PIN_5;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  // RAD TX PB10  USART3_TX AF7
-  GPIO_InitStruct.Pin = GPIO_PIN_10;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-
-  // UART3 settings
-  // UART connected to NRF via QI I2C line reconfigured to UART
-  // This line requires physical connection between TP3-TP37 and TP4-TP36
-  // RAD TX (PF0 - P0.16)
-  // RAD RX (PF1 - P0.15)
-
-  /* Enable clock for USART1 */
-  __HAL_RCC_USART6_FORCE_RESET();
-  __HAL_RCC_USART6_RELEASE_RESET();
-  __HAL_RCC_USART6_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-
-  // USART6_RX AF7
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART6;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
-  // USART6 TX AF7
-  GPIO_InitStruct.Pin = GPIO_PIN_0;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStruct.Alternate = GPIO_AF7_USART6;
-  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
-
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   // NRF Reset pin
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -303,19 +257,29 @@ static void prodtest_ble_radio_test_cmd(cli_t* cli){
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  UART_HandleTypeDef huart = {0};
 
-  /* Configure the UART peripheral */
-  huart.Instance = USART6; // USART3
-  huart.Init.BaudRate = 115200;
-  huart.Init.WordLength = UART_WORDLENGTH_8B;
-  huart.Init.StopBits = UART_STOPBITS_1;
-  huart.Init.Parity = UART_PARITY_NONE;
+  // UART PINS
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Alternate = GPIO_AF7_USART3;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+  GPIO_InitStruct.Pin = GPIO_PIN_5;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = GPIO_PIN_10 | GPIO_PIN_1;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  UART_HandleTypeDef huart = {0};
   huart.Init.Mode = UART_MODE_TX_RX;
-  huart.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart.Init.BaudRate = 1000000;
+  huart.Init.HwFlowCtl = UART_HWCONTROL_RTS_CTS;
   huart.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  huart.Init.Parity = UART_PARITY_NONE;
+  huart.Init.StopBits = UART_STOPBITS_1;
+  huart.Init.WordLength = UART_WORDLENGTH_8B;
+  huart.Instance = USART3;
 
   uint8_t cmd_line_byte;
   uint8_t nrf_byte;
