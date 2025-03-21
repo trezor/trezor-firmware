@@ -38,6 +38,7 @@ extern const flash_area_t STORAGE_AREAS[NORCOW_SECTOR_COUNT];
 /*
  * Current storage version.
  */
-#define NORCOW_VERSION ((uint32_t)0x00000005)
+#define NORCOW_VERSION ((uint32_t)0x00000006)
+#define NORCOW_MIN_VERSION 0x00000000
 
 #endif
