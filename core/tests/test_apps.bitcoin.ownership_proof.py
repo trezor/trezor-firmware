@@ -45,7 +45,7 @@ class TestOwnershipProof(unittest.TestCase):
             ),
         )
 
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=node,
             script_type=InputScriptType.SPENDWITNESS,
             multisig=None,
@@ -54,7 +54,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=[ownership_id],
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -97,7 +97,7 @@ class TestOwnershipProof(unittest.TestCase):
             ),
         )
 
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=node,
             script_type=InputScriptType.SPENDP2SHWITNESS,
             multisig=None,
@@ -106,7 +106,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=[ownership_id],
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -148,7 +148,7 @@ class TestOwnershipProof(unittest.TestCase):
             ),
         )
 
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=node,
             script_type=InputScriptType.SPENDTAPROOT,
             multisig=None,
@@ -157,7 +157,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=[ownership_id],
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -199,7 +199,7 @@ class TestOwnershipProof(unittest.TestCase):
             ),
         )
 
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=node,
             script_type=InputScriptType.SPENDADDRESS,
             multisig=None,
@@ -208,7 +208,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=[ownership_id],
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -340,7 +340,7 @@ class TestOwnershipProof(unittest.TestCase):
         )
 
         # Sign with the first key.
-        _, signature = ownership.generate_proof(
+        _, signature = ownership.ProofGenerator(
             node=keychains[0].derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0]),
             script_type=InputScriptType.SPENDWITNESS,
             multisig=multisig,
@@ -349,7 +349,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -359,7 +359,7 @@ class TestOwnershipProof(unittest.TestCase):
         multisig.signatures[0] = signature
 
         # Sign with the third key.
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=keychain.derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0]),
             script_type=InputScriptType.SPENDWITNESS,
             multisig=multisig,
@@ -368,7 +368,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -431,7 +431,7 @@ class TestOwnershipProof(unittest.TestCase):
         )
 
         # Sign with the second key.
-        _, signature = ownership.generate_proof(
+        _, signature = ownership.ProofGenerator(
             node=keychain.derive([49 | HARDENED, 0 | HARDENED, 2 | HARDENED, 0, 1]),
             script_type=InputScriptType.SPENDP2SHWITNESS,
             multisig=multisig,
@@ -440,7 +440,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -450,7 +450,7 @@ class TestOwnershipProof(unittest.TestCase):
         multisig.signatures[1] = signature
 
         # Sign with the fourth key.
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=keychain.derive([49 | HARDENED, 0 | HARDENED, 4 | HARDENED, 0, 1]),
             script_type=InputScriptType.SPENDP2SHWITNESS,
             multisig=multisig,
@@ -459,7 +459,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -469,7 +469,7 @@ class TestOwnershipProof(unittest.TestCase):
         multisig.signatures[3] = signature
 
         # Sign with the fifth key.
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=keychain.derive([49 | HARDENED, 0 | HARDENED, 5 | HARDENED, 0, 1]),
             script_type=InputScriptType.SPENDP2SHWITNESS,
             multisig=multisig,
@@ -478,7 +478,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -541,7 +541,7 @@ class TestOwnershipProof(unittest.TestCase):
         )
 
         # Sign with the first key.
-        _, signature = ownership.generate_proof(
+        _, signature = ownership.ProofGenerator(
             node=keychain.derive([48 | HARDENED, 0 | HARDENED, 1 | HARDENED, 0, 0]),
             script_type=InputScriptType.SPENDMULTISIG,
             multisig=multisig,
@@ -550,7 +550,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -560,7 +560,7 @@ class TestOwnershipProof(unittest.TestCase):
         multisig.signatures[0] = signature
 
         # Sign with the third key.
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=keychain.derive([48 | HARDENED, 0 | HARDENED, 2 | HARDENED, 0, 0]),
             script_type=InputScriptType.SPENDMULTISIG,
             multisig=multisig,
@@ -569,7 +569,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
         self.assertEqual(
             signature,
             unhexlify(
@@ -630,7 +630,7 @@ class TestOwnershipProof(unittest.TestCase):
         ownership_ids = [b"\x00" * 32, b"\x00" * 32]
 
         # Sign with the first key.
-        _, signature = ownership.generate_proof(
+        _, signature = ownership.ProofGenerator(
             node=keychains[0].derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0]),
             script_type=InputScriptType.SPENDWITNESS,
             multisig=multisig,
@@ -639,13 +639,13 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
 
         # Use the first signature for the second key.
         multisig.signatures[1] = signature
 
         # Sign with the first key again.
-        proof, signature = ownership.generate_proof(
+        proof, signature = ownership.ProofGenerator(
             node=keychains[0].derive([84 | HARDENED, 0 | HARDENED, 0 | HARDENED, 1, 0]),
             script_type=InputScriptType.SPENDWITNESS,
             multisig=multisig,
@@ -654,7 +654,7 @@ class TestOwnershipProof(unittest.TestCase):
             ownership_ids=ownership_ids,
             script_pubkey=script_pubkey,
             commitment_data=commitment_data,
-        )
+        ).sign()
 
         with self.assertRaises(DataError) as e:
             ownership.verify_nonownership(
