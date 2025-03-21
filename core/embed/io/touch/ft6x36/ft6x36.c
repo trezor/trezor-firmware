@@ -24,6 +24,7 @@
 
 #include <io/i2c_bus.h>
 #include <io/touch.h>
+#include <sys/sysevent_source.h>
 #include <sys/systick.h>
 #include "ft6x36.h"
 
@@ -35,6 +36,11 @@
 
 // #define TOUCH_TRACE_REGS
 // #define TOUCH_TRACE_EVENT
+
+typedef struct {
+  // Simple queue of two touch events
+  uint32_t event[2];
+} touch_tls_t;
 
 typedef struct {
   // Set if the driver is initialized
@@ -57,6 +63,8 @@ typedef struct {
   uint16_t last_x;
   // Previously reported y-coordinate
   uint16_t last_y;
+  // Thread local storage for touch events
+  touch_tls_t tls[SYSTASK_MAX_TASKS];
 
 } touch_driver_t;
 
@@ -64,6 +72,9 @@ typedef struct {
 static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
+
+// Forward declarations
+static const syshandle_vmt_t g_touch_handle_vmt;
 
 // Reads a subsequent registers from the FT6X36.
 //
@@ -316,6 +327,10 @@ secbool touch_init(void) {
     goto cleanup;
   }
 
+  if (!syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, driver)) {
+    goto cleanup;
+  }
+
   driver->init_ticks = hal_ticks_ms();
   driver->poll_ticks = driver->init_ticks;
   driver->read_ticks = driver->init_ticks;
@@ -324,20 +339,18 @@ secbool touch_init(void) {
   return sectrue;
 
 cleanup:
-  i2c_bus_close(driver->i2c_bus);
-  ft6x36_power_down();
-  memset(driver, 0, sizeof(touch_driver_t));
+  touch_deinit();
   return secfalse;
 }
 
 void touch_deinit(void) {
   touch_driver_t* driver = &g_touch_driver;
-
+  syshandle_unregister(SYSHANDLE_TOUCH);
+  i2c_bus_close(driver->i2c_bus);
   if (sectrue == driver->initialized) {
-    i2c_bus_close(driver->i2c_bus);
     ft6x36_power_down();
-    memset(driver, 0, sizeof(touch_driver_t));
   }
+  memset(driver, 0, sizeof(touch_driver_t));
 }
 
 void touch_power_set(bool on) {
@@ -465,7 +478,7 @@ void trace_event(uint32_t event) {
 }
 #endif
 
-uint32_t touch_get_event(void) {
+static uint32_t touch_get_event_internal(void) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (sectrue != driver->initialized) {
@@ -609,5 +622,83 @@ uint32_t touch_get_event(void) {
 
   return event;
 }
+
+static void add_event_to_tls_queue(touch_tls_t* tls, uint32_t new_event) {
+  // !@# TODO: this is not appropriate algorithm
+  if (new_event != 0) {
+    if (tls->event[0] == 0) {
+      tls->event[0] = new_event;
+    } else if (tls->event[1] == 0) {
+      tls->event[0] = tls->event[1];
+      tls->event[1] = new_event;
+    }
+  }
+}
+
+uint32_t touch_get_event(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue != driver->initialized) {
+    return 0;
+  }
+
+  touch_tls_t* tls = &driver->tls[systask_id(systask_active())];
+  uint32_t new_event = touch_get_event_internal();
+
+  if (new_event != 0) {
+    // Notify other tasks about the new touch event
+    syshandle_signal_read_ready(SYSHANDLE_TOUCH, &new_event);
+    // Add the event to the own queue
+    add_event_to_tls_queue(tls, new_event);
+  }
+
+  uint32_t event = tls->event[0];
+  tls->event[0] = tls->event[1];
+  tls->event[1] = 0;
+
+  return event;
+}
+
+static void on_task_created(void* context, systask_id_t task_id) {
+  touch_driver_t* driver = (touch_driver_t*)context;
+  if (!driver->initialized) {
+    return;
+  }
+  touch_tls_t* tls = &driver->tls[task_id];
+  memset(tls, 0, sizeof(touch_tls_t));
+}
+
+static void on_event_poll(void* context, bool read_awaited,
+                          bool write_awaited) {
+  UNUSED(context);
+  UNUSED(write_awaited);
+
+  if (read_awaited) {
+    uint32_t new_event = touch_get_event_internal();
+    syshandle_signal_read_ready(SYSHANDLE_TOUCH, &new_event);
+  }
+}
+
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  touch_driver_t* driver = (touch_driver_t*)context;
+  touch_tls_t* tls = &driver->tls[task_id];
+
+  uint32_t new_event = *(uint32_t*)param;
+
+  // Add the event to the queue
+  add_event_to_tls_queue(tls, new_event);
+
+  // Return true if there is an event in the queue
+  return tls->event[0] != 0;
+}
+
+static const syshandle_vmt_t g_touch_handle_vmt = {
+    .task_created = on_task_created,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_event_poll,
+};
 
 #endif  // KERNEL_MODE

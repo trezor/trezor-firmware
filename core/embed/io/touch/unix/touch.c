@@ -23,6 +23,7 @@
 #include <SDL.h>
 
 #include <io/touch.h>
+#include <sys/sysevent_source.h>
 
 extern int sdl_display_res_x, sdl_display_res_y;
 extern int sdl_touch_offset_x, sdl_touch_offset_y;
@@ -63,6 +64,9 @@ typedef struct {
 static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
+
+// Forward declaration
+static const syshandle_vmt_t g_touch_handle_vmt;
 
 static bool is_inside_display(int x, int y) {
   return x >= sdl_touch_offset_x && y >= sdl_touch_offset_y &&
@@ -197,12 +201,18 @@ static void handle_button_events(touch_driver_t* driver, SDL_Event event,
 secbool touch_init(void) {
   touch_driver_t* driver = &g_touch_driver;
 
-  if (driver->initialized != sectrue) {
-    memset(driver, 0, sizeof(touch_driver_t));
-    driver->state = IDLE;
-    driver->initialized = sectrue;
+  if (driver->initialized) {
+    return sectrue;
   }
 
+  memset(driver, 0, sizeof(touch_driver_t));
+  driver->state = IDLE;
+
+  if (!syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, driver)) {
+    return secfalse;
+  }
+
+  driver->initialized = sectrue;
   return driver->initialized;
 }
 
@@ -210,6 +220,7 @@ void touch_deinit(void) {
   touch_driver_t* driver = &g_touch_driver;
 
   if (driver->initialized == sectrue) {
+    syshandle_unregister(SYSHANDLE_TOUCH);
     memset(driver, 0, sizeof(touch_driver_t));
   }
 }
@@ -275,3 +286,36 @@ uint32_t touch_get_event(void) {
   }
   return ev_type | touch_pack_xy(ev_x, ev_y);
 }
+
+static void on_event_poll(void* context, bool read_awaited,
+                          bool write_awaited) {
+  touch_driver_t* drv = (touch_driver_t*)context;
+
+  UNUSED(drv);
+  UNUSED(write_awaited);
+
+  if (read_awaited) {
+    // uint32_t new_event = touch_get_event_internal();
+    syshandle_signal_read_ready(SYSHANDLE_TOUCH, NULL);
+  }
+}
+
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  touch_driver_t* drv = (touch_driver_t*)context;
+
+  UNUSED(drv);
+  UNUSED(task_id);
+  UNUSED(param);
+
+  // Return true if there is an event in the queue
+  return true;  // !@# TODO
+}
+
+static const syshandle_vmt_t g_touch_handle_vmt = {
+    .task_created = NULL,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_event_poll,
+};
