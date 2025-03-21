@@ -268,10 +268,8 @@ def _sign_digest(
 
     req = EthereumTxRequest()
     req.signature_v = signature[0]
-    if msg.chain_id > MAX_CHAIN_ID:
-        req.signature_v -= 27
-    else:
-        req.signature_v += 2 * msg.chain_id + 8
+    if msg.chain_id <= MAX_CHAIN_ID:
+        req.signature_v += 35 + 2 * msg.chain_id
 
     req.signature_r = signature[1:33]
     req.signature_s = signature[33:]

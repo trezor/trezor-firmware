@@ -163,7 +163,7 @@ def _sign_digest(
     )
 
     req = EthereumTxRequest()
-    req.signature_v = signature[0] - 27
+    req.signature_v = signature[0]
     req.signature_r = signature[1:33]
     req.signature_s = signature[33:]
 

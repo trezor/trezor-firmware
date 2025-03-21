@@ -88,15 +88,6 @@ async def verify_message(msg: VerifyMessage) -> Success:
         if signature_script_type != address_script_type:
             raise ProcessError("Invalid signature")
 
-    if signature_script_type == InputScriptType.SPENDP2SHWITNESS:
-        recoverable_signature = (
-            bytes([recoverable_signature[0] - 4]) + recoverable_signature[1:]
-        )
-    if signature_script_type == InputScriptType.SPENDWITNESS:
-        recoverable_signature = (
-            bytes([recoverable_signature[0] - 8]) + recoverable_signature[1:]
-        )
-
     pubkey = secp256k1.verify_recover(
         recoverable_signature,
         digest,

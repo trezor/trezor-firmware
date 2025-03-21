@@ -17,13 +17,13 @@ def encode_bip137_signature(
 ) -> bytes:
     def get_script_type_number(script_type: InputScriptType) -> int:
         if script_type == InputScriptType.SPENDADDRESS_UNCOMPRESSED:
-            return 0
+            return 27
         if script_type == InputScriptType.SPENDADDRESS:
-            return 4
+            return 31
         elif script_type == InputScriptType.SPENDP2SHWITNESS:
-            return 8
+            return 35
         elif script_type == InputScriptType.SPENDWITNESS:
-            return 12
+            return 39
         else:
             raise ValueError("Unsupported script type")
 
@@ -47,4 +47,4 @@ def decode_bip137_signature(signature: bytes) -> tuple[InputScriptType, bytes]:
 
     assert len(signature) == 65
     header = signature[0]
-    return get_script_type(header), bytes([header]) + signature[1:]
+    return get_script_type(header), bytes([(header - 27) % 4]) + signature[1:]

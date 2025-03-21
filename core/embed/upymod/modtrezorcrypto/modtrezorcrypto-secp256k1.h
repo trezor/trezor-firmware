@@ -155,7 +155,7 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign_recoverable(
     vstr_clear(&sig);
     mp_raise_ValueError("Signing failed");
   }
-  sig.buf[0] = 27 + pby;
+  sig.buf[0] = pby;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
@@ -210,8 +210,8 @@ mod_trezorcrypto_secp256k1_verify_recover(size_t n_args, const mp_obj_t *args) {
   if (dig.len != 32) {
     return mp_const_none;
   }
-  uint8_t recid = ((const uint8_t *)sig.buf)[0] - 27;
-  if (recid >= 8) {
+  uint8_t recid = ((const uint8_t *)sig.buf)[0];
+  if (recid >= 4) {
     return mp_const_none;
   }
   recid &= 3;
