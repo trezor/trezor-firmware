@@ -654,8 +654,8 @@ int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig,
                        uint8_t *pby,
                        int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
   if (node->curve->params) {
-    return ecdsa_sign_digest(node->curve->params, node->private_key, digest,
-                             sig, pby, is_canonical);
+    return ecdsa_sign_digest_recoverable(node->curve->params, node->private_key,
+                                         digest, sig, pby, is_canonical);
   } else if (node->curve == &curve25519_info) {
     return 1;  // signatures are not supported
   } else {

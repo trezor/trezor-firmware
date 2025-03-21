@@ -12,11 +12,10 @@ int zkp_ecdsa_get_public_key33(const ecdsa_curve *curve,
 int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
                                const uint8_t *private_key_bytes,
                                uint8_t *public_key_bytes);
-int zkp_ecdsa_sign_digest(const ecdsa_curve *curve,
-                          const uint8_t *private_key_bytes,
-                          const uint8_t *digest, uint8_t *signature_bytes,
-                          uint8_t *pby,
-                          int (*is_canonical)(uint8_t by, uint8_t sig[64]));
+int zkp_ecdsa_sign_digest_recoverable(
+    const ecdsa_curve *curve, const uint8_t *private_key_bytes,
+    const uint8_t *digest, uint8_t *signature_bytes, uint8_t *pby,
+    int (*is_canonical)(uint8_t by, uint8_t sig[64]));
 int zkp_ecdsa_recover_pub_from_sig(const ecdsa_curve *curve,
                                    uint8_t *public_key_bytes,
                                    const uint8_t *signature_bytes,
