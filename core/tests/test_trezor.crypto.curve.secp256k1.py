@@ -221,15 +221,15 @@ class TestCryptoSecp256k1(unittest.TestCase):
         pk = secp256k1.publickey(sk)
 
         dig = bytes([1] + [0] * 31)
-        sig = secp256k1.sign(sk, dig)
+        sig = secp256k1.sign_recoverable(sk, dig)
         self.assertTrue(secp256k1.verify(pk, sig, dig))
 
         dig = bytes([0] * 31 + [1])
-        sig = secp256k1.sign(sk, dig)
+        sig = secp256k1.sign_recoverable(sk, dig)
         self.assertTrue(secp256k1.verify(pk, sig, dig))
 
         dig = bytes([0xFF] * 32)
-        sig = secp256k1.sign(sk, dig)
+        sig = secp256k1.sign_recoverable(sk, dig)
         self.assertTrue(secp256k1.verify(pk, sig, dig))
 
     def test_sign_verify_random(self):
@@ -237,7 +237,7 @@ class TestCryptoSecp256k1(unittest.TestCase):
             sk = secp256k1.generate_secret()
             pk = secp256k1.publickey(sk)
             dig = random.bytes(32)
-            sig = secp256k1.sign(sk, dig)
+            sig = secp256k1.sign_recoverable(sk, dig)
             self.assertTrue(secp256k1.verify(pk, sig, dig))
 
     def test_verify_recover(self):
@@ -246,7 +246,7 @@ class TestCryptoSecp256k1(unittest.TestCase):
                 sk = secp256k1.generate_secret()
                 pk = secp256k1.publickey(sk, compressed)
                 dig = random.bytes(32)
-                sig = secp256k1.sign(sk, dig, compressed)
+                sig = secp256k1.sign_recoverable(sk, dig, compressed)
                 pk2 = secp256k1.verify_recover(sig, dig)
                 self.assertEqual(pk, pk2)
 

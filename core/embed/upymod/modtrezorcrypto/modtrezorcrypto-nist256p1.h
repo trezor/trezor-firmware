@@ -87,14 +87,14 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorcrypto_nist256p1_publickey_obj, 1, 2,
     mod_trezorcrypto_nist256p1_publickey);
 
-/// def sign(
+/// def sign_recoverable(
 ///     secret_key: bytes, digest: bytes, compressed: bool = True
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of the digest.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
-                                                const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign_recoverable(
+    size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t sk = {0};
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
@@ -118,9 +118,9 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
   sig.buf[0] = 27 + pby + compressed * 4;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_nist256p1_sign_obj,
-                                           2, 3,
-                                           mod_trezorcrypto_nist256p1_sign);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_nist256p1_sign_recoverable_obj, 2, 3,
+    mod_trezorcrypto_nist256p1_sign_recoverable);
 
 /// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 ///     """
@@ -225,8 +225,8 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_nist256p1_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_nist256p1_generate_secret_obj)},
     {MP_ROM_QSTR(MP_QSTR_publickey),
      MP_ROM_PTR(&mod_trezorcrypto_nist256p1_publickey_obj)},
-    {MP_ROM_QSTR(MP_QSTR_sign),
-     MP_ROM_PTR(&mod_trezorcrypto_nist256p1_sign_obj)},
+    {MP_ROM_QSTR(MP_QSTR_sign_recoverable),
+     MP_ROM_PTR(&mod_trezorcrypto_nist256p1_sign_recoverable_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify),
      MP_ROM_PTR(&mod_trezorcrypto_nist256p1_verify_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify_recover),

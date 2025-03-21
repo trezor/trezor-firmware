@@ -54,7 +54,7 @@ async def sign_tx(msg: RippleSignTx, keychain: Keychain) -> RippleSignedTx:
 
     # Signs and encodes signature into DER format
     first_half_of_sha512 = sha512(to_sign).digest()[:32]
-    sig = secp256k1.sign(node.private_key(), first_half_of_sha512)
+    sig = secp256k1.sign_recoverable(node.private_key(), first_half_of_sha512)
     sig_encoded = der.encode_seq((sig[1:33], sig[33:65]))
 
     tx = serialize(msg, source_address, node.public_key(), sig_encoded)

@@ -59,6 +59,6 @@ async def sign_tx(envelope: BinanceSignTx, keychain: Keychain) -> BinanceSignedT
 
     # generate_content_signature
     msghash = sha256(msg_json.encode()).digest()
-    signature_bytes = secp256k1.sign(node.private_key(), msghash)[1:65]
+    signature_bytes = secp256k1.sign_recoverable(node.private_key(), msghash)[1:65]
 
     return BinanceSignedTx(signature=signature_bytes, public_key=node.public_key())

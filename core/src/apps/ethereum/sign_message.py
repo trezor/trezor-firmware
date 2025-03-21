@@ -46,7 +46,7 @@ async def sign_message(
         decode_message(msg.message), address, account="ETH", path=path, verify=False
     )
 
-    signature = secp256k1.sign(
+    signature = secp256k1.sign_recoverable(
         node.private_key(),
         message_digest(msg.message),
         False,

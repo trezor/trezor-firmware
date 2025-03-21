@@ -52,7 +52,7 @@ async def sign_message(
     seckey = node.private_key()
 
     digest = message_digest(coin, message)
-    signature = secp256k1.sign(seckey, digest)
+    signature = secp256k1.sign_recoverable(seckey, digest)
 
     if script_type == InputScriptType.SPENDADDRESS:
         script_type_info = 0

@@ -262,7 +262,7 @@ def _sign_digest(
     from trezor.crypto.curve import secp256k1
 
     node = keychain.derive(msg.address_n)
-    signature = secp256k1.sign(
+    signature = secp256k1.sign_recoverable(
         node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
     )
 

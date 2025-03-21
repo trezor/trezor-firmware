@@ -133,11 +133,11 @@ def sign_challenge(
     if curve == "secp256k1":
         from trezor.crypto.curve import secp256k1
 
-        signature = secp256k1.sign(seckey, data)
+        signature = secp256k1.sign_recoverable(seckey, data)
     elif curve == "nist256p1":
         from trezor.crypto.curve import nist256p1
 
-        signature = nist256p1.sign(seckey, data)
+        signature = nist256p1.sign_recoverable(seckey, data)
     elif curve == "ed25519":
         from trezor.crypto.curve import ed25519
 

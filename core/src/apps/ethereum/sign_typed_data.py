@@ -48,7 +48,7 @@ async def sign_typed_data(
         msg.primary_type, msg.metamask_v4_compat
     )
 
-    signature = secp256k1.sign(
+    signature = secp256k1.sign_recoverable(
         node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
     )
 
