@@ -134,7 +134,7 @@ static void prodtest_wpc_report(cli_t* cli) {
 
   uint32_t ticks = hal_ticks_ms();
 
-  while (count-- > 0) {
+  while (true) {
     stwlc38_report_t report;
 
     if (!stwlc38_get_report(&report)) {
@@ -151,13 +151,17 @@ static void prodtest_wpc_report(cli_t* cli) {
                  report.opfreq, (int)report.ntc,
                  (int)abs(report.ntc * 1000) % 1000);
 
-    do {
-      if (cli_aborted(cli)) {
-        return;
-      }
-    } while (!ticks_expired(ticks + period));
+    if (--count > 0) {
+      do {
+        if (cli_aborted(cli)) {
+          return;
+        }
+      } while (!ticks_expired(ticks + period));
 
-    ticks += period;
+      ticks += period;
+    } else {
+      break;
+    }
   }
 
   cli_ok(cli, "");

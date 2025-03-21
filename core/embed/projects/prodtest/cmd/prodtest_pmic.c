@@ -159,7 +159,7 @@ static void prodtest_pmic_report(cli_t* cli) {
 
   uint32_t ticks = hal_ticks_ms();
 
-  while (count-- > 0) {
+  while (true) {
     npm1300_report_t report;
 
     if (!npm1300_measure_sync(&report)) {
@@ -187,13 +187,17 @@ static void prodtest_pmic_report(cli_t* cli) {
         (int)report.die_temp, (int)abs(report.die_temp * 1000) % 1000,
         report.ibat_meas_status, report.buck_status, state);
 
-    do {
-      if (cli_aborted(cli)) {
-        return;
-      }
-    } while (!ticks_expired(ticks + period));
+    if (--count > 0) {
+      do {
+        if (cli_aborted(cli)) {
+          return;
+        }
+      } while (!ticks_expired(ticks + period));
 
-    ticks += period;
+      ticks += period;
+    } else {
+      break;
+    }
   }
 
   cli_ok(cli, "");
