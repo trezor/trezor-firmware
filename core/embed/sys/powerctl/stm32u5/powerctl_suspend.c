@@ -30,6 +30,10 @@
 #include <sec/optiga_transport.h>
 #endif
 
+#ifdef USE_STORAGE_HWKEY
+#include <sec/secure_aes.h>
+#endif
+
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
@@ -63,6 +67,9 @@ void powerctl_suspend(void) {
 
   // Deinitialize all drivers that are not required in low-power mode
   // (e.g., USB, display, touch, haptic, etc.).
+#ifdef USE_STORAGE_HWKEY
+  secure_aes_deinit();
+#endif
 #ifdef USE_OPTIGA
   optiga_deinit();
 #endif
@@ -147,6 +154,9 @@ void powerctl_suspend(void) {
 #endif
 #ifdef USE_USB
   usb_start();
+#endif
+#ifdef USE_STORAGE_HWKEY
+  secure_aes_init();
 #endif
 #ifdef USE_OPTIGA
   optiga_init_and_configure();

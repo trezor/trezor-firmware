@@ -375,13 +375,32 @@ secbool secure_aes_init(void) {
 
   // Enable SHSI clock
   if (HAL_RCC_OscConfig(&osc_init_def) != HAL_OK) {
-    return secfalse;
+    goto cleanup;
   }
 
   // Enable SAES peripheral clock
+  __HAL_RCC_SAES_FORCE_RESET();
+  __HAL_RCC_SAES_RELEASE_RESET();
   __HAL_RCC_SAES_CLK_ENABLE();
 
   return sectrue;
+
+cleanup:
+  secure_aes_deinit();
+  return secfalse;
+}
+
+void secure_aes_deinit(void) {
+  __HAL_RCC_SAES_CLK_DISABLE();
+  __HAL_RCC_SAES_FORCE_RESET();
+  __HAL_RCC_SAES_RELEASE_RESET();
+
+  RCC_OscInitTypeDef osc_init_def = {0};
+  osc_init_def.OscillatorType = RCC_OSCILLATORTYPE_SHSI;
+  osc_init_def.SHSIState = RCC_SHSI_OFF;
+
+  // Disable SHSI clock
+  HAL_RCC_OscConfig(&osc_init_def);
 }
 
 #endif
