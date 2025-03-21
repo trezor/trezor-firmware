@@ -43,10 +43,10 @@ class FailureType(IntEnum):
     PinMismatch = 12
     WipeCodeMismatch = 13
     InvalidSession = 14
-    ThpUnallocatedSession = 15
-    InvalidProtocol = 16
-    BufferError = 17
-    DeviceIsBusy = 18
+    DeviceIsBusy = 15
+    ThpUnallocatedSession = 16
+    InvalidProtocol = 17
+    BufferError = 18
     FirmwareError = 99
 
 
