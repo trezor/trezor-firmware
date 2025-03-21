@@ -67,10 +67,6 @@ static void test_button_combination(cli_t* cli, uint32_t timeout, button_t btn1,
   cli_trace(cli, "Waiting for button combination to be pressed...");
 
   while (true) {
-    // Event must be read before calling `button_is_down()`
-    button_event_t e = {0};
-    button_get_event(&e);
-
     if (button_is_down(btn1) && button_is_down(btn2)) {
       break;
     } else if (ticks_expired(expire_time)) {
@@ -84,10 +80,6 @@ static void test_button_combination(cli_t* cli, uint32_t timeout, button_t btn1,
   cli_trace(cli, "Waiting for buttons to be released...");
 
   while (true) {
-    // Event must be read before calling `button_is_down()`
-    button_event_t e = {0};
-    button_get_event(&e);
-
     if (!button_is_down(btn1) && !button_is_down(btn2)) {
       break;
     } else if (ticks_expired(expire_time)) {

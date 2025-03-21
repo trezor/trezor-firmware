@@ -23,6 +23,7 @@
 #include <SDL.h>
 
 #include <io/button.h>
+#include <sys/sysevent_source.h>
 
 // Button driver state
 typedef struct {
@@ -44,8 +45,11 @@ static button_driver_t g_button_driver = {
     .initialized = false,
 };
 
+// Forward declarations
+static const syshandle_vmt_t g_button_handle_vmt;
+
 bool button_init(void) {
-  button_driver_t *drv = &g_button_driver;
+  button_driver_t* drv = &g_button_driver;
 
   if (drv->initialized) {
     return true;
@@ -53,13 +57,25 @@ bool button_init(void) {
 
   memset(drv, 0, sizeof(button_driver_t));
 
+  if (!syshandle_register(SYSHANDLE_BUTTON, &g_button_handle_vmt, drv)) {
+    return false;
+  }
+
   drv->initialized = true;
 
   return true;
 }
 
-bool button_get_event(button_event_t *event) {
-  button_driver_t *drv = &g_button_driver;
+void button_deinit(void) {
+  button_driver_t* drv = &g_button_driver;
+
+  syshandle_unregister(SYSHANDLE_BUTTON);
+
+  memset(drv, 0, sizeof(button_driver_t));
+}
+
+bool button_get_event(button_event_t* event) {
+  button_driver_t* drv = &g_button_driver;
 
   memset(event, 0, sizeof(button_event_t));
 
@@ -106,26 +122,60 @@ bool button_get_event(button_event_t *event) {
 }
 
 bool button_is_down(button_t button) {
-  button_driver_t *drv = &g_button_driver;
+  button_driver_t* drv = &g_button_driver;
 
   if (!drv->initialized) {
     return false;
   }
 
+  SDL_PumpEvents();
+
+  const uint8_t* keystate = SDL_GetKeyboardState(NULL);
+
   switch (button) {
 #ifdef BTN_LEFT_KEY
     case BTN_LEFT:
-      return drv->left_down;
+      return keystate[BTN_LEFT_KEY] != 0;
 #endif
 #ifdef BTN_RIGHT_KEY
     case BTN_RIGHT:
-      return drv->right_down;
+      return keystate[BTN_RIGHT_KEY] != 0;
 #endif
 #ifdef BTN_POWER_KEY
     case BTN_POWER:
-      return drv->power_down;
+      return keystate[BTN_POWER_KEY] != 0;
 #endif
     default:
       return false;
   }
 }
+
+static void on_event_poll(void* context, bool read_awaited,
+                          bool write_awaited) {
+  button_driver_t* drv = (button_driver_t*)context;
+
+  UNUSED(drv);
+  UNUSED(write_awaited);
+
+  if (read_awaited) {
+    // uint32_t state = button_read_state(drv); !@#
+    syshandle_signal_read_ready(SYSHANDLE_BUTTON, NULL);
+  }
+}
+
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  button_driver_t* drv = (button_driver_t*)context;
+
+  UNUSED(drv);
+
+  return true;  // !@#
+}
+
+static const syshandle_vmt_t g_button_handle_vmt = {
+    .task_created = NULL,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_event_poll,
+};
