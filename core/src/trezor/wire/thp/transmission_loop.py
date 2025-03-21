@@ -34,6 +34,7 @@ class TransmissionLoop:
             await write_payload_to_wire_and_add_checksum(
                 self.channel.iface, self.header, self.transport_payload
             )
+            break  # TODO temporary disable retransmission
             self.wait_task = loop.spawn(self._wait(i))
             try:
                 await self.wait_task
