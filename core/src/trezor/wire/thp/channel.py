@@ -139,7 +139,9 @@ class Channel:
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("receive packet")
 
-        self._handle_received_packet(packet)
+        task = self._handle_received_packet(packet)
+        if task is not None:
+            return task
 
         if self.expected_payload_length == 0:  # Reading failed TODO
             from trezor.wire.thp import ThpErrorType
@@ -172,12 +174,14 @@ class Channel:
             )
         return None
 
-    def _handle_received_packet(self, packet: utils.BufferType) -> None:
+    def _handle_received_packet(
+        self, packet: utils.BufferType
+    ) -> Awaitable[None] | None:
         ctrl_byte = packet[0]
         if control_byte.is_continuation(ctrl_byte):
             self._handle_cont_packet(packet)
-            return
-        self._handle_init_packet(packet)
+            return None
+        return self._handle_init_packet(packet)
 
     def _handle_init_packet(self, packet: utils.BufferType) -> None:
         self.fallback_decrypt = False
@@ -204,11 +208,15 @@ class Channel:
         try:
             buffer = memory_manager.get_new_read_buffer(cid, length)
         except WireBufferError:
-            # TODO handle not encrypted/(short??), eg. ACK
 
             self.fallback_decrypt = True
+            # TODO handle not encrypted/(short??), eg. ACK
 
             try:
+                if not self._can_fallback():
+                    raise Exception(
+                        "Channel is in a state that does not support fallback."
+                    )
                 self._prepare_fallback()
             except Exception:
                 self.fallback_decrypt = False
@@ -220,7 +228,7 @@ class Channel:
                     log.debug(
                         __name__, "FAILED TO FALLBACK: %s", hexlify(packet).decode()
                     )
-                return
+                return None
 
             to_read_len = min(len(packet) - INIT_HEADER_LENGTH, payload_length)
             buf = memoryview(self.buffer)[:to_read_len]
@@ -229,17 +237,23 @@ class Channel:
             # CRC CHECK
             self._handle_fallback_crc(buf)
 
+            # Handle ACK
+            if control_byte.is_ack(packet[0]):
+                ack_bit = (packet[0] & 0x08) >> 3
+                return received_message_handler._handle_ack(self, ack_bit)
+
             # TAG CHECK
             self._handle_fallback_decryption(buf)
 
             self.bytes_read += to_read_len
-            return
+            return None
 
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("handle_init_packet - payload len: ", str(payload_length))
             self._log("handle_init_packet - buffer len: ", str(len(buffer)))
 
         self._buffer_packet_data(buffer, packet, 0)
+        return None
 
     def _handle_fallback_crc(self, buf: memoryview) -> None:
         assert self.temp_crc is not None
@@ -548,6 +562,14 @@ class Channel:
         return (
             not workflow.tasks
         ) and self.get_channel_state() is ChannelState.ENCRYPTED_TRANSPORT
+
+    def _can_fallback(self) -> bool:
+        state = self.get_channel_state()
+        return state not in [
+            ChannelState.TH1,
+            ChannelState.TH2,
+            ChannelState.UNALLOCATED,
+        ]
 
     if __debug__:
 

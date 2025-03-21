@@ -332,6 +332,7 @@ def _client_unlocked(
         try:
             if _raw_client.is_invalidated:
                 _raw_client = _raw_client.get_new_client()
+                raise Exception("HERE WE GO")
             session = _raw_client.get_seedless_session()
             wipe_device(session)
             sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
@@ -392,8 +393,15 @@ def client(
     request: pytest.FixtureRequest, _client_unlocked: Client
 ) -> t.Generator[Client, None, None]:
     _client_unlocked.lock()
-    with ui_tests.screen_recording(_client_unlocked, request):
-        yield _client_unlocked
+    if bool(request.node.get_closest_marker("invalidate_client")):
+        with ui_tests.screen_recording(_client_unlocked, request):
+            try:
+                yield _client_unlocked
+            finally:
+                _client_unlocked.invalidate()
+    else:
+        with ui_tests.screen_recording(_client_unlocked, request):
+            yield _client_unlocked
 
 
 @pytest.fixture(scope="function")
@@ -533,6 +541,10 @@ def pytest_configure(config: "Config") -> None:
     config.addinivalue_line(
         "markers",
         "uninitialized_session: use uninitialized session instance",
+    )
+    config.addinivalue_line(
+        "markers",
+        "invalidate_client: invalidate client after test",
     )
     with open(os.path.join(os.path.dirname(__file__), "REGISTERED_MARKERS")) as f:
         for line in f:
