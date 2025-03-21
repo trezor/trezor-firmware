@@ -415,12 +415,12 @@ pub mod failure {
         Failure_InvalidSession = 14,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_Busy)
         Failure_Busy = 15,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_InvalidProtocol)
-        Failure_InvalidProtocol = 16,
-        // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_BufferError)
-        Failure_BufferError = 17,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_ThpUnallocatedSession)
-        Failure_ThpUnallocatedSession = 18,
+        Failure_ThpUnallocatedSession = 16,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_InvalidProtocol)
+        Failure_InvalidProtocol = 17,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_BufferError)
+        Failure_BufferError = 18,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.common.Failure.FailureType.Failure_FirmwareError)
         Failure_FirmwareError = 99,
     }
@@ -449,9 +449,9 @@ pub mod failure {
                 13 => ::std::option::Option::Some(FailureType::Failure_WipeCodeMismatch),
                 14 => ::std::option::Option::Some(FailureType::Failure_InvalidSession),
                 15 => ::std::option::Option::Some(FailureType::Failure_Busy),
-                16 => ::std::option::Option::Some(FailureType::Failure_InvalidProtocol),
-                17 => ::std::option::Option::Some(FailureType::Failure_BufferError),
-                18 => ::std::option::Option::Some(FailureType::Failure_ThpUnallocatedSession),
+                16 => ::std::option::Option::Some(FailureType::Failure_ThpUnallocatedSession),
+                17 => ::std::option::Option::Some(FailureType::Failure_InvalidProtocol),
+                18 => ::std::option::Option::Some(FailureType::Failure_BufferError),
                 99 => ::std::option::Option::Some(FailureType::Failure_FirmwareError),
                 _ => ::std::option::Option::None
             }
@@ -474,9 +474,9 @@ pub mod failure {
                 "Failure_WipeCodeMismatch" => ::std::option::Option::Some(FailureType::Failure_WipeCodeMismatch),
                 "Failure_InvalidSession" => ::std::option::Option::Some(FailureType::Failure_InvalidSession),
                 "Failure_Busy" => ::std::option::Option::Some(FailureType::Failure_Busy),
+                "Failure_ThpUnallocatedSession" => ::std::option::Option::Some(FailureType::Failure_ThpUnallocatedSession),
                 "Failure_InvalidProtocol" => ::std::option::Option::Some(FailureType::Failure_InvalidProtocol),
                 "Failure_BufferError" => ::std::option::Option::Some(FailureType::Failure_BufferError),
-                "Failure_ThpUnallocatedSession" => ::std::option::Option::Some(FailureType::Failure_ThpUnallocatedSession),
                 "Failure_FirmwareError" => ::std::option::Option::Some(FailureType::Failure_FirmwareError),
                 _ => ::std::option::Option::None
             }
@@ -498,9 +498,9 @@ pub mod failure {
             FailureType::Failure_WipeCodeMismatch,
             FailureType::Failure_InvalidSession,
             FailureType::Failure_Busy,
+            FailureType::Failure_ThpUnallocatedSession,
             FailureType::Failure_InvalidProtocol,
             FailureType::Failure_BufferError,
-            FailureType::Failure_ThpUnallocatedSession,
             FailureType::Failure_FirmwareError,
         ];
     }
@@ -528,9 +528,9 @@ pub mod failure {
                 FailureType::Failure_WipeCodeMismatch => 12,
                 FailureType::Failure_InvalidSession => 13,
                 FailureType::Failure_Busy => 14,
-                FailureType::Failure_InvalidProtocol => 15,
-                FailureType::Failure_BufferError => 16,
-                FailureType::Failure_ThpUnallocatedSession => 17,
+                FailureType::Failure_ThpUnallocatedSession => 15,
+                FailureType::Failure_InvalidProtocol => 16,
+                FailureType::Failure_BufferError => 17,
                 FailureType::Failure_FirmwareError => 18,
             };
             Self::enum_descriptor().value_by_index(index)
@@ -2515,9 +2515,9 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     essError\x10\t\x12\x1a\n\x16Failure_NotEnoughFunds\x10\n\x12\x1a\n\x16Fa\
     ilure_NotInitialized\x10\x0b\x12\x17\n\x13Failure_PinMismatch\x10\x0c\
     \x12\x1c\n\x18Failure_WipeCodeMismatch\x10\r\x12\x1a\n\x16Failure_Invali\
-    dSession\x10\x0e\x12\x10\n\x0cFailure_Busy\x10\x0f\x12\x1b\n\x17Failure_\
-    InvalidProtocol\x10\x10\x12\x17\n\x13Failure_BufferError\x10\x11\x12!\n\
-    \x1dFailure_ThpUnallocatedSession\x10\x12\x12\x19\n\x15Failure_FirmwareE\
+    dSession\x10\x0e\x12\x10\n\x0cFailure_Busy\x10\x0f\x12!\n\x1dFailure_Thp\
+    UnallocatedSession\x10\x10\x12\x1b\n\x17Failure_InvalidProtocol\x10\x11\
+    \x12\x17\n\x13Failure_BufferError\x10\x12\x12\x19\n\x15Failure_FirmwareE\
     rror\x10c\"\xab\x06\n\rButtonRequest\x12N\n\x04code\x18\x01\x20\x01(\x0e\
     2:.hw.trezor.messages.common.ButtonRequest.ButtonRequestTypeR\x04code\
     \x12\x14\n\x05pages\x18\x02\x20\x01(\rR\x05pages\x12\x12\n\x04name\x18\
