@@ -23,6 +23,7 @@
 
 #include <io/usb_hid.h>
 #include <sec/random_delays.h>
+#include <sys/sysevent_source.h>
 
 #include "usb_internal.h"
 
@@ -79,6 +80,8 @@ _Static_assert(sizeof(usb_hid_state_t) <= USBD_CLASS_STATE_MAX_SIZE);
 
 // interface dispatch functions
 static const USBD_ClassTypeDef usb_hid_class;
+
+static const syshandle_vmt_t usb_hid_handle_vmt;
 
 #define usb_get_hid_state(iface_num) \
   ((usb_hid_state_t *)usb_get_iface_state(iface_num, &usb_hid_class))
@@ -312,11 +315,21 @@ static uint8_t usb_hid_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_buffer,
                          state->max_packet_len);
 
+  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
+  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
+
+  if (!syshandle_register(handle, &usb_hid_handle_vmt, state)) {
+    return USBD_FAIL;
+  }
+
   return USBD_OK;
 }
 
 static uint8_t usb_hid_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_hid_state_t *state = (usb_hid_state_t *)dev->pUserData;
+
+  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
+  syshandle_unregister(SYSHANDLE_USB_IFACE_0 + iface_num);
 
   // Flush endpoints
   USBD_LL_FlushEP(dev, state->ep_in);
@@ -446,6 +459,56 @@ static const USBD_ClassTypeDef usb_hid_class = {
     .GetOtherSpeedConfigDescriptor = NULL,
     .GetDeviceQualifierDescriptor = NULL,
     .GetUsrStrDescriptor = NULL,
+};
+
+static void on_event_poll(void *context, bool read_awaited,
+                          bool write_awaited) {
+  usb_hid_state_t *state = (usb_hid_state_t *)context;
+
+  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
+  syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
+
+  // Only one task can read or write at a time. Therefore, we can
+  // assume that only one task is waiting for events and keep the
+  // logic simple.
+
+  if (read_awaited && usb_hid_can_read(iface_num)) {
+    syshandle_signal_read_ready(handle, NULL);
+  }
+
+  if (write_awaited && usb_hid_can_write(iface_num)) {
+    syshandle_signal_write_ready(handle, NULL);
+  }
+}
+
+static bool on_check_read_ready(void *context, systask_id_t task_id,
+                                void *param) {
+  usb_hid_state_t *state = (usb_hid_state_t *)context;
+  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
+
+  UNUSED(task_id);
+  UNUSED(param);
+
+  return usb_hid_can_read(iface_num);
+}
+
+static bool on_check_write_ready(void *context, systask_id_t task_id,
+                                 void *param) {
+  usb_hid_state_t *state = (usb_hid_state_t *)context;
+  uint8_t iface_num = state->desc_block->iface.bInterfaceNumber;
+
+  UNUSED(task_id);
+  UNUSED(param);
+
+  return usb_hid_can_write(iface_num);
+}
+
+static const syshandle_vmt_t usb_hid_handle_vmt = {
+    .task_created = NULL,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = on_check_write_ready,
+    .poll = on_event_poll,
 };
 
 #endif  // KERNEL_MODE
