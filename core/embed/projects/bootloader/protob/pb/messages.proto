@@ -37,6 +37,15 @@ message GetFeatures {
 }
 
 /**
+ * Request: Request device to wipe all sensitive data and settings
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message WipeDevice {
+}
+
+/**
  * Response: Reports various information about the device
  * @end
  */

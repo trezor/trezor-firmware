@@ -54,6 +54,10 @@ typedef struct _UnlockBootloader {
     char dummy_field;
 } UnlockBootloader;
 
+typedef struct _WipeDevice {
+    char dummy_field;
+} WipeDevice;
+
 typedef struct _ButtonRequest {
     bool has_code;
     ButtonRequestType code;
@@ -158,6 +162,7 @@ extern "C" {
 /* Initializer values for message structs */
 #define Initialize_init_default                  {0}
 #define GetFeatures_init_default                 {0}
+#define WipeDevice_init_default                  {0}
 #define Features_init_default                    {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0}
 #define Ping_init_default                        {false, ""}
 #define Success_init_default                     {false, ""}
@@ -170,6 +175,7 @@ extern "C" {
 #define UnlockBootloader_init_default            {0}
 #define Initialize_init_zero                     {0}
 #define GetFeatures_init_zero                    {0}
+#define WipeDevice_init_zero                     {0}
 #define Features_init_zero                       {false, "", 0, 0, 0, false, 0, false, "", false, "", false, "", false, 0, false, {0, {0}}, false, 0, false, "", false, 0, false, 0, false, 0, false, "", false, "", false, 0, false, 0, false, 0, false, 0}
 #define Ping_init_zero                           {false, ""}
 #define Success_init_zero                        {false, ""}
@@ -224,6 +230,11 @@ extern "C" {
 
 #define GetFeatures_CALLBACK NULL
 #define GetFeatures_DEFAULT NULL
+
+#define WipeDevice_FIELDLIST(X, a) \
+
+#define WipeDevice_CALLBACK NULL
+#define WipeDevice_DEFAULT NULL
 
 #define Features_FIELDLIST(X, a) \
 X(a, STATIC,   OPTIONAL, STRING,   vendor,            1) \
@@ -300,6 +311,7 @@ X(a, STATIC,   OPTIONAL, BYTES,    hash,              2)
 
 extern const pb_msgdesc_t Initialize_msg;
 extern const pb_msgdesc_t GetFeatures_msg;
+extern const pb_msgdesc_t WipeDevice_msg;
 extern const pb_msgdesc_t Features_msg;
 extern const pb_msgdesc_t Ping_msg;
 extern const pb_msgdesc_t Success_msg;
@@ -314,6 +326,7 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 /* Defines for backwards compatibility with code written before nanopb-0.4.0 */
 #define Initialize_fields &Initialize_msg
 #define GetFeatures_fields &GetFeatures_msg
+#define WipeDevice_fields &WipeDevice_msg
 #define Features_fields &Features_msg
 #define Ping_fields &Ping_msg
 #define Success_fields &Success_msg
@@ -328,7 +341,7 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 /* Maximum encoded size of messages (where known) */
 /* FirmwareUpload_size depends on runtime parameters */
 #define ButtonAck_size                           0
-#define ButtonRequest_size                       8
+#define ButtonRequest_size                       2
 #define Failure_size                             260
 #define Features_size                            497
 #define FirmwareErase_size                       6
@@ -338,6 +351,7 @@ extern const pb_msgdesc_t UnlockBootloader_msg;
 #define Ping_size                                258
 #define Success_size                             258
 #define UnlockBootloader_size                    0
+#define WipeDevice_size                          0
 
 #ifdef __cplusplus
 } /* extern "C" */

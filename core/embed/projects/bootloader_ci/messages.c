@@ -23,7 +23,7 @@
 #include <pb.h>
 #include <pb_decode.h>
 #include <pb_encode.h>
-#include "messages.pb.h"
+#include "pb/messages.pb.h"
 
 #include <io/usb.h>
 #include <util/flash.h>
