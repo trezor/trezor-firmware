@@ -151,13 +151,14 @@ static void prodtest_wpc_report(cli_t* cli) {
                  report.opfreq, (int)report.ntc,
                  (int)abs(report.ntc * 1000) % 1000);
 
-    do {
-      if (cli_aborted(cli)) {
-        return;
-      }
-    } while (!ticks_expired(ticks + period));
-
-    ticks += period;
+    if (count > 0) {
+      do {
+        if (cli_aborted(cli)) {
+          return;
+        }
+      } while (!ticks_expired(ticks + period));
+      ticks += period;
+    }
   }
 
   cli_ok(cli, "");
