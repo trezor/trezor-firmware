@@ -399,7 +399,11 @@ def test_hide_passphrase_from_host(client: Client):
             yield
             content = client.debug.read_layout().text_content().lower()
             assert TR.passphrase__from_host_not_shown[:50].lower() in content
-            if client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+            if client.layout_type in (
+                LayoutType.Bolt,
+                LayoutType.Delizia,
+                LayoutType.Eckhart,
+            ):
                 client.debug.press_yes()
             elif client.layout_type is LayoutType.Caesar:
                 client.debug.press_right()

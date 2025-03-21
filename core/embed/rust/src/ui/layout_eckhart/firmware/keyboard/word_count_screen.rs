@@ -114,8 +114,8 @@ impl ValueKeypad {
     const CANCEL_BUTTON_INDEX: usize = 2;
 
     pub fn new_single_share() -> Self {
-        const NUMBERS: [u32; 5] = [12, 24, 18, 20, 33];
-        const LABELS: [&str; 5] = ["12", "24", "18", "20", "33"];
+        const NUMBERS: [u32; 5] = [12, 20, 18, 24, 33];
+        const LABELS: [&str; 5] = ["12", "20", "18", "24", "33"];
         Self::new(&LABELS, &NUMBERS)
     }
 

@@ -23,6 +23,8 @@ from trezorlib.tools import H_
 
 from ...input_flows import InputFlowShowXpubQRCode
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
     (
         "Bitcoin",

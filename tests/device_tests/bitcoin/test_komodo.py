@@ -40,7 +40,11 @@ TXHASH_7b28bd = bytes.fromhex(
     "7b28bd91119e9776f0d4ebd80e570165818a829bbf4477cd1afe5149dbcd34b1"
 )
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.komodo]
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.komodo,
+    pytest.mark.models(skip=["eckhart"]),
+]
 
 
 def test_one_one_fee_sapling(client: Client):

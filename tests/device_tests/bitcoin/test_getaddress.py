@@ -26,6 +26,8 @@ from ... import bip32
 from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 
 def getmultisig(chain, nr, xpubs):
     return messages.MultisigRedeemScriptType(

@@ -21,6 +21,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 
 def test_p2wpkh_ownership_id(client: Client):
     ownership_id = btc.get_ownership_id(

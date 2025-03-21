@@ -102,7 +102,11 @@ class RecoveryFlow:
         if self.debug.layout_type is LayoutType.Delizia:
             assert TR.recovery__enter_each_word in self._text_content()
         else:
-            assert TR.recovery__enter_backup in self._text_content()
+            print(self._text_content())
+            if self.client.layout_type is LayoutType.Eckhart:
+                assert TR.recovery__enter_each_word in self._text_content()
+            else:
+                assert TR.recovery__enter_backup in self._text_content()
         is_dry_run = (
             TR.recovery__title_dry_run.lower()
             in self.debug.read_layout().title().lower()
@@ -131,7 +135,16 @@ class RecoveryFlow:
 
     def abort_recovery(self, confirm: bool) -> BRGeneratorType:
         yield
-        if self.client.layout_type is LayoutType.Caesar:
+        if self.client.layout_type is LayoutType.Bolt:
+            assert TR.recovery__enter_any_share in self._text_content()
+            self.debug.press_no()
+            yield
+            assert TR.recovery__wanna_cancel_recovery in self._text_content()
+            if confirm:
+                self.debug.press_yes()
+            else:
+                self.debug.press_no()
+        elif self.client.layout_type is LayoutType.Caesar:
             assert TR.recovery__num_of_words in self._text_content()
             self.debug.press_no()
             yield
@@ -141,7 +154,7 @@ class RecoveryFlow:
                 self.debug.press_yes()
             else:
                 self.debug.press_no()
-        elif self.client.layout_type is LayoutType.Delizia:
+        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             assert TR.recovery__enter_each_word in self._text_content()
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
@@ -150,14 +163,7 @@ class RecoveryFlow:
             else:
                 self.debug.click(self.debug.screen_buttons.menu())
         else:
-            assert TR.recovery__enter_any_share in self._text_content()
-            self.debug.press_no()
-            yield
-            assert TR.recovery__wanna_cancel_recovery in self._text_content()
-            if confirm:
-                self.debug.press_yes()
-            else:
-                self.debug.press_no()
+            raise ValueError("Unknown model!")
 
     def abort_recovery_between_shares(self) -> BRGeneratorType:
         yield
@@ -321,10 +327,11 @@ class RecoveryFlow:
                 if click_info:
                     if self.client.layout_type is LayoutType.Bolt:
                         yield from self.click_info_bolt()
-                    elif self.client.layout_type is LayoutType.Delizia:
-                        yield from self.click_info_delizia()
-                    else:
-                        raise ValueError("Unknown model!")
+                    elif self.client.layout_type in (
+                        LayoutType.Delizia,
+                        LayoutType.Eckhart,
+                    ):
+                        yield from self.click_info_delizia_eckhart()
                     yield from self.success_more_shares_needed()
 
     def click_info_bolt(self) -> t.Generator[t.Any, t.Any, None]:
@@ -335,7 +342,7 @@ class RecoveryFlow:
             self.debug.swipe_up()
         self.debug.press_yes()
 
-    def click_info_delizia(self) -> BRGeneratorType:
+    def click_info_delizia_eckhart(self) -> BRGeneratorType:
         # Moving through the menu into the show_shares screen
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")

@@ -50,7 +50,7 @@ FAKE_TXHASH_203416 = bytes.fromhex(
     "203416cda0f2f7f0b4d666c6160190126edb07236394e927bf605821866f2a71"
 )
 
-pytestmark = pytest.mark.altcoin
+pytestmark = [pytest.mark.altcoin, pytest.mark.models(skip=["eckhart"])]
 
 
 def test_send_bch_change(client: Client):

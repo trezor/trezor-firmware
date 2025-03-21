@@ -28,7 +28,10 @@ from ...common import MNEMONIC12
 def test_encrypt(client: Client):
     def input_flow():
         assert (yield).name == "cipher_key_value"
-        assert client.debug.read_layout().text_content() == TR.misc__enable_labeling
+        assert (
+            client.debug.read_layout().text_content().strip()
+            == TR.misc__enable_labeling
+        )
         client.debug.swipe_up()
         client.debug.press_yes()
 

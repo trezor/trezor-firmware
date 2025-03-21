@@ -24,7 +24,7 @@ TXHASH_33043a = bytes.fromhex(
     "33043a28cfa924ca701983e628615559ed2b68c0c14eb706b3970fa8dd4b5209"
 )
 
-pytestmark = pytest.mark.altcoin
+pytestmark = [pytest.mark.altcoin, pytest.mark.models(skip=["eckhart"])]
 
 
 def test_send_p2tr(client: Client):

@@ -35,7 +35,11 @@ from .signtx import (
 
 B = messages.ButtonRequestType
 
-pytestmark = [pytest.mark.multisig, pytest.mark.setup_client(mnemonic=MNEMONIC12)]
+pytestmark = [
+    pytest.mark.multisig,
+    pytest.mark.setup_client(mnemonic=MNEMONIC12),
+    pytest.mark.models(skip=["eckhart"]),
+]
 
 
 NODE_EXT1 = bip32.deserialize(

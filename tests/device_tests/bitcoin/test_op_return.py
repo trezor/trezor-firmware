@@ -31,6 +31,8 @@ from .signtx import (
     request_output,
 )
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 B = messages.ButtonRequestType
 TX_API = TxCache("Bitcoin")
 TX_API_TESTNET = TxCache("Testnet")

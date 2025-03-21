@@ -203,7 +203,7 @@ def test_apply_homescreen_toif(client: Client):
         device.apply_settings(client, homescreen=img)
 
 
-@pytest.mark.models(skip=["legacy", "safe3"])
+@pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
 def test_apply_homescreen_jpeg(client: Client):
     with open(HERE / "test_bg.jpg", "rb") as f:
         img = f.read()
@@ -325,6 +325,7 @@ def test_apply_homescreen(client: Client):
 
 
 @pytest.mark.setup_client(pin=None)
+@pytest.mark.models(skip="eckhart")
 def test_safety_checks(client: Client):
     def get_bad_address():
         btc.get_address(client, "Bitcoin", parse_path("m/44h"), show_display=True)

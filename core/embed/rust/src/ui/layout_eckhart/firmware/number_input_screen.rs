@@ -190,7 +190,7 @@ impl NumberInput {
     }
 
     fn render_number<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let mut buf = [0u8; 1];
+        let mut buf = [0u8; 3];
 
         if let Some(text) = strutil::format_i64(self.value as i64, &mut buf) {
             let font = fonts::FONT_SATOSHI_EXTRALIGHT_72;

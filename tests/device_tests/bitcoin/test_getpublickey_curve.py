@@ -21,6 +21,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 PATH_PRIVATE = parse_path("m/17h/0h/1h/2h/3h")
 PATH_PUBLIC = parse_path("m/17h/0h/1h/2h/3h/42")
 

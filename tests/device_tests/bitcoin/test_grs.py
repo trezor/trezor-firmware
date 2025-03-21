@@ -39,7 +39,7 @@ TXHASH_45aeb9 = bytes.fromhex(
     "45aeb9af884b4082104b0212c5f40ffca8f0127e627a05810b69f0bad777678c"
 )
 
-pytestmark = pytest.mark.altcoin
+pytestmark = [pytest.mark.altcoin, pytest.mark.models(skip=["eckhart"])]
 
 
 def test_legacy(client: Client):

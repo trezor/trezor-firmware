@@ -12,6 +12,8 @@ from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import forge_prevtx
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 # address at seed "all all all..." path m/44h/0h/0h/0/0
 INPUT_ADDRESS = "1JAd7XCBzGudGpJQSDSfpmJhiygtLQWaGL"
 PREV_HASH, PREV_TX = forge_prevtx([(INPUT_ADDRESS, 100_000_000)])

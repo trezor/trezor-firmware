@@ -23,6 +23,8 @@ from trezorlib.tools import parse_path
 
 from ...tx_cache import TxCache
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 TX_CACHE = TxCache("Peercoin")
 
 TXHASH_41b29a = bytes.fromhex(

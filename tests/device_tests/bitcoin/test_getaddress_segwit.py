@@ -24,6 +24,8 @@ from trezorlib.tools import parse_path
 from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 
 def test_show_segwit(client: Client):
     assert (

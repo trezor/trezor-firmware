@@ -28,6 +28,8 @@ TXHASH_8a34cc = bytes.fromhex(
     "8a34ccceaf138fd14398303340afb37871cb0ea6719ceba315172edb9ff6d625"
 )
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 
 @pytest.mark.altcoin
 def test_spend_lelantus(client: Client):

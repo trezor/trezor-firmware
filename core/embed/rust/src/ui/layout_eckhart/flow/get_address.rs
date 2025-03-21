@@ -4,9 +4,10 @@ use crate::{
     strutil::TString,
     translations::TR,
     ui::{
+        button_request::ButtonRequest,
         component::{
             text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
-            ComponentExt, Qr,
+            ButtonRequestExt, ComponentExt, Qr,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
@@ -81,8 +82,8 @@ pub fn new_get_address(
     path: Option<TString<'static>>,
     _xpubs: Obj, // TODO: get rid of Obj
     title_success: TString<'static>,
-    _br_code: u16,
-    _br_name: TString<'static>,
+    br_code: u16,
+    br_name: TString<'static>,
 ) -> Result<SwipeFlow, error::Error> {
     // Address
     let flow_title: TString = TR::words__receive.into();
@@ -114,7 +115,8 @@ pub fn new_get_address(
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
-        });
+        })
+        .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
     let content_confirmed =
         TextScreen::new(Paragraph::new(&theme::TEXT_REGULAR, title_success).into_paragraphs())

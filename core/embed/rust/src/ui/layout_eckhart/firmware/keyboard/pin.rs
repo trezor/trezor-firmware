@@ -73,6 +73,8 @@ impl<'a> PinKeyboard<'a> {
                     cancel: ButtonState::Hidden,
                     confirm: ButtonState::Disabled,
                     keys: ButtonState::Disabled,
+                    exception_key: None,
+                    exception_state: None,
                 }
             }
             _ => {
@@ -84,6 +86,8 @@ impl<'a> PinKeyboard<'a> {
                         cancel: ButtonState::Hidden,
                         confirm: ButtonState::Enabled,
                         keys: ButtonState::Disabled,
+                        exception_key: None,
+                        exception_state: None,
                     }
                 } else if self.input.is_empty() {
                     KeypadState {
@@ -96,6 +100,8 @@ impl<'a> PinKeyboard<'a> {
                         },
                         confirm: ButtonState::Hidden,
                         keys: ButtonState::Enabled,
+                        exception_key: None,
+                        exception_state: None,
                     }
                 } else {
                     KeypadState {
@@ -104,6 +110,8 @@ impl<'a> PinKeyboard<'a> {
                         cancel: ButtonState::Hidden,
                         confirm: ButtonState::Enabled,
                         keys: ButtonState::Enabled,
+                        exception_key: None,
+                        exception_state: None,
                     }
                 }
             }

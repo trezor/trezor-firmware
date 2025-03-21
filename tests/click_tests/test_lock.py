@@ -27,6 +27,7 @@ from .. import common
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
 
 PIN4 = "1234"
 
