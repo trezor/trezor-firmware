@@ -104,6 +104,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/sys/syscall/stm32/syscall_verifiers.c",
         "embed/sys/tamper/stm32u5/tamper.c",
         "embed/sys/task/stm32/applet.c",
+        "embed/sys/task/stm32/sysevent.c",
         "embed/sys/task/stm32/systask.c",
         "embed/sys/task/stm32/system.c",
         "embed/sys/time/stm32/systick.c",

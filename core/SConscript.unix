@@ -396,6 +396,7 @@ SOURCE_UNIX = [
     'embed/sys/mpu/unix/mpu.c',
     'embed/sys/startup/unix/bootutils.c',
     'embed/sys/task/unix/system.c',
+    'embed/sys/task/unix/sysevent.c',
     'embed/sys/time/unix/systick.c',
     'embed/sys/time/unix/systimer.c',
     'embed/util/flash/unix/flash.c',

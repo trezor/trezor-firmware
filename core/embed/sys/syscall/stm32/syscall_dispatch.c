@@ -33,6 +33,7 @@
 #include <sys/bootutils.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/sysevent.h>
 #include <sys/systask.h>
 #include <sys/system.h>
 #include <sys/systick.h>
@@ -144,6 +145,13 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       uint64_t cycles = systick_us_to_cycles(us);
       args[0] = cycles & 0xFFFFFFFF;
       args[1] = cycles >> 32;
+    } break;
+
+    case SYSCALL_SYSEVENTS_POLL: {
+      const sysevents_t *awaited = (sysevents_t *)args[0];
+      sysevents_t *signalled = (sysevents_t *)args[1];
+      uint32_t timeout = args[2];
+      sysevents_poll__verified(awaited, signalled, timeout);
     } break;
 
     case SYSCALL_REBOOT_DEVICE: {

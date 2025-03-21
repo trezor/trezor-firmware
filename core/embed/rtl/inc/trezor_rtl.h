@@ -62,4 +62,8 @@
 
 #define ARRAY_LENGTH(x) (sizeof(x) / sizeof((x)[0]))
 
+#ifndef UNUSED
+#define UNUSED(x) (void)(x)
+#endif
+
 #endif  // TREZOR_RTL_H
