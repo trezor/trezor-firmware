@@ -56,8 +56,10 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
   applet_clear_memory(applet);
 
   // Reset the applet task (stack pointer, etc.)
-  systask_init(&applet->task, applet->header->stack.start,
-               applet->header->stack.size, applet);
+  if (!systask_init(&applet->task, applet->header->stack.start,
+                    applet->header->stack.size, applet)) {
+    return false;
+  }
 
   // Copy the arguments onto the applet stack
   void* arg_copy = NULL;
