@@ -33,7 +33,7 @@ class TestCheckEvoluCommandsRegistrationRequest(unittest.TestCase):
         for arg in arguments:
             write_compact_size(h, len(arg))
             h.extend(arg)
-        proof = nist256p1.sign(
+        proof = nist256p1.sign_recoverable(
             delegated_identity(get_delegated_identity_key_rotation_index() or 0),
             h.get_digest(),
         )
@@ -89,7 +89,7 @@ class TestCheckEvoluCommandsGetNode(unittest.TestCase):
         write_compact_size(h, len(header))
         h.extend(header)
 
-        proof = nist256p1.sign(
+        proof = nist256p1.sign_recoverable(
             delegated_identity(get_delegated_identity_key_rotation_index() or 0),
             h.get_digest(),
         )

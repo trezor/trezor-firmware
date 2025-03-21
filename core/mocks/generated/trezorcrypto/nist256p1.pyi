@@ -17,8 +17,8 @@ def publickey(secret_key: AnyBytes, compressed: bool = True) -> bytes:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
-def sign(
-    secret_key: AnyBytes, digest: AnyBytes, compressed: bool = True
+def sign_recoverable(
+    secret_key: bytes, digest: bytes, compressed: bool = True
 ) -> bytes:
     """
     Uses secret key to produce the signature of the digest.

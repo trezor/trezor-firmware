@@ -95,8 +95,8 @@ class Credential:
         dig = hashlib.sha256()
         for segment in data:
             dig.update(segment)
-        sig = nist256p1.sign(self._private_key(), dig.digest(), False)
-        return der.encode_signature(sig)
+        sig = nist256p1.sign_recoverable(self._private_key(), dig.digest(), False)
+        return der.encode_seq((sig[1:33], sig[33:]))
 
     def bogus_signature(self) -> bytes:
         raise NotImplementedError

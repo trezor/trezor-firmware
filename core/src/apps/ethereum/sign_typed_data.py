@@ -53,7 +53,7 @@ async def sign_typed_data(
 
     progress_obj = progress(title=TR.progress__signing_transaction)
     progress_obj.report(600)
-    signature = secp256k1.sign(
+    signature = secp256k1.sign_recoverable(
         node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
     )
     progress_obj.stop()

@@ -110,7 +110,7 @@ def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> AnyBytes:
     from trezor.crypto import der
     from trezor.crypto.curve import secp256k1
 
-    sig = secp256k1.sign(node.private_key(), digest)
+    sig = secp256k1.sign_recoverable(node.private_key(), digest)
     sigder = der.encode_signature(sig)
     return sigder
 
