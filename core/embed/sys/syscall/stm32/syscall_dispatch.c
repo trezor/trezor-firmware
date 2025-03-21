@@ -80,20 +80,27 @@
 #include "syscall_internal.h"
 #include "syscall_verifiers.h"
 
+bool g_in_app_callback = false;
+
 static PIN_UI_WAIT_CALLBACK storage_init_callback = NULL;
 
 static secbool storage_init_callback_wrapper(
     uint32_t wait, uint32_t progress, enum storage_ui_message_t message) {
-  return (secbool)invoke_app_callback(wait, progress, message,
-                                      storage_init_callback);
+  secbool result;
+  g_in_app_callback = true;
+  result = invoke_app_callback(wait, progress, message, storage_init_callback);
+  g_in_app_callback = false;
+  return result;
 }
 
 static firmware_hash_callback_t firmware_hash_callback = NULL;
 
 static void firmware_hash_callback_wrapper(void *context, uint32_t progress,
                                            uint32_t total) {
+  g_in_app_callback = true;
   invoke_app_callback((uint32_t)context, progress, total,
                       firmware_hash_callback);
+  g_in_app_callback = false;
 }
 
 __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
@@ -151,7 +158,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       const sysevents_t *awaited = (sysevents_t *)args[0];
       sysevents_t *signalled = (sysevents_t *)args[1];
       uint32_t timeout = args[2];
-      sysevents_poll__verified(awaited, signalled, timeout);
+      if (!g_in_app_callback) {
+        sysevents_poll__verified(awaited, signalled, timeout);
+      }
     } break;
 
     case SYSCALL_REBOOT_DEVICE: {
