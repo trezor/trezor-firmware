@@ -1,0 +1,60 @@
+sample:
+  description: Radio Test sample
+  name: Radio Test
+common:
+  sysbuild: true
+  build_only: true
+  integration_platforms:
+    - t3w1_d1_nrf52833, t3w1_revA_nrf52832
+tests:
+  sample.peripheral.radio_test:
+    sysbuild: true
+    build_only: true
+    integration_platforms:
+      - nrf52dk/nrf52832
+      - nrf52840dk/nrf52840
+      - nrf5340dk/nrf5340/cpunet
+      - nrf7002dk/nrf5340/cpunet
+      - nrf54l15dk/nrf54l05/cpuapp
+      - nrf54l15dk/nrf54l10/cpuapp
+      - nrf54l15dk/nrf54l15/cpuapp
+      - nrf54h20dk/nrf54h20/cpurad
+    platform_allow: >
+      nrf52dk/nrf52832 nrf52840dk/nrf52840 nrf5340dk/nrf5340/cpunet nrf7002dk/nrf5340/cpunet
+      nrf54l15dk/nrf54l05/cpuapp nrf54l15dk/nrf54l10/cpuapp nrf54l15dk/nrf54l15/cpuapp
+      nrf54h20dk/nrf54h20/cpurad
+    tags: ci_build sysbuild ci_samples_peripheral_radio_test
+  sample.peripheral.radio_test.nrf5340_nrf21540:
+    sysbuild: true
+    build_only: true
+    extra_args: SHIELD=nrf21540ek
+    integration_platforms:
+      - nrf5340dk/nrf5340/cpunet
+    platform_allow: nrf5340dk/nrf5340/cpunet
+    tags: ci_build sysbuild ci_samples_peripheral_radio_test
+  sample.peripheral.radio_test.nrf5340_usb:
+    sysbuild: true
+    build_only: true
+    extra_args: FILE_SUFFIX=usb
+    integration_platforms:
+      - nrf5340dk/nrf5340/cpunet
+    platform_allow: nrf5340dk/nrf5340/cpunet
+    tags: ci_build sysbuild ci_samples_peripheral_radio_test
+  sample.peripheral.radio_test.nrf5340_nrf21540_usb:
+    sysbuild: true
+    build_only: true
+    extra_args: SHIELD=nrf21540ek FILE_SUFFIX=usb
+    integration_platforms:
+      - nrf5340dk/nrf5340/cpunet
+    platform_allow: nrf5340dk/nrf5340/cpunet
+    tags: ci_build sysbuild ci_samples_peripheral_radio_test
+  sample.peripheral.radio_test.nrf5340_nrf21540.no_automatic_power:
+    sysbuild: true
+    build_only: true
+    extra_args: SHIELD=nrf21540ek
+    extra_configs:
+      - CONFIG_RADIO_TEST_POWER_CONTROL_AUTOMATIC=n
+    integration_platforms:
+      - nrf5340dk/nrf5340/cpunet
+    platform_allow: nrf5340dk/nrf5340/cpunet
+    tags: ci_build sysbuild ci_samples_peripheral_radio_test
