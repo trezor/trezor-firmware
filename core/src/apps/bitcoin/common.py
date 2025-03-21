@@ -131,10 +131,6 @@ class EcdsaSigner:
             )
 
 
-def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
-    return EcdsaSigner(node, digest).sign()
-
-
 def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
     internal_private_key = node.private_key()
     output_private_key = bip340.tweak_secret_key(internal_private_key)
