@@ -255,6 +255,8 @@ static void systask_kill(systask_t* task) {
   }
 }
 
+bool systask_is_alive(const systask_t* task) { return !task->killed; }
+
 void systask_exit(systask_t* task, int exit_code) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
