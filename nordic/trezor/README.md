@@ -70,6 +70,14 @@ Build the application for the t3w1_revA_nrf52832 board:
 west build ./trezor-ble -b t3w1_revA_nrf52832 --sysbuild -- -DOVERLAY_CONFIG=debug.conf
 ```
 
+### Building radio-test
+
+To build the radio-test application which is used for BLE chamber test
+you can use following command.
+
+```sh
+west build ./radio_test/ -b t3w1_revA_nrf52832 --sysbuild --pristine
+```
 
 ### Flashing the Application
 Flash the compiled application onto the board:
