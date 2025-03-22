@@ -24,6 +24,7 @@
 #include <io/usb.h>
 #include <rtl/cli.h>
 #include <sys/system.h>
+#include <sys/systick.h>
 #include <util/flash_otp.h>
 #include <util/rsod.h>
 #include <util/unit_properties.h>
@@ -66,6 +67,7 @@
 
 #ifdef USE_RGB_LED
 #include <io/rgb_led.h>
+#include "cmd/prodtest_rgbled.h"
 #endif
 
 #ifdef USE_HASH_PROCESSOR
@@ -209,6 +211,7 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();
+  prodtest_rgbled_init();
 #endif
 #ifdef USE_BLE
   unit_properties_init();
@@ -248,7 +251,41 @@ int main(void) {
   pair_optiga(&g_cli);
 #endif
 
-  cli_run_loop(&g_cli);
+#if defined USE_BUTTON && defined USE_POWERCTL
+  uint32_t btn_deadline = 0;
+#endif
+
+  while (true) {
+    if (usb_vcp_can_read(VCP_IFACE)) {
+      cli_run(&g_cli);
+    }
+
+#if defined USE_BUTTON && defined USE_POWERCTL
+    button_event_t btn_event = {0};
+    bool btn = button_get_event(&btn_event);
+
+    if (btn) {
+      if (btn_event.button == BTN_POWER &&
+          btn_event.event_type == BTN_EVENT_DOWN) {
+        btn_deadline = ticks_timeout(1000);
+      }
+      if (btn_event.button == BTN_POWER &&
+          btn_event.event_type == BTN_EVENT_UP) {
+        if (ticks_expired(systick_ms())) {
+          powerctl_hibernate();
+          rgb_led_set_color(0xffff00);
+          systick_delay_ms(1000);
+          rgb_led_set_color(0);
+        }
+      }
+    }
+
+    if (button_is_down(BTN_POWER) && ticks_expired(btn_deadline)) {
+      rgb_led_set_color(0xff0000);
+    }
+
+#endif
+  }
 
   return 0;
 }
