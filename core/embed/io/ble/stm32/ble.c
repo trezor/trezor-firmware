@@ -42,7 +42,7 @@ typedef enum {
 // as it might result in order of messages being changed
 #define TX_QUEUE_LEN 1
 #define EVENT_QUEUE_LEN 4
-#define RX_QUEUE_LEN 16
+#define RX_QUEUE_LEN 64
 #define LOOP_PERIOD_MS 20
 #define PING_PERIOD 100
 
