@@ -109,7 +109,7 @@ class Homescreen(HomescreenBase):
             blecheck = loop.wait(io.BLE_EVENT)
             while True:
                 event = await blecheck
-                self._event(self.layout.ble_event, event)
+                self._event(self.layout.ble_event, *event)
 
     def create_tasks(self) -> Iterator[loop.Task]:
         yield from super().create_tasks()
