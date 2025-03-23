@@ -66,7 +66,7 @@ recommended way to install both is with [`rustup`](https://rustup.rs/). Make sur
 are up to date:
 
 ```sh
-rustup default nightly
+rustup override set nightly
 rustup update
 ```
 
