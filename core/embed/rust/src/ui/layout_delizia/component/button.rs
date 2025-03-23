@@ -204,7 +204,7 @@ impl Button {
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let y_offset = Offset::y(self.style().font.allcase_text_height() / 2);
+                let y_offset = Offset::y(self.style().font.text_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => {
                         self.area.left_center() + Offset::x(Self::BASELINE_OFFSET.x)
