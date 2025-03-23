@@ -1,7 +1,6 @@
 from trezorio import BLE, ble
 
 
-# TODO: reimplement in C
 class BleInterface:
 
     RX_PACKET_LEN = ble.RX_PACKET_LEN
