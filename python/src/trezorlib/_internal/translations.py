@@ -189,13 +189,12 @@ class FontsTable(BlobTable):
     @classmethod
     def from_dir(cls, model_fonts: dict[str, str], font_dir: Path) -> Self:
         """Example structure of the font dict:
-        (The beginning number corresponds to the C representation of each font)
+        (The key number corresponds to the index representation of each font set in `gen_font.py`)
         {
-        "1_FONT_NORMAL": "font_tthoves_regular_21_cs.json",
-        "2_FONT_BOLD": "font_tthoves_bold_17_cs.json",
-        "3_FONT_MONO": "font_robotomono_medium_20_cs.json",
-        "4_FONT_BIG": null,
-        "5_FONT_DEMIBOLD": "font_tthoves_demibold_21_cs.json"
+          "1": "font_tthoves_regular_21_cs.json",
+          "3": "font_robotomono_medium_20_cs.json",
+          "5": "font_tthoves_demibold_21_cs.json",
+          "7": "font_tthoves_bold_17_upper_cs.json"
         }
         """
         fonts = {}
@@ -203,7 +202,7 @@ class FontsTable(BlobTable):
             if not file_name:
                 continue
             file_path = font_dir / file_name
-            font_num = int(font_name.split("_")[0])
+            font_num = int(font_name)
             try:
                 fonts[font_num] = Font.from_file(file_path).build()
             except Exception as e:

@@ -280,10 +280,13 @@ class FaceProcessor:
     def _rs_file_name(self) -> Path:
         return (
             RUST_FONTS_DEST
-            / f"layout_{LAYOUT_NAME}"
+            / f"layout_{LAYOUT_NAME.lower()}"
             / "fonts"
             / f"font_{self.fontname}.rs"
         )
+
+    def _foreign_json_name(self, upper_cased: bool, lang: str) -> str:
+        return f"font_{self.fontname}{'_upper' if upper_cased else ''}_{lang}.json"
 
     def write_files(self) -> None:
         # JSON files:
@@ -310,10 +313,8 @@ class FaceProcessor:
                 glyph = Glyph.from_face(self.face, c, self.shaveX)
                 glyph.print_metrics()
                 fontdata[map_from] = glyph.to_bytes(self.bpp).hex()
-            file = (
-                JSON_FONTS_DEST
-                / f"font_{self.fontname}{'_upper' if upper_cased else ''}_{lang}.json"
-            )
+            file_name = self._foreign_json_name(upper_cased, lang)
+            file = JSON_FONTS_DEST / file_name
             json_content = json.dumps(fontdata, indent=2, ensure_ascii=False)
             file.write_text(json_content + "\n")
 
@@ -473,7 +474,7 @@ class FaceProcessor:
 
 def gen_layout_bolt():
     global LAYOUT_NAME
-    LAYOUT_NAME = "bolt"
+    LAYOUT_NAME = "Bolt"
     FaceProcessor("TTHoves", "Regular", 21, ext="otf", font_idx=1).write_files()
     FaceProcessor("TTHoves", "DemiBold", 21, ext="otf", font_idx=5).write_files()
     FaceProcessor(
@@ -490,7 +491,7 @@ def gen_layout_bolt():
 
 def gen_layout_caesar():
     global LAYOUT_NAME
-    LAYOUT_NAME = "caesar"
+    LAYOUT_NAME = "Caesar"
     FaceProcessor(
         "PixelOperator",
         "Regular",
@@ -527,7 +528,7 @@ def gen_layout_caesar():
 
 def gen_layout_delizia():
     global LAYOUT_NAME
-    LAYOUT_NAME = "delizia"
+    LAYOUT_NAME = "Delizia"
     # FIXME: BIG font id not needed
     FaceProcessor("TTSatoshi", "DemiBold", 42, ext="otf", font_idx=1).write_files()
     FaceProcessor("TTSatoshi", "DemiBold", 21, ext="otf", font_idx=1).write_files()
@@ -543,10 +544,11 @@ def gen_layout_delizia():
         font_idx_upper=7,
     ).write_files()
 
+
 LAYOUTS = {
-    "bolt": gen_layout_bolt,
-    "caesar": gen_layout_caesar,
-    "delizia": gen_layout_delizia,
+    "Bolt": gen_layout_bolt,
+    "Caesar": gen_layout_caesar,
+    "Delizia": gen_layout_delizia,
 }
 
 
