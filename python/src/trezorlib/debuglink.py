@@ -1370,7 +1370,6 @@ class TrezorClientDebugLink(TrezorClient):
         passphrase: str | object | None = None,
         derive_cardano: bool = False,
         session_id: bytes | None = None,
-        should_derive: bool = False,
     ) -> SessionDebugWrapper:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
@@ -1380,9 +1379,6 @@ class TrezorClientDebugLink(TrezorClient):
             )
         )
         session.passphrase = passphrase
-
-        if isinstance(session._session, SessionV1) and should_derive:
-            derive_seed(session=session)
         return session
 
     def get_seedless_session(
