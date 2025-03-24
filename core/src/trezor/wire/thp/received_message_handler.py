@@ -152,8 +152,8 @@ def _send_ack(ctx: Channel, ack_bit: int) -> Awaitable[None]:
     if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         log.debug(
             __name__,
-            "Writing ACK message to a channel with id: %d, ack_bit: %d",
-            ctx.get_channel_id_int(),
+            "Writing ACK message to a channel with cid: %s, ack_bit: %d",
+            get_bytes_as_str(ctx.channel_id),
             ack_bit,
         )
     return write_payload_to_wire_and_add_checksum(ctx.iface, header, b"")
@@ -404,6 +404,11 @@ async def _handle_state_ENCRYPTED_TRANSPORT(ctx: Channel, message_length: int) -
             ],
         )
     )
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+        log.debug(
+            __name__,
+            f"Scheduled message to be handled by a session (session_id: {session_id}, msg_type (int): {message_type})",
+        )
 
 
 async def _handle_pairing(ctx: Channel, message_length: int) -> None:
