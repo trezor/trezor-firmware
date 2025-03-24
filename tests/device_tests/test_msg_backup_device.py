@@ -208,18 +208,17 @@ def test_interrupt_backup_fails(session: Session):
     session.call_raw(messages.BackupDevice())
 
     # interupt backup by sending initialize
-    session2 = session.client.resume_session(session)
-    session2.refresh_features()
+    session.resume()
+    session.refresh_features()
 
     # check that device state is as expected
-    assert session2.features.initialized is True
+    assert session.features.initialized is True
     assert (
-        session2.features.backup_availability
-        == messages.BackupAvailability.NotAvailable
+        session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
-    assert session2.features.unfinished_backup is True
-    assert session2.features.no_backup is False
+    assert session.features.unfinished_backup is True
+    assert session.features.no_backup is False
 
     # Second attempt at backup should fail
     with pytest.raises(TrezorFailure, match=r".*Seed already backed up"):
-        device.backup(session2)
+        device.backup(session)
