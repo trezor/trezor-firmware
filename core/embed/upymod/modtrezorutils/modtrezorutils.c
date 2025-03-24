@@ -580,7 +580,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
      MP_ROM_INT(MODEL_HOMESCREEN_MAXSIZE)},
 #ifdef TREZOR_EMULATOR
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_true},
-    MEMINFO_DICT_ENTRIES
 #else
     {MP_ROM_QSTR(MP_QSTR_EMULATOR), mp_const_false},
 #endif
@@ -604,6 +603,7 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #error Unknown layout
 #endif
 #if !PYOPT
+    MEMINFO_DICT_ENTRIES
 #if DISABLE_ANIMATION
     {MP_ROM_QSTR(MP_QSTR_DISABLE_ANIMATION), mp_const_true},
 #else
