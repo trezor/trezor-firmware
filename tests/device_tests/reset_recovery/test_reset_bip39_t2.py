@@ -19,7 +19,6 @@ from mnemonic import Mnemonic
 
 from trezorlib import device, messages
 from trezorlib.btc import get_public_node
-from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
@@ -156,11 +155,7 @@ def test_reset_entropy_check(session: Session):
     assert IF.mnemonic == expected_mnemonic
 
     # Check that the device is properly initialized.
-    if session.client.protocol_version is ProtocolVersion.V1:
-        features = session.call_raw(messages.Initialize())
-    else:
-        session.refresh_features()
-        features = session.features
+    features = session.refresh_features()
 
     assert features.initialized is True
     assert features.backup_availability == messages.BackupAvailability.NotAvailable
