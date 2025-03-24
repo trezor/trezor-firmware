@@ -64,7 +64,7 @@ def _assert_protection(
         assert session.client.features.passphrase_protection is passphrase
         session.lock()
         # session.end()
-    if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
+    if session.protocol_version == ProtocolVersion.V1:
         new_session = session.client.get_session()
     return new_session
 
@@ -191,7 +191,7 @@ def test_get_public_key(session: Session):
         session.client.use_pin_sequence([PIN4])
         expected_responses = [_pin_request(session)]
 
-        if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if session.protocol_version == ProtocolVersion.V1:
             expected_responses.append(messages.PassphraseRequest)
         expected_responses.append(messages.PublicKey)
 
@@ -205,7 +205,7 @@ def test_get_address(session: Session):
     with session:
         session.client.use_pin_sequence([PIN4])
         expected_responses = [_pin_request(session)]
-        if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if session.protocol_version == ProtocolVersion.V1:
             expected_responses.append(messages.PassphraseRequest)
         expected_responses.append(messages.Address)
 
@@ -306,7 +306,7 @@ def test_sign_message(session: Session):
 
         expected_responses = [_pin_request(session)]
 
-        if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if session.protocol_version == ProtocolVersion.V1:
             expected_responses.append(messages.PassphraseRequest)
 
         expected_responses.extend(
@@ -392,7 +392,7 @@ def test_signtx(session: Session):
     with session:
         session.client.use_pin_sequence([PIN4])
         expected_responses = [_pin_request(session)]
-        if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if session.protocol_version == ProtocolVersion.V1:
             expected_responses.append(messages.PassphraseRequest)
         expected_responses.extend(
             [
