@@ -9,4 +9,5 @@ if __debug__:
 
     layout_watcher = False
 
-    reset_internal_entropy: bytes = b""
+    reset_internal_entropy = bytearray(32)
+    reset_internal_entropy[:] = bytes()

@@ -84,7 +84,7 @@ async def reset_device(msg: ResetDevice) -> Success:
         # generate internal entropy
         int_entropy = random.bytes(32, True)
         if __debug__:
-            storage.debug.reset_internal_entropy = int_entropy
+            storage.debug.reset_internal_entropy[:] = int_entropy
 
         entropy_commitment = (
             hmac(hmac.SHA256, int_entropy, b"").digest() if msg.entropy_check else None
