@@ -135,7 +135,7 @@ class TrezorConnection:
 
         # Try resume session from id
         if self.session_id is not None:
-            if client.protocol_version is ProtocolVersion.PROTOCOL_V1:
+            if client.protocol_version is ProtocolVersion.V1:
                 session = SessionV1.resume_from_id(
                     client=client, session_id=self.session_id
                 )
