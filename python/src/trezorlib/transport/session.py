@@ -59,6 +59,9 @@ class Session:
     def refresh_features(self) -> None:
         self.client.refresh_features()
 
+    def resume(self) -> None:
+        pass
+
     def end(self) -> t.Any:
         return self.call(messages.EndSession())
 
@@ -137,6 +140,9 @@ class SessionV1(Session):
         session = SessionV1(client, session_id)
         session.init_session()
         return session
+
+    def resume(self) -> None:
+        self.init_session(self.derive_cardano)
 
     def _write(self, msg: t.Any) -> None:
         if t.TYPE_CHECKING:

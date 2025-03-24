@@ -132,18 +132,6 @@ class TrezorClient:
             return session
         raise NotImplementedError
 
-    def resume_session(self, session: Session) -> Session:
-        """
-        Note: this function potentially modifies the input session.
-        """
-        from .transport.session import SessionV1
-
-        if isinstance(session, SessionV1):
-            session.init_session()
-            return session
-        else:
-            raise NotImplementedError
-
     def get_seedless_session(self, new_session: bool = False) -> Session:
         from .transport.session import SessionV1
 

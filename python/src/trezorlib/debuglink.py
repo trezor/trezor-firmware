@@ -45,7 +45,7 @@ from .messages import Capability, DebugWaitType
 from .protobuf import MessageType
 from .tools import parse_path
 from .transport import Timeout
-from .transport.session import Session, SessionV1, derive_seed
+from .transport.session import Session
 from .transport.thp.protocol_v1 import ProtocolV1Channel
 
 if t.TYPE_CHECKING:
@@ -979,6 +979,9 @@ class SessionDebugWrapper(Session):
             self.actual_responses.append(resp)
         return resp
 
+    def resume(self) -> None:
+        self._session.resume()
+
     def set_expected_responses(
         self,
         expected: list["ExpectedMessage" | t.Tuple[bool, "ExpectedMessage"]],
@@ -1388,13 +1391,6 @@ class TrezorClientDebugLink(TrezorClient):
         if not isinstance(session, SessionDebugWrapper):
             session = SessionDebugWrapper(session)
         return session
-
-    def resume_session(self, session: Session) -> SessionDebugWrapper:
-        if isinstance(session, SessionDebugWrapper):
-            session._session = super().resume_session(session._session)
-            return session
-        else:
-            return SessionDebugWrapper(super().resume_session(session))
 
     def watch_layout(self, watch: bool = True) -> None:
         """Enable or disable watching layout changes.
