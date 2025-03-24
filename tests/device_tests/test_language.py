@@ -24,7 +24,6 @@ import pytest
 from trezorlib import debuglink, device, exceptions, messages, models
 from trezorlib._internal import translations
 from trezorlib.debuglink import SessionDebugWrapper as Session
-from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import message_filters
 
 from ..translations import (
@@ -198,8 +197,7 @@ def test_full_language_change(session: Session, lang: str):
     _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
 
 
-def test_language_is_removed_after_wipe(client: Client):
-    session = client.get_session()
+def test_language_is_removed_after_wipe(session: Session):
     assert session.features.language == "en-US"
 
     _check_ping_screen_texts(session, get_ping_title("en"), get_ping_button("en"))
@@ -212,8 +210,7 @@ def test_language_is_removed_after_wipe(client: Client):
 
     # Wipe device
     device.wipe(session)
-    client = client.get_new_client()
-    session = client.get_seedless_session()
+    session.refresh_features()  # changing the language in features
     assert session.features.language == "en-US"
 
     # Load it again

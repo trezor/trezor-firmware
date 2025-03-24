@@ -21,7 +21,6 @@ import os
 import typing as t
 from enum import IntEnum
 from pathlib import Path
-from time import sleep
 
 import pytest
 import xdist
@@ -311,7 +310,6 @@ def _client_unlocked(
         _raw_client = _raw_client.get_new_client()
     session = _raw_client.get_seedless_session()
     wipe_device(session)
-    sleep(1.5)  # Makes tests more stable (wait for wipe to finish)
 
     if not _raw_client.features.bootloader_mode:
         _raw_client.refresh_features()
