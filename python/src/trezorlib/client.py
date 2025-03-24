@@ -47,7 +47,6 @@ Or visit https://suite.trezor.io/
 
 
 class ProtocolVersion(IntEnum):
-    UNKNOWN = 0x00
     PROTOCOL_V1 = 0x01  # Codec
     PROTOCOL_V2 = 0x02  # THP
 
@@ -91,7 +90,7 @@ class TrezorClient:
         if isinstance(self.protocol, ProtocolV1Channel):
             self._protocol_version = ProtocolVersion.PROTOCOL_V1
         else:
-            self._protocol_version = ProtocolVersion.UNKNOWN
+            raise Exception("Unknown protocol version")
 
     @classmethod
     def resume(
