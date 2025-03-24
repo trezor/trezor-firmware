@@ -92,17 +92,6 @@ class TrezorClient:
         else:
             raise Exception("Unknown protocol version")
 
-    @classmethod
-    def resume(
-        cls,
-        transport: Transport,
-        protobuf_mapping: ProtobufMapping | None = None,
-    ) -> TrezorClient:
-        if protobuf_mapping is None:
-            protobuf_mapping = mapping.DEFAULT_MAPPING
-        protocol = ProtocolV1Channel(transport, protobuf_mapping)
-        return TrezorClient(transport, protobuf_mapping, protocol)
-
     def get_session(
         self,
         passphrase: str | object | None = None,
