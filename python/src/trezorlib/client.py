@@ -46,9 +46,6 @@ Or visit https://suite.trezor.io/
 """.strip()
 
 
-LOG = logging.getLogger(__name__)
-
-
 class ProtocolVersion(IntEnum):
     UNKNOWN = 0x00
     PROTOCOL_V1 = 0x01  # Codec
