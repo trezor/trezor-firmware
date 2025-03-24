@@ -850,7 +850,7 @@ def test_multisession_authorization(client: Client):
     )
 
     # Switch back to the first session.
-    session1 = client.resume_session(session1)
+    session1.resume()
     # Requesting a preauthorized ownership proof for www.example1.com should succeed in session 1.
     ownership_proof, _ = btc.get_ownership_proof(
         session1,
@@ -895,7 +895,7 @@ def test_multisession_authorization(client: Client):
         )
 
     # Switch to the second session.
-    session2 = client.resume_session(session2)
+    session2.resume()
     # Requesting a preauthorized ownership proof for www.example2.com should still succeed in session 2.
     ownership_proof, _ = btc.get_ownership_proof(
         session2,

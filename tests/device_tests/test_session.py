@@ -46,7 +46,7 @@ def test_clear_session(client: Client):
         session.set_expected_responses(init_responses + cached_responses)
         assert get_public_node(session, ADDRESS_N).xpub == XPUB
 
-    client.resume_session(session)
+    session.resume()
     with session:
         # pin and passphrase are cached
         session.set_expected_responses(cached_responses)
@@ -62,7 +62,7 @@ def test_clear_session(client: Client):
         session.set_expected_responses(init_responses + cached_responses)
         assert get_public_node(session, ADDRESS_N).xpub == XPUB
 
-    client.resume_session(session)
+    session.resume()
     with session:
         # pin and passphrase are cached
         session.set_expected_responses(cached_responses)
@@ -104,14 +104,14 @@ def test_cannot_resume_ended_session(client: Client):
     session = client.get_session()
     session_id = session.id
 
-    session_resumed = client.resume_session(session)
+    session.resume()
 
-    assert session_resumed.id == session_id
+    assert session.id == session_id
 
     session.end()
-    session_resumed2 = client.resume_session(session)
+    session.resume()
 
-    assert session_resumed2.id != session_id
+    assert session.id != session_id
 
 
 def test_end_session_only_current(client: Client):
@@ -124,12 +124,12 @@ def test_end_session_only_current(client: Client):
     # assert client.session_id is None
 
     # resume ended session
-    session_b_resumed = client.resume_session(session_b)
-    assert session_b_resumed.id != session_b_id
+    session_b.resume()
+    assert session_b.id != session_b_id
 
     # resume first session that was not ended
-    session_a_resumed = client.resume_session(session_a)
-    assert session_a_resumed.id == session_a.id
+    session_a.resume()
+    assert session_a.id == session_a.id
 
 
 @pytest.mark.setup_client(passphrase=True)
@@ -155,7 +155,7 @@ def test_session_recycling(client: Client):
     with session:
         # passphrase should still be cached
         session.set_expected_responses([messages.Address] * 3)
-        client.resume_session(session)
+        session.resume()
         get_test_address(session)
         get_test_address(session)
         assert address == get_test_address(session)
@@ -170,8 +170,8 @@ def test_derive_cardano_empty_session(client: Client):
     session_id = session.id
 
     # restarting same session should go well
-    session_2 = client.resume_session(session)
-    assert session.id == session_2.id
+    session.resume()
+    assert session.id == session_id
 
     # restarting same session should go well with any setting
     session_3 = client.get_session(session_id=session_id, derive_cardano=False)
@@ -186,7 +186,7 @@ def test_derive_cardano_empty_session(client: Client):
 def test_derive_cardano_running_session(client: Client):
     # start new session
     session = client.get_session(derive_cardano=False)
-
+    session_id = session.id
     # force derivation of seed
     get_test_address(session)
 
@@ -195,23 +195,24 @@ def test_derive_cardano_running_session(client: Client):
         cardano.get_public_key(session, parse_path("m/44h/1815h/0h"))
 
     # restarting same session should go well
-    session_2 = client.resume_session(session)
-    assert session.id == session_2.id
+    session.resume()
+    assert session.id == session_id
 
     # restarting same session should go well if we _don't_ want to derive cardano
-    session_3 = client.get_session(session_id=session_2.id, derive_cardano=False)
+    session_3 = client.get_session(session_id=session_id, derive_cardano=False)
     assert session_3.id == session.id
 
     # restarting with derive_cardano=True should kill old session and create new one
     session_4 = client.get_session(derive_cardano=True)
-    assert session_4.id != session.id
+    session_4_id = session_4.id
+    assert session_4_id != session.id
 
     # new session should have Cardano capability
     cardano.get_public_key(session_4, parse_path("m/44h/1815h/0h"))
 
     # restarting with derive_cardano=True should keep same session
-    session_5 = client.resume_session(session_4)
-    assert session_5.id == session_4.id
+    session_4.resume()
+    assert session_4.id == session_4_id
 
     # restarting with derive_cardano=False should kill old session and create new one
     session_6 = client.get_session(session_id=session_4.id, derive_cardano=False)
