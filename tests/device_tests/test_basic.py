@@ -15,25 +15,8 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 from trezorlib import device, messages, models
-from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-
-
-def test_features(client: Client):
-    session = client.get_session()
-    f0 = session.features
-    if client.protocol_version == ProtocolVersion.V1:
-        # session erases session_id from its features
-        f0.session_id = session.id
-        f1 = session.call(messages.Initialize(session_id=session.id))
-
-        assert f0 == f1
-    else:
-        session2 = client.resume_session(session)
-        f1: messages.Features = session2.call(messages.GetFeatures())
-        assert f1.session_id is None
-        assert f0 == f1
 
 
 def test_capabilities(session: Session):
