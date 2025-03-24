@@ -192,6 +192,81 @@ def get_ownership_id(
     ).ownership_id
 
 
+def get_ownership_proof_common(
+    session: "Session",
+    coin_name: str,
+    n: "Address",
+    multisig: messages.MultisigRedeemScriptType | None,
+    script_type: messages.InputScriptType,
+    user_confirmation: bool,
+    ownership_ids: List[bytes] | None,
+    commitment_data: bytes | None,
+    preauthorized: bool,
+    use_anti_exfil: bool,
+    entropy: bytes | None,
+) -> Tuple[bytes | None, AntiExfilSignature]:
+    if preauthorized:
+        session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
+
+    if not use_anti_exfil:
+        res = session.call(
+            messages.GetOwnershipProof(
+                address_n=n,
+                coin_name=coin_name,
+                script_type=script_type,
+                multisig=multisig,
+                user_confirmation=user_confirmation,
+                ownership_ids=ownership_ids,
+                commitment_data=commitment_data,
+            ),
+            expect=messages.OwnershipProof,
+        )
+        assert res.ownership_proof != b""
+
+        return res.ownership_proof, AntiExfilSignature(res.signature, None, None)
+    else:
+        if not entropy:
+            entropy = generate_entropy()
+
+        res = session.call(
+            messages.GetOwnershipProof(
+                address_n=n,
+                coin_name=coin_name,
+                script_type=script_type,
+                multisig=multisig,
+                user_confirmation=user_confirmation,
+                ownership_ids=ownership_ids,
+                commitment_data=commitment_data,
+                entropy_commitment=commit_entropy(entropy),
+            ),
+            expect=messages.OwnershipProofNonceCommitment,
+        )
+
+        assert res.nonce_commitment is not None
+        nonce_commitment = res.nonce_commitment
+
+        res = session.call(
+            messages.OwnershipProofEntropy(entropy=entropy),
+            expect=messages.OwnershipProof,
+        )
+
+        # This function verifies that the signature includes the host's entropy and that its s value is less than half of the curve's order. However, it does not verify the signature itself, as trezorlib doesn't have the digest. The verification of the signature is the caller's responsibility.
+        if not verify(
+            public_key=None,
+            signature=res.signature,
+            digest=None,
+            entropy=entropy,
+            nonce_commitment=nonce_commitment,
+        ):
+            # This is a violation of the anti-exfil protocol.
+            raise ValueError("Invalid signature")
+
+        if res.ownership_proof != b"":
+            # If host uses the anti-exfil protocol, it should not rely on device to serialize the ownwership proof correctly.
+            raise ValueError("Ownership proof is not expected")
+        return None, AntiExfilSignature(res.signature, entropy, nonce_commitment)
+
+
 @workflow(capability=messages.Capability.Bitcoin)
 def get_ownership_proof(
     session: "Session",
@@ -204,23 +279,61 @@ def get_ownership_proof(
     commitment_data: Optional[bytes] = None,
     preauthorized: bool = False,
 ) -> Tuple[bytes, bytes]:
-    if preauthorized:
-        session.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
-
-    res = session.call(
-        messages.GetOwnershipProof(
-            address_n=n,
-            coin_name=coin_name,
-            script_type=script_type,
-            multisig=multisig,
-            user_confirmation=user_confirmation,
-            ownership_ids=ownership_ids,
-            commitment_data=commitment_data,
-        ),
-        expect=messages.OwnershipProof,
+    ownership_proof, anti_exfil_signature = get_ownership_proof_common(
+        session,
+        coin_name,
+        n,
+        multisig,
+        script_type,
+        user_confirmation,
+        ownership_ids,
+        commitment_data,
+        preauthorized,
+        False,
+        None,
     )
+    assert ownership_proof is not None
+    assert anti_exfil_signature.signature is not None
+    return ownership_proof, anti_exfil_signature.signature
 
-    return res.ownership_proof, res.signature
+
+def get_ownership_proof_new(
+    session: "Session",
+    coin_name: str,
+    n: "Address",
+    multisig: messages.MultisigRedeemScriptType | None = None,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+    user_confirmation: bool = False,
+    ownership_ids: List[bytes] | None = None,
+    commitment_data: bytes | None = None,
+    preauthorized: bool = False,
+    use_anti_exfil: bool = True,
+    entropy: bytes | None = None,
+) -> AntiExfilSignature:
+    """
+    If `use_anti_exfil` is set to `True`, the anti-exfiltration protocol will be
+    used. The purpose of this protocol is to prevent the device from leaking
+    its secrets through the signatures. In this case, `AntiExfilSignature` objects
+    will have non-emtpy fields `entropy` and `nonce_commitment`. It's the caller
+    responsibility to verify the signature and the nonce commitment. The caller
+    can optionally provide a list of entropies to be used in the protocol. Ideally,
+    the caller should provide the same list of entropies if the signing is repeated
+    due to a error to prevent the device to perform nonce-grinding attacks.
+    """
+    ownership_proof, anti_exfil_signature = get_ownership_proof_common(
+        session,
+        coin_name,
+        n,
+        multisig,
+        script_type,
+        user_confirmation,
+        ownership_ids,
+        commitment_data,
+        preauthorized,
+        use_anti_exfil,
+        entropy,
+    )
+    return anti_exfil_signature
 
 
 @workflow(capability=messages.Capability.Bitcoin)
