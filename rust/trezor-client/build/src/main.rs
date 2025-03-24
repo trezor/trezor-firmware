@@ -19,7 +19,7 @@ fn main() {
         })
         .collect();
 
-    let out_path = std::env::args().skip(1).next().expect("No output directory given");
+    let out_path = std::env::args().nth(1).expect("No output directory given");
     let out_dir = PathBuf::from(out_path);
     fs::create_dir_all(&out_dir).expect("Failed to create output directory");
     protobuf_codegen::Codegen::new()
