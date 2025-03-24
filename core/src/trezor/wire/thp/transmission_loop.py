@@ -34,6 +34,11 @@ class TransmissionLoop:
             await write_payload_to_wire_and_add_checksum(
                 self.channel.iface, self.header, self.transport_payload
             )
+
+            # Do not create wait task for last iteration
+            if i == max_retransmission_count - 1:
+                break
+
             self.wait_task = loop.spawn(self._wait(i))
             try:
                 await self.wait_task
