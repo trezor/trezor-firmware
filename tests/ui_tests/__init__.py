@@ -60,7 +60,7 @@ def screen_recording(
     finally:
         if client_callback:
             client = client_callback()
-        if client.protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if client.protocol_version == ProtocolVersion.V1:
             client.sync_responses()
         # Wait for response to Initialize, which gives the emulator time to catch up
         # and redraw the homescreen. Otherwise there's a race condition between that
