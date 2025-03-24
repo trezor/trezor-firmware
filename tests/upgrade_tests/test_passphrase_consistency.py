@@ -141,7 +141,7 @@ def test_init_device(emulator: Emulator):
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
         # in TT < 2.3.0 session_id will only be available after PassphraseStateRequest
         session_id = session.id
-        if session.protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if session.protocol_version == ProtocolVersion.V1:
             session.call(messages.Initialize(session_id=session_id))
         btc.get_address(
             session,
