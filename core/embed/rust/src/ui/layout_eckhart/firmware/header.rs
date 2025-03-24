@@ -147,6 +147,14 @@ impl Header {
     }
 
     #[inline(never)]
+    pub fn with_back_button(self) -> Self {
+        self.with_left_button(
+            Button::with_icon(theme::ICON_CHEVRON_LEFT).styled(theme::button_header()),
+            HeaderMsg::Back,
+        )
+    }
+
+    #[inline(never)]
     pub fn with_close_button(self) -> Self {
         self.with_right_button(
             Button::with_icon(theme::ICON_CLOSE).styled(theme::button_header()),

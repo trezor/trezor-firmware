@@ -603,6 +603,7 @@ pub enum FlowMsg {
     Cancelled,
     Info,
     Next,
+    Previous,
     Choice(usize),
     Text(ShortString),
 }
@@ -616,7 +617,7 @@ impl TryFrom<FlowMsg> for crate::micropython::obj::Obj {
 
         match val {
             FlowMsg::Confirmed | FlowMsg::Next => Ok(result::CONFIRMED.as_obj()),
-            FlowMsg::Cancelled => Ok(result::CANCELLED.as_obj()),
+            FlowMsg::Cancelled | FlowMsg::Previous => Ok(result::CANCELLED.as_obj()),
             FlowMsg::Info => Ok(result::INFO.as_obj()),
             FlowMsg::Choice(i) => i.try_into(),
             FlowMsg::Text(s) => s.as_str().try_into(),
