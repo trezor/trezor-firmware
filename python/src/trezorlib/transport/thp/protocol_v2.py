@@ -49,7 +49,9 @@ class ProtocolV2Channel(Channel):
     def read(self, session_id: int) -> t.Any:
         sid, msg_type, msg_data = self.read_and_decrypt()
         if sid != session_id:
-            raise Exception("Received messsage on a different session.")
+            raise Exception(
+                f"Received messsage on a different session (expected/received): ({session_id}/{sid}) "
+            )
         return self.mapping.decode(msg_type, msg_data)
 
     def write(self, session_id: int, msg: t.Any) -> None:
