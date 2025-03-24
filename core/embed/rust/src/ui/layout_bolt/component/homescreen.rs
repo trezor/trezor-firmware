@@ -180,7 +180,6 @@ impl Homescreen {
             Event::BLE(BLEEvent::PairingRequest(data)) => {
                 self.pairing = true;
 
-                let code = core::str::from_utf8(data).unwrap();
 
                 let mut pd = Confirm::new(
                     theme::BG,
@@ -198,10 +197,10 @@ impl Homescreen {
                     ),
                 )
                 .with_alert(Label::new(
-                    code.into(),
+                    "".into(),
                     Alignment::Center,
                     theme::TEXT_NORMAL,
-                ));
+                )).with_num_code(data);
 
                 pd.place(AREA);
 
