@@ -97,11 +97,7 @@ stdenvNoCC.mkDerivation ({
     curl  # for connect tests
     editorconfig-checker
     gcc-arm-embedded
-    # GCC <14 seems to have broken varargs handling on arm64-darwin which makes micropython crash.
-    # GCC 14 causes crypto tests to fail in CI due to emitting non-constant-time instructions,
-    # and it's probably a good idea to keep it the same version as gcc-arm-embedded anyway
-    # https://github.com/trezor/trezor-firmware/issues/4393
-    (if stdenv.isDarwin then gcc14 else gcc12)
+    gcc14
     git
     gitAndTools.git-subrepo
     gnumake
