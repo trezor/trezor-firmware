@@ -267,9 +267,11 @@ def _sign_digest(
     )
 
     req = EthereumTxRequest()
-    req.signature_v = signature[0]
     if msg.chain_id <= MAX_CHAIN_ID:
-        req.signature_v += 35 + 2 * msg.chain_id
+        req.signature_v = signature[0] + 35 + 2 * msg.chain_id
+    else:
+        # https://github.com/trezor/trezor-core/pull/311
+        req.signature_v = signature[0]
 
     req.signature_r = signature[1:33]
     req.signature_s = signature[33:]
