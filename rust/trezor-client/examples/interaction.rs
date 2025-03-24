@@ -47,7 +47,7 @@ fn do_main() -> Result<(), trezor_client::Error> {
     )?;
     println!("{}", xpub);
     println!("{:?}", xpub);
-    println!("{}", Address::p2pkh(&xpub.to_pub(), Network::Testnet));
+    println!("{}", Address::p2pkh(xpub.to_pub(), Network::Testnet));
 
     Ok(())
 }
