@@ -25,7 +25,7 @@ class Bitcoinlike(Bitcoin):
 
         if txi.script_type not in NONSEGWIT_INPUT_SCRIPT_TYPES:
             raise wire.ProcessError("Transaction has changed during signing")
-        public_key, signature = self.sign_bip143_input(i_sign, txi)
+        public_key, signature = await self.sign_bip143_input(i_sign, txi)
 
         # if multisig, do a sanity check to ensure we are signing with a key that is included in the multisig
         if txi.multisig:

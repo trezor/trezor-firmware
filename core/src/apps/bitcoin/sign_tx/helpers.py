@@ -404,6 +404,18 @@ def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequ
     return _sanitize_payment_req(ack)
 
 
+def request_entropy(tx_req: TxRequest, i: int, nonce_commitment: bytes) -> Awaitable[bytes]:  # type: ignore [awaitable-return-type]
+    from trezor.messages import TxAckEntropy
+
+    assert tx_req.details is not None
+    tx_req.request_type = RequestType.TXENTROPY
+    tx_req.details.nonce_commitment = nonce_commitment
+    tx_req.details.request_index = i
+    ack = yield TxAckEntropy, tx_req  # type: ignore [awaitable-return-type]
+    _clear_tx_request(tx_req)
+    return ack.tx.entropy.entropy
+
+
 def request_tx_finish(tx_req: TxRequest) -> Awaitable[None]:  # type: ignore [awaitable-return-type]
     tx_req.request_type = RequestType.TXFINISHED
     yield None, tx_req  # type: ignore [awaitable-return-type]
@@ -422,6 +434,7 @@ def _clear_tx_request(tx_req: TxRequest) -> None:
     details.tx_hash = None
     details.extra_data_len = None
     details.extra_data_offset = None
+    details.nonce_commitment = None
     serialized.signature = None
     serialized.signature_index = None
     # typechecker thinks serialized_tx is `bytes`, which is immutable
