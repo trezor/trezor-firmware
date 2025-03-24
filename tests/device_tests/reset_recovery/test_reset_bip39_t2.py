@@ -156,7 +156,7 @@ def test_reset_entropy_check(session: Session):
     assert IF.mnemonic == expected_mnemonic
 
     # Check that the device is properly initialized.
-    if session.client.protocol_version is ProtocolVersion.PROTOCOL_V1:
+    if session.client.protocol_version is ProtocolVersion.V1:
         features = session.call_raw(messages.Initialize())
     else:
         session.refresh_features()
