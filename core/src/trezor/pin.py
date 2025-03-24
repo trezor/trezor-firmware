@@ -91,5 +91,6 @@ def show_pin_timeout(
     # drop the layout when done so trezor.ui doesn't have to remain in memory
     if progress >= 1000:
         _progress_layout = None
+        _previous_remaining = None
 
     return False
