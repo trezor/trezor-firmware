@@ -22,7 +22,6 @@ import warnings
 from enum import IntEnum
 
 from . import exceptions, mapping, messages, models
-from .mapping import ProtobufMapping
 from .tools import parse_path
 from .transport import Transport, get_transport
 from .transport.thp.protocol_and_channel import Channel
@@ -58,6 +57,7 @@ class TrezorClient:
     ) = None
     pin_callback: t.Callable[[Session, messages.PinMatrixRequest], t.Any] | None = None
 
+    _model: models.TrezorModel
     _seedless_session: Session | None = None
     _features: messages.Features | None = None
     _protocol_version: int
@@ -66,21 +66,27 @@ class TrezorClient:
     def __init__(
         self,
         transport: Transport,
-        protobuf_mapping: ProtobufMapping | None = None,
         protocol: Channel | None = None,
+        model: models.TrezorModel | None = None,
     ) -> None:
         """
         Transport needs to be opened before calling a method (or accessing
         an attribute) for the first time. It should be closed after you're
         done using the client.
         """
+
+        LOG.info(f"creating client instance for device: {transport.get_path()}")
+        # Here, self.model could be set to None. Unless _init_device is False, it will
+        # get correctly reconfigured as part of the init_device flow.
+        self._model = model  # type: ignore ["None" is incompatible with "TrezorModel"]
+        if self._model:
+            self.mapping = self.model.default_mapping
+        else:
+            self.mapping = mapping.DEFAULT_MAPPING
+
         self._is_invalidated: bool = False
         self.transport = transport
 
-        if protobuf_mapping is None:
-            self.mapping = mapping.DEFAULT_MAPPING
-        else:
-            self.mapping = protobuf_mapping
         if protocol is None:
             self.protocol = self._get_protocol()
         else:
