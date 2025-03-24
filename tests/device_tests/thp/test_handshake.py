@@ -7,7 +7,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from .connect import prepare_protocol_for_handshake
 
-pytestmark = [pytest.mark.protocol("protocol_v2")]
+pytestmark = [pytest.mark.protocol("protocol_v2"), pytest.mark.invalidate_client]
 
 
 def test_allocate_channel(client: Client) -> None:
