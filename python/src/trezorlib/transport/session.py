@@ -56,8 +56,8 @@ class Session:
     def _read(self) -> t.Any:
         raise NotImplementedError
 
-    def refresh_features(self) -> None:
-        self.client.refresh_features()
+    def refresh_features(self) -> messages.Features:
+        return self.client.refresh_features()
 
     def resume(self) -> None:
         pass
