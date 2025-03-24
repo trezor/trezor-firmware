@@ -71,7 +71,7 @@ fn main() {
             )
             .unwrap(),
     );
-    let addr = Address::p2pkh(&pubkey.to_pub(), Network::Testnet);
+    let addr = Address::p2pkh(pubkey.to_pub(), Network::Testnet);
     println!("address: {}", addr);
 
     let mut psbt = psbt::Psbt {
@@ -105,7 +105,7 @@ fn main() {
     };
 
     println!("psbt before: {:?}", psbt);
-    println!("unsigned txid: {}", psbt.unsigned_tx.txid());
+    println!("unsigned txid: {}", psbt.unsigned_tx.compute_txid());
     println!(
         "unsigned tx: {}",
         hex::encode(bitcoin::consensus::encode::serialize(&psbt.unsigned_tx))

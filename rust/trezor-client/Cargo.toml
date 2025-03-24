@@ -15,7 +15,14 @@ description = "Client library for interfacing with Trezor hardware wallet device
 keywords = ["ethereum", "bitcoin", "trezor", "wallet"]
 categories = ["api-bindings", "cryptography::cryptocurrencies"]
 readme = "README.md"
-exclude = [".github/", "examples/", "scripts/", ".clippy.toml", ".gitignore", "rustfmt.toml"]
+exclude = [
+    ".github/",
+    "examples/",
+    "scripts/",
+    ".clippy.toml",
+    ".gitignore",
+    "rustfmt.toml",
+]
 edition = "2021"
 rust-version = "1.60"
 
@@ -28,8 +35,8 @@ members = ["build", "."]
 
 [workspace.dependencies]
 # important: keep in sync
-protobuf = "=3.3.0"
-protobuf-codegen = "=3.3.0"
+protobuf = "=3.7.2"
+protobuf-codegen = "=3.7.2"
 
 [dependencies]
 protobuf.workspace = true
@@ -37,16 +44,16 @@ byteorder = "1.4"
 rusb = "0.9"
 
 hex = { version = "0.4", default-features = false, features = ["std"] }
-thiserror = "1.0"
+thiserror = "2.0"
 tracing = "0.1"
 
 # bitcoin
-bitcoin = { version = "0.31", optional = true }
+bitcoin = { version = "0.32", optional = true }
 unicode-normalization = { version = "0.1.22", optional = true }
 
 [dev-dependencies]
 tracing-subscriber = "0.3"
-serial_test = "2.0.0"
+serial_test = "3"
 
 [features]
 default = ["bitcoin", "ethereum", "solana"]
@@ -61,6 +68,7 @@ cardano = []
 eos = []
 monero = []
 nem = []
+nostr = []
 ripple = []
 solana = []
 stellar = []
