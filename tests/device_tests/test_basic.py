@@ -23,7 +23,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 def test_features(client: Client):
     session = client.get_session()
     f0 = session.features
-    if client.protocol_version == ProtocolVersion.PROTOCOL_V1:
+    if client.protocol_version == ProtocolVersion.V1:
         # session erases session_id from its features
         f0.session_id = session.id
         f1 = session.call(messages.Initialize(session_id=session.id))
