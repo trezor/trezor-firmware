@@ -1438,7 +1438,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         # Start by canceling whatever is on screen. This will work to cancel T1 PIN
         # prompt, which is in TINY mode and does not respond to `Ping`.
-        if self.protocol_version is ProtocolVersion.PROTOCOL_V1:
+        if self.protocol_version is ProtocolVersion.V1:
             assert isinstance(self.protocol, ProtocolV1Channel)
             self.protocol.write(messages.Cancel())
             resp = self.protocol.read()
