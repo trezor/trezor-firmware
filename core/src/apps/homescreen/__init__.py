@@ -5,6 +5,7 @@ import storage.cache
 import storage.device
 from trezor import config, wire
 from trezor.enums import MessageType
+from trezor.ui.layouts import error_popup, raise_if_not_confirmed
 from trezor.ui.layouts.homescreen import Busyscreen, Homescreen, Lockscreen
 
 from apps.base import busy_expiry_ms, lock_device
@@ -21,6 +22,7 @@ async def busyscreen() -> None:
 
 async def homescreen() -> None:
     from trezor import TR
+    from trezorui_api import INFO
 
     if storage.device.is_initialized():
         label = storage.device.get_label()
@@ -53,11 +55,21 @@ async def homescreen() -> None:
         hold_to_lock=config.has_pin(),
     )
     try:
-        await obj.get_result()
+        res = await obj.get_result()
+        if res is INFO:
+            # trigger device menu
+            await raise_if_not_confirmed(
+                error_popup(
+                    "Not implemented",
+                    "DeviceMenu not yet implemented",
+                    button="OK then..",
+                ),
+                "device_menu",
+            )
+        else:
+            lock_device()
     finally:
         obj.__del__()
-
-    lock_device()
 
 
 async def _lockscreen(screensaver: bool = False) -> None:
