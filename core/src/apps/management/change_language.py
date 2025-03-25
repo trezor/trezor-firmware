@@ -102,6 +102,7 @@ async def do_change_language(
     # If we saved it gradually to the storage and only checked the fingerprint at the end
     # (with the idea of deleting the data if the fingerprint does not match),
     # attackers could still write some data into storage and then unplug the device.
+    # Note: it may raise MemoryError in case the heap is fragmented.
     blob = utils.empty_bytearray(translations.area_bytesize())
 
     # Write the header
