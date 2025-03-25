@@ -25,7 +25,7 @@
 #include <util/flash.h>
 #include <util/flash_utils.h>
 
-#if USE_OPTIGA
+#if USE_OPTIGA || USE_STORAGE_HWKEY
 #include <sec/secret.h>
 #endif
 
