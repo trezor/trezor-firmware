@@ -294,7 +294,6 @@ def _client_unlocked(
         except Exception:
             request.session.shouldstop = "Failed to communicate with Trezor"
             pytest.fail("Failed to communicate with Trezor")
-    _raw_client._seedless_session = _raw_client.get_seedless_session(new_session=True)
 
     # Resetting all the debug events to not be influenced by previous test
     _raw_client.debug.reset_debug_events()
