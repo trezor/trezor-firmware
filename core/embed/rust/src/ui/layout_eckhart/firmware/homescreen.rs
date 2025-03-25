@@ -305,19 +305,19 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
         .render(target);
 
     // Layer 2: Base Gradient overlay
-    for y in SCREEN.y0..SCREEN.y1 {
-        let slice = Rect::new(Point::new(SCREEN.x0, y), Point::new(SCREEN.x1, y + 1));
-        let factor = (y - SCREEN.y0) as f32 / SCREEN.height() as f32;
-        shape::Bar::new(slice)
-            .with_bg(BG)
-            .with_alpha(u8::lerp(u8::MIN, u8::MAX, factor))
-            .render(target);
-    }
+    // for y in SCREEN.y0..SCREEN.y1 {
+    //     let slice = Rect::new(Point::new(SCREEN.x0, y), Point::new(SCREEN.x1, y + 1));
+    //     let factor = (y - SCREEN.y0) as f32 / SCREEN.height() as f32;
+    //     shape::Bar::new(slice)
+    //         .with_bg(BG)
+    //         .with_alpha(u8::lerp(u8::MIN, u8::MAX, factor))
+    //         .render(target);
+    // }
 
     // Layer 3: (Optional) LED lightning simulation
-    if let Some(color) = led_color {
-        render_led_simulation(color, target);
-    }
+    // if let Some(color) = led_color {
+    //     render_led_simulation(color, target);
+    // }
 
     // Layer 4: Tile pattern
     // TODO: improve frame rate
@@ -332,6 +332,7 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
             shape::ToifImage::new(tile_area.top_left(), icon)
                 .with_align(Alignment2D::TOP_LEFT)
                 .with_fg(BLACK)
+                .with_cache(true)
                 .render(target);
         }
     }
