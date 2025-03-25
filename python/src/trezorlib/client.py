@@ -58,7 +58,6 @@ class TrezorClient:
     pin_callback: t.Callable[[Session, messages.PinMatrixRequest], t.Any] | None = None
 
     _model: models.TrezorModel
-    _seedless_session: Session | None = None
     _features: messages.Features | None = None
     _protocol_version: int
     _setup_pin: str | None = None  # Should be used only by conftest
@@ -113,6 +112,8 @@ class TrezorClient:
         from .transport.session import SessionV1, derive_seed
 
         if isinstance(self.protocol, ProtocolV1Channel):
+            if passphrase is None:
+                return SessionV1.new(client=self, derive_cardano=False)
             session = SessionV1.new(
                 self,
                 derive_cardano=derive_cardano,
@@ -132,15 +133,8 @@ class TrezorClient:
             return session
         raise NotImplementedError
 
-    def get_seedless_session(self, new_session: bool = False) -> Session:
-        from .transport.session import SessionV1
-
-        if not new_session and self._seedless_session is not None:
-            return self._seedless_session
-        if isinstance(self.protocol, ProtocolV1Channel):
-            self._seedless_session = SessionV1.new(client=self, derive_cardano=False)
-        assert self._seedless_session is not None
-        return self._seedless_session
+    def get_seedless_session(self) -> Session:
+        return self.get_session(passphrase=None)
 
     def invalidate(self) -> None:
         self._is_invalidated = True
