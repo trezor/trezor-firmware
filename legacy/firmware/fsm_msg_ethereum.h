@@ -129,6 +129,13 @@ void fsm_msgEthereumSignTx(const EthereumSignTx *msg) {
 
   CHECK_PIN
 
+  if (msg->has_entropy_commitment) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Anti-exfil not supported"));
+    layoutHome();
+    return;
+  }
+
   const EthereumDefinitionsDecoded *defs =
       get_definitions(msg->has_definitions, &msg->definitions, msg->chain_id,
                       msg->has_to ? msg->to : NULL);
@@ -150,6 +157,13 @@ void fsm_msgEthereumSignTxEIP1559(const EthereumSignTxEIP1559 *msg) {
   CHECK_INITIALIZED
 
   CHECK_PIN
+
+  if (msg->has_entropy_commitment) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Anti-exfil not supported"));
+    layoutHome();
+    return;
+  }
 
   const EthereumDefinitionsDecoded *defs =
       get_definitions(msg->has_definitions, &msg->definitions, msg->chain_id,
