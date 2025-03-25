@@ -43,6 +43,7 @@ MAX_DATA_LENGTH = {
     models.T2B1: 32 * 1024,
     models.T3T1: 256 * 1024,
     models.T3B1: 256 * 1024,
+    models.T3W1: 256 * 1024,  # FIXME: fill in correct value
 }
 
 

@@ -21,7 +21,7 @@ if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
   exit(1)
 
-FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "tropic"]
+FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga"]
 
 if not models.has_emulator(TREZOR_MODEL):
     # skip unix build
