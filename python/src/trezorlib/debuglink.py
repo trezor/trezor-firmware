@@ -1251,7 +1251,6 @@ class TrezorClientDebugLink(TrezorClient):
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
-        self._seedless_session = self.get_seedless_session(new_session=True)
         self.sync_responses()
 
         # So that we can choose right screenshotting logic (T1 vs TT)
