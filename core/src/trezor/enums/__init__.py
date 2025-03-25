@@ -77,6 +77,7 @@ if TYPE_CHECKING:
         SPENDWITNESS = 3
         SPENDP2SHWITNESS = 4
         SPENDTAPROOT = 5
+        SPENDADDRESS_UNCOMPRESSED = 6
 
     class OutputScriptType(IntEnum):
         PAYTOADDRESS = 0

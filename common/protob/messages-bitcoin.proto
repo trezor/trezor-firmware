@@ -14,12 +14,13 @@ option (include_in_bitcoin_only) = true;
  * Type of script which will be used for transaction input
  */
 enum InputScriptType {
-    SPENDADDRESS = 0;       // standard P2PKH address
-    SPENDMULTISIG = 1;      // P2SH multisig address
-    EXTERNAL = 2;           // reserved for external inputs (coinjoin)
-    SPENDWITNESS = 3;       // native SegWit
-    SPENDP2SHWITNESS = 4;   // SegWit over P2SH (backward compatible)
-    SPENDTAPROOT = 5;       // Taproot
+    SPENDADDRESS = 0;              // standard P2PKH address using compressed public key
+    SPENDMULTISIG = 1;             // P2SH multisig address
+    EXTERNAL = 2;                  // reserved for external inputs (coinjoin)
+    SPENDWITNESS = 3;              // native SegWit
+    SPENDP2SHWITNESS = 4;          // SegWit over P2SH (backward compatible)
+    SPENDTAPROOT = 5;              // Taproot
+    SPENDADDRESS_UNCOMPRESSED = 6; // legacy P2PKH address using uncompressed public key
 }
 
 /**

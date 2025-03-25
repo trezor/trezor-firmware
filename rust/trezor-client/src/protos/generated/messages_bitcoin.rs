@@ -13096,6 +13096,8 @@ pub enum InputScriptType {
     SPENDP2SHWITNESS = 4,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.bitcoin.InputScriptType.SPENDTAPROOT)
     SPENDTAPROOT = 5,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.bitcoin.InputScriptType.SPENDADDRESS_UNCOMPRESSED)
+    SPENDADDRESS_UNCOMPRESSED = 6,
 }
 
 impl ::protobuf::Enum for InputScriptType {
@@ -13113,6 +13115,7 @@ impl ::protobuf::Enum for InputScriptType {
             3 => ::std::option::Option::Some(InputScriptType::SPENDWITNESS),
             4 => ::std::option::Option::Some(InputScriptType::SPENDP2SHWITNESS),
             5 => ::std::option::Option::Some(InputScriptType::SPENDTAPROOT),
+            6 => ::std::option::Option::Some(InputScriptType::SPENDADDRESS_UNCOMPRESSED),
             _ => ::std::option::Option::None
         }
     }
@@ -13125,6 +13128,7 @@ impl ::protobuf::Enum for InputScriptType {
             "SPENDWITNESS" => ::std::option::Option::Some(InputScriptType::SPENDWITNESS),
             "SPENDP2SHWITNESS" => ::std::option::Option::Some(InputScriptType::SPENDP2SHWITNESS),
             "SPENDTAPROOT" => ::std::option::Option::Some(InputScriptType::SPENDTAPROOT),
+            "SPENDADDRESS_UNCOMPRESSED" => ::std::option::Option::Some(InputScriptType::SPENDADDRESS_UNCOMPRESSED),
             _ => ::std::option::Option::None
         }
     }
@@ -13136,6 +13140,7 @@ impl ::protobuf::Enum for InputScriptType {
         InputScriptType::SPENDWITNESS,
         InputScriptType::SPENDP2SHWITNESS,
         InputScriptType::SPENDTAPROOT,
+        InputScriptType::SPENDADDRESS_UNCOMPRESSED,
     ];
 }
 
@@ -13679,20 +13684,20 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x18\x06\x20\x01(\t:\x07BitcoinR\x08coinName\x12Z\n\x0bscript_type\x18\
     \x07\x20\x01(\x0e2+.hw.trezor.messages.bitcoin.InputScriptType:\x0cSPEND\
     ADDRESSR\nscriptType\x12P\n\x0bamount_unit\x18\x08\x20\x01(\x0e2&.hw.tre\
-    zor.messages.bitcoin.AmountUnit:\x07BITCOINR\namountUnit*~\n\x0fInputScr\
-    iptType\x12\x10\n\x0cSPENDADDRESS\x10\0\x12\x11\n\rSPENDMULTISIG\x10\x01\
-    \x12\x0c\n\x08EXTERNAL\x10\x02\x12\x10\n\x0cSPENDWITNESS\x10\x03\x12\x14\
-    \n\x10SPENDP2SHWITNESS\x10\x04\x12\x10\n\x0cSPENDTAPROOT\x10\x05*\x99\
-    \x01\n\x10OutputScriptType\x12\x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0f\
-    PAYTOSCRIPTHASH\x10\x01\x12\x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYT\
-    OOPRETURN\x10\x03\x12\x10\n\x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2\
-    SHWITNESS\x10\x05\x12\x10\n\x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStaking\
-    SpendType\x12\t\n\x05SSGen\x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUni\
-    t\x12\x0b\n\x07BITCOIN\x10\0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\
-    \x0cMICROBITCOIN\x10\x02\x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPub\
-    keysOrder\x12\r\n\tPRESERVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#\
-    com.satoshilabs.trezor.lib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\
-    \x01\
+    zor.messages.bitcoin.AmountUnit:\x07BITCOINR\namountUnit*\x9d\x01\n\x0fI\
+    nputScriptType\x12\x10\n\x0cSPENDADDRESS\x10\0\x12\x11\n\rSPENDMULTISIG\
+    \x10\x01\x12\x0c\n\x08EXTERNAL\x10\x02\x12\x10\n\x0cSPENDWITNESS\x10\x03\
+    \x12\x14\n\x10SPENDP2SHWITNESS\x10\x04\x12\x10\n\x0cSPENDTAPROOT\x10\x05\
+    \x12\x1d\n\x19SPENDADDRESS_UNCOMPRESSED\x10\x06*\x99\x01\n\x10OutputScri\
+    ptType\x12\x10\n\x0cPAYTOADDRESS\x10\0\x12\x13\n\x0fPAYTOSCRIPTHASH\x10\
+    \x01\x12\x11\n\rPAYTOMULTISIG\x10\x02\x12\x11\n\rPAYTOOPRETURN\x10\x03\
+    \x12\x10\n\x0cPAYTOWITNESS\x10\x04\x12\x14\n\x10PAYTOP2SHWITNESS\x10\x05\
+    \x12\x10\n\x0cPAYTOTAPROOT\x10\x06*.\n\x16DecredStakingSpendType\x12\t\n\
+    \x05SSGen\x10\0\x12\t\n\x05SSRTX\x10\x01*J\n\nAmountUnit\x12\x0b\n\x07BI\
+    TCOIN\x10\0\x12\x10\n\x0cMILLIBITCOIN\x10\x01\x12\x10\n\x0cMICROBITCOIN\
+    \x10\x02\x12\x0b\n\x07SATOSHI\x10\x03*8\n\x14MultisigPubkeysOrder\x12\r\
+    \n\tPRESERVED\x10\0\x12\x11\n\rLEXICOGRAPHIC\x10\x01B?\n#com.satoshilabs\
+    .trezor.lib.protobufB\x14TrezorMessageBitcoin\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
