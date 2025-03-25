@@ -105,9 +105,9 @@ class TrezorClient:
         should_derive: bool = True,
     ) -> Session:
         """
-        Returns initialized session (with derived seed).
+        Returns a new session.
 
-        Will fail if the device is not initialized
+        In case of seed derivation, the function will fail if the device is not initialized.
         """
         from .transport.session import SessionV1, derive_seed
 
