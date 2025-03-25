@@ -8,7 +8,6 @@ import pytest
 from _pytest.nodes import Node
 from _pytest.outcomes import Failed
 
-from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from . import common
@@ -60,8 +59,7 @@ def screen_recording(
     finally:
         if client_callback:
             client = client_callback()
-        if client.protocol_version == ProtocolVersion.V1:
-            client.sync_responses()
+        client.sync_responses()
         # Wait for response to Initialize, which gives the emulator time to catch up
         # and redraw the homescreen. Otherwise there's a race condition between that
         # and stopping recording.
