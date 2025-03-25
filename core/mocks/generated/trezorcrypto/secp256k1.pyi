@@ -38,7 +38,8 @@ def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-secp256k1.h
-def verify_recover(signature: bytes, digest: bytes) -> bytes:
+def verify_recover(signature: bytes, digest: bytes, compressed: bool = True)
+-> bytes:
     """
     Uses signature of the digest to verify the digest and recover the public
     key. Returns public key on success, None if the signature is invalid.

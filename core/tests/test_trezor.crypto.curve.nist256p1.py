@@ -279,8 +279,8 @@ class TestCryptoNist256p1(unittest.TestCase):
                 sk = nist256p1.generate_secret()
                 pk = nist256p1.publickey(sk, compressed)
                 dig = random.bytes(32)
-                sig = nist256p1.sign_recoverable(sk, dig, compressed)
-                pk2 = nist256p1.verify_recover(sig, dig)
+                sig = nist256p1.sign_recoverable(sk, dig)
+                pk2 = nist256p1.verify_recover(sig, dig, compressed)
                 self.assertEqual(pk, pk2)
 
 

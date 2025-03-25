@@ -22,7 +22,7 @@ async def verify_message(msg: EthereumVerifyMessage) -> Success:
         raise DataError("Invalid signature")
     sig = decode_signature(msg.signature)
 
-    pubkey = secp256k1.verify_recover(sig, digest)
+    pubkey = secp256k1.verify_recover(sig, digest, False)
 
     if not pubkey:
         raise DataError("Invalid signature")

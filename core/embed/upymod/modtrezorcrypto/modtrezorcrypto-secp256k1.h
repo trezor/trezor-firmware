@@ -194,16 +194,18 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify(mp_obj_t public_key,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_verify_obj,
                                  mod_trezorcrypto_secp256k1_verify);
 
-/// def verify_recover(signature: bytes, digest: bytes) -> bytes:
+/// def verify_recover(signature: bytes, digest: bytes, compressed: bool = True)
+/// -> bytes:
 ///     """
 ///     Uses signature of the digest to verify the digest and recover the public
 ///     key. Returns public key on success, None if the signature is invalid.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
-                                                          mp_obj_t digest) {
+STATIC mp_obj_t
+mod_trezorcrypto_secp256k1_verify_recover(size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t sig = {0}, dig = {0};
-  mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
-  mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[0], &sig, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
+  bool compressed = n_args < 3 || args[2] == mp_const_true;
   if (sig.len != 65) {
     return mp_const_none;
   }
@@ -214,7 +216,6 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
   if (recid >= 8) {
     return mp_const_none;
   }
-  bool compressed = (recid >= 4);
   recid &= 3;
   vstr_t pk = {0};
   vstr_init_len(&pk, 65);
@@ -230,9 +231,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
     return mp_const_none;
   }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_verify_recover_obj,
-                                 mod_trezorcrypto_secp256k1_verify_recover);
-
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_secp256k1_verify_recover_obj, 2, 3,
+    mod_trezorcrypto_secp256k1_verify_recover);
 /// def multiply(secret_key: bytes, public_key: bytes) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
