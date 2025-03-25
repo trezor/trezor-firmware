@@ -100,6 +100,7 @@ async def verify_message(msg: VerifyMessage) -> Success:
     pubkey = secp256k1.verify_recover(
         recoverable_signature,
         digest,
+        signature_script_type != InputScriptType.SPENDADDRESS_UNCOMPRESSED,
     )
 
     if not pubkey:

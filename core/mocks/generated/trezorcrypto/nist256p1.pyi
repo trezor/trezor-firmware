@@ -36,7 +36,8 @@ def verify(
 
 
 # upymod/modtrezorcrypto/modtrezorcrypto-nist256p1.h
-def verify_recover(signature: AnyBytes, digest: AnyBytes) -> bytes:
+def verify_recover(signature: AnyBytes, digest: AnyBytes, compressed: bool =
+True) -> bytes:
     """
     Uses signature of the digest to verify the digest and recover the public
     key. Returns public key on success, None if the signature is invalid.

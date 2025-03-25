@@ -246,8 +246,8 @@ class TestCryptoSecp256k1(unittest.TestCase):
                 sk = secp256k1.generate_secret()
                 pk = secp256k1.publickey(sk, compressed)
                 dig = random.bytes(32)
-                sig = secp256k1.sign_recoverable(sk, dig, compressed)
-                pk2 = secp256k1.verify_recover(sig, dig)
+                sig = secp256k1.sign_recoverable(sk, dig)
+                pk2 = secp256k1.verify_recover(sig, dig, compressed)
                 self.assertEqual(pk, pk2)
 
     def test_ecdh(self):
