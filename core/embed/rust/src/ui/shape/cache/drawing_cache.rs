@@ -6,6 +6,8 @@ use super::blur_cache::BlurCache;
 #[cfg(all(feature = "ui_jpeg", not(feature = "hw_jpeg_decoder")))]
 use super::jpeg_cache::JpegCache;
 
+use super::toif_cache::ToifCache;
+
 #[cfg(feature = "hw_jpeg_decoder")]
 use crate::trezorhal::jpegdec;
 
@@ -18,6 +20,8 @@ const ALIGN_PAD: usize = 8;
 const ZLIB_CACHE_SLOTS: usize = 1;
 #[cfg(not(feature = "framebuffer"))]
 const ZLIB_CACHE_SLOTS: usize = 3;
+
+const TOIF_CACHE_SLOTS: usize = 2;
 
 #[cfg(not(feature = "framebuffer"))]
 const RENDER_BUFF_SIZE: usize = (240 * 2 * 16) + ALIGN_PAD;
@@ -65,6 +69,8 @@ pub struct DrawingCache<'a> {
     #[cfg(feature = "ui_blurring")]
     blur_cache: RefCell<BlurCache<'a>>,
 
+    toif_cache: RefCell<ToifCache<'a>>,
+
     #[cfg(not(feature = "framebuffer"))]
     render_buff: &'a RefCell<RenderBuff>,
 }
@@ -93,6 +99,11 @@ impl<'a> DrawingCache<'a> {
             #[cfg(feature = "ui_blurring")]
             blur_cache: RefCell::new(unwrap!(BlurCache::new(bump_a), "Blur cache alloc")),
 
+            toif_cache: RefCell::new(unwrap!(
+                ToifCache::new(bump_a, TOIF_CACHE_SLOTS),
+                "TOIF cache alloc"
+            )),
+
             #[cfg(not(feature = "framebuffer"))]
             render_buff: unwrap!(alloc_buf(bump_b), "Render buff alloc"),
         }
@@ -113,6 +124,11 @@ impl<'a> DrawingCache<'a> {
     #[cfg(feature = "ui_blurring")]
     pub fn blur(&self) -> RefMut<BlurCache<'a>> {
         self.blur_cache.borrow_mut()
+    }
+
+    /// Returns the TOIF cache for accessing cached decompressed images
+    pub fn toif_cache(&self) -> RefMut<'_, ToifCache<'a>> {
+        self.toif_cache.borrow_mut()
     }
 
     /// Returns a buffer used for ProgressiveRenderer slice
@@ -141,6 +157,8 @@ impl<'a> DrawingCache<'a> {
         {
             size += BlurCache::get_bump_size();
         }
+
+        size += ToifCache::get_bump_size(TOIF_CACHE_SLOTS);
 
         size
     }

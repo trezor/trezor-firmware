@@ -26,6 +26,8 @@ pub struct ToifImage<'a> {
     alpha: u8,
     /// Final size calculated from TOIF data
     size: Offset,
+    /// Whether to use caching
+    use_cache: bool,
 }
 
 impl<'a> ToifImage<'a> {
@@ -38,6 +40,7 @@ impl<'a> ToifImage<'a> {
             bg_color: None,
             alpha: 255,
             size: Offset::zero(),
+            use_cache: false,
         }
     }
 
@@ -50,6 +53,7 @@ impl<'a> ToifImage<'a> {
             bg_color: None,
             alpha: 255,
             size: Offset::zero(),
+            use_cache: false,
         }
     }
 
@@ -72,12 +76,41 @@ impl<'a> ToifImage<'a> {
         Self { alpha, ..self }
     }
 
+    pub fn with_cache(self, use_cache: bool) -> Self {
+        Self { use_cache, ..self }
+    }
+
     pub fn render(mut self, renderer: &mut impl Renderer<'a>) {
         self.size = self.calc_size();
         renderer.render_shape(self);
     }
 
+    fn draw_from_cache(&self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) -> bool {
+        if !self.use_cache {
+            return false;
+        }
+
+        let mut toif_cache = cache.toif_cache();
+        let mut zlib_cache = cache.zlib();
+
+        // Draw directly from cache to canvas
+        toif_cache.draw_to_canvas(
+            self.toif,
+            canvas,
+            self.bounds(),
+            Some(self.fg_color),
+            self.bg_color,
+            self.alpha,
+            &mut zlib_cache,
+        )
+    }
+
     fn draw_grayscale(&self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
+        // Check if we can use the cache
+        if self.draw_from_cache(canvas, cache) {
+            return;
+        }
+
         // TODO: introduce new viewport/shape function for this calculation
         let bounds = self.bounds();
         let viewport = canvas.viewport();
@@ -127,6 +160,11 @@ impl<'a> ToifImage<'a> {
     }
 
     fn draw_rgb(&self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
+        // Check if we can use the cache
+        if self.draw_from_cache(canvas, cache) {
+            return;
+        }
+
         // TODO: introduce new viewport/shape function for this calculation
         let bounds = self.bounds();
         let viewport = canvas.viewport();
@@ -172,7 +210,6 @@ impl<'a> ToifImage<'a> {
 
     fn calc_size(&self) -> Offset {
         let info = unwrap!(ToifInfo::parse(self.toif), "Invalid image");
-
         info.size()
     }
 }
@@ -182,8 +219,12 @@ impl<'a> Shape<'a> for ToifImage<'a> {
         Rect::from_top_left_and_size(self.size.snap(self.pos, self.align), self.size)
     }
 
-    fn cleanup(&mut self, _cache: &DrawingCache<'a>) {
-        // TODO: inform the cache that we won't use the zlib slot anymore
+    fn cleanup(&mut self, cache: &DrawingCache<'a>) {
+        // If we're using caching, release our reference when we're done
+        if self.use_cache {
+            cache.toif_cache().release(self.toif);
+        }
+        // TODO: inform the zlib cache that we won't use the zlib slot anymore
     }
 
     fn draw(&mut self, canvas: &mut dyn Canvas, cache: &DrawingCache<'a>) {
