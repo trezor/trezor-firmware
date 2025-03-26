@@ -16,11 +16,11 @@
 
 import pytest
 
-from trezorlib import cardano, messages, models
-from trezorlib.btc import get_public_node
+from trezorlib import cardano, exceptions, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.tools import parse_path
+from trezorlib.tools import Address, parse_path
+from trezorlib.transport.session import Session, SessionV1
 
 from ..common import get_test_address
 
@@ -28,6 +28,22 @@ ADDRESS_N = parse_path("m/44h/0h/0h")
 XPUB = "xpub6BiVtCpG9fQPxnPmHXG8PhtzQdWC2Su4qWu6XW9tpWFYhxydCLJGrWBJZ5H6qTAHdPQ7pQhtpjiYZVZARo14qHiay2fvrX996oEP42u8wZy"
 
 PIN4 = "1234"
+
+
+def _get_public_node(
+    session: "Session",
+    address: "Address",
+    passphrase: str | None = None,
+) -> messages.PublicKey:
+
+    resp = session.call_raw(
+        messages.GetPublicKey(address_n=address),
+    )
+    if isinstance(resp, messages.ButtonRequest):
+        resp = session._callback_button(resp)
+    if passphrase is not None:
+        resp = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
+    return resp
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase="")
@@ -44,13 +60,13 @@ def test_clear_session(client: Client):
     with session:
         client.use_pin_sequence([PIN4])
         session.set_expected_responses(init_responses + cached_responses)
-        assert get_public_node(session, ADDRESS_N).xpub == XPUB
+        assert _get_public_node(session, ADDRESS_N, passphrase="").xpub == XPUB
 
     session.resume()
     with session:
         # pin and passphrase are cached
         session.set_expected_responses(cached_responses)
-        assert get_public_node(session, ADDRESS_N).xpub == XPUB
+        assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
     session.lock()
     session.end()
@@ -60,13 +76,13 @@ def test_clear_session(client: Client):
     with session:
         client.use_pin_sequence([PIN4])
         session.set_expected_responses(init_responses + cached_responses)
-        assert get_public_node(session, ADDRESS_N).xpub == XPUB
+        assert _get_public_node(session, ADDRESS_N, passphrase="").xpub == XPUB
 
     session.resume()
     with session:
         # pin and passphrase are cached
         session.set_expected_responses(cached_responses)
-        assert get_public_node(session, ADDRESS_N).xpub == XPUB
+        assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
 
 def test_end_session(client: Client):
@@ -109,9 +125,10 @@ def test_cannot_resume_ended_session(client: Client):
     assert session.id == session_id
 
     session.end()
-    session.resume()
+    with pytest.raises(exceptions.FailedSessionResumption) as e:
+        session.resume()
 
-    assert session.id != session_id
+    assert e.value.received_session_id != session_id
 
 
 def test_end_session_only_current(client: Client):
@@ -124,8 +141,10 @@ def test_end_session_only_current(client: Client):
     # assert client.session_id is None
 
     # resume ended session
-    session_b.resume()
-    assert session_b.id != session_b_id
+    with pytest.raises(exceptions.FailedSessionResumption) as e:
+        session_b.resume()
+
+    assert e.value.received_session_id != session_b_id
 
     # resume first session that was not ended
     session_a.resume()
@@ -136,14 +155,7 @@ def test_end_session_only_current(client: Client):
 def test_session_recycling(client: Client):
     session = client.get_session(passphrase="TREZOR")
     with session:
-        session.set_expected_responses(
-            [
-                messages.PassphraseRequest,
-                messages.ButtonRequest,
-                messages.ButtonRequest,
-                messages.Address,
-            ]
-        )
+        session.set_expected_responses([messages.Address])
         address = get_test_address(session)
 
     # create and close 100 sessions - more than the session limit
@@ -174,10 +186,10 @@ def test_derive_cardano_empty_session(client: Client):
     assert session.id == session_id
 
     # restarting same session should go well with any setting
-    session_3 = client.get_session(session_id=session_id, derive_cardano=False)
-    assert session_id == session_3.id
-    session_4 = client.get_session(session_id=session_id, derive_cardano=True)
-    assert session_id == session_4.id
+    session.init_session(derive_cardano=False)
+    assert session_id == session.id
+    session.init_session(derive_cardano=True)
+    assert session_id == session.id
 
 
 @pytest.mark.altcoin
@@ -199,24 +211,30 @@ def test_derive_cardano_running_session(client: Client):
     assert session.id == session_id
 
     # restarting same session should go well if we _don't_ want to derive cardano
-    session_3 = client.get_session(session_id=session_id, derive_cardano=False)
-    assert session_3.id == session.id
+    session.init_session(derive_cardano=False)
+    assert session.id == session_id
 
     # restarting with derive_cardano=True should kill old session and create new one
-    session_4 = client.get_session(derive_cardano=True)
-    session_4_id = session_4.id
-    assert session_4_id != session.id
+    with pytest.raises(exceptions.FailedSessionResumption) as e:
+        session.init_session(derive_cardano=True)
+    session_2 = SessionV1(client, e.value.received_session_id)
+    session_2.derive_cardano = True
+    session_2_id = session_2.id
+    assert session_2_id != session.id
 
     # new session should have Cardano capability
-    cardano.get_public_key(session_4, parse_path("m/44h/1815h/0h"))
+    cardano.get_public_key(session_2, parse_path("m/44h/1815h/0h"))
 
     # restarting with derive_cardano=True should keep same session
-    session_4.resume()
-    assert session_4.id == session_4_id
+    session_2.resume()
+    assert session_2.id == session_2_id
 
     # restarting with derive_cardano=False should kill old session and create new one
-    session_6 = client.get_session(session_id=session_4.id, derive_cardano=False)
-    assert session_4.id != session_6.id
+    with pytest.raises(exceptions.FailedSessionResumption) as e:
+        session_2.init_session(derive_cardano=False)
+    session_3 = SessionV1(client, e.value.received_session_id)
+
+    assert session_2.id != session_3.id
 
     with pytest.raises(TrezorFailure, match="not enabled"):
-        cardano.get_public_key(session_6, parse_path("m/44h/1815h/0h"))
+        cardano.get_public_key(session_3, parse_path("m/44h/1815h/0h"))
