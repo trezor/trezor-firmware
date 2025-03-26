@@ -14,8 +14,12 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+import pytest
+
 from trezorlib import btc
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+
+pytestmark = pytest.mark.models(skip=["eckhart"])
 
 
 def test_message_long(client: Client):
