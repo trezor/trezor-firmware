@@ -61,10 +61,8 @@ logging.basicConfig(
 LOG = logging.getLogger()
 
 
-def pin_callback(
-    session: transport_session.Session, request: trezorlib.messages.PinMatrixRequest
-) -> t.Any:
-    return session.call_raw(trezorlib.messages.PinMatrixAck(pin=""))
+def pin_callback(request: trezorlib.messages.PinMatrixRequest) -> str:
+    return ""
 
 
 def passphrase_callback(
