@@ -35,6 +35,7 @@ use crate::trezorhal::rgb_led::set_color;
 
 #[cfg(feature = "button")]
 use crate::ui::event::{ButtonEvent, PhysicalButton};
+use crate::ui::layout_bolt::component::pairing_mode::{PairingMode, PairingMsg};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
@@ -76,6 +77,8 @@ pub struct Homescreen {
     delay: Timer,
     pairing: bool,
     pairing_dialog: Option<ConfirmPairing<'static>>,
+    pairing_wait: bool,
+    pairing_wait_dialog: PairingMode,
 }
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -100,6 +103,14 @@ impl Homescreen {
             delay: Timer::new(),
             pairing: false,
             pairing_dialog: None,
+            pairing_wait: false,
+            pairing_wait_dialog: PairingMode::new(
+                "Waiting for pairing".into(),
+                fonts::FONT_NORMAL,
+                theme::FG,
+                theme::BG,
+                Button::with_text("Cancel".into()),
+            ),
         }
     }
 
@@ -172,6 +183,7 @@ impl Homescreen {
             }
             Event::BLE(BLEEvent::PairingCanceled) => {
                 self.pairing = false;
+                self.pairing_wait = false;
                 self.pairing_dialog = None;
                 #[cfg(feature = "rgb_led")]
                 set_color(0);
@@ -179,7 +191,7 @@ impl Homescreen {
             }
             Event::BLE(BLEEvent::PairingRequest(data)) => {
                 self.pairing = true;
-
+                self.pairing_wait = false;
 
                 let mut pd = ConfirmPairing::new(
                     theme::BG,
@@ -204,6 +216,9 @@ impl Homescreen {
 
     fn pairing(&self) -> bool {
         self.pairing
+    }
+    fn pairing_wait(&self) -> bool {
+        self.pairing_wait
     }
 
     fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
@@ -257,6 +272,7 @@ impl Component for Homescreen {
         self.pad.place(AREA);
         self.loader.place(AREA.translate(LOADER_OFFSET));
         self.pairing_dialog.place(AREA);
+        self.pairing_wait_dialog.place(AREA);
         bounds
     }
 
@@ -266,6 +282,21 @@ impl Component for Homescreen {
         if self.hold_to_lock {
             if Self::event_hold(self, ctx, event) {
                 return Some(HomescreenMsg::Dismissed);
+            }
+        }
+
+        if self.pairing_wait() {
+            if let Some(msg) = self.pairing_wait_dialog.event(ctx, event) {
+                match msg {
+                    PairingMsg::Cancel => {
+                        //ble::start_advertising();
+                        self.pairing_wait = false;
+                        ctx.request_paint();
+                        #[cfg(feature = "rgb_led")]
+                        set_color(0);
+                    }
+                    _ => {}
+                }
             }
         }
 
@@ -299,6 +330,8 @@ impl Component for Homescreen {
             #[cfg(feature = "rgb_led")]
             set_color(0xff);
             self.label.map(|t| pairing_mode(t));
+            self.pairing_wait = true;
+            ctx.request_paint();
             None
             //Some(HomescreenMsg::Dismissed)
         } else {
@@ -310,6 +343,8 @@ impl Component for Homescreen {
         self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
+        } else if self.pairing_wait() {
+            self.pairing_wait_dialog.render(target);
         } else if self.pairing() {
             self.pairing_dialog.render(target);
         } else {
