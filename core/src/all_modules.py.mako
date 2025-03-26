@@ -99,3 +99,7 @@ ALPHABET = "abcdefghijklmnopqrstuvwxyz"
 ${letter}
 ${letter.upper()}
 % endfor
+# generate module presizing identifiers
+% for i in range(30):
+___PRESIZE_MODULE_${i}
+% endfor
