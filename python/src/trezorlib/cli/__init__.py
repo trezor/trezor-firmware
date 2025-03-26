@@ -149,7 +149,9 @@ class TrezorConnection:
                         click.echo(
                             "Session-id stored in TREZOR_SESSION_ID is no longer valid. Call 'unset TREZOR_SESSION_ID' to clear it."
                         )
-                    raise exceptions.FailedSessionResumption()
+                    raise exceptions.FailedSessionResumption(
+                        received_session_id=session.id
+                    )
             return session
 
         features = client.protocol.get_features()
@@ -169,7 +171,7 @@ class TrezorConnection:
             available_on_device = Capability.PassphraseEntry in features.capabilities
             passphrase = get_passphrase(available_on_device, self.passphrase_on_host)
         session = client.get_session(
-            passphrase=passphrase, derive_cardano=derive_cardano, should_derive=True
+            passphrase=passphrase, derive_cardano=derive_cardano
         )
         return session
 
