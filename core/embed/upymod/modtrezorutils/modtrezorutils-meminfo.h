@@ -702,7 +702,7 @@ void dump_qstr_pool(FILE *out, const qstr_pool_t *pool) {
   for (const char *const *q = pool->qstrs, *const *q_top =
                                                pool->qstrs + pool->len;
        q < q_top; q++) {
-    escape_and_dump_string(out, Q_GET_DATA(*q));
+    escape_and_dump_string(out, *q);
     if (q < (q_top - 1))
       fprintf(out, ",\n");
     else
