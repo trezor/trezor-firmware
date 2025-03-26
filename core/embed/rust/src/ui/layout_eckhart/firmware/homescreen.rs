@@ -284,22 +284,33 @@ pub fn check_homescreen_format(image: BinaryData) -> bool {
     }
 }
 
-fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color>) {
-    const DEFAULT_HS_TILE_ROWS: usize = 4;
-    const DEFAULT_HS_TILE_COLS: usize = 4;
-    const DEFAULT_HS_AREA: Rect = SCREEN.inset(Insets::bottom(140));
-    const DEFAULT_HS_GRID: Grid =
-        Grid::new(DEFAULT_HS_AREA, DEFAULT_HS_TILE_ROWS, DEFAULT_HS_TILE_COLS);
-    const DEFAULT_HS_TILES_2: [(usize, usize); 3] = [(1, 1), (2, 1), (3, 1)];
+const DEFAULT_HS_TILE_ROWS: usize = 4;
+const DEFAULT_HS_TILE_COLS: usize = 4;
+const DEFAULT_HS_AREA: Rect = SCREEN.inset(Insets::bottom(140));
+const DEFAULT_HS_GRID: Grid =
+    Grid::new(DEFAULT_HS_AREA, DEFAULT_HS_TILE_ROWS, DEFAULT_HS_TILE_COLS);
+const DEFAULT_HS_TILES_2: [(usize, usize); 3] = [(1, 1), (2, 1), (3, 1)];
+const VERT_STEP: usize = 4;
+const HORZ_STEP: usize = 4;
 
+const Y_MAX: i16 = SCREEN.y1 - theme::ACTION_BAR_HEIGHT;
+const Y_RANGE: i16 = Y_MAX - SCREEN.y0;
+const X_MID: i16 = SCREEN.x0 + SCREEN.width() / 2;
+const X_HALF_WIDTH: f32 = (SCREEN.width() / 2) as f32;
+
+fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color>) {
     // Layer 1: Base Solid Colour
     shape::Bar::new(SCREEN)
         .with_bg(GREY_EXTRA_DARK)
         .render(target);
 
     // Layer 2: Base Gradient overlay
-    for y in SCREEN.y0..SCREEN.y1 {
-        let slice = Rect::new(Point::new(SCREEN.x0, y), Point::new(SCREEN.x1, y + 1));
+    let slice_height = 4;
+    for y in (SCREEN.y0..Y_MAX).step_by(slice_height) {
+        let slice = Rect::new(
+            Point::new(SCREEN.x0, y),
+            Point::new(SCREEN.x1, y + slice_height as i16),
+        );
         let factor = (y - SCREEN.y0) as f32 / SCREEN.height() as f32;
         shape::Bar::new(slice)
             .with_bg(BG)
@@ -313,15 +324,16 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
     }
 
     // Layer 4: Tile pattern
-    // TODO: improve frame rate
     for row in 0..DEFAULT_HS_TILE_ROWS {
         for col in 0..DEFAULT_HS_TILE_COLS {
             let tile_area = DEFAULT_HS_GRID.row_col(row, col);
-            let icon = if DEFAULT_HS_TILES_2.contains(&(row, col)) {
+            let is_reversed = DEFAULT_HS_TILES_2.iter().any(|&pos| pos == (row, col));
+            let icon = if is_reversed {
                 theme::ICON_HS_TILE_2.toif
             } else {
                 theme::ICON_HS_TILE_1.toif
             };
+
             shape::ToifImage::new(tile_area.top_left(), icon)
                 .with_align(Alignment2D::TOP_LEFT)
                 .with_fg(BLACK)
@@ -331,48 +343,48 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
 }
 
 fn render_led_simulation<'a>(color: Color, target: &mut impl Renderer<'a>) {
-    const Y_MAX: i16 = SCREEN.y1 - theme::ACTION_BAR_HEIGHT;
-    const Y_RANGE: i16 = Y_MAX - SCREEN.y0;
-
-    const X_MID: i16 = SCREEN.x0 + SCREEN.width() / 2;
-    const X_HALF_WIDTH: f32 = (SCREEN.width() / 2) as f32;
+    // Pre-compute commonly used values
+    let y_range_f32 = Y_RANGE as f32;
 
     // Vertical gradient (color intensity fading from bottom to top)
-    for y in SCREEN.y0..Y_MAX {
-        let factor = (y - SCREEN.y0) as f32 / Y_RANGE as f32;
-        let slice = Rect::new(Point::new(SCREEN.x0, y), Point::new(SCREEN.x1, y + 1));
+    for y in (SCREEN.y0..Y_MAX).step_by(VERT_STEP) {
+        let factor = (y - SCREEN.y0) as f32 / y_range_f32;
+        let slice = Rect::new(
+            Point::new(SCREEN.x0, y),
+            Point::new(SCREEN.x1, y + VERT_STEP as i16),
+        );
 
-        // Gradient 1 (Overall intensity: 35%)
-        // Stops:     0%,  40%
-        // Opacity: 100%,  20%
         let factor_grad_1 = (factor / 0.4).clamp(0.2, 1.0);
+        let factor_grad_2 = ((factor - 0.02) / (0.63 - 0.02)).clamp(0.0, 1.0);
+
+        let alpha1 = u8::lerp(89, u8::MIN, factor_grad_1);
+        let alpha2 = u8::lerp(179, u8::MIN, factor_grad_2);
+
         shape::Bar::new(slice)
             .with_bg(color)
-            .with_alpha(u8::lerp(89, u8::MIN, factor_grad_1))
+            .with_alpha(alpha1)
             .render(target);
 
-        // Gradient 2 (Overall intensity: 70%)
-        // Stops:     2%, 63%
-        // Opacity: 100%,  0%
-        let factor_grad_2 = ((factor - 0.02) / (0.63 - 0.02)).clamp(0.0, 1.0);
-        let alpha = u8::lerp(179, u8::MIN, factor_grad_2);
         shape::Bar::new(slice)
             .with_bg(color)
-            .with_alpha(alpha)
+            .with_alpha(alpha2)
             .render(target);
     }
 
     // Horizontal gradient (transparency increasing toward center)
-    for x in SCREEN.x0..SCREEN.x1 {
-        const WIDTH: i16 = SCREEN.width();
-        let slice = Rect::new(Point::new(x, SCREEN.y0), Point::new(x + 1, Y_MAX));
-        // Gradient 3
-        // Calculate distance from center as a normalized factor (0 at center, 1 at
-        // edges)
+    for x in (SCREEN.x0..SCREEN.x1).step_by(HORZ_STEP) {
+        let slice = Rect::new(
+            Point::new(x, SCREEN.y0),
+            Point::new(x + HORZ_STEP as i16, Y_MAX),
+        );
+
+        // Calculate distance from center
         let dist_from_mid = (x - X_MID).abs() as f32 / X_HALF_WIDTH;
+        let alpha = u8::lerp(u8::MIN, u8::MAX, dist_from_mid);
+
         shape::Bar::new(slice)
             .with_bg(BG)
-            .with_alpha(u8::lerp(u8::MIN, u8::MAX, dist_from_mid))
+            .with_alpha(alpha)
             .render(target);
     }
 }
