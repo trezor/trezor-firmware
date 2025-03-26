@@ -8,6 +8,7 @@ use crate::{
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
+        lerp::Lerp,
         shape::{self, Renderer},
         util::split_two_lines,
     },
@@ -34,6 +35,7 @@ pub struct Button {
     long_press: Option<Duration>,
     long_timer: Timer,
     haptic: bool,
+    gradient: bool,
 }
 
 impl Button {
@@ -56,6 +58,7 @@ impl Button {
             long_press: None,
             long_timer: Timer::new(),
             haptic: true,
+            gradient: false,
         }
     }
 
@@ -110,12 +113,21 @@ impl Button {
     }
 
     pub fn with_radius(mut self, radius: u8) -> Self {
+        // Both radius and gradient not supported
+        debug_assert!(!self.gradient);
         self.radius = Some(radius);
         self
     }
 
     pub fn without_haptics(mut self) -> Self {
         self.haptic = false;
+        self
+    }
+
+    pub fn with_gradient(mut self) -> Self {
+        // Both radius and gradient not supported
+        debug_assert!(self.radius.is_none());
+        self.gradient = true;
         self
     }
 
@@ -237,26 +249,71 @@ impl Button {
         }
     }
 
+    fn render_gradient_bar<'s>(&self, target: &mut impl Renderer<'s>, style: &ButtonStyle) {
+        let height = self.area.height();
+        let half_width = (self.area.width() / 2) as f32;
+        let x_mid = self.area.center().x;
+
+        // Layer 1: Horizontal Gradient (Overall intensity: 100%)
+        // Stops:    21%, 100%
+        // Opacity: 100%,  20%
+        for y in self.area.y0..self.area.y1 {
+            let factor = (y - self.area.y0) as f32 / height as f32;
+            let slice = Rect::new(Point::new(self.area.x0, y), Point::new(self.area.x1, y + 1));
+            let factor_grad = ((factor - 0.21) / (1.00 - 0.21)).clamp(0.0, 1.0);
+            let alpha = u8::lerp(u8::MAX, 51, factor_grad);
+            shape::Bar::new(slice)
+                .with_bg(style.button_color)
+                .with_alpha(alpha)
+                .render(target);
+        }
+
+        // Layer 2: Vertical Gradient (Overall intensity: 100%)
+        // distance from mid
+        for x in self.area.x0..self.area.x1 {
+            let slice = Rect::new(Point::new(x, self.area.y0), Point::new(x + 1, self.area.y1));
+            let dist_from_mid = (x - x_mid).abs() as f32 / half_width;
+            let alpha = u8::lerp(u8::MIN, u8::MAX, dist_from_mid);
+            shape::Bar::new(slice)
+                .with_bg(theme::BG)
+                .with_alpha(alpha)
+                .render(target);
+        }
+
+        // Layer 3: Black overlay (Overall intensity: 20%)
+        shape::Bar::new(self.area)
+            .with_bg(theme::BG)
+            .with_alpha(51)
+            .render(target);
+    }
+
     pub fn render_background<'s>(
         &self,
         target: &mut impl Renderer<'s>,
         style: &ButtonStyle,
         alpha: u8,
     ) {
-        if self.radius.is_some() {
-            shape::Bar::new(self.area)
-                .with_bg(style.background_color)
-                .with_radius(self.radius.unwrap() as i16)
-                .with_thickness(2)
-                .with_fg(style.button_color)
-                .with_alpha(alpha)
-                .render(target);
-        } else {
-            shape::Bar::new(self.area)
-                .with_bg(style.button_color)
-                .with_fg(style.button_color)
-                .with_alpha(alpha)
-                .render(target);
+        match (self.radius, self.gradient) {
+            (Some(radius), _) => {
+                shape::Bar::new(self.area)
+                    .with_bg(style.background_color)
+                    .with_radius(radius as i16)
+                    .with_thickness(2)
+                    .with_fg(style.button_color)
+                    .with_alpha(alpha)
+                    .render(target);
+            }
+            // Gradient bar is rendered only in `normal` state, not `active` or `disabled`
+            (None, true) if self.state == State::Initial || self.state == State::Released => {
+                self.render_gradient_bar(target, style);
+            }
+            _ => {
+                shape::Bar::new(self.area)
+                    .with_bg(style.button_color)
+                    .with_fg(style.button_color)
+                    .with_alpha(alpha)
+                    .render(target);
+            }
         }
     }
 
