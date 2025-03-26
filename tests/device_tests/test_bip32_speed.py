@@ -25,7 +25,7 @@ from trezorlib.tools import H_
 
 pytestmark = [
     pytest.mark.models("legacy"),
-    pytest.mark.flaky(reruns=5),
+    pytest.mark.flaky(retries=5),
 ]
 
 
