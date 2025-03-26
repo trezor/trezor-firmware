@@ -359,6 +359,7 @@ def show_success(
     content: str,
     subheader: str | None = None,
     button: str | None = None,
+    time_ms: int = 0,
 ) -> Awaitable[None]:
     button = button or TR.buttons__continue  # def_arg
     return raise_if_not_confirmed(
@@ -367,6 +368,7 @@ def show_success(
             button=button,
             description=content,
             allow_cancel=False,
+            time_ms=time_ms,
         ),
         br_name,
         ButtonRequestType.Success,

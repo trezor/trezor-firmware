@@ -832,7 +832,7 @@ impl FirmwareUI for UIEckhart {
         button: TString<'static>,
         description: TString<'static>,
         allow_cancel: bool,
-        _time_ms: u32,
+        time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description)
             .into_paragraphs()
@@ -845,6 +845,8 @@ impl FirmwareUI for UIEckhart {
                 Button::with_icon(theme::ICON_CROSS),
                 Button::with_text(button),
             )
+        } else if time_ms > 0 {
+            ActionBar::new_timeout(Button::with_text(button), time_ms)
         } else {
             ActionBar::new_single(Button::with_text(button))
         };
