@@ -19,7 +19,7 @@ use crate::{
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
-        layout_bolt::component::bl_confirm::{Confirm, ConfirmMsg, ConfirmTitle},
+        layout_bolt::component::confirm_pairing::{ConfirmPairing, ConfirmPairingMsg},
         shape::{self, Renderer},
     },
 };
@@ -75,7 +75,7 @@ pub struct Homescreen {
     paint_notification_only: bool,
     delay: Timer,
     pairing: bool,
-    pairing_dialog: Option<Confirm<'static>>,
+    pairing_dialog: Option<ConfirmPairing<'static>>,
 }
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -181,26 +181,17 @@ impl Homescreen {
                 self.pairing = true;
 
 
-                let mut pd = Confirm::new(
+                let mut pd = ConfirmPairing::new(
                     theme::BG,
                     Button::with_text("Cancel".into()),
                     Button::with_text("Confirm".into()),
-                    ConfirmTitle::Text(Label::new(
-                        "Pairing Request".into(),
-                        Alignment::Start,
-                        theme::TEXT_BOLD,
-                    )),
                     Label::new(
-                        "Pairing request received from another device. Confirm to pair.".into(),
+                        "Pairing request received".into(),
                         Alignment::Center,
                         theme::TEXT_NORMAL,
                     ),
-                )
-                .with_alert(Label::new(
-                    "".into(),
-                    Alignment::Center,
-                    theme::TEXT_NORMAL,
-                )).with_num_code(data);
+                    data,
+                );
 
                 pd.place(AREA);
 
@@ -281,14 +272,14 @@ impl Component for Homescreen {
         if self.pairing() {
             if let Some(msg) = self.pairing_dialog.event(ctx, event) {
                 match msg {
-                    ConfirmMsg::Cancel => {
+                    ConfirmPairingMsg::Cancel => {
                         ble::reject_pairing();
                         self.pairing = false;
                         ctx.request_paint();
                         #[cfg(feature = "rgb_led")]
                         set_color(0);
                     }
-                    ConfirmMsg::Confirm => {
+                    ConfirmPairingMsg::Confirm => {
                         ble::allow_pairing();
                         self.pairing = false;
                         ctx.request_paint();

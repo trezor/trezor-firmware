@@ -10,8 +10,7 @@ use crate::{
         shape::Renderer,
     },
 };
-use crate::strutil::format_i64;
-use crate::ui::layout_bolt::fonts;
+
 use super::{
     super::{
         constant::WIDTH,
@@ -66,7 +65,6 @@ pub struct Confirm<'a> {
     right_button: Child<Button>,
     info: Option<ConfirmInfo<'a>>,
     show_info: bool,
-    num_code: Option<u32>,
 }
 
 impl<'a> Confirm<'a> {
@@ -88,17 +86,11 @@ impl<'a> Confirm<'a> {
             alert: None,
             info: None,
             show_info: false,
-            num_code: None,
         }
     }
 
     pub fn with_alert(mut self, alert: Label<'static>) -> Self {
         self.alert = Some(Child::new(alert.vertically_centered()));
-        self
-    }
-
-    pub fn with_num_code(mut self, num_code: u32) -> Self {
-        self.num_code = Some(num_code);
         self
     }
 
@@ -237,22 +229,6 @@ impl Component for Confirm<'_> {
 
         self.message.render(target);
         self.alert.render(target);
-
-        if let Some(code) = self.num_code {
-
-            let mut buf = [0; 20];
-            let text = unwrap!(format_i64(code as _, &mut buf));
-
-            if let Some(a) = &self.alert {
-
-                let pos = a.inner().area().bottom_left();
-                shape::Text::new(pos, text, fonts::FONT_BOLD_UPPER)
-                    .with_fg(WHITE)
-                    .render(target);
-            }
-
-        }
-
         self.left_button.render(target);
         self.right_button.render(target);
         match &self.title {
