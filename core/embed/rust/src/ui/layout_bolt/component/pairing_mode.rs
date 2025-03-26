@@ -35,10 +35,13 @@ pub struct PairingMode {
 }
 
 impl PairingMode {
-    pub fn new<T>(message: T, font: Font, fg: Color, bg: Color, button: Button) -> Self
-    where
-        T: Into<TString<'static>>,
-    {
+    pub fn new(
+        message: TString<'static>,
+        font: Font,
+        fg: Color,
+        bg: Color,
+        button: Button,
+    ) -> Self {
         let mut instance = Self {
             fg,
             bg: Pad::with_background(bg),
