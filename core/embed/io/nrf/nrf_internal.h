@@ -36,9 +36,7 @@ uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len);
 void nrf_int_send(const uint8_t *data, uint32_t len);
 uint32_t nrf_int_receive(uint8_t *data, uint32_t len);
 
-bool nrf_firmware_running(void);
 
-bool nrf_reboot(void);
 bool nrf_reboot_to_bootloader(void);
 
 void nrf_signal_running(void);

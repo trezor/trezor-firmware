@@ -742,6 +742,15 @@ bool nrf_reboot(void) {
   return true;
 }
 
+
+void nrf_reset(void) {
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
+}
+
+void nrf_release_reset(void) {
+  HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
+}
+
 void nrf_signal_running(void) {
   HAL_GPIO_WritePin(NRF_OUT_FW_RUNNING_PORT, NRF_OUT_FW_RUNNING_PIN,
                     GPIO_PIN_SET);
@@ -793,6 +802,28 @@ bool nrf_get_info(nrf_info_t *info) {
 
   return false;
 }
+
+
+bool nrf_system_off(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  uint8_t data[1] = {MGMT_CMD_SYSTEM_OFF};
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
+    return false;
+  }
+
+  systick_delay_ms(100);
+
+  if (nrf_firmware_running()) {
+    return false;
+  }
+
+  return true;
+}
+
 
 void nrf_set_dfu_mode(void) {
   nrf_driver_t *drv = &g_nrf_driver;

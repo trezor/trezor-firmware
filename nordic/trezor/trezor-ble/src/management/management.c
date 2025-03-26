@@ -68,6 +68,9 @@ static void process_command(uint8_t *data, uint16_t len) {
   switch (cmd) {
     case MGMT_CMD_SYSTEM_OFF:
       LOG_INF("System off");
+      signals_nrf_ready(false);
+      signals_reserved(false);
+
       sys_poweroff();
       break;
     case MGMT_CMD_INFO:

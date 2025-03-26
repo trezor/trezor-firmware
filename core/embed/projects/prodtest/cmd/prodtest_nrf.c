@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/systick.h>
+
 #ifdef USE_BLE
 
 #include <trezor_rtl.h>
@@ -75,6 +77,40 @@ static void prodtest_nrf_version(cli_t* cli) {
          info.version_patch, info.version_tweak);
 }
 
+
+static void prodtest_nrf_system_off(cli_t* cli) {
+
+  if (!nrf_firmware_running()) {
+        cli_error(cli, CLI_ERROR, "NRF firmware is not running.");
+        return;
+  }
+
+  if (!nrf_system_off()) {
+    cli_error(cli, CLI_ERROR, "Could not turn off NRF.");
+    return;
+  }
+
+  systick_delay_ms(1000);
+
+  if (nrf_firmware_running()) {
+    cli_error(cli, CLI_ERROR, "NRF firmware is running.");
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
+
+static void prodtest_nrf_reset(cli_t* cli) {
+  nrf_reset();
+  cli_ok(cli, "");
+}
+
+static void prodtest_nrf_release_reset(cli_t* cli) {
+  nrf_release_reset();
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -88,6 +124,27 @@ PRODTEST_CLI_CMD(
   .name = "nrf-version",
   .func = prodtest_nrf_version,
   .info = "Reads NRF firmware version",
+  .args = ""
+  );
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-system-off",
+  .func = prodtest_nrf_system_off,
+  .info = "Turns off the NRF",
+  .args = ""
+  );
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-reset",
+  .func = prodtest_nrf_reset,
+  .info = "Forces a reset of the NRF",
+  .args = ""
+  );
+
+PRODTEST_CLI_CMD(
+  .name = "nrf-release-reset",
+  .func = prodtest_nrf_release_reset,
+  .info = "Releases the reset pin of the NRF",
   .args = ""
 );
 

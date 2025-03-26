@@ -107,3 +107,13 @@ bool nrf_test_gpio_trz_ready(void);
 bool nrf_test_gpio_stay_in_bld(void);
 
 bool nrf_test_gpio_reserved(void);
+
+void nrf_reset(void);
+
+void nrf_release_reset(void);
+
+bool nrf_system_off(void);
+
+bool nrf_reboot(void);
+
+bool nrf_firmware_running(void);
