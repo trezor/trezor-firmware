@@ -112,8 +112,6 @@ class TrezorClient:
         from .transport.session import SessionV1, derive_seed
 
         if isinstance(self.protocol, ProtocolV1Channel):
-            if passphrase is None:
-                return SessionV1.new(client=self, derive_cardano=False)
             session = SessionV1.new(
                 self,
                 derive_cardano=derive_cardano,
