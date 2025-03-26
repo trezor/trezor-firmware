@@ -45,9 +45,13 @@ for prefix in ALTCOIN_PREFIXES:
 qstrings_btconly = qstrings - qstrings_universal
 
 # sort result alphabetically
+digits = range(10)
 qstrings_btconly_sorted = sorted(qstrings_btconly)
 qstrings_universal_sorted = sorted(qstrings_universal)
 %>\
+% for digit in digits:
+  MP_QSTR_${digit};
+% endfor
 % for qstr in qstrings_btconly_sorted:
   ${qstr};
 % endfor
