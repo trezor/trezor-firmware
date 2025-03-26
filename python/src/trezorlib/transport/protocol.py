@@ -35,6 +35,10 @@ LOG = logging.getLogger(__name__)
 _DEFAULT_READ_TIMEOUT: float | None = None
 
 
+class UnexpectedMagic(RuntimeError):
+    pass
+
+
 class Handle(StructuralType):
     """PEP 544 structural type for Handle functionality.
     (called a "Protocol" in the proposed PEP, name which is impractical here)
@@ -163,7 +167,7 @@ class ProtocolV1(Protocol):
     def read_first(self, timeout: float | None = None) -> tuple[int, int, bytes]:
         chunk = self.handle.read_chunk(timeout=timeout)
         if chunk[:3] != b"?##":
-            raise RuntimeError(f"Unexpected magic characters: {chunk.hex()}")
+            raise UnexpectedMagic(chunk.hex())
         try:
             msg_type, datalen = struct.unpack(">HL", chunk[3 : 3 + self.HEADER_LEN])
         except Exception:
@@ -175,5 +179,5 @@ class ProtocolV1(Protocol):
     def read_next(self, timeout: float | None = None) -> bytes:
         chunk = self.handle.read_chunk(timeout=timeout)
         if chunk[:1] != b"?":
-            raise RuntimeError(f"Unexpected magic characters: {chunk.hex()}")
+            raise UnexpectedMagic(chunk.hex())
         return chunk[1:]

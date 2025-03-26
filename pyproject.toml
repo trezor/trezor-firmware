@@ -77,7 +77,7 @@ trezor-pylint-plugin = {path = "./tools/trezor-pylint-plugin", develop = true}
 trezor-core-tools = {path = "./core/tools", develop = true}
 flake8-annotations = "^3.1.1"
 pyelftools = "^0.32"
-pytest-rerunfailures = "^15.0"
+pytest-retry = "^1.7.0"
 
 [tool.poetry.dev-dependencies]
 scan-build = "*"

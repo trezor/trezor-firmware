@@ -31,7 +31,7 @@ from trezorlib import debuglink, log, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
-from trezorlib.transport import enumerate_devices, get_transport, protocol
+from trezorlib.transport import Timeout, enumerate_devices, get_transport, protocol
 
 # register rewrites before importing from local package
 # so that we see details of failed asserts from this module
@@ -503,6 +503,10 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
     if item.get_closest_marker("altcoin") and skip_altcoins:
         pytest.skip("Skipping altcoin test")
+
+
+def pytest_set_filtered_exceptions():
+    return (Timeout, protocol.UnexpectedMagic)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

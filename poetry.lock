@@ -1593,20 +1593,22 @@ files = [
 pytest = ">=3.0.0"
 
 [[package]]
-name = "pytest-rerunfailures"
-version = "15.0"
-description = "pytest plugin to re-run tests to eliminate flaky failures"
+name = "pytest-retry"
+version = "1.7.0"
+description = "Adds the ability to retry flaky tests in CI environments"
 optional = false
 python-versions = ">=3.9"
 groups = ["main"]
 files = [
-    {file = "pytest-rerunfailures-15.0.tar.gz", hash = "sha256:2d9ac7baf59f4c13ac730b47f6fa80e755d1ba0581da45ce30b72fb3542b4474"},
-    {file = "pytest_rerunfailures-15.0-py3-none-any.whl", hash = "sha256:dd150c4795c229ef44320adc9a0c0532c51b78bb7a6843a8c53556b9a611df1a"},
+    {file = "pytest_retry-1.7.0-py3-none-any.whl", hash = "sha256:a2dac85b79a4e2375943f1429479c65beb6c69553e7dae6b8332be47a60954f4"},
+    {file = "pytest_retry-1.7.0.tar.gz", hash = "sha256:f8d52339f01e949df47c11ba9ee8d5b362f5824dff580d3870ec9ae0057df80f"},
 ]
 
 [package.dependencies]
-packaging = ">=17.1"
-pytest = ">=7.4,<8.2.2 || >8.2.2"
+pytest = ">=7.0.0"
+
+[package.extras]
+dev = ["black", "flake8", "isort", "mypy"]
 
 [[package]]
 name = "pytest-timeout"
@@ -2340,4 +2342,4 @@ test = ["big-O", "jaraco.functools", "jaraco.itertools", "jaraco.test", "more-it
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.9"
-content-hash = "3d8597dbd91d37eabc20ce7e19f5996cda93243fcfbcd93fba73e9abd7b46373"
+content-hash = "3cf7446762b2697275d563511071e6368edafb8c86eeb88a402bbe7bfb9ba6ac"
