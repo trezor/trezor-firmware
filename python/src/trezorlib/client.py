@@ -28,7 +28,7 @@ from .transport.thp.protocol_and_channel import Channel
 from .transport.thp.protocol_v1 import ProtocolV1Channel
 
 if t.TYPE_CHECKING:
-    from .transport.session import Session
+    from .transport.session import Session, SessionV1
 
 LOG = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ MAX_PASSPHRASE_LENGTH = 50
 MAX_PIN_LENGTH = 50
 
 PASSPHRASE_ON_DEVICE = object()
+SEEDLESS = object()
 PASSPHRASE_TEST_PATH = parse_path("44h/1h/0h/0/0")
 
 OUTDATED_FIRMWARE_ERROR = """
@@ -51,16 +52,17 @@ class ProtocolVersion(IntEnum):
 
 
 class TrezorClient:
-    button_callback: t.Callable[[Session, messages.ButtonRequest], t.Any] | None = None
+    button_callback: t.Callable[[messages.ButtonRequest], None] | None = None
     passphrase_callback: (
         t.Callable[[Session, messages.PassphraseRequest], t.Any] | None
     ) = None
-    pin_callback: t.Callable[[Session, messages.PinMatrixRequest], t.Any] | None = None
+    pin_callback: t.Callable[[messages.PinMatrixRequest], str] | None = None
 
     _model: models.TrezorModel
     _features: messages.Features | None = None
     _protocol_version: int
     _setup_pin: str | None = None  # Should be used only by conftest
+    _last_active_session: SessionV1 | None = None
 
     def __init__(
         self,
@@ -99,42 +101,36 @@ class TrezorClient:
 
     def get_session(
         self,
-        passphrase: str | object | None = None,
+        passphrase: str | object = "",
         derive_cardano: bool = False,
-        session_id: bytes | None = None,
-        should_derive: bool = True,
     ) -> Session:
         """
         Returns a new session.
 
-        In case of seed derivation, the function will fail if the device is not initialized.
+        In the case of seed derivation, the function will fail if the device is not initialized.
         """
-        from .transport.session import SessionV1, derive_seed
+        if self.features.initialized is False and passphrase is not SEEDLESS:
+            raise exceptions.DerivationOnUninitaizedDeviceError(
+                "Calling uninitialized device with a passphrase. Call get_seedless_session instead."
+            )
 
         if isinstance(self.protocol, ProtocolV1Channel):
-            if passphrase is None:
+            from .transport.session import SessionV1, derive_seed
+
+            if passphrase is SEEDLESS:
                 return SessionV1.new(client=self, derive_cardano=False)
             session = SessionV1.new(
                 self,
                 derive_cardano=derive_cardano,
-                session_id=session_id,
             )
-            if should_derive:
-                if isinstance(passphrase, str):
-                    temporary = self.passphrase_callback
-                    self.passphrase_callback = get_callback_passphrase_v1(
-                        passphrase=passphrase
-                    )
-                    derive_seed(session)
-                    self.passphrase_callback = temporary
-                elif passphrase is PASSPHRASE_ON_DEVICE:
-                    derive_seed(session)
+            if self.features.passphrase_protection:
+                derive_seed(session, passphrase)
 
             return session
         raise NotImplementedError
 
     def get_seedless_session(self) -> Session:
-        return self.get_session(passphrase=None)
+        return self.get_session(passphrase=SEEDLESS)
 
     def invalidate(self) -> None:
         self._is_invalidated = True

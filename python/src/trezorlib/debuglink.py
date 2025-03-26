@@ -34,12 +34,11 @@ from mnemonic import Mnemonic
 from . import btc, mapping, messages, models, protobuf
 from .client import (
     MAX_PASSPHRASE_LENGTH,
-    MAX_PIN_LENGTH,
     PASSPHRASE_ON_DEVICE,
     ProtocolVersion,
     TrezorClient,
 )
-from .exceptions import Cancelled, PinException, TrezorFailure, UnexpectedMessageError
+from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
 from .messages import Capability, DebugWaitType
 from .protobuf import MessageType
@@ -51,7 +50,6 @@ from .transport.thp.protocol_v1 import ProtocolV1Channel
 if t.TYPE_CHECKING:
     from typing_extensions import Protocol
 
-    from .messages import PinMatrixRequestType
     from .transport import Transport
 
     ExpectedMessage = t.Union[
@@ -839,7 +837,7 @@ class DebugUI:
             except StopIteration:
                 self.input_flow = self.INPUT_FLOW_DONE
 
-    def get_pin(self, code: PinMatrixRequestType | None = None) -> str:
+    def get_pin(self) -> str:
         self.debuglink.snapshot_legacy()
 
         if self.pins is None:
@@ -1251,6 +1249,16 @@ class TrezorClientDebugLink(TrezorClient):
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
+        def get_pin(_msg: messages.PinMatrixRequest) -> str:
+            try:
+                pin = self.ui.get_pin()
+            except Cancelled:
+                raise
+            return pin
+
+        self.pin_callback = get_pin
+        self.button_callback = self.ui.button_request
+
         self.sync_responses()
 
         # So that we can choose right screenshotting logic (T1 vs TT)
@@ -1273,35 +1281,6 @@ class TrezorClientDebugLink(TrezorClient):
         new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
         new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
         return new_client
-
-    def button_callback(self, session: Session, msg: messages.ButtonRequest) -> t.Any:
-        __tracebackhide__ = True  # for pytest # pylint: disable=W0612
-        # do this raw - send ButtonAck first, notify UI later
-        session._write(messages.ButtonAck())
-        self.ui.button_request(msg)
-        return session._read()
-
-    def pin_callback(self, session: Session, msg: messages.PinMatrixRequest) -> t.Any:
-        try:
-            pin = self.ui.get_pin(msg.type)
-        except Cancelled:
-            session.call_raw(messages.Cancel())
-            raise
-
-        if any(d not in "123456789" for d in pin) or not (
-            1 <= len(pin) <= MAX_PIN_LENGTH
-        ):
-            session.call_raw(messages.Cancel())
-            raise ValueError("Invalid PIN provided")
-        resp = session.call_raw(messages.PinMatrixAck(pin=pin))
-        if isinstance(resp, messages.Failure) and resp.code in (
-            messages.FailureType.PinInvalid,
-            messages.FailureType.PinCancelled,
-            messages.FailureType.PinExpected,
-        ):
-            raise PinException(resp.code, resp.message)
-        else:
-            return resp
 
     def passphrase_callback(
         self, session: Session, msg: messages.PassphraseRequest
@@ -1369,15 +1348,15 @@ class TrezorClientDebugLink(TrezorClient):
 
     def get_session(
         self,
-        passphrase: str | object | None = None,
+        passphrase: str | object = "",
         derive_cardano: bool = False,
-        session_id: bytes | None = None,
     ) -> SessionDebugWrapper:
         if isinstance(passphrase, str):
             passphrase = Mnemonic.normalize_string(passphrase)
         session = SessionDebugWrapper(
             super().get_session(
-                passphrase, derive_cardano, session_id, should_derive=False
+                passphrase,
+                derive_cardano,
             )
         )
         session.passphrase = passphrase
