@@ -6,7 +6,8 @@ pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
         ffi::ble_event_type_t_BLE_CONNECTED => BLEEvent::Connected,
         ffi::ble_event_type_t_BLE_DISCONNECTED => BLEEvent::Disconnected,
         ffi::ble_event_type_t_BLE_PAIRING_REQUEST => {
-            let code: u32 = event.data
+            let code: u32 = event
+                .data
                 .iter()
                 .take(6)
                 .map(|&b| (b - b'0'))

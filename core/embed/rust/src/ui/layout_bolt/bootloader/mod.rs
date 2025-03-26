@@ -52,7 +52,7 @@ use super::theme::bootloader::{button_confirm_initial, button_initial};
 use super::cshape::{render_loader, LoaderRange};
 #[cfg(feature = "ble")]
 use crate::ui::layout_bolt::{
-    component::pairing_mode::PairingMode, component::confirm_pairing::ConfirmPairing,
+    component::confirm_pairing::ConfirmPairing, component::pairing_mode::PairingMode,
 };
 use crate::ui::{
     component::Event,

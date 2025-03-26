@@ -7,10 +7,10 @@ mod button;
 mod coinjoin_progress;
 #[cfg(feature = "ble")]
 pub mod confirm_pairing;
-#[cfg(feature = "ble")]
-pub mod pairing_mode;
 mod dialog;
 mod fido;
+#[cfg(feature = "ble")]
+pub mod pairing_mode;
 #[rustfmt::skip]
 mod fido_icons;
 mod error;
