@@ -717,21 +717,6 @@ void dump_qstr_pool(FILE *out, const qstr_pool_t *pool) {
   }
 }
 
-void dump_qstrdata(FILE *out) {
-  const qstr_pool_t *pool = MP_STATE_VM(last_pool);
-  while (pool != NULL) {
-    for (const char *const *q = pool->qstrs, *const *q_top =
-                                                 pool->qstrs + pool->len;
-         q < q_top; q++) {
-      if ((void *)*q > (void *)mp_state_ctx.mem.gc_pool_start) {
-        print_type(out, "qstrdata", NULL, q, false);
-        fprintf(out, ", \"pool\": \"%p\"},\n", pool);
-      }
-    }
-    pool = pool->prev;
-  }
-}
-
 static void dump_meminfo_json(FILE *out) {
   bool should_close = true;
   if (out == NULL) {
