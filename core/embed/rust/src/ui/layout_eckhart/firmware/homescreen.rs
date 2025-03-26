@@ -288,9 +288,9 @@ pub fn check_homescreen_format(image: BinaryData) -> bool {
 fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color>) {
     const DEFAULT_HS_TILE_ROWS: usize = 3;
     const DEFAULT_HS_TILE_COLS: usize = 5;
-    const DEFAUL_HS_AREA: Rect = SCREEN.inset(Insets::bottom(theme::ACTION_BAR_HEIGHT));
-    const DEFAUL_HS_GRID: Grid =
-        Grid::new(DEFAUL_HS_AREA, DEFAULT_HS_TILE_ROWS, DEFAULT_HS_TILE_COLS);
+    const DEFAULT_HS_AREA: Rect = SCREEN.inset(Insets::bottom(theme::ACTION_BAR_HEIGHT));
+    const DEFAULT_HS_GRID: Grid =
+        Grid::new(DEFAULT_HS_AREA, DEFAULT_HS_TILE_ROWS, DEFAULT_HS_TILE_COLS);
 
     // Layer 1: Base Solid Colour
     shape::Bar::new(SCREEN)
@@ -316,7 +316,7 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
     // TODO: improve frame rate
     for row in 0..DEFAULT_HS_TILE_ROWS {
         for col in 0..DEFAULT_HS_TILE_COLS {
-            let tile_area = DEFAUL_HS_GRID.row_col(row, col);
+            let tile_area = DEFAULT_HS_GRID.row_col(row, col);
             let icon = if [(0, 0), (0, 1), (0, 4), (1, 0), (1, 3), (1, 4)].contains(&(row, col)) {
                 theme::ICON_HS_TILE_2.toif
             } else {
