@@ -80,6 +80,8 @@ impl FirmwareUI for UIEckhart {
             Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
         } else {
             Button::with_text(verb)
+                .with_gradient()
+                .styled(theme::firmware::button_confirm())
         };
         let mut screen = TextScreen::new(formatted_text)
             .with_header(Header::new(title).with_menu_button())
