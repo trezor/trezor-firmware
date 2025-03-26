@@ -23,7 +23,7 @@ from mnemonic import Mnemonic
 
 from . import device, messages
 from .client import MAX_PIN_LENGTH
-from .exceptions import Cancelled, PinException
+from .exceptions import Cancelled
 from .messages import Capability, PinMatrixRequestType, WordRequestType
 from .transport.session import Session
 
@@ -91,15 +91,14 @@ class ClickUI:
 
         return "Please confirm action on your Trezor device."
 
-    def button_request(self, session: Session, br: messages.ButtonRequest) -> t.Any:
+    def button_request(self, br: messages.ButtonRequest) -> None:
         prompt = self._prompt_for_button(br)
         if prompt != self.last_prompt_shown:
             echo(prompt)
         if not self.always_prompt:
             self.last_prompt_shown = prompt
-        return session.call_raw(messages.ButtonAck())
 
-    def get_pin(self, session: Session, request: messages.PinMatrixRequest) -> t.Any:
+    def get_pin(self, request: messages.PinMatrixRequest) -> str:
         code = request.type
         if code == PIN_CURRENT:
             desc = "current PIN"
@@ -123,7 +122,6 @@ class ClickUI:
             try:
                 pin = prompt(f"Please enter {desc}", hide_input=True)
             except click.Abort:
-                session.call_raw(messages.Cancel())
                 raise Cancelled from None
 
             # translate letters to numbers if letters were used
@@ -137,15 +135,7 @@ class ClickUI:
             elif len(pin) > MAX_PIN_LENGTH:
                 echo(f"The value must be at most {MAX_PIN_LENGTH} digits in length.")
             else:
-                resp = session.call_raw(messages.PinMatrixAck(pin=pin))
-                if isinstance(resp, messages.Failure) and resp.code in (
-                    messages.FailureType.PinInvalid,
-                    messages.FailureType.PinCancelled,
-                    messages.FailureType.PinExpected,
-                ):
-                    raise PinException(resp.code, resp.message)
-                else:
-                    return resp
+                return pin
 
     def get_passphrase(
         self, session: Session, request: messages.PassphraseRequest
@@ -206,13 +196,12 @@ class ScriptUI:
     """
 
     @staticmethod
-    def button_request(session: Session, br: messages.ButtonRequest) -> t.Any:
+    def button_request(br: messages.ButtonRequest) -> None:
         code = br.code.name if br.code else None
         print(f"?BUTTON code={code} pages={br.pages} name={br.name}")
-        return session.call_raw(messages.ButtonAck())
 
     @staticmethod
-    def get_pin(session: Session, request: messages.PinMatrixRequest) -> t.Any:
+    def get_pin(request: messages.PinMatrixRequest) -> str:
         code = request.type
         if code is None:
             print("?PIN")
@@ -226,15 +215,7 @@ class ScriptUI:
             raise RuntimeError("Sent PIN must start with ':'")
         else:
             pin = pin[1:]
-            resp = session.call_raw(messages.PinMatrixAck(pin=pin))
-            if isinstance(resp, messages.Failure) and resp.code in (
-                messages.FailureType.PinInvalid,
-                messages.FailureType.PinCancelled,
-                messages.FailureType.PinExpected,
-            ):
-                raise PinException(resp.code, resp.message)
-            else:
-                return resp
+            return pin
 
     @staticmethod
     def get_passphrase(session: Session, request: messages.PassphraseRequest) -> t.Any:
