@@ -3,9 +3,6 @@ pub mod intro;
 pub mod menu;
 pub mod welcome;
 
-#[cfg(feature = "ble")]
-pub mod pairing_mode;
-
 use heapless::String;
 
 use crate::{
@@ -55,7 +52,7 @@ use super::theme::bootloader::{button_confirm_initial, button_initial};
 use super::cshape::{render_loader, LoaderRange};
 #[cfg(feature = "ble")]
 use crate::ui::layout_bolt::{
-    bootloader::pairing_mode::PairingMode, component::confirm_pairing::ConfirmPairing,
+    component::pairing_mode::PairingMode, component::confirm_pairing::ConfirmPairing,
 };
 use crate::ui::{
     component::Event,
