@@ -170,14 +170,14 @@ pub const fn button_confirm() -> ButtonStyleSheet {
         normal: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREEN_LIGHT,
-            button_color: BG,
+            button_color: GREEN_DARK,
             icon_color: GREEN_LIGHT,
-            background_color: BG,
+            background_color: GREEN_DARK,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_MEDIUM_26,
             text_color: GREEN,
-            button_color: GREY_SUPER_DARK,
+            button_color: GREEN_EXTRA_DARK,
             icon_color: GREEN,
             background_color: BG,
         },
