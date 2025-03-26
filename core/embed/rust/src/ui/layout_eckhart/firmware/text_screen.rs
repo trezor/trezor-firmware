@@ -1,16 +1,23 @@
-use crate::ui::{
-    component::{
-        swipe_detect::SwipeConfig,
-        text::paragraphs::{Checklist, ParagraphSource, Paragraphs},
-        Component, Event, EventCtx, FormattedText, PaginateFull,
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{
+            swipe_detect::SwipeConfig,
+            text::paragraphs::{Checklist, ParagraphSource, Paragraphs},
+            Component, Event, EventCtx, FormattedText, Label, PaginateFull,
+        },
+        flow::Swipable,
+        geometry::{Insets, Rect},
+        shape::Renderer,
+        util::Pager,
     },
-    flow::Swipable,
-    geometry::{Insets, Rect},
-    shape::Renderer,
-    util::Pager,
 };
 
-use super::{action_bar::ActionBarMsg, theme::SIDE_INSETS, ActionBar, Header, HeaderMsg, Hint};
+use super::{
+    action_bar::ActionBarMsg,
+    theme::{self, SIDE_INSETS},
+    ActionBar, Header, HeaderMsg, Hint,
+};
 
 /// Full-screen component for rendering text.
 ///
@@ -22,6 +29,7 @@ use super::{action_bar::ActionBarMsg, theme::SIDE_INSETS, ActionBar, Header, Hea
 /// - Action bar (Optional)
 pub struct TextScreen<T> {
     header: Option<Header>,
+    subtitle: Option<Label<'static>>,
     content: T,
     hint: Option<Hint<'static>>,
     action_bar: Option<ActionBar>,
@@ -40,10 +48,12 @@ where
     T: AllowedTextContent,
 {
     const CONTENT_INSETS: Insets = SIDE_INSETS;
+    const SUBTITLE_HEIGHT: i16 = 44;
 
     pub fn new(content: T) -> Self {
         Self {
             header: None,
+            subtitle: None,
             content,
             hint: None,
             action_bar: None,
@@ -52,6 +62,14 @@ where
 
     pub fn with_header(mut self, header: Header) -> Self {
         self.header = Some(header);
+        self
+    }
+
+    pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
+        if !subtitle.is_empty() {
+            self.subtitle =
+                Some(Label::left_aligned(subtitle, theme::TEXT_MEDIUM_EXTRA_LIGHT).top_aligned());
+        }
         self
     }
 
@@ -86,6 +104,14 @@ where
     fn place(&mut self, bounds: Rect) -> Rect {
         let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
         let (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
+        let rest = if let Some(subtitle) = &mut self.subtitle {
+            let (subtitle_area, rest) = rest.split_top(Self::SUBTITLE_HEIGHT);
+            subtitle.place(subtitle_area.inset(SIDE_INSETS));
+            rest
+        } else {
+            rest
+        };
+
         let content_area = if let Some(hint) = &mut self.hint {
             let (rest, hint_area) = rest.split_bottom(hint.height());
             hint.place(hint_area);
@@ -128,6 +154,7 @@ where
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
+        self.subtitle.render(target);
         self.hint.render(target);
         self.action_bar.render(target);
         self.content.render(target);
@@ -162,6 +189,9 @@ where
         t.component("TextComponent");
         if let Some(header) = self.header.as_ref() {
             header.trace(t);
+        }
+        if let Some(subtitle) = self.subtitle.as_ref() {
+            subtitle.trace(t);
         }
         self.content.trace(t);
         if let Some(hint) = self.hint.as_ref() {
