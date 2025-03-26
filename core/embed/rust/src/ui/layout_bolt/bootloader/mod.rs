@@ -497,7 +497,7 @@ impl BootloaderUI for UIBolt {
         };
 
         let mut frame = PairingMode::new(
-            "Waiting for pairing...",
+            "Waiting for pairing...".into(),
             fonts::FONT_NORMAL,
             BLD_TITLE_COLOR,
             bg,
