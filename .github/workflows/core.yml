@@ -271,7 +271,7 @@ jobs:
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         lang: ${{ fromJSON(needs.param.outputs.test_lang) }}
     env:
-      TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
+      TREZOR_PROFILING: '0'
       TREZOR_MODEL: ${{ matrix.model }}
       TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'btconly' && '1' || '0' }}
       TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
