@@ -5,6 +5,16 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 
 static void _librust_qstrs(void) {
+  MP_QSTR_0;
+  MP_QSTR_1;
+  MP_QSTR_2;
+  MP_QSTR_3;
+  MP_QSTR_4;
+  MP_QSTR_5;
+  MP_QSTR_6;
+  MP_QSTR_7;
+  MP_QSTR_8;
+  MP_QSTR_9;
   MP_QSTR_;
   MP_QSTR_ATTACHED;
   MP_QSTR_AttachType;
