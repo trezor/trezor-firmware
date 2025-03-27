@@ -369,6 +369,8 @@ apps.management.authenticate_device
 import apps.management.authenticate_device
 apps.management.backup_device
 import apps.management.backup_device
+apps.management.ble.unpair
+import apps.management.ble.unpair
 apps.management.change_language
 import apps.management.change_language
 apps.management.change_pin
