@@ -21,6 +21,7 @@
 #include <trezor_types.h>
 
 #include <io/display.h>
+#include <sys/sysevent.h>
 #include <sys/systick.h>
 
 #ifdef USE_BLE
@@ -108,6 +109,15 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
   const mp_uint_t timeout = trezor_obj_get_int(timeout_ms);
   const mp_uint_t deadline = mp_hal_ticks_ms() + timeout;
   mp_obj_iter_buf_t iterbuf = {0};
+
+  {
+    // This is just a dummy call to `sysevent_poll` to ensure cooperative
+    // multitasking works. Event polling is still performed in the loop below
+    // but will be replaced in the future.
+    sysevents_t awaited = {0};
+    sysevents_t signalled = {0};
+    sysevent_poll(&awaited, &signalled, 0);
+  }
 
   for (;;) {
     mp_obj_t iter = mp_getiter(ifaces, &iterbuf);
