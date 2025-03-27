@@ -21,6 +21,7 @@ from trezorlib.debuglink import SessionDebugWrapper as Session
 
 
 @pytest.mark.setup_client(uninitialized=True)
+@pytest.mark.uninitialized_session
 @pytest.mark.models("safe")
 def test_tutorial(session: Session):
     device.show_device_tutorial(session)
