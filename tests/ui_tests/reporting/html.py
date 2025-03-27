@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Iterable
 
 from dominate import document
-from dominate.tags import a, i, img, table, td, th, tr
+from dominate.tags import a, i, img, span, table, td, th, tr
 
 from ..common import UI_TESTS_DIR
 
@@ -92,13 +92,44 @@ def image_link(
     )
 
 
+def diff_row(
+    left: str | None,
+    right: str | None,
+    cur_dir: Path,
+    bgcolor: str,
+    hidden: bool = False,
+):
+    with tr(bgcolor=bgcolor, _class="hidden" if hidden else ""):
+        image_column(left, cur_dir)
+        image_column(right, cur_dir)
+        diff_column()
+
+
 def diff_table(diff: Iterable[tuple[str | None, str | None]], cur_dir: Path) -> None:
-    for left, right in diff:
-        if left == right:
-            background = "white"
+    unchanged_buffer = []
+    for idx, (left, right) in enumerate(diff):
+        is_diff = left != right
+        if idx <= 3:  # show the first 3 regardless...
+            diff_row(left, right, cur_dir, "red" if is_diff else "white")
         else:
-            background = "red"
-        with tr(bgcolor=background, onclick="createDiff(this)"):
-            image_column(left, cur_dir)
-            image_column(right, cur_dir)
-            diff_column()
+            if not is_diff:
+                unchanged_buffer.append((left, right))
+            else:
+                collapse = len(unchanged_buffer) > 3
+                for left, right in unchanged_buffer:
+                    diff_row(
+                        left,
+                        right,
+                        cur_dir,
+                        "yellow" if collapse else "white",
+                        collapse,
+                    )
+                if collapse:
+                    with tr(bgcolor="yellow"):
+                        with td(colspan=3, _class="showLink"):
+                            span(f"{len(unchanged_buffer)} hidden")
+                            a("show all", href="#", onclick="showAllHidden();")
+                unchanged_buffer.clear()
+                diff_row(left, right, cur_dir, "red")
+    for left, right in unchanged_buffer:
+        diff_row(left, right, cur_dir, "white")
