@@ -1404,6 +1404,9 @@ pub enum TranslatedString {
     instructions__tap_to_continue = 991,  // "Tap to continue"
     #[cfg(feature = "universal_fw")]
     nostr__event_kind_template = 992,  // "Event kind: {0}"
+    ble__unpair_all = 993,  // "Unpair all bluetooth devices"
+    ble__unpair_current = 994,  // "Unpair connected device"
+    ble__unpair_title = 995,  // "Unpair"
 }
 
 impl TranslatedString {
@@ -2804,6 +2807,9 @@ impl TranslatedString {
             Self::instructions__tap_to_continue => "Tap to continue",
             #[cfg(feature = "universal_fw")]
             Self::nostr__event_kind_template => "Event kind: {0}",
+            Self::ble__unpair_all => "Unpair all bluetooth devices",
+            Self::ble__unpair_current => "Unpair connected device",
+            Self::ble__unpair_title => "Unpair",
         }
     }
 
@@ -4203,6 +4209,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_nostr__event_kind_template => Some(Self::nostr__event_kind_template),
+            Qstr::MP_QSTR_ble__unpair_all => Some(Self::ble__unpair_all),
+            Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
+            Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
             _ => None,
         }
     }

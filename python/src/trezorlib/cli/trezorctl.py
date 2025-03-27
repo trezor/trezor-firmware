@@ -33,6 +33,7 @@ from . import (
     TrezorConnection,
     benchmark,
     binance,
+    ble,
     btc,
     cardano,
     crypto,
@@ -420,6 +421,7 @@ cli.add_command(tezos.cli)
 cli.add_command(firmware.cli)
 cli.add_command(debug.cli)
 cli.add_command(benchmark.cli)
+cli.add_command(ble.cli)
 
 #
 # Main

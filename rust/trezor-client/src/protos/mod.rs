@@ -17,6 +17,7 @@ mod generated {
     modules! {
         messages
         messages_bootloader
+        messages_ble
         messages_common
         messages_crypto
         messages_debug

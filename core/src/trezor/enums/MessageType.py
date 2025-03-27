@@ -60,6 +60,7 @@ FirmwareErase = 6
 FirmwareUpload = 7
 FirmwareRequest = 8
 ProdTestT1 = 32
+BleUnpair = 8001
 GetPublicKey = 11
 PublicKey = 12
 SignTx = 15
