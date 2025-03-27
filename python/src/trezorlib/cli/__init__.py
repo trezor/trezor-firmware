@@ -200,12 +200,10 @@ class TrezorConnection:
         client = get_client(self.get_transport())
         if self.script:
             client.button_callback = ui.ScriptUI.button_request
-            client.passphrase_callback = ui.ScriptUI.get_passphrase
             client.pin_callback = ui.ScriptUI.get_pin
         else:
             click_ui = ui.ClickUI()
             client.button_callback = click_ui.button_request
-            client.passphrase_callback = click_ui.get_passphrase
             client.pin_callback = click_ui.get_pin
         return client
 
