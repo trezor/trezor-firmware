@@ -1131,6 +1131,7 @@ async def confirm_signverify(
         extra=None,
         prompt_screen=True,
         hold=not verify,
+        page_counter=True,
         info=False,
         verb=TR.buttons__confirm,
     )

@@ -373,9 +373,9 @@ def test_signmessage_info(
 
 
 MESSAGE_LENGTHS = (
-    pytest.param("This is a very long message. " * 16, False, id="normal_text"),
-    pytest.param("ThisIsAMessageWithoutSpaces" * 16, False, id="no_spaces"),
-    pytest.param("ThisIsAMessageWithLongWords " * 16, False, id="long_words"),
+    pytest.param("This is a very long message. " * 16, True, id="normal_text"),
+    pytest.param("ThisIsAMessageWithoutSpaces" * 16, True, id="no_spaces"),
+    pytest.param("ThisIsAMessageWithLongWords " * 16, True, id="long_words"),
     pytest.param(
         "This\nmessage\nhas\nnewlines\nafter\nevery\nsingle\nword", False, id="newlines"
     ),
