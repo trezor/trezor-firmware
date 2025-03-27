@@ -646,12 +646,13 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
 
 
 class InputFlowShowXpubQRCode(InputFlowBase):
-    def __init__(self, client: Client, passphrase: bool = False):
+
+    def __init__(self, client: Client, passphrase_request_expected: bool = False):
         super().__init__(client)
-        self.passphrase = passphrase
+        self.passphrase_request_expected = passphrase_request_expected
 
     def input_flow_bolt(self) -> BRGeneratorType:
-        if self.passphrase:
+        if self.passphrase_request_expected:
             yield
             self.debug.press_yes()
             yield
@@ -678,7 +679,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_caesar(self) -> BRGeneratorType:
-        if self.passphrase:
+        if self.passphrase_request_expected:
             yield
             self.debug.press_right()
             yield
@@ -705,7 +706,7 @@ class InputFlowShowXpubQRCode(InputFlowBase):
         self.debug.press_middle()
 
     def input_flow_delizia(self) -> BRGeneratorType:
-        if self.passphrase:
+        if self.passphrase_request_expected:
             yield
             self.debug.press_yes()
             yield
