@@ -39,7 +39,6 @@ import trezorlib.mapping
 import trezorlib.messages
 import trezorlib.models
 import trezorlib.transport
-import trezorlib.transport.session as transport_session
 from trezorlib.client import TrezorClient
 from trezorlib.protobuf import format_message
 from trezorlib.transport.bridge import BridgeTransport
@@ -63,14 +62,6 @@ LOG = logging.getLogger()
 
 def pin_callback(request: trezorlib.messages.PinMatrixRequest) -> str:
     return ""
-
-
-def passphrase_callback(
-    session: transport_session.Session, request: trezorlib.messages.PassphraseRequest
-) -> t.Any:
-    return session.call_raw(
-        trezorlib.messages.PassphraseAck(passphrase="", on_device=False)
-    )
 
 
 class Session:
@@ -110,7 +101,6 @@ class Transport:
         transport.open()
         client = TrezorClient(transport)
         client.pin_callback = pin_callback
-        client.passphrase_callback = passphrase_callback
         self.model = client.model
 
         client.get_seedless_session().end()
