@@ -381,6 +381,8 @@ apps.management.backup_device
 import apps.management.backup_device
 apps.management.ble.pair_new_device
 import apps.management.ble.pair_new_device
+apps.management.ble.unpair
+import apps.management.ble.unpair
 apps.management.change_language
 import apps.management.change_language
 apps.management.change_pin

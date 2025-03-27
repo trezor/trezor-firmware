@@ -1404,18 +1404,21 @@ pub enum TranslatedString {
     instructions__tap_to_continue = 991,  // "Tap to continue"
     #[cfg(feature = "universal_fw")]
     nostr__event_kind_template = 992,  // "Event kind: {0}"
-    reset__share_words_first = 993,  // "Write down the first word from the backup."
-    backup__not_recommend = 994,  // "We don't recommend to skip wallet backup creation."
-    words__pay_attention = 995,  // "Pay attention"
-    address__check_with_source = 996,  // "Check the address with source."
-    words__receive = 997,  // "Receive"
-    reset__recovery_share_description = 998,  // "A recovery share is a list of words you wrote down when setting up your Trezor."
-    reset__recovery_share_number = 999,  // "Your wallet backup consists of 1 to 16 shares."
-    words__recovery_share = 1000,  // "Recovery share"
-    send__send_in_the_app = 1001,  // "After signing, send the transaction in the app."
-    send__sign_cancelled = 1002,  // "Sign cancelled."
-    words__send = 1003,  // "Send"
-    words__wallet = 1004,  // "Wallet"
+    ble__unpair_all = 993,  // "Unpair all bluetooth devices"
+    ble__unpair_current = 994,  // "Unpair connected device"
+    ble__unpair_title = 995,  // "Unpair"
+    reset__share_words_first = 996,  // "Write down the first word from the backup."
+    backup__not_recommend = 997,  // "We don't recommend to skip wallet backup creation."
+    words__pay_attention = 998,  // "Pay attention"
+    address__check_with_source = 999,  // "Check the address with source."
+    words__receive = 1000,  // "Receive"
+    reset__recovery_share_description = 1001,  // "A recovery share is a list of words you wrote down when setting up your Trezor."
+    reset__recovery_share_number = 1002,  // "Your wallet backup consists of 1 to 16 shares."
+    words__recovery_share = 1003,  // "Recovery share"
+    send__send_in_the_app = 1004,  // "After signing, send the transaction in the app."
+    send__sign_cancelled = 1005,  // "Sign cancelled."
+    words__send = 1006,  // "Send"
+    words__wallet = 1007,  // "Wallet"
 }
 
 impl TranslatedString {
@@ -2921,6 +2924,9 @@ impl TranslatedString {
             Self::instructions__tap_to_continue => "Tap to continue",
             #[cfg(feature = "universal_fw")]
             Self::nostr__event_kind_template => "Event kind: {0}",
+            Self::ble__unpair_all => "Unpair all bluetooth devices",
+            Self::ble__unpair_current => "Unpair connected device",
+            Self::ble__unpair_title => "Unpair",
             Self::reset__share_words_first => "Write down the first word from the backup.",
             Self::backup__not_recommend => "We don't recommend to skip wallet backup creation.",
             Self::words__pay_attention => "Pay attention",
@@ -4332,6 +4338,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_nostr__event_kind_template => Some(Self::nostr__event_kind_template),
+            Qstr::MP_QSTR_ble__unpair_all => Some(Self::ble__unpair_all),
+            Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
+            Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
             Qstr::MP_QSTR_reset__share_words_first => Some(Self::reset__share_words_first),
             Qstr::MP_QSTR_backup__not_recommend => Some(Self::backup__not_recommend),
             Qstr::MP_QSTR_words__pay_attention => Some(Self::words__pay_attention),

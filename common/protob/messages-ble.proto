@@ -1,0 +1,22 @@
+syntax = "proto2";
+package hw.trezor.messages.ble;
+
+// Sugar for easier handling in Java
+option java_package = "com.satoshilabs.trezor.lib.protobuf";
+option java_outer_classname = "TrezorMessageBle";
+
+import "options.proto";
+
+option (include_in_bitcoin_only) = true;
+
+
+/**
+ * Request: erases bond for currently connected device
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message BleUnpair {
+  optional bool all = 1;  // whether to erase bonds for all devices
+}
+
