@@ -285,11 +285,12 @@ pub fn check_homescreen_format(image: BinaryData) -> bool {
 }
 
 fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color>) {
-    const DEFAULT_HS_TILE_ROWS: usize = 3;
-    const DEFAULT_HS_TILE_COLS: usize = 5;
-    const DEFAULT_HS_AREA: Rect = SCREEN.inset(Insets::bottom(theme::ACTION_BAR_HEIGHT));
+    const DEFAULT_HS_TILE_ROWS: usize = 4;
+    const DEFAULT_HS_TILE_COLS: usize = 4;
+    const DEFAULT_HS_AREA: Rect = SCREEN.inset(Insets::bottom(140));
     const DEFAULT_HS_GRID: Grid =
         Grid::new(DEFAULT_HS_AREA, DEFAULT_HS_TILE_ROWS, DEFAULT_HS_TILE_COLS);
+    const DEFAULT_HS_TILES_2: [(usize, usize); 3] = [(1, 1), (2, 1), (3, 1)];
 
     // Layer 1: Base Solid Colour
     shape::Bar::new(SCREEN)
@@ -316,7 +317,7 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
     for row in 0..DEFAULT_HS_TILE_ROWS {
         for col in 0..DEFAULT_HS_TILE_COLS {
             let tile_area = DEFAULT_HS_GRID.row_col(row, col);
-            let icon = if [(0, 0), (0, 1), (0, 4), (1, 0), (1, 3), (1, 4)].contains(&(row, col)) {
+            let icon = if DEFAULT_HS_TILES_2.contains(&(row, col)) {
                 theme::ICON_HS_TILE_2.toif
             } else {
                 theme::ICON_HS_TILE_1.toif

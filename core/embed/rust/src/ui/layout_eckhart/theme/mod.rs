@@ -106,11 +106,11 @@ include_icon!(ICON_MINUS, "layout_eckhart/res/minus.toif");
 // Icon tiles for default homescreen
 include_icon!(
     ICON_HS_TILE_1,
-    "layout_eckhart/res/defaut_homescreen/tile1.toif"
+    "layout_eckhart/res/defaut_homescreen/hs_square_1.toif"
 );
 include_icon!(
     ICON_HS_TILE_2,
-    "layout_eckhart/res/defaut_homescreen/tile2.toif"
+    "layout_eckhart/res/defaut_homescreen/hs_square_2.toif"
 );
 
 // Common text styles and button styles must use fonts accessible from both
