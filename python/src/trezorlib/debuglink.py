@@ -32,10 +32,7 @@ from pathlib import Path
 from mnemonic import Mnemonic
 
 from . import btc, mapping, messages, models, protobuf
-from .client import (
-    ProtocolVersion,
-    TrezorClient,
-)
+from .client import ProtocolVersion, TrezorClient
 from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
 from .messages import DebugWaitType

@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import sys
 import typing as t
 
@@ -23,8 +25,7 @@ from mnemonic import Mnemonic
 from . import device, messages
 from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
 from .exceptions import Cancelled
-from .messages import Capability, PinMatrixRequestType, WordRequestType
-from .transport.session import Session
+from .messages import PinMatrixRequestType, WordRequestType
 
 PIN_MATRIX_DESCRIPTION = """
 Use the numeric keypad or lowercase letters to describe number positions.
