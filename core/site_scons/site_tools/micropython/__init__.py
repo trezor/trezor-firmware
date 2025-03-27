@@ -91,7 +91,7 @@ def generate(env):
     )
 
     env["BUILDERS"]["FrozenCFile"] = SCons.Builder.Builder(
-        action="$MPY_TOOL -f -q $qstr_header $SOURCES > $TARGET",
+        action="$MPY_TOOL -f -q $qstr_header $SOURCES --skip-freeze all_modules.py > $TARGET",
     )
 
 
