@@ -1,19 +1,17 @@
 use crate::error::{Error, Result};
 use bitcoin::{
-    address,
-    address::Payload,
     bip32,
     blockdata::script::Script,
     hashes::{sha256d, Hash},
+    params::Params,
     psbt,
     secp256k1::ecdsa::{RecoverableSignature, RecoveryId},
     Address, Network,
 };
 
 /// Retrieve an address from the given script.
-pub fn address_from_script(script: &Script, network: Network) -> Option<address::Address> {
-    let payload = Payload::from_script(script).ok()?;
-    Some(Address::new(network, payload))
+pub fn address_from_script(script: &Script, network: Network) -> Option<Address> {
+    Address::from_script(script, Params::new(network)).ok()
 }
 
 /// Find the (first if multiple) PSBT input that refers to the given txid.
