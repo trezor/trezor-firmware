@@ -191,7 +191,7 @@ class SessionV1(Session):
     def _activate_self(self) -> None:
         if self.client._last_active_session is not self:
             self.client._last_active_session = self
-            # self.resume()
+            self.resume()
 
     def _read(self) -> t.Any:
         assert self.client._last_active_session is self
@@ -206,6 +206,7 @@ class SessionV1(Session):
         else:
             new_session = False
             session_id = self.id
+        self.client._last_active_session = self
         resp: messages.Features = self.call_raw(
             messages.Initialize(session_id=session_id, derive_cardano=derive_cardano)
         )
