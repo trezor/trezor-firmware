@@ -46,6 +46,7 @@
 #define MICROPY_MEM_STATS           (1)
 #define MICROPY_ENABLE_PYSTACK      (1)
 #define MICROPY_LOADED_MODULES_DICT_SIZE (160)
+#define MICROPY_MAIN_DICT_SIZE      (8)
 
 // emitters
 #define MICROPY_PERSISTENT_CODE_LOAD (0)
