@@ -69,7 +69,7 @@ def test_autolock_not_retained(session: Session):
     time.sleep(10.5)
     session = client.get_session()
 
-    with session:
+    with session.client as client:
         # after sleeping for the pre-wipe autolock amount, Trezor must still be unlocked
-        session.set_expected_responses([messages.Address])
+        client.set_expected_responses([messages.Address])
         get_test_address(session)

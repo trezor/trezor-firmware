@@ -48,11 +48,11 @@ VECTORS = (
 def _test_secret(
     session: Session, shares: list[str], secret: str, click_info: bool = False
 ):
-    with session:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecovery(
             session.client, shares, click_info=click_info
         )
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         device.recover(
             session,
             pin_protection=False,
@@ -91,9 +91,9 @@ def test_extra_share_entered(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_abort(session: Session):
-    with session:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryAbort(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
         session.refresh_features()
@@ -102,11 +102,11 @@ def test_abort(session: Session):
 
 @pytest.mark.setup_client(uninitialized=True)
 def test_noabort(session: Session):
-    with session:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryNoAbort(
             session.client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         device.recover(session, pin_protection=False, label="label")
         session.refresh_features()
         assert session.features.initialized is True
@@ -120,11 +120,11 @@ def test_same_share(session: Session):
     # second share is first 4 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[1].split(" ")[:4]
 
-    with session:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryShareAlreadyEntered(
             session, first_share, second_share
         )
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")
 
@@ -136,10 +136,10 @@ def test_group_threshold_reached(session: Session):
     # second share is first 3 words of first
     second_share = MNEMONIC_SLIP39_ADVANCED_20[0].split(" ")[:3]
 
-    with session:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryThresholdReached(
             session, first_share, second_share
         )
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         with pytest.raises(exceptions.Cancelled):
             device.recover(session, pin_protection=False, label="label")

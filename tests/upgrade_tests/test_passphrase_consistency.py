@@ -91,9 +91,9 @@ def test_passphrase_works(emulator: Emulator):
             messages.ButtonRequest,
             messages.Address,
         ]
-    emu_session = emulator.client.get_session(passphrase="TREZOR")
-    with emu_session as session:
-        session.set_expected_responses(expected_responses)
+    session = emulator.client.get_session(passphrase="TREZOR")
+    with emulator.client:
+        emulator.client.set_expected_responses(expected_responses)
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
 
 
@@ -134,9 +134,9 @@ def test_init_device(emulator: Emulator):
             messages.Address,
         ]
 
-    emu_session = emulator.client.get_session(passphrase="TREZOR")
-    with emu_session as session:
-        session.set_expected_responses(expected_responses)
+    session = emulator.client.get_session(passphrase="TREZOR")
+    with emulator.client:
+        emulator.client.set_expected_responses(expected_responses)
 
         btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
         # in TT < 2.3.0 session_id will only be available after PassphraseStateRequest

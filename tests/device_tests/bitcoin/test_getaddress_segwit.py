@@ -74,10 +74,10 @@ def test_show_segwit(session: Session):
 
 @pytest.mark.altcoin
 def test_show_segwit_altcoin(session: Session):
-    with session:
+    with session.client as client:
         if is_core(session):
             IF = InputFlowConfirmAllWarnings(session.client)
-            session.set_input_flow(IF.get())
+            client.set_input_flow(IF.get())
         assert (
             btc.get_address(
                 session,

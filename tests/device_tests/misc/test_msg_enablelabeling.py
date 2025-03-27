@@ -33,8 +33,8 @@ def test_encrypt(client: Client):
         client.debug.press_yes()
 
     session = client.get_session()
-    with session:
-        session.set_input_flow(input_flow())
+    with session.client as client:
+        client.set_input_flow(input_flow())
         misc.encrypt_keyvalue(
             session,
             [],

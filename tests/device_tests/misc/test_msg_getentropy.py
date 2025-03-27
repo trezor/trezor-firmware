@@ -41,8 +41,8 @@ def entropy(data):
 
 @pytest.mark.parametrize("entropy_length", ENTROPY_LENGTHS)
 def test_entropy(session: Session, entropy_length):
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [m.ButtonRequest(code=m.ButtonRequestType.ProtectCall), m.Entropy]
         )
         ent = misc.get_entropy(session, entropy_length)

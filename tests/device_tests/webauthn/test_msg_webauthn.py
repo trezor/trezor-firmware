@@ -31,9 +31,9 @@ RK_CAPACITY = 100
 @pytest.mark.altcoin
 @pytest.mark.setup_client(mnemonic=MNEMONIC12)
 def test_add_remove(session: Session):
-    with session:
+    with session.client as client:
         IF = InputFlowFidoConfirm(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         # Remove index 0 should fail.
         with pytest.raises(TrezorFailure):

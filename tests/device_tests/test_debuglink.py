@@ -47,12 +47,12 @@ def test_pin(session: Session):
     )
     assert isinstance(resp, messages.PinMatrixRequest)
 
-    with session:
-        state = session.client.debug.state()
+    with session.client as client:
+        state = client.debug.state()
         assert state.pin == "1234"
         assert state.matrix != ""
 
-        pin_encoded = session.client.debug.encode_pin("1234")
+        pin_encoded = client.debug.encode_pin("1234")
         resp = session.call_raw(messages.PinMatrixAck(pin=pin_encoded))
         assert isinstance(resp, messages.PassphraseRequest)
 

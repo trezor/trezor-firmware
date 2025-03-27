@@ -40,11 +40,11 @@ EXTRA_GROUP_SHARE = [
 
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20, passphrase=False)
 def test_2of3_dryrun(session: Session):
-    with session:
+    with session.client as client:
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
             session.client, EXTRA_GROUP_SHARE + MNEMONIC_SLIP39_ADVANCED_20
         )
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         device.recover(
             session,
             passphrase_protection=False,
@@ -57,13 +57,13 @@ def test_2of3_dryrun(session: Session):
 @pytest.mark.setup_client(mnemonic=MNEMONIC_SLIP39_ADVANCED_20)
 def test_2of3_invalid_seed_dryrun(session: Session):
     # test fails because of different seed on device
-    with session, pytest.raises(
+    with session.client as client, pytest.raises(
         TrezorFailure, match=r"The seed does not match the one in the device"
     ):
         IF = InputFlowSlip39AdvancedRecoveryDryRun(
             session.client, INVALID_SHARES_SLIP39_ADVANCED_20, mismatch=True
         )
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         device.recover(
             session,
             passphrase_protection=False,
