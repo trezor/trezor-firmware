@@ -14,7 +14,6 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-import os
 import sys
 import typing as t
 
@@ -22,7 +21,7 @@ import click
 from mnemonic import Mnemonic
 
 from . import device, messages
-from .client import MAX_PIN_LENGTH
+from .client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
 from .exceptions import Cancelled
 from .messages import Capability, PinMatrixRequestType, WordRequestType
 from .transport.session import Session
@@ -137,52 +136,6 @@ class ClickUI:
             else:
                 return pin
 
-    def get_passphrase(
-        self, session: Session, request: messages.PassphraseRequest
-    ) -> t.Any:
-        available_on_device = (
-            Capability.PassphraseEntry in session.features.capabilities
-        )
-        if available_on_device and not self.passphrase_on_host:
-            return session.call_raw(
-                messages.PassphraseAck(passphrase=None, on_device=True)
-            )
-
-        env_passphrase = os.getenv("PASSPHRASE")
-        if env_passphrase is not None:
-            echo("Passphrase required. Using PASSPHRASE environment variable.")
-            return session.call_raw(
-                messages.PassphraseAck(passphrase=env_passphrase, on_device=False)
-            )
-
-        while True:
-            try:
-                passphrase = prompt(
-                    "Passphrase required",
-                    hide_input=True,
-                    default="",
-                    show_default=False,
-                )
-                # In case user sees the input on the screen, we do not need confirmation
-                if not CAN_HANDLE_HIDDEN_INPUT:
-                    break
-                second = prompt(
-                    "Confirm your passphrase",
-                    hide_input=True,
-                    default="",
-                    show_default=False,
-                )
-                if passphrase == second:
-                    break
-                else:
-                    echo("Passphrase did not match. Please try again.")
-            except click.Abort:
-                raise Cancelled from None
-
-        return session.call_raw(
-            messages.PassphraseAck(passphrase=passphrase, on_device=False)
-        )
-
 
 class ScriptUI:
     """Interface to be used by scripts, not directly by user.
@@ -218,10 +171,7 @@ class ScriptUI:
             return pin
 
     @staticmethod
-    def get_passphrase(session: Session, request: messages.PassphraseRequest) -> t.Any:
-        available_on_device = (
-            Capability.PassphraseEntry in session.features.capabilities
-        )
+    def get_passphrase(available_on_device: bool) -> str | object:
         if available_on_device:
             print("?PASSPHRASE available_on_device")
         else:
@@ -231,16 +181,11 @@ class ScriptUI:
         if passphrase == "CANCEL":
             raise Cancelled from None
         elif passphrase == "ON_DEVICE":
-            return session.call_raw(
-                messages.PassphraseAck(passphrase=None, on_device=True)
-            )
+            return PASSPHRASE_ON_DEVICE
         elif not passphrase.startswith(":"):
             raise RuntimeError("Sent passphrase must start with ':'")
         else:
-            passphrase = passphrase[1:]
-            return session.call_raw(
-                messages.PassphraseAck(passphrase=passphrase, on_device=False)
-            )
+            return passphrase[1:]
 
 
 def mnemonic_words(
