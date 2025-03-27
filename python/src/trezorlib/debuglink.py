@@ -33,15 +33,12 @@ from mnemonic import Mnemonic
 
 from . import btc, mapping, messages, models, protobuf
 from .client import (
-    MAX_PASSPHRASE_LENGTH,
-    PASSPHRASE_ON_DEVICE,
     ProtocolVersion,
     TrezorClient,
 )
 from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
-from .messages import Capability, DebugWaitType
-from .protobuf import MessageType
+from .messages import DebugWaitType
 from .tools import parse_path
 from .transport import Timeout
 from .transport.session import Session
@@ -1282,62 +1279,6 @@ class TrezorClientDebugLink(TrezorClient):
         new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
         return new_client
 
-    def passphrase_callback(
-        self, session: Session, msg: messages.PassphraseRequest
-    ) -> t.Any:
-        available_on_device = (
-            Capability.PassphraseEntry in session.features.capabilities
-        )
-
-        def send_passphrase(
-            passphrase: str | None = None, on_device: bool | None = None
-        ) -> MessageType:
-            msg = messages.PassphraseAck(passphrase=passphrase, on_device=on_device)
-            resp = session.call_raw(msg)
-            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
-                if resp.state is not None:
-                    session.id = resp.state
-                else:
-                    raise RuntimeError("Object resp.state is None")
-                resp = session.call_raw(messages.Deprecated_PassphraseStateAck())
-            return resp
-
-        # short-circuit old style entry
-        if msg._on_device is True:
-            return send_passphrase(None, None)
-
-        try:
-            if isinstance(session, SessionDebugWrapper):
-                passphrase = self.ui.get_passphrase(
-                    available_on_device=available_on_device
-                )
-                if passphrase is None:
-                    passphrase = session.passphrase
-            else:
-                raise NotImplementedError
-        except Cancelled:
-            session.call_raw(messages.Cancel())
-            raise
-
-        if passphrase is PASSPHRASE_ON_DEVICE:
-            if not available_on_device:
-                session.call_raw(messages.Cancel())
-                raise RuntimeError("Device is not capable of entering passphrase")
-            else:
-                return send_passphrase(on_device=True)
-
-        # else process host-entered passphrase
-        if passphrase is None:
-            passphrase = ""
-        if not isinstance(passphrase, str):
-            raise RuntimeError(f"Passphrase must be a str {type(passphrase)}")
-        passphrase = Mnemonic.normalize_string(passphrase)
-        if len(passphrase) > MAX_PASSPHRASE_LENGTH:
-            session.call_raw(messages.Cancel())
-            raise ValueError("Passphrase too long")
-
-        return send_passphrase(passphrase, on_device=False)
-
     def close_transport(self) -> None:
         self.transport.close()
         self.debug.close()
@@ -1359,7 +1300,6 @@ class TrezorClientDebugLink(TrezorClient):
                 derive_cardano,
             )
         )
-        session.passphrase = passphrase
         return session
 
     def get_seedless_session(

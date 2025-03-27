@@ -53,9 +53,6 @@ class ProtocolVersion(IntEnum):
 
 class TrezorClient:
     button_callback: t.Callable[[messages.ButtonRequest], None] | None = None
-    passphrase_callback: (
-        t.Callable[[Session, messages.PassphraseRequest], t.Any] | None
-    ) = None
     pin_callback: t.Callable[[messages.PinMatrixRequest], str] | None = None
 
     _model: models.TrezorModel
