@@ -90,6 +90,15 @@ struct cli {
 
   // Current line buffer
   char line_buffer[CLI_LINE_BUFFER_SIZE];
+  // number of characters in the buffer (excluding '\0')
+  int line_len;
+  // cursor position in the buffer
+  int line_cursor;
+  // currently selected history entry
+  int hist_idx;
+  // prefix to search in the history
+  int hist_prefix;
+
   // Command name (pointer to the line buffer)
   const char* cmd_name;
   // Number of parsed arguments
@@ -123,8 +132,8 @@ bool cli_init(cli_t* cli, cli_read_cb_t read, cli_write_cb_t write,
 void cli_set_commands(cli_t* cli, const cli_command_t* cmd_array,
                       size_t cmd_count);
 
-// Runs the CLI command loop
-void cli_run_loop(cli_t* cli);
+// Process the newly received characters from the console input
+void cli_process_io(cli_t* cli);
 
 // Returne the number of arguments in the command line
 size_t cli_arg_count(cli_t* cli);

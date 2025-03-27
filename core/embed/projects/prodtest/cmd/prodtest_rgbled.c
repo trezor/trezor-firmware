@@ -24,6 +24,21 @@
 #include <io/rgb_led.h>
 #include <rtl/cli.h>
 
+#include "prodtest_rgbled.h"
+
+static bool g_prodtest_rgbled_start = false;
+
+void prodtest_rgbled_init(void) {
+  rgb_led_set_color(RGBLED_GREEN);
+  g_prodtest_rgbled_start = true;
+}
+
+void prodtest_rgbled_clear_start(void) {
+  if (g_prodtest_rgbled_start) {
+    rgb_led_set_color(0);
+  }
+}
+
 static void prodtest_rgbled_set(cli_t* cli) {
   uint32_t r = 0;
   uint32_t g = 0;
@@ -53,6 +68,7 @@ static void prodtest_rgbled_set(cli_t* cli) {
 
   uint32_t rgb = (r << 16) | (g << 8) | b;
 
+  g_prodtest_rgbled_start = false;
   rgb_led_set_color(rgb);
 
   cli_ok(cli, "");
