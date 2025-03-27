@@ -23,7 +23,7 @@ def setup_device_legacy(client: Client, pin: str, wipe_code: str) -> None:
         label="WIPECODE",
     )
 
-    with session:
+    with session.client as client:
         client.use_pin_sequence([PIN, WIPE_CODE, WIPE_CODE])
         device.change_wipe_code(client.get_seedless_session())
 
@@ -41,7 +41,7 @@ def setup_device_core(client: Client, pin: str, wipe_code: str) -> None:
         label="WIPECODE",
     )
 
-    with session:
+    with session.client as client:
         client.use_pin_sequence([pin, wipe_code, wipe_code])
         device.change_wipe_code(client.get_seedless_session())
 

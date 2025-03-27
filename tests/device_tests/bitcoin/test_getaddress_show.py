@@ -63,9 +63,9 @@ def test_show_t1(
         yield
         session.client.debug.press_yes()
 
-    with session:
+    with session.client as client:
         # This is the only place where even T1 is using input flow
-        session.set_input_flow(input_flow_t1)
+        client.set_input_flow(input_flow_t1)
         assert (
             btc.get_address(
                 session,
@@ -88,9 +88,9 @@ def test_show_tt(
     script_type: messages.InputScriptType,
     address: str,
 ):
-    with session:
+    with session.client as client:
         IF = InputFlowShowAddressQRCode(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         assert (
             btc.get_address(
                 session,
@@ -109,9 +109,9 @@ def test_show_tt(
 def test_show_cancel(
     session: Session, path: str, script_type: messages.InputScriptType, address: str
 ):
-    with session, pytest.raises(Cancelled):
+    with session.client as client, pytest.raises(Cancelled):
         IF = InputFlowShowAddressQRCodeCancel(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         btc.get_address(
             session,
             "Bitcoin",
@@ -157,10 +157,10 @@ def test_show_multisig_3(session: Session):
 
     for multisig in (multisig1, multisig2):
         for i in [1, 2, 3]:
-            with session:
+            with session.client as client:
                 if is_core(session):
                     IF = InputFlowConfirmAllWarnings(session.client)
-                    session.set_input_flow(IF.get())
+                    client.set_input_flow(IF.get())
                 assert (
                     btc.get_address(
                         session,
@@ -273,9 +273,9 @@ def test_show_multisig_xpubs(
     )
 
     for i in range(3):
-        with session:
+        with session.client as client:
             IF = InputFlowShowMultisigXPUBs(session.client, address, xpubs, i)
-            session.set_input_flow(IF.get())
+            client.set_input_flow(IF.get())
             session.client.debug.synchronize_at("Homescreen")
             session.client.watch_layout()
             btc.get_address(
@@ -314,10 +314,10 @@ def test_show_multisig_15(session: Session):
 
     for multisig in [multisig1, multisig2]:
         for i in range(15):
-            with session:
+            with session.client as client:
                 if is_core(session):
                     IF = InputFlowConfirmAllWarnings(session.client)
-                    session.set_input_flow(IF.get())
+                    client.set_input_flow(IF.get())
                 assert (
                     btc.get_address(
                         session,

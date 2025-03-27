@@ -125,8 +125,8 @@ def test_one_one_fee(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -178,8 +178,8 @@ def test_testnet_one_two_fee(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -228,8 +228,8 @@ def test_testnet_fee_high_warning(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -280,8 +280,8 @@ def test_one_two_fee(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -342,8 +342,8 @@ def test_one_three_fee(session: Session, chunkify: bool):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -413,8 +413,8 @@ def test_two_two(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -557,8 +557,8 @@ def test_lots_of_change(session: Session):
 
     request_change_outputs = [request_output(i + 1) for i in range(cnt)]
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -608,8 +608,8 @@ def test_fee_high_warning(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -664,9 +664,9 @@ def test_fee_high_hardfail(session: Session):
     device.apply_settings(
         session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
     )
-    with session:
+    with session.client as client:
         IF = InputFlowSignTxHighFee(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         _, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1], [out1], prev_txes=TX_CACHE_TESTNET
@@ -696,8 +696,8 @@ def test_not_enough_funds(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -726,8 +726,8 @@ def test_p2sh(session: Session):
         script_type=messages.OutputScriptType.PAYTOSCRIPTHASH,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -785,6 +785,7 @@ def test_testnet_big_amount(session: Session):
 
 def test_attack_change_outputs(session: Session):
     # input tx: ac4ca0e7827a1228f44449cb57b4b9a809a667ca044dc43bb124627fed4bc10a
+    client = session.client
 
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/0h/0h/0/55"),  # 14nw9rFTWGUncHZjSqpPSJQaptWW7iRRB8
@@ -813,8 +814,8 @@ def test_attack_change_outputs(session: Session):
     )
 
     # Test if the transaction can be signed normally
-    with session:
-        session.set_expected_responses(
+    with client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
@@ -869,11 +870,11 @@ def test_attack_change_outputs(session: Session):
 
         return msg
 
-    with session, pytest.raises(
+    with client, pytest.raises(
         TrezorFailure, match="Transaction has changed during signing"
     ):
         # Set up attack processors
-        session.set_filter(messages.TxAck, attack_processor)
+        client.set_filter(messages.TxAck, attack_processor)
 
         btc.sign_tx(
             session,
@@ -924,11 +925,11 @@ def test_attack_modify_change_address(session: Session):
 
         return msg
 
-    with session, pytest.raises(
+    with session.client as client, pytest.raises(
         TrezorFailure, match="Transaction has changed during signing"
     ):
         # Set up attack processors
-        session.set_filter(messages.TxAck, attack_processor)
+        client.set_filter(messages.TxAck, attack_processor)
 
         btc.sign_tx(
             session, "Testnet", [inp1], [out1, out2], prev_txes=TX_CACHE_TESTNET
@@ -982,9 +983,9 @@ def test_attack_change_input_address(session: Session):
         return msg
 
     # Now run the attack, must trigger the exception
-    with session:
-        session.set_filter(messages.TxAck, attack_processor)
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_filter(messages.TxAck, attack_processor)
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -1033,8 +1034,8 @@ def test_spend_coinbase(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -1091,8 +1092,8 @@ def test_two_changes(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -1150,8 +1151,8 @@ def test_change_on_main_chain_allowed(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -1418,8 +1419,8 @@ def test_lock_time(session: Session, lock_time: int, sequence: int):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -1467,9 +1468,9 @@ def test_lock_time_blockheight(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client as client:
         IF = InputFlowLockTimeBlockHeight(session.client, "499999999")
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1506,9 +1507,9 @@ def test_lock_time_datetime(session: Session, lock_time_str: str):
     lock_time_utc = lock_time_naive.replace(tzinfo=timezone.utc)
     lock_time_timestamp = int(lock_time_utc.timestamp())
 
-    with session:
+    with session.client as client:
         IF = InputFlowLockTimeDatetime(session.client, lock_time_str)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1538,9 +1539,9 @@ def test_information(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client as client:
         IF = InputFlowSignTxInformation(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1573,9 +1574,9 @@ def test_information_mixed(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client as client:
         IF = InputFlowSignTxInformationMixed(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1604,9 +1605,9 @@ def test_information_cancel(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session, pytest.raises(Cancelled):
+    with session.client as client, pytest.raises(Cancelled):
         IF = InputFlowSignTxInformationCancel(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,
@@ -1654,9 +1655,9 @@ def test_information_replacement(session: Session):
         orig_index=0,
     )
 
-    with session:
+    with session.client as client:
         IF = InputFlowSignTxInformationReplacement(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         btc.sign_tx(
             session,

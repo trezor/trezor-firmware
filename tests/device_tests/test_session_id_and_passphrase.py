@@ -66,8 +66,8 @@ def _get_xpub(
     else:
         expected_responses = [messages.PublicKey]
 
-    with session:
-        session.set_expected_responses(expected_responses)
+    with session.client as client:
+        client.set_expected_responses(expected_responses)
         result = session.call_raw(XPUB_REQUEST)
         if passphrase is not None:
             result = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
@@ -441,7 +441,7 @@ def test_hide_passphrase_from_host(client: Client):
 
     passphrase = "abc"
     session = _get_session(client)
-    with session:
+    with client:
 
         def input_flow():
             yield
@@ -457,8 +457,8 @@ def test_hide_passphrase_from_host(client: Client):
                 raise KeyError
 
         session.client.watch_layout()
-        session.set_input_flow(input_flow)
-        session.set_expected_responses(
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(
             [
                 messages.PassphraseRequest,
                 messages.ButtonRequest,
@@ -477,7 +477,7 @@ def test_hide_passphrase_from_host(client: Client):
     # Starting new session, otherwise the passphrase would be cached
     session = _get_session(client)
 
-    with session:
+    with client:
 
         def input_flow():
             yield
@@ -493,8 +493,8 @@ def test_hide_passphrase_from_host(client: Client):
             client.debug.press_yes()
 
         session.client.watch_layout()
-        session.set_input_flow(input_flow)
-        session.set_expected_responses(
+        client.set_input_flow(input_flow)
+        client.set_expected_responses(
             [
                 messages.PassphraseRequest,
                 messages.ButtonRequest,

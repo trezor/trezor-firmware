@@ -60,7 +60,7 @@ def test_eos_signtx_transfer_token(session: Session, chunkify: bool):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID, chunkify=chunkify)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -93,7 +93,7 @@ def test_eos_signtx_buyram(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -126,7 +126,7 @@ def test_eos_signtx_buyrambytes(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -155,7 +155,7 @@ def test_eos_signtx_sellram(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -190,7 +190,7 @@ def test_eos_signtx_delegate(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -224,7 +224,7 @@ def test_eos_signtx_undelegate(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -253,7 +253,7 @@ def test_eos_signtx_refund(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -287,7 +287,7 @@ def test_eos_signtx_linkauth(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -320,7 +320,7 @@ def test_eos_signtx_unlinkauth(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -376,7 +376,7 @@ def test_eos_signtx_updateauth(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -405,7 +405,7 @@ def test_eos_signtx_deleteauth(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -468,7 +468,7 @@ def test_eos_signtx_vote(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -497,7 +497,7 @@ def test_eos_signtx_vote_proxy(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -526,7 +526,7 @@ def test_eos_signtx_unknown(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -602,7 +602,7 @@ def test_eos_signtx_newaccount(session: Session):
         "transaction_extensions": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (
@@ -638,7 +638,7 @@ def test_eos_signtx_setcontract(session: Session):
         "context_free_data": [],
     }
 
-    with session:
+    with session.client:
         resp = eos.sign_tx(session, ADDRESS_N, transaction, CHAIN_ID)
         assert isinstance(resp, EosSignedTx)
         assert (

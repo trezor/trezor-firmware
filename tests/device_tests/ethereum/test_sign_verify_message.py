@@ -36,9 +36,9 @@ def test_signmessage(session: Session, parameters, result):
         assert res.address == result["address"]
         assert res.signature.hex() == result["sig"]
     else:
-        with session:
+        with session.client as client:
             IF = InputFlowSignVerifyMessageLong(session.client)
-            session.set_input_flow(IF.get())
+            client.set_input_flow(IF.get())
             res = ethereum.sign_message(
                 session, parse_path(parameters["path"]), parameters["msg"]
             )
@@ -57,9 +57,9 @@ def test_verify(session: Session, parameters, result):
         )
         assert res is True
     else:
-        with session:
+        with session.client as client:
             IF = InputFlowSignVerifyMessageLong(session.client, verify=True)
-            session.set_input_flow(IF.get())
+            client.set_input_flow(IF.get())
             res = ethereum.verify_message(
                 session,
                 parameters["address"],

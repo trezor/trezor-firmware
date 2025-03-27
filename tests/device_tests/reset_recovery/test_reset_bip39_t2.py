@@ -35,9 +35,9 @@ pytestmark = pytest.mark.models("core")
 
 def reset_device(session: Session, strength: int):
     debug = session.client.debug
-    with session:
+    with session.client as client:
         IF = InputFlowBip39ResetBackup(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         # No PIN, no passphrase, don't display random
         device.setup(
@@ -91,9 +91,9 @@ def test_reset_device_pin(session: Session):
     debug = session.client.debug
     strength = 256  # 24 words
 
-    with session:
+    with session.client as client:
         IF = InputFlowBip39ResetPIN(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         # PIN, passphrase, display random
         device.setup(
@@ -129,9 +129,9 @@ def test_reset_device_pin(session: Session):
 def test_reset_entropy_check(session: Session):
     strength = 128  # 12 words
 
-    with session:
+    with session.client as client:
         IF = InputFlowBip39ResetBackup(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         # No PIN, no passphrase
         path_xpubs = device.setup(
@@ -176,9 +176,9 @@ def test_reset_failed_check(session: Session):
     debug = session.client.debug
     strength = 256  # 24 words
 
-    with session:
+    with session.client as client:
         IF = InputFlowBip39ResetFailedCheck(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
 
         # PIN, passphrase, display random
         device.setup(
@@ -263,9 +263,9 @@ def test_already_initialized(session: Session):
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.uninitialized_session
 def test_entropy_check(session: Session):
-    with session:
+    with session.client as client:
         delizia = session.client.debug.layout_type is LayoutType.Delizia
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(name="setup_device"),
                 (delizia, messages.ButtonRequest(name="confirm_setup_device")),
@@ -300,9 +300,9 @@ def test_entropy_check(session: Session):
 @pytest.mark.setup_client(uninitialized=True)
 @pytest.mark.uninitialized_session
 def test_no_entropy_check(session: Session):
-    with session:
+    with session.client as client:
         delizia = session.client.debug.layout_type is LayoutType.Delizia
-        session.set_expected_responses(
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(name="setup_device"),
                 (delizia, messages.ButtonRequest(name="confirm_setup_device")),

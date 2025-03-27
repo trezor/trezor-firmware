@@ -947,7 +947,6 @@ class SessionDebugWrapper(Session):
         if isinstance(session, SessionDebugWrapper):
             raise Exception("Cannot wrap already wrapped session!")
         self.__dict__["_session"] = session
-        self.reset_debug_features()
 
     def __getattr__(self, name: str) -> t.Any:
         return getattr(self._session, name)
@@ -962,58 +961,23 @@ class SessionDebugWrapper(Session):
     def protocol_version(self) -> int:
         return self.client.protocol_version
 
+    @property
+    def debug_client(self) -> TrezorClientDebugLink:
+        if not isinstance(self.client, TrezorClientDebugLink):
+            raise Exception("Debug client not available")
+        return self.client
+
     def _write(self, msg: t.Any) -> None:
-        self._session._write(self._filter_message(msg))
+        self._session._write(self.debug_client._filter_message(msg))
 
     def _read(self) -> t.Any:
-        resp = self._filter_message(self._session._read())
-        if self.actual_responses is not None:
-            self.actual_responses.append(resp)
+        resp = self.debug_client._filter_message(self._session._read())
+        if self.debug_client.actual_responses is not None:
+            self.debug_client.actual_responses.append(resp)
         return resp
 
     def resume(self) -> None:
         self._session.resume()
-
-    def set_expected_responses(
-        self,
-        expected: list["ExpectedMessage" | t.Tuple[bool, "ExpectedMessage"]],
-    ) -> None:
-        """Set a sequence of expected responses to session calls.
-
-        Within a given with-block, the list of received responses from device must
-        match the list of expected responses, otherwise an ``AssertionError`` is raised.
-
-        If an expected response is given a field value other than ``None``, that field value
-        must exactly match the received field value. If a given field is ``None``
-        (or unspecified) in the expected response, the received field value is not
-        checked.
-
-        Each expected response can also be a tuple ``(bool, message)``. In that case, the
-        expected response is only evaluated if the first field is ``True``.
-        This is useful for differentiating sequences between Trezor models:
-
-        >>> trezor_one = session.features.model == "1"
-        >>> session.set_expected_responses([
-        >>>     messages.ButtonRequest(code=ConfirmOutput),
-        >>>     (trezor_one, messages.ButtonRequest(code=ConfirmOutput)),
-        >>>     messages.Success(),
-        >>> ])
-        """
-        if not self.in_with_statement:
-            raise RuntimeError("Must be called inside 'with' statement")
-
-        # make sure all items are (bool, message) tuples
-        expected_with_validity = (
-            e if isinstance(e, tuple) else (True, e) for e in expected
-        )
-
-        # only apply those items that are (True, message)
-        self.expected_responses = [
-            MessageFilter.from_message_or_type(expected)
-            for valid, expected in expected_with_validity
-            if valid
-        ]
-        self.actual_responses = []
 
     def lock(self) -> None:
         """Lock the device.
@@ -1034,6 +998,214 @@ class SessionDebugWrapper(Session):
     def ensure_unlocked(self) -> None:
         btc.get_address(self, "Testnet", PASSPHRASE_TEST_PATH)
         self.refresh_features()
+
+
+class TrezorClientDebugLink(TrezorClient):
+    # This class implements automatic responses
+    # and other functionality for unit tests
+    # for various callbacks, created in order
+    # to automatically pass unit tests.
+    #
+    # This mixing should be used only for purposes
+    # of unit testing, because it will fail to work
+    # without special DebugLink interface provided
+    # by the device.
+
+    def __init__(
+        self,
+        transport: Transport,
+        auto_interact: bool = True,
+        open_transport: bool = True,
+        debug_transport: Transport | None = None,
+    ) -> None:
+        try:
+            debug_transport = debug_transport or transport.find_debug()
+            self.debug = DebugLink(debug_transport, auto_interact)
+            if open_transport:
+                self.debug.open()
+            # try to open debuglink, see if it works
+            assert self.debug.transport.ping()
+        except Exception:
+            if not auto_interact:
+                self.debug = NullDebugLink()
+            else:
+                raise
+
+        if open_transport:
+            transport.open()
+
+        # set transport explicitly so that sync_responses can work
+        super().__init__(transport)
+
+        self.transport = transport
+        self.ui: DebugUI = DebugUI(self.debug)
+
+        def get_pin(_msg: messages.PinMatrixRequest) -> str:
+            try:
+                pin = self.ui.get_pin()
+            except Cancelled:
+                raise
+            return pin
+
+        self.pin_callback = get_pin
+        self.button_callback = self.ui.button_request
+
+        self.sync_responses()
+
+        # So that we can choose right screenshotting logic (T1 vs TT)
+        # and know the supported debug capabilities
+        self.debug.model = self.model
+        self.debug.version = self.version
+
+        self.reset_debug_features()
+
+    @property
+    def layout_type(self) -> LayoutType:
+        return self.debug.layout_type
+
+    def get_new_client(self) -> TrezorClientDebugLink:
+        new_client = TrezorClientDebugLink(
+            self.transport,
+            self.debug.allow_interactions,
+            open_transport=False,
+            debug_transport=self.debug.transport,
+        )
+        new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
+        new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
+        new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
+        return new_client
+
+    def close_transport(self) -> None:
+        self.transport.close()
+        self.debug.close()
+
+    def lock(self) -> None:
+        s = self.get_seedless_session()
+        s.lock()
+
+    def get_session(
+        self,
+        passphrase: str | object = "",
+        derive_cardano: bool = False,
+    ) -> SessionDebugWrapper:
+        if isinstance(passphrase, str):
+            passphrase = Mnemonic.normalize_string(passphrase)
+        session = SessionDebugWrapper(
+            super().get_session(
+                passphrase,
+                derive_cardano,
+            )
+        )
+        return session
+
+    # FIXME: can be deleted
+    def get_seedless_session(
+        self, *args: t.Any, **kwargs: t.Any
+    ) -> SessionDebugWrapper:
+        session = super().get_seedless_session(*args, **kwargs)
+        if not isinstance(session, SessionDebugWrapper):
+            session = SessionDebugWrapper(session)
+        return session
+
+    def watch_layout(self, watch: bool = True) -> None:
+        """Enable or disable watching layout changes.
+
+        Since trezor-core v2.3.2, it is necessary to call `watch_layout()` before
+        using `debug.wait_layout()`, otherwise layout changes are not reported.
+        """
+        if self.version >= (2, 3, 2):
+            # version check is necessary because otherwise we cannot reliably detect
+            # whether and where to wait for reply:
+            # - T1 reports unknown debuglink messages on the wirelink
+            # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
+            self.debug.watch_layout(watch)
+
+    def use_pin_sequence(self, pins: t.Iterable[str]) -> None:
+        """Respond to PIN prompts from device with the provided PINs.
+        The sequence must be at least as long as the expected number of PIN prompts.
+        """
+        self.ui.pins = iter(pins)
+
+    def use_mnemonic(self, mnemonic: str) -> None:
+        """Use the provided mnemonic to respond to device.
+        Only applies to T1, where device prompts the host for mnemonic words."""
+        self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
+
+    def sync_responses(self) -> None:
+        """Synchronize Trezor device receiving with caller.
+
+        When a failed test does not read out the response, the next caller will write
+        a request, but read the previous response -- while the device had already sent
+        and placed into queue the new response.
+
+        This function will call `Ping` and read responses until it locates a `Success`
+        with the expected text. This means that we are reading up-to-date responses.
+        """
+        import secrets
+
+        # Start by canceling whatever is on screen. This will work to cancel T1 PIN
+        # prompt, which is in TINY mode and does not respond to `Ping`.
+        if self.protocol_version is ProtocolVersion.V1:
+            assert isinstance(self.protocol, ProtocolV1Channel)
+            self.protocol.write(messages.Cancel())
+            resp = self.protocol.read()
+            message = "SYNC" + secrets.token_hex(8)
+            self.protocol.write(messages.Ping(message=message))
+            while resp != messages.Success(message=message):
+                try:
+                    resp = self.protocol.read()
+                except Exception:
+                    pass
+
+    def mnemonic_callback(self, _) -> str:
+        word, pos = self.debug.read_recovery_word()
+        if word:
+            return word
+        if pos:
+            return self.mnemonic[pos - 1]
+
+        raise RuntimeError("Unexpected call")
+
+    def set_expected_responses(
+        self,
+        expected: list["ExpectedMessage" | t.Tuple[bool, "ExpectedMessage"]],
+    ) -> None:
+        """Set a sequence of expected responses to session calls.
+
+        Within a given with-block, the list of received responses from device must
+        match the list of expected responses, otherwise an ``AssertionError`` is raised.
+
+        If an expected response is given a field value other than ``None``, that field value
+        must exactly match the received field value. If a given field is ``None``
+        (or unspecified) in the expected response, the received field value is not
+        checked.
+
+        Each expected response can also be a tuple ``(bool, message)``. In that case, the
+        expected response is only evaluated if the first field is ``True``.
+        This is useful for differentiating sequences between Trezor models:
+
+        >>> trezor_one = session.features.model == "1"
+        >>> client.set_expected_responses([
+        >>>     messages.ButtonRequest(code=ConfirmOutput),
+        >>>     (trezor_one, messages.ButtonRequest(code=ConfirmOutput)),
+        >>>     messages.Success(),
+        >>> ])
+        """
+        if not self.in_with_statement:
+            raise RuntimeError("Must be called inside 'with' statement")
+
+        # make sure all items are (bool, message) tuples
+        expected_with_validity = (
+            e if isinstance(e, tuple) else (True, e) for e in expected
+        )
+
+        # only apply those items that are (True, message)
+        self.expected_responses = [
+            MessageFilter.from_message_or_type(expected)
+            for valid, expected in expected_with_validity
+            if valid
+        ]
+        self.actual_responses = []
 
     def set_filter(
         self,
@@ -1067,7 +1239,7 @@ class SessionDebugWrapper(Session):
 
         Clears all debugging state that might have been modified by a testcase.
         """
-        self.client.ui.clear()  # type: ignore [Cannot access attribute]
+        self.ui.clear()
         self.in_with_statement = False
         self.expected_responses: list[MessageFilter] | None = None
         self.actual_responses: list[protobuf.MessageType] | None = None
@@ -1076,7 +1248,7 @@ class SessionDebugWrapper(Session):
             t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
         ] = {}
 
-    def __enter__(self) -> "SessionDebugWrapper":
+    def __enter__(self) -> "TrezorClientDebugLink":
         # For usage in with/expected_responses
         if self.in_with_statement:
             raise RuntimeError("Do not nest!")
@@ -1091,10 +1263,8 @@ class SessionDebugWrapper(Session):
         actual_responses = self.actual_responses
 
         # grab a copy of the inputflow generator to raise an exception through it
-        if isinstance(self.client, TrezorClientDebugLink) and isinstance(
-            self.client.ui, DebugUI
-        ):
-            input_flow = self.client.ui.input_flow
+        if isinstance(self.ui, DebugUI):
+            input_flow = self.ui.input_flow
         else:
             input_flow = None
 
@@ -1187,8 +1357,8 @@ class SessionDebugWrapper(Session):
         >>>     # press Yes
         >>>     client.debug.press_yes()
         >>>
-        >>> with session:
-        >>>     session.set_input_flow(input_flow)
+        >>> with client:
+        >>>     client.set_input_flow(input_flow)
         >>>     some_call(session)
         """
         if not self.in_with_statement:
@@ -1198,173 +1368,9 @@ class SessionDebugWrapper(Session):
             input_flow = input_flow()
         if not hasattr(input_flow, "send"):
             raise RuntimeError("input_flow should be a generator function")
-        self.client.ui.input_flow = input_flow  # type: ignore [Cannot access attribute]
+        self.ui.input_flow = input_flow
 
         next(input_flow)  # start the generator
-
-
-class TrezorClientDebugLink(TrezorClient):
-    # This class implements automatic responses
-    # and other functionality for unit tests
-    # for various callbacks, created in order
-    # to automatically pass unit tests.
-    #
-    # This mixing should be used only for purposes
-    # of unit testing, because it will fail to work
-    # without special DebugLink interface provided
-    # by the device.
-
-    def __init__(
-        self,
-        transport: Transport,
-        auto_interact: bool = True,
-        open_transport: bool = True,
-        debug_transport: Transport | None = None,
-    ) -> None:
-        try:
-            debug_transport = debug_transport or transport.find_debug()
-            self.debug = DebugLink(debug_transport, auto_interact)
-            if open_transport:
-                self.debug.open()
-            # try to open debuglink, see if it works
-            assert self.debug.transport.ping()
-        except Exception:
-            if not auto_interact:
-                self.debug = NullDebugLink()
-            else:
-                raise
-
-        if open_transport:
-            transport.open()
-
-        # set transport explicitly so that sync_responses can work
-        super().__init__(transport)
-
-        self.transport = transport
-        self.ui: DebugUI = DebugUI(self.debug)
-
-        def get_pin(_msg: messages.PinMatrixRequest) -> str:
-            try:
-                pin = self.ui.get_pin()
-            except Cancelled:
-                raise
-            return pin
-
-        self.pin_callback = get_pin
-        self.button_callback = self.ui.button_request
-
-        self.sync_responses()
-
-        # So that we can choose right screenshotting logic (T1 vs TT)
-        # and know the supported debug capabilities
-        self.debug.model = self.model
-        self.debug.version = self.version
-
-    @property
-    def layout_type(self) -> LayoutType:
-        return self.debug.layout_type
-
-    def get_new_client(self) -> TrezorClientDebugLink:
-        new_client = TrezorClientDebugLink(
-            self.transport,
-            self.debug.allow_interactions,
-            open_transport=False,
-            debug_transport=self.debug.transport,
-        )
-        new_client.debug.screenshot_recording_dir = self.debug.screenshot_recording_dir
-        new_client.debug.t1_screenshot_directory = self.debug.t1_screenshot_directory
-        new_client.debug.t1_screenshot_counter = self.debug.t1_screenshot_counter
-        return new_client
-
-    def close_transport(self) -> None:
-        self.transport.close()
-        self.debug.close()
-
-    def lock(self) -> None:
-        s = self.get_seedless_session()
-        s.lock()
-
-    def get_session(
-        self,
-        passphrase: str | object = "",
-        derive_cardano: bool = False,
-    ) -> SessionDebugWrapper:
-        if isinstance(passphrase, str):
-            passphrase = Mnemonic.normalize_string(passphrase)
-        session = SessionDebugWrapper(
-            super().get_session(
-                passphrase,
-                derive_cardano,
-            )
-        )
-        return session
-
-    def get_seedless_session(
-        self, *args: t.Any, **kwargs: t.Any
-    ) -> SessionDebugWrapper:
-        session = super().get_seedless_session(*args, **kwargs)
-        if not isinstance(session, SessionDebugWrapper):
-            session = SessionDebugWrapper(session)
-        return session
-
-    def watch_layout(self, watch: bool = True) -> None:
-        """Enable or disable watching layout changes.
-
-        Since trezor-core v2.3.2, it is necessary to call `watch_layout()` before
-        using `debug.wait_layout()`, otherwise layout changes are not reported.
-        """
-        if self.version >= (2, 3, 2):
-            # version check is necessary because otherwise we cannot reliably detect
-            # whether and where to wait for reply:
-            # - T1 reports unknown debuglink messages on the wirelink
-            # - TT < 2.3.0 does not reply to unknown debuglink messages due to a bug
-            self.debug.watch_layout(watch)
-
-    def use_pin_sequence(self, pins: t.Iterable[str]) -> None:
-        """Respond to PIN prompts from device with the provided PINs.
-        The sequence must be at least as long as the expected number of PIN prompts.
-        """
-        self.ui.pins = iter(pins)
-
-    def use_mnemonic(self, mnemonic: str) -> None:
-        """Use the provided mnemonic to respond to device.
-        Only applies to T1, where device prompts the host for mnemonic words."""
-        self.mnemonic = Mnemonic.normalize_string(mnemonic).split(" ")
-
-    def sync_responses(self) -> None:
-        """Synchronize Trezor device receiving with caller.
-
-        When a failed test does not read out the response, the next caller will write
-        a request, but read the previous response -- while the device had already sent
-        and placed into queue the new response.
-
-        This function will call `Ping` and read responses until it locates a `Success`
-        with the expected text. This means that we are reading up-to-date responses.
-        """
-        import secrets
-
-        # Start by canceling whatever is on screen. This will work to cancel T1 PIN
-        # prompt, which is in TINY mode and does not respond to `Ping`.
-        if self.protocol_version is ProtocolVersion.V1:
-            assert isinstance(self.protocol, ProtocolV1Channel)
-            self.protocol.write(messages.Cancel())
-            resp = self.protocol.read()
-            message = "SYNC" + secrets.token_hex(8)
-            self.protocol.write(messages.Ping(message=message))
-            while resp != messages.Success(message=message):
-                try:
-                    resp = self.protocol.read()
-                except Exception:
-                    pass
-
-    def mnemonic_callback(self, _) -> str:
-        word, pos = self.debug.read_recovery_word()
-        if word:
-            return word
-        if pos:
-            return self.mnemonic[pos - 1]
-
-        raise RuntimeError("Unexpected call")
 
 
 def load_device(

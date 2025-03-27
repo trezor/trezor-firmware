@@ -51,9 +51,9 @@ def test_binance_get_address_chunkify_details(
 ):
     # data from https://github.com/binance-chain/javascript-sdk/blob/master/__tests__/crypto.test.js#L50
 
-    with session:
+    with session.client as client:
         IF = InputFlowShowAddressQRCode(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         address = get_address(
             session, parse_path(path), show_display=True, chunkify=True
         )

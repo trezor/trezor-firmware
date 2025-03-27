@@ -58,7 +58,7 @@ def test_non_segwit_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client:
         signatures, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API
         )
@@ -94,7 +94,7 @@ def test_segwit_non_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client:
         signatures, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1, inp2], [out1], prev_txes=TX_API
         )
@@ -138,7 +138,7 @@ def test_segwit_non_segwit_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client:
         signatures, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1, inp2, inp3], [out1], prev_txes=TX_API
         )
@@ -180,7 +180,7 @@ def test_non_segwit_segwit_non_segwit_inputs(session: Session):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with session:
+    with session.client:
         signatures, serialized_tx = btc.sign_tx(
             session, "Testnet", [inp1, inp2, inp3], [out1], prev_txes=TX_API
         )

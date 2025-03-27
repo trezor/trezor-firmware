@@ -270,10 +270,10 @@ def test_multisig(session: Session):
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        with session:
+        with session.client as client:
             if is_core(session):
                 IF = InputFlowConfirmAllWarnings(session.client)
-                session.set_input_flow(IF.get())
+                client.set_input_flow(IF.get())
             assert (
                 btc.get_address(
                     session,
@@ -321,10 +321,10 @@ def test_multisig_missing(session: Session, show_display):
     )
 
     for multisig in (multisig1, multisig2):
-        with pytest.raises(TrezorFailure), session:
+        with pytest.raises(TrezorFailure), session.client as client:
             if is_core(session):
                 IF = InputFlowConfirmAllWarnings(session.client)
-                session.set_input_flow(IF.get())
+                client.set_input_flow(IF.get())
             btc.get_address(
                 session,
                 "Bitcoin",
@@ -345,10 +345,10 @@ def test_bch_multisig(session: Session):
         xpubs.append(node.xpub)
 
     for nr in range(1, 4):
-        with session:
+        with session.client as client:
             if is_core(session):
                 IF = InputFlowConfirmAllWarnings(session.client)
-                session.set_input_flow(IF.get())
+                client.set_input_flow(IF.get())
             assert (
                 btc.get_address(
                     session,
@@ -396,8 +396,8 @@ def test_invalid_path(session: Session):
 
 def test_unknown_path(session: Session):
     UNKNOWN_PATH = parse_path("m/44h/9h/0h/0/0")
-    with session:
-        session.set_expected_responses([messages.Failure])
+    with session.client as client:
+        client.set_expected_responses([messages.Failure])
 
         with pytest.raises(TrezorFailure, match="Forbidden key path"):
             # account number is too high
@@ -406,8 +406,8 @@ def test_unknown_path(session: Session):
     # disable safety checks
     device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
 
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 messages.ButtonRequest(
                     code=messages.ButtonRequestType.UnknownDerivationPath
@@ -418,13 +418,13 @@ def test_unknown_path(session: Session):
         )
         if is_core(session):
             IF = InputFlowConfirmAllWarnings(session.client)
-            session.set_input_flow(IF.get())
+            client.set_input_flow(IF.get())
         # try again with a warning
         btc.get_address(session, "Bitcoin", UNKNOWN_PATH, show_display=True)
 
-    with session:
+    with session.client as client:
         # no warning is displayed when the call is silent
-        session.set_expected_responses([messages.Address])
+        client.set_expected_responses([messages.Address])
         btc.get_address(session, "Bitcoin", UNKNOWN_PATH, show_display=False)
 
 
@@ -455,10 +455,10 @@ def test_multisig_different_paths(session: Session):
     with pytest.raises(
         Exception, match="Using different paths for different xpubs is not allowed"
     ):
-        with session:
+        with session.client as client:
             if is_core(session):
                 IF = InputFlowConfirmAllWarnings(session.client)
-                session.set_input_flow(IF.get())
+                client.set_input_flow(IF.get())
             btc.get_address(
                 session,
                 "Bitcoin",
@@ -469,10 +469,10 @@ def test_multisig_different_paths(session: Session):
             )
 
     device.apply_settings(session, safety_checks=SafetyCheckLevel.PromptTemporarily)
-    with session:
+    with session.client as client:
         if is_core(session):
             IF = InputFlowConfirmAllWarnings(session.client)
-            session.set_input_flow(IF.get())
+            client.set_input_flow(IF.get())
         btc.get_address(
             session,
             "Bitcoin",

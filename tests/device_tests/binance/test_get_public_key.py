@@ -32,9 +32,9 @@ BINANCE_PATH = parse_path("m/44h/714h/0h/0/0")
     mnemonic="offer caution gift cross surge pretty orange during eye soldier popular holiday mention east eight office fashion ill parrot vault rent devote earth cousin"
 )
 def test_binance_get_public_key(session: Session):
-    with session:
+    with session.client as client:
         IF = InputFlowShowXpubQRCode(session.client)
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         sig = binance.get_public_key(session, BINANCE_PATH, show_display=True)
         assert (
             sig.hex()

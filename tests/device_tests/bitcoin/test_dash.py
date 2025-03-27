@@ -57,8 +57,8 @@ def test_send_dash(session: Session):
         amount=999_999_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
@@ -106,8 +106,8 @@ def test_send_dash_dip2_input(session: Session):
         amount=95_000_000,
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
-    with session:
-        session.set_expected_responses(
+    with session.client as client:
+        client.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),

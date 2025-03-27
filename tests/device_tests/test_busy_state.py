@@ -48,8 +48,8 @@ def test_busy_state(session: Session):
     _assert_busy(session, True)
     assert session.features.unlocked is False
 
-    with session:
-        session.client.use_pin_sequence([PIN])
+    with session.client as client:
+        client.use_pin_sequence([PIN])
         btc.get_address(
             session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), show_display=True
         )

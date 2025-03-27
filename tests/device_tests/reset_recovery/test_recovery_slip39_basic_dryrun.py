@@ -38,9 +38,9 @@ INVALID_SHARES_20_2of3 = [
 
 @pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_dryrun(session: Session):
-    with session:
+    with session.client as client:
         IF = InputFlowSlip39BasicRecoveryDryRun(session.client, SHARES_20_2of3[1:3])
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         device.recover(
             session,
             passphrase_protection=False,
@@ -53,13 +53,13 @@ def test_2of3_dryrun(session: Session):
 @pytest.mark.setup_client(mnemonic=SHARES_20_2of3[0:2])
 def test_2of3_invalid_seed_dryrun(session: Session):
     # test fails because of different seed on device
-    with session, pytest.raises(
+    with session.client as client, pytest.raises(
         TrezorFailure, match=r"The seed does not match the one in the device"
     ):
         IF = InputFlowSlip39BasicRecoveryDryRun(
             session.client, INVALID_SHARES_20_2of3, mismatch=True
         )
-        session.set_input_flow(IF.get())
+        client.set_input_flow(IF.get())
         device.recover(
             session,
             passphrase_protection=False,

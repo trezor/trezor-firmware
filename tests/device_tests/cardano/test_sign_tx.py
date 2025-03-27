@@ -122,10 +122,10 @@ def call_sign_tx(session: Session, parameters, input_flow=None, chunkify: bool =
     else:
         device.apply_settings(session, safety_checks=messages.SafetyCheckLevel.Strict)
 
-    with session:
+    with session.client as client:
         if input_flow is not None:
             session.client.watch_layout()
-            session.set_input_flow(input_flow(session.client))
+            client.set_input_flow(input_flow(session.client))
 
         return cardano.sign_tx(
             session=session,
