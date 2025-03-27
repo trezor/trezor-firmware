@@ -24,6 +24,7 @@
 
 #include <io/i2c_bus.h>
 #include <io/touch.h>
+#include <sys/sysevent_source.h>
 #include <sys/systick.h>
 #include "ft6x36.h"
 
@@ -32,6 +33,8 @@
 #elif defined TOUCH_PANEL_LHS200KB_IF21
 #include "panels/lhs200kb-if21.h"
 #endif
+
+#include "../touch_fsm.h"
 
 // #define TOUCH_TRACE_REGS
 // #define TOUCH_TRACE_EVENT
@@ -46,17 +49,12 @@ typedef struct {
   secbool ready;
   // Captured tick counter when `touch_init()` was called
   uint32_t init_ticks;
-  // Time (in ticks) when touch_get_event() was called last time
-  uint32_t poll_ticks;
   // Time (in ticks) when the touch registers were read last time
   uint32_t read_ticks;
-  // Set if the touch controller is currently touched
-  // (respectively, that we detected a touch event)
-  bool pressed;
-  // Previously reported x-coordinate
-  uint16_t last_x;
-  // Previously reported y-coordinate
-  uint16_t last_y;
+  // Last reported touch state
+  uint32_t state;
+  // Touch state machine for each task
+  touch_fsm_t tls[SYSTASK_MAX_TASKS];
 
 } touch_driver_t;
 
@@ -64,6 +62,9 @@ typedef struct {
 static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
+
+// Forward declarations
+static const syshandle_vmt_t g_touch_handle_vmt;
 
 // Reads a subsequent registers from the FT6X36.
 //
@@ -192,7 +193,7 @@ static void ft6x36_power_down(void) {
 
   if (state == GPIO_PIN_SET) {
     // 90 ms for circuitry to stabilize (being conservative)
-    hal_delay(90);
+    systick_delay_ms(90);
   }
 #endif
 }
@@ -214,7 +215,7 @@ static void ft6x36_power_up(void) {
 
   // Wait until the circuit fully kicks-in
   // (5ms is the minimum time required for the reset signal to be effective)
-  hal_delay(10);
+  systick_delay_ms(10);
 
   // Enable intterrupt input
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -230,7 +231,7 @@ static void ft6x36_power_up(void) {
 #endif
 
   // Wait for the touch controller to boot up
-  hal_delay(5);
+  systick_delay_ms(5);
 
   // Clear the flag indicating rising edge on INT_PIN
   __HAL_GPIO_EXTI_CLEAR_FLAG(TOUCH_INT_PIN);
@@ -316,28 +317,29 @@ secbool touch_init(void) {
     goto cleanup;
   }
 
-  driver->init_ticks = hal_ticks_ms();
-  driver->poll_ticks = driver->init_ticks;
+  if (!syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, driver)) {
+    goto cleanup;
+  }
+
+  driver->init_ticks = systick_ms();
   driver->read_ticks = driver->init_ticks;
   driver->initialized = sectrue;
 
   return sectrue;
 
 cleanup:
-  i2c_bus_close(driver->i2c_bus);
-  ft6x36_power_down();
-  memset(driver, 0, sizeof(touch_driver_t));
+  touch_deinit();
   return secfalse;
 }
 
 void touch_deinit(void) {
   touch_driver_t* driver = &g_touch_driver;
-
+  syshandle_unregister(SYSHANDLE_TOUCH);
+  i2c_bus_close(driver->i2c_bus);
   if (sectrue == driver->initialized) {
-    i2c_bus_close(driver->i2c_bus);
     ft6x36_power_down();
-    memset(driver, 0, sizeof(touch_driver_t));
   }
+  memset(driver, 0, sizeof(touch_driver_t));
 }
 
 void touch_power_set(bool on) {
@@ -355,7 +357,7 @@ secbool touch_ready(void) {
   if (sectrue == driver->initialized && sectrue != driver->ready) {
     // FT6X36 does not report events for 300ms
     // after it is released from the reset state
-    if ((int)(hal_ticks_ms() - driver->init_ticks) >= 310) {
+    if ((int)(systick_ms() - driver->init_ticks) >= 310) {
       driver->ready = sectrue;
     }
   }
@@ -386,7 +388,7 @@ uint8_t touch_get_version(void) {
   // to read the firmware version. If we try to read too soon, we get 0x00
   // and the chip behaves unpredictably.
   while (sectrue != touch_ready()) {
-    hal_delay(1);
+    systick_delay_ms(1);
   }
 
   ft6x36_wake_up(driver->i2c_bus);
@@ -442,7 +444,7 @@ void trace_regs(uint8_t* regs) {
     event = '-';
   }
 
-  uint32_t time = hal_ticks_ms() % 10000;
+  uint32_t time = systicks_ms() % 10000;
 
   printf("%04ld [gesture=%02X, nb_touches=%d, flags=%c, x=%3d, y=%3d]\r\n",
          time, gesture, nb_touches, event, x, y);
@@ -465,13 +467,9 @@ void trace_event(uint32_t event) {
 }
 #endif
 
-uint32_t touch_get_event(void) {
-  touch_driver_t* driver = &g_touch_driver;
-
-  if (sectrue != driver->initialized) {
-    return 0;
-  }
-
+// Reads touch registers and returns the last touch event
+// (state of touch registers) the controller is reporting.
+static uint32_t touch_get_state(touch_driver_t* driver) {
   // Content of registers 0x00 - 0x06 read from the touch controller
   uint8_t regs[7];
 
@@ -485,18 +483,16 @@ uint32_t touch_get_event(void) {
 
   uint32_t ticks = hal_ticks_ms();
 
-  // Test if the touch_get_event() is starving (not called frequently enough)
-  bool starving = (int32_t)(ticks - driver->poll_ticks) > 300 /* ms */;
-  driver->poll_ticks = ticks;
-
   // Test if the touch controller is polled too frequently
   // (less than 20ms since the last read)
   bool toofast = (int32_t)(ticks - driver->read_ticks) < 20 /* ms */;
 
   // Fast track: if there is no new event and the touch controller
   // is not touched, we do not need to read the registers
-  if (!ft6x36_test_and_clear_interrupt() && (!driver->pressed || toofast)) {
-    return 0;
+  bool pressed = (driver->state & TOUCH_START) || (driver->state & TOUCH_MOVE);
+
+  if (!ft6x36_test_and_clear_interrupt() && (!pressed || toofast)) {
+    return driver->state;
   }
 
   driver->read_ticks = ticks;
@@ -537,71 +533,35 @@ uint32_t touch_get_event(void) {
 
   ft6x36_panel_correction(x_raw, y_raw, &x, &y);
 
-  uint32_t event = 0;
+  uint32_t state = 0;
 
   uint32_t xy = touch_pack_xy(x, y);
 
   if ((nb_touches == 1) && (flags == FT6X63_EVENT_PRESS_DOWN)) {
-    if (!driver->pressed) {
-      // Finger was just pressed down
-      event = TOUCH_START | xy;
-    } else {
-      if ((x != driver->last_x) || (y != driver->last_y)) {
-        // It looks like we have missed the lift up event
-        // We should send the TOUCH_END event here with old coordinates
-        event = TOUCH_END | touch_pack_xy(driver->last_x, driver->last_y);
-      } else {
-        // We have received the same coordinates as before,
-        // probably this is the same start event, or a quick bounce,
-        // we should ignore it.
-      }
-    }
+    state = TOUCH_START | xy;
   } else if ((nb_touches == 1) && (flags == FT6X63_EVENT_CONTACT)) {
-    if (driver->pressed) {
-      if ((x != driver->last_x) || (y != driver->last_y)) {
-        // Report the move event only if the coordinates
-        // have changed
-        event = TOUCH_MOVE | xy;
-      }
-    } else {
-      // We have missed the press down event, we have to simulate it.
-      // But ensure we don't simulate TOUCH_START if touch_get_event() is not
-      // called frequently enough to not produce false events.
-      if (!starving) {
-        event = TOUCH_START | xy;
-      }
-    }
+    state = TOUCH_MOVE | xy;
   } else if ((nb_touches == 0) && (flags == FT6X63_EVENT_LIFT_UP)) {
-    if (driver->pressed) {
-      // Finger was just lifted up
-      event = TOUCH_END | xy;
-    } else {
-      if (!starving && ((x != driver->last_x) || (y != driver->last_y))) {
-        // We have missed the PRESS_DOWN event.
-        // Report the start event only if the coordinates
-        // have changed and driver is not starving.
-        // This suggests that the previous touch was very short,
-        // or/and the driver is not called very frequently.
-        event = TOUCH_START | xy;
-      } else {
-        // Either the driver is starving or the coordinates
-        // have not changed, which would suggest that the TOUCH_END
-        // is repeated, so no event is needed -this should not happen
-        // since two consecutive LIFT_UPs are not possible due to
-        // testing the interrupt line before reading the registers.
-      }
-    }
+    state = TOUCH_END | xy;
   }
 
-  // remember the last state
-  if ((event & TOUCH_START) || (event & TOUCH_MOVE)) {
-    driver->pressed = true;
-  } else if (event & TOUCH_END) {
-    driver->pressed = false;
+  driver->state = state;
+
+  return state;
+}
+
+uint32_t touch_get_event(void) {
+  touch_driver_t* driver = &g_touch_driver;
+
+  if (sectrue != driver->initialized) {
+    return 0;
   }
 
-  driver->last_x = x;
-  driver->last_y = y;
+  touch_fsm_t* fsm = &driver->tls[systask_id(systask_active())];
+
+  uint32_t touch_state = touch_get_state(driver);
+
+  uint32_t event = touch_fsm_get_event(fsm, touch_state);
 
 #ifdef TOUCH_TRACE_EVENT
   trace_event(event);
@@ -609,5 +569,42 @@ uint32_t touch_get_event(void) {
 
   return event;
 }
+
+static void on_task_created(void* context, systask_id_t task_id) {
+  touch_driver_t* driver = (touch_driver_t*)context;
+  touch_fsm_t* fsm = &driver->tls[task_id];
+  touch_fsm_init(fsm);
+}
+
+static void on_event_poll(void* context, bool read_awaited,
+                          bool write_awaited) {
+  touch_driver_t* driver = (touch_driver_t*)context;
+  UNUSED(write_awaited);
+
+  if (read_awaited) {
+    uint32_t touch_state = touch_get_state(driver);
+    if (touch_state != 0) {
+      syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
+    }
+  }
+}
+
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  touch_driver_t* driver = (touch_driver_t*)context;
+  touch_fsm_t* fsm = &driver->tls[task_id];
+
+  uint32_t touch_state = *(uint32_t*)param;
+
+  return touch_fsm_event_ready(fsm, touch_state);
+}
+
+static const syshandle_vmt_t g_touch_handle_vmt = {
+    .task_created = on_task_created,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_event_poll,
+};
 
 #endif  // KERNEL_MODE
