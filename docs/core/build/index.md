@@ -34,6 +34,6 @@ We use [Poetry](https://python-poetry.org/) to install and track Python dependen
 
 ```sh
 sudo pip3 install poetry
-poetry install
+poetry install --no-root
 poetry shell
 ```
