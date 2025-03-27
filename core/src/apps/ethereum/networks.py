@@ -334,3 +334,113 @@ def _networks_iterator() -> Iterator[NetworkInfoTuple]:
             "tSEP",  # symbol
             "Sepolia",  # name
         )
+    if utils.INTERNAL_MODEL == "D001":
+        yield (
+            1,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Ethereum",  # name
+        )
+        yield (
+            10,  # chain_id
+            614,  # slip44
+            "ETH",  # symbol
+            "Optimism",  # name
+        )
+        yield (
+            56,  # chain_id
+            714,  # slip44
+            "BNB",  # symbol
+            "BNB Smart Chain",  # name
+        )
+        yield (
+            61,  # chain_id
+            61,  # slip44
+            "ETC",  # symbol
+            "Ethereum Classic",  # name
+        )
+        yield (
+            137,  # chain_id
+            966,  # slip44
+            "POL",  # symbol
+            "Polygon",  # name
+        )
+        yield (
+            8453,  # chain_id
+            8453,  # slip44
+            "ETH",  # symbol
+            "Base",  # name
+        )
+        yield (
+            17000,  # chain_id
+            1,  # slip44
+            "tHOL",  # symbol
+            "Holesky",  # name
+        )
+        yield (
+            42161,  # chain_id
+            9001,  # slip44
+            "ETH",  # symbol
+            "Arbitrum One",  # name
+        )
+        yield (
+            11155111,  # chain_id
+            1,  # slip44
+            "tSEP",  # symbol
+            "Sepolia",  # name
+        )
+    if utils.INTERNAL_MODEL == "D002":
+        yield (
+            1,  # chain_id
+            60,  # slip44
+            "ETH",  # symbol
+            "Ethereum",  # name
+        )
+        yield (
+            10,  # chain_id
+            614,  # slip44
+            "ETH",  # symbol
+            "Optimism",  # name
+        )
+        yield (
+            56,  # chain_id
+            714,  # slip44
+            "BNB",  # symbol
+            "BNB Smart Chain",  # name
+        )
+        yield (
+            61,  # chain_id
+            61,  # slip44
+            "ETC",  # symbol
+            "Ethereum Classic",  # name
+        )
+        yield (
+            137,  # chain_id
+            966,  # slip44
+            "POL",  # symbol
+            "Polygon",  # name
+        )
+        yield (
+            8453,  # chain_id
+            8453,  # slip44
+            "ETH",  # symbol
+            "Base",  # name
+        )
+        yield (
+            17000,  # chain_id
+            1,  # slip44
+            "tHOL",  # symbol
+            "Holesky",  # name
+        )
+        yield (
+            42161,  # chain_id
+            9001,  # slip44
+            "ETH",  # symbol
+            "Arbitrum One",  # name
+        )
+        yield (
+            11155111,  # chain_id
+            1,  # slip44
+            "tSEP",  # symbol
+            "Sepolia",  # name
+        )
