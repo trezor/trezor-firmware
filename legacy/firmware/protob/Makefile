@@ -13,7 +13,8 @@ SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdPro
 	ChangeLanguage TranslationDataRequest TranslationDataAck \
 	SetBrightness DebugLinkOptigaSetSecMax EntropyCheckReady EntropyCheckContinue \
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
-	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature
+	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
+	BleUnpair
 
 ifeq ($(BITCOIN_ONLY), 1)
 SKIPPED_MESSAGES += Ethereum NEM Stellar

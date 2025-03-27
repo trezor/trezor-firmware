@@ -76,6 +76,10 @@ def _find_message_handler_module(msg_type: int) -> str:
     if utils.USE_OPTIGA and msg_type == MessageType.AuthenticateDevice:
         return "apps.management.authenticate_device"
 
+    if utils.USE_BLE:
+        if msg_type == MessageType.BleUnpair:
+            return "apps.management.ble.unpair"
+
     # bitcoin
     if msg_type == MessageType.AuthorizeCoinJoin:
         return "apps.bitcoin.authorize_coinjoin"
