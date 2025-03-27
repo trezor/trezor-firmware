@@ -24,6 +24,7 @@
 
 #include <io/usb.h>
 #include <sec/random_delays.h>
+#include <sys/sysevent_source.h>
 #include <sys/systick.h>
 
 #include "usb_internal.h"
@@ -56,6 +57,11 @@ typedef struct {
   uint8_t state[USBD_CLASS_STATE_MAX_SIZE] __attribute__((aligned(8)));
 } usb_iface_t;
 
+// USB driver task local storage
+typedef struct {
+  usb_state_t state;
+} usb_driver_tls_t;
+
 typedef struct {
   // Set if the driver is initialized
   secbool initialized;
@@ -84,8 +90,8 @@ typedef struct {
   // Set to `sectrue` if the USB stack was ready sinced the last start
   secbool was_ready;
 
-  // Current state of USB configuration
-  secbool configured;
+  // Task local storage for USB driver
+  usb_driver_tls_t tls[SYSTASK_MAX_TASKS];
 
 } usb_driver_t;
 
@@ -97,6 +103,7 @@ static usb_driver_t g_usb_driver = {
 // forward declarations of dispatch functions
 static const USBD_ClassTypeDef usb_class;
 static const USBD_DescriptorsTypeDef usb_descriptors;
+static const syshandle_vmt_t g_usb_handle_vmt;
 
 static secbool __wur check_desc_str(const char *s) {
   if (NULL == s) return secfalse;
@@ -174,8 +181,12 @@ secbool usb_init(const usb_dev_info_t *dev_info) {
   drv->config_desc->bMaxPower = 0x32;
 
   // starting with this flag set, to avoid false warnings
-  drv->configured = sectrue;
   drv->initialized = sectrue;
+
+  if (!syshandle_register(SYSHANDLE_USB, &g_usb_handle_vmt, drv)) {
+    usb_deinit();
+    return secfalse;
+  }
 
   return sectrue;
 }
@@ -186,6 +197,8 @@ void usb_deinit(void) {
   if (drv->initialized != sectrue) {
     return;
   }
+
+  syshandle_unregister(SYSHANDLE_USB);
 
   usb_stop();
 
@@ -306,31 +319,25 @@ usb_event_t usb_get_event(void) {
 
   if (drv->initialized != sectrue) {
     // The driver is not initialized
-    return false;
+    return USB_EVENT_NONE;
   }
 
-  secbool configured = usb_configured();
-  if (configured != drv->configured) {
-    drv->configured = configured;
-    if (configured == sectrue) {
-      return USB_EVENT_CONFIGURED;
-    } else {
-      return USB_EVENT_DECONFIGURED;
-    }
+  usb_state_t new_state;
+  usb_get_state(&new_state);
+
+  usb_driver_tls_t *tls = &drv->tls[systask_id(systask_active())];
+
+  if (new_state.configured != tls->state.configured) {
+    tls->state.configured = new_state.configured;
+    return new_state.configured ? USB_EVENT_CONFIGURED : USB_EVENT_DECONFIGURED;
   }
 
   return USB_EVENT_NONE;
 }
 
 void usb_get_state(usb_state_t *state) {
-  usb_driver_t *drv = &g_usb_driver;
-
   usb_state_t s = {0};
-
-  if (drv->initialized == sectrue) {
-    s.configured = drv->configured == sectrue;
-  }
-
+  s.configured = (usb_configured() == sectrue);
   *state = s;
 }
 
@@ -777,6 +784,41 @@ static const USBD_ClassTypeDef usb_class = {
     .GetOtherSpeedConfigDescriptor = usb_class_get_cfg_desc,
     .GetDeviceQualifierDescriptor = NULL,
     .GetUsrStrDescriptor = usb_class_get_usrstr_desc,
+};
+
+static void on_task_created(void *context, systask_id_t task_id) {
+  usb_driver_t *drv = (usb_driver_t *)context;
+  usb_driver_tls_t *tls = &drv->tls[task_id];
+  memset(tls, 0, sizeof(usb_driver_tls_t));
+}
+
+static void on_event_poll(void *context, bool read_awaited,
+                          bool write_awaited) {
+  UNUSED(context);
+  UNUSED(write_awaited);
+
+  if (read_awaited) {
+    usb_state_t new_state;
+    usb_get_state(&new_state);
+    syshandle_signal_read_ready(SYSHANDLE_USB, &new_state);
+  }
+}
+
+static bool on_check_read_ready(void *context, systask_id_t task_id,
+                                void *param) {
+  usb_driver_t *drv = (usb_driver_t *)context;
+  usb_driver_tls_t *tls = &drv->tls[task_id];
+
+  usb_state_t *new_state = (usb_state_t *)param;
+  return (new_state->configured != tls->state.configured);
+}
+
+static const syshandle_vmt_t g_usb_handle_vmt = {
+    .task_created = on_task_created,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_event_poll,
 };
 
 #endif  // KERNEL_MODE
