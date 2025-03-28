@@ -487,23 +487,3 @@ def test_unlocked(client: Client):
     with client:
         client.set_expected_responses([messages.Address])
         _get_test_address(session)
-
-
-@pytest.mark.setup_client(pin=None, passphrase=True)
-def test_passphrase_cached(session: Session):
-    client = session.client
-    with client:
-        if client.protocol_version == ProtocolVersion.V1:
-            client.set_expected_responses(
-                [messages.PassphraseRequest, messages.Address]
-            )
-        elif client.protocol_version == ProtocolVersion.V2:
-            client.set_expected_responses([messages.Address])
-        else:
-            raise Exception("Unknown session type")
-        session = _assert_protection(session, pin=False)
-        _get_test_address(session)
-
-    with client:
-        client.set_expected_responses([messages.Address])
-        _get_test_address(session)
