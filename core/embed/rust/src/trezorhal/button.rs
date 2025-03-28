@@ -17,6 +17,13 @@ pub enum PhysicalButtonEvent {
     Up = ffi::button_event_type_t_BTN_EVENT_UP as _,
 }
 
+pub fn button_parse_event(event: ffi::button_event_t) -> (PhysicalButton, PhysicalButtonEvent) {
+    (
+        unwrap!(PhysicalButton::from_u8(event.button as _)),
+        unwrap!(PhysicalButtonEvent::from_u8(event.event_type as _)),
+    )
+}
+
 pub fn button_get_event() -> Option<(PhysicalButton, PhysicalButtonEvent)> {
     unsafe {
         let mut e = ffi::button_event_t {
@@ -24,10 +31,7 @@ pub fn button_get_event() -> Option<(PhysicalButton, PhysicalButtonEvent)> {
             button: ffi::button_t_BTN_LEFT,
         };
         if ffi::button_get_event(&mut e as _) {
-            Some((
-                unwrap!(PhysicalButton::from_u8(e.button as _)),
-                unwrap!(PhysicalButtonEvent::from_u8(e.event_type as _)),
-            ))
+            Some(button_parse_event(e))
         } else {
             None
         }

@@ -59,6 +59,9 @@
 #ifdef USE_TAMPER
 #include <sys/tamper.h>
 #endif
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
 
 #include "antiglitch.h"
 #include "bootui.h"
@@ -121,6 +124,9 @@ static void drivers_init(secbool *touch_initialized) {
 #endif
 #ifdef USE_RGB_LED
   rgb_led_init();
+#endif
+#ifdef USE_BLE
+  ble_init();
 #endif
 }
 

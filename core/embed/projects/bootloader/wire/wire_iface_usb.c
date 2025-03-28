@@ -23,10 +23,10 @@
 #include "wire_iface_usb.h"
 
 #include <io/usb.h>
+#include <sys/sysevent.h>
 
 #define USB_TIMEOUT 500
 #define USB_PACKET_SIZE 64
-#define USB_IFACE_NUM 0
 
 _Static_assert(USB_PACKET_SIZE <= MAX_PACKET_SIZE, "USB_PACKET_SIZE too large");
 
@@ -35,7 +35,8 @@ static bool usb_write(uint8_t* data, size_t size) {
     return false;
   }
 
-  int r = usb_webusb_write_blocking(USB_IFACE_NUM, data, size, USB_TIMEOUT);
+  int r =
+      usb_webusb_write_blocking(SYSHANDLE_USB_IFACE_0, data, size, USB_TIMEOUT);
 
   return r == size;
 }
@@ -45,8 +46,8 @@ static int usb_read(uint8_t* buffer, size_t buffer_size) {
     return -1;
   }
 
-  int r = usb_webusb_read_blocking(USB_IFACE_NUM, buffer, USB_PACKET_SIZE,
-                                   USB_TIMEOUT);
+  int r = usb_webusb_read_blocking(SYSHANDLE_USB_IFACE_0, buffer,
+                                   USB_PACKET_SIZE, USB_TIMEOUT);
 
   return r;
 }
@@ -75,7 +76,7 @@ static void usb_init_all(secbool usb21_landing) {
   static uint8_t rx_buffer[USB_PACKET_SIZE];
 
   static const usb_webusb_info_t webusb_info = {
-      .iface_num = USB_IFACE_NUM,
+      .iface_num = SYSHANDLE_USB_IFACE_0,
 #ifdef TREZOR_EMULATOR
       .emu_port = 21324,
 #else
@@ -101,7 +102,7 @@ void usb_iface_init(wire_iface_t* iface, secbool usb21_landing) {
 
   memset(iface, 0, sizeof(wire_iface_t));
 
-  iface->poll_iface_id = USB_IFACE_NUM;
+  iface->poll_iface_id = SYSHANDLE_USB_IFACE_0;
   iface->tx_packet_size = USB_PACKET_SIZE;
   iface->rx_packet_size = USB_PACKET_SIZE;
   iface->write = &usb_write;

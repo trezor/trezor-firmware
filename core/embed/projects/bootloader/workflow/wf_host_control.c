@@ -17,26 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <bootui.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <sys/types.h>
 #include <util/image.h>
 
 #include "antiglitch.h"
-#include "poll.h"
 #include "protob/protob.h"
 #include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
-workflow_result_t workflow_host_control(const vendor_header *const vhdr,
-                                        const image_header *const hdr,
-                                        void (*redraw_wait_screen)(void)) {
+#ifdef USE_BLE
+#include <wire/wire_iface_ble.h>
+#endif
+
+workflow_result_t workflow_host_control(
+    const vendor_header *const vhdr, const image_header *const hdr,
+    uint32_t (*wait_layout_fnc)(uint8_t *mem, size_t mem_len,
+                                sysevents_t *signalled),
+    uint8_t *wait_layout, size_t wait_layout_len) {
   wire_iface_t usb_iface = {0};
   protob_io_t protob_usb_iface = {0};
-
-  redraw_wait_screen();
 
   // if both are NULL, we don't have a firmware installed
   // let's show a webusb landing page in this case
@@ -45,29 +50,74 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
   protob_init(&protob_usb_iface, &usb_iface);
 
+#ifdef USE_BLE
+  wire_iface_t ble_iface = {0};
+  protob_io_t protob_ble_iface = {0};
+  ble_iface_init(&ble_iface);
+  protob_init(&protob_ble_iface, &ble_iface);
+#endif
+
   workflow_result_t result = WF_ERROR_FATAL;
 
-  for (;;) {
-    uint16_t ifaces[1] = {protob_get_iface_flag(&protob_usb_iface) | MODE_READ};
-    poll_event_t e = {0};
+  sysevents_t awaited = {0};
 
-    uint8_t i = poll_events(ifaces, 1, &e, 100);
+  awaited.read_ready |= 1 << protob_get_iface_flag(&protob_usb_iface);
+
+#ifdef USE_BLE
+  awaited.read_ready |= 1 << protob_get_iface_flag(&protob_ble_iface);
+  awaited.read_ready |= 1 << SYSHANDLE_BLE;
+#endif
+#ifdef USE_BUTTON
+  awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
+#endif
+#ifdef USE_TOUCH
+  awaited.read_ready |= 1 << SYSHANDLE_TOUCH;
+#endif
+
+  for (;;) {
+    sysevents_t signalled = {0};
+
+    sysevents_poll(&awaited, &signalled, 100);
+
+    if (signalled.read_ready == 0) {
+      continue;
+    }
 
     uint16_t msg_id = 0;
     protob_io_t *active_iface = NULL;
 
-    switch (e.type) {
-      case EVENT_USB_CAN_READ:
-        if (i == protob_get_iface_flag(&protob_usb_iface) &&
-            sectrue == protob_get_msg_header(&protob_usb_iface, &msg_id)) {
-          active_iface = &protob_usb_iface;
-        } else {
-          continue;
-        }
-        break;
-      case EVENT_NONE:
-      default:
-        continue;
+    if (signalled.read_ready ==
+            (1 << protob_get_iface_flag(&protob_usb_iface)) &&
+        sectrue == protob_get_msg_header(&protob_usb_iface, &msg_id)) {
+      active_iface = &protob_usb_iface;
+    }
+
+#ifdef USE_BLE
+    if (signalled.read_ready ==
+            (1 << protob_get_iface_flag(&protob_ble_iface)) &&
+        sectrue == protob_get_msg_header(&protob_ble_iface, &msg_id)) {
+      active_iface = &protob_ble_iface;
+    }
+#endif
+
+    // no data, lets pass the event signal to UI
+    if (active_iface == NULL) {
+      wait_result_t res =
+          wait_layout_fnc(wait_layout, wait_layout_len, &signalled);
+
+      if (res == WAIT_CANCEL) {
+        result = WF_CANCELLED;
+        goto exit_host_control;
+      }
+#ifdef USE_BLE
+      if (res == WAIT_PAIRING_MODE) {
+        workflow_ble_pairing_request();
+        // redraw the wait screen
+        wait_layout_fnc(wait_layout, wait_layout_len, &signalled);
+      }
+#endif
+
+      continue;
     }
 
     switch (msg_id) {
