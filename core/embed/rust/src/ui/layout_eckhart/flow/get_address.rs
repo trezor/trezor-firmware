@@ -14,7 +14,6 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Alignment, Direction, LinearPlacement, Offset},
-        layout::util::ConfirmValueParams,
     },
 };
 
@@ -27,7 +26,6 @@ use super::super::{
     theme,
 };
 
-const TIMEOUT_MS: u32 = 2000;
 const ITEM_PADDING: i16 = 16;
 const GROUP_PADDING: i16 = 20;
 
@@ -73,7 +71,7 @@ impl FlowController for GetAddress {
 pub fn new_get_address(
     title: TString<'static>,
     _description: Option<TString<'static>>,
-    extra: Option<TString<'static>>,
+    _extra: Option<TString<'static>>,
     address: Obj, // TODO: get rid of Obj
     chunkify: bool,
     address_qr: TString<'static>,
@@ -87,23 +85,20 @@ pub fn new_get_address(
 ) -> Result<SwipeFlow, error::Error> {
     // Address
     let flow_title: TString = TR::words__receive.into();
-    let paragraphs = ConfirmValueParams {
-        description: title,
-        extra: extra.unwrap_or_else(|| "".into()),
-        value: address.try_into()?,
-        font: if chunkify {
-            let address: TString = address.try_into()?;
-            theme::get_chunkified_text_style(address.len())
-        } else {
-            &theme::TEXT_MONO_ADDRESS
-        },
-        description_font: &theme::TEXT_MEDIUM_EXTRA_LIGHT,
-        extra_font: &theme::TEXT_SMALL,
-    }
-    .into_paragraphs()
-    .with_placement(LinearPlacement::vertical().with_spacing(14));
+
+    let test_style = if chunkify {
+        let address: TString = address.try_into()?;
+        theme::get_chunkified_text_style(address.len())
+    } else {
+        &theme::TEXT_MONO_ADDRESS
+    };
+    let paragraphs = Paragraph::new(test_style, address.try_into().unwrap_or(TString::empty()))
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
+
     let content_address = TextScreen::new(paragraphs)
         .with_header(Header::new(flow_title).with_menu_button())
+        .with_subtitle(title)
         .with_action_bar(ActionBar::new_single(
             Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
         ))
@@ -116,20 +111,23 @@ pub fn new_get_address(
             TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
         })
-        .one_button_request(ButtonRequest::from_num(br_code, br_name));
+        .one_button_request(ButtonRequest::from_num(br_code, br_name))
+        .with_pages(|address_pages| address_pages + 1);
 
-    let content_confirmed =
-        TextScreen::new(Paragraph::new(&theme::TEXT_REGULAR, title_success).into_paragraphs())
-            .with_header(
-                Header::new(TR::words__title_done.into())
-                    .with_icon(theme::ICON_DONE, theme::GREEN_LIGHT)
-                    .with_text_style(theme::label_title_confirm()),
-            )
-            .with_action_bar(ActionBar::new_timeout(
-                Button::with_text(TR::instructions__continue_in_app.into()),
-                TIMEOUT_MS,
-            ))
-            .map(|_| Some(FlowMsg::Confirmed));
+    let content_confirmed = TextScreen::new(
+        Paragraph::new(&theme::TEXT_REGULAR, title_success)
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical()),
+    )
+    .with_header(
+        Header::new(TR::words__title_done.into())
+            .with_icon(theme::ICON_DONE, theme::GREEN_LIGHT)
+            .with_text_style(theme::label_title_confirm()),
+    )
+    .with_action_bar(ActionBar::new_single(Button::with_text(
+        TR::instructions__continue_in_app.into(),
+    )))
+    .map(|_| Some(FlowMsg::Confirmed));
 
     // Menu
 
