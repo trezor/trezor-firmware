@@ -24,7 +24,39 @@
 
 #include "touch_fsm.h"
 
-void touch_fsm_init(touch_fsm_t* fsm) {
+#include <sys/sysevent_source.h>
+#include <sys/systask.h>
+
+#define TOUCH_TRACE_EVENT
+
+typedef struct {
+  // Time (in ticks) when the tls was last updated
+  uint32_t update_ticks;
+  // Last reported touch state
+  uint32_t state;
+  // Set if the touch controller is currently touched
+  // (respectively, that we detected a touch event)
+  bool pressed;
+  // Previously reported x-coordinate
+  uint16_t last_x;
+  // Previously reported y-coordinate
+  uint16_t last_y;
+} touch_fsm_t;
+
+
+// Touch state machine for each task
+touch_fsm_t tls[SYSTASK_MAX_TASKS];
+
+// Forward declarations
+static const syshandle_vmt_t g_touch_handle_vmt;
+
+bool touch_fsm_init(void) {
+  return syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, NULL);
+}
+
+void touch_fsm_deinit(void) { syshandle_unregister(SYSHANDLE_TOUCH); }
+
+static void touch_tls_clear(touch_fsm_t* fsm) {
   memset(fsm, 0, sizeof(touch_fsm_t));
   fsm->update_ticks = systick_ms();
 }
@@ -32,6 +64,23 @@ void touch_fsm_init(touch_fsm_t* fsm) {
 bool touch_fsm_event_ready(touch_fsm_t* fsm, uint32_t touch_state) {
   return fsm->state != touch_state;
 }
+
+#ifdef TOUCH_TRACE_EVENT
+void trace_event(uint32_t event) {
+  char event_type = (event & TOUCH_START)  ? 'D'
+                    : (event & TOUCH_MOVE) ? 'M'
+                    : (event & TOUCH_END)  ? 'U'
+                                           : '-';
+
+  uint16_t x = touch_unpack_x(event);
+  uint16_t y = touch_unpack_y(event);
+
+  uint32_t time = hal_ticks_ms() % 10000;
+
+  printf("%04ld [event=%c, x=%3d, y=%3d]\r\n", (uint64_t)time, event_type, x,
+         y);
+}
+#endif
 
 uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
   fsm->state = touch_state;
@@ -112,3 +161,51 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
 
   return event;
 }
+
+uint32_t touch_get_event(void) {
+  touch_fsm_t* fsm = &tls[systask_id(systask_active())];
+
+  uint32_t touch_state = touch_get_state();
+
+  uint32_t event = touch_fsm_get_event(fsm, touch_state);
+
+#ifdef TOUCH_TRACE_EVENT
+  trace_event(event);
+#endif
+
+  return event;
+}
+
+static void on_task_created(void* context, systask_id_t task_id) {
+  touch_fsm_t* fsm = &tls[task_id];
+  touch_tls_clear(fsm);
+}
+
+static void on_event_poll(void* context, bool read_awaited,
+                          bool write_awaited) {
+  UNUSED(write_awaited);
+
+  if (read_awaited) {
+    uint32_t touch_state = touch_get_state();
+    if (touch_state != 0) {
+      syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
+    }
+  }
+}
+
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  touch_fsm_t* fsm = &tls[task_id];
+
+  uint32_t touch_state = *(uint32_t*)param;
+
+  return touch_fsm_event_ready(fsm, touch_state);
+}
+
+static const syshandle_vmt_t g_touch_handle_vmt = {
+    .task_created = on_task_created,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_event_poll,
+};

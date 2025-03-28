@@ -22,7 +22,6 @@
 #include <trezor_rtl.h>
 
 #include <io/touch.h>
-#include <sys/sysevent_source.h>
 
 #include "../touch_fsm.h"
 #include "sitronix.h"
@@ -33,8 +32,6 @@ typedef struct {
   secbool initialized;
   // Last reported touch state
   uint32_t state;
-  // Touch state machine for each task
-  touch_fsm_t tls[SYSTASK_MAX_TASKS];
 
 } touch_driver_t;
 
@@ -42,9 +39,6 @@ typedef struct {
 static touch_driver_t g_touch_driver = {
     .initialized = secfalse,
 };
-
-// Forward declarations
-static const syshandle_vmt_t g_touch_handle_vmt;
 
 secbool touch_init(void) {
   touch_driver_t* drv = &g_touch_driver;
@@ -66,7 +60,7 @@ secbool touch_init(void) {
     goto cleanup;
   }
 
-  if (!syshandle_register(SYSHANDLE_TOUCH, &g_touch_handle_vmt, drv)) {
+  if (!touch_fsm_init()) {
     goto cleanup;
   }
 
@@ -82,7 +76,7 @@ void touch_deinit(void) {
   touch_driver_t* drv = &g_touch_driver;
 
   BSP_TS_DeInit(0);
-  syshandle_unregister(SYSHANDLE_TOUCH);
+  touch_fsm_deinit();
 
   memset(drv, 0, sizeof(touch_driver_t));
 }
@@ -119,7 +113,13 @@ secbool touch_activity(void) {
   return sitronix_touching ? sectrue : secfalse;
 }
 
-static uint32_t touch_get_state(touch_driver_t* drv) {
+uint32_t touch_get_state(void) {
+  touch_driver_t* drv = &g_touch_driver;
+
+  if (sectrue != drv->initialized) {
+    return 0;
+  }
+
   TS_State_t ts = {0};
   BSP_TS_GetState(0, &ts);
 
@@ -152,59 +152,5 @@ static uint32_t touch_get_state(touch_driver_t* drv) {
   drv->state = state;
   return state;
 }
-
-uint32_t touch_get_event(void) {
-  touch_driver_t* drv = &g_touch_driver;
-
-  if (sectrue != drv->initialized) {
-    return 0;
-  }
-
-  touch_fsm_t* fsm = &drv->tls[systask_id(systask_active())];
-
-  uint32_t touch_state = touch_get_state(drv);
-
-  uint32_t event = touch_fsm_get_event(fsm, touch_state);
-
-  return event;
-}
-
-static void on_task_created(void* context, systask_id_t task_id) {
-  touch_driver_t* drv = (touch_driver_t*)context;
-  touch_fsm_t* fsm = &drv->tls[task_id];
-  touch_fsm_init(fsm);
-}
-
-static void on_event_poll(void* context, bool read_awaited,
-                          bool write_awaited) {
-  touch_driver_t* drv = (touch_driver_t*)context;
-
-  UNUSED(write_awaited);
-
-  if (read_awaited) {
-    uint32_t touch_state = touch_get_state(drv);
-    if (touch_state != 0) {
-      syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
-    }
-  }
-}
-
-static bool on_check_read_ready(void* context, systask_id_t task_id,
-                                void* param) {
-  touch_driver_t* drv = (touch_driver_t*)context;
-  touch_fsm_t* fsm = &drv->tls[task_id];
-
-  uint32_t touch_state = *(uint32_t*)param;
-
-  return touch_fsm_event_ready(fsm, touch_state);
-}
-
-static const syshandle_vmt_t g_touch_handle_vmt = {
-    .task_created = on_task_created,
-    .task_killed = NULL,
-    .check_read_ready = on_check_read_ready,
-    .check_write_ready = NULL,
-    .poll = on_event_poll,
-};
 
 #endif  // KERNEL_MODE
