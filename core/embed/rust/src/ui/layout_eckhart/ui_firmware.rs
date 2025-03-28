@@ -194,11 +194,37 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_modify_output(
-        _sign: i32,
-        _amount_change: TString<'static>,
-        _amount_new: TString<'static>,
+        sign: i32,
+        amount_change: TString<'static>,
+        amount_new: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let description = if sign < 0 {
+            TR::modify_amount__decrease_amount
+        } else {
+            TR::modify_amount__increase_amount
+        };
+
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount_change),
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::modify_amount__new_amount),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount_new),
+        ]);
+
+        let layout = RootComponent::new(
+            TextScreen::new(
+                paragraphs
+                    .into_paragraphs()
+                    .with_placement(LinearPlacement::vertical())
+                    .with_spacing(12),
+            )
+            .with_header(Header::new(TR::modify_amount__title.into()))
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                Button::with_text(TR::buttons__confirm.into()),
+            )),
+        );
+        Ok(layout)
     }
 
     fn confirm_more(
