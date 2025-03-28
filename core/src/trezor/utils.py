@@ -117,9 +117,9 @@ def presize_module(modname: str, size: int) -> None:
     """
     module = sys.modules[modname]
     for i in range(size):
-        setattr(module, f"___PRESIZE_MODULE_{i}", None)
+        setattr(module, f"{i}", None)
     for i in range(size):
-        delattr(module, f"___PRESIZE_MODULE_{i}")
+        delattr(module, f"{i}")
 
 
 if __debug__:
