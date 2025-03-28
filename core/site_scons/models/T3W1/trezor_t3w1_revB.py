@@ -61,7 +61,7 @@ def configure(
     if "input" in features_wanted:
         sources += ["embed/io/touch/ft6x36/ft6x36.c"]
         sources += ["embed/io/touch/ft6x36/panels/lx250a2410a.c"]
-        sources += ["embed/io/touch/touch_fsm.c"]
+        sources += ["embed/io/touch/touch_poll.c"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         sources += ["embed/io/button/stm32/button.c"]

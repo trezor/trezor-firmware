@@ -73,6 +73,8 @@ secbool touch_set_sensitivity(uint8_t value);
 // The function should not be used together with `touch_get_event()`.
 secbool touch_activity(void);
 
+uint32_t touch_get_state(void);
+
 #endif  // KERNEL_MODE
 
 // Returns the last event in packed 32-bit format
