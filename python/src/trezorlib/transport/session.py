@@ -212,8 +212,6 @@ class SessionV1(Session):
         )
         assert isinstance(resp, messages.Features)
         if new_session:
-            assert resp.session_id is not None
-            assert len(resp.session_id) == 32
             self.id = resp.session_id
         elif self.id != resp.session_id:
             raise exceptions.FailedSessionResumption(resp.session_id)
