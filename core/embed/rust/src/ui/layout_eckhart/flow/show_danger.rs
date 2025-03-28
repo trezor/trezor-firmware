@@ -91,13 +91,13 @@ pub fn new_show_danger(
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::empty()
             .with_separators()
-            .item(
+            .button(
                 Button::with_text(verb_cancel)
                     .styled(theme::menu_item_title())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
-            .item(
+            .button(
                 Button::with_text(TR::words__continue_anyway.into())
                     .styled(theme::menu_item_title_orange())
                     .with_text_align(Alignment::Start)

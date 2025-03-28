@@ -39,7 +39,7 @@ impl SelectWordScreen {
         let mut menu = VerticalMenu::empty().with_separators().with_fit_area();
 
         for word in share_words_vec {
-            menu = menu.item(
+            menu = menu.button(
                 Button::with_text(word)
                     .styled(theme::button_select_word())
                     .with_radius(12),

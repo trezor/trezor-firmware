@@ -45,7 +45,10 @@ impl BldMenuScreen {
             .styled(button_bld_menu())
             .with_text_align(Alignment::Start);
 
-        let menu = BldMenu::empty().item(bluetooth).item(reboot).item(reset);
+        let menu = BldMenu::empty()
+            .button(bluetooth)
+            .button(reboot)
+            .button(reset);
         Self {
             header: BldHeader::new("Bootloader".into()).with_close_button(),
             menu,

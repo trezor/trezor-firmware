@@ -1,11 +1,14 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    geometry::{Insets, Offset, Rect},
-    shape::{Bar, Renderer},
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{Component, Event, EventCtx},
+        geometry::{Alignment, Insets, Offset, Rect},
+        shape::{Bar, Renderer},
+    },
 };
 
 use super::{
-    super::component::{Button, ButtonMsg},
+    super::component::{Button, ButtonMsg, ButtonStyleSheet},
     theme,
 };
 use heapless::Vec;
@@ -42,6 +45,9 @@ impl VerticalMenu {
     const SIDE_INSETS: Insets = Insets::sides(12);
     const DEFAULT_PADDING: i16 = 28;
     const MIN_PADDING: i16 = 2;
+    const BUTTON_RADIUS: u8 = 12;
+    const BUTTON_ALIGNMENT: Alignment = Alignment::Start;
+    const BUTTON_CONTENT_OFFSET: Offset = Offset::x(12);
 
     fn new(buttons: VerticalMenuButtons) -> Self {
         Self {
@@ -69,9 +75,31 @@ impl VerticalMenu {
         self
     }
 
-    pub fn item(mut self, button: Button) -> Self {
+    pub fn button(mut self, button: Button) -> Self {
         unwrap!(self.buttons.push(button));
         self
+    }
+
+    pub fn item(
+        self,
+        text: TString<'static>,
+        subtext: Option<TString<'static>>,
+        style: ButtonStyleSheet,
+    ) -> Self {
+        let button = match subtext {
+            Some(subtext) => Button::with_text_and_subtext(text, subtext)
+                .with_text_align(Self::BUTTON_ALIGNMENT)
+                .with_content_offset(Self::BUTTON_CONTENT_OFFSET)
+                .styled(style)
+                .with_radius(Self::BUTTON_RADIUS),
+            None => Button::with_text(text)
+                .with_text_align(Self::BUTTON_ALIGNMENT)
+                .with_content_offset(Self::BUTTON_CONTENT_OFFSET)
+                .styled(style)
+                .with_radius(Self::BUTTON_RADIUS),
+        };
+
+        self.button(button)
     }
 
     pub fn area(&self) -> Rect {
