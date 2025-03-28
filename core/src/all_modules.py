@@ -359,6 +359,8 @@ apps.debug.load_device
 import apps.debug.load_device
 apps.homescreen
 import apps.homescreen
+apps.management
+import apps.management
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings
