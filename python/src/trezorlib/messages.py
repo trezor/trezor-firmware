@@ -462,6 +462,7 @@ class MessageType(IntEnum):
     FirmwareUpload = 7
     FirmwareRequest = 8
     ProdTestT1 = 32
+    BleUnpair = 8001
     GetPublicKey = 11
     PublicKey = 12
     SignTx = 15
@@ -2205,6 +2206,20 @@ class TxAckPrevExtraDataWrapper(protobuf.MessageType):
         extra_data_chunk: "bytes",
     ) -> None:
         self.extra_data_chunk = extra_data_chunk
+
+
+class BleUnpair(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 8001
+    FIELDS = {
+        1: protobuf.Field("all", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        all: Optional["bool"] = None,
+    ) -> None:
+        self.all = all
 
 
 class FirmwareErase(protobuf.MessageType):

@@ -1256,6 +1256,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPrevExtraDataWrapper"]:
             return isinstance(msg, cls)
 
+    class BleUnpair(protobuf.MessageType):
+        all: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            all: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["BleUnpair"]:
+            return isinstance(msg, cls)
+
     class CardanoBlockchainPointerType(protobuf.MessageType):
         block_index: "int"
         tx_index: "int"
