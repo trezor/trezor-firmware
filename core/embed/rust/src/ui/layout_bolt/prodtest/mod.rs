@@ -7,13 +7,15 @@ use crate::ui::{
         TouchEvent,
         TouchEvent::{TouchEnd, TouchMove, TouchStart},
     },
-    geometry::{Alignment, Offset, Rect},
+    geometry::{Alignment, Offset, Point, Rect},
     layout_bolt::{fonts, theme, UIBolt},
     shape,
     shape::render_on_display,
     ui_prodtest::ProdtestUI,
 };
 use heapless::Vec;
+
+use crate::ui::util::include_res;
 
 impl ProdtestUI for UIBolt {
     fn screen_prodtest_welcome() {
@@ -87,6 +89,21 @@ impl ProdtestUI for UIBolt {
 
         display::refresh();
         display::fade_backlight_duration(theme::backlight::get_backlight_normal(), 150);
+    }
+
+    fn screen_prodtest_jpeg(alpha: u8) {
+        render_on_display(None, Some(Color::black()), |target| {
+            let r = Rect::new(Point::new(0, 400), Point::new(380, 520));
+            shape::Bar::new(r)
+                .with_bg(Color::rgb(0, 0, 200))
+                .render(target);
+            let pt = Point::new(0, 0);
+            const JPEG: &[u8] = include_res!("layout_bolt/grad2.jpg");
+            shape::JpegOverlay::new(pt, JPEG)
+                .with_fg(Color::rgb(255, 255, 0))
+                .with_alpha(alpha)
+                .render(target);
+        });
     }
 
     fn screen_prodtest_bars(colors: &str) {

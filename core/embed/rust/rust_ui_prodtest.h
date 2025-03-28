@@ -12,4 +12,6 @@ void screen_prodtest_touch(int16_t x0, int16_t y0, int16_t w, int16_t h);
 
 void screen_prodtest_border(void);
 
+void screen_prodtest_jpeg(uint8_t alpha);
+
 void screen_prodtest_draw(uint32_t* events, uint32_t events_len);

@@ -13,6 +13,8 @@ pub trait ProdtestUI {
 
     fn screen_prodtest_border();
 
+    fn screen_prodtest_jpeg(alpha: u8);
+
     fn screen_prodtest_bars(colors: &str);
 
     #[cfg(feature = "touch")]

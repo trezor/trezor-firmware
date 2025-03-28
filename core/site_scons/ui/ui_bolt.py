@@ -13,6 +13,10 @@ def init_ui(
         rust_features.append("ui_blurring")
         rust_features.append("ui_jpeg")
 
+    if stage == "prodtest":
+        rust_features.append("ui_blurring")
+        rust_features.append("ui_jpeg")
+
 
 def get_ui_layout() -> str:
     return "UI_LAYOUT_BOLT"

@@ -34,6 +34,11 @@ extern "C" fn screen_prodtest_border() {
 }
 
 #[no_mangle]
+extern "C" fn screen_prodtest_jpeg(alpha: u8) {
+    ModelUI::screen_prodtest_jpeg(alpha);
+}
+
+#[no_mangle]
 extern "C" fn screen_prodtest_bars(colors: *const cty::c_char, colors_len: u8) {
     let colors: &str = unwrap!(unsafe { from_c_array(colors, colors_len as usize) });
     ModelUI::screen_prodtest_bars(colors);

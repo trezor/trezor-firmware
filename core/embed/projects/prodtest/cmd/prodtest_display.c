@@ -22,6 +22,7 @@
 
 #include <io/display.h>
 #include <rtl/cli.h>
+#include <sys/systick.h>
 
 static void prodtest_display_border(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -99,6 +100,27 @@ static void prodtest_display_set_backlight(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+static void prodtest_display_jpeg(cli_t* cli) {
+  uint32_t alpha = 255;
+  if (!cli_arg_uint32(cli, "alpha", &alpha)) {
+    cli_error_arg(cli, "Expecting alpha value in range 0-255.");
+    return;
+  }
+
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  uint64_t start = systick_us();
+  screen_prodtest_jpeg(alpha);
+  cli_trace(cli, "%d us", (int)(systick_us() - start));
+
+  display_refresh();
+
+  cli_ok(cli, "");
+}
+
 // clang-format off
 
 PRODTEST_CLI_CMD(
@@ -127,4 +149,11 @@ PRODTEST_CLI_CMD(
   .func = prodtest_display_set_backlight,
   .info = "Set the display backlight level",
   .args = "<level>"
+);
+
+PRODTEST_CLI_CMD(
+  .name = "display-jpeg",
+  .func = prodtest_display_jpeg,
+  .info = "Show jpeg",
+  .args = "<alpha>"
 );
