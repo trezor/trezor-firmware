@@ -133,19 +133,19 @@ pub fn new_get_address(
 
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::empty()
-            .item(
+            .button(
                 Button::with_text(TR::address__qr_code.into())
                     .styled(theme::menu_item_title())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
-            .item(
+            .button(
                 Button::with_text(TR::address_details__account_info.into())
                     .styled(theme::menu_item_title())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
-            .item(
+            .button(
                 Button::with_text(TR::buttons__cancel.into())
                     .styled(theme::menu_item_title_orange())
                     .with_text_align(Alignment::Start)
