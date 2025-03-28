@@ -221,7 +221,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
       bool ready = (poller->signalled->read_ready != 0) ||
                    (poller->signalled->write_ready != 0);
       if (ready || timed_out) {
-        systask_t *task = poller->task;
+        systask_t *task = poller->task;  // USB interface
         remove_poller(dispatcher, prio);
         if (task == kernel_task) {
           return;

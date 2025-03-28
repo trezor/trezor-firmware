@@ -1,16 +1,31 @@
 use crate::{
     strutil::hexlify,
-    trezorhal::secbool::secbool,
+    trezorhal::{
+        secbool::secbool,
+        sysevent::{parse_event, sysevents_t},
+    },
     ui::{
         ui_bootloader::BootloaderUI,
         util::{from_c_array, from_c_str},
         ModelUI,
     },
 };
+use core::slice;
 
 #[no_mangle]
-extern "C" fn screen_welcome() {
-    ModelUI::screen_welcome();
+extern "C" fn screen_welcome(mem: *mut u8, mem_size: usize) {
+    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
+
+    ModelUI::screen_welcome(buf);
+}
+
+#[no_mangle]
+extern "C" fn screen_welcome_event(mem: *mut u8, mem_size: usize, signalled: &sysevents_t) -> u32 {
+    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
+
+    let e = parse_event(signalled);
+
+    ModelUI::screen_welcome_event(buf, e)
 }
 
 #[no_mangle]
@@ -131,8 +146,19 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_s
 }
 
 #[no_mangle]
-extern "C" fn screen_connect(initial_setup: bool) {
-    ModelUI::screen_connect(initial_setup)
+extern "C" fn screen_connect(initial_setup: bool, mem: *mut u8, mem_size: usize) {
+    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
+
+    ModelUI::screen_connect(initial_setup, buf)
+}
+
+#[no_mangle]
+extern "C" fn screen_connect_event(mem: *mut u8, mem_size: usize, signalled: &sysevents_t) -> u32 {
+    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
+
+    let e = parse_event(signalled);
+
+    ModelUI::screen_connect_event(buf, e)
 }
 
 #[no_mangle]
@@ -143,4 +169,16 @@ extern "C" fn screen_wipe_success() {
 #[no_mangle]
 extern "C" fn screen_wipe_fail() {
     ModelUI::screen_wipe_fail()
+}
+
+#[cfg(feature = "ble")]
+#[no_mangle]
+extern "C" fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
+    ModelUI::screen_confirm_pairing(code, initial_setup)
+}
+
+#[cfg(feature = "ble")]
+#[no_mangle]
+extern "C" fn screen_pairing_mode(initial_setup: bool) -> u32 {
+    ModelUI::screen_pairing_mode(initial_setup)
 }

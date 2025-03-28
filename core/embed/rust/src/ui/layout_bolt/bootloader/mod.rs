@@ -1,9 +1,14 @@
+pub mod connect;
+pub mod intro;
+pub mod menu;
+pub mod welcome;
+
 use heapless::String;
 
 use crate::{
     trezorhal::secbool::secbool,
     ui::{
-        component::{connect::Connect, Label},
+        component::Label,
         display::{self, Color, Icon},
         geometry::{Point, Rect},
         layout::simplified::{run, show},
@@ -11,7 +16,7 @@ use crate::{
 };
 
 use super::{
-    bootloader::welcome::Welcome,
+    bootloader::{connect::Connect, welcome::Welcome},
     component::{
         bl_confirm::{Confirm, ConfirmTitle},
         Button, ResultScreen, WelcomeScreen,
@@ -21,9 +26,9 @@ use super::{
         self,
         bootloader::{
             button_bld, button_bld_menu, button_confirm, button_wipe_cancel, button_wipe_confirm,
-            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40, DOWNLOAD32, FIRE32,
-            FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD, TEXT_NORMAL,
-            TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
+            BLD_BG, BLD_FG, BLD_TITLE_COLOR, BLD_WARN_COLOR, BLD_WIPE_COLOR, CHECK24, CHECK40,
+            DOWNLOAD32, FIRE32, FIRE40, RESULT_FW_INSTALL, RESULT_INITIAL, RESULT_WIPE, TEXT_BOLD,
+            TEXT_NORMAL, TEXT_WIPE_BOLD, TEXT_WIPE_NORMAL, WARNING40, WELCOME_COLOR, X24,
         },
         FG,
     },
@@ -41,17 +46,21 @@ use crate::ui::{
 
 use ufmt::uwrite;
 
-use super::theme::bootloader::BLD_WARN_COLOR;
-
-use intro::Intro;
-use menu::Menu;
+#[cfg(feature = "ble")]
+use super::theme::bootloader::{button_confirm_initial, button_initial};
 
 use super::cshape::{render_loader, LoaderRange};
-use crate::ui::display::LOADER_MAX;
-
-pub mod intro;
-pub mod menu;
-pub mod welcome;
+#[cfg(feature = "ble")]
+use crate::ui::layout_bolt::{
+    component::confirm_pairing::ConfirmPairing, component::pairing_mode::PairingMode,
+};
+use crate::ui::{
+    component::Event,
+    display::LOADER_MAX,
+    layout::simplified::{init_layout, process_event},
+};
+use intro::Intro;
+use menu::Menu;
 
 pub type BootloaderString = String<128>;
 
@@ -138,9 +147,16 @@ impl UIBolt {
 }
 
 impl BootloaderUI for UIBolt {
-    fn screen_welcome() {
-        let mut frame = Welcome::new();
-        show(&mut frame, true);
+    fn screen_welcome(buf: &mut [u8]) {
+        let welcome = Welcome::new();
+
+        let frame = init_layout(buf, welcome);
+
+        show(frame, true);
+    }
+
+    fn screen_welcome_event(buf: &mut [u8], event: Option<Event>) -> u32 {
+        process_event::<Welcome>(buf, event)
     }
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
@@ -321,15 +337,23 @@ impl BootloaderUI for UIBolt {
         )
     }
 
-    fn screen_connect(initial_setup: bool) {
+    fn screen_connect(initial_setup: bool, buf: &mut [u8]) {
         let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let mut frame = Connect::new(
+
+        let connect = Connect::new(
             "Waiting for host...",
             fonts::FONT_NORMAL,
             BLD_TITLE_COLOR,
             bg,
         );
-        show(&mut frame, true);
+
+        let frame = init_layout(buf, connect);
+
+        show(frame, true);
+    }
+
+    fn screen_connect_event(buf: &mut [u8], event: Option<Event>) -> u32 {
+        process_event::<Connect>(buf, event)
     }
 
     fn screen_wipe_success() {
@@ -438,5 +462,48 @@ impl BootloaderUI for UIBolt {
         });
 
         display::refresh();
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
+        let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
+        let title = Label::centered("Pair device".into(), TEXT_NORMAL);
+
+        let (right, left) = if initial_setup {
+            (
+                Button::with_text("CONFIRM".into()).styled(button_confirm_initial()),
+                Button::with_text("REJECT".into()).styled(button_initial()),
+            )
+        } else {
+            (
+                Button::with_text("CONFIRM".into()).styled(button_confirm()),
+                Button::with_text("REJECT".into()).styled(button_bld()),
+            )
+        };
+
+        let mut frame = ConfirmPairing::new(bg, left, right, title, code);
+
+        run(&mut frame)
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_pairing_mode(initial_setup: bool) -> u32 {
+        let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
+
+        let btn = if initial_setup {
+            Button::with_text("Cancel".into()).styled(button_initial())
+        } else {
+            Button::with_text("Cancel".into()).styled(button_bld())
+        };
+
+        let mut frame = PairingMode::new(
+            "Waiting for pairing...".into(),
+            fonts::FONT_NORMAL,
+            BLD_TITLE_COLOR,
+            bg,
+            btn,
+        );
+
+        run(&mut frame)
     }
 }

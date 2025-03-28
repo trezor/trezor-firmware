@@ -3,7 +3,7 @@ use heapless::String;
 use crate::{
     trezorhal::secbool::secbool,
     ui::{
-        component::{connect::Connect, Label, LineBreaking::BreakWordsNoHyphen},
+        component::{Label, LineBreaking::BreakWordsNoHyphen},
         constant,
         constant::{HEIGHT, SCREEN},
         display::{self, Color, Icon},
@@ -33,7 +33,14 @@ mod intro;
 mod menu;
 mod welcome;
 
-use crate::ui::ui_bootloader::BootloaderUI;
+mod connect;
+
+use crate::ui::{
+    component::Event,
+    layout::simplified::{init_layout, process_event},
+    ui_bootloader::BootloaderUI,
+};
+use connect::Connect;
 use intro::Intro;
 use menu::Menu;
 use welcome::Welcome;
@@ -90,9 +97,16 @@ impl UICaesar {
 }
 
 impl BootloaderUI for UICaesar {
-    fn screen_welcome() {
-        let mut frame = Welcome::new();
-        show(&mut frame, true);
+    fn screen_welcome(buf: &mut [u8]) {
+        let welcome = Welcome::new();
+
+        let frame = init_layout(buf, welcome);
+
+        show(frame, true);
+    }
+
+    fn screen_welcome_event(buf: &mut [u8], event: Option<Event>) -> u32 {
+        process_event::<Welcome>(buf, event)
     }
 
     fn screen_install_success(restart_seconds: u8, _initial_setup: bool, complete_draw: bool) {
@@ -273,9 +287,16 @@ impl BootloaderUI for UICaesar {
         );
     }
 
-    fn screen_connect(_initial_setup: bool) {
-        let mut frame = Connect::new("Waiting for host...", fonts::FONT_NORMAL, BLD_FG, BLD_BG);
-        show(&mut frame, false);
+    fn screen_connect(_initial_setup: bool, buf: &mut [u8]) {
+        let frame = Connect::new("Waiting for host...", fonts::FONT_NORMAL, BLD_FG, BLD_BG);
+
+        let frame = init_layout(buf, frame);
+
+        show(frame, true);
+    }
+
+    fn screen_connect_event(buf: &mut [u8], event: Option<Event>) -> u32 {
+        process_event::<Connect>(buf, event)
     }
 
     fn screen_wipe_success() {
@@ -380,5 +401,15 @@ impl BootloaderUI for UICaesar {
         });
 
         display::refresh();
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_confirm_pairing(_code: u32, _initial_setup: bool) -> u32 {
+        unimplemented!()
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_pairing_mode(_initial_setup: bool) -> u32 {
+        unimplemented!()
     }
 }

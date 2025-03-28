@@ -3,7 +3,7 @@ use heapless::String;
 use crate::{
     trezorhal::secbool::secbool,
     ui::{
-        component::{connect::Connect, Label},
+        component::Label,
         display::{self, Color, Icon},
         geometry::{Alignment, Offset, Point, Rect},
         layout::simplified::{run, show},
@@ -43,12 +43,19 @@ use crate::ui::{
 use ufmt::uwrite;
 
 use super::theme::bootloader::BLD_WARN_COLOR;
+use crate::ui::{
+    component::Event,
+    layout::simplified::{init_layout, process_event},
+};
+use connect::Connect;
 use intro::Intro;
 use menu::Menu;
 
 pub mod intro;
 pub mod menu;
 pub mod welcome;
+
+pub mod connect;
 
 pub type BootloaderString = String<128>;
 
@@ -123,9 +130,14 @@ impl UIDelizia {
 }
 
 impl BootloaderUI for UIDelizia {
-    fn screen_welcome() {
-        let mut frame = Welcome::new();
-        show(&mut frame, true);
+    fn screen_welcome(buf: &mut [u8]) {
+        let frame = Welcome::new();
+        let frame = init_layout(buf, frame);
+        show(frame, true);
+    }
+
+    fn screen_welcome_event(buf: &mut [u8], event: Option<Event>) -> u32 {
+        process_event::<Welcome>(buf, event)
     }
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
@@ -357,15 +369,20 @@ impl BootloaderUI for UIDelizia {
         )
     }
 
-    fn screen_connect(initial_setup: bool) {
+    fn screen_connect(initial_setup: bool, buf: &mut [u8]) {
         let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let mut frame = Connect::new(
+        let frame = Connect::new(
             "Waiting for host...",
             fonts::FONT_DEMIBOLD,
             BLD_TITLE_COLOR,
             bg,
         );
-        show(&mut frame, true);
+        let frame = init_layout(buf, frame);
+        show(frame, true);
+    }
+
+    fn screen_connect_event(buf: &mut [u8], event: Option<Event>) -> u32 {
+        process_event::<Connect>(buf, event)
     }
 
     fn screen_wipe_success() {
@@ -474,5 +491,15 @@ impl BootloaderUI for UIDelizia {
         });
 
         display::refresh();
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_confirm_pairing(_code: u32, _initial_setup: bool) -> u32 {
+        unimplemented!()
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_pairing_mode(_initial_setup: bool) -> u32 {
+        unimplemented!()
     }
 }

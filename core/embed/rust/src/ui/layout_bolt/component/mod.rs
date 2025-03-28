@@ -1,11 +1,16 @@
 #[cfg(feature = "translations")]
 mod address_details;
 pub mod bl_confirm;
+
 mod button;
 #[cfg(feature = "translations")]
 mod coinjoin_progress;
+#[cfg(feature = "ble")]
+pub mod confirm_pairing;
 mod dialog;
 mod fido;
+#[cfg(feature = "ble")]
+pub mod pairing_mode;
 #[rustfmt::skip]
 mod fido_icons;
 mod error;
