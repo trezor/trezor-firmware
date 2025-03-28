@@ -14,10 +14,11 @@ use crate::{
 };
 
 use super::firmware::{
-    AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, Homescreen, HomescreenMsg,
-    MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputScreen, NumberInputScreenMsg,
-    PinKeyboard, PinKeyboardMsg, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
-    SelectWordScreen, SetBrightnessMsg, SetBrightnessScreen, TextScreen, TextScreenMsg,
+    AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
+    Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg,
+    NumberInputScreen, NumberInputScreenMsg, PinKeyboard, PinKeyboardMsg, SelectWordCountMsg,
+    SelectWordCountScreen, SelectWordMsg, SelectWordScreen, SetBrightnessMsg, SetBrightnessScreen,
+    TextScreen, TextScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -134,6 +135,20 @@ impl ComponentMsgObj for SetBrightnessScreen {
         match msg {
             SetBrightnessMsg::Confirmed => Ok(CONFIRMED.as_obj()),
             SetBrightnessMsg::Cancelled => Ok(CANCELLED.as_obj()),
+        }
+    }
+}
+
+impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            DeviceMenuMsg::NotImplemented => "NotImplemented".try_into(),
+            DeviceMenuMsg::BackupFailed => "BackupFailed".try_into(),
+            DeviceMenuMsg::PairNewDevice => "PairNewDevice".try_into(),
+            DeviceMenuMsg::CheckBackup => "CheckBackup".try_into(),
+            DeviceMenuMsg::WipeDevice => "WipeDevice".try_into(),
+            DeviceMenuMsg::ScreenBrightness => "ScreenBrightness".try_into(),
+            DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }
 }

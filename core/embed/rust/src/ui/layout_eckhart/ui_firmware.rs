@@ -32,12 +32,15 @@ use crate::{
 use super::{
     component::Button,
     firmware::{
+        DeviceMenuScreen,
         ActionBar, Bip39Input, ConfirmHomescreen, Header, HeaderMsg, Hint, Homescreen,
         MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen, SelectWordScreen,
         SetBrightnessScreen, Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
+
+use heapless::Vec;
 
 impl FirmwareUI for UIEckhart {
     fn confirm_action(
@@ -785,6 +788,11 @@ impl FirmwareUI for UIEckhart {
             coinjoin_authorized,
             notification,
         )?);
+        Ok(layout)
+    }
+
+    fn show_device_menu(failed_backup: bool, battery_percentage: usize, paired_devices: Vec<TString<'static>, 10>) -> Result<impl LayoutMaybeTrace, Error> {
+        let layout = RootComponent::new(DeviceMenuScreen::new(failed_backup, battery_percentage, paired_devices));
         Ok(layout)
     }
 

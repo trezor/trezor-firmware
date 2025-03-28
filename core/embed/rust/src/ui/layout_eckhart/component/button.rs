@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-use super::super::theme;
+use super::super::{fonts, theme};
 
 pub enum ButtonMsg {
     Pressed,
@@ -27,7 +27,8 @@ pub struct Button {
     touch_expand: Option<Insets>,
     content: ButtonContent,
     content_offset: Offset,
-    styles: ButtonStyleSheet,
+    stylesheet: ButtonStyleSheet,
+    subtext_style: TextStyle,
     text_align: Alignment,
     radius: Option<u8>,
     state: State,
@@ -39,9 +40,23 @@ pub struct Button {
 impl Button {
     const LINE_SPACING: i16 = 7;
     #[cfg(not(feature = "bootloader"))]
-    const SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
+    const DEFAULT_SUBTEXT_STYLE: TextStyle = theme::label_menu_item_subtitle();
     #[cfg(feature = "bootloader")]
-    const SUBTEXT_STYLE: TextStyle = theme::TEXT_NORMAL;
+    const DEFAULT_SUBTEXT_STYLE: TextStyle = theme::TEXT_NORMAL;
+    #[cfg(not(feature = "bootloader"))]
+    const SUBTEXT_STYLE_GREEN: TextStyle = theme::label_menu_item_subtitle_green();
+    #[cfg(feature = "bootloader")]
+    const SUBTEXT_STYLE_GREEN: TextStyle = TextStyle::new(
+        fonts::FONT_SATOSHI_REGULAR_38,
+        theme::GREEN,
+        theme::BG,
+        theme::GREEN,
+        theme::GREEN,
+    );
+
+    const MENU_ITEM_RADIUS: u8 = 12;
+    const MENU_ITEM_ALIGNMENT: Alignment = Alignment::Start;
+    const MENU_ITEM_CONTENT_OFFSET: Offset = Offset::x(12);
 
     pub const fn new(content: ButtonContent) -> Self {
         Self {
@@ -49,13 +64,33 @@ impl Button {
             content_offset: Offset::zero(),
             area: Rect::zero(),
             touch_expand: None,
-            styles: theme::button_default(),
+            stylesheet: theme::button_default(),
+            subtext_style: Self::DEFAULT_SUBTEXT_STYLE,
             text_align: Alignment::Center,
             radius: None,
             state: State::Initial,
             long_press: None,
             long_timer: Timer::new(),
             haptic: true,
+        }
+    }
+
+    pub fn new_menu_item(
+        text: TString<'static>,
+        subtext: Option<TString<'static>>,
+        stylesheet: ButtonStyleSheet,
+    ) -> Self {
+        match subtext {
+            Some(subtext) => Self::with_text_and_subtext(text, subtext)
+                .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+                .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+                .styled(stylesheet)
+                .with_radius(Self::MENU_ITEM_RADIUS),
+            None => Self::with_text(text)
+                .with_text_align(Self::MENU_ITEM_ALIGNMENT)
+                .with_content_offset(Self::MENU_ITEM_CONTENT_OFFSET)
+                .styled(stylesheet)
+                .with_radius(Self::MENU_ITEM_RADIUS),
         }
     }
 
@@ -84,8 +119,13 @@ impl Button {
         Self::new(ButtonContent::Empty)
     }
 
-    pub const fn styled(mut self, styles: ButtonStyleSheet) -> Self {
-        self.styles = styles;
+    pub const fn styled(mut self, stylesheet: ButtonStyleSheet) -> Self {
+        self.stylesheet = stylesheet;
+        self
+    }
+
+    pub const fn subtext_green(mut self) -> Self {
+        self.subtext_style = Self::SUBTEXT_STYLE_GREEN;
         self
     }
 
@@ -192,29 +232,29 @@ impl Button {
             ButtonContent::TextAndSubtext(_, _) => {
                 self.style().font.allcase_text_height()
                     + Self::LINE_SPACING
-                    + Self::SUBTEXT_STYLE.text_font.allcase_text_height()
+                    + self.subtext_style.text_font.allcase_text_height()
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
         }
     }
 
-    pub fn set_stylesheet(&mut self, styles: ButtonStyleSheet) {
-        if self.styles != styles {
-            self.styles = styles;
+    pub fn set_stylesheet(&mut self, stylesheet: ButtonStyleSheet) {
+        if self.stylesheet != stylesheet {
+            self.stylesheet = stylesheet;
         }
     }
 
     pub fn style(&self) -> &ButtonStyle {
         match self.state {
-            State::Initial | State::Released => self.styles.normal,
-            State::Pressed => self.styles.active,
-            State::Disabled => self.styles.disabled,
+            State::Initial | State::Released => self.stylesheet.normal,
+            State::Pressed => self.stylesheet.active,
+            State::Disabled => self.stylesheet.disabled,
         }
     }
 
-    pub fn style_sheet(&self) -> &ButtonStyleSheet {
-        &self.styles
+    pub fn stylesheet(&self) -> &ButtonStyleSheet {
+        &self.stylesheet
     }
 
     pub fn area(&self) -> Rect {
@@ -256,10 +296,11 @@ impl Button {
         }
     }
 
-    pub fn render_content<'s>(
+    fn render_content<'s>(
         &self,
         target: &mut impl Renderer<'s>,
-        style: &ButtonStyle,
+        stylesheet: &ButtonStyle,
+        subtext_style: &TextStyle,
         alpha: u8,
     ) {
         match &self.content {
@@ -272,8 +313,8 @@ impl Button {
                     Alignment::End => self.area.right_center() - self.content_offset,
                 } + y_offset;
                 text.map(|text| {
-                    shape::Text::new(start_of_baseline, text, style.font)
-                        .with_fg(style.text_color)
+                    shape::Text::new(start_of_baseline, text, stylesheet.font)
+                        .with_fg(stylesheet.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
                         .render(target);
@@ -281,7 +322,7 @@ impl Button {
             }
             ButtonContent::TextAndSubtext(text, subtext) => {
                 let text_y_offset =
-                    Offset::y(self.content_height() / 2 - self.style().font.allcase_text_height());
+                    Offset::y(self.content_height() / 2 - stylesheet.font.allcase_text_height());
                 let subtext_y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => self.area.left_center() + self.content_offset,
@@ -291,17 +332,17 @@ impl Button {
                 let text_baseline = start_of_baseline - text_y_offset;
                 let subtext_baseline = start_of_baseline + subtext_y_offset;
 
-                text.map(|text| {
-                    shape::Text::new(text_baseline, text, style.font)
-                        .with_fg(style.text_color)
+                text.map(|t| {
+                    shape::Text::new(text_baseline, t, stylesheet.font)
+                        .with_fg(stylesheet.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
                         .render(target);
                 });
 
                 subtext.map(|subtext| {
-                    shape::Text::new(subtext_baseline, subtext, Self::SUBTEXT_STYLE.text_font)
-                        .with_fg(Self::SUBTEXT_STYLE.text_color)
+                    shape::Text::new(subtext_baseline, subtext, subtext_style.text_font)
+                        .with_fg(subtext_style.text_color)
                         .with_align(self.text_align)
                         .with_alpha(alpha)
                         .render(target);
@@ -310,7 +351,7 @@ impl Button {
             ButtonContent::Icon(icon) => {
                 shape::ToifImage::new(self.area.center() + self.content_offset, icon.toif)
                     .with_align(Alignment2D::CENTER)
-                    .with_fg(style.icon_color)
+                    .with_fg(stylesheet.icon_color)
                     .with_alpha(alpha)
                     .render(target);
             }
@@ -323,8 +364,8 @@ impl Button {
                 if let Some(text) = text {
                     const OFFSET_Y: Offset = Offset::y(25);
                     text.map(|text| {
-                        shape::Text::new(baseline, text, style.font)
-                            .with_fg(style.text_color)
+                        shape::Text::new(baseline, text, stylesheet.font)
+                            .with_fg(stylesheet.text_color)
                             .with_align(Alignment::Center)
                             .with_alpha(alpha)
                             .render(target);
@@ -333,7 +374,7 @@ impl Button {
                         self.area.center() + OFFSET_Y,
                         theme::ICON_DASH_HORIZONTAL.toif,
                     )
-                    .with_fg(style.icon_color)
+                    .with_fg(stylesheet.icon_color)
                     .with_align(Alignment2D::CENTER)
                     .render(target);
                 } else {
@@ -356,7 +397,7 @@ impl Button {
     pub fn render_with_alpha<'s>(&self, target: &mut impl Renderer<'s>, alpha: u8) {
         let style = self.style();
         self.render_background(target, style, alpha);
-        self.render_content(target, style, alpha);
+        self.render_content(target, style, &self.subtext_style, alpha);
     }
 }
 
@@ -465,7 +506,7 @@ impl Component for Button {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let style = self.style();
         self.render_background(target, style, 0xFF);
-        self.render_content(target, style, 0xFF);
+        self.render_content(target, style, &self.subtext_style, 0xFF);
     }
 }
 

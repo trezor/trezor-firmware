@@ -532,6 +532,16 @@ def show_homescreen(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def show_device_menu(
+    *,
+    failed_backup: bool,
+    battery_percentage: bool,
+    paired_devices: Iterable[str],
+) -> LayoutObj[UiResult]:
+    """Idle homescreen."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def show_info(
     *,
     title: str,

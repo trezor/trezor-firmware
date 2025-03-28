@@ -1036,6 +1036,10 @@ impl FirmwareUI for UICaesar {
         Ok(layout)
     }
 
+    fn show_device_menu(_failed_backup: bool, _battery_percentage: usize, _paired_devices: Vec<TString<'static>, 10>) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_device_menu not supported"))
+    }
+
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,

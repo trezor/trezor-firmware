@@ -177,8 +177,8 @@ impl ActionBar {
             Mode::Double { .. } => (
                 left_button
                     .as_ref()
-                    .map(|b| (b.content().clone(), *b.style_sheet())),
-                Some((right_button.content().clone(), *right_button.style_sheet())),
+                    .map(|b| (b.content().clone(), *b.stylesheet())),
+                Some((right_button.content().clone(), *right_button.stylesheet())),
             ),
             _ => (None, None),
         };
