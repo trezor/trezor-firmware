@@ -22,8 +22,8 @@ import pytest
 
 from trezorlib import btc, device, exceptions, messages
 from trezorlib.client import PASSPHRASE_ON_DEVICE
-
-from trezorlib.debuglink import DebugLink, LayoutType, SessionDebugWrapper as Session
+from trezorlib.debuglink import DebugLink, LayoutType
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
 from trezorlib.transport.session import SessionV1, derive_seed
