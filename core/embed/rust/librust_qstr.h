@@ -649,6 +649,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__maximum_fee;
   MP_QSTR_send__receiving_to_multisig;
   MP_QSTR_send__send_from;
+  MP_QSTR_send__send_in_the_app;
+  MP_QSTR_send__sign_cancelled;
   MP_QSTR_send__sign_transaction;
   MP_QSTR_send__title_confirm_sending;
   MP_QSTR_send__title_joint_transaction;
@@ -819,6 +821,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
   MP_QSTR_words__recovery_share;
+  MP_QSTR_words__send;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
@@ -837,6 +840,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__unknown;
   MP_QSTR_words__unlimited;
   MP_QSTR_words__unlocked;
+  MP_QSTR_words__wallet;
   MP_QSTR_words__warning;
   MP_QSTR_words__writable;
   MP_QSTR_words__yes;

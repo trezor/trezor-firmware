@@ -1023,5 +1023,9 @@
   "1021": "words__receive",
   "1022": "reset__recovery_share_description",
   "1023": "reset__recovery_share_number",
-  "1024": "words__recovery_share"
+  "1024": "words__recovery_share",
+  "1025": "send__send_in_the_app",
+  "1026": "send__sign_cancelled",
+  "1027": "words__send",
+  "1028": "words__wallet"
 }
