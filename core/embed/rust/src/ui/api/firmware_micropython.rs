@@ -802,6 +802,19 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
+        let battery_percentage: u8 = kwargs.get_or(Qstr::MP_QSTR_battery_percentage, 0)?;
+        let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
+        let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
+        let layout = ModelUI::show_device_menu(failed_backup, battery_percentage, paired_devices)?;
+        let layout_obj = LayoutObj::new_root(layout)?;
+        Ok(layout_obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1560,6 +1573,15 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Idle homescreen."""
     Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
+
+    /// def show_device_menu(
+    ///     *,
+    ///     failed_backup: bool,
+    ///     battery_percentage: int,
+    ///     paired_devices: Iterable[str],
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Show the device menu."""
+    Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
 
     /// def show_info(
     ///     *,
