@@ -30,6 +30,7 @@
 #define BLE_TX_PACKET_SIZE 64
 
 #define BLE_ADV_NAME_LEN 20
+#define BLE_PAIRING_CODE_LEN 6
 
 typedef enum {
   BLE_SWITCH_OFF = 0,      // Turn off BLE advertising, disconnect
