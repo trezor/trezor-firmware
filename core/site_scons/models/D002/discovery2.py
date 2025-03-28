@@ -57,7 +57,7 @@ def configure(
         sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/io/touch/sitronix/touch.c"]
         sources += ["embed/io/touch/sitronix/sitronix.c"]
-        sources += ["embed/io/touch/touch_fsm.c"]
+        sources += ["embed/io/touch/touch_poll.c"]
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
