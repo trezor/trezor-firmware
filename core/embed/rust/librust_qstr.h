@@ -112,6 +112,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__title_create_wallet_backup;
   MP_QSTR_backup__title_skip;
   MP_QSTR_backup__want_to_skip;
+  MP_QSTR_battery_percentage;
   MP_QSTR_bitcoin__commitment_data;
   MP_QSTR_bitcoin__confirm_locktime;
   MP_QSTR_bitcoin__create_proof_of_ownership;
@@ -258,6 +259,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_extra_item;
   MP_QSTR_extra_items;
   MP_QSTR_extra_title;
+  MP_QSTR_failed_backup;
   MP_QSTR_fee;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
@@ -373,6 +375,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_page_counter;
   MP_QSTR_pages;
   MP_QSTR_paint;
+  MP_QSTR_paired_devices;
   MP_QSTR_passphrase__access_wallet;
   MP_QSTR_passphrase__always_on_device;
   MP_QSTR_passphrase__continue_with_empty_passphrase;
@@ -670,6 +673,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_address_details;
   MP_QSTR_show_checklist;
   MP_QSTR_show_danger;
+  MP_QSTR_show_device_menu;
   MP_QSTR_show_error;
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
