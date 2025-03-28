@@ -22,9 +22,11 @@ import pytest
 
 from trezorlib import btc, device, exceptions, messages
 from trezorlib.client import PASSPHRASE_ON_DEVICE
-from trezorlib.debuglink import DebugLink, LayoutType
+
+from trezorlib.debuglink import DebugLink, LayoutType, SessionDebugWrapper as Session
 from trezorlib.protobuf import MessageType
 from trezorlib.tools import parse_path
+from trezorlib.transport.session import SessionV1, derive_seed
 
 from .. import common
 from .. import translations as TR
@@ -221,10 +223,10 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    # get address
-    session = device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
+    session = Session(SessionV1.new(device_handler.client))
+    # session = device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
 
-    device_handler.run_with_provided_session(session, common.get_test_address)  # type: ignore
+    device_handler.run_with_provided_session(session, derive_seed, passphrase=PASSPHRASE_ON_DEVICE)  # type: ignore
     assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
     if debug.layout_type is LayoutType.Caesar:
@@ -250,7 +252,10 @@ def test_autolock_passphrase_keyboard(device_handler: "BackgroundDeviceHandler")
     elif debug.layout_type is LayoutType.Caesar:
         debug.input("j" * 8)
 
-    # address corresponding to "jjjjjjjj" passphrase
+    device_handler.result()
+
+    # get address corresponding to "jjjjjjjj" passphrase
+    device_handler.run_with_provided_session(session, common.get_test_address)
     assert device_handler.result() == "mnF4yRWJXmzRB6EuBzuVigqeqTqirQupxJ"
 
 
@@ -259,9 +264,11 @@ def test_autolock_interrupts_passphrase(device_handler: "BackgroundDeviceHandler
     set_autolock_delay(device_handler, 10_000)
     debug = device_handler.debuglink()
 
-    # get address
-    session = device_handler.client.get_session(passphrase=PASSPHRASE_ON_DEVICE)
-    device_handler.run_with_provided_session(session, common.get_test_address)  # type: ignore
+    # get address (derive_seed)
+    session = Session(SessionV1.new(client=device_handler.client))
+    device_handler.run_with_provided_session(
+        session, derive_seed, passphrase=PASSPHRASE_ON_DEVICE
+    )  # type: ignore
     assert "PassphraseKeyboard" in debug.read_layout().all_components()
 
     if debug.layout_type is LayoutType.Caesar:
