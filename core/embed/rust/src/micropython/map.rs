@@ -19,9 +19,10 @@ impl Map {
         // .all_keys_are_qstrs = 1,
         // .is_fixed = 1,
         // .is_ordered = 1,
+        // .no_realloc = 1,
         // .used = MP_ARRAY_SIZE(table_name),
         // .alloc = MP_ARRAY_SIZE(table_name),
-        let bits = 0b111 | N << 3;
+        let bits = 0b1111 | N << 4;
         let bitfield = ffi::__BindgenBitfieldUnit::new(bits.to_ne_bytes());
         Self {
             _bitfield_align_1: [],
