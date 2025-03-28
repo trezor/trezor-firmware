@@ -304,6 +304,20 @@ pub trait FirmwareUI {
         notification_level: u8,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    fn show_device_menu(
+        failed_backup: bool,
+        battery_percentage: u8,
+        firmware_version: TString<'static>,
+        device_name: TString<'static>,
+        paired_devices: Vec<TString<'static>, 1>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_pairing_device_name(
+        device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,

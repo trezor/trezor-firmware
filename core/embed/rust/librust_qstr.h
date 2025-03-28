@@ -113,6 +113,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__title_create_wallet_backup;
   MP_QSTR_backup__title_skip;
   MP_QSTR_backup__want_to_skip;
+  MP_QSTR_battery_percentage;
   MP_QSTR_bitcoin__commitment_data;
   MP_QSTR_bitcoin__confirm_locktime;
   MP_QSTR_bitcoin__create_proof_of_ownership;
@@ -199,6 +200,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
+  MP_QSTR_code;
   MP_QSTR_coinjoin__access_account;
   MP_QSTR_coinjoin__do_not_disconnect;
   MP_QSTR_coinjoin__max_mining_fee;
@@ -241,6 +243,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_deinit;
   MP_QSTR_description;
   MP_QSTR_details_title;
+  MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
@@ -258,6 +261,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_extra_item;
   MP_QSTR_extra_items;
   MP_QSTR_extra_title;
+  MP_QSTR_failed_backup;
   MP_QSTR_fee;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
@@ -265,6 +269,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_firmware_version;
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_get_address;
@@ -374,6 +379,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_page_counter;
   MP_QSTR_pages;
   MP_QSTR_paint;
+  MP_QSTR_paired_devices;
   MP_QSTR_passphrase__access_wallet;
   MP_QSTR_passphrase__always_on_device;
   MP_QSTR_passphrase__continue_with_empty_passphrase;
@@ -671,6 +677,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_address_details;
   MP_QSTR_show_checklist;
   MP_QSTR_show_danger;
+  MP_QSTR_show_device_menu;
   MP_QSTR_show_error;
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
@@ -679,6 +686,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
+  MP_QSTR_show_pairing_code;
+  MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
