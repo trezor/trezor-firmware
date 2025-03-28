@@ -532,6 +532,8 @@ try:
 except OSError:
     print("SDL2 not installed, Emulator build is not possible")
 
+BYTECODE_OPTIMIZATION = {'0': '0', '1': '1'}[PYOPT]
+
 env.Replace(
     PYTHON='python',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
@@ -539,7 +541,7 @@ env.Replace(
     MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
     MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT,
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + BYTECODE_OPTIMIZATION,
     PB2PY='$PYTHON ../common/protob/pb2py',
 )
 
