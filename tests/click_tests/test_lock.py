@@ -65,7 +65,7 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     device_handler.run_with_session(common.get_test_address)
 
     assert "PinKeyboard" in debug.read_layout().all_components()
-    debug.input("1234")
+    debug.input(PIN4)
     assert device_handler.result()
 
     session.refresh_features()
