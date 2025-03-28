@@ -387,6 +387,7 @@ async def confirm_output(
     source_account: str | None = None,
     source_account_path: str | None = None,
     cancel_text: str | None = None,
+    description: str | None = None,
 ) -> None:
     if address_label is not None:
         title = address_label
@@ -397,9 +398,32 @@ async def confirm_output(
     else:
         title = TR.send__title_sending_to
 
-    # FIXME: not implemented
-    # use `flow_confirm_output` or `TT/TR` style?
-    raise NotImplementedError
+    await raise_if_not_confirmed(
+        trezorui_api.flow_confirm_output(
+            title=TR.words__address,
+            subtitle=title,
+            message=address,
+            extra=None,
+            amount=amount,
+            chunkify=chunkify,
+            text_mono=True,
+            account_title=TR.send__send_from,
+            account=source_account,
+            account_path=source_account_path,
+            address_item=None,
+            extra_item=None,
+            br_code=br_code,
+            br_name="confirm_output",
+            summary_items=None,
+            fee_items=None,
+            summary_title=None,
+            summary_br_name=None,
+            summary_br_code=None,
+            cancel_text=cancel_text,
+            description=description,
+        ),
+        br_name=None,
+    )
 
 
 async def should_show_payment_request_details(
@@ -672,14 +696,14 @@ def confirm_total(
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
-    title = title or TR.words__title_summary  # def_arg
+    title = title or TR.words__send  # def_arg
     total_label = total_label or TR.send__total_amount  # def_arg
     fee_label = fee_label or TR.send__incl_transaction_fee  # def_arg
 
     fee_items = []
     account_items = []
     if source_account:
-        account_items.append((TR.confirm_total__sending_from_account, source_account))
+        account_items.append((TR.words__account, source_account))
     if source_account_path:
         account_items.append((TR.address_details__derivation_path, source_account_path))
     if fee_rate_amount:
@@ -713,7 +737,7 @@ def _confirm_summary(
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
-    title = title or TR.words__title_summary  # def_arg
+    title = title or TR.words__send  # def_arg
 
     return raise_if_not_confirmed(
         trezorui_api.confirm_summary(
