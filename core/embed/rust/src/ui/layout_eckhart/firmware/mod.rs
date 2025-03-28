@@ -1,6 +1,7 @@
 mod action_bar;
 mod brightness_screen;
 mod confirm_homescreen;
+mod device_menu_screen;
 mod header;
 mod hint;
 mod hold_to_confirm;
@@ -17,6 +18,7 @@ mod vertical_menu_screen;
 pub use action_bar::{ActionBar, ActionBarMsg};
 pub use brightness_screen::SetBrightnessScreen;
 pub use confirm_homescreen::{ConfirmHomescreen, ConfirmHomescreenMsg};
+pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;
