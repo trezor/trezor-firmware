@@ -16,8 +16,7 @@
 
 import pytest
 
-from trezorlib import btc, device, messages, misc, models
-from trezorlib import exceptions
+from trezorlib import btc, device, exceptions, messages, misc, models
 from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
