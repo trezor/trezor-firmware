@@ -677,14 +677,14 @@ def confirm_total(
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
-    title = title or TR.words__title_summary  # def_arg
+    title = title or TR.words__send  # def_arg
     total_label = total_label or TR.send__total_amount  # def_arg
     fee_label = fee_label or TR.send__incl_transaction_fee  # def_arg
 
     fee_items = []
     account_items = []
     if source_account:
-        account_items.append((TR.confirm_total__sending_from_account, source_account))
+        account_items.append((TR.words__account, source_account))
     if source_account_path:
         account_items.append((TR.address_details__derivation_path, source_account_path))
     if fee_rate_amount:
@@ -718,7 +718,7 @@ def _confirm_summary(
     br_name: str = "confirm_total",
     br_code: ButtonRequestType = ButtonRequestType.SignTx,
 ) -> Awaitable[None]:
-    title = title or TR.words__title_summary  # def_arg
+    title = title or TR.words__send  # def_arg
 
     return raise_if_not_confirmed(
         trezorui_api.confirm_summary(
