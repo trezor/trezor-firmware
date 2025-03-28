@@ -21,7 +21,6 @@ import os
 import typing as t
 from enum import IntEnum
 from pathlib import Path
-from time import sleep
 
 import pytest
 import xdist
