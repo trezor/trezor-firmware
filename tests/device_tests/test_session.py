@@ -160,7 +160,7 @@ def test_session_recycling(client: Client):
 
     # create and close 100 sessions - more than the session limit
     for _ in range(100):
-        session_x = client.get_session()
+        session_x = client.get_seedless_session()
         session_x.end()
 
     # it should still be possible to resume the original session
