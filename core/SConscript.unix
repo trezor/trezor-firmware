@@ -532,7 +532,7 @@ try:
 except OSError:
     print("SDL2 not installed, Emulator build is not possible")
 
-BYTECODE_OPTIMIZATION = {'0': '0', '1': '1'}[PYOPT]
+BYTECODE_OPTIMIZATION = {'0': '0', '1': '3'}[PYOPT]
 
 env.Replace(
     PYTHON='python',
