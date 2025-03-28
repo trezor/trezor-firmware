@@ -138,6 +138,19 @@ impl Header {
         }
     }
 
+    pub fn with_battery(self, percentage: usize) -> Self {
+        let is_low_battery = percentage < 20; // TODO
+
+        self.with_icon(
+            theme::ICON_BATTERY_ZAP,
+            if is_low_battery {
+                theme::YELLOW
+            } else {
+                theme::GREEN_LIME
+            },
+        )
+    }
+
     #[inline(never)]
     pub fn with_menu_button(self) -> Self {
         self.with_right_button(
