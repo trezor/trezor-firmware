@@ -1,4 +1,5 @@
 use core::cmp::Ordering;
+use heapless::Vec;
 
 use crate::{
     error::Error,
@@ -217,17 +218,52 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_summary(
-        _amount: TString<'static>,
-        _amount_label: TString<'static>,
-        _fee: TString<'static>,
-        _fee_label: TString<'static>,
-        _title: Option<TString<'static>>,
-        _account_items: Option<Obj>,
-        _extra_items: Option<Obj>,
-        _extra_title: Option<TString<'static>>,
-        _verb_cancel: Option<TString<'static>>,
+        amount: TString<'static>,
+        amount_label: TString<'static>,
+        fee: TString<'static>,
+        fee_label: TString<'static>,
+        title: Option<TString<'static>>,
+        account_items: Option<Obj>,
+        extra_items: Option<Obj>,
+        extra_title: Option<TString<'static>>,
+        verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        // collect available info
+        let account_paragraphs = if let Some(items) = account_items {
+            let mut paragraphs = ParagraphVecShort::new();
+            for pair in IterBuf::new().try_iterate(items)? {
+                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, value)));
+            }
+            Some(paragraphs)
+        } else {
+            None
+        };
+        let extra_paragraphs = if let Some(items) = extra_items {
+            let mut paragraphs = ParagraphVecShort::new();
+            for pair in IterBuf::new().try_iterate(items)? {
+                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, value)));
+            }
+            Some(paragraphs)
+        } else {
+            None
+        };
+
+        let flow = flow::new_confirm_summary(
+            title.unwrap_or(TString::empty()),
+            amount,
+            amount_label,
+            fee,
+            fee_label,
+            account_paragraphs,
+            extra_title,
+            extra_paragraphs,
+            verb_cancel,
+        )?;
+        Ok(flow)
     }
 
     fn confirm_properties(
