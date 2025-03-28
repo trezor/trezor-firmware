@@ -28,6 +28,7 @@
 #include <sys/applet.h>
 #include <sys/bootutils.h>
 #include <sys/mpu.h>
+#include <sys/sysevent.h>
 #include <sys/system.h>
 #include <sys/systick.h>
 #include <util/bl_check.h>
@@ -177,6 +178,19 @@ void drivers_init() {
 #endif
 }
 
+// Kernel task main loop
+//
+// Returns when the coreapp task is terminated
+static void kernel_loop(applet_t *coreapp) {
+  do {
+    sysevents_t awaited = {0};
+    sysevents_t signalled = {0};
+
+    sysevents_poll(&awaited, &signalled, 100);
+
+  } while (applet_is_alive(coreapp));
+}
+
 // defined in linker script
 extern uint32_t _codelen;
 
@@ -226,6 +240,10 @@ static void show_rsod(const systask_postmortem_t *pminfo) {
   if (applet_reset(&coreapp, 1, pminfo, sizeof(systask_postmortem_t))) {
     // Run the applet & wait for it to finish
     applet_run(&coreapp);
+    // Loop until the coreapp is terminated
+    kernel_loop(&coreapp);
+    // Release the coreapp resources
+    applet_stop(&coreapp);
 
     if (coreapp.task.pminfo.reason == TASK_TERM_REASON_EXIT) {
       // RSOD was shown successfully
@@ -285,8 +303,12 @@ int main(void) {
     error_shutdown("Cannot start coreapp");
   }
 
-  // Run the applet & wait for it to finish
+  // Run the applet
   applet_run(&coreapp);
+  // Loop until the coreapp is terminated
+  kernel_loop(&coreapp);
+  // Release the coreapp resources
+  applet_stop(&coreapp);
 
   // Coreapp crashed, show RSOD
   show_rsod(&coreapp.task.pminfo);

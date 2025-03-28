@@ -17,23 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <sys/systask.h>
 
-#include <trezor_types.h>
+// Currently, the emulator runs in single-task mode, so all
+// task-related functions are stubs that allow compiling and
+// running the emulator without multitasking support.
 
-#include <io/i2c_bus.h>
+systask_t* systask_active(void) { return NULL; }
 
-typedef struct {
-  uint16_t TouchDetected;
-  uint16_t X;
-  uint16_t Y;
-  uint16_t Z;
-} TS_StateTypeDef;
+systask_t* systask_kernel(void) { return NULL; }
 
-void BSP_TS_GetState(TS_StateTypeDef *TsState);
+systask_id_t systask_id(const systask_t* task) { return 0; }
 
-void stmpe811_Reset(i2c_bus_t *i2c_bus);
-
-void touch_set_mode(void);
-
-uint32_t touch_active(void);
+void systask_yield_to(systask_t* task) {}

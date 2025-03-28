@@ -42,7 +42,7 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
 
   while (true) {
     switch (screen) {
-      case SCREEN_INTRO:
+      case SCREEN_INTRO: {
         intro_result_t ui_result = ui_screen_intro(vhdr, hdr, firmware_present);
         if (ui_result == INTRO_MENU) {
           screen = SCREEN_MENU;
@@ -50,8 +50,8 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
         if (ui_result == INTRO_HOST) {
           screen = SCREEN_WAIT_FOR_HOST;
         }
-        break;
-      case SCREEN_MENU:
+      } break;
+      case SCREEN_MENU: {
         menu_result_t menu_result = ui_screen_menu(firmware_present);
         if (menu_result == MENU_EXIT) {  // exit menu
           screen = SCREEN_INTRO;
@@ -78,8 +78,8 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
           }
           return WF_ERROR_FATAL;
         }
-        break;
-      case SCREEN_WAIT_FOR_HOST:
+      } break;
+      case SCREEN_WAIT_FOR_HOST: {
         workflow_result_t res =
             workflow_host_control(vhdr, hdr, ui_screen_connect);
         switch (res) {
@@ -89,7 +89,7 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
           default:
             return res;
         }
-        break;
+      } break;
       default:
         return WF_ERROR_FATAL;
         break;

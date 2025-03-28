@@ -63,6 +63,11 @@ typedef struct {
   bool initialized;
   // Current mode
   mpu_mode_t mode;
+  // Address of the active framebuffer
+  // (if set to 0, the framebuffer is not accessible)
+  uint32_t active_fb_addr;
+  // Size of the framebuffer in bytes
+  size_t active_fb_size;
 
 } mpu_driver_t;
 
@@ -216,12 +221,37 @@ mpu_mode_t mpu_get_mode(void) {
 }
 
 void mpu_set_active_fb(const void* addr, size_t size) {
-  // Not implemented on STM32F4
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  irq_key_t lock = irq_lock();
+
+  drv->active_fb_addr = (uint32_t)addr;
+  drv->active_fb_size = size;
+
+  irq_unlock(lock);
 }
 
 bool mpu_inside_active_fb(const void* addr, size_t size) {
-  // Not implemented on STM32F4
-  return false;
+  mpu_driver_t* drv = &g_mpu_driver;
+
+  if (!drv->initialized) {
+    return false;
+  }
+
+  irq_key_t lock = irq_lock();
+
+  bool result =
+      ((uintptr_t)addr + size >= (uintptr_t)addr) &&  // overflow check
+      ((uintptr_t)addr >= drv->active_fb_addr) &&
+      ((uintptr_t)addr + size <= drv->active_fb_addr + drv->active_fb_size);
+
+  irq_unlock(lock);
+
+  return result;
 }
 
 // STM32F4xx memory map

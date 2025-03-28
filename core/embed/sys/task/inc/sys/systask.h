@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_SYSTASK_H
-#define TREZORHAL_SYSTASK_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -97,6 +96,12 @@ typedef void (*systask_error_handler_t)(const systask_postmortem_t* pminfo);
 
 #ifdef KERNEL_MODE
 
+// Maximum number of tasks that can be created
+#define SYSTASK_MAX_TASKS 2
+
+// Zero-based task ID (up SYSTASK_MAX_TASKS - 1)
+typedef uint8_t systask_id_t;
+
 // Task context used by the kernel to save the state of each task
 // when switching between them
 typedef struct {
@@ -109,8 +114,10 @@ typedef struct {
   // Exception return value
   uint32_t exc_return;
   // Set to nonzero, if the task is killed
-  uint32_t killed;
+  volatile uint32_t killed;
 
+  // Task id
+  systask_id_t id;
   // MPU mode the task is running in
   mpu_mode_t mpu_mode;
   // Task post-mortem information
@@ -128,14 +135,20 @@ void systask_scheduler_init(systask_error_handler_t error_handler);
 // Returns the currently running task
 systask_t* systask_active(void);
 
-// Makes the given task the currently running task
+// Returns the kernel task
+systask_t* systask_kernel(void);
+
+// Makes the given task the currently running task.
 void systask_yield_to(systask_t* task);
 
 // Initializes a task with the given stack pointer, stack size
 //
 // The task must be not be running when the function is called
-void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
+bool systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
                   void* context);
+
+// Returns true if the task is alive (not terminated, killed or crashed)
+bool systask_is_alive(const systask_t* task);
 
 // Pushes data onto the stack of the task
 //
@@ -153,6 +166,9 @@ void systask_pop_data(systask_t* task, size_t size);
 // Return `true` in case of success, `false` otherwise
 bool systask_push_call(systask_t* task, void* fn, uint32_t arg1, uint32_t arg2,
                        uint32_t arg3);
+
+// Gets the ID (zero-based index up SYSTASK_MAX_TASKS - 1) of the given task.
+systask_id_t systask_id(const systask_t* task);
 
 // Terminates the task with the given exit code
 //
@@ -181,5 +197,3 @@ void systask_exit_fatal(systask_t* task, const char* message,
                         int line);
 
 #endif  // KERNEL_MODE
-
-#endif  // TREZORHAL_SYSTASK_H

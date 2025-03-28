@@ -182,7 +182,7 @@ def add_rust_lib(*, env, build, profile, features, all_paths, build_dir):
         action=cargo_build(),
     )
 
-    env.Append(LINKFLAGS=f"-L{RUST_LIBDIR}")
-    env.Append(LINKFLAGS=f"-l{RUST_LIB}")
+    env.Append(LINKFLAGS=[f"-L{RUST_LIBDIR}"])
+    env.Append(LINKFLAGS=[f"-l{RUST_LIB}"])
 
     return rust

@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _TOUCH_FT6X36_H
-#define _TOUCH_FT6X36_H
+#pragma once
 
 // I2C address of the FT6X36 on the I2C bus.
 #define FT6X36_I2C_ADDR 0x38
@@ -71,5 +70,3 @@
 // ------------------------------------------------------------
 
 #define FT6X36_GESTURE_NONE 0x00
-
-#endif

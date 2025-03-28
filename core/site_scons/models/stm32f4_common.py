@@ -89,6 +89,7 @@ def stm32f4_common_files(env, defines, sources, paths):
         "embed/sys/task/stm32/system.c",
         "embed/sys/time/stm32/systick.c",
         "embed/sys/time/stm32/systimer.c",
+        "embed/sys/task/sysevent.c",
         "embed/util/board_capabilities/stm32/board_capabilities.c",
         "embed/util/flash/stm32f4/flash.c",
         "embed/util/flash/stm32f4/flash_layout.c",

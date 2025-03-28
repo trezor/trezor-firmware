@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -25,10 +27,9 @@
 #include <sys/linker_utils.h>
 #include <sys/mpu.h>
 #include <sys/syscall.h>
+#include <sys/sysevent_source.h>
 #include <sys/systask.h>
 #include <sys/system.h>
-
-#ifdef KERNEL_MODE
 
 // Disable stack protector for this file since it  may interfere
 // with the stack manipulation and fault handling
@@ -53,6 +54,8 @@ typedef struct {
   systask_t* active_task;
   // Task to be scheduled next
   systask_t* waiting_task;
+  // Bitmap of used task IDs
+  uint32_t task_id_map;
 } systask_scheduler_t;
 
 // Global task manager state
@@ -61,8 +64,10 @@ static systask_scheduler_t g_systask_scheduler = {
     // to function correctly before the scheduler is initialized.
     .active_task = &g_systask_scheduler.kernel_task,
     .waiting_task = &g_systask_scheduler.kernel_task,
+    .task_id_map = 0x00000001,  // Kernel task is always present
     .kernel_task = {
         .sp_lim = (uint32_t)&_stack_section_start,
+        .id = 0,  // Kernel task ID == 0
     }};
 
 void systask_scheduler_init(systask_error_handler_t error_handler) {
@@ -73,6 +78,7 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
   scheduler->error_handler = error_handler;
   scheduler->active_task = &scheduler->kernel_task;
   scheduler->waiting_task = scheduler->active_task;
+  scheduler->task_id_map = 0x00000001;  // Kernel task is always present
 
   scheduler->kernel_task.sp_lim = (uint32_t)&_stack_section_start;
 
@@ -89,6 +95,12 @@ systask_t* systask_active(void) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;
 
   return scheduler->active_task;
+}
+
+systask_t* systask_kernel(void) {
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  return &scheduler->kernel_task;
 }
 
 static void systask_yield(void) {
@@ -117,15 +129,38 @@ void systask_yield_to(systask_t* task) {
   systask_yield();
 }
 
-void systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
+static systask_id_t systask_get_unused_id(void) {
+  systask_id_t id = 0;
+  while (++id < SYSTASK_MAX_TASKS) {
+    if ((g_systask_scheduler.task_id_map & (1 << id)) == 0) {
+      break;
+    }
+  }
+  return id;
+}
+
+bool systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
                   void* applet) {
+  systask_id_t id = systask_get_unused_id();
+  if (id >= SYSTASK_MAX_TASKS) {
+    return false;
+  }
+
   memset(task, 0, sizeof(systask_t));
   task->sp = stack_ptr + stack_size;
   task->sp_lim = stack_ptr + 256;
   task->exc_return = 0xFFFFFFED;  // Thread mode, use PSP, pop FP context
+  task->id = id;
   task->mpu_mode = MPU_MODE_APP;
   task->applet = applet;
+
+  // Notify all event sources about the task creation
+  sysevents_notify_task_created(task);
+
+  return true;
 }
+
+systask_id_t systask_id(const systask_t* task) { return task->id; }
 
 uint32_t* systask_push_data(systask_t* task, const void* data, size_t size) {
   if (task->sp < task->sp_lim) {
@@ -211,10 +246,16 @@ static void systask_kill(systask_t* task) {
     // if it returns. Neither is expected to happen.
     reboot_device();
   } else if (task == scheduler->active_task) {
+    // Free task ID
+    scheduler->task_id_map &= ~(1 << task->id);
+    // Notify all event sources about the task termination
+    sysevents_notify_task_killed(task);
     // Switch to the kernel task
     systask_yield_to(&scheduler->kernel_task);
   }
 }
+
+bool systask_is_alive(const systask_t* task) { return !task->killed; }
 
 void systask_exit(systask_t* task, int exit_code) {
   systask_scheduler_t* scheduler = &g_systask_scheduler;

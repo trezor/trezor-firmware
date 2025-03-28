@@ -90,6 +90,12 @@ bool applet_reset(applet_t* applet, uint32_t cmd, const void* arg,
 // Runs the applet and waits until it finishes.
 void applet_run(applet_t* applet);
 
+// Release all resources help by the applet
+void applet_stop(applet_t* applet);
+
+// Returns `true` if the applet task is alive.
+bool applet_is_alive(applet_t* applet);
+
 // Returns the currently active applet.
 //
 // Returns `NULL` if no applet is currently active.
