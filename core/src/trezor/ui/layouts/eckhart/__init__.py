@@ -129,7 +129,7 @@ def confirm_path_warning(
         "path_warning",
         description,
         value=path,
-        title=TR.words__pay_attention,
+        title=TR.words__important,
         menu_title=TR.words__receive,
         verb_cancel=TR.words__cancel_and_exit,
         br_code=ButtonRequestType.UnknownDerivationPath,
@@ -140,7 +140,7 @@ def confirm_multisig_warning() -> Awaitable[None]:
     return show_danger(
         "warning_multisig",
         TR.send__receiving_to_multisig,
-        title=TR.words__pay_attention,
+        title=TR.words__important,
         menu_title=TR.words__receive,
         verb_cancel=TR.words__cancel_and_exit,
     )
