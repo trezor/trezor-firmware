@@ -212,7 +212,7 @@ class SessionV1(Session):
         )
         assert isinstance(resp, messages.Features)
         if new_session:
-            self.id = resp.session_id
+            self.id = resp.session_id or b""
         elif self.id != resp.session_id:
             raise exceptions.FailedSessionResumption(resp.session_id)
         self.was_initialized_at_least_once = True
