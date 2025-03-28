@@ -483,6 +483,8 @@ env.Replace(
     ASPPFLAGS='$CFLAGS $CCFLAGS',
     )
 
+BYTECODE_OPTIMIZATION = {'0': '0', '1': '1'}[PYOPT]
+
 env.Replace(
     HEADERTOOL='headertool',
     PYTHON='python',
@@ -491,7 +493,7 @@ env.Replace(
     MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
     MAKECMAKELISTS='$PYTHON tools/make_cmakelists.py',
     MPY_TOOL='$PYTHON vendor/micropython/tools/mpy-tool.py',
-    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + PYOPT,
+    MPY_CROSS='vendor/micropython/mpy-cross/mpy-cross -O' + BYTECODE_OPTIMIZATION,
     PB2PY='$PYTHON ../common/protob/pb2py',
 )
 
