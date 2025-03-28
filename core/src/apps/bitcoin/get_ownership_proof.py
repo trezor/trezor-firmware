@@ -11,6 +11,17 @@ if TYPE_CHECKING:
     from .authorization import CoinJoinAuthorization
 
 
+async def send_request_entropy(nonce_commitment: bytes) -> bytes:
+    from trezor.messages import OwnershipProofEntropy, OwnershipProofNonceCommitment
+    from trezor.wire.context import call
+
+    req = OwnershipProofNonceCommitment()
+    req.nonce_commitment = nonce_commitment
+    resp = await call(req, OwnershipProofEntropy)
+    assert resp.entropy is not None
+    return resp.entropy
+
+
 @with_keychain
 async def get_ownership_proof(
     msg: GetOwnershipProof,
@@ -28,7 +39,7 @@ async def get_ownership_proof(
 
     from . import addresses, common, scripts
     from .keychain import validate_path_against_script_type
-    from .ownership import generate_proof, get_identifier
+    from .ownership import ProofGenerator, get_identifier
 
     script_type = msg.script_type  # local_cache_attribute
     ownership_ids = msg.ownership_ids  # local_cache_attribute
@@ -83,7 +94,7 @@ async def get_ownership_proof(
                 TR.bitcoin__commitment_data,
             )
 
-    ownership_proof, signature = generate_proof(
+    proof_generator = ProofGenerator(
         node,
         script_type,
         msg.multisig,
@@ -94,4 +105,13 @@ async def get_ownership_proof(
         msg.commitment_data,
     )
 
-    return OwnershipProof(ownership_proof=ownership_proof, signature=signature)
+    if msg.entropy_commitment:
+        # use anti-exfil protocol
+        nonce_commitment = proof_generator.commit_nonce(msg.entropy_commitment)
+        entropy = await send_request_entropy(nonce_commitment)
+        _, signature = proof_generator.sign(entropy)
+        return OwnershipProof(ownership_proof=b"", signature=signature)
+    else:
+        ownership_proof, signature = proof_generator.sign()
+        assert ownership_proof is not None
+        return OwnershipProof(ownership_proof=ownership_proof, signature=signature)

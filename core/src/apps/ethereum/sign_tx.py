@@ -13,12 +13,7 @@ from .keychain import with_keychain_from_chain_id
 if TYPE_CHECKING:
     from typing import Iterable
 
-    from trezor.messages import (
-        EthereumNetworkInfo,
-        EthereumSignTx,
-        EthereumTokenInfo,
-        EthereumTxAck,
-    )
+    from trezor.messages import EthereumNetworkInfo, EthereumSignTx, EthereumTokenInfo
 
     from apps.common.keychain import Keychain
 
@@ -97,9 +92,9 @@ async def sign_tx(
     progress_obj.report(60)
 
     while data_left > 0:
-        resp = await send_request_chunk(data_left)
-        data_left -= len(resp.data_chunk)
-        sha.extend(resp.data_chunk)
+        data = await send_request_chunk(data_left)
+        data_left -= len(data)
+        sha.extend(data)
 
     # eip 155 replay protection
     rlp.write(sha, msg.chain_id)
@@ -107,7 +102,7 @@ async def sign_tx(
     rlp.write(sha, 0)
 
     digest = sha.get_digest()
-    result = _sign_digest(msg, keychain, digest)
+    result = await _sign_digest(msg, keychain, digest)
 
     progress_obj.stop()
 
@@ -246,35 +241,65 @@ def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
     return length
 
 
-async def send_request_chunk(data_left: int) -> EthereumTxAck:
+async def send_request_chunk(data_left: int) -> bytes:
     from trezor.messages import EthereumTxAck
     from trezor.wire.context import call
 
     # TODO: layoutProgress ?
     req = EthereumTxRequest()
     req.data_length = min(data_left, 1024)
-    return await call(req, EthereumTxAck)
+    resp = await call(req, EthereumTxAck)
+    assert resp.data_chunk is not None
+    return resp.data_chunk
 
 
-def _sign_digest(
+async def send_request_entropy(nonce_commitment: bytes) -> bytes:
+    from trezor.messages import EthereumTxAck
+    from trezor.wire.context import call
+
+    req = EthereumTxRequest()
+    req.nonce_commitment = nonce_commitment
+    resp = await call(req, EthereumTxAck)
+    assert resp.entropy is not None
+    return resp.entropy
+
+
+async def _sign_digest(
     msg: EthereumSignTx, keychain: Keychain, digest: bytes
 ) -> EthereumTxRequest:
     from trezor.crypto.curve import secp256k1
 
     node = keychain.derive(msg.address_n)
-    signature = secp256k1.sign(
-        node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
-    )
+    private_key = node.private_key()
+
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        nonce_commitment = secp256k1.anti_exfil_commit_nonce(
+            private_key, digest, msg.entropy_commitment
+        )
+        entropy = await send_request_entropy(nonce_commitment)
+
+        signature = secp256k1.anti_exfil_sign(private_key, digest, entropy)
+    else:
+        signature = secp256k1.sign_recoverable(
+            private_key, digest, secp256k1.CANONICAL_SIG_ETHEREUM
+        )
 
     req = EthereumTxRequest()
-    req.signature_v = signature[0]
-    if msg.chain_id > MAX_CHAIN_ID:
-        req.signature_v -= 27
-    else:
-        req.signature_v += 2 * msg.chain_id + 8
 
-    req.signature_r = signature[1:33]
-    req.signature_s = signature[33:]
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        req.signature_v = None
+        req.signature_r = signature[:32]
+        req.signature_s = signature[32:]
+    else:
+        if msg.chain_id <= MAX_CHAIN_ID:
+            req.signature_v = 35 + 2 * msg.chain_id + signature[0]
+        else:
+            # https://github.com/trezor/trezor-core/pull/311
+            req.signature_v = signature[0]
+        req.signature_r = signature[1:33]
+        req.signature_s = signature[33:]
 
     return req
 

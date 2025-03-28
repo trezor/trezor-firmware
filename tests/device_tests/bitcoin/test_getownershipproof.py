@@ -153,3 +153,27 @@ def test_confirm_ownership_proof_with_data(client: Client):
         ownership_proof.hex()
         == "534c00190101a122407efc198211c81af4450f40b235d54775efd934d16b9e31c6ce9bad57070002483045022100b41c51d130d1e4e179679734b7fcb39abe8859727de10a782fac3f9bae82c31802205b0697eb1c101a1f5a3b103b7b6c34568adface1dbbb3512b783c66bb52f0c920121032ef68318c8f6aaa0adec0199c69901f0db7d3485eb38d9ad235221dc3d61154b"
     )
+
+
+@pytest.mark.models("core", reason="Not implemented")
+def test_p2wpkh_ownership_proof_anti_exfil(client: Client):
+    signed_input = btc.get_ownership_proof_new(
+        client,
+        "Bitcoin",
+        parse_path("m/84h/0h/0h/1/0"),
+        script_type=messages.InputScriptType.SPENDWITNESS,
+        use_anti_exfil=True,
+        entropy=bytes(32),
+    )
+
+    assert signed_input == btc.AntiExfilSignature(
+        signature=bytes.fromhex(
+            "a62b6c42aea80e0a9a0105766242b563273b88274e2497fd06feb99ec689861c775cf473a82d1100bfd7d4e6e5c6f095a4353010f4f6c28404aca1334b699d4f"
+        ),
+        entropy=bytes.fromhex(
+            "0000000000000000000000000000000000000000000000000000000000000000"
+        ),
+        nonce_commitment=bytes.fromhex(
+            "026bc7cc5a6da272b0a9ccd0e9c8f9f725bbcbe47baecddd66bc5cbb0b5694971d"
+        ),
+    )

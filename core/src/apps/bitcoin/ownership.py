@@ -3,17 +3,18 @@ from typing import TYPE_CHECKING
 
 from trezor import utils
 from trezor.crypto.hashlib import sha256
+from trezor.enums import InputScriptType
 from trezor.utils import HashWriter
 from trezor.wire import DataError
 
 from apps.bitcoin.writers import write_bytes_prefixed
 from apps.common.readers import read_compact_size
 
+from .common import EcdsaSigner
 from .scripts import read_bip322_signature_proof
 
 if TYPE_CHECKING:
     from trezor.crypto import bip32
-    from trezor.enums import InputScriptType
     from trezor.messages import MultisigRedeemScriptType
 
     from apps.common.coininfo import CoinInfo
@@ -29,55 +30,103 @@ _OWNERSHIP_ID_LEN = const(32)
 _OWNERSHIP_ID_KEY_PATH = [b"SLIP-0019", b"Ownership identification key"]
 
 
-def generate_proof(
-    node: bip32.HDNode,
-    script_type: InputScriptType,
-    multisig: MultisigRedeemScriptType | None,
-    coin: CoinInfo,
-    user_confirmed: bool,
-    ownership_ids: list[bytes],
-    script_pubkey: bytes,
-    commitment_data: bytes,
-) -> tuple[bytes, bytes]:
-    from trezor.enums import InputScriptType
+class ProofGenerator:
+    @staticmethod
+    def is_ecdsa_script_type(script_type: InputScriptType) -> bool:
+        return script_type in (
+            InputScriptType.SPENDADDRESS,
+            InputScriptType.SPENDMULTISIG,
+            InputScriptType.SPENDWITNESS,
+            InputScriptType.SPENDP2SHWITNESS,
+        )
 
-    from apps.bitcoin.writers import write_bytes_fixed, write_compact_size, write_uint8
+    @staticmethod
+    def get_proof_body(
+        user_confirmed: bool,
+        ownership_ids: list[bytes],
+        script_pubkey: bytes,
+        commitment_data: bytes,
+    ) -> tuple[bytearray, bytes]:
+        from apps.bitcoin.writers import (
+            write_bytes_fixed,
+            write_compact_size,
+            write_uint8,
+        )
 
-    from . import common
-    from .scripts import write_bip322_signature_proof
+        flags = 0
+        if user_confirmed:
+            flags |= _FLAG_USER_CONFIRMED
 
-    flags = 0
-    if user_confirmed:
-        flags |= _FLAG_USER_CONFIRMED
+        proof = utils.empty_bytearray(
+            4 + 1 + 1 + len(ownership_ids) * _OWNERSHIP_ID_LEN
+        )
 
-    proof = utils.empty_bytearray(4 + 1 + 1 + len(ownership_ids) * _OWNERSHIP_ID_LEN)
+        write_bytes_fixed(proof, _VERSION_MAGIC, 4)
+        write_uint8(proof, flags)
+        write_compact_size(proof, len(ownership_ids))
+        for ownership_id in ownership_ids:
+            write_bytes_fixed(proof, ownership_id, _OWNERSHIP_ID_LEN)
 
-    write_bytes_fixed(proof, _VERSION_MAGIC, 4)
-    write_uint8(proof, flags)
-    write_compact_size(proof, len(ownership_ids))
-    for ownership_id in ownership_ids:
-        write_bytes_fixed(proof, ownership_id, _OWNERSHIP_ID_LEN)
+        sighash = HashWriter(sha256(proof))
+        write_bytes_prefixed(sighash, script_pubkey)
+        write_bytes_prefixed(sighash, commitment_data)
+        digest = sighash.get_digest()
 
-    sighash = HashWriter(sha256(proof))
-    write_bytes_prefixed(sighash, script_pubkey)
-    write_bytes_prefixed(sighash, commitment_data)
-    if script_type in (
-        InputScriptType.SPENDADDRESS,
-        InputScriptType.SPENDMULTISIG,
-        InputScriptType.SPENDWITNESS,
-        InputScriptType.SPENDP2SHWITNESS,
-    ):
-        signature = common.ecdsa_sign(node, sighash.get_digest())
-    elif script_type == InputScriptType.SPENDTAPROOT:
-        signature = common.bip340_sign(node, sighash.get_digest())
-    else:
-        raise DataError("Unsupported script type.")
-    public_key = node.public_key()
-    write_bip322_signature_proof(
-        proof, script_type, multisig, coin, public_key, signature
-    )
+        return proof, digest
 
-    return proof, signature
+    def __init__(
+        self,
+        node: bip32.HDNode,
+        script_type: InputScriptType,
+        multisig: MultisigRedeemScriptType | None,
+        coin: CoinInfo,
+        user_confirmed: bool,
+        ownership_ids: list[bytes],
+        script_pubkey: bytes,
+        commitment_data: bytes,
+    ) -> None:
+        self.proof_body, self.digest = self.get_proof_body(
+            user_confirmed, ownership_ids, script_pubkey, commitment_data
+        )
+        self.node = node
+        self.multisig = multisig
+        self.coin = coin
+        self.script_type = script_type
+
+        if self.is_ecdsa_script_type(script_type):
+            self.signer = EcdsaSigner(self.node, self.digest)
+
+    def commit_nonce(self, entropy_commitment: bytes) -> bytes:
+        if not self.is_ecdsa_script_type(self.script_type):
+            raise DataError("Unsupported script type.")
+
+        return self.signer.commit_nonce(entropy_commitment)
+
+    def sign(self, entropy: bytes | None = None) -> tuple[bytes | None, bytes]:
+
+        from . import common
+        from .scripts import write_bip322_signature_proof
+
+        if self.is_ecdsa_script_type(self.script_type):
+            signature = self.signer.sign(entropy)
+        elif self.script_type == InputScriptType.SPENDTAPROOT:
+            signature = common.bip340_sign(self.node, self.digest)
+        else:
+            raise DataError("Unsupported script type.")
+
+        if entropy is None:
+            public_key = self.node.public_key()
+            write_bip322_signature_proof(
+                self.proof_body,
+                self.script_type,
+                self.multisig,
+                self.coin,
+                public_key,
+                signature,
+            )
+            return self.proof_body, signature
+        else:
+            return None, signature
 
 
 def verify_nonownership(

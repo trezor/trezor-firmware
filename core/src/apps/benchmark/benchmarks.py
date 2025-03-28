@@ -24,7 +24,7 @@ from .curve_benchmark import (
 from .hash_benchmark import HashBenchmark
 
 
-# This is a wrapper above the trezor.crypto.curve.ed25519 module that satisfies SignCurve protocol, the modules uses `message` instead of `digest` in `sign()` and `verify()`
+# This is a wrapper above the trezor.crypto.curve.ed25519 module that satisfies SignCurve protocol, the wrapper maps `digest` to `message` in `sign()` and `verify()`
 class Ed25519:
     def __init__(self) -> None:
         pass
@@ -42,6 +42,48 @@ class Ed25519:
     def verify(self, public_key: bytes, signature: bytes, digest: bytes) -> bool:
         # ed25519.verify(public_key: bytes, signature: bytes, message: bytes) -> bool:
         return ed25519.verify(public_key, signature, digest)
+
+
+# This is a wrapper above the trezor.crypto.curve.secp256k1 module that satisfies SignCurve and MultiplyCurve protocol, the wrapper maps `sign()` to `sign_recoverable()`
+class Secp256k1:
+    def __init__(self) -> None:
+        pass
+
+    def generate_secret(self) -> bytes:
+        return secp256k1.generate_secret()
+
+    def publickey(self, secret_key: bytes) -> bytes:
+        return secp256k1.publickey(secret_key)
+
+    def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
+        return secp256k1.multiply(secret_key, public_key)
+
+    def sign(self, secret_key: bytes, digest: bytes) -> bytes:
+        return secp256k1.sign_recoverable(secret_key, digest)
+
+    def verify(self, public_key: bytes, signature: bytes, digest: bytes) -> bool:
+        return secp256k1.verify(public_key, signature, digest)
+
+
+# This is a wrapper above the trezor.crypto.curve.nist256p1 module that satisfies SignCurve and MultiplyCurve protocol, the wrapper maps `sign()` to `sign_recoverable()`
+class Nist256p1:
+    def __init__(self) -> None:
+        pass
+
+    def generate_secret(self) -> bytes:
+        return nist256p1.generate_secret()
+
+    def publickey(self, secret_key: bytes) -> bytes:
+        return nist256p1.publickey(secret_key)
+
+    def multiply(self, secret_key: bytes, public_key: bytes) -> bytes:
+        return nist256p1.multiply(secret_key, public_key)
+
+    def sign(self, secret_key: bytes, digest: bytes) -> bytes:
+        return nist256p1.sign_recoverable(secret_key, digest)
+
+    def verify(self, public_key: bytes, signature: bytes, digest: bytes) -> bool:
+        return nist256p1.verify(public_key, signature, digest)
 
 
 benchmarks = {
@@ -79,17 +121,17 @@ benchmarks = {
     "crypto/cipher/chacha20poly1305/decrypt": DecryptBenchmark(
         lambda: chacha20poly1305(random_bytes(32), random_bytes(12)), 64
     ),
-    "crypto/curve/secp256k1/sign": SignBenchmark(secp256k1),
-    "crypto/curve/secp256k1/verify": VerifyBenchmark(secp256k1),
-    "crypto/curve/secp256k1/publickey": PublickeyBenchmark(secp256k1),
-    "crypto/curve/secp256k1/multiply": MultiplyBenchmark(secp256k1),
-    "crypto/curve/nist256p1/sign": SignBenchmark(nist256p1),
-    "crypto/curve/nist256p1/verify": VerifyBenchmark(nist256p1),
-    "crypto/curve/nist256p1/publickey": PublickeyBenchmark(nist256p1),
-    "crypto/curve/nist256p1/multiply": MultiplyBenchmark(nist256p1),
+    "crypto/curve/secp256k1/sign": SignBenchmark(Secp256k1()),
+    "crypto/curve/secp256k1/verify": VerifyBenchmark(Secp256k1()),
+    "crypto/curve/secp256k1/publickey": PublickeyBenchmark(Secp256k1()),
+    "crypto/curve/secp256k1/multiply": MultiplyBenchmark(Secp256k1()),
+    "crypto/curve/nist256p1/sign": SignBenchmark(Nist256p1()),
+    "crypto/curve/nist256p1/verify": VerifyBenchmark(Nist256p1()),
+    "crypto/curve/nist256p1/publickey": PublickeyBenchmark(Nist256p1()),
+    "crypto/curve/nist256p1/multiply": MultiplyBenchmark(Nist256p1()),
     "crypto/curve/ed25519/sign": SignBenchmark(Ed25519()),
     "crypto/curve/ed25519/verify": VerifyBenchmark(Ed25519()),
-    "crypto/curve/ed25519/publickey": PublickeyBenchmark(ed25519),
+    "crypto/curve/ed25519/publickey": PublickeyBenchmark(Ed25519()),
     "crypto/curve/curve25519/publickey": PublickeyBenchmark(curve25519),
     "crypto/curve/curve25519/multiply": MultiplyBenchmark(curve25519),
 }

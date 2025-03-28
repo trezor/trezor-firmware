@@ -64,14 +64,33 @@ class Zcash(Bitcoinlike):
     async def sign_nonsegwit_input(self, i_sign: int) -> None:
         await self.sign_nonsegwit_bip143_input(i_sign)
 
-    def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
-        from apps.bitcoin.common import ecdsa_sign
+    async def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
+        from trezor.wire import ProcessError
+
+        from apps.bitcoin.common import EcdsaSigner
+        from apps.bitcoin.sign_tx.helpers import request_entropy
 
         node = self.keychain.derive(txi.address_n)
         signature_digest = self.tx_info.sig_hasher.hash_zip244(
             txi, self.input_derive_script(txi, node)
         )
-        signature = ecdsa_sign(node, signature_digest)
+
+        if txi.entropy_commitment is not None and self.serialize:
+            # If host uses the anti-exfil protocol, it should not rely on device
+            # to serialize the transaction correctly.
+            raise ProcessError(
+                "Anti-exfil is not supported together with serialization"
+            )
+
+        ecdsa_signer = EcdsaSigner(node, signature_digest)
+        if txi.entropy_commitment is not None:
+            # use anti-exfil protocol
+            nonce_commitment = ecdsa_signer.commit_nonce(txi.entropy_commitment)
+            entropy = await request_entropy(self.tx_req, i, nonce_commitment)
+            signature = ecdsa_signer.sign(entropy)
+        else:
+            signature = ecdsa_signer.sign()
+
         return node.public_key(), signature
 
     async def process_original_input(self, txi: TxInput, script_pubkey: bytes) -> None:

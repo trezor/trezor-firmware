@@ -72,6 +72,7 @@ message EthereumSignTx {
     optional uint32 tx_type = 10;                                        // Used for Wanchain
     optional ethereum_definitions.EthereumDefinitions definitions = 12;  // network and/or token definitions for tx
     optional bool chunkify = 13;                                         // display the address in chunks of 4 characters
+    optional bytes entropy_commitment = 14;                              // commitment to host's entropy, non-empty value indicates anti-exfil protocol will be used
 }
 
 /**
@@ -95,6 +96,7 @@ message EthereumSignTxEIP1559 {
     repeated EthereumAccessList access_list = 11;                              // Access List
     optional ethereum_definitions.EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
     optional bool chunkify = 13;                                               // display the address in chunks of 4 characters
+    optional bytes entropy_commitment = 14;                                    // commitment to host's entropy, non-empty value indicates anti-exfil protocol will be used
 
     message EthereumAccessList {
         required string address = 1;
@@ -110,10 +112,11 @@ message EthereumSignTxEIP1559 {
  * @next EthereumTxAck
  */
 message EthereumTxRequest {
-    optional uint32 data_length = 1;    // Number of bytes being requested (<= 1024)
-    optional uint32 signature_v = 2;    // Computed signature (recovery parameter, limited to 27 or 28)
-    optional bytes signature_r = 3;     // Computed signature R component (256 bit)
-    optional bytes signature_s = 4;     // Computed signature S component (256 bit)
+    optional uint32 data_length = 1;      // Number of bytes being requested (<= 1024)
+    optional uint32 signature_v = 2;      // Computed signature (recovery parameter, limited to 27 or 28)
+    optional bytes signature_r = 3;       // Computed signature R component (256 bit)
+    optional bytes signature_s = 4;       // Computed signature S component (256 bit)
+    optional bytes nonce_commitment = 5;  // Commitment to signature nonce, used in anti-exfil protocol
 }
 
 /**
@@ -122,6 +125,7 @@ message EthereumTxRequest {
  */
 message EthereumTxAck {
     required bytes data_chunk = 1;  // Bytes from transaction payload (<= 1024 bytes)
+    optional bytes entropy = 2;     // Host's entropy, used in anti-exfil protocol
 }
 
 /**

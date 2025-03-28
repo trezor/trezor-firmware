@@ -4123,10 +4123,10 @@ START_TEST(test_rfc6979) {
 }
 END_TEST
 
-static void test_ecdsa_sign_digest_deterministic_helper(
-    int (*ecdsa_sign_digest_fn)(const ecdsa_curve *, const uint8_t *,
-                                const uint8_t *, uint8_t *, uint8_t *,
-                                int (*)(uint8_t by, uint8_t sig[64]))) {
+static void test_ecdsa_sign_digest_deterministic_helper(int (
+    *ecdsa_sign_digest_recoverable_fn)(const ecdsa_curve *, const uint8_t *,
+                                       const uint8_t *, uint8_t *, uint8_t *,
+                                       int (*)(uint8_t by, uint8_t sig[64]))) {
   static struct {
     const char *priv_key;
     const char *digest;
@@ -4154,20 +4154,93 @@ static void test_ecdsa_sign_digest_deterministic_helper(
     memcpy(digest, fromhex(tests[i].digest), 32);
     memcpy(expected_sig, fromhex(tests[i].sig), 64);
 
-    res =
-        ecdsa_sign_digest_fn(curve, priv_key, digest, computed_sig, NULL, NULL);
+    res = ecdsa_sign_digest_recoverable_fn(curve, priv_key, digest,
+                                           computed_sig, NULL, NULL);
     ck_assert_int_eq(res, 0);
     ck_assert_mem_eq(expected_sig, computed_sig, 64);
   }
 }
 
-START_TEST(test_tc_ecdsa_sign_digest_deterministic) {
-  test_ecdsa_sign_digest_deterministic_helper(tc_ecdsa_sign_digest);
+START_TEST(test_tc_ecdsa_sign_digest_recoverable_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(tc_ecdsa_sign_digest_recoverable);
 }
 END_TEST
 
-START_TEST(test_zkp_ecdsa_sign_digest_deterministic) {
-  test_ecdsa_sign_digest_deterministic_helper(zkp_ecdsa_sign_digest);
+START_TEST(test_zkp_ecdsa_sign_digest_recoverable_deterministic) {
+  test_ecdsa_sign_digest_deterministic_helper(
+      zkp_ecdsa_sign_digest_recoverable);
+}
+END_TEST
+
+START_TEST(test_zkp_ecdsa_anti_exfil_commit_nonce) {
+  static const struct {
+    const char *priv_key;
+    const char *digest;
+    const char *entropy;
+    const char *expected_nonce_commitment;
+  } tests[] = {
+      {"8521fa4b1f08d39b91e2fcc6a342b2395fbada5146c494be485b6d5ff8002da0",
+       "0d841da7d1d6c5edb90864118f52c865f2ac56deb13a41229ef7cbd2951593fd",
+       "88e381faa8f2297cd6295b19e8a3563291e4c86a873f9a758b0cd6629a102eac",
+       "032b756f0b1937eef6d269b35781c7a1a5435e00e3c06245ef2162d51c15b2992c"}};
+
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t priv_key[32] = {0};
+  uint8_t digest[32] = {0};
+  uint8_t entropy[32] = {0};
+  uint8_t nonce_commitment[64] = {0};
+  uint8_t expected_nonce_commitment[64] = {0};
+  int res = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(digest, fromhex(tests[i].digest), 32);
+    memcpy(entropy, fromhex(tests[i].entropy), 32);
+    memcpy(expected_nonce_commitment,
+           fromhex(tests[i].expected_nonce_commitment), 33);
+
+    res = zkp_ecdsa_anti_exfil_commit_nonce(curve, priv_key, digest, entropy,
+                                            nonce_commitment);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(expected_nonce_commitment, nonce_commitment, 33);
+  }
+}
+END_TEST
+
+START_TEST(test_zkp_ecdsa_anti_exfil_sign_digest) {
+  static const struct {
+    const char *priv_key;
+    const char *digest;
+    const char *entropy_commitment;
+    const char *expected_sig;
+  } tests[] = {
+      {"8521fa4b1f08d39b91e2fcc6a342b2395fbada5146c494be485b6d5ff8002da0",
+       "0d841da7d1d6c5edb90864118f52c865f2ac56deb13a41229ef7cbd2951593fd",
+       // entropy:
+       // 88e381faa8f2297cd6295b19e8a3563291e4c86a873f9a758b0cd6629a102eac
+       "bc07f96c351484fecb4c1b1820070c446f4f5398530e85ed2955041bdef54abf",
+       "e4450fb09d21528a3b75e34e1a7d0872f8f02f243087f69a472029c6622ed9790b1855b"
+       "91149ea55d5336b0967d25c73890b126220dd4ad885b69b65028178da"}};
+
+  const ecdsa_curve *curve = &secp256k1;
+  uint8_t priv_key[32] = {0};
+  uint8_t digest[32] = {0};
+  uint8_t entropy_commitment[32] = {0};
+  uint8_t expected_sig[64] = {0};
+  uint8_t computed_sig[64] = {0};
+  int res = 0;
+
+  for (size_t i = 0; i < sizeof(tests) / sizeof(*tests); i++) {
+    memcpy(priv_key, fromhex(tests[i].priv_key), 32);
+    memcpy(digest, fromhex(tests[i].digest), 32);
+    memcpy(entropy_commitment, fromhex(tests[i].entropy_commitment), 32);
+    memcpy(expected_sig, fromhex(tests[i].expected_sig), 64);
+
+    res = zkp_ecdsa_anti_exfil_sign_digest(curve, priv_key, digest,
+                                           entropy_commitment, computed_sig);
+    ck_assert_int_eq(res, 0);
+    ck_assert_mem_eq(expected_sig, computed_sig, 64);
+  }
 }
 END_TEST
 
@@ -11520,9 +11593,11 @@ Suite *test_suite(void) {
   tcase_add_test(tc, test_zkp_ecdh_multiply);
   tcase_add_test(tc, test_zkp_ecdsa_tweak_pubkey);
 #if USE_RFC6979
-  tcase_add_test(tc, test_tc_ecdsa_sign_digest_deterministic);
-  tcase_add_test(tc, test_zkp_ecdsa_sign_digest_deterministic);
+  tcase_add_test(tc, test_tc_ecdsa_sign_digest_recoverable_deterministic);
+  tcase_add_test(tc, test_zkp_ecdsa_sign_digest_recoverable_deterministic);
 #endif
+  tcase_add_test(tc, test_zkp_ecdsa_anti_exfil_commit_nonce);
+  tcase_add_test(tc, test_zkp_ecdsa_anti_exfil_sign_digest);
   suite_add_tcase(s, tc);
 
   tc = tcase_create("rfc6979");

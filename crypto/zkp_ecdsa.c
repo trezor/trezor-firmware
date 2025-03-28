@@ -28,11 +28,11 @@
 #include "memzero.h"
 #include "secp256k1.h"
 #include "zkp_context.h"
+#include "zkp_ecdsa.h"
 
 #include "vendor/secp256k1-zkp/include/secp256k1.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_ecdh.h"
-#include "vendor/secp256k1-zkp/include/secp256k1_extrakeys.h"
-#include "vendor/secp256k1-zkp/include/secp256k1_preallocated.h"
+#include "vendor/secp256k1-zkp/include/secp256k1_ecdsa_s2c.h"
 #include "vendor/secp256k1-zkp/include/secp256k1_recovery.h"
 
 #include "zkp_ecdsa.h"
@@ -173,7 +173,7 @@ int zkp_ecdsa_get_public_key65(const ecdsa_curve *curve,
 // signature_bytes has 64 bytes
 // pby is one byte
 // returns 0 on success
-int zkp_ecdsa_sign_digest(
+int zkp_ecdsa_sign_digest_recoverable(
     const ecdsa_curve *curve, const uint8_t *private_key_bytes,
     const uint8_t *digest, uint8_t *signature_bytes, uint8_t *pby,
     int (*is_canonical)(uint8_t by, uint8_t signature_bytes[64])) {
@@ -262,6 +262,125 @@ int zkp_ecdsa_sign_digest(
   return result;
 }
 
+// anti-exfil ECDSA signing
+// curve has to be &secp256k1
+// private_key_bytes has 32 bytes
+// digest has 32 bytes
+// entropy_commitment has 32 bytes
+// signature_bytes has 64 bytes
+// returns 0 on success
+int zkp_ecdsa_anti_exfil_sign_digest(const ecdsa_curve *curve,
+                                     const uint8_t *private_key_bytes,
+                                     const uint8_t *digest,
+                                     const uint8_t *entropy,
+                                     uint8_t *signature_bytes) {
+  int result = 0;
+  secp256k1_context *context_writable = NULL;
+
+  if (curve != &secp256k1) {
+    result = 1;
+    goto cleanup;
+  }
+
+  if (is_zero_digest(digest)) {
+    // The probability of the digest being all-zero by chance is
+    // infinitesimal, so this is most likely an indication of a bug.
+    // Furthermore, the signature has no value, because in this case it can be
+    // easily forged for any public key, see zkp_ecdsa_verify_digest().
+    result = 1;
+    goto cleanup;
+  }
+
+  context_writable = zkp_context_acquire_writable();
+  if (context_writable == NULL) {
+    result = 1;
+    goto cleanup;
+  }
+
+  if (secp256k1_context_writable_randomize(context_writable) != 0) {
+    result = 1;
+    goto cleanup;
+  }
+
+  secp256k1_ecdsa_signature signature = {0};
+  if (secp256k1_anti_exfil_sign(context_writable, &signature, digest,
+                                private_key_bytes, entropy) != 1) {
+    result = 1;
+    goto cleanup;
+  }
+
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  if (secp256k1_ecdsa_signature_serialize_compact(
+          context_read_only, signature_bytes, &signature) != 1) {
+    result = 1;
+    goto cleanup;
+  }
+
+cleanup:
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
+  }
+
+  return result;
+}
+
+// anti-exfil ECDSA commit
+// curve has to be &secp256k1
+// private_key_bytes has 32 bytes
+// digest has 32 bytes
+// entropy_commitment has 32 bytes
+// public_nonce_bytes has 33 bytes
+// returns 0 on success
+int zkp_ecdsa_anti_exfil_commit_nonce(const ecdsa_curve *curve,
+                                      const uint8_t *private_key_bytes,
+                                      const uint8_t *digest,
+                                      const uint8_t *entropy_commitment,
+                                      uint8_t *nonce_commitment) {
+  int result = 0;
+  secp256k1_context *context_writable = NULL;
+
+  assert(curve == &secp256k1);
+  if (curve != &secp256k1) {
+    result = 1;
+    goto cleanup;
+  }
+
+  context_writable = zkp_context_acquire_writable();
+  if (context_writable == NULL) {
+    result = 1;
+    goto cleanup;
+  }
+
+  if (secp256k1_context_writable_randomize(context_writable) != 0) {
+    result = 1;
+    goto cleanup;
+  }
+
+  secp256k1_ecdsa_s2c_opening s2c_opening = {0};
+  if (secp256k1_ecdsa_anti_exfil_signer_commit(context_writable, &s2c_opening,
+                                               digest, private_key_bytes,
+                                               entropy_commitment) != 1) {
+    result = 1;
+    goto cleanup;
+  }
+
+  const secp256k1_context *context_read_only = zkp_context_get_read_only();
+  if (secp256k1_ecdsa_s2c_opening_serialize(context_read_only, nonce_commitment,
+                                            &s2c_opening) != 1) {
+    result = 1;
+    goto cleanup;
+  }
+
+cleanup:
+  if (context_writable) {
+    zkp_context_release_writable();
+    context_writable = NULL;
+  }
+
+  return result;
+}
+
 // ECDSA public key recovery
 // public_key_bytes has 65 bytes
 // signature_bytes has 64 bytes
@@ -340,12 +459,12 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
 
   if (result == 0) {
     if (is_zero_digest(digest)) {
-      // The digest was all-zero. The probability of this happening by chance is
-      // infinitesimal, but it could be induced by a fault injection. In this
-      // case the signature (r,s) can be forged by taking r := (t * Q).x mod n
-      // and s := r * t^-1 mod n for any t in [1, n-1]. We fail verification,
-      // because there is no guarantee that the signature was created by the
-      // owner of the private key.
+      // The digest was all-zero. The probability of this happening by
+      // chance is infinitesimal, but it could be induced by a fault
+      // injection. In this case the signature (r,s) can be forged by taking
+      // r := (t * Q).x mod n and s := r * t^-1 mod n for any t in [1, n-1].
+      // We fail verification, because there is no guarantee that the
+      // signature was created by the owner of the private key.
       result = 3;
     }
   }
@@ -372,8 +491,8 @@ int zkp_ecdsa_verify_digest(const ecdsa_curve *curve,
   if (result == 0) {
     (void)secp256k1_ecdsa_signature_normalize(
         context_read_only, &signature,
-        &signature);  // The return value inidicates whether the signature was
-                      // already normalized
+        &signature);  // The return value inidicates whether the signature
+                      // was already normalized
 
     if (secp256k1_ecdsa_verify(context_read_only, &signature, digest,
                                &public_key) != 1) {
@@ -517,8 +636,8 @@ ecdsa_tweak_pubkey_result zkp_ecdsa_tweak_pubkey(
 
   if (secp256k1_ec_pubkey_tweak_add(context_writable, &public_key,
                                     tweak_bytes) != 1) {
-    // The tweak is not less than the group order, or the resulting public key
-    // is the point at infinity.
+    // The tweak is not less than the group order, or the resulting public
+    // key is the point at infinity.
     result = ECDSA_TWEAK_PUBKEY_INVALID_TWEAK_OR_RESULT_ERR;
     goto end;
   }

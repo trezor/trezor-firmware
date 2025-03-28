@@ -3144,6 +3144,13 @@ static void signing_hash_decred(const TxInputType *txinput,
 
 static bool signing_sign_ecdsa(TxInputType *txinput, const uint8_t *private_key,
                                const uint8_t *public_key, const uint8_t *hash) {
+  if (txinput->has_entropy_commitment) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Anti-exfil not supported"));
+    signing_abort();
+    return false;
+  }
+
   resp.has_serialized = true;
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
@@ -3188,8 +3195,16 @@ static bool signing_sign_ecdsa(TxInputType *txinput, const uint8_t *private_key,
   return true;
 }
 
-static bool signing_sign_bip340(const uint8_t *private_key,
+static bool signing_sign_bip340(TxInputType *txinput,
+                                const uint8_t *private_key,
                                 const uint8_t *hash) {
+  if (txinput->has_entropy_commitment) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Anti-exfil not supported"));
+    signing_abort();
+    return false;
+  }
+
   resp.has_serialized = true;
   resp.serialized.has_signature_index = true;
   resp.serialized.signature_index = idx1;
@@ -3240,7 +3255,7 @@ static bool signing_sign_segwit_input(TxInputType *txinput) {
 
     if (!input_validate_path(txinput) || !tx_info_check_input(&info, txinput) ||
         !input_derive_node(txinput) ||
-        !signing_sign_bip340(node.private_key, hash)) {
+        !signing_sign_bip340(txinput, node.private_key, hash)) {
       return false;
     }
 

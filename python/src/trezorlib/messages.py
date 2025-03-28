@@ -84,6 +84,7 @@ class InputScriptType(IntEnum):
     SPENDWITNESS = 3
     SPENDP2SHWITNESS = 4
     SPENDTAPROOT = 5
+    SPENDADDRESS_UNCOMPRESSED = 6
 
 
 class OutputScriptType(IntEnum):
@@ -122,6 +123,7 @@ class RequestType(IntEnum):
     TXORIGINPUT = 5
     TXORIGOUTPUT = 6
     TXPAYMENTREQ = 7
+    TXENTROPY = 8
 
 
 class CardanoDerivationType(IntEnum):
@@ -478,6 +480,8 @@ class MessageType(IntEnum):
     GetOwnershipProof = 49
     OwnershipProof = 50
     AuthorizeCoinJoin = 51
+    OwnershipProofNonceCommitment = 606
+    OwnershipProofEntropy = 607
     CipherKeyValue = 23
     CipheredKeyValue = 48
     SignIdentity = 53
@@ -1446,6 +1450,7 @@ class TxInput(protobuf.MessageType):
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False, default=None),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False, default=None),
         20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False, default=0),
+        21: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1468,6 +1473,7 @@ class TxInput(protobuf.MessageType):
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
         coinjoin_flags: Optional["int"] = 0,
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -1486,6 +1492,7 @@ class TxInput(protobuf.MessageType):
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
         self.coinjoin_flags = coinjoin_flags
+        self.entropy_commitment = entropy_commitment
 
 
 class TxOutput(protobuf.MessageType):
@@ -1524,6 +1531,20 @@ class TxOutput(protobuf.MessageType):
         self.orig_hash = orig_hash
         self.orig_index = orig_index
         self.payment_req_index = payment_req_index
+
+
+class TxEntropy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("entropy", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entropy: Optional["bytes"] = None,
+    ) -> None:
+        self.entropy = entropy
 
 
 class PrevTx(protobuf.MessageType):
@@ -1720,6 +1741,20 @@ class TxAckPrevExtraData(protobuf.MessageType):
         self.tx = tx
 
 
+class TxAckEntropy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 22
+    FIELDS = {
+        1: protobuf.Field("tx", "TxAckEntropyWrapper", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        tx: "TxAckEntropyWrapper",
+    ) -> None:
+        self.tx = tx
+
+
 class GetOwnershipProof(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 49
     FIELDS = {
@@ -1730,6 +1765,7 @@ class GetOwnershipProof(protobuf.MessageType):
         5: protobuf.Field("user_confirmation", "bool", repeated=False, required=False, default=False),
         6: protobuf.Field("ownership_ids", "bytes", repeated=True, required=False, default=None),
         7: protobuf.Field("commitment_data", "bytes", repeated=False, required=False, default=b''),
+        8: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1742,6 +1778,7 @@ class GetOwnershipProof(protobuf.MessageType):
         multisig: Optional["MultisigRedeemScriptType"] = None,
         user_confirmation: Optional["bool"] = False,
         commitment_data: Optional["bytes"] = b'',
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.ownership_ids: Sequence["bytes"] = ownership_ids if ownership_ids is not None else []
@@ -1750,6 +1787,35 @@ class GetOwnershipProof(protobuf.MessageType):
         self.multisig = multisig
         self.user_confirmation = user_confirmation
         self.commitment_data = commitment_data
+        self.entropy_commitment = entropy_commitment
+
+
+class OwnershipProofNonceCommitment(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 606
+    FIELDS = {
+        1: protobuf.Field("nonce_commitment", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        nonce_commitment: Optional["bytes"] = None,
+    ) -> None:
+        self.nonce_commitment = nonce_commitment
+
+
+class OwnershipProofEntropy(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 607
+    FIELDS = {
+        1: protobuf.Field("entropy", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entropy: Optional["bytes"] = None,
+    ) -> None:
+        self.entropy = entropy
 
 
 class OwnershipProof(protobuf.MessageType):
@@ -1854,6 +1920,7 @@ class TxRequestDetailsType(protobuf.MessageType):
         2: protobuf.Field("tx_hash", "bytes", repeated=False, required=False, default=None),
         3: protobuf.Field("extra_data_len", "uint32", repeated=False, required=False, default=None),
         4: protobuf.Field("extra_data_offset", "uint32", repeated=False, required=False, default=None),
+        5: protobuf.Field("nonce_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1863,11 +1930,13 @@ class TxRequestDetailsType(protobuf.MessageType):
         tx_hash: Optional["bytes"] = None,
         extra_data_len: Optional["int"] = None,
         extra_data_offset: Optional["int"] = None,
+        nonce_commitment: Optional["bytes"] = None,
     ) -> None:
         self.request_index = request_index
         self.tx_hash = tx_hash
         self.extra_data_len = extra_data_len
         self.extra_data_offset = extra_data_offset
+        self.nonce_commitment = nonce_commitment
 
 
 class TxRequestSerializedType(protobuf.MessageType):
@@ -1907,6 +1976,7 @@ class TransactionType(protobuf.MessageType):
         12: protobuf.Field("version_group_id", "uint32", repeated=False, required=False, default=None),
         13: protobuf.Field("timestamp", "uint32", repeated=False, required=False, default=None),
         14: protobuf.Field("branch_id", "uint32", repeated=False, required=False, default=None),
+        15: protobuf.Field("entropy", "TxEntropyType", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1926,6 +1996,7 @@ class TransactionType(protobuf.MessageType):
         version_group_id: Optional["int"] = None,
         timestamp: Optional["int"] = None,
         branch_id: Optional["int"] = None,
+        entropy: Optional["TxEntropyType"] = None,
     ) -> None:
         self.inputs: Sequence["TxInputType"] = inputs if inputs is not None else []
         self.bin_outputs: Sequence["TxOutputBinType"] = bin_outputs if bin_outputs is not None else []
@@ -1941,6 +2012,21 @@ class TransactionType(protobuf.MessageType):
         self.version_group_id = version_group_id
         self.timestamp = timestamp
         self.branch_id = branch_id
+        self.entropy = entropy
+
+
+class TxEntropyType(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("entropy", "bytes", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        entropy: Optional["bytes"] = None,
+    ) -> None:
+        self.entropy = entropy
 
 
 class TxInputType(protobuf.MessageType):
@@ -1963,6 +2049,7 @@ class TxInputType(protobuf.MessageType):
         18: protobuf.Field("decred_staking_spend", "DecredStakingSpendType", repeated=False, required=False, default=None),
         19: protobuf.Field("script_pubkey", "bytes", repeated=False, required=False, default=None),
         20: protobuf.Field("coinjoin_flags", "uint32", repeated=False, required=False, default=0),
+        21: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -1985,6 +2072,7 @@ class TxInputType(protobuf.MessageType):
         decred_staking_spend: Optional["DecredStakingSpendType"] = None,
         script_pubkey: Optional["bytes"] = None,
         coinjoin_flags: Optional["int"] = 0,
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.prev_hash = prev_hash
@@ -2003,6 +2091,7 @@ class TxInputType(protobuf.MessageType):
         self.decred_staking_spend = decred_staking_spend
         self.script_pubkey = script_pubkey
         self.coinjoin_flags = coinjoin_flags
+        self.entropy_commitment = entropy_commitment
 
 
 class TxOutputBinType(protobuf.MessageType):
@@ -2205,6 +2294,20 @@ class TxAckPrevExtraDataWrapper(protobuf.MessageType):
         extra_data_chunk: "bytes",
     ) -> None:
         self.extra_data_chunk = extra_data_chunk
+
+
+class TxAckEntropyWrapper(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        15: protobuf.Field("entropy", "TxEntropy", repeated=False, required=True),
+    }
+
+    def __init__(
+        self,
+        *,
+        entropy: "TxEntropy",
+    ) -> None:
+        self.entropy = entropy
 
 
 class FirmwareErase(protobuf.MessageType):
@@ -5202,6 +5305,7 @@ class EthereumSignTx(protobuf.MessageType):
         10: protobuf.Field("tx_type", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
         13: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        14: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5219,6 +5323,7 @@ class EthereumSignTx(protobuf.MessageType):
         tx_type: Optional["int"] = None,
         definitions: Optional["EthereumDefinitions"] = None,
         chunkify: Optional["bool"] = None,
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.gas_price = gas_price
@@ -5232,6 +5337,7 @@ class EthereumSignTx(protobuf.MessageType):
         self.tx_type = tx_type
         self.definitions = definitions
         self.chunkify = chunkify
+        self.entropy_commitment = entropy_commitment
 
 
 class EthereumSignTxEIP1559(protobuf.MessageType):
@@ -5250,6 +5356,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         11: protobuf.Field("access_list", "EthereumAccessList", repeated=True, required=False, default=None),
         12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
         13: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        14: protobuf.Field("entropy_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5268,6 +5375,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         data_initial_chunk: Optional["bytes"] = b'',
         definitions: Optional["EthereumDefinitions"] = None,
         chunkify: Optional["bool"] = None,
+        entropy_commitment: Optional["bytes"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
@@ -5282,6 +5390,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         self.data_initial_chunk = data_initial_chunk
         self.definitions = definitions
         self.chunkify = chunkify
+        self.entropy_commitment = entropy_commitment
 
 
 class EthereumTxRequest(protobuf.MessageType):
@@ -5291,6 +5400,7 @@ class EthereumTxRequest(protobuf.MessageType):
         2: protobuf.Field("signature_v", "uint32", repeated=False, required=False, default=None),
         3: protobuf.Field("signature_r", "bytes", repeated=False, required=False, default=None),
         4: protobuf.Field("signature_s", "bytes", repeated=False, required=False, default=None),
+        5: protobuf.Field("nonce_commitment", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5300,25 +5410,30 @@ class EthereumTxRequest(protobuf.MessageType):
         signature_v: Optional["int"] = None,
         signature_r: Optional["bytes"] = None,
         signature_s: Optional["bytes"] = None,
+        nonce_commitment: Optional["bytes"] = None,
     ) -> None:
         self.data_length = data_length
         self.signature_v = signature_v
         self.signature_r = signature_r
         self.signature_s = signature_s
+        self.nonce_commitment = nonce_commitment
 
 
 class EthereumTxAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 60
     FIELDS = {
         1: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),
+        2: protobuf.Field("entropy", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         data_chunk: "bytes",
+        entropy: Optional["bytes"] = None,
     ) -> None:
         self.data_chunk = data_chunk
+        self.entropy = entropy
 
 
 class EthereumSignMessage(protobuf.MessageType):

@@ -547,6 +547,13 @@ void fsm_msgGetOwnershipProof(const GetOwnershipProof *msg) {
 
   CHECK_INITIALIZED
 
+  if (msg->has_entropy_commitment) {
+    fsm_sendFailure(FailureType_Failure_ProcessError,
+                    _("Anti-exfil not supported"));
+    layoutHome();
+    return;
+  }
+
   const CoinInfo *coin = fsm_getCoin(msg->has_coin_name, msg->coin_name);
   if (!coin) return;
 

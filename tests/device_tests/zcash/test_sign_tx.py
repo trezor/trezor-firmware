@@ -22,7 +22,12 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...common import is_core
-from ..bitcoin.signtx import request_finished, request_input, request_output
+from ..bitcoin.signtx import (
+    request_entropy,
+    request_finished,
+    request_input,
+    request_output,
+)
 
 B = messages.ButtonRequestType
 
@@ -551,3 +556,66 @@ def test_spend_multisig(client: Client):
         serialized_tx.hex()
         == "050000800a27a726b4d0d6c2000000000000000001a372ba233da275280170a7b00a6b60b51fbae4bdf936a9a91b9a7970c1681b4300000000fdfd0000483045022100d1f91921391ca4a985cbe080ce8be71f1b8ceba6049151bffe7dc6cc27a4a4d80220082fb171f7536779cd216f0508e0205039b2f20988d05455dac9bc22bc71300501473044022058bb0b1ac0d6b62b6f86bdb32879e9240369387282e73a96cb6fbeba56f5493e02206dabb42fc4ce4f5d97bc641f353e7351949695d8e6383764e76eebe572cc33fc014c69522103725d6c5253f2040a9a73af24bcc196bf302d6cc94374dd7197b138e10912670121038924e94fff15302a3fb45ad4fc0ed17178800f0f1c2bdacb1017f4db951aa9f12102aae8affd0eb8e1181d665daef4de1828f23053c548ec9bafc3a787f558aa014153aeffffffff0168cf0e00000000001976a914548cb80e45b1d36312fe0cb075e5e337e3c54cef88ac000000"
     )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil(client: Client):
+    inp1 = messages.TxInputType(
+        # tmBMyeJebzkP5naji8XUKqLyL1NDwNkgJFt
+        address_n=parse_path("m/44h/1h/0h/0/9"),
+        amount=4_154_120,
+        prev_hash=TXHASH_f9231f,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        # m/44h/1h/0h/0/0
+        address="tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu",
+        amount=4_154_120 - 19_400,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_entropy(
+                    0,
+                    bytes.fromhex(
+                        "038571129568dfe3d5b4d38aa3f162ce1285f53b5652c49ef48ef2c94674c29dc6"
+                    ),
+                ),
+                request_finished(),
+            ]
+        )
+
+        anti_exfil_signatures = btc.sign_tx_new(
+            client,
+            "Zcash Testnet",
+            [inp1],
+            [out1],
+            version=5,
+            version_group_id=VERSION_GROUP_ID,
+            branch_id=BRANCH_ID,
+            user_anti_exfil=True,
+            entropy_list=[bytes(32)],
+        )
+
+        assert anti_exfil_signatures == [
+            btc.AntiExfilSignature(
+                signature=bytes.fromhex(
+                    "d8014ab713494b098b2201170dafff07cf5d9cd42d4aa743e5fd282074a6358f10d700caea729a19d20ca0a0de740d160e785b3dbc2ab8a6ebc2f4968a5442e4"
+                ),
+                entropy=bytes.fromhex(
+                    "0000000000000000000000000000000000000000000000000000000000000000"
+                ),
+                nonce_commitment=bytes.fromhex(
+                    "038571129568dfe3d5b4d38aa3f162ce1285f53b5652c49ef48ef2c94674c29dc6"
+                ),
+            )
+        ]

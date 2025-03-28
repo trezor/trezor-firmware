@@ -609,8 +609,9 @@ int hdnode_sign(HDNode *node, const uint8_t *msg, uint32_t msg_len,
                 HasherType hasher_sign, uint8_t *sig, uint8_t *pby,
                 int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
   if (node->curve->params) {
-    return ecdsa_sign(node->curve->params, hasher_sign, node->private_key, msg,
-                      msg_len, sig, pby, is_canonical);
+    return ecdsa_sign_recoverable(node->curve->params, hasher_sign,
+                                  node->private_key, msg, msg_len, sig, pby,
+                                  is_canonical);
   } else if (node->curve == &curve25519_info) {
     return 1;  // signatures are not supported
   } else {
@@ -633,8 +634,8 @@ int hdnode_sign_digest(HDNode *node, const uint8_t *digest, uint8_t *sig,
                        uint8_t *pby,
                        int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
   if (node->curve->params) {
-    return ecdsa_sign_digest(node->curve->params, node->private_key, digest,
-                             sig, pby, is_canonical);
+    return ecdsa_sign_digest_recoverable(node->curve->params, node->private_key,
+                                         digest, sig, pby, is_canonical);
   } else if (node->curve == &curve25519_info) {
     return 1;  // signatures are not supported
   } else {

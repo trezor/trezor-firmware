@@ -209,8 +209,10 @@ class Decred(Bitcoin):
     async def step4_serialize_inputs(self) -> None:
         from trezor.enums import DecredStakingSpendType
 
+        from apps.bitcoin.sign_tx.helpers import request_entropy
+
         from .. import multisig
-        from ..common import SigHashType, ecdsa_sign
+        from ..common import EcdsaSigner, SigHashType
         from .progress import progress
 
         inputs_count = self.tx_info.tx.inputs_count  # local_cache_attribute
@@ -276,7 +278,24 @@ class Decred(Bitcoin):
             writers.write_bytes_fixed(h_sign, witness_hash, writers.TX_HASH_SIZE)
 
             sig_hash = writers.get_tx_hash(h_sign, double=coin.sign_hash_double)
-            signature = ecdsa_sign(key_sign, sig_hash)
+
+            if txi_sign.entropy_commitment is not None and self.serialize:
+                # If host uses the anti-exfil protocol, it should not rely on device
+                # to serialize the transaction correctly.
+                raise ProcessError(
+                    "Anti-exfil is not supported together with serialization"
+                )
+
+            ecdsa_signer = EcdsaSigner(key_sign, sig_hash)
+            if txi_sign.entropy_commitment is not None:
+                # use anti-exfil protocol
+                nonce_commitment = ecdsa_signer.commit_nonce(
+                    txi_sign.entropy_commitment
+                )
+                entropy = await request_entropy(self.tx_req, i_sign, nonce_commitment)
+                signature = ecdsa_signer.sign(entropy)
+            else:
+                signature = ecdsa_signer.sign()
 
             # serialize input with correct signature
             self.set_serialized_signature(i_sign, signature)
