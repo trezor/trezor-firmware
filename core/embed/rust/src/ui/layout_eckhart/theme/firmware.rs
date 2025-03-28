@@ -164,6 +164,10 @@ pub const fn label_menu_item_subtitle() -> TextStyle {
     TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREY, BG, GREY, GREY)
 }
 
+pub const fn label_menu_item_subtitle_green() -> TextStyle {
+    TextStyle::new(fonts::FONT_SATOSHI_REGULAR_22, GREEN, BG, GREEN, GREEN)
+}
+
 // Button styles
 pub const fn button_confirm() -> ButtonStyleSheet {
     ButtonStyleSheet {
@@ -308,6 +312,10 @@ pub const fn menu_item_title_yellow() -> ButtonStyleSheet {
 
 pub const fn menu_item_title_orange() -> ButtonStyleSheet {
     menu_item_title!(ORANGE)
+}
+
+pub const fn menu_item_title_red() -> ButtonStyleSheet {
+    menu_item_title!(RED)
 }
 
 macro_rules! button_homebar_style {

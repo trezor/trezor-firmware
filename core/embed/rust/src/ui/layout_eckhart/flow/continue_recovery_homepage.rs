@@ -233,6 +233,7 @@ pub fn new_continue_recovery_homepage(
                     Button::with_text_and_subtext(
                         TR::words__recovery_share.into(),
                         TR::buttons__more_info.into(),
+                        None,
                     )
                     .styled(theme::menu_item_title())
                     .with_text_align(Alignment::Start)

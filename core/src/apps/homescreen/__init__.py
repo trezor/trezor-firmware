@@ -3,8 +3,10 @@ from typing import Coroutine
 import storage
 import storage.cache
 import storage.device
+import trezorui_api
 from trezor import config, wire
 from trezor.enums import MessageType
+from trezor.ui.layouts import raise_if_not_confirmed
 from trezor.ui.layouts.homescreen import Busyscreen, Homescreen, Lockscreen
 
 from apps.base import busy_expiry_ms, lock_device
@@ -53,11 +55,43 @@ async def homescreen() -> None:
         hold_to_lock=config.has_pin(),
     )
     try:
-        await obj.get_result()
+        res = await obj.get_result()
     finally:
         obj.__del__()
 
-    lock_device()
+    if res is trezorui_api.INFO:
+
+        # MOCK DATA
+        failed_backup = True
+        battery_percentage = 22
+        paired_devices = ["Suite on my de-Googled Phone"]
+        #
+
+        menu_result = await raise_if_not_confirmed(
+            trezorui_api.show_device_menu(
+                failed_backup=failed_backup,
+                battery_percentage=battery_percentage,
+                paired_devices=paired_devices,
+            ),
+            "device_menu",
+        )
+        print(menu_result)
+        if menu_result == "DevicePair":
+
+            await raise_if_not_confirmed(
+                trezorui_api.show_pairing_device_name(
+                    device_name="My Trez",
+                ),
+                "device_name",
+            )
+            await raise_if_not_confirmed(
+                trezorui_api.show_pairing_code(
+                    code="123456",
+                ),
+                "pairing_code",
+            )
+    else:
+        lock_device()
 
 
 async def _lockscreen(screensaver: bool = False) -> None:
