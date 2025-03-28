@@ -20,9 +20,14 @@
 void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   RESP_INIT(PublicKey);
 
-  CHECK_INITIALIZED
-
   CHECK_PIN
+
+  // Get temporary seed if running entropy check, otherwise ensure the device is
+  // initialized.
+  const uint8_t *seed = reset_get_seed();
+  if (seed == NULL) {
+    CHECK_INITIALIZED
+  }
 
   InputScriptType script_type =
       msg->has_script_type ? msg->script_type : InputScriptType_SPENDADDRESS;
@@ -50,15 +55,23 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
     }
   }
 
+  // Make sure we never display the temporary XPUB to the user.
+  if (seed != NULL && msg->show_display) {
+    fsm_sendFailure(FailureType_Failure_DataError,
+                    _("Showing temporary XPUB is forbidden"));
+    layoutHome();
+    return;
+  }
+
   // derive m/0' to obtain root_fingerprint
   uint32_t root_fingerprint;
   uint32_t path[1] = {PATH_HARDENED | 0};
-  HDNode *node = fsm_getDerivedNode(curve, path, 1, &root_fingerprint);
+  HDNode *node = fsm_getDerivedNodeEx(curve, path, 1, seed, &root_fingerprint);
   if (!node) return;
 
   uint32_t fingerprint;
-  node = fsm_getDerivedNode(curve, msg->address_n, msg->address_n_count,
-                            &fingerprint);
+  node = fsm_getDerivedNodeEx(curve, msg->address_n, msg->address_n_count, seed,
+                              &fingerprint);
   if (!node) return;
 
   if (hdnode_fill_public_key(node) != 0) {
@@ -132,7 +145,11 @@ void fsm_msgGetPublicKey(const GetPublicKey *msg) {
   resp->root_fingerprint = root_fingerprint;
 
   msg_write(MessageType_MessageType_PublicKey, resp);
-  layoutHome();
+
+  // Keep screen layout when running entropy check.
+  if (seed == NULL) {
+    layoutHome();
+  }
 }
 
 static PathSchema fsm_getUnlockedSchema(MessageType message_type) {

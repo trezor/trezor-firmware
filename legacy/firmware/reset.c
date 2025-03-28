@@ -241,6 +241,7 @@ void reset_backup(bool separated, const char *mnemonic) {
 void reset_abort(void) {
   memzero(int_entropy, sizeof(int_entropy));
   memzero(seed, sizeof(seed));
+  mnemonic_clear();
   if (reset_state != RESET_NONE) {
     reset_state = RESET_NONE;
     layoutHome();
