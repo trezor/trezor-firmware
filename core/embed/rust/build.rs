@@ -42,6 +42,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../io/touch/inc",
     "-I../io/rgb_led/inc",
     "-I../io/usb/inc",
+    "-I../io/poll/inc",
     "-I../sec/entropy/inc",
     "-I../sys/time/inc",
     "-I../util/flash/inc",
@@ -424,7 +425,10 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("jpegdec_close")
         .allowlist_function("jpegdec_process")
         .allowlist_function("jpegdec_get_info")
-        .allowlist_function("jpegdec_get_slice_rgba8888");
+        .allowlist_function("jpegdec_get_slice_rgba8888")
+        // poll
+        .allowlist_type("poll_event_t")
+        .allowlist_function("poll_events");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

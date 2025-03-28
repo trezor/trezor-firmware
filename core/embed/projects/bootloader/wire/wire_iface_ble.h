@@ -19,21 +19,10 @@
 
 #pragma once
 
-#include <trezor_types.h>
+#include "codec_v1.h"
 
-#define IFACE_USB_MAX (15)  // 0-15 reserved for USB
+void ble_iface_init(wire_iface_t* iface);
 
-#define MODE_READ 0x0000
-#define MODE_WRITE 0x0100
+void ble_iface_deinit(wire_iface_t* iface);
 
-typedef enum {
-  EVENT_NONE = 0,
-  EVENT_USB_CAN_READ = 0x01,
-} poll_event_type_t;
-
-typedef struct {
-  poll_event_type_t type;
-} poll_event_t;
-
-uint8_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
-                    poll_event_t* event, uint32_t timeout_ms);
+void ble_iface_start_pairing(void);

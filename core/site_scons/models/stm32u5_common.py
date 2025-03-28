@@ -10,6 +10,7 @@ def stm32u5_common_files(env, defines, sources, paths):
     ]
 
     paths += [
+        "embed/io/poll/inc",
         "embed/sec/entropy/inc",
         "embed/sec/hash_processor/inc",
         "embed/sec/monoctr/inc",
@@ -79,6 +80,7 @@ def stm32u5_common_files(env, defines, sources, paths):
     ]
 
     sources += [
+        "embed/io/poll/poll.c",
         "embed/sec/entropy/stm32u5/entropy.c",
         "embed/sec/hash_processor/stm32u5/hash_processor.c",
         "embed/sec/monoctr/stm32u5/monoctr.c",

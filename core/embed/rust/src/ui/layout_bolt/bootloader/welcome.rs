@@ -1,11 +1,3 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad},
-    constant::screen,
-    display::toif::Toif,
-    geometry::{Alignment, Alignment2D, Offset, Rect},
-    shape::{self, Renderer},
-};
-
 use super::super::{
     fonts,
     theme::{
@@ -13,6 +5,20 @@ use super::super::{
         GREY_MEDIUM, WHITE,
     },
 };
+use crate::ui::{
+    component::{Component, Event, EventCtx, Pad},
+    constant::screen,
+    display::toif::Toif,
+    geometry::{Alignment, Alignment2D, Offset, Rect},
+    shape::{self, Renderer},
+};
+
+#[repr(u32)]
+#[derive(Copy, Clone, ToPrimitive)]
+pub enum WelcomeMsg {
+    Cancel = 1,
+    PairingMode = 2,
+}
 
 pub struct Welcome {
     bg: Pad,
@@ -27,7 +33,7 @@ impl Welcome {
 }
 
 impl Component for Welcome {
-    type Msg = Never;
+    type Msg = WelcomeMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg.place(screen());
@@ -35,6 +41,10 @@ impl Component for Welcome {
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        #[cfg(all(feature = "ble", feature = "button"))]
+        if let Event::Button(_) = _event {
+            return Some(WelcomeMsg::PairingMode);
+        }
         None
     }
 
