@@ -17,13 +17,15 @@
 import pytest
 
 from trezorlib import btc, device, messages, misc, models
+from trezorlib import exceptions
 from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
+from trezorlib.transport.session import derive_seed
 
-from ..common import MNEMONIC12, MOCK_GET_ENTROPY, get_test_address, is_core
+from ..common import MNEMONIC12, MOCK_GET_ENTROPY, TEST_ADDRESS_N, is_core
 from ..tx_cache import TxCache
 from .bitcoin.signtx import (
     request_finished,
@@ -58,7 +60,12 @@ def _assert_protection(
     """Make sure PIN and passphrase protection have expected values"""
     with session.client as client:
         client.use_pin_sequence([PIN4])
-        session.ensure_unlocked()
+        try:
+            session.ensure_unlocked()
+        except exceptions.InvalidSessionError:
+            session.cancel()
+            session._read()
+
         client.refresh_features()
         assert client.features.pin_protection is pin
         assert client.features.passphrase_protection is passphrase
@@ -67,6 +74,16 @@ def _assert_protection(
     if session.protocol_version == ProtocolVersion.V1:
         new_session = client.get_session()
     return new_session
+
+
+def _get_test_address(session: Session) -> None:
+    resp = session.call_raw(
+        messages.GetAddress(address_n=TEST_ADDRESS_N, coin_name="Testnet")
+    )
+    if isinstance(resp, messages.ButtonRequest):
+        resp = session._callback_button(resp)
+    if isinstance(resp, messages.PassphraseRequest):
+        session.call_raw(messages.PassphraseAck(passphrase=""))
 
 
 def test_initialize(session: Session):
@@ -196,7 +213,10 @@ def test_get_public_key(session: Session):
         expected_responses.append(messages.PublicKey)
 
         client.set_expected_responses(expected_responses)
-        btc.get_public_node(session, [])
+
+        resp = session.call_raw(messages.GetPublicKey(address_n=[]))
+        session._callback_button(resp)
+        session.call_raw(messages.PassphraseAck(passphrase=""))
 
 
 def test_get_address(session: Session):
@@ -211,7 +231,7 @@ def test_get_address(session: Session):
 
         client.set_expected_responses(expected_responses)
 
-        get_test_address(session)
+        _get_test_address(session)
 
 
 def test_wipe_device(session: Session):
@@ -308,7 +328,15 @@ def test_sign_message(session: Session):
         expected_responses = [_pin_request(session)]
 
         if session.protocol_version == ProtocolVersion.V1:
-            expected_responses.append(messages.PassphraseRequest)
+            # The first passphrase request results in failure, second is handled
+            # by derive_seed (which gives Address msg).
+            expected_responses.extend(
+                [
+                    messages.PassphraseRequest,
+                    messages.PassphraseRequest,
+                    messages.Address,
+                ]
+            )
 
         expected_responses.extend(
             [
@@ -320,6 +348,12 @@ def test_sign_message(session: Session):
 
         client.set_expected_responses(expected_responses)
 
+        if client.protocol_version == ProtocolVersion.V1:
+            with pytest.raises(exceptions.InvalidSessionError):
+                btc.sign_message(
+                    session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), "testing message"
+                )
+            derive_seed(session, passphrase="")
         btc.sign_message(
             session, "Bitcoin", parse_path("m/44h/0h/0h/0/0"), "testing message"
         )
@@ -394,7 +428,15 @@ def test_signtx(session: Session):
         client.use_pin_sequence([PIN4])
         expected_responses = [_pin_request(session)]
         if session.protocol_version == ProtocolVersion.V1:
-            expected_responses.append(messages.PassphraseRequest)
+            # The first passphrase request results in failure, second is handled
+            # by derive_seed (which gives Address msg).
+            expected_responses.extend(
+                [
+                    messages.PassphraseRequest,
+                    messages.PassphraseRequest,
+                    messages.Address,
+                ]
+            )
         expected_responses.extend(
             [
                 request_input(0),
@@ -414,7 +456,12 @@ def test_signtx(session: Session):
             ]
         )
         client.set_expected_responses(expected_responses)
-
+        if client.protocol_version == ProtocolVersion.V1:
+            with pytest.raises(exceptions.InvalidSessionError):
+                btc.sign_tx(
+                    session, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin")
+                )
+            derive_seed(session, passphrase="")
         btc.sign_tx(session, "Bitcoin", [inp1], [out1], prev_txes=TxCache("Bitcoin"))
 
 
@@ -435,30 +482,30 @@ def test_unlocked(session: Session):
     with client:
         client.use_pin_sequence([PIN4])
         client.set_expected_responses([_pin_request(session), messages.Address])
-        get_test_address(session)
+        _get_test_address(session)
 
     session.refresh_features()
     assert session.features.unlocked is True
     with client:
         client.set_expected_responses([messages.Address])
-        get_test_address(session)
+        _get_test_address(session)
 
 
 @pytest.mark.setup_client(pin=None, passphrase=True)
 def test_passphrase_cached(session: Session):
     client = session.client
-    session = _assert_protection(session, pin=False)
     with client:
-        if session.protocol_version == 1:
+        if client.protocol_version == ProtocolVersion.V1:
             client.set_expected_responses(
                 [messages.PassphraseRequest, messages.Address]
             )
-        elif session.protocol_version == 2:
+        elif client.protocol_version == ProtocolVersion.V2:
             client.set_expected_responses([messages.Address])
         else:
             raise Exception("Unknown session type")
-        get_test_address(session)
+        session = _assert_protection(session, pin=False)
+        _get_test_address(session)
 
     with client:
         client.set_expected_responses([messages.Address])
-        get_test_address(session)
+        _get_test_address(session)
