@@ -424,7 +424,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("jpegdec_close")
         .allowlist_function("jpegdec_process")
         .allowlist_function("jpegdec_get_info")
-        .allowlist_function("jpegdec_get_slice_rgba8888");
+        .allowlist_function("jpegdec_get_slice_rgba8888")
+        .allowlist_function("jpegdec_get_slice_mono8");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

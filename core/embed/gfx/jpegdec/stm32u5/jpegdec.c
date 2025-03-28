@@ -463,4 +463,118 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
   return result;
 }
 
+// Initialize DMA base copy for fast copying of 8x8 blocks
+//
+// 'dst_stride' is the number of bytes between the start of two consecutive
+// rows in the destination buffer.
+static void fast_copy_init(DMA_HandleTypeDef *hdma, size_t dst_stride) {
+  hdma->Instance = GPDMA1_Channel13;
+  hdma->Init.Request = GPDMA1_REQUEST_HASH_IN;
+  hdma->Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
+  hdma->Init.Direction = DMA_MEMORY_TO_MEMORY;
+  hdma->Init.SrcInc = DMA_SINC_INCREMENTED;
+  hdma->Init.DestInc = DMA_DINC_INCREMENTED;
+  hdma->Init.SrcDataWidth = DMA_SRC_DATAWIDTH_WORD;
+  hdma->Init.DestDataWidth = DMA_DEST_DATAWIDTH_WORD;
+  hdma->Init.Priority = DMA_LOW_PRIORITY_HIGH_WEIGHT;
+  hdma->Init.SrcBurstLength = 2;
+  hdma->Init.DestBurstLength = 2;
+  hdma->Init.TransferAllocatedPort =
+      DMA_SRC_ALLOCATED_PORT1 | DMA_DEST_ALLOCATED_PORT0;
+  hdma->Init.TransferEventMode = DMA_TCEM_REPEATED_BLOCK_TRANSFER;
+  hdma->Init.Mode = DMA_NORMAL;
+  HAL_DMA_Init(hdma);
+  HAL_DMA_ConfigChannelAttributes(hdma, DMA_CHANNEL_PRIV | DMA_CHANNEL_SEC |
+                                            DMA_CHANNEL_SRC_SEC |
+                                            DMA_CHANNEL_DEST_SEC);
+
+  DMA_RepeatBlockConfTypeDef rep = {0};
+
+  rep.DestAddrOffset = dst_stride - 8;
+  rep.RepeatCount = 1;
+  HAL_DMAEx_ConfigRepeatBlock(hdma, &rep);
+}
+
+// Initiate a fast copy of an 8x8 block from 'src' to 'dst'
+//
+// `src` is expected to be a pointer to the start of an 8x8 block.
+// `dst` is expected to be a pointer to destination bitmap buffer
+static inline void fast_copy_block(DMA_HandleTypeDef *hdma, uint8_t *dst,
+                                   uint8_t *src) {
+  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0)
+    ;
+
+  hdma->Lock = 0;
+  hdma->State = HAL_DMA_STATE_READY;
+
+  HAL_DMA_Start(hdma, (uint32_t)src, (uint32_t)dst, 64);
+}
+
+// Deinitialize the DMA base copy
+static inline void fast_copy_deinit(DMA_HandleTypeDef *hdma) {
+  while ((hdma->Instance->CSR & DMA_FLAG_IDLE) == 0)
+    ;
+
+  hdma->Lock = 0;
+  hdma->State = HAL_DMA_STATE_READY;
+
+  HAL_DMA_DeInit(hdma);
+}
+
+bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
+  jpegdec_t *dec = &g_jpegdec;
+
+  if (!dec->inuse) {
+    return false;
+  }
+
+  if (dec->state != JPEGDEC_STATE_SLICE_READY) {
+    return false;
+  }
+
+  if (!IS_ALIGNED((uint32_t)mono8, 4)) {
+    return false;
+  }
+
+  slice->width = dec->slice_width;
+  slice->height = dec->slice_height;
+  slice->x = dec->slice_x;
+  slice->y = dec->slice_y;
+
+  bool result = false;
+
+  switch (dec->image.format) {
+    case JPEGDEC_IMAGE_YCBCR420:
+      // Not implemented
+      break;
+    case JPEGDEC_IMAGE_YCBCR422:
+      // Not implemented
+      break;
+    case JPEGDEC_IMAGE_YCBCR444:
+      // Not implemented
+      break;
+    case JPEGDEC_IMAGE_GRAYSCALE: {
+      static DMA_HandleTypeDef hdma = {0};
+      fast_copy_init(&hdma, dec->slice_width);
+      uint8_t *src = (uint8_t *)dec->ycbcr_buffer;
+      for (int y = 0; y < dec->slice_height; y += 8) {
+        for (int x = 0; x < dec->slice_width; x += 8) {
+          uint8_t *dst = (uint8_t *)mono8 + y * dec->slice_width + x;
+          fast_copy_block(&hdma, dst, src);
+          src += 64;
+        }
+      }
+
+      fast_copy_deinit(&hdma);
+      result = true;
+    } break;
+
+    default:
+      result = false;
+      break;
+  }
+
+  return result;
+}
+
 #endif  // KERNEL_MODE
