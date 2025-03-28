@@ -321,6 +321,8 @@ void fsm_msgResetDevice(const ResetDevice *msg) {
                   msg->strength == 192 || msg->strength == 256,
               _("Invalid seed strength"));
 
+  fsm_abortWorkflows();
+
   reset_init(msg->has_strength ? msg->strength : 128,
              msg->has_passphrase_protection && msg->passphrase_protection,
              msg->has_pin_protection && msg->pin_protection,
@@ -328,11 +330,16 @@ void fsm_msgResetDevice(const ResetDevice *msg) {
              msg->has_label ? msg->label : 0,
              msg->has_u2f_counter ? msg->u2f_counter : 0,
              msg->has_skip_backup ? msg->skip_backup : false,
-             msg->has_no_backup ? msg->no_backup : false);
+             msg->has_no_backup ? msg->no_backup : false,
+             msg->has_entropy_check ? msg->entropy_check : false);
 }
 
 void fsm_msgEntropyAck(const EntropyAck *msg) {
   reset_entropy(msg->entropy.bytes, msg->entropy.size);
+}
+
+void fsm_msgEntropyCheckContinue(const EntropyCheckContinue *msg) {
+  reset_continue(msg->has_finish ? msg->finish : false);
 }
 
 void fsm_msgBackupDevice(const BackupDevice *msg) {
@@ -496,6 +503,8 @@ void fsm_msgRecoveryDevice(const RecoveryDevice *msg) {
   CHECK_PARAM(msg->type == RecoveryType_NormalRecovery ||
                   msg->type == RecoveryType_DryRun,
               _("UnlockRepeatedBackup not supported"))
+
+  fsm_abortWorkflows();
 
   const bool dry_run = msg->has_type ? msg->type == RecoveryType_DryRun : false;
   if (!dry_run) {

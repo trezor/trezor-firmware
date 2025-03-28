@@ -410,6 +410,7 @@ void fsm_msgRebootToBootloader(void) {
 }
 
 void fsm_abortWorkflows(void) {
+  reset_abort();
   recovery_abort();
   signing_abort();
   authorization_type = 0;

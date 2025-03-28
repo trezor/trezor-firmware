@@ -11,7 +11,7 @@ SKIPPED_MESSAGES := Binance Cardano DebugMonero Eos Monero Ontology Ripple SdPro
 	UnlockBootloader AuthenticateDevice AuthenticityProof \
 	Solana StellarClaimClaimableBalanceOp \
 	ChangeLanguage TranslationDataRequest TranslationDataAck \
-	SetBrightness DebugLinkOptigaSetSecMax EntropyCheckReady EntropyCheckContinue \
+	SetBrightness DebugLinkOptigaSetSecMax \
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
 	BleUnpair
