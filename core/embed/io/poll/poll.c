@@ -18,17 +18,29 @@
  */
 
 #include <trezor_bsp.h>
+#include <trezor_rtl.h>
 
-#include "poll.h"
-
+#include <io/poll.h>
 #include <io/usb.h>
 #include <sys/systick.h>
+
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
+#ifdef USE_BUTTON
+#include <io/button.h>
+#endif
+
+#ifdef USE_TOUCH
+#include <io/touch.h>
+#endif
 
 #ifdef TREZOR_EMULATOR
 #include "SDL.h"
 #endif
 
-uint8_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
+int16_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
                     poll_event_t* event, uint32_t timeout_ms) {
   uint32_t deadline = ticks_timeout(timeout_ms);
 
@@ -45,11 +57,45 @@ uint8_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
         if ((ifaces[i] & MODE_READ) == MODE_READ) {
           // check if USB can read
           if (sectrue == usb_webusb_can_read(iface_num)) {
-            event->type = EVENT_USB_CAN_READ;
+            event->event.usb_data_event = EVENT_USB_CAN_READ;
             return iface_num;
           }
         }
       }
+#ifdef USE_BLE
+      if (iface_num == IFACE_BLE) {
+        if ((ifaces[i] & MODE_READ) == MODE_READ) {
+          // check if BLE can read
+          if (ble_can_read()) {
+            event->event.ble_data_event = EVENT_BLE_CAN_READ;
+            return iface_num;
+          }
+        }
+      }
+      if (iface_num == IFACE_BLE_EVENT) {
+        ble_event_t ble_event = {0};
+        if (ble_get_event(&ble_event)) {
+          memcpy(&event->event.ble_event, &ble_event, sizeof(ble_event_t));
+          return iface_num;
+        }
+      }
+#endif
+#ifdef USE_BUTTON
+      if (iface_num == IFACE_BUTTON) {
+        if (button_get_event(&event->event.button_event)) {
+          return iface_num;
+        }
+      }
+#endif
+#ifdef USE_TOUCH
+      if (iface_num == IFACE_TOUCH) {
+        uint32_t touch_event = touch_get_event();
+        if (touch_event != 0) {
+          event->event.touch_event = touch_event;
+          return iface_num;
+        }
+      }
+#endif
     }
 
 #ifndef TREZOR_EMULATOR
@@ -57,6 +103,5 @@ uint8_t poll_events(const uint16_t* ifaces, size_t ifaces_num,
 #endif
   }
 
-  event->type = EVENT_NONE;
-  return 0;
+  return -1;
 }

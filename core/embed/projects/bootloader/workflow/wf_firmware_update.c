@@ -20,6 +20,7 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <io/poll.h>
 #include <sys/bootargs.h>
 #include <sys/systick.h>
 #include <util/flash.h>
@@ -28,8 +29,6 @@
 #if USE_OPTIGA || USE_STORAGE_HWKEY
 #include <sec/secret.h>
 #endif
-
-#include <poll.h>
 
 #include "bootui.h"
 #include "protob/protob.h"
@@ -521,9 +520,9 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
   while (true) {
     uint16_t ifaces[1] = {protob_get_iface_flag(iface) | MODE_READ};
     poll_event_t e = {0};
-    uint8_t i = poll_events(ifaces, 1, &e, 100);
+    uint16_t i = poll_events(ifaces, 1, &e, 100);
 
-    if (e.type == EVENT_NONE || i != protob_get_iface_flag(iface)) {
+    if (i < 0 || i != protob_get_iface_flag(iface)) {
       continue;
     }
 

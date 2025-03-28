@@ -42,6 +42,11 @@ typedef enum {
   INTRO_HOST = 2,
 } intro_result_t;
 
+typedef enum {
+  WAIT_CANCEL = 1,
+  WAIT_PAIRING_MODE = 2,
+} wait_result_t;
+
 // Displays a warning screen before jumping to the untrusted firmware
 //
 // Shows vendor image, vendor string and firmware version
@@ -60,14 +65,10 @@ void ui_screen_boot(const vendor_header* const vhdr,
 // the user presses a button, touches the display
 void ui_click(void);
 
-void ui_screen_welcome(void);
-
 uint32_t ui_screen_intro(const vendor_header* const vhdr,
                          const image_header* const hdr, bool fw_ok);
 
 uint32_t ui_screen_menu(secbool firmware_present);
-
-void ui_screen_connect(void);
 
 ui_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                       const image_header* const hdr,
@@ -89,9 +90,14 @@ void ui_screen_fail(void);
 void ui_fadein(void);
 void ui_fadeout(void);
 void ui_set_initial_setup(bool initial);
+bool ui_get_initial_setup(void);
 
 void ui_screen_boot_stage_1(bool fading);
 
 #ifdef USE_OPTIGA
 uint32_t ui_screen_unlock_bootloader_confirm(void);
+#endif
+
+#ifdef USE_BLE
+uint32_t ui_screen_confirm_pairing(uint32_t code);
 #endif

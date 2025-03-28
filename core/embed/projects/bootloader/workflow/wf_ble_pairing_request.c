@@ -16,26 +16,54 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#include <wire/wire_iface_ble.h>
+#ifdef USE_BLE
 
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <util/image.h>
+#include <io/ble.h>
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
 #include "workflow.h"
 
-workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
-                                       const image_header *const hdr) {
-  ui_set_initial_setup(true);
-  uint8_t buf[1024] = {0};
-  screen_connect(true, buf, sizeof(buf));
+workflow_result_t workflow_ble_pairing_request(void) {
+  ble_iface_start_pairing();
 
-  workflow_result_t res = WF_CANCELLED;
-  while (res == WF_CANCELLED) {
-    res = workflow_host_control(vhdr, hdr, screen_connect_event, buf,
-                                sizeof(buf));
+  uint32_t result = screen_pairing_mode(ui_get_initial_setup());
+
+  if (result == 0) {
+    ble_state_t state = {0};
+
+    ble_get_state(&state);
+
+    if (state.peer_count > 0) {
+      ble_command_t cmd = {.cmd_type = BLE_SWITCH_ON};
+      ble_issue_command(&cmd);
+    } else {
+      ble_command_t cmd = {.cmd_type = BLE_SWITCH_OFF};
+      ble_issue_command(&cmd);
+    }
+
+    return WF_OK;
   }
-  return res;
+
+  result = ui_screen_confirm_pairing(result);
+
+  if (result == UI_RESULT_CONFIRM) {
+    ble_command_t cmd = {
+        .cmd_type = BLE_ALLOW_PAIRING,
+    };
+    ble_issue_command(&cmd);
+  } else {
+    ble_command_t cmd = {
+        .cmd_type = BLE_REJECT_PAIRING,
+    };
+    ble_issue_command(&cmd);
+  }
+
+  return WF_OK;
 }
+
+#endif

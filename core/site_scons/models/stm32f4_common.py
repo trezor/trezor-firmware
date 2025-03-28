@@ -10,6 +10,7 @@ def stm32f4_common_files(env, defines, sources, paths):
     ]
 
     paths += [
+        "embed/io/poll/inc",
         "embed/sec/entropy/inc",
         "embed/sec/monoctr/inc",
         "embed/sec/random_delays/inc",
@@ -63,6 +64,7 @@ def stm32f4_common_files(env, defines, sources, paths):
     ]
 
     sources += [
+        "embed/io/poll/poll.c",
         "embed/sec/entropy/stm32f4/entropy.c",
         "embed/sec/monoctr/stm32f4/monoctr.c",
         "embed/sec/random_delays/stm32/random_delays.c",

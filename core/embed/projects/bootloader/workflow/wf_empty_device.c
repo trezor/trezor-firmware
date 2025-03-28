@@ -30,6 +30,7 @@
 #endif
 
 #include "bootui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
 workflow_result_t workflow_empty_device(void) {
@@ -51,7 +52,10 @@ workflow_result_t workflow_empty_device(void) {
 
   workflow_result_t res = WF_CANCELLED;
   while (res == WF_CANCELLED) {
-    res = workflow_host_control(NULL, NULL, ui_screen_welcome);
+    uint8_t buf[1024] = {0};
+    screen_welcome(buf, sizeof(buf));
+    res = workflow_host_control(NULL, NULL, screen_welcome_event, buf,
+                                sizeof(buf));
   }
   return res;
 }

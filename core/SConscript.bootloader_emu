@@ -99,7 +99,6 @@ SOURCE_NANOPB = [
 SOURCE_BOOTLOADER = [
     'embed/projects/bootloader/bootui.c',
     'embed/projects/bootloader/main.c',
-    'embed/projects/bootloader/poll.c',
     'embed/projects/bootloader/antiglitch.c',
     'embed/projects/bootloader/workflow/wf_firmware_update.c',
     'embed/projects/bootloader/workflow/wf_wipe_device.c',
@@ -121,6 +120,7 @@ SOURCE_BOOTLOADER = [
 SOURCE_TREZORHAL = [
     'embed/io/display/unix/display_driver.c',
     'embed/io/usb/unix/usb.c',
+    'embed/io/poll/poll.c',
     'embed/sec/monoctr/unix/monoctr.c',
     'embed/sec/random_delays/unix/random_delays.c',
     'embed/sec/rng/unix/rng.c',
@@ -181,6 +181,7 @@ ALLPATHS = ['embed/rust',
            'embed/gfx/inc',
            'embed/io/display/inc',
            'embed/io/usb/inc',
+           'embed/io/poll/inc',
            'embed/sec/entropy/inc',
            'embed/sec/monoctr/inc',
            'embed/sec/random_delays/inc',
