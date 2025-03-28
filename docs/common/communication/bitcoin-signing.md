@@ -308,6 +308,15 @@ Trezor sets `request_type` to `TXPAYMENTREQ`, and `request_details.tx_hash` is u
 
 The host must respond with a `TxAckPaymentRequest` message.
 
+### Entropy request
+
+This type of request is used if anti-exfiltration protocol is used.
+
+Trezor sets `request_type` to `TXENTROPY`. `request_details.tx_hash` is unset.
+`request_details.request_index` is the index of the input in the transaction: 0 is the
+first input, 1 is second, etc. `request_details.nonce_commitment` is the commitment to
+the signature nonce.
+
 ## Replacement transactions
 
 A replacement transaction is a transaction that uses the same inputs as one or more
@@ -369,6 +378,16 @@ output that has this field set to a particular index, it will ask for the paymen
 that has the given index.
 
 All outputs belonging to one payment request must be consecutive in the transaction.
+
+## Anti-exfiltration protocol
+
+The purpose of the anti-exfiltration protocol is to prevent the device from leaking its secrets
+through the signatures. The host can request the protocol by setting `entropy_commitment` in
+the `TxInput` message. The device will respond with a `TxRequest` message, with `request_type`
+set to `TXENTROPY` and the `request_details.nonce_commitment` field filled in. The host must then
+reply with a `TxAckEntropy` message. The input signature will then commit to both the nonce and
+the entropy, which is verified by the host. The full description of the protocol is [here]
+(https://github.com/BlockstreamResearch/secp256k1-zkp/blob/6152622613fdf1c5af6f31f74c427c4e9ee120ce/include/secp256k1_ecdsa_s2c.h#L100).
 
 ## Implementation notes
 
