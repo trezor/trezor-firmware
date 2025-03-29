@@ -14,14 +14,13 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Alignment, Direction, LinearPlacement, Offset},
-        layout_eckhart::firmware::Hint,
     },
 };
 
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
+        ActionBar, Header, Hint, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
         VerticalMenuScreenMsg,
     },
     theme,
