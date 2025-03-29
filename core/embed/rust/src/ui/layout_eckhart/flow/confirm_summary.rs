@@ -31,8 +31,6 @@ const MENU_ITEM_CANCEL: usize = 0;
 const MENU_ITEM_EXTRA_INFO: usize = 1;
 const MENU_ITEM_ACCOUNT_INFO: usize = 2;
 
-const TIMEOUT_MS: u32 = 2000;
-
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum ConfirmSummary {
     Summary,
