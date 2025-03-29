@@ -56,7 +56,7 @@ where
             subtitle: None,
             content,
             hint: None,
-            action_bar: None,
+            action_bar: Some(ActionBar::new_paginate_only()),
         }
     }
 
