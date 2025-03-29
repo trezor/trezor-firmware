@@ -2866,7 +2866,7 @@ class InputFlowConfirmAllWarnings(InputFlowBase):
             # Paginating (going as further as possible) and pressing Yes
             if br.pages is not None:
                 for _ in range(br.pages - 1):
-                    self.debug.press_yes()
+                    self.debug.click(self.client.debug.screen_buttons.ok())
             layout = self.debug.read_layout()
             text = layout.action_bar().lower()
             # hi priority warning
