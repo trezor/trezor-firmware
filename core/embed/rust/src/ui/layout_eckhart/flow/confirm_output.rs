@@ -354,7 +354,7 @@ pub fn new_confirm_output(
         .with_header(Header::new(TR::words__amount.into()).with_menu_button())
         .with_action_bar(ActionBar::new_double(
             Button::with_icon(theme::ICON_CHEVRON_UP),
-            Button::with_text(TR::buttons__continue.into()),
+            Button::with_text(TR::buttons__confirm.into()).styled(theme::button_confirm()),
         ))
         .with_subtitle(subtitle.unwrap_or(TString::empty()))
         .map(|msg| match msg {
