@@ -171,6 +171,10 @@ impl Button {
         self.touch_expand = Some(expand);
     }
 
+    pub fn set_content_offset(&mut self, offset: Offset) {
+        self.content_offset = offset;
+    }
+
     pub fn content(&self) -> &ButtonContent {
         &self.content
     }
