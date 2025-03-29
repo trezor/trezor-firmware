@@ -112,7 +112,10 @@ def test_one_one_fee_sapling(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (
+                    is_core(client),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e38206),
@@ -266,7 +269,10 @@ def test_external_presigned(client: Client):
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (
+                    is_core(client),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_e38206),

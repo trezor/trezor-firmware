@@ -69,7 +69,10 @@ def test_opreturn(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (
+                    is_core(client),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
                 request_output(1),
                 messages.ButtonRequest(code=B.ConfirmOutput),
                 messages.ButtonRequest(code=B.SignTx),

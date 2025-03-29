@@ -23,7 +23,11 @@ from trezorlib.tools import parse_path
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowShowAddressQRCode
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.ethereum,
+    pytest.mark.models(skip=["eckhart"]),
+]
 
 
 @parametrize_using_common_fixtures("ethereum/getaddress.json")

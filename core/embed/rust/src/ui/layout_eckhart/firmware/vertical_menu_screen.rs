@@ -187,5 +187,7 @@ impl Swipable for VerticalMenuScreen {
 impl crate::trace::Trace for VerticalMenuScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("VerticalMenuScreen");
+        t.child("Header", &self.header);
+        t.child("Menu", &self.menu);
     }
 }

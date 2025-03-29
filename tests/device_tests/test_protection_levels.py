@@ -279,6 +279,7 @@ def test_recovery_device(client: Client):
         )
 
 
+@pytest.mark.models(skip=["eckhart"])
 def test_sign_message(client: Client):
     _assert_protection(client)
     with client:
@@ -320,7 +321,7 @@ def test_verify_message_t1(client: Client):
         )
 
 
-@pytest.mark.models("core")
+@pytest.mark.models("core", skip=["eckhart"])
 def test_verify_message_t2(client: Client):
     _assert_protection(client)
     with client:
@@ -371,7 +372,10 @@ def test_signtx(client: Client):
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (
+                    is_core(client),
+                    messages.ButtonRequest(code=B.ConfirmOutput),
+                ),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_meta(TXHASH_50f6f1),

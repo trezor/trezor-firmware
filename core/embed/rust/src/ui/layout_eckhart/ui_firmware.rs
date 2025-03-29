@@ -194,11 +194,37 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_modify_output(
-        _sign: i32,
-        _amount_change: TString<'static>,
-        _amount_new: TString<'static>,
+        sign: i32,
+        amount_change: TString<'static>,
+        amount_new: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let description = if sign < 0 {
+            TR::modify_amount__decrease_amount
+        } else {
+            TR::modify_amount__increase_amount
+        };
+
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount_change),
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::modify_amount__new_amount),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount_new),
+        ]);
+
+        let layout = RootComponent::new(
+            TextScreen::new(
+                paragraphs
+                    .into_paragraphs()
+                    .with_placement(LinearPlacement::vertical())
+                    .with_spacing(12),
+            )
+            .with_header(Header::new(TR::modify_amount__title.into()))
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                Button::with_text(TR::buttons__confirm.into()),
+            )),
+        );
+        Ok(layout)
     }
 
     fn confirm_more(
@@ -217,17 +243,52 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_summary(
-        _amount: TString<'static>,
-        _amount_label: TString<'static>,
-        _fee: TString<'static>,
-        _fee_label: TString<'static>,
-        _title: Option<TString<'static>>,
-        _account_items: Option<Obj>,
-        _extra_items: Option<Obj>,
-        _extra_title: Option<TString<'static>>,
-        _verb_cancel: Option<TString<'static>>,
+        amount: TString<'static>,
+        amount_label: TString<'static>,
+        fee: TString<'static>,
+        fee_label: TString<'static>,
+        title: Option<TString<'static>>,
+        account_items: Option<Obj>,
+        extra_items: Option<Obj>,
+        extra_title: Option<TString<'static>>,
+        verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        // collect available info
+        let account_paragraphs = if let Some(items) = account_items {
+            let mut paragraphs = ParagraphVecShort::new();
+            for pair in IterBuf::new().try_iterate(items)? {
+                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, value)));
+            }
+            Some(paragraphs)
+        } else {
+            None
+        };
+        let extra_paragraphs = if let Some(items) = extra_items {
+            let mut paragraphs = ParagraphVecShort::new();
+            for pair in IterBuf::new().try_iterate(items)? {
+                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, value)));
+            }
+            Some(paragraphs)
+        } else {
+            None
+        };
+
+        let flow = flow::new_confirm_summary(
+            title.unwrap_or(TString::empty()),
+            amount,
+            amount_label,
+            fee,
+            fee_label,
+            account_paragraphs,
+            extra_title,
+            extra_paragraphs,
+            verb_cancel,
+        )?;
+        Ok(flow)
     }
 
     fn confirm_properties(
@@ -357,29 +418,114 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn flow_confirm_output(
-        _title: Option<TString<'static>>,
-        _subtitle: Option<TString<'static>>,
+        title: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         _description: Option<TString<'static>>,
         _extra: Option<TString<'static>>,
-        _message: Obj,
-        _amount: Option<Obj>,
-        _chunkify: bool,
+        message: Obj,
+        amount: Option<Obj>,
+        chunkify: bool,
         _text_mono: bool,
-        _account_title: TString<'static>,
-        _account: Option<TString<'static>>,
-        _account_path: Option<TString<'static>>,
-        _br_code: u16,
-        _br_name: TString<'static>,
-        _address_item: Option<(TString<'static>, Obj)>,
+        account_title: TString<'static>,
+        account: Option<TString<'static>>,
+        account_path: Option<TString<'static>>,
+        br_code: u16,
+        br_name: TString<'static>,
+        address_item: Option<(TString<'static>, Obj)>,
         _extra_item: Option<(TString<'static>, Obj)>,
-        _summary_items: Option<Obj>,
-        _fee_items: Option<Obj>,
-        _summary_title: Option<TString<'static>>,
-        _summary_br_code: Option<u16>,
-        _summary_br_name: Option<TString<'static>>,
-        _cancel_text: Option<TString<'static>>,
+        summary_items: Option<Obj>,
+        fee_items: Option<Obj>,
+        summary_title: Option<TString<'static>>,
+        summary_br_code: Option<u16>,
+        summary_br_name: Option<TString<'static>>,
+        cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let (address_title, address_paragraphs) = if let Some(address_item) = address_item {
+            let mut paragraphs = ParagraphVecShort::new();
+            for pair in IterBuf::new().try_iterate(address_item.1)? {
+                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, value)));
+            }
+            (Some(address_item.0), Some(paragraphs))
+        } else {
+            (None, None)
+        };
+
+        // collect available info
+        let account_paragraphs = {
+            let mut paragraphs = ParagraphVecShort::new();
+            if let Some(account) = account {
+                unwrap!(paragraphs.push(
+                    Paragraph::new(
+                        &theme::TEXT_SMALL_LIGHT,
+                        TString::from_translation(TR::words__wallet)
+                    )
+                    .no_break()
+                ));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, account)));
+            }
+            if let Some(path) = account_path {
+                unwrap!(paragraphs.push(
+                    Paragraph::new(
+                        &theme::TEXT_SMALL_LIGHT,
+                        TString::from_translation(TR::address_details__derivation_path)
+                    )
+                    .no_break()
+                ));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, path)));
+            }
+            if paragraphs.is_empty() {
+                None
+            } else {
+                Some(paragraphs)
+            }
+        };
+
+        let summary_paragraphs = if let Some(items) = summary_items {
+            let mut paragraphs = ParagraphVecShort::new();
+            for pair in IterBuf::new().try_iterate(items)? {
+                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, value)));
+            }
+            Some(paragraphs)
+        } else {
+            None
+        };
+
+        let fee_paragraphs = if let Some(items) = fee_items {
+            let mut paragraphs = ParagraphVecShort::new();
+            for pair in IterBuf::new().try_iterate(items)? {
+                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, value)));
+            }
+            Some(paragraphs)
+        } else {
+            None
+        };
+
+        let flow = flow::confirm_output::new_confirm_output(
+            title,
+            subtitle,
+            chunkify,
+            message,
+            amount,
+            br_name,
+            br_code,
+            account_title,
+            account_paragraphs,
+            address_title,
+            address_paragraphs,
+            summary_title,
+            summary_paragraphs,
+            summary_br_code,
+            summary_br_name,
+            fee_paragraphs,
+            cancel_text,
+        )?;
+        Ok(flow)
     }
 
     fn flow_confirm_set_new_pin(
