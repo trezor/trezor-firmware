@@ -70,10 +70,11 @@ impl Component for ConfirmHomescreen {
 
         let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
         let (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
+        let text_area = rest.inset(theme::SIDE_INSETS);
 
         self.header.place(header_area);
         self.action_bar.place(action_bar_area);
-        self.text.place(rest);
+        self.text.place(text_area);
         bounds
     }
 
