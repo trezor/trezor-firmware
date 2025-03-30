@@ -999,5 +999,9 @@
   "997": "words__receive",
   "998": "reset__recovery_share_description",
   "999": "reset__recovery_share_number",
-  "1000": "words__recovery_share"
+  "1000": "words__recovery_share",
+  "1001": "send__send_in_the_app",
+  "1002": "send__sign_cancelled",
+  "1003": "words__send",
+  "1004": "words__wallet"
 }
