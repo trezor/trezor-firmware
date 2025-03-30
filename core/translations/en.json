@@ -815,7 +815,13 @@
     "sd_card__wanna_format": "Do you really want to format the SD card?",
     "sd_card__wrong_sd_card": "Wrong SD card.",
     "send__address_path": "address path",
-    "send__cancel_sign": "Cancel sign",
+    "send__cancel_sign": {
+      "Bolt": "Cancel sign",
+      "Caesar": "Cancel sign",
+      "Delizia": "Cancel sign",
+      "Eckhart": "Cancel sign?"
+    },
+    "send__sign_cancelled": "Sign cancelled.",
     "send__confirm_sending": "Sending amount",
     "send__from_multiple_accounts": "Sending from multiple accounts.",
     "send__incl_transaction_fee": "incl. Transaction fee",
@@ -824,6 +830,7 @@
     "send__receiving_to_multisig": "Receiving to a multisig address.",
     "send__send_from": "Send from",
     "send__sign_transaction": "Sign transaction",
+    "send__send_in_the_app": "After signing, send the transaction in the app.",
     "send__title_confirm_sending": "Confirm sending",
     "send__title_joint_transaction": "Joint transaction",
     "send__title_receiving_to": "Receiving to",
@@ -1044,6 +1051,7 @@
     "words__receive": "Receive",
     "words__recipient": "Recipient",
     "words__recovery_share": "Recovery share",
+    "words__send": "Send",
     "words__settings": "Settings",
     "words__sign": "Sign",
     "words__signer": "Signer",
@@ -1064,6 +1072,7 @@
       "Eckhart": "Try again"
     },
     "words__unknown": "Unknown",
+    "words__wallet": "Wallet",
     "words__warning": "Warning",
     "words__writable": "Writable",
     "words__yes": "Yes"
