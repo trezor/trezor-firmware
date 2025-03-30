@@ -1240,7 +1240,7 @@ pub enum TranslatedString {
     pin__cancel_description = 870,  // "Continue without PIN"
     pin__cancel_info = 871,  // "Without a PIN, anyone can access this device."
     pin__cancel_setup = 872,  // "Cancel PIN setup"
-    send__cancel_sign = 873,  // "Cancel sign"
+    send__cancel_sign = 873,  // {"Bolt": "Cancel sign", "Caesar": "Cancel sign", "Delizia": "Cancel sign", "Eckhart": "Cancel sign?"}
     send__send_from = 874,  // "Send from"
     instructions__hold_to_sign = 875,  // "Hold to sign"
     confirm_total__fee_rate = 876,  // "Fee rate"
