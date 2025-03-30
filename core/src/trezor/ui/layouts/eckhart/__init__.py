@@ -392,6 +392,7 @@ async def confirm_output(
     source_account: str | None = None,
     source_account_path: str | None = None,
     cancel_text: str | None = None,
+    description: str | None = None,
 ) -> None:
     if address_label is not None:
         title = address_label
@@ -402,9 +403,32 @@ async def confirm_output(
     else:
         title = TR.send__title_sending_to
 
-    # FIXME: not implemented
-    # use `flow_confirm_output` or `TT/TR` style?
-    raise NotImplementedError
+    await raise_if_not_confirmed(
+        trezorui_api.flow_confirm_output(
+            title=TR.words__address,
+            subtitle=title,
+            message=address,
+            extra=None,
+            amount=amount,
+            chunkify=chunkify,
+            text_mono=True,
+            account_title=TR.send__send_from,
+            account=source_account,
+            account_path=source_account_path,
+            address_item=None,
+            extra_item=None,
+            br_code=br_code,
+            br_name="confirm_output",
+            summary_items=None,
+            fee_items=None,
+            summary_title=None,
+            summary_br_name=None,
+            summary_br_code=None,
+            cancel_text=cancel_text,
+            description=description,
+        ),
+        br_name=None,
+    )
 
 
 async def should_show_payment_request_details(
