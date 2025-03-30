@@ -110,7 +110,7 @@ impl ActionBar {
 
     pub fn new_cancel_confirm() -> Self {
         Self::new_double(
-            Button::with_icon(theme::ICON_CROSS).styled(theme::button_cancel()),
+            Button::with_icon(theme::ICON_CROSS),
             Button::with_text(TR::buttons__confirm.into()),
         )
     }

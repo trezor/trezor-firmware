@@ -53,31 +53,22 @@ impl FirmwareUI for UIEckhart {
         _prompt_screen: bool,
         _prompt_title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let action = action.unwrap_or("".into());
-        let formatted_text = {
-            let mut ops = OpTextLayout::new(theme::TEXT_NORMAL);
+        let paragraphs = {
+            let action = action.unwrap_or("".into());
+            let description = description.unwrap_or("".into());
+            let mut paragraphs = ParagraphVecShort::new();
             if !reverse {
-                ops = ops
-                    .color(theme::GREY_LIGHT)
-                    .text(action, fonts::FONT_SATOSHI_REGULAR_38);
-                if let Some(description) = description {
-                    ops = ops
-                        .newline()
-                        .color(theme::GREY)
-                        .text(description, fonts::FONT_SATOSHI_REGULAR_22);
-                }
+                paragraphs
+                    .add(Paragraph::new(&theme::TEXT_REGULAR, action))
+                    .add(Paragraph::new(&theme::TEXT_REGULAR, description));
             } else {
-                if let Some(description) = description {
-                    ops = ops
-                        .color(theme::GREY)
-                        .text(description, fonts::FONT_SATOSHI_REGULAR_22)
-                        .newline();
-                }
-                ops = ops
-                    .color(theme::GREY_LIGHT)
-                    .text(action, fonts::FONT_SATOSHI_REGULAR_38);
-            };
-            FormattedText::new(ops)
+                paragraphs
+                    .add(Paragraph::new(&theme::TEXT_REGULAR, description))
+                    .add(Paragraph::new(&theme::TEXT_REGULAR, action));
+            }
+            paragraphs.into_paragraphs().with_placement(
+                LinearPlacement::vertical().with_spacing(theme::TEXT_VERTICAL_SPACING),
+            )
         };
 
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
@@ -86,10 +77,11 @@ impl FirmwareUI for UIEckhart {
         } else {
             Button::with_text(verb)
         };
-        let mut screen = TextScreen::new(formatted_text)
-            .with_header(Header::new(title).with_menu_button())
+
+        let mut screen = TextScreen::new(paragraphs)
+            .with_header(Header::new(title))
             .with_action_bar(ActionBar::new_double(
-                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                Button::with_icon(theme::ICON_CROSS),
                 right_button,
             ));
         if let Some(subtitle) = subtitle {
