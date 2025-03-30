@@ -1,4 +1,5 @@
 mod action_bar;
+mod brightness_screen;
 mod confirm_homescreen;
 mod header;
 mod hint;
@@ -14,6 +15,7 @@ mod vertical_menu;
 mod vertical_menu_screen;
 
 pub use action_bar::{ActionBar, ActionBarMsg};
+pub use brightness_screen::{SetBrightnessMsg, SetBrightnessScreen};
 pub use confirm_homescreen::{ConfirmHomescreen, ConfirmHomescreenMsg};
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
