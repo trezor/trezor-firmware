@@ -34,7 +34,7 @@ use super::{
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, Header, HeaderMsg, Hint, Homescreen,
         MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen, SelectWordScreen,
-        Slip39Input, TextScreen,
+        SetBrightnessScreen, Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -648,8 +648,14 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn set_brightness(_current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+    fn set_brightness(current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
+        let content = SetBrightnessScreen::new(
+            theme::backlight::get_backlight_min() as u16,
+            theme::backlight::get_backlight_max() as u16,
+            current_brightness.unwrap_or(theme::backlight::get_backlight_normal()) as u16,
+        );
+        let layout = RootComponent::new(content);
+        Ok(layout)
     }
 
     fn show_address_details(
