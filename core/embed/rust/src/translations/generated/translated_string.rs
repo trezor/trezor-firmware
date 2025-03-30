@@ -1264,7 +1264,7 @@ pub enum TranslatedString {
     pin__cancel_description = 870,  // "Continue without PIN"
     pin__cancel_info = 871,  // "Without a PIN, anyone can access this device."
     pin__cancel_setup = 872,  // "Cancel PIN setup"
-    send__cancel_sign = 873,  // "Cancel sign"
+    send__cancel_sign = 873,  // {"Bolt": "Cancel sign", "Caesar": "Cancel sign", "Delizia": "Cancel sign", "Eckhart": "Cancel sign?"}
     send__send_from = 874,  // "Send from"
     instructions__hold_to_sign = 875,  // "Hold to sign"
     confirm_total__fee_rate = 876,  // "Fee rate"
@@ -1415,6 +1415,10 @@ pub enum TranslatedString {
     reset__recovery_share_description = 1001,  // "A recovery share is a list of words you wrote down when setting up your Trezor."
     reset__recovery_share_number = 1002,  // "Your wallet backup consists of 1 to 16 shares."
     words__recovery_share = 1003,  // "Recovery share"
+    send__send_in_the_app = 1004,  // "After signing, send the transaction in the app."
+    send__sign_cancelled = 1005,  // "Sign cancelled."
+    words__send = 1006,  // "Send"
+    words__wallet = 1007,  // "Wallet"
 }
 
 impl TranslatedString {
@@ -2738,7 +2742,14 @@ impl TranslatedString {
             Self::pin__cancel_description => "Continue without PIN",
             Self::pin__cancel_info => "Without a PIN, anyone can access this device.",
             Self::pin__cancel_setup => "Cancel PIN setup",
+            #[cfg(feature = "layout_bolt")]
             Self::send__cancel_sign => "Cancel sign",
+            #[cfg(feature = "layout_caesar")]
+            Self::send__cancel_sign => "Cancel sign",
+            #[cfg(feature = "layout_delizia")]
+            Self::send__cancel_sign => "Cancel sign",
+            #[cfg(feature = "layout_eckhart")]
+            Self::send__cancel_sign => "Cancel sign?",
             Self::send__send_from => "Send from",
             Self::instructions__hold_to_sign => "Hold to sign",
             Self::confirm_total__fee_rate => "Fee rate",
@@ -2924,6 +2935,10 @@ impl TranslatedString {
             Self::reset__recovery_share_description => "A recovery share is a list of words you wrote down when setting up your Trezor.",
             Self::reset__recovery_share_number => "Your wallet backup consists of 1 to 16 shares.",
             Self::words__recovery_share => "Recovery share",
+            Self::send__send_in_the_app => "After signing, send the transaction in the app.",
+            Self::send__sign_cancelled => "Sign cancelled.",
+            Self::words__send => "Send",
+            Self::words__wallet => "Wallet",
         }
     }
 
@@ -4334,6 +4349,10 @@ impl TranslatedString {
             Qstr::MP_QSTR_reset__recovery_share_description => Some(Self::reset__recovery_share_description),
             Qstr::MP_QSTR_reset__recovery_share_number => Some(Self::reset__recovery_share_number),
             Qstr::MP_QSTR_words__recovery_share => Some(Self::words__recovery_share),
+            Qstr::MP_QSTR_send__send_in_the_app => Some(Self::send__send_in_the_app),
+            Qstr::MP_QSTR_send__sign_cancelled => Some(Self::send__sign_cancelled),
+            Qstr::MP_QSTR_words__send => Some(Self::words__send),
+            Qstr::MP_QSTR_words__wallet => Some(Self::words__wallet),
             _ => None,
         }
     }
