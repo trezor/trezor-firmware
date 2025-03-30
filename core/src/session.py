@@ -26,5 +26,7 @@ wire.setup(usb.iface_wire)
 # start the event loop
 loop.run()
 
+workflow.close_default()
+
 if __debug__:
     log.debug(__name__, "Restarting main loop")

@@ -108,6 +108,12 @@ def start_default() -> None:
     autolock_interrupts_workflow = True
 
 
+def close_default() -> None:
+    """Close and free all resources used by default task."""
+    if default_task:
+        default_task.close()
+
+
 def set_default(constructor: Callable[[], loop.Task], restart: bool = False) -> None:
     """Configure a default workflow, which will be started next time it is needed."""
     global default_constructor
