@@ -87,6 +87,8 @@ CATEGORY_ACTIONS = {
     PassphraseCategory.UPPERCASE: UPPERCASE_ACTIONS,
     PassphraseCategory.SPECIAL: SPECIAL_ACTIONS,
 }
+
+
 def _get_test_address(session: Session) -> None:
     resp = session.call_raw(
         messages.GetAddress(address_n=TEST_ADDRESS_N, coin_name="Testnet")
