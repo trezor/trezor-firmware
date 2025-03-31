@@ -20,6 +20,7 @@ from trezorlib import device, exceptions, messages
 from trezorlib.client import MAX_PIN_LENGTH
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
+from trezorlib.transport.session import SessionV1
 
 PinType = messages.PinMatrixRequestType
 
@@ -199,6 +200,6 @@ def test_set_wipe_code_invalid(session: Session, invalid_wipe_code: str):
     assert isinstance(ret, messages.Failure)
 
     # Check that there's still no wipe code protection.
-    session.resume()
+    session = Session(SessionV1.new(session.client))
     session.ensure_unlocked()
     assert session.features.wipe_code_protection is False
