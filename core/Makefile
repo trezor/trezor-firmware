@@ -1,4 +1,3 @@
-
 .PHONY: vendor
 
 # get the number of CPU cores in a "portable" manner
@@ -401,12 +400,20 @@ flash_bootloader_ci_jlink: $(BOOTLOADER_CI_BUILD_DIR)/bootloader.bin ## flash CI
 	JLinkExe -nogui 1 -commanderscript embed/projects/bootloader_ci/bootloader_flash.jlink
 
 flash_firmware_jlink: $(FIRMWARE_BUILD_DIR)/firmware.bin ## flash firmware using JLink. file names must end in .bin for JLink
+ifeq ($(MCU),$(filter $(MCU),STM32F4))
 	cp -f $<.p1 $<.p1.bin
 	cp -f $<.p2 $<.p2.bin
 	## pad 2nd part so that FW integrity works after flash
 	## read&compare in flashing will avoid erasing unmodified sectors
 	truncate -s $(FIRMWARE_P2_MAXSIZE) $<.p2.bin
-	JLinkExe -nogui 1 -commanderscript embed/projects/firmware/firmware_flash.jlink
+	JLinkExe -nogui 1 -commanderscript embed/models/T2T1/firmware_flash.jlink
+else
+	# unfortunately JLink commander cannot be parameterized without buying SDK and rebuilding with changes
+	cp -f $< $<.padded.bin
+	echo firmware size is $(FIRMWARE_MAXSIZE)
+	dd if=/dev/zero bs=1 count=$$(($(FIRMWARE_MAXSIZE) - $$(stat -c %s $<))) | tr '\000' '\377' >> $<.padded.bin
+	JLinkExe -nogui 1 -commanderscript embed/models/T3W1/firmware_flash.jlink
+endif
 
 ## openocd debug commands:
 
