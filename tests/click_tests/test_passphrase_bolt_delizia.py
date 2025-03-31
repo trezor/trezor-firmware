@@ -21,7 +21,8 @@ from typing import TYPE_CHECKING, Generator, Optional
 import pytest
 
 from trezorlib import messages
-from trezorlib.debuglink import LayoutType, SessionDebugWrapper as Session
+from trezorlib.debuglink import LayoutType
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.transport.session import SessionV1
 
 from ..common import TEST_ADDRESS_N
