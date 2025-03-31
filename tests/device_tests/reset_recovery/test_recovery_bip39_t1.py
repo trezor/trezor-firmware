@@ -17,9 +17,9 @@
 import pytest
 
 from trezorlib import device, messages
-from trezorlib.transport.session import SessionV1
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
+from trezorlib.transport.session import SessionV1
 
 from ...common import MNEMONIC12
 
