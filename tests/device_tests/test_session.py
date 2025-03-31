@@ -41,6 +41,8 @@ def _get_public_node(
     )
     if isinstance(resp, messages.ButtonRequest):
         resp = session._callback_button(resp)
+    if isinstance(resp, messages.PinMatrixRequest):
+        resp = session._callback_pin(resp)
     if passphrase is not None:
         resp = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
     return resp
