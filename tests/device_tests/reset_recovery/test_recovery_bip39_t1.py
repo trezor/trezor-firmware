@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.transport.session import SessionV1
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.tools import parse_path
 
@@ -25,7 +26,7 @@ from ...common import MNEMONIC12
 PIN4 = "1234"
 PIN6 = "789456"
 
-pytestmark = pytest.mark.models("legacy")
+pytestmark = [pytest.mark.models("legacy"), pytest.mark.uninitialized_session]
 
 
 @pytest.mark.setup_client(uninitialized=True)
@@ -78,7 +79,7 @@ def test_pin_passphrase(session: Session):
     assert mnemonic == [None] * 12
 
     # Mnemonic is the same
-    session.init_session()
+    session = SessionV1.new(session.client)
     session.client.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
@@ -132,7 +133,7 @@ def test_nopin_nopassphrase(session: Session):
     assert mnemonic == [None] * 12
 
     # Mnemonic is the same
-    session.init_session()
+    session = SessionV1.new(session.client)
     session.client.refresh_features()
     assert debug.state().mnemonic_secret == MNEMONIC12.encode()
 
