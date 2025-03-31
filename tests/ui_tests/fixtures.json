@@ -18455,10 +18455,10 @@
 "T3B1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "b2db0657b53a40b5ca32ba0bd5873bde18bb2d385c909518580d93398ee2bfe2",
 "T3B1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "4a4ac39daacae7e3e15d3e818f5e3bced74eb96bf627cde1b67172abf81cdfcf",
 "T3B1_en_test_shamir_persistence.py::test_abort": "835bcf66eede3351b7a98271b7c8bb897e418e3ce9251795190782fc4bd6eb5e",
-"T3B1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "65ca98ff5d20a49aaa579e05fbe6b8509f6e27e65a0406c90d87a6ac1282c6b9",
-"T3B1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "74126fd68541f7122455e1209328caaf55b8b4f6a6547c205663045674af4e13",
-"T3B1_en_test_shamir_persistence.py::test_recovery_single_reset": "a63babaf9d891c50b850106da2fc986a2d9f6a28f70a47e041385f01709f7804",
-"T3B1_en_test_wipe_code.py::test_wipe_code_activate_core": "30ae2c1873cab64eb54ce659f2870a045250e3335fc8af55c9f67ec3c5f46f85"
+"T3B1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "324467777de656191ed05945cf25da00185b99009526265dbbee075808bceb43",
+"T3B1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "4ce6dc78cccebbad02d8bee8167cd9230db33ac66567101a07e0bdbf392488f5",
+"T3B1_en_test_shamir_persistence.py::test_recovery_single_reset": "23bdc9fdc3280b06cd2823a9714f9ff0f0af8c8c69516a23905c6369ac7c3ccc",
+"T3B1_en_test_wipe_code.py::test_wipe_code_activate_core": "143756227468aa1fd298d172963dd44f96ac4e4f333511c0bc1e1c720f5eda63"
 }
 },
 "T3T1": {
@@ -27236,7 +27236,7 @@
 "T3T1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "fbf2f0a69b18aee3d0ff4eeefa1d7cccb1fe5d967dce3737694c5af6cbb5b67f",
 "T3T1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "e0d2cff3fd85b680f8efbf14404141e3f954dda8bdceb74575cc40a584e7c0b7",
 "T3T1_en_test_shamir_persistence.py::test_recovery_single_reset": "4637001b683f1421fdab419acfd1f9170e798cf6de30ff317d9195ac04226037",
-"T3T1_en_test_wipe_code.py::test_wipe_code_activate_core": "5778bbce832aa3038f2e2f1b8c032a5f8ac25c8dd9143dd36f9cf0cceceb9ff7"
+"T3T1_en_test_wipe_code.py::test_wipe_code_activate_core": "ba66b42782bd88406ec2805a491539f46b1994969855280b2eb09ffa0db0ee70"
 }
 }
 }
