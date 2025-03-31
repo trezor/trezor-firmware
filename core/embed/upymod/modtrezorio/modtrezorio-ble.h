@@ -169,15 +169,32 @@ STATIC mp_obj_t mod_trezorio_BLE_peer_count(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_peer_count_obj,
                                  mod_trezorio_BLE_peer_count);
 
-/// def allow_pairing() -> bool:
+const size_t CODE_LEN = 6;
+static bool encode_pairing_code(mp_obj_t obj, uint8_t *outbuf) {
+  mp_int_t code = mp_obj_get_int(obj);
+  if (code < 0 || code > 999999) {
+    return false;
+  }
+  for (size_t i = 0; i < CODE_LEN; i++) {
+    outbuf[CODE_LEN - i - 1] = '0' + (code % 10);
+    code /= 10;
+  }
+  return true;
+}
+
+/// def allow_pairing(code: int) -> bool:
 ///     """
-///     Accept BLE pairing request
+///     Accept BLE pairing request. Code must match the one received with
+///     BLE_PAIRING_REQUEST event.
 ///     """
-STATIC mp_obj_t mod_trezorio_BLE_allow_pairing() {
-  ble_command_t cmd = {.cmd_type = BLE_ALLOW_PAIRING, .data_len = 0};
+STATIC mp_obj_t mod_trezorio_BLE_allow_pairing(mp_obj_t code) {
+  ble_command_t cmd = {.cmd_type = BLE_ALLOW_PAIRING, .data_len = CODE_LEN};
+  if (!encode_pairing_code(code, cmd.data.raw)) {
+    return mp_const_false;
+  }
   return mp_obj_new_bool(ble_issue_command(&cmd));
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_allow_pairing_obj,
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_allow_pairing_obj,
                                  mod_trezorio_BLE_allow_pairing);
 
 /// def reject_pairing() -> bool:
