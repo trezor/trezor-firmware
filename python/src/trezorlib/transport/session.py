@@ -211,9 +211,10 @@ class SessionV1(Session):
             messages.Initialize(session_id=session_id, derive_cardano=derive_cardano)
         )
         assert isinstance(resp, messages.Features)
+        msg_id = resp.session_id or b""
         if new_session:
-            self.id = resp.session_id or b""
-        elif self.id != resp.session_id:
+            self.id = msg_id
+        elif self.id != msg_id:
             raise exceptions.FailedSessionResumption(resp.session_id)
         self.was_initialized_at_least_once = True
 
