@@ -74,6 +74,9 @@ typedef struct {
   // and we have to simulate it
   uint8_t mono_framebuf[DISPLAY_RESX * DISPLAY_RESY];
 #endif
+#ifdef USE_RGB_LED
+  uint32_t led_color;
+#endif
 
 } display_driver_t;
 
@@ -319,6 +322,46 @@ static void copy_mono_framebuf(display_driver_t *drv) {
 }
 #endif
 
+#ifdef USE_RGB_LED
+void draw_rgb_led(uint32_t color) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+  // Extract RGB components
+  uint32_t r = (color >> 16) & 0xFF;
+  uint32_t g = (color >> 8) & 0xFF;
+  uint32_t b = color & 0xFF;
+
+  // Define LED circle properties
+  const int radius = 5;
+  int center_x = DISPLAY_RESX / 2;
+  int center_y = 0;
+
+  // Position based on background
+  if (drv->background) {
+    center_x += TOUCH_OFFSET_X;
+    center_y = TOUCH_OFFSET_Y / 2;
+  } else {
+    center_x += EMULATOR_BORDER;
+    center_y = EMULATOR_BORDER / 2;
+  }
+
+  // Draw the LED
+  SDL_SetRenderDrawColor(drv->renderer, r, g, b, 255);
+  for (int y = -radius; y <= radius; y++) {
+    for (int x = -radius; x <= radius; x++) {
+      if (x * x + y * y <= radius * radius) {
+        SDL_RenderDrawPoint(drv->renderer, center_x + x, center_y + y);
+      }
+    }
+  }
+  SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
+  SDL_RenderPresent(drv->renderer);
+}
+#endif
+
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 
@@ -353,6 +396,10 @@ void display_refresh(void) {
     SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
                      drv->orientation_angle, NULL, 0);
   }
+  // Show the LED
+#ifdef USE_RGB_LED
+  draw_rgb_led(drv->led_color);
+#endif
   SDL_RenderPresent(drv->renderer);
 }
 
@@ -493,3 +540,14 @@ void display_clear_save(void) {
   SDL_FreeSurface(drv->prev_saved);
   drv->prev_saved = NULL;
 }
+
+#ifdef USE_RGB_LED
+void display_rgb_led(uint32_t color) {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+  drv->led_color = color;
+}
+#endif

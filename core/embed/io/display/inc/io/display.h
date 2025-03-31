@@ -159,4 +159,10 @@ void display_copy_mono1p(const gfx_bitblt_t *bb);
 // The function is available only on the emulator.
 const char *display_save(const char *prefix);
 void display_clear_save(void);
+
+#ifdef USE_RGB_LED
+// Display a color on the LED.
+// The function is available only on the emulator.
+void display_rgb_led(uint32_t color);
+#endif
 #endif
