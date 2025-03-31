@@ -40,7 +40,9 @@ def test_repeated_backup(
 
     assert features.initialized is False
 
-    device_handler.run_with_session(
+    session = device_handler.client.get_seedless_session()
+    device_handler.run_with_provided_session(
+        session,
         device.setup,
         strength=128,
         backup_type=messages.BackupType.Slip39_Basic,
