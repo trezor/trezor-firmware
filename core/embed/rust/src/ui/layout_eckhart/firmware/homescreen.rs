@@ -3,6 +3,7 @@ use crate::{
     io::BinaryData,
     strutil::TString,
     translations::TR,
+    trezorhal::rgb_led,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
         display::{image::ImageInfo, Color},
@@ -166,6 +167,13 @@ impl Homescreen {
     }
 }
 
+impl Drop for Homescreen {
+    fn drop(&mut self) {
+        // Turn off the LED when homescreen is destroyed
+        rgb_led::set_color(0);
+    }
+}
+
 impl Component for Homescreen {
     type Msg = HomescreenMsg;
 
@@ -221,6 +229,11 @@ impl Component for Homescreen {
         self.hint.render(target);
         self.action_bar.render(target);
         self.htc_anim.render(target);
+        if let Some(rgb_led) = self.led_color {
+            rgb_led::set_color(rgb_led.to_u32());
+        } else {
+            rgb_led::set_color(0);
+        }
     }
 }
 
