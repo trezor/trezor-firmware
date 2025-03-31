@@ -45,6 +45,20 @@ def peer_count() -> int:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
+def allow_pairing() -> bool:
+    """
+    Accept BLE pairing request
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+def reject_pairing() -> bool:
+    """
+    Reject BLE pairing request
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
 class BleInterface:
     """
     BLE interface wrapper.
