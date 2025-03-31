@@ -45,9 +45,10 @@ def peer_count() -> int:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def allow_pairing() -> bool:
+def allow_pairing(code: int) -> bool:
     """
-    Accept BLE pairing request
+    Accept BLE pairing request. Code must match the one received with
+    BLE_PAIRING_REQUEST event.
     """
 
 

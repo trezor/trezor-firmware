@@ -35,13 +35,19 @@ pub fn pairing_mode(name: &str) {
     }
 }
 
-pub fn allow_pairing() {
+pub fn allow_pairing(mut code: u32) {
+    const CODE_LEN: u8 = 6;
+    let mut cmd = ffi::ble_command_t {
+        cmd_type: ffi::ble_command_type_t_BLE_ALLOW_PAIRING,
+        data_len: CODE_LEN,
+        data: ffi::ble_command_data_t { raw: [0; 32] },
+    };
     unsafe {
-        let mut cmd = ffi::ble_command_t {
-            cmd_type: ffi::ble_command_type_t_BLE_ALLOW_PAIRING,
-            data_len: 0,
-            data: ffi::ble_command_data_t { raw: [0; 32] },
-        };
+        for i in (0..CODE_LEN).rev() {
+            let digit = b'0' + ((code % 10) as u8);
+            code /= 10;
+            cmd.data.raw[i as usize] = digit;
+        }
         ffi::ble_issue_command(&mut cmd as _);
     }
 }
