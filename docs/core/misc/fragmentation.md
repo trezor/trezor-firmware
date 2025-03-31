@@ -49,6 +49,8 @@ Micropython to preallocate 160 slots in `mpconfigport.h` variable
 `trezor.utils`, so if we ever need more modules than that, the test suite _should_ catch
 it.
 
+Presizing is also applied to `__main__` module by setting `MICROPY_MAIN_DICT_SIZE`.
+
 ## Top-level and function-local imports
 
 In order to keep the imported image size in check, in certain places we avoid importing
