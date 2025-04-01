@@ -46,6 +46,7 @@ impl<T> Gc<T> {
         // EXCEPTION: Returns null instead of raising.
         unsafe {
             let raw = ffi::gc_alloc(layout.size(), flags);
+            dbg_println!("alloc({}) = {:?} flags: {}", layout.size(), raw, flags);
             if raw.is_null() {
                 return Err(Error::AllocationFailed);
             }

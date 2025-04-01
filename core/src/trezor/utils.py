@@ -96,6 +96,7 @@ def unimport_end(mods: set[str], collect: bool = True) -> None:
 class unimport:
     def __init__(self) -> None:
         self.mods: set[str] | None = None
+        self.i = 0
 
     def __enter__(self) -> None:
         self.mods = unimport_begin()
@@ -106,6 +107,10 @@ class unimport:
         self.mods.clear()
         self.mods = None
         gc.collect()
+        fname = f"/tmp/dump-{self.i:03}.json"
+        print(f"dumping to {fname}")
+        from trezorutils import meminfo; meminfo(fname)
+        self.i += 1
 
 
 def presize_module(modname: str, size: int) -> None:

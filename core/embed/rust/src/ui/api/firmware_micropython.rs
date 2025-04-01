@@ -789,7 +789,9 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         let skip_first_paint: bool = kwargs.get(Qstr::MP_QSTR_skip_first_paint)?.try_into()?;
 
         let layout = ModelUI::show_homescreen(label, hold, notification, notification_level)?;
+        dbg_println!("LayoutObj::new_root<");
         let layout_obj = LayoutObj::new_root(layout)?;
+        dbg_println!(">LayoutObj::new_root");
         if skip_first_paint {
             layout_obj.skip_first_paint();
         }

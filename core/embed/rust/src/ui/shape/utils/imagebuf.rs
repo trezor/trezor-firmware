@@ -40,6 +40,7 @@ where
         unsafe {
             IMAGE_BUFFER_LOCKED = false;
         }
+        dbg_println!("ImageBuffer::drop");
     }
 }
 

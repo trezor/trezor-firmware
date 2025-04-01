@@ -717,6 +717,8 @@ void dump_qstr_pool(FILE *out, const qstr_pool_t *pool) {
   }
 }
 
+void log_roots_from_regs(FILE *out);
+
 static void dump_meminfo_json(FILE *out) {
   bool should_close = true;
   if (out == NULL) {
@@ -727,60 +729,9 @@ static void dump_meminfo_json(FILE *out) {
     out = &mp_plat_print;
 #endif
   }
-  fprintf(out, "\n[\n[" UINT_FMT ", " UINT_FMT ", " UINT_FMT "],\n",
-          (mp_uint_t)MP_STATE_MEM(gc_pool_start),
-          (mp_uint_t)MP_STATE_MEM(gc_pool_end), BYTES_PER_BLOCK);
 
-  // void **ptrs = (void **)(void *)&mp_state_ctx;
-  // size_t root_start = offsetof(mp_state_ctx_t, thread.dict_locals);
-  // size_t root_end = offsetof(mp_state_ctx_t, vm.qstr_last_chunk);
+  log_roots_from_regs(out);
 
-  // for (size_t i = root_start; i < root_end; i++) {
-  //     void *ptr = ptrs[i];
-  //     if (i == 55) continue; // mp_loaded_modules_dict
-  //     if (i == 62) continue; // dict_main
-  //     if (i == 66) continue; // mp_sys_path_obj
-  //     if (i == 70) continue; // mp_sys_argv_obj
-  //     if (i == 123) continue; // qstr_last_chunk
-  //     if (VERIFY_PTR(ptr)) {
-  //         size_t block = BLOCK_FROM_PTR(ptr);
-  //         if (ATB_GET_KIND(block) == AT_HEAD) {
-  //           fprintf(out, "\"root_ofs: %ld\",\n", i);
-  //           dump_value(out, ptr);
-  //             // // An unmarked head: mark it, and mark all its children
-  //             // TRACE_MARK(block, ptr);
-  //             // ATB_HEAD_TO_MARK(block);
-  //             // gc_mark_subtree(block);
-  //         }
-  //     }
-  // }
-
-  fprintf(out, "\"dict_locals\",\n");
-  dump_value(out, MP_STATE_THREAD(dict_locals));
-
-  fprintf(out, "\"mp_loaded_modules_dict\",\n");
-  dump_value_opt(out, &MP_STATE_VM(mp_loaded_modules_dict), true);
-
-  fprintf(out, "\"dict_main\",\n");
-  dump_value_opt(out, &MP_STATE_VM(dict_main), true);
-
-  fprintf(out, "\"mp_sys_path_obj\",\n");
-  dump_value_opt(out, &MP_STATE_VM(mp_sys_path_obj), true);
-
-  fprintf(out, "\"mp_sys_argv_obj\",\n");
-  dump_value_opt(out, &MP_STATE_VM(mp_sys_argv_obj), true);
-
-  fprintf(out, "\"ui_wait_callback\",\n");
-  dump_value(out, MP_STATE_VM(trezorconfig_ui_wait_callback));
-
-  fprintf(out, "\"qstr_pools\",\n");
-  const qstr_pool_t *pool = MP_STATE_VM(last_pool);
-  while (VERIFY_PTR((void *)pool)) {
-    dump_qstr_pool(out, pool);
-    pool = pool->prev;
-  }
-
-  fprintf(out, "null\n]\n");
   if (should_close) {
     fclose(out);
   } else {
@@ -794,7 +745,6 @@ static void dump_meminfo_json(FILE *out) {
     }
   }
 
-  gc_dump_alloc_table();
 }
 
 /// def meminfo(filename: str | None) -> None:
