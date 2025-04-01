@@ -121,7 +121,7 @@ impl ProdtestUI for UICaesar {
 
     // currently has to be here due to clippy limitations
     #[cfg(feature = "touch")]
-    fn screen_prodtest_draw(events: Vec<TouchEvent, 256>) {
+    fn screen_prodtest_draw(_events: Vec<TouchEvent, 256>) {
         unimplemented!()
     }
 }
