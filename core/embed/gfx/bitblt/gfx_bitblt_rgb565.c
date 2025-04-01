@@ -19,7 +19,9 @@
 
 // Turning off the stack protector for this file improves
 // the performance of drawing operations when called frequently.
+#ifndef TREZOR_EMULATOR
 #pragma GCC optimize("no-stack-protector")
+#endif
 
 #include <gfx/gfx_bitblt.h>
 

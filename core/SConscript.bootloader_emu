@@ -258,9 +258,12 @@ rust = tools.add_rust_lib(
     build_dir=str(Dir('.').abspath),
 )
 
+env.Append(LINKFLAGS=['-lm'])
 
-env.Append(LINKFLAGS='-lm')
-env.Append(LINKFLAGS='-Wl,' + ('-dead_strip' if env['PLATFORM'] == 'darwin' else '--gc-sections'))
+if env['PLATFORM'] == 'darwin':
+    env.Append(LINKFLAGS=['-Wl,-dead_strip'])
+else:
+    env.Append(LINKFLAGS=['-Wl,--gc-sections'])
 
 #
 # Program objects
