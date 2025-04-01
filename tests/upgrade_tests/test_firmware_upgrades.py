@@ -379,11 +379,12 @@ def test_upgrade_shamir_backup(gen: str, tag: Optional[str]):
         mnemonic_secret = emu.client.debug.state().mnemonic_secret
 
         # Set passphrase_source = HOST.
-        session = emu.client.get_session()
+        session = emu.client.get_seedless_session()
         resp = session.call(ApplySettings(_passphrase_source=2, use_passphrase=True))
         assert isinstance(resp, Success)
 
         # Get a passphrase-less and a passphrased address.
+        session = emu.client.get_session()
         address = btc.get_address(session, "Bitcoin", PATH)
         if session.protocol_version == ProtocolVersion.V1:
             session.call(messages.Initialize(new_session=True))
