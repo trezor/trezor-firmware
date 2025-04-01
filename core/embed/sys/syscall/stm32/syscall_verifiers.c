@@ -45,6 +45,25 @@
 
 // ---------------------------------------------------------------------
 
+void sysevents_poll__verified(const sysevents_t *awaited,
+                              sysevents_t *signalled, uint32_t timeout) {
+  if (!probe_read_access(awaited, sizeof(*awaited))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(signalled, sizeof(*signalled))) {
+    goto access_violation;
+  }
+
+  sysevents_poll(awaited, signalled, timeout);
+  return;
+
+access_violation:
+  apptask_access_violation();
+}
+
+// ---------------------------------------------------------------------
+
 void system_exit__verified(int exit_code) {
   systask_t *task = systask_active();
 

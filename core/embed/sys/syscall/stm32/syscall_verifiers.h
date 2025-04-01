@@ -22,6 +22,12 @@
 #ifdef SYSCALL_DISPATCH
 
 // ---------------------------------------------------------------------
+#include <sys/sysevent.h>
+
+void sysevents_poll__verified(const sysevents_t *awaited,
+                              sysevents_t *signalled, uint32_t timeout);
+
+// ---------------------------------------------------------------------
 #include <sys/systask.h>
 
 void system_exit__verified(int exit_code);

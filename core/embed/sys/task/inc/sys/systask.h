@@ -135,7 +135,10 @@ void systask_scheduler_init(systask_error_handler_t error_handler);
 // Returns the currently running task
 systask_t* systask_active(void);
 
-// Makes the given task the currently running task
+// Returns the kernel task
+systask_t* systask_kernel(void);
+
+// Makes the given task the currently running task.
 void systask_yield_to(systask_t* task);
 
 // Initializes a task with the given stack pointer, stack size
@@ -161,8 +164,8 @@ void systask_pop_data(systask_t* task, size_t size);
 bool systask_push_call(systask_t* task, void* fn, uint32_t arg1, uint32_t arg2,
                        uint32_t arg3);
 
-// Gets the Id (zero-based index up SYSTASK_MAX_TASKS - 1) of the given task
-systask_id_t systask_id(systask_t* task);
+// Gets the ID (zero-based index up SYSTASK_MAX_TASKS - 1) of the given task.
+systask_id_t systask_id(const systask_t* task);
 
 // Terminates the task with the given exit code
 //

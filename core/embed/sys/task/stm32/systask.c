@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -25,10 +27,9 @@
 #include <sys/linker_utils.h>
 #include <sys/mpu.h>
 #include <sys/syscall.h>
+#include <sys/sysevent_source.h>
 #include <sys/systask.h>
 #include <sys/system.h>
-
-#ifdef KERNEL_MODE
 
 // Disable stack protector for this file since it  may interfere
 // with the stack manipulation and fault handling
@@ -96,6 +97,12 @@ systask_t* systask_active(void) {
   return scheduler->active_task;
 }
 
+systask_t* systask_kernel(void) {
+  systask_scheduler_t* scheduler = &g_systask_scheduler;
+
+  return &scheduler->kernel_task;
+}
+
 static void systask_yield(void) {
   bool handler_mode = (__get_IPSR() & IPSR_ISR_Msk) != 0;
 
@@ -146,6 +153,9 @@ bool systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
   task->id = id;
   task->mpu_mode = MPU_MODE_APP;
   task->applet = applet;
+
+  // Notify all event sources about the task creation
+  sysevents_notify_task_created(task);
 
   return true;
 }
@@ -238,7 +248,8 @@ static void systask_kill(systask_t* task) {
   } else if (task == scheduler->active_task) {
     // Free task ID
     scheduler->task_id_map &= ~(1 << task->id);
-
+    // Notify all event sources about the task termination
+    sysevents_notify_task_killed(task);
     // Switch to the kernel task
     systask_yield_to(&scheduler->kernel_task);
   }
