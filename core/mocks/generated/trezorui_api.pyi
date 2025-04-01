@@ -549,7 +549,8 @@ def show_pairing_device_name(
     *,
     device_name: str,
 ) -> LayoutObj[UiResult]:
-    """Pairing device: first screen (device name)."""
+    """Pairing device: first screen (device name).
+    Returns if BLEEvent::PairingRequest is received."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -557,7 +558,8 @@ def show_pairing_code(
     *,
     code: str,
 ) -> LayoutObj[UiResult]:
-    """Pairing device: second screen (pairing code)."""
+    """Pairing device: second screen (pairing code).
+    Returns on BLEEvent::{PairingCanceled, Disconnected}."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
