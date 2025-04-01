@@ -180,6 +180,10 @@ impl<'a> DeviceMenuScreen<'a> {
         let device = screen.add_device_menu(device_name, about);
         let settings = screen.add_settings_menu(security, device);
 
+        let is_connected = !paired_devices.is_empty(); // TODO this is mostly bad
+        let connected_subtext: Option<TString<'static>> =
+            is_connected.then_some("1 device connected".into());
+
         let mut paired_device_indices: Vec<usize, 1> = Vec::new();
         for (i, device) in paired_devices.iter().enumerate() {
             unwrap!(paired_device_indices
@@ -187,9 +191,10 @@ impl<'a> DeviceMenuScreen<'a> {
         }
 
         let devices = screen.add_paired_devices_menu(paired_devices, paired_device_indices);
-        let pair_and_connect = screen.add_pair_and_connect_menu(devices);
+        let pair_and_connect = screen.add_pair_and_connect_menu(devices, connected_subtext);
 
-        let root = screen.add_root_menu(failed_backup, pair_and_connect, settings);
+        let root =
+            screen.add_root_menu(failed_backup, pair_and_connect, settings, connected_subtext);
 
         screen.set_active_subscreen(root);
 
@@ -219,17 +224,18 @@ impl<'a> DeviceMenuScreen<'a> {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_pair_and_connect_menu(&mut self, manage_devices_index: usize) -> usize {
+    fn add_pair_and_connect_menu(
+        &mut self,
+        manage_devices_index: usize,
+        connected_subtext: Option<TString<'static>>,
+    ) -> usize {
         let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
         unwrap!(items.push(
             MenuItem::new(
                 "Manage paired devices".into(),
                 Some(Action::GoTo(manage_devices_index)),
             )
-            .with_subtext(Some((
-                "1 device connected".into(),
-                Some(Button::SUBTEXT_STYLE_GREEN)
-            )))
+            .with_subtext(connected_subtext.map(|t| (t, Some(Button::SUBTEXT_STYLE_GREEN))))
         ));
         unwrap!(items.push(MenuItem::new(
             "Pair new device".into(),
@@ -293,6 +299,7 @@ impl<'a> DeviceMenuScreen<'a> {
         failed_backup: bool,
         pair_and_connect_index: usize,
         settings_index: usize,
+        connected_subtext: Option<TString<'static>>,
     ) -> usize {
         let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
         if failed_backup {
@@ -310,10 +317,7 @@ impl<'a> DeviceMenuScreen<'a> {
                 "Pair & connect".into(),
                 Some(Action::GoTo(pair_and_connect_index)),
             )
-            .with_subtext(Some((
-                "1 device connected".into(),
-                Some(Button::SUBTEXT_STYLE_GREEN)
-            )))
+            .with_subtext(connected_subtext.map(|t| (t, Some(Button::SUBTEXT_STYLE_GREEN))))
         ));
         unwrap!(items.push(MenuItem::new(
             "Settings".into(),
