@@ -68,8 +68,4 @@ void button_deinit(void);
 bool button_get_event(button_event_t* event);
 
 // Checks if the specified button is currently pressed
-//
-// The current implementation returns the state of the button at the time
-// `button_get_event()` was called. In the future, we may fix this limitation.
-// For now, `button_get_event()` must be called before `button_is_down()`.
 bool button_is_down(button_t button);
