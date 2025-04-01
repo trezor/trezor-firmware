@@ -71,13 +71,7 @@ def emulator(gen: str, tag: str) -> Iterator[Emulator]:
 )
 def test_passphrase_works(emulator: Emulator):
     """Check that passphrase handling in trezorlib works correctly in all versions."""
-    if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
-        expected_responses = [
-            messages.PassphraseRequest,
-            messages.Deprecated_PassphraseStateRequest,
-            messages.Address,
-        ]
-    elif (
+    if (
         emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
     ) or (
         emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
@@ -105,8 +99,6 @@ def test_passphrase_works(emulator: Emulator):
             )
             if isinstance(resp, messages.PassphraseRequest):
                 resp = session.call_raw(messages.PassphraseAck(passphrase="TREZOR"))
-            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
-                resp = session.call_raw(messages.Deprecated_PassphraseStateAck())
             if isinstance(resp, messages.ButtonRequest):
                 resp = session._callback_button(resp)
             if isinstance(resp, messages.ButtonRequest):
@@ -124,15 +116,7 @@ def test_init_device(emulator: Emulator):
     """Check that passphrase caching and session_id retaining works correctly across
     supported versions.
     """
-    if emulator.client.features.model == "T" and emulator.client.version < (2, 3, 0):
-        expected_responses = [
-            messages.PassphraseRequest,
-            messages.Deprecated_PassphraseStateRequest,
-            messages.Address,
-            messages.Features,
-            messages.Address,
-        ]
-    elif (
+    if (
         emulator.client.features.model == "T" and emulator.client.version < (2, 3, 3)
     ) or (
         emulator.client.features.model == "1" and emulator.client.version < (1, 9, 3)
@@ -165,8 +149,6 @@ def test_init_device(emulator: Emulator):
             )
             if isinstance(resp, messages.PassphraseRequest):
                 resp = session.call_raw(messages.PassphraseAck(passphrase="TREZOR"))
-            if isinstance(resp, messages.Deprecated_PassphraseStateRequest):
-                resp = session.call_raw(messages.Deprecated_PassphraseStateAck())
             if isinstance(resp, messages.ButtonRequest):
                 resp = session._callback_button(resp)
             if isinstance(resp, messages.ButtonRequest):
@@ -176,6 +158,7 @@ def test_init_device(emulator: Emulator):
             session = client.get_session(passphrase="TREZOR")
             btc.get_address(session, "Testnet", parse_path("44h/1h/0h/0/0"))
         # in TT < 2.3.0 session_id will only be available after PassphraseStateRequest
+        # support for TT < 2.3.0 dropped in trezorlib 0.14
         session_id = session.id
         if client.protocol_version == ProtocolVersion.V1:
             session.call(messages.Initialize(session_id=session_id))
