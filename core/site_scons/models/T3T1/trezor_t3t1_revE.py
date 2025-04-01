@@ -66,6 +66,7 @@ def configure(
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
         sources += ["embed/io/touch/ft6x36/ft6x36.c"]
+        sources += ["embed/io/touch/touch_fsm.c"]
         sources += ["embed/io/touch/ft6x36/panels/lx154a2422cpt23.c"]
         paths += ["embed/io/i2c_bus/inc"]
         paths += ["embed/io/touch/inc"]
