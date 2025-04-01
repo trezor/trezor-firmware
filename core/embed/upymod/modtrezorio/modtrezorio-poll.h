@@ -34,16 +34,6 @@
 
 #include "embed/upymod/trezorobj.h"
 
-#ifdef TREZOR_EMULATOR
-#include "SDL.h"
-#endif
-
-#define BLE_EVENT_IFACE (252)
-#define USB_EVENT_IFACE (253)
-#define BUTTON_IFACE (254)
-#define TOUCH_IFACE (255)
-#define USB_RW_IFACE_MAX (15)  // 0-15 reserved for USB
-#define BLE_IFACE (16)
 #define POLL_READ (0x0000)
 #define POLL_WRITE (0x0100)
 
@@ -98,6 +88,25 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
     mp_raise_TypeError("invalid list_ref");
   }
 
+  sysevents_t awaited = {0};
+
+  mp_obj_iter_buf_t iterbuf = {0};
+
+  mp_obj_t iter = mp_getiter(ifaces, &iterbuf);
+  mp_obj_t item = 0;
+  while ((item = mp_iternext(iter)) != MP_OBJ_STOP_ITERATION) {
+    const mp_uint_t i = trezor_obj_get_uint(item);
+    const mp_uint_t iface = i & 0x00FF;
+    const mp_uint_t mode = i & 0xFF00;
+
+    if (mode & POLL_WRITE) {
+      awaited.write_ready |= (1 << iface);
+
+    } else {
+      awaited.read_ready |= (1 << iface);
+    }
+  }
+
   // The value `timeout_ms` can be negative in a minority of cases, indicating a
   // deadline overrun. This is not a problem because we use the `timeout` only
   // to calculate a `deadline`, and having deadline in the past works fine
@@ -106,157 +115,118 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
   // just coerce it to an uint. Deliberately assigning *get_int* to *uint_t*
   // will give us C's wrapping unsigned overflow behavior, and the `deadline`
   // result will come out correct.
-  const mp_uint_t timeout = trezor_obj_get_int(timeout_ms);
-  const mp_uint_t deadline = mp_hal_ticks_ms() + timeout;
-  mp_obj_iter_buf_t iterbuf = {0};
+  const mp_uint_t timeout = MAX(trezor_obj_get_int(timeout_ms), 0);
+  sysevents_t signalled = {0};
 
-  {
-    // This is just a dummy call to `sysevent_poll` to ensure cooperative
-    // multitasking works. Event polling is still performed in the loop below
-    // but will be replaced in the future.
-    sysevents_t awaited = {0};
-    sysevents_t signalled = {0};
-    sysevent_poll(&awaited, &signalled, 0);
+  sysevents_poll(&awaited, &signalled, timeout);
+
+#ifdef USE_TOUCH
+  if (signalled.read_ready & (1 << SYSHANDLE_TOUCH)) {
+    const uint32_t evt = touch_get_event();
+    if (evt != 0) {
+      // ignore TOUCH_MOVE events if they are too frequent
+      if ((evt & TOUCH_MOVE) == 0 ||
+          (hal_ticks_ms() - last_touch_sample_time > 10)) {
+        last_touch_sample_time = hal_ticks_ms();
+
+        mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
+        const uint32_t etype = (evt >> 24) & 0xFFU;  // event type
+        const uint32_t ex = (evt >> 12) & 0xFFFU;    // x position
+        const uint32_t ey = evt & 0xFFFU;            // y position
+        uint32_t exr;                                // rotated x position
+        uint32_t eyr;                                // rotated y position
+        switch (display_get_orientation()) {
+          case 90:
+            exr = ey;
+            eyr = DISPLAY_RESX - ex;
+            break;
+          case 180:
+            exr = DISPLAY_RESX - ex;
+            eyr = DISPLAY_RESY - ey;
+            break;
+          case 270:
+            exr = DISPLAY_RESY - ey;
+            eyr = ex;
+            break;
+          default:
+            exr = ex;
+            eyr = ey;
+            break;
+        }
+        tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
+        tuple->items[1] = MP_OBJ_NEW_SMALL_INT(exr);
+        tuple->items[2] = MP_OBJ_NEW_SMALL_INT(eyr);
+        ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_TOUCH);
+        ret->items[1] = MP_OBJ_FROM_PTR(tuple);
+        return mp_const_true;
+      }
+    }
+  }
+#endif
+
+#ifdef USE_BUTTON
+  if (signalled.read_ready & (1 << SYSHANDLE_BUTTON)) {
+    button_event_t btn_event = {0};
+    if (button_get_event(&btn_event)) {
+      mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+      uint32_t etype = btn_event.event_type;
+      uint32_t en = btn_event.button;
+      if (display_get_orientation() == 180) {
+        en = (en == BTN_LEFT) ? BTN_RIGHT : BTN_LEFT;
+      }
+      tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
+      tuple->items[1] = MP_OBJ_NEW_SMALL_INT(en);
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BUTTON);
+      ret->items[1] = MP_OBJ_FROM_PTR(tuple);
+      return mp_const_true;
+    }
+  }
+#endif
+
+#ifdef USE_BLE
+  if (signalled.read_ready & (1 << SYSHANDLE_BLE_IFACE_0)) {
+    ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE_IFACE_0);
+    ret->items[1] = MP_OBJ_NEW_SMALL_INT(BLE_RX_PACKET_SIZE);
+    return mp_const_true;
   }
 
-  for (;;) {
-    mp_obj_t iter = mp_getiter(ifaces, &iterbuf);
-    mp_obj_t item = 0;
-    while ((item = mp_iternext(iter)) != MP_OBJ_STOP_ITERATION) {
-      const mp_uint_t i = trezor_obj_get_uint(item);
-      const mp_uint_t iface = i & 0x00FF;
-      const mp_uint_t mode = i & 0xFF00;
+  if (signalled.write_ready & (1 << SYSHANDLE_BLE_IFACE_0)) {
+    ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE_IFACE_0 | POLL_WRITE);
+    ret->items[1] = mp_const_none;
+    return mp_const_true;
+  }
 
-#if defined TREZOR_EMULATOR
-      // Ensures that SDL events are processed even if the ifaces list
-      // contains only USB interfaces. This prevents the emulator from
-      // freezing when the user interacts with the window.
-      SDL_PumpEvents();
-#endif
-
-      if (false) {
-      }
-#if defined USE_TOUCH
-      else if (iface == TOUCH_IFACE) {
-        const uint32_t evt = touch_get_event();
-        if (evt) {
-          // ignore TOUCH_MOVE events if they are too frequent
-          if ((evt & TOUCH_MOVE) == 0 ||
-              (hal_ticks_ms() - last_touch_sample_time > 10)) {
-            last_touch_sample_time = hal_ticks_ms();
-
-            mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
-            const uint32_t etype = (evt >> 24) & 0xFFU;  // event type
-            const uint32_t ex = (evt >> 12) & 0xFFFU;    // x position
-            const uint32_t ey = evt & 0xFFFU;            // y position
-            uint32_t exr;                                // rotated x position
-            uint32_t eyr;                                // rotated y position
-            switch (display_get_orientation()) {
-              case 90:
-                exr = ey;
-                eyr = DISPLAY_RESX - ex;
-                break;
-              case 180:
-                exr = DISPLAY_RESX - ex;
-                eyr = DISPLAY_RESY - ey;
-                break;
-              case 270:
-                exr = DISPLAY_RESY - ey;
-                eyr = ex;
-                break;
-              default:
-                exr = ex;
-                eyr = ey;
-                break;
-            }
-            tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
-            tuple->items[1] = MP_OBJ_NEW_SMALL_INT(exr);
-            tuple->items[2] = MP_OBJ_NEW_SMALL_INT(eyr);
-            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-            ret->items[1] = MP_OBJ_FROM_PTR(tuple);
-            return mp_const_true;
-          }
-        }
-      }
-#endif
-      else if (iface == USB_EVENT_IFACE) {
-        usb_event_t event = usb_get_event();
-
-        if (event != USB_EVENT_NONE) {
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = MP_OBJ_NEW_SMALL_INT((int32_t)event);
-          return mp_const_true;
-        }
-      }
-#if USE_BUTTON
-      else if (iface == BUTTON_IFACE) {
-        button_event_t btn_event = {0};
-        const bool btn = button_get_event(&btn_event);
-        if (btn) {
-          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-          uint32_t etype = btn_event.event_type;
-          uint32_t en = btn_event.button;
-          if (display_get_orientation() == 180) {
-            en = (en == BTN_LEFT) ? BTN_RIGHT : BTN_LEFT;
-          }
-          tuple->items[0] = MP_OBJ_NEW_SMALL_INT(etype);
-          tuple->items[1] = MP_OBJ_NEW_SMALL_INT(en);
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = MP_OBJ_FROM_PTR(tuple);
-          return mp_const_true;
-        }
-      }
-#endif
-      else if (iface <= USB_RW_IFACE_MAX) {
-        if (mode == POLL_READ) {
-          if ((sectrue == usb_hid_can_read(iface)) ||
-              (sectrue == usb_webusb_can_read(iface))) {
-            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-            ret->items[1] = MP_OBJ_NEW_SMALL_INT(USB_PACKET_LEN);
-            return mp_const_true;
-          }
-        } else if (mode == POLL_WRITE) {
-          if ((sectrue == usb_hid_can_write(iface)) ||
-              (sectrue == usb_webusb_can_write(iface))) {
-            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-            ret->items[1] = mp_const_none;
-            return mp_const_true;
-          }
-        }
-      }
-#ifdef USE_BLE
-      else if (iface == BLE_IFACE) {
-        if (mode == POLL_READ) {
-          if (ble_can_read()) {
-            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-            ret->items[1] = MP_OBJ_NEW_SMALL_INT(BLE_RX_PACKET_SIZE);
-            return mp_const_true;
-          }
-        } else if (mode == POLL_WRITE) {
-          if (ble_can_write()) {
-            ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-            ret->items[1] = mp_const_none;
-            return mp_const_true;
-          }
-        }
-      } else if (iface == BLE_EVENT_IFACE) {
-        ble_event_t event = {0};
-        bool read = ble_get_event(&event);
-        if (read) {
-          mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
-          tuple->items[0] = MP_OBJ_NEW_SMALL_INT(event.type);
-          tuple->items[1] = parse_ble_event_data(&event);
-          ret->items[0] = MP_OBJ_NEW_SMALL_INT(i);
-          ret->items[1] = MP_OBJ_FROM_PTR(tuple);
-          return mp_const_true;
-        }
-      }
-#endif
+  if (signalled.read_ready & (1 << SYSHANDLE_BLE)) {
+    ble_event_t event = {0};
+    if (ble_get_event(&event)) {
+      mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(2, NULL));
+      tuple->items[0] = MP_OBJ_NEW_SMALL_INT(event.type);
+      tuple->items[1] = parse_ble_event_data(&event);
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE);
+      ret->items[1] = MP_OBJ_FROM_PTR(tuple);
+      return mp_const_true;
     }
-    if (mp_hal_ticks_ms() >= deadline) {
-      break;
-    } else {
-      MICROPY_EVENT_POLL_HOOK
+  }
+#endif
+
+  if (signalled.read_ready & (1 << SYSHANDLE_USB)) {
+    usb_event_t event = usb_get_event();
+    ret->items[0] = MP_OBJ_NEW_SMALL_INT(SYSHANDLE_USB);
+    ret->items[1] = MP_OBJ_NEW_SMALL_INT((int32_t)event);
+    return mp_const_true;
+  }
+
+  for (syshandle_t h = SYSHANDLE_USB_IFACE_0; h <= SYSHANDLE_USB_IFACE_7; h++) {
+    if (signalled.read_ready & (1 << h)) {
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(h);
+      ret->items[1] = MP_OBJ_NEW_SMALL_INT(USB_PACKET_LEN);
+      return mp_const_true;
+    }
+
+    if (signalled.write_ready & (1 << h)) {
+      ret->items[0] = MP_OBJ_NEW_SMALL_INT(h | POLL_WRITE);
+      ret->items[1] = mp_const_none;
+      return mp_const_true;
     }
   }
 
