@@ -142,9 +142,9 @@ impl ComponentMsgObj for SetBrightnessScreen {
 impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            DeviceMenuMsg::NotImplemented => "NotImplemented".try_into(),
             DeviceMenuMsg::BackupFailed => "BackupFailed".try_into(),
-            DeviceMenuMsg::PairNewDevice => "PairNewDevice".try_into(),
+            DeviceMenuMsg::DevicePair => "DevicePair".try_into(),
+            DeviceMenuMsg::DeviceDisconnect(_) => "DeviceDisconnect".try_into(),
             DeviceMenuMsg::CheckBackup => "CheckBackup".try_into(),
             DeviceMenuMsg::WipeDevice => "WipeDevice".try_into(),
             DeviceMenuMsg::ScreenBrightness => "ScreenBrightness".try_into(),

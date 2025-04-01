@@ -807,7 +807,7 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
         let battery_percentage: usize = kwargs.get_or(Qstr::MP_QSTR_battery_percentage, 0)?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
-        let paired_devices: Vec<TString, 10> = util::iter_into_vec(paired_devices)?;
+        let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
         let layout = ModelUI::show_device_menu(failed_backup, battery_percentage, paired_devices)?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())

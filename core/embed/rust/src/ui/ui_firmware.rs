@@ -304,7 +304,7 @@ pub trait FirmwareUI {
     fn show_device_menu(
         failed_backup: bool,
         battery_percentage: usize,
-        paired_devices: Vec<TString<'static>, 10>,
+        paired_devices: Vec<TString<'static>, 1>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_info(

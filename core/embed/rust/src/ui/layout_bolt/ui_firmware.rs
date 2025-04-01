@@ -870,7 +870,7 @@ impl FirmwareUI for UIBolt {
         Ok(layout)
     }
 
-    fn show_device_menu(_failed_backup: bool, _battery_percentage: usize, _paired_devices: Vec<TString<'static>, 10>) -> Result<impl LayoutMaybeTrace, Error> {
+    fn show_device_menu(_failed_backup: bool, _battery_percentage: usize, _paired_devices: Vec<TString<'static>, 1>) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_device_menu not supported"))
     }
 

@@ -8,7 +8,7 @@ use crate::{
         },
         geometry::Rect,
         layout_eckhart::{
-            component::Button,
+            component::{Button, ButtonStyleSheet},
             constant::SCREEN,
             firmware::{
                 Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
@@ -23,38 +23,29 @@ use super::theme;
 use heapless::Vec;
 
 const MAX_DEPTH: usize = 5;
-const MAX_SUBMENUS: usize = 10;
+const MAX_SUBSCREENS: usize = 10;
 
-#[derive(Clone, Debug)]
+const DISCONNECT_DEVICE_MENU_INDEX: usize = 1;
+
+#[derive(Clone)]
 enum Action {
-    // Go to another registered child screen
+    // Go to another registered subscreen
     GoTo(usize),
 
     // Return a DeviceMenuMsg to the caller
     Return(DeviceMenuMsg),
 }
 
-struct SubmenuScreen {
-    pub screen: VerticalMenuScreen,
-
-    // actions for the menu items in the VerticalMenuScreen, in order
-    pub actions: Vec<Option<Action>, MENU_MAX_ITEMS>,
-}
-
-enum Subscreen {
-    Submenu(SubmenuScreen),
-    AboutScreen,
-}
-
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 pub enum DeviceMenuMsg {
-    NotImplemented,
-
     // Root menu
     BackupFailed,
 
     // "Pair & Connect"
-    PairNewDevice,
+    DevicePair, // pair a new device
+    DeviceDisconnect(
+        usize, /* which device to disconnect, index in the list of devices */
+    ),
 
     // Security menu
     CheckBackup,
@@ -63,20 +54,99 @@ pub enum DeviceMenuMsg {
     // Device menu
     ScreenBrightness,
 
+    // nothing selected
     Close,
+}
+
+struct MenuItem {
+    text: TString<'static>,
+    subtext: Option<TString<'static>>,
+    stylesheet: ButtonStyleSheet,
+    green_subtext: bool,
+    action: Option<Action>,
+}
+
+impl MenuItem {
+    pub fn new(text: TString<'static>, action: Option<Action>) -> Self {
+        Self {
+            text,
+            subtext: None,
+            stylesheet: theme::menu_item_title(),
+            green_subtext: false,
+            action,
+        }
+    }
+
+    pub fn with_subtext(mut self, subtext: Option<TString<'static>>) -> Self {
+        self.subtext = subtext;
+        self
+    }
+
+    pub fn with_stylesheet(mut self, stylesheet: ButtonStyleSheet) -> Self {
+        self.stylesheet = stylesheet;
+        self
+    }
+
+    pub fn with_green_subtext(mut self) -> Self {
+        self.green_subtext = true;
+        self
+    }
+}
+
+struct SubmenuScreen {
+    header_text: TString<'static>,
+    show_battery: bool,
+    items: Vec<MenuItem, MENU_MAX_ITEMS>,
+}
+
+impl SubmenuScreen {
+    pub fn new(header_text: TString<'static>, items: Vec<MenuItem, MENU_MAX_ITEMS>) -> Self {
+        Self {
+            header_text,
+            show_battery: false,
+            items,
+        }
+    }
+
+    pub fn with_battery(mut self) -> Self {
+        self.show_battery = true;
+        self
+    }
+}
+
+// Each subscreen of the DeviceMenuScreen is one of these
+enum Subscreen {
+    // A menu, with associated items and actions
+    Submenu(SubmenuScreen),
+
+    // A screen allowing the user to to disconnect a device
+    DeviceScreen(
+        TString<'static>, /* device name */
+        usize,            /* index in the list of devices */
+    ),
+
+    // The about screen
+    AboutScreen,
 }
 
 pub struct DeviceMenuScreen<'a> {
     bounds: Rect,
 
-    about_screen: TextScreen<Paragraphs<[Paragraph<'a>; 2]>>,
+    battery_percentage: usize,
 
-    // all the subscreens in the DeviceMenuScreen
-    // which can be either VerticalMenuScreens with associated Actions
-    // or some predefined TextScreens, such as "About"
-    subscreens: Vec<Subscreen, MAX_SUBMENUS>,
+    // These correspond to the currently active subscreen,
+    // which is one of the possible kinds of subscreens
+    // as defined by `enum Subscreen`
+    // The active one will be Some(...) and the other two will be None.
+    // This way we only need to keep one screen at any time in memory.
+    menu_screen: Option<VerticalMenuScreen>,
+    paired_device_screen: Option<VerticalMenuScreen>,
+    about_screen: Option<TextScreen<Paragraphs<[Paragraph<'a>; 2]>>>,
 
-    // the index of the current subscreen in the list of subscreens
+    // Information needed to construct any subscreen on demand
+    subscreens: Vec<Subscreen, MAX_SUBSCREENS>,
+
+    // index of the current subscreen in the list of subscreens
     active_subscreen: usize,
 
     // stack of parents that led to the current subscreen
@@ -87,19 +157,18 @@ impl<'a> DeviceMenuScreen<'a> {
     pub fn new(
         failed_backup: bool,
         battery_percentage: usize,
-        paired_devices: Vec<TString<'static>, 10>,
+        // NB: we currently only support one device at a time.
+        // if we ever increase this size, we will need a way to return the correct
+        // device index on Disconnect back to uPy
+        // (see component_msg_obj.rs, which currently just returns "DeviceDisconnect" with no index!)
+        paired_devices: Vec<TString<'static>, 1>,
     ) -> Self {
-        let about_content = Paragraphs::new([
-            Paragraph::new(&theme::firmware::TEXT_REGULAR, "Firmware version"),
-            Paragraph::new(&theme::firmware::TEXT_REGULAR, "2.3.1"), // TODO
-        ]);
-
-        let about_screen = TextScreen::new(about_content)
-            .with_header(Header::new("About".into()).with_close_button());
-
         let mut screen = Self {
             bounds: Rect::zero(),
-            about_screen,
+            battery_percentage,
+            menu_screen: None,
+            paired_device_screen: None,
+            about_screen: None,
             active_subscreen: 0,
             subscreens: Vec::new(),
             parent_subscreens: Vec::new(),
@@ -110,220 +179,147 @@ impl<'a> DeviceMenuScreen<'a> {
         let device = screen.add_device_menu("My device".into(), about); // TODO: device name
         let settings = screen.add_settings_menu(security, device);
 
-        let mut paired_device_indices: Vec<usize, 10> = Vec::new();
-        for device in &paired_devices {
-            unwrap!(paired_device_indices.push(screen.add_paired_device_menu(*device)));
+        let mut paired_device_indices: Vec<usize, 1> = Vec::new();
+        for (i, device) in paired_devices.iter().enumerate() {
+            unwrap!(paired_device_indices
+                .push(screen.add_subscreen(Subscreen::DeviceScreen(*device, i))));
         }
 
         let devices = screen.add_paired_devices_menu(paired_devices, paired_device_indices);
         let pair_and_connect = screen.add_pair_and_connect_menu(devices);
 
-        let root = screen.add_root_menu(
-            failed_backup,
-            battery_percentage,
-            pair_and_connect,
-            settings,
-        );
+        let root = screen.add_root_menu(failed_backup, pair_and_connect, settings);
 
         screen.set_active_subscreen(root);
 
         screen
     }
 
-    fn add_paired_device_menu(&mut self, device: TString<'static>) -> usize {
-        let mut actions: Vec<Option<Action>, MENU_MAX_ITEMS> = Vec::new();
-        let mut menu = VerticalMenu::empty().with_separators();
-        menu = menu.item(Button::new_menu_item(
-            device.into(),
-            None,
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(None));
-
-        let screen = VerticalMenuScreen::new(menu).with_header(
-            Header::new("Manage".into())
-                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
-        );
-
-        self.add_subscreen(Subscreen::Submenu(SubmenuScreen { screen, actions }))
-    }
-
     fn add_paired_devices_menu(
         &mut self,
-        paired_devices: Vec<TString<'static>, 10>,
-        paired_device_indices: Vec<usize, 10>,
+        paired_devices: Vec<TString<'static>, 1>,
+        paired_device_indices: Vec<usize, 1>,
     ) -> usize {
-        let mut actions: Vec<Option<Action>, MENU_MAX_ITEMS> = Vec::new();
-        let mut menu = VerticalMenu::empty().with_separators();
+        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
         for (device, idx) in paired_devices.iter().zip(paired_device_indices) {
-            menu = menu.item(Button::new_menu_item(
-                (*device).into(),
-                None,
-                theme::menu_item_title(),
+            unwrap!(items.push(
+                MenuItem::new((*device).into(), Some(Action::GoTo(idx)))
+                    .with_subtext(Some("Connected".into())) // TODO: this should be a boolean feature of the device
+                    .with_green_subtext()
             ));
-            unwrap!(actions.push(Some(Action::GoTo(idx))));
         }
 
-        let screen = VerticalMenuScreen::new(menu).with_header(
-            Header::new("Manage paired devices".into())
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled)
-                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
-        );
-
-        self.add_subscreen(Subscreen::Submenu(SubmenuScreen { screen, actions }))
+        self.add_subscreen(Subscreen::Submenu(SubmenuScreen::new(
+            "Manage paired devices".into(),
+            items,
+        )))
     }
 
     fn add_pair_and_connect_menu(&mut self, manage_devices_index: usize) -> usize {
-        let mut actions: Vec<Option<Action>, MENU_MAX_ITEMS> = Vec::new();
-        let mut menu = VerticalMenu::empty().with_separators();
-        menu = menu.item(
-            Button::new_menu_item(
+        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        unwrap!(items.push(
+            MenuItem::new(
                 "Manage paired devices".into(),
-                Some("1 device connected".into()), // TODO
-                theme::menu_item_title(),
+                Some(Action::GoTo(manage_devices_index)),
             )
-            .subtext_green(),
-        );
-        unwrap!(actions.push(Some(Action::GoTo(manage_devices_index))));
-        menu = menu.item(Button::new_menu_item(
-            "Pair new device".into(),
-            None,
-            theme::menu_item_title(),
+            .with_subtext(Some("1 device connected".into()))
+            .with_green_subtext(),
         ));
-        unwrap!(actions.push(Some(Action::Return(DeviceMenuMsg::PairNewDevice))));
+        unwrap!(items.push(MenuItem::new(
+            "Pair new device".into(),
+            Some(Action::Return(DeviceMenuMsg::DevicePair)),
+        )));
 
-        let screen = VerticalMenuScreen::new(menu).with_header(
-            Header::new("Pair & Connect".into())
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled)
-                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
-        );
-
-        self.add_subscreen(Subscreen::Submenu(SubmenuScreen { screen, actions }))
+        self.add_subscreen(Subscreen::Submenu(SubmenuScreen::new(
+            "Pair & connect".into(),
+            items,
+        )))
     }
 
     fn add_settings_menu(&mut self, security_index: usize, device_index: usize) -> usize {
-        let mut actions: Vec<Option<Action>, MENU_MAX_ITEMS> = Vec::new();
-        let mut menu = VerticalMenu::empty().with_separators();
-        menu = menu.item(Button::new_menu_item(
+        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        unwrap!(items.push(MenuItem::new(
             "Security".into(),
-            None,
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(Some(Action::GoTo(security_index))));
-        menu = menu.item(Button::new_menu_item(
+            Some(Action::GoTo(security_index))
+        )));
+        unwrap!(items.push(MenuItem::new(
             "Device".into(),
-            None,
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(Some(Action::GoTo(device_index))));
+            Some(Action::GoTo(device_index))
+        )));
 
-        let screen = VerticalMenuScreen::new(menu).with_header(
-            Header::new("Settings".into())
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled)
-                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
-        );
-
-        self.add_subscreen(Subscreen::Submenu(SubmenuScreen { screen, actions }))
+        self.add_subscreen(Subscreen::Submenu(SubmenuScreen::new(
+            "Settings".into(),
+            items,
+        )))
     }
 
     fn add_security_menu(&mut self) -> usize {
-        let mut actions: Vec<Option<Action>, MENU_MAX_ITEMS> = Vec::new();
-        let mut menu = VerticalMenu::empty().with_separators();
-        menu = menu.item(Button::new_menu_item(
+        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        unwrap!(items.push(MenuItem::new(
             "Check backup".into(),
-            None,
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(Some(Action::Return(DeviceMenuMsg::CheckBackup))));
-        menu = menu.item(Button::new_menu_item(
+            Some(Action::Return(DeviceMenuMsg::CheckBackup)),
+        )));
+        unwrap!(items.push(MenuItem::new(
             "Wipe device".into(),
-            None,
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(Some(Action::Return(DeviceMenuMsg::WipeDevice))));
+            Some(Action::Return(DeviceMenuMsg::WipeDevice))
+        )));
 
-        let screen = VerticalMenuScreen::new(menu).with_header(
-            Header::new("Security".into())
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled)
-                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
-        );
-
-        self.add_subscreen(Subscreen::Submenu(SubmenuScreen { screen, actions }))
+        self.add_subscreen(Subscreen::Submenu(SubmenuScreen::new(
+            "Security".into(),
+            items,
+        )))
     }
 
     fn add_device_menu(&mut self, device_name: TString<'static>, about_index: usize) -> usize {
-        let mut actions: Vec<Option<Action>, MENU_MAX_ITEMS> = Vec::new();
-        let mut menu = VerticalMenu::empty().with_separators();
-        menu = menu.item(Button::new_menu_item(
-            "Name".into(),
-            Some(device_name),
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(None));
-        menu = menu.item(Button::new_menu_item(
+        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        unwrap!(items.push(MenuItem::new("Name".into(), None).with_subtext(Some(device_name))));
+        unwrap!(items.push(MenuItem::new(
             "Screen brightness".into(),
-            None,
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(Some(Action::Return(DeviceMenuMsg::ScreenBrightness))));
-        menu = menu.item(Button::new_menu_item(
+            Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
+        )));
+        unwrap!(items.push(MenuItem::new(
             "About".into(),
-            None,
-            theme::menu_item_title(),
-        ));
-        unwrap!(actions.push(Some(Action::GoTo(about_index))));
+            Some(Action::GoTo(about_index))
+        )));
 
-        let screen = VerticalMenuScreen::new(menu).with_header(
-            Header::new("Security".into())
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled)
-                .with_left_button(Button::with_icon(theme::ICON_CHEVRON_LEFT), HeaderMsg::Back),
-        );
-
-        self.add_subscreen(Subscreen::Submenu(SubmenuScreen { screen, actions }))
+        self.add_subscreen(Subscreen::Submenu(SubmenuScreen::new(
+            "Device".into(),
+            items,
+        )))
     }
 
     fn add_root_menu(
         &mut self,
         failed_backup: bool,
-        battery_percentage: usize,
         pair_and_connect_index: usize,
         settings_index: usize,
     ) -> usize {
-        let mut actions: Vec<Option<Action>, MENU_MAX_ITEMS> = Vec::new();
-        let mut menu = VerticalMenu::empty().with_separators();
+        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
         if failed_backup {
-            menu = menu.item(Button::new_menu_item(
-                "Backup failed".into(),
-                Some("Review".into()),
-                theme::menu_item_title_red(),
+            unwrap!(items.push(
+                MenuItem::new(
+                    "Backup failed".into(),
+                    Some(Action::Return(DeviceMenuMsg::BackupFailed)),
+                )
+                .with_subtext(Some("Review".into()))
+                .with_stylesheet(theme::menu_item_title_red()),
             ));
-            unwrap!(actions.push(Some(Action::Return(DeviceMenuMsg::BackupFailed))));
         }
-
-        menu = menu.item(
-            Button::new_menu_item(
+        unwrap!(items.push(
+            MenuItem::new(
                 "Pair & connect".into(),
-                Some("1 device connected".into()), // TODO
-                theme::menu_item_title(),
+                Some(Action::GoTo(pair_and_connect_index)),
             )
-            .subtext_green(),
-        );
-        unwrap!(actions.push(Some(Action::GoTo(pair_and_connect_index))));
-
-        menu = menu.item(Button::new_menu_item(
-            "Settings".into(),
-            None,
-            theme::menu_item_title(),
+            .with_subtext(Some("1 device connected".into()))
+            .with_green_subtext(),
         ));
-        unwrap!(actions.push(Some(Action::GoTo(settings_index))));
-
-        let screen = VerticalMenuScreen::new(menu).with_header(
-            Header::new("".into())
-                .with_battery(battery_percentage)
-                .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),
-        );
-
-        self.add_subscreen(Subscreen::Submenu(SubmenuScreen { screen, actions }))
+        unwrap!(items.push(MenuItem::new(
+            "Settings".into(),
+            Some(Action::GoTo(settings_index)),
+        )));
+        self.add_subscreen(Subscreen::Submenu(
+            SubmenuScreen::new("".into(), items).with_battery(),
+        ))
     }
 
     fn add_subscreen(&mut self, screen: Subscreen) -> usize {
@@ -334,16 +330,87 @@ impl<'a> DeviceMenuScreen<'a> {
     fn set_active_subscreen(&mut self, idx: usize) {
         assert!(idx < self.subscreens.len());
         self.active_subscreen = idx;
+        self.build_active_subscreen();
+    }
+
+    fn build_active_subscreen(&mut self) {
+        match self.subscreens[self.active_subscreen] {
+            Subscreen::Submenu(ref mut submenu) => {
+                self.paired_device_screen = None;
+                self.about_screen = None;
+                let mut menu = VerticalMenu::empty().with_separators();
+                for item in &submenu.items {
+                    let mut button =
+                        Button::new_menu_item(item.text, item.subtext, item.stylesheet);
+                    if item.green_subtext {
+                        button = button.subtext_green();
+                    }
+                    menu = menu.item(button);
+                }
+                let mut header = Header::new(submenu.header_text)
+                    .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled);
+                if submenu.show_battery {
+                    header = header.with_battery(self.battery_percentage);
+                } else {
+                    header = header.with_left_button(
+                        Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                        HeaderMsg::Back,
+                    );
+                }
+                self.menu_screen = Some(VerticalMenuScreen::new(menu).with_header(header));
+            }
+            Subscreen::DeviceScreen(device, _) => {
+                self.menu_screen = None;
+                self.about_screen = None;
+                let mut menu = VerticalMenu::empty().with_separators();
+                menu = menu.item(Button::new_menu_item(
+                    device,
+                    None,
+                    theme::menu_item_title(),
+                ));
+                menu = menu.item(Button::new_menu_item(
+                    "Disconnect".into(),
+                    None,
+                    theme::menu_item_title_red(),
+                ));
+                self.paired_device_screen = Some(
+                    VerticalMenuScreen::new(menu).with_header(
+                        Header::new("Manage".into())
+                            .with_right_button(
+                                Button::with_icon(theme::ICON_CROSS),
+                                HeaderMsg::Cancelled,
+                            )
+                            .with_left_button(
+                                Button::with_icon(theme::ICON_CHEVRON_LEFT),
+                                HeaderMsg::Back,
+                            ),
+                    ),
+                );
+            }
+            Subscreen::AboutScreen => {
+                self.menu_screen = None;
+                self.paired_device_screen = None;
+                let about_content = Paragraphs::new([
+                    Paragraph::new(&theme::firmware::TEXT_REGULAR, "Firmware version"),
+                    Paragraph::new(&theme::firmware::TEXT_REGULAR, "2.3.1"), // TODO
+                ]);
+
+                self.about_screen = Some(
+                    TextScreen::new(about_content)
+                        .with_header(Header::new("About".into()).with_close_button()),
+                );
+            }
+        }
     }
 
     fn handle_submenu(&mut self, ctx: &mut EventCtx, idx: usize) -> Option<DeviceMenuMsg> {
         match self.subscreens[self.active_subscreen] {
             Subscreen::Submenu(ref mut menu_screen) => {
-                match menu_screen.actions[idx] {
+                match menu_screen.items[idx].action {
                     Some(Action::GoTo(menu)) => {
-                        menu_screen.screen.update_menu(ctx);
+                        self.menu_screen.as_mut().unwrap().update_menu(ctx);
                         unwrap!(self.parent_subscreens.push(self.active_subscreen));
-                        self.active_subscreen = menu;
+                        self.set_active_subscreen(menu);
                         self.place(self.bounds);
                     }
                     Some(Action::Return(msg)) => return Some(msg),
@@ -360,7 +427,7 @@ impl<'a> DeviceMenuScreen<'a> {
 
     fn go_back(&mut self) -> Option<DeviceMenuMsg> {
         if let Some(parent) = self.parent_subscreens.pop() {
-            self.active_subscreen = parent;
+            self.set_active_subscreen(parent);
             self.place(self.bounds);
             None
         } else {
@@ -380,7 +447,8 @@ impl<'a> Component for DeviceMenuScreen<'a> {
         self.bounds = bounds;
 
         match self.subscreens[self.active_subscreen] {
-            Subscreen::Submenu(ref mut menu_screen) => menu_screen.screen.place(bounds),
+            Subscreen::Submenu(..) => self.menu_screen.place(bounds),
+            Subscreen::DeviceScreen(..) => self.paired_device_screen.place(bounds),
             Subscreen::AboutScreen => self.about_screen.place(bounds),
         };
 
@@ -393,9 +461,23 @@ impl<'a> Component for DeviceMenuScreen<'a> {
 
         // Handle the event for the active menu
         match self.subscreens[self.active_subscreen] {
-            Subscreen::Submenu(ref mut menu_screen) => match menu_screen.screen.event(ctx, event) {
+            Subscreen::Submenu(..) => match self.menu_screen.event(ctx, event) {
                 Some(VerticalMenuScreenMsg::Selected(index)) => {
                     return self.handle_submenu(ctx, index);
+                }
+                Some(VerticalMenuScreenMsg::Back) => {
+                    return self.go_back();
+                }
+                Some(VerticalMenuScreenMsg::Close) => {
+                    return Some(DeviceMenuMsg::Close);
+                }
+                _ => {}
+            },
+            Subscreen::DeviceScreen(_, i) => match self.paired_device_screen.event(ctx, event) {
+                Some(VerticalMenuScreenMsg::Selected(index)) => {
+                    if index == DISCONNECT_DEVICE_MENU_INDEX {
+                        return Some(DeviceMenuMsg::DeviceDisconnect(i));
+                    }
                 }
                 Some(VerticalMenuScreenMsg::Back) => {
                     return self.go_back();
@@ -418,7 +500,8 @@ impl<'a> Component for DeviceMenuScreen<'a> {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         match &self.subscreens[self.active_subscreen] {
-            Subscreen::Submenu(ref menu_screen) => menu_screen.screen.render(target),
+            Subscreen::Submenu(..) => self.menu_screen.render(target),
+            Subscreen::DeviceScreen(..) => self.paired_device_screen.render(target),
             Subscreen::AboutScreen => self.about_screen.render(target),
         }
     }
