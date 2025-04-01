@@ -57,7 +57,7 @@ LABEL = "test"
 STRENGTH = 128
 
 
-def _get_session(client: "Client", passphrase: str | object = "") -> Session:
+def _get_session(client: "Client", passphrase: str | object = "") -> "Session":
     if client.protocol_version != ProtocolVersion.V1:
         return client.get_session(passphrase=passphrase)
 
