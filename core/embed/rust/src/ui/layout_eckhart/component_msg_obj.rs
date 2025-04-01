@@ -17,7 +17,7 @@ use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, Homescreen, HomescreenMsg,
     MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, NumberInputScreen, NumberInputScreenMsg,
     PinKeyboard, PinKeyboardMsg, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
-    SelectWordScreen, SetBrightnessMsg, SetBrightnessScreen, TextScreen, TextScreenMsg,
+    SelectWordScreen, SetBrightnessScreen, TextScreen, TextScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -130,10 +130,7 @@ impl ComponentMsgObj for ConfirmHomescreen {
 }
 
 impl ComponentMsgObj for SetBrightnessScreen {
-    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
-        match msg {
-            SetBrightnessMsg::Confirmed => Ok(CONFIRMED.as_obj()),
-            SetBrightnessMsg::Cancelled => Ok(CANCELLED.as_obj()),
-        }
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        Ok(CONFIRMED.as_obj())
     }
 }
