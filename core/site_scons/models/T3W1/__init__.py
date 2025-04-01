@@ -17,7 +17,7 @@ def configure_board(
     defines += (("VERSIONS_HEADER", '"T3W1/versions.h"'),)
 
     # Set default revision if None
-    revision = revision or "B"
+    revision = revision or "C"
 
     # Mapping of revisions to their respective configurations
     revision_map = {
