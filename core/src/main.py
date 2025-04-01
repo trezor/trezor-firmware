@@ -36,6 +36,9 @@ import trezor.pin  # noqa: F401
 # usb imports trezor.utils and trezor.io which is a C module
 import usb
 
+from trezor import io
+io.ble.start_comm()
+
 # create an unimport manager that will be reused in the main loop
 unimport_manager = utils.unimport()
 
