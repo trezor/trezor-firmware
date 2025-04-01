@@ -63,6 +63,7 @@ def configure(
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         sources += ["embed/io/button/stm32/button.c"]
+        sources += ["embed/io/button/button_fsm.c"]
         paths += ["embed/io/button/inc"]
         features_available.append("button")
         defines += [
