@@ -24,6 +24,7 @@
 #include <io/ble.h>
 #include <io/nrf.h>
 #include <sys/irq.h>
+#include <sys/sysevent_source.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 #include <util/tsqueue.h>
@@ -75,6 +76,9 @@ typedef struct {
 } ble_driver_t;
 
 static ble_driver_t g_ble_driver = {0};
+
+static const syshandle_vmt_t ble_handle_vmt;
+static const syshandle_vmt_t ble_iface_handle_vmt;
 
 static bool ble_send_state_request(ble_driver_t *drv) {
   (void)drv;
@@ -373,6 +377,14 @@ bool ble_init(void) {
     goto cleanup;
   }
 
+  if (!syshandle_register(SYSHANDLE_BLE, &ble_handle_vmt, drv)) {
+    goto cleanup;
+  }
+
+  if (!syshandle_register(SYSHANDLE_BLE_IFACE_0, &ble_iface_handle_vmt, drv)) {
+    goto cleanup;
+  }
+
   drv->initialized = true;
   return true;
 
@@ -391,6 +403,9 @@ void ble_deinit(void) {
   if (!drv->initialized) {
     return;
   }
+
+  syshandle_unregister(SYSHANDLE_BLE_IFACE_0);
+  syshandle_unregister(SYSHANDLE_BLE);
 
   nrf_unregister_listener(NRF_SERVICE_BLE);
   nrf_unregister_listener(NRF_SERVICE_BLE_MANAGER);
@@ -648,5 +663,87 @@ bool ble_get_mac(uint8_t *mac, size_t max_len) {
   memset(mac, 0, max_len);
   return false;
 }
+
+static void on_ble_iface_event_poll(void *context, bool read_awaited,
+                                    bool write_awaited) {
+  UNUSED(context);
+
+  syshandle_t handle = SYSHANDLE_BLE_IFACE_0;
+
+  // Only one task can read or write at a time. Therefore, we can
+  // assume that only one task is waiting for events and keep the
+  // logic simple.
+
+  if (read_awaited && ble_can_read()) {
+    syshandle_signal_read_ready(handle, NULL);
+  }
+
+  if (write_awaited && ble_can_write()) {
+    syshandle_signal_write_ready(handle, NULL);
+  }
+}
+
+static bool on_ble_iface_read_ready(void *context, systask_id_t task_id,
+                                    void *param) {
+  UNUSED(context);
+  UNUSED(task_id);
+  UNUSED(param);
+
+  return ble_can_read();
+}
+
+static bool on_ble_iface_check_write_ready(void *context, systask_id_t task_id,
+                                           void *param) {
+  UNUSED(context);
+  UNUSED(task_id);
+  UNUSED(param);
+
+  return ble_can_write();
+}
+
+static const syshandle_vmt_t ble_iface_handle_vmt = {
+    .task_created = NULL,
+    .task_killed = NULL,
+    .check_read_ready = on_ble_iface_read_ready,
+    .check_write_ready = on_ble_iface_check_write_ready,
+    .poll = on_ble_iface_event_poll,
+};
+
+static void on_ble_poll(void *context, bool read_awaited, bool write_awaited) {
+  ble_driver_t *drv = (ble_driver_t *)context;
+
+  UNUSED(write_awaited);
+
+  // Until we need to poll BLE events from multiple tasks,
+  // the logic here can remain very simple. If this assumption
+  // changes, the logic will need to be updated (e.g., task-local storage
+  // with an independent queue for each task).
+
+  if (read_awaited) {
+    irq_key_t key = irq_lock();
+    bool queue_is_empty = !tsqueue_empty(&drv->event_queue);
+    irq_unlock(key);
+
+    syshandle_signal_read_ready(SYSHANDLE_BLE, &queue_is_empty);
+  }
+}
+
+static bool on_ble_check_read_ready(void *context, systask_id_t task_id,
+                                    void *param) {
+  UNUSED(context);
+  UNUSED(task_id);
+
+  bool queue_is_empty = *(bool *)param;
+
+  return !queue_is_empty;
+}
+
+static const syshandle_vmt_t ble_handle_vmt = {
+    .task_created = NULL,
+    .task_killed = NULL,
+    .check_read_ready = on_ble_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_ble_poll,
+};
 
 #endif

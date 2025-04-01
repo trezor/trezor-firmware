@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/sysevent.h>
+
 // #include "ble/dfu.h"
 // #include "ble/messages.h"
 
@@ -194,7 +196,7 @@ STATIC mp_obj_t mod_trezorio_BleInterface_make_new(const mp_obj_type_t *type,
 ///     Returns the configured number of this interface.
 ///     """
 STATIC mp_obj_t mod_trezorio_BleInterface_iface_num(mp_obj_t self) {
-  return MP_OBJ_NEW_SMALL_INT(BLE_IFACE);
+  return MP_OBJ_NEW_SMALL_INT(SYSHANDLE_BLE_IFACE_0);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BleInterface_iface_num_obj,
                                  mod_trezorio_BleInterface_iface_num);
