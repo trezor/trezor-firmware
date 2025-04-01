@@ -5,7 +5,7 @@ import sys
 
 if len(sys.argv) < 2:
     print("""\
-USAGE: ./analyze-memory-dump.py somefile.json
+USAGE: ./analyze-memory-dump.py somefile.json [memorymap.html]
 
 Where "somefile.json" was produced by using `trezor.utils.mem_dump("somefile.json")`
 somewhere in emulator source code.
@@ -368,6 +368,7 @@ for item in allobjs:
     div.add(dl)
     doc.add(div)
 
-print("Writing to memorymap.html...")
-with open("memorymap.html", "w") as f:
+fname = "memorymap.html" if len(sys.argv) < 3 else sys.argv[2]
+print(f"Writing to {fname}...")
+with open(fname, "w") as f:
     f.write(doc.render(pretty=False))
