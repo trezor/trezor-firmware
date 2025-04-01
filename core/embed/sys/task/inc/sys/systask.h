@@ -114,7 +114,7 @@ typedef struct {
   // Exception return value
   uint32_t exc_return;
   // Set to nonzero, if the task is killed
-  uint32_t killed;
+  volatile uint32_t killed;
 
   // Task id
   systask_id_t id;
@@ -146,6 +146,9 @@ void systask_yield_to(systask_t* task);
 // The task must be not be running when the function is called
 bool systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
                   void* context);
+
+// Returns true if the task is alive (not terminated, killed or crashed)
+bool systask_is_alive(const systask_t* task);
 
 // Pushes data onto the stack of the task
 //
