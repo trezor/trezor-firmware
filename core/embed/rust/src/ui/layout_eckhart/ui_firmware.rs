@@ -15,7 +15,7 @@ use crate::{
                     Paragraphs, VecExt,
                 },
             },
-            Empty, FormattedText,
+            BLEHandler, Empty, FormattedText,
         },
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
@@ -816,6 +816,7 @@ impl FirmwareUI for UIEckhart {
             .with_action_bar(ActionBar::new_single(Button::with_text(
                 "Continue on host".into(),
             )));
+        let screen = BLEHandler::new(screen, true);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -830,6 +831,7 @@ impl FirmwareUI for UIEckhart {
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new("Bluetooth pairing".into()))
             .with_action_bar(ActionBar::new_cancel_confirm());
+        let screen = BLEHandler::new(screen, false);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
