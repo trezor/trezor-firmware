@@ -1051,6 +1051,8 @@ impl FirmwareUI for UIEckhart {
             .with_action_bar(ActionBar::new_single(Button::with_text(
                 "Continue on host".into(),
             )));
+        #[cfg(feature = "ble")]
+        let screen = crate::ui::component::BLEHandler::new(screen, true);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -1065,6 +1067,8 @@ impl FirmwareUI for UIEckhart {
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new("Bluetooth pairing".into()))
             .with_action_bar(ActionBar::new_cancel_confirm());
+        #[cfg(feature = "ble")]
+        let screen = crate::ui::component::BLEHandler::new(screen, false);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
