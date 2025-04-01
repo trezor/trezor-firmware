@@ -21,11 +21,6 @@ pub struct SetBrightnessScreen {
     slider: VerticalSlider,
 }
 
-pub enum SetBrightnessMsg {
-    Confirmed,
-    Cancelled,
-}
-
 impl SetBrightnessScreen {
     const SLIDER_HEIGHT: i16 = 392;
     pub fn new(min: u16, max: u16, init_value: u16) -> Self {
@@ -37,7 +32,7 @@ impl SetBrightnessScreen {
 }
 
 impl Component for SetBrightnessScreen {
-    type Msg = SetBrightnessMsg;
+    type Msg = ();
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // assert full screen
@@ -55,12 +50,11 @@ impl Component for SetBrightnessScreen {
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         if let Some(HeaderMsg::Cancelled) = self.header.event(ctx, event) {
-            return Some(SetBrightnessMsg::Cancelled);
+            return Some(());
         }
 
         if let Some(value) = self.slider.event(ctx, event) {
             unwrap!(storage::set_brightness(value as _));
-            return Some(SetBrightnessMsg::Confirmed);
         }
         None
     }
@@ -136,7 +130,7 @@ impl Component for VerticalSlider {
             Offset::new(Self::SLIDER_WIDTH, bounds.height()),
             Alignment2D::CENTER,
         );
-        self.touch_area = self.area.outset(Insets::uniform(20));
+        self.touch_area = self.area.outset(Insets::uniform(30));
         bounds
     }
 
@@ -159,12 +153,7 @@ impl Component for VerticalSlider {
                     self.touching = false;
                     self.update_value(pos, ctx);
                     ctx.request_paint();
-                    // Confirm the value only if the touch ended inside the touch area
-                    if self.touch_area.contains(pos) {
-                        return Some(self.value as _);
-                    } else {
-                        display::backlight(self.value as _);
-                    }
+                    return Some(self.value as _);
                 }
                 _ => {}
             };
@@ -184,12 +173,18 @@ impl Component for VerticalSlider {
             .with_bg(theme::GREY_EXTRA_DARK)
             .render(target);
 
+        let slider_color = if self.touching {
+            theme::GREY
+        } else {
+            theme::GREY_LIGHT
+        };
+
         // Moving slider
         Bar::new(small_area.translate(
             Offset::y(val_pct as i16 * (self.area.height() - Self::SLIDER_WIDTH) / 100).neg(),
         ))
         .with_radius(4)
-        .with_bg(theme::GREY_LIGHT)
+        .with_bg(slider_color)
         .render(target);
     }
 }
