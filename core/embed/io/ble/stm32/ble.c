@@ -721,7 +721,7 @@ static void on_ble_poll(void *context, bool read_awaited, bool write_awaited) {
 
   if (read_awaited) {
     irq_key_t key = irq_lock();
-    bool queue_is_empty = !tsqueue_empty(&drv->event_queue);
+    bool queue_is_empty = tsqueue_empty(&drv->event_queue);
     irq_unlock(key);
 
     syshandle_signal_read_ready(SYSHANDLE_BLE, &queue_is_empty);
