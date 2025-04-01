@@ -54,6 +54,10 @@ if utils.USE_BLE:
     from trezorio import ble
     ble.start_comm()
 
+    # allow connections from bonded peers if any
+    if ble.peer_count() > 0:
+        ble.start_advertising(True, storage.device.get_label())
+
 
 # run the endless loop
 while True:
