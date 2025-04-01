@@ -658,6 +658,9 @@ __attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
   *
   ******************************************************************************
   */
+
+#include "sitronix.h"
+
 /* TS instances */
 #define TS_INSTANCES_NBR 1U
 #define TS_TOUCH_NBR 10U
@@ -671,13 +674,6 @@ __attribute__((optimize("-O0"))) int32_t SITRONIX_DetectTouch(
 /** @defgroup STM32U5x9J_DISCOVERY_TS_Exported_Types TS Exported Types
  * @{
  */
-typedef struct {
-  uint32_t Width;       /* Screen width */
-  uint32_t Height;      /* Screen height */
-  uint32_t Orientation; /* Touch screen orientation */
-  uint32_t Accuracy;    /* Expressed in pixel and means the x or y difference vs
-                         old    position to consider the new values valid */
-} TS_Init_t;
 
 typedef struct {
   uint8_t MultiTouch;
@@ -686,12 +682,6 @@ typedef struct {
   uint32_t MaxXl;
   uint32_t MaxYl;
 } TS_Capabilities_t;
-
-typedef struct {
-  uint32_t TouchDetected;
-  uint32_t TouchX;
-  uint32_t TouchY;
-} TS_State_t;
 
 typedef struct {
   uint32_t TouchDetected;
@@ -1205,120 +1195,5 @@ static int32_t SITRONIX_Probe(uint32_t Instance) {
 /**
  * @}
  */
-
-#include <trezor_rtl.h>
-
-#include <io/touch.h>
-
-// Touch driver
-typedef struct {
-  // Set if driver is initialized
-  secbool initialized;
-  // Last lower-level driver state
-  TS_State_t prev_state;
-
-} touch_driver_t;
-
-// Touch driver instance
-static touch_driver_t g_touch_driver = {
-    .initialized = secfalse,
-};
-
-secbool touch_init(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (sectrue != driver->initialized) {
-    TS_Init_t TsInit;
-
-    /* Initialize the TouchScreen */
-    TsInit.Width = 480;
-    TsInit.Height = 480;
-    TsInit.Orientation = 0;
-    TsInit.Accuracy = 10;
-
-    BSP_TS_Init(0, &TsInit);
-
-    driver->initialized = sectrue;
-  }
-
-  return driver->initialized;
-}
-
-void touch_deinit(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (sectrue == driver->initialized) {
-    BSP_TS_DeInit(0);
-    memset(driver, 0, sizeof(touch_driver_t));
-  }
-}
-
-void touch_power_set(bool on) {
-  // Not implemented for the discovery kit
-}
-
-secbool touch_ready(void) {
-  touch_driver_t *driver = &g_touch_driver;
-  return driver->initialized;
-}
-
-secbool touch_set_sensitivity(uint8_t value) {
-  // Not implemented for the discovery kit
-  return sectrue;
-}
-
-uint8_t touch_get_version(void) {
-  // Not implemented for the discovery kit
-  return 0;
-}
-
-secbool touch_activity(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (sectrue != driver->initialized) {
-    return secfalse;
-  }
-
-  TS_State_t new_state = {0};
-  BSP_TS_GetState(0, &new_state);
-
-  return sitronix_touching ? sectrue : secfalse;
-}
-
-uint32_t touch_get_event(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (sectrue != driver->initialized) {
-    return 0;
-  }
-
-  TS_State_t new_state = {0};
-  BSP_TS_GetState(0, &new_state);
-
-  new_state.TouchDetected = (sitronix_touching != 0);
-  new_state.TouchX = new_state.TouchX > 120 ? new_state.TouchX - 120 : 0;
-  new_state.TouchY = new_state.TouchY > 120 ? new_state.TouchY - 120 : 0;
-
-  uint32_t event = 0;
-
-  if (new_state.TouchDetected && !driver->prev_state.TouchDetected) {
-    uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
-    event = TOUCH_START | xy;
-  } else if (!new_state.TouchDetected && driver->prev_state.TouchDetected) {
-    uint32_t xy =
-        touch_pack_xy(driver->prev_state.TouchX, driver->prev_state.TouchY);
-    event = TOUCH_END | xy;
-  } else if (new_state.TouchDetected) {
-    if ((new_state.TouchX != driver->prev_state.TouchX) ||
-        (new_state.TouchY != driver->prev_state.TouchY)) {
-      uint32_t xy = touch_pack_xy(new_state.TouchX, new_state.TouchY);
-      event = TOUCH_MOVE | xy;
-    }
-  }
-
-  driver->prev_state = new_state;
-
-  return event;
-}
 
 #endif

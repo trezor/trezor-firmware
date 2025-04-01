@@ -62,6 +62,7 @@ def configure(
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/unix/touch.c"]
+        sources += ["embed/io/touch/touch_fsm.c"]
         paths += ["embed/io/touch/inc"]
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]

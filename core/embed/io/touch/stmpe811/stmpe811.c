@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
 #ifdef KERNEL_MODE
 
 #include <io/i2c_bus.h>
-#include <io/touch.h>
+#include <sys/systick.h>
+
 #include "stmpe811.h"
 
 /* Chip IDs */
@@ -175,7 +175,7 @@
 uint32_t I2cxTimeout =
     I2Cx_TIMEOUT_MAX; /*<! Value of Timeout when I2C communication fails */
 
-static i2c_bus_t *i2c_bus = NULL;
+static i2c_bus_t *g_i2c_bus = NULL;
 
 /**
  * @brief  Writes a value in a register of the device through BUS.
@@ -199,7 +199,7 @@ static void I2Cx_WriteData(uint8_t Addr, uint8_t Reg, uint8_t Value) {
       .ops = ops,
   };
 
-  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+  i2c_status_t status = i2c_bus_submit_and_wait(g_i2c_bus, &pkt);
 
   (void)status;
 }
@@ -233,7 +233,7 @@ static void I2Cx_WriteBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
       .ops = ops,
   };
 
-  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+  i2c_status_t status = i2c_bus_submit_and_wait(g_i2c_bus, &pkt);
 
   (void)status;
 }
@@ -267,7 +267,7 @@ static uint8_t I2Cx_ReadData(uint8_t Addr, uint8_t Reg) {
       .ops = ops,
   };
 
-  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+  i2c_status_t status = i2c_bus_submit_and_wait(g_i2c_bus, &pkt);
 
   (void)status;
 
@@ -304,7 +304,7 @@ static uint8_t I2Cx_ReadBuffer(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
       .ops = ops,
   };
 
-  i2c_status_t status = i2c_bus_submit_and_wait(i2c_bus, &pkt);
+  i2c_status_t status = i2c_bus_submit_and_wait(g_i2c_bus, &pkt);
 
   return status == I2C_STATUS_OK ? 0 : 1;
 }
@@ -356,7 +356,7 @@ uint16_t IOE_ReadMultiple(uint8_t Addr, uint8_t Reg, uint8_t *pBuffer,
  * @brief  IOE Delay.
  * @param  Delay in ms
  */
-void IOE_Delay(uint32_t Delay) { HAL_Delay(Delay); }
+void IOE_Delay(uint32_t Delay) { systick_delay_ms(Delay); }
 
 /**
  * @brief  Enable the AF for the selected IO pin(s).
@@ -462,7 +462,9 @@ void touch_set_mode(void) {
  * @param  DeviceAddr: Device address on communication Bus.
  * @retval None
  */
-void stmpe811_Reset() {
+void stmpe811_Reset(i2c_bus_t *i2c_bus) {
+  g_i2c_bus = i2c_bus;
+
   /* Power Down the stmpe811 */
   IOE_Write(TS_I2C_ADDRESS, STMPE811_REG_SYS_CTRL1, 2);
 
@@ -477,7 +479,7 @@ void stmpe811_Reset() {
   IOE_Delay(2);
 }
 
-static uint32_t touch_active(void) {
+uint32_t touch_active(void) {
   uint8_t state;
   uint8_t ret = 0;
 
@@ -523,174 +525,81 @@ void stmpe811_TS_GetXY(uint16_t *X, uint16_t *Y) {
   /* Enable the FIFO again */
   IOE_Write(TS_I2C_ADDRESS, STMPE811_REG_FIFO_STA, 0x00);
 }
-
-typedef struct {
-  uint16_t TouchDetected;
-  uint16_t X;
-  uint16_t Y;
-  uint16_t Z;
-} TS_StateTypeDef;
-
 /**
  * @brief  Returns status and positions of the touch screen.
  * @param  TsState: Pointer to touch screen current state structure
  */
 void BSP_TS_GetState(TS_StateTypeDef *TsState) {
+  static bool _detected = false;
   static uint32_t _x = 0, _y = 0;
   uint16_t xDiff, yDiff, x, y, xr, yr;
 
-  TsState->TouchDetected = touch_active();
+  TsState->TouchDetected = _detected;
+  TsState->X = _x;
+  TsState->Y = _y;
 
-  if (TsState->TouchDetected) {
-    stmpe811_TS_GetXY(&x, &y);
+  bool detected = (IOE_Read(TS_I2C_ADDRESS, STMPE811_REG_TSC_CTRL) &
+                   STMPE811_TS_CTRL_STATUS) != 0;
 
-    /* Y value first correction */
-    y -= 360;
+  if (!detected) {
+    TsState->TouchDetected = _detected = false;
+    return;
+  } else {
+    if (IOE_Read(TS_I2C_ADDRESS, STMPE811_REG_FIFO_SIZE) > 0) {
+      stmpe811_TS_GetXY(&x, &y);
 
-    /* Y value second correction */
-    yr = y / 11;
+      /* Y value first correction */
+      y -= 360;
 
-    /* Return y position value */
-    if (yr <= 0) {
-      yr = 0;
-    } else if (yr > 320) {
-      yr = 320 - 1;
-    } else {
-      yr = 320 - yr;
-    }
-    y = yr;
+      /* Y value second correction */
+      yr = y / 11;
 
-    /* X value first correction */
-    if (x <= 3000) {
-      x = 3870 - x;
-    } else {
-      x = 3800 - x;
-    }
+      /* Return y position value */
+      if (yr <= 0) {
+        yr = 0;
+      } else if (yr > 320) {
+        yr = 320 - 1;
+      } else {
+        yr = 320 - yr;
+      }
+      y = yr;
 
-    /* X value second correction */
-    xr = x / 15;
+      /* X value first correction */
+      if (x <= 3000) {
+        x = 3870 - x;
+      } else {
+        x = 3800 - x;
+      }
 
-    /* Return X position value */
-    if (xr <= 0) {
-      xr = 0;
-    } else if (xr > 240) {
-      xr = 240 - 1;
-    } else {
-    }
+      /* X value second correction */
+      xr = x / 15;
 
-    x = xr;
-    xDiff = x > _x ? (x - _x) : (_x - x);
-    yDiff = y > _y ? (y - _y) : (_y - y);
+      /* Return X position value */
+      if (xr <= 0) {
+        xr = 0;
+      } else if (xr > 240) {
+        xr = 240 - 1;
+      } else {
+      }
 
-    if (xDiff + yDiff > 5) {
-      _x = x;
-      _y = y;
-    }
+      x = xr;
+      xDiff = x > _x ? (x - _x) : (_x - x);
+      yDiff = y > _y ? (y - _y) : (_y - y);
 
-    /* Update the X position */
-    TsState->X = _x;
+      if (xDiff + yDiff > 5) {
+        _x = x;
+        _y = y;
+      }
 
-    /* Update the Y position */
-    TsState->Y = _y;
-  }
-}
+      _detected = true;
 
-typedef struct {
-  // Set if driver is initialized
-  secbool initialized;
-  // Last lower-level driver state
-  TS_StateTypeDef prev_state;
+      /* Update the X position */
+      TsState->X = _x;
 
-} touch_driver_t;
-
-// Touch driver instance
-static touch_driver_t g_touch_driver = {
-    .initialized = secfalse,
-};
-
-secbool touch_init(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (driver->initialized != sectrue) {
-    i2c_bus = i2c_bus_open(TOUCH_I2C_INSTANCE);
-    if (i2c_bus == NULL) {
-      return secfalse;
-    }
-
-    stmpe811_Reset();
-    touch_set_mode();
-
-    driver->initialized = sectrue;
-  }
-
-  return driver->initialized;
-}
-
-void touch_deinit(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (driver->initialized == sectrue) {
-    // Not implemented properly
-
-    i2c_bus_close(i2c_bus);
-    memset(driver, 0, sizeof(touch_driver_t));
-  }
-}
-
-void touch_power_set(bool on) {
-  // Not implemented for the discovery kit
-}
-
-secbool touch_ready(void) {
-  touch_driver_t *driver = &g_touch_driver;
-  return driver->initialized;
-}
-
-secbool touch_set_sensitivity(uint8_t value) {
-  // Not implemented for the discovery kit
-  return sectrue;
-}
-
-uint8_t touch_get_version(void) {
-  // Not implemented for the discovery kit
-  return 0;
-}
-
-secbool touch_activity(void) {
-  uint8_t state = ((IOE_Read(TS_I2C_ADDRESS, STMPE811_REG_TSC_CTRL) &
-                    (uint8_t)STMPE811_TS_CTRL_STATUS) == (uint8_t)0x80);
-  return state > 0 ? sectrue : secfalse;
-}
-
-uint32_t touch_get_event(void) {
-  touch_driver_t *driver = &g_touch_driver;
-
-  if (driver->initialized != sectrue) {
-    return 0;
-  }
-
-  TS_StateTypeDef new_state = {0};
-  BSP_TS_GetState(&new_state);
-
-  uint32_t event = 0;
-
-  if (new_state.TouchDetected && !driver->prev_state.TouchDetected) {
-    uint32_t xy = touch_pack_xy(new_state.X, new_state.Y);
-    event = TOUCH_START | xy;
-  } else if (!new_state.TouchDetected && driver->prev_state.TouchDetected) {
-    uint32_t xy = touch_pack_xy(driver->prev_state.X, driver->prev_state.Y);
-    event = TOUCH_END | xy;
-  } else if (new_state.TouchDetected) {
-    if ((new_state.X != driver->prev_state.X) ||
-        (new_state.Y != driver->prev_state.Y)) {
-      uint32_t xy = touch_pack_xy(new_state.X, new_state.Y);
-      event = TOUCH_MOVE | xy;
+      /* Update the Y position */
+      TsState->Y = _y;
     }
   }
-
-  driver->prev_state = new_state;
-
-  return event;
 }
 
 #endif
