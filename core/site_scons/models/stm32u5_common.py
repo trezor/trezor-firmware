@@ -108,6 +108,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/sys/task/stm32/system.c",
         "embed/sys/time/stm32/systick.c",
         "embed/sys/time/stm32/systimer.c",
+        "embed/sys/task/sysevent.c",
         "embed/sys/trustzone/stm32u5/trustzone.c",
         "embed/util/board_capabilities/stm32/board_capabilities.c",
         "embed/util/flash/stm32u5/flash.c",
