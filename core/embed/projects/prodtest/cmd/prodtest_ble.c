@@ -36,6 +36,8 @@ void ble_timer_cb(void* context) {
     switch (e.type) {
       case BLE_PAIRING_REQUEST:
         cmd.cmd_type = BLE_ALLOW_PAIRING;
+        memcpy(cmd.data.raw, e.data, BLE_PAIRING_CODE_LEN);
+        cmd.data_len = BLE_PAIRING_CODE_LEN;
         ble_issue_command(&cmd);
       default:
         break;
