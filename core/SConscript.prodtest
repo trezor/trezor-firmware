@@ -137,6 +137,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_bootloader.c',
     'embed/projects/prodtest/cmd/prodtest_button.c',
     'embed/projects/prodtest/cmd/prodtest_display.c',
+    'embed/projects/prodtest/cmd/prodtest_fuel_gauge.c',
     'embed/projects/prodtest/cmd/prodtest_prodtest.c',
     'embed/projects/prodtest/cmd/prodtest_get_cpuid.c',
     'embed/projects/prodtest/cmd/prodtest_haptic.c',
