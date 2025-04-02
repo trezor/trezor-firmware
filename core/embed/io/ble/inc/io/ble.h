@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_BLE_H
-#define TREZORHAL_BLE_H
+#pragma once
 
 // This module provides interface to BLE (Bluetooth Low Energy) functionality.
 // It allows the device to advertise itself, connect to other devices, and
@@ -30,6 +29,7 @@
 #define BLE_TX_PACKET_SIZE 64
 
 #define BLE_ADV_NAME_LEN 20
+#define BLE_PAIRING_CODE_LEN 6
 
 typedef enum {
   BLE_SWITCH_OFF = 0,      // Turn off BLE advertising, disconnect
@@ -150,5 +150,3 @@ uint32_t ble_read(uint8_t *data, uint16_t max_len);
 // When not using static address, the address is random and may not correspond
 // to what is actually used for advertising
 bool ble_get_mac(uint8_t *mac, size_t max_len);
-
-#endif

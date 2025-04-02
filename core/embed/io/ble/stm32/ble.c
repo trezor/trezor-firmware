@@ -82,7 +82,7 @@ static const syshandle_vmt_t ble_iface_handle_vmt;
 
 static bool ble_send_state_request(ble_driver_t *drv) {
   (void)drv;
-  uint8_t cmd = INTERNAL_CMD_PING;
+  uint8_t cmd = INTERNAL_CMD_SEND_STATE;
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL) >=
          0;
 }
@@ -147,10 +147,15 @@ static bool ble_send_pairing_reject(ble_driver_t *drv) {
   return result;
 }
 
-static bool ble_send_pairing_accept(ble_driver_t *drv) {
-  uint8_t cmd = INTERNAL_CMD_ALLOW_PAIRING;
-  bool result =
-      nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
+static bool ble_send_pairing_accept(ble_driver_t *drv, uint8_t *code) {
+  cmd_allow_pairing_t data = {
+      .cmd_id = INTERNAL_CMD_ALLOW_PAIRING,
+  };
+
+  memcpy(data.code, code, sizeof(data.code));
+
+  bool result = nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&data,
+                             sizeof(data), NULL, NULL);
 
   if (result) {
     drv->pairing_requested = false;
@@ -160,8 +165,8 @@ static bool ble_send_pairing_accept(ble_driver_t *drv) {
 }
 
 static bool ble_send_mac_request(ble_driver_t *drv) {
-  (void)drv;
-  uint8_t cmd = INTERNAL_CMD_MAC_REQUEST;
+  UNUSED(drv);
+  uint8_t cmd = INTERNAL_CMD_GET_MAC;
 
   return nrf_send_msg(NRF_SERVICE_BLE_MANAGER, &cmd, sizeof(cmd), NULL, NULL);
 }
@@ -235,8 +240,9 @@ static void ble_process_rx_msg_pairing_request(const uint8_t *data,
     return;
   }
 
-  ble_event_t event = {.type = BLE_PAIRING_REQUEST, .data_len = 6};
-  memcpy(event.data, &data[1], 6);
+  ble_event_t event = {.type = BLE_PAIRING_REQUEST,
+                       .data_len = BLE_PAIRING_CODE_LEN};
+  memcpy(event.data, &data[1], BLE_PAIRING_CODE_LEN);
   if (!tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event),
                        NULL)) {
     ble_send_pairing_reject(drv);
@@ -589,7 +595,7 @@ bool ble_issue_command(ble_command_t *command) {
       result = ble_send_erase_bonds(drv);
       break;
     case BLE_ALLOW_PAIRING:
-      result = ble_send_pairing_accept(drv);
+      result = ble_send_pairing_accept(drv, command->data.raw);
       break;
     case BLE_REJECT_PAIRING:
       result = ble_send_pairing_reject(drv);
