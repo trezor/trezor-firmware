@@ -17,7 +17,7 @@ use crate::{
             },
             Empty, FormattedText,
         },
-        geometry::{LinearPlacement, Offset},
+        geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
             util::{ConfirmValueParams, RecoveryType, StrOrBytes},
@@ -793,6 +793,40 @@ impl FirmwareUI for UIEckhart {
             battery_percentage,
             paired_devices,
         ));
+        Ok(layout)
+    }
+
+    fn show_pairing_device_name(
+        device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let font = fonts::FONT_SATOSHI_REGULAR_38;
+        let text_style = theme::firmware::TEXT_REGULAR;
+        let mut ops = OpTextLayout::new(text_style);
+        ops = ops.color(theme::GREEN);
+        ops = ops.text(device_name, font);
+        ops = ops.color(text_style.text_color);
+        let text: TString = " is your Trezor's name.".into();
+        ops = ops.text(text, font);
+        let screen = TextScreen::new(FormattedText::new(ops))
+            .with_header(Header::new("Pair with new device".into()).with_close_button())
+            .with_action_bar(ActionBar::new_single(Button::with_text(
+                "Continue on host".into(),
+            )));
+        let layout = RootComponent::new(screen);
+        Ok(layout)
+    }
+
+    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        let text: TString<'static> = "Pairing code match?".into();
+        let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
+        ops = ops.text(text, fonts::FONT_SATOSHI_REGULAR_38);
+        ops = ops.newline().newline().newline();
+        ops = ops.alignment(Alignment::Center);
+        ops = ops.text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
+        let screen = TextScreen::new(FormattedText::new(ops))
+            .with_header(Header::new("Bluetooth pairing".into()))
+            .with_action_bar(ActionBar::new_cancel_confirm());
+        let layout = RootComponent::new(screen);
         Ok(layout)
     }
 
