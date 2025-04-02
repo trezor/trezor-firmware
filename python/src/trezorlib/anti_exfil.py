@@ -1,3 +1,4 @@
+import secrets
 from dataclasses import dataclass
 from hashlib import sha256
 from typing import Optional
@@ -13,9 +14,7 @@ class AntiExfilSignature:
 
 
 def generate_entropy() -> bytes:
-    import os
-
-    return os.urandom(32)
+    return secrets.token_bytes(32)
 
 
 def sha256_data(message: bytes) -> bytes:
