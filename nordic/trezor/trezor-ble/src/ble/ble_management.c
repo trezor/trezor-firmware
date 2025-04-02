@@ -113,15 +113,11 @@ static void process_command(uint8_t *data, uint16_t len) {
       ble_management_send_status_event();
       break;
     case INTERNAL_CMD_ADVERTISING_ON: {
-      uint8_t color = data[2];
-      bool static_addr = data[3];
-      uint32_t device_code =
-          (data[4] << 24) | (data[5] << 16) | (data[6] << 8) | data[7];
-      char *name = &data[8];
+      cmd_advertising_on_t *cmd = (cmd_advertising_on_t *)data;
 
-      int name_len = strnlen(name, 20);
-      advertising_start(data[1] != 0, color, device_code, static_addr, name,
-                        name_len);
+      int name_len = strnlen(cmd->name, BLE_ADV_NAME_LEN);
+      advertising_start(cmd->whitelist != 0, cmd->color, cmd->device_code,
+                        cmd->static_addr, (char *)cmd->name, name_len);
     } break;
     case INTERNAL_CMD_ADVERTISING_OFF:
       advertising_stop();
@@ -135,10 +131,12 @@ static void process_command(uint8_t *data, uint16_t len) {
       // pb_msg_ack();
       break;
     case INTERNAL_CMD_ALLOW_PAIRING:
-      pairing_num_comp_reply(true);
+      cmd_allow_pairing_t *cmd = (cmd_allow_pairing_t *)data;
+
+      pairing_num_comp_reply(true, cmd->code);
       break;
     case INTERNAL_CMD_REJECT_PAIRING:
-      pairing_num_comp_reply(false);
+      pairing_num_comp_reply(false, NULL);
       break;
     case INTERNAL_CMD_UNPAIR:
       success = bonds_erase_current();
