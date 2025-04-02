@@ -25,7 +25,6 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.messages import FailureType, SafetyCheckLevel
 from trezorlib.tools import parse_path
-from trezorlib.transport.session import SessionV1
 
 from .. import translations as TR
 
@@ -116,7 +115,7 @@ def test_session_with_passphrase(client: Client):
     with pytest.raises(exceptions.FailedSessionResumption) as e:
         _get_session(client, session_id=b"X" * 32)
 
-    session_3 = Session(SessionV1(client, e.value.received_session_id))
+    session_3 = _get_session(client, e.value.received_session_id)
 
     assert session_3.id is not None
     assert len(session_3.id) == 32
@@ -252,7 +251,7 @@ def test_max_sessions_with_passphrases(client: Client):
     for passphrase in reversed(passphrases):
         with pytest.raises(exceptions.FailedSessionResumption) as e:
             sessions[passphrase].resume()
-        sessions[passphrase] = Session(SessionV1(client, e.value.received_session_id))
+        sessions[passphrase] = _get_session(client, e.value.received_session_id)
         _get_xpub(sessions[passphrase], passphrase=passphrase)  # passphrase is prompted
 
 

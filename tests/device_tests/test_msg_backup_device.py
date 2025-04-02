@@ -208,8 +208,7 @@ def test_interrupt_backup_fails(session: Session):
     session.call_raw(messages.BackupDevice())
 
     # interupt backup by sending initialize
-    session.resume()
-    session.refresh_features()
+    session = session.client.get_session()
 
     # check that device state is as expected
     assert session.features.initialized is True
