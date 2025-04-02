@@ -66,6 +66,21 @@ async def homescreen() -> None:
 
             menu_result = await raise_if_not_confirmed(show_device_menu(failed_backup=failed_backup, battery_percentage=battery_percentage, paired_devices=paired_devices), "device_menu")
             print(menu_result)
+            if menu_result == "DevicePair":
+                from trezor import ui
+                import trezorui_api
+                await raise_if_not_confirmed(
+                    trezorui_api.show_pairing_device_name(
+                        device_name="My Trez",
+                    ),
+                    "device_name"
+                )
+                await raise_if_not_confirmed(
+                    trezorui_api.show_pairing_code(
+                        code="123456",
+                    ),
+                    "pairing_code"
+                )
         else:
             lock_device()
     finally:
