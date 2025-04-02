@@ -193,15 +193,15 @@ def get_ownership_proof_common(
     client: "TrezorClient",
     coin_name: str,
     n: "Address",
-    multisig: Optional[messages.MultisigRedeemScriptType],
+    multisig: messages.MultisigRedeemScriptType | None,
     script_type: messages.InputScriptType,
     user_confirmation: bool,
-    ownership_ids: Optional[List[bytes]],
-    commitment_data: Optional[bytes],
+    ownership_ids: List[bytes] | None,
+    commitment_data: bytes | None,
     preauthorized: bool,
     use_anti_exfil: bool,
-    entropy: Optional[bytes],
-) -> Tuple[Optional[bytes], AntiExfilSignature]:
+    entropy: bytes | None,
+) -> Tuple[bytes | None, AntiExfilSignature]:
     if preauthorized:
         client.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
 
@@ -297,14 +297,14 @@ def get_ownership_proof_new(
     client: "TrezorClient",
     coin_name: str,
     n: "Address",
-    multisig: Optional[messages.MultisigRedeemScriptType] = None,
+    multisig: messages.MultisigRedeemScriptType | None = None,
     script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
     user_confirmation: bool = False,
-    ownership_ids: Optional[List[bytes]] = None,
-    commitment_data: Optional[bytes] = None,
+    ownership_ids: List[bytes] | None = None,
+    commitment_data: bytes | None = None,
     preauthorized: bool = False,
     use_anti_exfil: bool = True,
-    entropy: Optional[bytes] = None,
+    entropy: bytes | None = None,
 ) -> AntiExfilSignature:
     """
     If `use_anti_exfil` is set to `True`, the anti-exfilitration protocol will be
@@ -384,16 +384,16 @@ def sign_tx_common(
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
-    details: Optional[messages.SignTx],
-    prev_txes: Optional["TxCacheType"],
+    details: messages.SignTx | None,
+    prev_txes: TxCacheType | None,
     payment_reqs: Sequence[messages.TxAckPaymentRequest],
     preauthorized: bool,
-    unlock_path: Optional[List[int]],
-    unlock_path_mac: Optional[bytes],
+    unlock_path: List[int] | None,
+    unlock_path_mac: bytes | None,
     use_anti_exfil: bool,
-    entropy_list: Optional[List[bytes]],
+    entropy_list: List[bytes] | None,
     **kwargs: Any,
-) -> Tuple[Sequence[Optional[AntiExfilSignature]], bytes]:
+) -> Tuple[Sequence[AntiExfilSignature | None], bytes]:
     if prev_txes is None:
         prev_txes = {}
 
@@ -455,7 +455,7 @@ def sign_tx_common(
 
     R = messages.RequestType
 
-    nonce_commitment_list: List[Optional[bytes]] = [None for _ in inputs]
+    nonce_commitment_list: List[bytes | None] = [None for _ in inputs]
     if use_anti_exfil and entropy_list is None:
         entropy_list = [generate_entropy() for _ in inputs]
 
@@ -638,16 +638,16 @@ def sign_tx_new(
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
-    details: Optional[messages.SignTx] = None,
-    prev_txes: Optional["TxCacheType"] = None,
+    details: messages.SignTx | None = None,
+    prev_txes: TxCacheType | None = None,
     payment_reqs: Sequence[messages.TxAckPaymentRequest] = (),
     preauthorized: bool = False,
-    unlock_path: Optional[List[int]] = None,
-    unlock_path_mac: Optional[bytes] = None,
+    unlock_path: List[int] | None = None,
+    unlock_path_mac: bytes | None = None,
     use_anti_exfil: bool = True,
-    entropy_list: Optional[List[bytes]] = None,
+    entropy_list: List[bytes] | None = None,
     **kwargs: Any,
-) -> Sequence[Optional[AntiExfilSignature]]:
+) -> Sequence[AntiExfilSignature | None]:
     """Sign a Bitcoin-like transaction.
 
     Returns a list of `AntiExfilSignature` objects (one for each provided input).

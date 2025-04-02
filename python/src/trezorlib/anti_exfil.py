@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import secrets
 from dataclasses import dataclass
 from hashlib import sha256
-from typing import Optional
 
 import ecdsa
 
@@ -9,8 +10,8 @@ import ecdsa
 @dataclass
 class AntiExfilSignature:
     signature: bytes
-    entropy: Optional[bytes]
-    nonce_commitment: Optional[bytes]
+    entropy: bytes | None
+    nonce_commitment: bytes | None
 
 
 def generate_entropy() -> bytes:
@@ -43,9 +44,9 @@ def tweak_nonce(nonce_commitment: bytes, entropy: bytes) -> bytes:
 
 
 def verify(
-    public_key: Optional[bytes],
+    public_key: bytes | None,
     signature: bytes,
-    digest: Optional[bytes],
+    digest: bytes | None,
     entropy: bytes,
     nonce_commitment: bytes,
 ) -> bool:

@@ -14,6 +14,8 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
+from __future__ import annotations
+
 import re
 from typing import TYPE_CHECKING, Any, AnyStr, Dict, List, Optional, Tuple
 
@@ -200,14 +202,14 @@ def sign_tx_common(
     gas_limit: int,
     to: str,
     value: int,
-    data: Optional[bytes],
-    chain_id: Optional[int],
-    tx_type: Optional[int],
-    definitions: Optional[messages.EthereumDefinitions],
+    data: bytes | None,
+    chain_id: int | None,
+    tx_type: int | None,
+    definitions: messages.EthereumDefinitions | None,
     chunkify: bool,
     use_anti_exfil: bool,
-    entropy: Optional[bytes],
-) -> Tuple[Optional[int], bytes, bytes, Optional[bytes], Optional[bytes]]:
+    entropy: bytes | None,
+) -> Tuple[int | None, bytes, bytes, bytes | None, bytes | None]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
 
@@ -332,13 +334,13 @@ def sign_tx_new(
     gas_limit: int,
     to: str,
     value: int,
-    data: Optional[bytes] = None,
-    chain_id: Optional[int] = None,
-    tx_type: Optional[int] = None,
-    definitions: Optional[messages.EthereumDefinitions] = None,
+    data: bytes | None = None,
+    chain_id: int | None = None,
+    tx_type: int | None = None,
+    definitions: messages.EthereumDefinitions | None = None,
     chunkify: bool = False,
     use_anti_exfil: bool = True,
-    entropy: Optional[bytes] = None,
+    entropy: bytes | None = None,
 ) -> AntiExfilSignature:
     """
     If `use_anti_exfil` is set to `True`, the anti-exfilitration protocol will be
@@ -385,12 +387,12 @@ def sign_tx_eip1559_common(
     chain_id: int,
     max_gas_fee: int,
     max_priority_fee: int,
-    access_list: Optional[List[messages.EthereumAccessList]],
-    definitions: Optional[messages.EthereumDefinitions],
+    access_list: List[messages.EthereumAccessList] | None,
+    definitions: messages.EthereumDefinitions | None,
     chunkify: bool,
     use_anti_exfil: bool,
-    entropy: Optional[bytes] = None,
-) -> Tuple[Optional[int], bytes, bytes, Optional[bytes], Optional[bytes]]:
+    entropy: bytes | None = None,
+) -> Tuple[int | None, bytes, bytes, bytes | None, bytes | None]:
     if use_anti_exfil:
         if entropy is None:
             entropy = generate_entropy()
@@ -419,7 +421,7 @@ def sign_tx_eip1559_common(
     response = client.call(msg)
     assert isinstance(response, messages.EthereumTxRequest)
 
-    nonce_commitment: Optional[bytes] = None
+    nonce_commitment: bytes | None = None
 
     while True:
         if response.data_length is not None:
@@ -517,11 +519,11 @@ def sign_tx_eip1559_new(
     chain_id: int,
     max_gas_fee: int,
     max_priority_fee: int,
-    access_list: Optional[List[messages.EthereumAccessList]] = None,
-    definitions: Optional[messages.EthereumDefinitions] = None,
+    access_list: List[messages.EthereumAccessList] | None = None,
+    definitions: messages.EthereumDefinitions | None = None,
     chunkify: bool = False,
     use_anti_exfil: bool = True,
-    entropy: Optional[bytes] = None,
+    entropy: bytes | None = None,
 ) -> AntiExfilSignature:
     """
     If `use_anti_exfil` is set to `True`, the anti-exfilitration protocol will be
