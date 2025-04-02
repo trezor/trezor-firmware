@@ -309,6 +309,12 @@ pub trait FirmwareUI {
         paired_devices: Vec<TString<'static>, 1>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
+    fn show_pairing_device_name(
+        device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
+
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
