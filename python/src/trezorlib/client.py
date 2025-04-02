@@ -120,8 +120,7 @@ class TrezorClient:
                 self,
                 derive_cardano=derive_cardano,
             )
-            if self.features.passphrase_protection:
-                derive_seed(session, passphrase)
+            derive_seed(session, passphrase)
 
             return session
         raise NotImplementedError
