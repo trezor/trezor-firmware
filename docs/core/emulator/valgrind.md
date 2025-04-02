@@ -29,7 +29,7 @@ With `PYOPT=0`, most of the execution time is spent formatting and writing logs,
 
 If you're using Nix, you can use Valgrind and KCachegrind packages from our `shell.nix`:
 ```
-nix-shell --args devTools true --run "poetry shell"
+nix-shell --arg devTools true --run "poetry shell"
 ```
 
 Record profiling data on some device tests:
