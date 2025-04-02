@@ -249,11 +249,11 @@ def get_ownership_proof_common(
 
         # This function verifies that the signature includes the host's entropy and that its s value is less than half of the curve's order. However, it does not verify the signature itself, as trezorlib doesn't have the digest. The verification of the signature is the caller's responsibility.
         if not verify(
-            None,
-            res.signature,
-            None,
-            entropy,
-            nonce_commitment,
+            public_key=None,
+            signature=res.signature,
+            digest=None,
+            entropy=entropy,
+            nonce_commitment=nonce_commitment,
         ):
             # This is a violation of the anti-exfil protocol.
             raise ValueError("Invalid signature")
@@ -485,11 +485,11 @@ def sign_tx_common(
                         )
                     # This function verifies that the signature includes the host's entropy and that its s value is less than half of the curve's order. However, it does not verify the signature itself, as trezorlib doesn't have the digest. The verification of the signature is the caller's responsibility.
                     if not verify(
-                        None,
-                        sig,
-                        None,
-                        entropy_list[idx],
-                        nonce_commitment,
+                        public_key=None,
+                        signature=sig,
+                        digest=None,
+                        entropy=entropy_list[idx],
+                        nonce_commitment=nonce_commitment,
                     ):
                         # This is a violation of the anti-exfil protocol.
                         raise ValueError(f"Invalid signature for index {idx}")

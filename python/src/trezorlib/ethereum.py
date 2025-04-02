@@ -268,11 +268,11 @@ def sign_tx_common(
 
         # This function verifies that the signature includes the host's entropy and that its s value is less than half of the curve's order. However, it does not verify the signature itself, as trezorlib doesn't have the digest. The verification of the signature is the caller's responsibility.
         if nonce_commitment is None or not verify(
-            None,
-            response.signature_r + response.signature_s,
-            None,
-            entropy,
-            nonce_commitment,
+            public_key=None,
+            signature=response.signature_r + response.signature_s,
+            digest=None,
+            entropy=entropy,
+            nonce_commitment=nonce_commitment,
         ):
             # This is a violation of the anti-exfil protocol.
             raise exceptions.TrezorException("Invalid signature")
@@ -446,11 +446,11 @@ def sign_tx_eip1559_common(
 
         # This function verifies that the signature includes the host's entropy and that its s value is less than half of the curve's order. However, it does not verify the signature itself, as trezorlib doesn't have the digest. The verification of the signature is the caller's responsibility.
         if nonce_commitment is None or not verify(
-            None,
-            response.signature_r + response.signature_s,
-            None,
-            entropy,
-            nonce_commitment,
+            public_key=None,
+            signature=response.signature_r + response.signature_s,
+            digest=None,
+            entropy=entropy,
+            nonce_commitment=nonce_commitment,
         ):
             # This is a violation of the anti-exfil protocol.
             raise exceptions.TrezorException("Invalid signature")
