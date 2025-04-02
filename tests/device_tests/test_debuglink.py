@@ -54,9 +54,6 @@ def test_pin(session: Session):
 
         pin_encoded = client.debug.encode_pin("1234")
         resp = session.call_raw(messages.PinMatrixAck(pin=pin_encoded))
-        assert isinstance(resp, messages.PassphraseRequest)
-
-        resp = session.call_raw(messages.PassphraseAck(passphrase=""))
         assert isinstance(resp, messages.Address)
 
 

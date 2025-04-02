@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import cardano, exceptions, messages, models
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import Address, parse_path
@@ -33,7 +34,6 @@ PIN4 = "1234"
 def _get_public_node(
     session: "Session",
     address: "Address",
-    passphrase: str | None = None,
 ) -> messages.PublicKey:
 
     resp = session.call_raw(
@@ -43,26 +43,32 @@ def _get_public_node(
         resp = session._callback_button(resp)
     if isinstance(resp, messages.PinMatrixRequest):
         resp = session._callback_pin(resp)
-    if passphrase is not None:
-        resp = session.call_raw(messages.PassphraseAck(passphrase=passphrase))
     return resp
 
 
 @pytest.mark.setup_client(pin=PIN4, passphrase="")
 def test_clear_session(client: Client):
     is_t1 = client.model is models.T1B1
+    v1 = client.protocol_version == ProtocolVersion.V1
     init_responses = [
+        (v1, messages.Features),
         messages.PinMatrixRequest if is_t1 else messages.ButtonRequest,
-        messages.PassphraseRequest,
+        (v1, messages.PassphraseRequest),
+        (v1, messages.Address),
+    ]
+
+    lock_unlock = [
+        messages.Success,
+        messages.PinMatrixRequest if is_t1 else messages.ButtonRequest,
     ]
 
     cached_responses = [messages.PublicKey]
-    session = client.get_session()
-    session.lock()
     with client:
-        client.use_pin_sequence([PIN4])
-        client.set_expected_responses(init_responses + cached_responses)
-        assert _get_public_node(session, ADDRESS_N, passphrase="").xpub == XPUB
+        client.use_pin_sequence([PIN4, PIN4])
+        client.set_expected_responses(init_responses + lock_unlock + cached_responses)
+        session = client.get_session()
+        session.lock()
+        assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
     session.resume()
     with client:
@@ -72,13 +78,13 @@ def test_clear_session(client: Client):
 
     session.lock()
     session.end()
-    session = client.get_session()
 
     # session cache is cleared
     with client:
-        client.use_pin_sequence([PIN4])
+        client.use_pin_sequence([PIN4, PIN4])
         client.set_expected_responses(init_responses + cached_responses)
-        assert _get_public_node(session, ADDRESS_N, passphrase="").xpub == XPUB
+        session = client.get_session()
+        assert _get_public_node(session, ADDRESS_N).xpub == XPUB
 
     session.resume()
     with client:
@@ -168,7 +174,10 @@ def test_session_recycling(client: Client):
     # it should still be possible to resume the original session
     with client:
         # passphrase should still be cached
-        client.set_expected_responses([messages.Address] * 3)
+        expected_responses = [messages.Address] * 3
+        if client.protocol_version == ProtocolVersion.V1:
+            expected_responses = [messages.Features] + expected_responses
+        client.set_expected_responses(expected_responses)
         session.resume()
         get_test_address(session)
         get_test_address(session)
