@@ -324,8 +324,7 @@ pub fn new_confirm_output(
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
     })
-    .one_button_request(ButtonRequest::from_num(br_code, br_name))
-    .with_pages(|_| 1);
+    .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
     // Cancelled
     let content_cancelled = TextScreen::new(
@@ -365,8 +364,7 @@ pub fn new_confirm_output(
             TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
             TextScreenMsg::Menu => Some(FlowMsg::Info),
         })
-        .one_button_request(ButtonRequest::from_num(br_code, br_name))
-        .with_pages(|_| 1);
+        .one_button_request(ButtonRequest::from_num(br_code, br_name));
 
         let mut flow = SwipeFlow::new(&ConfirmOutputWithAmount::Address)?;
         flow.add_page(&ConfirmOutputWithAmount::Address, content_main)?
@@ -430,8 +428,7 @@ pub fn new_confirm_output(
         .one_button_request(ButtonRequest::from_num(
             summary_br_code.unwrap(),
             summary_br_name.unwrap(),
-        ))
-        .with_pages(|_| 1);
+        ));
 
         // SummaryMenu
         let mut summary_menu = VerticalMenu::empty();

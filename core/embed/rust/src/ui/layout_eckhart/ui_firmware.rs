@@ -20,7 +20,7 @@ use crate::{
         geometry::{LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmValueParams, RecoveryType, StrOrBytes},
+            util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
@@ -258,11 +258,28 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_properties(
-        _title: TString<'static>,
-        _items: Obj,
-        _hold: bool,
+        title: TString<'static>,
+        items: Obj,
+        hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = PropsList::new(
+            items,
+            &theme::TEXT_SMALL_LIGHT,
+            &theme::TEXT_MEDIUM,
+            &theme::TEXT_MONO_LIGHT,
+        )?;
+
+        let flow = flow::new_confirm_with_menu_cancel(
+            title,
+            None,
+            paragraphs
+                .into_paragraphs()
+                .with_spacing(12)
+                .with_placement(LinearPlacement::vertical()),
+            None,
+            hold,
+        )?;
+        Ok(flow)
     }
 
     fn confirm_value(

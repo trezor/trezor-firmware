@@ -676,6 +676,7 @@ def confirm_properties(
     br_code: ButtonRequestType = ButtonRequestType.ConfirmOutput,
 ) -> Awaitable[None]:
     # Monospace flag for values that are bytes.
+    # TODO: all props are strings, so nothing is rendered in monospace
     items = [(prop[0], prop[1], isinstance(prop[1], bytes)) for prop in props]
 
     return raise_if_not_confirmed(
