@@ -815,6 +815,30 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
+extern "C" fn new_show_pairing_device_name(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
+        let layout = ModelUI::show_pairing_device_name(device_name)?;
+        let layout_obj = LayoutObj::new_root(layout)?;
+        Ok(layout_obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let code: TString = kwargs.get(Qstr::MP_QSTR_code)?.try_into()?;
+        let layout = ModelUI::show_pairing_code(code)?;
+        let layout_obj = LayoutObj::new_root(layout)?;
+        Ok(layout_obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
 extern "C" fn new_show_info(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
@@ -1582,6 +1606,20 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
+
+    /// def show_pairing_device_name(
+    ///     *,
+    ///     device_name: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Pairing device: first screen (device name)."""
+    Qstr::MP_QSTR_show_pairing_device_name => obj_fn_kw!(0, new_show_pairing_device_name).as_obj(),
+
+    /// def show_pairing_code(
+    ///     *,
+    ///     code: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Pairing device: second screen (pairing code)."""
+    Qstr::MP_QSTR_show_pairing_code => obj_fn_kw!(0, new_show_pairing_code).as_obj(),
 
     /// def show_info(
     ///     *,

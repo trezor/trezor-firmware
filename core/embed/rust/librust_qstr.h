@@ -199,6 +199,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
+  MP_QSTR_code;
   MP_QSTR_coinjoin__access_account;
   MP_QSTR_coinjoin__do_not_disconnect;
   MP_QSTR_coinjoin__max_mining_fee;
@@ -242,6 +243,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_deinit;
   MP_QSTR_description;
   MP_QSTR_details_title;
+  MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
@@ -682,6 +684,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
+  MP_QSTR_show_pairing_code;
+  MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
