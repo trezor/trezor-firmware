@@ -283,73 +283,74 @@ def client(
     _raw_client.reset_debug_features()
     _raw_client.open()
     try:
-        _raw_client.sync_responses()
-        _raw_client.init_device()
-    except Exception:
-        request.session.shouldstop = "Failed to communicate with Trezor"
-        pytest.fail("Failed to communicate with Trezor")
+        try:
+            _raw_client.sync_responses()
+            _raw_client.init_device()
+        except Exception:
+            request.session.shouldstop = "Failed to communicate with Trezor"
+            pytest.fail("Failed to communicate with Trezor")
 
-    # Resetting all the debug events to not be influenced by previous test
-    _raw_client.debug.reset_debug_events()
+        # Resetting all the debug events to not be influenced by previous test
+        _raw_client.debug.reset_debug_events()
 
-    if test_ui:
-        # we need to reseed before the wipe
-        _raw_client.debug.reseed(0)
+        if test_ui:
+            # we need to reseed before the wipe
+            _raw_client.debug.reseed(0)
 
-    if sd_marker:
-        should_format = sd_marker.kwargs.get("formatted", True)
-        _raw_client.debug.erase_sd_card(format=should_format)
+        if sd_marker:
+            should_format = sd_marker.kwargs.get("formatted", True)
+            _raw_client.debug.erase_sd_card(format=should_format)
 
-    wipe_device(_raw_client)
+        wipe_device(_raw_client)
 
-    # Load language again, as it got erased in wipe
-    if _raw_client.model is not models.T1B1:
-        lang = request.session.config.getoption("lang") or "en"
-        assert isinstance(lang, str)
-        translations.set_language(_raw_client, lang)
+        # Load language again, as it got erased in wipe
+        if _raw_client.model is not models.T1B1:
+            lang = request.session.config.getoption("lang") or "en"
+            assert isinstance(lang, str)
+            translations.set_language(_raw_client, lang)
 
-    setup_params = dict(
-        uninitialized=False,
-        mnemonic=" ".join(["all"] * 12),
-        pin=None,
-        passphrase=False,
-        needs_backup=False,
-        no_backup=False,
-    )
-
-    marker = request.node.get_closest_marker("setup_client")
-    if marker:
-        setup_params.update(marker.kwargs)
-
-    use_passphrase = setup_params["passphrase"] is True or isinstance(
-        setup_params["passphrase"], str
-    )
-
-    if not setup_params["uninitialized"]:
-        debuglink.load_device(
-            _raw_client,
-            mnemonic=setup_params["mnemonic"],  # type: ignore
-            pin=setup_params["pin"],  # type: ignore
-            passphrase_protection=use_passphrase,
-            label="test",
-            needs_backup=setup_params["needs_backup"],  # type: ignore
-            no_backup=setup_params["no_backup"],  # type: ignore
-            _skip_init_device=True,
+        setup_params = dict(
+            uninitialized=False,
+            mnemonic=" ".join(["all"] * 12),
+            pin=None,
+            passphrase=False,
+            needs_backup=False,
+            no_backup=False,
         )
 
-        if request.node.get_closest_marker("experimental"):
-            apply_settings(_raw_client, experimental_features=True)
+        marker = request.node.get_closest_marker("setup_client")
+        if marker:
+            setup_params.update(marker.kwargs)
 
-        if use_passphrase and isinstance(setup_params["passphrase"], str):
-            _raw_client.use_passphrase(setup_params["passphrase"])
+        use_passphrase = setup_params["passphrase"] is True or isinstance(
+            setup_params["passphrase"], str
+        )
 
-        _raw_client.lock(_refresh_features=False)
-        _raw_client.init_device(new_session=True)
+        if not setup_params["uninitialized"]:
+            debuglink.load_device(
+                _raw_client,
+                mnemonic=setup_params["mnemonic"],  # type: ignore
+                pin=setup_params["pin"],  # type: ignore
+                passphrase_protection=use_passphrase,
+                label="test",
+                needs_backup=setup_params["needs_backup"],  # type: ignore
+                no_backup=setup_params["no_backup"],  # type: ignore
+                _skip_init_device=True,
+            )
 
-    with ui_tests.screen_recording(_raw_client, request):
-        yield _raw_client
+            if request.node.get_closest_marker("experimental"):
+                apply_settings(_raw_client, experimental_features=True)
 
-    _raw_client.close()
+            if use_passphrase and isinstance(setup_params["passphrase"], str):
+                _raw_client.use_passphrase(setup_params["passphrase"])
+
+            _raw_client.lock(_refresh_features=False)
+            _raw_client.init_device(new_session=True)
+
+        with ui_tests.screen_recording(_raw_client, request):
+            yield _raw_client
+    finally:
+        _raw_client.close()
 
 
 def _is_main_runner(session_or_request: pytest.Session | pytest.FixtureRequest) -> bool:
