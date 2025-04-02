@@ -805,7 +805,7 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
 extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
         let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
-        let battery_percentage: usize = kwargs.get_or(Qstr::MP_QSTR_battery_percentage, 0)?;
+        let battery_percentage: u8 = kwargs.get_or(Qstr::MP_QSTR_battery_percentage, 0)?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
         let layout = ModelUI::show_device_menu(failed_backup, battery_percentage, paired_devices)?;
@@ -1576,7 +1576,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// def show_device_menu(
     ///     *,
     ///     failed_backup: bool,
-    ///     battery_percentage: bool,
+    ///     battery_percentage: int,
     ///     paired_devices: Iterable[str],
     /// ) -> LayoutObj[UiResult]:
     ///     """Idle homescreen."""

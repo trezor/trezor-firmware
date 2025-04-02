@@ -132,7 +132,7 @@ enum Subscreen {
 pub struct DeviceMenuScreen<'a> {
     bounds: Rect,
 
-    battery_percentage: usize,
+    battery_percentage: u8,
 
     // These correspond to the currently active subscreen,
     // which is one of the possible kinds of subscreens
@@ -156,7 +156,7 @@ pub struct DeviceMenuScreen<'a> {
 impl<'a> DeviceMenuScreen<'a> {
     pub fn new(
         failed_backup: bool,
-        battery_percentage: usize,
+        battery_percentage: u8,
         // NB: we currently only support one device at a time.
         // if we ever increase this size, we will need a way to return the correct
         // device index on Disconnect back to uPy

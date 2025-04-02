@@ -138,7 +138,7 @@ impl Header {
         }
     }
 
-    pub fn with_battery(self, percentage: usize) -> Self {
+    pub fn with_battery(self, percentage: u8) -> Self {
         let is_low_battery = percentage < 20; // TODO
 
         self.with_icon(

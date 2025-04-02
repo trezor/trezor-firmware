@@ -535,7 +535,7 @@ def show_homescreen(
 def show_device_menu(
     *,
     failed_backup: bool,
-    battery_percentage: bool,
+    battery_percentage: int,
     paired_devices: Iterable[str],
 ) -> LayoutObj[UiResult]:
     """Idle homescreen."""
