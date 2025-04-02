@@ -186,7 +186,7 @@ class SessionV1(Session):
         self._activate_self()
         if t.TYPE_CHECKING:
             assert isinstance(self.client.protocol, ProtocolV1Channel)
-        self.client.protocol.write(msg)
+        self.client._write(msg)
 
     def _activate_self(self) -> None:
         if self.client._last_active_session is not self:
@@ -197,7 +197,7 @@ class SessionV1(Session):
         assert self.client._last_active_session is self
         if t.TYPE_CHECKING:
             assert isinstance(self.client.protocol, ProtocolV1Channel)
-        return self.client.protocol.read()
+        return self.client._read()
 
     def init_session(self, derive_cardano: bool | None = None) -> None:
         if self.id == b"":
