@@ -302,6 +302,27 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
                                  mod_trezorutils_enable_oom_dump);
 #endif  // MICROPY_OOM_CALLBACK
 
+/// if __debug__:
+///     def check_reallocs() -> None:
+///         """
+///         Assert that `sys.modules` and `main`'s globals are never
+///         reallocated.
+///         """
+STATIC mp_obj_t mod_trezorutils_check_reallocs(void) {
+  mp_obj_dict_t *modules = &MP_STATE_VM(mp_loaded_modules_dict);
+  if (modules->map.alloc > MICROPY_LOADED_MODULES_DICT_SIZE) {
+    mp_raise_msg(&mp_type_AssertionError, "sys.modules dict is reallocated");
+  }
+  mp_obj_t main = mp_obj_dict_get(modules, MP_OBJ_NEW_QSTR(MP_QSTR_main));
+  size_t main_map_alloc = mp_obj_module_get_globals(main)->map.alloc;
+  if (main_map_alloc > MICROPY_MAIN_DICT_SIZE) {
+    mp_raise_msg(&mp_type_AssertionError, "main globals dict is reallocated");
+  }
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_check_reallocs_obj,
+                                 mod_trezorutils_check_reallocs);
+
 #endif  // !PYOPT
 
 /// def reboot_to_bootloader(
@@ -520,6 +541,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_enable_oom_dump),
      MP_ROM_PTR(&mod_trezorutils_enable_oom_dump_obj)},
 #endif
+    {MP_ROM_QSTR(MP_QSTR_check_reallocs),
+     MP_ROM_PTR(&mod_trezorutils_check_reallocs_obj)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_sd_hotswap_enabled),
      MP_ROM_PTR(&mod_trezorutils_sd_hotswap_enabled_obj)},

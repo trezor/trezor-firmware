@@ -37,7 +37,7 @@ from trezorutils import (  # noqa: F401
 from typing import TYPE_CHECKING
 
 if __debug__:
-    from trezorutils import LOG_STACK_USAGE
+    from trezorutils import LOG_STACK_USAGE, check_reallocs
 
     if LOG_STACK_USAGE:
         from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
@@ -67,10 +67,9 @@ def unimport_begin() -> set[str]:
 
 
 def unimport_end(mods: set[str], collect: bool = True) -> None:
-    # static check that the size of sys.modules never grows above value of
-    # MICROPY_LOADED_MODULES_DICT_SIZE, so that the sys.modules dict is never
-    # reallocated at run-time
-    assert len(sys.modules) <= 160, "Please bump preallocated size in mpconfigport.h"
+    if __debug__:
+        # Assert that `sys.modules` and `__main__` dict are never reallocated at run-time
+        check_reallocs()
 
     for mod in sys.modules:  # pylint: disable=consider-using-dict-items
         if mod not in mods:

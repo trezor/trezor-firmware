@@ -104,6 +104,12 @@ if __debug__:
         """
         Dump GC info in case of an OOM.
         """
+if __debug__:
+    def check_reallocs() -> None:
+        """
+        Assert that `sys.modules` and `main`'s globals are never
+        reallocated.
+        """
 
 
 # upymod/modtrezorutils/modtrezorutils.c
