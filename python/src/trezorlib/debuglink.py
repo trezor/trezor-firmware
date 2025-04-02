@@ -808,10 +808,10 @@ class DebugUI:
 
     def __init__(self, debuglink: DebugLink) -> None:
         self.debuglink = debuglink
-        self.pins: t.Iterator[str] | None = None
         self.clear()
 
     def clear(self) -> None:
+        self.pins: t.Iterator[str] | None = None
         self.passphrase = None
         self.input_flow: t.Union[
             t.Generator[None, messages.ButtonRequest, None], object, None
