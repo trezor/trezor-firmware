@@ -476,6 +476,7 @@ def test_unlocked(client: Client):
             [
                 (v1, messages.Features),
                 _pin_request(client),
+                (v1, messages.Address),
                 messages.Address,
             ]
         )
