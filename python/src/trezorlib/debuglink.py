@@ -997,13 +997,10 @@ class SessionDebugWrapper(Session):
         return self.client
 
     def _write(self, msg: t.Any) -> None:
-        self._session._write(self.debug_client._filter_message(msg))
+        self._session._write(msg)
 
     def _read(self) -> t.Any:
-        resp = self.debug_client._filter_message(self._session._read())
-        if self.debug_client.actual_responses is not None:
-            self.debug_client.actual_responses.append(resp)
-        return resp
+        return self._session._read()
 
     def resume(self) -> None:
         self._session.resume()
@@ -1400,6 +1397,15 @@ class TrezorClientDebugLink(TrezorClient):
         self.ui.input_flow = input_flow
 
         next(input_flow)  # start the generator
+
+    def _write(self, msg: t.Any) -> None:
+        super()._write(self._filter_message(msg))
+
+    def _read(self) -> t.Any:
+        resp = self._filter_message(super()._read())
+        if self.actual_responses is not None:
+            self.actual_responses.append(resp)
+        return resp
 
 
 def load_device(
