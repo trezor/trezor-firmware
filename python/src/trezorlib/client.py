@@ -189,6 +189,12 @@ class TrezorClient:
             else:
                 raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
 
+    def _write(self, msg: t.Any) -> None:
+        self.protocol.write(msg)
+
+    def _read(self) -> t.Any:
+        return self.protocol.read()
+
 
 def get_default_client(
     path: t.Optional[str] = None,
