@@ -9,10 +9,13 @@ if TYPE_CHECKING:
 
 
 @auto_keychain(__name__)
-async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddress:
+async def get_address(
+    msg: RippleGetAddress, keychain: Keychain
+) -> RippleAddress | None:
     # NOTE: local imports here saves 20 bytes
     from trezor.messages import RippleAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import context
 
     from apps.common import paths
 
@@ -25,8 +28,11 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
     node = keychain.derive(address_n)
     pubkey = node.public_key()
     address = address_from_public_key(pubkey)
+    response = RippleAddress(address=address)
 
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERN, SLIP44_ID
 
         await show_address(
@@ -35,5 +41,8 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
             account=paths.get_account_name("XRP", msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
 
-    return RippleAddress(address=address)
+    return response

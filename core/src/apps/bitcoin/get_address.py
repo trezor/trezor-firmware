@@ -35,14 +35,19 @@ def _get_xpubs(
 
 
 @with_keychain
-async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Address:
+async def get_address(
+    msg: GetAddress, keychain: Keychain, coin: CoinInfo
+) -> Address | None:
+    from trezor import TR
     from trezor.enums import InputScriptType
     from trezor.messages import Address
     from trezor.ui.layouts import (
         confirm_multisig_different_paths_warning,
         confirm_multisig_warning,
         show_address,
+        show_continue_in_app,
     )
+    from trezor.wire import context
 
     from apps.common.address_mac import get_address_mac
     from apps.common.paths import address_n_to_str, validate_path
@@ -103,6 +108,8 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
         ):
             mac = get_address_mac(address, coin.slip44, keychain)
 
+    response = Address(address=address, mac=mac)
+
     if msg.show_display:
         path = address_n_to_str(address_n)
         if multisig:
@@ -156,4 +163,8 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
                 chunkify=bool(msg.chunkify),
             )
 
-    return Address(address=address, mac=mac)
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
+    else:
+        return response

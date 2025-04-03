@@ -172,12 +172,12 @@ impl StatusScreen {
         )
     }
 
-    pub fn new_success_timeout(msg: TString<'static>) -> Self {
+    pub fn new_success_timeout(msg: TString<'static>, time_ms: u32) -> Self {
         Self::new(
             theme::ICON_SIMPLE_CHECKMARK30,
             theme::GREEN_LIME,
             theme::GREEN_LIGHT,
-            DismissType::Timeout(Timeout::new(TIMEOUT_MS)),
+            DismissType::Timeout(Timeout::new(time_ms)),
             msg,
         )
     }
