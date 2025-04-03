@@ -43,7 +43,8 @@ class _Prof:
         #     print(event, frame.f_code.co_filename, frame.f_lineno)
 
         if event == "line":
-            self.__coverage.line_tick(frame.f_code.co_filename, frame.f_lineno)
+            filename = str(frame.f_code.co_filename)
+            self.__coverage.line_tick(filename, frame.f_lineno)
 
     def coverage_data(self):
         return self.__coverage.lines_execution()
