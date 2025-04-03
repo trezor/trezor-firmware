@@ -21,7 +21,7 @@ fn main() {
             .unwrap(),
     )
     .unwrap();
-    let addr = Address::p2pkh(&pubkey.to_pub(), Network::Testnet);
+    let addr = Address::p2pkh(pubkey.to_pub(), Network::Testnet);
     println!("address: {}", addr);
 
     let (addr, signature) = handle_interaction(
