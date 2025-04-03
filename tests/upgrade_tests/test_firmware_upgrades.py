@@ -122,9 +122,9 @@ def test_upgrade_load_pin(gen: str, tag: str) -> None:
         assert not client.features.passphrase_protection
         assert client.features.initialized
         assert client.features.label == LABEL
-        session = client.get_session()
-        with session.client as client:
+        with client:
             client.use_pin_sequence([PIN])
+            session = client.get_session()
             assert btc.get_address(session, "Bitcoin", PATH) == ADDRESS
 
     with EmulatorWrapper(gen, tag) as emu:
