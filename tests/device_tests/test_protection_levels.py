@@ -241,7 +241,6 @@ def test_wipe_device(client: Client):
     client = client.get_new_client()
     session = client.get_seedless_session()
     with client:
-        client.use_pin_sequence([PIN4])
         client.set_expected_responses([messages.Features])
         session.call(messages.GetFeatures())
 
