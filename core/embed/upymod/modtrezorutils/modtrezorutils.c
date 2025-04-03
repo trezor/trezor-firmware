@@ -313,8 +313,14 @@ STATIC mp_obj_t mod_trezorutils_check_reallocs(void) {
   if (modules->map.alloc > MICROPY_LOADED_MODULES_DICT_SIZE) {
     mp_raise_msg(&mp_type_AssertionError, "sys.modules dict is reallocated");
   }
+#ifdef TREZOR_EMULATOR
+  // when profiling, __main__ module is `prof.py`, not `main.py`
   mp_obj_t main = mp_obj_dict_get(modules, MP_OBJ_NEW_QSTR(MP_QSTR_main));
   size_t main_map_alloc = mp_obj_module_get_globals(main)->map.alloc;
+#else
+  // `main.py` is executed (not imported), so there is no `main` module
+  size_t main_map_alloc = MP_STATE_VM(dict_main).map.alloc;
+#endif
   if (main_map_alloc > MICROPY_MAIN_DICT_SIZE) {
     mp_raise_msg(&mp_type_AssertionError, "main globals dict is reallocated");
   }
