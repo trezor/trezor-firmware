@@ -4,9 +4,7 @@ use crate::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
         constant::screen,
         display::{Color, Icon},
-        event::SwipeEvent,
         geometry::{Alignment, Alignment2D, Direction, Insets, Offset, Point, Rect},
-        lerp::Lerp,
         shape::{self, Renderer, Text},
         util::Pager,
     },
@@ -134,56 +132,12 @@ impl<'a> Component for Hint<'a> {
         self.area
     }
 
-    fn event(&mut self, _ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        match event {
-            Event::Attach(_) => {
-                self.progress = 0;
-            }
-            Event::Swipe(SwipeEvent::Move(dir, progress)) => match dir {
-                Direction::Up if self.swipe_allow_up => {
-                    self.progress = progress;
-                    self.dir = dir;
-                }
-                Direction::Down if self.swipe_allow_down => {
-                    self.progress = progress;
-                    self.dir = dir;
-                }
-                _ => {}
-            },
-            _ => {}
-        };
-
+    fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let progress = self.progress as f32 / 1000.0;
-
-        let shift = pareen::constant(0.0).seq_ease_out(
-            0.0,
-            easer::functions::Cubic,
-            1.0,
-            pareen::constant(1.0),
-        );
-
-        let offset = i16::lerp(0, 20, shift.eval(progress));
-
-        let mask = u8::lerp(0, 255, shift.eval(progress));
-
-        let offset = match self.dir {
-            Direction::Up => Offset::y(-offset),
-            Direction::Down => Offset::y(3 * offset),
-            _ => Offset::zero(),
-        };
-
-        target.with_origin(offset, &|target| {
-            self.content.render(self.area, target);
-            shape::Bar::new(self.area)
-                .with_alpha(mask)
-                .with_fg(Color::black())
-                .with_bg(Color::black())
-                .render(target);
-        });
+        self.content.render(self.area, target);
     }
 }
 
