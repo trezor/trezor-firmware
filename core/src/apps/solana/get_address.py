@@ -16,9 +16,10 @@ if TYPE_CHECKING:
 async def get_address(
     msg: SolanaGetAddress,
     keychain: Keychain,
-) -> SolanaAddress:
+) -> SolanaAddress | None:
     from trezor.messages import SolanaAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import context
 
     from apps.common import paths
 
@@ -26,12 +27,18 @@ async def get_address(
 
     public_key = derive_public_key(keychain, msg.address_n)
     address = base58.encode(public_key)
+    response = SolanaAddress(address=address)
 
     if msg.show_display:
+        from trezor import TR
+
         await show_address(
             address,
             path=paths.address_n_to_str(msg.address_n),
             chunkify=bool(msg.chunkify),
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
 
-    return SolanaAddress(address=address)
+    return response

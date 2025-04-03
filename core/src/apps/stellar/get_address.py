@@ -9,9 +9,12 @@ if TYPE_CHECKING:
 
 
 @auto_keychain(__name__)
-async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddress:
+async def get_address(
+    msg: StellarGetAddress, keychain: Keychain
+) -> StellarAddress | None:
     from trezor.messages import StellarAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import context
 
     from apps.common import paths, seed
 
@@ -24,8 +27,11 @@ async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddr
     node = keychain.derive(address_n)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
     address = helpers.address_from_public_key(pubkey)
+    response = StellarAddress(address=address)
 
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERN, SLIP44_ID
 
         await show_address(
@@ -35,5 +41,8 @@ async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddr
             account=paths.get_account_name("XLM", msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
 
-    return StellarAddress(address=address)
+    return response
