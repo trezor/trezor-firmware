@@ -53,6 +53,7 @@ def _address_to_script_type(address: str, coin: CoinInfo) -> InputScriptType:
 async def verify_message(msg: VerifyMessage) -> Success:
     from trezor import TR, utils
     from trezor.crypto.curve import secp256k1
+    from trezor.crypto.signature import decode_bip137_signature
     from trezor.enums import InputScriptType
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_signverify, show_success
@@ -77,32 +78,32 @@ async def verify_message(msg: VerifyMessage) -> Success:
 
     digest = message_digest(coin, message)
 
-    script_type = _address_to_script_type(address, coin)
-    recid = signature[0]
-    if 27 <= recid <= 34:
-        # p2pkh or no script type provided
-        pass  # use the script type from the address
-    elif 35 <= recid <= 38 and script_type == InputScriptType.SPENDP2SHWITNESS:
-        # segwit-in-p2sh
-        signature = bytes([signature[0] - 4]) + signature[1:]
-    elif 39 <= recid <= 42 and script_type == InputScriptType.SPENDWITNESS:
-        # native segwit
-        signature = bytes([signature[0] - 8]) + signature[1:]
-    else:
-        raise ProcessError("Invalid signature")
+    address_script_type = _address_to_script_type(address, coin)
+    signature_script_type, recoverable_signature = decode_bip137_signature(signature)
 
-    pubkey = secp256k1.verify_recover(signature, digest)
+    if signature_script_type not in (
+        InputScriptType.SPENDADDRESS,
+        InputScriptType.SPENDADDRESS_UNCOMPRESSED,
+    ):
+        if signature_script_type != address_script_type:
+            raise ProcessError("Invalid signature")
+
+    pubkey = secp256k1.verify_recover(
+        recoverable_signature,
+        digest,
+        signature_script_type != InputScriptType.SPENDADDRESS_UNCOMPRESSED,
+    )
 
     if not pubkey:
         raise ProcessError("Invalid signature")
 
-    if script_type == InputScriptType.SPENDADDRESS:
+    if address_script_type == InputScriptType.SPENDADDRESS:
         addr = address_pkh(pubkey, coin)
         if not utils.BITCOIN_ONLY and coin.cashaddr_prefix is not None:
             addr = address_to_cashaddr(addr, coin)
-    elif script_type == InputScriptType.SPENDP2SHWITNESS:
+    elif address_script_type == InputScriptType.SPENDP2SHWITNESS:
         addr = address_p2wpkh_in_p2sh(pubkey, coin)
-    elif script_type == InputScriptType.SPENDWITNESS:
+    elif address_script_type == InputScriptType.SPENDWITNESS:
         addr = address_p2wpkh(pubkey, coin)
     else:
         raise ProcessError("Invalid signature")

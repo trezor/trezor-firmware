@@ -14,6 +14,17 @@ def base58_encode(prefix: str, sig_prefix: str, data: bytes) -> str:
         return prefix + b58
 
 
+def encode_signature(recoverable_signature: bytes) -> str:
+    from trezor.crypto.signature import encode_bip137_signature
+    from trezor.enums import InputScriptType
+
+    return base58_encode(
+        "SIG_",
+        "K1",
+        encode_bip137_signature(recoverable_signature, InputScriptType.SPENDADDRESS),
+    )
+
+
 def eos_name_to_string(value: int) -> str:
     charmap = ".12345abcdefghijklmnopqrstuvwxyz"
     tmp = value

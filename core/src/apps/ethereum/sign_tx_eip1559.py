@@ -103,9 +103,9 @@ async def sign_tx_eip1559(
         sha.extend(data)
 
     while data_left > 0:
-        resp = await send_request_chunk(data_left)
-        data_left -= len(resp.data_chunk)
-        sha.extend(resp.data_chunk)
+        data_chunk = await send_request_chunk(data_left)
+        data_left -= len(data_chunk)
+        sha.extend(data_chunk)
 
     # write_access_list
     payload_length = sum(access_list_item_length(i) for i in msg.access_list)
@@ -119,7 +119,7 @@ async def sign_tx_eip1559(
         rlp.write(sha, item.storage_keys)
 
     digest = sha.get_digest()
-    result = _sign_digest(msg, keychain, digest)
+    result = await _sign_digest(msg, keychain, digest)
 
     return result
 
@@ -151,20 +151,40 @@ def _get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     return length
 
 
-def _sign_digest(
+async def _sign_digest(
     msg: EthereumSignTxEIP1559, keychain: Keychain, digest: bytes
 ) -> EthereumTxRequest:
     from trezor.crypto.curve import secp256k1
     from trezor.messages import EthereumTxRequest
 
+    from .sign_tx import send_request_entropy
+
     node = keychain.derive(msg.address_n)
-    signature = secp256k1.sign(
-        node.private_key(), digest, False, secp256k1.CANONICAL_SIG_ETHEREUM
-    )
+    private_key = node.private_key()
+
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        nonce_commitment = secp256k1.anti_exfil_commit_nonce(
+            private_key, digest, msg.entropy_commitment
+        )
+        entropy = await send_request_entropy(nonce_commitment)
+
+        signature = secp256k1.anti_exfil_sign(private_key, digest, entropy)
+    else:
+        signature = secp256k1.sign_recoverable(
+            private_key, digest, secp256k1.CANONICAL_SIG_ETHEREUM
+        )
 
     req = EthereumTxRequest()
-    req.signature_v = signature[0] - 27
-    req.signature_r = signature[1:33]
-    req.signature_s = signature[33:]
+
+    if msg.entropy_commitment is not None:
+        # use anti-exfil protocol
+        req.signature_v = None
+        req.signature_r = signature[:32]
+        req.signature_s = signature[32:]
+    else:
+        req.signature_v = signature[0]
+        req.signature_r = signature[1:33]
+        req.signature_s = signature[33:]
 
     return req

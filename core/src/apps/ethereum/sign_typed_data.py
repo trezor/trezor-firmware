@@ -33,7 +33,7 @@ async def sign_typed_data(
 
     from apps.common import paths
 
-    from .helpers import address_from_bytes
+    from .helpers import address_from_bytes, encode_signature
     from .layout import require_confirm_address
 
     await paths.validate_path(keychain, msg.address_n)
@@ -48,13 +48,13 @@ async def sign_typed_data(
         msg.primary_type, msg.metamask_v4_compat
     )
 
-    signature = secp256k1.sign(
-        node.private_key(), data_hash, False, secp256k1.CANONICAL_SIG_ETHEREUM
+    signature = secp256k1.sign_recoverable(
+        node.private_key(), data_hash, secp256k1.CANONICAL_SIG_ETHEREUM
     )
 
     return EthereumTypedDataSignature(
         address=address_from_bytes(address_bytes, defs.network),
-        signature=signature[1:] + signature[0:1],
+        signature=encode_signature(signature),
     )
 
 

@@ -517,3 +517,134 @@ def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
     assert sig_r.hex() == result["sig_r"]
     assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
+
+
+@pytest.mark.models("core", reason="Not implemented")
+def test_anti_exfil(client: Client):
+    with client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                message_filters.EthereumTxRequest(
+                    data_length=1,
+                    signature_v=None,
+                    signature_r=None,
+                    signature_s=None,
+                    nonce_commitment=None,
+                ),
+                message_filters.EthereumTxRequest(
+                    data_length=None,
+                    signature_v=None,
+                    signature_r=None,
+                    signature_s=None,
+                    nonce_commitment=bytes.fromhex(
+                        "03957e53baf3a5a3c0b0376b1b5a397abc3612f5509c5a1436d701cb1ef985555b"
+                    ),
+                ),
+                message_filters.EthereumTxRequest(
+                    data_length=None,
+                    signature_v=None,
+                    signature_r=bytes.fromhex(
+                        "7fd641fa851220322d82a26ad68f1409b26c336db60cd45e69a6c7ac5f504e47"
+                    ),
+                    signature_s=bytes.fromhex(
+                        "3e53105405b8d984e4d76f300157441d87f9d553213859b0a11068c0d6a70430"
+                    ),
+                    nonce_commitment=None,
+                ),
+            ]
+        )
+
+        anti_exfil_signature = ethereum.sign_tx_new(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0,
+            gas_price=20_000,
+            gas_limit=20_000,
+            to=TO_ADDR,
+            value=0,
+            data=b"A" * 1025,
+            chain_id=1,
+            use_anti_exfil=True,
+            entropy=bytes(32),
+        )
+
+        assert anti_exfil_signature == ethereum.AntiExfilSignature(
+            signature=bytes.fromhex(
+                "7fd641fa851220322d82a26ad68f1409b26c336db60cd45e69a6c7ac5f504e473e53105405b8d984e4d76f300157441d87f9d553213859b0a11068c0d6a70430"
+            ),
+            entropy=bytes.fromhex(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            nonce_commitment=bytes.fromhex(
+                "03957e53baf3a5a3c0b0376b1b5a397abc3612f5509c5a1436d701cb1ef985555b"
+            ),
+        )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil_eip1559(client: Client):
+    with client:
+        client.set_expected_responses(
+            [
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                messages.ButtonRequest(code=messages.ButtonRequestType.SignTx),
+                message_filters.EthereumTxRequest(
+                    data_length=1,
+                    signature_v=None,
+                    signature_r=None,
+                    signature_s=None,
+                    nonce_commitment=None,
+                ),
+                message_filters.EthereumTxRequest(
+                    data_length=None,
+                    signature_v=None,
+                    signature_r=None,
+                    signature_s=None,
+                    nonce_commitment=bytes.fromhex(
+                        "039802b7d2fa6d6490fd3300b1b48021f477905232f2378c6cf56bf1efa53792f8"
+                    ),
+                ),
+                message_filters.EthereumTxRequest(
+                    data_length=None,
+                    signature_v=None,
+                    signature_r=bytes.fromhex(
+                        "bd43e3e33f79fa6cdb5bc71dabe8fc8990b47e8559f8d86ee7fc8f7e9a3d1d3e"
+                    ),
+                    signature_s=bytes.fromhex(
+                        "63c6155e9c2b65cee17d6337565a153aa29b1033519989cbe5584c73ea843be2"
+                    ),
+                    nonce_commitment=None,
+                ),
+            ]
+        )
+
+        anti_exfil_signature = ethereum.sign_tx_eip1559_new(
+            client,
+            n=parse_path("m/44h/60h/0h/0/0"),
+            nonce=0,
+            gas_limit=20_000,
+            to=TO_ADDR,
+            value=0,
+            data=b"A" * 1025,
+            chain_id=1,
+            max_gas_fee=10,
+            max_priority_fee=10,
+            use_anti_exfil=True,
+            entropy=bytes(32),
+        )
+
+        assert anti_exfil_signature == ethereum.AntiExfilSignature(
+            signature=bytes.fromhex(
+                "bd43e3e33f79fa6cdb5bc71dabe8fc8990b47e8559f8d86ee7fc8f7e9a3d1d3e63c6155e9c2b65cee17d6337565a153aa29b1033519989cbe5584c73ea843be2"
+            ),
+            entropy=bytes.fromhex(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            nonce_commitment=bytes.fromhex(
+                "039802b7d2fa6d6490fd3300b1b48021f477905232f2378c6cf56bf1efa53792f8"
+            ),
+        )

@@ -29,6 +29,7 @@ TransactionType.inputs                                      max_count:1
 TransactionType.bin_outputs                                 max_count:1
 TransactionType.outputs                                     max_count:1
 TransactionType.extra_data                                  max_size:1024
+TransactionType.entropy                                     max_size:32
 
 TxInputType.address_n                                       max_count:8
 TxInputType.prev_hash                                       max_size:32
@@ -38,6 +39,7 @@ TxInputType.ownership_proof                                 max_size:147
 TxInputType.commitment_data                                 max_size:70
 TxInputType.orig_hash                                       max_size:32
 TxInputType.script_pubkey                                   max_size:520
+TxInputType.entropy_commitment                              max_size:32
 
 TxOutputType.address                                        max_size:130
 TxOutputType.address_n                                      max_count:8
@@ -46,7 +48,10 @@ TxOutputType.orig_hash                                      max_size:32
 
 TxOutputBinType.script_pubkey                               max_size:520
 
+TxEntropyType.entropy                                       max_size:32
+
 TxRequestDetailsType.tx_hash                                max_size:32
+TxRequestDetailsType.nonce_commitment                       max_size:32
 
 TxRequestSerializedType.signature                           max_size:73
 TxRequestSerializedType.serialized_tx                       max_size:2048
@@ -66,11 +71,14 @@ TxInput.ownership_proof                                     max_size:147
 TxInput.commitment_data                                     max_size:70
 TxInput.orig_hash                                           max_size:32
 TxInput.script_pubkey                                       max_size:520
+TxInput.entropy_commitment                                  max_size:32
 
 TxOutput.address                                            max_size:130
 TxOutput.address_n                                          max_count:8
 TxOutput.op_return_data                                     max_size:150
 TxOutput.orig_hash                                          max_size:32
+
+TxEntropy.entropy                                           max_size:32
 
 PrevInput.prev_hash                                         max_size:32
 PrevInput.script_sig                                        max_size:1650
@@ -78,6 +86,8 @@ PrevInput.script_sig                                        max_size:1650
 PrevOutput.script_pubkey                                    max_size:520
 
 TxAckPrevExtraDataWrapper.extra_data_chunk                  type:FT_IGNORE
+
+TxAckEntropyWrapper.entropy                                 max_size:32
 
 GetOwnershipId.address_n                                    max_count:8
 GetOwnershipId.coin_name                                    max_size:21
@@ -88,9 +98,14 @@ GetOwnershipProof.address_n                                 max_count:8
 GetOwnershipProof.coin_name                                 max_size:21
 GetOwnershipProof.ownership_ids                             max_count:15 max_size:32
 GetOwnershipProof.commitment_data                           max_size:70
+GetOwnershipProof.entropy_commitment                        max_size:32
 
 OwnershipProof.ownership_proof                              max_size:147
 OwnershipProof.signature                                    max_size:71
+
+OwnershipProofNonceCommitment.nonce_commitment              max_size:32
+
+OwnershipProofEntropy.entropy                               max_size:32
 
 AuthorizeCoinJoin.coordinator                               max_size:37
 AuthorizeCoinJoin.address_n                                 max_count:8

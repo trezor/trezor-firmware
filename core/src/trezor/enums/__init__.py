@@ -77,6 +77,7 @@ if TYPE_CHECKING:
         SPENDWITNESS = 3
         SPENDP2SHWITNESS = 4
         SPENDTAPROOT = 5
+        SPENDADDRESS_UNCOMPRESSED = 6
 
     class OutputScriptType(IntEnum):
         PAYTOADDRESS = 0
@@ -110,6 +111,7 @@ if TYPE_CHECKING:
         TXORIGINPUT = 5
         TXORIGOUTPUT = 6
         TXPAYMENTREQ = 7
+        TXENTROPY = 8
 
     class CardanoDerivationType(IntEnum):
         LEDGER = 0
@@ -425,6 +427,8 @@ if TYPE_CHECKING:
         GetOwnershipProof = 49
         OwnershipProof = 50
         AuthorizeCoinJoin = 51
+        OwnershipProofNonceCommitment = 606
+        OwnershipProofEntropy = 607
         CipherKeyValue = 23
         CipheredKeyValue = 48
         SignIdentity = 53

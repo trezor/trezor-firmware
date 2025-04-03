@@ -24,7 +24,8 @@ ZKP_CFLAGS = \
 	-DENABLE_MODULE_RECOVERY \
 	-DENABLE_MODULE_SCHNORRSIG \
 	-DENABLE_MODULE_EXTRAKEYS \
-	-DENABLE_MODULE_ECDH
+	-DENABLE_MODULE_ECDH \
+	-DENABLE_MODULE_ECDSA_S2C # This module is used by secp256k1_anti_exfil_sign() and secp256k1_anti_exfil_commit_nonce() from zkp_ecdsa.c, which are not actually called on T1. However, since we have enough space on T1, it is not worth the effort to use ifdefs to remove them.
 
 OBJS += secp256k1-zkp.o
 OBJS += precomputed_ecmult.o

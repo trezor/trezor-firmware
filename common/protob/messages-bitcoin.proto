@@ -14,12 +14,13 @@ option (include_in_bitcoin_only) = true;
  * Type of script which will be used for transaction input
  */
 enum InputScriptType {
-    SPENDADDRESS = 0;       // standard P2PKH address
-    SPENDMULTISIG = 1;      // P2SH multisig address
-    EXTERNAL = 2;           // reserved for external inputs (coinjoin)
-    SPENDWITNESS = 3;       // native SegWit
-    SPENDP2SHWITNESS = 4;   // SegWit over P2SH (backward compatible)
-    SPENDTAPROOT = 5;       // Taproot
+    SPENDADDRESS = 0;              // standard P2PKH address using compressed public key
+    SPENDMULTISIG = 1;             // P2SH multisig address
+    EXTERNAL = 2;                  // reserved for external inputs (coinjoin)
+    SPENDWITNESS = 3;              // native SegWit
+    SPENDP2SHWITNESS = 4;          // SegWit over P2SH (backward compatible)
+    SPENDTAPROOT = 5;              // Taproot
+    SPENDADDRESS_UNCOMPRESSED = 6; // legacy P2PKH address using uncompressed public key
 }
 
 /**
@@ -252,6 +253,7 @@ message TxRequest {
         TXORIGINPUT = 5;
         TXORIGOUTPUT = 6;
         TXPAYMENTREQ = 7;
+        TXENTROPY = 8;
     }
     /**
     * Structure representing request details
@@ -261,6 +263,7 @@ message TxRequest {
         optional bytes tx_hash = 2;             // tx_hash of requested transaction
         optional uint32 extra_data_len = 3;     // length of requested extra data (only for Dash, Zcash)
         optional uint32 extra_data_offset = 4;  // offset of requested extra data (only for Dash, Zcash)
+        optional bytes nonce_commitment = 5;    // commitment to signature nonce, used in anti-exfil protocol
     }
     /**
     * Structure representing serialized data
@@ -306,6 +309,11 @@ message TxAck {
         optional uint32 version_group_id = 12;  // only for Zcash, nVersionGroupId
         optional uint32 timestamp = 13;         // only for Peercoin
         optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID
+        optional TxEntropyType entropy = 15;    // used in anti-exfil protocol
+
+        message TxEntropyType {
+            optional bytes entropy = 1; // host's entropy, used in anti-exfil protocol
+        }
         /**
         * Structure representing transaction input
         */
@@ -330,6 +338,7 @@ message TxAck {
             optional DecredStakingSpendType decred_staking_spend = 18;          // if not None this holds the type of stake spend: revocation or stake generation
             optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
             optional uint32 coinjoin_flags = 20 [default=0];                    // bit field of CoinJoin-specific flags
+            optional bytes entropy_commitment = 21;                             // commitment to host's entropy, non-empty value indicates anti-exfil protocol will be used for this input
         }
         /**
         * Structure representing compiled transaction output
@@ -384,6 +393,7 @@ message TxInput {
     optional DecredStakingSpendType decred_staking_spend = 18; 	        // if not None this holds the type of stake spend: revocation or stake generation
     optional bytes script_pubkey = 19;                                  // scriptPubKey of the previous output spent by this input, only set of EXTERNAL inputs
     optional uint32 coinjoin_flags = 20 [default=0];                    // bit field of CoinJoin-specific flags
+    optional bytes entropy_commitment = 21;                             // commitment to host's entropy, used in anti-exfil protocol
 }
 
 /** Data type for transaction output to be signed.
@@ -402,6 +412,13 @@ message TxOutput {
     optional uint32 payment_req_index = 12 [(experimental_field)=true]; // index of the PaymentRequest containing this output
 }
 
+/** Data type for host's entropy, used in anti-exfil protocol.
+ * @embed
+ */
+message TxEntropy {
+    optional bytes entropy = 1; // host's entropy, used in anti-exfil protocol
+}
+
 /** Data type for metadata about previous transaction which contains the UTXO being spent.
  * @embed
  */
@@ -417,7 +434,7 @@ message PrevTx {
     optional uint32 branch_id = 14;         // only for Zcash, BRANCH_ID
 
     // fields which are in use, or have been in the past, in TransactionType
-    reserved 2, 3, 5, 8, 11;
+    reserved 2, 3, 5, 8, 11, 15;
 }
 
 /** Data type for inputs of previous transactions.
@@ -591,6 +608,23 @@ message TxAckPrevExtraData {
 }
 
 /**
+ * Request: Host's entropy, used in anti-exfil protocol
+ *
+ * Do not edit this type without considering compatibility with TxAck.
+ *
+ * @next TxRequest
+ */
+message TxAckEntropy {
+    option (wire_type) = 22;
+
+    required TxAckEntropyWrapper tx = 1;
+
+    message TxAckEntropyWrapper {
+        required TxEntropy entropy = 15;
+    }
+}
+
+/**
  * Request: Ask device for a proof of ownership corresponding to address_n path
  * @start
  * @next OwnershipProof
@@ -604,6 +638,25 @@ message GetOwnershipProof {
     optional bool user_confirmation = 5 [default=false];                // show a confirmation dialog and set the "user confirmation" bit in the proof
     repeated bytes ownership_ids = 6;                                   // list of ownership identifiers in case of multisig
     optional bytes commitment_data = 7 [default=''];                    // additional data to which the proof should commit
+    optional bytes entropy_commitment = 8;                              // commitment to host's entropy, non-empty value indicates anti-exfil protocol will be used
+}
+
+/**
+ * Response: Contains the commitment to the signature nonce, used in anti-exfil protocol
+ * @next OwnershipProofEntropy
+ * @next Failure
+ */
+message OwnershipProofNonceCommitment {
+    optional bytes nonce_commitment = 1;                                // commitment to signature nonce, used in anti-exfil protocol
+}
+
+/**
+ * Request: Contains the host's entropy, used in anti-exfil protocol
+ * @next OwnershipProof
+ * @next Failure
+ */
+message OwnershipProofEntropy {
+    optional bytes entropy = 1;                                         // host's entropy, used in anti-exfil protocol
 }
 
 /**

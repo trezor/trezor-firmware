@@ -662,13 +662,14 @@ int tc_ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
-               const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len,
-               uint8_t *sig, uint8_t *pby,
-               int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
+int ecdsa_sign_recoverable(const ecdsa_curve *curve, HasherType hasher_sign,
+                           const uint8_t *priv_key, const uint8_t *msg,
+                           uint32_t msg_len, uint8_t *sig, uint8_t *pby,
+                           int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
   uint8_t hash[32] = {0};
   hasher_Raw(hasher_sign, msg, msg_len, hash);
-  int res = ecdsa_sign_digest(curve, priv_key, hash, sig, pby, is_canonical);
+  int res = ecdsa_sign_digest_recoverable(curve, priv_key, hash, sig, pby,
+                                          is_canonical);
   memzero(hash, sizeof(hash));
   return res;
 }
@@ -679,9 +680,10 @@ int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
 // digest is 32 bytes of digest
 // is_canonical is an optional function that checks if the signature
 // conforms to additional coin-specific rules.
-int tc_ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
-                         const uint8_t *digest, uint8_t *sig, uint8_t *pby,
-                         int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
+int tc_ecdsa_sign_digest_recoverable(
+    const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *digest,
+    uint8_t *sig, uint8_t *pby,
+    int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
   int i = 0;
   curve_point R = {0};
   bignum256 k = {0}, z = {0}, randk = {0};
@@ -1323,16 +1325,18 @@ int ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key,
   return tc_ecdsa_get_public_key65(curve, priv_key, pub_key);
 }
 
-int ecdsa_sign_digest(const ecdsa_curve *curve, const uint8_t *priv_key,
-                      const uint8_t *digest, uint8_t *sig, uint8_t *pby,
-                      int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
+int ecdsa_sign_digest_recoverable(
+    const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *digest,
+    uint8_t *sig, uint8_t *pby,
+    int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
 #ifdef USE_SECP256K1_ZKP_ECDSA
   if (curve == &secp256k1) {
-    return zkp_ecdsa_sign_digest(curve, priv_key, digest, sig, pby,
-                                 is_canonical);
+    return zkp_ecdsa_sign_digest_recoverable(curve, priv_key, digest, sig, pby,
+                                             is_canonical);
   }
 #endif
-  return tc_ecdsa_sign_digest(curve, priv_key, digest, sig, pby, is_canonical);
+  return tc_ecdsa_sign_digest_recoverable(curve, priv_key, digest, sig, pby,
+                                          is_canonical);
 }
 
 int ecdsa_verify_digest(const ecdsa_curve *curve, const uint8_t *pub_key,

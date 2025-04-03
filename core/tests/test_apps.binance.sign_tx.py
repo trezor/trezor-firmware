@@ -20,7 +20,7 @@ if not utils.BITCOIN_ONLY:
 # NOTE: copy-pasted from apps.binance.sign_tx
 def generate_content_signature(json: bytes, private_key: bytes) -> bytes:
     msghash = sha256(json).digest()
-    return secp256k1.sign(private_key, msghash)[1:65]
+    return secp256k1.sign_recoverable(private_key, msghash)[1:65]
 
 
 @unittest.skipUnless(not utils.BITCOIN_ONLY, "altcoin")

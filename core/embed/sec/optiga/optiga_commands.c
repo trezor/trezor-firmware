@@ -932,8 +932,8 @@ optiga_result optiga_set_priv_key(uint16_t oid, const uint8_t priv_key[32]) {
   sha256_Update(&context, &sop_cmd1[17], 62);
   sha256_Final(&context, digest);
 
-  if (0 != ecdsa_sign_digest(&nist256p1, TA_PRIV_KEY, digest, &sop_cmd1[81],
-                             NULL, NULL)) {
+  if (0 != ecdsa_sign_digest_recoverable(&nist256p1, TA_PRIV_KEY, digest,
+                                         &sop_cmd1[81], NULL, NULL)) {
     memzero(sop_cmd2, sizeof(sop_cmd2));
     return OPTIGA_ERR_PROCESS;
   }

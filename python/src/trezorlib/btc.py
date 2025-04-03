@@ -25,6 +25,7 @@ from typing import TYPE_CHECKING, Any, AnyStr, List, Optional, Sequence, Tuple
 from typing_extensions import Protocol, TypedDict
 
 from . import exceptions, messages
+from .anti_exfil import AntiExfilSignature, commit_entropy, generate_entropy, verify
 from .tools import _return_success, prepare_message_bytes, session
 
 if TYPE_CHECKING:
@@ -188,6 +189,81 @@ def get_ownership_id(
     ).ownership_id
 
 
+def get_ownership_proof_common(
+    client: "TrezorClient",
+    coin_name: str,
+    n: "Address",
+    multisig: messages.MultisigRedeemScriptType | None,
+    script_type: messages.InputScriptType,
+    user_confirmation: bool,
+    ownership_ids: List[bytes] | None,
+    commitment_data: bytes | None,
+    preauthorized: bool,
+    use_anti_exfil: bool,
+    entropy: bytes | None,
+) -> Tuple[bytes | None, AntiExfilSignature]:
+    if preauthorized:
+        client.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
+
+    if not use_anti_exfil:
+        res = client.call(
+            messages.GetOwnershipProof(
+                address_n=n,
+                coin_name=coin_name,
+                script_type=script_type,
+                multisig=multisig,
+                user_confirmation=user_confirmation,
+                ownership_ids=ownership_ids,
+                commitment_data=commitment_data,
+            ),
+            expect=messages.OwnershipProof,
+        )
+        assert res.ownership_proof != b""
+
+        return res.ownership_proof, AntiExfilSignature(res.signature, None, None)
+    else:
+        if not entropy:
+            entropy = generate_entropy()
+
+        res = client.call(
+            messages.GetOwnershipProof(
+                address_n=n,
+                coin_name=coin_name,
+                script_type=script_type,
+                multisig=multisig,
+                user_confirmation=user_confirmation,
+                ownership_ids=ownership_ids,
+                commitment_data=commitment_data,
+                entropy_commitment=commit_entropy(entropy),
+            ),
+            expect=messages.OwnershipProofNonceCommitment,
+        )
+
+        assert res.nonce_commitment is not None
+        nonce_commitment = res.nonce_commitment
+
+        res = client.call(
+            messages.OwnershipProofEntropy(entropy=entropy),
+            expect=messages.OwnershipProof,
+        )
+
+        # This function verifies that the signature includes the host's entropy and that its s value is less than half of the curve's order. However, it does not verify the signature itself, as trezorlib doesn't have the digest. The verification of the signature is the caller's responsibility.
+        if not verify(
+            public_key=None,
+            signature=res.signature,
+            digest=None,
+            entropy=entropy,
+            nonce_commitment=nonce_commitment,
+        ):
+            # This is a violation of the anti-exfil protocol.
+            raise ValueError("Invalid signature")
+
+        if res.ownership_proof != b"":
+            # If host uses the anti-exfil protocol, it should not rely on device to serialize the ownwership proof correctly.
+            raise ValueError("Ownership proof is not expected")
+        return None, AntiExfilSignature(res.signature, entropy, nonce_commitment)
+
+
 def get_ownership_proof(
     client: "TrezorClient",
     coin_name: str,
@@ -199,23 +275,61 @@ def get_ownership_proof(
     commitment_data: Optional[bytes] = None,
     preauthorized: bool = False,
 ) -> Tuple[bytes, bytes]:
-    if preauthorized:
-        client.call(messages.DoPreauthorized(), expect=messages.PreauthorizedRequest)
-
-    res = client.call(
-        messages.GetOwnershipProof(
-            address_n=n,
-            coin_name=coin_name,
-            script_type=script_type,
-            multisig=multisig,
-            user_confirmation=user_confirmation,
-            ownership_ids=ownership_ids,
-            commitment_data=commitment_data,
-        ),
-        expect=messages.OwnershipProof,
+    ownership_proof, anti_exfil_signature = get_ownership_proof_common(
+        client,
+        coin_name,
+        n,
+        multisig,
+        script_type,
+        user_confirmation,
+        ownership_ids,
+        commitment_data,
+        preauthorized,
+        False,
+        None,
     )
+    assert ownership_proof is not None
+    assert anti_exfil_signature.signature is not None
+    return ownership_proof, anti_exfil_signature.signature
 
-    return res.ownership_proof, res.signature
+
+def get_ownership_proof_new(
+    client: "TrezorClient",
+    coin_name: str,
+    n: "Address",
+    multisig: messages.MultisigRedeemScriptType | None = None,
+    script_type: messages.InputScriptType = messages.InputScriptType.SPENDADDRESS,
+    user_confirmation: bool = False,
+    ownership_ids: List[bytes] | None = None,
+    commitment_data: bytes | None = None,
+    preauthorized: bool = False,
+    use_anti_exfil: bool = True,
+    entropy: bytes | None = None,
+) -> AntiExfilSignature:
+    """
+    If `use_anti_exfil` is set to `True`, the anti-exfilitration protocol will be
+    used. The purpose of this protocol is to prevent the device from leaking
+    its secrets through the signatures. In this case, `AntiExfilSignature` objects
+    will have non-emtpy fields `entropy` and `nonce_commitment`. It's the caller
+    responsibility to verify the signature and the nonce commitment. The caller
+    can optionally provide a list of entropies to be used in the protocol. Ideally,
+    the caller should provide the same list of entropies if the signing is repeated
+    due to a error to prevent the device to perform nonce-grinding attacks.
+    """
+    ownership_proof, anti_exfil_signature = get_ownership_proof_common(
+        client,
+        coin_name,
+        n,
+        multisig,
+        script_type,
+        user_confirmation,
+        ownership_ids,
+        commitment_data,
+        preauthorized,
+        use_anti_exfil,
+        entropy,
+    )
+    return anti_exfil_signature
 
 
 def sign_message(
@@ -265,30 +379,21 @@ def verify_message(
 
 
 @session
-def sign_tx(
+def sign_tx_common(
     client: "TrezorClient",
     coin_name: str,
     inputs: Sequence[messages.TxInputType],
     outputs: Sequence[messages.TxOutputType],
-    details: Optional[messages.SignTx] = None,
-    prev_txes: Optional["TxCacheType"] = None,
-    payment_reqs: Sequence[messages.TxAckPaymentRequest] = (),
-    preauthorized: bool = False,
-    unlock_path: Optional[List[int]] = None,
-    unlock_path_mac: Optional[bytes] = None,
+    details: messages.SignTx | None,
+    prev_txes: TxCacheType | None,
+    payment_reqs: Sequence[messages.TxAckPaymentRequest],
+    preauthorized: bool,
+    unlock_path: List[int] | None,
+    unlock_path_mac: bytes | None,
+    use_anti_exfil: bool,
+    entropy_list: List[bytes] | None,
     **kwargs: Any,
-) -> Tuple[Sequence[Optional[bytes]], bytes]:
-    """Sign a Bitcoin-like transaction.
-
-    Returns a list of signatures (one for each provided input) and the
-    network-serialized transaction.
-
-    In addition to the required arguments, it is possible to specify additional
-    transaction properties (version, lock time, expiry...). Each additional argument
-    must correspond to a field in the `SignTx` data type. Note that some fields
-    (`inputs_count`, `outputs_count`, `coin_name`) will be inferred from the arguments
-    and cannot be overriden by kwargs.
-    """
+) -> Tuple[Sequence[AntiExfilSignature | None], bytes]:
     if prev_txes is None:
         prev_txes = {}
 
@@ -349,18 +454,45 @@ def sign_tx(
     )
 
     R = messages.RequestType
+
+    nonce_commitment_list: List[bytes | None] = [None for _ in inputs]
+    if use_anti_exfil and entropy_list is None:
+        entropy_list = [generate_entropy() for _ in inputs]
+
     while True:
         # If there's some part of signed transaction, let's add it
         if res.serialized:
             if res.serialized.serialized_tx:
+                if use_anti_exfil:
+                    # If host uses the anti-exfil protocol, it should not rely on device to serialize the transaction correctly.
+                    raise ValueError("Serialization is not expected")
                 serialized_tx += res.serialized.serialized_tx
 
             if res.serialized.signature_index is not None:
                 idx = res.serialized.signature_index
                 sig = res.serialized.signature
+                assert sig is not None
                 if signatures[idx] is not None:
                     raise ValueError(f"Signature for index {idx} already filled")
                 signatures[idx] = sig
+                if use_anti_exfil:
+                    assert entropy_list is not None
+                    nonce_commitment = nonce_commitment_list[idx]
+                    if nonce_commitment is None:
+                        # Device provides a signature without commiting to the nonce before. This is a violation of the anti-exfil protocol.
+                        raise ValueError(
+                            f"Nonce commitment for index {idx} not provided"
+                        )
+                    # This function verifies that the signature includes the host's entropy and that its s value is less than half of the curve's order. However, it does not verify the signature itself, as trezorlib doesn't have the digest. The verification of the signature is the caller's responsibility.
+                    if not verify(
+                        public_key=None,
+                        signature=sig,
+                        digest=None,
+                        entropy=entropy_list[idx],
+                        nonce_commitment=nonce_commitment,
+                    ):
+                        # This is a violation of the anti-exfil protocol.
+                        raise ValueError(f"Invalid signature for index {idx}")
 
         if res.request_type == R.TXFINISHED:
             break
@@ -387,7 +519,21 @@ def sign_tx(
                 msg = copy_tx_meta(current_tx)
             elif res.request_type in (R.TXINPUT, R.TXORIGINPUT):
                 assert res.details.request_index is not None
-                msg.inputs = [current_tx.inputs[res.details.request_index]]
+                idx = res.details.request_index
+                msg.inputs = [current_tx.inputs[idx]]
+                if use_anti_exfil:
+                    assert entropy_list is not None
+                    msg.inputs[0].entropy_commitment = commit_entropy(entropy_list[idx])
+            elif use_anti_exfil and res.request_type == R.TXENTROPY:
+                assert res.details.request_index is not None
+                idx = res.details.request_index
+                nonce_commitment = res.details.nonce_commitment
+                nonce_commitment_list[idx] = nonce_commitment
+                if nonce_commitment is None:
+                    # Device requests an entropy without commiting to the nonce before. This is a violation of the anti-exfil protocol.
+                    raise ValueError(f"Nonce commitment for index {idx} not provided")
+                assert entropy_list is not None
+                msg.entropy = messages.TxEntropyType(entropy=entropy_list[idx])
             elif res.request_type == R.TXOUTPUT:
                 assert res.details.request_index is not None
                 if res.details.tx_hash:
@@ -416,7 +562,128 @@ def sign_tx(
         if i.script_type != messages.InputScriptType.EXTERNAL and sig is None:
             raise exceptions.TrezorException("Some signatures are missing!")
 
-    return signatures, serialized_tx
+    if use_anti_exfil:
+        assert entropy_list is not None
+        return [
+            (
+                AntiExfilSignature(
+                    signature=sig, entropy=entropy, nonce_commitment=nonce_commitment
+                )
+                if sig is not None
+                else None
+            )
+            for sig, entropy, nonce_commitment in zip(
+                signatures, entropy_list, nonce_commitment_list
+            )
+        ], serialized_tx
+    else:
+        return [
+            (
+                AntiExfilSignature(signature=sig, entropy=None, nonce_commitment=None)
+                if sig is not None
+                else None
+            )
+            for sig in signatures
+        ], serialized_tx
+
+
+@session
+def sign_tx(
+    client: "TrezorClient",
+    coin_name: str,
+    inputs: Sequence[messages.TxInputType],
+    outputs: Sequence[messages.TxOutputType],
+    details: Optional[messages.SignTx] = None,
+    prev_txes: Optional["TxCacheType"] = None,
+    payment_reqs: Sequence[messages.TxAckPaymentRequest] = (),
+    preauthorized: bool = False,
+    unlock_path: Optional[List[int]] = None,
+    unlock_path_mac: Optional[bytes] = None,
+    **kwargs: Any,
+) -> Tuple[Sequence[Optional[bytes]], bytes]:
+    """Sign a Bitcoin-like transaction.
+
+    Returns a list of signatures (one for each provided input) and the
+    network-serialized transaction.
+
+    In addition to the required arguments, it is possible to specify additional
+    transaction properties (version, lock time, expiry...). Each additional argument
+    must correspond to a field in the `SignTx` data type. Note that some fields
+    (`inputs_count`, `outputs_count`, `coin_name`) will be inferred from the arguments
+    and cannot be overriden by kwargs.
+    """
+    anti_exfil_signatures, serialization = sign_tx_common(
+        client,
+        coin_name,
+        inputs,
+        outputs,
+        details,
+        prev_txes,
+        payment_reqs,
+        preauthorized,
+        unlock_path,
+        unlock_path_mac,
+        False,
+        None,
+        **kwargs,
+    )
+    return [
+        s.signature if s is not None else None for s in anti_exfil_signatures
+    ], serialization
+
+
+@session
+def sign_tx_new(
+    client: "TrezorClient",
+    coin_name: str,
+    inputs: Sequence[messages.TxInputType],
+    outputs: Sequence[messages.TxOutputType],
+    details: messages.SignTx | None = None,
+    prev_txes: TxCacheType | None = None,
+    payment_reqs: Sequence[messages.TxAckPaymentRequest] = (),
+    preauthorized: bool = False,
+    unlock_path: List[int] | None = None,
+    unlock_path_mac: bytes | None = None,
+    use_anti_exfil: bool = True,
+    entropy_list: List[bytes] | None = None,
+    **kwargs: Any,
+) -> Sequence[AntiExfilSignature | None]:
+    """Sign a Bitcoin-like transaction.
+
+    Returns a list of `AntiExfilSignature` objects (one for each provided input).
+
+    If `use_anti_exfil` is set to `True`, the anti-exfilitration protocol will be
+    used. The purpose of this protocol is to prevent the device from leaking
+    its secrets through the signatures. In this case, `AntiExfilSignature` objects
+    will have non-emtpy fields `entropy` and `nonce_commitment`. It's the caller
+    responsibility to verify the signature and the nonce commitment. The caller
+    can optionally provide a list of entropies to be used in the protocol. Ideally,
+    the caller should provide the same list of entropies if the signing is repeated
+    due to a error to prevent the device to perform nonce-grinding attacks.
+
+    In addition to the required arguments, it is possible to specify additional
+    transaction properties (version, lock time, expiry...). Each additional argument
+    must correspond to a field in the `SignTx` data type. Note that some fields
+    (`inputs_count`, `outputs_count`, `coin_name`) will be inferred from the arguments
+    and cannot be overriden by kwargs.
+    """
+    anti_exfil_signatures, serialization = sign_tx_common(
+        client,
+        coin_name,
+        inputs,
+        outputs,
+        details,
+        prev_txes,
+        payment_reqs,
+        preauthorized,
+        unlock_path,
+        unlock_path_mac,
+        use_anti_exfil,
+        entropy_list,
+        serialize=False,
+        **kwargs,
+    )
+    return anti_exfil_signatures
 
 
 def authorize_coinjoin(

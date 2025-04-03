@@ -104,13 +104,31 @@ NONSEGWIT_INPUT_SCRIPT_TYPES = (
 )
 
 
-def ecdsa_sign(node: bip32.HDNode, digest: bytes) -> bytes:
-    from trezor.crypto import der
-    from trezor.crypto.curve import secp256k1
+class EcdsaSigner:
+    def __init__(self, node: bip32.HDNode, digest: bytes) -> None:
+        self.node = node
+        self.digest = digest
+        self.private_key = node.private_key()
 
-    sig = secp256k1.sign(node.private_key(), digest)
-    sigder = der.encode_seq((sig[1:33], sig[33:65]))
-    return sigder
+    def commit_nonce(self, entropy_commitment: bytes) -> bytes:
+        from trezor.crypto.curve import secp256k1
+
+        return secp256k1.anti_exfil_commit_nonce(
+            self.private_key, self.digest, entropy_commitment
+        )
+
+    def sign(self, entropy: bytes | None = None) -> bytes:
+        # If entropy is provided, uses anti-exfil signing and returns a signature that has 64 bytes.
+        # Otherwise, uses standard signing and returns a DER-encoded signature.
+        from trezor.crypto.curve import secp256k1
+        from trezor.crypto.signature import encode_der_signature
+
+        if entropy is not None:
+            return secp256k1.anti_exfil_sign(self.private_key, self.digest, entropy)
+        else:
+            return encode_der_signature(
+                secp256k1.sign_recoverable(self.private_key, self.digest)
+            )
 
 
 def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:

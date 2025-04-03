@@ -8,12 +8,13 @@ if TYPE_CHECKING:
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
 
+from trezor.crypto.signature import encode_bip137_signature
+
 
 @with_keychain
 async def sign_message(
     msg: SignMessage, keychain: Keychain, coin: CoinInfo
 ) -> MessageSignature:
-    from trezor import wire
     from trezor.crypto.curve import secp256k1
     from trezor.enums import InputScriptType
     from trezor.messages import MessageSignature
@@ -52,19 +53,9 @@ async def sign_message(
     seckey = node.private_key()
 
     digest = message_digest(coin, message)
-    signature = secp256k1.sign(seckey, digest)
-
-    if script_type == InputScriptType.SPENDADDRESS:
-        script_type_info = 0
-    elif script_type == InputScriptType.SPENDP2SHWITNESS:
-        script_type_info = 4
-    elif script_type == InputScriptType.SPENDWITNESS:
-        script_type_info = 8
-    else:
-        raise wire.ProcessError("Unsupported script type")
-
-    # Add script type information to the recovery byte.
-    if script_type_info != 0 and not msg.no_script_type:
-        signature = bytes([signature[0] + script_type_info]) + signature[1:]
+    signature = encode_bip137_signature(
+        secp256k1.sign_recoverable(seckey, digest, False),
+        script_type if not msg.no_script_type else InputScriptType.SPENDADDRESS,
+    )
 
     return MessageSignature(address=address, signature=signature)

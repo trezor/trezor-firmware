@@ -10,12 +10,12 @@ from trezor.wire import DataError, ProcessError
 from apps.common.writers import write_compact_size
 
 from .. import addresses, common, multisig, scripts, writers
-from ..common import SigHashType, ecdsa_sign, input_is_external
+from ..common import EcdsaSigner, SigHashType, input_is_external
 from ..ownership import verify_nonownership
 from ..verification import SignatureVerifier
 from . import helpers
 from .approvers import CoinJoinApprover
-from .helpers import request_tx_input, request_tx_output
+from .helpers import request_entropy, request_tx_input, request_tx_output
 from .progress import progress
 from .tx_info import OriginalTxInfo
 
@@ -610,7 +610,7 @@ class Bitcoin:
 
         self.write_tx_input_derived(self.serialized_tx, txi, key_sign_pub, b"")
 
-    def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
+    async def sign_bip143_input(self, i: int, txi: TxInput) -> tuple[bytes, bytes]:
         if self.taproot_only:
             # Prevents an attacker from bypassing prev tx checking by providing a different
             # script type than the one that was provided during the confirmation phase.
@@ -635,12 +635,29 @@ class Bitcoin:
             self.get_hash_type(txi),
         )
 
-        signature = ecdsa_sign(node, hash143_digest)
+        if txi.entropy_commitment is not None and self.serialize:
+            # If host uses the anti-exfil protocol, it should not rely on device
+            # to serialize the transaction correctly.
+            raise ProcessError(
+                "Anti-exfil is not supported together with serialization"
+            )
+
+        ecdsa_signer = EcdsaSigner(node, hash143_digest)
+        if txi.entropy_commitment is not None:
+            # use anti-exfil protocol
+            nonce_commitment = ecdsa_signer.commit_nonce(txi.entropy_commitment)
+            entropy = await request_entropy(self.tx_req, i, nonce_commitment)
+            signature = ecdsa_signer.sign(entropy)
+        else:
+            signature = ecdsa_signer.sign()
 
         return public_key, signature
 
     def sign_taproot_input(self, i: int, txi: TxInput) -> bytes:
         from ..common import bip340_sign
+
+        if txi.entropy_commitment is not None:
+            raise ProcessError("Anti-exfil is not supported for taproot inputs")
 
         sigmsg_digest = self.tx_info.sig_hasher.hash341(
             i,
@@ -666,7 +683,7 @@ class Bitcoin:
                     self.serialized_tx, signature, self.get_sighash_type(txi)
                 )
         else:
-            public_key, signature = self.sign_bip143_input(i, txi)
+            public_key, signature = await self.sign_bip143_input(i, txi)
             if self.serialize:
                 if txi.multisig:
                     # find out place of our signature based on the pubkey
@@ -776,8 +793,22 @@ class Bitcoin:
         tx_digest, txi, node = await self.get_legacy_tx_digest(i, self.tx_info)
         assert node is not None
 
+        if txi.entropy_commitment is not None and self.serialize:
+            # If host uses the anti-exfil protocol, it should not rely on device
+            # to serialize the transaction correctly.
+            raise ProcessError(
+                "Anti-exfil is not supported together with serialization"
+            )
+
         # compute the signature from the tx digest
-        signature = ecdsa_sign(node, tx_digest)
+        ecdsa_signer = EcdsaSigner(node, tx_digest)
+        if txi.entropy_commitment is not None:
+            # use anti-exfil protocol
+            nonce_commitment = ecdsa_signer.commit_nonce(txi.entropy_commitment)
+            entropy = await request_entropy(self.tx_req, i, nonce_commitment)
+            signature = ecdsa_signer.sign(entropy)
+        else:
+            signature = ecdsa_signer.sign()
 
         if self.serialize:
             # serialize input with correct signature

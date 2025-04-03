@@ -22,7 +22,13 @@ from trezorlib.tools import parse_path
 
 from ...common import is_core
 from ...tx_cache import TxCache
-from .signtx import request_finished, request_input, request_meta, request_output
+from .signtx import (
+    request_entropy,
+    request_finished,
+    request_input,
+    request_meta,
+    request_output,
+)
 
 B = messages.ButtonRequestType
 TX_API = TxCache("Decred Testnet")
@@ -428,3 +434,72 @@ def test_decred_multisig_change(client: Client):
         serialized_tx.hex()
         == "0100000002d18f50c5e465b727fee4af645350093a8baf7e04ee8ef34ecf0c46f422d2c79a0100000000fffffffff32d5470c1a96b2d9d5215066bd2e254f191d4ce8873d0d096f71c8b5fb8f5480000000000ffffffff02605af40500000000000017a914d4ea4e064d969064ca56a4cede56f7bf6cf62f118700a3e1110000000000001976a9143eb656115197956125365348c542e37b6d3d259988ac00000000000000000200c2eb0b0000000000000000fffffffffc483045022100e7056e4cbc0941a1255e85ab95634fd9ae497be9a8ab0e793d6049f7dd97fa07022031c17d6279211843ea1e0815a1831748aa44c3a3083669293805f8e9e803d78d01473044022039b74918f67afd24f20c0bf4d0ea40637d85005bbb942e7c79e17694e4729e0902202563fa43376220261bb177fc87d637d39809e0ffa4991a1477dbc60a1c2e3997014c69522103defea6f243b97354449bb348446a97e38df2fbed33afc3a7185bfdd26757cfdb2103725d6c5253f2040a9a73af24bcc196bf302d6cc94374dd7197b138e10912670121038924e94fff15302a3fb45ad4fc0ed17178800f0f1c2bdacb1017f4db951aa9f153ae00c2eb0b0000000000000000fffffffffb473044022047afb55f956ef7ac7d4a32e97fe35b3981cd827866ccd76e66b7f186a5338f9302201415cdd987876e8c6c13037e53d055aac467acece41d9357657e4fd8290d914101473044022005cb0efd5889d697e040b2db5d56ef7e1d29fcd20b74a8cc44d670092b6cfaee02202150837c1f5108af8b6cc022bd2d40e54170869ad39b2d1d61c67a47ad21e019014c695221021ef4b5d81f21593071b993bd4d8c564c569a6f84de0d4511135cbc66d8bf7bcd2103f1e53b6e0ff99adf7e8fa826a94bdac83163d8abbc1d19a8d6b88a4af91b9a67210390c8ea70e1f2f60e0052be65183c43bb01b2f02dfa4e448f74e359997f74e6ad53ae"
     )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil(client: Client):
+    # NOTE: fake input tx used
+
+    inp1 = messages.TxInputType(
+        # TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz
+        address_n=parse_path("m/44h/1h/0h/0/0"),
+        prev_hash=FAKE_TXHASH_4d8acd,
+        prev_index=1,
+        amount=200_000_000,
+        script_type=messages.InputScriptType.SPENDADDRESS,
+        decred_tree=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="TscqTv1he8MZrV321SfRghw7LFBCJDKB3oz",
+        amount=190_000_000,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    with client:
+        client.set_expected_responses(
+            [
+                request_input(0),
+                request_output(0),
+                messages.ButtonRequest(code=B.ConfirmOutput),
+                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                messages.ButtonRequest(code=B.FeeOverThreshold),
+                messages.ButtonRequest(code=B.SignTx),
+                request_input(0),
+                request_meta(FAKE_TXHASH_4d8acd),
+                request_input(0, FAKE_TXHASH_4d8acd),
+                request_output(0, FAKE_TXHASH_4d8acd),
+                request_output(1, FAKE_TXHASH_4d8acd),
+                request_input(0),
+                request_entropy(
+                    0,
+                    bytes.fromhex(
+                        "0309f0bcf850a01d36ed5ec89e8cff0ba4801f2a2e631d6e571940e8adbf841499"
+                    ),
+                ),
+                request_finished(),
+            ]
+        )
+        anti_exfil_signatures = btc.sign_tx_new(
+            client,
+            "Decred Testnet",
+            [inp1],
+            [out1],
+            prev_txes=TX_API,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32)],
+        )
+
+    assert anti_exfil_signatures == [
+        btc.AntiExfilSignature(
+            signature=bytes.fromhex(
+                "d998b0138e90ec207fd268949edafdc8fc53ec73da3459675392841da75b12d975d54857b076650ac6b3b698079f6336c870c57bc6246b77af66a0167701251b"
+            ),
+            entropy=bytes.fromhex(
+                "0000000000000000000000000000000000000000000000000000000000000000"
+            ),
+            nonce_commitment=bytes.fromhex(
+                "0309f0bcf850a01d36ed5ec89e8cff0ba4801f2a2e631d6e571940e8adbf841499"
+            ),
+        )
+    ]

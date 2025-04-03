@@ -17,10 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "py/obj.h"
 #include "py/objstr.h"
 
 #include "vendor/trezor-crypto/ecdsa.h"
 #include "vendor/trezor-crypto/secp256k1.h"
+#include "vendor/trezor-crypto/zkp_ecdsa.h"
 
 /// package: trezorcrypto.secp256k1
 
@@ -91,6 +93,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 #if !BITCOIN_ONLY
 
 static int ethereum_is_canonical(uint8_t v, uint8_t signature[64]) {
+  // This condition states that the x-coordinate of the public nonce should be
+  // less than the curve order (refer to
+  // https://github.com/trezor/trezor-firmware/blob/b08f5fb0f66c4a9bebceb7d538e28f129aec8c4f/crypto/ecdsa.c#L724).
+  // For the secp256k1 curve, the probability of this occurring is less than
+  // 2^-127.
   (void)signature;
   return (v & 2) == 0;
 }
@@ -114,25 +121,23 @@ enum {
 
 #endif
 
-/// def sign(
+/// def sign_recoverable(
 ///     secret_key: bytes,
 ///     digest: bytes,
-///     compressed: bool = True,
 ///     canonical: int | None = None,
 /// ) -> bytes:
 ///     """
 ///     Uses secret key to produce the signature of the digest.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
-                                                const mp_obj_t *args) {
+STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign_recoverable(
+    size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t sk = {0};
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
-  bool compressed = (n_args < 3) || (args[2] == mp_const_true);
   int (*is_canonical)(uint8_t by, uint8_t sig[64]) = NULL;
 #if !BITCOIN_ONLY
-  mp_int_t canonical = (n_args > 3) ? mp_obj_get_int(args[3]) : 0;
+  mp_int_t canonical = (n_args > 2) ? mp_obj_get_int(args[2]) : 0;
   switch (canonical) {
     case CANONICAL_SIG_ETHEREUM:
       is_canonical = ethereum_is_canonical;
@@ -151,18 +156,102 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_sign(size_t n_args,
   vstr_t sig = {0};
   vstr_init_len(&sig, 65);
   uint8_t pby = 0;
-  if (0 != ecdsa_sign_digest(&secp256k1, (const uint8_t *)sk.buf,
-                             (const uint8_t *)dig.buf, (uint8_t *)sig.buf + 1,
-                             &pby, is_canonical)) {
+  if (0 != ecdsa_sign_digest_recoverable(
+               &secp256k1, (const uint8_t *)sk.buf, (const uint8_t *)dig.buf,
+               (uint8_t *)sig.buf + 1, &pby, is_canonical)) {
     vstr_clear(&sig);
     mp_raise_ValueError("Signing failed");
   }
-  sig.buf[0] = 27 + pby + compressed * 4;
+  sig.buf[0] = pby;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_secp256k1_sign_obj,
-                                           2, 4,
-                                           mod_trezorcrypto_secp256k1_sign);
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_secp256k1_sign_recoverable_obj, 2, 3,
+    mod_trezorcrypto_secp256k1_sign_recoverable);
+
+/// def anti_exfil_commit_nonce(
+///     secret_key: bytes,
+///     digest: bytes,
+///     entropy_commitment: bytes,
+/// ) -> bytes:
+///     """
+///     Commits to the signature nonce using the entropy from host. This funcion
+///     is a part of the anti-exfil protocol.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_secp256k1_anti_exfil_commit_nonce(
+    mp_obj_t secret_key, mp_obj_t digest, mp_obj_t entropy_commitment) {
+  mp_buffer_info_t secret_key_buffer = {0};
+  mp_buffer_info_t digest_buffer = {0};
+  mp_buffer_info_t entropy_buffer = {0};
+  mp_get_buffer_raise(secret_key, &secret_key_buffer, MP_BUFFER_READ);
+  mp_get_buffer_raise(digest, &digest_buffer, MP_BUFFER_READ);
+  mp_get_buffer_raise(entropy_commitment, &entropy_buffer, MP_BUFFER_READ);
+  if (secret_key_buffer.len != 32) {
+    mp_raise_ValueError("Invalid length of secret key");
+  }
+  if (digest_buffer.len != 32) {
+    mp_raise_ValueError("Invalid length of digest");
+  }
+  if (entropy_buffer.len != 32) {
+    mp_raise_ValueError("Invalid length of entropy commitment");
+  }
+  vstr_t nonce_vstr = {0};
+  vstr_init_len(&nonce_vstr, 33);
+  if (0 != zkp_ecdsa_anti_exfil_commit_nonce(
+               &secp256k1, (const uint8_t *)secret_key_buffer.buf,
+               (const uint8_t *)digest_buffer.buf,
+               (const uint8_t *)entropy_buffer.buf,
+               (uint8_t *)nonce_vstr.buf)) {
+    vstr_clear(&nonce_vstr);
+    mp_raise_ValueError("Anti-exfil commit failed");
+  }
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &nonce_vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(
+    mod_trezorcrypto_secp256k1_anti_exfil_commit_nonce_obj,
+    mod_trezorcrypto_secp256k1_anti_exfil_commit_nonce);
+
+/// def anti_exfil_sign(
+///     secret_key: bytes,
+///     digest: bytes,
+///     entropy: bytes,
+/// ) -> bytes:
+///     """
+///     Signs the digest with the secret key using the entropy from host. This
+///     funcion is a part of the anti-exfil protocol.
+///     """
+STATIC mp_obj_t mod_trezorcrypto_secp256k1_anti_exfil_sign(mp_obj_t secret_key,
+                                                           mp_obj_t digest,
+                                                           mp_obj_t entropy) {
+  mp_buffer_info_t secret_key_buffer = {0};
+  mp_buffer_info_t digest_buffer = {0};
+  mp_buffer_info_t entropy_buffer = {0};
+  mp_get_buffer_raise(secret_key, &secret_key_buffer, MP_BUFFER_READ);
+  mp_get_buffer_raise(digest, &digest_buffer, MP_BUFFER_READ);
+  mp_get_buffer_raise(entropy, &entropy_buffer, MP_BUFFER_READ);
+  if (secret_key_buffer.len != 32) {
+    mp_raise_ValueError("Invalid length of secret key");
+  }
+  if (digest_buffer.len != 32) {
+    mp_raise_ValueError("Invalid length of digest");
+  }
+  if (entropy_buffer.len != 32) {
+    mp_raise_ValueError("Invalid length of entropy commitment");
+  }
+  vstr_t signature_vstr = {0};
+  vstr_init_len(&signature_vstr, 64);
+  if (0 != zkp_ecdsa_anti_exfil_sign_digest(
+               &secp256k1, (const uint8_t *)secret_key_buffer.buf,
+               (const uint8_t *)digest_buffer.buf,
+               (const uint8_t *)entropy_buffer.buf,
+               (uint8_t *)signature_vstr.buf)) {
+    vstr_clear(&signature_vstr);
+    mp_raise_ValueError("Anti-exfil sign failed");
+  }
+  return mp_obj_new_str_from_vstr(&mp_type_bytes, &signature_vstr);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_anti_exfil_sign_obj,
+                                 mod_trezorcrypto_secp256k1_anti_exfil_sign);
 
 /// def verify(public_key: bytes, signature: bytes, digest: bytes) -> bool:
 ///     """
@@ -194,27 +283,28 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify(mp_obj_t public_key,
 STATIC MP_DEFINE_CONST_FUN_OBJ_3(mod_trezorcrypto_secp256k1_verify_obj,
                                  mod_trezorcrypto_secp256k1_verify);
 
-/// def verify_recover(signature: bytes, digest: bytes) -> bytes:
+/// def verify_recover(signature: bytes, digest: bytes, compressed: bool = True)
+/// -> bytes:
 ///     """
 ///     Uses signature of the digest to verify the digest and recover the public
 ///     key. Returns public key on success, None if the signature is invalid.
 ///     """
-STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
-                                                          mp_obj_t digest) {
+STATIC mp_obj_t
+mod_trezorcrypto_secp256k1_verify_recover(size_t n_args, const mp_obj_t *args) {
   mp_buffer_info_t sig = {0}, dig = {0};
-  mp_get_buffer_raise(signature, &sig, MP_BUFFER_READ);
-  mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[0], &sig, MP_BUFFER_READ);
+  mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
+  bool compressed = n_args < 3 || args[2] == mp_const_true;
   if (sig.len != 65) {
     return mp_const_none;
   }
   if (dig.len != 32) {
     return mp_const_none;
   }
-  uint8_t recid = ((const uint8_t *)sig.buf)[0] - 27;
-  if (recid >= 8) {
+  uint8_t recid = ((const uint8_t *)sig.buf)[0];
+  if (recid >= 4) {
     return mp_const_none;
   }
-  bool compressed = (recid >= 4);
   recid &= 3;
   vstr_t pk = {0};
   vstr_init_len(&pk, 65);
@@ -230,9 +320,9 @@ STATIC mp_obj_t mod_trezorcrypto_secp256k1_verify_recover(mp_obj_t signature,
     return mp_const_none;
   }
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_secp256k1_verify_recover_obj,
-                                 mod_trezorcrypto_secp256k1_verify_recover);
-
+STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
+    mod_trezorcrypto_secp256k1_verify_recover_obj, 2, 3,
+    mod_trezorcrypto_secp256k1_verify_recover);
 /// def multiply(secret_key: bytes, public_key: bytes) -> bytes:
 ///     """
 ///     Multiplies point defined by public_key with scalar defined by
@@ -267,14 +357,18 @@ STATIC const mp_rom_map_elem_t mod_trezorcrypto_secp256k1_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_generate_secret_obj)},
     {MP_ROM_QSTR(MP_QSTR_publickey),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_publickey_obj)},
-    {MP_ROM_QSTR(MP_QSTR_sign),
-     MP_ROM_PTR(&mod_trezorcrypto_secp256k1_sign_obj)},
+    {MP_ROM_QSTR(MP_QSTR_sign_recoverable),
+     MP_ROM_PTR(&mod_trezorcrypto_secp256k1_sign_recoverable_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_verify_obj)},
     {MP_ROM_QSTR(MP_QSTR_verify_recover),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_verify_recover_obj)},
     {MP_ROM_QSTR(MP_QSTR_multiply),
      MP_ROM_PTR(&mod_trezorcrypto_secp256k1_multiply_obj)},
+    {MP_ROM_QSTR(MP_QSTR_anti_exfil_sign),
+     MP_ROM_PTR(&mod_trezorcrypto_secp256k1_anti_exfil_sign_obj)},
+    {MP_ROM_QSTR(MP_QSTR_anti_exfil_commit_nonce),
+     MP_ROM_PTR(&mod_trezorcrypto_secp256k1_anti_exfil_commit_nonce_obj)},
 #if !BITCOIN_ONLY
     {MP_ROM_QSTR(MP_QSTR_CANONICAL_SIG_ETHEREUM),
      MP_ROM_INT(CANONICAL_SIG_ETHEREUM)},

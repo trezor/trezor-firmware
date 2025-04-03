@@ -13,6 +13,7 @@ async def sign_tx(envelope: BinanceSignTx, keychain: Keychain) -> BinanceSignedT
     from trezor import wire
     from trezor.crypto.curve import secp256k1
     from trezor.crypto.hashlib import sha256
+    from trezor.crypto.signature import encode_raw_signature
     from trezor.enums import MessageType
     from trezor.messages import (
         BinanceCancelMsg,
@@ -59,6 +60,8 @@ async def sign_tx(envelope: BinanceSignTx, keychain: Keychain) -> BinanceSignedT
 
     # generate_content_signature
     msghash = sha256(msg_json.encode()).digest()
-    signature_bytes = secp256k1.sign(node.private_key(), msghash)[1:65]
+    signature_bytes = encode_raw_signature(
+        secp256k1.sign_recoverable(node.private_key(), msghash)
+    )
 
     return BinanceSignedTx(signature=signature_bytes, public_key=node.public_key())

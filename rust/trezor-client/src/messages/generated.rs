@@ -120,6 +120,8 @@ trezor_message_impl! {
     GetOwnershipProof => MessageType_GetOwnershipProof,
     OwnershipProof => MessageType_OwnershipProof,
     AuthorizeCoinJoin => MessageType_AuthorizeCoinJoin,
+    OwnershipProofNonceCommitment => MessageType_OwnershipProofNonceCommitment,
+    OwnershipProofEntropy => MessageType_OwnershipProofEntropy,
 }
 
 #[cfg(feature = "cardano")]

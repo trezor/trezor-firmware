@@ -35,7 +35,7 @@ async def sign_message(
     from apps.common import paths
     from apps.common.signverify import decode_message
 
-    from .helpers import address_from_bytes
+    from .helpers import address_from_bytes, encode_signature
 
     await paths.validate_path(keychain, msg.address_n)
 
@@ -46,14 +46,13 @@ async def sign_message(
         decode_message(msg.message), address, account="ETH", path=path, verify=False
     )
 
-    signature = secp256k1.sign(
+    signature = secp256k1.sign_recoverable(
         node.private_key(),
         message_digest(msg.message),
-        False,
         secp256k1.CANONICAL_SIG_ETHEREUM,
     )
 
     return EthereumMessageSignature(
         address=address,
-        signature=signature[1:] + bytearray([signature[0]]),
+        signature=encode_signature(signature),
     )
