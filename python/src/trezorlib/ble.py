@@ -1,19 +1,17 @@
 import typing as t
 
 from . import messages
-from .tools import session
 
 if t.TYPE_CHECKING:
-    from ..client import TrezorClient
+    from .transport.session import Session
 
 
-@session
 def unpair(
-    client: "TrezorClient",
+    session: "Session",
     all: bool,
 ):
 
-    resp = client.call(messages.BleUnpair(all=all))
+    resp = session.call(messages.BleUnpair(all=all))
 
     if isinstance(resp, messages.Success):
         return
