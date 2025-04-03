@@ -189,7 +189,8 @@ def test_session_recycling(client: Client):
 @pytest.mark.models("core")
 def test_derive_cardano_empty_session(client: Client):
     # start new session
-    session = client.get_session(derive_cardano=True)
+    session = SessionV1.new(client)
+    session.init_session(derive_cardano=True)
     session_id = session.id
 
     # restarting same session should go well
