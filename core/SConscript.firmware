@@ -636,7 +636,11 @@ if FROZEN:
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
         ] if not SDCARD else [])
     )
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/management/ble/*.py',
+        ] if "ble" not in FEATURES_AVAILABLE else [])
+    )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/misc/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/bitcoin/*/*.py',
