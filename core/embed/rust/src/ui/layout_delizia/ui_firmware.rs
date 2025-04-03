@@ -625,7 +625,6 @@ impl FirmwareUI for UIDelizia {
         account: Option<TString<'static>>,
         path: Option<TString<'static>>,
         xpubs: Obj,
-        title_success: TString<'static>,
         br_code: u16,
         br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -640,7 +639,6 @@ impl FirmwareUI for UIDelizia {
             account,
             path,
             xpubs,
-            title_success,
             br_code,
             br_name,
         )?;
