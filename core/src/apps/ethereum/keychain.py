@@ -17,6 +17,7 @@ if TYPE_CHECKING:
         EthereumSignTxEIP1559,
         EthereumSignTypedData,
     )
+    from trezor.wire import MaybeEarlyResponse
 
     from apps.common.keychain import Handler, Keychain, MsgOut
 
@@ -30,7 +31,7 @@ if TYPE_CHECKING:
 
     HandlerAddressN = Callable[
         [MsgInAddressN, Keychain, definitions.Definitions],
-        Awaitable[MsgOut],
+        Awaitable[MaybeEarlyResponse[MsgOut]],
     ]
 
     # messages for "with_keychain_and_defs_from_chain_id" decorator
@@ -42,7 +43,7 @@ if TYPE_CHECKING:
 
     HandlerChainId = Callable[
         [MsgInSignTx, Keychain, definitions.Definitions],
-        Awaitable[MsgOut],
+        Awaitable[MaybeEarlyResponse[MsgOut]],
     ]
 
 
@@ -120,7 +121,7 @@ def with_keychain_from_path(
     def decorator(
         func: HandlerAddressN[MsgInAddressN, MsgOut]
     ) -> Handler[MsgInAddressN, MsgOut]:
-        async def wrapper(msg: MsgInAddressN) -> MsgOut:
+        async def wrapper(msg: MsgInAddressN) -> MaybeEarlyResponse[MsgOut]:
             slip44 = _slip44_from_address_n(msg.address_n)
             defs = _defs_from_message(msg, slip44=slip44)
             schemas = _schemas_from_network(patterns, defs.network)
@@ -137,7 +138,7 @@ def with_keychain_from_chain_id(
     func: HandlerChainId[MsgInSignTx, MsgOut]
 ) -> Handler[MsgInSignTx, MsgOut]:
     # this is only for SignTx, and only PATTERN_ADDRESS is allowed
-    async def wrapper(msg: MsgInSignTx) -> MsgOut:
+    async def wrapper(msg: MsgInSignTx) -> MaybeEarlyResponse[MsgOut]:
         defs = _defs_from_message(msg, chain_id=msg.chain_id)
         schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
         keychain = await get_keychain(CURVE, schemas)

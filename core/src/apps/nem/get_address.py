@@ -6,14 +6,18 @@ from . import CURVE, PATTERNS, SLIP44_ID
 
 if TYPE_CHECKING:
     from trezor.messages import NEMAddress, NEMGetAddress
+    from trezor.wire import MaybeEarlyResponse
 
     from apps.common.keychain import Keychain
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
+async def get_address(
+    msg: NEMGetAddress, keychain: Keychain
+) -> MaybeEarlyResponse[NEMAddress]:
     from trezor.messages import NEMAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import early_response
 
     from apps.common import paths
 
@@ -28,8 +32,11 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
 
     node = keychain.derive(address_n)
     address = node.nem_address(network)
+    response = NEMAddress(address=address)
 
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERNS, SLIP44_ID
 
         await show_address(
@@ -40,5 +47,8 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
             network=get_network_str(network),
             chunkify=bool(msg.chunkify),
         )
+        return await early_response(
+            response, show_continue_in_app(TR.address__confirmed)
+        )
 
-    return NEMAddress(address=address)
+    return response
