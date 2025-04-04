@@ -296,7 +296,7 @@ def enter_seed_previous_correct(
             i += 1
         layout = enter_word(debug, word, is_slip39=False)
 
-    # TR.assert_in(debug.read_layout().text_content(), "recovery__wallet_recovered")
+    assert TR.recovery__wallet_recovered in debug.read_layout().text_content()
 
 
 def prepare_enter_seed(

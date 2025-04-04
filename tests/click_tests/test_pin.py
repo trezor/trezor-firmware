@@ -145,6 +145,11 @@ def prepare(
     if debug.layout_type is LayoutType.Delizia and tap:
         go_next(debug)
         debug.click(debug.screen_buttons.tap_to_confirm())
+    elif debug.layout_type is LayoutType.Eckhart:
+        # After the test, we need to go back to the main screen
+        main_component = debug.read_layout().main_component()
+        if main_component != "Homescreen":
+            go_next(debug)
     else:
         go_next(debug)
 
