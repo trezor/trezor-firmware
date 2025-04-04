@@ -68,7 +68,8 @@ pub const TEXT_MONO_MEDIUM: TextStyle = TextStyle::new(
     BG,
     GREY_EXTRA_LIGHT,
     GREY_EXTRA_LIGHT,
-);
+)
+.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
 
 pub const TEXT_MONO_MEDIUM_LIGHT: TextStyle = TextStyle::new(
     fonts::FONT_MONO_MEDIUM_38,
