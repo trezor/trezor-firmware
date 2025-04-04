@@ -26,7 +26,8 @@ use crate::{
             util::{ConfirmValueParams, RecoveryType},
         },
         ui_firmware::{
-            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+            FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
+            MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -183,7 +184,7 @@ impl FirmwareUI for UICaesar {
         _hold: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
+        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn confirm_homescreen(
@@ -222,9 +223,7 @@ impl FirmwareUI for UICaesar {
         _items: Obj,
         _verb: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"confirm_emphasized not implemented",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn confirm_fido(
@@ -704,18 +703,14 @@ impl FirmwareUI for UICaesar {
         _summary_br_name: Option<TString<'static>>,
         _cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"flow_confirm_output not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn flow_confirm_set_new_pin(
         _title: TString<'static>,
         _description: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"flow_confirm_set_new_pin not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn flow_get_address(
@@ -733,9 +728,7 @@ impl FirmwareUI for UICaesar {
         _br_code: u16,
         _br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"flow_get_address not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn multiple_pages_texts(
@@ -925,9 +918,7 @@ impl FirmwareUI for UICaesar {
     }
 
     fn set_brightness(_current_brightness: Option<u8>) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"setting brightness not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_address_details(
@@ -992,7 +983,7 @@ impl FirmwareUI for UICaesar {
         _value: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_danger not supported"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_error(
@@ -1002,7 +993,7 @@ impl FirmwareUI for UICaesar {
         _allow_cancel: bool,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"show error not supported"))
+        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_group_share_success(
@@ -1063,9 +1054,7 @@ impl FirmwareUI for UICaesar {
         _horizontal: bool,
         _chunkify: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show_info_with_cancel not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_lockscreen(
@@ -1155,13 +1144,11 @@ impl FirmwareUI for UICaesar {
         _text_footer: Option<TString<'static>>,
         _text_confirm: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"use show_share_words"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_remaining_shares(_pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show remaining shares not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_simple(
@@ -1182,7 +1169,7 @@ impl FirmwareUI for UICaesar {
         _allow_cancel: bool,
         _time_ms: u32,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"show success not supported"))
+        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_wait_text(text: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {

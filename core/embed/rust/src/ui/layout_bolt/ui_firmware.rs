@@ -26,7 +26,8 @@ use crate::{
             util::{ConfirmValueParams, PropsList, RecoveryType},
         },
         ui_firmware::{
-            FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
+            FirmwareUI, ERROR_NOT_IMPLEMENTED, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES,
+            MAX_WORD_QUIZ_ITEMS,
         },
         ModelUI,
     },
@@ -135,7 +136,7 @@ impl FirmwareUI for UIBolt {
         _hold: bool,
         _chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
+        Err::<Gc<LayoutObj>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn confirm_homescreen(
@@ -574,18 +575,14 @@ impl FirmwareUI for UIBolt {
         _summary_br_name: Option<TString<'static>>,
         _cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"flow_confirm_output not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn flow_confirm_set_new_pin(
         _title: TString<'static>,
         _description: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"flow_confirm_set_new_pin not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn flow_get_address(
@@ -603,9 +600,7 @@ impl FirmwareUI for UIBolt {
         _br_code: u16,
         _br_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"flow_get_address not supported",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn multiple_pages_texts(
@@ -613,15 +608,11 @@ impl FirmwareUI for UIBolt {
         _verb: TString<'static>,
         _items: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"multiple_pages_texts not implemented",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn prompt_backup() -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"prompt_backup not implemented",
-        ))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn request_bip39(
@@ -817,7 +808,7 @@ impl FirmwareUI for UIBolt {
         _value: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_danger not supported"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_error(
@@ -1039,7 +1030,7 @@ impl FirmwareUI for UIBolt {
         _text_footer: Option<TString<'static>>,
         _text_confirm: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"use show_share_words"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn show_remaining_shares(pages_iterable: Obj) -> Result<impl LayoutMaybeTrace, Error> {
@@ -1161,7 +1152,7 @@ impl FirmwareUI for UIBolt {
     }
 
     fn tutorial() -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"tutorial not supported"))
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 }
 
