@@ -14,13 +14,14 @@ use crate::{
                     Checklist, Paragraph, ParagraphSource, ParagraphVecLong, ParagraphVecShort,
                     Paragraphs, VecExt,
                 },
+                TextStyle,
             },
             ComponentExt as _, Empty, FormattedText, Timeout,
         },
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
             obj::{LayoutMaybeTrace, LayoutObj, RootComponent},
-            util::{ConfirmValueParams, RecoveryType, StrOrBytes},
+            util::{ConfirmValueParams, PropsList, RecoveryType, StrOrBytes},
         },
         ui_firmware::{
             FirmwareUI, MAX_CHECKLIST_ITEMS, MAX_GROUP_SHARE_LINES, MAX_WORD_QUIZ_ITEMS,
@@ -113,10 +114,23 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_coinjoin(
-        _max_rounds: TString<'static>,
-        _max_feerate: TString<'static>,
+        max_rounds: TString<'static>,
+        max_feerate: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_rounds),
+            Paragraph::new(&theme::TEXT_MONO_LIGHT, max_rounds),
+            Paragraph::new(&theme::TEXT_REGULAR, TR::coinjoin__max_mining_fee),
+            Paragraph::new(&theme::TEXT_MONO_LIGHT, max_feerate),
+        ])
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
+
+        let screen = TextScreen::new(paragraphs)
+            .with_header(Header::new(TR::coinjoin__title.into()))
+            .with_action_bar(ActionBar::new_cancel_confirm());
+        let layout = RootComponent::new(screen);
+        Ok(layout)
     }
 
     fn confirm_emphasized(
@@ -177,21 +191,84 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_modify_fee(
-        _title: TString<'static>,
-        _sign: i32,
-        _user_fee_change: TString<'static>,
-        _total_fee_new: TString<'static>,
+        title: TString<'static>,
+        sign: i32,
+        user_fee_change: TString<'static>,
+        total_fee_new: TString<'static>,
         _fee_rate_amount: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let (description, change, total_label) = match sign {
+            s if s < 0 => (
+                TR::modify_fee__decrease_fee,
+                user_fee_change,
+                TR::modify_fee__new_transaction_fee,
+            ),
+            s if s > 0 => (
+                TR::modify_fee__increase_fee,
+                user_fee_change,
+                TR::modify_fee__new_transaction_fee,
+            ),
+            _ => (
+                TR::modify_fee__no_change,
+                "".into(),
+                TR::modify_fee__transaction_fee,
+            ),
+        };
+
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, change),
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, total_label),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, total_fee_new),
+        ]);
+
+        let flow = flow::new_confirm_with_menu(
+            title,
+            None,
+            paragraphs
+                .into_paragraphs()
+                .with_spacing(12)
+                .with_placement(LinearPlacement::vertical()),
+            None,
+            false,
+            Some(TR::words__title_information.into()),
+            None,
+        )?;
+        Ok(flow)
     }
 
     fn confirm_modify_output(
-        _sign: i32,
-        _amount_change: TString<'static>,
-        _amount_new: TString<'static>,
+        sign: i32,
+        amount_change: TString<'static>,
+        amount_new: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let description = if sign < 0 {
+            TR::modify_amount__decrease_amount
+        } else {
+            TR::modify_amount__increase_amount
+        };
+
+        let paragraphs = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, description),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount_change),
+            Paragraph::new(&theme::TEXT_SMALL_LIGHT, TR::modify_amount__new_amount),
+            Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount_new),
+        ]);
+
+        let layout = RootComponent::new(
+            TextScreen::new(
+                paragraphs
+                    .into_paragraphs()
+                    .with_placement(LinearPlacement::vertical())
+                    .with_spacing(12),
+            )
+            .with_header(Header::new(TR::modify_amount__title.into()))
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                Button::with_text(TR::buttons__confirm.into()),
+            )),
+        );
+        Ok(layout)
     }
 
     fn confirm_more(
@@ -261,11 +338,30 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_properties(
-        _title: TString<'static>,
-        _items: Obj,
-        _hold: bool,
+        title: TString<'static>,
+        items: Obj,
+        hold: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let paragraphs = PropsList::new(
+            items,
+            &theme::TEXT_SMALL_LIGHT,
+            &theme::TEXT_MEDIUM,
+            &theme::TEXT_MONO_LIGHT,
+        )?;
+
+        let flow = flow::new_confirm_with_menu(
+            title,
+            None,
+            paragraphs
+                .into_paragraphs()
+                .with_spacing(12)
+                .with_placement(LinearPlacement::vertical()),
+            None,
+            hold,
+            None,
+            None,
+        )?;
+        Ok(flow)
     }
 
     fn confirm_value(
@@ -331,25 +427,65 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_value_intro(
-        _title: TString<'static>,
-        _value: Obj,
-        _subtitle: Option<TString<'static>>,
-        _verb: Option<TString<'static>>,
-        _verb_cancel: Option<TString<'static>>,
-        _hold: bool,
-        _chunkify: bool,
+        title: TString<'static>,
+        value: Obj,
+        subtitle: Option<TString<'static>>,
+        verb: Option<TString<'static>>,
+        verb_cancel: Option<TString<'static>>,
+        hold: bool,
+        chunkify: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"confirm_value_intro not implemented"))
+        let flow = flow::new_confirm_value_intro(
+            title,
+            subtitle,
+            value,
+            TR::buttons__view_all_data.into(),
+            verb_cancel,
+            verb,
+            hold,
+            chunkify,
+        )?;
+
+        LayoutObj::new_root(flow)
     }
 
     fn confirm_with_info(
-        _title: TString<'static>,
-        _items: Obj,
-        _verb: TString<'static>,
-        _verb_info: TString<'static>,
+        title: TString<'static>,
+        items: Obj,
+        verb: TString<'static>,
+        verb_info: TString<'static>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"))
+        let mut paragraphs = ParagraphVecShort::new();
+
+        for para in IterBuf::new().try_iterate(items)? {
+            let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
+            let is_data = is_data.try_into()?;
+            let style: &TextStyle = if is_data {
+                &theme::TEXT_MONO_MEDIUM_LIGHT
+            } else {
+                &theme::TEXT_SMALL_LIGHT
+            };
+            let text: TString = text.try_into()?;
+            paragraphs.add(Paragraph::new(style, text));
+            if paragraphs.is_full() {
+                break;
+            }
+        }
+
+        let flow = flow::new_confirm_with_menu(
+            title,
+            None,
+            paragraphs
+                .into_paragraphs()
+                .with_placement(LinearPlacement::vertical())
+                .with_spacing(12),
+            Some(verb),
+            false,
+            Some(verb_info),
+            None,
+        )?;
+        Ok(flow)
     }
 
     fn check_homescreen_format(image: BinaryData, _accept_toif: bool) -> bool {
@@ -869,19 +1005,24 @@ impl FirmwareUI for UIEckhart {
             let [key, value]: [Obj; 2] = util::iter_into_array(para)?;
             let key: TString = key.try_into()?;
             let value: TString = value.try_into()?;
-            paragraphs.add(Paragraph::new(&theme::TEXT_MEDIUM, key).no_break());
+            paragraphs.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, key).no_break());
             if chunkify {
                 paragraphs.add(Paragraph::new(
                     theme::get_chunkified_text_style(value.len()),
                     value,
                 ));
             } else {
-                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_MEDIUM, value));
+                paragraphs.add(Paragraph::new(&theme::TEXT_MONO_LIGHT, value));
             }
         }
 
-        let screen = TextScreen::new(paragraphs.into_paragraphs())
-            .with_header(Header::new(title).with_close_button());
+        let screen = TextScreen::new(
+            paragraphs
+                .into_paragraphs()
+                .with_spacing(12)
+                .with_placement(LinearPlacement::vertical()),
+        )
+        .with_header(Header::new(title).with_close_button());
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
