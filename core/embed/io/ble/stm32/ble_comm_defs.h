@@ -43,13 +43,15 @@ typedef struct {
 
 typedef enum {
   INTERNAL_EVENT_STATUS = 0x01,
+  INTERNAL_EVENT_SUCCESS = 0x02,
+  INTERNAL_EVENT_FAILURE = 0x03,
   INTERNAL_EVENT_PAIRING_REQUEST = 0x04,
   INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
   INTERNAL_EVENT_MAC = 0x06,
 } internal_event_t;
 
 typedef enum {
-  INTERNAL_CMD_PING = 0x00,
+  INTERNAL_CMD_SEND_STATE = 0x00,
   INTERNAL_CMD_ADVERTISING_ON = 0x01,
   INTERNAL_CMD_ADVERTISING_OFF = 0x02,
   INTERNAL_CMD_ERASE_BONDS = 0x03,
@@ -58,7 +60,7 @@ typedef enum {
   INTERNAL_CMD_ALLOW_PAIRING = 0x06,
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
   INTERNAL_CMD_UNPAIR = 0x08,
-  INTERNAL_CMD_MAC_REQUEST = 0x09,
+  INTERNAL_CMD_GET_MAC = 0x09,
 } internal_cmd_t;
 
 typedef struct {
@@ -69,3 +71,8 @@ typedef struct {
   uint32_t device_code;
   uint8_t name[BLE_ADV_NAME_LEN];
 } cmd_advertising_on_t;
+
+typedef struct {
+  uint8_t cmd_id;
+  uint8_t code[BLE_PAIRING_CODE_LEN];
+} cmd_allow_pairing_t;

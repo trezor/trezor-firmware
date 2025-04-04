@@ -92,7 +92,7 @@ void advertising_start(bool wl, uint8_t color, uint32_t device_code,
   advertising_data[1].data_len = name_len;
   advertising_data[1].data = (const uint8_t *)name;
 
-  char gap_name[21] = {0};
+  char gap_name[BLE_ADV_NAME_LEN + 1] = {0};
   memcpy(gap_name, name, name_len);
 
   bt_set_name(gap_name);

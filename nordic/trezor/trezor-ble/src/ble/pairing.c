@@ -32,6 +32,8 @@
 #define LOG_MODULE_NAME ble_pairing
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
+static uint8_t g_passkey_str[BLE_PAIRING_CODE_LEN] = {0};
+
 static struct bt_conn *auth_conn;
 
 void passkey_to_str(uint8_t buf[6], unsigned int passkey) {
@@ -52,9 +54,8 @@ void auth_passkey_confirm(struct bt_conn *conn, unsigned int passkey) {
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
-  uint8_t passkey_str[6];
-  passkey_to_str(passkey_str, passkey);
-  ble_management_send_pairing_request_event(passkey_str, 6);
+  passkey_to_str(g_passkey_str, passkey);
+  ble_management_send_pairing_request_event(g_passkey_str, 6);
 
   ble_management_send_status_event();
 }
@@ -98,9 +99,19 @@ void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
 static struct bt_conn_auth_info_cb conn_auth_info_callbacks = {
     .pairing_complete = pairing_complete, .pairing_failed = pairing_failed};
 
-void pairing_num_comp_reply(bool accept) {
+bool pairing_code_not_empty(void) {
+  for (int i = 0; i < sizeof(g_passkey_str); i++) {
+    if (g_passkey_str[i] != 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void pairing_num_comp_reply(bool accept, uint8_t *code) {
   if (auth_conn != NULL) {
-    if (accept) {
+    if (accept && pairing_code_not_empty() && code != NULL &&
+        memcmp(g_passkey_str, code, sizeof(g_passkey_str)) == 0) {
       bt_conn_auth_passkey_confirm(auth_conn);
       LOG_INF("Numeric Match, conn %p", (void *)auth_conn);
     } else {
@@ -112,13 +123,17 @@ void pairing_num_comp_reply(bool accept) {
     bt_conn_unref(auth_conn);
     auth_conn = NULL;
   }
+
+  memset(g_passkey_str, 0, sizeof(g_passkey_str));
 }
 
 void pairing_reset(void) {
   if (auth_conn) {
+    bt_conn_auth_cancel(auth_conn);
     bt_conn_unref(auth_conn);
     auth_conn = NULL;
   }
+  memset(g_passkey_str, 0, sizeof(g_passkey_str));
 }
 
 bool pairing_init(void) {

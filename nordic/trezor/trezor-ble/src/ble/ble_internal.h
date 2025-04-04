@@ -46,6 +46,9 @@
 #define BT_UUID_TRZ_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_RX_VAL)
 #define BT_UUID_TRZ_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_TX_VAL)
 
+#define BLE_PAIRING_CODE_LEN 6
+#define BLE_ADV_NAME_LEN 20
+
 typedef struct {
   uint8_t msg_id;
   uint8_t connected;
@@ -85,6 +88,20 @@ typedef enum {
   INTERNAL_CMD_UNPAIR = 0x08,
   INTERNAL_CMD_GET_MAC = 0x09,
 } internal_cmd_t;
+
+typedef struct {
+  uint8_t cmd_id;
+  uint8_t whitelist;
+  uint8_t color;
+  uint8_t static_addr;
+  uint32_t device_code;
+  uint8_t name[BLE_ADV_NAME_LEN];
+} cmd_advertising_on_t;
+
+typedef struct {
+  uint8_t cmd_id;
+  uint8_t code[BLE_PAIRING_CODE_LEN];
+} cmd_allow_pairing_t;
 
 // BLE management functions
 // Initialization
@@ -135,7 +152,7 @@ bool pairing_init(void);
 // Reset pairing process
 void pairing_reset(void);
 // Respond to pairing request
-void pairing_num_comp_reply(bool accept);
+void pairing_num_comp_reply(bool accept, uint8_t *code);
 
 // Service functions
 // Callback definition for received data
