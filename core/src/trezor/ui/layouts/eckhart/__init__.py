@@ -939,6 +939,9 @@ def confirm_sign_identity(
     )
 
 
+LONG_MSG_PAGE_THRESHOLD = 5
+
+
 async def confirm_signverify(
     message: str,
     address: str,
@@ -947,8 +950,71 @@ async def confirm_signverify(
     account: str | None = None,
     chunkify: bool = False,
 ) -> None:
-    # FIXME: not implemented
-    raise NotImplementedError
+    if verify:
+        address_title = TR.sign_message__verify_address
+        br_name = "verify_message"
+    else:
+        address_title = TR.sign_message__confirm_address
+        br_name = "sign_message"
+
+    address_layout = trezorui_api.confirm_value(
+        title=address_title,
+        value=address,
+        description="",
+        is_data=True,
+        verb=TR.buttons__continue,
+        info=True,
+        chunkify=chunkify,
+    )
+
+    items: list[tuple[str, str]] = []
+    if account is not None:
+        items.append((TR.words__account, account))
+    if path is not None:
+        items.append((TR.address_details__derivation_path, path))
+    items.append(
+        (
+            TR.sign_message__message_size,
+            TR.sign_message__bytes_template.format(len(message)),
+        )
+    )
+
+    info_layout = trezorui_api.show_info_with_cancel(
+        title=TR.words__title_information,
+        items=items,
+        horizontal=True,
+    )
+
+    while True:
+        try:
+            await with_info(address_layout, info_layout, br_name, br_code=BR_CODE_OTHER)
+        except ActionCancelled:
+            result = await interact(
+                trezorui_api.show_mismatch(title=TR.addr_mismatch__mismatch),
+                None,
+                raise_on_cancel=None,
+            )
+            assert result in (CONFIRMED, CANCELLED)
+            # Right button aborts action, left goes back to showing address.
+            if result is CONFIRMED:
+                raise
+            continue
+        else:
+            break
+
+    message_layout = trezorui_api.confirm_value(
+        title=TR.sign_message__confirm_message,
+        description=None,
+        is_data=True,
+        value=message,
+        extra=None,
+        prompt_screen=True,
+        hold=not verify,
+        info=False,
+        verb=TR.buttons__confirm,
+    )
+
+    await interact(message_layout, br_name, BR_CODE_OTHER)
 
 
 def error_popup(
