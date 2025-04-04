@@ -13,7 +13,10 @@ use crate::{
     },
 };
 
-use super::super::{fonts, theme};
+#[cfg(feature = "bootloader")]
+use super::super::fonts;
+
+use super::super::theme;
 
 pub enum ButtonMsg {
     Pressed,

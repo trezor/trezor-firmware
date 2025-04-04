@@ -2,7 +2,6 @@ use crate::{
     strutil::TString,
     ui::{
         component::{
-            base::AttachType,
             text::paragraphs::{Paragraph, Paragraphs},
             Component, Event, EventCtx,
         },
@@ -456,9 +455,6 @@ impl<'a> Component for DeviceMenuScreen<'a> {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        // Update the menu when the screen is attached
-        if let Event::Attach(AttachType::Initial) = event {}
-
         // Handle the event for the active menu
         match self.subscreens[self.active_subscreen] {
             Subscreen::Submenu(..) => match self.menu_screen.event(ctx, event) {
