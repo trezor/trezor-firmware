@@ -786,6 +786,9 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
     return false;
   }
 
+  uint32_t src_fg =
+      gfx_color32_replace_a(gfx_color_to_color32(bb->src_fg), bb->src_alpha);
+
   drv->handle.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
   drv->handle.Init.Mode = DMA2D_M2M_BLEND;
   drv->handle.Init.OutputOffset = bb->dst_stride / sizeof(uint32_t) - bb->width;
@@ -793,8 +796,8 @@ bool dma2d_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
 
   drv->handle.LayerCfg[1].InputColorMode = DMA2D_INPUT_A8;
   drv->handle.LayerCfg[1].InputOffset = bb->src_stride - bb->width;
-  drv->handle.LayerCfg[1].AlphaMode = 0;
-  drv->handle.LayerCfg[1].InputAlpha = gfx_color_to_color32(bb->src_fg);
+  drv->handle.LayerCfg[1].AlphaMode = DMA2D_COMBINE_ALPHA;
+  drv->handle.LayerCfg[1].InputAlpha = src_fg;
   HAL_DMA2D_ConfigLayer(&drv->handle, 1);
 
   drv->handle.LayerCfg[0].InputColorMode = DMA2D_INPUT_ARGB8888;
