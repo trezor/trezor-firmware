@@ -27,7 +27,7 @@
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
-#include "nvm_data.h"
+#include "nvm_data_fw_patch_v4.h"
 #include "stwlc38.h"
 #include "stwlc38_defs.h"
 #include "stwlc38_internal.h"
@@ -69,6 +69,10 @@ bool stwlc38_patch_and_config() {
     return false;
   }
 
+  uint8_t chip_rev;
+  status = stwlc38_read_fw_register(drv->i2c_bus, STWLC38_FWREG_CHIP_REV_REG,
+                                    &chip_rev);
+
   // Reset and disable NVM loading
   status =
       stwlc38_write_fw_register(drv->i2c_bus, STWLC38_FWREG_SYS_CMD_REG, 0x40);
@@ -96,6 +100,16 @@ bool stwlc38_patch_and_config() {
     return false;
   }
 
+  const uint8_t *config_data;
+  if (chip_rev == STWLC38_CUT_1_2) {
+    config_data = cfg_data_cut_1_2;
+  } else if (chip_rev == STWLC38_CUT_1_3) {
+    config_data = cfg_data_cut_1_3;
+  } else {
+    // Unknown chip revision, patch and config cannot be written.
+    return false;
+  }
+
   // Write patch to NVM
   status = stwlc38_nvm_write_bulk(drv->i2c_bus, patch_data, NVM_PATCH_SIZE,
                                   STWLC38_NVM_PATCH_START_SECTOR_INDEX);
@@ -103,8 +117,7 @@ bool stwlc38_patch_and_config() {
     return false;
   }
 
-  // Write config to NVM
-  status = stwlc38_nvm_write_bulk(drv->i2c_bus, cfg_data, NVM_CFG_SIZE,
+  status = stwlc38_nvm_write_bulk(drv->i2c_bus, config_data, NVM_CFG_SIZE,
                                   STWLC38_NVM_CFG_START_SECTOR_INDEX);
   if (status != I2C_STATUS_OK) {
     return false;

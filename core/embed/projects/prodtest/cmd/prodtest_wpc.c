@@ -216,6 +216,22 @@ static void prodtest_wpc_update(cli_t* cli) {
 
   cli_trace(cli, "Updating STWLC38...");
 
+  stwlc38_chip_info_t chip_info;
+  if (!stwlc38_read_chip_info(&chip_info)) {
+    cli_error(cli, CLI_ERROR, "Cannot read STWLC38 info.");
+    return;
+  }
+
+  if (chip_info.chip_rev == STWLC38_CUT_1_2) {
+    cli_trace(cli, "STWLC38 chip revision 1.2");
+  } else if (chip_info.chip_rev == STWLC38_CUT_1_3) {
+    cli_trace(cli, "STWLC38 chip revision 1.3");
+  } else {
+    cli_error(cli, CLI_ERROR, "Unknown chip revision, update aborted.");
+    return;
+  }
+
+  // Update STWLC38 firmware and configuration
   uint32_t update_time = systick_ms();
   bool status = stwlc38_patch_and_config();
   update_time = systick_ms() - update_time;

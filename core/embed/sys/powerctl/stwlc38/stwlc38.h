@@ -27,6 +27,12 @@ typedef enum {
   OP_MODE_TX = 3,
 } stwlc38_op_mode_t;
 
+typedef enum {
+  STWLC38_UNKNOWN_CHIP_REV = 0,
+  STWLC38_CUT_1_2 = 0x3,
+  STWLC38_CUT_1_3 = 0x4,
+} stwlc38_chip_rev_t;
+
 typedef struct {
   uint16_t chip_id;           // Chip ID
   uint8_t chip_rev;           // Chip Revision
