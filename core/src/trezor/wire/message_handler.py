@@ -25,7 +25,12 @@ def wrap_protobuf_load(
     expected_type: type[LoadedMessageType],
 ) -> LoadedMessageType:
     try:
-        if __debug__ and utils.EMULATOR and utils.USE_THP:
+        if (
+            __debug__
+            and utils.EMULATOR
+            and utils.USE_THP
+            and utils.ALLOW_DEBUG_MESSAGES
+        ):
             log.debug(
                 __name__,
                 "Buffer to be parsed to a LoadedMessage: %s",
@@ -38,7 +43,7 @@ def wrap_protobuf_load(
             )
         return msg
     except Exception as e:
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.exception(__name__, e)
         if e.args:
             raise DataError("Failed to decode message: " + " ".join(e.args))
@@ -60,17 +65,27 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
     the type of message is supposed to be optimized and not disrupt the running state,
     this function will return `True`.
     """
-    if __debug__:
+    if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
         try:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
         except Exception:
             msg_type = f"{msg.type} - unknown message type"
-        log.debug(
-            __name__,
-            "%d receive: <%s>",
-            ctx.iface.iface_num(),
-            msg_type,
-        )
+        if utils.USE_THP:
+            cid = int.from_bytes(ctx.channel_id, "big")
+            log.debug(
+                __name__,
+                "%d:%d receive: <%s>",
+                ctx.iface.iface_num(),
+                cid,
+                msg_type,
+            )
+        else:
+            log.debug(
+                __name__,
+                "%d receive: <%s>",
+                ctx.iface.iface_num(),
+                msg_type,
+            )
 
     res_msg: protobuf.MessageType | None = None
 
@@ -147,7 +162,7 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # - the message was not valid protobuf
         # - workflow raised some kind of an exception while running
         # - something canceled the workflow from the outside
-        if __debug__:
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             if isinstance(exc, ActionCancelled):
                 log.debug(__name__, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):

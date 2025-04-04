@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import ethereum
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -31,9 +31,9 @@ pytestmark = [
 
 
 @parametrize_using_common_fixtures("ethereum/getpublickey.json")
-def test_ethereum_getpublickey(client: Client, parameters, result):
+def test_ethereum_getpublickey(session: Session, parameters, result):
     path = parse_path(parameters["path"])
-    res = ethereum.get_public_node(client, path)
+    res = ethereum.get_public_node(session, path)
     assert res.node.depth == len(path)
     assert res.node.fingerprint == result["fingerprint"]
     assert res.node.child_num == result["child_num"]
@@ -42,14 +42,14 @@ def test_ethereum_getpublickey(client: Client, parameters, result):
     assert res.xpub == result["xpub"]
 
 
-def test_slip25_disallowed(client: Client):
+def test_slip25_disallowed(session: Session):
     path = parse_path("m/10025'/60'/0'/0/0")
     with pytest.raises(TrezorFailure):
-        ethereum.get_public_node(client, path)
+        ethereum.get_public_node(session, path)
 
 
 @pytest.mark.models("legacy")
-def test_legacy_restrictions(client: Client):
+def test_legacy_restrictions(session: Session):
     path = parse_path("m/46'")
     with pytest.raises(TrezorFailure, match="Invalid path for EthereumGetPublicKey"):
-        ethereum.get_public_node(client, path)
+        ethereum.get_public_node(session, path)

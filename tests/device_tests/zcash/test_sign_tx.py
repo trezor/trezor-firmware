@@ -17,7 +17,7 @@
 import pytest
 
 from trezorlib import btc, messages
-from trezorlib.debuglink import TrezorClientDebugLink as Client
+from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
@@ -57,7 +57,7 @@ pytestmark = [
 ]
 
 
-def test_version_group_id_missing(client: Client):
+def test_version_group_id_missing(session: Session):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
@@ -73,7 +73,7 @@ def test_version_group_id_missing(client: Client):
 
     with pytest.raises(TrezorFailure, match="Version group ID must be set."):
         btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1],
@@ -81,7 +81,7 @@ def test_version_group_id_missing(client: Client):
         )
 
 
-def test_spend_v4_input(client: Client):
+def test_spend_v4_input(session: Session):
     # 4b6cecb81c825180786ebe07b65bcc76078afc5be0f1c64e08d764005012380d is a v4 tx
 
     inp1 = messages.TxInputType(
@@ -99,13 +99,13 @@ def test_spend_v4_input(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -114,7 +114,7 @@ def test_spend_v4_input(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1],
@@ -130,7 +130,7 @@ def test_spend_v4_input(client: Client):
         )
 
 
-def test_send_to_multisig(client: Client):
+def test_send_to_multisig(session: Session):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/8"),
@@ -147,13 +147,13 @@ def test_send_to_multisig(client: Client):
         script_type=messages.OutputScriptType.PAYTOSCRIPTHASH,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -162,7 +162,7 @@ def test_send_to_multisig(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1],
@@ -178,7 +178,7 @@ def test_send_to_multisig(client: Client):
         )
 
 
-def test_spend_v5_input(client: Client):
+def test_spend_v5_input(session: Session):
     inp1 = messages.TxInputType(
         # tmBMyeJebzkP5naji8XUKqLyL1NDwNkgJFt
         address_n=parse_path("m/44h/1h/0h/0/9"),
@@ -194,13 +194,13 @@ def test_spend_v5_input(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
                 request_output(0),
@@ -209,7 +209,7 @@ def test_spend_v5_input(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1],
@@ -225,7 +225,7 @@ def test_spend_v5_input(client: Client):
         )
 
 
-def test_one_two(client: Client):
+def test_one_two(session: Session):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
@@ -247,13 +247,13 @@ def test_one_two(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -264,7 +264,7 @@ def test_one_two(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1, out2],
@@ -281,7 +281,7 @@ def test_one_two(client: Client):
 
 
 @pytest.mark.models("core")
-def test_unified_address(client: Client):
+def test_unified_address(session: Session):
     # identical to the test_one_two
     # but receiver address is unified with an orchard address
     inp1 = messages.TxInputType(
@@ -305,13 +305,13 @@ def test_unified_address(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 request_output(1),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(0),
@@ -322,7 +322,7 @@ def test_unified_address(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1, out2],
@@ -339,7 +339,7 @@ def test_unified_address(client: Client):
 
 
 @pytest.mark.models("core")
-def test_external_presigned(client: Client):
+def test_external_presigned(session: Session):
     inp1 = messages.TxInputType(
         # tmQoJ3PTXgQLaRRZZYT6xk8XtjRbr2kCqwu
         address_n=parse_path("m/44h/1h/0h/0/0"),
@@ -369,14 +369,14 @@ def test_external_presigned(client: Client):
         script_type=messages.OutputScriptType.PAYTOADDRESS,
     )
 
-    with client:
-        client.set_expected_responses(
+    with session:
+        session.set_expected_responses(
             [
                 request_input(0),
                 request_input(1),
                 request_output(0),
                 messages.ButtonRequest(code=B.ConfirmOutput),
-                (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+                (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
                 messages.ButtonRequest(code=B.SignTx),
                 request_input(1),
                 request_input(0),
@@ -387,7 +387,7 @@ def test_external_presigned(client: Client):
         )
 
         _, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1, inp2],
             [out1],
@@ -403,7 +403,7 @@ def test_external_presigned(client: Client):
         )
 
 
-def test_refuse_replacement_tx(client: Client):
+def test_refuse_replacement_tx(session: Session):
     inp1 = messages.TxInputType(
         address_n=parse_path("m/44h/1h/0h/0/4"),
         amount=174998,
@@ -441,7 +441,7 @@ def test_refuse_replacement_tx(client: Client):
         TrezorFailure, match="Replacement transactions are not supported."
     ):
         btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1, out2],
@@ -451,12 +451,12 @@ def test_refuse_replacement_tx(client: Client):
         )
 
 
-def test_spend_multisig(client: Client):
+def test_spend_multisig(session: Session):
     # Cloned from tests/device_tests/bitcoin/test_multisig.py::test_2_of_3
 
     nodes = [
         btc.get_public_node(
-            client, parse_path(f"m/48h/1h/{index}h/0h"), coin_name="Zcash Testnet"
+            session, parse_path(f"m/48h/1h/{index}h/0h"), coin_name="Zcash Testnet"
         ).node
         for index in range(1, 4)
     ]
@@ -486,17 +486,17 @@ def test_spend_multisig(client: Client):
         request_input(0),
         request_output(0),
         messages.ButtonRequest(code=B.ConfirmOutput),
-        (is_core(client), messages.ButtonRequest(code=B.ConfirmOutput)),
+        (is_core(session), messages.ButtonRequest(code=B.ConfirmOutput)),
         messages.ButtonRequest(code=B.SignTx),
         request_input(0),
         request_output(0),
         request_finished(),
     ]
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
         signatures1, _ = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp1],
             [out1],
@@ -533,10 +533,10 @@ def test_spend_multisig(client: Client):
         multisig=multisig,
     )
 
-    with client:
-        client.set_expected_responses(expected_responses)
+    with session:
+        session.set_expected_responses(expected_responses)
         signatures2, serialized_tx = btc.sign_tx(
-            client,
+            session,
             "Zcash Testnet",
             [inp3],
             [out1],

@@ -35,10 +35,11 @@ def test_encrypt(client: Client):
         client.debug.swipe_up()
         client.debug.press_yes()
 
-    with client:
-        client.set_input_flow(input_flow())
+    session = client.get_session()
+    with session:
+        session.set_input_flow(input_flow())
         misc.encrypt_keyvalue(
-            client,
+            session,
             [],
             "Enable labeling?",
             b"",

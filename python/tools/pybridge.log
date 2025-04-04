@@ -1,0 +1,43 @@
+2025-03-05 17:53:29,808 INFO HID transport is disabled: No module named 'hid'
+2025-03-05 17:53:29,812 WARNING WebUSB transport is disabled: No module named 'usb1'
+2025-03-05 17:53:29,812 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 17:53:51,342 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 17:55:17,269 INFO HID transport is disabled: No module named 'hid'
+2025-03-05 17:55:17,276 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 17:55:17,287 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 17:55:17,288 DEBUG sending message: GetFeatures
+2025-03-05 17:55:17,349 DEBUG received message: Features
+2025-03-05 17:55:17,349 DEBUG sending message: Initialize
+2025-03-05 17:55:17,578 DEBUG received message: Features
+2025-03-05 17:55:17,578 DEBUG sending message: EndSession
+2025-03-05 17:55:17,768 DEBUG received message: Success
+2025-03-05 18:01:51,821 INFO HID transport is disabled: No module named 'hid'
+2025-03-05 18:01:51,839 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:01:51,839 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:02:09,227 INFO HID transport is disabled: No module named 'hid'
+2025-03-05 18:02:09,244 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:02:09,244 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:02:09,244 DEBUG sending message: GetFeatures
+2025-03-05 18:02:09,305 DEBUG received message: Features
+2025-03-05 18:02:09,306 DEBUG sending message: Initialize
+2025-03-05 18:02:09,537 DEBUG received message: Features
+2025-03-05 18:02:09,537 DEBUG sending message: EndSession
+2025-03-05 18:02:09,726 DEBUG received message: Success
+2025-03-05 18:02:20,843 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:02:20,843 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:02:20,934 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:02:20,935 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:02:54,782 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:02:54,782 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:02:54,872 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:02:54,873 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:58:10,432 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:58:10,432 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:59:32,641 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:59:32,641 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:59:45,713 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:59:45,713 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 18:59:53,285 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 18:59:53,285 INFO Enumerating UdpTransport: found 0 devices
+2025-03-05 19:02:17,136 INFO Enumerating WebUsbTransport: found 1 devices
+2025-03-05 19:02:17,136 INFO Enumerating UdpTransport: found 0 devices
