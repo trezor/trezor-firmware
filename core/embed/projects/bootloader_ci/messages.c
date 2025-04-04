@@ -359,8 +359,8 @@ void process_msg_FirmwareErase(uint8_t iface_num, uint32_t msg_size,
 }
 
 static uint32_t chunk_size = 0;
-// SRAM is unused, so we can use it for chunk buffer
-uint8_t *const chunk_buffer = (uint8_t *const)0x20000000;
+
+__attribute__((section(".buf"))) uint32_t chunk_buffer[IMAGE_CHUNK_SIZE / 4];
 
 /* we don't use secbool/sectrue/secfalse here as it is a nanopb api */
 static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
@@ -391,7 +391,7 @@ static bool _read_payload(pb_istream_t *stream, const pb_field_t *field,
     }
     // read data
     if (!pb_read(
-            stream, (pb_byte_t *)(chunk_buffer + chunk_written),
+            stream, (pb_byte_t *)((uint8_t *)chunk_buffer + chunk_written),
             (stream->bytes_left > BUFSIZE) ? BUFSIZE : stream->bytes_left)) {
       chunk_size = 0;
       return false;
@@ -481,7 +481,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
       // first block and headers are not yet parsed
       vendor_header vhdr;
 
-      if (sectrue != read_vendor_header(chunk_buffer, &vhdr)) {
+      if (sectrue != read_vendor_header((uint8_t *)chunk_buffer, &vhdr)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid vendor header");
@@ -497,10 +497,12 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
         return UPLOAD_ERR_INVALID_VENDOR_HEADER_SIG;
       }
 
-      const image_header *received_hdr = read_image_header(
-          chunk_buffer + vhdr.hdrlen, FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
+      const image_header *received_hdr =
+          read_image_header((uint8_t *)chunk_buffer + vhdr.hdrlen,
+                            FIRMWARE_IMAGE_MAGIC, FIRMWARE_MAXSIZE);
 
-      if (received_hdr != (const image_header *)(chunk_buffer + vhdr.hdrlen)) {
+      if (received_hdr !=
+          (const image_header *)((uint8_t *)chunk_buffer + vhdr.hdrlen)) {
         MSG_SEND_INIT(Failure);
         MSG_SEND_ASSIGN_VALUE(code, FailureType_Failure_ProcessError);
         MSG_SEND_ASSIGN_STRING(message, "Invalid firmware header");
@@ -592,7 +594,7 @@ int process_msg_FirmwareUpload(uint8_t iface_num, uint32_t msg_size,
   }
 
   if (sectrue != check_single_hash(hdr.hashes + firmware_block * 32,
-                                   chunk_buffer + headers_offset,
+                                   (uint8_t *)chunk_buffer + headers_offset,
                                    chunk_size - headers_offset)) {
     if (firmware_upload_chunk_retry > 0) {
       --firmware_upload_chunk_retry;
