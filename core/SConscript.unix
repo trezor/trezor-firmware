@@ -686,7 +686,11 @@ if FROZEN:
         ] if "sd_card" not in FEATURES_AVAILABLE else []
     ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'apps/homescreen/device_menu.py',
+        ] if TREZOR_MODEL != "T3W1" else [])
+    )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[
             SOURCE_PY_DIR + 'apps/management/sd_protect.py',
