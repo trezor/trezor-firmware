@@ -159,7 +159,8 @@ impl<'a> DeviceMenuScreen<'a> {
         // NB: we currently only support one device at a time.
         // if we ever increase this size, we will need a way to return the correct
         // device index on Disconnect back to uPy
-        // (see component_msg_obj.rs, which currently just returns "DeviceDisconnect" with no index!)
+        // (see component_msg_obj.rs, which currently just returns "DeviceDisconnect" with no
+        // index!)
         paired_devices: Vec<TString<'static>, 1>,
     ) -> Self {
         let mut screen = Self {
@@ -178,6 +179,10 @@ impl<'a> DeviceMenuScreen<'a> {
         let device = screen.add_device_menu("My device".into(), about); // TODO: device name
         let settings = screen.add_settings_menu(security, device);
 
+        let is_connected = !paired_devices.is_empty(); // TODO this is mostly bad
+        let connected_subtext: Option<TString<'static>> =
+            is_connected.then_some("1 device connected".into());
+
         let mut paired_device_indices: Vec<usize, 1> = Vec::new();
         for (i, device) in paired_devices.iter().enumerate() {
             unwrap!(paired_device_indices
@@ -185,9 +190,10 @@ impl<'a> DeviceMenuScreen<'a> {
         }
 
         let devices = screen.add_paired_devices_menu(paired_devices, paired_device_indices);
-        let pair_and_connect = screen.add_pair_and_connect_menu(devices);
+        let pair_and_connect = screen.add_pair_and_connect_menu(devices, connected_subtext);
 
-        let root = screen.add_root_menu(failed_backup, pair_and_connect, settings);
+        let root =
+            screen.add_root_menu(failed_backup, pair_and_connect, settings, connected_subtext);
 
         screen.set_active_subscreen(root);
 
@@ -214,15 +220,19 @@ impl<'a> DeviceMenuScreen<'a> {
         )))
     }
 
-    fn add_pair_and_connect_menu(&mut self, manage_devices_index: usize) -> usize {
+    fn add_pair_and_connect_menu(
+        &mut self,
+        manage_devices_index: usize,
+        connected_subtext: Option<TString<'static>>,
+    ) -> usize {
         let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
         unwrap!(items.push(
             MenuItem::new(
                 "Manage paired devices".into(),
                 Some(Action::GoTo(manage_devices_index)),
             )
-            .with_subtext(Some("1 device connected".into()))
-            .with_green_subtext(),
+            .with_subtext(connected_subtext)
+            .with_green_subtext()
         ));
         unwrap!(items.push(MenuItem::new(
             "Pair new device".into(),
@@ -292,6 +302,7 @@ impl<'a> DeviceMenuScreen<'a> {
         failed_backup: bool,
         pair_and_connect_index: usize,
         settings_index: usize,
+        connected_subtext: Option<TString<'static>>,
     ) -> usize {
         let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
         if failed_backup {
@@ -309,7 +320,7 @@ impl<'a> DeviceMenuScreen<'a> {
                 "Pair & connect".into(),
                 Some(Action::GoTo(pair_and_connect_index)),
             )
-            .with_subtext(Some("1 device connected".into()))
+            .with_subtext(connected_subtext)
             .with_green_subtext(),
         ));
         unwrap!(items.push(MenuItem::new(

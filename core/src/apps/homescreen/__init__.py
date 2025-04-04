@@ -3,9 +3,8 @@ from typing import Coroutine
 import storage
 import storage.cache
 import storage.device
-from trezor import config, wire
+from trezor import config, utils, wire
 from trezor.enums import MessageType
-from trezor.ui.layouts import raise_if_not_confirmed
 from trezor.ui.layouts.homescreen import Busyscreen, Homescreen, Lockscreen
 
 from apps.base import busy_expiry_ms, lock_device
@@ -22,7 +21,7 @@ async def busyscreen() -> None:
 
 async def homescreen() -> None:
     from trezor import TR
-    from trezorui_api import INFO, show_device_menu
+    from trezorui_api import INFO
 
     if storage.device.is_initialized():
         label = storage.device.get_label()
@@ -56,35 +55,15 @@ async def homescreen() -> None:
     )
     try:
         res = await obj.get_result()
-        if res is INFO:
-
-            ##### MOCK DATA
-            failed_backup = True
-            battery_percentage = 22
-            paired_devices = ["Suite on my de-Googled Phone"]
-            #####
-
-            menu_result = await raise_if_not_confirmed(show_device_menu(failed_backup=failed_backup, battery_percentage=battery_percentage, paired_devices=paired_devices), "device_menu")
-            print(menu_result)
-            if menu_result == "DevicePair":
-                from trezor import ui
-                import trezorui_api
-                await raise_if_not_confirmed(
-                    trezorui_api.show_pairing_device_name(
-                        device_name="My Trez",
-                    ),
-                    "device_name"
-                )
-                await raise_if_not_confirmed(
-                    trezorui_api.show_pairing_code(
-                        code="123456",
-                    ),
-                    "pairing_code"
-                )
-        else:
-            lock_device()
     finally:
         obj.__del__()
+
+    if utils.INTERNAL_MODEL == "T3W1":
+        if res is INFO:
+            from .device_menu import handle_device_menu
+
+            return await handle_device_menu()
+    lock_device()
 
 
 async def _lockscreen(screensaver: bool = False) -> None:

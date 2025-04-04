@@ -23,6 +23,13 @@ def erase_bonds() -> bool:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
+def unpair() -> bool:
+    """
+    Erases bond for current connection, if any
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
 def start_comm() -> bool:
     """
     Start communication with BLE chip
@@ -37,7 +44,7 @@ def start_advertising(whitelist: bool, name: str | None) -> bool:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def stop_advertising(whitelist: bool) -> bool:
+def stop_advertising() -> bool:
     """
     Stop advertising
     """
@@ -54,6 +61,28 @@ def disconnect() -> bool:
 def peer_count() -> int:
     """
     Get peer count (number of bonded devices)
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+def is_connected() -> bool:
+    """
+    TODO: this should really return struct or enum
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+def allow_pairing(code: int) -> bool:
+    """
+    Accept BLE pairing request. Code must match the one received with
+    BLE_PAIRING_REQUEST event.
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+def reject_pairing() -> bool:
+    """
+    Reject BLE pairing request
     """
 RX_PACKET_LEN: int
 """Length of one BLE RX packet."""

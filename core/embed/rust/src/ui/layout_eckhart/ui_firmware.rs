@@ -15,7 +15,7 @@ use crate::{
                     Paragraphs, VecExt,
                 },
             },
-            Empty, FormattedText,
+            BLEHandler, Empty, FormattedText,
         },
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
@@ -32,10 +32,9 @@ use crate::{
 use super::{
     component::Button,
     firmware::{
-        DeviceMenuScreen,
-        ActionBar, Bip39Input, ConfirmHomescreen, Header, HeaderMsg, Hint, Homescreen,
-        MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen, SelectWordScreen,
-        SetBrightnessScreen, Slip39Input, TextScreen,
+        ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, Header, HeaderMsg, Hint,
+        Homescreen, MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen,
+        SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -801,7 +800,10 @@ impl FirmwareUI for UIEckhart {
         ops = ops.text(text, font);
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new("Pair with new device".into()).with_close_button())
-            .with_action_bar(ActionBar::new_single(Button::with_text("Continue on host".into())));
+            .with_action_bar(ActionBar::new_single(Button::with_text(
+                "Continue on host".into(),
+            )));
+        let screen = BLEHandler::new(screen, true);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
@@ -816,6 +818,7 @@ impl FirmwareUI for UIEckhart {
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new("Bluetooth pairing".into()))
             .with_action_bar(ActionBar::new_cancel_confirm());
+        let screen = BLEHandler::new(screen, false);
         let layout = RootComponent::new(screen);
         Ok(layout)
     }

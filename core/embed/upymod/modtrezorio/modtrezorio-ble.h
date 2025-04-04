@@ -139,6 +139,17 @@ STATIC mp_obj_t mod_trezorio_BLE_erase_bonds(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_erase_bonds_obj,
                                  mod_trezorio_BLE_erase_bonds);
 
+/// def unpair() -> bool:
+///     """
+///     Erases bond for current connection, if any
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_unpair(void) {
+  ble_command_t cmd = {.cmd_type = BLE_UNPAIR, .data_len = 0};
+  return mp_obj_new_bool(ble_issue_command(&cmd));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_unpair_obj,
+                                 mod_trezorio_BLE_unpair);
+
 /// def start_comm() -> bool:
 ///     """
 ///     Start communication with BLE chip
@@ -187,7 +198,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorio_BLE_start_advertising_obj, 1, 2,
     mod_trezorio_BLE_start_advertising);
 
-/// def stop_advertising(whitelist: bool) -> bool:
+/// def stop_advertising() -> bool:
 ///     """
 ///     Stop advertising
 ///     """
@@ -221,6 +232,57 @@ STATIC mp_obj_t mod_trezorio_BLE_peer_count(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_peer_count_obj,
                                  mod_trezorio_BLE_peer_count);
 
+/// def is_connected() -> bool:
+///     """
+///     TODO: this should really return struct or enum
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_is_connected(void) {
+  ble_state_t state;
+  ble_get_state(&state);
+  return MP_OBJ_NEW_SMALL_INT(state.connected);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_is_connected_obj,
+                                 mod_trezorio_BLE_is_connected);
+
+const size_t CODE_LEN = 6;
+static bool encode_pairing_code(mp_obj_t obj, uint8_t *outbuf) {
+  mp_int_t code = mp_obj_get_int(obj);
+  if (code < 0 || code > 999999) {
+    return false;
+  }
+  for (size_t i = 0; i < CODE_LEN; i++) {
+    outbuf[CODE_LEN - i - 1] = '0' + (code % 10);
+    code /= 10;
+  }
+  return true;
+}
+
+/// def allow_pairing(code: int) -> bool:
+///     """
+///     Accept BLE pairing request. Code must match the one received with
+///     BLE_PAIRING_REQUEST event.
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_allow_pairing(mp_obj_t code) {
+  ble_command_t cmd = {.cmd_type = BLE_ALLOW_PAIRING, .data_len = CODE_LEN};
+  if (!encode_pairing_code(code, cmd.data.raw)) {
+    return mp_const_false;
+  }
+  return mp_obj_new_bool(ble_issue_command(&cmd));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_allow_pairing_obj,
+                                 mod_trezorio_BLE_allow_pairing);
+
+/// def reject_pairing() -> bool:
+///     """
+///     Reject BLE pairing request
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_reject_pairing(void) {
+  ble_command_t cmd = {.cmd_type = BLE_REJECT_PAIRING, .data_len = 0};
+  return mp_obj_new_bool(ble_issue_command(&cmd));
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_reject_pairing_obj,
+                                 mod_trezorio_BLE_reject_pairing);
+
 /// RX_PACKET_LEN: int
 /// """Length of one BLE RX packet."""
 
@@ -237,6 +299,7 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&mod_trezorio_BLE_read_obj)},
     {MP_ROM_QSTR(MP_QSTR_erase_bonds),
      MP_ROM_PTR(&mod_trezorio_BLE_erase_bonds_obj)},
+    {MP_ROM_QSTR(MP_QSTR_unpair), MP_ROM_PTR(&mod_trezorio_BLE_unpair_obj)},
     {MP_ROM_QSTR(MP_QSTR_start_comm),
      MP_ROM_PTR(&mod_trezorio_BLE_start_comm_obj)},
     {MP_ROM_QSTR(MP_QSTR_start_advertising),
@@ -247,6 +310,12 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_BLE_disconnect_obj)},
     {MP_ROM_QSTR(MP_QSTR_peer_count),
      MP_ROM_PTR(&mod_trezorio_BLE_peer_count_obj)},
+    {MP_ROM_QSTR(MP_QSTR_is_connected),
+     MP_ROM_PTR(&mod_trezorio_BLE_is_connected_obj)},
+    {MP_ROM_QSTR(MP_QSTR_allow_pairing),
+     MP_ROM_PTR(&mod_trezorio_BLE_allow_pairing_obj)},
+    {MP_ROM_QSTR(MP_QSTR_reject_pairing),
+     MP_ROM_PTR(&mod_trezorio_BLE_reject_pairing_obj)},
     {MP_ROM_QSTR(MP_QSTR_RX_PACKET_LEN), MP_ROM_INT(BLE_RX_PACKET_SIZE)},
     {MP_ROM_QSTR(MP_QSTR_TX_PACKET_LEN), MP_ROM_INT(BLE_TX_PACKET_SIZE)},
 };
