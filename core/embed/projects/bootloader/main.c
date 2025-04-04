@@ -59,6 +59,9 @@
 #ifdef USE_TAMPER
 #include <sys/tamper.h>
 #endif
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>
+#endif
 
 #include "antiglitch.h"
 #include "bootui.h"
@@ -312,6 +315,10 @@ int bootloader_main(void) {
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
     firmware_present_backup = firmware_present;
   }
+
+#ifdef USE_POWERCTL
+  powerctl_init();
+#endif
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
