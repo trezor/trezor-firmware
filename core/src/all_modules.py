@@ -367,6 +367,8 @@ apps.debug.load_device
 import apps.debug.load_device
 apps.homescreen
 import apps.homescreen
+apps.homescreen.device_menu
+import apps.homescreen.device_menu
 apps.management.apply_flags
 import apps.management.apply_flags
 apps.management.apply_settings
@@ -375,6 +377,8 @@ apps.management.authenticate_device
 import apps.management.authenticate_device
 apps.management.backup_device
 import apps.management.backup_device
+apps.management.ble.pair_new_device
+import apps.management.ble.pair_new_device
 apps.management.change_language
 import apps.management.change_language
 apps.management.change_pin
