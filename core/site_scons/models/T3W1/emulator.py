@@ -92,4 +92,10 @@ def configure(
 
     sources += ["embed/util/flash/stm32u5/flash_layout.c"]
 
+    defines += ["USE_HW_JPEG_DECODER"]
+    features_available.append("hw_jpeg_decoder")
+    sources += [
+        "embed/gfx/jpegdec/unix/jpegdec.c",
+    ]
+
     return features_available
