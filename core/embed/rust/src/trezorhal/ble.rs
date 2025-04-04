@@ -1,4 +1,23 @@
 use super::ffi;
+use crate::ui::event::BLEEvent;
+
+pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
+    match event.type_ {
+        ffi::ble_event_type_t_BLE_CONNECTED => BLEEvent::Connected,
+        ffi::ble_event_type_t_BLE_DISCONNECTED => BLEEvent::Disconnected,
+        ffi::ble_event_type_t_BLE_PAIRING_REQUEST => {
+            let code: u32 = event
+                .data
+                .iter()
+                .take(6)
+                .map(|&b| (b - b'0'))
+                .fold(0, |acc, d| acc * 10 + d as u32);
+            BLEEvent::PairingRequest(code)
+        }
+        ffi::ble_event_type_t_BLE_PAIRING_CANCELLED => BLEEvent::PairingCanceled,
+        _ => panic!(),
+    }
+}
 
 pub fn connected() -> bool {
     unsafe {

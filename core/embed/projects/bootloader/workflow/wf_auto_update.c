@@ -23,15 +23,19 @@
 #include <util/image.h>
 
 #include "bootui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
                                        const image_header *const hdr) {
   ui_set_initial_setup(true);
+  uint8_t buf[1024] = {0};
+  screen_connect(true, buf, sizeof(buf));
 
   workflow_result_t res = WF_CANCELLED;
   while (res == WF_CANCELLED) {
-    res = workflow_host_control(vhdr, hdr, ui_screen_connect);
+    res = workflow_host_control(vhdr, hdr, screen_connect_event, buf,
+                                sizeof(buf));
   }
   return res;
 }

@@ -25,6 +25,7 @@
 
 #include "antiglitch.h"
 #include "bootui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
 typedef enum {
@@ -80,8 +81,10 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
         }
       } break;
       case SCREEN_WAIT_FOR_HOST: {
-        workflow_result_t res =
-            workflow_host_control(vhdr, hdr, ui_screen_connect);
+        uint8_t buf[1024] = {0};
+        screen_connect(false, buf, sizeof(buf));
+        workflow_result_t res = workflow_host_control(
+            vhdr, hdr, screen_connect_event, buf, sizeof(buf));
         switch (res) {
           case WF_CANCELLED:
             screen = SCREEN_INTRO;
