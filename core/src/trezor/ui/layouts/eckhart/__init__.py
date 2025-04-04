@@ -894,8 +894,36 @@ async def confirm_modify_output(
     amount_change: str,
     amount_new: str,
 ) -> None:
-    # FIXME: not implemented
-    raise NotImplementedError
+    address_layout = trezorui_api.confirm_value(
+        title=TR.modify_amount__title,
+        value=address,
+        verb=TR.buttons__continue,
+        verb_cancel=None,
+        description=f"{TR.words__address}:",
+    )
+    modify_layout = trezorui_api.confirm_modify_output(
+        sign=sign,
+        amount_change=amount_change,
+        amount_new=amount_new,
+    )
+
+    send_button_request = True
+    while True:
+        await raise_if_not_confirmed(
+            address_layout,
+            "modify_output" if send_button_request else None,
+            ButtonRequestType.ConfirmOutput,
+        )
+        result = await interact(
+            modify_layout,
+            "modify_output" if send_button_request else None,
+            ButtonRequestType.ConfirmOutput,
+            raise_on_cancel=None,
+        )
+        send_button_request = False
+
+        if result is CONFIRMED:
+            break
 
 
 def confirm_modify_fee(
@@ -905,8 +933,21 @@ def confirm_modify_fee(
     total_fee_new: str,
     fee_rate_amount: str | None = None,
 ) -> Awaitable[None]:
-    # FIXME: not implemented
-    raise NotImplementedError
+    fee_layout = trezorui_api.confirm_modify_fee(
+        title=title,
+        sign=sign,
+        user_fee_change=user_fee_change,
+        total_fee_new=total_fee_new,
+        fee_rate_amount=fee_rate_amount,
+    )
+    items: list[tuple[str, str]] = []
+    if fee_rate_amount:
+        items.append((TR.bitcoin__new_fee_rate, fee_rate_amount))
+    info_layout = trezorui_api.show_info_with_cancel(
+        title=TR.confirm_total__title_fee,
+        items=items,
+    )
+    return with_info(fee_layout, info_layout, "modify_fee", ButtonRequestType.SignTx)
 
 
 def confirm_coinjoin(max_rounds: int, max_fee_per_vbyte: str) -> Awaitable[None]:
