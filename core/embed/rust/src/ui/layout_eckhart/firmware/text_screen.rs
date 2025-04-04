@@ -3,11 +3,15 @@ use crate::{
     ui::{
         component::{
             swipe_detect::SwipeConfig,
-            text::paragraphs::{Checklist, ParagraphSource, Paragraphs},
-            Component, Event, EventCtx, FormattedText, Label, PaginateFull,
+            text::{
+                layout::LayoutFit,
+                paragraphs::{Checklist, ParagraphSource, Paragraphs},
+                TextStyle,
+            },
+            Component, Event, EventCtx, FormattedText, Label, PaginateFull, TextLayout,
         },
         flow::Swipable,
-        geometry::{Insets, Rect},
+        geometry::{Insets, Offset, Rect},
         shape::Renderer,
         util::Pager,
     },
@@ -33,6 +37,7 @@ pub struct TextScreen<T> {
     content: T,
     hint: Option<Hint<'static>>,
     action_bar: Option<ActionBar>,
+    page_limit: Option<u16>,
     // TODO: swipe handling
     // TODO: animations
 }
@@ -49,6 +54,8 @@ where
 {
     const CONTENT_INSETS: Insets = SIDE_INSETS;
     const SUBTITLE_HEIGHT: i16 = 44;
+    const SUBTITLE_DOUBLE_HEIGHT: i16 = 76;
+    const SUBTITLE_STYLE: TextStyle = theme::TEXT_MEDIUM_EXTRA_LIGHT;
 
     pub fn new(content: T) -> Self {
         Self {
@@ -57,6 +64,7 @@ where
             content,
             hint: None,
             action_bar: Some(ActionBar::new_paginate_only()),
+            page_limit: None,
         }
     }
 
@@ -67,8 +75,7 @@ where
 
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         if !subtitle.is_empty() {
-            self.subtitle =
-                Some(Label::left_aligned(subtitle, theme::TEXT_MEDIUM_EXTRA_LIGHT).top_aligned());
+            self.subtitle = Some(Label::left_aligned(subtitle, Self::SUBTITLE_STYLE).top_aligned());
         }
         self
     }
@@ -83,15 +90,29 @@ where
         self
     }
 
+    pub fn with_page_limit(mut self, page_limit: u16) -> Self {
+        self.page_limit = Some(page_limit);
+        self
+    }
+
     fn update_page(&mut self, page_idx: u16) {
         self.content.change_page(page_idx);
-        let pager = self.content.pager();
+        let pager = self.content_pager();
+
         if let Some(hint) = self.hint.as_mut() {
             hint.update(pager);
         }
         if let Some(ab) = self.action_bar.as_mut() {
             ab.update(pager)
         };
+    }
+
+    fn content_pager(&self) -> Pager {
+        if let Some(page_limit) = self.page_limit {
+            self.content.pager().with_limit(page_limit)
+        } else {
+            self.content.pager()
+        }
     }
 }
 
@@ -105,7 +126,24 @@ where
         let (header_area, rest) = bounds.split_top(Header::HEADER_HEIGHT);
         let (rest, action_bar_area) = rest.split_bottom(ActionBar::ACTION_BAR_HEIGHT);
         let rest = if let Some(subtitle) = &mut self.subtitle {
-            let (subtitle_area, rest) = rest.split_top(Self::SUBTITLE_HEIGHT);
+            // Check if the subtitle text fits in the available space
+            let subtitle_height = if let LayoutFit::OutOfBounds { .. } =
+                subtitle.text().map(|text| {
+                    TextLayout::new(Self::SUBTITLE_STYLE)
+                        .with_bounds(
+                            Rect::from_size(Offset::new(bounds.width(), Self::SUBTITLE_HEIGHT))
+                                .inset(SIDE_INSETS),
+                        )
+                        .fit_text(text)
+                }) {
+                Self::SUBTITLE_DOUBLE_HEIGHT
+            } else {
+                Self::SUBTITLE_HEIGHT
+            };
+
+            dbg_println!("Subtitle height: {:?}", subtitle_height);
+
+            let (subtitle_area, rest) = rest.split_top(subtitle_height);
             subtitle.place(subtitle_area.inset(SIDE_INSETS));
             rest
         } else {
@@ -128,8 +166,10 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.content.event(ctx, event);
+        // Update page count of the screen
+        ctx.set_page_count(self.content_pager().total() as usize);
 
+        self.content.event(ctx, event);
         if let Some(msg) = self.header.event(ctx, event) {
             match msg {
                 HeaderMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
@@ -142,11 +182,11 @@ where
                 ActionBarMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
                 ActionBarMsg::Confirmed => return Some(TextScreenMsg::Confirmed),
                 ActionBarMsg::Prev => {
-                    self.update_page(self.content.pager().prev());
+                    self.update_page(self.content_pager().prev());
                     return None;
                 }
                 ActionBarMsg::Next => {
-                    self.update_page(self.content.pager().next());
+                    self.update_page(self.content_pager().next());
                     return None;
                 }
             }
@@ -168,7 +208,7 @@ where
     T: AllowedTextContent,
 {
     fn get_pager(&self) -> Pager {
-        self.content.pager()
+        self.content_pager()
     }
     fn get_swipe_config(&self) -> SwipeConfig {
         SwipeConfig::default()
@@ -203,5 +243,9 @@ where
         if let Some(ab) = self.action_bar.as_ref() {
             t.child("ActionBar", ab);
         }
+        if let Some(page_limit) = self.page_limit {
+            t.int("page_limit", page_limit as i64);
+        }
+        t.int("page_count", self.content.pager().total() as i64);
     }
 }
