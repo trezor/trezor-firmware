@@ -1,3 +1,4 @@
+
 /*
  * This file is part of the Trezor project, https://trezor.io/
  *
@@ -17,13 +18,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#pragma once
+#include <trezor_rtl.h>
 
-#include <trezor_types.h>
+#include "lx250a2410a.h"
 
-// Performs touch coordinates correction needed for a specific panel
-// Input parameteres x, y represent original touch coordinates.
-// Output parameters x_new, y_new represent corrected touch coordinates.
-//
-void lhs200kb_if21_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                    uint16_t *y_new);
+void lx250a2410a_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
+                                  uint16_t *y_new) {
+  // This panel may report coordinates outside the display area
+  *x_new = MIN(x, DISPLAY_RESX - 1);
+  *y_new = MIN(y, DISPLAY_RESY - 1);
+}

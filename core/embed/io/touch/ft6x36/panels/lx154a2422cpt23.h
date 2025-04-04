@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_TOUCH_LX154A2422CPT23_H
-#define TREZORHAL_TOUCH_LX154A2422CPT23_H
+#pragma once
 
 #include <trezor_types.h>
 
@@ -31,5 +30,3 @@
 // center of the screen.
 void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
                                       uint16_t *y_new);
-
-#endif
