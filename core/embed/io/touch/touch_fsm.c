@@ -36,8 +36,6 @@ bool touch_fsm_event_ready(touch_fsm_t* fsm, uint32_t touch_state) {
 }
 
 uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
-  fsm->state = touch_state;
-
   uint32_t ticks = hal_ticks_ms();
 
   // Test if the touch_get_event() is starving (not called frequently enough)
@@ -67,18 +65,15 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
     }
   } else if (touch_state & TOUCH_MOVE) {
     if (fsm->pressed) {
-      if ((x != fsm->last_x) || (y != fsm->last_y)) {
+      if ((fsm->state & TOUCH_START) || (x != fsm->last_x) ||
+          (y != fsm->last_y)) {
         // Report the move event only if the coordinates
-        // have changed
+        // have changed or previous event was TOUCH_START
         event = TOUCH_MOVE | xy;
       }
     } else {
       // We have missed the press down event, we have to simulate it.
-      // But ensure we don't simulate TOUCH_START if touch_get_event() is not
-      // called frequently enough to not produce false events.
-      if (!starving) {
-        event = TOUCH_START | xy;
-      }
+      event = TOUCH_START | xy;
     }
   } else if (touch_state & TOUCH_END) {
     if (fsm->pressed) {
@@ -111,6 +106,7 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
 
   fsm->last_x = x;
   fsm->last_y = y;
+  fsm->state = touch_state;
 
   return event;
 }
