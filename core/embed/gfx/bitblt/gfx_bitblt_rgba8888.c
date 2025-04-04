@@ -165,14 +165,26 @@ void gfx_rgba8888_blend_mono8(const gfx_bitblt_t* bb) {
     uint8_t* src_ptr = (uint8_t*)bb->src_row + bb->src_x;
     uint16_t height = bb->height;
 
-    while (height-- > 0) {
-      for (int x = 0; x < bb->width; x++) {
-        uint8_t fg_alpha = src_ptr[x];
-        dst_ptr[x] = gfx_color32_blend_a8(
-            bb->src_fg, gfx_color32_to_color(dst_ptr[x]), fg_alpha);
+    if (bb->src_alpha == 255) {
+      while (height-- > 0) {
+        for (int x = 0; x < bb->width; x++) {
+          uint8_t fg_alpha = src_ptr[x];
+          dst_ptr[x] = gfx_color32_blend_a8(
+              bb->src_fg, gfx_color32_to_color(dst_ptr[x]), fg_alpha);
+        }
+        dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
+        src_ptr += bb->src_stride / sizeof(*src_ptr);
       }
-      dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
-      src_ptr += bb->src_stride / sizeof(*src_ptr);
+    } else {
+      while (height-- > 0) {
+        for (int x = 0; x < bb->width; x++) {
+          uint8_t fg_alpha = (src_ptr[x] * bb->src_alpha) / 255;
+          dst_ptr[x] = gfx_color32_blend_a8(
+              bb->src_fg, gfx_color32_to_color(dst_ptr[x]), fg_alpha);
+        }
+        dst_ptr += bb->dst_stride / sizeof(*dst_ptr);
+        src_ptr += bb->src_stride / sizeof(*src_ptr);
+      }
     }
   }
 }
