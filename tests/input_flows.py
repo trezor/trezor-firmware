@@ -257,7 +257,26 @@ class InputFlowSignMessagePagination(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        assert False, "Not implemented"
+        # collect screen contents into `message_read`.
+        # Using a helper debuglink function to assemble the final text.
+        layouts: list[LayoutContent] = []
+
+        br = yield  # confirm address
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+        br = yield
+        # assert br.pages is not None
+        for i in range(br.pages or 1):
+            layout = self.debug.read_layout()
+            layouts.append(layout)
+
+            if br.pages and i < br.pages - 1:
+                self.debug.click(self.debug.screen_buttons.ok())
+
+        self.message_read = multipage_content(layouts)
+
+        self.debug.press_yes()
 
 
 class InputFlowSignVerifyMessageLong(InputFlowBase):
@@ -352,7 +371,37 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
             br = yield
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        assert False, "Not implemented"
+        # collect screen contents into `message_read`.
+        # Using a helper debuglink function to assemble the final text.
+        layouts: list[LayoutContent] = []
+
+        br = yield  # confirm address
+        print(self.debug.read_layout().text_content())
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+        br = yield
+        print(self.debug.read_layout().text_content())
+
+        print(br.pages)
+        print(br.code)
+        print(br.name)
+        assert br.pages is not None
+        for i in range(br.pages):
+            layout = self.debug.read_layout()
+            layouts.append(layout)
+
+            if i < br.pages - 1:
+                self.debug.click(self.debug.screen_buttons.ok())
+
+        self.message_read = multipage_content(layouts)
+
+        self.debug.press_yes()
+
+        if self.verify:
+            # "The signature is valid!" screen
+            self.debug.press_yes()
+            br = yield
 
 
 class InputFlowSignMessageInfo(InputFlowBase):
