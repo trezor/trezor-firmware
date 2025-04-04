@@ -180,6 +180,18 @@ STATIC mp_obj_t mod_trezorio_BLE_peer_count(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_peer_count_obj,
                                  mod_trezorio_BLE_peer_count);
 
+/// def is_connected() -> bool:
+///     """
+///     TODO: this should really return struct or enum
+///     """
+STATIC mp_obj_t mod_trezorio_BLE_is_connected(void) {
+  ble_state_t state;
+  ble_get_state(&state);
+  return MP_OBJ_NEW_SMALL_INT(state.connected);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorio_BLE_is_connected_obj,
+                                 mod_trezorio_BLE_is_connected);
+
 const size_t CODE_LEN = 6;
 static bool encode_pairing_code(mp_obj_t obj, uint8_t *outbuf) {
   mp_int_t code = mp_obj_get_int(obj);
@@ -353,6 +365,8 @@ STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
      MP_ROM_PTR(&mod_trezorio_BLE_disconnect_obj)},
     {MP_ROM_QSTR(MP_QSTR_peer_count),
      MP_ROM_PTR(&mod_trezorio_BLE_peer_count_obj)},
+    {MP_ROM_QSTR(MP_QSTR_is_connected),
+     MP_ROM_PTR(&mod_trezorio_BLE_is_connected_obj)},
     {MP_ROM_QSTR(MP_QSTR_allow_pairing),
      MP_ROM_PTR(&mod_trezorio_BLE_allow_pairing_obj)},
     {MP_ROM_QSTR(MP_QSTR_reject_pairing),

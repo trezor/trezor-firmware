@@ -52,6 +52,13 @@ def peer_count() -> int:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
+def is_connected() -> bool:
+    """
+    TODO: this should really return struct or enum
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
 def allow_pairing(code: int) -> bool:
     """
     Accept BLE pairing request. Code must match the one received with
