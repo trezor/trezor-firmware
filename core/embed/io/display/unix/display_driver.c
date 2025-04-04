@@ -24,6 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <io/unix/sdl_display.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -75,6 +76,10 @@ typedef struct {
   uint8_t mono_framebuf[DISPLAY_RESX * DISPLAY_RESY];
 #endif
 
+#ifdef USE_RGB_LED
+  // Color of the RGB LED
+  uint32_t led_color;
+#endif
 } display_driver_t;
 
 static display_driver_t g_display_driver = {
@@ -177,6 +182,9 @@ bool display_init(display_content_mode_t mode) {
   SDL_ShowCursor(SDL_DISABLE);
 #else
   drv->orientation_angle = 0;
+#endif
+#ifdef USE_RGB_LED
+  drv->led_color = 0;
 #endif
 
   gfx_bitblt_init();
@@ -319,6 +327,63 @@ static void copy_mono_framebuf(display_driver_t *drv) {
 }
 #endif
 
+#ifdef USE_RGB_LED
+
+void display_rgb_led(uint32_t color) {
+  display_driver_t *drv = &g_display_driver;
+  if (!drv->initialized) {
+    return;
+  }
+  // Store color for future display refreshes
+  drv->led_color = color;
+  display_refresh();
+}
+
+void draw_rgb_led() {
+  display_driver_t *drv = &g_display_driver;
+
+  if (!drv->initialized) {
+    return;
+  }
+
+  const uint32_t color = drv->led_color;
+
+  if (color == 0) {
+    return;  // No LED color set
+  }
+
+  // Extract RGB components
+  uint32_t r = (color >> 16) & 0xFF;
+  uint32_t g = (color >> 8) & 0xFF;
+  uint32_t b = color & 0xFF;
+
+  // Define LED circle properties
+  const int radius = 5;
+  int center_x = DISPLAY_RESX / 2;
+  int center_y = 0;
+
+  // Position based on background
+  if (drv->background) {
+    center_x += TOUCH_OFFSET_X;
+    center_y = TOUCH_OFFSET_Y / 2;
+  } else {
+    center_x += EMULATOR_BORDER;
+    center_y = EMULATOR_BORDER / 2;
+  }
+
+  // Draw the LED
+  SDL_SetRenderDrawColor(drv->renderer, r, g, b, 255);
+  for (int y = -radius; y <= radius; y++) {
+    for (int x = -radius; x <= radius; x++) {
+      if (x * x + y * y <= radius * radius) {
+        SDL_RenderDrawPoint(drv->renderer, center_x + x, center_y + y);
+      }
+    }
+  }
+  SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
+}
+#endif  // USE_RGB_LED
+
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
 
@@ -353,6 +418,10 @@ void display_refresh(void) {
     SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
                      drv->orientation_angle, NULL, 0);
   }
+#ifdef USE_RGB_LED
+  draw_rgb_led();
+#endif
+
   SDL_RenderPresent(drv->renderer);
 }
 

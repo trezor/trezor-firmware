@@ -45,6 +45,12 @@ def configure(
         paths += ["embed/io/sbu/inc"]
         defines += [("USE_SBU", "1")]
 
+    if "rgb_led" in features_wanted:
+        sources += ["embed/io/rgb_led/unix/rgb_led.c"]
+        paths += ["embed/io/rgb_led/inc"]
+        features_available.append("rgb_led")
+        defines += [("USE_RGB_LED", "1")]
+
     if "optiga" in features_wanted:
         sources += ["embed/sec/optiga/unix/optiga_hal.c"]
         sources += ["embed/sec/optiga/unix/optiga.c"]
