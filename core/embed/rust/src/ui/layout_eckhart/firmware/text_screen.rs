@@ -128,6 +128,8 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Update page count of the screen
+        ctx.set_page_count(self.content.pager().total() as usize);
         if let Some(msg) = self.header.event(ctx, event) {
             match msg {
                 HeaderMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
