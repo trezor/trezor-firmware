@@ -1041,12 +1041,12 @@ impl FirmwareUI for UICaesar {
     }
 
     fn show_pairing_device_name(
-        device_name: TString<'static>,
+        _device_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_pairing_device_name not supported"))
     }
 
-    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+    fn show_pairing_code(_code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_pairing_code not supported"))
     }
 
