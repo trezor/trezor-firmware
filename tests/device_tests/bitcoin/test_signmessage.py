@@ -388,10 +388,25 @@ MESSAGE_LENGTHS = (
     pytest.param("1\n2\n3\n4\n5\n6\n7", False, id="single_line_over"),
 )
 
+MESSAGE_LENGTHS_ECKHART = (
+    pytest.param("This is a very long message. " * 27, False, id="normal_text"),
+    pytest.param("ThisIsAMessageWithoutSpaces" * 29, False, id="no_spaces"),
+    pytest.param("ThisIsAMessageWithLongWords " * 28, False, id="long_words"),
+    pytest.param(
+        "This\nmessage\nhas\nnewlines\nafter\nevery\nsingle\none\nword",
+        False,
+        id="newlines",
+    ),
+    pytest.param(
+        "Příšerně žluťoučký kůň úpěl ďábelské ódy. " * 19, True, id="utf_text"
+    ),
+    pytest.param("PříšerněŽluťoučkýKůňÚpělĎábelskéÓdy" * 23, True, id="utf_nospace"),
+    pytest.param("1\n2\n3\n4\n5\n6\n7\n8\n9", False, id="single_line_over"),
+)
 
-@pytest.mark.models("core")
-@pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS)
-def test_signmessage_pagination(client: Client, message: str, is_long: bool):
+
+def _pagination_test(client: Client, message: str, is_long: bool):
+
     with client:
         IF = (
             InputFlowSignVerifyMessageLong
@@ -406,12 +421,27 @@ def test_signmessage_pagination(client: Client, message: str, is_long: bool):
             message=message,
         )
 
-    # We cannot differentiate between a newline and space in the message read from Trezor.
-    # TODO: do the check also for T2B1
+    message_read = IF.message_read.replace(" ", "").replace("...", "")
+    signed_message = message.replace("\n", "").replace(" ", "")
+
     if client.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
-        message_read = IF.message_read.replace(" ", "").replace("...", "")
-        signed_message = message.replace("\n", "").replace(" ", "")
         assert signed_message in message_read
+
+
+@pytest.mark.models(
+    "core",
+    skip=["eckhart"],
+    reason="Test with different parameters implemented for eckhart",
+)
+@pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS)
+def test_signmessage_pagination(client: Client, message: str, is_long: bool):
+    _pagination_test(client, message, is_long)
+
+
+@pytest.mark.models("eckhart")
+@pytest.mark.parametrize("message,is_long", MESSAGE_LENGTHS_ECKHART)
+def test_signmessage_pagination_eckhart(client: Client, message: str, is_long: bool):
+    _pagination_test(client, message, is_long)
 
 
 @pytest.mark.models("t2t1", reason="Tailored to TT fonts and screen size")
