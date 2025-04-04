@@ -779,6 +779,12 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
           (void *)args[0], (jpegdec_slice_t *)args[1]);
       break;
     }
+
+    case SYSCALL_JPEGDEC_GET_SLICE_MONO8: {
+      args[0] = jpegdec_get_slice_mono8__verified((void *)args[0],
+                                                  (jpegdec_slice_t *)args[1]);
+      break;
+    }
 #endif  // USE_HW_JPEG_DECODER
 
 #ifdef USE_DMA2D

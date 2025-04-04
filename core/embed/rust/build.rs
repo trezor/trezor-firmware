@@ -416,6 +416,7 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("haptic_play_custom")
         // jpegdec
         .allowlist_var("JPEGDEC_RGBA8888_BUFFER_SIZE")
+        .allowlist_var("JPEGDEC_MONO8_BUFFER_SIZE")
         .allowlist_type("jpegdec_state_t")
         .allowlist_type("jpegdec_image_t")
         .allowlist_type("jpegdec_image_format_t")
@@ -424,7 +425,8 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("jpegdec_close")
         .allowlist_function("jpegdec_process")
         .allowlist_function("jpegdec_get_info")
-        .allowlist_function("jpegdec_get_slice_rgba8888");
+        .allowlist_function("jpegdec_get_slice_rgba8888")
+        .allowlist_function("jpegdec_get_slice_mono8");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
