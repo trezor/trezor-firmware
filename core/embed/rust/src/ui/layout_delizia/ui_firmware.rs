@@ -888,6 +888,20 @@ impl FirmwareUI for UIDelizia {
         Ok(layout)
     }
 
+    fn show_device_menu(_failed_backup: bool, _battery_percentage: u8, _paired_devices: heapless::Vec<TString<'static>, 1>) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_device_menu not supported"))
+    }
+
+    fn show_pairing_device_name(
+        _device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_pairing_device_name not supported"))
+    }
+
+    fn show_pairing_code(_code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"show_pairing_code not supported"))
+    }
+
     fn show_info(
         title: TString<'static>,
         description: TString<'static>,
