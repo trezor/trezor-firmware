@@ -227,6 +227,11 @@ env.Replace(
     ASPPFLAGS='$CFLAGS $CCFLAGS', )
 
 try:
+    env.ParseConfig('pkg-config --cflags --libs libjpeg')
+except OSError:
+    print("libjpeg not installed, Emulator build is not possible")
+
+try:
     env.ParseConfig('pkg-config --cflags --libs sdl2 SDL2_image')
 except OSError:
     print("SDL2 not installed, Emulator build is not possible")
