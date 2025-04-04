@@ -317,7 +317,8 @@ impl FirmwareUI for UIEckhart {
             description_font: &theme::TEXT_SMALL,
             extra_font: &theme::TEXT_SMALL,
         }
-        .into_paragraphs();
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
         let right_button = if hold {
