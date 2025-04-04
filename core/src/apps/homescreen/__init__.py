@@ -4,9 +4,8 @@ import storage
 import storage.cache
 import storage.device
 import trezorui_api
-from trezor import config, wire
+from trezor import config, utils, wire
 from trezor.enums import MessageType
-from trezor.ui.layouts import raise_if_not_confirmed
 from trezor.ui.layouts.homescreen import Busyscreen, Homescreen, Lockscreen
 
 from apps.base import busy_expiry_ms, lock_device
@@ -59,42 +58,12 @@ async def homescreen() -> None:
     finally:
         obj.__del__()
 
-    if res is trezorui_api.INFO:
-        # MOCK DATA
-        failed_backup = True
-        battery_percentage = 22
-        firmware_version = "2.3.1"
-        device_name = "My Trezor"
-        paired_devices = ["Suite on my de-Googled Phone"]
-        #
+    if utils.INTERNAL_MODEL == "T3W1":
+        if res is trezorui_api.INFO:
+            from .device_menu import handle_device_menu
 
-        menu_result = await raise_if_not_confirmed(
-            trezorui_api.show_device_menu(
-                failed_backup=failed_backup,
-                battery_percentage=battery_percentage,
-                firmware_version=firmware_version,
-                device_name=device_name,
-                paired_devices=paired_devices,
-            ),
-            "device_menu",
-        )
-        print(menu_result)
-        if menu_result == "DevicePair":
-
-            await raise_if_not_confirmed(
-                trezorui_api.show_pairing_device_name(
-                    device_name=device_name,
-                ),
-                "device_name",
-            )
-            await raise_if_not_confirmed(
-                trezorui_api.show_pairing_code(
-                    code="123456",
-                ),
-                "pairing_code",
-            )
-    else:
-        lock_device()
+            return await handle_device_menu()
+    lock_device()
 
 
 async def _lockscreen(screensaver: bool = False) -> None:
