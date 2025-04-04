@@ -370,7 +370,7 @@ impl FirmwareUI for UIEckhart {
         description: Option<TString<'static>>,
         is_data: bool,
         extra: Option<TString<'static>>,
-        _subtitle: Option<TString<'static>>,
+        subtitle: Option<TString<'static>>,
         verb: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
         info: bool,
@@ -392,21 +392,29 @@ impl FirmwareUI for UIEckhart {
                 let value: TString = value.try_into()?;
                 theme::get_chunkified_text_style(value.len())
             } else if is_data {
-                &theme::TEXT_MONO_MEDIUM
+                &theme::TEXT_MONO_ADDRESS
             } else {
                 &theme::TEXT_MEDIUM
             },
             description_font: &theme::TEXT_SMALL,
             extra_font: &theme::TEXT_SMALL,
         }
-        .into_paragraphs();
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical());
 
-        let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        let right_button = if hold {
-            Button::with_text(verb).with_long_press(theme::CONFIRM_HOLD_DURATION)
-        } else {
+        let mut right_button = if hold {
+            let verb = verb.unwrap_or(TR::buttons__hold_to_confirm.into());
             Button::with_text(verb)
+                .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                .styled(theme::firmware::button_confirm())
+        } else if let Some(verb) = verb {
+            Button::with_text(verb)
+        } else {
+            Button::with_text(TR::buttons__confirm.into()).styled(theme::firmware::button_confirm())
         };
+        if warning_footer.is_some() {
+            right_button = right_button.styled(theme::button_cancel_gradient());
+        }
         let header = if info {
             Header::new(title)
                 .with_right_button(Button::with_icon(theme::ICON_INFO), HeaderMsg::Menu)
@@ -416,6 +424,7 @@ impl FirmwareUI for UIEckhart {
 
         let mut screen = TextScreen::new(paragraphs)
             .with_header(header)
+            .with_subtitle(subtitle.unwrap_or(TString::empty()))
             .with_action_bar(ActionBar::new_double(
                 Button::with_icon(theme::ICON_CROSS),
                 right_button,
@@ -525,19 +534,19 @@ impl FirmwareUI for UIEckhart {
     fn flow_confirm_output(
         title: Option<TString<'static>>,
         subtitle: Option<TString<'static>>,
-        _description: Option<TString<'static>>,
-        _extra: Option<TString<'static>>,
+        description: Option<TString<'static>>,
+        extra: Option<TString<'static>>,
         message: Obj,
         amount: Option<Obj>,
         chunkify: bool,
-        _text_mono: bool,
+        text_mono: bool,
         account_title: TString<'static>,
         account: Option<TString<'static>>,
         account_path: Option<TString<'static>>,
         br_code: u16,
         br_name: TString<'static>,
         address_item: Option<(TString<'static>, Obj)>,
-        _extra_item: Option<(TString<'static>, Obj)>,
+        extra_item: Option<(TString<'static>, Obj)>,
         summary_items: Option<Obj>,
         fee_items: Option<Obj>,
         summary_title: Option<TString<'static>>,
@@ -545,14 +554,31 @@ impl FirmwareUI for UIEckhart {
         summary_br_name: Option<TString<'static>>,
         cancel_text: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        let (address_title, address_paragraphs) = if let Some(address_item) = address_item {
-            let mut paragraphs = ParagraphVecShort::new();
-            for pair in IterBuf::new().try_iterate(address_item.1)? {
-                let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
-                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
-                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, value)));
-            }
-            (Some(address_item.0), Some(paragraphs))
+        let mut main_paragraphs = ParagraphVecShort::new();
+        if let Some(description) = description {
+            unwrap!(main_paragraphs.push(Paragraph::new(&theme::TEXT_NORMAL, description)));
+        }
+        if let Some(extra) = extra {
+            unwrap!(main_paragraphs.push(Paragraph::new(&theme::TEXT_SMALL, extra)));
+        }
+        let font = if chunkify {
+            &theme::TEXT_MONO_ADDRESS_CHUNKS
+        } else if text_mono {
+            &theme::TEXT_MONO_LIGHT
+        } else {
+            &theme::TEXT_MEDIUM
+        };
+        unwrap!(main_paragraphs.push(Paragraph::new(
+            font,
+            message.try_into().unwrap_or(TString::empty()),
+        )));
+
+        let (address_title, address_paragraph) = if let Some((title, item)) = address_item {
+            let paragraph = Paragraph::new(
+                &theme::TEXT_MONO_ADDRESS_CHUNKS,
+                item.try_into().unwrap_or(TString::empty()),
+            );
+            (Some(title), Some(paragraph))
         } else {
             (None, None)
         };
@@ -611,22 +637,33 @@ impl FirmwareUI for UIEckhart {
             None
         };
 
+        let (extra_title, extra_paragraph) = if let Some((title, item)) = extra_item {
+            let paragraph = Paragraph::new(
+                &theme::TEXT_MONO_ADDRESS,
+                item.try_into().unwrap_or(TString::empty()),
+            );
+            (Some(title), Some(paragraph))
+        } else {
+            (None, None)
+        };
+
         let flow = flow::confirm_output::new_confirm_output(
             title,
             subtitle,
-            chunkify,
-            message,
+            main_paragraphs,
             amount,
             br_name,
             br_code,
             account_title,
             account_paragraphs,
             address_title,
-            address_paragraphs,
+            address_paragraph,
             summary_title,
             summary_paragraphs,
             summary_br_code,
             summary_br_name,
+            extra_title,
+            extra_paragraph,
             fee_paragraphs,
             cancel_text,
         )?;
@@ -1051,14 +1088,18 @@ impl FirmwareUI for UIEckhart {
         let url: TString = TR::addr_mismatch__support_url.into();
         let button: TString = TR::buttons__quit.into();
 
-        let paragraphs = ParagraphVecShort::from_iter([
-            Paragraph::new(&theme::TEXT_REGULAR, description).centered(),
-            Paragraph::new(&theme::TEXT_MONO_MEDIUM, url).centered(),
-        ])
-        .into_paragraphs();
-        let screen = TextScreen::new(paragraphs)
+        let text_style = theme::TEXT_REGULAR;
+        let ops = OpTextLayout::new(text_style)
+            .text(description, text_style.text_font)
+            .text(url, theme::TEXT_MONO_MEDIUM.text_font);
+        let text = FormattedText::new(ops);
+
+        let screen = TextScreen::new(text)
             .with_header(Header::new(title))
-            .with_action_bar(ActionBar::new_single(Button::with_text(button)));
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CROSS),
+                Button::with_text(button),
+            ));
 
         let layout = RootComponent::new(screen);
         Ok(layout)
