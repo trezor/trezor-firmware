@@ -9,6 +9,7 @@ use crate::io::BinaryData;
 use num_traits::FromPrimitive;
 
 pub const RGBA8888_BUFFER_SIZE: usize = ffi::JPEGDEC_RGBA8888_BUFFER_SIZE as _;
+pub const MONO8_BUFFER_SIZE: usize = ffi::JPEGDEC_MONO8_BUFFER_SIZE as _;
 
 #[derive(PartialEq, Debug, Eq, FromPrimitive, Clone, Copy)]
 enum JpegDecState {
@@ -129,6 +130,33 @@ impl<'a> JpegDecoder<'a> {
         Ok(())
     }
 
+    /// Decodes the JPEG image and calls the output function for each slice.
+    /// The function decodes only the Y component of the image, so
+    /// the output is always grayscale (BitmapFormat::MONO8).
+    /// Requires a temporary buffer of size `RGBA8888_BUFFER_SIZE`.
+    /// The output function should return `true` to continue decoding or `false`
+    /// to stop. Returns `Ok(())` if the decoding was successful or
+    /// `Err(())` if an error occurred.
+    pub fn decode_mono8(
+        &mut self,
+        buff: &mut [u8],
+        output: &mut dyn FnMut(Rect, BitmapView) -> bool,
+    ) -> Result<(), ()> {
+        loop {
+            match self.read_input() {
+                JpegDecState::SliceReady => {
+                    if !self.write_output_mono8(buff, output) {
+                        break;
+                    };
+                }
+                JpegDecState::Finished => break,
+                JpegDecState::NeedData => {}
+                _ => return Err(()),
+            };
+        }
+        Ok(())
+    }
+
     fn read_input(&mut self) -> JpegDecState {
         if self.buff_pos == self.buff_len {
             self.buff_len = self.jpeg.read(self.jpeg_pos, &mut self.buff);
@@ -173,8 +201,8 @@ impl<'a> JpegDecoder<'a> {
         };
 
         // SAFETY:
-        //  - `rgba_u32` is a valid pointer to a mutable buffer of u32 of length at
-        //    least `RGBA8888_BUFFER_SIZE`
+        //  - `rgba_u32` is a valid pointer to a mutable buffer of length at least
+        //    `RGBA8888_BUFFER_SIZE` aligned to u32
         //  - `slice` is a valid pointer to a mutable `jpegdec_slice_t`
         //  - `jpegdec_get_slice_rgba8888` doesn't retain the pointers to the data for
         //    later use
@@ -195,6 +223,54 @@ impl<'a> JpegDecoder<'a> {
             r.size(),
             None,
             rgba_u8
+        ));
+
+        let view = BitmapView::new(&bitmap);
+
+        output(r, view)
+    }
+
+    fn write_output_mono8(
+        &self,
+        buff: &mut [u8],
+        output: &mut dyn FnMut(Rect, BitmapView) -> bool,
+    ) -> bool {
+        // SAFETY:
+        // - after aligning the buffer to u32, the we check the
+        //  length of the buffer to be at least `MONO8_BUFFER_SIZE`
+        let buff_u32 = unsafe { buff.align_to_mut::<u32>().1 };
+        assert!(buff_u32.len() * 4 >= MONO8_BUFFER_SIZE);
+
+        let mut slice = ffi::jpegdec_slice_t {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0,
+        };
+
+        // SAFETY:
+        //  - `buff` is a valid pointer to a mutable buffer of length at least
+        //    `MONO8_BUFFER_SIZE` bytes aligned to u32
+        //  - `slice` is a valid pointer to a mutable `jpegdec_slice_t`
+        //  - `jpegdec_get_slice_yonly` doesn't retain the pointers to the data for
+        //    later use
+        unsafe { ffi::jpegdec_get_slice_mono8(buff_u32.as_mut_ptr(), &mut slice) };
+
+        let r = Rect::from_top_left_and_size(
+            Point::new(slice.x, slice.y),
+            Offset::new(slice.width, slice.height),
+        );
+
+        // SAFETY:
+        // - reinterpreting &[u32] to &[u8] is safe
+        let buff_u8 = unsafe { buff.align_to::<u8>().1 };
+
+        let bitmap = unwrap!(Bitmap::new(
+            BitmapFormat::MONO8,
+            None,
+            r.size(),
+            None,
+            buff_u8
         ));
 
         let view = BitmapView::new(&bitmap);

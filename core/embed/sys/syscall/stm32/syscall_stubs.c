@@ -733,6 +733,11 @@ bool jpegdec_get_slice_rgba8888(uint32_t *rgba8888, jpegdec_slice_t *slice) {
                                SYSCALL_JPEGDEC_GET_SLICE_RGBA8888);
 }
 
+bool jpegdec_get_slice_mono8(uint32_t *mono8, jpegdec_slice_t *slice) {
+  return (bool)syscall_invoke2((uint32_t)mono8, (uint32_t)slice,
+                               SYSCALL_JPEGDEC_GET_SLICE_MONO8);
+}
+
 #endif  // USE_HW_JPEG_DECODER
 
 // =============================================================================

@@ -33,6 +33,9 @@
 // Maximum size of the RGBA8888 buffer for a slice.
 #define JPEGDEC_RGBA8888_BUFFER_SIZE (JPEGDEC_MAX_SLICE_BLOCKS * 8 * 8 * 4)
 
+// Maximum size of the MONO8 buffer for a slice
+#define JPEGDEC_MONO8_BUFFER_SIZE (JPEGDEC_MAX_SLICE_BLOCKS * 8 * 8)
+
 typedef struct jpegdec jpegdec_t;
 
 typedef enum {
@@ -43,7 +46,7 @@ typedef enum {
   // (jpegdec_get_info can be called to get the image info)
   JPEGDEC_STATE_INFO_READY,
   // Decoded slice is ready
-  // (jpegdec_get_slice_rgba8888 can be called to get the slice data)
+  // (jpegdec_get_slice_xxx can be called to get the slice data)
   JPEGDEC_STATE_SLICE_READY,
   // Decoding is finished
   JPEGDEC_STATE_FINISHED,
@@ -125,3 +128,12 @@ bool jpegdec_get_info(jpegdec_image_t* info);
 // Can be called immediately after `jpegdec_process` returns
 // `JPEGDEC_STATE_SLICE_READY`.
 bool jpegdec_get_slice_rgba8888(uint32_t* rgba8888, jpegdec_slice_t* slice);
+
+// Copy the last decoded slice to the buffer
+//
+// `mono8` must be a buffer of at least `JPEGDEC_MONO8_BUFFER_SIZE`
+// bytes and must be aligned to 4 bytes.
+//
+// Can be called immediately after `jpegdec_process` returns
+// `JPEGDEC_STATE_SLICE_READY`.
+bool jpegdec_get_slice_mono8(uint32_t* mono8, jpegdec_slice_t* slice);
