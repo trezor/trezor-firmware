@@ -381,7 +381,10 @@ class RecoveryFlow:
         # Scroll through remaining share pages
         assert br.pages is not None
         for _ in range(br.pages - 1):
-            self.debug.swipe_up()
+            if self.client.layout_type is LayoutType.Delizia:
+                self.debug.swipe_up()
+            elif self.client.layout_type is LayoutType.Eckhart:
+                self.debug.click(self.debug.screen_buttons.ok())
 
         assert br.name == "show_shares"
         assert br.code == B.Other
