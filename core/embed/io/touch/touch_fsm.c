@@ -73,11 +73,7 @@ uint32_t touch_fsm_get_event(touch_fsm_t* fsm, uint32_t touch_state) {
       }
     } else {
       // We have missed the press down event, we have to simulate it.
-      // But ensure we don't simulate TOUCH_START if touch_get_event() is not
-      // called frequently enough to not produce false events.
-      if (!starving) {
-        event = TOUCH_START | xy;
-      }
+      event = TOUCH_START | xy;
     }
   } else if (touch_state & TOUCH_END) {
     if (fsm->pressed) {
