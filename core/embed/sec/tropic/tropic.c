@@ -48,8 +48,8 @@ bool tropic_init(void) {
     return true;
   }
 
-  uint8_t tropic_secret_tropic_pubkey[SECRET_TROPIC_KEY_LEN] = {0};
-  uint8_t tropic_secret_trezor_privkey[SECRET_TROPIC_KEY_LEN] = {0};
+  uint8_t tropic_secret_tropic_pubkey[SECRET_KEY_LEN] = {0};
+  uint8_t tropic_secret_trezor_privkey[SECRET_KEY_LEN] = {0};
 
   if (!tropic_hal_init()) {
     goto cleanup;
@@ -66,7 +66,7 @@ bool tropic_init(void) {
       secret_tropic_get_trezor_privkey(tropic_secret_trezor_privkey);
 
   if (pubkey_ok == sectrue && privkey_ok == sectrue) {
-    uint8_t trezor_pubkey[SECRET_TROPIC_KEY_LEN] = {0};
+    uint8_t trezor_pubkey[SECRET_KEY_LEN] = {0};
     curve25519_scalarmult_basepoint(trezor_pubkey,
                                     tropic_secret_trezor_privkey);
 
