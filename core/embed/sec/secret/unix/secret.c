@@ -133,15 +133,15 @@ void secret_erase(void) {
   mpu_restore(mpu_mode);
 }
 
-secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]) {
+secbool secret_optiga_set(const uint8_t secret[SECRET_KEY_LEN]) {
   secret_erase();
   secret_write_header();
-  secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+  secret_write(secret, SECRET_OPTIGA_KEY_OFFSET, SECRET_KEY_LEN);
   return sectrue;
 }
 
-secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]) {
-  return secret_read(dest, SECRET_OPTIGA_KEY_OFFSET, SECRET_OPTIGA_KEY_LEN);
+secbool secret_optiga_get(uint8_t dest[SECRET_KEY_LEN]) {
+  return secret_read(dest, SECRET_OPTIGA_KEY_OFFSET, SECRET_KEY_LEN);
 }
 
 secbool secret_optiga_present(void) {
@@ -152,13 +152,13 @@ secbool secret_optiga_writable(void) { return secret_wiped(); }
 
 void secret_optiga_erase(void) { secret_erase(); }
 
-secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]) {
-  memcpy(dest, &SECRET_TROPIC_TREZOR_PRIVKEY_BYTES, SECRET_TROPIC_KEY_LEN);
+secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_KEY_LEN]) {
+  memcpy(dest, &SECRET_TROPIC_TREZOR_PRIVKEY_BYTES, SECRET_KEY_LEN);
   return sectrue;
 }
 
-secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]) {
-  memcpy(dest, &SECRET_TROPIC_PUBKEY_BYTES, SECRET_TROPIC_KEY_LEN);
+secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_KEY_LEN]) {
+  memcpy(dest, &SECRET_TROPIC_PUBKEY_BYTES, SECRET_KEY_LEN);
   return sectrue;
 }
 

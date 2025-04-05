@@ -57,7 +57,7 @@ void optiga_init_and_configure(void) {
 
   optiga_init();
 
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  uint8_t secret[SECRET_KEY_LEN] = {0};
   secbool secret_ok = secret_optiga_get(secret);
 
   if (sectrue == secret_ok) {
