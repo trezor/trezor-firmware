@@ -17,8 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_SECBOOL_H
-#define TREZORHAL_SECBOOL_H
+#pragma once
 
 #include <stdint.h>
 
@@ -26,8 +25,20 @@ typedef uint32_t secbool;
 #define sectrue 0xAAAAAAAAU
 #define secfalse 0x00000000U
 
+static inline secbool secbool_or(secbool a, secbool b) {
+  if (sectrue == a || sectrue == b) {
+    return sectrue;
+  }
+  return secfalse;
+}
+
+static inline secbool secbool_and(secbool a, secbool b) {
+  if (sectrue == a && sectrue == b) {
+    return sectrue;
+  }
+  return secfalse;
+}
+
 #ifndef __wur
 #define __wur __attribute__((warn_unused_result))
-#endif
-
 #endif
