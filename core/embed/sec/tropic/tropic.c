@@ -94,7 +94,9 @@ cleanup:
 void tropic_deinit(void) {
   tropic_driver_t *drv = &g_tropic_driver;
 
-  lt_deinit(&drv->handle);
+  if (drv->handle.device != NULL) {
+    lt_deinit(&drv->handle);
+  }
 
   tropic_hal_deinit();
 
