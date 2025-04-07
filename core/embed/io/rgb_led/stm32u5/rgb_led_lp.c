@@ -49,19 +49,9 @@ typedef struct {
 static rgb_led_t g_rgb_led = {0};
 
 static void rgb_led_set_default_pin_state(void) {
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
-  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-
-  GPIO_InitStructure.Pin = RGB_LED_RED_PIN;
-  HAL_GPIO_Init(RGB_LED_RED_PORT, &GPIO_InitStructure);
-
-  GPIO_InitStructure.Pin = RGB_LED_GREEN_PIN;
-  HAL_GPIO_Init(RGB_LED_GREEN_PORT, &GPIO_InitStructure);
-
-  GPIO_InitStructure.Pin = RGB_LED_BLUE_PIN;
-  HAL_GPIO_Init(RGB_LED_BLUE_PORT, &GPIO_InitStructure);
+  HAL_GPIO_DeInit(RGB_LED_RED_PORT, RGB_LED_RED_PIN);
+  HAL_GPIO_DeInit(RGB_LED_GREEN_PORT, RGB_LED_GREEN_PIN);
+  HAL_GPIO_DeInit(RGB_LED_BLUE_PORT, RGB_LED_BLUE_PIN);
 }
 
 void rgb_led_init(void) {
@@ -188,6 +178,14 @@ void rgb_led_deinit(void) {
 
   HAL_LPTIM_Counter_Stop(&drv->tim_1);
   HAL_LPTIM_Counter_Stop(&drv->tim_3);
+
+  __HAL_RCC_LPTIM1_CLK_DISABLE();
+  __HAL_RCC_LPTIM1_FORCE_RESET();
+  __HAL_RCC_LPTIM1_RELEASE_RESET();
+
+  __HAL_RCC_LPTIM3_CLK_DISABLE();
+  __HAL_RCC_LPTIM3_FORCE_RESET();
+  __HAL_RCC_LPTIM3_RELEASE_RESET();
 
   memset(drv, 0, sizeof(*drv));
 }
