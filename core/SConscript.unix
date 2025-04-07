@@ -574,6 +574,8 @@ qstr_protobuf = env.Command(
 
 qstr_micropython = 'vendor/micropython/py/qstrdefs.h'
 
+qstr_extra = 'embed/upymod/qstrdefsport.h'
+
 micropy_defines = env.MicroPyDefines(source=SOURCE_QSTR)
 
 qstr_collected = env.CollectQstr(
@@ -581,7 +583,7 @@ qstr_collected = env.CollectQstr(
 
 qstr_preprocessed = env.PreprocessQstr(
     target='genhdr/qstrdefs.preprocessed.h',
-    source=[qstr_micropython, qstr_protobuf, qstr_collected])
+    source=[qstr_micropython, qstr_protobuf, qstr_collected, qstr_extra])
 
 qstr_generated = env.GenerateQstrDefs(
     target='genhdr/qstrdefs.generated.h', source=qstr_preprocessed)
