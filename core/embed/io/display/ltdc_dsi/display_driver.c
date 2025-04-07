@@ -413,19 +413,13 @@ cleanup:
 void display_deinit(display_content_mode_t mode) {
   display_driver_t *drv = &g_display_driver;
 
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
-
   gfx_bitblt_deinit();
 
   NVIC_DisableIRQ(LTDC_IRQn);
   NVIC_DisableIRQ(LTDC_ER_IRQn);
 
 #ifdef BACKLIGHT_PIN_PIN
-  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-  GPIO_InitStructure.Pin = BACKLIGHT_PIN_PIN;
-  HAL_GPIO_Init(BACKLIGHT_PIN_PORT, &GPIO_InitStructure);
+  HAL_GPIO_DeInit(BACKLIGHT_PIN_PORT, BACKLIGHT_PIN_PIN);
 #endif
 
 #ifdef USE_BACKLIGHT
@@ -439,22 +433,14 @@ void display_deinit(display_content_mode_t mode) {
 #endif
   display_pll_deinit();
 
-#ifdef DISPLAY_PWREN_PIN
-  // Release PWREN pin and switch display power off
-  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-  GPIO_InitStructure.Pin = DISPLAY_PWREN_PIN;
-  HAL_GPIO_Init(DISPLAY_PWREN_PORT, &GPIO_InitStructure);
-#endif
-
 #ifdef DISPLAY_RESET_PIN
   // Release the RESET pin
-  GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_LOW;
-  GPIO_InitStructure.Pin = DISPLAY_RESET_PIN;
-  HAL_GPIO_Init(DISPLAY_RESET_PORT, &GPIO_InitStructure);
+  HAL_GPIO_DeInit(DISPLAY_RESET_PORT, DISPLAY_RESET_PIN);
+#endif
+
+#ifdef DISPLAY_PWREN_PIN
+  // Release PWREN pin and switch display power off
+  HAL_GPIO_DeInit(DISPLAY_PWREN_PORT, DISPLAY_PWREN_PIN);
 #endif
 
   memset(drv, 0, sizeof(display_driver_t));
