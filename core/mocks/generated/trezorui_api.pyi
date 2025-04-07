@@ -537,6 +537,8 @@ def show_device_menu(
     *,
     failed_backup: bool,
     battery_percentage: int,
+    firmware_version: str,
+    device_name: str,
     paired_devices: Iterable[str],
 ) -> LayoutObj[UiResult]:
     """Show the device menu."""
