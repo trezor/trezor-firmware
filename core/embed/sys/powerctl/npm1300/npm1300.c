@@ -227,8 +227,8 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       {NPM1300_TASKLDSW2CLR, 0x01},
       // BUCK regulators
       // 2.7V, use sw settigns
-      {NPM1300_BUCK1NORMVOUT, 17},
-      {NPM1300_BUCKSWCTRLSEL, 1},
+      // {NPM1300_BUCK1NORMVOUT, 17}, // this settings adds 900uA on VBAT
+      // {NPM1300_BUCKSWCTRLSEL, 1},
       // Buck auto mode, Pull downs disabled
       {NPM1300_BUCKCTRL0, 0},  // Auto mode
       //
@@ -266,8 +266,8 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
       {NPM1300_DIETEMPRESUME, die_temp_resume >> 2},
       {NPM1300_DIETEMPRESUMELSB, die_temp_resume & 0x03},
       // LEDS
-      {NPM1300_LEDDRV0MODESEL, NPM1300_LEDDRVMODESEL_ERROR},
-      {NPM1300_LEDDRV1MODESEL, NPM1300_LEDDRVMODESEL_CHARGING},
+      {NPM1300_LEDDRV0MODESEL, NPM1300_LEDDRVMODESEL_NOTUSED},
+      {NPM1300_LEDDRV1MODESEL, NPM1300_LEDDRVMODESEL_NOTUSED},
       {NPM1300_LEDDRV2MODESEL, NPM1300_LEDDRVMODESEL_NOTUSED},
       // GPIO
       {NPM1300_GPIOMODE0, NPM1300_GPIOMODE_GPIINPUT},
