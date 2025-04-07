@@ -63,7 +63,7 @@ typedef struct {
   uint8_t adc_vbat2_result_msb;
   uint8_t adc_ibat_meas_status;
   uint8_t buck_status;
-
+  uint8_t usb_status;
 } npm1300_adc_regs_t;
 
 typedef struct {
@@ -526,7 +526,6 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
 
   uint16_t ibat_adc =
       (r->adc_vbat2_result_msb << 2) + ((r->adc_gp1_result_lsbs >> 4) & 0x03);
-
   // IBAT_MEAS_STATUS register isn't well documented in the NPM1300 datasheet.
   // The following is based partially on observation.
   //
@@ -577,6 +576,7 @@ static void npm1300_calculate_report(npm1300_driver_t* drv,
   // Populate measurement and status flags from the raw data
   report->ibat_meas_status = r->adc_ibat_meas_status;
   report->buck_status = r->buck_status;
+  report->usb_status = r->usb_status;
 }
 
 // I2C operation for writing constant value to the npm1300 register
@@ -676,6 +676,7 @@ static const i2c_op_t npm1300_ops_adc_readout[] = {
     NPM_READ_FIELD(NPM1300_ADCVBAT2RESULTMSB, adc_regs.adc_vbat2_result_msb),
     NPM_READ_FIELD(NPM1300_ADCIBATMEASSTATUS, adc_regs.adc_ibat_meas_status),
     NPM_READ_FIELD(NPM1300_BUCKSTATUS, adc_regs.buck_status),
+    NPM_READ_FIELD(NPM1300_USBCDETECTSTATUS, adc_regs.usb_status),
 };
 
 #define npm1300_i2c_submit(drv, ops) \
