@@ -129,6 +129,7 @@ pub struct DeviceMenuScreen<'a> {
     bounds: Rect,
 
     battery_percentage: u8,
+    firmware_version: TString<'static>,
 
     // These correspond to the currently active subscreen,
     // which is one of the possible kinds of subscreens
@@ -153,6 +154,8 @@ impl<'a> DeviceMenuScreen<'a> {
     pub fn new(
         failed_backup: bool,
         battery_percentage: u8,
+        firmware_version: TString<'static>,
+        device_name: TString<'static>,
         // NB: we currently only support one device at a time.
         // if we ever increase this size, we will need a way to return the correct
         // device index on Disconnect back to uPy
@@ -163,6 +166,7 @@ impl<'a> DeviceMenuScreen<'a> {
         let mut screen = Self {
             bounds: Rect::zero(),
             battery_percentage,
+            firmware_version,
             menu_screen: None,
             paired_device_screen: None,
             about_screen: None,
@@ -173,7 +177,7 @@ impl<'a> DeviceMenuScreen<'a> {
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let security = screen.add_security_menu();
-        let device = screen.add_device_menu("My device".into(), about); // TODO: device name
+        let device = screen.add_device_menu(device_name, about);
         let settings = screen.add_settings_menu(security, device);
 
         let mut paired_device_indices: Vec<usize, 1> = Vec::new();
@@ -407,7 +411,7 @@ impl<'a> DeviceMenuScreen<'a> {
                 self.paired_device_screen = None;
                 let about_content = Paragraphs::new([
                     Paragraph::new(&theme::firmware::TEXT_REGULAR, "Firmware version"),
-                    Paragraph::new(&theme::firmware::TEXT_REGULAR, "2.3.1"), // TODO
+                    Paragraph::new(&theme::firmware::TEXT_REGULAR, self.firmware_version),
                 ]);
 
                 self.about_screen = Some(
