@@ -269,6 +269,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_firmware_version;
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_get_address;
