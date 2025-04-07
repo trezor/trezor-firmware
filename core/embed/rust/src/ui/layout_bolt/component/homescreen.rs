@@ -1,3 +1,7 @@
+use super::{
+    super::{constant, fonts, theme::IMAGE_HOMESCREEN},
+    theme, Loader, LoaderMsg,
+};
 use crate::{
     io::BinaryData,
     strutil::TString,
@@ -6,6 +10,7 @@ use crate::{
     trezorhal::usb::usb_configured,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Pad, Timer},
+        constant::{HEIGHT, WIDTH},
         display::{
             image::{ImageInfo, ToifFormat},
             toif::Icon,
@@ -18,12 +23,25 @@ use crate::{
     },
 };
 
-use crate::ui::constant::{HEIGHT, WIDTH};
-
-use super::{
-    super::{constant, fonts, theme::IMAGE_HOMESCREEN},
-    theme, Loader, LoaderMsg,
+#[cfg(feature = "ble")]
+use crate::{
+    trezorhal::ble::{self, connected, pairing_mode},
+    ui::{
+        component::Label,
+        event::BLEEvent,
+        layout_bolt::component::{
+            confirm_pairing::{ConfirmPairing, ConfirmPairingMsg},
+            pairing_mode::{PairingMode, PairingMsg},
+            Button,
+        },
+    },
 };
+
+#[cfg(feature = "rgb_led")]
+use crate::trezorhal::rgb_led::set_color;
+
+#[cfg(feature = "button")]
+use crate::ui::event::{ButtonEvent, PhysicalButton};
 
 const AREA: Rect = constant::screen();
 const TOP_CENTER: Point = AREA.top_center();
@@ -63,6 +81,16 @@ pub struct Homescreen {
     pad: Pad,
     paint_notification_only: bool,
     delay: Timer,
+    #[cfg(feature = "ble")]
+    pairing: bool,
+    #[cfg(feature = "ble")]
+    pairing_code: u32,
+    #[cfg(feature = "ble")]
+    pairing_dialog: Option<ConfirmPairing<'static>>,
+    #[cfg(feature = "ble")]
+    pairing_wait: bool,
+    #[cfg(feature = "ble")]
+    pairing_wait_dialog: PairingMode,
 }
 
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
@@ -85,11 +113,28 @@ impl Homescreen {
             pad: Pad::with_background(theme::BG),
             paint_notification_only: false,
             delay: Timer::new(),
+            #[cfg(feature = "ble")]
+            pairing: false,
+            #[cfg(feature = "ble")]
+            pairing_code: 0,
+            #[cfg(feature = "ble")]
+            pairing_dialog: None,
+            #[cfg(feature = "ble")]
+            pairing_wait: false,
+            #[cfg(feature = "ble")]
+            pairing_wait_dialog: PairingMode::new(
+                "Waiting for pairing".into(),
+                fonts::FONT_NORMAL,
+                theme::FG,
+                theme::BG,
+                Button::with_text("Cancel".into()),
+            ),
         }
     }
 
     fn level_to_style(level: u8) -> (Color, Icon) {
         match level {
+            4 => (theme::BLUE, theme::ICON_MAGIC),
             3 => (theme::YELLOW, theme::ICON_COINJOIN),
             2 => (theme::VIOLET, theme::ICON_MAGIC),
             1 => (theme::YELLOW, theme::ICON_WARN),
@@ -98,6 +143,16 @@ impl Homescreen {
     }
 
     fn get_notification(&self) -> Option<HomescreenNotification> {
+        #[cfg(feature = "ble")]
+        if connected() {
+            let (color, icon) = Self::level_to_style(4);
+            return Some(HomescreenNotification {
+                text: "BLE connected".into(),
+                icon,
+                color,
+            });
+        }
+
         if !usb_configured() {
             let (color, icon) = Self::level_to_style(0);
             Some(HomescreenNotification {
@@ -135,6 +190,100 @@ impl Homescreen {
             self.paint_notification_only = true;
             ctx.request_paint();
         }
+    }
+
+    #[cfg(feature = "ble")]
+    fn event_ble(&mut self, ctx: &mut EventCtx, event: Event) {
+        match event {
+            Event::BLE(BLEEvent::Connected) | Event::BLE(BLEEvent::Disconnected) => {
+                self.paint_notification_only = true;
+                ctx.request_paint();
+                #[cfg(feature = "rgb_led")]
+                set_color(0);
+            }
+            Event::BLE(BLEEvent::PairingCanceled) => {
+                self.pairing = false;
+                self.pairing_wait = false;
+                self.pairing_dialog = None;
+                #[cfg(feature = "rgb_led")]
+                set_color(0);
+                ctx.request_paint();
+            }
+            Event::BLE(BLEEvent::PairingRequest(data)) => {
+                self.pairing = true;
+                self.pairing_wait = false;
+                self.pairing_code = data;
+
+                let mut pd = ConfirmPairing::new(
+                    theme::BG,
+                    Button::with_text("Cancel".into()),
+                    Button::with_text("Confirm".into()),
+                    Label::new(
+                        "Pairing request received".into(),
+                        Alignment::Center,
+                        theme::TEXT_NORMAL,
+                    ),
+                    data,
+                );
+
+                pd.place(AREA);
+
+                self.pairing_dialog = Some(pd);
+                ctx.request_paint();
+            }
+            _ => {}
+        };
+
+        if self.pairing_wait() {
+            if let Some(PairingMsg::Cancel) = self.pairing_wait_dialog.event(ctx, event) {
+                //ble::start_advertising(); todo
+                self.pairing_wait = false;
+                ctx.request_paint();
+                #[cfg(feature = "rgb_led")]
+                set_color(0);
+            }
+        }
+
+        if self.pairing() {
+            if let Some(msg) = self.pairing_dialog.event(ctx, event) {
+                match msg {
+                    ConfirmPairingMsg::Cancel => {
+                        ble::reject_pairing();
+                        self.pairing_code = 0;
+                        self.pairing = false;
+                        ctx.request_paint();
+                        #[cfg(feature = "rgb_led")]
+                        set_color(0);
+                    }
+                    ConfirmPairingMsg::Confirm => {
+                        ble::allow_pairing(self.pairing_code);
+                        self.pairing = false;
+                        self.pairing_code = 0;
+                        ctx.request_paint();
+                        #[cfg(feature = "rgb_led")]
+                        set_color(0);
+                    }
+                }
+            }
+        }
+
+        if let Event::Button(ButtonEvent::ButtonPressed(PhysicalButton::Power)) = event {
+            #[cfg(feature = "rgb_led")]
+            set_color(0xff);
+            self.label.map(pairing_mode);
+            self.pairing_wait = true;
+            ctx.request_paint();
+        }
+    }
+
+    #[cfg(feature = "ble")]
+    fn pairing(&self) -> bool {
+        self.pairing
+    }
+
+    #[cfg(feature = "ble")]
+    fn pairing_wait(&self) -> bool {
+        self.pairing_wait
     }
 
     fn event_hold(&mut self, ctx: &mut EventCtx, event: Event) -> bool {
@@ -187,95 +336,118 @@ impl Component for Homescreen {
     fn place(&mut self, bounds: Rect) -> Rect {
         self.pad.place(AREA);
         self.loader.place(AREA.translate(LOADER_OFFSET));
+
+        #[cfg(feature = "ble")]
+        self.pairing_dialog.place(AREA);
+
+        #[cfg(feature = "ble")]
+        self.pairing_wait_dialog.place(AREA);
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         Self::event_usb(self, ctx, event);
-        if self.hold_to_lock {
-            Self::event_hold(self, ctx, event).then_some(HomescreenMsg::Dismissed)
-        } else {
-            None
+        if self.hold_to_lock && Self::event_hold(self, ctx, event) {
+            return Some(HomescreenMsg::Dismissed);
         }
+
+        #[cfg(feature = "ble")]
+        Self::event_ble(self, ctx, event);
+
+        if let Event::Attach(_) = event {
+            #[cfg(feature = "rgb_led")]
+            set_color(0);
+        }
+
+        None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.pad.render(target);
         if self.loader.is_animating() || self.loader.is_completely_grown(Instant::now()) {
             self.render_loader(target);
-        } else {
-            match ImageInfo::parse(self.image) {
-                ImageInfo::Jpeg(_) => {
-                    shape::JpegImage::new_image(self.pad.area.center(), self.image)
-                        .with_align(Alignment2D::CENTER)
-                        .render(target)
-                }
-                ImageInfo::Toif(_) => {
-                    shape::ToifImage::new_image(self.pad.area.center(), self.image)
-                        .with_align(Alignment2D::CENTER)
-                        .render(target)
-                }
-                _ => {}
-            }
+            return;
+        }
 
-            self.label.map(|t| {
-                let r = Rect::new(
-                    Point::new(6, LABEL_Y - 24),
-                    Point::new(WIDTH - 6, LABEL_Y + 11),
+        #[cfg(feature = "ble")]
+        if self.pairing_wait() {
+            self.pairing_wait_dialog.render(target);
+            return;
+        }
+
+        #[cfg(feature = "ble")]
+        if self.pairing() {
+            self.pairing_dialog.render(target);
+            return;
+        }
+
+        match ImageInfo::parse(self.image) {
+            ImageInfo::Jpeg(_) => shape::JpegImage::new_image(self.pad.area.center(), self.image)
+                .with_align(Alignment2D::CENTER)
+                .render(target),
+            ImageInfo::Toif(_) => shape::ToifImage::new_image(self.pad.area.center(), self.image)
+                .with_align(Alignment2D::CENTER)
+                .render(target),
+            _ => {}
+        }
+
+        self.label.map(|t| {
+            let r = Rect::new(
+                Point::new(6, LABEL_Y - 24),
+                Point::new(WIDTH - 6, LABEL_Y + 11),
+            );
+            shape::Bar::new(r)
+                .with_bg(Color::black())
+                .with_alpha(89)
+                .with_radius(3)
+                .render(target);
+
+            let style = theme::TEXT_DEMIBOLD;
+            let pos = Point::new(self.pad.area.center().x, LABEL_Y);
+            shape::Text::new(pos, t, style.text_font)
+                .with_align(Alignment::Center)
+                .with_fg(theme::FG)
+                .render(target);
+        });
+
+        if let Some(notif) = self.get_notification() {
+            const NOTIFICATION_HEIGHT: i16 = 36;
+            const NOTIFICATION_BORDER: i16 = 6;
+            const TEXT_ICON_SPACE: i16 = 8;
+
+            let banner = self
+                .pad
+                .area
+                .inset(Insets::sides(NOTIFICATION_BORDER))
+                .with_height(NOTIFICATION_HEIGHT)
+                .translate(Offset::y(NOTIFICATION_BORDER));
+
+            shape::Bar::new(banner)
+                .with_radius(2)
+                .with_bg(notif.color)
+                .render(target);
+
+            notif.text.map(|t| {
+                let style = theme::TEXT_BOLD;
+                let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
+                let text_pos = Point::new(
+                    style
+                        .text_font
+                        .horz_center(banner.x0 + icon_width, banner.x1, t),
+                    style.text_font.vert_center(banner.y0, banner.y1, "A"),
                 );
-                shape::Bar::new(r)
-                    .with_bg(Color::black())
-                    .with_alpha(89)
-                    .with_radius(3)
+
+                shape::Text::new(text_pos, t, style.text_font)
+                    .with_fg(style.text_color)
                     .render(target);
 
-                let style = theme::TEXT_DEMIBOLD;
-                let pos = Point::new(self.pad.area.center().x, LABEL_Y);
-                shape::Text::new(pos, t, style.text_font)
-                    .with_align(Alignment::Center)
-                    .with_fg(theme::FG)
+                let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
+
+                shape::ToifImage::new(icon_pos, notif.icon.toif)
+                    .with_fg(style.text_color)
+                    .with_align(Alignment2D::CENTER_LEFT)
                     .render(target);
             });
-
-            if let Some(notif) = self.get_notification() {
-                const NOTIFICATION_HEIGHT: i16 = 36;
-                const NOTIFICATION_BORDER: i16 = 6;
-                const TEXT_ICON_SPACE: i16 = 8;
-
-                let banner = self
-                    .pad
-                    .area
-                    .inset(Insets::sides(NOTIFICATION_BORDER))
-                    .with_height(NOTIFICATION_HEIGHT)
-                    .translate(Offset::y(NOTIFICATION_BORDER));
-
-                shape::Bar::new(banner)
-                    .with_radius(2)
-                    .with_bg(notif.color)
-                    .render(target);
-
-                notif.text.map(|t| {
-                    let style = theme::TEXT_BOLD;
-                    let icon_width = notif.icon.toif.width() + TEXT_ICON_SPACE;
-                    let text_pos = Point::new(
-                        style
-                            .text_font
-                            .horz_center(banner.x0 + icon_width, banner.x1, t),
-                        style.text_font.vert_center(banner.y0, banner.y1, "A"),
-                    );
-
-                    shape::Text::new(text_pos, t, style.text_font)
-                        .with_fg(style.text_color)
-                        .render(target);
-
-                    let icon_pos = Point::new(text_pos.x - icon_width, banner.center().y);
-
-                    shape::ToifImage::new(icon_pos, notif.icon.toif)
-                        .with_fg(style.text_color)
-                        .with_align(Alignment2D::CENTER_LEFT)
-                        .render(target);
-                });
-            }
         }
     }
 }
