@@ -46,6 +46,10 @@
 #include <io/rgb_led.h>
 #endif
 
+#ifdef USE_TROPIC
+#include <sec/tropic.h>
+#endif
+
 #ifdef KERNEL_MODE
 
 static void background_tasks_suspend(void) {
@@ -69,6 +73,9 @@ void powerctl_suspend(void) {
   // (e.g., USB, display, touch, haptic, etc.).
 #ifdef USE_STORAGE_HWKEY
   secure_aes_deinit();
+#endif
+#ifdef USE_TROPIC
+  tropic_deinit();
 #endif
 #ifdef USE_OPTIGA
   optiga_deinit();
@@ -160,6 +167,9 @@ void powerctl_suspend(void) {
 #endif
 #ifdef USE_OPTIGA
   optiga_init_and_configure();
+#endif
+#ifdef USE_TROPIC
+  tropic_init();
 #endif
 }
 
