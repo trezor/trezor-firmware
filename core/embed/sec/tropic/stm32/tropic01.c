@@ -145,7 +145,10 @@ bool tropic_hal_init(void) {
 void tropic_hal_deinit(void) {
   tropic01_hal_driver_t *drv = &g_tropic01_hal_driver;
 
-  HAL_SPI_DeInit(&drv->spi);
+  if (drv->spi.Instance != NULL) {
+    HAL_SPI_DeInit(&drv->spi);
+  }
+
   __HAL_RCC_SPI2_FORCE_RESET();
   __HAL_RCC_SPI2_RELEASE_RESET();
   __HAL_RCC_SPI2_CLK_DISABLE();
