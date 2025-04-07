@@ -33,8 +33,8 @@ use super::{
     component::Button,
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, Header, HeaderMsg, Hint,
-        Homescreen, MnemonicKeyboard, NumberInputScreen, PinKeyboard, ProgressScreen,
-        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
+        Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen, SelectWordCountScreen,
+        SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -584,15 +584,19 @@ impl FirmwareUI for UIEckhart {
         min_count: u32,
         max_count: u32,
         description: Option<TString<'static>>,
-        _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
+        more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let description = description.unwrap_or(TString::empty());
-        let component = NumberInputScreen::new(min_count, max_count, count, description)
-            .with_header(Header::new(title));
 
-        let layout = RootComponent::new(component);
-
-        Ok(layout)
+        let flow = flow::request_number::new_request_number(
+            title,
+            count,
+            min_count,
+            max_count,
+            description,
+            unwrap!(more_info_callback),
+        )?;
+        Ok(flow)
     }
 
     fn request_pin(

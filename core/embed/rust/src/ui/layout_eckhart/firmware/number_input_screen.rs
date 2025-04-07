@@ -2,9 +2,11 @@ use crate::{
     strutil::{self, TString},
     translations::TR,
     ui::{
-        component::{Component, Event, EventCtx, Label, Maybe, Never},
+        component::{swipe_detect::SwipeConfig, Component, Event, EventCtx, Label, Maybe},
+        flow::Swipable,
         geometry::{Alignment, Insets, Offset, Rect},
         shape::{self, Renderer},
+        util::Pager,
     },
 };
 
@@ -20,6 +22,7 @@ use super::{
 pub enum NumberInputScreenMsg {
     Cancelled,
     Confirmed(u32),
+    Changed(u32),
     Menu,
 }
 
@@ -87,7 +90,7 @@ impl Component for NumberInputScreen {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.number_input.event(ctx, event);
+        let changed = self.number_input.event(ctx, event);
 
         if let Some(HeaderMsg::Menu) = self.header.event(ctx, event) {
             return Some(NumberInputScreenMsg::Menu);
@@ -103,6 +106,10 @@ impl Component for NumberInputScreen {
             }
         }
 
+        if let Some(NumberInputMsg::Changed(value)) = changed {
+            return Some(NumberInputScreenMsg::Changed(value));
+        }
+
         None
     }
 
@@ -111,6 +118,15 @@ impl Component for NumberInputScreen {
         self.description.render(target);
         self.number_input.render(target);
         self.action_bar.render(target);
+    }
+}
+
+impl Swipable for NumberInputScreen {
+    fn get_pager(&self) -> Pager {
+        Pager::single_page()
+    }
+    fn get_swipe_config(&self) -> SwipeConfig {
+        SwipeConfig::default()
     }
 }
 
@@ -130,6 +146,10 @@ struct NumberInput {
     min: u32,
     max: u32,
     value: u32,
+}
+
+pub enum NumberInputMsg {
+    Changed(u32),
 }
 
 impl NumberInput {
@@ -204,7 +224,7 @@ impl NumberInput {
 }
 
 impl Component for NumberInput {
-    type Msg = Never;
+    type Msg = NumberInputMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.area = bounds;
@@ -231,12 +251,19 @@ impl Component for NumberInput {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        let mut changed = false;
         if let Some(ButtonMsg::Clicked) = self.dec.event(ctx, event) {
             self.decrease(ctx);
+            changed = true;
         };
         if let Some(ButtonMsg::Clicked) = self.inc.event(ctx, event) {
             self.increase(ctx);
+            changed = true;
         };
+        if changed {
+            ctx.request_paint();
+            return Some(NumberInputMsg::Changed(self.value));
+        }
         None
     }
 
