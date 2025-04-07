@@ -175,85 +175,85 @@ See [docs/tests/ui-tests](../tests/ui-tests.md) for more info.
 ### [core btconly device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L145)
 Device tests excluding altcoins, only for BTC.
 
-### [core btconly device asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L165)
+### [core btconly device asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L164)
 
-### [core monero test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L186)
+### [core monero test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L184)
 Monero tests.
 
-### [core monero asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L206)
+### [core monero asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L204)
 
-### [core u2f test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L229)
+### [core u2f test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L227)
 Tests for U2F and HID.
 
-### [core u2f asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L248)
+### [core u2f asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L246)
 
-### [core fido2 test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L266)
+### [core fido2 test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L264)
 FIDO2 device tests.
 
-### [core fido2 asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L289)
+### [core fido2 asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L287)
 
-### [core click test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L309)
+### [core click test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L307)
 Click tests - UI.
 See [docs/tests/click-tests](../tests/click-tests.md) for more info.
 
-### [core click R test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L341)
+### [core click R test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L339)
 Click tests.
 See [docs/tests/click-tests](../tests/click-tests.md) for more info.
 
-### [core click asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L370)
+### [core click asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L368)
 
-### [core upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L391)
+### [core upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L389)
 Upgrade tests.
 See [docs/tests/upgrade-tests](../tests/upgrade-tests.md) for more info.
 
-### [core upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L410)
+### [core upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L408)
 
-### [core persistence test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L432)
+### [core persistence test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L430)
 Persistence tests - UI.
 
-### [core persistence asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L462)
+### [core persistence asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L460)
 
-### [core hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L480)
+### [core hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L478)
 
-### [crypto test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L499)
+### [crypto test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L497)
 
-### [legacy device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L531)
+### [legacy device test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L529)
 Legacy device test - UI.
 
-### [legacy asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L559)
+### [legacy asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L557)
 
-### [legacy btconly test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L571)
+### [legacy btconly test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L569)
 
-### [legacy btconly asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L591)
+### [legacy btconly asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L588)
 
-### [legacy upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L606)
+### [legacy upgrade test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L602)
 
-### [legacy upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L625)
+### [legacy upgrade asan test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L621)
 
-### [legacy hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L646)
+### [legacy hwi test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L642)
 
-### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L666)
+### [python test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L662)
 
-### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L685)
+### [python support test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L681)
 
-### [rust test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L694)
+### [rust test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L690)
 
-### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L704)
+### [storage test](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L700)
 
-### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L728)
+### [core unix memory profiler](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L724)
 
-### [core firmware flash size checker](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L754)
+### [core firmware flash size checker](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L750)
 Finds out how much flash space we have left in the firmware build
 Fails if the free space is less than certain threshold
 
-### [core firmware flash size compare master](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L767)
+### [core firmware flash size compare master](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L763)
 Compares the current flash space with the situation in the current master
 Fails if the new binary is significantly larger than the master one
 (the threshold is defined in the script, currently 5kb).
 Allowing fir failure, not to prevent the merge.
 Also generates a report with the current situation
 
-### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L782)
+### [connect test core](https://github.com/trezor/trezor-firmware/blob/master/ci/test.yml#L778)
 
 ---
 ## TEST-NONENGLISH stage - [test-nonenglish.yml](https://github.com/trezor/trezor-firmware/blob/master/ci/test-nonenglish.yml)

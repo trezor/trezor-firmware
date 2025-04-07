@@ -149,7 +149,6 @@ core btconly device test:
     - core unix frozen btconly debug build
   variables:
     MICROPYTHON: "build/unix/trezor-emu-core-bitcoinonly"
-    TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
     - $NIX_SHELL --run "poetry run make -C core test_emu | ts -s"
   artifacts:
@@ -171,7 +170,6 @@ core btconly device asan test:
     - schedules  # nightly build
   variables:
     MICROPYTHON: "build/unix/trezor-emu-core-bitcoinonly"
-    TREZOR_PYTEST_SKIP_ALTCOINS: 1
     PYTEST_TIMEOUT: "600"
   script:
     - $NIX_SHELL --run "poetry run make -C core test_emu | ts -s"
@@ -576,7 +574,6 @@ legacy btconly test:
   variables:
     EMULATOR: "1"
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
-    TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
     - $NIX_SHELL --run "poetry run make -C legacy test_emu | ts -s"
   artifacts:
@@ -598,7 +595,6 @@ legacy btconly asan test:
   variables:
     EMULATOR: "1"
     EMULATOR_BINARY: "firmware/trezor-bitcoinonly.elf"
-    TREZOR_PYTEST_SKIP_ALTCOINS: 1
   script:
     - $NIX_SHELL --run "poetry run make -C legacy test_emu | ts -s"
 
