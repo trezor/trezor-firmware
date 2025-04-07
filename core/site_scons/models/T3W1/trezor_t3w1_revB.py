@@ -206,6 +206,18 @@ def configure(
         paths += ["embed/util/hw_revision/inc"]
         sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
 
+
+    if "power_manager" in features_wanted:
+        sources += [
+            "embed/sys/power_manager/stm32u5/power_manager.c",
+            "embed/sys/power_manager/stm32u5/power_monitoring.c",
+            "embed/sys/power_manager/stm32u5/power_states.c",
+        ]
+        paths += ["embed/sys/power_manager/stm32u5/inc/"]
+        paths += ["embed/sys/power_manager/inc"]
+        defines += [("USE_POWER_MANAGER", "1")]
+        features_available.append("power_manager")
+
     defines += [
         "FRAMEBUFFER",
         "DISPLAY_RGBA8888",
