@@ -24,6 +24,7 @@
 #include <trezor_rtl.h>
 
 #include <io/display.h>
+#include <io/unix/sdl_display.h>
 
 #include <SDL.h>
 #include <SDL_image.h>
@@ -54,10 +55,6 @@
 
 #endif
 
-#ifdef USE_RGB_LED
-extern uint32_t g_led_color;
-#endif
-
 typedef struct {
   // Set if the driver is initialized
   bool initialized;
@@ -79,6 +76,10 @@ typedef struct {
   uint8_t mono_framebuf[DISPLAY_RESX * DISPLAY_RESY];
 #endif
 
+#ifdef USE_RGB_LED
+  // Color of the RGB LED
+  uint32_t led_color;
+#endif
 } display_driver_t;
 
 static display_driver_t g_display_driver = {
@@ -324,12 +325,30 @@ static void copy_mono_framebuf(display_driver_t *drv) {
 #endif
 
 #ifdef USE_RGB_LED
-void draw_rgb_led(uint32_t color) {
+
+void display_rgb_led(uint32_t color) {
+  display_driver_t *drv = &g_display_driver;
+  if (!drv->initialized) {
+    return;
+  }
+  // Store color for future display refreshes
+  drv->led_color = color;
+  display_refresh();
+}
+
+void draw_rgb_led() {
   display_driver_t *drv = &g_display_driver;
 
   if (!drv->initialized) {
     return;
   }
+
+  const uint32_t color = drv->led_color;
+
+  if (color == 0) {
+    return;  // No LED color set
+  }
+
   // Extract RGB components
   uint32_t r = (color >> 16) & 0xFF;
   uint32_t g = (color >> 8) & 0xFF;
@@ -359,10 +378,8 @@ void draw_rgb_led(uint32_t color) {
     }
   }
   SDL_SetRenderDrawColor(drv->renderer, 0, 0, 0, 255);
-  SDL_RenderPresent(drv->renderer);
 }
-
-#endif
+#endif  // USE_RGB_LED
 
 void display_refresh(void) {
   display_driver_t *drv = &g_display_driver;
@@ -398,12 +415,10 @@ void display_refresh(void) {
     SDL_RenderCopyEx(drv->renderer, drv->texture, NULL, &r,
                      drv->orientation_angle, NULL, 0);
   }
-  // Show the LED
 #ifdef USE_RGB_LED
-  if (g_led_color != 0) {
-    draw_rgb_led(g_led_color);
-  }
+  draw_rgb_led();
 #endif
+
   SDL_RenderPresent(drv->renderer);
 }
 

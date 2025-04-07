@@ -17,9 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <io/display.h>
 #include <io/rgb_led.h>
+#include <io/unix/sdl_display.h>
 
-uint32_t g_led_color = 0;
-
-void rgb_led_set_color(uint32_t color) { g_led_color = color; }
+void rgb_led_set_color(uint32_t color) { display_rgb_led(color); }
