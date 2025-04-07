@@ -73,7 +73,7 @@
 #endif
 
 #ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#include <sys/power_manager.h>
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -178,7 +178,8 @@ static void show_welcome_screen(void) {
 
 static void drivers_init(void) {
 #ifdef USE_POWERCTL
-  powerctl_init();
+  power_manager_init();
+  // powerctl_init();
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);
