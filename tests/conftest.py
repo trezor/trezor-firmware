@@ -27,7 +27,7 @@ import xdist
 from _pytest.python import IdMaker
 from _pytest.reports import TestReport
 
-from trezorlib import debuglink, log, models
+from trezorlib import debuglink, log, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.device import apply_settings
 from trezorlib.device import wipe as wipe_device
@@ -270,6 +270,12 @@ def client(
     if _raw_client.model not in models_filter:
         pytest.skip(f"Skipping test for model {_raw_client.model.internal_name}")
 
+    is_btc_only = (
+        messages.Capability.Bitcoin_like not in _raw_client.features.capabilities
+    )
+    if request.node.get_closest_marker("altcoin") and is_btc_only:
+        pytest.skip("Skipping altcoin test")
+
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
         raise RuntimeError(
@@ -500,10 +506,6 @@ def pytest_runtest_setup(item: pytest.Item) -> None:
     models_filter = ModelsFilter(item)
     if not models_filter:
         raise RuntimeError("Don't skip tests for all trezor models!")
-
-    skip_altcoins = int(os.environ.get("TREZOR_PYTEST_SKIP_ALTCOINS", 0))
-    if item.get_closest_marker("altcoin") and skip_altcoins:
-        pytest.skip("Skipping altcoin test")
 
 
 def pytest_set_filtered_exceptions():

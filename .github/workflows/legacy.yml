@@ -120,7 +120,6 @@ jobs:
         asan: ${{ fromJSON(github.event_name == 'schedule' && '["noasan", "asan"]' || '["noasan"]') }}
     env:
       EMULATOR: 1
-      TREZOR_PYTEST_SKIP_ALTCOINS: ${{ matrix.coins == 'universal' && '0' || '1' }}
       PYTEST_TIMEOUT: 120
     steps:
       - uses: actions/checkout@v4
