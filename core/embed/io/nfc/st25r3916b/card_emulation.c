@@ -13,6 +13,7 @@
  * COPYRIGHT(c) 2018 STMicroelectronics
  ******************************************************************************
  */
+#ifdef KERNEL_MODE
 
 /* Includes ------------------------------------------------------------------*/
 #include "card_emulation.h"
@@ -633,6 +634,8 @@ uint16_t card_emulation_t3t(uint8_t *rxData, uint16_t rxDataLen, uint8_t *txBuf,
   txBuf[1] = ((char)0xFF);
   return 2;
 }
+
+#endif
 
 /**
  * @}

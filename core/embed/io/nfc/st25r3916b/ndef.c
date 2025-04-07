@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include "ndef.h"
 #include <trezor_rtl.h>
@@ -200,3 +201,5 @@ size_t ndef_create_uri(const char *uri, uint8_t *buffer, size_t buffer_size) {
 
   return uri_len + NDEF_MESSAGE_URI_OVERHEAD;  // return buffer len
 }
+
+#endif

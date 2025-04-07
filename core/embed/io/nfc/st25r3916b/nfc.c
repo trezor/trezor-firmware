@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef KERNEL_MODE
+
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -264,7 +266,7 @@ void nfc_deinit(void) {
   HAL_GPIO_DeInit(NFC_SPI_NSS_PORT, NFC_SPI_NSS_PIN);
   HAL_GPIO_DeInit(NFC_INT_PORT, NFC_INT_PIN);
 
-  memset(&drv, 0, sizeof(st25r3916b_driver_t));
+  memset(drv, 0, sizeof(st25r3916b_driver_t));
 }
 
 nfc_status_t nfc_register_tech(const nfc_tech_t tech) {
@@ -671,3 +673,5 @@ static nfc_status_t nfc_transcieve_blocking(uint8_t *tx_buf,
     return NFC_OK;
   }
 }
+
+#endif
