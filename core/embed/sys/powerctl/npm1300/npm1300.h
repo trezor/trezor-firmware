@@ -48,7 +48,7 @@ typedef struct {
   // BUCKSTATUS register value
   // (for debugging purposes, see the NPM1300 datasheet)
   uint8_t buck_status;
-
+  uint8_t usb_status;
 } npm1300_report_t;
 
 typedef void (*npm1300_report_callback_t)(void* context,
