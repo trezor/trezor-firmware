@@ -173,14 +173,13 @@ static void ft6x36_power_down(void) {
                                       // held in reset until released
 #endif
 
-  // set above pins to OUTPUT / NOPULL
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
+  HAL_GPIO_DeInit(TOUCH_INT_PORT, TOUCH_INT_PIN);
 
+#if defined(TOUCH_RST_PIN) || defined(TOUCH_ON_PIN)
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStructure.Pull = GPIO_NOPULL;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = TOUCH_INT_PIN;
-  HAL_GPIO_Init(TOUCH_INT_PORT, &GPIO_InitStructure);
 
 #ifdef TOUCH_RST_PIN
   GPIO_InitStructure.Pin = TOUCH_RST_PIN;
@@ -195,6 +194,7 @@ static void ft6x36_power_down(void) {
     // 90 ms for circuitry to stabilize (being conservative)
     systick_delay_ms(90);
   }
+#endif
 #endif
 }
 
