@@ -84,6 +84,8 @@ pub struct Homescreen {
     #[cfg(feature = "ble")]
     pairing: bool,
     #[cfg(feature = "ble")]
+    pairing_code: u32,
+    #[cfg(feature = "ble")]
     pairing_dialog: Option<ConfirmPairing<'static>>,
     #[cfg(feature = "ble")]
     pairing_wait: bool,
@@ -113,6 +115,8 @@ impl Homescreen {
             delay: Timer::new(),
             #[cfg(feature = "ble")]
             pairing: false,
+            #[cfg(feature = "ble")]
+            pairing_code: 0,
             #[cfg(feature = "ble")]
             pairing_dialog: None,
             #[cfg(feature = "ble")]
@@ -208,6 +212,7 @@ impl Homescreen {
             Event::BLE(BLEEvent::PairingRequest(data)) => {
                 self.pairing = true;
                 self.pairing_wait = false;
+                self.pairing_code = data;
 
                 let mut pd = ConfirmPairing::new(
                     theme::BG,
@@ -244,14 +249,16 @@ impl Homescreen {
                 match msg {
                     ConfirmPairingMsg::Cancel => {
                         ble::reject_pairing();
+                        self.pairing_code = 0;
                         self.pairing = false;
                         ctx.request_paint();
                         #[cfg(feature = "rgb_led")]
                         set_color(0);
                     }
                     ConfirmPairingMsg::Confirm => {
-                        ble::allow_pairing();
+                        ble::allow_pairing(self.pairing_code);
                         self.pairing = false;
+                        self.pairing_code = 0;
                         ctx.request_paint();
                         #[cfg(feature = "rgb_led")]
                         set_color(0);
