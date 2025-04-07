@@ -786,11 +786,15 @@ impl FirmwareUI for UIEckhart {
     fn show_device_menu(
         failed_backup: bool,
         battery_percentage: u8,
+        firmware_version: TString<'static>,
+        device_name: TString<'static>,
         paired_devices: Vec<TString<'static>, 1>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
             battery_percentage,
+            firmware_version,
+            device_name,
             paired_devices,
         ));
         Ok(layout)
