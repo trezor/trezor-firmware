@@ -79,7 +79,7 @@
 #endif
 
 #ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#include <sys/power_manager.h>
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -194,7 +194,8 @@ void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
 #ifdef USE_POWERCTL
-  powerctl_init();
+  power_manager_init();
+  // powerctl_init();
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);
