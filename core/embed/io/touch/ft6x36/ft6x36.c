@@ -507,7 +507,7 @@ static uint32_t touch_get_state(touch_driver_t* driver) {
   // Read the set of registers containing touch event and coordinates
   if (sectrue != ft6x36_read_regs(driver->i2c_bus, 0x00, regs, sizeof(regs))) {
     // Failed to read the touch registers
-    return 0;
+    return driver->state;
   }
 
 #ifdef TOUCH_TRACE_REGS
@@ -520,7 +520,7 @@ static uint32_t touch_get_state(touch_driver_t* driver) {
   if (gesture != FT6X36_GESTURE_NONE) {
     // This is here for unknown historical reasons
     // It seems we can't get here with FT6X36
-    return 0;
+    return driver->state;
   }
 
   // Extract number of touches (0, 1, 2) or 0x0F before
@@ -540,21 +540,17 @@ static uint32_t touch_get_state(touch_driver_t* driver) {
 
   ft6x36_panel_correction(x_raw, y_raw, &x, &y);
 
-  uint32_t state = 0;
-
   uint32_t xy = touch_pack_xy(x, y);
 
   if ((nb_touches == 1) && (flags == FT6X63_EVENT_PRESS_DOWN)) {
-    state = TOUCH_START | xy;
+    driver->state = TOUCH_START | xy;
   } else if ((nb_touches == 1) && (flags == FT6X63_EVENT_CONTACT)) {
-    state = TOUCH_MOVE | xy;
+    driver->state = TOUCH_MOVE | xy;
   } else if ((nb_touches == 0) && (flags == FT6X63_EVENT_LIFT_UP)) {
-    state = TOUCH_END | xy;
+    driver->state = TOUCH_END | xy;
   }
 
-  driver->state = state;
-
-  return state;
+  return driver->state;
 }
 
 uint32_t touch_get_event(void) {
@@ -590,9 +586,7 @@ static void on_event_poll(void* context, bool read_awaited,
 
   if (read_awaited) {
     uint32_t touch_state = touch_get_state(driver);
-    if (touch_state != 0) {
-      syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
-    }
+    syshandle_signal_read_ready(SYSHANDLE_TOUCH, &touch_state);
   }
 }
 
