@@ -667,7 +667,7 @@ def sign_tx_new(
     (`inputs_count`, `outputs_count`, `coin_name`) will be inferred from the arguments
     and cannot be overriden by kwargs.
     """
-    anti_exfil_signatures, serialization = sign_tx_common(
+    anti_exfil_signatures, _ = sign_tx_common(
         client,
         coin_name,
         inputs,
