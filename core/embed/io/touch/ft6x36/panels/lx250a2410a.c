@@ -1,3 +1,4 @@
+
 /*
  * This file is part of the Trezor project, https://trezor.io/
  *
@@ -17,22 +18,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lx154a2422cpt23.h"
+#include <trezor_rtl.h>
 
-void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                      uint16_t *y_new) {
-#define CENTER (DISPLAY_RESX / 2)
-#define CORRECTION 30
+#include "lx250a2410a.h"
 
-  int x_corrected = CENTER + ((x - CENTER) * (CORRECTION + CENTER) / CENTER);
-
-  if (x_corrected < 0) {
-    *x_new = 0;
-  } else if (x_corrected >= DISPLAY_RESX) {
-    *x_new = DISPLAY_RESX - 1;
-  } else {
-    *x_new = (uint16_t)x_corrected;
-  }
-
-  *y_new = y;
+void lx250a2410a_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
+                                  uint16_t *y_new) {
+  // This panel may report coordinates outside the display area
+  *x_new = MIN(x, DISPLAY_RESX - 1);
+  *y_new = MIN(y, DISPLAY_RESY - 1);
 }

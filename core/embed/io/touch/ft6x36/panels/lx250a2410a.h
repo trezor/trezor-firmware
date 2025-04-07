@@ -17,22 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lx154a2422cpt23.h"
+#pragma once
 
-void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
-                                      uint16_t *y_new) {
-#define CENTER (DISPLAY_RESX / 2)
-#define CORRECTION 30
+#include <trezor_types.h>
 
-  int x_corrected = CENTER + ((x - CENTER) * (CORRECTION + CENTER) / CENTER);
-
-  if (x_corrected < 0) {
-    *x_new = 0;
-  } else if (x_corrected >= DISPLAY_RESX) {
-    *x_new = DISPLAY_RESX - 1;
-  } else {
-    *x_new = (uint16_t)x_corrected;
-  }
-
-  *y_new = y;
-}
+// Performs touch coordinates correction needed for a specific panel.
+// Input parameters x, y represent the original touch coordinates.
+// Output parameters x_new, y_new represent the corrected touch coordinates.
+void lx250a2410a_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
+                                  uint16_t *y_new);
