@@ -6,24 +6,24 @@ Welcome to the Trezor Firmware repository. This repository is so called _monorep
 
 ## Repository Structure
 
-* **[`ci`](https://github.com/trezor/trezor-firmware/tree/master/ci/)**: [Gitlab CI](https://gitlab.com/satoshilabs/trezor/trezor-firmware) configuration files
-* **[`common/defs`](https://github.com/trezor/trezor-firmware/tree/master/common/defs/)**: JSON coin definitions and support tables
-* **[`common/protob`](https://github.com/trezor/trezor-firmware/tree/master/common/protob/)**: Common protobuf definitions for the Trezor protocol
-* **[`common/tools`](https://github.com/trezor/trezor-firmware/tree/master/common/tools/)**: Tools for managing coin definitions and related data
-* **[`core`](https://github.com/trezor/trezor-firmware/tree/master/core/)**: Trezor Core, firmware implementation for Trezor T
-* **[`crypto`](https://github.com/trezor/trezor-firmware/tree/master/crypto/)**: Stand-alone cryptography library used by both Trezor Core and the Trezor One firmware
-* **[`docs`](https://github.com/trezor/trezor-firmware/tree/master/docs/)**: Assorted documentation
-* **[`legacy`](https://github.com/trezor/trezor-firmware/tree/master/legacy/)**: Trezor One firmware implementation
-* **[`python`](https://github.com/trezor/trezor-firmware/tree/master/python/)**: Python [client library](https://pypi.org/project/trezor) and the `trezorctl` command
-* **[`storage`](https://github.com/trezor/trezor-firmware/tree/master/storage/)**: NORCOW storage implementation used by both Trezor Core and the Trezor One firmware
-* **[`tests`](https://github.com/trezor/trezor-firmware/tree/master/tests/)**: Firmware unit test suite
-* **[`tools`](https://github.com/trezor/trezor-firmware/tree/master/tools/)**: Miscellaneous build and helper scripts
-* **[`vendor`](https://github.com/trezor/trezor-firmware/tree/master/vendor/)**: Submodules for external dependencies
+* **[`ci`](https://github.com/trezor/trezor-firmware/tree/main/ci/)**: Helper files, data, and scripts for the CI pipeline
+* **[`common/defs`](https://github.com/trezor/trezor-firmware/tree/main/common/defs/)**: JSON coin definitions and support tables
+* **[`common/protob`](https://github.com/trezor/trezor-firmware/tree/main/common/protob/)**: Common protobuf definitions for the Trezor protocol
+* **[`common/tools`](https://github.com/trezor/trezor-firmware/tree/main/common/tools/)**: Tools for managing coin definitions and related data
+* **[`core`](https://github.com/trezor/trezor-firmware/tree/main/core/)**: Trezor Core, firmware implementation for Trezor T
+* **[`crypto`](https://github.com/trezor/trezor-firmware/tree/main/crypto/)**: Stand-alone cryptography library used by both Trezor Core and the Trezor One firmware
+* **[`docs`](https://github.com/trezor/trezor-firmware/tree/main/docs/)**: Assorted documentation
+* **[`legacy`](https://github.com/trezor/trezor-firmware/tree/main/legacy/)**: Trezor One firmware implementation
+* **[`python`](https://github.com/trezor/trezor-firmware/tree/main/python/)**: Python [client library](https://pypi.org/project/trezor) and the `trezorctl` command
+* **[`storage`](https://github.com/trezor/trezor-firmware/tree/main/storage/)**: NORCOW storage implementation used by both Trezor Core and the Trezor One firmware
+* **[`tests`](https://github.com/trezor/trezor-firmware/tree/main/tests/)**: Firmware unit test suite
+* **[`tools`](https://github.com/trezor/trezor-firmware/tree/main/tools/)**: Miscellaneous build and helper scripts
+* **[`vendor`](https://github.com/trezor/trezor-firmware/tree/main/vendor/)**: Submodules for external dependencies
 
 
 ## Contribute
 
-See [CONTRIBUTING.md](https://github.com/trezor/trezor-firmware/tree/master/CONTRIBUTING.md).
+See [CONTRIBUTING.md](https://github.com/trezor/trezor-firmware/tree/main/CONTRIBUTING.md).
 
 Also please have a look at the docs, either in the `docs` folder or at  [docs.trezor.io](https://docs.trezor.io) before contributing. The [misc](misc/index.md) chapter should be read in particular because it contains some useful assorted knowledge.
 
