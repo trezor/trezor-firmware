@@ -17,19 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_TOUCH_LX154A2422CPT23_H
-#define TREZORHAL_TOUCH_LX154A2422CPT23_H
+#pragma once
 
 #include <trezor_types.h>
 
-// Performs touch coordinates correction needed for a specific panel
-// Input parameteres x, y represent original touch coordinates.
-// Output parameters x_new, y_new represent corrected touch coordinates.
+// Performs touch coordinates correction needed for a specific panel.
+// Input parameters x, y represent the original touch coordinates.
+// Output parameters x_new, y_new represent the corrected touch coordinates.
 //
 // In case of LX154A2422CPT23, this correction means to shift X coordinate
 // towards the edge of the screen, proportionally to the distance from the
 // center of the screen.
 void lx154a2422cpt23_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
                                       uint16_t *y_new);
-
-#endif

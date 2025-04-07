@@ -18,12 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_bsp.h>
-#include <trezor_model.h>
-#include <trezor_rtl.h>
-
-#include <io/touch.h>
-#include "lx154a2422cpt23.h"
+#include "lhs200kb-if21.h"
 
 void lhs200kb_if21_touch_correction(uint16_t x, uint16_t y, uint16_t *x_new,
                                     uint16_t *y_new) {
