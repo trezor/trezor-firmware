@@ -60,10 +60,11 @@ async def homescreen() -> None:
         obj.__del__()
 
     if res is trezorui_api.INFO:
-
         # MOCK DATA
         failed_backup = True
         battery_percentage = 22
+        firmware_version = "2.3.1"
+        device_name = "My Trezor"
         paired_devices = ["Suite on my de-Googled Phone"]
         #
 
@@ -71,6 +72,8 @@ async def homescreen() -> None:
             trezorui_api.show_device_menu(
                 failed_backup=failed_backup,
                 battery_percentage=battery_percentage,
+                firmware_version=firmware_version,
+                device_name=device_name,
                 paired_devices=paired_devices,
             ),
             "device_menu",
@@ -80,7 +83,7 @@ async def homescreen() -> None:
 
             await raise_if_not_confirmed(
                 trezorui_api.show_pairing_device_name(
-                    device_name="My Trez",
+                    device_name=device_name,
                 ),
                 "device_name",
             )
