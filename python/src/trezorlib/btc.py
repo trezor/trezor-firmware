@@ -456,8 +456,14 @@ def sign_tx_common(
     R = messages.RequestType
 
     nonce_commitment_list: List[bytes | None] = [None for _ in inputs]
-    if use_anti_exfil and entropy_list is None:
-        entropy_list = [generate_entropy() for _ in inputs]
+    if use_anti_exfil:
+        if entropy_list is None:
+            entropy_list = [generate_entropy() for _ in inputs]
+        else:
+            if len(entropy_list) != len(inputs):
+                raise ValueError(
+                    "The length of the entropy list doesn't match the number of inputs"
+                )
 
     while True:
         # If there's some part of signed transaction, let's add it
