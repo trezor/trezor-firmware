@@ -160,13 +160,19 @@ def network_from_address_n(
 # ====== Client functions ====== #
 
 
-def get_address(
+def get_address(*args: Any, **kwargs: Any) -> str:
+    resp = get_authenticated_address(*args, **kwargs)
+    assert resp.address is not None
+    return resp.address
+
+
+def get_authenticated_address(
     client: "TrezorClient",
     n: "Address",
     show_display: bool = False,
     encoded_network: Optional[bytes] = None,
     chunkify: bool = False,
-) -> str:
+) -> messages.EthereumAddress:
     resp = client.call(
         messages.EthereumGetAddress(
             address_n=n,
@@ -176,8 +182,7 @@ def get_address(
         ),
         expect=messages.EthereumAddress,
     )
-    assert resp.address is not None
-    return resp.address
+    return resp
 
 
 def get_public_node(
