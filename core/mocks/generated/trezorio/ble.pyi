@@ -52,6 +52,19 @@ def peer_count() -> int:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
+def connection_state() -> int:
+    """
+    Returns current connection state as flags:
+
+    0x01 state known
+    0x02 connectable
+    0x04 connected
+    0x08 pairing
+    0x10 pairing request
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
 def allow_pairing(code: int) -> bool:
     """
     Accept BLE pairing request. Code must match the one received with
