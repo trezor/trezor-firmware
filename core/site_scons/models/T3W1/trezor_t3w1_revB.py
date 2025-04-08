@@ -235,6 +235,8 @@ def configure(
 
     sources += [
         "embed/sys/power_manager/stm32u5/power_manager.c",
+        "embed/sys/power_manager/stm32u5/power_monitoring.c",
+        "embed/sys/power_manager/stm32u5/power_states.c",
         "embed/sys/powerctl/npm1300/npm1300.c",
         "embed/sys/powerctl/stwlc38/stwlc38.c",
         "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
@@ -243,6 +245,7 @@ def configure(
         "embed/sys/powerctl/wakeup_flags.c",
     ]
     paths += ["embed/sys/powerctl/inc"]
+    paths += ["embed/sys/power_manager/stm32u5/inc/"]
     paths += ["embed/sys/power_manager/inc"]
     defines += [("USE_POWERCTL", "1")]
 
