@@ -6,6 +6,7 @@ from trezorcrypto import (  # noqa: F401
     crc,
     hmac,
     pbkdf2,
+    pq_signature,
     random,
 )
 

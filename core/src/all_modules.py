@@ -243,6 +243,8 @@ apps.benchmark.hash_benchmark
 import apps.benchmark.hash_benchmark
 apps.benchmark.list_names
 import apps.benchmark.list_names
+apps.benchmark.pq_signature_benchmark
+import apps.benchmark.pq_signature_benchmark
 apps.benchmark.run
 import apps.benchmark.run
 apps.bitcoin

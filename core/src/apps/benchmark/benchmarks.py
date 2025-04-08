@@ -1,4 +1,4 @@
-from trezor.crypto import aes, aesgcm, chacha20poly1305
+from trezor.crypto import aes, aesgcm, chacha20poly1305, pq_signature
 from trezor.crypto.curve import curve25519, ed25519, nist256p1, secp256k1
 from trezor.crypto.hashlib import (
     blake2b,
@@ -13,6 +13,7 @@ from trezor.crypto.hashlib import (
     sha512,
 )
 
+from . import pq_signature_benchmark
 from .cipher_benchmark import DecryptBenchmark, EncryptBenchmark
 from .common import random_bytes
 from .curve_benchmark import (
@@ -92,4 +93,22 @@ benchmarks = {
     "crypto/curve/ed25519/publickey": PublickeyBenchmark(ed25519),
     "crypto/curve/curve25519/publickey": PublickeyBenchmark(curve25519),
     "crypto/curve/curve25519/multiply": MultiplyBenchmark(curve25519),
+    "crypto/pq-signature/sign_time": pq_signature_benchmark.SignTimeBenchmark(
+        pq_signature
+    ),
+    "crypto/pq-signature/verify_time": pq_signature_benchmark.VerifyTimeBenchmark(
+        pq_signature
+    ),
+    "crypto/pq-signature/generate_keypair_time": pq_signature_benchmark.GenerateKeypairTimeBenchmark(
+        pq_signature
+    ),
+    "crypto/pq-signature/sign_memory": pq_signature_benchmark.SignMemoryBenchmark(
+        pq_signature
+    ),
+    "crypto/pq-signature/verify_memory": pq_signature_benchmark.VerifyMemoryBenchmark(
+        pq_signature
+    ),
+    "crypto/pq-signature/generate_keypair_memory": pq_signature_benchmark.GenerateKeypairMemoryBenchmark(
+        pq_signature
+    ),
 }
