@@ -21,6 +21,7 @@ async def get_address(
     from trezor.ui.layouts import show_address
 
     from apps.common import paths
+    from apps.common.address_mac import get_address_mac
 
     from .helpers import address_from_bytes
 
@@ -31,6 +32,9 @@ async def get_address(
     node = keychain.derive(address_n)
 
     address = address_from_bytes(node.ethereum_pubkeyhash(), defs.network)
+
+    slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
+    mac = get_address_mac(address, paths.unharden(slip44_id), keychain)
 
     if msg.show_display:
         slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
@@ -45,4 +49,4 @@ async def get_address(
             chunkify=bool(msg.chunkify),
         )
 
-    return EthereumAddress(address=address)
+    return EthereumAddress(address=address, mac=mac)
