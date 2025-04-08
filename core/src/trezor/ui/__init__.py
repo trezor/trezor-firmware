@@ -381,6 +381,9 @@ class Layout(Generic[T]):
             yield self._handle_input_iface(io.BUTTON, self.layout.button_event)
         if utils.USE_TOUCH:
             yield self._handle_input_iface(io.TOUCH, self.layout.touch_event)
+        if utils.USE_BLE:
+            # most layouts don't care but we don't want to keep stale events in the queue
+            yield self._handle_ble_events()
 
     def _handle_input_iface(
         self, iface: int, event_call: Callable[..., LayoutState | None]
@@ -429,6 +432,18 @@ class Layout(Generic[T]):
                         self.notify_debuglink(self)
             except Exception:
                 raise
+
+    if utils.USE_BLE:
+
+        async def _handle_ble_events(self) -> None:
+            blecheck = loop.wait(io.BLE_EVENT)
+            try:
+                while True:
+                    event = await blecheck
+                    log.debug(__name__, "BLE event: %s", event)
+                    self._event(self.layout.ble_event, *event)
+            except Shutdown:
+                return
 
     def _task_finalizer(self, task: loop.Task, value: Any) -> None:
         if value is None:
