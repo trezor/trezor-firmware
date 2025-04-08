@@ -4,8 +4,7 @@
     ],
     "exclude": [
         "src/apps/monero",
-        "src/typing.py",
-        "src/all_modules.py"
+        "src/typing.py"
     ],
     "stubPath": "mocks/generated",
     "typeCheckingMode": "basic",

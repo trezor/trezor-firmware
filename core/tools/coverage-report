@@ -27,7 +27,6 @@ else
 fi
 
 EXCLUDES="\
-src/all_modules.py,\
 src/typing.py,\
 src/apps/ethereum/tokens.py,\
 src/apps/webauthn/knownapps.py,\

@@ -4,7 +4,6 @@ rust/trezor-client/src/messages/generated.rs linguist-generated
 core/embed/rust/src/translations/generated/*.rs linguist-generated
 core/embed/rust/src/ui/layout_*/fonts/font_*.rs linguist-generated
 
-core/src/all_modules.py linguist-generated
 core/src/trezor/messages.py linguist-generated
 core/src/trezor/enums/*.py linguist-generated
 core/src/apps/common/coininfo.py linguist-generated

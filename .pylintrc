@@ -1,6 +1,5 @@
 [MASTER]
 ignore-paths=
-    core/src/all_modules.py,
     core/src/apps/ethereum/tokens.py,
     core/src/trezor/res/resources.py,
     core/src/trezor/messages.py,
