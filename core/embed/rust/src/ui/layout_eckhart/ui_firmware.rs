@@ -796,7 +796,7 @@ impl FirmwareUI for UIEckhart {
             firmware_version,
             device_name,
             paired_devices,
-        ));
+        )?);
         Ok(layout)
     }
 
