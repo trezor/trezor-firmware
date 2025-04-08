@@ -1,10 +1,12 @@
 import os
 from time import sleep
+
 import pytest
 
 from trezorlib import messages
 from trezorlib.client import ProtocolV2Channel
 from trezorlib.debuglink import TrezorClientDebugLink as Client
+
 from ...conftest import LOCK_TIME
 
 pytestmark = [pytest.mark.protocol("protocol_v2"), pytest.mark.invalidate_client]
