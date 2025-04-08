@@ -12,42 +12,42 @@
 
 #define PQC_SHAKEINCCTX_BYTES (sizeof(uint64_t)*26)
 #define PQC_SHAKECTX_BYTES (sizeof(uint64_t)*25)
+#define PQC_SHAKECTX_LENGTH 26
 
 // Context for incremental API
 typedef struct {
-    uint64_t *ctx;
+    uint64_t ctx[PQC_SHAKECTX_LENGTH];
 } shake128incctx;
 
 // Context for non-incremental API
 typedef struct {
-    uint64_t *ctx;
+    uint64_t ctx[PQC_SHAKECTX_LENGTH];
 } shake128ctx;
 
 // Context for incremental API
 typedef struct {
-    uint64_t *ctx;
+    uint64_t ctx[PQC_SHAKECTX_LENGTH];
 } shake256incctx;
 
 // Context for non-incremental API
 typedef struct {
-    uint64_t *ctx;
+    uint64_t ctx[PQC_SHAKECTX_LENGTH];
 } shake256ctx;
 
 // Context for incremental API
 typedef struct {
-    uint64_t *ctx;
+    uint64_t ctx[PQC_SHAKECTX_LENGTH];
 } sha3_256incctx;
 
 // Context for incremental API
 typedef struct {
-    uint64_t *ctx;
+    uint64_t ctx[PQC_SHAKECTX_LENGTH];
 } sha3_384incctx;
 
 // Context for incremental API
 typedef struct {
-    uint64_t *ctx;
+    uint64_t ctx[PQC_SHAKECTX_LENGTH];
 } sha3_512incctx;
-
 /* Initialize the state and absorb the provided input.
  *
  * This function does not support being called multiple times
@@ -133,7 +133,7 @@ void sha3_256_inc_ctx_clone(sha3_256incctx *dest, const sha3_256incctx *src);
 /* Release the state, don't use if `_finalize` has been used */
 void sha3_256_inc_ctx_release(sha3_256incctx *state);
 
-void sha3_256(uint8_t *output, const uint8_t *input, size_t inlen);
+// void sha3_256(uint8_t *output, const uint8_t *input, size_t inlen);
 
 /* Initialize the incremental hashing state */
 void sha3_384_inc_init(sha3_384incctx *state);
@@ -161,6 +161,6 @@ void sha3_512_inc_ctx_clone(sha3_512incctx *dest, const sha3_512incctx *src);
 void sha3_512_inc_ctx_release(sha3_512incctx *state);
 
 /* One-stop SHA3-512 shop */
-void sha3_512(uint8_t *output, const uint8_t *input, size_t inlen);
+// void sha3_512(uint8_t *output, const uint8_t *input, size_t inlen);
 
 #endif

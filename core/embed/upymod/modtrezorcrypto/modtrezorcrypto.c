@@ -56,6 +56,7 @@ static void wrapped_ui_wait_callback(uint32_t current, uint32_t total) {
 #include "modtrezorcrypto-hmac.h"
 #include "modtrezorcrypto-nist256p1.h"
 #include "modtrezorcrypto-pbkdf2.h"
+#include "modtrezorcrypto-pq_signature.h"
 #include "modtrezorcrypto-random.h"
 #include "modtrezorcrypto-ripemd160.h"
 #include "modtrezorcrypto-secp256k1.h"
@@ -135,6 +136,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorcrypto_globals_table[] = {
      MP_ROM_PTR(&mod_trezorcrypto_Sha3_512_type)},
     {MP_ROM_QSTR(MP_QSTR_shamir), MP_ROM_PTR(&mod_trezorcrypto_shamir_module)},
     {MP_ROM_QSTR(MP_QSTR_slip39), MP_ROM_PTR(&mod_trezorcrypto_slip39_module)},
+    {MP_ROM_QSTR(MP_QSTR_pq_signature),
+     MP_ROM_PTR(&mod_trezorcrypto_pq_signature_module)},
 #if USE_OPTIGA
     {MP_ROM_QSTR(MP_QSTR_optiga), MP_ROM_PTR(&mod_trezorcrypto_optiga_module)},
 #endif
