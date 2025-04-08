@@ -541,6 +541,22 @@ pub const fn button_keyboard_next() -> ButtonStyleSheet {
     }
 }
 
+// Things that look like button but don't do anything.
+pub const fn button_always_disabled() -> ButtonStyleSheet {
+    let style = &ButtonStyle {
+        font: fonts::FONT_SATOSHI_MEDIUM_26,
+        text_color: GREY_LIGHT,
+        button_color: BG,
+        icon_color: GREY_LIGHT,
+        background_color: BG,
+    };
+    ButtonStyleSheet {
+        normal: style,
+        active: style,
+        disabled: style,
+    }
+}
+
 pub const fn input_mnemonic() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {

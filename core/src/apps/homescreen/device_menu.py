@@ -1,6 +1,7 @@
 import storage.device
+import trezorble as ble
 import trezorui_api
-from trezor import TR, config, utils
+from trezor import TR, config, log, utils
 from trezor.ui.layouts import interact
 from trezor.wire import ActionCancelled
 from trezorui_api import DeviceMenuResult
@@ -36,12 +37,18 @@ async def handle_device_menu() -> None:
     )
     # MOCK DATA
     battery_percentage = 22
-    paired_devices = ["Trezor Suite"]
+    paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     device_name = storage.device.get_label() or "Trezor"
+
     auto_lock_ms = storage.device.get_autolock_delay_ms()
     auto_lock_delay = strings.format_autolock_duration(auto_lock_ms)
+
+    log.debug(
+        __name__,
+        f"device menu, BLE state: {ble.connection_flags()} (peers: {ble.peer_count()})",
+    )
 
     menu_result = await interact(
         trezorui_api.show_device_menu(
@@ -79,9 +86,11 @@ async def handle_device_menu() -> None:
         # It's a tuple with (result_type, index)
         result_type, index = menu_result
         if result_type is DeviceMenuResult.DeviceDisconnect:
-            raise RuntimeError(
-                f"Device disconnect not implemented, device index: {index}"
-            )
+            from trezor.messages import BleUnpair
+
+            from apps.management.ble.unpair import unpair
+
+            await unpair(BleUnpair(all=False))  # FIXME we can only unpair current
         else:
             raise RuntimeError(f"Unknown menu {result_type}, {index}")
     else:
