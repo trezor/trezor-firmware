@@ -341,12 +341,24 @@ def click_info_button_bolt(debug: "DebugLink") -> Generator[Any, Any, ButtonRequ
 
 
 def click_info_button_delizia_eckhart(debug: "DebugLink"):
-    """Click Shamir backup info button and return back."""
+    """Click Shamir backup info button, scroll through it and return back."""
     debug.click(debug.screen_buttons.menu())
     layout = debug.read_layout()
     assert "VerticalMenu" in layout.all_components()
+    # Click on the first item in the vertical menu
     debug.click(debug.screen_buttons.vertical_menu_items()[0])
+    layout = debug.read_layout()
+
+    # Go through the info screen pages
+    for _ in range(layout.page_count() - 1):
+        if debug.layout_type is LayoutType.Delizia:
+            debug.swipe_up()
+        elif debug.layout_type is LayoutType.Eckhart:
+            debug.click(debug.screen_buttons.ok())
+
+    # Close info screen
     debug.click(debug.screen_buttons.menu())
+    # Close menu
     debug.click(debug.screen_buttons.menu())
 
 
@@ -378,7 +390,10 @@ def get_text_possible_pagination(debug: "DebugLink", br: messages.ButtonRequest)
     text = debug.read_layout().text_content()
     if br.pages is not None:
         for _ in range(br.pages - 1):
-            debug.swipe_up()
+            if debug.layout_type is LayoutType.Eckhart:
+                debug.click(debug.screen_buttons.ok())
+            else:
+                debug.swipe_up()
             text += " "
             text += debug.read_layout().text_content()
     return text
