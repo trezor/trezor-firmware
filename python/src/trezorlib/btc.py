@@ -272,7 +272,7 @@ def sign_tx(
     outputs: Sequence[messages.TxOutputType],
     details: Optional[messages.SignTx] = None,
     prev_txes: Optional["TxCacheType"] = None,
-    payment_reqs: Sequence[messages.TxAckPaymentRequest] = (),
+    payment_reqs: Sequence[messages.PaymentRequest] = (),
     preauthorized: bool = False,
     unlock_path: Optional[List[int]] = None,
     unlock_path_mac: Optional[bytes] = None,

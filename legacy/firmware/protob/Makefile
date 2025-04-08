@@ -6,7 +6,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	DebugLinkGetPairingInfo DebugLinkPairingInfo DebugLinkGetGcInfo DebugLinkGcInfoItem \
 	DebugLinkGcInfo DebugLinkRecordScreen DebugLinkEraseSdCard DebugLinkWatchLayout \
 	DebugLinkLayout DebugLinkResetDebugEvents GetNonce \
-	TxAckInput TxAckOutput TxAckPrev TxAckPaymentRequest \
+	TxAckInput TxAckOutput TxAckPrev PaymentRequest \
 	EthereumSignTypedData EthereumTypedDataStructRequest EthereumTypedDataStructAck \
 	EthereumTypedDataValueRequest EthereumTypedDataValueAck ShowDeviceTutorial \
 	UnlockBootloader AuthenticateDevice AuthenticityProof \

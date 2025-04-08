@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from typing import Optional
 
     from trezor.crypto import bip32
-    from trezor.messages import SignTx, TxAckPaymentRequest, TxInput, TxOutput
+    from trezor.messages import PaymentRequest, SignTx, TxInput, TxOutput
 
     from apps.common.coininfo import CoinInfo
     from apps.common.keychain import Keychain
@@ -90,7 +90,7 @@ class Approver:
         self.total_out += txo.amount
 
     async def add_payment_request(
-        self, msg: TxAckPaymentRequest, keychain: Keychain
+        self, msg: PaymentRequest, keychain: Keychain
     ) -> None:
         from .payment_request import PaymentRequestVerifier
 
@@ -240,7 +240,7 @@ class BasicApprover(Approver):
             self.external_output_index += 1
 
     async def add_payment_request(
-        self, msg: TxAckPaymentRequest, keychain: Keychain
+        self, msg: PaymentRequest, keychain: Keychain
     ) -> None:
         await super().add_payment_request(msg, keychain)
         if msg.amount is None:

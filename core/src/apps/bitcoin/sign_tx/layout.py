@@ -19,7 +19,7 @@ from ..keychain import address_n_to_name
 
 if TYPE_CHECKING:
     from trezor.enums import AmountUnit
-    from trezor.messages import TxAckPaymentRequest, TxOutput
+    from trezor.messages import PaymentRequest, TxOutput
 
     from apps.common.coininfo import CoinInfo
     from apps.common.paths import Bip32Path
@@ -152,7 +152,7 @@ async def confirm_decred_sstx_submission(
 
 
 async def should_show_payment_request_details(
-    msg: TxAckPaymentRequest,
+    msg: PaymentRequest,
     coin: CoinInfo,
     amount_unit: AmountUnit,
 ) -> bool:
