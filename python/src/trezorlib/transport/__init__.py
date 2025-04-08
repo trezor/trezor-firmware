@@ -110,6 +110,7 @@ class Transport:
 
 
 def all_transports() -> Iterable[type["Transport"]]:
+    from .ble import BleTransport
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
@@ -120,7 +121,9 @@ def all_transports() -> Iterable[type["Transport"]]:
         HidTransport,
         UdpTransport,
         WebUsbTransport,
+        BleTransport,
     )
+    print(f"transports {transports}")
     return set(t for t in transports if t.ENABLED)
 
 
@@ -161,6 +164,7 @@ def get_transport(path: str | None = None, prefix_search: bool = False) -> Trans
         )
     )
     transports = [t for t in all_transports() if match_prefix(path, t.PATH_PREFIX)]
+    print(f"transports {transports}")
     if transports:
         return transports[0].find_by_path(path, prefix_search=prefix_search)
 

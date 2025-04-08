@@ -43,6 +43,7 @@ class FailureType(IntEnum):
     PinMismatch = 12
     WipeCodeMismatch = 13
     InvalidSession = 14
+    DeviceIsBusy = 15
     FirmwareError = 99
 
 
@@ -2220,6 +2221,10 @@ class BleUnpair(protobuf.MessageType):
         all: Optional["bool"] = None,
     ) -> None:
         self.all = all
+
+
+class BleDisconnect(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
 
 
 class FirmwareErase(protobuf.MessageType):

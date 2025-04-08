@@ -20,3 +20,11 @@ message BleUnpair {
   optional bool all = 1;  // whether to erase bonds for all devices
 }
 
+/**
+ * Request: disconnect
+ * @start
+ * @next Success
+ * @next Failure
+ */
+message BleDisconnect {
+}

@@ -19,3 +19,15 @@ def unpair(
         return
     else:
         raise RuntimeError(f"Unexpected message {resp}")
+
+
+@session
+def disconnect(
+    client: "TrezorClient",
+):
+    resp = client.call(messages.BleDisconnect())
+
+    if isinstance(resp, messages.Success):
+        return
+    else:
+        raise RuntimeError(f"Unexpected message {resp}")

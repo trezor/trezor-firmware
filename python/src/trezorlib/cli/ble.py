@@ -15,15 +15,13 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import sys
-from typing import TYPE_CHECKING
 
 import click
 
 from .. import ble, exceptions
+from ..client import TrezorClient
+from ..transport.ble import BleProxy
 from . import with_client
-
-if TYPE_CHECKING:
-    from ..client import TrezorClient
 
 
 @click.group(name="ble")
@@ -53,3 +51,54 @@ def unpair(
     except exceptions.TrezorException as e:
         click.echo(f"Unpair failed: {e}")
         sys.exit(3)
+
+
+@cli.command()
+def connect() -> None:
+    """Connect to the device via BLE."""
+    ble = BleProxy()
+
+    click.echo("Scanning...")
+    devices = ble.scan()
+
+    if len(devices) == 0:
+        click.echo("No BLE devices found")
+        return
+    else:
+        click.echo(f"Found {len(devices)} BLE device(s)")
+
+    for address, name in devices:
+        click.echo(f"Device: {name}, {address}")
+
+    device = devices[0]
+    click.echo(f"Connecting to {device[1]}...")
+    ble.connect(device[0])
+    click.echo("Connected")
+
+
+@with_client
+def disconnect_device(client: "TrezorClient") -> None:
+    """Disconnect from device side."""
+    try:
+        ble.disconnect(client)
+    except exceptions.Cancelled:
+        click.echo("Disconnect aborted on device.")
+    except exceptions.TrezorException as e:
+        click.echo(f"Disconnect failed: {e}")
+        sys.exit(3)
+
+
+@cli.command()
+@click.option("--device", is_flag=True, help="Disconnect from device side.")
+def disconnect(device: bool) -> None:
+
+    if device:
+        disconnect_device()
+    else:
+        ble_proxy = BleProxy()
+        devices = [d for d in ble_proxy.lookup() if d.connected]
+        if len(devices) == 0:
+            click.echo("No BLE devices found")
+            return
+        ble_proxy.connect(devices[0].address)
+        ble_proxy.disconnect()
