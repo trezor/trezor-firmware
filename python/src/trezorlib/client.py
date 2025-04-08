@@ -95,7 +95,7 @@ class TrezorClient:
         if isinstance(self.protocol, ProtocolV1Channel):
             self._protocol_version = ProtocolVersion.V1
         elif isinstance(self.protocol, ProtocolV2Channel):
-            self._protocol_version = ProtocolVersion.PROTOCOL_V2
+            self._protocol_version = ProtocolVersion.V2
         else:
             raise Exception("Unknown protocol version")
 
@@ -129,7 +129,7 @@ class TrezorClient:
             from .transport.session import SessionV2
 
             assert isinstance(passphrase, str) or passphrase is None
-            session_id = 1  # TODO fix this with ProtocolV2 session rework
+            session_id = b"\x01"  # TODO fix this with ProtocolV2 session rework
             if session_id is not None:
                 sid = int.from_bytes(session_id, "big")
             else:
@@ -197,9 +197,9 @@ class TrezorClient:
         return protocol
 
     def reset_protocol(self):
-        if self._protocol_version == ProtocolVersion.PROTOCOL_V1:
+        if self._protocol_version == ProtocolVersion.V1:
             self.protocol = ProtocolV1Channel(self.transport, self.mapping)
-        elif self._protocol_version == ProtocolVersion.PROTOCOL_V2:
+        elif self._protocol_version == ProtocolVersion.V2:
             self.protocol = ProtocolV2Channel(self.transport, self.mapping)
         else:
             assert False
@@ -217,11 +217,23 @@ class TrezorClient:
             else:
                 raise exceptions.OutdatedFirmwareError(OUTDATED_FIRMWARE_ERROR)
 
-    def _write(self, msg: t.Any) -> None:
-        self.protocol.write(msg)
+    def _write(self, msg: t.Any, session_id: int | None = None) -> None:
+        if isinstance(self.protocol, ProtocolV1Channel):
+            self.protocol.write(msg)
+        elif isinstance(self.protocol, ProtocolV2Channel):
+            assert session_id is not None
+            self.protocol.write(session_id=session_id, msg=msg)
+        else:
+            raise Exception("Unknown client protocol")
 
-    def _read(self) -> t.Any:
-        return self.protocol.read()
+    def _read(self, session_id: int | None = None) -> t.Any:
+        if isinstance(self.protocol, ProtocolV1Channel):
+            self.protocol.read()
+        elif isinstance(self.protocol, ProtocolV2Channel):
+            assert session_id is not None
+            self.protocol.read(session_id=session_id)
+        else:
+            raise Exception("Unknown client protocol")
 
 
 def get_default_client(
