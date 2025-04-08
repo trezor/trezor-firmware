@@ -25,7 +25,6 @@
 #include <sys/systick.h>
 #include <trezor_rtl.h>
 
-
 void prodtest_power_manager_hibernate(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -61,32 +60,44 @@ void prodtest_power_manager_suspend(cli_t* cli) {
   cli_ok(cli, "");
 }
 
-void prodtest_power_manager_report(cli_t *cli){
-    if (cli_arg_count(cli) > 0) {
-        cli_error_arg_count(cli);
-        return;
-    }
+void prodtest_power_manager_report(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
 
-    power_manager_report_t report;
-    power_manager_status_t status = power_manager_get_report(&report);
-    if (status != POWER_MANAGER_OK) {
-        cli_error(cli, CLI_ERROR, "Failed to get power manager report");
-        return;
-    }
-    cli_trace(cli, "Power manager report:");
-    cli_trace(cli, "  USB %s", report.usb_connected ? "connected" : "disconnected");
-    cli_trace(cli, "  WLC %s", report.wireless_charger_connected ? "connected" : "disconnected");
-    cli_trace(cli, "  Battery voltage: %d.%03d V", (int)report.battery_voltage_v, (int)(report.battery_voltage_v * 1000) % 1000);
-    cli_trace(cli, "  Battery current: %d.%03d mA", (int)report.battery_current_ma, (int)(report.battery_current_ma * 1000) % 1000);
-    cli_trace(cli, "  Battery temperature: %d.%03d C", (int)report.battery_temp_c, (int)(report.battery_temp_c * 1000) % 1000);
-    cli_trace(cli, "  PMIC die temperature: %d.%03d C", (int)report.pmic_temp_c, (int)(report.pmic_temp_c * 1000) % 1000);
-    cli_trace(cli, "  WLC voltage: %d.%03d V", (int)report.wireless_output_voltage_v, (int)(report.wireless_output_voltage_v * 1000) % 1000);
-    cli_trace(cli, "  WLC current: %d.%03d mA", (int)report.wireless_current_ma, (int)(report.wireless_current_ma * 1000) % 1000);
-    cli_trace(cli, "  WLC die temperature: %d.%03d C", (int)report.wireless_temp_c, (int)(report.wireless_temp_c * 1000) % 1000);
-    cli_trace(cli, "  System voltage: %d.%03d V", (int)report.system_voltage_v, (int)(report.system_voltage_v * 1000) % 1000);
+  power_manager_report_t report;
+  power_manager_status_t status = power_manager_get_report(&report);
+  if (status != POWER_MANAGER_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to get power manager report");
+    return;
+  }
+  cli_trace(cli, "Power manager report:");
+  cli_trace(cli, "  USB %s",
+            report.usb_connected ? "connected" : "disconnected");
+  cli_trace(cli, "  WLC %s",
+            report.wireless_charger_connected ? "connected" : "disconnected");
+  cli_trace(cli, "  Battery voltage: %d.%03d V", (int)report.battery_voltage_v,
+            (int)(report.battery_voltage_v * 1000) % 1000);
+  cli_trace(cli, "  Battery current: %d.%03d mA",
+            (int)report.battery_current_ma,
+            (int)(report.battery_current_ma * 1000) % 1000);
+  cli_trace(cli, "  Battery temperature: %d.%03d C", (int)report.battery_temp_c,
+            (int)(report.battery_temp_c * 1000) % 1000);
+  cli_trace(cli, "  PMIC die temperature: %d.%03d C", (int)report.pmic_temp_c,
+            (int)(report.pmic_temp_c * 1000) % 1000);
+  cli_trace(cli, "  WLC voltage: %d.%03d V",
+            (int)report.wireless_output_voltage_v,
+            (int)(report.wireless_output_voltage_v * 1000) % 1000);
+  cli_trace(cli, "  WLC current: %d.%03d mA", (int)report.wireless_current_ma,
+            (int)(report.wireless_current_ma * 1000) % 1000);
+  cli_trace(cli, "  WLC die temperature: %d.%03d C",
+            (int)report.wireless_temp_c,
+            (int)(report.wireless_temp_c * 1000) % 1000);
+  cli_trace(cli, "  System voltage: %d.%03d V", (int)report.system_voltage_v,
+            (int)(report.system_voltage_v * 1000) % 1000);
 
-    cli_ok(cli, "");
-
+  cli_ok(cli, "");
 }
 
 void prodtest_power_manager_monitor(cli_t* cli) {
@@ -94,7 +105,6 @@ void prodtest_power_manager_monitor(cli_t* cli) {
     cli_error_arg_count(cli);
     return;
   }
-
 
   power_manager_status_t status;
   power_manager_event_t event_flag;
@@ -107,7 +117,6 @@ void prodtest_power_manager_monitor(cli_t* cli) {
 
   cli_trace(cli, "Start power manager monitor, current state: {%s}",
             power_manager_get_state_name(state));
-
 
   while (true) {
     if (cli_aborted(cli)) {
@@ -147,7 +156,6 @@ void prodtest_power_manager_monitor(cli_t* cli) {
   }
 
   cli_ok(cli, "");
-
 }
 
 // clang-format off
