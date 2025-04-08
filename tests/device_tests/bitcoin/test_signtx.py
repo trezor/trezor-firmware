@@ -1835,7 +1835,9 @@ def test_anti_exfil_attack_1(client: Client):
     )
 
     def attack_processor(msg):
-        msg.serialized.signature = bytes(64)
+        # Simulate the device is providing an invalid signature
+        if msg.serialized and msg.serialized.signature:
+            msg.serialized.signature = bytes(64)
         return msg
 
     with client, pytest.raises(ValueError, match="Invalid signature for index 0"):
@@ -1855,7 +1857,7 @@ def test_anti_exfil_attack_1(client: Client):
 
 @pytest.mark.models(skip="legacy", reason="Not implemented")
 def test_anti_exfil_attack_2(client: Client):
-    # This test verifies that the host detects if the device asks for a entropy but not provides nonce commitment.
+    # This test verifies that the host detects if the device asks for the entropy but not provides the nonce commitment.
 
     # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
     inp1 = messages.TxInputType(
@@ -1872,13 +1874,53 @@ def test_anti_exfil_attack_2(client: Client):
     )
 
     def attack_processor(msg):
-        msg.details.nonce_commitment = None
+        # Simulate the device is not providing the nonce commitment
+        if msg.request_type == messages.RequestType.TXENTROPY:
+            msg.details.nonce_commitment = None
         return msg
 
     with client, pytest.raises(
         ValueError, match="Nonce commitment for index 0 not provided"
     ):
         client.set_filter(messages.TxRequest, attack_processor)
+
+        _ = btc.sign_tx_new(
+            client,
+            "Bitcoin",
+            [inp1],
+            [out1],
+            prev_txes=TX_CACHE_MAINNET,
+            use_anti_exfil=True,
+            entropy_list=[bytes(32)],
+        )
+
+
+@pytest.mark.models(skip="legacy", reason="Not implemented")
+def test_anti_exfil_attack_3(client: Client):
+    # This test verifies that the protocol fails gracefully if the device provides an entropy not matching the entropy commitment.
+
+    # input tx: 0dac366fd8a67b2a89fbb0d31086e7acded7a5bbf9ef9daa935bc873229ef5b5
+    inp1 = messages.TxInputType(
+        address_n=parse_path("m/44h/0h/5h/0/9"),  # 1H2CRJBrDMhkvCGZMW7T4oQwYbL8eVuh7p
+        amount=63_988,
+        prev_hash=TXHASH_0dac36,
+        prev_index=0,
+    )
+
+    out1 = messages.TxOutputType(
+        address="13Hbso8zgV5Wmqn3uA7h3QVtmPzs47wcJ7",
+        amount=50_248,
+        script_type=messages.OutputScriptType.PAYTOADDRESS,
+    )
+
+    def attack_processor(msg):
+        # Simulate the device is providing an invalid entropy
+        if msg.tx.entropy:
+            msg.tx.entropy.entropy = bytes(32 * [0xFF])
+        return msg
+
+    with client, pytest.raises(ValueError, match="Invalid signature for index 0"):
+        client.set_filter(messages.TxAck, attack_processor)
 
         _ = btc.sign_tx_new(
             client,
