@@ -36,3 +36,6 @@
 [submodule "vendor/ts-tvl"]
 	path = vendor/ts-tvl
 	url = https://github.com/tropicsquare/ts-tvl
+[submodule "vendor/pqm4"]
+	path = vendor/pqm4
+	url = https://github.com/mupq/pqm4
