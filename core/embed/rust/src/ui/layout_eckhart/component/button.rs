@@ -350,7 +350,7 @@ impl Button {
                     .render(target);
             }
             // Gradient bar is rendered only in `normal` state, not `active` or `disabled`
-            (None, true) if self.state == State::Initial || self.state == State::Released => {
+            (None, true) if self.state.is_normal() => {
                 self.render_gradient_bar(target, style);
             }
             _ => {
@@ -607,6 +607,14 @@ enum State {
     Pressed,
     Released,
     Disabled,
+}
+
+impl State {
+    /// Returns true if the button is in a normal state (not pressed or
+    /// disabled).
+    fn is_normal(&self) -> bool {
+        matches!(self, State::Initial | State::Released)
+    }
 }
 
 #[derive(PartialEq, Eq, Clone)]

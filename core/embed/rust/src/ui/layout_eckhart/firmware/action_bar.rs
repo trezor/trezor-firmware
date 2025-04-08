@@ -71,12 +71,13 @@ impl ActionBar {
     /// component automatically shows navigation up/down buttons for
     /// paginated content.
     pub fn new_single(button: Button) -> Self {
-        Self::new(
-            Mode::Single,
-            None,
-            Some(button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)),
-            None,
-        )
+        let mut right_button = button
+            .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+            .with_gradient();
+        if right_button.stylesheet() == &theme::button_default() {
+            right_button = right_button.styled(theme::firmware::button_default_actionbar_right());
+        };
+        Self::new(Mode::Single, None, Some(right_button), None)
     }
 
     /// Create action bar with single button confirming the layout
@@ -93,17 +94,21 @@ impl ActionBar {
     /// automatically shows navigation up/down buttons for paginated
     /// content.
     pub fn new_double(left: Button, right: Button) -> Self {
+        let left_button = left
+            .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+            .with_content_offset(Self::BUTTON_CONTENT_OFFSET);
+        let mut right_button = right
+            .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+            .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg())
+            .with_gradient();
+        if right_button.stylesheet() == &theme::button_default() {
+            right_button = right_button.styled(theme::firmware::button_default_actionbar_right());
+        };
+
         Self::new(
             Mode::Double { left_short: true },
-            Some(
-                left.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
-                    .with_content_offset(Self::BUTTON_CONTENT_OFFSET),
-            ),
-            Some(
-                right
-                    .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
-                    .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg()),
-            ),
+            Some(left_button),
+            Some(right_button),
             None,
         )
     }
@@ -112,7 +117,6 @@ impl ActionBar {
         Self::new_double(
             Button::with_icon(theme::ICON_CROSS),
             Button::with_text(TR::buttons__confirm.into())
-                .with_gradient()
                 .styled(theme::firmware::button_confirm()),
         )
     }
