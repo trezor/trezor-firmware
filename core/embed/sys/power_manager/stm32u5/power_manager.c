@@ -1,30 +1,47 @@
+/*
+ * This file is part of the Trezor project, https://trezor.io/
+ *
+ * Copyright (c) SatoshiLabs
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <trezor_rtl.h>
 #include <sys/irq.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
+#include <trezor_rtl.h>
 
 #include "power_manager_internal.h"
 
-/* Global driver instance */
+// Global driver instance
 power_manager_driver_t g_power_manager = {
-  .initialized = false,
-  .state = POWER_MANAGER_STATE_ULTRA_POWER_SAVE,
+    .initialized = false,
+    .state = POWER_MANAGER_STATE_ULTRA_POWER_SAVE,
 };
 
-/* State name string table */
+// State name string table
 const char* const power_manager_state_names[POWER_MANAGER_STATE_COUNT] = {
 #define POWER_MANAGER_STATE_STRING(state) #state,
-  POWER_MANAGER_STATE_LIST(POWER_MANAGER_STATE_STRING)
+    POWER_MANAGER_STATE_LIST(POWER_MANAGER_STATE_STRING)
 #undef POWER_MANAGER_STATE_STRING
 };
 
-
-/* Forward declarations of static functions */
+// Forward declarations of static functions
 static void pm_monitoring_timer_handler(void* context);
 static void pm_shutdown_timer_handler(void* context);
 
-/* API Implementation */
+// API Implementation
 
 power_manager_status_t power_manager_init(void) {
   power_manager_driver_t* drv = &g_power_manager;
@@ -33,20 +50,20 @@ power_manager_status_t power_manager_init(void) {
     return POWER_MANAGER_OK;
   }
 
-  /* Initialize hardware subsystems */
+  // Initialize hardware subsystems
   if (!npm1300_init() || !stwlc38_init()) {
     power_manager_deinit();
     return POWER_MANAGER_ERROR;
   }
 
-  /* Create monitoring timer */
+  // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
   systimer_set_periodic(drv->monitoring_timer, POWER_MANAGER_TIMER_PERIOD_MS);
 
-  /* Create shutdown timer */
+  // Create shutdown timer
   drv->shutdown_timer = systimer_create(pm_shutdown_timer_handler, NULL);
 
-  /* Initial power source measurement */
+  // Initial power source measurement
   npm1300_measure(pm_pmic_data_ready, NULL);
 
   drv->initialized = true;
@@ -141,7 +158,8 @@ power_manager_status_t power_manager_hibernate(void) {
   return POWER_MANAGER_OK;
 }
 
-power_manager_status_t power_manager_get_report(power_manager_report_t* report) {
+power_manager_status_t power_manager_get_report(
+    power_manager_report_t* report) {
   power_manager_driver_t* drv = &g_power_manager;
 
   if (!drv->initialized) {
@@ -150,7 +168,7 @@ power_manager_status_t power_manager_get_report(power_manager_report_t* report) 
 
   irq_key_t irq_key = irq_lock();
 
-  /* Copy current data into report */
+  // Copy current data into report
   report->usb_connected = drv->usb_connected;
   report->wireless_charger_connected = drv->wireless_connected;
   report->system_voltage_v = drv->pmic_data.vsys;
@@ -168,7 +186,7 @@ power_manager_status_t power_manager_get_report(power_manager_report_t* report) 
   return POWER_MANAGER_OK;
 }
 
-/* Timer handlers */
+// Timer handlers
 
 static void pm_monitoring_timer_handler(void* context) {
   pm_monitor_power_sources();
