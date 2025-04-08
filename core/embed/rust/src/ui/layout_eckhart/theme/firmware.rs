@@ -221,6 +221,32 @@ pub const fn button_cancel() -> ButtonStyleSheet {
     }
 }
 
+pub const fn button_default_actionbar_right() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_LIGHT,
+            button_color: GREY_EXTRA_DARK,
+            icon_color: GREY_LIGHT,
+            background_color: GREY_EXTRA_DARK,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_DARK,
+            button_color: GREY_SUPER_DARK,
+            icon_color: GREY_DARK,
+            background_color: BG,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_MEDIUM_26,
+            text_color: GREY_EXTRA_DARK,
+            button_color: BG,
+            icon_color: GREY_EXTRA_DARK,
+            background_color: BG,
+        },
+    }
+}
+
 pub const fn button_warning_high() -> ButtonStyleSheet {
     ButtonStyleSheet {
         normal: &ButtonStyle {
