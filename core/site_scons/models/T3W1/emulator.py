@@ -87,6 +87,12 @@ def configure(
         features_available.append("touch")
         defines += [("USE_TOUCH", "1")]
 
+        sources += ["embed/io/button/unix/button.c"]
+        sources += ["embed/io/button/button_fsm.c"]
+        paths += ["embed/io/button/inc"]
+        features_available.append("button")
+        defines += [("USE_BUTTON", "1")]
+
     if "ble" in features_wanted:
         sources += ["embed/io/ble/unix/ble.c"]
         paths += ["embed/io/ble/inc"]
