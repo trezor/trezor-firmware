@@ -93,7 +93,7 @@ def make_payment_request(
 
     h_pr.update(h_outputs.digest())
 
-    return messages.TxAckPaymentRequest(
+    return messages.PaymentRequest(
         recipient_name=recipient_name,
         amount=sum(txo.amount for txo in outputs if txo.address),
         memos=msg_memos,

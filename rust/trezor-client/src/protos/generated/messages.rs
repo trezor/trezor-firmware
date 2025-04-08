@@ -77,6 +77,8 @@ pub enum MessageType {
     MessageType_EntropyRequest = 35,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EntropyAck)
     MessageType_EntropyAck = 36,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_PaymentRequest)
+    MessageType_PaymentRequest = 37,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EntropyCheckReady)
     MessageType_EntropyCheckReady = 994,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EntropyCheckContinue)
@@ -165,8 +167,6 @@ pub enum MessageType {
     MessageType_GetAddress = 29,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_Address)
     MessageType_Address = 30,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TxAckPaymentRequest)
-    MessageType_TxAckPaymentRequest = 37,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SignMessage)
     MessageType_SignMessage = 38,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_VerifyMessage)
@@ -561,6 +561,7 @@ impl ::protobuf::Enum for MessageType {
             34 => ::std::option::Option::Some(MessageType::MessageType_BackupDevice),
             35 => ::std::option::Option::Some(MessageType::MessageType_EntropyRequest),
             36 => ::std::option::Option::Some(MessageType::MessageType_EntropyAck),
+            37 => ::std::option::Option::Some(MessageType::MessageType_PaymentRequest),
             994 => ::std::option::Option::Some(MessageType::MessageType_EntropyCheckReady),
             995 => ::std::option::Option::Some(MessageType::MessageType_EntropyCheckContinue),
             41 => ::std::option::Option::Some(MessageType::MessageType_PassphraseRequest),
@@ -605,7 +606,6 @@ impl ::protobuf::Enum for MessageType {
             22 => ::std::option::Option::Some(MessageType::MessageType_TxAck),
             29 => ::std::option::Option::Some(MessageType::MessageType_GetAddress),
             30 => ::std::option::Option::Some(MessageType::MessageType_Address),
-            37 => ::std::option::Option::Some(MessageType::MessageType_TxAckPaymentRequest),
             38 => ::std::option::Option::Some(MessageType::MessageType_SignMessage),
             39 => ::std::option::Option::Some(MessageType::MessageType_VerifyMessage),
             40 => ::std::option::Option::Some(MessageType::MessageType_MessageSignature),
@@ -816,6 +816,7 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_BackupDevice" => ::std::option::Option::Some(MessageType::MessageType_BackupDevice),
             "MessageType_EntropyRequest" => ::std::option::Option::Some(MessageType::MessageType_EntropyRequest),
             "MessageType_EntropyAck" => ::std::option::Option::Some(MessageType::MessageType_EntropyAck),
+            "MessageType_PaymentRequest" => ::std::option::Option::Some(MessageType::MessageType_PaymentRequest),
             "MessageType_EntropyCheckReady" => ::std::option::Option::Some(MessageType::MessageType_EntropyCheckReady),
             "MessageType_EntropyCheckContinue" => ::std::option::Option::Some(MessageType::MessageType_EntropyCheckContinue),
             "MessageType_PassphraseRequest" => ::std::option::Option::Some(MessageType::MessageType_PassphraseRequest),
@@ -860,7 +861,6 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_TxAck" => ::std::option::Option::Some(MessageType::MessageType_TxAck),
             "MessageType_GetAddress" => ::std::option::Option::Some(MessageType::MessageType_GetAddress),
             "MessageType_Address" => ::std::option::Option::Some(MessageType::MessageType_Address),
-            "MessageType_TxAckPaymentRequest" => ::std::option::Option::Some(MessageType::MessageType_TxAckPaymentRequest),
             "MessageType_SignMessage" => ::std::option::Option::Some(MessageType::MessageType_SignMessage),
             "MessageType_VerifyMessage" => ::std::option::Option::Some(MessageType::MessageType_VerifyMessage),
             "MessageType_MessageSignature" => ::std::option::Option::Some(MessageType::MessageType_MessageSignature),
@@ -1070,6 +1070,7 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_BackupDevice,
         MessageType::MessageType_EntropyRequest,
         MessageType::MessageType_EntropyAck,
+        MessageType::MessageType_PaymentRequest,
         MessageType::MessageType_EntropyCheckReady,
         MessageType::MessageType_EntropyCheckContinue,
         MessageType::MessageType_PassphraseRequest,
@@ -1114,7 +1115,6 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_TxAck,
         MessageType::MessageType_GetAddress,
         MessageType::MessageType_Address,
-        MessageType::MessageType_TxAckPaymentRequest,
         MessageType::MessageType_SignMessage,
         MessageType::MessageType_VerifyMessage,
         MessageType::MessageType_MessageSignature,
@@ -1330,51 +1330,51 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_BackupDevice => 22,
             MessageType::MessageType_EntropyRequest => 23,
             MessageType::MessageType_EntropyAck => 24,
-            MessageType::MessageType_EntropyCheckReady => 25,
-            MessageType::MessageType_EntropyCheckContinue => 26,
-            MessageType::MessageType_PassphraseRequest => 27,
-            MessageType::MessageType_PassphraseAck => 28,
-            MessageType::MessageType_RecoveryDevice => 29,
-            MessageType::MessageType_WordRequest => 30,
-            MessageType::MessageType_WordAck => 31,
-            MessageType::MessageType_GetFeatures => 32,
-            MessageType::MessageType_SdProtect => 33,
-            MessageType::MessageType_ChangeWipeCode => 34,
-            MessageType::MessageType_EndSession => 35,
-            MessageType::MessageType_DoPreauthorized => 36,
-            MessageType::MessageType_PreauthorizedRequest => 37,
-            MessageType::MessageType_CancelAuthorization => 38,
-            MessageType::MessageType_RebootToBootloader => 39,
-            MessageType::MessageType_GetFirmwareHash => 40,
-            MessageType::MessageType_FirmwareHash => 41,
-            MessageType::MessageType_UnlockPath => 42,
-            MessageType::MessageType_UnlockedPathRequest => 43,
-            MessageType::MessageType_ShowDeviceTutorial => 44,
-            MessageType::MessageType_UnlockBootloader => 45,
-            MessageType::MessageType_AuthenticateDevice => 46,
-            MessageType::MessageType_AuthenticityProof => 47,
-            MessageType::MessageType_ChangeLanguage => 48,
-            MessageType::MessageType_DataChunkRequest => 49,
-            MessageType::MessageType_DataChunkAck => 50,
-            MessageType::MessageType_SetBrightness => 51,
-            MessageType::MessageType_SetU2FCounter => 52,
-            MessageType::MessageType_GetNextU2FCounter => 53,
-            MessageType::MessageType_NextU2FCounter => 54,
-            MessageType::MessageType_Deprecated_PassphraseStateRequest => 55,
-            MessageType::MessageType_Deprecated_PassphraseStateAck => 56,
-            MessageType::MessageType_FirmwareErase => 57,
-            MessageType::MessageType_FirmwareUpload => 58,
-            MessageType::MessageType_FirmwareRequest => 59,
-            MessageType::MessageType_ProdTestT1 => 60,
-            MessageType::MessageType_BleUnpair => 61,
-            MessageType::MessageType_GetPublicKey => 62,
-            MessageType::MessageType_PublicKey => 63,
-            MessageType::MessageType_SignTx => 64,
-            MessageType::MessageType_TxRequest => 65,
-            MessageType::MessageType_TxAck => 66,
-            MessageType::MessageType_GetAddress => 67,
-            MessageType::MessageType_Address => 68,
-            MessageType::MessageType_TxAckPaymentRequest => 69,
+            MessageType::MessageType_PaymentRequest => 25,
+            MessageType::MessageType_EntropyCheckReady => 26,
+            MessageType::MessageType_EntropyCheckContinue => 27,
+            MessageType::MessageType_PassphraseRequest => 28,
+            MessageType::MessageType_PassphraseAck => 29,
+            MessageType::MessageType_RecoveryDevice => 30,
+            MessageType::MessageType_WordRequest => 31,
+            MessageType::MessageType_WordAck => 32,
+            MessageType::MessageType_GetFeatures => 33,
+            MessageType::MessageType_SdProtect => 34,
+            MessageType::MessageType_ChangeWipeCode => 35,
+            MessageType::MessageType_EndSession => 36,
+            MessageType::MessageType_DoPreauthorized => 37,
+            MessageType::MessageType_PreauthorizedRequest => 38,
+            MessageType::MessageType_CancelAuthorization => 39,
+            MessageType::MessageType_RebootToBootloader => 40,
+            MessageType::MessageType_GetFirmwareHash => 41,
+            MessageType::MessageType_FirmwareHash => 42,
+            MessageType::MessageType_UnlockPath => 43,
+            MessageType::MessageType_UnlockedPathRequest => 44,
+            MessageType::MessageType_ShowDeviceTutorial => 45,
+            MessageType::MessageType_UnlockBootloader => 46,
+            MessageType::MessageType_AuthenticateDevice => 47,
+            MessageType::MessageType_AuthenticityProof => 48,
+            MessageType::MessageType_ChangeLanguage => 49,
+            MessageType::MessageType_DataChunkRequest => 50,
+            MessageType::MessageType_DataChunkAck => 51,
+            MessageType::MessageType_SetBrightness => 52,
+            MessageType::MessageType_SetU2FCounter => 53,
+            MessageType::MessageType_GetNextU2FCounter => 54,
+            MessageType::MessageType_NextU2FCounter => 55,
+            MessageType::MessageType_Deprecated_PassphraseStateRequest => 56,
+            MessageType::MessageType_Deprecated_PassphraseStateAck => 57,
+            MessageType::MessageType_FirmwareErase => 58,
+            MessageType::MessageType_FirmwareUpload => 59,
+            MessageType::MessageType_FirmwareRequest => 60,
+            MessageType::MessageType_ProdTestT1 => 61,
+            MessageType::MessageType_BleUnpair => 62,
+            MessageType::MessageType_GetPublicKey => 63,
+            MessageType::MessageType_PublicKey => 64,
+            MessageType::MessageType_SignTx => 65,
+            MessageType::MessageType_TxRequest => 66,
+            MessageType::MessageType_TxAck => 67,
+            MessageType::MessageType_GetAddress => 68,
+            MessageType::MessageType_Address => 69,
             MessageType::MessageType_SignMessage => 70,
             MessageType::MessageType_VerifyMessage => 71,
             MessageType::MessageType_MessageSignature => 72,
@@ -1572,7 +1572,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xd0V\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xcfV\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1603,81 +1603,81 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     essageType_BackupDevice\x10\"\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
     \x12(\n\x1aMessageType_EntropyRequest\x10#\x1a\x08\x80\xa6\x1d\x01\x98\
     \xb5\x18\x01\x12$\n\x16MessageType_EntropyAck\x10$\x1a\x08\x80\xa6\x1d\
-    \x01\x90\xb5\x18\x01\x12,\n\x1dMessageType_EntropyCheckReady\x10\xe2\x07\
-    \x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12/\n\x20MessageType_EntropyCh\
-    eckContinue\x10\xe3\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12+\n\
-    \x1dMessageType_PassphraseRequest\x10)\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
-    \x18\x01\x12/\n\x19MessageType_PassphraseAck\x10*\x1a\x10\xc0\xb5\x18\
-    \x01\xb0\xb5\x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageTy\
-    pe_RecoveryDevice\x10-\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\
-    \x17MessageType_WordRequest\x10.\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\
-    \x12!\n\x13MessageType_WordAck\x10/\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
-    \x01\x12%\n\x17MessageType_GetFeatures\x107\x1a\x08\x80\xa6\x1d\x01\x90\
-    \xb5\x18\x01\x12#\n\x15MessageType_SdProtect\x10O\x1a\x08\x80\xa6\x1d\
-    \x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_ChangeWipeCode\x10R\x1a\x08\
-    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x16MessageType_EndSession\x10S\
-    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12)\n\x1bMessageType_DoPreauth\
-    orized\x10T\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12.\n\x20MessageTyp\
-    e_PreauthorizedRequest\x10U\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12-\
-    \n\x1fMessageType_CancelAuthorization\x10V\x1a\x08\x80\xa6\x1d\x01\x90\
-    \xb5\x18\x01\x12,\n\x1eMessageType_RebootToBootloader\x10W\x1a\x08\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12)\n\x1bMessageType_GetFirmwareHash\x10X\
-    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12&\n\x18MessageType_FirmwareH\
-    ash\x10Y\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12$\n\x16MessageType_U\
-    nlockPath\x10]\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12-\n\x1fMessage\
-    Type_UnlockedPathRequest\x10^\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\
-    \x12,\n\x1eMessageType_ShowDeviceTutorial\x10_\x1a\x08\x80\xa6\x1d\x01\
-    \x90\xb5\x18\x01\x12*\n\x1cMessageType_UnlockBootloader\x10`\x1a\x08\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12,\n\x1eMessageType_AuthenticateDevice\
-    \x10a\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_Auth\
-    enticityProof\x10b\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12)\n\x1aMes\
-    sageType_ChangeLanguage\x10\xde\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
-    \x01\x12+\n\x1cMessageType_DataChunkRequest\x10\xdf\x07\x1a\x08\x80\xa6\
-    \x1d\x01\x98\xb5\x18\x01\x12'\n\x18MessageType_DataChunkAck\x10\xe0\x07\
-    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x19MessageType_SetBright\
-    ness\x10\xe1\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x19Messa\
-    geType_SetU2FCounter\x10?\x1a\x04\x90\xb5\x18\x01\x12'\n\x1dMessageType_\
-    GetNextU2FCounter\x10P\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_Nex\
-    tU2FCounter\x10Q\x1a\x04\x98\xb5\x18\x01\x125\n-MessageType_Deprecated_P\
-    assphraseStateRequest\x10M\x1a\x02\x08\x01\x121\n)MessageType_Deprecated\
-    _PassphraseStateAck\x10N\x1a\x02\x08\x01\x12+\n\x19MessageType_FirmwareE\
-    rase\x10\x06\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\
-    ,\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x0c\xb8\xb5\x18\x01\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12-\n\x1bMessageType_FirmwareRequest\x10\
-    \x08\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12(\n\x16M\
-    essageType_ProdTestT1\x10\x20\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\
-    \x90\xb5\x18\x01\x12$\n\x15MessageType_BleUnpair\x10\xc1>\x1a\x08\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12&\n\x18MessageType_GetPublicKey\x10\x0b\
-    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x15MessageType_PublicKey\
-    \x10\x0c\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\x20\n\x12MessageTyp\
-    e_SignTx\x10\x0f\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x15Messa\
-    geType_TxRequest\x10\x15\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\x1f\
-    \n\x11MessageType_TxAck\x10\x16\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
-    \x12$\n\x16MessageType_GetAddress\x10\x1d\x1a\x08\x80\xa6\x1d\x01\x90\
-    \xb5\x18\x01\x12!\n\x13MessageType_Address\x10\x1e\x1a\x08\x80\xa6\x1d\
-    \x01\x98\xb5\x18\x01\x12)\n\x1fMessageType_TxAckPaymentRequest\x10%\x1a\
-    \x04\x90\xb5\x18\x01\x12%\n\x17MessageType_SignMessage\x10&\x1a\x08\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12'\n\x19MessageType_VerifyMessage\x10'\
-    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12*\n\x1cMessageType_MessageSi\
-    gnature\x10(\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12(\n\x1aMessageTy\
-    pe_GetOwnershipId\x10+\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\
-    \x17MessageType_OwnershipId\x10,\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\
-    \x12+\n\x1dMessageType_GetOwnershipProof\x101\x1a\x08\x80\xa6\x1d\x01\
-    \x90\xb5\x18\x01\x12(\n\x1aMessageType_OwnershipProof\x102\x1a\x08\x80\
-    \xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_AuthorizeCoinJoin\x10\
-    3\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_CipherKe\
-    yValue\x10\x17\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12*\n\x1cMessage\
-    Type_CipheredKeyValue\x100\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12&\
-    \n\x18MessageType_SignIdentity\x105\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
-    \x01\x12(\n\x1aMessageType_SignedIdentity\x106\x1a\x08\x80\xa6\x1d\x01\
-    \x98\xb5\x18\x01\x12+\n\x1dMessageType_GetECDHSessionKey\x10=\x1a\x08\
-    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_ECDHSessionKey\
-    \x10>\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x123\n\x1dMessageType_Debu\
-    gLinkDecision\x10d\x1a\x10\xc0\xb5\x18\x01\xb0\xb5\x18\x01\x80\xa6\x1d\
-    \x01\xa0\xb5\x18\x01\x12/\n\x1dMessageType_DebugLinkGetState\x10e\x1a\
-    \x0c\x80\xa6\x1d\x01\xb0\xb5\x18\x01\xa0\xb5\x18\x01\x12(\n\x1aMessageTy\
-    pe_DebugLinkState\x10f\x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x12'\n\
-    \x19MessageType_DebugLinkStop\x10g\x1a\x08\x80\xa6\x1d\x01\xa0\xb5\x18\
+    \x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_PaymentRequest\x10%\x1a\x08\
+    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12,\n\x1dMessageType_EntropyCheckReady\
+    \x10\xe2\x07\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12/\n\x20MessageTy\
+    pe_EntropyCheckContinue\x10\xe3\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
+    \x01\x12+\n\x1dMessageType_PassphraseRequest\x10)\x1a\x08\x80\xa6\x1d\
+    \x01\x98\xb5\x18\x01\x12/\n\x19MessageType_PassphraseAck\x10*\x1a\x10\
+    \xc0\xb5\x18\x01\xb0\xb5\x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\
+    \x1aMessageType_RecoveryDevice\x10-\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
+    \x01\x12%\n\x17MessageType_WordRequest\x10.\x1a\x08\x80\xa6\x1d\x01\x98\
+    \xb5\x18\x01\x12!\n\x13MessageType_WordAck\x10/\x1a\x08\x80\xa6\x1d\x01\
+    \x90\xb5\x18\x01\x12%\n\x17MessageType_GetFeatures\x107\x1a\x08\x80\xa6\
+    \x1d\x01\x90\xb5\x18\x01\x12#\n\x15MessageType_SdProtect\x10O\x1a\x08\
+    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_ChangeWipeCode\
+    \x10R\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x16MessageType_EndS\
+    ession\x10S\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12)\n\x1bMessageTyp\
+    e_DoPreauthorized\x10T\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12.\n\
+    \x20MessageType_PreauthorizedRequest\x10U\x1a\x08\x80\xa6\x1d\x01\x98\
+    \xb5\x18\x01\x12-\n\x1fMessageType_CancelAuthorization\x10V\x1a\x08\x80\
+    \xa6\x1d\x01\x90\xb5\x18\x01\x12,\n\x1eMessageType_RebootToBootloader\
+    \x10W\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12)\n\x1bMessageType_GetF\
+    irmwareHash\x10X\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12&\n\x18Messa\
+    geType_FirmwareHash\x10Y\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12$\n\
+    \x16MessageType_UnlockPath\x10]\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
+    \x12-\n\x1fMessageType_UnlockedPathRequest\x10^\x1a\x08\x80\xa6\x1d\x01\
+    \x98\xb5\x18\x01\x12,\n\x1eMessageType_ShowDeviceTutorial\x10_\x1a\x08\
+    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12*\n\x1cMessageType_UnlockBootloader\
+    \x10`\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12,\n\x1eMessageType_Auth\
+    enticateDevice\x10a\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMe\
+    ssageType_AuthenticityProof\x10b\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
+    \x12)\n\x1aMessageType_ChangeLanguage\x10\xde\x07\x1a\x08\x80\xa6\x1d\
+    \x01\x90\xb5\x18\x01\x12+\n\x1cMessageType_DataChunkRequest\x10\xdf\x07\
+    \x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12'\n\x18MessageType_DataChunk\
+    Ack\x10\xe0\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x19Messag\
+    eType_SetBrightness\x10\xe1\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
+    \x12#\n\x19MessageType_SetU2FCounter\x10?\x1a\x04\x90\xb5\x18\x01\x12'\n\
+    \x1dMessageType_GetNextU2FCounter\x10P\x1a\x04\x90\xb5\x18\x01\x12$\n\
+    \x1aMessageType_NextU2FCounter\x10Q\x1a\x04\x98\xb5\x18\x01\x125\n-Messa\
+    geType_Deprecated_PassphraseStateRequest\x10M\x1a\x02\x08\x01\x121\n)Mes\
+    sageType_Deprecated_PassphraseStateAck\x10N\x1a\x02\x08\x01\x12+\n\x19Me\
+    ssageType_FirmwareErase\x10\x06\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\
+    \x90\xb5\x18\x01\x12,\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x0c\
+    \xb8\xb5\x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12-\n\x1bMessageType_F\
+    irmwareRequest\x10\x08\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\x98\xb5\
+    \x18\x01\x12(\n\x16MessageType_ProdTestT1\x10\x20\x1a\x0c\xb8\xb5\x18\
+    \x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_BleUnpair\x10\
+    \xc1>\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12&\n\x18MessageType_GetP\
+    ublicKey\x10\x0b\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x15Messa\
+    geType_PublicKey\x10\x0c\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\x20\
+    \n\x12MessageType_SignTx\x10\x0f\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
+    \x12#\n\x15MessageType_TxRequest\x10\x15\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
+    \x18\x01\x12\x1f\n\x11MessageType_TxAck\x10\x16\x1a\x08\x80\xa6\x1d\x01\
+    \x90\xb5\x18\x01\x12$\n\x16MessageType_GetAddress\x10\x1d\x1a\x08\x80\
+    \xa6\x1d\x01\x90\xb5\x18\x01\x12!\n\x13MessageType_Address\x10\x1e\x1a\
+    \x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12%\n\x17MessageType_SignMessage\
+    \x10&\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12'\n\x19MessageType_Veri\
+    fyMessage\x10'\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12*\n\x1cMessage\
+    Type_MessageSignature\x10(\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12(\
+    \n\x1aMessageType_GetOwnershipId\x10+\x1a\x08\x80\xa6\x1d\x01\x90\xb5\
+    \x18\x01\x12%\n\x17MessageType_OwnershipId\x10,\x1a\x08\x80\xa6\x1d\x01\
+    \x98\xb5\x18\x01\x12+\n\x1dMessageType_GetOwnershipProof\x101\x1a\x08\
+    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_OwnershipProof\
+    \x102\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_Auth\
+    orizeCoinJoin\x103\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMes\
+    sageType_CipherKeyValue\x10\x17\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
+    \x12*\n\x1cMessageType_CipheredKeyValue\x100\x1a\x08\x80\xa6\x1d\x01\x98\
+    \xb5\x18\x01\x12&\n\x18MessageType_SignIdentity\x105\x1a\x08\x80\xa6\x1d\
+    \x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_SignedIdentity\x106\x1a\x08\
+    \x80\xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_GetECDHSessionKey\
+    \x10=\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_ECDH\
+    SessionKey\x10>\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x123\n\x1dMessag\
+    eType_DebugLinkDecision\x10d\x1a\x10\xc0\xb5\x18\x01\xb0\xb5\x18\x01\x80\
+    \xa6\x1d\x01\xa0\xb5\x18\x01\x12/\n\x1dMessageType_DebugLinkGetState\x10\
+    e\x1a\x0c\x80\xa6\x1d\x01\xb0\xb5\x18\x01\xa0\xb5\x18\x01\x12(\n\x1aMess\
+    ageType_DebugLinkState\x10f\x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x12'\
+    \n\x19MessageType_DebugLinkStop\x10g\x1a\x08\x80\xa6\x1d\x01\xa0\xb5\x18\
     \x01\x12&\n\x18MessageType_DebugLinkLog\x10h\x1a\x08\x80\xa6\x1d\x01\xa8\
     \xb5\x18\x01\x12-\n\x1fMessageType_DebugLinkMemoryRead\x10n\x1a\x08\x80\
     \xa6\x1d\x01\xa0\xb5\x18\x01\x12)\n\x1bMessageType_DebugLinkMemory\x10o\
