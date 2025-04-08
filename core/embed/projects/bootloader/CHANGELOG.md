@@ -142,6 +142,7 @@ Internal only release for Model R prototypes.
 
 ### Added
 - First public release
+
 [#262]: https://github.com/trezor/trezor-firmware/pull/262
 [#1049]: https://github.com/trezor/trezor-firmware/pull/1049
 [#1599]: https://github.com/trezor/trezor-firmware/pull/1599
