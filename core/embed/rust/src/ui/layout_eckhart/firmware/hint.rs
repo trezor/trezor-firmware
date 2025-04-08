@@ -42,7 +42,7 @@ impl<'a> Hint<'a> {
     /// height of the multi line component [px]
     pub const HEIGHT_MAXIMAL: i16 = 66;
     /// margins from the edges of the screen [px]
-    const HINT_INSETS: Insets = Insets::sides(24);
+    const HINT_INSETS: Insets = Insets::new(16, 24, 24, 24);
 
     fn from_content(content: HintContent<'a>) -> Self {
         Self {
@@ -107,10 +107,10 @@ impl<'a> Hint<'a> {
         }
     }
 
-    /// Returns the height of the component. In case of the instruction, the
-    /// height is calculated based on the text length.
+    /// Returns the height of the content including padding. In case of the
+    /// instruction, the height is calculated based on the text length.
     pub fn height(&self) -> i16 {
-        self.content.height()
+        self.content.height() + Self::HINT_INSETS.top + Self::HINT_INSETS.bottom
     }
 }
 
@@ -119,8 +119,9 @@ impl<'a> Component for Hint<'a> {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         debug_assert!(bounds.width() == screen().width());
-        debug_assert!(bounds.height() == self.content.height());
+        debug_assert!(bounds.height() == self.height());
         let bounds = bounds.inset(Self::HINT_INSETS);
+
         if let HintContent::Instruction(instruction) = &mut self.content {
             let text_area = match instruction.icon {
                 Some(_) => bounds.split_left(instruction.icon_width()).1,
@@ -305,22 +306,29 @@ mod tests {
         // FIXME: this test is fine but the `screen()` is not returning the right value
         // for eckhart println!("screen size: {:?}", screen().width());
 
+        let with_padding = |h: i16| h + Hint::HINT_INSETS.top + Hint::HINT_INSETS.bottom;
         let hint_1line = Hint::new_instruction("Test", None);
-        assert_eq!(hint_1line.height(), Hint::HEIGHT_MINIMAL);
+        assert_eq!(hint_1line.content.height(), Hint::HEIGHT_MINIMAL);
+        assert_eq!(hint_1line.height(), with_padding(Hint::HEIGHT_MINIMAL));
 
         let hint_2lines = Hint::new_instruction(
             "The word appears multiple times in the backup.",
             Some(theme::ICON_INFO),
         );
         assert_eq!(
-            hint_2lines.height(),
+            hint_2lines.content.height(),
             Instruction::STYLE_INSTRUCTION.text_font.text_height() * 2
+        );
+        assert_eq!(
+            hint_2lines.height(),
+            with_padding(Instruction::STYLE_INSTRUCTION.text_font.text_height() * 2)
         );
 
         let hint_3lines = Hint::new_instruction(
             "This is very long instruction which will span across at least three lines of the Hint component.",
             None,
         );
-        assert_eq!(hint_3lines.height(), Hint::HEIGHT_MAXIMAL,);
+        assert_eq!(hint_3lines.content.height(), Hint::HEIGHT_MAXIMAL);
+        assert_eq!(hint_3lines.height(), with_padding(Hint::HEIGHT_MAXIMAL));
     }
 }
