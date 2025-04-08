@@ -19,6 +19,7 @@
 
 #include <sys/systick.h>
 #include <sys/systimer.h>
+#include <io/backlight.h>
 
 #include "../../powerctl/npm1300/npm1300.h"
 #include "power_manager_internal.h"
@@ -27,13 +28,13 @@
 static const power_manager_state_handler_t state_handlers[] = {
     [POWER_MANAGER_STATE_ACTIVE] =
         {
-            .enter = NULL,
+            .enter = pm_entry_active,
             .handle = pm_handle_state_active,
             .exit = NULL,
         },
     [POWER_MANAGER_STATE_POWER_SAVE] =
         {
-            .enter = NULL,
+            .enter = pm_entry_power_save,
             .handle = pm_handle_state_power_save,
             .exit = NULL,
         },
@@ -99,6 +100,13 @@ void pm_process_state_machine(void) {
 
 // State handler implementations
 
+void pm_entry_active(power_manager_driver_t* drv){
+
+  // Set unlimited backlight
+  backlight_set_max_level(255);
+
+}
+
 power_manager_state_t pm_handle_state_active(power_manager_driver_t* drv) {
   // Handle hibernate request
   if (drv->request_hibernate) {
@@ -128,6 +136,13 @@ power_manager_state_t pm_handle_state_active(power_manager_driver_t* drv) {
   }
 
   return drv->state;
+}
+
+void pm_entry_power_save(power_manager_driver_t *drv){
+
+  // Limit backlight
+  backlight_set_max_level(130);
+
 }
 
 power_manager_state_t pm_handle_state_power_save(power_manager_driver_t* drv) {

@@ -92,6 +92,8 @@ power_manager_state_t pm_handle_state_suspend(power_manager_driver_t* drv);
 power_manager_state_t pm_handle_state_charging(power_manager_driver_t* drv);
 power_manager_state_t pm_handle_state_hibernate(power_manager_driver_t* drv);
 
+void pm_entry_active(power_manager_driver_t* drv);
+void pm_entry_power_save(power_manager_driver_t* drv);
 void pm_enter_shutting_down(power_manager_driver_t* drv);
 void pm_exit_shutting_down(power_manager_driver_t* drv);
 void pm_enter_suspend(power_manager_driver_t* drv);

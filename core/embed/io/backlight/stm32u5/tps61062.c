@@ -47,10 +47,16 @@
 typedef struct {
   // Set if driver is initialized
   bool initialized;
+
   // Level requested (0-255)
+  int requested_level;
   int current_level;
+
   // Current step in range 0-32
   int current_step;
+
+  // Max backlight level
+  int max_level;
 
   DMA_HandleTypeDef dma;
   TIM_HandleTypeDef tim;
@@ -150,6 +156,9 @@ void backlight_init(backlight_action_t action) {
   HAL_TIM_Base_Start(&drv->tim);
   HAL_TIM_PWM_Start(&drv->tim, TIM_CHANNEL_1);
 
+  // Default max level limit
+  drv->max_level = BACKLIGHT_MAX_LEVEL;
+
   drv->initialized = true;
 }
 
@@ -179,23 +188,36 @@ void backlight_deinit(backlight_action_t action) {
   drv->initialized = false;
 }
 
-int backlight_set(int val) {
+int backlight_set(int requested_level) {
   backlight_driver_t *drv = &g_backlight_driver;
 
   if (!drv->initialized) {
     return 0;
   }
 
-  if (val < 0 || val > 255) {
+  // Requested level out of range
+  if (requested_level < BACKLIGHT_MIN_LEVEL ||
+      requested_level > BACKLIGHT_MAX_LEVEL){
     return drv->current_level;
   }
 
-  if (val == drv->current_level) {
-    return val;
+  // Capture requested level.
+  drv->requested_level = requested_level;
+
+  int requested_level_limited = drv->requested_level;
+  if(drv->requested_level > drv->max_level){
+    requested_level_limited = drv->max_level;
   }
 
-  drv->current_level = val;
-  int set_step = MAX_STEPS * val / 255;
+  // No action required
+  if (requested_level_limited == drv->current_level) {
+    return drv->current_level;
+  }
+
+  // New backlight leve
+  drv->current_level = requested_level_limited;
+
+  int set_step = MAX_STEPS * drv->current_level / 255;
 
   if (set_step == 0) {
     backlight_shutdown();
@@ -250,6 +272,29 @@ int backlight_get(void) {
   }
 
   return drv->current_level;
+}
+
+// Set maximal backlight level
+int backlight_set_max_level(int max_level){
+  backlight_driver_t *drv = &g_backlight_driver;
+
+  if(!drv->initialized){
+    return 0;
+  }
+
+  if(max_level < BACKLIGHT_MIN_LEVEL){
+    max_level = BACKLIGHT_MIN_LEVEL;
+  }
+
+  if(max_level > BACKLIGHT_MAX_LEVEL){
+    max_level = BACKLIGHT_MAX_LEVEL;
+  }
+
+  drv->max_level = max_level;
+  backlight_set(drv->requested_level);
+
+  return drv->current_level;
+
 }
 
 static void backlight_control_up(uint32_t *data, int steps) {

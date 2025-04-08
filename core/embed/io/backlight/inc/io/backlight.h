@@ -19,6 +19,9 @@
 
 #pragma once
 
+#define BACKLIGHT_MAX_LEVEL 255
+#define BACKLIGHT_MIN_LEVEL 0
+
 // Action to be taken when initializing or
 // deinitializing the backlight driver
 typedef enum {
@@ -41,14 +44,21 @@ void backlight_init(backlight_action_t action);
 // is kept on.
 void backlight_deinit(backlight_action_t action);
 
-// Sets the backlight level in range 0-255 and returns the actual level set.
+// Request the backlight level in range 0-255 and returns the actual level set.
+// The requested level may be limited if its above the max_level limit.
 //
 // If the level is outside the range, the function has no effect
 // and just returns the actual level set. If the backlight driver
 // is not initialized, the function returns 0.
-int backlight_set(int val);
+int backlight_set(int requested_level);
 
 // Gets the backlight level in range 0-255
 //
 // Returns 0 if the backlight driver is not initialized.
 int backlight_get(void);
+
+// Set maximal backlight limit, if the currently set level is above the
+// set limit, backlight will be change immediately.
+//
+// Returns 0 if the backlight driver is not initialized.
+int backlight_set_max_level(int max_level);
