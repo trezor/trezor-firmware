@@ -10,10 +10,11 @@ async def handle_device_menu() -> None:
     # MOCK DATA
     failed_backup = True
     battery_percentage = 22
-    paired_devices = ["Trezor Suite"] if ble.is_connected() else []
+    paired_devices = ["Trezor Suite"] if (ble.connection_state() & 0x04) else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     device_name = storage.device.get_label() or "Trezor"
+    print(bin(ble.connection_state()))
 
     menu_result = await raise_if_not_confirmed(
         trezorui_api.show_device_menu(

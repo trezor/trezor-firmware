@@ -52,9 +52,15 @@ def peer_count() -> int:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def is_connected() -> bool:
+def connection_state() -> int:
     """
-    TODO: this should really return struct or enum
+    Returns current connection state as flags:
+
+    0x01 state known
+    0x02 connectable
+    0x04 connected
+    0x08 pairing
+    0x10 pairing request
     """
 
 
