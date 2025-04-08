@@ -3581,11 +3581,13 @@ if TYPE_CHECKING:
 
     class EthereumAddress(protobuf.MessageType):
         address: "str | None"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str | None" = None,
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 

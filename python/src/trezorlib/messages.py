@@ -4941,6 +4941,7 @@ class EthereumAddress(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("_old_address", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("address", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -4948,9 +4949,11 @@ class EthereumAddress(protobuf.MessageType):
         *,
         _old_address: Optional["bytes"] = None,
         address: Optional["str"] = None,
+        mac: Optional["bytes"] = None,
     ) -> None:
         self._old_address = _old_address
         self.address = address
+        self.mac = mac
 
 
 class EthereumSignTx(protobuf.MessageType):
