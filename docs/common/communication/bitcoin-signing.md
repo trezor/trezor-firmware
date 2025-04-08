@@ -306,7 +306,7 @@ Trezor sets `request_type` to `TXPAYMENTREQ`, and `request_details.tx_hash` is u
 `request_details.request_index` is the index of the payment request in the transaction:
 0 is the first payment request, 1 is second, etc.
 
-The host must respond with a `TxAckPaymentRequest` message.
+The host must respond with a `PaymentRequest` message.
 
 ## Replacement transactions
 

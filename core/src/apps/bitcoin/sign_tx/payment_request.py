@@ -6,7 +6,7 @@ from trezor.wire import DataError, context
 from .. import writers
 
 if TYPE_CHECKING:
-    from trezor.messages import TxAckPaymentRequest, TxOutput
+    from trezor.messages import PaymentRequest, TxOutput
 
     from apps.common import coininfo
     from apps.common.keychain import Keychain
@@ -24,7 +24,7 @@ class PaymentRequestVerifier:
         PUBLIC_KEY = b""
 
     def __init__(
-        self, msg: TxAckPaymentRequest, coin: coininfo.CoinInfo, keychain: Keychain
+        self, msg: PaymentRequest, coin: coininfo.CoinInfo, keychain: Keychain
     ) -> None:
         from storage.cache_common import APP_COMMON_NONCE
         from trezor.crypto.hashlib import sha256

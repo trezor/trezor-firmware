@@ -373,6 +373,7 @@ if TYPE_CHECKING:
         BackupDevice = 34
         EntropyRequest = 35
         EntropyAck = 36
+        PaymentRequest = 37
         EntropyCheckReady = 994
         EntropyCheckContinue = 995
         PassphraseRequest = 41
@@ -417,7 +418,6 @@ if TYPE_CHECKING:
         TxAck = 22
         GetAddress = 29
         Address = 30
-        TxAckPaymentRequest = 37
         SignMessage = 38
         VerifyMessage = 39
         MessageSignature = 40
