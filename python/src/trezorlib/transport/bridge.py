@@ -76,7 +76,7 @@ def detect_protocol_version(transport: "BridgeTransport") -> int:
     from .. import mapping, messages
     from ..messages import FailureType
 
-    protocol_version = ProtocolVersion.PROTOCOL_V1
+    protocol_version = ProtocolVersion.V1
     request_type, request_data = mapping.DEFAULT_MAPPING.encode(messages.Initialize())
     transport.open()
     transport.write_chunk(request_type.to_bytes(2, "big") + request_data)
@@ -87,13 +87,13 @@ def detect_protocol_version(transport: "BridgeTransport") -> int:
     if isinstance(response, messages.Failure):
         if response.code == FailureType.InvalidProtocol:
             LOG.debug("Protocol V2 detected")
-            protocol_version = ProtocolVersion.PROTOCOL_V2
+            protocol_version = ProtocolVersion.V2
 
     return protocol_version
 
 
 def _is_transport_valid(transport: "BridgeTransport") -> bool:
-    is_valid = detect_protocol_version(transport) == ProtocolVersion.PROTOCOL_V1
+    is_valid = detect_protocol_version(transport) == ProtocolVersion.V1
     if not is_valid:
         LOG.warning("Detected unsupported Bridge transport!")
     return is_valid

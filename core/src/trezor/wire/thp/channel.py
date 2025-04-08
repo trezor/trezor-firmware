@@ -161,8 +161,8 @@ class Channel:
             pass  # TODO ??
         if self.fallback_decrypt and self.expected_payload_length == self.bytes_read:
             self._finish_fallback()
-            from trezor.messages import Failure
             from trezor.enums import FailureType
+            from trezor.messages import Failure
 
             return self.write(
                 Failure(code=FailureType.DeviceIsBusy, message="FALLBACK!"),
@@ -201,7 +201,7 @@ class Channel:
             return None
         return self._handle_init_packet(packet)
 
-    def _handle_init_packet(self, packet: utils.BufferType) -> None:
+    def _handle_init_packet(self, packet: utils.BufferType) -> Awaitable[None] | None:
         self.fallback_decrypt = False
         self.fallback_session_id = None
         self.bytes_read = 0
