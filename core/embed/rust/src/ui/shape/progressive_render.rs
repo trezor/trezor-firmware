@@ -141,8 +141,10 @@ where
         }
     }
 
+    #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self) {}
 
+    #[cfg(feature = "ui_debug")]
     fn should_raise_overflow_exception(&self) -> bool {
         false
     }

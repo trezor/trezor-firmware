@@ -317,6 +317,7 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         let mut invalid: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.render_state(self.state.index(), target);
+            #[cfg(feature = "ui_debug")]
             if target.should_raise_overflow_exception() {
                 invalid = true;
             }

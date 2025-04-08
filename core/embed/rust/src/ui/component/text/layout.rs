@@ -255,6 +255,7 @@ impl TextLayout {
             &mut TextRenderer::new(target).with_alpha(alpha),
         );
 
+        #[cfg(feature = "ui_debug")]
         if must_fit && matches!(fit, LayoutFit::OutOfBounds { .. }) {
             target.raise_overflow_exception();
         }

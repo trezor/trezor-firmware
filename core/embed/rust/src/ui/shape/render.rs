@@ -59,8 +59,10 @@ pub trait Renderer<'a> {
         self.set_viewport(original);
     }
 
+    #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self);
 
+    #[cfg(feature = "ui_debug")]
     fn should_raise_overflow_exception(&self) -> bool;
 }
 
@@ -128,10 +130,12 @@ where
         }
     }
 
+    #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self) {
         self.overflow = true;
     }
 
+    #[cfg(feature = "ui_debug")]
     fn should_raise_overflow_exception(&self) -> bool {
         self.overflow
     }
@@ -145,6 +149,7 @@ where
     pub renderer: T,
     _env: core::marker::PhantomData<&'env mut &'env ()>,
     _alloc: core::marker::PhantomData<&'alloc ()>,
+    #[cfg(feature = "ui_debug")]
     overflow: bool,
 }
 
@@ -153,11 +158,22 @@ where
     T: Renderer<'alloc>,
 {
     pub fn new(renderer: T) -> Self {
-        Self {
-            renderer,
-            _env: core::marker::PhantomData,
-            _alloc: core::marker::PhantomData,
-            overflow: false,
+        #[cfg(feature = "ui_debug")]
+        {
+            Self {
+                renderer,
+                _env: core::marker::PhantomData,
+                _alloc: core::marker::PhantomData,
+                overflow: false,
+            }
+        }
+        #[cfg(not(feature = "ui_debug"))]
+        {
+            Self {
+                renderer,
+                _env: core::marker::PhantomData,
+                _alloc: core::marker::PhantomData,
+            }
         }
     }
 
@@ -185,10 +201,12 @@ where
         self.renderer.render_shape(shape);
     }
 
+    #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self) {
         self.overflow = true;
     }
 
+    #[cfg(feature = "ui_debug")]
     fn should_raise_overflow_exception(&self) -> bool {
         self.overflow
     }

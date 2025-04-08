@@ -312,11 +312,7 @@ impl LayoutObjInner {
 
         if self.repaint != Repaint::None {
             self.repaint = Repaint::None;
-            if self.root_mut().paint().is_err() {
-                Err(Error::OutOfRange)
-            } else {
-                Ok(true)
-            }
+            self.root_mut().paint().map(|_| true)
         } else {
             Ok(false)
         }
@@ -602,10 +598,8 @@ extern "C" fn ui_layout_timer(this: Obj, token: Obj) -> Obj {
 extern "C" fn ui_layout_paint(this: Obj) -> Obj {
     let block = || {
         let this: Gc<LayoutObj> = this.try_into()?;
-        let Ok(painted) = this.inner_mut().obj_paint_if_requested() else {
-            return Err(Error::OutOfRange);
-        };
-        Ok(painted.into())
+        let painted = this.inner_mut().obj_paint_if_requested();
+        Ok(painted?.into())
     };
     unsafe { util::try_or_raise(block) }
 }
