@@ -74,6 +74,7 @@ pub fn new_show_share_words_flow(
     .with_action_bar(ActionBar::new_single(Button::with_text(
         TR::buttons__continue.into(),
     )))
+    .with_page_limit(1)
     .map(|msg| match msg {
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
