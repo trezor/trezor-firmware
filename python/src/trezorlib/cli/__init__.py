@@ -135,11 +135,11 @@ class TrezorConnection:
 
         # Try resume session from id
         if self.session_id is not None:
-            if client.protocol_version is ProtocolVersion.PROTOCOL_V1:
+            if client.protocol_version is ProtocolVersion.V1:
                 session = SessionV1.resume_from_id(
                     client=client, session_id=self.session_id
                 )
-            elif client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+            elif client.protocol_version is ProtocolVersion.V2:
                 session = SessionV2(client, self.session_id)
                 # TODO fix resumption on THP
             else:
