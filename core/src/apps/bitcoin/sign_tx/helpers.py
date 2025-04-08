@@ -3,9 +3,9 @@ from typing import TYPE_CHECKING
 from trezor import utils
 from trezor.enums import InputScriptType, OutputScriptType, RequestType
 from trezor.messages import (
+    PaymentRequest,
     TxAckInput,
     TxAckOutput,
-    TxAckPaymentRequest,
     TxAckPrevExtraData,
     TxAckPrevInput,
     TxAckPrevMeta,
@@ -90,7 +90,7 @@ class UiConfirmDecredSSTXSubmission(UiConfirm):
 class UiConfirmPaymentRequest(UiConfirm):
     def __init__(
         self,
-        payment_req: TxAckPaymentRequest,
+        payment_req: PaymentRequest,
         coin: CoinInfo,
         amount_unit: AmountUnit,
     ) -> None:
@@ -266,7 +266,7 @@ def confirm_decred_sstx_submission(output: TxOutput, coin: CoinInfo, amount_unit
     return (yield UiConfirmDecredSSTXSubmission(output, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
-def should_show_payment_request_details(payment_req: TxAckPaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[bool]:  # type: ignore [awaitable-return-type]
+def should_show_payment_request_details(payment_req: PaymentRequest, coin: CoinInfo, amount_unit: AmountUnit) -> Awaitable[bool]:  # type: ignore [awaitable-return-type]
     return (yield UiConfirmPaymentRequest(payment_req, coin, amount_unit))  # type: ignore [awaitable-return-type]
 
 
@@ -389,11 +389,11 @@ def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: b
     return ack.tx.output
 
 
-def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequest]:  # type: ignore [awaitable-return-type]
+def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[PaymentRequest]:  # type: ignore [awaitable-return-type]
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXPAYMENTREQ
     tx_req.details.request_index = i
-    ack = yield TxAckPaymentRequest, tx_req  # type: ignore [awaitable-return-type]
+    ack = yield PaymentRequest, tx_req  # type: ignore [awaitable-return-type]
     _clear_tx_request(tx_req)
     return _sanitize_payment_req(ack)
 
@@ -573,7 +573,7 @@ def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
     return txo
 
 
-def _sanitize_payment_req(payment_req: TxAckPaymentRequest) -> TxAckPaymentRequest:
+def _sanitize_payment_req(payment_req: PaymentRequest) -> PaymentRequest:
     for memo in payment_req.memos:
         if (memo.text_memo, memo.refund_memo, memo.coin_purchase_memo).count(None) != 2:
             raise DataError(

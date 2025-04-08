@@ -46,6 +46,7 @@ enum MessageType {
     MessageType_BackupDevice = 34 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_EntropyRequest = 35 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_EntropyAck = 36 [(bitcoin_only) = true, (wire_in) = true];
+    MessageType_PaymentRequest = 37 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_EntropyCheckReady = 994 [(bitcoin_only) = true, (wire_out) = true];
     MessageType_EntropyCheckContinue = 995 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_PassphraseRequest = 41 [(bitcoin_only) = true, (wire_out) = true];
@@ -100,7 +101,6 @@ enum MessageType {
     MessageType_TxAck = 22 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_GetAddress = 29 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_Address = 30 [(bitcoin_only) = true, (wire_out) = true];
-    MessageType_TxAckPaymentRequest = 37 [(wire_in) = true];
     MessageType_SignMessage = 38 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_VerifyMessage = 39 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_MessageSignature = 40 [(bitcoin_only) = true, (wire_out) = true];
