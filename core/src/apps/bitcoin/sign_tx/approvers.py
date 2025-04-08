@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from ..authorization import CoinJoinAuthorization
     from .bitcoin import Bitcoin
-    from .payment_request import PaymentRequestVerifier
+    from .payment_request import BitcoinPaymentRequestVerifier
     from .tx_info import TxInfo
 
 
@@ -33,7 +33,7 @@ class Approver:
     def __init__(self, tx: SignTx, coin: CoinInfo) -> None:
         self.coin = coin
         self.weight = tx_weight.TxWeightCalculator()
-        self.payment_req_verifier: PaymentRequestVerifier | None = None
+        self.payment_req_verifier: BitcoinPaymentRequestVerifier | None = None
         self.show_payment_req_details = False
 
         # amounts in the current transaction
@@ -91,10 +91,12 @@ class Approver:
     async def add_payment_request(
         self, msg: PaymentRequest, keychain: Keychain
     ) -> None:
-        from .payment_request import PaymentRequestVerifier
+        from .payment_request import BitcoinPaymentRequestVerifier
 
         self.finish_payment_request()
-        self.payment_req_verifier = PaymentRequestVerifier(msg, self.coin, keychain)
+        self.payment_req_verifier = BitcoinPaymentRequestVerifier(
+            msg, self.coin.slip44, keychain
+        )
 
     def finish_payment_request(self) -> None:
         if self.payment_req_verifier:
