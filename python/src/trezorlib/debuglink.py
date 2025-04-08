@@ -32,20 +32,13 @@ from pathlib import Path
 from mnemonic import Mnemonic
 
 from . import btc, mapping, messages, models, protobuf
-from .client import (
-    MAX_PASSPHRASE_LENGTH,
-    MAX_PIN_LENGTH,
-    PASSPHRASE_ON_DEVICE,
-    ProtocolVersion,
-    TrezorClient,
-)
-from .exceptions import Cancelled, PinException, TrezorFailure, UnexpectedMessageError
+from .client import ProtocolVersion, TrezorClient
+from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
 from .log import DUMP_BYTES
-from .messages import Capability, DebugWaitType
-from .protobuf import MessageType
+from .messages import DebugWaitType
 from .tools import parse_path
 from .transport import Timeout
-from .transport.session import Session, SessionV1, derive_seed
+from .transport.session import Session
 from .transport.thp.protocol_v1 import ProtocolV1Channel
 
 if t.TYPE_CHECKING:

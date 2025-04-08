@@ -102,11 +102,9 @@ if utils.USE_THP:
                 return  # pylint: disable=lost-exception
 
 else:
-    _PROTOBUF_BUFFER_SIZE = const(8192)
-    WIRE_BUFFER = bytearray(_PROTOBUF_BUFFER_SIZE)
 
     async def handle_session(iface: WireInterface) -> None:
-        ctx = CodecContext(iface, WIRE_BUFFER)
+        ctx = CodecContext(iface, WIRE_BUFFER_PROVIDER)
         next_msg: protocol_common.Message | None = None
 
         # Take a mark of modules that are imported at this point, so we can
