@@ -17,9 +17,11 @@ async def unpair(msg: BleUnpair) -> None:
     else:
         await confirm_action("unpair", TR.ble__unpair_title, TR.ble__unpair_current)
 
-    ctx = get_context()
-
-    await ctx.write(Success(message="Erasing.."))
+    try:
+        ctx = get_context()
+        await ctx.write(Success(message="Erasing.."))
+    except RuntimeError:  # TODO newtype?
+        pass
 
     if msg.all:
         ble.erase_bonds()
