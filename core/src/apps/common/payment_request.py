@@ -3,12 +3,11 @@ from typing import TYPE_CHECKING
 
 from trezor.wire import DataError, context
 
-from .. import writers
+from . import writers
 
 if TYPE_CHECKING:
-    from trezor.messages import PaymentRequest, TxOutput
+    from trezor.messages import PaymentRequest
 
-    from apps.common import coininfo
     from apps.common.keychain import Keychain
 
 _MEMO_TYPE_TEXT = const(1)
@@ -23,16 +22,14 @@ class PaymentRequestVerifier:
     else:
         PUBLIC_KEY = b""
 
-    def __init__(
-        self, msg: PaymentRequest, coin: coininfo.CoinInfo, keychain: Keychain
-    ) -> None:
+    def __init__(self, msg: PaymentRequest, slip44_id: int, keychain: Keychain) -> None:
         from storage.cache_common import APP_COMMON_NONCE
         from trezor.crypto.hashlib import sha256
         from trezor.utils import HashWriter
 
         from apps.common.address_mac import check_address_mac
 
-        from .. import writers  # pylint: disable=import-outside-toplevel
+        from . import writers  # pylint: disable=import-outside-toplevel
 
         self.h_outputs = HashWriter(sha256())
         self.amount = 0
@@ -57,23 +54,23 @@ class PaymentRequestVerifier:
         for m in msg.memos:
             if m.text_memo is not None:
                 memo = m.text_memo
-                writers.write_uint32(self.h_pr, _MEMO_TYPE_TEXT)
+                writers.write_uint32_le(self.h_pr, _MEMO_TYPE_TEXT)
                 writers.write_bytes_prefixed(self.h_pr, memo.text.encode())
             elif m.refund_memo is not None:
                 memo = m.refund_memo
                 # Unlike in a coin purchase memo, the coin type is implied by the payment request.
-                check_address_mac(memo.address, memo.mac, coin.slip44, keychain)
-                writers.write_uint32(self.h_pr, _MEMO_TYPE_REFUND)
+                check_address_mac(memo.address, memo.mac, slip44_id, keychain)
+                writers.write_uint32_le(self.h_pr, _MEMO_TYPE_REFUND)
                 writers.write_bytes_prefixed(self.h_pr, memo.address.encode())
             elif m.coin_purchase_memo is not None:
                 memo = m.coin_purchase_memo
                 check_address_mac(memo.address, memo.mac, memo.coin_type, keychain)
-                writers.write_uint32(self.h_pr, _MEMO_TYPE_COIN_PURCHASE)
-                writers.write_uint32(self.h_pr, memo.coin_type)
+                writers.write_uint32_le(self.h_pr, _MEMO_TYPE_COIN_PURCHASE)
+                writers.write_uint32_le(self.h_pr, memo.coin_type)
                 writers.write_bytes_prefixed(self.h_pr, memo.amount.encode())
                 writers.write_bytes_prefixed(self.h_pr, memo.address.encode())
 
-        writers.write_uint32(self.h_pr, coin.slip44)
+        writers.write_uint32_le(self.h_pr, slip44_id)
 
     def verify(self) -> None:
         from trezor.crypto.curve import secp256k1
@@ -81,7 +78,7 @@ class PaymentRequestVerifier:
         if self.expected_amount is not None and self.amount != self.expected_amount:
             raise DataError("Invalid amount in payment request.")
 
-        hash_outputs = writers.get_tx_hash(self.h_outputs)
+        hash_outputs = self.h_outputs.get_digest()
         writers.write_bytes_fixed(self.h_pr, hash_outputs, 32)
 
         if not secp256k1.verify(
@@ -89,15 +86,8 @@ class PaymentRequestVerifier:
         ):
             raise DataError("Invalid signature in payment request.")
 
-    def _add_output(self, txo: TxOutput) -> None:
-        # For change outputs txo.address filled in by output_derive_script().
-        assert txo.address is not None
-        writers.write_uint64(self.h_outputs, txo.amount)
-        writers.write_bytes_prefixed(self.h_outputs, txo.address.encode())
-
-    def add_external_output(self, txo: TxOutput) -> None:
-        self._add_output(txo)
-        self.amount += txo.amount
-
-    def add_change_output(self, txo: TxOutput) -> None:
-        self._add_output(txo)
+    def add_output(self, amount: int, address: str, change: bool = False) -> None:
+        writers.write_uint64_le(self.h_outputs, amount)
+        writers.write_bytes_prefixed(self.h_outputs, address.encode())
+        if not change:
+            self.amount += amount

@@ -5,6 +5,7 @@ from trezor.utils import ensure
 
 from apps.common.writers import (  # noqa: F401
     write_bytes_fixed,
+    write_bytes_prefixed,
     write_bytes_reversed,
     write_bytes_unchecked,
     write_compact_size,
@@ -27,11 +28,6 @@ write_uint32 = write_uint32_le
 write_uint64 = write_uint64_le
 
 TX_HASH_SIZE = const(32)
-
-
-def write_bytes_prefixed(w: Writer, b: bytes) -> None:
-    write_compact_size(w, len(b))
-    write_bytes_unchecked(w, b)
 
 
 def write_tx_input(w: Writer, i: TxInput | PrevInput, script: bytes) -> None:
