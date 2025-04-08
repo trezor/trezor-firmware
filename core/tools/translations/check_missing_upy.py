@@ -257,7 +257,6 @@ if __name__ == "__main__":
         "knownapps.py",
         "networks.py",
         "tokens.py",
-        "all_modules.py",
         "workflow_handlers.py",
         "messages.py",
         "errors.py",
