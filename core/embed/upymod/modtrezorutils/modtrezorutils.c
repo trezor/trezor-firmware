@@ -303,18 +303,17 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
 #endif  // MICROPY_OOM_CALLBACK
 
 /// if __debug__:
-///     def check_reallocs() -> None:
+///     def check_heap_fragmentation() -> None:
 ///         """
-///         Assert that `sys.modules` and `main`'s globals are never
-///         reallocated.
+///         Assert known sources for heap fragmentation.
 ///         """
-STATIC mp_obj_t mod_trezorutils_check_reallocs(void) {
+STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
   mp_obj_dict_t *modules = &MP_STATE_VM(mp_loaded_modules_dict);
   if (modules->map.alloc > MICROPY_LOADED_MODULES_DICT_SIZE) {
     mp_raise_msg(&mp_type_AssertionError, "sys.modules dict is reallocated");
   }
 #ifdef TREZOR_EMULATOR
-  // when profiling, __main__ module is `prof.py`, not `main.py`
+  // when profiling, __main__ module is `prof`, not `main`
   mp_obj_t main = mp_obj_dict_get(modules, MP_OBJ_NEW_QSTR(MP_QSTR_main));
   size_t main_map_alloc = mp_obj_module_get_globals(main)->map.alloc;
 #else
@@ -324,11 +323,23 @@ STATIC mp_obj_t mod_trezorutils_check_reallocs(void) {
   if (main_map_alloc > MICROPY_MAIN_DICT_SIZE) {
     mp_raise_msg(&mp_type_AssertionError, "main globals dict is reallocated");
   }
+
+  size_t n_pool, n_qstr, n_str_data_bytes, n_total_bytes;
+  qstr_pool_info(&n_pool, &n_qstr, &n_str_data_bytes, &n_total_bytes);
+  if (n_pool) {
+#ifdef TREZOR_EMULATOR
+    qstr_dump_data();
+#endif
+    mp_raise_msg_varg(&mp_type_AssertionError,
+                      "Runtime QSTR allocation: " UINT_FMT " pools, " UINT_FMT
+                      " strings, " UINT_FMT " data bytes, " UINT_FMT
+                      " total bytes",
+                      n_pool, n_qstr, n_str_data_bytes, n_total_bytes);
+  }
   return mp_const_none;
 }
-STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_check_reallocs_obj,
-                                 mod_trezorutils_check_reallocs);
-
+STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_check_heap_fragmentation_obj,
+                                 mod_trezorutils_check_heap_fragmentation);
 #endif  // !PYOPT
 
 /// def reboot_to_bootloader(
@@ -547,8 +558,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_enable_oom_dump),
      MP_ROM_PTR(&mod_trezorutils_enable_oom_dump_obj)},
 #endif
-    {MP_ROM_QSTR(MP_QSTR_check_reallocs),
-     MP_ROM_PTR(&mod_trezorutils_check_reallocs_obj)},
+    {MP_ROM_QSTR(MP_QSTR_check_heap_fragmentation),
+     MP_ROM_PTR(&mod_trezorutils_check_heap_fragmentation_obj)},
 #endif
     {MP_ROM_QSTR(MP_QSTR_sd_hotswap_enabled),
      MP_ROM_PTR(&mod_trezorutils_sd_hotswap_enabled_obj)},
