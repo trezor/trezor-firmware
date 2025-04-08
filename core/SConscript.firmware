@@ -23,6 +23,8 @@ LOG_STACK_USAGE = ARGUMENTS.get('LOG_STACK_USAGE', '0') == '1'
 DISABLE_ANIMATION = ARGUMENTS.get('TREZOR_DISABLE_ANIMATION', '0') == '1'
 BLOCK_ON_VCP = ARGUMENTS.get('BLOCK_ON_VCP', '0') == '1'
 UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
+PQ_SIGNATURE_ALGORITHM = os.getenv('PQ_SIGNATURE_ALGORITHM', 'ml-dsa-44')
+PQ_SIGNATURE_VERIFICATION_ONLY = os.getenv('PQ_SIGNATURE_VERIFICATION_ONLY', '0') == '1'
 
 STORAGE_INSECURE_TESTING_MODE = ARGUMENTS.get('STORAGE_INSECURE_TESTING_MODE', '0') == '1'
 if STORAGE_INSECURE_TESTING_MODE and PRODUCTION:
@@ -193,6 +195,18 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
         'vendor/trezor-crypto/zkp_ecdsa.c',
         'vendor/trezor-crypto/zkp_bip340.c',
     ]
+
+if PQ_SIGNATURE_ALGORITHM:
+    PQ_SIGNATURE_PATH = f'vendor/pqm4/mupq/pqclean/crypto_sign/{PQ_SIGNATURE_ALGORITHM}/clean/'
+    PQ_SIGNATURE_PREFIX = f'PQCLEAN_{PQ_SIGNATURE_ALGORITHM.upper().replace("-", "")}_CLEAN'
+    PQ_SIGNATURE_CPPPATH = [PQ_SIGNATURE_PATH, 'vendor/trezor-crypto/pq_signature', 'vendor/trezor-crypto']
+    PQ_SIGNATURE_CPPDEFINES = [('PQ_SIGNATURE_PREFIX', PQ_SIGNATURE_PREFIX)]
+    PQ_SIGNATURE_CCFLAGS_MOD = "-Wno-unused-function -Wno-incompatible-pointer-types"
+    if PQ_SIGNATURE_VERIFICATION_ONLY:
+        PQ_SIGNATURE_CPPDEFINES += ['PQ_SIGNATURE_VERIFICATION_ONLY']
+    PQ_SIGNATURE_SOURCE = Glob(PQ_SIGNATURE_PATH + '*.c') + Glob('vendor/trezor-crypto/pq_signature/*.c')
+    CPPPATH_MOD += [PQ_SIGNATURE_PATH]
+    CPPDEFINES_MOD += PQ_SIGNATURE_CPPDEFINES
 
 # AES-GCM
 if FEATURE_FLAGS["AES_GCM"]:
@@ -741,6 +755,9 @@ source_files = SOURCE_MOD + SOURCE_MOD_CRYPTO + SOURCE_FIRMWARE + SOURCE_MICROPY
 obj_program = []
 obj_program.extend(env.Object(source=SOURCE_MOD))
 obj_program.extend(env.Object(source=SOURCE_MOD_CRYPTO, CCFLAGS='$CCFLAGS -ftrivial-auto-var-init=zero'))
+if PQ_SIGNATURE_ALGORITHM:
+    obj_program.extend(env.Object(source=PQ_SIGNATURE_SOURCE, CCFLAGS=f'$CCFLAGS {PQ_SIGNATURE_CCFLAGS_MOD}', CPPPATH=PQ_SIGNATURE_CPPPATH, CPPDEFINES=PQ_SIGNATURE_CPPDEFINES))
+    source_files.extend(PQ_SIGNATURE_SOURCE)
 if FEATURE_FLAGS["SECP256K1_ZKP"]:
     obj_program.extend(env.Object(source=SOURCE_MOD_SECP256K1_ZKP, CCFLAGS='$CCFLAGS -Wno-unused-function'))
     source_files.extend(SOURCE_MOD_SECP256K1_ZKP)
