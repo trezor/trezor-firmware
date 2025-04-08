@@ -1,7 +1,8 @@
 import storage.device
+import trezorble as ble
 import trezorui_api
 from trezor import TR, config, utils
-from trezor.ui.layouts import interact
+from trezor.ui.layouts import interact, log
 from trezor.wire import ActionCancelled
 from trezorui_api import DeviceMenuResult
 
@@ -33,7 +34,7 @@ async def handle_device_menu() -> None:
     # MOCK DATA
     failed_backup = True
     battery_percentage = 22
-    paired_devices = ["Trezor Suite"]
+    paired_devices = ["Trezor Suite"] if ble.is_connected() else []
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     device_name = storage.device.get_label() or "Trezor"
@@ -43,6 +44,10 @@ async def handle_device_menu() -> None:
     MIN = MS * 60
     HOUR = MIN * 60
     DAY = HOUR * 24
+    log.debug(
+        __name__,
+        f"device menu, BLE state: {ble.connection_flags()} (peers: {ble.peer_count()})",
+    )
 
     if auto_lock_ms >= DAY:
         auto_lock_num = auto_lock_ms // DAY
@@ -77,6 +82,7 @@ async def handle_device_menu() -> None:
         from apps.management.ble.pair_new_device import pair_new_device
 
         await pair_new_device()
+<<<<<<< HEAD
     elif menu_result is DeviceMenuResult.ScreenBrightness:
         from trezor.ui.layouts import set_brightness
 
@@ -102,5 +108,14 @@ async def handle_device_menu() -> None:
             )
         else:
             raise RuntimeError(f"Unknown menu {result_type}, {index}")
+||||||| parent of f9ad200301 (feat(core): BLE pairing flow)
+=======
+    elif menu_result == "DeviceDisconnect":
+        from trezor.messages import BleUnpair
+
+        from apps.management.ble.unpair import unpair
+
+        await unpair(BleUnpair(all=False))
+>>>>>>> f9ad200301 (feat(core): BLE pairing flow)
     else:
         raise RuntimeError(f"Unknown menu {menu_result}")
