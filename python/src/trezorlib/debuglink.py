@@ -238,7 +238,13 @@ class LayoutContent(UnstructuredJSONReader):
         """What is on the screen, in one long string, so content can be
         asserted regardless of newlines. Also getting rid of possible ellipsis.
         """
-        content = self.screen_content().replace("\n", " ")
+        content = self.screen_content()
+
+        # Fix line-broken hyphenated words: 'Back- ups' -> 'Backups'
+        content = re.sub(r"-\s+", "", content)
+
+        # Replace remaining newlines with space
+        content = content.replace("\n", " ")
         if content.endswith("..."):
             content = content[:-3]
         if content.startswith("..."):
