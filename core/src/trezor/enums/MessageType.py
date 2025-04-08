@@ -29,6 +29,7 @@ Nonce = 33
 BackupDevice = 34
 EntropyRequest = 35
 EntropyAck = 36
+PaymentRequest = 37
 EntropyCheckReady = 994
 EntropyCheckContinue = 995
 PassphraseRequest = 41
@@ -111,7 +112,6 @@ if not utils.BITCOIN_ONLY:
     SetU2FCounter = 63
     GetNextU2FCounter = 80
     NextU2FCounter = 81
-    TxAckPaymentRequest = 37
     EthereumGetPublicKey = 450
     EthereumPublicKey = 451
     EthereumGetAddress = 56

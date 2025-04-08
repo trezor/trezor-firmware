@@ -100,5 +100,5 @@ CoinJoinRequest.mask_public_key                             max_size:33
 CoinJoinRequest.signature                                   max_size:64
 
 # Unused messages.
-TxAckPaymentRequest                                         skip_message:true
+PaymentRequest                                              skip_message:true
 PaymentRequestMemo                                          skip_message:true

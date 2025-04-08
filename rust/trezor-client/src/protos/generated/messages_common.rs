@@ -2501,6 +2501,1212 @@ impl ::protobuf::reflect::ProtobufValue for HDNodeType {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.common.PaymentRequest)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct PaymentRequest {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.nonce)
+    pub nonce: ::std::option::Option<::std::vec::Vec<u8>>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.recipient_name)
+    pub recipient_name: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.memos)
+    pub memos: ::std::vec::Vec<payment_request::PaymentRequestMemo>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.amount)
+    pub amount: ::std::option::Option<u64>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.signature)
+    pub signature: ::std::option::Option<::std::vec::Vec<u8>>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.common.PaymentRequest.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a PaymentRequest {
+    fn default() -> &'a PaymentRequest {
+        <PaymentRequest as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl PaymentRequest {
+    pub fn new() -> PaymentRequest {
+        ::std::default::Default::default()
+    }
+
+    // optional bytes nonce = 1;
+
+    pub fn nonce(&self) -> &[u8] {
+        match self.nonce.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_nonce(&mut self) {
+        self.nonce = ::std::option::Option::None;
+    }
+
+    pub fn has_nonce(&self) -> bool {
+        self.nonce.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_nonce(&mut self, v: ::std::vec::Vec<u8>) {
+        self.nonce = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_nonce(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.nonce.is_none() {
+            self.nonce = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.nonce.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_nonce(&mut self) -> ::std::vec::Vec<u8> {
+        self.nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    // required string recipient_name = 2;
+
+    pub fn recipient_name(&self) -> &str {
+        match self.recipient_name.as_ref() {
+            Some(v) => v,
+            None => "",
+        }
+    }
+
+    pub fn clear_recipient_name(&mut self) {
+        self.recipient_name = ::std::option::Option::None;
+    }
+
+    pub fn has_recipient_name(&self) -> bool {
+        self.recipient_name.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_recipient_name(&mut self, v: ::std::string::String) {
+        self.recipient_name = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_recipient_name(&mut self) -> &mut ::std::string::String {
+        if self.recipient_name.is_none() {
+            self.recipient_name = ::std::option::Option::Some(::std::string::String::new());
+        }
+        self.recipient_name.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_recipient_name(&mut self) -> ::std::string::String {
+        self.recipient_name.take().unwrap_or_else(|| ::std::string::String::new())
+    }
+
+    // optional uint64 amount = 4;
+
+    pub fn amount(&self) -> u64 {
+        self.amount.unwrap_or(0)
+    }
+
+    pub fn clear_amount(&mut self) {
+        self.amount = ::std::option::Option::None;
+    }
+
+    pub fn has_amount(&self) -> bool {
+        self.amount.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_amount(&mut self, v: u64) {
+        self.amount = ::std::option::Option::Some(v);
+    }
+
+    // required bytes signature = 5;
+
+    pub fn signature(&self) -> &[u8] {
+        match self.signature.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_signature(&mut self) {
+        self.signature = ::std::option::Option::None;
+    }
+
+    pub fn has_signature(&self) -> bool {
+        self.signature.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_signature(&mut self, v: ::std::vec::Vec<u8>) {
+        self.signature = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_signature(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.signature.is_none() {
+            self.signature = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.signature.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_signature(&mut self) -> ::std::vec::Vec<u8> {
+        self.signature.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(5);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "nonce",
+            |m: &PaymentRequest| { &m.nonce },
+            |m: &mut PaymentRequest| { &mut m.nonce },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "recipient_name",
+            |m: &PaymentRequest| { &m.recipient_name },
+            |m: &mut PaymentRequest| { &mut m.recipient_name },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+            "memos",
+            |m: &PaymentRequest| { &m.memos },
+            |m: &mut PaymentRequest| { &mut m.memos },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "amount",
+            |m: &PaymentRequest| { &m.amount },
+            |m: &mut PaymentRequest| { &mut m.amount },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "signature",
+            |m: &PaymentRequest| { &m.signature },
+            |m: &mut PaymentRequest| { &mut m.signature },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<PaymentRequest>(
+            "PaymentRequest",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for PaymentRequest {
+    const NAME: &'static str = "PaymentRequest";
+
+    fn is_initialized(&self) -> bool {
+        if self.recipient_name.is_none() {
+            return false;
+        }
+        if self.signature.is_none() {
+            return false;
+        }
+        for v in &self.memos {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    self.nonce = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                18 => {
+                    self.recipient_name = ::std::option::Option::Some(is.read_string()?);
+                },
+                26 => {
+                    self.memos.push(is.read_message()?);
+                },
+                32 => {
+                    self.amount = ::std::option::Option::Some(is.read_uint64()?);
+                },
+                42 => {
+                    self.signature = ::std::option::Option::Some(is.read_bytes()?);
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.nonce.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(1, &v);
+        }
+        if let Some(v) = self.recipient_name.as_ref() {
+            my_size += ::protobuf::rt::string_size(2, &v);
+        }
+        for value in &self.memos {
+            let len = value.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        };
+        if let Some(v) = self.amount {
+            my_size += ::protobuf::rt::uint64_size(4, v);
+        }
+        if let Some(v) = self.signature.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(5, &v);
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.nonce.as_ref() {
+            os.write_bytes(1, v)?;
+        }
+        if let Some(v) = self.recipient_name.as_ref() {
+            os.write_string(2, v)?;
+        }
+        for v in &self.memos {
+            ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+        };
+        if let Some(v) = self.amount {
+            os.write_uint64(4, v)?;
+        }
+        if let Some(v) = self.signature.as_ref() {
+            os.write_bytes(5, v)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> PaymentRequest {
+        PaymentRequest::new()
+    }
+
+    fn clear(&mut self) {
+        self.nonce = ::std::option::Option::None;
+        self.recipient_name = ::std::option::Option::None;
+        self.memos.clear();
+        self.amount = ::std::option::Option::None;
+        self.signature = ::std::option::Option::None;
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static PaymentRequest {
+        static instance: PaymentRequest = PaymentRequest {
+            nonce: ::std::option::Option::None,
+            recipient_name: ::std::option::Option::None,
+            memos: ::std::vec::Vec::new(),
+            amount: ::std::option::Option::None,
+            signature: ::std::option::Option::None,
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for PaymentRequest {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("PaymentRequest").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for PaymentRequest {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for PaymentRequest {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
+/// Nested message and enums of message `PaymentRequest`
+pub mod payment_request {
+    // @@protoc_insertion_point(message:hw.trezor.messages.common.PaymentRequest.PaymentRequestMemo)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct PaymentRequestMemo {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.PaymentRequestMemo.text_memo)
+        pub text_memo: ::protobuf::MessageField<TextMemo>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.PaymentRequestMemo.refund_memo)
+        pub refund_memo: ::protobuf::MessageField<RefundMemo>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.PaymentRequestMemo.coin_purchase_memo)
+        pub coin_purchase_memo: ::protobuf::MessageField<CoinPurchaseMemo>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.common.PaymentRequest.PaymentRequestMemo.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a PaymentRequestMemo {
+        fn default() -> &'a PaymentRequestMemo {
+            <PaymentRequestMemo as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl PaymentRequestMemo {
+        pub fn new() -> PaymentRequestMemo {
+            ::std::default::Default::default()
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(3);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, TextMemo>(
+                "text_memo",
+                |m: &PaymentRequestMemo| { &m.text_memo },
+                |m: &mut PaymentRequestMemo| { &mut m.text_memo },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, RefundMemo>(
+                "refund_memo",
+                |m: &PaymentRequestMemo| { &m.refund_memo },
+                |m: &mut PaymentRequestMemo| { &mut m.refund_memo },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, CoinPurchaseMemo>(
+                "coin_purchase_memo",
+                |m: &PaymentRequestMemo| { &m.coin_purchase_memo },
+                |m: &mut PaymentRequestMemo| { &mut m.coin_purchase_memo },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<PaymentRequestMemo>(
+                "PaymentRequest.PaymentRequestMemo",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for PaymentRequestMemo {
+        const NAME: &'static str = "PaymentRequestMemo";
+
+        fn is_initialized(&self) -> bool {
+            for v in &self.text_memo {
+                if !v.is_initialized() {
+                    return false;
+                }
+            };
+            for v in &self.refund_memo {
+                if !v.is_initialized() {
+                    return false;
+                }
+            };
+            for v in &self.coin_purchase_memo {
+                if !v.is_initialized() {
+                    return false;
+                }
+            };
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    10 => {
+                        ::protobuf::rt::read_singular_message_into_field(is, &mut self.text_memo)?;
+                    },
+                    18 => {
+                        ::protobuf::rt::read_singular_message_into_field(is, &mut self.refund_memo)?;
+                    },
+                    26 => {
+                        ::protobuf::rt::read_singular_message_into_field(is, &mut self.coin_purchase_memo)?;
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.text_memo.as_ref() {
+                let len = v.compute_size();
+                my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+            }
+            if let Some(v) = self.refund_memo.as_ref() {
+                let len = v.compute_size();
+                my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+            }
+            if let Some(v) = self.coin_purchase_memo.as_ref() {
+                let len = v.compute_size();
+                my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.text_memo.as_ref() {
+                ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+            }
+            if let Some(v) = self.refund_memo.as_ref() {
+                ::protobuf::rt::write_message_field_with_cached_size(2, v, os)?;
+            }
+            if let Some(v) = self.coin_purchase_memo.as_ref() {
+                ::protobuf::rt::write_message_field_with_cached_size(3, v, os)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> PaymentRequestMemo {
+            PaymentRequestMemo::new()
+        }
+
+        fn clear(&mut self) {
+            self.text_memo.clear();
+            self.refund_memo.clear();
+            self.coin_purchase_memo.clear();
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static PaymentRequestMemo {
+            static instance: PaymentRequestMemo = PaymentRequestMemo {
+                text_memo: ::protobuf::MessageField::none(),
+                refund_memo: ::protobuf::MessageField::none(),
+                coin_purchase_memo: ::protobuf::MessageField::none(),
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for PaymentRequestMemo {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("PaymentRequest.PaymentRequestMemo").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for PaymentRequestMemo {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for PaymentRequestMemo {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.common.PaymentRequest.TextMemo)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct TextMemo {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.TextMemo.text)
+        pub text: ::std::option::Option<::std::string::String>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.common.PaymentRequest.TextMemo.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a TextMemo {
+        fn default() -> &'a TextMemo {
+            <TextMemo as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl TextMemo {
+        pub fn new() -> TextMemo {
+            ::std::default::Default::default()
+        }
+
+        // required string text = 1;
+
+        pub fn text(&self) -> &str {
+            match self.text.as_ref() {
+                Some(v) => v,
+                None => "",
+            }
+        }
+
+        pub fn clear_text(&mut self) {
+            self.text = ::std::option::Option::None;
+        }
+
+        pub fn has_text(&self) -> bool {
+            self.text.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_text(&mut self, v: ::std::string::String) {
+            self.text = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_text(&mut self) -> &mut ::std::string::String {
+            if self.text.is_none() {
+                self.text = ::std::option::Option::Some(::std::string::String::new());
+            }
+            self.text.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_text(&mut self) -> ::std::string::String {
+            self.text.take().unwrap_or_else(|| ::std::string::String::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(1);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "text",
+                |m: &TextMemo| { &m.text },
+                |m: &mut TextMemo| { &mut m.text },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<TextMemo>(
+                "PaymentRequest.TextMemo",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for TextMemo {
+        const NAME: &'static str = "TextMemo";
+
+        fn is_initialized(&self) -> bool {
+            if self.text.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    10 => {
+                        self.text = ::std::option::Option::Some(is.read_string()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.text.as_ref() {
+                my_size += ::protobuf::rt::string_size(1, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.text.as_ref() {
+                os.write_string(1, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> TextMemo {
+            TextMemo::new()
+        }
+
+        fn clear(&mut self) {
+            self.text = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static TextMemo {
+            static instance: TextMemo = TextMemo {
+                text: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for TextMemo {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("PaymentRequest.TextMemo").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for TextMemo {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for TextMemo {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.common.PaymentRequest.RefundMemo)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct RefundMemo {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.RefundMemo.address)
+        pub address: ::std::option::Option<::std::string::String>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.RefundMemo.mac)
+        pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.common.PaymentRequest.RefundMemo.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a RefundMemo {
+        fn default() -> &'a RefundMemo {
+            <RefundMemo as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl RefundMemo {
+        pub fn new() -> RefundMemo {
+            ::std::default::Default::default()
+        }
+
+        // required string address = 1;
+
+        pub fn address(&self) -> &str {
+            match self.address.as_ref() {
+                Some(v) => v,
+                None => "",
+            }
+        }
+
+        pub fn clear_address(&mut self) {
+            self.address = ::std::option::Option::None;
+        }
+
+        pub fn has_address(&self) -> bool {
+            self.address.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_address(&mut self, v: ::std::string::String) {
+            self.address = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_address(&mut self) -> &mut ::std::string::String {
+            if self.address.is_none() {
+                self.address = ::std::option::Option::Some(::std::string::String::new());
+            }
+            self.address.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_address(&mut self) -> ::std::string::String {
+            self.address.take().unwrap_or_else(|| ::std::string::String::new())
+        }
+
+        // required bytes mac = 2;
+
+        pub fn mac(&self) -> &[u8] {
+            match self.mac.as_ref() {
+                Some(v) => v,
+                None => &[],
+            }
+        }
+
+        pub fn clear_mac(&mut self) {
+            self.mac = ::std::option::Option::None;
+        }
+
+        pub fn has_mac(&self) -> bool {
+            self.mac.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+            self.mac = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+            if self.mac.is_none() {
+                self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+            }
+            self.mac.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+            self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "address",
+                |m: &RefundMemo| { &m.address },
+                |m: &mut RefundMemo| { &mut m.address },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "mac",
+                |m: &RefundMemo| { &m.mac },
+                |m: &mut RefundMemo| { &mut m.mac },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RefundMemo>(
+                "PaymentRequest.RefundMemo",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for RefundMemo {
+        const NAME: &'static str = "RefundMemo";
+
+        fn is_initialized(&self) -> bool {
+            if self.address.is_none() {
+                return false;
+            }
+            if self.mac.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    10 => {
+                        self.address = ::std::option::Option::Some(is.read_string()?);
+                    },
+                    18 => {
+                        self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.address.as_ref() {
+                my_size += ::protobuf::rt::string_size(1, &v);
+            }
+            if let Some(v) = self.mac.as_ref() {
+                my_size += ::protobuf::rt::bytes_size(2, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.address.as_ref() {
+                os.write_string(1, v)?;
+            }
+            if let Some(v) = self.mac.as_ref() {
+                os.write_bytes(2, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> RefundMemo {
+            RefundMemo::new()
+        }
+
+        fn clear(&mut self) {
+            self.address = ::std::option::Option::None;
+            self.mac = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static RefundMemo {
+            static instance: RefundMemo = RefundMemo {
+                address: ::std::option::Option::None,
+                mac: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for RefundMemo {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("PaymentRequest.RefundMemo").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for RefundMemo {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for RefundMemo {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+
+    // @@protoc_insertion_point(message:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo)
+    #[derive(PartialEq,Clone,Default,Debug)]
+    pub struct CoinPurchaseMemo {
+        // message fields
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.coin_type)
+        pub coin_type: ::std::option::Option<u32>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.amount)
+        pub amount: ::std::option::Option<::std::string::String>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.address)
+        pub address: ::std::option::Option<::std::string::String>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.mac)
+        pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
+        // special fields
+        // @@protoc_insertion_point(special_field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.special_fields)
+        pub special_fields: ::protobuf::SpecialFields,
+    }
+
+    impl<'a> ::std::default::Default for &'a CoinPurchaseMemo {
+        fn default() -> &'a CoinPurchaseMemo {
+            <CoinPurchaseMemo as ::protobuf::Message>::default_instance()
+        }
+    }
+
+    impl CoinPurchaseMemo {
+        pub fn new() -> CoinPurchaseMemo {
+            ::std::default::Default::default()
+        }
+
+        // required uint32 coin_type = 1;
+
+        pub fn coin_type(&self) -> u32 {
+            self.coin_type.unwrap_or(0)
+        }
+
+        pub fn clear_coin_type(&mut self) {
+            self.coin_type = ::std::option::Option::None;
+        }
+
+        pub fn has_coin_type(&self) -> bool {
+            self.coin_type.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_coin_type(&mut self, v: u32) {
+            self.coin_type = ::std::option::Option::Some(v);
+        }
+
+        // required string amount = 2;
+
+        pub fn amount(&self) -> &str {
+            match self.amount.as_ref() {
+                Some(v) => v,
+                None => "",
+            }
+        }
+
+        pub fn clear_amount(&mut self) {
+            self.amount = ::std::option::Option::None;
+        }
+
+        pub fn has_amount(&self) -> bool {
+            self.amount.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_amount(&mut self, v: ::std::string::String) {
+            self.amount = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_amount(&mut self) -> &mut ::std::string::String {
+            if self.amount.is_none() {
+                self.amount = ::std::option::Option::Some(::std::string::String::new());
+            }
+            self.amount.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_amount(&mut self) -> ::std::string::String {
+            self.amount.take().unwrap_or_else(|| ::std::string::String::new())
+        }
+
+        // required string address = 3;
+
+        pub fn address(&self) -> &str {
+            match self.address.as_ref() {
+                Some(v) => v,
+                None => "",
+            }
+        }
+
+        pub fn clear_address(&mut self) {
+            self.address = ::std::option::Option::None;
+        }
+
+        pub fn has_address(&self) -> bool {
+            self.address.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_address(&mut self, v: ::std::string::String) {
+            self.address = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_address(&mut self) -> &mut ::std::string::String {
+            if self.address.is_none() {
+                self.address = ::std::option::Option::Some(::std::string::String::new());
+            }
+            self.address.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_address(&mut self) -> ::std::string::String {
+            self.address.take().unwrap_or_else(|| ::std::string::String::new())
+        }
+
+        // required bytes mac = 4;
+
+        pub fn mac(&self) -> &[u8] {
+            match self.mac.as_ref() {
+                Some(v) => v,
+                None => &[],
+            }
+        }
+
+        pub fn clear_mac(&mut self) {
+            self.mac = ::std::option::Option::None;
+        }
+
+        pub fn has_mac(&self) -> bool {
+            self.mac.is_some()
+        }
+
+        // Param is passed by value, moved
+        pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+            self.mac = ::std::option::Option::Some(v);
+        }
+
+        // Mutable pointer to the field.
+        // If field is not initialized, it is initialized with default value first.
+        pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+            if self.mac.is_none() {
+                self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+            }
+            self.mac.as_mut().unwrap()
+        }
+
+        // Take field
+        pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+            self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+        }
+
+        pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+            let mut fields = ::std::vec::Vec::with_capacity(4);
+            let mut oneofs = ::std::vec::Vec::with_capacity(0);
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "coin_type",
+                |m: &CoinPurchaseMemo| { &m.coin_type },
+                |m: &mut CoinPurchaseMemo| { &mut m.coin_type },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "amount",
+                |m: &CoinPurchaseMemo| { &m.amount },
+                |m: &mut CoinPurchaseMemo| { &mut m.amount },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "address",
+                |m: &CoinPurchaseMemo| { &m.address },
+                |m: &mut CoinPurchaseMemo| { &mut m.address },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+                "mac",
+                |m: &CoinPurchaseMemo| { &m.mac },
+                |m: &mut CoinPurchaseMemo| { &mut m.mac },
+            ));
+            ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<CoinPurchaseMemo>(
+                "PaymentRequest.CoinPurchaseMemo",
+                fields,
+                oneofs,
+            )
+        }
+    }
+
+    impl ::protobuf::Message for CoinPurchaseMemo {
+        const NAME: &'static str = "CoinPurchaseMemo";
+
+        fn is_initialized(&self) -> bool {
+            if self.coin_type.is_none() {
+                return false;
+            }
+            if self.amount.is_none() {
+                return false;
+            }
+            if self.address.is_none() {
+                return false;
+            }
+            if self.mac.is_none() {
+                return false;
+            }
+            true
+        }
+
+        fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+            while let Some(tag) = is.read_raw_tag_or_eof()? {
+                match tag {
+                    8 => {
+                        self.coin_type = ::std::option::Option::Some(is.read_uint32()?);
+                    },
+                    18 => {
+                        self.amount = ::std::option::Option::Some(is.read_string()?);
+                    },
+                    26 => {
+                        self.address = ::std::option::Option::Some(is.read_string()?);
+                    },
+                    34 => {
+                        self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                    },
+                    tag => {
+                        ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                    },
+                };
+            }
+            ::std::result::Result::Ok(())
+        }
+
+        // Compute sizes of nested messages
+        #[allow(unused_variables)]
+        fn compute_size(&self) -> u64 {
+            let mut my_size = 0;
+            if let Some(v) = self.coin_type {
+                my_size += ::protobuf::rt::uint32_size(1, v);
+            }
+            if let Some(v) = self.amount.as_ref() {
+                my_size += ::protobuf::rt::string_size(2, &v);
+            }
+            if let Some(v) = self.address.as_ref() {
+                my_size += ::protobuf::rt::string_size(3, &v);
+            }
+            if let Some(v) = self.mac.as_ref() {
+                my_size += ::protobuf::rt::bytes_size(4, &v);
+            }
+            my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+            self.special_fields.cached_size().set(my_size as u32);
+            my_size
+        }
+
+        fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+            if let Some(v) = self.coin_type {
+                os.write_uint32(1, v)?;
+            }
+            if let Some(v) = self.amount.as_ref() {
+                os.write_string(2, v)?;
+            }
+            if let Some(v) = self.address.as_ref() {
+                os.write_string(3, v)?;
+            }
+            if let Some(v) = self.mac.as_ref() {
+                os.write_bytes(4, v)?;
+            }
+            os.write_unknown_fields(self.special_fields.unknown_fields())?;
+            ::std::result::Result::Ok(())
+        }
+
+        fn special_fields(&self) -> &::protobuf::SpecialFields {
+            &self.special_fields
+        }
+
+        fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+            &mut self.special_fields
+        }
+
+        fn new() -> CoinPurchaseMemo {
+            CoinPurchaseMemo::new()
+        }
+
+        fn clear(&mut self) {
+            self.coin_type = ::std::option::Option::None;
+            self.amount = ::std::option::Option::None;
+            self.address = ::std::option::Option::None;
+            self.mac = ::std::option::Option::None;
+            self.special_fields.clear();
+        }
+
+        fn default_instance() -> &'static CoinPurchaseMemo {
+            static instance: CoinPurchaseMemo = CoinPurchaseMemo {
+                coin_type: ::std::option::Option::None,
+                amount: ::std::option::Option::None,
+                address: ::std::option::Option::None,
+                mac: ::std::option::Option::None,
+                special_fields: ::protobuf::SpecialFields::new(),
+            };
+            &instance
+        }
+    }
+
+    impl ::protobuf::MessageFull for CoinPurchaseMemo {
+        fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+            static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+            descriptor.get(|| super::file_descriptor().message_by_package_relative_name("PaymentRequest.CoinPurchaseMemo").unwrap()).clone()
+        }
+    }
+
+    impl ::std::fmt::Display for CoinPurchaseMemo {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            ::protobuf::text_format::fmt(self, f)
+        }
+    }
+
+    impl ::protobuf::reflect::ProtobufValue for CoinPurchaseMemo {
+        type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+    }
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-common.proto\x12\x19hw.trezor.messages.common\x1a\roption\
     s.proto\"%\n\x07Success\x12\x1a\n\x07message\x18\x01\x20\x01(\t:\0R\x07m\
@@ -2553,8 +3759,25 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     gerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\
     \x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tch\
     ainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\
-    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKeyB>\n#com.satoshilabs.\
-    trezor.lib.protobufB\x13TrezorMessageCommon\x80\xa6\x1d\x01\
+    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xd5\x05\n\x0ePayme\
+    ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0ere\
+    cipient_name\x18\x02\x20\x02(\tR\rrecipientName\x12R\n\x05memos\x18\x03\
+    \x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequestM\
+    emoR\x05memos\x12\x16\n\x06amount\x18\x04\x20\x01(\x04R\x06amount\x12\
+    \x1c\n\tsignature\x18\x05\x20\x02(\x0cR\tsignature\x1a\xa6\x02\n\x12Paym\
+    entRequestMemo\x12O\n\ttext_memo\x18\x01\x20\x01(\x0b22.hw.trezor.messag\
+    es.common.PaymentRequest.TextMemoR\x08textMemo\x12U\n\x0brefund_memo\x18\
+    \x02\x20\x01(\x0b24.hw.trezor.messages.common.PaymentRequest.RefundMemoR\
+    \nrefundMemo\x12h\n\x12coin_purchase_memo\x18\x03\x20\x01(\x0b2:.hw.trez\
+    or.messages.common.PaymentRequest.CoinPurchaseMemoR\x10coinPurchaseMemo\
+    \x1a\x1e\n\x08TextMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\x1a\
+    8\n\nRefundMemo\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\
+    \x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\x1as\n\x10CoinPurchaseMemo\
+    \x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\x12\x16\n\x06amoun\
+    t\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\x18\x03\x20\x02(\tR\
+    \x07address\x12\x10\n\x03mac\x18\x04\x20\x02(\x0cR\x03mac:\x04\x88\xb2\
+    \x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\
+    \x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2573,7 +3796,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
             let mut deps = ::std::vec::Vec::with_capacity(1);
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(11);
+            let mut messages = ::std::vec::Vec::with_capacity(16);
             messages.push(Success::generated_message_descriptor_data());
             messages.push(Failure::generated_message_descriptor_data());
             messages.push(ButtonRequest::generated_message_descriptor_data());
@@ -2585,6 +3808,11 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(Deprecated_PassphraseStateRequest::generated_message_descriptor_data());
             messages.push(Deprecated_PassphraseStateAck::generated_message_descriptor_data());
             messages.push(HDNodeType::generated_message_descriptor_data());
+            messages.push(PaymentRequest::generated_message_descriptor_data());
+            messages.push(payment_request::PaymentRequestMemo::generated_message_descriptor_data());
+            messages.push(payment_request::TextMemo::generated_message_descriptor_data());
+            messages.push(payment_request::RefundMemo::generated_message_descriptor_data());
+            messages.push(payment_request::CoinPurchaseMemo::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(3);
             enums.push(failure::FailureType::generated_enum_descriptor_data());
             enums.push(button_request::ButtonRequestType::generated_enum_descriptor_data());
