@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage.cache as storage_cache
 import trezorui_api
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS
-from trezor import TR, ui, utils
+from trezor import TR, ui
 
 if TYPE_CHECKING:
     from typing import Any, Callable, Iterator, ParamSpec, TypeVar
@@ -101,21 +101,9 @@ class Homescreen(HomescreenBase):
             event = await usbcheck
             self._event(self.layout.usb_event, event)
 
-    if utils.USE_BLE:
-
-        async def ble_checker_task(self) -> None:
-            from trezor import io, loop
-
-            blecheck = loop.wait(io.BLE_EVENT)
-            while True:
-                event = await blecheck
-                self._event(self.layout.ble_event, *event)
-
     def create_tasks(self) -> Iterator[loop.Task]:
         yield from super().create_tasks()
         yield self.usb_checker_task()
-        if utils.USE_BLE:
-            yield self.ble_checker_task()
 
 
 class Lockscreen(HomescreenBase):
