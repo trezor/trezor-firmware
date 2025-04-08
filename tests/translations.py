@@ -77,6 +77,13 @@ def set_language(client: Client, lang: str, *, force: bool = False):
     _CURRENT_TRANSLATION.TR = TRANSLATIONS[lang]
 
 
+def get_language(_client: Client) -> str:
+    for lang in LANGUAGES:
+        if _CURRENT_TRANSLATION.TR == TRANSLATIONS[lang]:
+            return lang
+    return "en"
+
+
 def get_lang_json(lang: str) -> translations.JsonDef:
     assert lang in LANGUAGES
     lang_json = json.loads((TRANSLATIONS_DIR / f"{lang}.json").read_text())

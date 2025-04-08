@@ -23,7 +23,7 @@ from trezorlib import device, messages
 from .. import translations as TR
 from ..common import MOCK_GET_ENTROPY
 from . import reset
-from .common import go_next
+from .common import LayoutType, go_next
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
@@ -53,10 +53,14 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_new_wallet(debug)
 
     # confirm back up
-    # TR.assert_in_multiple(
-    #     debug.read_layout().text_content(),
-    #     ["backup__it_should_be_backed_up", "backup__it_should_be_backed_up_now"],
-    # )
+    if debug.read_layout().page_count() == 1:
+        assert any(
+            needle in debug.read_layout().text_content()
+            for needle in [
+                TR.backup__it_should_be_backed_up,
+                TR.backup__it_should_be_backed_up_now,
+            ]
+        )
     reset.confirm_read(debug)
 
     # confirm backup intro
@@ -80,7 +84,8 @@ def test_reset_bip39(device_handler: "BackgroundDeviceHandler"):
     reset.confirm_read(debug)
 
     # Your backup is done
-    go_next(debug)
+    if debug.layout_type is not LayoutType.Eckhart:
+        go_next(debug)
 
     # TODO: some validation of the generated secret?
 
