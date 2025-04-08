@@ -1048,9 +1048,7 @@ impl FirmwareUI for UIEckhart {
         ops = ops.text(text, font);
         let screen = TextScreen::new(FormattedText::new(ops))
             .with_header(Header::new("Pair with new device".into()).with_close_button())
-            .with_action_bar(ActionBar::new_single(Button::with_text(
-                "Continue on host".into(),
-            )));
+            .with_action_bar(ActionBar::new_text_only("Continue on host".into()));
         #[cfg(feature = "ble")]
         let screen = crate::ui::component::BLEHandler::new(screen, true);
         let layout = RootComponent::new(screen);
