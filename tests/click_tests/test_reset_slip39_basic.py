@@ -59,7 +59,7 @@ def test_reset_slip39_basic(
         entropy_check_count=0,
         _get_entropy=MOCK_GET_ENTROPY,
     )
-    if device_handler.client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+    if device_handler.client.protocol_version is ProtocolVersion.V2:
         reset.confirm_read(debug, middle_r=True)
 
     # confirm new wallet
