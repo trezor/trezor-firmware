@@ -810,7 +810,7 @@ def test_multisession_authorization(client: Client):
     )
 
     # Open a second session.
-    if client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+    if client.protocol_version is ProtocolVersion.V2:
         session_id = b"\x02"
     else:
         session_id = None

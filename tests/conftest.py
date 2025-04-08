@@ -294,23 +294,17 @@ def _client_unlocked(
         args = protocol_marker.args
         protocol_version = _raw_client.protocol_version
 
-        if (
-            protocol_version == ProtocolVersion.PROTOCOL_V1
-            and "protocol_v1" not in args
-        ):
+        if protocol_version == ProtocolVersion.V1 and "protocol_v1" not in args:
             pytest.skip(
                 f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
             )
 
-        if (
-            protocol_version == ProtocolVersion.PROTOCOL_V2
-            and "protocol_v2" not in args
-        ):
+        if protocol_version == ProtocolVersion.V2 and "protocol_v2" not in args:
             pytest.skip(
                 f"Skipping test for device/emulator with protocol_v{protocol_version} - the protocol is not supported."
             )
 
-    if _raw_client.protocol_version is ProtocolVersion.PROTOCOL_V2:
+    if _raw_client.protocol_version is ProtocolVersion.V2:
         pass
     sd_marker = request.node.get_closest_marker("sd_card")
     if sd_marker and not _raw_client.features.sd_card_present:
