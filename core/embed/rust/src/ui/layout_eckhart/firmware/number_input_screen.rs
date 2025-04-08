@@ -134,8 +134,9 @@ impl Swipable for NumberInputScreen {
 impl crate::trace::Trace for NumberInputScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("NumberInputScreen");
-        t.child("number_input", &self.number_input);
+        t.child("Header", &self.header);
         t.child("description", &self.description);
+        t.child("number_input", &self.number_input);
     }
 }
 
