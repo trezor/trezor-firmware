@@ -132,8 +132,9 @@ WIRETYPE_ENTRY = c.Sequence(
     "msg_offset" / c.Int16ul,
 )
 
-# QDEF(MP_QSTR_copysign, 5171, 8, "copysign")
-QDEF_RE = re.compile(r'^QDEF\(MP_QSTR(\S+), ([0-9]+), ([0-9])+, "(.*)"\)$')
+# QDEF1(MP_QSTR_copysign, 5171, 8, "copysign")
+QDEF_RE = re.compile(r'^QDEF(\d)\(MP_QSTR\S+, [0-9]+, [0-9]+, "(.*)"\)$')
+QDEF_RE_SKIP = re.compile("^$|^//")  # empty line or a comment
 
 
 @dataclass
@@ -540,17 +541,18 @@ class RustBlobRenderer:
     def build_qstr_map(self, qstr_defs):
         # QSTR defs are rolled out into an enum in py/qstr.h, the numeric
         # value is simply an incremented integer.
-        qstr_counter = 0
         with open(qstr_defs, "r") as f:
-            for line in f:
-                match = QDEF_RE.match(line)
-                if not match:
-                    continue
-                line = match.group(0)
-                string = match.group(4)
-                self.qstr_map[string] = qstr_counter
-                qstr_counter += 1
-        logging.debug(f"Found {qstr_counter} Qstr defs")
+            matches = [
+                QDEF_RE.match(line).groups()
+                for line in f
+                if not QDEF_RE_SKIP.match(line)
+            ]
+            # QDEF0 are processed before QDEF1 (see `vendor/micropython/py/qstr.h`)
+            # Keep the original QSTR order (since Python's sort is stable)
+            matches.sort(key=lambda m: int(m[0]))
+            for i, (_qdef, string) in enumerate(matches):
+                self.qstr_map[string] = i
+        logging.debug(f"Found {len(matches)} Qstr defs")
 
     def build_enums_with_offsets(self):
         enums = []
