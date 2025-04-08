@@ -74,9 +74,7 @@ impl FirmwareUI for UIEckhart {
         };
 
         let verb = verb.unwrap_or(TR::buttons__confirm.into());
-        let mut right_button = Button::with_text(verb)
-            .with_gradient()
-            .styled(theme::firmware::button_confirm());
+        let mut right_button = Button::with_text(verb).styled(theme::firmware::button_confirm());
         if hold {
             right_button = right_button.with_long_press(theme::CONFIRM_HOLD_DURATION);
         }
