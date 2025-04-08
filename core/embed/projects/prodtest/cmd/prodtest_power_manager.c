@@ -75,15 +75,15 @@ void prodtest_power_manager_report(cli_t *cli){
     }
     cli_trace(cli, "Power manager report:");
     cli_trace(cli, "  USB %s", report.usb_connected ? "connected" : "disconnected");
-    cli_trace(cli, "  WLC %s", report.wlc_connected ? "connected" : "disconnected");
-    cli_trace(cli, "  Battery voltage: %d.%03d V", (int)report.battery_voltage_V, (int)(report.battery_voltage_V * 1000) % 1000);
-    cli_trace(cli, "  Battery current: %d.%03d mA", (int)report.battery_current_mA, (int)(report.battery_current_mA * 1000) % 1000);
-    cli_trace(cli, "  Battery temperature: %d.%03d C", (int)report.battery_temp_deg, (int)(report.battery_temp_deg * 1000) % 1000);
-    cli_trace(cli, "  PMIC die temperature: %d.%03d C", (int)report.pmic_die_temp_deg, (int)(report.pmic_die_temp_deg * 1000) % 1000);
-    cli_trace(cli, "  WLC voltage: %d.%03d V", (int)report.wlc_vrect_V, (int)(report.wlc_vrect_V * 1000) % 1000);
-    cli_trace(cli, "  WLC current: %d.%03d mA", (int)report.wlc_current_mA, (int)(report.wlc_current_mA * 1000) % 1000);
-    cli_trace(cli, "  WLC die temperature: %d.%03d C", (int)report.wlc_die_temp_deg, (int)(report.wlc_die_temp_deg * 1000) % 1000);
-    cli_trace(cli, "  System voltage: %d.%03d V", (int)report.vsys_voltage_V, (int)(report.vsys_voltage_V * 1000) % 1000);
+    cli_trace(cli, "  WLC %s", report.wireless_charger_connected ? "connected" : "disconnected");
+    cli_trace(cli, "  Battery voltage: %d.%03d V", (int)report.battery_voltage_v, (int)(report.battery_voltage_v * 1000) % 1000);
+    cli_trace(cli, "  Battery current: %d.%03d mA", (int)report.battery_current_ma, (int)(report.battery_current_ma * 1000) % 1000);
+    cli_trace(cli, "  Battery temperature: %d.%03d C", (int)report.battery_temp_c, (int)(report.battery_temp_c * 1000) % 1000);
+    cli_trace(cli, "  PMIC die temperature: %d.%03d C", (int)report.pmic_temp_c, (int)(report.pmic_temp_c * 1000) % 1000);
+    cli_trace(cli, "  WLC voltage: %d.%03d V", (int)report.wireless_output_voltage_v, (int)(report.wireless_output_voltage_v * 1000) % 1000);
+    cli_trace(cli, "  WLC current: %d.%03d mA", (int)report.wireless_current_ma, (int)(report.wireless_current_ma * 1000) % 1000);
+    cli_trace(cli, "  WLC die temperature: %d.%03d C", (int)report.wireless_temp_c, (int)(report.wireless_temp_c * 1000) % 1000);
+    cli_trace(cli, "  System voltage: %d.%03d V", (int)report.system_voltage_v, (int)(report.system_voltage_v * 1000) % 1000);
 
     cli_ok(cli, "");
 
@@ -120,26 +120,26 @@ void prodtest_power_manager_monitor(cli_t* cli) {
       cli_error(cli, CLI_ERROR, "Failed to get power manager events");
     }
 
-    if (event_flag & POWER_MANAGER_STATE_CHANGED) {
+    if (event_flag & POWER_MANAGER_EVENT_STATE_CHANGED) {
       status = power_manager_get_state(&state);
 
       cli_trace(cli, "Power manager state changed to {%s}",
                 power_manager_get_state_name(state));
     }
 
-    if (event_flag & POWER_MANAGER_USB_CONNECTED) {
+    if (event_flag & POWER_MANAGER_EVENT_USB_CONNECTED) {
       cli_trace(cli, "USB connected");
     }
 
-    if (event_flag & POWER_MANAGER_USB_DISCONNECTED) {
+    if (event_flag & POWER_MANAGER_EVENT_USB_DISCONNECTED) {
       cli_trace(cli, "USB disconnected");
     }
 
-    if (event_flag & POWER_MANAGER_WLC_CONNECTED) {
+    if (event_flag & POWER_MANAGER_EVENT_WIRELESS_CONNECTED) {
       cli_trace(cli, "WLC connected");
     }
 
-    if (event_flag & POWER_MANAGER_WLC_DISCONNECTED) {
+    if (event_flag & POWER_MANAGER_EVENT_WIRELESS_DISCONNECTED) {
       cli_trace(cli, "WLC disconnected");
     }
 
