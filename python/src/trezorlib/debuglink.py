@@ -827,7 +827,6 @@ class DebugUI:
 
     def __init__(self, debuglink: DebugLink) -> None:
         self.debuglink = debuglink
-        self.pins: t.Iterator[str] | None = None
         self.clear()
 
     def clear(self) -> None:
@@ -1098,20 +1097,16 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.sync_responses()
 
-    def __getattr__(self, name: str) -> t.Any:
-        return getattr(self._session, name)
-
-    def __setattr__(self, name: str, value: t.Any) -> None:
-        if hasattr(self._session, name):
-            setattr(self._session, name, value)
-        else:
-            self.__dict__[name] = value
+        # So that we can choose right screenshotting logic (T1 vs TT)
+        # and know the supported debug capabilities
+        self.debug.model = self.model
+        self.debug.version = self.version
 
         self.reset_debug_features()
 
     @property
-    def protocol_version(self) -> int:
-        return self.client.protocol_version
+    def layout_type(self) -> LayoutType:
+        return self.debug.layout_type
 
     def get_new_client(self) -> TrezorClientDebugLink:
         new_client = TrezorClientDebugLink(
@@ -1313,10 +1308,8 @@ class TrezorClientDebugLink(TrezorClient):
         actual_responses = self.actual_responses
 
         # grab a copy of the inputflow generator to raise an exception through it
-        if isinstance(self.client, TrezorClientDebugLink) and isinstance(
-            self.client.ui, DebugUI
-        ):
-            input_flow = self.client.ui.input_flow
+        if isinstance(self.ui, DebugUI):
+            input_flow = self.ui.input_flow
         else:
             input_flow = None
 
@@ -1432,10 +1425,6 @@ class TrezorClientDebugLink(TrezorClient):
         if self.actual_responses is not None:
             self.actual_responses.append(resp)
         return resp
-
-    def reset_protocol(self):
-        super().reset_protocol()
-        self._seedless_session = self.get_seedless_session(new_session=True)
 
 
 def load_device(
