@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 def run_benchmark(benchmark: Benchmark) -> BenchmarkResult:
-    minimum_duration_s = 1
+    minimum_duration_s = 10
     minimum_duration_us = minimum_duration_s * 1000000
     benchmark.prepare()
     start_time_us = utime.ticks_us()
