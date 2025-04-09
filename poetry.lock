@@ -2059,7 +2059,7 @@ testing = ["flaky (>=3.4.0)", "freezegun (>=0.3.11)", "pathlib2 (>=2.3.3) ; pyth
 
 [[package]]
 name = "trezor"
-version = "0.14.0"
+version = "0.13.9"
 description = "Python library for communicating with Trezor Hardware Wallet"
 optional = false
 python-versions = ">=3.8"
