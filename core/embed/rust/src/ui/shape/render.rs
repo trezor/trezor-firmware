@@ -80,6 +80,7 @@ where
     /// Drawing cache (decompression context, scratch-pad memory)
     cache: &'a DrawingCache<'alloc>,
 
+    #[cfg(feature = "ui_debug")]
     overflow: bool,
 }
 
@@ -100,10 +101,17 @@ where
         // TODO: consider storing original canvas.viewport
         //       and restoring it by drop() function
 
-        Self {
-            canvas,
-            cache,
-            overflow: false,
+        #[cfg(feature = "ui_debug")]
+        {
+            Self {
+                canvas,
+                cache,
+                overflow: false,
+            }
+        }
+        #[cfg(not(feature = "ui_debug"))]
+        {
+            Self { canvas, cache }
         }
     }
 }
