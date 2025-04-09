@@ -204,6 +204,9 @@ impl Component for Header {
             if title_area.height() < header_area.height() / 10 {
                 self.title
                     .place(title_area.translate(Offset::y(title_area.height() / 2)));
+            } else {
+                self.title
+                    .place(title_area.translate(Offset::y(-theme::SPACING)));
             }
         };
 
