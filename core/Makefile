@@ -46,6 +46,7 @@ TREZOR_EMULATOR_DEBUGGABLE ?= 0
 QUIET_MODE ?= 0
 TREZOR_DISABLE_ANIMATION ?= $(if $(filter 0,$(PYOPT)),1,0)
 STORAGE_INSECURE_TESTING_MODE ?= 0
+MICROPY_ENABLE_SOURCE_LINE ?= 1
 UI_DEBUG_OVERLAY ?= 0
 
 # If set, VCP writes will be blocking, in order to allow reliable debug data transmission over VCP.
@@ -128,6 +129,7 @@ SCONS_VARS = \
 	DISABLE_OPTIGA="$(DISABLE_OPTIGA)" \
 	DISABLE_TROPIC="$(DISABLE_TROPIC)" \
 	LOG_STACK_USAGE="$(LOG_STACK_USAGE)" \
+	MICROPY_ENABLE_SOURCE_LINE="$(MICROPY_ENABLE_SOURCE_LINE)" \
 	PRODUCTION="$(PRODUCTION)" \
 	PYOPT="$(PYOPT)" \
 	QUIET_MODE="$(QUIET_MODE)" \
@@ -310,7 +312,8 @@ build_unix_debug: templates ## build unix port
 		TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
 
 build_cross: ## build mpy-cross port
-	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS)
+	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS) \
+		CFLAGS_EXTRA=-DMICROPY_ENABLE_SOURCE_LINE=$(MICROPY_ENABLE_SOURCE_LINE)
 
 ## clean commands:
 
