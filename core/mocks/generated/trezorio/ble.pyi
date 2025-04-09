@@ -31,7 +31,7 @@ def start_advertising(whitelist: bool, name: str | None) -> bool:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def stop_advertising(whitelist: bool) -> bool:
+def stop_advertising() -> bool:
     """
     Stop advertising
     """
@@ -48,6 +48,19 @@ def disconnect() -> bool:
 def peer_count() -> int:
     """
     Get peer count (number of bonded devices)
+    """
+
+
+# upymod/modtrezorio/modtrezorio-ble.h
+def connection_state() -> int:
+    """
+    Returns current connection state as flags:
+
+    0x01 state known
+    0x02 connectable
+    0x04 connected
+    0x08 pairing
+    0x10 pairing request
     """
 
 
