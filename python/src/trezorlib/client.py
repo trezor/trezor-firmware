@@ -228,10 +228,10 @@ class TrezorClient:
 
     def _read(self, session_id: int | None = None) -> t.Any:
         if isinstance(self.protocol, ProtocolV1Channel):
-            self.protocol.read()
+            return self.protocol.read()
         elif isinstance(self.protocol, ProtocolV2Channel):
             assert session_id is not None
-            self.protocol.read(session_id=session_id)
+            return self.protocol.read(session_id=session_id)
         else:
             raise Exception("Unknown client protocol")
 
