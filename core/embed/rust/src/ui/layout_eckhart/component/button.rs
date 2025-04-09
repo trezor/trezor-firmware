@@ -610,7 +610,8 @@ enum State {
 }
 
 impl State {
-    /// Returns true if the button is in a normal state (not pressed or disabled).
+    /// Returns true if the button is in a normal state (not pressed or
+    /// disabled).
     fn is_normal(&self) -> bool {
         matches!(self, State::Initial | State::Released)
     }
