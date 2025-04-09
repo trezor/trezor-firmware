@@ -19,61 +19,7 @@
 
 #include <sys/sysevent.h>
 
-// #include "ble/dfu.h"
-// #include "ble/messages.h"
-
 /// package: trezorio.ble
-
-// /// def update_init(data: bytes, binsize: int) -> int:
-// ///     """
-// ///     Initializes the BLE firmware update
-// ///     """
-// STATIC mp_obj_t mod_trezorio_BLE_update_init(mp_obj_t data, mp_obj_t binsize)
-// {
-//   mp_buffer_info_t buffer = {0};
-//   mp_int_t binsize_int = mp_obj_get_int(binsize);
-//
-//   mp_get_buffer_raise(data, &buffer, MP_BUFFER_READ);
-//
-//   ble_set_dfu_mode(true);
-//
-//   dfu_result_t result = dfu_update_init(buffer.buf, buffer.len, binsize_int);
-//   if (result == DFU_NEXT_CHUNK) {
-//     return mp_obj_new_int(0);
-//   } else if (result == DFU_SUCCESS) {
-//     ble_set_dfu_mode(false);
-//     return mp_obj_new_int(1);
-//   } else {
-//     ble_set_dfu_mode(false);
-//     mp_raise_msg(&mp_type_RuntimeError, "Upload failed.");
-//   }
-// }
-// STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorio_BLE_update_init_obj,
-//                                  mod_trezorio_BLE_update_init);
-//
-// /// def update_chunk(chunk: bytes) -> int:
-// ///     """
-// ///     Writes next chunk of BLE firmware update
-// ///     """
-// STATIC mp_obj_t mod_trezorio_BLE_update_chunk(mp_obj_t data) {
-//   mp_buffer_info_t buffer = {0};
-//
-//   mp_get_buffer_raise(data, &buffer, MP_BUFFER_READ);
-//
-//   dfu_result_t result = dfu_update_chunk(buffer.buf, buffer.len);
-//
-//   if (result == DFU_NEXT_CHUNK) {
-//     return mp_obj_new_int(0);
-//   } else if (result == DFU_SUCCESS) {
-//     ble_set_dfu_mode(false);
-//     return mp_obj_new_int(1);
-//   } else {
-//     ble_set_dfu_mode(false);
-//     mp_raise_msg(&mp_type_RuntimeError, "Upload failed.");
-//   }
-// }
-// STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorio_BLE_update_chunk_obj,
-//                                  mod_trezorio_BLE_update_chunk);
 
 ///
 /// def erase_bonds() -> bool:
@@ -146,7 +92,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorio_BLE_start_advertising_obj, 1, 2,
     mod_trezorio_BLE_start_advertising);
 
-/// def stop_advertising(whitelist: bool) -> bool:
+/// def stop_advertising() -> bool:
 ///     """
 ///     Stop advertising
 ///     """
@@ -357,10 +303,6 @@ STATIC const mp_obj_type_t mod_trezorio_BleInterface_type = {
 
 STATIC const mp_rom_map_elem_t mod_trezorio_BLE_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_ble)},
-    // {MP_ROM_QSTR(MP_QSTR_update_init),
-    //  MP_ROM_PTR(&mod_trezorio_BLE_update_init_obj)},
-    // {MP_ROM_QSTR(MP_QSTR_update_chunk),
-    //  MP_ROM_PTR(&mod_trezorio_BLE_update_chunk_obj)},
     {MP_ROM_QSTR(MP_QSTR_erase_bonds),
      MP_ROM_PTR(&mod_trezorio_BLE_erase_bonds_obj)},
     {MP_ROM_QSTR(MP_QSTR_unpair), MP_ROM_PTR(&mod_trezorio_BLE_unpair_obj)},
