@@ -31,7 +31,7 @@ def start_advertising(whitelist: bool, name: str | None) -> bool:
 
 
 # upymod/modtrezorio/modtrezorio-ble.h
-def stop_advertising(whitelist: bool) -> bool:
+def stop_advertising() -> bool:
     """
     Stop advertising
     """

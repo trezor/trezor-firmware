@@ -40,6 +40,9 @@ typedef enum {
   BLE_ALLOW_PAIRING = 5,   // Accept pairing request
   BLE_REJECT_PAIRING = 6,  // Reject pairing request
   BLE_UNPAIR = 7,          // Erase bond for currently connected device
+#ifdef TREZOR_EMULATOR
+  BLE_EMULATOR_PONG = 255,  // Ping reply, emulator only
+#endif
 } ble_command_type_t;
 
 typedef struct {
@@ -64,6 +67,9 @@ typedef enum {
   BLE_DISCONNECTED = 2,       // Disconnected from a device
   BLE_PAIRING_REQUEST = 3,    // Pairing request received
   BLE_PAIRING_CANCELLED = 4,  // Pairing was cancelled by host
+#ifdef TREZOR_EMULATOR
+  BLE_EMULATOR_PING = 255,  // Ping, emulator only
+#endif
 } ble_event_type_t;
 
 typedef struct {

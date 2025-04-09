@@ -146,7 +146,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
     mod_trezorio_BLE_start_advertising_obj, 1, 2,
     mod_trezorio_BLE_start_advertising);
 
-/// def stop_advertising(whitelist: bool) -> bool:
+/// def stop_advertising() -> bool:
 ///     """
 ///     Stop advertising
 ///     """

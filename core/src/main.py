@@ -50,9 +50,16 @@ import storage.device
 usb.bus.open(storage.device.get_device_id())
 
 
+# enable BLE, allow connections
 if utils.USE_BLE:
     from trezorio import ble
     ble.start_comm()
+
+    # allow connections from bonded peers if any
+    if ble.peer_count() > 0:
+        ble.start_advertising(True, storage.device.get_label())
+
+    del ble
 
 
 # run the endless loop
