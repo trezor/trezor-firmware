@@ -6,4 +6,3 @@
 // Update the RGB LED color in the emulator
 void display_rgb_led(uint32_t color);
 #endif
-

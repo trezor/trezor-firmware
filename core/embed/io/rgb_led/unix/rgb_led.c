@@ -21,8 +21,8 @@
 #include <io/unix/sdl_display.h>
 
 #ifdef KERNEL_MODE
-void rgb_led_init(void) {};
-void rgb_led_deinit(void) {};
+void rgb_led_init(void){};
+void rgb_led_deinit(void){};
 #endif
 
 void rgb_led_set_color(uint32_t color) { display_rgb_led(color); }
