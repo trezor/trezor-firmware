@@ -3,12 +3,12 @@ use heapless::String;
 use crate::{
     trezorhal::secbool::secbool,
     ui::{
-        component::{connect::Connect, Label, LineBreaking::BreakWordsNoHyphen},
-        constant,
-        constant::{HEIGHT, SCREEN},
+        component::{Label, LineBreaking::BreakWordsNoHyphen},
+        constant::{self, HEIGHT, SCREEN},
         display::{self, Color, Icon},
         geometry::{Alignment2D, Offset, Point},
         layout::simplified::{run, show, ReturnToC},
+        ui_bootloader::BootloaderLayoutType,
     },
 };
 
@@ -33,7 +33,12 @@ mod intro;
 mod menu;
 mod welcome;
 
-use crate::ui::ui_bootloader::BootloaderUI;
+mod connect;
+
+use crate::ui::{
+    component::Event, layout::simplified::process_frame_event, ui_bootloader::BootloaderUI,
+};
+use connect::Connect;
 use intro::Intro;
 use menu::Menu;
 use welcome::Welcome;
@@ -89,11 +94,54 @@ impl UICaesar {
     }
 }
 
-impl BootloaderUI for UICaesar {
-    fn screen_welcome() {
-        let mut frame = Welcome::new();
-        show(&mut frame, true);
+pub enum BootloaderLayout {
+    Welcome(Welcome),
+    Menu(Menu),
+    Connect(Connect),
+}
+
+impl BootloaderLayoutType for BootloaderLayout {
+    fn event(&mut self, event: Option<Event>) -> u32 {
+        match self {
+            BootloaderLayout::Welcome(f) => process_frame_event::<Welcome>(f, event),
+            BootloaderLayout::Menu(f) => process_frame_event::<Menu>(f, event),
+            BootloaderLayout::Connect(f) => process_frame_event::<Connect>(f, event),
+        }
     }
+
+    fn show(&mut self) {
+        match self {
+            BootloaderLayout::Welcome(f) => show(f, false),
+            BootloaderLayout::Menu(f) => show(f, false),
+            BootloaderLayout::Connect(f) => show(f, false),
+        }
+    }
+
+    fn init_welcome() -> Self {
+        Self::Welcome(Welcome::new())
+    }
+
+    fn init_menu(_initial_setup: bool, firmware_present: secbool) -> Self {
+        Self::Menu(Menu::new(firmware_present))
+    }
+
+    fn init_connect(_initial_setup: bool, _auto_update: bool) -> Self {
+        Self::Connect(Connect::new(
+            "Waiting for host...",
+            fonts::FONT_NORMAL,
+            BLD_FG,
+            BLD_BG,
+        ))
+    }
+
+    #[cfg(feature = "ble")]
+    fn init_pairing_mode(_initial_setup: bool) -> Self {
+        unimplemented!()
+    }
+}
+
+impl BootloaderUI for UICaesar {
+    type CLayoutType = BootloaderLayout;
 
     fn screen_install_success(restart_seconds: u8, _initial_setup: bool, complete_draw: bool) {
         let mut reboot_msg = BootloaderString::new();
@@ -221,10 +269,6 @@ impl BootloaderUI for UICaesar {
         show(&mut frame, false);
     }
 
-    fn screen_menu(firmware_present: secbool) -> u32 {
-        run(&mut Menu::new(firmware_present))
-    }
-
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
         let mut title_str: BootloaderString = String::new();
         unwrap!(title_str.push_str("BOOTLOADER "));
@@ -271,11 +315,6 @@ impl BootloaderUI for UICaesar {
             BLD_BG,
             Some((ICON_SUCCESS, BLD_FG)),
         );
-    }
-
-    fn screen_connect(_initial_setup: bool) {
-        let mut frame = Connect::new("Waiting for host...", fonts::FONT_NORMAL, BLD_FG, BLD_BG);
-        show(&mut frame, false);
     }
 
     fn screen_wipe_success() {
@@ -380,5 +419,15 @@ impl BootloaderUI for UICaesar {
         });
 
         display::refresh();
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_confirm_pairing(_code: u32, _initial_setup: bool) -> u32 {
+        unimplemented!()
+    }
+
+    #[cfg(feature = "ble")]
+    fn screen_pairing_mode_finalizing(_initial_setup: bool) -> u32 {
+        unimplemented!()
     }
 }

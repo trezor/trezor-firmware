@@ -1,4 +1,4 @@
-use super::*;
+use super::{super::model, *};
 use crate::{
     error::Error,
     micropython::{

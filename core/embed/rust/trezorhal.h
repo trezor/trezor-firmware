@@ -7,9 +7,11 @@
 #include <io/usb.h>
 #include <rtl/secbool.h>
 #include <sec/entropy.h>
+#include <sys/sysevent.h>
 #include <sys/systick.h>
 #include <util/flash.h>
 #include <util/translations.h>
+#include "rust_types.h"
 #include "storage.h"
 
 #ifdef USE_HW_JPEG_DECODER
