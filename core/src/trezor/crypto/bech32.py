@@ -128,8 +128,6 @@ def convertbits(
 
 def decode(hrp: str, addr: str) -> OptionalTuple2[int, bytes]:
     """Decode a segwit address."""
-    from trezorcrypto import bech32
-
     try:
         hrpgot, data, spec = bech32.decode(addr)
         decoded = bytes(convertbits(data[1:], 5, 8, False))

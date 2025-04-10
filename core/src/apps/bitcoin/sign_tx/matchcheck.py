@@ -1,9 +1,14 @@
 from typing import TYPE_CHECKING
 
+from trezor.enums import InputScriptType
+from trezor.messages import TxOutput
+
+from ..common import BIP32_WALLET_DEPTH, CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
+
 if TYPE_CHECKING:
     from typing import Any, Generic, TypeVar
 
-    from trezor.messages import TxInput, TxOutput
+    from trezor.messages import TxInput
 
     from apps.common.paths import Bip32Path
 
@@ -86,8 +91,6 @@ class MatchChecker(Generic[T]):
 
 class WalletPathChecker(MatchChecker):
     def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
-        from ..common import BIP32_WALLET_DEPTH
-
         if len(txio.address_n) <= BIP32_WALLET_DEPTH:
             return None
         return txio.address_n[:-BIP32_WALLET_DEPTH]
@@ -113,11 +116,6 @@ class MultisigFingerprintChecker(MatchChecker):
 
 class ScriptTypeChecker(MatchChecker):
     def attribute_from_tx(self, txio: TxInput | TxOutput) -> Any:
-        from trezor.enums import InputScriptType
-        from trezor.messages import TxOutput
-
-        from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
-
         if TxOutput.is_type_of(txio):
             script_type = CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES[txio.script_type]
         else:

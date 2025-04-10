@@ -1,7 +1,10 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
-from .common import BIP32_WALLET_DEPTH
+from trezor import utils
+
+from .common import BIP32_WALLET_DEPTH, CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
+from .writers import write_bytes_prefixed
 
 if TYPE_CHECKING:
     from trezor.messages import (
@@ -21,10 +24,6 @@ class CoinJoinAuthorization:
         self.params = params
 
     def check_get_ownership_proof(self, msg: GetOwnershipProof) -> bool:
-        from trezor import utils
-
-        from .writers import write_bytes_prefixed
-
         params = self.params  # local_cache_attribute
 
         # Check whether the current params matches the parameters of the request.
@@ -47,8 +46,6 @@ class CoinJoinAuthorization:
         )
 
     def check_internal_output(self, txo: TxOutput) -> bool:
-        from .common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
-
         # Check whether the output matches the parameters of the request.
         return (
             len(txo.address_n) >= BIP32_WALLET_DEPTH
