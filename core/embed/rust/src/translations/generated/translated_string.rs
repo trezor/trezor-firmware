@@ -420,7 +420,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__amount_sent = 271,  // "Amount sent:"
     #[cfg(feature = "universal_fw")]
-    ethereum__contract = 272,  // "Contract:"
+    ethereum__contract = 272,  // {"Bolt": "Contract", "Caesar": "Contract", "Delizia": "Contract", "Eckhart": "Call contract"}
     #[cfg(feature = "universal_fw")]
     ethereum__data_size_template = 273,  // "Size: {0} bytes"
     #[cfg(feature = "universal_fw")]
@@ -1240,7 +1240,7 @@ pub enum TranslatedString {
     pin__cancel_description = 870,  // "Continue without PIN"
     pin__cancel_info = 871,  // "Without a PIN, anyone can access this device."
     pin__cancel_setup = 872,  // "Cancel PIN setup"
-    send__cancel_sign = 873,  // {"Bolt": "Cancel sign", "Caesar": "Cancel sign", "Delizia": "Cancel sign", "Eckhart": "Cancel sign?"}
+    send__cancel_sign = 873,  // "Cancel sign"
     send__send_from = 874,  // "Send from"
     instructions__hold_to_sign = 875,  // "Hold to sign"
     confirm_total__fee_rate = 876,  // "Fee rate"
@@ -1336,13 +1336,13 @@ pub enum TranslatedString {
     address__public_key_confirmed = 966,  // "Public key confirmed"
     words__continue_anyway = 967,  // "Continue anyway"
     #[cfg(feature = "universal_fw")]
-    ethereum__unknown_contract_address = 968,  // "Unknown contract address"
+    ethereum__unknown_contract_address = 968,  // {"Bolt": "Unknown contract address. Continue only if you know what you are doing.", "Caesar": "Unknown contract address. Continue only if you know what you are doing.", "Delizia": "Unknown contract address. Continue only if you know what you are doing.", "Eckhart": "Unknown token contract address. Continue only if you know what you are doing."}
     #[cfg(feature = "universal_fw")]
-    ethereum__token_contract = 969,  // "Token contract"
+    ethereum__token_contract = 969,  // {"Bolt": "Token contract", "Caesar": "Token contract", "Delizia": "Token contract", "Eckhart": "Token contract address"}
     buttons__view_all_data = 970,  // "View all data"
     instructions__view_all_data = 971,  // "View all data in the menu."
     #[cfg(feature = "universal_fw")]
-    ethereum__interaction_contract = 972,  // "Interaction contract"
+    ethereum__interaction_contract = 972,  // {"Bolt": "Interaction contract", "Caesar": "Interaction contract", "Delizia": "Interaction contract", "Eckhart": "Interaction contract address"}
     misc__enable_labeling = 973,  // "Enable labeling?"
     #[cfg(feature = "universal_fw")]
     solana__base_fee = 975,  // "Base fee"
