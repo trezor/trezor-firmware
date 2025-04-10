@@ -74,6 +74,7 @@ typedef enum {
   INTERNAL_EVENT_PAIRING_REQUEST = 0x04,
   INTERNAL_EVENT_PAIRING_CANCELLED = 0x05,
   INTERNAL_EVENT_MAC = 0x06,
+  INTERNAL_EVENT_PAIRING_COMPLETED = 0x07,
 } internal_event_t;
 
 typedef enum {
@@ -112,6 +113,8 @@ void ble_management_send_status_event(void);
 void ble_management_send_pairing_request_event(uint8_t *data, uint16_t len);
 // Send Pairing Cancelled event
 void ble_management_send_pairing_cancelled_event(void);
+// Send Pairing Completed event
+void ble_management_send_pairing_completed(void);
 
 // Bonds
 // Erase all bonds
