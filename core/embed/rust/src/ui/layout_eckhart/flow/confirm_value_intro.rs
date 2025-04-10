@@ -47,6 +47,8 @@ impl FlowController for ConfirmValueIntro {
     fn handle_event(&'static self, msg: FlowMsg) -> Decision {
         match (self, msg) {
             (Self::Intro, FlowMsg::Confirmed) => self.return_msg(FlowMsg::Confirmed),
+            // special case for the "view all data" button
+            (Self::Intro, FlowMsg::Cancelled) => self.return_msg(FlowMsg::Info),
             (Self::Intro, FlowMsg::Info) => Self::Menu.goto(),
             (Self::Menu, FlowMsg::Choice(0)) => self.return_msg(FlowMsg::Info),
             (Self::Menu, FlowMsg::Choice(1)) => self.return_msg(FlowMsg::Cancelled),
@@ -72,8 +74,7 @@ pub fn new_confirm_value_intro(
     // Intro
     let mut confirm_button = Button::with_text(
         confirm_button_label.unwrap_or(TR::sign_message__confirm_without_review.into()),
-    )
-    .styled(theme::button_confirm());
+    );
     if hold {
         confirm_button = confirm_button.with_long_press(theme::LOCK_HOLD_DURATION);
     }
@@ -97,9 +98,16 @@ pub fn new_confirm_value_intro(
     .with_page_limit(1)
     .with_header(Header::new(title).with_menu_button())
     .with_subtitle(subtitle.unwrap_or(TString::empty()))
-    .with_action_bar(ActionBar::new_single(confirm_button))
+    .with_action_bar(
+        ActionBar::new_double(
+            Button::with_text(TR::buttons__view_all_data.into()),
+            confirm_button,
+        )
+        .with_left_short(false),
+    )
     .map(|msg| match msg {
         TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        // special case for the "view all data" button
         TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
         TextScreenMsg::Menu => Some(FlowMsg::Info),
     });

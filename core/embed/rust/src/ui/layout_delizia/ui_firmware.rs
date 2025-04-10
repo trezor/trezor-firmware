@@ -100,6 +100,7 @@ impl FirmwareUI for UIDelizia {
         page_counter: bool,
         prompt_screen: bool,
         cancel: bool,
+        _warning_footer: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
         ConfirmValue::new(title, value, description)
             .with_description_font(&theme::TEXT_SUB_GREY)

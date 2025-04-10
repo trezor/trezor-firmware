@@ -118,7 +118,7 @@ pub const TEXT_MONO_ADDRESS_CHUNKS: TextStyle = TEXT_MONO_LIGHT
 
 pub const TEXT_MONO_ADDRESS: TextStyle = TEXT_MONO_LIGHT
     .with_line_breaking(LineBreaking::BreakWordsNoHyphen)
-    .with_page_breaking(PageBreaking::CutAndInsertEllipsis);
+    .with_page_breaking(PageBreaking::CutAndInsertEllipsisBoth);
 
 /// Decide the text style of chunkified text according to its length.
 pub fn get_chunkified_text_style(_character_length: usize) -> &'static TextStyle {
@@ -208,6 +208,32 @@ pub const fn button_cancel() -> ButtonStyleSheet {
             button_color: BG,
             icon_color: ORANGE,
             background_color: BG,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
+            text_color: ORANGE_DIMMED,            //unused
+            button_color: ORANGE_EXTRA_DARK,
+            icon_color: ORANGE_DIMMED,
+            background_color: ORANGE_EXTRA_DARK,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
+            text_color: GREY_EXTRA_DARK,          // unused
+            button_color: BG,
+            icon_color: GREY_EXTRA_DARK,
+            background_color: BG,
+        },
+    }
+}
+
+pub const fn button_cancel_gradient() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_SATOSHI_REGULAR_22, // unused
+            text_color: ORANGE,                   // unused
+            button_color: ORANGE_DARK,
+            icon_color: ORANGE,
+            background_color: ORANGE_DARK,
         },
         active: &ButtonStyle {
             font: fonts::FONT_SATOSHI_REGULAR_22, // unused
