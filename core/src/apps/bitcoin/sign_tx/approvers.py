@@ -5,7 +5,7 @@ from trezor.wire import DataError, ProcessError
 
 from apps.common import safety_checks
 
-from ..common import input_is_external_unverified
+from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES, input_is_external_unverified
 from ..keychain import validate_path_against_script_type
 from . import helpers, tx_weight
 from .tx_info import OriginalTxInfo
@@ -169,8 +169,6 @@ class BasicApprover(Approver):
             raise ProcessError("Transaction has changed during signing")
 
     async def _add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        from ..common import CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
-
         if txo.address_n and not validate_path_against_script_type(
             self.coin,
             address_n=txo.address_n,

@@ -3,7 +3,9 @@ from typing import TYPE_CHECKING
 from ..writers import (
     TX_HASH_SIZE,
     write_bytes_fixed,
+    write_bytes_prefixed,
     write_bytes_reversed,
+    write_tx_output,
     write_uint32,
     write_uint64,
 )
@@ -59,8 +61,6 @@ class BitcoinSigHasher:
         self.h_outputs = HashWriter(sha256())
 
     def add_input(self, txi: TxInput, script_pubkey: bytes) -> None:
-        from ..writers import write_bytes_prefixed
-
         write_bytes_reversed(self.h_prevouts, txi.prev_hash, TX_HASH_SIZE)
         write_uint32(self.h_prevouts, txi.prev_index)
         write_uint64(self.h_amounts, txi.amount)
@@ -68,8 +68,6 @@ class BitcoinSigHasher:
         write_uint32(self.h_sequences, txi.sequence)
 
     def add_output(self, txo: TxOutput, script_pubkey: bytes) -> None:
-        from ..writers import write_tx_output
-
         write_tx_output(self.h_outputs, txo, script_pubkey)
 
     def hash143(
