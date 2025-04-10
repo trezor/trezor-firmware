@@ -186,7 +186,7 @@ static void kernel_loop(applet_t *coreapp) {
     sysevents_t awaited = {0};
     sysevents_t signalled = {0};
 
-    sysevents_poll(&awaited, &signalled, 100);
+    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
   } while (applet_is_alive(coreapp));
 }

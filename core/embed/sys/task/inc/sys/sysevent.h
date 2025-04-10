@@ -46,11 +46,11 @@ typedef struct {
 } sysevents_t;  // sys_events_t
 
 // Polls for the specified events. The function blocks until at least
-// one event is signaled or the timeout (in milliseconds) expires.
+// one event is signaled or deadline expires.
 //
 // Multiple events may be signaled simultaneously.
 //
 // Returns the events that were signaled. If the timeout expires, both
 // fields in the result are set to 0.
 void sysevents_poll(const sysevents_t* awaited, sysevents_t* signalled,
-                    uint32_t timeout);
+                    uint32_t deadline);

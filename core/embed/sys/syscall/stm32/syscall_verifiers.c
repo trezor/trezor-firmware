@@ -46,7 +46,7 @@
 // ---------------------------------------------------------------------
 
 void sysevents_poll__verified(const sysevents_t *awaited,
-                              sysevents_t *signalled, uint32_t timeout) {
+                              sysevents_t *signalled, uint32_t deadline) {
   if (!probe_read_access(awaited, sizeof(*awaited))) {
     goto access_violation;
   }
@@ -55,7 +55,7 @@ void sysevents_poll__verified(const sysevents_t *awaited,
     goto access_violation;
   }
 
-  sysevents_poll(awaited, signalled, timeout);
+  sysevents_poll(awaited, signalled, deadline);
   return;
 
 access_violation:
