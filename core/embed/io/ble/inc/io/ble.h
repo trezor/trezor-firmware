@@ -65,6 +65,7 @@ typedef enum {
   BLE_DISCONNECTED = 2,       // Disconnected from a device
   BLE_PAIRING_REQUEST = 3,    // Pairing request received
   BLE_PAIRING_CANCELLED = 4,  // Pairing was cancelled by host
+  BLE_PAIRING_COMPLETED = 5,  // Pairing was completed successfully
 } ble_event_type_t;
 
 typedef struct {

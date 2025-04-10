@@ -263,6 +263,18 @@ static void ble_process_rx_msg_pairing_cancelled(const uint8_t *data,
   drv->pairing_requested = false;
 }
 
+static void ble_process_rx_msg_pairing_completed(const uint8_t *data,
+                                                 uint32_t len) {
+  ble_driver_t *drv = &g_ble_driver;
+  if (!drv->initialized) {
+    return;
+  }
+
+  ble_event_t event = {.type = BLE_PAIRING_COMPLETED, .data_len = 0};
+  tsqueue_enqueue(&drv->event_queue, (uint8_t *)&event, sizeof(event), NULL);
+  drv->pairing_requested = false;
+}
+
 static void ble_process_rx_msg_mac(const uint8_t *data, uint32_t len) {
   ble_driver_t *drv = &g_ble_driver;
   if (!drv->initialized) {
@@ -290,6 +302,9 @@ static void ble_process_rx_msg(const uint8_t *data, uint32_t len) {
       break;
     case INTERNAL_EVENT_MAC:
       ble_process_rx_msg_mac(data, len);
+      break;
+    case INTERNAL_EVENT_PAIRING_COMPLETED:
+      ble_process_rx_msg_pairing_completed(data, len);
     default:
       break;
   }
