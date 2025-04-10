@@ -157,6 +157,7 @@ async def require_confirm_unknown_token(address_bytes: bytes) -> None:
         contract_address_hex,
         subtitle=TR.ethereum__token_contract,
         verb=TR.buttons__continue,
+        warning_footer=TR.ethereum__unknown_contract_address,
         br_name="unknown_token",
         br_code=ButtonRequestType.SignTx,
     )
@@ -181,6 +182,7 @@ def require_confirm_other_data(data: bytes, data_total: int) -> Awaitable[None]:
         TR.ethereum__title_input_data,
         data,
         description=TR.ethereum__data_size_template.format(data_total),
+        subtitle=TR.ethereum__title_all_input_data_template.format(data_total),
         verb=TR.buttons__confirm,
         verb_cancel=TR.send__cancel_sign,
         br_code=ButtonRequestType.SignTx,

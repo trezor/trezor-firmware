@@ -147,6 +147,7 @@ impl FirmwareUI for UICaesar {
         _page_counter: bool,
         _prompt_screen: bool,
         _cancel: bool,
+        _warning_footer: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),

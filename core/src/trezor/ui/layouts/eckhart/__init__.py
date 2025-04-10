@@ -510,30 +510,29 @@ def confirm_blob(
     hold: bool = False,
     br_code: ButtonRequestType = BR_CODE_OTHER,
     ask_pagination: bool = False,
+    verb_skip_pagination: str | None = None,
     chunkify: bool = False,
-    prompt_screen: bool = True,
+    _prompt_screen: bool = True,
 ) -> Awaitable[None]:
+
     if ask_pagination:
         main_layout = trezorui_api.confirm_value_intro(
             title=title,
             value=data,
             subtitle=description,
-            verb=verb,
+            verb=verb_skip_pagination or verb,
             verb_cancel=verb_cancel,
+            hold=hold,
             chunkify=chunkify,
         )
         info_layout = trezorui_api.confirm_value(
-            title=title,
-            value=data,
-            subtitle=description,
+            title=subtitle or title,
             description=None,
-            verb=None,
-            verb_cancel=verb_cancel,
+            value=data,
             info=False,
-            hold=False,
+            hold=hold,
             chunkify=chunkify,
             page_counter=True,
-            prompt_screen=False,
             cancel=True,
         )
 
@@ -552,11 +551,10 @@ def confirm_blob(
             description=description,
             subtitle=subtitle,
             verb=verb,
-            verb_cancel=verb_cancel,
             info=info,
             hold=hold,
             chunkify=chunkify,
-            prompt_screen=prompt_screen,
+            cancel=True,
         )
         return raise_if_not_confirmed(
             layout,
@@ -571,6 +569,7 @@ def confirm_address(
     subtitle: str | None = None,
     description: str | None = None,
     verb: str | None = None,
+    warning_footer: str | None = None,
     chunkify: bool = True,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,
@@ -584,6 +583,7 @@ def confirm_address(
         subtitle=subtitle,
         verb=verb,
         chunkify=chunkify,
+        warning_footer=warning_footer,
     )
 
 
@@ -600,7 +600,6 @@ def confirm_text(
         description or "",
         br_name,
         br_code,
-        verb=TR.buttons__confirm,
     )
 
 
@@ -618,7 +617,6 @@ def confirm_amount(
         description,
         br_name,
         br_code,
-        verb=TR.buttons__confirm,
     )
 
 
@@ -637,11 +635,9 @@ def confirm_value(
     info_items: Iterable[tuple[str, str]] | None = None,
     info_title: str | None = None,
     chunkify_info: bool = False,
+    warning_footer: str | None = None,
 ) -> Awaitable[None]:
     """General confirmation dialog, used by many other confirm_* functions."""
-
-    if not verb and not hold:
-        raise ValueError("Either verb or hold=True must be set")
 
     info_items = info_items or []
     info_layout = trezorui_api.show_info_with_cancel(
@@ -661,6 +657,8 @@ def confirm_value(
             info=bool(info_items),
             hold=hold,
             chunkify=chunkify,
+            warning_footer=warning_footer,
+            cancel=False,
         ),
         info_layout,
         br_name,
@@ -766,6 +764,8 @@ if not utils.BITCOIN_ONLY:
         return show_danger(
             "unknown_contract_warning",
             TR.ethereum__unknown_contract_address,
+            title=TR.words__important,
+            menu_title=TR.ethereum__contract,
             verb_cancel=TR.send__cancel_sign,
         )
 
@@ -777,13 +777,50 @@ if not utils.BITCOIN_ONLY:
         maximum_fee: str,
         fee_info_items: Iterable[tuple[str, str]],
         is_contract_interaction: bool,
-        br_name: str = "confirm_ethereum_tx",
+        br_name: str = "confirm_total",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
         chunkify: bool = False,
     ) -> None:
-        # FIXME: not implemented
-        # use `flow_confirm_output` or `TT/TR` style?
-        raise NotImplementedError
+        subtitle = (
+            None
+            if is_contract_interaction and recipient is None
+            else (
+                TR.ethereum__interaction_contract
+                if is_contract_interaction
+                else TR.words__recipient
+            )
+        )
+        title = TR.words__send
+
+        await raise_if_not_confirmed(
+            trezorui_api.flow_confirm_output(
+                title=title,
+                subtitle=subtitle,
+                description=None,
+                extra=None,
+                message=(recipient or TR.ethereum__new_contract),
+                amount=None,
+                chunkify=(chunkify if recipient else False),
+                text_mono=(True if recipient else False),
+                account_title=TR.send__send_from,
+                account=account,
+                account_path=account_path,
+                address_item=None,
+                extra_item=None,
+                br_code=br_code,
+                br_name="confirm_output",
+                summary_items=(
+                    (TR.words__amount, total_amount),
+                    (TR.send__maximum_fee, maximum_fee),
+                ),
+                fee_items=fee_info_items,
+                summary_title=title,
+                summary_br_name=br_name,
+                summary_br_code=br_code,
+                cancel_text=TR.buttons__cancel,
+            ),
+            None,
+        )
 
     async def confirm_ethereum_staking_tx(
         title: str,
@@ -800,9 +837,39 @@ if not utils.BITCOIN_ONLY:
         br_name: str = "confirm_ethereum_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        # FIXME: not implemented
-        # use `confirm_output` or `TT/TR` style?
-        raise NotImplementedError
+        if verb == TR.ethereum__staking_claim:
+            summary_items = ((TR.send__maximum_fee, maximum_fee),)
+        else:
+            summary_items = (
+                (TR.words__amount, total_amount),
+                (TR.send__maximum_fee, maximum_fee),
+            )
+        await raise_if_not_confirmed(
+            trezorui_api.flow_confirm_output(
+                title=verb,
+                subtitle=None,
+                description=None,
+                extra=None,
+                message=intro_question,
+                amount=None,
+                chunkify=False,
+                text_mono=False,
+                account_title=TR.address_details__account_info,
+                account=account,
+                account_path=account_path,
+                br_code=br_code,
+                br_name=br_name,
+                address_item=(address_title, address),
+                extra_item=None,
+                summary_items=summary_items,
+                fee_items=info_items,
+                summary_title=verb,
+                summary_br_name="confirm_total",
+                summary_br_code=ButtonRequestType.SignTx,
+                cancel_text=TR.buttons__cancel,  # cancel staking
+            ),
+            br_name=None,
+        )
 
     def confirm_solana_tx(
         amount: str,
@@ -825,6 +892,47 @@ if not utils.BITCOIN_ONLY:
             extra_items=items,
             br_name=br_name,
             br_code=br_code,
+        )
+
+    async def confirm_solana_staking_tx(
+        title: str,
+        description: str,
+        account: str,
+        account_path: str,
+        vote_account: str,
+        stake_item: tuple[str, str] | None,
+        amount_item: tuple[str, str],
+        fee_item: tuple[str, str],
+        fee_details: Iterable[tuple[str, str]],
+        blockhash_item: tuple[str, str],
+        br_name: str = "confirm_solana_staking_tx",
+        br_code: ButtonRequestType = ButtonRequestType.SignTx,
+    ) -> None:
+        await raise_if_not_confirmed(
+            trezorui_api.flow_confirm_output(
+                title=title,
+                subtitle=None,
+                description=description,
+                extra=TR.solana__stake_provider if vote_account else None,
+                message=vote_account,
+                amount=None,
+                chunkify=True,
+                text_mono=True,
+                account_title=TR.address_details__account_info,
+                account=account,
+                account_path=account_path,
+                br_code=br_code,
+                br_name=br_name,
+                address_item=stake_item,
+                extra_item=blockhash_item,
+                fee_items=fee_details,
+                summary_title=title,
+                summary_items=(amount_item, fee_item),
+                summary_br_name="confirm_total",
+                summary_br_code=ButtonRequestType.SignTx,
+                cancel_text=TR.buttons__cancel,
+            ),
+            br_name=None,
         )
 
     def confirm_cardano_tx(
@@ -889,7 +997,6 @@ def confirm_replacement(title: str, txid: str) -> Awaitable[None]:
         verb=TR.buttons__continue,
         info=False,
         br_code=ButtonRequestType.SignTx,
-        prompt_screen=False,
     )
 
 
@@ -903,8 +1010,8 @@ async def confirm_modify_output(
         title=TR.modify_amount__title,
         value=address,
         verb=TR.buttons__continue,
-        verb_cancel=None,
         description=f"{TR.words__address}:",
+        cancel=True,
     )
     modify_layout = trezorui_api.confirm_modify_output(
         sign=sign,
@@ -979,6 +1086,9 @@ def confirm_sign_identity(
     )
 
 
+LONG_MSG_PAGE_THRESHOLD = 5
+
+
 async def confirm_signverify(
     message: str,
     address: str,
@@ -987,8 +1097,82 @@ async def confirm_signverify(
     account: str | None = None,
     chunkify: bool = False,
 ) -> None:
-    # FIXME: not implemented
-    raise NotImplementedError
+    if verify:
+        address_title = TR.sign_message__verify_address
+        br_name = "verify_message"
+    else:
+        address_title = TR.sign_message__confirm_address
+        br_name = "sign_message"
+
+    address_layout = trezorui_api.confirm_value(
+        title=address_title,
+        value=address,
+        description="",
+        is_data=True,
+        verb=TR.buttons__continue,
+        info=True,
+        chunkify=chunkify,
+        cancel=True,
+    )
+
+    items: list[tuple[str, str]] = []
+    if account is not None:
+        items.append((TR.words__account, account))
+    if path is not None:
+        items.append((TR.address_details__derivation_path, path))
+    items.append(
+        (
+            TR.sign_message__message_size,
+            TR.sign_message__bytes_template.format(len(message)),
+        )
+    )
+
+    info_layout = trezorui_api.show_info_with_cancel(
+        title=TR.words__title_information,
+        items=items,
+        horizontal=True,
+    )
+
+    while True:
+        try:
+            await with_info(address_layout, info_layout, br_name, br_code=BR_CODE_OTHER)
+        except ActionCancelled:
+            result = await interact(
+                trezorui_api.show_mismatch(title=TR.addr_mismatch__mismatch),
+                None,
+                raise_on_cancel=None,
+            )
+            assert result in (CONFIRMED, CANCELLED)
+            # Right button aborts action, left goes back to showing address.
+            if result is CONFIRMED:
+                raise
+            continue
+        else:
+            break
+
+    message_layout = trezorui_api.confirm_value(
+        title=TR.sign_message__confirm_message,
+        description=None,
+        value=message,
+        extra=None,
+        prompt_screen=True,
+        hold=not verify,
+        info=False,
+        cancel=True,
+    )
+
+    if message_layout.page_count() <= LONG_MSG_PAGE_THRESHOLD:
+        await interact(message_layout, br_name, BR_CODE_OTHER)
+    else:
+        await confirm_blob(
+            br_name,
+            TR.sign_message__confirm_message,
+            message,
+            br_code=BR_CODE_OTHER,
+            hold=not verify,
+            ask_pagination=True,
+            verb_skip_pagination=TR.buttons__confirm,
+        )
 
 
 def error_popup(
