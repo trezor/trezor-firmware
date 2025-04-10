@@ -5,6 +5,7 @@ EthereumSignTx.gas_limit                max_size:32
 EthereumSignTx.to                       max_size:43
 EthereumSignTx.value                    max_size:32
 EthereumSignTx.data_initial_chunk       max_size:1024
+EthereumSignTx.payment_req              type:FT_IGNORE
 
 EthereumSignTxEIP1559.address_n          max_count:8
 EthereumSignTxEIP1559.nonce              max_size:32
@@ -15,6 +16,7 @@ EthereumSignTxEIP1559.to                 max_size:43
 EthereumSignTxEIP1559.value              max_size:32
 EthereumSignTxEIP1559.data_initial_chunk max_size:1024
 EthereumSignTxEIP1559.access_list        max_count:8
+EthereumSignTxEIP1559.payment_req        type:FT_IGNORE
 
 EthereumAccessList.address              max_size:43
 EthereumAccessList.storage_keys         max_count:8 max_size:32
