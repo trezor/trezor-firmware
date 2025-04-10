@@ -24,7 +24,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
 from ...input_flows import InputFlowPaymentRequestDetails
-from .payment_req import CoinPurchaseMemo, RefundMemo, TextMemo, make_payment_request
+from ..payment_req import CoinPurchaseMemo, RefundMemo, TextMemo, make_payment_request
 from .signtx import forge_prevtx
 
 # address at seed "all all all..." path m/84h/1h/0h/0/0
@@ -146,13 +146,24 @@ def test_payment_request(client: Client, payment_request_params):
     for i, params in enumerate(payment_request_params):
         request_outputs = []
         for txo_index in params.txo_indices:
-            outputs[txo_index].payment_req_index = i
-            request_outputs.append(outputs[txo_index])
+            output = outputs[txo_index]
+            output.payment_req_index = i
+            request_outputs.append((output.amount, output.address))
         nonce = misc.get_nonce(client) if params.get_nonce else None
+        for memo in params.memos:
+            if isinstance(memo, RefundMemo):
+                memo.address_resp = btc.get_authenticated_address(
+                    client, "Testnet", memo.address_n
+                )
+            elif isinstance(memo, CoinPurchaseMemo):
+                memo.address_resp = btc.get_authenticated_address(
+                    client, memo.coin_name, memo.address_n
+                )
         payment_reqs.append(
             make_payment_request(
                 client,
                 recipient_name="trezor.io",
+                slip44=1,
                 outputs=request_outputs,
                 change_addresses=["tb1qkvwu9g3k2pdxewfqr7syz89r3gj557l3uuf9r9"],
                 memos=params.memos,
@@ -194,7 +205,8 @@ def test_payment_request_details(client: Client):
         make_payment_request(
             client,
             recipient_name="trezor.io",
-            outputs=outputs[:2],
+            slip44=1,
+            outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
             memos=[TextMemo("Invoice #87654321.")],
             nonce=nonce,
         )
@@ -224,7 +236,8 @@ def test_payment_req_wrong_amount(client: Client):
     payment_req = make_payment_request(
         client,
         recipient_name="trezor.io",
-        outputs=outputs[:2],
+        slip44=1,
+        outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
         nonce=misc.get_nonce(client),
     )
 
@@ -245,13 +258,15 @@ def test_payment_req_wrong_amount(client: Client):
 def test_payment_req_wrong_mac_refund(client: Client):
     # Test wrong MAC in payment request memo.
     memo = RefundMemo(parse_path("m/44h/1h/0h/1/0"))
+    memo.address_resp = btc.get_authenticated_address(client, "Testnet", memo.address_n)
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
     payment_req = make_payment_request(
         client,
         recipient_name="trezor.io",
-        outputs=outputs[:2],
+        slip44=1,
+        outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
         memos=[memo],
         nonce=misc.get_nonce(client),
     )
@@ -282,13 +297,17 @@ def test_payment_req_wrong_mac_purchase(client: Client):
         slip44=5,
         address_n=parse_path("m/44h/5h/0h/1/0"),
     )
+    memo.address_resp = btc.get_authenticated_address(
+        client, memo.coin_name, memo.address_n
+    )
     outputs[0].payment_req_index = 0
     outputs[1].payment_req_index = 0
     outputs[2].payment_req_index = None
     payment_req = make_payment_request(
         client,
         recipient_name="trezor.io",
-        outputs=outputs[:2],
+        slip44=1,
+        outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
         memos=[memo],
         nonce=misc.get_nonce(client),
     )
@@ -317,7 +336,8 @@ def test_payment_req_wrong_output(client: Client):
     payment_req = make_payment_request(
         client,
         recipient_name="trezor.io",
-        outputs=outputs[:2],
+        slip44=1,
+        outputs=[(txo.amount, txo.address) for txo in outputs[:2]],
         nonce=misc.get_nonce(client),
     )
 
