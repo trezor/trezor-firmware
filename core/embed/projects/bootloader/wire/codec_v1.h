@@ -26,6 +26,8 @@
 #define MAX_PACKET_SIZE 256
 
 typedef struct {
+  // initialized flag
+  bool initialized;
   // identifier of the interface used for polling communication events
   uint8_t poll_iface_id;
   // size of TX packet

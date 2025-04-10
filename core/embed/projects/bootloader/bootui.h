@@ -34,6 +34,7 @@ typedef enum {
   MENU_EXIT = 0xAABBCCDD,
   MENU_REBOOT = 0x11223344,
   MENU_WIPE = 0x55667788,
+  MENU_BLUETOOTH = 0x99AABBCC,
 } menu_result_t;
 
 // todo: use bindgen to tie this to rust
@@ -41,6 +42,22 @@ typedef enum {
   INTRO_MENU = 1,
   INTRO_HOST = 2,
 } intro_result_t;
+
+typedef enum {
+  WAIT_CANCEL = 1,
+  WAIT_PAIRING_MODE = 2,
+  WAIT_MENU = 3,
+} wait_result_t;
+
+typedef enum {
+  PAIRING_MODE_CANCEL = 1000000,
+} pairing_mode_result_t;
+
+typedef enum {
+  PAIRING_FINALIZATION_COMPLETED = 1,
+  PAIRING_FINALIZATION_CANCEL = 2,
+  PAIRING_FINALIZATION_FAILED = 3,
+} pairing_mode_finalization_result_t;
 
 // Displays a warning screen before jumping to the untrusted firmware
 //
@@ -60,14 +77,8 @@ void ui_screen_boot(const vendor_header* const vhdr,
 // the user presses a button, touches the display
 void ui_click(void);
 
-void ui_screen_welcome(void);
-
 uint32_t ui_screen_intro(const vendor_header* const vhdr,
                          const image_header* const hdr, bool fw_ok);
-
-uint32_t ui_screen_menu(secbool firmware_present);
-
-void ui_screen_connect(void);
 
 ui_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
                                       const image_header* const hdr,
@@ -89,9 +100,14 @@ void ui_screen_fail(void);
 void ui_fadein(void);
 void ui_fadeout(void);
 void ui_set_initial_setup(bool initial);
+bool ui_get_initial_setup(void);
 
 void ui_screen_boot_stage_1(bool fading);
 
 #ifdef USE_OPTIGA
 uint32_t ui_screen_unlock_bootloader_confirm(void);
+#endif
+
+#ifdef USE_BLE
+uint32_t ui_screen_confirm_pairing(uint32_t code);
 #endif

@@ -24,7 +24,7 @@
 
 #include "bootui.h"
 #include "protob.h"
-#include "rust_ui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
 workflow_result_t workflow_unlock_bootloader(protob_io_t *iface) {

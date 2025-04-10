@@ -25,6 +25,7 @@
 
 #include "antiglitch.h"
 #include "bootui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
 typedef enum {
@@ -32,6 +33,46 @@ typedef enum {
   SCREEN_MENU,
   SCREEN_WAIT_FOR_HOST,
 } screen_t;
+
+workflow_result_t workflow_menu(const vendor_header *const vhdr,
+                                const image_header *const hdr,
+                                secbool firmware_present) {
+  while (true) {
+    uint8_t buf[1024];
+    screen_menu(ui_get_initial_setup(), firmware_present, buf, sizeof(buf));
+    uint32_t ui_result = 0;
+    workflow_result_t result =
+        workflow_host_control(vhdr, hdr, buf, sizeof(buf), &ui_result);
+
+    if (result != WF_OK_UI_ACTION) {
+      return result;
+    }
+
+    menu_result_t menu_result = (menu_result_t)ui_result;
+
+    if (menu_result == MENU_EXIT) {  // exit menu
+      return WF_OK;
+    }
+#ifdef USE_BLE
+    if (menu_result == MENU_BLUETOOTH) {
+      workflow_ble_pairing_request(vhdr, hdr);
+      continue;
+    }
+#endif
+    if (menu_result == MENU_REBOOT) {  // reboot
+      jump_allow_1();
+      jump_allow_2();
+      return WF_OK_REBOOT_SELECTED;
+    }
+    if (menu_result == MENU_WIPE) {  // wipe
+      workflow_result_t r = workflow_wipe_device(NULL);
+      if (r == WF_ERROR || r == WF_OK_DEVICE_WIPED || r == WF_CANCELLED) {
+        return r;
+      }
+    }
+    return WF_ERROR_FATAL;
+  }
+}
 
 workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
                                       const image_header *const hdr,
@@ -52,37 +93,50 @@ workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
         }
       } break;
       case SCREEN_MENU: {
-        menu_result_t menu_result = ui_screen_menu(firmware_present);
-        if (menu_result == MENU_EXIT) {  // exit menu
+        workflow_result_t res = workflow_menu(vhdr, hdr, firmware_present);
+        if (res == WF_OK) {
           screen = SCREEN_INTRO;
+          continue;
         }
-        if (menu_result == MENU_REBOOT) {  // reboot
-#ifndef USE_HASH_PROCESSOR
-          ui_screen_boot_stage_1(true);
-#endif
-          jump_allow_1();
-          jump_allow_2();
-          return WF_OK_REBOOT_SELECTED;
+        if (res == WF_CANCELLED) {
+          screen = SCREEN_MENU;
+          continue;
         }
-        if (menu_result == MENU_WIPE) {  // wipe
-          workflow_result_t r = workflow_wipe_device(NULL);
-          if (r == WF_ERROR) {
-            return r;
-          }
-          if (r == WF_OK_DEVICE_WIPED) {
-            return r;
-          }
-          if (r == WF_CANCELLED) {
-            screen = SCREEN_MENU;
-            continue;
-          }
-          return WF_ERROR_FATAL;
-        }
+        return res;
       } break;
       case SCREEN_WAIT_FOR_HOST: {
+        uint8_t buf[1024] = {0};
+        uint32_t ui_result = 0;
+        screen_connect(false, true, buf, sizeof(buf));
         workflow_result_t res =
-            workflow_host_control(vhdr, hdr, ui_screen_connect);
+            workflow_host_control(vhdr, hdr, buf, sizeof(buf), &ui_result);
         switch (res) {
+          case WF_OK_UI_ACTION:
+            switch (ui_result) {
+              case WAIT_CANCEL:
+                screen = SCREEN_INTRO;
+                break;
+#ifdef USE_BLE
+              case WAIT_PAIRING_MODE:
+                res = workflow_ble_pairing_request(vhdr, hdr);
+                if (res == WF_OK_PAIRING_COMPLETED ||
+                    res == WF_OK_PAIRING_FAILED) {
+                  screen = SCREEN_WAIT_FOR_HOST;
+                  break;
+                }
+                if (res == WF_CANCELLED) {
+                  screen = SCREEN_INTRO;
+                  break;
+                }
+                return res;
+#endif
+              case WAIT_MENU:
+                screen = SCREEN_MENU;
+                break;
+              default:
+                return WF_ERROR_FATAL;
+            }
+            continue;
           case WF_CANCELLED:
             screen = SCREEN_INTRO;
             continue;

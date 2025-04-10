@@ -1,15 +1,15 @@
+use super::super::{
+    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
+    fonts,
+    theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
+};
 use crate::ui::{
     component::{text::TextStyle, LineBreaking::BreakWordsNoHyphen},
     constant::{HEIGHT, WIDTH},
     display::Color,
     geometry::{Offset, Point, Rect},
+    layout_bolt::theme::GREY_MEDIUM,
     util::include_res,
-};
-
-use super::super::{
-    component::{ButtonStyle, ButtonStyleSheet, ResultStyle},
-    fonts,
-    theme::{BLACK, FG, GREY_DARK, GREY_LIGHT, WHITE},
 };
 
 pub const BLD_BG: Color = Color::rgb(0x00, 0x1E, 0xAD);
@@ -29,6 +29,9 @@ pub const BLD_INSTALL_BTN_COLOR_ACTIVE: Color = Color::rgb(0xCD, 0xD2, 0xEF);
 
 pub const BLD_BTN_COLOR: Color = Color::rgb(0x2D, 0x42, 0xBF);
 pub const BLD_BTN_COLOR_ACTIVE: Color = Color::rgb(0x04, 0x10, 0x58);
+
+pub const BLD_BTN_INITIAL_COLOR: Color = GREY_MEDIUM;
+pub const BLD_BTN_INITIAL_ACTIVE: Color = GREY_DARK;
 
 pub const BLD_TITLE_COLOR: Color = WHITE;
 
@@ -228,6 +231,70 @@ pub fn button_bld() -> ButtonStyleSheet {
             button_color: BLD_BTN_COLOR,
             background_color: BLD_BG,
             border_color: BLD_BG,
+            border_radius: 4,
+            border_width: 0,
+        },
+    }
+}
+
+pub fn button_confirm_initial() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_BOLD_UPPER,
+            text_color: WELCOME_COLOR,
+            button_color: WHITE,
+            background_color: WELCOME_COLOR,
+            border_color: WELCOME_COLOR,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_BOLD_UPPER,
+            text_color: WELCOME_COLOR,
+            button_color: GREY_LIGHT,
+            background_color: WELCOME_COLOR,
+            border_color: WELCOME_COLOR,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_BOLD_UPPER,
+            text_color: FG,
+            button_color: GREY_DARK,
+            background_color: FG,
+            border_color: FG,
+            border_radius: RADIUS,
+            border_width: 0,
+        },
+    }
+}
+
+pub fn button_initial() -> ButtonStyleSheet {
+    ButtonStyleSheet {
+        normal: &ButtonStyle {
+            font: fonts::FONT_BOLD_UPPER,
+            text_color: WHITE,
+            button_color: BLD_BTN_INITIAL_COLOR,
+            background_color: WELCOME_COLOR,
+            border_color: WELCOME_COLOR,
+            border_radius: 4,
+            border_width: 0,
+        },
+        active: &ButtonStyle {
+            font: fonts::FONT_BOLD_UPPER,
+            text_color: WHITE,
+            button_color: BLD_BTN_INITIAL_ACTIVE,
+            background_color: WELCOME_COLOR,
+            border_color: WELCOME_COLOR,
+            border_radius: 4,
+            border_width: 0,
+        },
+        disabled: &ButtonStyle {
+            font: fonts::FONT_BOLD_UPPER,
+            text_color: GREY_LIGHT,
+            button_color: BLD_BTN_COLOR,
+            background_color: WELCOME_COLOR,
+            border_color: WELCOME_COLOR,
             border_radius: 4,
             border_width: 0,
         },
