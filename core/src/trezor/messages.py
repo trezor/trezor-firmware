@@ -3608,6 +3608,7 @@ if TYPE_CHECKING:
         tx_type: "int | None"
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -3624,6 +3625,7 @@ if TYPE_CHECKING:
             tx_type: "int | None" = None,
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
@@ -3645,6 +3647,7 @@ if TYPE_CHECKING:
         access_list: "list[EthereumAccessList]"
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -3662,6 +3665,7 @@ if TYPE_CHECKING:
             data_initial_chunk: "bytes | None" = None,
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
