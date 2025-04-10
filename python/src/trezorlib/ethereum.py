@@ -191,6 +191,7 @@ def sign_tx(
     tx_type: Optional[int] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
+    payment_req: Optional[messages.PaymentRequest] = None,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -206,6 +207,7 @@ def sign_tx(
         tx_type=tx_type,
         definitions=definitions,
         chunkify=chunkify,
+        payment_req=payment_req,
     )
 
     if data is None:
@@ -252,6 +254,7 @@ def sign_tx_eip1559(
     access_list: Optional[List[messages.EthereumAccessList]] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
+    payment_req: Optional[messages.PaymentRequest] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -269,6 +272,7 @@ def sign_tx_eip1559(
         data_initial_chunk=chunk,
         definitions=definitions,
         chunkify=chunkify,
+        payment_req=payment_req,
     )
 
     response = client.call(msg)

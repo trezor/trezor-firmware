@@ -80,7 +80,7 @@ async def require_confirm_approve(
 
 
 async def require_confirm_tx(
-    to_bytes: bytes,
+    recipient: str | None,
     value: int,
     address_n: list[int],
     maximum_fee: str,
@@ -92,12 +92,11 @@ async def require_confirm_tx(
 ) -> None:
     from trezor.ui.layouts import confirm_ethereum_tx
 
-    to_str = address_from_bytes(to_bytes, network) if to_bytes else None
     total_amount = format_ethereum_amount(value, token, network)
     account, account_path = get_account_and_path(address_n)
 
     await confirm_ethereum_tx(
-        to_str,
+        recipient,
         total_amount,
         account,
         account_path,
