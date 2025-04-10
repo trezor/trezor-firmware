@@ -1,7 +1,7 @@
 use crate::{
     trezorhal::secbool::{secbool, sectrue},
     ui::{
-        component::{Child, Component, Event, EventCtx, Label, Pad},
+        component::{Component, Event, EventCtx, Label, Pad},
         constant::{screen, WIDTH},
         display::Icon,
         geometry::{Insets, Point, Rect},
@@ -26,40 +26,55 @@ pub enum MenuMsg {
     Close = 0xAABBCCDD,
     Reboot = 0x11223344,
     FactoryReset = 0x55667788,
+    Bluetooth = 0x99AABBCC,
 }
 
 pub struct Menu {
     bg: Pad,
-    title: Child<Label<'static>>,
-    close: Child<Button>,
-    reboot: Child<Button>,
-    reset: Child<Button>,
+    title: Label<'static>,
+    close: Button,
+    reboot: Button,
+    reset: Button,
+    bluetooth: Button,
 }
 
 impl Menu {
     pub fn new(firmware_present: secbool) -> Self {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
+        let content_bluetooth = IconText::new("BLUETOOTH", Icon::new(FIRE24));
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
-            title: Child::new(
-                Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG)).vertically_centered(),
-            ),
-            close: Child::new(
-                Button::with_icon(Icon::new(X32))
-                    .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
-            ),
-            reboot: Child::new(
-                Button::with_icon_and_text(content_reboot)
-                    .styled(button_bld())
-                    .initially_enabled(sectrue == firmware_present),
-            ),
-            reset: Child::new(Button::with_icon_and_text(content_reset).styled(button_bld())),
+            title: Label::left_aligned("BOOTLOADER".into(), text_title(BLD_BG))
+                .vertically_centered(),
+
+            close: Button::with_icon(Icon::new(X32))
+                .styled(button_bld_menu())
+                .with_expanded_touch_area(Insets::uniform(CORNER_BUTTON_TOUCH_EXPANSION)),
+
+            reboot: Button::with_icon_and_text(content_reboot)
+                .styled(button_bld())
+                .initially_enabled(sectrue == firmware_present),
+
+            reset: Button::with_icon_and_text(content_reset).styled(button_bld()),
+            bluetooth: Button::with_icon_and_text(content_bluetooth).styled(button_bld()),
         };
         instance.bg.clear();
         instance
+    }
+
+    pub fn get_button_pos(&self, i: u8) -> Rect {
+        Rect::new(
+            Point::new(
+                CONTENT_PADDING,
+                BUTTON_AREA_START + i as i16 * (BUTTON_HEIGHT + BUTTON_SPACING),
+            ),
+            Point::new(
+                WIDTH - CONTENT_PADDING,
+                BUTTON_AREA_START + (i + 1) as i16 * BUTTON_HEIGHT + i as i16 * BUTTON_SPACING,
+            ),
+        )
     }
 }
 
@@ -70,20 +85,10 @@ impl Component for Menu {
         self.bg.place(screen());
         self.title.place(TITLE_AREA);
         self.close.place(CORNER_BUTTON_AREA);
-        self.reboot.place(Rect::new(
-            Point::new(CONTENT_PADDING, BUTTON_AREA_START),
-            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START + BUTTON_HEIGHT),
-        ));
-        self.reset.place(Rect::new(
-            Point::new(
-                CONTENT_PADDING,
-                BUTTON_AREA_START + BUTTON_HEIGHT + BUTTON_SPACING,
-            ),
-            Point::new(
-                WIDTH - CONTENT_PADDING,
-                BUTTON_AREA_START + 2 * BUTTON_HEIGHT + BUTTON_SPACING,
-            ),
-        ));
+        self.reboot.place(self.get_button_pos(0));
+        self.reset.place(self.get_button_pos(1));
+        #[cfg(feature = "ble")]
+        self.bluetooth.place(self.get_button_pos(2));
         bounds
     }
 
@@ -97,6 +102,10 @@ impl Component for Menu {
         if let Some(Clicked) = self.reset.event(ctx, event) {
             return Some(Self::Msg::FactoryReset);
         }
+        #[cfg(feature = "ble")]
+        if let Some(Clicked) = self.bluetooth.event(ctx, event) {
+            return Some(Self::Msg::Bluetooth);
+        }
 
         None
     }
@@ -107,5 +116,7 @@ impl Component for Menu {
         self.close.render(target);
         self.reboot.render(target);
         self.reset.render(target);
+        #[cfg(feature = "ble")]
+        self.bluetooth.render(target);
     }
 }

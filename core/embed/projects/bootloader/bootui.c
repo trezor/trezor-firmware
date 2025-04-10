@@ -24,7 +24,7 @@
 #include <rtl/mini_printf.h>
 
 #include "bootui.h"
-#include "rust_ui.h"
+#include "rust_ui_bootloader.h"
 #include "version.h"
 
 #define BACKLIGHT_NORMAL 150
@@ -46,6 +46,8 @@ static void format_ver(const char *format, uint32_t version, char *buffer,
 static bool initial_setup = true;
 
 void ui_set_initial_setup(bool initial) { initial_setup = initial; }
+
+bool ui_get_initial_setup(void) { return initial_setup; }
 
 #if defined USE_TOUCH
 #include <io/touch.h>
@@ -97,10 +99,6 @@ void ui_screen_boot(const vendor_header *const vhdr,
               vimg_len, wait);
 }
 
-// welcome UI
-
-void ui_screen_welcome(void) { screen_welcome(); }
-
 uint32_t ui_screen_intro(const vendor_header *const vhdr,
                          const image_header *const hdr, bool fw_ok) {
   char bld_ver[32];
@@ -111,19 +109,14 @@ uint32_t ui_screen_intro(const vendor_header *const vhdr,
   return screen_intro(bld_ver, vhdr->vstr, vhdr->vstr_len, ver_str, fw_ok);
 }
 
-uint32_t ui_screen_menu(secbool firmware_present) {
-  return screen_menu(firmware_present);
-}
-
-void ui_screen_connect(void) { screen_connect(initial_setup); }
-
 // install UI
 
-ui_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
-                                      const image_header *const hdr,
-                                      secbool should_keep_seed,
-                                      secbool is_newvendor,
-                                      secbool is_newinstall, int version_cmp) {
+confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
+                                           const image_header *const hdr,
+                                           secbool should_keep_seed,
+                                           secbool is_newvendor,
+                                           secbool is_newinstall,
+                                           int version_cmp) {
   uint8_t fingerprint[32];
   char ver_str[64];
   get_image_fingerprint(hdr, fingerprint);
@@ -149,7 +142,7 @@ void ui_screen_install_progress_upload(int pos) {
 
 // wipe UI
 
-ui_result_t ui_screen_wipe_confirm(void) { return screen_wipe_confirm(); }
+confirm_result_t ui_screen_wipe_confirm(void) { return screen_wipe_confirm(); }
 
 void ui_screen_wipe(void) { screen_wipe_progress(0, true); }
 
@@ -180,3 +173,9 @@ void ui_screen_install_restricted(void) { screen_install_fail(); }
 void ui_fadein(void) { display_fade(0, BACKLIGHT_NORMAL, 1000); }
 
 void ui_fadeout(void) { display_fade(BACKLIGHT_NORMAL, 0, 500); }
+
+#ifdef USE_BLE
+uint32_t ui_screen_confirm_pairing(uint32_t code) {
+  return screen_confirm_pairing(code, initial_setup);
+}
+#endif

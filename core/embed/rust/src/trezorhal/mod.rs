@@ -35,3 +35,9 @@ pub mod wordlist;
 pub mod secbool;
 
 pub mod time;
+
+#[cfg(feature = "ui")]
+pub mod sysevent;
+
+#[cfg(feature = "bootloader")]
+pub use ffi::c_layout_t;

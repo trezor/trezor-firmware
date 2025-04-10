@@ -21,9 +21,11 @@
 
 #include <trezor_types.h>
 
+#include <sys/sysevent.h>
 #include <util/image.h>
 
 #include "protob/protob.h"
+#include "rust_ui_bootloader.h"
 
 typedef enum {
   WF_ERROR_FATAL = 0,
@@ -33,6 +35,9 @@ typedef enum {
   WF_OK_FIRMWARE_INSTALLED = 0x04D9D07F,
   WF_OK_DEVICE_WIPED = 0x30DC3841,
   WF_OK_BOOTLOADER_UNLOCKED = 0x23FCBD03,
+  WF_OK_UI_ACTION = 0xAABBCCEE,
+  WF_OK_PAIRING_COMPLETED = 0xAABBCCEF,
+  WF_OK_PAIRING_FAILED = 0xAABBCCF0,
   WF_CANCELLED = 0x55667788,
 } workflow_result_t;
 
@@ -54,6 +59,9 @@ workflow_result_t workflow_get_features(protob_io_t *iface,
                                         const vendor_header *const vhdr,
                                         const image_header *const hdr);
 
+workflow_result_t workflow_menu(const vendor_header *const vhdr,
+                                const image_header *const hdr,
+                                secbool firmware_present);
 workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
                                       const image_header *const hdr,
                                       secbool firmware_present);
@@ -62,7 +70,13 @@ workflow_result_t workflow_empty_device(void);
 
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
-                                        void (*redraw_wait_screen)(void));
+                                        c_layout_t *wait_layout,
+                                        uint32_t *ui_action_result);
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
                                        const image_header *const hdr);
+
+#ifdef USE_BLE
+workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
+                                               const image_header *const hdr);
+#endif

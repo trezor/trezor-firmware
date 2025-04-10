@@ -29,8 +29,6 @@
 #include <sec/secret.h>
 #endif
 
-#include <poll.h>
-
 #include "bootui.h"
 #include "protob/protob.h"
 #include "version_check.h"
@@ -311,12 +309,12 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       }
 #endif
 
-      ui_result_t response = UI_RESULT_CANCEL;
+      confirm_result_t response = CANCEL;
       if (((vhdr.vtrust & VTRUST_NO_WARNING) == VTRUST_NO_WARNING) &&
           (sectrue == is_new || sectrue == is_ilu)) {
         // new installation or interaction less updated - auto confirm
         // only allowed for full-trust images
-        response = UI_RESULT_CONFIRM;
+        response = CONFIRM;
       } else {
         if (sectrue != is_new) {
           int version_cmp = version_compare(hdr.version, current_hdr->version);
@@ -328,7 +326,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         }
       }
 
-      if (UI_RESULT_CONFIRM != response) {
+      if (CONFIRM != response) {
         send_user_abort(iface, "Firmware install cancelled");
         return UPLOAD_ERR_USER_ABORT;
       }
@@ -519,11 +517,14 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
   upload_status_t s = UPLOAD_IN_PROGRESS;
 
   while (true) {
-    uint16_t ifaces[1] = {protob_get_iface_flag(iface) | MODE_READ};
-    poll_event_t e = {0};
-    uint8_t i = poll_events(ifaces, 1, &e, 100);
+    sysevents_t awaited = {0};
+    sysevents_t signalled = {0};
 
-    if (e.type == EVENT_NONE || i != protob_get_iface_flag(iface)) {
+    awaited.read_ready = 1 << protob_get_iface_flag(iface);
+
+    sysevents_poll(&awaited, &signalled, 100);
+
+    if (awaited.read_ready != signalled.read_ready) {
       continue;
     }
 
