@@ -70,7 +70,25 @@ async def sign_tx_eip1559(
         gas_limit,
         defs.network,
     )
-    await confirm_tx_data(msg, defs, address_bytes, maximum_fee, fee_items, data_total)
+
+    payment_req_verifier = None
+    if msg.payment_req:
+        from apps.common.payment_request import PaymentRequestVerifier
+
+        slip44_id = paths.unharden(msg.address_n[1])
+        payment_req_verifier = PaymentRequestVerifier(
+            msg.payment_req, slip44_id, keychain
+        )
+
+    await confirm_tx_data(
+        msg,
+        defs,
+        address_bytes,
+        maximum_fee,
+        fee_items,
+        data_total,
+        payment_req_verifier,
+    )
 
     # transaction data confirmed, proceed with signing
     data = bytearray()
