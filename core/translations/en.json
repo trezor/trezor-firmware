@@ -322,14 +322,25 @@
     "eos__vote_for_proxy": "Vote for proxy",
     "eos__voter": "Voter:",
     "ethereum__amount_sent": "Amount sent:",
-    "ethereum__contract": "Contract:",
+    "ethereum__contract": {
+      "Bolt": "Contract",
+      "Caesar": "Contract",
+      "Delizia": "Contract",
+      "Eckhart": "Call contract"
+    },
     "ethereum__data_size_template": "Size: {0} bytes",
     "ethereum__gas_limit": "Gas limit",
     "ethereum__gas_price": "Gas price",
-    "ethereum__interaction_contract": "Interaction contract",
+    "ethereum__interaction_contract": {
+      "Bolt": "Interaction contract",
+      "Caesar": "Interaction contract",
+      "Delizia": "Interaction contract",
+      "Eckhart": "Interaction contract address"
+    },
     "ethereum__max_gas_price": "Max fee per gas",
     "ethereum__name_and_version": "Name and version",
     "ethereum__new_contract": "New contract will be deployed",
+    "ethereum__deploy_contract": "Deploy contract",
     "ethereum__no_message_field": "No message field",
     "ethereum__priority_fee": "Max priority fee",
     "ethereum__show_full_array": "Show full array",
@@ -350,11 +361,27 @@
     "ethereum__title_confirm_struct": "Confirm struct",
     "ethereum__title_confirm_typed_data": "Confirm typed data",
     "ethereum__title_input_data": "Input data",
+    "ethereum__title_all_input_data_template": "All input data ({0} bytes)",
     "ethereum__title_signing_address": "Signing address",
-    "ethereum__token_contract": "Token contract",
+    "ethereum__token_contract": {
+      "Bolt": "Token contract",
+      "Caesar": "Token contract",
+      "Delizia": "Token contract",
+      "Eckhart": "Token contract address"
+    },
     "ethereum__units_template": "{0} units",
-    "ethereum__unknown_contract_address": "Unknown contract address. Continue only if you know what you are doing.",
-    "ethereum__unknown_contract_address_short": "Unknown contract address.",
+    "ethereum__unknown_contract_address": {
+      "Bolt": "Unknown contract address. Continue only if you know what you are doing.",
+      "Caesar": "Unknown contract address. Continue only if you know what you are doing.",
+      "Delizia": "Unknown contract address. Continue only if you know what you are doing.",
+      "Eckhart": "Unknown token contract address. Continue only if you know what you are doing."
+    },
+    "ethereum__unknown_contract_address_short": {
+      "Bolt": "Unknown contract address.",
+      "Caesar": "Unknown contract address.",
+      "Delizia": "Unknown contract address.",
+      "Eckhart": "Unknown token contract address."
+    },
     "ethereum__unknown_token": "Unknown token",
     "ethereum__valid_signature": "The signature is valid.",
     "experimental_mode__enable": "Enable experimental features?",
@@ -825,12 +852,7 @@
     "sd_card__wanna_format": "Do you really want to format the SD card?",
     "sd_card__wrong_sd_card": "Wrong SD card.",
     "send__address_path": "address path",
-    "send__cancel_sign": {
-      "Bolt": "Cancel sign",
-      "Caesar": "Cancel sign",
-      "Delizia": "Cancel sign",
-      "Eckhart": "Cancel sign?"
-    },
+    "send__cancel_sign": "Cancel sign",
     "send__sign_cancelled": "Sign cancelled.",
     "send__confirm_sending": "Sending amount",
     "send__from_multiple_accounts": "Sending from multiple accounts.",

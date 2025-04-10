@@ -772,6 +772,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_verb_info;
   MP_QSTR_verify;
   MP_QSTR_version;
+  MP_QSTR_warning_footer;
   MP_QSTR_wipe__info;
   MP_QSTR_wipe__title;
   MP_QSTR_wipe__want_to_wipe;
@@ -1023,6 +1024,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__amount_sent;
   MP_QSTR_ethereum__contract;
   MP_QSTR_ethereum__data_size_template;
+  MP_QSTR_ethereum__deploy_contract;
   MP_QSTR_ethereum__gas_limit;
   MP_QSTR_ethereum__gas_price;
   MP_QSTR_ethereum__interaction_contract;
@@ -1044,6 +1046,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__staking_stake_intro;
   MP_QSTR_ethereum__staking_unstake;
   MP_QSTR_ethereum__staking_unstake_intro;
+  MP_QSTR_ethereum__title_all_input_data_template;
   MP_QSTR_ethereum__title_confirm_domain;
   MP_QSTR_ethereum__title_confirm_message;
   MP_QSTR_ethereum__title_confirm_struct;
