@@ -96,6 +96,14 @@ void ble_management_send_pairing_request_event(uint8_t *data, uint16_t len) {
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
 }
 
+void ble_management_send_pairing_completed(void) {
+  uint8_t tx_data[1] = {0};
+
+  tx_data[0] = INTERNAL_EVENT_PAIRING_COMPLETED;
+
+  trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, tx_data, sizeof(tx_data));
+}
+
 static void management_send_mac(uint8_t *mac) {
   uint8_t tx_data[1 + BT_ADDR_SIZE] = {0};
   tx_data[0] = INTERNAL_EVENT_MAC;
