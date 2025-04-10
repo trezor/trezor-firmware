@@ -74,7 +74,11 @@ impl ActionBar {
         Self::new(
             Mode::Single,
             None,
-            Some(button.with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)),
+            Some(
+                button
+                    .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
+                    .with_gradient(),
+            ),
             None,
         )
     }
@@ -102,7 +106,8 @@ impl ActionBar {
             Some(
                 right
                     .with_expanded_touch_area(Self::BUTTON_EXPAND_TOUCH)
-                    .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg()),
+                    .with_content_offset(Self::BUTTON_CONTENT_OFFSET.neg())
+                    .with_gradient(),
             ),
             None,
         )
@@ -112,7 +117,6 @@ impl ActionBar {
         Self::new_double(
             Button::with_icon(theme::ICON_CROSS),
             Button::with_text(TR::buttons__confirm.into())
-                .with_gradient()
                 .styled(theme::firmware::button_confirm()),
         )
     }
