@@ -5220,6 +5220,7 @@ class EthereumSignTx(protobuf.MessageType):
         10: protobuf.Field("tx_type", "uint32", repeated=False, required=False, default=None),
         12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
         13: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        14: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5237,6 +5238,7 @@ class EthereumSignTx(protobuf.MessageType):
         tx_type: Optional["int"] = None,
         definitions: Optional["EthereumDefinitions"] = None,
         chunkify: Optional["bool"] = None,
+        payment_req: Optional["PaymentRequest"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.gas_price = gas_price
@@ -5250,6 +5252,7 @@ class EthereumSignTx(protobuf.MessageType):
         self.tx_type = tx_type
         self.definitions = definitions
         self.chunkify = chunkify
+        self.payment_req = payment_req
 
 
 class EthereumSignTxEIP1559(protobuf.MessageType):
@@ -5268,6 +5271,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         11: protobuf.Field("access_list", "EthereumAccessList", repeated=True, required=False, default=None),
         12: protobuf.Field("definitions", "EthereumDefinitions", repeated=False, required=False, default=None),
         13: protobuf.Field("chunkify", "bool", repeated=False, required=False, default=None),
+        14: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -5286,6 +5290,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         data_initial_chunk: Optional["bytes"] = b'',
         definitions: Optional["EthereumDefinitions"] = None,
         chunkify: Optional["bool"] = None,
+        payment_req: Optional["PaymentRequest"] = None,
     ) -> None:
         self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.access_list: Sequence["EthereumAccessList"] = access_list if access_list is not None else []
@@ -5300,6 +5305,7 @@ class EthereumSignTxEIP1559(protobuf.MessageType):
         self.data_initial_chunk = data_initial_chunk
         self.definitions = definitions
         self.chunkify = chunkify
+        self.payment_req = payment_req
 
 
 class EthereumTxRequest(protobuf.MessageType):
