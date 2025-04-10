@@ -124,7 +124,7 @@ def with_keychain_from_path(
             slip44 = _slip44_from_address_n(msg.address_n)
             defs = _defs_from_message(msg, slip44=slip44)
             schemas = _schemas_from_network(patterns, defs.network)
-            keychain = await get_keychain(CURVE, schemas)
+            keychain = await get_keychain(CURVE, schemas, [[b"SLIP-0024"]])
             with keychain:
                 return await func(msg, keychain, defs)
 
@@ -140,7 +140,7 @@ def with_keychain_from_chain_id(
     async def wrapper(msg: MsgInSignTx) -> MsgOut:
         defs = _defs_from_message(msg, chain_id=msg.chain_id)
         schemas = _schemas_from_network(PATTERNS_ADDRESS, defs.network)
-        keychain = await get_keychain(CURVE, schemas)
+        keychain = await get_keychain(CURVE, schemas, [[b"SLIP-0024"]])
         with keychain:
             return await func(msg, keychain, defs)
 
