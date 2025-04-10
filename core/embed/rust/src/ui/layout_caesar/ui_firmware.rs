@@ -981,6 +981,7 @@ impl FirmwareUI for UICaesar {
         _title: TString<'static>,
         _description: TString<'static>,
         _value: TString<'static>,
+        _menu_title: Option<TString<'static>>,
         _verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
@@ -1024,6 +1025,32 @@ impl FirmwareUI for UICaesar {
         let loader_description = hold.then_some("Locking the device...".into());
         let layout = RootComponent::new(Homescreen::new(label, notification, loader_description));
         Ok(layout)
+    }
+
+    fn show_device_menu(
+        _failed_backup: bool,
+        _battery_percentage: u8,
+        _firmware_version: TString<'static>,
+        _device_name: TString<'static>,
+        _paired_devices: Vec<TString<'static>, 1>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"show_device_menu not supported",
+        ))
+    }
+
+    fn show_pairing_device_name(
+        _device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"show_pairing_device_name not supported",
+        ))
+    }
+
+    fn show_pairing_code(_code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"show_pairing_code not supported",
+        ))
     }
 
     fn show_info(
@@ -1137,7 +1164,7 @@ impl FirmwareUI for UICaesar {
         Ok(layout)
     }
 
-    fn show_share_words_delizia(
+    fn show_share_words_extended(
         _words: heapless::Vec<TString<'static>, 33>,
         _subtitle: Option<TString<'static>>,
         _instructions: Obj,

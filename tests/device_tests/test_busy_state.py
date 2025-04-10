@@ -23,6 +23,8 @@ from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 PIN = "1234"
 
 

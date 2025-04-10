@@ -10,5 +10,7 @@ elif utils.UI_LAYOUT == "CAESAR":
     from .caesar import *  # noqa: F401,F403
 elif utils.UI_LAYOUT == "DELIZIA":
     from .delizia import *  # noqa: F401,F403
+elif utils.UI_LAYOUT == "ECKHART":
+    from .eckhart import *  # noqa: F401,F403
 else:
     raise ValueError("Unknown layout")
