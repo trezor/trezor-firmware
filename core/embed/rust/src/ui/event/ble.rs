@@ -7,6 +7,7 @@ pub enum BLEEvent {
     Disconnected,
     PairingRequest(u32),
     PairingCanceled,
+    PairingCompleted,
 }
 
 impl BLEEvent {
@@ -16,6 +17,7 @@ impl BLEEvent {
             (2, None) => Self::Disconnected,
             (3, Some(code)) => Self::PairingRequest(code),
             (4, None) => Self::PairingCanceled,
+            (5, None) => Self::PairingCompleted,
             _ => return Err(Error::ValueError(c"Invalid BLE event")),
         };
         Ok(result)
