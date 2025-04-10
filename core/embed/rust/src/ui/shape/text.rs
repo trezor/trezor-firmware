@@ -54,6 +54,10 @@ impl<'a> Text<'a> {
 
     pub fn render<'r>(mut self, renderer: &mut impl Renderer<'r>) {
         self.bounds = self.calc_bounds();
+        #[cfg(feature = "ui_debug")]
+        if self.font.text_width(self.text) > renderer.viewport().clip.width() {
+            fatal_error!(&uformat!(len: 128, "Text too long: '{}'", self.text));
+        }
         renderer.render_shape(self);
     }
 
