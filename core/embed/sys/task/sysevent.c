@@ -157,7 +157,7 @@ static inline void insert_poller(sysevent_dispatcher_t *dispatcher,
 }
 
 void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
-                    uint32_t timeout) {
+                    uint32_t deadline) {
   sysevent_dispatcher_t *dispatcher = &g_sysevent_dispatcher;
 
   memset(signalled, 0, sizeof(*signalled));
@@ -177,7 +177,7 @@ void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
   dispatcher->pollers[prio].task = systask_active();
   dispatcher->pollers[prio].awaited = awaited;
   dispatcher->pollers[prio].signalled = signalled;
-  dispatcher->pollers[prio].deadline = ticks_timeout(timeout);
+  dispatcher->pollers[prio].deadline = deadline;
 
   if (active_task != kernel_task) {
     systask_yield_to(kernel_task);
