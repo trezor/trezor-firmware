@@ -6,6 +6,7 @@ option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageEthereum";
 
 import "messages-common.proto";
+import "options.proto";
 
 /**
  * Request: Ask device for public key corresponding to address_n path
@@ -72,6 +73,7 @@ message EthereumSignTx {
     optional uint32 tx_type = 10;                        // Used for Wanchain
     optional EthereumDefinitions definitions = 12;       // network and/or token definitions for tx
     optional bool chunkify = 13;                         // display the address in chunks of 4 characters
+    optional common.PaymentRequest payment_req = 14 [(experimental_field)=true]; // SLIP-24 payment request
 }
 
 /**
@@ -95,6 +97,7 @@ message EthereumSignTxEIP1559 {
     repeated EthereumAccessList access_list = 11;        // Access List
     optional EthereumDefinitions definitions = 12;       // network and/or token definitions for tx
     optional bool chunkify = 13;                         // display the address in chunks of 4 characters
+    optional common.PaymentRequest payment_req = 14 [(experimental_field)=true]; // SLIP-24 payment request
 
     message EthereumAccessList {
         required string address = 1;
