@@ -25,7 +25,7 @@
 #include <sys/sysevent.h>
 
 void sysevents_poll__verified(const sysevents_t *awaited,
-                              sysevents_t *signalled, uint32_t timeout);
+                              sysevents_t *signalled, uint32_t deadline);
 
 // ---------------------------------------------------------------------
 #include <sys/systask.h>

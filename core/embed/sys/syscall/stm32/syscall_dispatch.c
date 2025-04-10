@@ -157,9 +157,9 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     case SYSCALL_SYSEVENTS_POLL: {
       const sysevents_t *awaited = (sysevents_t *)args[0];
       sysevents_t *signalled = (sysevents_t *)args[1];
-      uint32_t timeout = args[2];
+      uint32_t deadline = args[2];
       if (!g_in_app_callback) {
-        sysevents_poll__verified(awaited, signalled, timeout);
+        sysevents_poll__verified(awaited, signalled, deadline);
       }
     } break;
 

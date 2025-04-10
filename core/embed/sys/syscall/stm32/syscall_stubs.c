@@ -77,8 +77,8 @@ uint64_t systick_us_to_cycles(uint64_t us) {
 #include <sys/sysevent.h>
 
 void sysevents_poll(const sysevents_t *awaited, sysevents_t *signalled,
-                    uint32_t timeout) {
-  syscall_invoke3((uint32_t)awaited, (uint32_t)signalled, timeout,
+                    uint32_t deadline) {
+  syscall_invoke3((uint32_t)awaited, (uint32_t)signalled, deadline,
                   SYSCALL_SYSEVENTS_POLL);
 }
 
