@@ -68,6 +68,15 @@ ROOT_PUBLIC_KEYS = [
             "be8fb08ae0479568f9d2cb07630cb3e52f4af0692102da5873559e45e9fa72959"
         ),
     ),
+    RootCertificate(
+        "TESTING ENVIRONMENT. DO NOT USE THIS DEVICE",
+        "Trezor T3W1",
+        True,
+        _pk_p256(
+            "04521192e173a9da4e3023f747d836563725372681eba3079c56ff11b2fc137ab"
+            "189eb4155f371127651b5594f8c332fc1e9c0f3b80d4212822668b63189706578"
+        ),
+    ),
 ]
 
 
