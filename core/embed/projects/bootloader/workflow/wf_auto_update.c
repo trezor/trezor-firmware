@@ -17,12 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <antiglitch.h>
+#include <sys/bootargs.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <util/image.h>
 
 #include "bootui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
@@ -30,8 +33,19 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
   ui_set_initial_setup(true);
 
   workflow_result_t res = WF_CANCELLED;
-  while (res == WF_CANCELLED) {
-    res = workflow_host_control(vhdr, hdr, ui_screen_connect);
+  uint32_t ui_result = CONNECT_CANCEL;
+
+  c_layout_t layout;
+  memset(&layout, 0, sizeof(layout));
+  screen_connect(true, false, &layout);
+  res = workflow_host_control(vhdr, hdr, &layout, &ui_result);
+
+  if (res == WF_OK_UI_ACTION && ui_result == CONNECT_CANCEL) {
+    bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
+    jump_allow_1();
+    jump_allow_2();
+    return WF_OK_REBOOT_SELECTED;
   }
+
   return res;
 }

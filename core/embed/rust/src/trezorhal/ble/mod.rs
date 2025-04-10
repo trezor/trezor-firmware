@@ -1,10 +1,10 @@
 #[cfg(feature = "micropython")]
 mod micropython;
 
-use crate::error::Error;
+use crate::{error::Error, ui::event::BLEEvent};
 use core::mem::size_of;
 
-use super::{ffi, model};
+use super::ffi;
 
 pub const ADV_NAME_LEN: usize = ffi::BLE_ADV_NAME_LEN as usize;
 pub const PAIRING_CODE_LEN: usize = ffi::BLE_PAIRING_CODE_LEN as usize;
@@ -21,6 +21,25 @@ fn prefix_utf8_bytes(text: &str, max_len: usize) -> &[u8] {
         i -= 1;
     }
     &text.as_bytes()[..i]
+}
+
+pub fn ble_parse_event(event: ffi::ble_event_t) -> BLEEvent {
+    match event.type_ {
+        ffi::ble_event_type_t_BLE_CONNECTED => BLEEvent::Connected,
+        ffi::ble_event_type_t_BLE_DISCONNECTED => BLEEvent::Disconnected,
+        ffi::ble_event_type_t_BLE_PAIRING_REQUEST => {
+            let code: u32 = event
+                .data
+                .iter()
+                .take(6)
+                .map(|&b| (b - b'0'))
+                .fold(0, |acc, d| acc * 10 + d as u32);
+            BLEEvent::PairingRequest(code)
+        }
+        ffi::ble_event_type_t_BLE_PAIRING_CANCELLED => BLEEvent::PairingCanceled,
+        ffi::ble_event_type_t_BLE_PAIRING_COMPLETED => BLEEvent::PairingCompleted,
+        _ => panic!(),
+    }
 }
 
 fn state() -> ffi::ble_state_t {

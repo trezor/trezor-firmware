@@ -1,11 +1,3 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx, Never, Pad},
-    constant::screen,
-    display::toif::Toif,
-    geometry::{Alignment, Alignment2D, Offset, Rect},
-    shape::{self, Renderer},
-};
-
 use super::super::{
     fonts,
     theme::{
@@ -13,33 +5,70 @@ use super::super::{
         GREY_MEDIUM, WHITE,
     },
 };
+use crate::ui::{
+    component::{Component, Event, EventCtx, Pad},
+    constant::screen,
+    display::{toif::Toif, Icon},
+    geometry::{Alignment, Alignment2D, Insets, Offset, Rect},
+    layout_bolt::{
+        component::Button,
+        theme::bootloader::{button_initial, CORNER_BUTTON_AREA, MENU32},
+    },
+    shape::{self, Renderer},
+};
+
+#[cfg(feature = "powerctl")]
+use crate::ui::layout_bolt::component::ButtonMsg::Clicked;
+
+#[repr(u32)]
+#[derive(Copy, Clone, ToPrimitive)]
+pub enum WelcomeMsg {
+    Cancel = 1,
+    PairingMode = 2,
+    Menu = 3,
+}
 
 pub struct Welcome {
     bg: Pad,
+    menu: Button,
 }
 
 impl Welcome {
     pub fn new() -> Self {
         Self {
             bg: Pad::with_background(WELCOME_COLOR).with_clear(),
+            menu: Button::with_icon(Icon::new(MENU32))
+                .styled(button_initial())
+                .with_expanded_touch_area(Insets::uniform(13)),
         }
     }
 }
 
 impl Component for Welcome {
-    type Msg = Never;
+    type Msg = WelcomeMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.bg.place(screen());
+        self.menu.place(CORNER_BUTTON_AREA);
         bounds
     }
 
     fn event(&mut self, _ctx: &mut EventCtx, _event: Event) -> Option<Self::Msg> {
+        #[cfg(all(feature = "ble", feature = "button"))]
+        if let Event::Button(_) = _event {
+            return Some(WelcomeMsg::PairingMode);
+        }
+        #[cfg(feature = "powerctl")]
+        if let Some(Clicked) = self.menu.event(_ctx, _event) {
+            return Some(WelcomeMsg::Menu);
+        };
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
+        #[cfg(feature = "powerctl")]
+        self.menu.render(target);
 
         shape::Text::new(
             screen().top_center() + Offset::y(102),

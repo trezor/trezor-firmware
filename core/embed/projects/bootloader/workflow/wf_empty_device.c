@@ -30,6 +30,7 @@
 #endif
 
 #include "bootui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
 workflow_result_t workflow_empty_device(void) {
@@ -50,8 +51,35 @@ workflow_result_t workflow_empty_device(void) {
 #endif
 
   workflow_result_t res = WF_CANCELLED;
-  while (res == WF_CANCELLED) {
-    res = workflow_host_control(NULL, NULL, ui_screen_welcome);
+  uint32_t ui_result = WELCOME_CANCEL;
+  while (res == WF_CANCELLED ||
+         (res == WF_OK_UI_ACTION && ui_result == WELCOME_CANCEL)) {
+    c_layout_t layout;
+    memset(&layout, 0, sizeof(layout));
+    screen_welcome(&layout);
+    res = workflow_host_control(NULL, NULL, &layout, &ui_result);
+#ifdef USE_BLE
+    if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
+      res = workflow_ble_pairing_request(NULL, NULL);
+      if (res == WF_OK_PAIRING_COMPLETED || res == WF_OK_PAIRING_FAILED) {
+        res = WF_CANCELLED;
+        ui_result = WELCOME_CANCEL;
+        continue;
+      }
+    }
+#endif
+    if (res == WF_OK_UI_ACTION && ui_result == WELCOME_MENU) {
+      do {
+        res = workflow_menu(NULL, NULL, false);
+      } while (res == WF_CANCELLED);
+
+      if (res == WF_OK) {
+        res = WF_CANCELLED;
+        ui_result = WELCOME_CANCEL;
+        continue;
+      }
+      return res;
+    }
   }
   return res;
 }

@@ -1,7 +1,7 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{Child, Component, Event, EventCtx, Label, Pad},
+        component::{Component, Event, EventCtx, Label, Pad},
         constant::screen,
         display::Icon,
         geometry::{Alignment, Insets, Point, Rect},
@@ -27,29 +27,27 @@ pub enum IntroMsg {
 
 pub struct Intro<'a> {
     bg: Pad,
-    title: Child<Label<'a>>,
-    menu: Child<Button>,
-    host: Child<Button>,
-    text: Child<Label<'a>>,
-    warn: Option<Child<Label<'a>>>,
+    title: Label<'a>,
+    menu: Button,
+    host: Button,
+    text: Label<'a>,
+    warn: Option<Label<'a>>,
 }
 
 impl<'a> Intro<'a> {
     pub fn new(title: TString<'a>, content: TString<'a>, fw_ok: bool) -> Self {
         Self {
             bg: Pad::with_background(BLD_BG).with_clear(),
-            title: Child::new(Label::left_aligned(title, text_title(BLD_BG)).vertically_centered()),
-            menu: Child::new(
-                Button::with_icon(Icon::new(MENU32))
-                    .styled(button_bld_menu())
-                    .with_expanded_touch_area(Insets::uniform(13)),
-            ),
-            host: Child::new(Button::with_text("INSTALL FIRMWARE".into()).styled(button_bld())),
-            text: Child::new(Label::left_aligned(content, TEXT_NORMAL).vertically_centered()),
-            warn: (!fw_ok).then_some(Child::new(
+            title: Label::left_aligned(title, text_title(BLD_BG)).vertically_centered(),
+            menu: Button::with_icon(Icon::new(MENU32))
+                .styled(button_bld_menu())
+                .with_expanded_touch_area(Insets::uniform(13)),
+            host: Button::with_text("INSTALL FIRMWARE".into()).styled(button_bld()),
+            text: Label::left_aligned(content, TEXT_NORMAL).vertically_centered(),
+            warn: (!fw_ok).then_some(
                 Label::new("FIRMWARE CORRUPTED".into(), Alignment::Start, TEXT_WARNING)
                     .vertically_centered(),
-            )),
+            ),
         }
     }
 }

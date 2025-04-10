@@ -22,18 +22,69 @@
 
 #include <util/flash_utils.h>
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
+#include <sys/systick.h>
+
 #include "bootui.h"
 #include "protob.h"
-#include "rust_ui.h"
+#include "rust_ui_bootloader.h"
 #include "workflow.h"
 
-workflow_result_t workflow_wipe_device(protob_io_t *iface) {
+static void send_error_conditionally(protob_io_t* iface, char* msg) {
+  if (iface != NULL) {
+    send_msg_failure(iface, FailureType_Failure_ProcessError,
+                     "Could not read BLE status");
+  }
+}
+
+#ifdef USE_BLE
+static bool wipe_bonds(protob_io_t* iface) {
+  ble_state_t state = {0};
+  ble_get_state(&state);
+
+  if (!state.state_known) {
+    send_error_conditionally(iface, "Could not read BLE status");
+    screen_wipe_fail();
+    return false;
+  }
+
+  ble_command_t ble_command = {0};
+  ble_command.cmd_type = BLE_ERASE_BONDS;
+  if (!ble_issue_command(&ble_command)) {
+    send_error_conditionally(iface, "Could not issue BLE command");
+    screen_wipe_fail();
+    return false;
+  }
+
+  uint32_t deadline = ticks_timeout(100);
+
+  while (true) {
+    ble_get_state(&state);
+    if (state.peer_count == 0) {
+      break;
+    }
+    if (ticks_expired(deadline)) {
+      send_error_conditionally(iface, "Could not erase bonds");
+      screen_wipe_fail();
+      return false;
+    }
+  }
+
+  return true;
+}
+#endif
+
+workflow_result_t workflow_wipe_device(protob_io_t* iface) {
   WipeDevice msg_recv;
   if (iface != NULL) {
     recv_msg_wipe_device(iface, &msg_recv);
   }
-  ui_result_t response = ui_screen_wipe_confirm();
-  if (UI_RESULT_CONFIRM != response) {
+
+  confirm_result_t response = ui_screen_wipe_confirm();
+  if (CONFIRM != response) {
     if (iface != NULL) {
       send_user_abort(iface, "Wipe cancelled");
     }
@@ -42,11 +93,14 @@ workflow_result_t workflow_wipe_device(protob_io_t *iface) {
   ui_screen_wipe();
   secbool wipe_result = erase_device(ui_screen_wipe_progress);
 
+#ifdef USE_BLE
+  if (!wipe_bonds(iface)) {
+    return WF_ERROR;
+  }
+#endif
+
   if (sectrue != wipe_result) {
-    if (iface != NULL) {
-      send_msg_failure(iface, FailureType_Failure_ProcessError,
-                       "Could not erase flash");
-    }
+    send_error_conditionally(iface, "Could not erase flash");
     screen_wipe_fail();
     return WF_ERROR;
   }

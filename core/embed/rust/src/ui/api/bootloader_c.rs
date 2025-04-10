@@ -1,16 +1,36 @@
 use crate::{
     strutil::hexlify,
-    trezorhal::secbool::secbool,
+    trezorhal::{
+        layout_buf::{c_layout_t, LayoutBuffer},
+        secbool::secbool,
+        sysevent::{parse_event, sysevents_t},
+    },
     ui::{
-        ui_bootloader::BootloaderUI,
+        ui_bootloader::{BootloaderLayoutType as _, BootloaderUI},
         util::{from_c_array, from_c_str},
         ModelUI,
     },
 };
 
 #[no_mangle]
-extern "C" fn screen_welcome() {
-    ModelUI::screen_welcome();
+extern "C" fn screen_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> u32 {
+    let e = parse_event(signalled);
+    // SAFETY: calling code is supposed to give us exclusive access to an already
+    // initialized layout
+    unsafe {
+        let mut layout = LayoutBuffer::<<ModelUI as BootloaderUI>::CLayoutType>::new(layout);
+        let layout = layout.get_mut();
+        layout.event(e)
+    }
+}
+
+#[no_mangle]
+extern "C" fn screen_welcome(layout: *mut c_layout_t) {
+    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_welcome();
+    screen.show();
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
+    let mut layout = unsafe { LayoutBuffer::new(layout) };
+    layout.store(screen);
 }
 
 #[no_mangle]
@@ -75,8 +95,13 @@ extern "C" fn screen_unlock_bootloader_success() {
 }
 
 #[no_mangle]
-extern "C" fn screen_menu(firmware_present: secbool) -> u32 {
-    ModelUI::screen_menu(firmware_present)
+extern "C" fn screen_menu(initial_setup: bool, firmware_present: secbool, layout: *mut c_layout_t) {
+    let mut screen =
+        <ModelUI as BootloaderUI>::CLayoutType::init_menu(initial_setup, firmware_present);
+    screen.show();
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
+    let mut layout = unsafe { LayoutBuffer::new(layout) };
+    layout.store(screen);
 }
 
 #[no_mangle]
@@ -131,8 +156,13 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_s
 }
 
 #[no_mangle]
-extern "C" fn screen_connect(initial_setup: bool) {
-    ModelUI::screen_connect(initial_setup)
+extern "C" fn screen_connect(initial_setup: bool, auto_update: bool, layout: *mut c_layout_t) {
+    let mut screen =
+        <ModelUI as BootloaderUI>::CLayoutType::init_connect(initial_setup, auto_update);
+    screen.show();
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
+    let mut layout = unsafe { LayoutBuffer::new(layout) };
+    layout.store(screen);
 }
 
 #[no_mangle]
@@ -143,4 +173,26 @@ extern "C" fn screen_wipe_success() {
 #[no_mangle]
 extern "C" fn screen_wipe_fail() {
     ModelUI::screen_wipe_fail()
+}
+
+#[cfg(feature = "ble")]
+#[no_mangle]
+extern "C" fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
+    ModelUI::screen_confirm_pairing(code, initial_setup)
+}
+
+#[cfg(feature = "ble")]
+#[no_mangle]
+extern "C" fn screen_pairing_mode(initial_setup: bool, layout: *mut c_layout_t) {
+    let mut screen = <ModelUI as BootloaderUI>::CLayoutType::init_pairing_mode(initial_setup);
+    screen.show();
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
+    let mut layout = unsafe { LayoutBuffer::new(layout) };
+    layout.store(screen);
+}
+
+#[cfg(feature = "ble")]
+#[no_mangle]
+extern "C" fn screen_pairing_mode_finalizing(initial_setup: bool) -> u32 {
+    ModelUI::screen_pairing_mode_finalizing(initial_setup)
 }
