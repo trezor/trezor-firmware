@@ -671,6 +671,7 @@ def confirm_address(
     subtitle: str | None = None,
     description: str | None = None,
     verb: str | None = None,
+    warning_footer: str | None = None,
     chunkify: bool = True,
     br_name: str = "confirm_address",
     br_code: ButtonRequestType = BR_CODE_OTHER,

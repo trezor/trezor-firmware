@@ -343,7 +343,7 @@ impl FirmwareUI for UIEckhart {
         let paragraphs = PropsList::new(
             items,
             &theme::TEXT_SMALL_LIGHT,
-            &theme::TEXT_MEDIUM,
+            &theme::TEXT_MONO_LIGHT,
             &theme::TEXT_MONO_LIGHT,
         )?;
 
@@ -376,7 +376,8 @@ impl FirmwareUI for UIEckhart {
         chunkify: bool,
         page_counter: bool,
         _prompt_screen: bool,
-        _cancel: bool,
+        cancel: bool,
+        warning_footer: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error> {
         let paragraphs = ConfirmValueParams {
             description: description.unwrap_or("".into()),
@@ -420,15 +421,21 @@ impl FirmwareUI for UIEckhart {
             Header::new(title)
         };
 
+        let action_bar = if cancel {
+            ActionBar::new_double(Button::with_icon(theme::ICON_CROSS), right_button)
+        } else {
+            ActionBar::new_single(right_button)
+        };
+
         let mut screen = TextScreen::new(paragraphs)
             .with_header(header)
             .with_subtitle(subtitle.unwrap_or(TString::empty()))
-            .with_action_bar(ActionBar::new_double(
-                Button::with_icon(theme::ICON_CROSS),
-                right_button,
-            ));
+            .with_action_bar(action_bar);
         if page_counter {
             screen = screen.with_hint(Hint::new_page_counter());
+        }
+        if let Some(warning_footer) = warning_footer {
+            screen = screen.with_hint(Hint::new_warning(warning_footer));
         }
         LayoutObj::new(screen)
     }
@@ -564,7 +571,7 @@ impl FirmwareUI for UIEckhart {
         } else if text_mono {
             &theme::TEXT_MONO_LIGHT
         } else {
-            &theme::TEXT_MEDIUM
+            &theme::TEXT_REGULAR
         };
         unwrap!(main_paragraphs.push(Paragraph::new(
             font,
@@ -633,7 +640,7 @@ impl FirmwareUI for UIEckhart {
             for pair in IterBuf::new().try_iterate(items)? {
                 let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
                 unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break()));
-                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_LIGHT, value)));
+                unwrap!(paragraphs.push(Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, value)));
             }
             Some(paragraphs)
         } else {
