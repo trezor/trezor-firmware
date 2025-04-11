@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import typing as t
 
+
 from .. import exceptions, messages, models
 from ..client import MAX_PIN_LENGTH
 from ..protobuf import MessageType
@@ -274,8 +275,12 @@ class SessionV2(Session):
         self.channel.write(self.sid, msg)
 
     def _read(self) -> t.Any:
+        from trezorlib.debuglink import TrezorClientDebugLink
+
         msg = self.channel.read(self.sid)
         LOG.debug("reading message %s", type(msg))
+        if isinstance(self.client, TrezorClientDebugLink):
+            self.client.notify_read(msg)
         return msg
 
     def update_id_and_sid(self, id: bytes) -> None:
