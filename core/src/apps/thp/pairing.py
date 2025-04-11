@@ -97,7 +97,10 @@ async def handle_pairing_request(
         raise Exception("Missing host_name.")
 
     ctx.host_name = message.host_name
-    await ctx.show_pairing_dialogue()
+    if __debug__ and not ctx.channel_ctx.should_show_pairing_dialog:
+        _skip_pairing_dialog(ctx)
+    else:
+        await ctx.show_pairing_dialog()
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
     select_method_msg = await ctx.read(
         [
@@ -165,7 +168,7 @@ async def handle_credential_phase(
             raise Exception("Credential does not have a hostname")
 
     if show_connection_dialog and not autoconnect:
-        await ctx.show_connection_dialogue()
+        await ctx.show_connection_dialog()
 
     while ThpCredentialRequest.is_type_of(message):
         message = await _handle_credential_request(ctx, message)
@@ -489,3 +492,18 @@ def _get_message_type_for_method(method: int) -> int:
     if method is ThpPairingMethod.QrCode:
         return ThpMessageType.ThpQrCodeTag
     raise ValueError("Unexpected pairing method - no message type available")
+
+if __debug__:
+
+    async def _skip_pairing_dialog(ctx: PairingContext) -> None:
+        from trezor.enums import ButtonRequestType
+        from trezor.messages import ButtonAck, ButtonRequest, ThpPairingRequestApproved
+        from trezor.wire.errors import ActionCancelled
+
+        resp = await ctx.call(
+            ButtonRequest(code=ButtonRequestType.Other, name="thp_pairing_request")
+        )
+        if isinstance(resp, ButtonAck):
+            await ctx.write(ThpPairingRequestApproved())
+        else:
+            raise ActionCancelled

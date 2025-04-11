@@ -4302,6 +4302,23 @@ class DebugLinkPairingInfo(protobuf.MessageType):
         self.nfc_secret_trezor = nfc_secret_trezor
 
 
+class DebugLinkToggleThpPairingDialog(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("channel_id", "bytes", repeated=False, required=False, default=None),
+        2: protobuf.Field("show_dialog", "bool", repeated=False, required=False, default=False),
+    }
+
+    def __init__(
+        self,
+        *,
+        channel_id: Optional["bytes"] = None,
+        show_dialog: Optional["bool"] = False,
+    ) -> None:
+        self.channel_id = channel_id
+        self.show_dialog = show_dialog
+
+
 class DebugLinkStop(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 103
 
