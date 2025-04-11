@@ -369,21 +369,44 @@ impl Button {
         stylesheet: &ButtonStyle,
         alpha: u8,
     ) {
+        let mut show_text = |text: &str, start_of_baseline: Point| {
+            shape::Text::new(start_of_baseline, text, stylesheet.font)
+                .with_fg(stylesheet.text_color)
+                .with_align(self.text_align)
+                .with_alpha(alpha)
+                .render(target)
+        };
+        let start_of_baseline = |area: Rect, y_offset: Offset| match self.text_align {
+            Alignment::Start => area.left_center() + self.content_offset,
+            Alignment::Center => area.center() + self.content_offset,
+            Alignment::End => area.right_center() - self.content_offset,
+        } + y_offset;
+
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
                 let y_offset = Offset::y(self.content_height() / 2);
-                let start_of_baseline = match self.text_align {
-                    Alignment::Start => self.area.left_center() + self.content_offset,
-                    Alignment::Center => self.area.center() + self.content_offset,
-                    Alignment::End => self.area.right_center() - self.content_offset,
-                } + y_offset;
-                text.map(|text| {
-                    shape::Text::new(start_of_baseline, text, stylesheet.font)
-                        .with_fg(stylesheet.text_color)
-                        .with_align(self.text_align)
-                        .with_alpha(alpha)
-                        .render(target);
+                text.map(|t| {
+                    let (t1, t2) = split_two_lines(t, stylesheet.font, self.area.width());
+
+                    if t1.is_empty() || t2.is_empty() {
+                        show_text(t, start_of_baseline(self.area, y_offset));
+                    } else {
+                        show_text(
+                            t1,
+                            start_of_baseline(
+                                Rect::new(self.area.top_left(), self.area.right_center()),
+                                y_offset,
+                            ),
+                        );
+                        show_text(
+                            t2,
+                            start_of_baseline(
+                                Rect::new(self.area.left_center(), self.area.bottom_right()),
+                                y_offset,
+                            ),
+                        );
+                    }
                 });
             }
             ButtonContent::TextAndSubtext {
@@ -392,30 +415,46 @@ impl Button {
                 subtext_style,
             } => {
                 let text_y_offset =
-                    Offset::y(self.content_height() / 2 - stylesheet.font.allcase_text_height());
-                let subtext_y_offset = Offset::y(self.content_height() / 2);
-                let start_of_baseline = match self.text_align {
-                    Alignment::Start => self.area.left_center() + self.content_offset,
-                    Alignment::Center => self.area.center() + self.content_offset,
-                    Alignment::End => self.area.right_center() - self.content_offset,
-                };
-                let text_baseline = start_of_baseline - text_y_offset;
-                let subtext_baseline = start_of_baseline + subtext_y_offset;
-
+                    Offset::y(-(self.content_height() / 2 - stylesheet.font.allcase_text_height()));
+                let mut subtext_y_offset = Offset::y(self.content_height() / 2);
                 text.map(|t| {
-                    shape::Text::new(text_baseline, t, stylesheet.font)
-                        .with_fg(stylesheet.text_color)
-                        .with_align(self.text_align)
-                        .with_alpha(alpha)
-                        .render(target);
+                    let (t1, t2) = split_two_lines(t, stylesheet.font, self.area.width());
+
+                    if t1.is_empty() || t2.is_empty() {
+                        show_text(t, start_of_baseline(self.area, text_y_offset));
+                    } else {
+                        subtext_y_offset = subtext_y_offset + Offset::y(Self::LINE_SPACING);
+                        show_text(
+                            t1,
+                            start_of_baseline(
+                                Rect::new(self.area.top_left(), self.area.right_center()),
+                                text_y_offset,
+                            ),
+                        );
+                        let text_y_offset_2 = Offset::y(
+                            -(self.content_height() - stylesheet.font.allcase_text_height())
+                                + Self::LINE_SPACING,
+                        );
+                        show_text(
+                            t2,
+                            start_of_baseline(
+                                Rect::new(self.area.left_center(), self.area.bottom_right()),
+                                text_y_offset_2,
+                            ),
+                        );
+                    }
                 });
 
                 subtext.map(|subtext| {
-                    shape::Text::new(subtext_baseline, subtext, subtext_style.text_font)
-                        .with_fg(subtext_style.text_color)
-                        .with_align(self.text_align)
-                        .with_alpha(alpha)
-                        .render(target);
+                    shape::Text::new(
+                        start_of_baseline(self.area, subtext_y_offset),
+                        subtext,
+                        subtext_style.text_font,
+                    )
+                    .with_fg(subtext_style.text_color)
+                    .with_align(self.text_align)
+                    .with_alpha(alpha)
+                    .render(target);
                 });
             }
             ButtonContent::Icon(icon) => {
