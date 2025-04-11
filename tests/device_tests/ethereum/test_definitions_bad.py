@@ -19,11 +19,7 @@ from ...definitions import (
 )
 from .test_definitions import DEFAULT_ERC20_PARAMS, ERC20_FAKE_ADDRESS
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.ethereum,
-    pytest.mark.models(skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 def fails(client: Client, network: bytes, match: str) -> None:

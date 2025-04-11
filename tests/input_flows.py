@@ -257,7 +257,26 @@ class InputFlowSignMessagePagination(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        assert False, "Not implemented"
+        # collect screen contents into `message_read`.
+        # Using a helper debuglink function to assemble the final text.
+        layouts: list[LayoutContent] = []
+
+        br = yield  # confirm address
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+        br = yield
+        assert br.pages is not None
+        for i in range(br.pages or 1):
+            layout = self.debug.read_layout()
+            layouts.append(layout)
+
+            if br.pages and i < br.pages - 1:
+                self.debug.click(self.debug.screen_buttons.ok())
+
+        self.message_read = multipage_content(layouts)
+
+        self.debug.press_yes()
 
 
 class InputFlowSignVerifyMessageLong(InputFlowBase):
@@ -352,7 +371,38 @@ class InputFlowSignVerifyMessageLong(InputFlowBase):
             br = yield
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        assert False, "Not implemented"
+        # collect screen contents into `message_read`.
+        # Using a helper debuglink function to assemble the final text.
+        layouts: list[LayoutContent] = []
+
+        br = yield  # confirm address
+        self.debug.read_layout()
+        self.debug.press_yes()
+
+        br = yield  # confirm address intro
+
+        self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.synchronize_at("VerticalMenu")
+        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+
+        br = yield  # confirm address long
+        self.debug.read_layout()
+        assert br.pages is not None
+        for i in range(br.pages):
+            layout = self.debug.read_layout()
+            layouts.append(layout)
+
+            if i < br.pages - 1:
+                self.debug.click(self.debug.screen_buttons.ok())
+
+        self.message_read = multipage_content(layouts)
+
+        self.debug.press_yes()
+
+        if self.verify:
+            # "The signature is valid!" screen
+            self.debug.press_yes()
+            br = yield
 
 
 class InputFlowSignMessageInfo(InputFlowBase):
@@ -384,15 +434,14 @@ class InputFlowSignMessageInfo(InputFlowBase):
 
     def input_flow_eckhart(self) -> BRGeneratorType:
         yield
-        # go to menu
+        # go to info menu
         self.debug.click(self.debug.screen_buttons.menu())
-        # show address/message info
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+        # close menu
         self.debug.click(self.debug.screen_buttons.menu())
         # cancel flow
-        self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
+        self.debug.press_no()
         # confirm cancel
-        self.debug.click(self.debug.screen_buttons.ok())
+        self.debug.press_yes()
         yield
 
 
@@ -733,6 +782,10 @@ class InputFlowShowMultisigXPUBs(InputFlowBase):
         assert "Multisig 2 of 3" in layout.screen_content()
         assert TR.address_details__derivation_path in layout.screen_content()
 
+        # three xpub pages with the same testing logic
+        for _xpub_num in range(3):
+            self.debug.click(self.client.debug.screen_buttons.ok())
+
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
         # menu
@@ -868,6 +921,12 @@ class InputFlowShowXpubQRCode(InputFlowBase):
             br = yield
             layout = self.debug.read_layout()
 
+        # In case of page overflow, paginete to the last page
+        # The last page is the confirm page
+        if br.pages > 2:
+            for _ in range(br.pages - 2):
+                self.debug.click(self.debug.screen_buttons.ok())
+
         assert layout.subtitle() in (TR.address__public_key, "XPUB")
 
         self.debug.click(self.debug.screen_buttons.menu())
@@ -949,7 +1008,27 @@ class InputFlowPaymentRequestDetails(InputFlowBase):
         self.debug.press_yes()
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        assert False, "Not implemented"
+        yield  # request to see details
+        self.debug.read_layout()
+        self.debug.press_info()
+
+        yield  # confirm first output
+        assert self.outputs[0].address[:16] in self.text_content()  # type: ignore
+        self.debug.click(self.debug.screen_buttons.ok())
+        yield  # confirm first output
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield  # confirm second output
+        assert self.outputs[1].address[:16] in self.text_content()  # type: ignore
+        self.debug.click(self.debug.screen_buttons.ok())
+        yield  # confirm second output
+        self.debug.read_layout()
+        self.debug.click(self.debug.screen_buttons.ok())
+
+        yield  # confirm transaction
+        self.debug.click(self.debug.screen_buttons.ok())
+        self.debug.press_yes()
 
 
 class InputFlowSignTxHighFee(InputFlowBase):
@@ -1462,14 +1541,11 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.client.layout_type in (
-            LayoutType.Bolt,
-            LayoutType.Eckhart,
-        ):
+        if self.client.layout_type is LayoutType.Bolt:
             self.debug.click(self.SHOW_MORE)
         elif self.client.layout_type is LayoutType.Caesar:
             self.debug.press_right()
-        elif self.client.layout_type is LayoutType.Delizia:
+        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
         else:

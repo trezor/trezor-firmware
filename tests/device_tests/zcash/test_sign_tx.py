@@ -50,11 +50,7 @@ TXHASH_4b6cec = bytes.fromhex(
 VERSION_GROUP_ID = 0x26A7270A
 BRANCH_ID = 0xC2D6D0B4
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.zcash,
-    pytest.mark.models(skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.zcash]
 
 
 def test_version_group_id_missing(client: Client):
