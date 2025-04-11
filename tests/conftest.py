@@ -346,7 +346,11 @@ def _client_unlocked(
                     LOG = logging.getLogger(__name__)
                     LOG.error(f"Failed to re-create a client: {e}")
                     sleep(LOCK_TIME)
-                    _raw_client = _get_raw_client(request)
+                    try:
+                        _raw_client = _raw_client.get_new_client()
+                    except Exception as e:
+                        sleep(1.5)
+                        _raw_client = _get_raw_client(request)
 
             session = _raw_client.get_seedless_session()
             wipe_device(session)
