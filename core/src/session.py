@@ -24,10 +24,10 @@ workflow.start_default()
 wire.setup(usb.iface_wire)
 
 if utils.USE_BLE:
-    from trezorio import ble
+    import trezorble as ble
 
     # initialize the wire codec over BLE
-    wire.setup(ble.BleInterface())
+    wire.setup(ble.interface)
 
 # start the event loop
 loop.run()
