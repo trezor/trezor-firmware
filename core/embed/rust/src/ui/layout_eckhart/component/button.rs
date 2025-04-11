@@ -5,6 +5,7 @@ use crate::{
     time::Duration,
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Timer},
+        constant,
         display::{toif::Icon, Color, Font},
         event::TouchEvent,
         geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
@@ -58,7 +59,7 @@ impl Button {
     );
     const MENU_ITEM_RADIUS: u8 = 12;
     const MENU_ITEM_ALIGNMENT: Alignment = Alignment::Start;
-    const MENU_ITEM_CONTENT_OFFSET: Offset = Offset::x(12);
+    pub const MENU_ITEM_CONTENT_OFFSET: Offset = Offset::x(12);
 
     pub const fn new(content: ButtonContent) -> Self {
         Self {
@@ -245,18 +246,36 @@ impl Button {
         self.style().font.visible_text_height("1")
     }
 
-    pub fn content_height(&self) -> i16 {
+    fn baseline_subtext_height(&self) -> i16 {
+        match &self.content {
+            ButtonContent::TextAndSubtext { subtext_style, .. } => {
+                subtext_style.text_font.visible_text_height("1")
+            }
+            _ => 0,
+        }
+    }
+
+    fn text_height(&self, text: &str, width: i16) -> i16 {
+        let (t1, t2) = split_two_lines(text, self.stylesheet.normal.font, width);
+        if t1.is_empty() || t2.is_empty() {
+            self.style().font.line_height()
+        } else {
+            self.style().font.line_height() * 2 - constant::LINE_SPACE
+        }
+    }
+
+    pub fn content_height(&self, width: i16) -> i16 {
         match &self.content {
             ButtonContent::Empty => 0,
-            ButtonContent::Text(_) => self.baseline_text_height(),
+            ButtonContent::Text(text) => text.map(|t| self.text_height(t, width)),
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::IconAndText(child) => {
-                let text_height = self.baseline_text_height();
+                let text_height = self.style().font.line_height();
                 let icon_height = child.icon.toif.height();
                 text_height.max(icon_height)
             }
-            ButtonContent::TextAndSubtext { subtext_style, .. } => {
-                self.style().font.line_height() + subtext_style.text_font.text_height()
+            ButtonContent::TextAndSubtext { text, .. } => {
+                text.map(|t| self.text_height(t, width) + self.baseline_subtext_height())
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
@@ -371,21 +390,45 @@ impl Button {
         stylesheet: &ButtonStyle,
         alpha: u8,
     ) {
+        let mut show_text = |text: &str, render_origin: Point| {
+            shape::Text::new(render_origin, text, stylesheet.font)
+                .with_fg(stylesheet.text_color)
+                .with_align(self.text_align)
+                .with_alpha(alpha)
+                .render(target)
+        };
+        let render_origin = |y_offset: i16| {
+            match self.text_align {
+                Alignment::Start => self.area.left_center().ofs(self.content_offset),
+                Alignment::Center => self.area.center().ofs(self.content_offset),
+                Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
+            }
+            .ofs(Offset::y(y_offset))
+        };
+
         match &self.content {
             ButtonContent::Empty => {}
             ButtonContent::Text(text) => {
-                let render_origin = match self.text_align {
-                    Alignment::Start => self.area.left_center().ofs(self.content_offset),
-                    Alignment::Center => self.area.center().ofs(self.content_offset),
-                    Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
-                }
-                .ofs(Offset::y(self.content_height() / 2));
-                text.map(|text| {
-                    shape::Text::new(render_origin, text, stylesheet.font)
-                        .with_fg(stylesheet.text_color)
-                        .with_align(self.text_align)
-                        .with_alpha(alpha)
-                        .render(target);
+                let text_baseline_height = self.baseline_text_height();
+                text.map(|t| {
+                    let (t1, t2) = split_two_lines(
+                        t,
+                        stylesheet.font,
+                        self.area.width() - 2 * self.content_offset.x,
+                    );
+
+                    if t1.is_empty() || t2.is_empty() {
+                        show_text(t, render_origin(text_baseline_height / 2));
+                    } else {
+                        show_text(
+                            t1,
+                            render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE)),
+                        );
+                        show_text(
+                            t2,
+                            render_origin(text_baseline_height + constant::LINE_SPACE * 2),
+                        );
+                    }
                 });
             }
             ButtonContent::TextAndSubtext {
@@ -393,30 +436,50 @@ impl Button {
                 subtext,
                 subtext_style,
             } => {
-                let base = match self.text_align {
-                    Alignment::Start => self.area.left_center().ofs(self.content_offset),
-                    Alignment::Center => self.area.center().ofs(self.content_offset),
-                    Alignment::End => self.area.right_center().ofs(self.content_offset.neg()),
-                };
-
-                let text_render_origin = base
-                    .ofs(Offset::y(self.content_height() / 2 - self.baseline_text_height()).neg());
-                let subtext_render_origin = base.ofs(Offset::y(self.content_height() / 2));
-
-                text.map(|t| {
-                    shape::Text::new(text_render_origin, t, stylesheet.font)
-                        .with_fg(stylesheet.text_color)
-                        .with_align(self.text_align)
-                        .with_alpha(alpha)
-                        .render(target);
+                let text_baseline_height = self.baseline_text_height();
+                let single_line_text = text.map(|t| {
+                    let (t1, t2) = split_two_lines(
+                        t,
+                        stylesheet.font,
+                        self.area.width() - 2 * self.content_offset.x,
+                    );
+                    if t1.is_empty() || t2.is_empty() {
+                        show_text(
+                            t,
+                            render_origin(text_baseline_height / 2 - constant::LINE_SPACE * 2),
+                        );
+                        true
+                    } else {
+                        show_text(
+                            t1,
+                            render_origin(-(text_baseline_height / 2 + constant::LINE_SPACE * 3)),
+                        );
+                        show_text(
+                            t2,
+                            render_origin(text_baseline_height - constant::LINE_SPACE * 2),
+                        );
+                        false
+                    }
                 });
 
                 subtext.map(|subtext| {
-                    shape::Text::new(subtext_render_origin, subtext, subtext_style.text_font)
-                        .with_fg(subtext_style.text_color)
-                        .with_align(self.text_align)
-                        .with_alpha(alpha)
-                        .render(target);
+                    shape::Text::new(
+                        render_origin(if single_line_text {
+                            text_baseline_height / 2
+                                + constant::LINE_SPACE
+                                + self.baseline_subtext_height()
+                        } else {
+                            text_baseline_height
+                                + constant::LINE_SPACE * 2
+                                + self.baseline_subtext_height()
+                        }),
+                        subtext,
+                        subtext_style.text_font,
+                    )
+                    .with_fg(subtext_style.text_color)
+                    .with_align(self.text_align)
+                    .with_alpha(alpha)
+                    .render(target);
                 });
             }
             ButtonContent::Icon(icon) => {

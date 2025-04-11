@@ -74,7 +74,9 @@ impl Component for BldMenu {
         let padding = 28;
 
         for button in self.buttons.iter_mut() {
-            let button_height = button.content_height() + 2 * padding;
+            let button_height = button
+                .content_height(button_width - 2 * Button::MENU_ITEM_CONTENT_OFFSET.x)
+                + 2 * padding;
             let button_bounds =
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
 
