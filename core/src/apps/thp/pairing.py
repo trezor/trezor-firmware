@@ -409,7 +409,7 @@ async def _handle_credential_request(
                 "Cannot ask for autoconnect credential without a valid credential!"
             )
 
-        await ctx.show_autoconnec_credential_confirmation_screen()
+        await ctx.show_autoconnect_credential_confirmation_screen()
 
     trezor_static_pubkey = crypto.get_trezor_static_pubkey()
     credential_metadata = ThpCredentialMetadata(
