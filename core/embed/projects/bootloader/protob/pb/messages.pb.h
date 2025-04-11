@@ -30,7 +30,8 @@ typedef enum _FailureType {
     FailureType_Failure_UnexpectedMessage = 1,
     FailureType_Failure_DataError = 3,
     FailureType_Failure_ActionCancelled = 4,
-    FailureType_Failure_ProcessError = 9
+    FailureType_Failure_ProcessError = 9,
+    FailureType_Failure_Busy = 15
 } FailureType;
 
 typedef enum _ButtonRequestType {
