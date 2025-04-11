@@ -22,7 +22,7 @@ from trezorlib import device, exceptions, messages
 
 from ..common import MOCK_GET_ENTROPY
 from . import recovery, reset
-from .common import go_next, LayoutType
+from .common import LayoutType, go_next
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler

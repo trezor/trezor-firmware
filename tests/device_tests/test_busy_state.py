@@ -39,7 +39,9 @@ def _assert_busy(client: Client, should_be_busy: bool, screen: str = "Homescreen
 
 @pytest.mark.setup_client(pin=PIN)
 def test_busy_state(client: Client):
-    _assert_busy(client, False, "Lockscreen")
+
+    screen = "Homescreen" if client.layout_type is LayoutType.Eckhart else "Lockscreen"
+    _assert_busy(client, False, screen)
     assert client.features.unlocked is False
 
     # Show busy dialog for 1 minute.

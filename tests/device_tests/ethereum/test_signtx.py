@@ -37,11 +37,7 @@ from .common import encode_network
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.ethereum,
-    pytest.mark.models(skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 def make_defs(parameters: dict) -> messages.EthereumDefinitions:
@@ -134,11 +130,7 @@ def test_signtx_fee_info(client: Client):
     )
 
 
-@pytest.mark.models(
-    "core",
-    skip="delizia",
-    reason="T1 does not support input flows; Delizia can't send Cancel on Summary",
-)
+@pytest.mark.models("core")
 def test_signtx_go_back_from_summary(client: Client):
     input_flow = InputFlowEthereumSignTxGoBackFromSummary(client).get()
     _do_test_signtx(
@@ -441,7 +433,7 @@ HEXDATA = "0123456789abcd000023456789abcd010003456789abcd020000456789abcd0300000
 @pytest.mark.parametrize(
     "flow", (input_flow_data_skip, input_flow_data_scroll_down, input_flow_data_go_back)
 )
-@pytest.mark.models("core", skip="delizia", reason="Not yet implemented in new UI")
+@pytest.mark.models("core")
 def test_signtx_data_pagination(client: Client, flow):
     def _sign_tx_call():
         ethereum.sign_tx(

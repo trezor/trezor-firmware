@@ -23,7 +23,7 @@ from trezorlib.tools import parse_path
 
 @pytest.mark.altcoin
 @pytest.mark.tezos
-@pytest.mark.models("core", skip=["eckhart"])
+@pytest.mark.models("core")
 def test_tezos_get_public_key(client: Client):
     path = parse_path("m/44h/1729h/0h")
     pk = get_public_key(client, path)
