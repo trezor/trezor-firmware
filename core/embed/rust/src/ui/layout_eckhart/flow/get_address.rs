@@ -1,12 +1,12 @@
 use crate::{
     error,
-    micropython::obj::Obj,
+    micropython::{obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
         button_request::ButtonRequest,
         component::{
-            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, VecExt},
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecLong, VecExt},
             ButtonRequestExt, ComponentExt, Qr,
         },
         flow::{
@@ -16,6 +16,7 @@ use crate::{
         geometry::{Alignment, Direction, LinearPlacement, Offset},
     },
 };
+use heapless::Vec;
 
 use super::super::{
     component::Button,
@@ -28,6 +29,7 @@ use super::super::{
 
 const ITEM_PADDING: i16 = 16;
 const GROUP_PADDING: i16 = 20;
+const MAX_XPUBS: usize = 3;
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub enum GetAddress {
@@ -78,7 +80,7 @@ pub fn new_get_address(
     case_sensitive: bool,
     account: Option<TString<'static>>,
     path: Option<TString<'static>>,
-    _xpubs: Obj, // TODO: get rid of Obj
+    xpubs: Obj, // TODO: get rid of Obj
     title_success: TString<'static>,
     br_code: u16,
     br_name: TString<'static>,
@@ -171,7 +173,7 @@ pub fn new_get_address(
         .map(|_| Some(FlowMsg::Cancelled));
 
     // AccountInfo
-    let mut para = ParagraphVecShort::new();
+    let mut para = ParagraphVecLong::new();
     if let Some(a) = account {
         para.add(Paragraph::new::<TString>(
             &theme::TEXT_SMALL_LIGHT,
@@ -186,9 +188,25 @@ pub fn new_get_address(
                 &theme::TEXT_SMALL_LIGHT,
                 TR::address_details__derivation_path.into(),
             )
-            .with_top_padding(GROUP_PADDING),
+            .with_top_padding(GROUP_PADDING)
+            .no_break(),
         );
-        para.add(Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, p).with_top_padding(ITEM_PADDING));
+        para.add(
+            Paragraph::new(&theme::TEXT_MONO_EXTRA_LIGHT, p)
+                .with_top_padding(ITEM_PADDING)
+                .break_after(),
+        );
+    }
+
+    let xpub_items: Vec<Obj, MAX_XPUBS> = util::iter_into_vec(xpubs).unwrap_or(Vec::new());
+    for i in xpub_items.into_iter() {
+        let [label, value]: [TString; 2] = util::iter_into_array(i)?;
+        para.add(Paragraph::new(&theme::TEXT_SMALL_LIGHT, label).no_break());
+        para.add(
+            Paragraph::new(&theme::TEXT_MONO_LIGHT, value)
+                .with_top_padding(ITEM_PADDING)
+                .break_after(),
+        );
     }
 
     let content_account = TextScreen::new(

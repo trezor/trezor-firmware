@@ -26,11 +26,7 @@ from ...input_flows import InputFlowConfirmAllWarnings
 from .construct.instructions import PROGRAMS, UnknownInstruction
 from .construct.transaction import Message, RawInstruction
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.solana,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core")]
 
 
 @parametrize_using_common_fixtures(
