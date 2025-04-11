@@ -47,4 +47,5 @@ def test_handshake(client: Client) -> None:
 
     # TODO - without pairing, the client is damaged and results in fail of the following test
     # so far no luck in solving it - it should be also tackled in FW, as it causes unexpected FW error
-    protocol._do_pairing(client.debug)
+    client.protocol = protocol
+    client.do_pairing()
