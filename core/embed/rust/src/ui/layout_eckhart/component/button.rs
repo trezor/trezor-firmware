@@ -463,6 +463,10 @@ impl Button {
                 });
 
                 subtext.map(|subtext| {
+                    #[cfg(feature = "ui_debug")]
+                    if subtext_style.text_font.text_width(subtext) > self.area.width() {
+                        fatal_error!(&uformat!(len: 128, "Subtext too long: '{}'", subtext));
+                    }
                     shape::Text::new(
                         render_origin(if single_line_text {
                             text_baseline_height / 2
