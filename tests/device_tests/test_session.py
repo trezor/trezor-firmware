@@ -53,6 +53,7 @@ def test_clear_session(client: Client):
     init_responses = [
         (v1, messages.Features),
         messages.PinMatrixRequest if is_t1 else messages.ButtonRequest,
+        (not v1, messages.Success),
         (v1, messages.PassphraseRequest),
         (v1, messages.Address),
     ]
@@ -124,6 +125,7 @@ def test_end_session(client: Client):
         session.end()
 
 
+@pytest.mark.protocol("protocol_v1")
 def test_cannot_resume_ended_session(client: Client):
     session = client.get_session()
     session_id = session.id
@@ -139,6 +141,7 @@ def test_cannot_resume_ended_session(client: Client):
     assert e.value.received_session_id != session_id
 
 
+@pytest.mark.protocol("protocol_v1")
 def test_end_session_only_current(client: Client):
     """test that EndSession only destroys the current session"""
     session_a = client.get_session()
@@ -187,6 +190,7 @@ def test_session_recycling(client: Client):
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.models("core")
+@pytest.mark.protocol("protocol_v1")
 def test_derive_cardano_empty_session(client: Client):
     # start new session
     session = SessionV1.new(client)
@@ -207,6 +211,7 @@ def test_derive_cardano_empty_session(client: Client):
 @pytest.mark.altcoin
 @pytest.mark.cardano
 @pytest.mark.models("core")
+@pytest.mark.protocol("protocol_v1")
 def test_derive_cardano_running_session(client: Client):
     # start new session
     session = client.get_session(derive_cardano=False)
