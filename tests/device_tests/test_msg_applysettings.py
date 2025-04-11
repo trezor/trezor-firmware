@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, device, exceptions, messages, misc, models
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import SessionDebugWrapper as Session
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
@@ -372,7 +373,9 @@ def test_safety_checks(session: Session):
 
     assert session.features.safety_checks == messages.SafetyCheckLevel.Strict
 
-    with pytest.raises(exceptions.TrezorFailure, match="Forbidden key path"), client:
+    with pytest.raises(
+        exceptions.TrezorFailure, match="Forbidden key path"
+    ), session.client as client:
         client.set_expected_responses([messages.Failure])
         get_bad_address()
 
@@ -385,11 +388,11 @@ def test_safety_checks(session: Session):
 
         assert session.features.safety_checks == messages.SafetyCheckLevel.PromptAlways
 
-        with client:
+        with session.client as client:
             client.set_expected_responses(
                 [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
             )
-            IF = InputFlowConfirmAllWarnings(session.client)
+            IF = InputFlowConfirmAllWarnings(client)
             client.set_input_flow(IF.get())
             get_bad_address()
 
@@ -399,11 +402,13 @@ def test_safety_checks(session: Session):
 
     assert session.features.safety_checks == messages.SafetyCheckLevel.Strict
 
-    with pytest.raises(exceptions.TrezorFailure, match="Forbidden key path"), client:
+    with pytest.raises(
+        exceptions.TrezorFailure, match="Forbidden key path"
+    ), session.client as client:
         client.set_expected_responses([messages.Failure])
         get_bad_address()
 
-    with client:
+    with session.client as client:
         client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(
             session, safety_checks=messages.SafetyCheckLevel.PromptTemporarily
@@ -411,11 +416,11 @@ def test_safety_checks(session: Session):
 
     assert session.features.safety_checks == messages.SafetyCheckLevel.PromptTemporarily
 
-    with client:
+    with session.client as client:
         client.set_expected_responses(
             [messages.ButtonRequest, messages.ButtonRequest, messages.Address]
         )
-        if session.model is not models.T1B1:
+        if client.model is not models.T1B1:
             IF = InputFlowConfirmAllWarnings(session.client)
             client.set_input_flow(IF.get())
         get_bad_address()
@@ -437,7 +442,9 @@ def test_experimental_features(session: Session):
 
     assert not session.features.experimental_features
 
-    with pytest.raises(exceptions.TrezorFailure, match="DataError"), client:
+    with pytest.raises(
+        exceptions.TrezorFailure, match="DataError"
+    ), session.client as client:
         client.set_expected_responses([messages.Failure])
         experimental_call()
 
@@ -447,7 +454,7 @@ def test_experimental_features(session: Session):
 
     assert session.features.experimental_features
 
-    with client:
+    with session.client as client:
         client.set_expected_responses([messages.Nonce])
         experimental_call()
 
