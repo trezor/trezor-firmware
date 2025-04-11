@@ -416,10 +416,13 @@ impl<'a> DeviceMenuScreen<'a> {
             Subscreen::Submenu(ref mut submenu_index) => {
                 match self.submenus[*submenu_index].items[idx].action {
                     Some(Action::GoTo(menu)) => {
-                        self.menu_screen.as_mut().unwrap().update_menu(ctx);
                         unwrap!(self.parent_subscreens.push(self.active_subscreen));
                         self.set_active_subscreen(menu);
                         self.place(self.bounds);
+                        if let Some(screen) = self.menu_screen.as_mut() {
+                            screen.initialize_screen(ctx);
+                        }
+                        return None;
                     }
                     Some(Action::Return(msg)) => return Some(msg),
                     None => {}
@@ -433,10 +436,13 @@ impl<'a> DeviceMenuScreen<'a> {
         None
     }
 
-    fn go_back(&mut self) -> Option<DeviceMenuMsg> {
+    fn go_back(&mut self, ctx: &mut EventCtx) -> Option<DeviceMenuMsg> {
         if let Some(parent) = self.parent_subscreens.pop() {
             self.set_active_subscreen(parent);
             self.place(self.bounds);
+            if let Some(screen) = self.menu_screen.as_mut() {
+                screen.initialize_screen(ctx);
+            }
             None
         } else {
             Some(DeviceMenuMsg::Close)
@@ -478,7 +484,7 @@ impl<'a> Component for DeviceMenuScreen<'a> {
                         }
                     }
                     Some(VerticalMenuScreenMsg::Back) => {
-                        return self.go_back();
+                        return self.go_back(ctx);
                     }
                     Some(VerticalMenuScreenMsg::Close) => {
                         return Some(DeviceMenuMsg::Close);
@@ -488,7 +494,7 @@ impl<'a> Component for DeviceMenuScreen<'a> {
             }
             Subscreen::AboutScreen => {
                 if let Some(TextScreenMsg::Cancelled) = self.about_screen.event(ctx, event) {
-                    return self.go_back();
+                    return self.go_back(ctx);
                 }
             }
         }
