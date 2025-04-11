@@ -26,9 +26,11 @@ class Session:
         self,
         msg: MessageType,
         expect: type[MT] = MessageType,
+        skip_firmware_version_check: bool = False,
         _passphrase_ack: messages.PassphraseAck | None = None,
     ) -> MT:
-        self.client.check_firmware_version()
+        if not skip_firmware_version_check:
+            self.client.check_firmware_version()
         resp = self.call_raw(msg)
 
         while True:
@@ -260,14 +262,11 @@ class SessionV2(Session):
         return session
 
     def __init__(self, client: TrezorClient, id: bytes) -> None:
-        from ..debuglink import TrezorClientDebugLink
 
         super().__init__(client, id)
         assert isinstance(client.protocol, ProtocolV2Channel)
 
-        if isinstance(client, TrezorClientDebugLink):
-            client.protocol._helper_debug = client.debug
-        self.channel: ProtocolV2Channel = client.protocol.get_channel()
+        self.channel: ProtocolV2Channel = client.protocol
         self.update_id_and_sid(id)
 
     def _write(self, msg: t.Any) -> None:

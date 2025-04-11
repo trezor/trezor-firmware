@@ -1059,6 +1059,8 @@ class TrezorClientDebugLink(TrezorClient):
     # without special DebugLink interface provided
     # by the device.
 
+    protocol: ProtocolV1Channel | ProtocolV2Channel
+
     def __init__(
         self,
         transport: Transport,
@@ -1104,8 +1106,8 @@ class TrezorClientDebugLink(TrezorClient):
         # and know the supported debug capabilities
         if self.protocol_version is ProtocolVersion.V2:
             assert isinstance(self.protocol, ProtocolV2Channel)
-            self.protocol._helper_debug = self.debug
-            self.protocol = self.protocol.get_channel()
+            self.do_pairing()
+            # self.protocol = self.protocol.get_channel()
         self.debug.model = self.model
         self.debug.version = self.version
 
