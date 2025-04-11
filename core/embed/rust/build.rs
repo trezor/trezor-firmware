@@ -274,6 +274,7 @@ fn generate_micropython_bindings() {
         .allowlist_var("mp_type_OverflowError")
         .allowlist_var("mp_type_ValueError")
         .allowlist_var("mp_type_TypeError")
+        .allowlist_var("mp_type_RuntimeError")
         // time
         .allowlist_function("mp_hal_ticks_ms")
         .allowlist_function("mp_hal_delay_ms")
@@ -401,8 +402,15 @@ fn generate_trezorhal_bindings() {
         .allowlist_type("usb_event_t")
         .allowlist_function("usb_get_state")
         // ble
+        .allowlist_var("BLE_PAIRING_CODE_LEN")
+        .allowlist_var("BLE_RX_PACKET_SIZE")
+        .allowlist_var("BLE_TX_PACKET_SIZE")
+        .allowlist_var("BLE_ADV_NAME_LEN")
         .allowlist_function("ble_get_state")
         .allowlist_function("ble_issue_command")
+        .allowlist_function("ble_start")
+        .allowlist_function("ble_write")
+        .allowlist_function("ble_read")
         .allowlist_type("ble_command_t")
         .allowlist_type("ble_state_t")
         // touch
