@@ -22,11 +22,7 @@ from trezorlib.tools import parse_path
 
 from ...input_flows import InputFlowShowAddressQRCode
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.tezos,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.tezos, pytest.mark.models("core")]
 
 TEST_VECTORS = [
     ("m/44h/1729h/0h", "tz1Kef7BSg6fo75jk37WkKRYSnJDs69KVqt9"),

@@ -24,11 +24,7 @@ from trezorlib.exceptions import TrezorFailure
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowConfirmAllWarnings
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.cardano,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 
 
 def show_details_input_flow(client: Client):

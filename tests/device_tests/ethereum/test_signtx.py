@@ -37,11 +37,7 @@ from ...input_flows import (
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.ethereum,
-    pytest.mark.models(skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 def make_defs(parameters: dict) -> messages.EthereumDefinitions:

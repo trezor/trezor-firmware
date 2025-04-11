@@ -181,22 +181,25 @@ def test_change_invalid_current(client: Client):
     _check_pin(client, PIN4)
 
 
-@pytest.mark.models("delizia")
+@pytest.mark.models("delizia", "eckhart")
 @pytest.mark.setup_client(pin=None)
 def test_pin_menu_cancel_setup(client: Client):
     def cancel_pin_setup_input_flow():
         yield
-        # enter context menu
-        client.debug.click(client.debug.screen_buttons.menu())
-        client.debug.synchronize_at("VerticalMenu")
-        # click "Cancel PIN setup"
-        client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
-        client.debug.synchronize_at("Paragraphs")
-        # swipe through info screen
-        client.debug.swipe_up()
-        client.debug.synchronize_at("PromptScreen")
-        # tap to confirm
-        client.debug.click(client.debug.screen_buttons.tap_to_confirm())
+        if client.layout_type is LayoutType.Delizia:
+            # enter context menu
+            client.debug.click(client.debug.screen_buttons.menu())
+            client.debug.synchronize_at("VerticalMenu")
+            # click "Cancel PIN setup"
+            client.debug.click(client.debug.screen_buttons.vertical_menu_items()[0])
+            client.debug.synchronize_at("Paragraphs")
+            # swipe through info screen
+            client.debug.swipe_up()
+            client.debug.synchronize_at("PromptScreen")
+            # tap to confirm
+            client.debug.click(client.debug.screen_buttons.tap_to_confirm())
+        elif client.layout_type is LayoutType.Eckhart:
+            client.debug.press_no()
 
     with client, pytest.raises(Cancelled):
         client.set_input_flow(cancel_pin_setup_input_flow)
