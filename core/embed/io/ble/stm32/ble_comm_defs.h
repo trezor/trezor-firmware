@@ -30,7 +30,8 @@ typedef struct {
   uint8_t advertising_whitelist;
 
   uint8_t peer_count;
-  uint8_t reserved[2];
+  uint8_t busy_flag;
+  uint8_t reserved;
   uint8_t sd_version_number;
 
   uint16_t sd_company_id;
@@ -62,6 +63,7 @@ typedef enum {
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
   INTERNAL_CMD_UNPAIR = 0x08,
   INTERNAL_CMD_GET_MAC = 0x09,
+  INTERNAL_CMD_SET_BUSY = 0x0A,
 } internal_cmd_t;
 
 typedef struct {
@@ -77,3 +79,8 @@ typedef struct {
   uint8_t cmd_id;
   uint8_t code[BLE_PAIRING_CODE_LEN];
 } cmd_allow_pairing_t;
+
+typedef struct {
+  uint8_t cmd_id;
+  uint8_t flag;
+} cmd_set_busy_t;

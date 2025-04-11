@@ -56,6 +56,7 @@ void ble_management_send_status_event(void) {
   msg.sd_subversion_number = 0;
   msg.app_version = 0;
   msg.bld_version = 0;
+  msg.busy_flag = ble_get_busy_flag();
 
   trz_comm_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&msg, sizeof(msg));
 }
@@ -138,11 +139,11 @@ static void process_command(uint8_t *data, uint16_t len) {
     case INTERNAL_CMD_ACK:
       // pb_msg_ack();
       break;
-    case INTERNAL_CMD_ALLOW_PAIRING:
+    case INTERNAL_CMD_ALLOW_PAIRING: {
       cmd_allow_pairing_t *cmd = (cmd_allow_pairing_t *)data;
 
       pairing_num_comp_reply(true, cmd->code);
-      break;
+    } break;
     case INTERNAL_CMD_REJECT_PAIRING:
       pairing_num_comp_reply(false, NULL);
       break;
@@ -155,6 +156,9 @@ static void process_command(uint8_t *data, uint16_t len) {
       management_send_mac(mac);
       send_response = false;
     } break;
+    case INTERNAL_CMD_SET_BUSY: {
+      ble_set_busy_flag(data[1]);
+    }
     default:
       break;
   }

@@ -55,6 +55,7 @@ typedef struct {
   bool initialized;
   bool status_valid;
   bool accept_msgs;
+  uint8_t busy_flag;
   bool pairing_requested;
   ble_event_t event_queue_buffers[EVENT_QUEUE_LEN];
   tsqueue_entry_t event_queue_entries[EVENT_QUEUE_LEN];
@@ -217,6 +218,7 @@ static void ble_process_rx_msg_status(const uint8_t *data, uint32_t len) {
     drv->mode_current = BLE_MODE_OFF;
   }
 
+  drv->busy_flag = msg.busy_flag;
   drv->peer_count = msg.peer_count;
 
   drv->status_valid = true;
@@ -349,6 +351,24 @@ static void ble_loop(void *context) {
                         NULL)) {
         tsqueue_enqueue(&drv->tx_queue, data, NRF_MAX_TX_DATA_SIZE, NULL);
       }
+    }
+
+    if (drv->accept_msgs && drv->busy_flag != 0) {
+      cmd_set_busy_t cmd = {
+          .cmd_id = INTERNAL_CMD_SET_BUSY,
+          .flag = 0,
+      };
+      nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&cmd, sizeof(cmd), NULL,
+                   NULL);
+    }
+
+    if (!drv->accept_msgs && drv->busy_flag == 0) {
+      cmd_set_busy_t cmd = {
+          .cmd_id = INTERNAL_CMD_SET_BUSY,
+          .flag = 1,
+      };
+      nrf_send_msg(NRF_SERVICE_BLE_MANAGER, (uint8_t *)&cmd, sizeof(cmd), NULL,
+                   NULL);
     }
 
     if (drv->mode_current != drv->mode_requested) {
