@@ -103,6 +103,7 @@ message Failure {
         Failure_DataError = 3;
         Failure_ActionCancelled = 4;
         Failure_ProcessError = 9;
+        Failure_Busy = 15;
     }
 }
 

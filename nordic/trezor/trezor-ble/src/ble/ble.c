@@ -19,15 +19,13 @@
 
 #include <zephyr/logging/log.h>
 #include <zephyr/settings/settings.h>
+#include <zephyr/sys/atomic.h>
 
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
 #include <zephyr/bluetooth/hci.h>
 #include <zephyr/bluetooth/uuid.h>
-
-#include <signals/signals.h>
-
 #include "ble_internal.h"
 
 #define LOG_MODULE_NAME ble
@@ -35,11 +33,13 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 static K_SEM_DEFINE(ble_init_ok, 0, 1);
 
+atomic_t g_busy_flag = ATOMIC_INIT(0);
+
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data,
                           uint16_t len) {
-  if (!signals_is_trz_ready()) {
+  if (atomic_get(&g_busy_flag) != 0) {
     LOG_INF("Trezor not ready, rejecting data");
-    //    send_error_response();
+    service_send_busy();
     return;
   }
 
@@ -100,6 +100,10 @@ void ble_write_thread(void) {
     LOG_DBG("Freeing UART data");
   }
 }
+
+void ble_set_busy_flag(uint8_t flag) { atomic_set(&g_busy_flag, flag); }
+
+uint8_t ble_get_busy_flag(void) { return atomic_get(&g_busy_flag); }
 
 K_THREAD_DEFINE(ble_write_thread_id, CONFIG_DEFAULT_THREAD_STACK_SIZE,
                 ble_write_thread, NULL, NULL, NULL, 7, 0, 0);

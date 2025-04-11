@@ -194,6 +194,9 @@ void fsm_sendFailure(FailureType code, const char *text)
       case FailureType_Failure_FirmwareError:
         text = _("Firmware error");
         break;
+      case FailureType_Failure_Busy:
+        text = _("Busy");
+        break;
     }
   }
 #if DEBUG_LINK
