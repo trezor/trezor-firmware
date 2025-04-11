@@ -31,6 +31,7 @@ if __debug__:
             DebugLinkRecordScreen,
             DebugLinkReseedRandom,
             DebugLinkState,
+            DebugLinkToggleThpPairingDialog,
         )
         from trezor.ui import Layout
         from trezor.wire import WireInterface
@@ -267,6 +268,25 @@ if __debug__:
             reset_entropy=storage.reset_internal_entropy,
             tokens=tokens,
         )
+
+    async def dispatch_DebugLinkTogglePairingDialog(
+        msg: DebugLinkToggleThpPairingDialog,
+    ) -> Success:
+        if not utils.USE_THP:
+            raise RuntimeError("Trezor does not support THP")
+        if msg.channel_id is None:
+            raise RuntimeError("Invalid DebugLinkToggleThpPairingDialog message")
+        from trezor.wire.thp.channel import Channel
+        from trezor.wire.thp.thp_main import _CHANNELS
+
+        channel_id = int.from_bytes(msg.channel_id, "big")
+        channel: Channel | None = None
+        try:
+            channel = _CHANNELS[channel_id]
+        except KeyError:
+            raise RuntimeError("Provided channel is invalid")
+        channel.should_show_pairing_dialog = msg.show_dialog
+        return Success()
 
     async def dispatch_DebugLinkGetPairingInfo(
         msg: DebugLinkGetPairingInfo,

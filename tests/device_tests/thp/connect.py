@@ -39,7 +39,7 @@ def handle_pairing_request(
 ) -> None:
     protocol._send_message(ThpPairingRequest(host_name=host_name))
     button_req = protocol._read_message(ButtonRequest)
-    assert button_req.name == "pairing_request"
+    assert button_req.name == "thp_pairing_request"
 
     protocol._send_message(ButtonAck())
 

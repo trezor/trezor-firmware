@@ -142,7 +142,7 @@ class PairingContext(Context):
             raise Exception("Not allowed to set this method")
         self.selected_method = selected_method
 
-    async def show_pairing_dialogue(self, device_name: str | None = None) -> None:
+    async def show_pairing_dialog(self, device_name: str | None = None) -> None:
         from trezor.messages import ThpPairingRequestApproved
         from trezor.ui.layouts.common import interact
 
@@ -157,13 +157,13 @@ class PairingContext(Context):
             trezorui_api.confirm_action(
                 title="Before you continue", action=action_string, description=None
             ),
-            br_name="pairing_request",
+            br_name="thp_pairing_request",
             br_code=ButtonRequestType.Other,
         )
         if result == trezorui_api.CONFIRMED:
             await self.write(ThpPairingRequestApproved())
 
-    async def show_connection_dialogue(self, device_name: str | None = None) -> None:
+    async def show_connection_dialog(self, device_name: str | None = None) -> None:
         from trezor.ui.layouts.common import interact
 
         if not device_name:
@@ -174,9 +174,9 @@ class PairingContext(Context):
             )
         await interact(
             trezorui_api.confirm_action(
-                title="Connection dialogue", action=action_string, description=None
+                title="Connection dialog", action=action_string, description=None
             ),
-            br_name="connection_request",
+            br_name="thp_connection_request",
             br_code=ButtonRequestType.Other,
         )
 
