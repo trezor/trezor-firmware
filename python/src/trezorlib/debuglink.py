@@ -40,6 +40,7 @@ from .tools import parse_path
 from .transport import Timeout
 from .transport.session import ProtocolV2Channel, Session
 from .transport.thp.protocol_v1 import ProtocolV1Channel
+from trezorlib import exceptions
 
 if t.TYPE_CHECKING:
     from typing_extensions import Protocol
@@ -1031,6 +1032,7 @@ class TrezorClientDebugLink(TrezorClient):
     # by the device.
 
     protocol: ProtocolV1Channel | ProtocolV2Channel
+    actual_responses: list[protobuf.MessageType] | None = None
 
     def __init__(
         self,
@@ -1056,8 +1058,6 @@ class TrezorClientDebugLink(TrezorClient):
             transport.open()
 
         # set transport explicitly so that sync_responses can work
-        super().__init__(transport)
-
         self.transport = transport
         self.ui: DebugUI = DebugUI(self.debug)
 
@@ -1070,6 +1070,13 @@ class TrezorClientDebugLink(TrezorClient):
 
         self.pin_callback = get_pin
         self.button_callback = self.ui.button_request
+
+        try:
+            super().__init__(transport)
+        except exceptions.DeviceLockedException:
+            self.use_pin_sequence(["1234"])
+            self.debug.input(self.debug.encode_pin("1234"))
+            super().__init__(transport)
 
         self.sync_responses()
 
@@ -1303,6 +1310,7 @@ class TrezorClientDebugLink(TrezorClient):
             # Propagate the exception through the input flow, so that we see in
             # traceback where it is stuck.
             input_flow.throw(exc_type, value, traceback)
+        self.actual_responses = None
 
     @classmethod
     def _verify_responses(
@@ -1405,6 +1413,14 @@ class TrezorClientDebugLink(TrezorClient):
         if self.actual_responses is not None:
             self.actual_responses.append(resp)
         return resp
+
+    def notify_read(self, msg: protobuf.MessageType) -> None:
+        pass
+        try:
+            if self.actual_responses is not None:
+                self.actual_responses.append(msg)
+        except Exception as e:
+            print(e)
 
 
 def load_device(
