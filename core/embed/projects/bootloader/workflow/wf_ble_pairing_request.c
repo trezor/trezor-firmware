@@ -29,7 +29,7 @@
 #include "workflow.h"
 
 static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
-  if (code < 0 || code > 999999) {
+  if (code > 999999) {
     return false;
   }
   for (size_t i = 0; i < BLE_PAIRING_CODE_LEN; i++) {
