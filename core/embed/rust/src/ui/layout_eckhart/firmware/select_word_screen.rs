@@ -36,7 +36,7 @@ impl SelectWordScreen {
         share_words_vec: [TString<'static>; MAX_WORD_QUIZ_ITEMS],
         description: TString<'static>,
     ) -> Self {
-        let mut menu = VerticalMenu::empty().with_separators().with_fit_area();
+        let mut menu = VerticalMenu::empty().with_separators().with_content_fit();
 
         for word in share_words_vec {
             menu = menu.item(
