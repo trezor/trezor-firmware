@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from trezorlib import btc, device, exceptions, messages, misc, models
+from trezorlib.debuglink import LayoutType
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.tools import parse_path
 
@@ -203,9 +204,14 @@ def test_apply_homescreen_toif(client: Client):
         device.apply_settings(client, homescreen=img)
 
 
-@pytest.mark.models(skip=["legacy", "safe3", "eckhart"])
+@pytest.mark.models(skip=["legacy", "safe3"])
 def test_apply_homescreen_jpeg(client: Client):
-    with open(HERE / "test_bg.jpg", "rb") as f:
+    file_name = (
+        "test_bg_eckhart.jpg"
+        if client.debug.layout_type is LayoutType.Eckhart
+        else "test_bg.jpg"
+    )
+    with open(HERE / file_name, "rb") as f:
         img = f.read()
         with client:
             _set_expected_responses(client)
@@ -325,7 +331,6 @@ def test_apply_homescreen(client: Client):
 
 
 @pytest.mark.setup_client(pin=None)
-@pytest.mark.models(skip="eckhart")
 def test_safety_checks(client: Client):
     def get_bad_address():
         btc.get_address(client, "Bitcoin", parse_path("m/44h"), show_display=True)
