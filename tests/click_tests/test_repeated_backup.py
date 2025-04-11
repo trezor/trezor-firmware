@@ -22,7 +22,7 @@ from trezorlib import device, exceptions, messages
 
 from ..common import MOCK_GET_ENTROPY
 from . import recovery, reset
-from .common import go_next, LayoutType
+from .common import go_next
 
 if TYPE_CHECKING:
     from ..device_handler import BackgroundDeviceHandler
@@ -79,9 +79,6 @@ def test_repeated_backup_via_device(
     reset.confirm_read(debug)
     # confirm backup done
     reset.confirm_read(debug)
-    # Your backup is done
-    if debug.layout_type is not LayoutType.Eckhart:
-        go_next(debug)
 
     # retrieve the result to check that it does not raise a failure
     device_handler.result()
