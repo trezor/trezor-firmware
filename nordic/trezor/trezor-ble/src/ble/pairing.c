@@ -85,6 +85,8 @@ void pairing_complete(struct bt_conn *conn, bool bonded) {
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
 
+  ble_management_send_pairing_completed();
+
   LOG_INF("Pairing completed: %s, bonded: %d", addr, bonded);
 }
 
@@ -92,6 +94,8 @@ void pairing_failed(struct bt_conn *conn, enum bt_security_err reason) {
   char addr[BT_ADDR_LE_STR_LEN];
 
   bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+  ble_management_send_pairing_cancelled_event();
 
   LOG_INF("Pairing failed conn: %s, reason %d", addr, reason);
 }
