@@ -63,6 +63,19 @@ impl Menu {
         instance.bg.clear();
         instance
     }
+
+    pub fn get_button_pos(&self, i: u8) -> Rect {
+        Rect::new(
+            Point::new(
+                CONTENT_PADDING,
+                BUTTON_AREA_START + i as i16 * (BUTTON_HEIGHT + BUTTON_SPACING),
+            ),
+            Point::new(
+                WIDTH - CONTENT_PADDING,
+                BUTTON_AREA_START + (i + 1) as i16 * BUTTON_HEIGHT + i as i16 * BUTTON_SPACING,
+            ),
+        )
+    }
 }
 
 impl Component for Menu {
@@ -72,30 +85,10 @@ impl Component for Menu {
         self.bg.place(screen());
         self.title.place(TITLE_AREA);
         self.close.place(CORNER_BUTTON_AREA);
-        self.reboot.place(Rect::new(
-            Point::new(CONTENT_PADDING, BUTTON_AREA_START),
-            Point::new(WIDTH - CONTENT_PADDING, BUTTON_AREA_START + BUTTON_HEIGHT),
-        ));
-        self.reset.place(Rect::new(
-            Point::new(
-                CONTENT_PADDING,
-                BUTTON_AREA_START + BUTTON_HEIGHT + BUTTON_SPACING,
-            ),
-            Point::new(
-                WIDTH - CONTENT_PADDING,
-                BUTTON_AREA_START + 2 * BUTTON_HEIGHT + BUTTON_SPACING,
-            ),
-        ));
-        self.bluetooth.place(Rect::new(
-            Point::new(
-                CONTENT_PADDING,
-                BUTTON_AREA_START + 2 * BUTTON_HEIGHT + 2 * BUTTON_SPACING,
-            ),
-            Point::new(
-                WIDTH - CONTENT_PADDING,
-                BUTTON_AREA_START + 3 * BUTTON_HEIGHT + 2 * BUTTON_SPACING,
-            ),
-        ));
+        self.reboot.place(self.get_button_pos(0));
+        self.reset.place(self.get_button_pos(1));
+        #[cfg(feature = "ble")]
+        self.bluetooth.place(self.get_button_pos(2));
         bounds
     }
 
@@ -109,6 +102,7 @@ impl Component for Menu {
         if let Some(Clicked) = self.reset.event(ctx, event) {
             return Some(Self::Msg::FactoryReset);
         }
+        #[cfg(feature = "ble")]
         if let Some(Clicked) = self.bluetooth.event(ctx, event) {
             return Some(Self::Msg::Bluetooth);
         }
@@ -122,6 +116,7 @@ impl Component for Menu {
         self.close.render(target);
         self.reboot.render(target);
         self.reset.render(target);
+        #[cfg(feature = "ble")]
         self.bluetooth.render(target);
     }
 }
