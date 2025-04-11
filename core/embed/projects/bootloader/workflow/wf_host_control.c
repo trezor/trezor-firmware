@@ -155,7 +155,7 @@ exit_host_control:
   systick_delay_ms(100);
   usb_iface_deinit();
 #ifdef USE_BLE
-  ble_iface_init();
+  ble_iface_deinit();
 #endif
   return result;
 }
