@@ -38,7 +38,7 @@ from .log import DUMP_BYTES
 from .messages import DebugWaitType
 from .tools import parse_path
 from .transport import Timeout
-from .transport.session import Session
+from .transport.session import ProtocolV2Channel, Session
 from .transport.thp.protocol_v1 import ProtocolV1Channel
 
 if t.TYPE_CHECKING:
@@ -894,6 +894,9 @@ class DebugUI:
         self.debuglink.snapshot_legacy()
         return self.passphrase
 
+    def confirm_screen(self) -> None:
+        self.debuglink.press_yes()
+
 
 class MessageFilter:
 
@@ -1099,6 +1102,10 @@ class TrezorClientDebugLink(TrezorClient):
 
         # So that we can choose right screenshotting logic (T1 vs TT)
         # and know the supported debug capabilities
+        if self.protocol_version is ProtocolVersion.V2:
+            assert isinstance(self.protocol, ProtocolV2Channel)
+            self.protocol._helper_debug = self.debug
+            self.protocol = self.protocol.get_channel()
         self.debug.model = self.model
         self.debug.version = self.version
 

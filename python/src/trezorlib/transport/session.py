@@ -265,10 +265,9 @@ class SessionV2(Session):
         super().__init__(client, id)
         assert isinstance(client.protocol, ProtocolV2Channel)
 
-        helper_debug = None
         if isinstance(client, TrezorClientDebugLink):
-            helper_debug = client.debug
-        self.channel: ProtocolV2Channel = client.protocol.get_channel(helper_debug)
+            client.protocol._helper_debug = client.debug
+        self.channel: ProtocolV2Channel = client.protocol.get_channel()
         self.update_id_and_sid(id)
 
     def _write(self, msg: t.Any) -> None:
