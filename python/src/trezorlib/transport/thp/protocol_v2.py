@@ -33,6 +33,7 @@ class ProtocolV2Channel(Channel):
 
     _has_valid_channel: bool = False
     _features: messages.Features | None = None
+    _helper_debug: DebugLink | None = None
 
     def __init__(
         self,
@@ -41,9 +42,9 @@ class ProtocolV2Channel(Channel):
     ) -> None:
         super().__init__(transport, mapping)
 
-    def get_channel(self, helper_debug: DebugLink | None = None) -> ProtocolV2Channel:
+    def get_channel(self) -> ProtocolV2Channel:
         if not self._has_valid_channel:
-            self._establish_new_channel(helper_debug)
+            self._establish_new_channel(self._helper_debug)
         return self
 
     def read(self, session_id: int) -> t.Any:
@@ -60,7 +61,7 @@ class ProtocolV2Channel(Channel):
 
     def get_features(self) -> messages.Features:
         if not self._has_valid_channel:
-            self._establish_new_channel()
+            self._establish_new_channel(self._helper_debug)
         if self._features is None:
             self.update_features()
         assert self._features is not None

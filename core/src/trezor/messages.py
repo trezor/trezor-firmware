@@ -3006,6 +3006,22 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkPairingInfo"]:
             return isinstance(msg, cls)
 
+    class DebugLinkToggleThpPairingDialog(protobuf.MessageType):
+        channel_id: "bytes | None"
+        show_dialog: "bool"
+
+        def __init__(
+            self,
+            *,
+            channel_id: "bytes | None" = None,
+            show_dialog: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["DebugLinkToggleThpPairingDialog"]:
+            return isinstance(msg, cls)
+
     class DebugLinkStop(protobuf.MessageType):
 
         @classmethod
