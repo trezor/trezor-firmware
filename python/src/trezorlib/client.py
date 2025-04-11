@@ -26,7 +26,7 @@ from .tools import parse_path
 from .transport import Transport, get_transport
 from .transport.thp.protocol_and_channel import Channel
 from .transport.thp.protocol_v1 import ProtocolV1Channel
-from .transport.thp.protocol_v2 import ProtocolV2Channel
+from .transport.thp.protocol_v2 import ProtocolV2Channel, TrezorState
 
 if t.TYPE_CHECKING:
     from .transport.session import Session, SessionV1
@@ -62,6 +62,7 @@ class TrezorClient:
     _setup_pin: str | None = None  # Should be used only by conftest
     _last_active_session: SessionV1 | None = None
 
+    _session_id_counter: int = 0
     def __init__(
         self,
         transport: Transport,
@@ -99,6 +100,26 @@ class TrezorClient:
         else:
             raise Exception("Unknown protocol version")
 
+    def do_pairing(self) -> None:
+        from .transport.session import SessionV2
+
+        assert self.protocol_version == ProtocolVersion.V2
+        session = SessionV2(client=self, id=b"\x00")
+        session.call(
+            messages.ThpPairingRequest(host_name="Trezorlib"),
+            expect=messages.ThpPairingRequestApproved,
+            skip_firmware_version_check=True,
+        )
+        session.call(
+            messages.ThpSelectMethod(
+                selected_pairing_method=messages.ThpPairingMethod.SkipPairing
+            ),
+            expect=messages.ThpEndResponse,
+            skip_firmware_version_check=True,
+        )
+        assert isinstance(self.protocol, ProtocolV2Channel)
+        self.protocol._has_valid_channel = True
+
     def get_session(
         self,
         passphrase: str | object = "",
@@ -128,17 +149,21 @@ class TrezorClient:
         if isinstance(self.protocol, ProtocolV2Channel):
             from .transport.session import SessionV2
 
+            if self.protocol.trezor_state is TrezorState.UNPAIRED:
+                self.do_pairing()
+
             if passphrase is SEEDLESS:
                 return SessionV2(self, id=b"\x00")
 
+            if self._session_id_counter >= 255:
+                self._session_id_counter = 0
             assert isinstance(passphrase, str) or passphrase is None
-            session_id = b"\x01"  # TODO fix this with ProtocolV2 session rework
-            if session_id is not None:
-                sid = int.from_bytes(session_id, "big")
-            else:
-                sid = 1
-            assert 0 <= sid <= 255
-            return SessionV2.new(self, passphrase, derive_cardano, sid)
+            self._session_id_counter += 1
+
+            return SessionV2.new(
+                self, passphrase, derive_cardano, self._session_id_counter
+            )
+
         raise NotImplementedError
 
     def get_seedless_session(self) -> Session:
@@ -150,10 +175,19 @@ class TrezorClient:
     @property
     def features(self) -> messages.Features:
         if self._features is None:
-            self._features = self.protocol.get_features()
+            self._features = self._get_features()
             self.check_firmware_version(warn_only=True)
         assert self._features is not None
         return self._features
+
+    def _get_features(self) -> messages.Features:
+        if isinstance(self.protocol, ProtocolV2Channel):
+            if (
+                self.protocol.trezor_state is TrezorState.UNPAIRED
+                or not self.protocol._has_valid_channel
+            ):
+                self.do_pairing()
+        return self.protocol.get_features()
 
     @property
     def protocol_version(self) -> int:
