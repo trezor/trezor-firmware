@@ -99,6 +99,13 @@ def configure(
         features_available.append("ble")
         defines += [("USE_BLE", "1")]
 
+    sources += [
+        "embed/sys/powerctl/unix/powerctl.c",
+    ]
+    defines += [("USE_POWERCTL", "1")]
+    paths += ["embed/sys/powerctl/inc"]
+    features_available.append("powerctl")
+
     features_available.append("backlight")
     defines += [("USE_BACKLIGHT", "1")]
 

@@ -23,6 +23,13 @@
 #include <sys/types.h>
 #include <util/image.h>
 
+#ifdef USE_POWERCTL
+#include <sys/powerctl.h>
+#endif
+
+#include <io/display.h>
+#include <io/display_utils.h>
+
 #include "antiglitch.h"
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
@@ -59,11 +66,14 @@ workflow_result_t workflow_menu(const vendor_header *const vhdr,
       continue;
     }
 #endif
-    if (menu_result == MENU_REBOOT) {  // reboot
-      jump_allow_1();
-      jump_allow_2();
-      return WF_OK_REBOOT_SELECTED;
+#ifdef USE_POWERCTL
+    if (menu_result == MENU_POWER_OFF) {  // reboot
+      display_fade(display_get_backlight(), 0, 200);
+      powerctl_hibernate();
+      // in case hibernation failed, continue with menu
+      continue;
     }
+#endif
     if (menu_result == MENU_WIPE) {  // wipe
       workflow_result_t r = workflow_wipe_device(NULL);
       if (r == WF_ERROR || r == WF_OK_DEVICE_WIPED || r == WF_CANCELLED) {
