@@ -98,7 +98,7 @@ async def handle_pairing_request(
 
     ctx.host_name = message.host_name
     if __debug__ and not ctx.channel_ctx.should_show_pairing_dialog:
-        _skip_pairing_dialog(ctx)
+        await _skip_pairing_dialog(ctx)
     else:
         await ctx.show_pairing_dialog()
     assert ThpSelectMethod.MESSAGE_WIRE_TYPE is not None
@@ -493,6 +493,7 @@ def _get_message_type_for_method(method: int) -> int:
         return ThpMessageType.ThpQrCodeTag
     raise ValueError("Unexpected pairing method - no message type available")
 
+
 if __debug__:
 
     async def _skip_pairing_dialog(ctx: PairingContext) -> None:
@@ -501,7 +502,8 @@ if __debug__:
         from trezor.wire.errors import ActionCancelled
 
         resp = await ctx.call(
-            ButtonRequest(code=ButtonRequestType.Other, name="thp_pairing_request")
+            ButtonRequest(code=ButtonRequestType.Other, name="thp_pairing_request"),
+            expected_type=ButtonAck,
         )
         if isinstance(resp, ButtonAck):
             await ctx.write(ThpPairingRequestApproved())
