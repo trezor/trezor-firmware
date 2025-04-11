@@ -52,7 +52,7 @@ usb.bus.open(storage.device.get_device_id())
 
 # enable BLE, allow connections
 if utils.USE_BLE:
-    from trezorio import ble
+    import trezorble as ble
     ble.start_comm()
 
     # allow connections from bonded peers if any

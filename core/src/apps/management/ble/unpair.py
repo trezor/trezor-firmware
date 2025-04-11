@@ -1,6 +1,6 @@
-from trezorio import ble
 from typing import TYPE_CHECKING
 
+import trezorble as ble
 from trezor import TR
 
 if TYPE_CHECKING:

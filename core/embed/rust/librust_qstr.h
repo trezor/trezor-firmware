@@ -19,6 +19,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ATTACHED;
   MP_QSTR_AttachType;
   MP_QSTR_BacklightLevels;
+  MP_QSTR_BleInterface;
   MP_QSTR_CANCELLED;
   MP_QSTR_CONFIRMED;
   MP_QSTR_DIM;
@@ -36,12 +37,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_NONE;
   MP_QSTR_NORMAL;
   MP_QSTR_RESUME;
+  MP_QSTR_RX_PACKET_LEN;
   MP_QSTR_SWIPE_DOWN;
   MP_QSTR_SWIPE_LEFT;
   MP_QSTR_SWIPE_RIGHT;
   MP_QSTR_SWIPE_UP;
   MP_QSTR_TR;
   MP_QSTR_TRANSITIONING;
+  MP_QSTR_TX_PACKET_LEN;
   MP_QSTR_TranslationsHeader;
   MP_QSTR___del__;
   MP_QSTR___dict__;
@@ -78,6 +81,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address_label;
   MP_QSTR_address_qr;
   MP_QSTR_allow_cancel;
+  MP_QSTR_allow_pairing;
   MP_QSTR_amount;
   MP_QSTR_amount_change;
   MP_QSTR_amount_label;
@@ -222,6 +226,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_confirm_value;
   MP_QSTR_confirm_value_intro;
   MP_QSTR_confirm_with_info;
+  MP_QSTR_connection_flags;
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
   MP_QSTR_current;
@@ -237,11 +242,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_device_name__change_template;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
+  MP_QSTR_disconnect;
   MP_QSTR_encode;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
   MP_QSTR_entropy__title_confirm;
   MP_QSTR_erase;
+  MP_QSTR_erase_bonds;
   MP_QSTR_experimental_mode__enable;
   MP_QSTR_experimental_mode__only_for_dev;
   MP_QSTR_experimental_mode__title;
@@ -282,6 +289,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_homescreen__title_set;
   MP_QSTR_horizontal;
   MP_QSTR_icon_name;
+  MP_QSTR_iface_num;
   MP_QSTR_image;
   MP_QSTR_indeterminate;
   MP_QSTR_info;
@@ -312,6 +320,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_instructions__tap_to_continue;
   MP_QSTR_instructions__tap_to_start;
   MP_QSTR_instructions__view_all_data;
+  MP_QSTR_interface;
+  MP_QSTR_is_connected;
   MP_QSTR_is_data;
   MP_QSTR_is_type_of;
   MP_QSTR_items;
@@ -378,6 +388,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_passphrase__turn_on;
   MP_QSTR_passphrase__wallet;
   MP_QSTR_path;
+  MP_QSTR_peer_count;
   MP_QSTR_pin__cancel_description;
   MP_QSTR_pin__cancel_info;
   MP_QSTR_pin__cancel_setup;
@@ -432,6 +443,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_prompt_screen;
   MP_QSTR_prompt_title;
   MP_QSTR_qr_title;
+  MP_QSTR_read;
   MP_QSTR_reboot_to_bootloader__just_a_moment;
   MP_QSTR_reboot_to_bootloader__restart;
   MP_QSTR_reboot_to_bootloader__title;
@@ -487,6 +499,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_recovery__x_of_y_entered_template;
   MP_QSTR_recovery__you_have_entered;
   MP_QSTR_recovery_type;
+  MP_QSTR_reject_pairing;
   MP_QSTR_remaining_shares;
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
@@ -674,6 +687,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_sign_message__message_size;
   MP_QSTR_sign_message__verify_address;
   MP_QSTR_skip_first_paint;
+  MP_QSTR_start_advertising;
+  MP_QSTR_start_comm;
+  MP_QSTR_stop_advertising;
   MP_QSTR_storage_msg__processing;
   MP_QSTR_storage_msg__starting;
   MP_QSTR_storage_msg__verifying_pin;
@@ -697,6 +713,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_total_len;
   MP_QSTR_touch_event;
   MP_QSTR_trace;
+  MP_QSTR_trezorble;
   MP_QSTR_trezorproto;
   MP_QSTR_trezorui_api;
   MP_QSTR_tutorial;
@@ -729,6 +746,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_tutorial__welcome_safe5;
   MP_QSTR_type_for_name;
   MP_QSTR_type_for_wire;
+  MP_QSTR_unpair;
   MP_QSTR_usb_event;
   MP_QSTR_user_fee_change;
   MP_QSTR_value;
