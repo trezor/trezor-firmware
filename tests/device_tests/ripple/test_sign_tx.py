@@ -21,11 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.ripple,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ripple, pytest.mark.models("core")]
 
 
 @pytest.mark.parametrize("chunkify", (True, False))

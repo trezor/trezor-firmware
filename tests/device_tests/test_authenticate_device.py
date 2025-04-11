@@ -9,7 +9,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 from ..common import compact_size
 
-pytestmark = pytest.mark.models("safe", skip=["eckhart"])
+pytestmark = pytest.mark.models("safe")
 
 ROOT_PUBLIC_KEY = {
     models.T2B1: bytes.fromhex(
@@ -20,6 +20,9 @@ ROOT_PUBLIC_KEY = {
     ),
     models.T3B1: bytes.fromhex(
         "047f77368dea2d4d61e989f474a56723c3212dacf8a808d8795595ef38441427c4389bc454f02089d7f08b873005e4c28d432468997871c0bf286fd3861e21e96a"
+    ),
+    models.T3W1: bytes.fromhex(
+        "04521192e173a9da4e3023f747d836563725372681eba3079c56ff11b2fc137ab189eb4155f371127651b5594f8c332fc1e9c0f3b80d4212822668b63189706578"
     ),
 }
 

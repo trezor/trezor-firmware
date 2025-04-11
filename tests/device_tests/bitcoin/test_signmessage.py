@@ -35,8 +35,6 @@ from ...input_flows import (
 
 S = messages.InputScriptType
 
-pytestmark = pytest.mark.models(skip=["eckhart"])
-
 
 def case(
     id: str,
