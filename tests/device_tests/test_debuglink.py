@@ -76,6 +76,9 @@ def test_softlock_instability(session: Session):
     ):
         pytest.xfail("reseed only supported on emulator")
     device.wipe(session)
+
+    client = session.client.get_new_client()
+    session = client.get_seedless_session()
     entropy_after_wipe = misc.get_entropy(session, 16)
     session.refresh_features()
 
@@ -83,6 +86,8 @@ def test_softlock_instability(session: Session):
     load_device()
     session.client.debug.reseed(0)
     device.wipe(session)
+    client = session.client.get_new_client()
+    session = client.get_seedless_session()
     assert misc.get_entropy(session, 16) == entropy_after_wipe
     session.refresh_features()
 
@@ -95,4 +100,6 @@ def test_softlock_instability(session: Session):
     # the device is now trying to run the lockscreen, which attempts to unlock.
     # If the device actually called config.unlock(), it would use additional randomness.
     # That is undesirable. Assert that the returned entropy is still the same.
+    client = session.client.get_new_client()
+    session = client.get_seedless_session()
     assert misc.get_entropy(session, 16) == entropy_after_wipe
