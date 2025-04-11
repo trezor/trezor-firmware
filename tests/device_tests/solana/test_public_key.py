@@ -22,11 +22,7 @@ from trezorlib.tools import parse_path
 
 from ...common import parametrize_using_common_fixtures
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.solana,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.solana, pytest.mark.models("core")]
 
 
 @parametrize_using_common_fixtures(

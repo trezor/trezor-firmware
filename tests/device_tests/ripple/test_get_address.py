@@ -28,11 +28,7 @@ CUSTOM_MNEMONIC = (
     "whip snack decide blur unfold fiction pumpkin athlete"
 )
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.ripple,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ripple, pytest.mark.models("core")]
 
 # data from https://iancoleman.io/bip39/
 TEST_VECTORS = [

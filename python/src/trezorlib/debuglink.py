@@ -325,7 +325,18 @@ class LayoutContent(UnstructuredJSONReader):
 
     def button_contents(self) -> list[str]:
         """Getting list of button contents."""
-        buttons = self.find_unique_value_by_key("buttons", default={}, only_type=dict)
+
+        if self.action_bar() != "":
+            # ActionBar is used in Eckhart layout
+            buttons = self.find_unique_value_by_key(
+                "ActionBar", default={}, only_type=dict
+            )
+            button_keys = ("left_button", "", "right_button")
+        else:
+            buttons = self.find_unique_value_by_key(
+                "buttons", default={}, only_type=dict
+            )
+            button_keys = ("left_btn", "middle_btn", "right_btn")
 
         def get_button_content(btn_key: str) -> str:
             button_obj = buttons.get(btn_key, {})
@@ -342,7 +353,6 @@ class LayoutContent(UnstructuredJSONReader):
             # default value
             return "-"
 
-        button_keys = ("left_btn", "middle_btn", "right_btn")
         return [get_button_content(btn_key) for btn_key in button_keys]
 
     def seed_words(self) -> list[str]:

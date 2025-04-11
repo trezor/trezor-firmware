@@ -402,7 +402,12 @@ class EthereumFlow:
 
     def confirm_data(self, info: bool = False, cancel: bool = False) -> BRGeneratorType:
         assert (yield).name == "confirm_data"
-        assert TR.ethereum__title_input_data in self.debug.read_layout().title()
+        if self.client.layout_type is LayoutType.Eckhart:
+            TR.regexp("ethereum__title_all_input_data_template").fullmatch(
+                self.debug.read_layout().title().strip()
+            )
+        else:
+            assert TR.ethereum__title_input_data in self.debug.read_layout().title()
         if info:
             self.debug.press_info()
         elif cancel:
@@ -414,7 +419,12 @@ class EthereumFlow:
         br = yield
         assert br.name == "confirm_data"
         assert br.pages is not None
-        assert TR.ethereum__title_input_data in self.debug.read_layout().title()
+        if self.client.layout_type is LayoutType.Eckhart:
+            TR.regexp("ethereum__title_all_input_data_template").fullmatch(
+                self.debug.read_layout().title().strip()
+            )
+        else:
+            assert TR.ethereum__title_input_data in self.debug.read_layout().title()
         for _ in range(br.pages - 1):
             self.debug.read_layout()
             go_next(self.debug)
@@ -425,13 +435,21 @@ class EthereumFlow:
         elif self.client.layout_type is LayoutType.Delizia:
             self.debug.read_layout()
             self.debug.click(self.debug.screen_buttons.tap_to_confirm())
+        elif self.client.layout_type is LayoutType.Eckhart:
+            self.debug.read_layout()
+            self.debug.click(self.debug.screen_buttons.ok())
 
     def paginate_data_go_back(self) -> BRGeneratorType:
         br = yield
         assert br.name == "confirm_data"
         assert br.pages is not None
         assert br.pages > 2
-        assert TR.ethereum__title_input_data in self.debug.read_layout().title()
+        if self.client.layout_type is LayoutType.Eckhart:
+            TR.regexp("ethereum__title_all_input_data_template").fullmatch(
+                self.debug.read_layout().title().strip()
+            )
+        else:
+            assert TR.ethereum__title_input_data in self.debug.read_layout().title()
         if self.client.layout_type is LayoutType.Bolt:
             self.debug.swipe_up()
             self.debug.swipe_up()
@@ -448,6 +466,13 @@ class EthereumFlow:
                 self.debug.swipe_up()
             # Close the menu wuth the cross button
             self.debug.click(self.debug.screen_buttons.menu())
+        elif self.client.layout_type is LayoutType.Eckhart:
+            # Scroll to the last page
+            for _ in range(br.pages - 1):
+                self.debug.click(self.debug.screen_buttons.ok())
+            # Go back to the first page and then cancel
+            for _ in range(br.pages):
+                self.debug.click(self.debug.screen_buttons.cancel())
         else:
             raise ValueError(f"Unknown layout: {self.client.layout_type}")
 
@@ -554,6 +579,54 @@ class EthereumFlow:
         self.debug.click(self.debug.screen_buttons.tap_to_confirm())
         assert (yield).name == "confirm_ethereum_tx"
 
+    def _confirm_tx_eckhart(
+        self, cancel: bool, info: bool, go_back_from_summary: bool
+    ) -> BRGeneratorType:
+
+        assert (yield).name == "confirm_output"
+        title_exp = (
+            TR.words__send
+            if self.client.layout_type is LayoutType.Eckhart
+            else TR.words__address
+        )
+        assert title_exp in self.debug.read_layout().title()
+        if cancel:
+            self.debug.press_no()
+            return
+
+        self.debug.click(self.debug.screen_buttons.ok())
+        assert (yield).name == "confirm_total"
+        layout = self.debug.read_layout()
+        title_exp = (
+            TR.words__send
+            if self.client.layout_type is LayoutType.Eckhart
+            else TR.words__title_summary
+        )
+        assert layout.title() == title_exp
+        assert TR.send__maximum_fee in layout.text_content()
+        if go_back_from_summary:
+            # Get back to the address screen
+            self.debug.click(self.debug.screen_buttons.cancel())
+            title = self.debug.read_layout().title()
+            assert title_exp in title
+            # Get back to the summary screen
+            self.debug.click(self.debug.screen_buttons.ok())
+            layout = self.debug.read_layout()
+            assert layout.title() == title_exp
+            assert TR.send__maximum_fee in layout.text_content()
+        if info:
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.synchronize_at("VerticalMenu")
+            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            text = self.debug.read_layout().text_content()
+            assert TR.ethereum__gas_limit in text
+            assert TR.ethereum__gas_price in text
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.click(self.debug.screen_buttons.menu())
+        self.debug.click(self.debug.screen_buttons.ok())
+        self.debug.read_layout()
+        assert (yield).name == "confirm_ethereum_tx"
+
     def confirm_tx(
         self,
         cancel: bool = False,
@@ -566,6 +639,8 @@ class EthereumFlow:
             yield from self._confirm_tx_caesar(cancel, info, go_back_from_summary)
         elif self.client.layout_type is LayoutType.Delizia:
             yield from self._confirm_tx_delizia(cancel, info, go_back_from_summary)
+        elif self.client.layout_type is LayoutType.Eckhart:
+            yield from self._confirm_tx_eckhart(cancel, info, go_back_from_summary)
         else:
             raise ValueError("Unknown model!")
 
@@ -665,6 +740,36 @@ class EthereumFlow:
                 self.debug.click(self.debug.screen_buttons.menu())
             self.debug.swipe_up()
             # br = yield  # FIXME: no BR on sign transaction
+
+            self.debug.press_yes()
+
+        elif self.client.layout_type is LayoutType.Eckhart:
+            # confirm intro
+            if info:
+                self.debug.click(self.debug.screen_buttons.menu())
+                self.debug.synchronize_at("VerticalMenu")
+                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+                assert self.debug.read_layout().title() in (
+                    TR.ethereum__staking_stake_address,
+                    TR.ethereum__staking_claim_address,
+                )
+                self.debug.click(self.debug.screen_buttons.menu())
+                self.debug.click(self.debug.screen_buttons.menu())
+
+            self.debug.click(self.debug.screen_buttons.ok())
+            br = yield
+            assert br.code == B.SignTx
+            assert br.name == "confirm_total"
+
+            # confirm summary
+            if info:
+                self.debug.click(self.debug.screen_buttons.menu())
+                self.debug.synchronize_at("VerticalMenu")
+                self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+                assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
+                assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
+                self.debug.click(self.debug.screen_buttons.menu())
+                self.debug.click(self.debug.screen_buttons.menu())
 
             self.debug.press_yes()
 
