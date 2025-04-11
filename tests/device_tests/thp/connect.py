@@ -27,11 +27,11 @@ def prepare_protocol_for_pairing(
 def get_encrypted_transport_protocol(
     client: Client, host_static_randomness: bytes | None = None
 ) -> ProtocolV2Channel:
-    protocol = prepare_protocol_for_pairing(
+    client.protocol = prepare_protocol_for_pairing(
         client, host_static_randomness=host_static_randomness
     )
-    protocol._do_pairing(client.debug)
-    return protocol
+    client.do_pairing()
+    return client.protocol
 
 
 def handle_pairing_request(
