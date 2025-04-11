@@ -51,9 +51,6 @@ uint32_t last_touch_sample_time = 0;
 #include "modtrezorio-webusb.h"
 #include "modtrezorio-usb.h"
 // clang-format on
-#ifdef USE_BLE
-#include "modtrezorio-ble.h"
-#endif
 #ifdef USE_SD_CARD
 #include "modtrezorio-fatfs.h"
 #include "modtrezorio-sdcard.h"
@@ -99,7 +96,6 @@ STATIC const mp_rom_map_elem_t mp_module_trezorio_globals_table[] = {
 #endif
 
 #ifdef USE_BLE
-    {MP_ROM_QSTR(MP_QSTR_ble), MP_ROM_PTR(&mod_trezorio_BLE_module)},
     {MP_ROM_QSTR(MP_QSTR_BLE_EVENT), MP_ROM_INT(SYSHANDLE_BLE)},
 #endif
 #ifdef USE_TOUCH
