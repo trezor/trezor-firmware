@@ -29,11 +29,7 @@ from trezorlib.tools import parse_path
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowShowXpubQRCode
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.cardano,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.cardano, pytest.mark.models("core")]
 
 
 @parametrize_using_common_fixtures(

@@ -24,8 +24,6 @@ from ...common import is_core
 from ...input_flows import InputFlowConfirmAllWarnings
 from .signtx import forge_prevtx
 
-pytestmark = pytest.mark.models(skip=["eckhart"])
-
 VECTORS = (  # path, script_types
     # GreenAddress A m/[1,4]/address_index
     (
