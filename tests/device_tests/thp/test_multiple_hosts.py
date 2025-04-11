@@ -50,10 +50,12 @@ def _prepare_two_hosts(client: Client) -> tuple[ProtocolV2Channel, ProtocolV2Cha
     )
     protocol_1._do_handshake()
 
-    protocol_1._do_pairing(client.debug)
+    client.protocol = protocol_1
+    client.do_pairing()
     sleep(LOCK_TIME)
     protocol_2._do_handshake()
-    protocol_2._do_pairing(client.debug)
+    client.protocol = protocol_2
+    client.do_pairing()
 
     return protocol_1, protocol_2
 
@@ -122,7 +124,8 @@ def test_concurrent_handshakes_1(client: Client) -> None:
 
     # The second host performs action that results
     # in the invalidation of the first host's handshake state
-    protocol_2._do_pairing(helper_debug=client.debug)
+    client.protocol = protocol_2
+    client.do_pairing()
 
     # Even after LOCK_TIME passes, the first host's channel cannot
     # be resumed

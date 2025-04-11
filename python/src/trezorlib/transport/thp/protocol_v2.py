@@ -4,6 +4,7 @@ import logging
 import os
 import typing as t
 from binascii import hexlify
+from enum import IntEnum
 
 from noise.connection import Keypair, NoiseConnection
 
@@ -21,8 +22,13 @@ LOG = logging.getLogger(__name__)
 DEFAULT_SESSION_ID: int = 0
 
 if t.TYPE_CHECKING:
-    from ...debuglink import DebugLink
+    pass
 MT = t.TypeVar("MT", bound=protobuf.MessageType)
+
+
+class TrezorState(IntEnum):
+    UNPAIRED = 0x00
+    PAIRED = 0x01
 
 
 class ProtocolV2Channel(Channel):
@@ -33,18 +39,20 @@ class ProtocolV2Channel(Channel):
 
     _has_valid_channel: bool = False
     _features: messages.Features | None = None
-    _helper_debug: DebugLink | None = None
+    trezor_state: int = TrezorState.UNPAIRED
 
     def __init__(
         self,
         transport: Transport,
         mapping: ProtobufMapping,
+        credential: bytes | None = None,
     ) -> None:
         super().__init__(transport, mapping)
+        self.trezor_state = self.prepare_channel_without_pairing(credential=credential)
 
     def get_channel(self) -> ProtocolV2Channel:
         if not self._has_valid_channel:
-            self._establish_new_channel(self._helper_debug)
+            raise RuntimeError("Channel is invalidated")
         return self
 
     def read(self, session_id: int) -> t.Any:
@@ -61,7 +69,7 @@ class ProtocolV2Channel(Channel):
 
     def get_features(self) -> messages.Features:
         if not self._has_valid_channel:
-            self._establish_new_channel(self._helper_debug)
+            raise RuntimeError("Channel is invalidated")
         if self._features is None:
             self.update_features()
         assert self._features is not None
@@ -96,11 +104,10 @@ class ProtocolV2Channel(Channel):
         assert isinstance(msg, message_type)
         return msg
 
-    def _establish_new_channel(self, helper_debug: DebugLink | None = None) -> None:
+    def prepare_channel_without_pairing(self, credential: bytes | None = None) -> int:
         self._reset_sync_bits()
         self._do_channel_allocation()
-        self._do_handshake()
-        self._do_pairing(helper_debug)
+        return self._do_handshake(credential=credential)
 
     def _reset_sync_bits(self) -> None:
         self.sync_bit_send = 0
@@ -148,7 +155,7 @@ class ProtocolV2Channel(Channel):
         self,
         credential: bytes | None = None,
         host_static_randomness: bytes | None = None,
-    ):
+    ) -> int:
 
         randomness_static = host_static_randomness or os.urandom(32)
 
@@ -160,7 +167,7 @@ class ProtocolV2Channel(Channel):
             credential,
         )
         self._read_ack()
-        self._read_handshake_completion_response()
+        return self._read_handshake_completion_response()
 
     def _send_handshake_init_request(self) -> None:
         ha_init_req_header = MessageHeader(0, self.channel_id, 36)
@@ -215,7 +222,7 @@ class ProtocolV2Channel(Channel):
         )
         self.handshake_hash = self._noise.get_handshake_hash()
 
-    def _read_handshake_completion_response(self) -> None:
+    def _read_handshake_completion_response(self) -> int:
         # Read handshake completion response, ignore payload as we do not care about the state
         header, data = self._read_until_valid_crc_check()
         if not header.is_handshake_comp_response():
@@ -228,25 +235,7 @@ class ProtocolV2Channel(Channel):
         print("trezor state:", trezor_state)
         assert trezor_state == b"\x00" or trezor_state == b"\x01"
         self._send_ack_1()
-
-    def _do_pairing(self, helper_debug: DebugLink | None):
-
-        self._send_message(messages.ThpPairingRequest(host_name="Trezorlib"))
-        self._read_message(messages.ButtonRequest)
-        self._send_message(messages.ButtonAck())
-
-        if helper_debug is not None:
-            helper_debug.press_yes()
-
-        self._read_message(messages.ThpPairingRequestApproved)
-        self._send_message(
-            messages.ThpSelectMethod(
-                selected_pairing_method=messages.ThpPairingMethod.SkipPairing
-            )
-        )
-        self._read_message(messages.ThpEndResponse)
-
-        self._has_valid_channel = True
+        return int.from_bytes(trezor_state, "big")
 
     def _read_ack(self):
         header, payload = self._read_until_valid_crc_check()
