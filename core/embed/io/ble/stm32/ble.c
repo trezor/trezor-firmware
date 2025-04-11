@@ -595,7 +595,7 @@ bool ble_issue_command(ble_command_t *command) {
       result = ble_send_erase_bonds(drv);
       break;
     case BLE_ALLOW_PAIRING:
-      result = ble_send_pairing_accept(drv, command->data.raw);
+      result = ble_send_pairing_accept(drv, command->data.pairing_code);
       break;
     case BLE_REJECT_PAIRING:
       result = ble_send_pairing_reject(drv);

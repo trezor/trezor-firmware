@@ -50,6 +50,7 @@ typedef struct {
 typedef union {
   uint8_t raw[32];
   ble_adv_start_cmd_data_t adv_start;
+  uint8_t pairing_code[BLE_PAIRING_CODE_LEN];
 } ble_command_data_t;
 
 typedef struct {
