@@ -1,5 +1,6 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
+    event::TouchEvent,
     geometry::{Insets, Offset, Rect},
     shape::{Bar, Renderer},
 };
@@ -19,19 +20,19 @@ type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
 pub struct VerticalMenu {
     /// Bounds the sliding window of the menu.
     bounds: Rect,
-    /// Full bounds of the menu, including off-screen items.
-    virtual_bounds: Rect,
     /// Menu items.
     buttons: VerticalMenuButtons,
-    /// Whether to show separators between buttons.
-    separators: bool,
+    /// Full height of the menu, including overflowing items.
+    total_height: i16,
     /// Vertical offset of the current view.
     offset_y: i16,
     /// Maximum vertical offset.
-    max_offset: i16,
+    offset_y_max: i16,
     /// Adapt padding to fit entire area. If the area is too small, the padding
     /// will be reduced to min value.
-    fit_area: bool,
+    content_fit: bool,
+    /// Whether to show separators between buttons.
+    separators: bool,
 }
 
 pub enum VerticalMenuMsg {
@@ -45,13 +46,13 @@ impl VerticalMenu {
 
     fn new(buttons: VerticalMenuButtons) -> Self {
         Self {
-            virtual_bounds: Rect::zero(),
             bounds: Rect::zero(),
             buttons,
-            separators: false,
+            total_height: 0,
             offset_y: 0,
-            max_offset: 0,
-            fit_area: false,
+            offset_y_max: 0,
+            separators: false,
+            content_fit: false,
         }
     }
 
@@ -64,8 +65,8 @@ impl VerticalMenu {
         self
     }
 
-    pub fn with_fit_area(mut self) -> Self {
-        self.fit_area = true;
+    pub fn with_content_fit(mut self) -> Self {
+        self.content_fit = true;
         self
     }
 
@@ -74,18 +75,19 @@ impl VerticalMenu {
         self
     }
 
-    pub fn area(&self) -> Rect {
-        self.bounds
+    /// Check if the menu fits its area without scrolling.
+    pub fn fits_area(&self) -> bool {
+        self.total_height <= self.bounds.height()
     }
 
     /// Scroll the menu to the desired offset.
     pub fn set_offset(&mut self, offset_y: i16) {
-        self.offset_y = offset_y.max(0).min(self.max_offset);
+        self.offset_y = offset_y.max(0).min(self.offset_y_max);
     }
 
     /// Chcek if the menu is on the bottom.
     pub fn is_max_offset(&self) -> bool {
-        self.offset_y == self.max_offset
+        self.offset_y == self.offset_y_max
     }
 
     /// Get the current sliding window offset.
@@ -93,7 +95,10 @@ impl VerticalMenu {
         self.offset_y
     }
 
-    /// Update menu buttons based on the current offset.
+    /// Update state of menu buttons based on the current offset.
+    /// Enable only buttons that are fully visible in the menu area.
+    /// Meaningful only if the menu is scrollable.
+    /// If the menu fits its area, all buttons are enabled.
     pub fn update_menu(&mut self, ctx: &mut EventCtx) {
         for button in self.buttons.iter_mut() {
             let in_bounds = button
@@ -107,19 +112,35 @@ impl VerticalMenu {
 
     fn set_max_offset(&mut self) {
         // Calculate the overflow of the menu area
-        let menu_overflow = (self.virtual_bounds.height() - self.bounds.height()).max(0);
+        let menu_overflow = (self.total_height - self.bounds.height()).max(0);
 
         // Find the first button from the top that would completely fit in the menu area
         // in the bottom position
         for button in &self.buttons {
-            let offset = button.area().top_left().y - self.area().top_left().y;
+            let offset = button.area().top_left().y - self.bounds.top_left().y;
             if offset > menu_overflow {
-                self.max_offset = offset;
+                self.offset_y_max = offset;
                 return;
             }
         }
 
-        self.max_offset = menu_overflow;
+        self.offset_y_max = menu_overflow;
+    }
+
+    // Shift position of touch events in the menu area by an offset of the current
+    // sliding window position
+    fn shift_touch_event(&self, event: Event) -> Event {
+        match event {
+            Event::Touch(t) => {
+                let o = Offset::y(self.offset_y);
+                Event::Touch(match t {
+                    TouchEvent::TouchStart(p) => TouchEvent::TouchStart(p.ofs(o)),
+                    TouchEvent::TouchMove(p) => TouchEvent::TouchMove(p.ofs(o)),
+                    TouchEvent::TouchEnd(p) => TouchEvent::TouchEnd(p.ofs(o)),
+                })
+            }
+            _ => event,
+        }
     }
 
     fn render_buttons<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -156,8 +177,8 @@ impl Component for VerticalMenu {
         // Crop the menu area
         self.bounds = bounds.inset(Self::SIDE_INSETS);
 
-        // Determine padding dynamically if `fit_area` is enabled
-        let padding = if self.fit_area {
+        // Determine padding dynamically if `content_fit` is enabled
+        let padding = if self.content_fit {
             let mut content_height = 0;
             for button in self.buttons.iter_mut() {
                 content_height += button.content_height();
@@ -182,12 +203,8 @@ impl Component for VerticalMenu {
             top_left = top_left + Offset::y(button_height);
         }
 
-        // Calculate virtual bounds of all buttons combined
-        let total_height = top_left.y - self.bounds.top_left().y;
-        self.virtual_bounds = Rect::from_top_left_and_size(
-            self.bounds.top_left(),
-            Offset::new(self.bounds.width(), total_height),
-        );
+        // Calculate height of all buttons combined
+        self.total_height = top_left.y - self.bounds.top_left().y;
 
         // Calculate maximum offset for scrolling
         self.set_max_offset();
@@ -196,8 +213,10 @@ impl Component for VerticalMenu {
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Shif touch events by the scroll offset
+        let event_shifted = self.shift_touch_event(event);
         for (i, button) in self.buttons.iter_mut().enumerate() {
-            if let Some(ButtonMsg::Clicked) = button.event(ctx, event) {
+            if let Some(ButtonMsg::Clicked) = button.event(ctx, event_shifted) {
                 return Some(VerticalMenuMsg::Selected(i));
             }
         }
