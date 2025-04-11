@@ -304,16 +304,16 @@ def test_channel_replacement(client: Client) -> None:
 
     client.protocol = get_encrypted_transport_protocol(client, host_static_randomness)
 
-    session = client.get_session(passphrase="TREZOR", session_id=b"\x10")
+    session = client.get_session(passphrase="TREZOR")
     address = get_test_address(session)
 
-    session_2 = client.get_session(passphrase="ROZERT", session_id=b"\x20")
+    session_2 = client.get_session(passphrase="ROZERT")
     address_2 = get_test_address(session_2)
     assert address != address_2
 
     # create new channel using the same host_static_privkey
     client.protocol = get_encrypted_transport_protocol(client, host_static_randomness)
-    session_3 = client.get_session(passphrase="OKIDOKI", session_id=b"\x30")
+    session_3 = client.get_session(passphrase="OKIDOKI")
     address_3 = get_test_address(session_3)
     assert address_3 != address_2
 
@@ -333,6 +333,6 @@ def test_channel_replacement(client: Client) -> None:
         _ = get_test_address(session_3)
     assert str(e_2.value.message) == "Invalid session"
 
-    session_4 = client.get_session(passphrase="TREZOR", session_id=b"\x40")
+    session_4 = client.get_session(passphrase="TREZOR")
     super_new_address = get_test_address(session_4)
     assert address == super_new_address
