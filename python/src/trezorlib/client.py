@@ -128,6 +128,9 @@ class TrezorClient:
         if isinstance(self.protocol, ProtocolV2Channel):
             from .transport.session import SessionV2
 
+            if passphrase is SEEDLESS:
+                return SessionV2(self, id=b"\x00")
+
             assert isinstance(passphrase, str) or passphrase is None
             session_id = b"\x01"  # TODO fix this with ProtocolV2 session rework
             if session_id is not None:
