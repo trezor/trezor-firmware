@@ -158,6 +158,16 @@ message DebugLinkState {
 }
 
 /**
+ * Request: Disable or enable the pairing dialog for a given THP channel
+ * @start
+ * @next Success
+ */
+message DebugLinkToggleThpPairingDialog{
+    optional bytes channel_id=1;
+    optional bool show_dialog=2 [default=false];
+}
+
+/**
  * Request: Ask device to restart
  * @start
  */
