@@ -180,7 +180,7 @@ class PairingContext(Context):
             br_code=ButtonRequestType.Other,
         )
 
-    async def show_autoconnec_credential_confirmation_screen(self) -> None:
+    async def show_autoconnect_credential_confirmation_screen(self) -> None:
         from trezor.ui.layouts.common import interact
 
         await interact(
