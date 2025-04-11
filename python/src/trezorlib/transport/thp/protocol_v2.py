@@ -231,8 +231,6 @@ class ProtocolV2Channel(Channel):
                 err = _get_error_from_int(data[0])
                 raise Exception("Received ThpError: " + err)
         trezor_state = self._noise.decrypt(bytes(data))
-        # TODO handle trezor_state
-        print("trezor state:", trezor_state)
         assert trezor_state == b"\x00" or trezor_state == b"\x01"
         self._send_ack_1()
         return int.from_bytes(trezor_state, "big")
