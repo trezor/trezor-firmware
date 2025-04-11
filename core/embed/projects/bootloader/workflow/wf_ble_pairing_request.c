@@ -39,23 +39,11 @@ static bool encode_pairing_code(uint32_t code, uint8_t *outbuf) {
   return true;
 }
 
-static void end_pairing_mode(void) {
-  ble_state_t state = {0};
-
-  ble_get_state(&state);
-
-  if (state.peer_count > 0) {
-    ble_command_t cmd = {.cmd_type = BLE_SWITCH_ON};
-    ble_issue_command(&cmd);
-  } else {
-    ble_command_t cmd = {.cmd_type = BLE_SWITCH_OFF};
-    ble_issue_command(&cmd);
-  }
-}
-
 workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
                                                const image_header *const hdr) {
-  ble_iface_start_pairing();
+  if (!ble_iface_start_pairing()) {
+    return WF_OK_PAIRING_FAILED;
+  }
 
   uint8_t buf[1024] = {0};
   screen_pairing_mode(ui_get_initial_setup(), buf, sizeof(buf));
@@ -65,12 +53,12 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
       workflow_host_control(vhdr, hdr, buf, sizeof(buf), &code);
 
   if (res != WF_OK_UI_ACTION) {
-    end_pairing_mode();
+    ble_iface_end_pairing();
     return res;
   }
 
   if (code == PAIRING_MODE_CANCEL) {
-    end_pairing_mode();
+    ble_iface_end_pairing();
     return WF_OK_PAIRING_FAILED;
   }
 
@@ -114,13 +102,13 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
     pairing_mode_finalization_result_t r =
         screen_pairing_mode_finalizing(ui_get_initial_setup());
     if (r == PAIRING_FINALIZATION_FAILED) {
-      end_pairing_mode();
+      ble_iface_end_pairing();
       return WF_OK_PAIRING_FAILED;
     }
     if (r == PAIRING_FINALIZATION_CANCEL) {
       ble_command_t disconnect = {.cmd_type = BLE_DISCONNECT};
       ble_issue_command(&disconnect);
-      end_pairing_mode();
+      ble_iface_end_pairing();
       return WF_OK_PAIRING_FAILED;
     }
   }

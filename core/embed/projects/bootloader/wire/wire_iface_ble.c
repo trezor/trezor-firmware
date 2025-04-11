@@ -144,18 +144,39 @@ void ble_iface_deinit(void) {
   memset(iface, 0, sizeof(wire_iface_t));
 }
 
-void ble_iface_start_pairing(void) {
+void ble_iface_end_pairing(void) {
   ble_state_t state = {0};
 
   ble_get_state(&state);
 
-  while (state.connected) {
+  if (state.peer_count > 0) {
+    ble_command_t cmd = {.cmd_type = BLE_SWITCH_ON};
+    ble_issue_command(&cmd);
+  } else {
+    ble_command_t cmd = {.cmd_type = BLE_SWITCH_OFF};
+    ble_issue_command(&cmd);
+  }
+}
+
+bool ble_iface_start_pairing(void) {
+  ble_state_t state = {0};
+
+  ble_get_state(&state);
+
+  uint16_t retry_cnt = 0;
+
+  while (state.connected && retry_cnt < 10) {
     ble_command_t cmd_disconnect = {
         .cmd_type = BLE_DISCONNECT,
     };
     ble_issue_command(&cmd_disconnect);
     systick_delay_ms(20);
     ble_get_state(&state);
+    retry_cnt++;
+  }
+
+  if (state.connected) {
+    return false;
   }
 
   ble_command_t cmd = {
@@ -165,9 +186,23 @@ void ble_iface_start_pairing(void) {
                        .name = "Trezor Bootloader",
                        .static_mac = false,
                    }},
-      .data_len = 0,
   };
   ble_issue_command(&cmd);
+
+  retry_cnt = 0;
+  ble_get_state(&state);
+  while (!state.pairing && retry_cnt < 10) {
+    systick_delay_ms(20);
+    ble_get_state(&state);
+    retry_cnt++;
+  }
+
+  if (!state.pairing) {
+    ble_iface_end_pairing();
+    return false;
+  }
+
+  return true;
 }
 
 #endif
