@@ -24,6 +24,7 @@ pub enum Error {
     ValueError(&'static CStr),
     #[cfg(feature = "micropython")]
     ValueErrorParam(&'static CStr, Obj),
+    RuntimeError(&'static CStr),
 }
 
 macro_rules! value_error {
@@ -73,6 +74,13 @@ impl Error {
                     ffi::mp_obj_new_exception_args(&ffi::mp_type_AttributeError, 1, &attr.into())
                 }
                 Error::EOFError => ffi::mp_obj_new_exception(&ffi::mp_type_EOFError),
+                Error::RuntimeError(msg) => {
+                    if let Ok(msg) = msg.try_into() {
+                        ffi::mp_obj_new_exception_args(&ffi::mp_type_RuntimeError, 1, &msg)
+                    } else {
+                        ffi::mp_obj_new_exception(&ffi::mp_type_RuntimeError)
+                    }
+                }
             }
         }
     }
