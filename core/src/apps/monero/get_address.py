@@ -9,10 +9,13 @@ if TYPE_CHECKING:
 
 
 @auto_keychain(__name__)
-async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddress:
+async def get_address(
+    msg: MoneroGetAddress, keychain: Keychain
+) -> MoneroAddress | None:
     from trezor import wire
     from trezor.messages import MoneroAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import context
 
     from apps.common import paths
     from apps.monero import misc
@@ -65,7 +68,11 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
             crypto_helpers.encodepoint(pub_view),
         )
 
+    response = MoneroAddress(address=addr.encode())
+
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERN, SLIP44_ID
 
         await show_address(
@@ -75,5 +82,8 @@ async def get_address(msg: MoneroGetAddress, keychain: Keychain) -> MoneroAddres
             account=paths.get_account_name("XMR", msg.address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
 
-    return MoneroAddress(address=addr.encode())
+    return response

@@ -9,9 +9,12 @@ if TYPE_CHECKING:
 
 
 @auto_keychain(__name__)
-async def get_address(msg: BinanceGetAddress, keychain: Keychain) -> BinanceAddress:
+async def get_address(
+    msg: BinanceGetAddress, keychain: Keychain
+) -> BinanceAddress | None:
     from trezor.messages import BinanceAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import context
 
     from apps.common import paths
 
@@ -25,7 +28,11 @@ async def get_address(msg: BinanceGetAddress, keychain: Keychain) -> BinanceAddr
     node = keychain.derive(address_n)
     pubkey = node.public_key()
     address = address_from_public_key(pubkey, HRP)
+    response = BinanceAddress(address=address)
+
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERN, SLIP44_ID
 
         await show_address(
@@ -34,5 +41,8 @@ async def get_address(msg: BinanceGetAddress, keychain: Keychain) -> BinanceAddr
             account=paths.get_account_name("BNB", address_n, PATTERN, SLIP44_ID),
             chunkify=bool(msg.chunkify),
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
 
-    return BinanceAddress(address=address)
+    return response

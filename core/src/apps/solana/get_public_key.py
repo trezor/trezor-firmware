@@ -16,19 +16,26 @@ if TYPE_CHECKING:
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
 async def get_public_key(
     msg: SolanaGetPublicKey, keychain: Keychain
-) -> SolanaPublicKey:
+) -> SolanaPublicKey | None:
     from trezor.messages import SolanaPublicKey
-    from trezor.ui.layouts import show_pubkey
+    from trezor.ui.layouts import show_continue_in_app, show_pubkey
+    from trezor.wire import context
 
     public_key = derive_public_key(keychain, msg.address_n)
+    response = SolanaPublicKey(public_key=public_key)
 
     if msg.show_display:
+        from trezor import TR
+
         from apps.common.paths import address_n_to_str
 
         path = address_n_to_str(msg.address_n)
         await show_pubkey(base58.encode(public_key), path=path)
+        await context.write(response)
+        await show_continue_in_app(TR.address__public_key_confirmed)
+        return None
 
-    return SolanaPublicKey(public_key=public_key)
+    return response
 
 
 def derive_public_key(keychain: Keychain, address_n: list[int]) -> bytes:

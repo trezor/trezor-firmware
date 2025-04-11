@@ -100,7 +100,7 @@ async def show_dry_run_result(result: bool, is_slip39: bool) -> None:
             text = TR.recovery__dry_run_slip39_valid_match
         else:
             text = TR.recovery__dry_run_bip39_valid_match
-        await show_success("success_dry_recovery", text, button=TR.buttons__continue)
+        await show_success("success_dry_recovery", text)
     else:
         if is_slip39:
             text = TR.recovery__dry_run_slip39_valid_mismatch
