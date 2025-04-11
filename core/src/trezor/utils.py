@@ -37,7 +37,7 @@ from trezorutils import (  # noqa: F401
 from typing import TYPE_CHECKING
 
 if __debug__:
-    from trezorutils import LOG_STACK_USAGE, check_reallocs
+    from trezorutils import LOG_STACK_USAGE, check_heap_fragmentation
 
     if LOG_STACK_USAGE:
         from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
@@ -68,8 +68,7 @@ def unimport_begin() -> set[str]:
 
 def unimport_end(mods: set[str], collect: bool = True) -> None:
     if __debug__:
-        # Assert that `sys.modules` and `__main__` dict are never reallocated at run-time
-        check_reallocs()
+        check_heap_fragmentation()
 
     for mod in sys.modules:  # pylint: disable=consider-using-dict-items
         if mod not in mods:
