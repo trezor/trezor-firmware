@@ -90,6 +90,9 @@ class Channel:
         self.temp_crc_compare: bytearray | None = None
         self.temp_tag: bytearray | None = None
 
+        if __debug__:
+            self.should_show_pairing_dialog: bool = True
+
     def clear(self) -> None:
         clear_sessions_with_channel_id(self.channel_id)
         memory_manager.release_lock_if_owner(self.get_channel_id_int())
