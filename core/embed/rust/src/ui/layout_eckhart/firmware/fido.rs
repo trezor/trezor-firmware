@@ -1,0 +1,95 @@
+use crate::{
+    strutil::TString,
+    ui::{
+        component::{
+            image::Image,
+            paginated::SinglePage,
+            text::{
+                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
+                TextStyle,
+            },
+            Component, Event, EventCtx, LineBreaking,
+        },
+        geometry::{Insets, LinearPlacement, Offset, Rect},
+        shape::Renderer,
+    },
+};
+
+use super::super::{firmware::fido_icons::get_fido_icon_data, theme};
+
+pub struct FidoCredential<F: Fn() -> TString<'static>> {
+    app_icon: Option<Image>,
+    text: Paragraphs<ParagraphVecShort<'static>>,
+    get_account: F,
+}
+
+impl<F: Fn() -> TString<'static>> FidoCredential<F> {
+    const ICON_SIZE: i16 = 32;
+    const SPACING: i16 = 24;
+
+    pub fn new(
+        icon_name: Option<TString<'static>>,
+        app_name: TString<'static>,
+        get_account: F,
+    ) -> Self {
+        const STYLE: TextStyle =
+            theme::TEXT_REGULAR.with_line_breaking(LineBreaking::BreakWordsNoHyphen);
+        let app_icon = get_fido_icon_data(icon_name).map(Image::new);
+        let text = ParagraphVecShort::from_iter([
+            Paragraph::new(&theme::TEXT_MEDIUM_GREY, app_name),
+            Paragraph::new(&STYLE, (get_account)()),
+        ])
+        .into_paragraphs()
+        .with_placement(LinearPlacement::vertical())
+        .with_spacing(Self::SPACING);
+        Self {
+            app_icon,
+            text,
+            get_account,
+        }
+    }
+}
+
+impl<F: Fn() -> TString<'static>> Component for FidoCredential<F> {
+    type Msg = ();
+
+    fn place(&mut self, bounds: Rect) -> Rect {
+        let icon_size = self.app_icon.map_or(Offset::zero(), |i| i.toif.size());
+        let (icon_area, text_area) = bounds.split_top(icon_size.y);
+        let text_area = text_area.inset(Insets::top(Self::SPACING));
+        self.text.place(text_area);
+        // let text_height = self.text.area().height();
+        // let vertical_space = bounds.height() - icon_size.y - Self::SPACING -
+        // text_height; let off = Offset::y(vertical_space / 2);
+
+        // let icon_area = icon_area.with_width(icon_size.x).translate(off);
+        // let text_area = text_area.with_height(text_height).translate(off);
+        self.app_icon.place(icon_area);
+        self.text.place(text_area);
+        bounds
+    }
+
+    fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        if let Event::Attach(_) = event {
+            self.text.mutate(|p| p[1].update((self.get_account)()));
+            ctx.request_paint();
+        }
+        self.app_icon.event(ctx, event);
+        self.text.event(ctx, event);
+        None
+    }
+
+    fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        self.app_icon.render(target);
+        self.text.render(target);
+    }
+}
+
+impl<F: Fn() -> TString<'static>> SinglePage for FidoCredential<F> {}
+
+#[cfg(feature = "ui_debug")]
+impl<F: Fn() -> TString<'static>> crate::trace::Trace for FidoCredential<F> {
+    fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        t.component("FidoCredential");
+    }
+}
