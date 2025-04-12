@@ -180,12 +180,12 @@ __attribute__((unused)) static void secret_key_cache(uint8_t reg_offset,
   volatile uint32_t *reg = &TAMP->BKP0R;
   reg += reg_offset;
   if (sectrue == ok) {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
       *reg = ((uint32_t *)secret)[i];
       reg++;
     }
   } else {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
       *reg = 0;
       reg++;
     }
@@ -214,7 +214,7 @@ __attribute__((unused)) static secbool secret_key_get(
 
   bool all_zero = true;
   volatile uint32_t *reg = &TAMP->BKP0R;
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
     secret[i] = reg[i + reg_offset];
 
     if (secret[i] != 0) {
@@ -260,12 +260,12 @@ static void secret_bhk_load(void) {
 
   volatile uint32_t *reg1 = &TAMP->BKP0R;
   if (sectrue == ok) {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
       *reg1 = ((uint32_t *)secret)[i];
       reg1++;
     }
   } else {
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < (SECRET_KEY_LEN / sizeof(uint32_t)); i++) {
       *reg1 = 0;
       reg1++;
     }
