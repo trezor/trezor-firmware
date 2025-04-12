@@ -54,7 +54,7 @@ def test_reset_recovery(client: Client):
         device.wipe(client)
         set_language(client, lang[:2])
 
-        recover(client, combination)
+        recover(client, combination, click_info=True)
         address_after = btc.get_address(
             client, "Bitcoin", parse_path("m/44h/0h/0h/0/0")
         )
@@ -90,9 +90,9 @@ def reset(client: Client, strength: int = 128) -> list[str]:
     return IF.mnemonics
 
 
-def recover(client: Client, shares: list[str]):
+def recover(client: Client, shares: list[str], click_info: bool = False):
     with client:
-        IF = InputFlowSlip39AdvancedRecovery(client, shares, False)
+        IF = InputFlowSlip39AdvancedRecovery(client, shares, click_info)
         client.set_input_flow(IF.get())
         device.recover(client, pin_protection=False, label="label")
 

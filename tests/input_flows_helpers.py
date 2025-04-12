@@ -313,6 +313,10 @@ class RecoveryFlow:
             mnemonic = share.split(" ")
             yield from self.input_mnemonic(mnemonic)
 
+            # Caesar does not have the info button
+            if self.client.layout_type is LayoutType.Caesar:
+                click_info = False
+
             if index < len(shares) - 1:
                 if has_groups:
                     yield from self.success_share_group_entered()
@@ -341,6 +345,11 @@ class RecoveryFlow:
         self.debug.synchronize_at("VerticalMenu")
         self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
         br = yield
+        # Scroll through remaining share pages
+        assert br.pages is not None
+        for _ in range(br.pages - 1):
+            self.debug.swipe_up()
+
         assert br.name == "show_shares"
         assert br.code == B.Other
         # Getting back to the homepage
@@ -357,7 +366,7 @@ class EthereumFlow:
 
     def confirm_data(self, info: bool = False, cancel: bool = False) -> BRGeneratorType:
         assert (yield).name == "confirm_data"
-        assert self.debug.read_layout().title() == TR.ethereum__title_input_data
+        assert TR.ethereum__title_input_data in self.debug.read_layout().title()
         if info:
             self.debug.press_info()
         elif cancel:
@@ -369,28 +378,40 @@ class EthereumFlow:
         br = yield
         assert br.name == "confirm_data"
         assert br.pages is not None
-        assert self.debug.read_layout().title() == TR.ethereum__title_input_data
-        for _ in range(br.pages):
+        assert TR.ethereum__title_input_data in self.debug.read_layout().title()
+        for _ in range(br.pages - 1):
             self.debug.read_layout()
             go_next(self.debug)
-        self.debug.read_layout()
+        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Caesar):
+            self.debug.read_layout()
+            go_next(self.debug)
+            self.debug.read_layout()
+        elif self.client.layout_type is LayoutType.Delizia:
+            self.debug.read_layout()
+            self.debug.click(self.debug.screen_buttons.tap_to_confirm())
 
     def paginate_data_go_back(self) -> BRGeneratorType:
         br = yield
         assert br.name == "confirm_data"
         assert br.pages is not None
         assert br.pages > 2
-        assert self.debug.read_layout().title() == TR.ethereum__title_input_data
-        if self.client.layout_type is LayoutType.Caesar:
-            self.debug.press_right()
-            self.debug.press_right()
-            self.debug.press_left()
-            self.debug.press_left()
-            self.debug.press_left()
-        elif self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        assert TR.ethereum__title_input_data in self.debug.read_layout().title()
+        if self.client.layout_type is LayoutType.Bolt:
             self.debug.swipe_up()
             self.debug.swipe_up()
             self.debug.click(self.GO_BACK)
+        elif self.client.layout_type is LayoutType.Caesar:
+            self.debug.press_right()
+            self.debug.press_right()
+            self.debug.press_left()
+            self.debug.press_left()
+            self.debug.press_left()
+        elif self.client.layout_type is LayoutType.Delizia:
+            # Scroll to the last page data page
+            for _ in range(br.pages - 2):
+                self.debug.swipe_up()
+            # Close the menu wuth the cross button
+            self.debug.click(self.debug.screen_buttons.menu())
         else:
             raise ValueError(f"Unknown layout: {self.client.layout_type}")
 
@@ -463,7 +484,6 @@ class EthereumFlow:
         assert (yield).name == "confirm_output"
         title = self.debug.read_layout().title()
         assert TR.words__address in title
-        assert TR.words__recipient in title
 
         if cancel:
             self.debug.press_no()
@@ -475,10 +495,15 @@ class EthereumFlow:
         assert layout.title() == TR.words__title_summary
         assert TR.send__maximum_fee in layout.text_content()
         if go_back_from_summary:
-            self.debug.press_no()
-            assert (yield).name == "confirm_ethereum_tx"
-            self.debug.press_yes()
-            assert (yield).name == "confirm_ethereum_tx"
+            # Get back to the address screen
+            self.debug.swipe_down()
+            title = self.debug.read_layout().title()
+            assert TR.words__address in title
+            # Get back to the summary screen
+            self.debug.swipe_up()
+            layout = self.debug.read_layout()
+            assert layout.title() == TR.words__title_summary
+            assert TR.send__maximum_fee in layout.text_content()
         if info:
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
