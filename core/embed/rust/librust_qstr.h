@@ -800,6 +800,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__amount;
   MP_QSTR_words__are_you_sure;
   MP_QSTR_words__array_of;
+  MP_QSTR_words__authenticate;
   MP_QSTR_words__blockhash;
   MP_QSTR_words__buying;
   MP_QSTR_words__cancel_and_exit;
