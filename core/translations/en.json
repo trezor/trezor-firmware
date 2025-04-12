@@ -364,8 +364,18 @@
     "fido__device_already_registered": "This device is already registered with this application.",
     "fido__device_already_registered_with_template": "This device is already registered with {0}.",
     "fido__device_not_registered": "This device is not registered with this application.",
-    "fido__does_not_belong": "The credential you are trying to import does\nnot belong to this authenticator.",
-    "fido__erase_credentials": "erase all credentials?",
+    "fido__does_not_belong": {
+      "Bolt": "The credential you are trying to import does\nnot belong to this authenticator.",
+      "Caesar": "The credential you are trying to import does\nnot belong to this authenticator.",
+      "Delizia": "The credential you are trying to import does\nnot belong to this authenticator.",
+      "Eckhart": "The credential you are trying to import does not belong to this authenticator."
+    },
+    "fido__erase_credentials": {
+      "Bolt": "erase all credentials?",
+      "Caesar": "erase all credentials?",
+      "Delizia": "erase all credentials?",
+      "Eckhart": "Delete all of the saved credentials?"
+    },
     "fido__export_credentials": "Export information about the credentials stored on this device?",
     "fido__more_credentials": "More credentials",
     "fido__not_registered": "Not registered",
@@ -1025,6 +1035,7 @@
     "words__amount": "Amount",
     "words__are_you_sure": "Are you sure?",
     "words__array_of": "Array of",
+    "words__authenticate": "Authenticate",
     "words__blockhash": "Blockhash",
     "words__buying": "Buying",
     "words__cancel_and_exit": "Cancel and exit",

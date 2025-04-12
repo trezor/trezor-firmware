@@ -8,8 +8,7 @@ async def add_resident_credential(msg: WebAuthnAddResidentCredential) -> Success
     import storage.device as storage_device
     from trezor import TR, wire
     from trezor.messages import Success
-    from trezor.ui.layouts import show_error_and_raise
-    from trezor.ui.layouts.fido import confirm_fido
+    from trezor.ui.layouts.fido import confirm_fido, credential_warning
 
     from .credential import Fido2Credential
     from .resident_credentials import store_resident_credential
@@ -22,7 +21,7 @@ async def add_resident_credential(msg: WebAuthnAddResidentCredential) -> Success
     try:
         cred = Fido2Credential.from_cred_id(bytes(msg.credential_id), None)
     except Exception:
-        await show_error_and_raise(
+        await credential_warning(
             "warning_credential",
             TR.fido__does_not_belong,
         )
