@@ -33,6 +33,8 @@ pub enum VerticalMenuScreenMsg {
     Back,
     /// Right header button clicked
     Close,
+    /// Menu item selected
+    Menu,
 }
 
 impl VerticalMenuScreen {
@@ -189,7 +191,7 @@ impl Component for VerticalMenuScreen {
             match msg {
                 HeaderMsg::Cancelled => return Some(VerticalMenuScreenMsg::Close),
                 HeaderMsg::Back => return Some(VerticalMenuScreenMsg::Back),
-                _ => {}
+                HeaderMsg::Menu => return Some(VerticalMenuScreenMsg::Menu),
             }
         }
 
