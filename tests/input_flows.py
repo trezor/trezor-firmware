@@ -1060,7 +1060,25 @@ class InputFlowSignTxInformationReplacement(InputFlowBase):
         self.debug.press_right()
         self.debug.press_right()
 
-    input_flow_delizia = input_flow_bolt
+    def input_flow_delizia(self) -> BRGeneratorType:
+        yield  # confirm txid
+        self.debug.press_yes()
+        yield  # confirm address
+        self.debug.press_yes()
+        # go back to address
+        yield
+        self.debug.press_no()
+        # confirm address
+        self.debug.press_yes()
+        # confirm amount
+        self.debug.press_yes()
+
+        yield  # transaction summary, press info
+        self.debug.click(self.client.debug.screen_buttons.menu())
+        self.debug.click(self.client.debug.screen_buttons.vertical_menu_items()[0])
+        # close menu
+        self.debug.click(self.client.debug.screen_buttons.menu())
+        self.debug.press_yes()
 
 
 def lock_time_input_flow_bolt(
@@ -1182,10 +1200,13 @@ class InputFlowEIP712ShowMore(InputFlowBase):
 
     def _confirm_show_more(self) -> None:
         """Model-specific, either clicks a screen or presses a button."""
-        if self.client.layout_type in (LayoutType.Bolt, LayoutType.Delizia):
+        if self.client.layout_type is LayoutType.Bolt:
             self.debug.click(self.SHOW_MORE)
         elif self.client.layout_type is LayoutType.Caesar:
             self.debug.press_right()
+        elif self.client.layout_type is LayoutType.Delizia:
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
         else:
             raise NotImplementedError
 

@@ -1613,8 +1613,6 @@ def test_information_cancel(client: Client):
 
 @pytest.mark.models(
     "core",
-    skip="delizia",
-    reason="Cannot test layouts on T1, not implemented in Delizia UI",
 )
 def test_information_replacement(client: Client):
     # Use the change output and an external output to bump the fee.
