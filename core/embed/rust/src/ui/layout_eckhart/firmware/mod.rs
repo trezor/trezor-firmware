@@ -22,7 +22,7 @@ pub use action_bar::{ActionBar, ActionBarMsg};
 pub use brightness_screen::SetBrightnessScreen;
 pub use confirm_homescreen::{ConfirmHomescreen, ConfirmHomescreenMsg};
 pub use device_menu_screen::{DeviceMenuMsg, DeviceMenuScreen};
-pub use fido::FidoCredential;
+pub use fido::{FidoAccountName, FidoCredential};
 pub use header::{Header, HeaderMsg};
 pub use hint::Hint;
 pub use hold_to_confirm::HoldToConfirmAnim;

@@ -19,7 +19,7 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, FidoCredential, Header, TextScreen, TextScreenMsg, VerticalMenu,
+        ActionBar, FidoCredential, Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
@@ -57,7 +57,13 @@ impl FlowController for ConfirmFido {
                 Self::Authenticate.goto()
             }
             (_, FlowMsg::Info) => Self::Menu.goto(),
-            (Self::Authenticate, FlowMsg::Cancelled) => Self::ChooseCredential.goto(),
+            (Self::Authenticate, FlowMsg::Cancelled) => {
+                if single_cred() {
+                    self.return_msg(FlowMsg::Cancelled)
+                } else {
+                    Self::ChooseCredential.goto()
+                }
+            }
             (Self::Authenticate, FlowMsg::Confirmed) => {
                 self.return_msg(FlowMsg::Choice(CRED_SELECTED.load(Ordering::Relaxed)))
             }
@@ -88,6 +94,7 @@ pub fn new_confirm_fido(
     SINGLE_CRED.store(num_accounts <= 1, Ordering::Relaxed);
     CRED_SELECTED.store(0, Ordering::Relaxed);
 
+    // Intro screen
     let content_intro = TextScreen::new(
         Paragraph::new::<TString>(&theme::TEXT_REGULAR, TR::fido__select_intro.into())
             .into_paragraphs()
@@ -103,54 +110,63 @@ pub fn new_confirm_fido(
         _ => None,
     });
 
+    // Choose credential screen
     let mut credentials = VerticalMenu::empty();
     for i in 0..num_accounts {
         let account = unwrap!(accounts.get(i));
         let label = account
             .try_into()
             .unwrap_or_else(|_| TString::from_str("-"));
-        credentials = credentials.item(Button::with_text(label));
+        credentials = credentials.item(Button::new_menu_item(label, theme::menu_item_title()));
     }
     let content_choose_credential = VerticalMenuScreen::new(credentials)
         .with_header(Header::new(TR::fido__title_select_credential.into()))
         .map(|msg| match msg {
             VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
             VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
+            VerticalMenuScreenMsg::Menu => Some(FlowMsg::Info),
             _ => None,
         });
 
+    // Authenticate screen
     let get_account = move || {
         let current = CRED_SELECTED.load(Ordering::Relaxed);
         let account = unwrap!(accounts.get(current));
         account.try_into().unwrap_or_else(|_| TString::from_str(""))
     };
-
-    let mut auth_header = Header::new(TR::fido__title_credential_details.into());
-    auth_header = if single_cred() {
-        auth_header.with_menu_button()
+    let auth_header = if single_cred() {
+        Header::new(title)
     } else {
-        auth_header.with_close_button()
+        Header::new(TR::fido__title_credential_details.into()).with_close_button()
+    };
+    let auth_action_bar = if single_cred() {
+        ActionBar::new_cancel_confirm()
+    } else {
+        ActionBar::new_single(
+            Button::with_text(TR::words__authenticate.into()).styled(theme::button_confirm()),
+        )
     };
 
     let content_authenticate =
         TextScreen::new(FidoCredential::new(icon_name, app_name, get_account))
             .with_header(auth_header)
-            .with_action_bar(ActionBar::new_single(
-                Button::with_text(TR::words__authenticate.into()).styled(theme::button_confirm()),
-            ))
+            .with_action_bar(auth_action_bar)
             .map(|msg| match msg {
+                TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
                 TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
                 TextScreenMsg::Menu => Some(FlowMsg::Info),
-                _ => None,
             });
 
-    let content_menu = VerticalMenuScreen::new(VerticalMenu::empty().item(
-        Button::with_text(TR::buttons__cancel.into()).styled(theme::menu_item_title_orange()),
-    ))
-    .with_header(Header::new(TR::fido__title_authenticate.into()).with_close_button())
+    // Menu screen
+    let content_menu = VerticalMenuScreen::new(VerticalMenu::empty().item(Button::new_menu_item(
+        TR::buttons__cancel.into(),
+        theme::menu_item_title_orange(),
+    )))
+    .with_header(Header::new(title).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Selected(0) => Some(FlowMsg::Choice(0)),
         VerticalMenuScreenMsg::Menu => Some(FlowMsg::Info),
+        VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
         _ => None,
     });
 
