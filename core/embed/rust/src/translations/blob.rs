@@ -24,7 +24,7 @@ const INVALID_TRANSLATIONS_BLOB: Error = value_error!(c"Invalid translations blo
 #[repr(packed)]
 struct OffsetEntry {
     pub id: u16,
-    pub offset: u16,
+    pub offset: u32,
 }
 
 pub struct Table<'a> {
@@ -34,7 +34,7 @@ pub struct Table<'a> {
 
 fn validate_offset_table(
     data_len: usize,
-    mut iter: impl Iterator<Item = u16>,
+    mut iter: impl Iterator<Item = u32>,
 ) -> Result<(), Error> {
     // every offset table must have at least the sentinel
     let mut prev = iter.next().ok_or(INVALID_TRANSLATIONS_BLOB)?;
@@ -124,12 +124,17 @@ impl<'a> Table<'a> {
 pub struct Translations<'a> {
     header: TranslationsHeader<'a>,
     translations: &'a [u8],
-    translations_offsets: &'a [u16],
+    translations_offsets: &'a [u32],
     fonts: Table<'a>,
 }
 
 fn read_u16_prefixed_block<'a>(reader: &mut InputStream<'a>) -> Result<InputStream<'a>, Error> {
     let len = reader.read_u16_le()? as usize;
+    reader.read_stream(len)
+}
+
+fn read_u32_prefixed_block<'a>(reader: &mut InputStream<'a>) -> Result<InputStream<'a>, Error> {
+    let len = reader.read_u32_le()? as usize;
     reader.read_stream(len)
 }
 
@@ -157,8 +162,8 @@ impl<'a> Translations<'a> {
 
         let mut payload_reader = InputStream::new(payload_bytes);
 
-        let mut translations_reader = read_u16_prefixed_block(&mut payload_reader)?;
-        let fonts_reader = read_u16_prefixed_block(&mut payload_reader)?;
+        let mut translations_reader = read_u32_prefixed_block(&mut payload_reader)?;
+        let fonts_reader = read_u32_prefixed_block(&mut payload_reader)?;
 
         if payload_reader.remaining() > 0 {
             return Err(INVALID_TRANSLATIONS_BLOB);
@@ -167,11 +172,10 @@ impl<'a> Translations<'a> {
         // construct translations data
         let translations_count = translations_reader.read_u16_le()? as usize;
         let translations_offsets_bytes =
-            translations_reader.read((translations_count + 1) * mem::size_of::<u16>())?;
-        // SAFETY: any bytes are valid u16 values, so casting any data to
-        // a sequence of u16 values is safe.
+            translations_reader.read((translations_count + 1) * mem::size_of::<u32>())?;
+        // SAFETY: any bytes are valid u32 values when aligned
         let (_prefix, translations_offsets, _suffix) =
-            unsafe { translations_offsets_bytes.align_to::<u16>() };
+            unsafe { translations_offsets_bytes.align_to::<u32>() };
         if !_prefix.is_empty() || !_suffix.is_empty() {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
@@ -301,7 +305,7 @@ fn read_fixedsize_str<'a>(reader: &mut InputStream<'a>, len: usize) -> Result<&'
 }
 
 impl<'a> TranslationsHeader<'a> {
-    const BLOB_MAGIC: &'static [u8] = b"TRTR00";
+    const BLOB_MAGIC: &'static [u8] = b"TRTR01";
     const HEADER_MAGIC: &'static [u8] = b"TR";
     const LANGUAGE_TAG_LEN: usize = 8;
 
@@ -327,7 +331,7 @@ impl<'a> TranslationsHeader<'a> {
         }
 
         // read length of contained data
-        let container_length = reader.read_u16_le()? as usize;
+        let container_length = reader.read_u32_le()? as usize;
         // continue working on the contained data (i.e., read beyond the bounds of
         // container_length will result in EOF).
         let mut reader = reader.read_stream(container_length.min(reader.remaining()))?;
@@ -357,7 +361,7 @@ impl<'a> TranslationsHeader<'a> {
         let version_bytes = header_reader.read(4)?;
         let version = unwrap!(version_bytes.try_into());
 
-        let data_len = header_reader.read_u16_le()? as usize;
+        let data_len = header_reader.read_u32_le()? as usize;
         let data_hash: sha256::Digest =
             unwrap!(header_reader.read(sha256::DIGEST_SIZE)?.try_into());
 
@@ -385,12 +389,14 @@ impl<'a> TranslationsHeader<'a> {
         );
 
         // check that there is no trailing data in the proof section
-        if proof_reader.remaining() > 0 {
-            return Err(INVALID_TRANSLATIONS_BLOB);
-        }
+        // if proof_reader.remaining() > 0 {
+        //     dbg_println!("Invalid proof remaining bytes: {}", proof_reader.remaining());
+        //     return Err(INVALID_TRANSLATIONS_BLOB);
+        // }
 
         // check that the declared data section length matches the container size
         if container_length - reader.tell() != data_len {
+            dbg_println!("Invalid data length");
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
 

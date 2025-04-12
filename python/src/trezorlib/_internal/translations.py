@@ -15,8 +15,8 @@ from ..firmware.models import Model
 from ..models import TrezorModel
 from ..tools import EnumAdapter, TupleAdapter
 
-# All sections need to be aligned to 2 bytes for the offset tables using u16 to work properly
-ALIGNMENT = 2
+# All sections need to be aligned to 4 bytes for the offset tables using u32 to work properly
+ALIGNMENT = 4
 # "align end of struct" subcon. The builtin c.Aligned does not do the right thing,
 # because it assumes that the alignment is relative to the start of the subcon, not the
 # start of the whole struct.
@@ -76,7 +76,7 @@ class Header(Struct):
         "language" / c.PaddedString(8, "ascii"),  # BCP47 language tag
         "model" / EnumAdapter(c.Bytes(4), Model),
         "firmware_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
-        "data_len" / c.Int16ul,
+        "data_len" / c.Int32ul,
         "data_hash" / c.Bytes(32),
         ALIGN_SUBCON,
         c.Terminated,
@@ -108,8 +108,8 @@ class BlobTable(Struct):
 
     # fmt: off
     SUBCON = c.Struct(
-        "_length" / c.Rebuild(c.Int16ul, c.len_(c.this.offsets) - 1),
-        "offsets" / c.Array(c.this._length + 1, TupleAdapter(c.Int16ul, c.Int16ul)),
+        "_length" / c.Rebuild(c.Int32ul, c.len_(c.this.offsets) - 1),
+        "offsets" / c.Array(c.this._length + 1, TupleAdapter(c.Int32ul, c.Int32ul)),
         "data" / c.GreedyBytes,
         ALIGN_SUBCON,
         c.Terminated,
@@ -147,8 +147,8 @@ class TranslatedStrings(Struct):
 
     # fmt: off
     SUBCON = c.Struct(
-        "_length" / c.Rebuild(c.Int16ul, c.len_(c.this.offsets) - 1),
-        "offsets" / c.Array(c.this._length + 1, c.Int16ul),
+        "_length" / c.Rebuild(c.Int32ul, c.len_(c.this.offsets) - 1),
+        "offsets" / c.Array(c.this._length + 1, c.Int32ul),
         "strings" / c.GreedyBytes,
         ALIGN_SUBCON,
         c.Terminated,
@@ -226,8 +226,8 @@ class Payload(Struct):
 
     # fmt: off
     SUBCON = c.Struct(
-        "translations_bytes" / c.Prefixed(c.Int16ul, c.GreedyBytes),
-        "fonts_bytes" / c.Prefixed(c.Int16ul, c.GreedyBytes),
+        "translations_bytes" / c.Prefixed(c.Int32ul, c.GreedyBytes),
+        "fonts_bytes" / c.Prefixed(c.Int32ul, c.GreedyBytes),
         c.Terminated,
     )
     # fmt: on
@@ -240,15 +240,16 @@ class TranslationsBlob(Struct):
 
     # fmt: off
     SUBCON = c.Struct(
-        "magic" / c.Const(b"TRTR00"),
+        "magic" / c.Const(b"TRTR01"),
         "total_length" / c.Rebuild(
-            c.Int16ul,
+            c.Int32ul,
             (
                 c.len_(c.this.header_bytes)
                 + c.len_(c.this.proof_bytes)
                 + c.len_(c.this.payload.translations_bytes)
                 + c.len_(c.this.payload.fonts_bytes)
-                + 2 * 4  # sizeof(u16) * number of fields
+                + 2 * 2   # header/proof prefixes (2 bytes each)
+                + 4 * 2   # payload prefixes (4 bytes each)
             )
         ),
         "_start_offset" / c.Tell,

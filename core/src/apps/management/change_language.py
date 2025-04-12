@@ -75,6 +75,7 @@ async def do_change_language(
 
     # Verifying header information
     if header.total_len != data_length:
+        print(f"Header total length {header.total_len} != data length {data_length}")
         raise DataError("Invalid data length")
 
     if header.version != expected_version:
