@@ -96,6 +96,7 @@ def _do_test_signtx(
             data=bytes.fromhex(parameters["data"]),
             definitions=make_defs(parameters),
             chunkify=chunkify,
+            payment_req=parameters.get("payment_req"),
         )
 
     expected_v = 2 * parameters["chain_id"] + 35
@@ -519,3 +520,39 @@ def test_signtx_staking_eip1559(client: Client, parameters: dict, result: dict):
     assert sig_r.hex() == result["sig_r"]
     assert sig_s.hex() == result["sig_s"]
     assert sig_v == result["sig_v"]
+
+
+@pytest.mark.experimental
+@pytest.mark.models("core", reason="T1 does not support payment requests")
+def test_signtx_payment_req(client: Client):
+    from trezorlib import btc, misc
+
+    from ..payment_req import CoinPurchaseMemo, make_payment_request
+
+    memo = CoinPurchaseMemo(
+        amount="0.0636 BTC",
+        coin_name="Bitcoin",
+        slip44=0,
+        address_n=parse_path("m/44h/0h/0h/0/0"),
+    )
+    memo.address_resp = btc.get_authenticated_address(
+        client, memo.coin_name, memo.address_n
+    )
+
+    nonce = misc.get_nonce(client)
+
+    params = dict(example_input_data["parameters"])
+    params["payment_req"] = make_payment_request(
+        client,
+        recipient_name="trezor.io",
+        slip44=60,
+        outputs=[(int(params["value"], 16), params["to_address"])],
+        memos=[memo],
+        nonce=nonce,
+    )
+
+    _do_test_signtx(
+        client,
+        params,
+        example_input_data["result"],
+    )
