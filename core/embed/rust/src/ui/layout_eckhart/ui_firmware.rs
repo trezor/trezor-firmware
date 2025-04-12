@@ -731,9 +731,15 @@ impl FirmwareUI for UIEckhart {
                 Button::with_icon(theme::ICON_CLOSE),
                 Button::with_text(button),
             )
+        } else {
+            ActionBar::new_single(Button::with_text(button))
         };
         let screen = TextScreen::new(content)
-            .with_header(Header::new(title).with_icon(theme::ICON_WARNING, theme::RED))
+            .with_header(
+                Header::new(title)
+                    .with_icon(theme::ICON_WARNING, theme::ORANGE)
+                    .with_text_style(theme::label_title_danger()),
+            )
             .with_action_bar(action_bar);
         let obj = LayoutObj::new(screen)?;
         Ok(obj)
