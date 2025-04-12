@@ -32,6 +32,7 @@ env:
     |T3B1 Safe 3    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3B1-en-core_persistence_test/master_diff.html))||
     |T3T1 Safe 5    |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_device_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_click_test/master_diff.html)) |<img src="https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/status.png" width="20px" height="20px" /> [test](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/differing_screens.html)) [main](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_index.html)([screens](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/T3T1-en-core_persistence_test/master_diff.html))||
     |All            |<img src="https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/status.png" width="20px" height="20px" /> [main](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/index.html)([screens](https://data.trezor.io/dev/firmware/master_diff/${{ github.run_id }}/master_diff.html)) ||
+  TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
 
 jobs:
   param:
@@ -273,7 +274,6 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       TREZOR_MODEL: ${{ matrix.model }}
-      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
       ADDRESS_SANITIZER: ${{ matrix.asan == 'asan' && '1' || '0' }}
       PYTEST_TIMEOUT: ${{ matrix.asan == 'asan' && 600 || 400 }}
       ACTIONS_DO_UI_TEST: ${{ matrix.coins == 'universal' && matrix.asan == 'noasan' }}
@@ -345,7 +345,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-click-${{ matrix.model }}-${{ matrix.lang }}-${{ matrix.asan }}
-          path: tests/trezor.log
+          path: tests/trezor*.log
           retention-days: 7
         if: always()
       - uses: ./.github/actions/ui-report
@@ -376,7 +376,6 @@ jobs:
     env:
       TREZOR_UPGRADE_TEST: core
       PYTEST_TIMEOUT: 400
-      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
     steps:
       - uses: actions/checkout@v4
         with:
@@ -393,7 +392,7 @@ jobs:
         with:
           name: core-test-upgrade-${{ matrix.model }}-${{ matrix.asan }}
           path: |
-            tests/trezor.log
+            tests/trezor*.log
           retention-days: 7
         if: always()
 
@@ -414,7 +413,6 @@ jobs:
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
-      TREZOR_PYTEST_LOGS_DIR: ${{ github.workspace }}/tests/
     steps:
       - uses: actions/checkout@v4
         with:
@@ -441,7 +439,7 @@ jobs:
         with:
           name: core-test-persistence-${{ matrix.model }}-${{ matrix.asan }}
           path: |
-            tests/trezor.log
+            tests/trezor*.log
           retention-days: 7
         if: always()
 
@@ -496,7 +494,7 @@ jobs:
         with:
           name: core-memperf-${{ matrix.model }}
           path: |
-            tests/trezor.log
+            tests/trezor*.log
             core/prof/memperf-html
           retention-days: 7
         if: always()
@@ -587,7 +585,7 @@ jobs:
         with:
           name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}
           path: |
-            tests/trezor.log
+            tests/trezor*.log
             core/tests/trezor_monero_tests.log
           retention-days: 7
         if: always()
@@ -624,7 +622,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-u2f-${{ matrix.model }}-${{ matrix.asan }}
-          path: tests/trezor.log
+          path: tests/trezor*.log
           retention-days: 7
         if: always()
       - uses: ./.github/actions/upload-coverage
@@ -659,7 +657,7 @@ jobs:
         with:
           name: core-test-fido2-${{ matrix.model }}-${{ matrix.asan }}
           path: |
-            tests/trezor.log
+            tests/trezor*.log
           retention-days: 7
         if: always()
       - uses: ./.github/actions/upload-coverage
