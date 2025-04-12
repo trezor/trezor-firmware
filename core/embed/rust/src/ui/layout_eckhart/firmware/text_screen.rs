@@ -16,7 +16,7 @@ use crate::{
 use super::{
     action_bar::ActionBarMsg,
     theme::{self, SIDE_INSETS},
-    ActionBar, Header, HeaderMsg, Hint,
+    ActionBar, FidoCredential, Header, HeaderMsg, Hint,
 };
 
 /// Full-screen component for rendering text.
@@ -179,6 +179,7 @@ pub trait AllowedTextContent: Component + PaginateFull {}
 impl AllowedTextContent for FormattedText {}
 impl<'a, T> AllowedTextContent for Paragraphs<T> where T: ParagraphSource<'a> {}
 impl<'a, T> AllowedTextContent for Checklist<T> where T: ParagraphSource<'a> {}
+impl<F> AllowedTextContent for FidoCredential<F> where F: Fn() -> TString<'static> {}
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for TextScreen<T>
