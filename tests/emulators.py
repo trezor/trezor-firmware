@@ -15,7 +15,6 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import os
-import shutil
 import tempfile
 from collections import defaultdict
 from pathlib import Path
@@ -104,7 +103,11 @@ class EmulatorWrapper:
         else:
             workdir = None
 
-        self.worker_id = worker_id
+        logs_dir = os.environ.get("TREZOR_PYTEST_LOGS_DIR")
+        logfile = None
+        if logs_dir:
+            logfile = Path(logs_dir) / f"trezor-{worker_id}.log"
+
         if gen == "legacy":
             self.emulator = LegacyEmulator(
                 executable,
@@ -112,6 +115,7 @@ class EmulatorWrapper:
                 storage=storage,
                 headless=headless,
                 auto_interact=auto_interact,
+                logfile=logfile,
             )
         elif gen == "core":
             self.emulator = CoreEmulator(
@@ -123,6 +127,7 @@ class EmulatorWrapper:
                 headless=headless,
                 auto_interact=auto_interact,
                 main_args=main_args,
+                logfile=logfile,
             )
         else:
             raise ValueError(
@@ -135,11 +140,4 @@ class EmulatorWrapper:
 
     def __exit__(self, exc_type, exc_value, traceback) -> None:
         self.emulator.stop()
-        logs_dir = os.environ.get("TREZOR_PYTEST_LOGS_DIR")
-        if logs_dir is not None:
-            src = Path(self.profile_dir.name) / "trezor.log"
-            dst = Path(logs_dir) / f"trezor-{self.worker_id}.log"
-            with open(src, "rb") as src, open(dst, "ab") as dst:
-                shutil.copyfileobj(src, dst)
-
         self.profile_dir.cleanup()
