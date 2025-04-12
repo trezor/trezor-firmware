@@ -952,6 +952,7 @@ class TR:
     words__amount: str = "Amount"
     words__are_you_sure: str = "Are you sure?"
     words__array_of: str = "Array of"
+    words__authenticate: str = "Authenticate"
     words__blockhash: str = "Blockhash"
     words__buying: str = "Buying"
     words__cancel_and_exit: str = "Cancel and exit"
