@@ -499,9 +499,9 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     fido__device_not_registered = 301,  // "This device is not registered with this application."
     #[cfg(feature = "universal_fw")]
-    fido__does_not_belong = 302,  // "The credential you are trying to import does\nnot belong to this authenticator."
+    fido__does_not_belong = 302,  // {"Bolt": "The credential you are trying to import does\nnot belong to this authenticator.", "Caesar": "The credential you are trying to import does\nnot belong to this authenticator.", "Delizia": "The credential you are trying to import does\nnot belong to this authenticator.", "Eckhart": "The credential you are trying to import does not belong to this authenticator."}
     #[cfg(feature = "universal_fw")]
-    fido__erase_credentials = 303,  // "erase all credentials?"
+    fido__erase_credentials = 303,  // {"Bolt": "erase all credentials?", "Caesar": "erase all credentials?", "Delizia": "erase all credentials?", "Eckhart": "Delete all of the saved credentials?"}
     #[cfg(feature = "universal_fw")]
     fido__export_credentials = 304,  // "Export information about the credentials stored on this device?"
     #[cfg(feature = "universal_fw")]
@@ -1419,6 +1419,7 @@ pub enum TranslatedString {
     send__sign_cancelled = 1005,  // "Sign cancelled."
     words__send = 1006,  // "Send"
     words__wallet = 1007,  // "Wallet"
+    words__authenticate = 1008,  // "Authenticate"
 }
 
 impl TranslatedString {
@@ -1921,9 +1922,29 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::fido__device_not_registered => "This device is not registered with this application.",
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             Self::fido__does_not_belong => "The credential you are trying to import does\nnot belong to this authenticator.",
             #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            Self::fido__does_not_belong => "The credential you are trying to import does\nnot belong to this authenticator.",
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            Self::fido__does_not_belong => "The credential you are trying to import does\nnot belong to this authenticator.",
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            Self::fido__does_not_belong => "The credential you are trying to import does not belong to this authenticator.",
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_bolt")]
             Self::fido__erase_credentials => "erase all credentials?",
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_caesar")]
+            Self::fido__erase_credentials => "erase all credentials?",
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_delizia")]
+            Self::fido__erase_credentials => "erase all credentials?",
+            #[cfg(feature = "universal_fw")]
+            #[cfg(feature = "layout_eckhart")]
+            Self::fido__erase_credentials => "Delete all of the saved credentials?",
             #[cfg(feature = "universal_fw")]
             Self::fido__export_credentials => "Export information about the credentials stored on this device?",
             #[cfg(feature = "universal_fw")]
@@ -2939,6 +2960,7 @@ impl TranslatedString {
             Self::send__sign_cancelled => "Sign cancelled.",
             Self::words__send => "Send",
             Self::words__wallet => "Wallet",
+            Self::words__authenticate => "Authenticate",
         }
     }
 
@@ -4353,6 +4375,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_send__sign_cancelled => Some(Self::send__sign_cancelled),
             Qstr::MP_QSTR_words__send => Some(Self::words__send),
             Qstr::MP_QSTR_words__wallet => Some(Self::words__wallet),
+            Qstr::MP_QSTR_words__authenticate => Some(Self::words__authenticate),
             _ => None,
         }
     }
