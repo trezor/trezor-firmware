@@ -16,7 +16,7 @@ use crate::{
 use super::{
     action_bar::ActionBarMsg,
     theme::{self, SIDE_INSETS},
-    ActionBar, Header, HeaderMsg, Hint,
+    ActionBar, FidoAccountName, FidoCredential, Header, HeaderMsg, Hint,
 };
 
 /// Full-screen component for rendering text.
@@ -128,6 +128,8 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        self.content.event(ctx, event);
+
         if let Some(msg) = self.header.event(ctx, event) {
             match msg {
                 HeaderMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
@@ -179,6 +181,7 @@ pub trait AllowedTextContent: Component + PaginateFull {}
 impl AllowedTextContent for FormattedText {}
 impl<'a, T> AllowedTextContent for Paragraphs<T> where T: ParagraphSource<'a> {}
 impl<'a, T> AllowedTextContent for Checklist<T> where T: ParagraphSource<'a> {}
+impl<F> AllowedTextContent for FidoCredential<F> where F: FidoAccountName {}
 
 #[cfg(feature = "ui_debug")]
 impl<T> crate::trace::Trace for TextScreen<T>
