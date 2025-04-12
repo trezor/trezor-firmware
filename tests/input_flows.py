@@ -2921,4 +2921,6 @@ class InputFlowFidoConfirm(InputFlowBase):
             self.debug.click(self.debug.screen_buttons.tap_to_confirm())
 
     def input_flow_eckhart(self) -> BRGeneratorType:
-        assert False, "Not implemented"
+        while True:
+            yield
+            self.debug.press_yes()
