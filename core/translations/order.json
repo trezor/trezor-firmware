@@ -1010,5 +1010,6 @@
   "1008": "send__send_in_the_app",
   "1009": "send__sign_cancelled",
   "1010": "words__send",
-  "1011": "words__wallet"
+  "1011": "words__wallet",
+  "1012": "words__authenticate"
 }
