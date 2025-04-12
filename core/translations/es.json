@@ -23,11 +23,12 @@
       "8": "font_ttsatoshi_demibold_18_es.json"
     },
     "Eckhart": {
-      "1": "font_ttsatoshi_demibold_21_es.json",
-      "2": "font_ttsatoshi_demibold_21_es.json",
-      "3": "font_robotomono_medium_21_es.json",
-      "5": "font_ttsatoshi_demibold_21_es.json",
-      "8": "font_ttsatoshi_demibold_18_es.json"
+      "1": "font_ttsatoshi_extralight_46_es.json",
+      "2": "font_ttsatoshi_regular_38_es.json",
+      "3": "font_ttsatoshi_medium_26_es.json",
+      "4": "font_ttsatoshi_regular_22_es.json",
+      "5": "font_robotomono_medium_38_es.json",
+      "6": "font_robotomono_light_30_es.json"
     }
   },
   "header": {
