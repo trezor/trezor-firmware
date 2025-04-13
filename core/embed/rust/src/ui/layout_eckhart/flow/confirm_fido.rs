@@ -19,7 +19,7 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, FidoCredential, Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu,
+        ActionBar, FidoCredential, Header, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,

@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 import trezorui_api
-from trezor import ui, TR
+from trezor import TR, ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_error_and_raise
 
