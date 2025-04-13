@@ -1,14 +1,9 @@
-from typing import TYPE_CHECKING
-
 import trezorui_api
 from trezor import ui
 from trezor.enums import ButtonRequestType
 from trezor.ui.layouts import show_error_and_raise
 
 from ..common import interact
-
-if TYPE_CHECKING:
-    from typing import NoReturn
 
 
 async def confirm_fido(
@@ -50,7 +45,7 @@ async def confirm_fido_reset() -> bool:
     return (await ui.Layout(confirm).get_result()) is trezorui_api.CONFIRMED
 
 
-async def credential_warning(br_name: str, content: str) -> NoReturn:
+async def credential_warning(br_name: str, content: str) -> None:
     await show_error_and_raise(
         br_name=br_name,
         content=content,
