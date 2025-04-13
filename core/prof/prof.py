@@ -1,8 +1,15 @@
+import micropython
 import sys
+from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
 from uio import open
 from uos import getenv
-import micropython
+
+if TYPE_CHECKING:
+    from types import FrameType
+
+    TraceFunction: TypeAlias = Callable[[FrameType, str, Any], "TraceFunction"]
+
 
 # We need to insert "" to sys.path so that the frozen build can import main from the
 # frozen modules, and regular build can import it from current directory.
@@ -12,21 +19,21 @@ PATH_PREFIX = (getenv("TREZOR_SRC") or ".") + "/"
 
 
 class Coverage:
-    def __init__(self):
+    def __init__(self) -> None:
         self.__files = {}
 
-    def line_tick(self, filename, lineno):
-        if not filename in self.__files:
+    def line_tick(self, filename: str, lineno: int) -> None:
+        if filename not in self.__files:
             self.__files[filename] = set()
         self.__files[filename].add(lineno)
 
-    def lines_execution(self):
+    def lines_execution(self) -> dict[str, dict[str, list[int]]]:
         lines_execution = {"lines": {}}
         lines = lines_execution["lines"]
         this_file = globals()["__file__"]
-        for filename in self.__files:
+        for filename, values in self.__files.items():
             if not filename == this_file:
-                lines[PATH_PREFIX + filename] = list(self.__files[filename])
+                lines[PATH_PREFIX + filename] = list(values)
 
         return lines_execution
 
@@ -36,7 +43,7 @@ class _Prof:
     display_flags = 0
     __coverage = Coverage()
 
-    def trace_tick(self, frame, event, arg):
+    def trace_tick(self, frame: FrameType, event: str) -> None:
         self.trace_count += 1
 
         # if frame.f_code.co_filename.endswith('/loop.py'):
@@ -45,11 +52,8 @@ class _Prof:
         if event == "line":
             self.__coverage.line_tick(frame.f_code.co_filename, frame.f_lineno)
 
-    def coverage_data(self):
-        return self.__coverage.lines_execution()
-
-    def write_data(self):
-        print("Total traces executed: ", __prof__.trace_count)
+    def write_data(self) -> None:
+        print("Total traces executed: ", self.trace_count)
         # In case of multithreaded tests, we might be called multiple times.
         # Making sure the threads do not overwrite each other's data.
         worker_id = getenv("PYTEST_XDIST_WORKER")
@@ -61,16 +65,16 @@ class _Prof:
             # wtf so private much beautiful wow
             f.write("!coverage.py: This is a private format, don't read it directly!")
             # poormans json
-            f.write(str(__prof__.coverage_data()).replace("'", '"'))
+            f.write(str(self.__coverage.lines_execution()).replace("'", '"'))
 
 
 class AllocCounter:
-    def __init__(self):
+    def __init__(self) -> None:
         self.last_alloc_count = 0
         self.data = {}
         self.last_line = None
 
-    def count_last_line(self, allocs):
+    def count_last_line(self, allocs: int) -> None:
         if self.last_line is None:
             return
 
@@ -84,7 +88,7 @@ class AllocCounter:
         entry["total_allocs"] += allocs
         entry["calls"] += 1
 
-    def trace_tick(self, frame, event, arg):
+    def trace_tick(self, frame: FrameType, event: str) -> None:
         allocs_now = micropython.alloc_count()
 
         if event != "line":
@@ -95,32 +99,25 @@ class AllocCounter:
         self.last_line = f"{frame.f_code.co_filename}:{frame.f_lineno}"
         self.last_alloc_count = micropython.alloc_count()
 
-    def dump_data(self, filename):
+    def dump_data(self, filename: str) -> None:
         allocs_now = micropython.alloc_count()
         allocs_per_last_line = allocs_now - self.last_alloc_count
         self.count_last_line(allocs_per_last_line)
         with open(filename, "w") as f:
             for key, val in self.data.items():
-                f.write("{} {total_allocs} {calls}\n".format(key, **val))
+                f.write(f'{key} {val["total_allocs"]} {val["calls"]}\n')
 
-    def write_data(self):
+    def write_data(self) -> None:
         self.dump_data("alloc_data.txt")
 
 
-def trace_handler(frame, event, arg):
-    __prof__.trace_tick(frame, event, arg)
+def trace_handler(frame: FrameType, event: str, _arg: Any) -> TraceFunction:
+    __prof__.trace_tick(frame, event)
     return trace_handler
 
 
-def atexit():
-    print("\n------------------ script exited ------------------")
-    __prof__.write_data()
-
-
-sys.atexit(atexit)
-
 global __prof__
-if not "__prof__" in globals():
+if "__prof__" not in globals():
     if getenv("TREZOR_MEMPERF") == "1":
         __prof__ = AllocCounter()
     else:
@@ -131,4 +128,8 @@ sys.settrace(trace_handler)
 if isinstance(__prof__, AllocCounter):
     __prof__.last_alloc_count = micropython.alloc_count()
 
-import main
+try:
+    import main  # noqa: F401
+finally:
+    print("\n------------------ script exited ------------------")
+    __prof__.write_data()
