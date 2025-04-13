@@ -3,6 +3,7 @@
 // do not edit manually!
 // fmt: off
 <%
+import re
 from itertools import chain
 
 SRCDIR = THIS_FILE.resolve().parent.parent.parent / "src"
@@ -29,6 +30,10 @@ ALTCOINS = (
     "zcash",
 )
 
+ALTCOINS_RE = re.compile("|".join(ALTCOINS), flags=re.IGNORECASE)
+THP_RE = re.compile(r"\.thp", flags=re.IGNORECASE)
+DEBUG_RE = re.compile("debug", flags=re.IGNORECASE)
+
 pyfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)
 
 def make_import_name(pyfile):
@@ -39,19 +44,19 @@ def make_import_name(pyfile):
         import_name = str(importfile.with_suffix(""))
     return import_name.replace("/", ".")
 
-imports = [make_import_name(f) for f in pyfiles]
+imports = set(make_import_name(f) for f in pyfiles)
 
-imports_thp = [import_name for import_name in imports if ".thp" in import_name.lower()]
-imports_common = [import_name for import_name in imports if (not any(a in import_name.lower() for a in ALTCOINS) and import_name not in imports_thp)]
-imports_altcoin = [import_name for import_name in imports if import_name not in imports_common and import_name not in imports_thp]
+imports_thp = set(import_name for import_name in imports if THP_RE.search(import_name))
+imports_altcoin = set(import_name for import_name in imports if ALTCOINS_RE.search(import_name))
+imports_debug = set(import_name for import_name in imports if DEBUG_RE.search(import_name))
+imports_common = imports - imports_thp - imports_altcoin - imports_debug
 
 def make_import_qstrs(import_names):
-    imported = set()
+    import_qstrs = set()
     for name in import_names:
-        for qstr in (name, name.rsplit('.', 1)[-1]):
-            if qstr not in imported:
-                yield qstr
-                imported.add(qstr)
+        import_qstrs.add(name)
+        import_qstrs.add(name.rsplit('.', 1)[-1])
+    return sorted(import_qstrs)
 %>\
 
 #error This header should not be part of the build, its purpose is only to add missed Qstrings
@@ -83,6 +88,12 @@ Q(${import_name})
 
 #if !BITCOIN_ONLY
 % for import_name in make_import_qstrs(imports_altcoin):
+Q(${import_name})
+% endfor
+#endif
+
+#if !PYOPT
+% for import_name in make_import_qstrs(imports_debug):
 Q(${import_name})
 % endfor
 #endif
