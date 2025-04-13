@@ -13,6 +13,7 @@ PATTERNS = (
     "storage/**/*.py",
     "trezor/**/*.py",
     "apps/**/*.py",
+    "prof/*.py",
 )
 
 ALTCOINS = (
@@ -32,7 +33,7 @@ ALTCOINS = (
 
 ALTCOINS_RE = re.compile("|".join(ALTCOINS), flags=re.IGNORECASE)
 THP_RE = re.compile(r"\.thp", flags=re.IGNORECASE)
-DEBUG_RE = re.compile("debug", flags=re.IGNORECASE)
+DEBUG_RE = re.compile("debug|prof", flags=re.IGNORECASE)
 
 pyfiles = chain.from_iterable(sorted(SRCDIR.glob(p)) for p in PATTERNS)
 

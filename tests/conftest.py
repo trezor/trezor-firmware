@@ -64,11 +64,10 @@ def _emulator_wrapper_main_args() -> list[str]:
     """Look at TREZOR_PROFILING env variable, so that we can generate coverage reports."""
     do_profiling = os.environ.get("TREZOR_PROFILING") == "1"
     if do_profiling:
-        core_dir = HERE.parent / "core"
-        profiling_wrapper = core_dir / "prof" / "prof.py"
+        src_dir = HERE.parent / "core" / "src"
         # So that the coverage reports have the correct paths
-        os.environ["TREZOR_SRC"] = str(core_dir / "src")
-        return [str(profiling_wrapper)]
+        os.environ["TREZOR_SRC"] = str(src_dir)
+        return ["-m", "prof"]
     else:
         return ["-m", "main"]
 

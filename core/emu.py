@@ -27,8 +27,6 @@ HERE = Path(__file__).resolve().parent
 MICROPYTHON = HERE / "build" / "unix" / "trezor-emu-core"
 SRC_DIR = HERE / "src"
 
-PROFILING_WRAPPER = HERE / "prof" / "prof.py"
-
 PROFILE_BASE = Path.home() / ".trezoremu"
 
 TREZOR_STORAGE_FILES = (
@@ -205,7 +203,7 @@ def cli(
         raise click.ClickException("Cannot load mnemonics in production mode")
 
     if profiling or alloc_profiling:
-        main_args = [str(PROFILING_WRAPPER)]
+        main_args = ["-m", "prof"]
     elif main:
         main_args = [main]
     else:
