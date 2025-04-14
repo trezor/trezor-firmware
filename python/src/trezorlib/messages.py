@@ -1162,7 +1162,8 @@ class RefundMemo(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = None
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
-        2: protobuf.Field("mac", "bytes", repeated=False, required=True),
+        2: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        3: protobuf.Field("mac", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -1170,7 +1171,9 @@ class RefundMemo(protobuf.MessageType):
         *,
         address: "str",
         mac: "bytes",
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.address = address
         self.mac = mac
 
@@ -1181,7 +1184,8 @@ class CoinPurchaseMemo(protobuf.MessageType):
         1: protobuf.Field("coin_type", "uint32", repeated=False, required=True),
         2: protobuf.Field("amount", "string", repeated=False, required=True),
         3: protobuf.Field("address", "string", repeated=False, required=True),
-        4: protobuf.Field("mac", "bytes", repeated=False, required=True),
+        4: protobuf.Field("address_n", "uint32", repeated=True, required=False, default=None),
+        5: protobuf.Field("mac", "bytes", repeated=False, required=True),
     }
 
     def __init__(
@@ -1191,7 +1195,9 @@ class CoinPurchaseMemo(protobuf.MessageType):
         amount: "str",
         address: "str",
         mac: "bytes",
+        address_n: Optional[Sequence["int"]] = None,
     ) -> None:
+        self.address_n: Sequence["int"] = address_n if address_n is not None else []
         self.coin_type = coin_type
         self.amount = amount
         self.address = address
