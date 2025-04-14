@@ -117,7 +117,7 @@ class TestTrezorHostProtocol(unittest.TestCase):
         gen.send(None)
         self.assertEqual(len(self.interface.data), 1)
 
-        expected_response = b"?##\x00\x03\x00\x00\x00\x14\x08\x10"
+        expected_response = b"?##\x00\x03\x00\x00\x00\x14\x08\x11"
         self.assertEqual(
             self.interface.data[-1][: len(expected_response)], expected_response
         )
