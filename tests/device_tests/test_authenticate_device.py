@@ -78,12 +78,7 @@ def test_authenticate_device(client: Client, challenge: bytes) -> None:
 
     # Verify that the common name matches the Trezor model.
     common_name = cert.subject.get_attributes_for_oid(x509.oid.NameOID.COMMON_NAME)[0]
-    if client.model == models.T3B1:
-        # XXX TODO replace as soon as we have T3B1 staging
-        internal_model = "T2B1"
-    else:
-        internal_model = client.model.internal_name
-    assert common_name.value.startswith(internal_model)
+    assert common_name.value.startswith(client.model.internal_name)
 
     # Verify the signature of the challenge.
     data = b"\x13AuthenticateDevice:" + compact_size(len(challenge)) + challenge
