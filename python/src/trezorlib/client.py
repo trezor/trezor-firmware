@@ -63,6 +63,7 @@ class TrezorClient:
     _last_active_session: SessionV1 | None = None
 
     _session_id_counter: int = 0
+
     def __init__(
         self,
         transport: Transport,
