@@ -44,6 +44,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../io/usb/inc",
     "-I../sec/entropy/inc",
     "-I../sys/time/inc",
+    "-I../sys/task/inc",
     "-I../util/flash/inc",
     "-I../util/translations/inc",
     "-I../models",
@@ -402,13 +403,16 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("usb_get_state")
         // ble
         .allowlist_function("ble_get_state")
+        .allowlist_function("ble_get_event")
         .allowlist_function("ble_issue_command")
         .allowlist_type("ble_command_t")
         .allowlist_type("ble_state_t")
+        .allowlist_type("ble_event_t")
         // touch
         .allowlist_function("touch_get_event")
         // button
         .allowlist_type("button_t")
+        .allowlist_type("button_event_t")
         .allowlist_function("button_get_event")
         // haptic
         .allowlist_type("haptic_effect_t")
@@ -426,7 +430,11 @@ fn generate_trezorhal_bindings() {
         .allowlist_function("jpegdec_process")
         .allowlist_function("jpegdec_get_info")
         .allowlist_function("jpegdec_get_slice_rgba8888")
-        .allowlist_function("jpegdec_get_slice_mono8");
+        .allowlist_function("jpegdec_get_slice_mono8")
+        // sysevent
+        .allowlist_type("syshandle_t")
+        .allowlist_type("sysevents_t")
+        .allowlist_function("sysevents_poll");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings
