@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 from trezor.enums import InputScriptType
 from trezor.messages import TxOutput
+from trezor.utils import ensure
 
 from ..common import BIP32_WALLET_DEPTH, CHANGE_OUTPUT_TO_INPUT_SCRIPT_TYPES
 
@@ -54,8 +55,6 @@ class MatchChecker(Generic[T]):
         raise NotImplementedError
 
     def add_input(self, txi: TxInput) -> None:
-        from trezor.utils import ensure
-
         ensure(not self.read_only)
 
         if self.attribute is self.MISMATCH:

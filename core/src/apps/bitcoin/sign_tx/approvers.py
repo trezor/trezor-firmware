@@ -1,6 +1,7 @@
 from micropython import const
 from typing import TYPE_CHECKING
 
+from trezor.enums import OutputScriptType
 from trezor.wire import DataError, ProcessError
 
 from apps.common import safety_checks
@@ -190,8 +191,6 @@ class BasicApprover(Approver):
         tx_info: TxInfo | None,
         orig_txo: TxOutput | None = None,
     ) -> None:
-        from trezor.enums import OutputScriptType
-
         await super().add_external_output(txo, script_pubkey, tx_info, orig_txo)
 
         if orig_txo:
