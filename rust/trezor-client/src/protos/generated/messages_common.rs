@@ -3179,6 +3179,8 @@ pub mod payment_request {
         // message fields
         // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.RefundMemo.address)
         pub address: ::std::option::Option<::std::string::String>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.RefundMemo.address_n)
+        pub address_n: ::std::vec::Vec<u32>,
         // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.RefundMemo.mac)
         pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
         // special fields
@@ -3233,7 +3235,7 @@ pub mod payment_request {
             self.address.take().unwrap_or_else(|| ::std::string::String::new())
         }
 
-        // required bytes mac = 2;
+        // required bytes mac = 3;
 
         pub fn mac(&self) -> &[u8] {
             match self.mac.as_ref() {
@@ -3270,12 +3272,17 @@ pub mod payment_request {
         }
 
         pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-            let mut fields = ::std::vec::Vec::with_capacity(2);
+            let mut fields = ::std::vec::Vec::with_capacity(3);
             let mut oneofs = ::std::vec::Vec::with_capacity(0);
             fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
                 "address",
                 |m: &RefundMemo| { &m.address },
                 |m: &mut RefundMemo| { &mut m.address },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+                "address_n",
+                |m: &RefundMemo| { &m.address_n },
+                |m: &mut RefundMemo| { &mut m.address_n },
             ));
             fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
                 "mac",
@@ -3310,6 +3317,12 @@ pub mod payment_request {
                         self.address = ::std::option::Option::Some(is.read_string()?);
                     },
                     18 => {
+                        is.read_repeated_packed_uint32_into(&mut self.address_n)?;
+                    },
+                    16 => {
+                        self.address_n.push(is.read_uint32()?);
+                    },
+                    26 => {
                         self.mac = ::std::option::Option::Some(is.read_bytes()?);
                     },
                     tag => {
@@ -3327,8 +3340,11 @@ pub mod payment_request {
             if let Some(v) = self.address.as_ref() {
                 my_size += ::protobuf::rt::string_size(1, &v);
             }
+            for value in &self.address_n {
+                my_size += ::protobuf::rt::uint32_size(2, *value);
+            };
             if let Some(v) = self.mac.as_ref() {
-                my_size += ::protobuf::rt::bytes_size(2, &v);
+                my_size += ::protobuf::rt::bytes_size(3, &v);
             }
             my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
             self.special_fields.cached_size().set(my_size as u32);
@@ -3339,8 +3355,11 @@ pub mod payment_request {
             if let Some(v) = self.address.as_ref() {
                 os.write_string(1, v)?;
             }
+            for v in &self.address_n {
+                os.write_uint32(2, *v)?;
+            };
             if let Some(v) = self.mac.as_ref() {
-                os.write_bytes(2, v)?;
+                os.write_bytes(3, v)?;
             }
             os.write_unknown_fields(self.special_fields.unknown_fields())?;
             ::std::result::Result::Ok(())
@@ -3360,6 +3379,7 @@ pub mod payment_request {
 
         fn clear(&mut self) {
             self.address = ::std::option::Option::None;
+            self.address_n.clear();
             self.mac = ::std::option::Option::None;
             self.special_fields.clear();
         }
@@ -3367,6 +3387,7 @@ pub mod payment_request {
         fn default_instance() -> &'static RefundMemo {
             static instance: RefundMemo = RefundMemo {
                 address: ::std::option::Option::None,
+                address_n: ::std::vec::Vec::new(),
                 mac: ::std::option::Option::None,
                 special_fields: ::protobuf::SpecialFields::new(),
             };
@@ -3401,6 +3422,8 @@ pub mod payment_request {
         pub amount: ::std::option::Option<::std::string::String>,
         // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.address)
         pub address: ::std::option::Option<::std::string::String>,
+        // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.address_n)
+        pub address_n: ::std::vec::Vec<u32>,
         // @@protoc_insertion_point(field:hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemo.mac)
         pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
         // special fields
@@ -3510,7 +3533,7 @@ pub mod payment_request {
             self.address.take().unwrap_or_else(|| ::std::string::String::new())
         }
 
-        // required bytes mac = 4;
+        // required bytes mac = 5;
 
         pub fn mac(&self) -> &[u8] {
             match self.mac.as_ref() {
@@ -3547,7 +3570,7 @@ pub mod payment_request {
         }
 
         pub(in super) fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-            let mut fields = ::std::vec::Vec::with_capacity(4);
+            let mut fields = ::std::vec::Vec::with_capacity(5);
             let mut oneofs = ::std::vec::Vec::with_capacity(0);
             fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
                 "coin_type",
@@ -3563,6 +3586,11 @@ pub mod payment_request {
                 "address",
                 |m: &CoinPurchaseMemo| { &m.address },
                 |m: &mut CoinPurchaseMemo| { &mut m.address },
+            ));
+            fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
+                "address_n",
+                |m: &CoinPurchaseMemo| { &m.address_n },
+                |m: &mut CoinPurchaseMemo| { &mut m.address_n },
             ));
             fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
                 "mac",
@@ -3609,6 +3637,12 @@ pub mod payment_request {
                         self.address = ::std::option::Option::Some(is.read_string()?);
                     },
                     34 => {
+                        is.read_repeated_packed_uint32_into(&mut self.address_n)?;
+                    },
+                    32 => {
+                        self.address_n.push(is.read_uint32()?);
+                    },
+                    42 => {
                         self.mac = ::std::option::Option::Some(is.read_bytes()?);
                     },
                     tag => {
@@ -3632,8 +3666,11 @@ pub mod payment_request {
             if let Some(v) = self.address.as_ref() {
                 my_size += ::protobuf::rt::string_size(3, &v);
             }
+            for value in &self.address_n {
+                my_size += ::protobuf::rt::uint32_size(4, *value);
+            };
             if let Some(v) = self.mac.as_ref() {
-                my_size += ::protobuf::rt::bytes_size(4, &v);
+                my_size += ::protobuf::rt::bytes_size(5, &v);
             }
             my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
             self.special_fields.cached_size().set(my_size as u32);
@@ -3650,8 +3687,11 @@ pub mod payment_request {
             if let Some(v) = self.address.as_ref() {
                 os.write_string(3, v)?;
             }
+            for v in &self.address_n {
+                os.write_uint32(4, *v)?;
+            };
             if let Some(v) = self.mac.as_ref() {
-                os.write_bytes(4, v)?;
+                os.write_bytes(5, v)?;
             }
             os.write_unknown_fields(self.special_fields.unknown_fields())?;
             ::std::result::Result::Ok(())
@@ -3673,6 +3713,7 @@ pub mod payment_request {
             self.coin_type = ::std::option::Option::None;
             self.amount = ::std::option::Option::None;
             self.address = ::std::option::Option::None;
+            self.address_n.clear();
             self.mac = ::std::option::Option::None;
             self.special_fields.clear();
         }
@@ -3682,6 +3723,7 @@ pub mod payment_request {
                 coin_type: ::std::option::Option::None,
                 amount: ::std::option::Option::None,
                 address: ::std::option::Option::None,
+                address_n: ::std::vec::Vec::new(),
                 mac: ::std::option::Option::None,
                 special_fields: ::protobuf::SpecialFields::new(),
             };
@@ -3759,7 +3801,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     gerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\
     \x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tch\
     ainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\
-    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xd5\x05\n\x0ePayme\
+    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\x90\x06\n\x0ePayme\
     ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0ere\
     cipient_name\x18\x02\x20\x02(\tR\rrecipientName\x12R\n\x05memos\x18\x03\
     \x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequestM\
@@ -3771,13 +3813,14 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \nrefundMemo\x12h\n\x12coin_purchase_memo\x18\x03\x20\x01(\x0b2:.hw.trez\
     or.messages.common.PaymentRequest.CoinPurchaseMemoR\x10coinPurchaseMemo\
     \x1a\x1e\n\x08TextMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\x1a\
-    8\n\nRefundMemo\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\
-    \x10\n\x03mac\x18\x02\x20\x02(\x0cR\x03mac\x1as\n\x10CoinPurchaseMemo\
-    \x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08coinType\x12\x16\n\x06amoun\
-    t\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07address\x18\x03\x20\x02(\tR\
-    \x07address\x12\x10\n\x03mac\x18\x04\x20\x02(\x0cR\x03mac:\x04\x88\xb2\
-    \x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCommon\
-    \x80\xa6\x1d\x01\
+    U\n\nRefundMemo\x12\x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\
+    \x1b\n\taddress_n\x18\x02\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\x18\
+    \x03\x20\x02(\x0cR\x03mac\x1a\x90\x01\n\x10CoinPurchaseMemo\x12\x1b\n\tc\
+    oin_type\x18\x01\x20\x02(\rR\x08coinType\x12\x16\n\x06amount\x18\x02\x20\
+    \x02(\tR\x06amount\x12\x18\n\x07address\x18\x03\x20\x02(\tR\x07address\
+    \x12\x1b\n\taddress_n\x18\x04\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\
+    \x18\x05\x20\x02(\x0cR\x03mac:\x04\x88\xb2\x19\x01B>\n#com.satoshilabs.t\
+    rezor.lib.protobufB\x13TrezorMessageCommon\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
