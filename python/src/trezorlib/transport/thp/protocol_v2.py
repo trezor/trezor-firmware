@@ -281,11 +281,14 @@ class ProtocolV2Channel(Channel):
 
     def read_and_decrypt(self) -> t.Tuple[int, int, bytes]:
         header, raw_payload = self._read_until_valid_crc_check()
+        if header.cid != self.channel_id:
+            # TODO fix this recursion
+            # Received message from different channel - discard
+            return self.read_and_decrypt()
         if control_byte.is_ack(header.ctrl_byte):
             # TODO fix this recursion
             return self.read_and_decrypt()
         if control_byte.is_error(header.ctrl_byte):
-            # TODO check for different channel
             err = _get_error_from_int(raw_payload[0])
             raise Exception("Received ThpError: " + err)
         if not header.is_encrypted_transport():
