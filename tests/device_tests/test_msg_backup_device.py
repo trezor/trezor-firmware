@@ -218,6 +218,7 @@ def test_interrupt_backup_fails(session: Session):
 
     # check that device state is as expected
     assert session.features.initialized is True
+    session.refresh_features()
     assert (
         session.features.backup_availability == messages.BackupAvailability.NotAvailable
     )
