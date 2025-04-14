@@ -568,7 +568,7 @@ MP_NOINLINE int main_(int argc, char **argv) {
 #ifdef MICROPY_PY_SYS_PATH_DEFAULT
     path = MICROPY_PY_SYS_PATH_DEFAULT;
 #else
-    path = ".frozen:~/.micropython/lib:/usr/lib/micropython";
+    path = ".frozen";
 #endif
   }
   size_t path_num = 1;  // [0] is for current dir (or base dir of the script)
