@@ -214,7 +214,7 @@ class PairingContext(Context):
                 action=f"Do you want to pair with {self.host_name} without confirmation?",
                 description=None,
             ),
-            br_name="autoconnect_credential_request",
+            br_name="thp_autoconnect_credential_request",
             br_code=ButtonRequestType.Other,
         )
 
