@@ -200,13 +200,15 @@ message PaymentRequest {
 
     message RefundMemo {
         required string address = 1;   // the address where the payment should be refunded if necessary
-        required bytes mac = 2;        // the MAC returned by GetAddress
+        repeated uint32 address_n = 2; // BIP-32 path to derive the key from the master node
+        required bytes mac = 3;        // the MAC returned by GetAddress
     }
 
     message CoinPurchaseMemo {
         required uint32 coin_type = 1; // the SLIP-0044 coin type of the address
         required string amount = 2;    // the amount the address will receive as a human-readable string including units, e.g. "0.025 BTC"
         required string address = 3;   // the address where the coin purchase will be delivered
-        required bytes mac = 4;        // the MAC returned by GetAddress
+        repeated uint32 address_n = 4; // BIP-32 path to derive the key from the master node
+        required bytes mac = 5;        // the MAC returned by GetAddress
     }
 }
