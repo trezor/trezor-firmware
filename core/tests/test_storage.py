@@ -42,7 +42,7 @@ class TestConfig(unittest.TestCase):
             from storage import common
             from storage.device import _CRED_AUTH_KEY_COUNTER, _NAMESPACE
 
-            common.set(_NAMESPACE, _CRED_AUTH_KEY_COUNTER, b"\xff\xff\xff\xfe")
+            common.set(_NAMESPACE, _CRED_AUTH_KEY_COUNTER, b"\xff\xff\xff\xfe", True)
             device.increment_cred_auth_key_counter()
             self.assertEqual(device.get_cred_auth_key_counter(), b"\xff\xff\xff\xff")
             with self.assertRaises(AssertionError) as e:
