@@ -465,8 +465,7 @@ jobs:
       - run: chmod +x core/build/unix/trezor-emu-core*
       - uses: ./.github/actions/environment  # XXX poetry maybe not needed
       - run: nix-shell --run "git clone --depth=1 https://github.com/bitcoin-core/HWI.git"
-      # see python_test for explanation of _PYTHON_SYSCONFIGDATA_NAME
-      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
+      - run: nix-shell --arg fullDeps true --run "cd HWI && poetry install && poetry run ./test/test_trezor.py --model_t ../core/build/unix/trezor-emu-core bitcoind"
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-hwi-${{ matrix.model }}
@@ -579,9 +578,8 @@ jobs:
       - uses: cachix/install-nix-action@v23
         with:
           nix_path: nixpkgs=channel:nixos-unstable
-      # see python_test job for _PYTHON_SYSCONFIGDATA_NAME explanation
-      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry install"
-      - run: nix-shell --arg fullDeps true --run "unset _PYTHON_SYSCONFIGDATA_NAME && poetry run make -C core test_emu_monero"
+      - run: nix-shell --arg fullDeps true --run "poetry install"
+      - run: nix-shell --arg fullDeps true --run "poetry run make -C core test_emu_monero"
       - uses: actions/upload-artifact@v4
         with:
           name: core-test-monero-${{ matrix.model }}-${{ matrix.asan }}
