@@ -479,18 +479,29 @@ class Channel:
             from trezor.enums import FailureType
             from trezor.messages import Failure
 
+            if length <= len(self.buffer):
+                # Fallback write - Write buffer is locked, using backup buffer instead
+                noise_payload_len = memory_manager.encode_into_buffer(
+                    self.buffer, msg, session_id
+                )
+                task = self._write_and_encrypt(noise_payload_len, fallback=True)
+                if task is not None:
+                    await task
+                return
+
+            # Message cannot be written - not even in fallback mode, killing channel
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 self._log("Failed to get write buffer, killing channel.")
 
-                noise_payload_len = memory_manager.encode_into_buffer(
-                    self.buffer,
-                    Failure(
-                        code=FailureType.FirmwareError,
-                        message="Failed to obtain write buffer.",
-                    ),
-                    session_id,
-                )
-                self.set_channel_state(ChannelState.INVALIDATED)
+            noise_payload_len = memory_manager.encode_into_buffer(
+                self.buffer,
+                Failure(
+                    code=FailureType.FirmwareError,
+                    message="Failed to obtain write buffer.",
+                ),
+                session_id,
+            )
+            self.set_channel_state(ChannelState.INVALIDATED)
         task = self._write_and_encrypt(
             noise_payload_len=noise_payload_len, force=force, fallback=fallback
         )
