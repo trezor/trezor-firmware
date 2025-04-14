@@ -1,7 +1,16 @@
 from typing import TYPE_CHECKING
 
 from trezor import utils
-from trezor.enums import RequestType
+from trezor.enums import InputScriptType, OutputScriptType, RequestType
+from trezor.messages import (
+    TxAckInput,
+    TxAckOutput,
+    TxAckPaymentRequest,
+    TxAckPrevExtraData,
+    TxAckPrevInput,
+    TxAckPrevMeta,
+    TxAckPrevOutput,
+)
 from trezor.wire import DataError
 
 from .. import common
@@ -17,7 +26,6 @@ if TYPE_CHECKING:
         PrevOutput,
         PrevTx,
         SignTx,
-        TxAckPaymentRequest,
         TxInput,
         TxOutput,
         TxRequest,
@@ -311,8 +319,6 @@ def confirm_multiple_accounts() -> Awaitable[Any]:  # type: ignore [awaitable-re
 
 
 def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevTx]:  # type: ignore [awaitable-return-type]
-    from trezor.messages import TxAckPrevMeta
-
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXMETA
     tx_req.details.tx_hash = tx_hash
@@ -324,8 +330,6 @@ def request_tx_meta(tx_req: TxRequest, coin: CoinInfo, tx_hash: bytes | None = N
 def request_tx_extra_data(
     tx_req: TxRequest, offset: int, size: int, tx_hash: bytes | None = None
 ) -> Awaitable[bytearray]:  # type: ignore [awaitable-return-type]
-    from trezor.messages import TxAckPrevExtraData
-
     details = tx_req.details  # local_cache_attribute
 
     assert details is not None
@@ -339,8 +343,6 @@ def request_tx_extra_data(
 
 
 def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxInput]:  # type: ignore [awaitable-return-type]
-    from trezor.messages import TxAckInput
-
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = RequestType.TXORIGINPUT
@@ -354,8 +356,6 @@ def request_tx_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes |
 
 
 def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevInput]:  # type: ignore [awaitable-return-type]
-    from trezor.messages import TxAckPrevInput
-
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXINPUT
     tx_req.details.request_index = i
@@ -366,8 +366,6 @@ def request_tx_prev_input(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: by
 
 
 def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[TxOutput]:  # type: ignore [awaitable-return-type]
-    from trezor.messages import TxAckOutput
-
     assert tx_req.details is not None
     if tx_hash:
         tx_req.request_type = RequestType.TXORIGOUTPUT
@@ -381,8 +379,6 @@ def request_tx_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes 
 
 
 def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: bytes | None = None) -> Awaitable[PrevOutput]:  # type: ignore [awaitable-return-type]
-    from trezor.messages import TxAckPrevOutput
-
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXOUTPUT
     tx_req.details.request_index = i
@@ -394,8 +390,6 @@ def request_tx_prev_output(tx_req: TxRequest, i: int, coin: CoinInfo, tx_hash: b
 
 
 def request_payment_req(tx_req: TxRequest, i: int) -> Awaitable[TxAckPaymentRequest]:  # type: ignore [awaitable-return-type]
-    from trezor.messages import TxAckPaymentRequest
-
     assert tx_req.details is not None
     tx_req.request_type = RequestType.TXPAYMENTREQ
     tx_req.details.request_index = i
@@ -481,9 +475,6 @@ def _sanitize_tx_meta(tx: PrevTx, coin: CoinInfo) -> PrevTx:
 
 
 def _sanitize_tx_input(txi: TxInput, coin: CoinInfo) -> TxInput:
-    from trezor.enums import InputScriptType
-    from trezor.wire import DataError  # local_cache_global
-
     script_type = txi.script_type  # local_cache_attribute
 
     if len(txi.prev_hash) != TX_HASH_SIZE:
@@ -538,9 +529,6 @@ def _sanitize_tx_prev_input(txi: PrevInput, coin: CoinInfo) -> PrevInput:
 
 
 def _sanitize_tx_output(txo: TxOutput, coin: CoinInfo) -> TxOutput:
-    from trezor.enums import OutputScriptType
-    from trezor.wire import DataError  # local_cache_global
-
     script_type = txo.script_type  # local_cache_attribute
     address_n = txo.address_n  # local_cache_attribute
 
