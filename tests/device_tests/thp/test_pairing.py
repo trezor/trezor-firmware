@@ -37,7 +37,6 @@ from trezorlib.messages import (
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
 
-
 from .connect import (
     get_encrypted_transport_protocol,
     handle_pairing_request,
