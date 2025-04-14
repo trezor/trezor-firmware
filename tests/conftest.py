@@ -348,7 +348,7 @@ def _client_unlocked(
                     sleep(LOCK_TIME)
                     try:
                         _raw_client = _raw_client.get_new_client()
-                    except Exception as e:
+                    except Exception:
                         sleep(1.5)
                         _raw_client = _get_raw_client(request)
 

@@ -33,14 +33,18 @@ from mnemonic import Mnemonic
 
 from . import btc, mapping, messages, models, protobuf
 from .client import ProtocolVersion, TrezorClient
-from .exceptions import Cancelled, TrezorFailure, UnexpectedMessageError
+from .exceptions import (
+    Cancelled,
+    DeviceLockedException,
+    TrezorFailure,
+    UnexpectedMessageError,
+)
 from .log import DUMP_BYTES
 from .messages import DebugWaitType
 from .tools import parse_path
 from .transport import Timeout
 from .transport.session import ProtocolV2Channel, Session
 from .transport.thp.protocol_v1 import ProtocolV1Channel
-from trezorlib import exceptions
 
 if t.TYPE_CHECKING:
     from typing_extensions import Protocol
@@ -1102,7 +1106,7 @@ class TrezorClientDebugLink(TrezorClient):
 
         try:
             super().__init__(transport)
-        except exceptions.DeviceLockedException:
+        except DeviceLockedException:
             self.use_pin_sequence(["1234"])
             self.debug.input(self.debug.encode_pin("1234"))
             super().__init__(transport)
@@ -1444,7 +1448,6 @@ class TrezorClientDebugLink(TrezorClient):
         return resp
 
     def notify_read(self, msg: protobuf.MessageType) -> None:
-        pass
         try:
             if self.actual_responses is not None:
                 self.actual_responses.append(msg)
