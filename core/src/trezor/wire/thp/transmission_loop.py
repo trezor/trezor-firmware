@@ -34,7 +34,7 @@ class TransmissionLoop:
             await write_payload_to_wire_and_add_checksum(
                 self.channel.iface, self.header, self.transport_payload
             )
-
+            break  # TODO temporary disable retransmission
             # Do not create wait task for last iteration
             if i == max_retransmission_count - 1:
                 break
