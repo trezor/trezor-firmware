@@ -27,7 +27,7 @@ from trezor.messages import (
 )
 from trezor.wire import message_handler
 from trezor.wire.context import UnexpectedMessageException
-from trezor.wire.errors import SilentError, UnexpectedMessage
+from trezor.wire.errors import ActionCancelled, SilentError, UnexpectedMessage
 from trezor.wire.thp import ChannelState, ThpError, crypto, get_enabled_pairing_methods
 from trezor.wire.thp.pairing_context import PairingContext
 
@@ -89,6 +89,9 @@ def check_method_is_allowed_and_selected(
 async def handle_pairing_request(
     ctx: PairingContext, message: protobuf.MessageType
 ) -> ThpEndResponse:
+
+    if Cancel.is_type_of(message):
+        raise ActionCancelled()
 
     if not ThpPairingRequest.is_type_of(message):
         raise UnexpectedMessage("Unexpected message")
