@@ -33,11 +33,6 @@ let
     };
     overlays = [ rustOverlay ];
   };
-  # commit before python36 was removed
-  oldPythonNixpkgs = import (builtins.fetchTarball {
-    url = "https://github.com/NixOS/nixpkgs/archive/b9126f77f553974c90ab65520eff6655415fc5f4.tar.gz";
-    sha256 = "02s3qkb6kz3ndyx7rfndjbvp4vlwiqc42fxypn3g6jnc0v5jyz95";
-  }) { };
   moneroTests = nixpkgs.fetchurl {
     url = "https://github.com/ph4r05/monero/releases/download/v0.18.3.1-dev-tests-u18.04-01/trezor_tests";
     sha256 = "d8938679b69f53132ddacea1de4b38b225b06b37b3309aa17911cfbe09b70b4a";
@@ -113,8 +108,6 @@ stdenvNoCC.mkDerivation ({
     python310
     python39
     python38
-    oldPythonNixpkgs.python37
-    oldPythonNixpkgs.python36
   ] ++ [
     SDL2
     SDL2_image
