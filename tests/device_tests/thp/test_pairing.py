@@ -1,4 +1,5 @@
 import os
+import time
 import typing as t
 from hashlib import sha256
 
@@ -12,6 +13,9 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.messages import (
     ButtonAck,
     ButtonRequest,
+    Cancel,
+    Failure,
+    FailureType,
     ThpCodeEntryChallenge,
     ThpCodeEntryCommitment,
     ThpCodeEntryCpaceHostTag,
@@ -25,12 +29,14 @@ from trezorlib.messages import (
     ThpNfcTagTrezor,
     ThpPairingMethod,
     ThpPairingPreparationsFinished,
+    ThpPairingRequest,
     ThpQrCodeSecret,
     ThpQrCodeTag,
     ThpSelectMethod,
 )
 from trezorlib.transport.thp import curve25519
 from trezorlib.transport.thp.cpace import Cpace
+
 
 from .connect import (
     get_encrypted_transport_protocol,
@@ -143,6 +149,34 @@ def test_pairing_code_entry(client: Client) -> None:
     protocol._read_message(ThpEndResponse)
 
     protocol._has_valid_channel = True
+
+
+def test_pairing_cancel_1(client: Client) -> None:
+    protocol = prepare_protocol_for_pairing(client)
+
+    protocol._send_message(ThpPairingRequest(host_name="TestTrezor Cancel 1"))
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "thp_pairing_request"
+
+    protocol._send_message(ButtonAck())
+    time.sleep(1)
+    protocol._send_message(Cancel())
+
+    resp = protocol._read_message(Failure)
+    assert resp.code == FailureType.ActionCancelled
+
+
+def test_pairing_cancel_2(client: Client) -> None:
+    protocol = prepare_protocol_for_pairing(client)
+
+    protocol._send_message(ThpPairingRequest(host_name="TestTrezor Cancel 2"))
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "thp_pairing_request"
+
+    protocol._send_message(ButtonAck())
+    client.debug.press_no()
+    resp = protocol._read_message(Failure)
+    assert resp.code == FailureType.ActionCancelled
 
 
 def test_pairing_nfc(client: Client) -> None:
