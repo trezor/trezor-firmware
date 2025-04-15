@@ -1260,7 +1260,6 @@ pub enum TranslatedString {
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
     instructions__learn_more = 893,  // "Learn more"
-    instructions__shares_continue_with_x_template = 894,  // "Continue with Share #{0}"
     instructions__shares_start_with_1 = 895,  // "Start with share #1"
     instructions__tap_to_start = 896,  // "Tap to start"
     passphrase__title_passphrase = 897,  // "Passphrase"
@@ -1437,6 +1436,7 @@ pub enum TranslatedString {
     ethereum__title_all_input_data_template = 1031,  // "All input data ({0} bytes)"
     auto_lock__description = 1032,  // "Set the time before your Trezor locks automatically."
     plurals__lock_after_x_days = 1033,  // "day|days"
+    reset__next_share = 1034,  // "Next share"
 }
 
 impl TranslatedString {
@@ -2804,7 +2804,6 @@ impl TranslatedString {
             (Self::instructions__hold_to_continue, "Hold to continue"),
             (Self::instructions__hold_to_exit_tutorial, "Hold to exit tutorial"),
             (Self::instructions__learn_more, "Learn more"),
-            (Self::instructions__shares_continue_with_x_template, "Continue with Share #{0}"),
             (Self::instructions__shares_start_with_1, "Start with share #1"),
             (Self::instructions__tap_to_start, "Tap to start"),
             (Self::passphrase__title_passphrase, "Passphrase"),
@@ -3032,6 +3031,7 @@ impl TranslatedString {
             (Self::ethereum__title_all_input_data_template, "All input data ({0} bytes)"),
             (Self::auto_lock__description, "Set the time before your Trezor locks automatically."),
             (Self::plurals__lock_after_x_days, "day|days"),
+            (Self::reset__next_share, "Next share"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3663,7 +3663,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_instructions__hold_to_exit_tutorial, Self::instructions__hold_to_exit_tutorial),
         (Qstr::MP_QSTR_instructions__hold_to_sign, Self::instructions__hold_to_sign),
         (Qstr::MP_QSTR_instructions__learn_more, Self::instructions__learn_more),
-        (Qstr::MP_QSTR_instructions__shares_continue_with_x_template, Self::instructions__shares_continue_with_x_template),
         (Qstr::MP_QSTR_instructions__shares_start_with_1, Self::instructions__shares_start_with_1),
         (Qstr::MP_QSTR_instructions__swipe_down, Self::instructions__swipe_down),
         (Qstr::MP_QSTR_instructions__swipe_horizontally, Self::instructions__swipe_horizontally),
@@ -3986,6 +3985,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_reset__needed_to_form_a_group, Self::reset__needed_to_form_a_group),
         (Qstr::MP_QSTR_reset__needed_to_recover_your_wallet, Self::reset__needed_to_recover_your_wallet),
         (Qstr::MP_QSTR_reset__never_make_digital_copy, Self::reset__never_make_digital_copy),
+        (Qstr::MP_QSTR_reset__next_share, Self::reset__next_share),
         (Qstr::MP_QSTR_reset__num_of_share_holders_template, Self::reset__num_of_share_holders_template),
         (Qstr::MP_QSTR_reset__num_of_shares_advanced_info_template, Self::reset__num_of_shares_advanced_info_template),
         (Qstr::MP_QSTR_reset__num_of_shares_basic_info_template, Self::reset__num_of_shares_basic_info_template),
