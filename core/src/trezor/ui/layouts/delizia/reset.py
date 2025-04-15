@@ -351,26 +351,26 @@ async def show_share_confirmation_success(
 
     # TODO: super-shamir copy not done
     if share_index == num_of_shares - 1:
-        title = TR.reset__share_completed_template.format(share_index + 1)
+        footer_description = TR.reset__share_completed_template.format(share_index + 1)
         if group_index is None:
-            footer_description = ""
+            title = ""
         else:
-            footer_description = TR.reset__finished_verifying_group_template.format(
+            title = TR.reset__finished_verifying_group_template.format(
                 group_index + 1
             )
     else:
         if group_index is None:
             title = TR.reset__share_completed_template.format(share_index + 1)
             footer_description = (
-                TR.instructions__shares_continue_with_x_template.format(share_index + 2)
+                TR.reset__continue_with_share_template.format(share_index + 2)
             )
         else:
-            title = TR.reset__continue_with_next_share
-            footer_description = (
+            title = (
                 TR.reset__group_share_checked_successfully_template.format(
                     group_index + 1, share_index + 1
                 )
             )
+            footer_description = TR.reset__next_share
 
     await show_success("success_share_confirm", title, subheader=footer_description)
 
