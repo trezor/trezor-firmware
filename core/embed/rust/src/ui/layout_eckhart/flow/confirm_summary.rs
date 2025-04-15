@@ -20,8 +20,8 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, Hint, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
+        ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -135,11 +135,11 @@ pub fn new_confirm_summary(
     });
 
     // Menu
-    let mut menu = VerticalMenu::empty();
+    let mut menu = VerticalMenu::<ShortMenuVec>::empty();
     let mut menu_items = Vec::<usize, 3>::new();
 
     if account_paragraphs.is_some() {
-        menu = menu.item(
+        menu.item(
             Button::with_text(TR::address_details__account_info.into())
                 .styled(theme::menu_item_title())
                 .with_text_align(Alignment::Start)
@@ -148,7 +148,7 @@ pub fn new_confirm_summary(
         unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
     if extra_paragraphs.is_some() {
-        menu = menu.item(
+        menu.item(
             Button::with_text(extra_title.unwrap_or(TR::buttons__more_info.into()))
                 .styled(theme::menu_item_title())
                 .with_text_align(Alignment::Start)
@@ -156,7 +156,7 @@ pub fn new_confirm_summary(
         );
         unwrap!(menu_items.push(MENU_ITEM_EXTRA_INFO));
     }
-    menu = menu.item(
+    menu.item(
         Button::with_text(verb_cancel.unwrap_or(TR::buttons__cancel.into()))
             .styled(theme::menu_item_title_orange())
             .with_text_align(Alignment::Start)

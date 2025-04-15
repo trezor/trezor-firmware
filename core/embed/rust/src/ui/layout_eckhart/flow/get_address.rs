@@ -20,8 +20,8 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, HeaderMsg, Hint, QrScreen, TextScreen, TextScreenMsg, VerticalMenu,
-        VerticalMenuScreen, VerticalMenuScreenMsg,
+        ActionBar, Header, HeaderMsg, Hint, QrScreen, ShortMenuVec, TextScreen, TextScreenMsg,
+        VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -131,20 +131,20 @@ pub fn new_get_address(
 
     // Menu
     let content_menu = VerticalMenuScreen::new(
-        VerticalMenu::empty()
-            .item(
+        VerticalMenu::<ShortMenuVec>::empty()
+            .with_item(
                 Button::with_text(TR::address__qr_code.into())
                     .styled(theme::menu_item_title())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
-            .item(
+            .with_item(
                 Button::with_text(TR::address_details__account_info.into())
                     .styled(theme::menu_item_title())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
-            .item(
+            .with_item(
                 Button::with_text(TR::buttons__cancel.into())
                     .styled(theme::menu_item_title_orange())
                     .with_text_align(Alignment::Start)

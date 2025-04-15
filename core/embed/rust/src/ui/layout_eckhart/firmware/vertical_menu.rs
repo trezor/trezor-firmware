@@ -1,8 +1,14 @@
-use crate::ui::{
-    component::{Component, Event, EventCtx},
-    event::TouchEvent,
-    geometry::{Insets, Offset, Rect},
-    shape::{Bar, Renderer},
+use core::ops::DerefMut;
+
+use crate::{
+    micropython::gc::GcBox,
+    ui::{
+        component::{Component, Event, EventCtx},
+        event::TouchEvent,
+        geometry::{Direction, Insets, Offset, Rect},
+        shape::{Bar, Renderer},
+        util::animation_disabled,
+    },
 };
 
 use super::{
@@ -13,15 +19,78 @@ use heapless::Vec;
 
 /// Number of buttons.
 /// Presently, VerticalMenu holds only fixed number of buttons.
-pub const MENU_MAX_ITEMS: usize = 5;
+pub const LONG_MENU_ITEMS: usize = 100;
+pub const SHORT_MENU_ITEMS: usize = 5;
 
-type VerticalMenuButtons = Vec<Button, MENU_MAX_ITEMS>;
+pub type LongMenuGc = GcBox<Vec<Button, LONG_MENU_ITEMS>>;
+pub type ShortMenuVec = Vec<Button, SHORT_MENU_ITEMS>;
 
-pub struct VerticalMenu {
+pub trait MenuItems: Default {
+    fn empty() -> Self {
+        Self::default()
+    }
+    fn push(&mut self, button: Button);
+    fn iter(&self) -> core::slice::Iter<'_, Button>;
+    fn iter_mut(&mut self) -> core::slice::IterMut<'_, Button>;
+    fn get_len(&self) -> usize;
+    fn get_last(&self) -> Option<&Button>;
+}
+
+impl MenuItems for ShortMenuVec {
+    fn push(&mut self, button: Button) {
+        unwrap!(self.push(button));
+    }
+
+    fn iter(&self) -> core::slice::Iter<'_, Button> {
+        self.as_slice().iter()
+    }
+
+    fn iter_mut(&mut self) -> core::slice::IterMut<'_, Button> {
+        self.as_mut_slice().iter_mut()
+    }
+
+    fn get_len(&self) -> usize {
+        self.len()
+    }
+
+    fn get_last(&self) -> Option<&Button> {
+        self.last()
+    }
+}
+
+impl Default for LongMenuGc {
+    fn default() -> Self {
+        unwrap!(GcBox::new(Vec::new()))
+    }
+}
+
+impl MenuItems for LongMenuGc {
+    fn push(&mut self, button: Button) {
+        unwrap!(self.deref_mut().push(button));
+    }
+
+    fn iter(&self) -> core::slice::Iter<'_, Button> {
+        self.as_slice().iter()
+    }
+
+    fn iter_mut(&mut self) -> core::slice::IterMut<'_, Button> {
+        self.as_mut_slice().iter_mut()
+    }
+
+    fn get_len(&self) -> usize {
+        self.len()
+    }
+
+    fn get_last(&self) -> Option<&Button> {
+        self.last()
+    }
+}
+
+pub struct VerticalMenu<T = ShortMenuVec> {
     /// Bounds the sliding window of the menu.
     bounds: Rect,
     /// Menu items.
-    buttons: VerticalMenuButtons,
+    buttons: T,
     /// Full height of the menu, including overflowing items.
     total_height: i16,
     /// Vertical offset of the current view.
@@ -36,12 +105,12 @@ pub enum VerticalMenuMsg {
     Selected(usize),
 }
 
-impl VerticalMenu {
+impl<T: MenuItems> VerticalMenu<T> {
     const SIDE_INSETS: Insets = Insets::sides(12);
     const DEFAULT_PADDING: i16 = 28;
     const MIN_PADDING: i16 = 2;
 
-    fn new(buttons: VerticalMenuButtons) -> Self {
+    fn new(buttons: T) -> Self {
         Self {
             bounds: Rect::zero(),
             buttons,
@@ -53,7 +122,7 @@ impl VerticalMenu {
     }
 
     pub fn empty() -> Self {
-        Self::new(VerticalMenuButtons::new())
+        Self::new(T::default())
     }
 
     pub fn with_separators(mut self) -> Self {
@@ -61,8 +130,13 @@ impl VerticalMenu {
         self
     }
 
-    pub fn item(mut self, button: Button) -> Self {
-        unwrap!(self.buttons.push(button));
+    pub fn with_item(mut self, button: Button) -> Self {
+        self.buttons.push(button);
+        self
+    }
+
+    pub fn item(&mut self, button: Button) -> &mut Self {
+        self.buttons.push(button);
         self
     }
 
@@ -90,7 +164,7 @@ impl VerticalMenu {
     /// Enable only buttons that are fully visible in the menu area.
     /// Meaningful only if the menu is scrollable.
     /// If the menu fits its area, all buttons are enabled.
-    pub fn update_menu(&mut self, ctx: &mut EventCtx) {
+    pub fn update_button_states(&mut self, ctx: &mut EventCtx) {
         for button in self.buttons.iter_mut() {
             let in_bounds = button
                 .area()
@@ -101,13 +175,66 @@ impl VerticalMenu {
         }
     }
 
+    /// Scroll the menu by one item in given direction.
+    /// Relevant only for testing purposes when the animations are disabled.
+    pub fn scroll_item(&mut self, dir: Direction) {
+        // Make sure the animations are disabled
+        debug_assert!(animation_disabled());
+        // Only vertical swipes are allowed
+        debug_assert!(dir == Direction::Up || dir == Direction::Down);
+
+        // For single button, the menu is not scrollable
+        if self.buttons.get_len() < 2 {
+            return;
+        }
+
+        // The offset could reach only discrete values of cumsum of button heights
+        let current = self.offset_y;
+        let mut cumsum = 0;
+
+        for button in self
+            .buttons
+            .iter()
+            .take(self.buttons.get_len().saturating_sub(1))
+        {
+            let new_cumsum = cumsum + button.area().height();
+            match dir {
+                Direction::Up if new_cumsum > current => {
+                    self.set_offset(new_cumsum);
+                    break;
+                }
+                Direction::Down if new_cumsum >= current => {
+                    self.set_offset(cumsum);
+                    break;
+                }
+                _ => {
+                    cumsum = new_cumsum;
+                }
+            }
+        }
+    }
+
     fn set_max_offset(&mut self) {
+        // Relevant only for testing when the animations are disabled
+        // The menu is scrollable until the last button is visible
+        #[cfg(feature = "ui_debug")]
+        if animation_disabled() {
+            self.offset_y_max = self.total_height
+                - self
+                    .buttons
+                    .get_last()
+                    .unwrap_or(&Button::empty())
+                    .area()
+                    .height();
+            return;
+        }
+
         // Calculate the overflow of the menu area
         let menu_overflow = (self.total_height - self.bounds.height()).max(0);
 
         // Find the first button from the top that would completely fit in the menu area
         // in the bottom position
-        for button in &self.buttons {
+        for button in self.buttons.iter() {
             let offset = button.area().top_left().y - self.bounds.top_left().y;
             if offset > menu_overflow {
                 self.offset_y_max = offset;
@@ -135,15 +262,16 @@ impl VerticalMenu {
     }
 
     fn render_buttons<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        for button in &self.buttons {
+        for button in self.buttons.iter() {
             button.render(target);
         }
     }
 
     fn render_separators<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        for i in 1..self.buttons.len() {
-            let button = &self.buttons[i];
-            let button_prev = &self.buttons[i - 1];
+        for pair in self.buttons.iter().as_slice().windows(2) {
+            let [button_prev, button] = pair else {
+                continue;
+            };
 
             if !button.is_pressed() && !button_prev.is_pressed() {
                 let separator = Rect::from_top_left_and_size(
@@ -161,7 +289,7 @@ impl VerticalMenu {
     }
 }
 
-impl Component for VerticalMenu {
+impl<T: MenuItems> Component for VerticalMenu<T> {
     type Msg = VerticalMenuMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -218,11 +346,14 @@ impl Component for VerticalMenu {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for VerticalMenu {
+impl<T: MenuItems> crate::trace::Trace for VerticalMenu<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
+        // Trace the VerticalMenu component
         t.component("VerticalMenu");
+
+        // Trace the buttons as a list
         t.in_list("buttons", &|button_list| {
-            for button in &self.buttons {
+            for button in self.buttons.iter() {
                 button_list.child(button);
             }
         });

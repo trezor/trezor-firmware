@@ -477,9 +477,9 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     fido__device_not_registered = 301,  // "This device is not registered with this application."
     #[cfg(feature = "universal_fw")]
-    fido__does_not_belong = 302,  // "The credential you are trying to import does\nnot belong to this authenticator."
+    fido__does_not_belong = 302,  // {"Bolt": "The credential you are trying to import does\nnot belong to this authenticator.", "Caesar": "The credential you are trying to import does\nnot belong to this authenticator.", "Delizia": "The credential you are trying to import does\nnot belong to this authenticator.", "Eckhart": "The credential you are trying to import does not belong to this authenticator."}
     #[cfg(feature = "universal_fw")]
-    fido__erase_credentials = 303,  // "erase all credentials?"
+    fido__erase_credentials = 303,  // {"Bolt": "erase all credentials?", "Caesar": "erase all credentials?", "Delizia": "erase all credentials?", "Eckhart": "Delete all of the saved credentials?"}
     #[cfg(feature = "universal_fw")]
     fido__export_credentials = 304,  // "Export information about the credentials stored on this device?"
     #[cfg(feature = "universal_fw")]

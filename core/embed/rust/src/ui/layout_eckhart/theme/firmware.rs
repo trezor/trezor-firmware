@@ -53,6 +53,10 @@ pub const TEXT_MEDIUM: TextStyle = TextStyle::new(
     GREY_LIGHT,
     GREY_LIGHT,
 );
+
+pub const TEXT_MEDIUM_GREY: TextStyle =
+    TextStyle::new(fonts::FONT_SATOSHI_MEDIUM_26, GREY, BG, GREY, GREY);
+
 /// TT Satoshi Regular - 22 (Screen title, Hint, PageCounter, Secondary info)
 /// with negative line spacing to make it more compact
 pub const TEXT_SMALL: TextStyle =
