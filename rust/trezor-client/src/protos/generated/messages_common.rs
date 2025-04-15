@@ -2567,7 +2567,7 @@ impl PaymentRequest {
         self.nonce.take().unwrap_or_else(|| ::std::vec::Vec::new())
     }
 
-    // required string recipient_name = 2;
+    // optional string recipient_name = 2;
 
     pub fn recipient_name(&self) -> &str {
         match self.recipient_name.as_ref() {
@@ -2606,7 +2606,7 @@ impl PaymentRequest {
     // optional uint64 amount = 4;
 
     pub fn amount(&self) -> u64 {
-        self.amount.unwrap_or(0)
+        self.amount.unwrap_or(0u64)
     }
 
     pub fn clear_amount(&mut self) {
@@ -2622,12 +2622,12 @@ impl PaymentRequest {
         self.amount = ::std::option::Option::Some(v);
     }
 
-    // required bytes signature = 5;
+    // optional bytes signature = 5;
 
     pub fn signature(&self) -> &[u8] {
         match self.signature.as_ref() {
             Some(v) => v,
-            None => &[],
+            None => b"",
         }
     }
 
@@ -2698,17 +2698,6 @@ impl ::protobuf::Message for PaymentRequest {
     const NAME: &'static str = "PaymentRequest";
 
     fn is_initialized(&self) -> bool {
-        if self.recipient_name.is_none() {
-            return false;
-        }
-        if self.signature.is_none() {
-            return false;
-        }
-        for v in &self.memos {
-            if !v.is_initialized() {
-                return false;
-            }
-        };
         true
     }
 
@@ -2899,26 +2888,6 @@ pub mod payment_request {
         const NAME: &'static str = "PaymentRequestMemo";
 
         fn is_initialized(&self) -> bool {
-            for v in &self.text_memo {
-                if !v.is_initialized() {
-                    return false;
-                }
-            };
-            for v in &self.refund_memo {
-                if !v.is_initialized() {
-                    return false;
-                }
-            };
-            for v in &self.coin_purchase_memo {
-                if !v.is_initialized() {
-                    return false;
-                }
-            };
-            for v in &self.text_details_memo {
-                if !v.is_initialized() {
-                    return false;
-                }
-            };
             true
         }
 
@@ -3058,7 +3027,7 @@ pub mod payment_request {
             ::std::default::Default::default()
         }
 
-        // required string text = 1;
+        // optional string text = 1;
 
         pub fn text(&self) -> &str {
             match self.text.as_ref() {
@@ -3114,9 +3083,6 @@ pub mod payment_request {
         const NAME: &'static str = "TextMemo";
 
         fn is_initialized(&self) -> bool {
-            if self.text.is_none() {
-                return false;
-            }
             true
         }
 
@@ -3435,7 +3401,7 @@ pub mod payment_request {
             ::std::default::Default::default()
         }
 
-        // required string address = 1;
+        // optional string address = 1;
 
         pub fn address(&self) -> &str {
             match self.address.as_ref() {
@@ -3471,12 +3437,12 @@ pub mod payment_request {
             self.address.take().unwrap_or_else(|| ::std::string::String::new())
         }
 
-        // required bytes mac = 3;
+        // optional bytes mac = 3;
 
         pub fn mac(&self) -> &[u8] {
             match self.mac.as_ref() {
                 Some(v) => v,
-                None => &[],
+                None => b"",
             }
         }
 
@@ -3537,12 +3503,6 @@ pub mod payment_request {
         const NAME: &'static str = "RefundMemo";
 
         fn is_initialized(&self) -> bool {
-            if self.address.is_none() {
-                return false;
-            }
-            if self.mac.is_none() {
-                return false;
-            }
             true
         }
 
@@ -3678,10 +3638,10 @@ pub mod payment_request {
             ::std::default::Default::default()
         }
 
-        // required uint32 coin_type = 1;
+        // optional uint32 coin_type = 1;
 
         pub fn coin_type(&self) -> u32 {
-            self.coin_type.unwrap_or(0)
+            self.coin_type.unwrap_or(0u32)
         }
 
         pub fn clear_coin_type(&mut self) {
@@ -3697,7 +3657,7 @@ pub mod payment_request {
             self.coin_type = ::std::option::Option::Some(v);
         }
 
-        // required string amount = 2;
+        // optional string amount = 2;
 
         pub fn amount(&self) -> &str {
             match self.amount.as_ref() {
@@ -3733,7 +3693,7 @@ pub mod payment_request {
             self.amount.take().unwrap_or_else(|| ::std::string::String::new())
         }
 
-        // required string address = 3;
+        // optional string address = 3;
 
         pub fn address(&self) -> &str {
             match self.address.as_ref() {
@@ -3769,12 +3729,12 @@ pub mod payment_request {
             self.address.take().unwrap_or_else(|| ::std::string::String::new())
         }
 
-        // required bytes mac = 5;
+        // optional bytes mac = 5;
 
         pub fn mac(&self) -> &[u8] {
             match self.mac.as_ref() {
                 Some(v) => v,
-                None => &[],
+                None => b"",
             }
         }
 
@@ -3845,18 +3805,6 @@ pub mod payment_request {
         const NAME: &'static str = "CoinPurchaseMemo";
 
         fn is_initialized(&self) -> bool {
-            if self.coin_type.is_none() {
-                return false;
-            }
-            if self.amount.is_none() {
-                return false;
-            }
-            if self.address.is_none() {
-                return false;
-            }
-            if self.mac.is_none() {
-                return false;
-            }
             true
         }
 
@@ -4037,30 +3985,30 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     gerprint\x18\x02\x20\x02(\rR\x0bfingerprint\x12\x1b\n\tchild_num\x18\x03\
     \x20\x02(\rR\x08childNum\x12\x1d\n\nchain_code\x18\x04\x20\x02(\x0cR\tch\
     ainCode\x12\x1f\n\x0bprivate_key\x18\x05\x20\x01(\x0cR\nprivateKey\x12\
-    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xb8\x07\n\x0ePayme\
-    ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12%\n\x0ere\
-    cipient_name\x18\x02\x20\x02(\tR\rrecipientName\x12R\n\x05memos\x18\x03\
-    \x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequestM\
-    emoR\x05memos\x12\x16\n\x06amount\x18\x04\x20\x01(\x04R\x06amount\x12\
-    \x1c\n\tsignature\x18\x05\x20\x02(\x0cR\tsignature\x1a\x8d\x03\n\x12Paym\
-    entRequestMemo\x12O\n\ttext_memo\x18\x01\x20\x01(\x0b22.hw.trezor.messag\
-    es.common.PaymentRequest.TextMemoR\x08textMemo\x12U\n\x0brefund_memo\x18\
-    \x02\x20\x01(\x0b24.hw.trezor.messages.common.PaymentRequest.RefundMemoR\
-    \nrefundMemo\x12h\n\x12coin_purchase_memo\x18\x03\x20\x01(\x0b2:.hw.trez\
-    or.messages.common.PaymentRequest.CoinPurchaseMemoR\x10coinPurchaseMemo\
-    \x12e\n\x11text_details_memo\x18\x04\x20\x01(\x0b29.hw.trezor.messages.c\
-    ommon.PaymentRequest.TextDetailsMemoR\x0ftextDetailsMemo\x1a\x1e\n\x08Te\
-    xtMemo\x12\x12\n\x04text\x18\x01\x20\x02(\tR\x04text\x1a?\n\x0fTextDetai\
-    lsMemo\x12\x16\n\x05title\x18\x01\x20\x01(\t:\0R\x05title\x12\x14\n\x04t\
-    ext\x18\x02\x20\x01(\t:\0R\x04text\x1aU\n\nRefundMemo\x12\x18\n\x07addre\
-    ss\x18\x01\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x02\x20\x03(\
-    \rR\x08addressN\x12\x10\n\x03mac\x18\x03\x20\x02(\x0cR\x03mac\x1a\x90\
-    \x01\n\x10CoinPurchaseMemo\x12\x1b\n\tcoin_type\x18\x01\x20\x02(\rR\x08c\
-    oinType\x12\x16\n\x06amount\x18\x02\x20\x02(\tR\x06amount\x12\x18\n\x07a\
-    ddress\x18\x03\x20\x02(\tR\x07address\x12\x1b\n\taddress_n\x18\x04\x20\
-    \x03(\rR\x08addressN\x12\x10\n\x03mac\x18\x05\x20\x02(\x0cR\x03mac:\x04\
-    \x88\xb2\x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13TrezorMessa\
-    geCommon\x80\xa6\x1d\x01\
+    \x1d\n\npublic_key\x18\x06\x20\x02(\x0cR\tpublicKey\"\xce\x07\n\x0ePayme\
+    ntRequest\x12\x14\n\x05nonce\x18\x01\x20\x01(\x0cR\x05nonce\x12'\n\x0ere\
+    cipient_name\x18\x02\x20\x01(\t:\0R\rrecipientName\x12R\n\x05memos\x18\
+    \x03\x20\x03(\x0b2<.hw.trezor.messages.common.PaymentRequest.PaymentRequ\
+    estMemoR\x05memos\x12\x19\n\x06amount\x18\x04\x20\x01(\x04:\x010R\x06amo\
+    unt\x12\x1e\n\tsignature\x18\x05\x20\x01(\x0c:\0R\tsignature\x1a\x8d\x03\
+    \n\x12PaymentRequestMemo\x12O\n\ttext_memo\x18\x01\x20\x01(\x0b22.hw.tre\
+    zor.messages.common.PaymentRequest.TextMemoR\x08textMemo\x12U\n\x0brefun\
+    d_memo\x18\x02\x20\x01(\x0b24.hw.trezor.messages.common.PaymentRequest.R\
+    efundMemoR\nrefundMemo\x12h\n\x12coin_purchase_memo\x18\x03\x20\x01(\x0b\
+    2:.hw.trezor.messages.common.PaymentRequest.CoinPurchaseMemoR\x10coinPur\
+    chaseMemo\x12e\n\x11text_details_memo\x18\x04\x20\x01(\x0b29.hw.trezor.m\
+    essages.common.PaymentRequest.TextDetailsMemoR\x0ftextDetailsMemo\x1a\
+    \x20\n\x08TextMemo\x12\x14\n\x04text\x18\x01\x20\x01(\t:\0R\x04text\x1a?\
+    \n\x0fTextDetailsMemo\x12\x16\n\x05title\x18\x01\x20\x01(\t:\0R\x05title\
+    \x12\x14\n\x04text\x18\x02\x20\x01(\t:\0R\x04text\x1aY\n\nRefundMemo\x12\
+    \x1a\n\x07address\x18\x01\x20\x01(\t:\0R\x07address\x12\x1b\n\taddress_n\
+    \x18\x02\x20\x03(\rR\x08addressN\x12\x12\n\x03mac\x18\x03\x20\x01(\x0c:\
+    \0R\x03mac\x1a\x99\x01\n\x10CoinPurchaseMemo\x12\x1e\n\tcoin_type\x18\
+    \x01\x20\x01(\r:\x010R\x08coinType\x12\x18\n\x06amount\x18\x02\x20\x01(\
+    \t:\0R\x06amount\x12\x1a\n\x07address\x18\x03\x20\x01(\t:\0R\x07address\
+    \x12\x1b\n\taddress_n\x18\x04\x20\x03(\rR\x08addressN\x12\x12\n\x03mac\
+    \x18\x05\x20\x01(\x0c:\0R\x03mac:\x04\x88\xb2\x19\x01B>\n#com.satoshilab\
+    s.trezor.lib.protobufB\x13TrezorMessageCommon\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
