@@ -150,6 +150,29 @@ def test_pairing_code_entry(client: Client) -> None:
     protocol._has_valid_channel = True
 
 
+def test_pairing_code_entry_cancel(client: Client) -> None:
+    protocol = prepare_protocol_for_pairing(client)
+
+    handle_pairing_request(client, protocol, "TestTrezor CodeEntry")
+
+    protocol._send_message(
+        ThpSelectMethod(selected_pairing_method=ThpPairingMethod.CodeEntry)
+    )
+
+    _ = protocol._read_message(ThpCodeEntryCommitment)
+
+    challenge = os.urandom(16)
+    protocol._send_message(ThpCodeEntryChallenge(challenge=challenge))
+    protocol._read_message(ThpCodeEntryCpaceTrezor)
+
+    # Code Entry code shown
+
+    # Press Cancel button
+    client.debug.press_yes()
+    failure = protocol._read_message(Failure)
+    assert failure.code is FailureType.ActionCancelled
+
+
 def test_pairing_cancel_1(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
 
@@ -360,7 +383,7 @@ def test_credential_phase(client: Client) -> None:
     client.debug.press_yes()
     # Autoconnect issuance confirmation dialog is shown.
     button_req = protocol._read_message(ButtonRequest)
-    assert button_req.name == "autoconnect_credential_request"
+    assert button_req.name == "thp_autoconnect_credential_request"
     protocol._send_message(ButtonAck())
     client.debug.press_yes()
     # Autoconnect credential is received
