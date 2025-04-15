@@ -22,6 +22,7 @@ message RippleGetAddress {
  */
 message RippleAddress {
     required string address = 1;                // Address in Ripple format (base58 of a pubkey with checksum)
+    optional bytes mac = 2;                     // Address authentication code
 }
 
 /**

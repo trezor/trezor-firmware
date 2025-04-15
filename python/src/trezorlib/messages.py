@@ -2461,14 +2461,17 @@ class CardanoAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 308
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "str",
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
 
 class CardanoGetPublicKey(protobuf.MessageType):
@@ -6947,14 +6950,17 @@ class RippleAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 401
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "str",
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
 
 class RippleSignTx(protobuf.MessageType):
@@ -7081,14 +7087,17 @@ class SolanaAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 903
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "str",
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
 
 class SolanaTxTokenAccountInfo(protobuf.MessageType):
@@ -7206,14 +7215,17 @@ class StellarAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 208
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "str",
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
 
 class StellarSignTx(protobuf.MessageType):
@@ -7672,14 +7684,17 @@ class TezosAddress(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 151
     FIELDS = {
         1: protobuf.Field("address", "string", repeated=False, required=True),
+        2: protobuf.Field("mac", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
         self,
         *,
         address: "str",
+        mac: Optional["bytes"] = None,
     ) -> None:
         self.address = address
+        self.mac = mac
 
 
 class TezosGetPublicKey(protobuf.MessageType):
