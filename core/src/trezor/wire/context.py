@@ -47,6 +47,10 @@ class UnexpectedMessageException(Exception):
         self.msg = msg
 
 
+class NoWireContext(RuntimeError):
+    pass
+
+
 CURRENT_CONTEXT: Context | None = None
 
 
@@ -58,7 +62,7 @@ async def call(
 
     Raises if there is no context for this workflow."""
     if CURRENT_CONTEXT is None:
-        raise RuntimeError("No wire context")
+        raise NoWireContext
 
     return await CURRENT_CONTEXT.call(msg, expected_type)
 
@@ -72,7 +76,7 @@ async def call_any(
 
     Raises if there is no context for this workflow."""
     if CURRENT_CONTEXT is None:
-        raise RuntimeError("No wire context")
+        raise NoWireContext
 
     await CURRENT_CONTEXT.write(msg)
     del msg
@@ -101,9 +105,11 @@ def get_context() -> Context:
 
     Result of this function should not be stored -- the context is technically allowed
     to change inbetween any `await` statements.
+
+    Raises KeyError if there is currently no context.
     """
     if CURRENT_CONTEXT is None:
-        raise RuntimeError("No wire context")
+        raise NoWireContext
     return CURRENT_CONTEXT
 
 
