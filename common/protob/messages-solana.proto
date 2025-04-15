@@ -38,6 +38,7 @@ message SolanaGetAddress {
  */
 message SolanaAddress {
     required string address = 1; // Solana address as Base58 encoded string
+    optional bytes mac = 2;      // Address authentication code
 }
 
 /**

@@ -3,7 +3,7 @@ StellarAsset.issuer                                     max_size:57
 StellarGetAddress.address_n                             max_count:10
 
 StellarAddress.address                                  max_size:57
-
+StellarAddress.mac                                      type:FT_IGNORE
 
 StellarSignTx.source_account                            max_size:57
 StellarSignTx.address_n                                 max_count:10

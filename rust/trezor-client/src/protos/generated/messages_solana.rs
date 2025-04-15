@@ -552,6 +552,8 @@ pub struct SolanaAddress {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaAddress.address)
     pub address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.solana.SolanaAddress.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.solana.SolanaAddress.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -604,13 +606,54 @@ impl SolanaAddress {
         self.address.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
+    // optional bytes mac = 2;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "address",
             |m: &SolanaAddress| { &m.address },
             |m: &mut SolanaAddress| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &SolanaAddress| { &m.mac },
+            |m: &mut SolanaAddress| { &mut m.mac },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<SolanaAddress>(
             "SolanaAddress",
@@ -636,6 +679,9 @@ impl ::protobuf::Message for SolanaAddress {
                 10 => {
                     self.address = ::std::option::Option::Some(is.read_string()?);
                 },
+                18 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -651,6 +697,9 @@ impl ::protobuf::Message for SolanaAddress {
         if let Some(v) = self.address.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
         }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -659,6 +708,9 @@ impl ::protobuf::Message for SolanaAddress {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.address.as_ref() {
             os.write_string(1, v)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -678,12 +730,14 @@ impl ::protobuf::Message for SolanaAddress {
 
     fn clear(&mut self) {
         self.address = ::std::option::Option::None;
+        self.mac = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static SolanaAddress {
         static instance: SolanaAddress = SolanaAddress {
             address: ::std::option::Option::None,
+            mac: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1595,20 +1649,20 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ublicKey\x12\x1d\n\npublic_key\x18\x01\x20\x02(\x0cR\tpublicKey\"n\n\x10\
     SolanaGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\
     \x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\
-    \x08chunkify\x18\x03\x20\x01(\x08R\x08chunkify\")\n\rSolanaAddress\x12\
-    \x18\n\x07address\x18\x01\x20\x02(\tR\x07address\"\xa6\x01\n\x18SolanaTx\
-    TokenAccountInfo\x12!\n\x0cbase_address\x18\x01\x20\x02(\tR\x0bbaseAddre\
-    ss\x12#\n\rtoken_program\x18\x02\x20\x02(\tR\x0ctokenProgram\x12\x1d\n\n\
-    token_mint\x18\x03\x20\x02(\tR\ttokenMint\x12#\n\rtoken_account\x18\x04\
-    \x20\x02(\tR\x0ctokenAccount\"\xa4\x01\n\x16SolanaTxAdditionalInfo\x12e\
-    \n\x14token_accounts_infos\x18\x01\x20\x03(\x0b23.hw.trezor.messages.sol\
-    ana.SolanaTxTokenAccountInfoR\x12tokenAccountsInfos\x12#\n\rencoded_toke\
-    n\x18\x02\x20\x01(\x0cR\x0cencodedToken\"\xac\x01\n\x0cSolanaSignTx\x12\
-    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12#\n\rserialized_tx\
-    \x18\x02\x20\x02(\x0cR\x0cserializedTx\x12Z\n\x0fadditional_info\x18\x03\
-    \x20\x01(\x0b21.hw.trezor.messages.solana.SolanaTxAdditionalInfoR\x0eadd\
-    itionalInfo\"1\n\x11SolanaTxSignature\x12\x1c\n\tsignature\x18\x01\x20\
-    \x02(\x0cR\tsignature\
+    \x08chunkify\x18\x03\x20\x01(\x08R\x08chunkify\";\n\rSolanaAddress\x12\
+    \x18\n\x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\x18\
+    \x02\x20\x01(\x0cR\x03mac\"\xa6\x01\n\x18SolanaTxTokenAccountInfo\x12!\n\
+    \x0cbase_address\x18\x01\x20\x02(\tR\x0bbaseAddress\x12#\n\rtoken_progra\
+    m\x18\x02\x20\x02(\tR\x0ctokenProgram\x12\x1d\n\ntoken_mint\x18\x03\x20\
+    \x02(\tR\ttokenMint\x12#\n\rtoken_account\x18\x04\x20\x02(\tR\x0ctokenAc\
+    count\"\xa4\x01\n\x16SolanaTxAdditionalInfo\x12e\n\x14token_accounts_inf\
+    os\x18\x01\x20\x03(\x0b23.hw.trezor.messages.solana.SolanaTxTokenAccount\
+    InfoR\x12tokenAccountsInfos\x12#\n\rencoded_token\x18\x02\x20\x01(\x0cR\
+    \x0cencodedToken\"\xac\x01\n\x0cSolanaSignTx\x12\x1b\n\taddress_n\x18\
+    \x01\x20\x03(\rR\x08addressN\x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\
+    \x0cserializedTx\x12Z\n\x0fadditional_info\x18\x03\x20\x01(\x0b21.hw.tre\
+    zor.messages.solana.SolanaTxAdditionalInfoR\x0eadditionalInfo\"1\n\x11So\
+    lanaTxSignature\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

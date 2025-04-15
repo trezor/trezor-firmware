@@ -229,6 +229,8 @@ pub struct RippleAddress {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleAddress.address)
     pub address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleAddress.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ripple.RippleAddress.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -281,13 +283,54 @@ impl RippleAddress {
         self.address.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
+    // optional bytes mac = 2;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "address",
             |m: &RippleAddress| { &m.address },
             |m: &mut RippleAddress| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &RippleAddress| { &m.mac },
+            |m: &mut RippleAddress| { &mut m.mac },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RippleAddress>(
             "RippleAddress",
@@ -313,6 +356,9 @@ impl ::protobuf::Message for RippleAddress {
                 10 => {
                     self.address = ::std::option::Option::Some(is.read_string()?);
                 },
+                18 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -328,6 +374,9 @@ impl ::protobuf::Message for RippleAddress {
         if let Some(v) = self.address.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
         }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -336,6 +385,9 @@ impl ::protobuf::Message for RippleAddress {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.address.as_ref() {
             os.write_string(1, v)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -355,12 +407,14 @@ impl ::protobuf::Message for RippleAddress {
 
     fn clear(&mut self) {
         self.address = ::std::option::Option::None;
+        self.mac = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static RippleAddress {
         static instance: RippleAddress = RippleAddress {
             address: ::std::option::Option::None,
+            mac: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1190,20 +1244,21 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x15messages-ripple.proto\x12\x19hw.trezor.messages.ripple\"n\n\x10Rip\
     pleGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\
     \n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chu\
-    nkify\x18\x03\x20\x01(\x08R\x08chunkify\")\n\rRippleAddress\x12\x18\n\
-    \x07address\x18\x01\x20\x02(\tR\x07address\"\x85\x03\n\x0cRippleSignTx\
-    \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03fee\
-    \x18\x02\x20\x02(\x04R\x03fee\x12\x17\n\x05flags\x18\x03\x20\x01(\r:\x01\
-    0R\x05flags\x12\x1a\n\x08sequence\x18\x04\x20\x02(\rR\x08sequence\x120\n\
-    \x14last_ledger_sequence\x18\x05\x20\x01(\rR\x12lastLedgerSequence\x12O\
-    \n\x07payment\x18\x06\x20\x02(\x0b25.hw.trezor.messages.ripple.RippleSig\
-    nTx.RipplePaymentR\x07payment\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08\
-    R\x08chunkify\x1ar\n\rRipplePayment\x12\x16\n\x06amount\x18\x01\x20\x02(\
-    \x04R\x06amount\x12\x20\n\x0bdestination\x18\x02\x20\x02(\tR\x0bdestinat\
-    ion\x12'\n\x0fdestination_tag\x18\x03\x20\x01(\rR\x0edestinationTag\"S\n\
-    \x0eRippleSignedTx\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
-    \x12#\n\rserialized_tx\x18\x02\x20\x02(\x0cR\x0cserializedTxB:\n#com.sat\
-    oshilabs.trezor.lib.protobufB\x13TrezorMessageRipple\
+    nkify\x18\x03\x20\x01(\x08R\x08chunkify\";\n\rRippleAddress\x12\x18\n\
+    \x07address\x18\x01\x20\x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\
+    \x01(\x0cR\x03mac\"\x85\x03\n\x0cRippleSignTx\x12\x1b\n\taddress_n\x18\
+    \x01\x20\x03(\rR\x08addressN\x12\x10\n\x03fee\x18\x02\x20\x02(\x04R\x03f\
+    ee\x12\x17\n\x05flags\x18\x03\x20\x01(\r:\x010R\x05flags\x12\x1a\n\x08se\
+    quence\x18\x04\x20\x02(\rR\x08sequence\x120\n\x14last_ledger_sequence\
+    \x18\x05\x20\x01(\rR\x12lastLedgerSequence\x12O\n\x07payment\x18\x06\x20\
+    \x02(\x0b25.hw.trezor.messages.ripple.RippleSignTx.RipplePaymentR\x07pay\
+    ment\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08R\x08chunkify\x1ar\n\rRip\
+    plePayment\x12\x16\n\x06amount\x18\x01\x20\x02(\x04R\x06amount\x12\x20\n\
+    \x0bdestination\x18\x02\x20\x02(\tR\x0bdestination\x12'\n\x0fdestination\
+    _tag\x18\x03\x20\x01(\rR\x0edestinationTag\"S\n\x0eRippleSignedTx\x12\
+    \x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\x12#\n\rserialized_tx\
+    \x18\x02\x20\x02(\x0cR\x0cserializedTxB:\n#com.satoshilabs.trezor.lib.pr\
+    otobufB\x13TrezorMessageRipple\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
