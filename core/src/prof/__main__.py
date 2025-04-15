@@ -27,15 +27,14 @@ class Coverage:
             self.__files[filename] = set()
         self.__files[filename].add(lineno)
 
-    def lines_execution(self) -> dict[str, dict[str, list[int]]]:
-        lines_execution = {"lines": {}}
-        lines = lines_execution["lines"]
+    def lines_execution(self) -> dict[str, list[int]]:
+        lines = {}
         this_file = globals()["__file__"]
         for filename, values in self.__files.items():
-            if not filename == this_file:
+            if filename != this_file:
                 lines[PATH_PREFIX + filename] = list(values)
 
-        return lines_execution
+        return lines
 
 
 class _Prof:
@@ -58,12 +57,10 @@ class _Prof:
         # Making sure the threads do not overwrite each other's data.
         worker_id = getenv("PYTEST_XDIST_WORKER")
         if worker_id:
-            file_name = f".coverage.{worker_id}"
+            file_name = f".coverage.{worker_id}.json"
         else:
-            file_name = ".coverage"
+            file_name = ".coverage.json"
         with open(file_name, "w") as f:
-            # wtf so private much beautiful wow
-            f.write("!coverage.py: This is a private format, don't read it directly!")
             # poormans json
             f.write(str(self.__coverage.lines_execution()).replace("'", '"'))
 
