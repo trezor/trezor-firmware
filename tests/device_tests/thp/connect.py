@@ -17,10 +17,14 @@ def prepare_protocol_for_handshake(client: Client) -> ProtocolV2Channel:
 
 
 def prepare_protocol_for_pairing(
-    client: Client, host_static_randomness: bytes | None = None
+    client: Client,
+    host_static_randomness: bytes | None = None,
+    credential: bytes | None = None,
 ) -> ProtocolV2Channel:
     protocol = prepare_protocol_for_handshake(client)
-    protocol._do_handshake(host_static_randomness=host_static_randomness)
+    protocol._do_handshake(
+        credential=credential, host_static_randomness=host_static_randomness
+    )
     return protocol
 
 

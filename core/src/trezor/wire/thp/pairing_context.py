@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from ubinascii import hexlify
 
 import trezorui_api
-from trezor import loop, protobuf, workflow
+from trezor import loop, protobuf, utils, workflow
 from trezor.enums import ButtonRequestType
 from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
@@ -104,8 +104,12 @@ class PairingContext(Context):
             )
 
         message: Message = await self.incoming_message
-
         if message.type not in expected_types:
+            from trezor.messages import Cancel
+
+            if message.type == Cancel.MESSAGE_WIRE_TYPE:
+                raise ActionCancelled
+
             raise UnexpectedMessageException(message)
 
         if expected_type is None:
@@ -192,18 +196,20 @@ class PairingContext(Context):
         from trezor.ui.layouts.common import interact
 
         if not device_name:
-            action_string = f"Allow {self.host_name} to pair with this Trezor?"
+            action_string = f"Allow {self.host_name} to connect with this Trezor?"
         else:
             action_string = (
-                f"Allow {self.host_name} on {device_name} to pair with this Trezor?"
+                f"Allow {self.host_name} on {device_name} to connect with this Trezor?"
             )
-        await interact(
+        result = await interact(
             trezorui_api.confirm_action(
                 title="Connection dialog", action=action_string, description=None
             ),
             br_name="thp_connection_request",
             br_code=ButtonRequestType.Other,
         )
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+            log.debug(__name__, "Result of connection dialog %s", str(result))
 
     async def show_autoconnect_credential_confirmation_screen(self) -> None:
         from trezor.ui.layouts.common import interact
