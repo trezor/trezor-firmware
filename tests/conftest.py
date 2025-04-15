@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import logging
 import os
+import time
 import typing as t
 from enum import IntEnum
 from pathlib import Path
@@ -53,6 +54,8 @@ if t.TYPE_CHECKING:
 
 HERE = Path(__file__).resolve().parent
 CORE = HERE.parent / "core"
+
+LOG = logging.getLogger(__name__)
 
 # So that we see details of failed asserts from this module
 pytest.register_assert_rewrite("tests.common")
@@ -238,6 +241,22 @@ class ModelsFilter:
         return selected_models
 
 
+def _initialize_with_retries(
+    request: pytest.FixtureRequest, raw_client: Client
+) -> None:
+    """Stop the test session if the error reproduces a few times."""
+    for _ in range(5):
+        try:
+            raw_client.sync_responses()
+            raw_client.init_device()
+            return
+        except Exception:
+            LOG.warning("Failed to initialize client", exc_info=True)
+            time.sleep(1)
+    request.session.shouldstop = "Failed to communicate with Trezor"
+    pytest.fail("Failed to communicate with Trezor")
+
+
 @pytest.fixture(scope="function")
 def client(
     request: pytest.FixtureRequest, _raw_client: Client
@@ -288,12 +307,7 @@ def client(
     _raw_client.reset_debug_features()
     _raw_client.open()
     try:
-        try:
-            _raw_client.sync_responses()
-            _raw_client.init_device()
-        except Exception:
-            request.session.shouldstop = "Failed to communicate with Trezor"
-            pytest.fail("Failed to communicate with Trezor")
+        _initialize_with_retries(request, _raw_client)
 
         # Resetting all the debug events to not be influenced by previous test
         _raw_client.debug.reset_debug_events()
