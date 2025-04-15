@@ -1,8 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     event::TouchEvent,
-    geometry::{Insets, Offset, Rect},
+    geometry::{Direction, Insets, Offset, Rect},
     shape::{Bar, Renderer},
+    util::animation_disabled,
 };
 
 use super::{
@@ -111,21 +112,66 @@ impl VerticalMenu {
         }
     }
 
-    fn set_max_offset(&mut self) {
-        // Calculate the overflow of the menu area
-        let menu_overflow = (self.total_height - self.bounds.height()).max(0);
+    /// Scroll the menu by one item in given direction.
+    /// Relevant only for testing purposes when the animations are disabled.
+    pub fn scroll_item(&mut self, dir: Direction) {
+        // Make sure the animations are disabled
+        debug_assert!(animation_disabled());
+        // Only vertical swipes are allowed
+        debug_assert!(dir == Direction::Up || dir == Direction::Down);
 
-        // Find the first button from the top that would completely fit in the menu area
-        // in the bottom position
-        for button in &self.buttons {
-            let offset = button.area().top_left().y - self.bounds.top_left().y;
-            if offset > menu_overflow {
-                self.offset_y_max = offset;
-                return;
-            }
+        // For single button, the menu is not scrollable
+        if self.buttons.len() < 2 {
+            return;
         }
 
-        self.offset_y_max = menu_overflow;
+        // The offset could reach only discrete values of cumsum of button heights
+        let current = self.offset_y;
+        let mut cumsum = 0;
+
+        for button in &self.buttons[..self.buttons.len() - 1] {
+            let new_cumsum = cumsum + button.area().height();
+            match dir {
+                Direction::Up if new_cumsum > current => {
+                    self.set_offset(new_cumsum);
+                    break;
+                }
+                Direction::Down if new_cumsum >= current => {
+                    self.set_offset(cumsum);
+                    break;
+                }
+                _ => {
+                    cumsum = new_cumsum;
+                }
+            }
+        }
+    }
+
+    fn set_max_offset(&mut self) {
+        if animation_disabled() {
+            // Relevant only for testing when the animations are disabled
+            // The menu is scrollable until the last button is visible
+            self.offset_y_max = if self.buttons.len() > 0 {
+                self.total_height - unwrap!(self.buttons.last()).area().height()
+            } else {
+                0
+            }
+        } else {
+            // Calculate the overflow of the menu area
+            let menu_overflow = (self.total_height - self.bounds.height()).max(0);
+
+            // Find the first button from the top that would completely fit in the menu area
+            // in the bottom position
+            for button in &self.buttons {
+                let offset = button.area().top_left().y - self.bounds.top_left().y;
+                if offset > menu_overflow {
+                    self.offset_y_max = offset;
+                    return;
+                }
+            }
+
+            self.offset_y_max = menu_overflow;
+        }
     }
 
     // Shift position of touch events in the menu area by an offset of the current

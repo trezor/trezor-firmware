@@ -9,7 +9,7 @@ use crate::{
         flow::Swipable,
         geometry::{Alignment2D, Direction, Rect},
         shape::{Renderer, ToifImage},
-        util::Pager,
+        util::{animation_disabled, Pager},
     },
 };
 
@@ -101,7 +101,7 @@ impl Component for VerticalMenuScreen {
         }
 
         // Handle swipe events if swipe is enabled (menu does not fit)
-        if self.swipe_enabled {
+        if self.swipe_enabled && !animation_disabled() {
             match self.swipe.event(ctx, event, self.swipe_config) {
                 Some(SwipeEvent::Start(_)) => {
                     // Lock the base position to scroll around
@@ -131,6 +131,13 @@ impl Component for VerticalMenuScreen {
                 }
                 _ => {}
             };
+        // Relevant only for testing testing purposes when the animations are
+        // disabled. The menu is scrollable up/down item-wise
+        } else if animation_disabled() {
+            if let Some(SwipeEvent::End(dir)) = self.swipe.event(ctx, event, self.swipe_config) {
+                self.menu.scroll_item(dir);
+                self.menu.update_menu(ctx);
+            }
         }
 
         if let Some(msg) = self.header.event(ctx, event) {
