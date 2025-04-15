@@ -34,7 +34,7 @@ async def get_address(
     address = address_from_bytes(node.ethereum_pubkeyhash(), defs.network)
 
     slip44_id = address_n[1]  # it depends on the network (ETH vs ETC...)
-    mac = get_address_mac(address, paths.unharden(slip44_id), keychain)
+    mac = get_address_mac(address, paths.unharden(slip44_id), address_n, keychain)
 
     if msg.show_display:
         coin = "ETH"

@@ -59,12 +59,16 @@ class PaymentRequestVerifier:
             elif m.refund_memo is not None:
                 memo = m.refund_memo
                 # Unlike in a coin purchase memo, the coin type is implied by the payment request.
-                check_address_mac(memo.address, memo.mac, slip44_id, keychain)
+                check_address_mac(
+                    memo.address, memo.mac, slip44_id, memo.address_n, keychain
+                )
                 writers.write_uint32_le(self.h_pr, _MEMO_TYPE_REFUND)
                 writers.write_bytes_prefixed(self.h_pr, memo.address.encode())
             elif m.coin_purchase_memo is not None:
                 memo = m.coin_purchase_memo
-                check_address_mac(memo.address, memo.mac, memo.coin_type, keychain)
+                check_address_mac(
+                    memo.address, memo.mac, memo.coin_type, memo.address_n, keychain
+                )
                 writers.write_uint32_le(self.h_pr, _MEMO_TYPE_COIN_PURCHASE)
                 writers.write_uint32_le(self.h_pr, memo.coin_type)
                 writers.write_bytes_prefixed(self.h_pr, memo.amount.encode())

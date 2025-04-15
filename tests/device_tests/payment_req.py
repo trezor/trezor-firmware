@@ -71,7 +71,9 @@ def make_payment_request(
             hash_bytes_prefixed(h_pr, memo.text.encode())
         elif isinstance(memo, RefundMemo):
             msg_memo = messages.RefundMemo(
-                address=memo.address_resp.address, mac=memo.address_resp.mac
+                address=memo.address_resp.address,
+                address_n=memo.address_n,
+                mac=memo.address_resp.mac,
             )
             msg_memos.append(messages.PaymentRequestMemo(refund_memo=msg_memo))
             memo_type = 2
@@ -82,6 +84,7 @@ def make_payment_request(
                 coin_type=memo.slip44,
                 amount=memo.amount,
                 address=memo.address_resp.address,
+                address_n=memo.address_n,
                 mac=memo.address_resp.mac,
             )
             msg_memos.append(messages.PaymentRequestMemo(coin_purchase_memo=msg_memo))
