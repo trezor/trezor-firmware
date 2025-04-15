@@ -4,22 +4,25 @@ from trezor import utils
 
 if TYPE_CHECKING:
     from apps.common.keychain import Keychain
+    from apps.common.paths import Bip32Path
 
 _ADDRESS_MAC_KEY_PATH = [b"SLIP-0024", b"Address MAC key"]
 
 
 def check_address_mac(
-    address: str, mac: bytes, slip44: int, keychain: Keychain
+    address: str, mac: bytes, slip44: int, address_n: Bip32Path, keychain: Keychain
 ) -> None:
     from trezor import wire
     from trezor.crypto import hashlib
 
-    expected_mac = get_address_mac(address, slip44, keychain)
+    expected_mac = get_address_mac(address, slip44, address_n, keychain)
     if len(mac) != hashlib.sha256.digest_size or not utils.consteq(expected_mac, mac):
         raise wire.DataError("Invalid address MAC.")
 
 
-def get_address_mac(address: str, slip44: int, keychain: Keychain) -> bytes:
+def get_address_mac(
+    address: str, slip44: int, address_n: Bip32Path, keychain: Keychain
+) -> bytes:
     from trezor.crypto import hmac
 
     from .writers import write_bytes_unchecked, write_compact_size, write_uint32_le
@@ -31,6 +34,9 @@ def get_address_mac(address: str, slip44: int, keychain: Keychain) -> bytes:
     mac = utils.HashWriter(hmac(hmac.SHA256, node.key()))
     address_bytes = address.encode()
     write_uint32_le(mac, slip44)
+    write_compact_size(mac, len(address_n))
+    for n in address_n:
+        write_uint32_le(mac, n)
     write_compact_size(mac, len(address_bytes))
     write_bytes_unchecked(mac, address_bytes)
     return mac.get_digest()
