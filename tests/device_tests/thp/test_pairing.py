@@ -229,6 +229,85 @@ def _nfc_pairing(client: Client, protocol: ProtocolV2Channel) -> None:
     assert tag_trezor_msg.tag == computed_tag
 
 
+def test_connection_confirmation_cancel(client: Client) -> None:
+    protocol = prepare_protocol_for_pairing(client)
+    _nfc_pairing(client, protocol)
+
+    # Request credential with confirmation after pairing
+    randomness_static = os.urandom(32)
+    host_static_privkey = curve25519.get_private_key(randomness_static)
+    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    protocol._send_message(
+        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+    )
+    credential_response = protocol._read_message(ThpCredentialResponse)
+
+    assert credential_response.credential is not None
+    credential = credential_response.credential
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
+
+    # Connect using credential with confirmation
+    protocol = prepare_protocol_for_pairing(
+        client=client, host_static_randomness=randomness_static, credential=credential
+    )
+    protocol._send_message(ThpEndRequest())
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "thp_connection_request"
+    protocol._send_message(Cancel())
+    failure = protocol._read_message(Failure)
+
+    assert failure.code == FailureType.ActionCancelled
+
+    time.sleep(0.2)  # TODO fix this behavior
+    protocol = prepare_protocol_for_pairing(
+        client=client, host_static_randomness=randomness_static, credential=credential
+    )
+    protocol._send_message(ThpEndRequest())
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "thp_connection_request"
+    protocol._send_message(ButtonAck())
+    client.debug.press_yes()
+    protocol._read_message(ThpEndResponse)
+
+
+def test_autoconnect_credential_request_cancel(client: Client) -> None:
+    protocol = prepare_protocol_for_pairing(client)
+    _nfc_pairing(client, protocol)
+
+    # Request credential with confirmation after pairing
+    randomness_static = os.urandom(32)
+    host_static_privkey = curve25519.get_private_key(randomness_static)
+    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    protocol._send_message(
+        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+    )
+    credential_response = protocol._read_message(ThpCredentialResponse)
+
+    assert credential_response.credential is not None
+    credential = credential_response.credential
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
+
+    # Connect using credential with confirmation and request autoconnect
+    protocol = prepare_protocol_for_pairing(
+        client=client, host_static_randomness=randomness_static, credential=credential
+    )
+    protocol._send_message(
+        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=True)
+    )
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "thp_connection_request"
+    protocol._send_message(ButtonAck())
+    client.debug.press_yes()
+    button_req = protocol._read_message(ButtonRequest)
+    assert button_req.name == "thp_autoconnect_credential_request"
+    protocol._send_message(Cancel())
+    failure = protocol._read_message(Failure)
+
+    assert failure.code == FailureType.ActionCancelled
+
+
 def test_credential_phase(client: Client) -> None:
     protocol = prepare_protocol_for_pairing(client)
     _nfc_pairing(client, protocol)
