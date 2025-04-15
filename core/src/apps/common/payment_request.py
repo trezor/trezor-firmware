@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 _MEMO_TYPE_TEXT = const(1)
 _MEMO_TYPE_REFUND = const(2)
 _MEMO_TYPE_COIN_PURCHASE = const(3)
+_MEMO_TYPE_TEXT_DETAILS = const(4)
 
 
 class PaymentRequestVerifier:
@@ -73,6 +74,13 @@ class PaymentRequestVerifier:
                 writers.write_uint32_le(self.h_pr, memo.coin_type)
                 writers.write_bytes_prefixed(self.h_pr, memo.amount.encode())
                 writers.write_bytes_prefixed(self.h_pr, memo.address.encode())
+            elif m.text_details_memo is not None:
+                memo = m.text_details_memo
+                writers.write_uint32_le(self.h_pr, _MEMO_TYPE_TEXT_DETAILS)
+                writers.write_bytes_prefixed(self.h_pr, memo.title.encode())
+                writers.write_bytes_prefixed(self.h_pr, memo.text.encode())
+            else:
+                DataError("Unrecognized memo type in payment request.")
 
         writers.write_uint32_le(self.h_pr, slip44_id)
 

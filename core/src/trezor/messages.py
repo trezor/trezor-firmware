@@ -273,6 +273,7 @@ if TYPE_CHECKING:
         text_memo: "TextMemo | None"
         refund_memo: "RefundMemo | None"
         coin_purchase_memo: "CoinPurchaseMemo | None"
+        text_details_memo: "TextDetailsMemo | None"
 
         def __init__(
             self,
@@ -280,6 +281,7 @@ if TYPE_CHECKING:
             text_memo: "TextMemo | None" = None,
             refund_memo: "RefundMemo | None" = None,
             coin_purchase_memo: "CoinPurchaseMemo | None" = None,
+            text_details_memo: "TextDetailsMemo | None" = None,
         ) -> None:
             pass
 
@@ -299,6 +301,22 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["TextMemo"]:
+            return isinstance(msg, cls)
+
+    class TextDetailsMemo(protobuf.MessageType):
+        title: "str"
+        text: "str"
+
+        def __init__(
+            self,
+            *,
+            title: "str | None" = None,
+            text: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TextDetailsMemo"]:
             return isinstance(msg, cls)
 
     class RefundMemo(protobuf.MessageType):
