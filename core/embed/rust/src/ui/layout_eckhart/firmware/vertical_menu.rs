@@ -1,8 +1,9 @@
 use crate::ui::{
     component::{Component, Event, EventCtx},
     event::TouchEvent,
-    geometry::{Insets, Offset, Rect},
+    geometry::{Direction, Insets, Offset, Rect},
     shape::{Bar, Renderer},
+    util::animation_disabled,
 };
 
 use super::{
@@ -90,7 +91,7 @@ impl VerticalMenu {
     /// Enable only buttons that are fully visible in the menu area.
     /// Meaningful only if the menu is scrollable.
     /// If the menu fits its area, all buttons are enabled.
-    pub fn update_menu(&mut self, ctx: &mut EventCtx) {
+    pub fn update_button_states(&mut self, ctx: &mut EventCtx) {
         for button in self.buttons.iter_mut() {
             let in_bounds = button
                 .area()
@@ -101,7 +102,57 @@ impl VerticalMenu {
         }
     }
 
+    /// Scroll the menu by one item in given direction.
+    /// Relevant only for testing purposes when the animations are disabled.
+    #[cfg(feature = "ui_debug")]
+    pub fn scroll_item(&mut self, dir: Direction) {
+        // Make sure the animations are disabled
+        debug_assert!(animation_disabled());
+        // Only vertical swipes are allowed
+        debug_assert!(dir == Direction::Up || dir == Direction::Down);
+
+        // For single button, the menu is not scrollable
+        if self.buttons.len() < 2 {
+            return;
+        }
+
+        // The offset could reach only discrete values of cumsum of button heights
+        let current = self.offset_y;
+        let mut cumsum = 0;
+
+        for button in &self.buttons[..self.buttons.len() - 1] {
+            let new_cumsum = cumsum + button.area().height();
+            match dir {
+                Direction::Up if new_cumsum > current => {
+                    self.set_offset(new_cumsum);
+                    break;
+                }
+                Direction::Down if new_cumsum >= current => {
+                    self.set_offset(cumsum);
+                    break;
+                }
+                _ => {
+                    cumsum = new_cumsum;
+                }
+            }
+        }
+    }
+
     fn set_max_offset(&mut self) {
+        // Relevant only for testing when the animations are disabled
+        // The menu is scrollable until the last button is visible
+        #[cfg(feature = "ui_debug")]
+        if animation_disabled() {
+            self.offset_y_max = self.total_height
+                - self
+                    .buttons
+                    .last()
+                    .unwrap_or(&Button::empty())
+                    .area()
+                    .height();
+            return;
+        }
+
         // Calculate the overflow of the menu area
         let menu_overflow = (self.total_height - self.bounds.height()).max(0);
 
