@@ -5,10 +5,12 @@ from . import seed
 if TYPE_CHECKING:
     from trezor.messages import CardanoAddress, CardanoGetAddress
 
+    from apps.common.keychain import Keychain as Slip21Keychain
+
 
 @seed.with_keychain
 async def get_address(
-    msg: CardanoGetAddress, keychain: seed.Keychain
+    msg: CardanoGetAddress, keychain: seed.Keychain, slip21_keychain: Slip21Keychain
 ) -> CardanoAddress:
     from trezor import log, wire
     from trezor.messages import CardanoAddress

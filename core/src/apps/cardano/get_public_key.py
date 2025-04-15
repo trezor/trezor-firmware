@@ -8,10 +8,12 @@ from . import seed
 if TYPE_CHECKING:
     from trezor.messages import CardanoGetPublicKey, CardanoPublicKey
 
+    from apps.common.keychain import Keychain as Slip21Keychain
+
 
 @seed.with_keychain
 async def get_public_key(
-    msg: CardanoGetPublicKey, keychain: seed.Keychain
+    msg: CardanoGetPublicKey, keychain: seed.Keychain, slip21_keychain: Slip21Keychain
 ) -> CardanoPublicKey:
     from trezor import log, wire
     from trezor.ui.layouts import show_pubkey
