@@ -488,23 +488,23 @@ void secret_prepare_fw(secbool allow_run_with_secret,
   secret_bhk_load();
   secret_bhk_lock();
   secret_se_uncache();
-  secbool SE_secret_present = secret_se_present();
-  secbool SE_secret_writable = secret_se_writable();
-  if (sectrue == allow_provisioning_access && sectrue == SE_secret_writable &&
-      secfalse == SE_secret_present) {
+  secbool se_secret_present = secret_se_present();
+  secbool se_secret_writable = secret_se_writable();
+  if (sectrue == allow_provisioning_access && sectrue == se_secret_writable &&
+      secfalse == se_secret_present) {
     // SE Secret is not present and the secret sector is writable.
     // This means the U5 chip is unprovisioned.
     // Allow trusted firmware (prodtest presumably) to access the secret sector,
     // early return here.
     return;
   }
-  if (sectrue == allow_run_with_secret && sectrue == SE_secret_present) {
+  if (sectrue == allow_run_with_secret && sectrue == se_secret_present) {
     // Firmware is trusted, and the SE secret is present, make it available.
     secret_se_cache();
   }
   // Disable access unconditionally.
   secret_disable_access();
-  if (sectrue != allow_run_with_secret && sectrue == SE_secret_present) {
+  if (sectrue != allow_run_with_secret && sectrue == se_secret_present) {
     // Untrusted firmware, locked bootloader. Show the restricted screen.
     show_install_restricted_screen();
   }
