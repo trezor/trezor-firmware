@@ -108,6 +108,7 @@ if __debug__:
     def check_heap_fragmentation() -> None:
         """
         Assert known sources for heap fragmentation.
+        Enabled only for frozen debug builds.
         """
 
 

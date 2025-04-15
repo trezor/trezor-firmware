@@ -306,8 +306,10 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
 ///     def check_heap_fragmentation() -> None:
 ///         """
 ///         Assert known sources for heap fragmentation.
+///         Enabled only for frozen debug builds.
 ///         """
 STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
+#if MICROPY_MODULE_FROZEN_MPY
   mp_obj_dict_t *modules = &MP_STATE_VM(mp_loaded_modules_dict);
   if (modules->map.alloc > MICROPY_LOADED_MODULES_DICT_SIZE) {
     mp_raise_msg(&mp_type_AssertionError, "sys.modules dict is reallocated");
@@ -336,6 +338,7 @@ STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
                       " total bytes",
                       n_pool, n_qstr, n_str_data_bytes, n_total_bytes);
   }
+#endif  // MICROPY_MODULE_FROZEN_MPY
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_check_heap_fragmentation_obj,
