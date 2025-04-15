@@ -5,10 +5,14 @@ from . import seed
 if TYPE_CHECKING:
     from trezor.messages import CardanoGetNativeScriptHash, CardanoNativeScriptHash
 
+    from apps.common.keychain import Keychain as Slip21Keychain
+
 
 @seed.with_keychain
 async def get_native_script_hash(
-    msg: CardanoGetNativeScriptHash, keychain: seed.Keychain
+    msg: CardanoGetNativeScriptHash,
+    keychain: seed.Keychain,
+    slip21_keychain: Slip21Keychain,
 ) -> CardanoNativeScriptHash:
     from trezor.enums import CardanoNativeScriptHashDisplayFormat
     from trezor.messages import CardanoNativeScriptHash
