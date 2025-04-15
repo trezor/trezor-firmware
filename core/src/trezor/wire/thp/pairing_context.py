@@ -147,21 +147,11 @@ class PairingContext(Context):
             raise Exception("Not allowed to set this method")
         self.selected_method = selected_method
 
-    async def show_pairing_dialog(self, device_name: str | None = None) -> None:
-        from trezor.messages import ThpPairingRequestApproved
-        from trezor.ui.layouts.common import interact
-
-        if not device_name:
-            action_string = f"Allow {self.host_name} to pair with this Trezor?"
-        else:
-            action_string = (
-                f"Allow {self.host_name} on {device_name} to pair with this Trezor?"
-            )
-
+    def _hotfix(self) -> None:
         # TODO FIXME
         # The subsequent code is a hotfix for the following issue:
         #
-        # 1. `interact` - on line `result = await interact(` - calls `workflow.close_others` and `_button_request`
+        # 1. `interact` - on lines `result = await interact(` - calls `workflow.close_others` and `_button_request`
         # 2. `workflow.close_others` may result in clearing of `context.CURRENT_CONTEXT`
         # 3. `_button_request` uses `context.maybe_call` - sending of button request is ommited
         #    when `context.CURRENT_CONTEXT` is `None`
@@ -182,6 +172,20 @@ class PairingContext(Context):
             )
         # --- HOTFIX END ---
 
+    async def show_pairing_dialog(self, device_name: str | None = None) -> None:
+        from trezor.messages import ThpPairingRequestApproved
+        from trezor.ui.layouts.common import interact
+
+        if not device_name:
+            action_string = f"Allow {self.host_name} to pair with this Trezor?"
+        else:
+            action_string = (
+                f"Allow {self.host_name} on {device_name} to pair with this Trezor?"
+            )
+
+        # TODO FIXME
+        self._hotfix()
+
         result = await interact(
             trezorui_api.confirm_action(
                 title="Before you continue", action=action_string, description=None
@@ -201,6 +205,10 @@ class PairingContext(Context):
             action_string = (
                 f"Allow {self.host_name} on {device_name} to connect with this Trezor?"
             )
+
+        # TODO FIXME
+        self._hotfix()
+
         result = await interact(
             trezorui_api.confirm_action(
                 title="Connection dialog", action=action_string, description=None
@@ -213,6 +221,9 @@ class PairingContext(Context):
 
     async def show_autoconnect_credential_confirmation_screen(self) -> None:
         from trezor.ui.layouts.common import interact
+
+        # TODO FIXME
+        self._hotfix()
 
         await interact(
             trezorui_api.confirm_action(
