@@ -1024,10 +1024,15 @@ class SessionDebugWrapper(Session):
         return self.client
 
     def _write(self, msg: t.Any) -> None:
+        if isinstance(self.client, TrezorClientDebugLink):
+            msg = self.client._filter_message(msg)
         self._session._write(msg)
 
     def _read(self) -> t.Any:
-        return self._session._read()
+        msg = self._session._read()
+        if isinstance(self.client, TrezorClientDebugLink):
+            msg = self.client._filter_message(msg)
+        return msg
 
     def resume(self) -> None:
         self._session.resume()
@@ -1066,6 +1071,10 @@ class TrezorClientDebugLink(TrezorClient):
 
     protocol: ProtocolV1Channel | ProtocolV2Channel
     actual_responses: list[protobuf.MessageType] | None = None
+    filters: t.Dict[
+        t.Type[protobuf.MessageType],
+        t.Callable[[protobuf.MessageType], protobuf.MessageType] | None,
+    ] = {}
 
     def __init__(
         self,
