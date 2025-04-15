@@ -39,6 +39,8 @@ if __debug__:
 if TYPE_CHECKING:
     from typing import Any, Callable, Concatenate, ParamSpec, Tuple
 
+    from trezorui_api import UiResult
+
     P = ParamSpec("P")
     FuncWithContext = Callable[Concatenate[PairingContext, P], Any]
 
@@ -91,6 +93,7 @@ async def handle_pairing_request(
 ) -> ThpEndResponse:
 
     if Cancel.is_type_of(message):
+        ctx.channel_ctx.set_channel_state(ChannelState.TP0)
         raise ActionCancelled()
 
     if not ThpPairingRequest.is_type_of(message):
@@ -123,14 +126,22 @@ async def handle_pairing_request(
         await _prepare_pairing(ctx)
 
         ctx.channel_ctx.set_channel_state(ChannelState.TP3)
+        result: UiResult | None = None
         try:
             # Should raise UnexpectedMessageException
-            await ctx.show_pairing_method_screen()
+            result = await ctx.show_pairing_method_screen()
         except UnexpectedMessageException as e:
             raw_response = e.msg
             req_type = protobuf.type_for_wire(raw_response.type)
             response = message_handler.wrap_protobuf_load(raw_response.data, req_type)
 
+        if result is not None:
+            from trezorui_api import CONFIRMED
+
+            if result is CONFIRMED:
+                # TODO In UI Screen has one button with text "Cancel", but is gets confirmed
+                ctx.channel_ctx.set_channel_state(ChannelState.TP0)
+                raise ActionCancelled
         if Cancel.is_type_of(response):
             ctx.channel_ctx.clear()
             raise SilentError("Action was cancelled by the Host")
