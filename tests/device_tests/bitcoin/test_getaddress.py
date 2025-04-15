@@ -146,7 +146,7 @@ def test_address_mac(client: Client):
     assert resp.address == "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE"
     assert (
         resp.mac.hex()
-        == "9cf7c230041d6ed95b8273bd32e023d3f227ec8c44257f6463c743a4b4add028"
+        == "158dd8df21894cc1cb01a33736a50884ecd6d5c2bcc2ffd2398f4d147d19c191"
     )
 
     resp = btc.get_authenticated_address(
@@ -155,7 +155,7 @@ def test_address_mac(client: Client):
     assert resp.address == "mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ"
     assert (
         resp.mac.hex()
-        == "4375089e50423505dc3480e6e85b0ba37a52bd1e009db5d260b6329f22c950d9"
+        == "bc555ef1d74814b26a7a2c8039c87414cdd0730027aee8e038ad236ce57875c1"
     )
 
     # Script type mismatch.
@@ -174,7 +174,7 @@ def test_altcoin_address_mac(client: Client):
     assert resp.address == "LWj6ApswZxay4cJEJES2sGe7fLMLRvvv8h"
     assert (
         resp.mac.hex()
-        == "eaf47182d7ae17d2046ec2e204bc5b67477db20a5eaea3cec5393c25664bc4d2"
+        == "13ae756e50735626639dcaf037e65d62b152593e9f088f8bbf452a3c148b5ea6"
     )
 
     resp = btc.get_authenticated_address(
@@ -183,7 +183,7 @@ def test_altcoin_address_mac(client: Client):
     assert resp.address == "bitcoincash:qzc5q87w069lzg7g3gzx0c8dz83mn7l02scej5aluw"
     assert (
         resp.mac.hex()
-        == "46d8e369b499a9dc62eb9e4472f4a12640ae0fb7a63c1a4dde6752123b2b7274"
+        == "d5f54aea2200f50d1a0419d2faae62a82198f27df63ae4eac56d0e625de174f5"
     )
 
     resp = btc.get_authenticated_address(
@@ -192,7 +192,7 @@ def test_altcoin_address_mac(client: Client):
     assert resp.address == "Fmhtxeh7YdCBkyQF7AQG4QnY8y3rJg89di"
     assert (
         resp.mac.hex()
-        == "08d67c5f1ee20fd03f3e5aa26f798574716c122238ac280e33a6f3787d531552"
+        == "c988b6f968a55b5be918d97f0f672acfd3bdbc91c148bc1a04a0ae4e8753464c"
     )
 
 

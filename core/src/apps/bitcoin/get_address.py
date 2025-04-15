@@ -102,7 +102,7 @@ async def get_address(msg: GetAddress, keychain: Keychain, coin: CoinInfo) -> Ad
             keychain.is_in_keychain(address_n)
             and validate_path_against_script_type(coin, msg)
         ):
-            mac = get_address_mac(address, coin.slip44, keychain)
+            mac = get_address_mac(address, coin.slip44, address_n, keychain)
 
     if msg.show_display:
         path = address_n_to_str(address_n)

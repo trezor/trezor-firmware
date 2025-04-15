@@ -328,18 +328,20 @@ class TestAddress(unittest.TestCase):
         VECTORS = (
             (
                 "Bitcoin",
+                [H_(44), H_(0), H_(0), 1, 0],
                 "1DyHzbQUoQEsLxJn6M7fMD8Xdt1XvNiwNE",
-                "9cf7c230041d6ed95b8273bd32e023d3f227ec8c44257f6463c743a4b4add028",
+                "158dd8df21894cc1cb01a33736a50884ecd6d5c2bcc2ffd2398f4d147d19c191",
             ),
             (
                 "Testnet",
+                [H_(44), H_(0), H_(0), 1, 0],
                 "mm6kLYbGEL1tGe4ZA8xacfgRPdW1NLjCbZ",
-                "4375089e50423505dc3480e6e85b0ba37a52bd1e009db5d260b6329f22c950d9",
+                "0b1048fcf82a0a08cffc87a8db2e2512e0d1379eb8d15c9adae8672ba2e00be0",
             ),
         )
         seed = bip39.seed(" ".join(["all"] * 12), "")
 
-        for coin_name, address, mac in VECTORS:
+        for coin_name, address_n, address, mac in VECTORS:
             coin = coins.by_name(coin_name)
             mac = unhexlify(mac)
             keychain = Keychain(
@@ -348,11 +350,13 @@ class TestAddress(unittest.TestCase):
                 [AlwaysMatchingSchema],
                 slip21_namespaces=[[b"SLIP-0024"]],
             )
-            self.assertEqual(get_address_mac(address, coin.slip44, keychain), mac)
-            check_address_mac(address, mac, coin.slip44, keychain)
+            self.assertEqual(
+                get_address_mac(address, coin.slip44, address_n, keychain), mac
+            )
+            check_address_mac(address, mac, coin.slip44, address_n, keychain)
             with self.assertRaises(wire.DataError):
                 mac = bytes([mac[0] ^ 1]) + mac[1:]
-                check_address_mac(address, mac, coin.slip44, keychain)
+                check_address_mac(address, mac, coin.slip44, address_n, keychain)
 
 
 if __name__ == "__main__":
