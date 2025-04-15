@@ -4,7 +4,7 @@ runs:
   steps:
     # add per-job suffix so the .coverage files won't be overwritten during merge (by `core_coverage_report`)
     - run: |
-        for F in core/src/.coverage core/src/.coverage.gw*
+        for F in core/src/.coverage*
         do
           mv -v $F $F.${{ github.job }}${{ strategy.job-index }} || true
         done
