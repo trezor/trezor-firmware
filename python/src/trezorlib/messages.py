@@ -913,6 +913,7 @@ class PaymentRequestMemo(protobuf.MessageType):
         1: protobuf.Field("text_memo", "TextMemo", repeated=False, required=False, default=None),
         2: protobuf.Field("refund_memo", "RefundMemo", repeated=False, required=False, default=None),
         3: protobuf.Field("coin_purchase_memo", "CoinPurchaseMemo", repeated=False, required=False, default=None),
+        4: protobuf.Field("text_details_memo", "TextDetailsMemo", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -921,10 +922,12 @@ class PaymentRequestMemo(protobuf.MessageType):
         text_memo: Optional["TextMemo"] = None,
         refund_memo: Optional["RefundMemo"] = None,
         coin_purchase_memo: Optional["CoinPurchaseMemo"] = None,
+        text_details_memo: Optional["TextDetailsMemo"] = None,
     ) -> None:
         self.text_memo = text_memo
         self.refund_memo = refund_memo
         self.coin_purchase_memo = coin_purchase_memo
+        self.text_details_memo = text_details_memo
 
 
 class TextMemo(protobuf.MessageType):
@@ -938,6 +941,23 @@ class TextMemo(protobuf.MessageType):
         *,
         text: "str",
     ) -> None:
+        self.text = text
+
+
+class TextDetailsMemo(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("title", "string", repeated=False, required=False, default=''),
+        2: protobuf.Field("text", "string", repeated=False, required=False, default=''),
+    }
+
+    def __init__(
+        self,
+        *,
+        title: Optional["str"] = '',
+        text: Optional["str"] = '',
+    ) -> None:
+        self.title = title
         self.text = text
 
 

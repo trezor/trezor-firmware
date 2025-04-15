@@ -14,6 +14,12 @@ class TextMemo:
 
 
 @dataclass
+class TextDetailsMemo:
+    title: str
+    text: str
+
+
+@dataclass
 class RefundMemo:
     address_n: list[int]
     address_resp: messages.Address | messages.EthereumAddress | None = None
@@ -94,6 +100,13 @@ def make_payment_request(
             h_pr.update(memo.slip44.to_bytes(4, "little"))
             hash_bytes_prefixed(h_pr, memo.amount.encode())
             hash_bytes_prefixed(h_pr, memo.address_resp.address.encode())
+        elif isinstance(memo, TextDetailsMemo):
+            msg_memo = messages.TextDetailsMemo(text=memo.text)
+            msg_memos.append(messages.PaymentRequestMemo(text_memo=msg_memo))
+            memo_type = 4
+            h_pr.update(memo_type.to_bytes(4, "little"))
+            hash_bytes_prefixed(h_pr, memo.title.encode())
+            hash_bytes_prefixed(h_pr, memo.text.encode())
         else:
             raise ValueError
 
