@@ -40,6 +40,7 @@ message StellarGetAddress {
  */
 message StellarAddress {
     required string address = 1;    // Address in Stellar format (base32 of a pubkey with checksum)
+    optional bytes mac = 2;         // Address authentication code
 }
 
 /**
