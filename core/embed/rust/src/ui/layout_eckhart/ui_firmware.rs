@@ -156,13 +156,13 @@ impl FirmwareUI for UIEckhart {
     }
 
     fn confirm_fido(
-        _title: TString<'static>,
-        _app_name: TString<'static>,
-        _icon: Option<TString<'static>>,
-        _accounts: Gc<List>,
+        title: TString<'static>,
+        app_name: TString<'static>,
+        icon: Option<TString<'static>>,
+        accounts: Gc<List>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         #[cfg(feature = "universal_fw")]
-        return Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(c"not implemented"));
+        return flow::confirm_fido::new_confirm_fido(title, app_name, icon, accounts);
         #[cfg(not(feature = "universal_fw"))]
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"confirm_fido not used in bitcoin-only firmware",
@@ -727,15 +727,19 @@ impl FirmwareUI for UIEckhart {
             .with_placement(LinearPlacement::vertical());
 
         let action_bar = if allow_cancel {
-            ActionBar::new_single(Button::with_text(button))
-        } else {
             ActionBar::new_double(
                 Button::with_icon(theme::ICON_CLOSE),
                 Button::with_text(button),
             )
+        } else {
+            ActionBar::new_single(Button::with_text(button))
         };
         let screen = TextScreen::new(content)
-            .with_header(Header::new(title).with_icon(theme::ICON_WARNING, theme::RED))
+            .with_header(
+                Header::new(title)
+                    .with_icon(theme::ICON_WARNING, theme::ORANGE)
+                    .with_text_style(theme::label_title_danger()),
+            )
             .with_action_bar(action_bar);
         let obj = LayoutObj::new(screen)?;
         Ok(obj)
