@@ -28,9 +28,6 @@ pub struct VerticalMenu {
     offset_y: i16,
     /// Maximum vertical offset.
     offset_y_max: i16,
-    /// Adapt padding to fit entire area. If the area is too small, the padding
-    /// will be reduced to min value.
-    content_fit: bool,
     /// Whether to show separators between buttons.
     separators: bool,
 }
@@ -52,7 +49,6 @@ impl VerticalMenu {
             offset_y: 0,
             offset_y_max: 0,
             separators: false,
-            content_fit: false,
         }
     }
 
@@ -62,11 +58,6 @@ impl VerticalMenu {
 
     pub fn with_separators(mut self) -> Self {
         self.separators = true;
-        self
-    }
-
-    pub fn with_content_fit(mut self) -> Self {
-        self.content_fit = true;
         self
     }
 
@@ -177,24 +168,12 @@ impl Component for VerticalMenu {
         // Crop the menu area
         self.bounds = bounds.inset(Self::SIDE_INSETS);
 
-        // Determine padding dynamically if `content_fit` is enabled
-        let padding = if self.content_fit {
-            let mut content_height = 0;
-            for button in self.buttons.iter_mut() {
-                content_height += button.content_height();
-            }
-            let padding = (self.bounds.height() - content_height) / (self.buttons.len() as i16) / 2;
-            padding.max(Self::MIN_PADDING)
-        } else {
-            Self::DEFAULT_PADDING
-        };
-
         let button_width = self.bounds.width();
         let mut top_left = self.bounds.top_left();
 
         // Place each button (might overflow the menu bounds)
         for button in self.buttons.iter_mut() {
-            let button_height = button.content_height() + 2 * padding;
+            let button_height = button.content_height() + 2 * Self::DEFAULT_PADDING;
             let button_bounds =
                 Rect::from_top_left_and_size(top_left, Offset::new(button_width, button_height));
 
