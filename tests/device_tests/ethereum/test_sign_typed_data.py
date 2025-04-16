@@ -23,11 +23,7 @@ from trezorlib.tools import parse_path
 from ...common import parametrize_using_common_fixtures
 from ...input_flows import InputFlowEIP712Cancel, InputFlowEIP712ShowMore
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.ethereum,
-    pytest.mark.models(skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
 
 
 @pytest.mark.models("core")
@@ -99,7 +95,7 @@ DATA = {
 }
 
 
-@pytest.mark.models("core", skip="delizia", reason="Not yet implemented in new UI")
+@pytest.mark.models("core")
 def test_ethereum_sign_typed_data_show_more_button(client: Client):
     with client:
         client.watch_layout()

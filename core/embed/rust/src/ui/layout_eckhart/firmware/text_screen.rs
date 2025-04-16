@@ -33,6 +33,7 @@ pub struct TextScreen<T> {
     content: T,
     hint: Option<Hint<'static>>,
     action_bar: Option<ActionBar>,
+    page_limit: Option<u16>,
     // TODO: swipe handling
     // TODO: animations
 }
@@ -57,6 +58,7 @@ where
             content,
             hint: None,
             action_bar: Some(ActionBar::new_paginate_only()),
+            page_limit: None,
         }
     }
 
@@ -83,15 +85,29 @@ where
         self
     }
 
+    pub fn with_page_limit(mut self, page_limit: u16) -> Self {
+        self.page_limit = Some(page_limit);
+        self
+    }
+
     fn update_page(&mut self, page_idx: u16) {
         self.content.change_page(page_idx);
-        let pager = self.content.pager();
+        let pager = self.content_pager();
+
         if let Some(hint) = self.hint.as_mut() {
             hint.update(pager);
         }
         if let Some(ab) = self.action_bar.as_mut() {
             ab.update(pager)
         };
+    }
+
+    fn content_pager(&self) -> Pager {
+        if let Some(page_limit) = self.page_limit {
+            self.content.pager().with_limit(page_limit)
+        } else {
+            self.content.pager()
+        }
     }
 }
 
@@ -128,6 +144,8 @@ where
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
+        // Update page count of the screen
+        ctx.set_page_count(self.content_pager().total() as usize);
         if let Some(msg) = self.header.event(ctx, event) {
             match msg {
                 HeaderMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
@@ -140,11 +158,11 @@ where
                 ActionBarMsg::Cancelled => return Some(TextScreenMsg::Cancelled),
                 ActionBarMsg::Confirmed => return Some(TextScreenMsg::Confirmed),
                 ActionBarMsg::Prev => {
-                    self.update_page(self.content.pager().prev());
+                    self.update_page(self.content_pager().prev());
                     return None;
                 }
                 ActionBarMsg::Next => {
-                    self.update_page(self.content.pager().next());
+                    self.update_page(self.content_pager().next());
                     return None;
                 }
             }
@@ -166,7 +184,7 @@ where
     T: AllowedTextContent,
 {
     fn get_pager(&self) -> Pager {
-        self.content.pager()
+        self.content_pager()
     }
     fn get_swipe_config(&self) -> SwipeConfig {
         SwipeConfig::default()
@@ -200,5 +218,9 @@ where
         if let Some(ab) = self.action_bar.as_ref() {
             t.child("ActionBar", ab);
         }
+        if let Some(page_limit) = self.page_limit {
+            t.int("page_limit", page_limit as i64);
+        }
+        t.int("page_count", self.content.pager().total() as i64);
     }
 }

@@ -25,11 +25,7 @@ TEZOS_PATH = parse_path("m/44h/1729h/0h")
 TEZOS_PATH_10 = parse_path("m/44h/1729h/10h")
 TEZOS_PATH_15 = parse_path("m/44h/1729h/15h")
 
-pytestmark = [
-    pytest.mark.altcoin,
-    pytest.mark.tezos,
-    pytest.mark.models("core", skip=["eckhart"]),
-]
+pytestmark = [pytest.mark.altcoin, pytest.mark.tezos, pytest.mark.models("core")]
 
 
 def test_tezos_sign_tx_proposal(client: Client):
