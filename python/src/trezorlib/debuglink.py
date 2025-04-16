@@ -1104,7 +1104,6 @@ class TrezorClientDebugLink(TrezorClient):
         if self.protocol_version is ProtocolVersion.V2:
             assert isinstance(self.protocol, ProtocolV2Channel)
             self.do_pairing(pairing_method=messages.ThpPairingMethod.SkipPairing)
-            # self.protocol = self.protocol.get_channel()
         self.debug.model = self.model
         self.debug.version = self.version
 
@@ -1423,15 +1422,6 @@ class TrezorClientDebugLink(TrezorClient):
         self.ui.input_flow = input_flow
 
         next(input_flow)  # start the generator
-
-    def _write(self, msg: t.Any) -> None:
-        super()._write(self._filter_message(msg))
-
-    def _read(self) -> t.Any:
-        resp = self._filter_message(super()._read())
-        if self.actual_responses is not None:
-            self.actual_responses.append(resp)
-        return resp
 
     def notify_read(self, msg: protobuf.MessageType) -> None:
         try:
