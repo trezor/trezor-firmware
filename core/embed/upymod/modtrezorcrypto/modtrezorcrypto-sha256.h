@@ -19,6 +19,7 @@
 
 #include "py/objstr.h"
 
+#include <sec/hash_processor.h>
 #include "memzero.h"
 #include "sha2.h"
 
@@ -32,7 +33,7 @@
 ///     digest_size: int
 typedef struct _mp_obj_Sha256_t {
   mp_obj_base_t base;
-  SHA256_CTX ctx;
+  hash_sha256_context_t ctx;
 } mp_obj_Sha256_t;
 
 STATIC mp_obj_t mod_trezorcrypto_Sha256_update(mp_obj_t self, mp_obj_t data);
@@ -47,7 +48,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha256_make_new(const mp_obj_type_t *type,
   mp_arg_check_num(n_args, n_kw, 0, 1, false);
   mp_obj_Sha256_t *o = m_new_obj_with_finaliser(mp_obj_Sha256_t);
   o->base.type = type;
-  sha256_Init(&(o->ctx));
+  hash_processor_sha256_init(&(o->ctx));
   // constructor called with bytes/str as first parameter
   if (n_args == 1) {
     mod_trezorcrypto_Sha256_update(MP_OBJ_FROM_PTR(o), args[0]);
@@ -64,7 +65,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha256_update(mp_obj_t self, mp_obj_t data) {
   mp_buffer_info_t msg = {0};
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
-    sha256_Update(&(o->ctx), msg.buf, msg.len);
+    hash_processor_sha256_update(&(o->ctx), msg.buf, msg.len);
   }
   return mp_const_none;
 }
@@ -79,10 +80,10 @@ STATIC mp_obj_t mod_trezorcrypto_Sha256_digest(mp_obj_t self) {
   mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
   vstr_t hash = {0};
   vstr_init_len(&hash, SHA256_DIGEST_LENGTH);
-  SHA256_CTX ctx = {0};
-  memcpy(&ctx, &(o->ctx), sizeof(SHA256_CTX));
-  sha256_Final(&ctx, (uint8_t *)hash.buf);
-  memzero(&ctx, sizeof(SHA256_CTX));
+  hash_sha256_context_t ctx = {0};
+  memcpy(&ctx, &(o->ctx), sizeof(hash_sha256_context_t));
+  hash_processor_sha256_final(&ctx, (uint8_t *)hash.buf);
+  memzero(&ctx, sizeof(hash_sha256_context_t));
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &hash);
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha256_digest_obj,
@@ -90,7 +91,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha256_digest_obj,
 
 STATIC mp_obj_t mod_trezorcrypto_Sha256___del__(mp_obj_t self) {
   mp_obj_Sha256_t *o = MP_OBJ_TO_PTR(self);
-  memzero(&(o->ctx), sizeof(SHA256_CTX));
+  memzero(&(o->ctx), sizeof(hash_sha256_context_t));
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_Sha256___del___obj,
