@@ -279,6 +279,7 @@ def test_recovery_device(client: Client):
         )
 
 
+@pytest.mark.models(skip=["eckhart"])
 def test_sign_message(client: Client):
     _assert_protection(client)
     with client:
@@ -320,7 +321,7 @@ def test_verify_message_t1(client: Client):
         )
 
 
-@pytest.mark.models("core")
+@pytest.mark.models("core", skip=["eckhart"])
 def test_verify_message_t2(client: Client):
     _assert_protection(client)
     with client:

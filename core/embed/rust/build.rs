@@ -517,4 +517,7 @@ fn link_core_objects() {
 
     println!("cargo:rustc-link-lib=SDL2");
     println!("cargo:rustc-link-lib=SDL2_image");
+
+    #[cfg(any(feature = "ui_jpeg", feature = "hw_jpeg_decoder"))]
+    println!("cargo:rustc-link-lib=jpeg");
 }

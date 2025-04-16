@@ -103,7 +103,7 @@ BINANCE_TEST_VECTORS = [
 
 @pytest.mark.altcoin
 @pytest.mark.binance
-@pytest.mark.models("core")
+@pytest.mark.models("core", skip=["eckhart"])
 @pytest.mark.setup_client(
     mnemonic="offer caution gift cross surge pretty orange during eye soldier popular holiday mention east eight office fashion ill parrot vault rent devote earth cousin"
 )

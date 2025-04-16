@@ -37,7 +37,11 @@ from .common import encode_network
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.ethereum,
+    pytest.mark.models(skip=["eckhart"]),
+]
 
 
 def make_defs(parameters: dict) -> messages.EthereumDefinitions:

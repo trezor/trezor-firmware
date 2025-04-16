@@ -736,12 +736,16 @@ extern "C" fn new_show_danger(n_args: usize, args: *const Obj, kwargs: *mut Map)
         let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
         let description: TString = kwargs.get(Qstr::MP_QSTR_description)?.try_into()?;
         let value: TString = kwargs.get_or(Qstr::MP_QSTR_value, "".into())?;
+        let menu_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_menu_title)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let verb_cancel: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_verb_cancel)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
 
-        let layout = ModelUI::show_danger(title, description, value, verb_cancel)?;
+        let layout = ModelUI::show_danger(title, description, value, menu_title, verb_cancel)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -793,6 +797,51 @@ extern "C" fn new_show_homescreen(n_args: usize, args: *const Obj, kwargs: *mut 
         if skip_first_paint {
             layout_obj.skip_first_paint();
         }
+        Ok(layout_obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let failed_backup: bool = kwargs.get(Qstr::MP_QSTR_failed_backup)?.try_into()?;
+        let battery_percentage: u8 = kwargs.get_or(Qstr::MP_QSTR_battery_percentage, 0)?;
+        let firmware_version: TString = kwargs.get(Qstr::MP_QSTR_firmware_version)?.try_into()?;
+        let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
+        let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
+        let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
+        let layout = ModelUI::show_device_menu(
+            failed_backup,
+            battery_percentage,
+            firmware_version,
+            device_name,
+            paired_devices,
+        )?;
+        let layout_obj = LayoutObj::new_root(layout)?;
+        Ok(layout_obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_pairing_device_name(
+    n_args: usize,
+    args: *const Obj,
+    kwargs: *mut Map,
+) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
+        let layout = ModelUI::show_pairing_device_name(device_name)?;
+        let layout_obj = LayoutObj::new_root(layout)?;
+        Ok(layout_obj.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_show_pairing_code(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let code: TString = kwargs.get(Qstr::MP_QSTR_code)?.try_into()?;
+        let layout = ModelUI::show_pairing_code(code)?;
+        let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -907,7 +956,7 @@ extern "C" fn new_show_share_words(n_args: usize, args: *const Obj, kwargs: *mut
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
 }
 
-extern "C" fn new_show_share_words_delizia(
+extern "C" fn new_show_share_words_extended(
     n_args: usize,
     args: *const Obj,
     kwargs: *mut Map,
@@ -927,7 +976,7 @@ extern "C" fn new_show_share_words_delizia(
 
         let words: Vec<TString, 33> = util::iter_into_vec(words)?;
 
-        let layout = ModelUI::show_share_words_delizia(
+        let layout = ModelUI::show_share_words_extended(
             words,
             subtitle,
             instructions,
@@ -1522,6 +1571,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     description: str,
     ///     value: str = "",
+    ///     menu_title: str | None = None,
     ///     verb_cancel: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Warning modal that makes it easier to cancel than to continue."""
@@ -1555,6 +1605,31 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Idle homescreen."""
     Qstr::MP_QSTR_show_homescreen => obj_fn_kw!(0, new_show_homescreen).as_obj(),
+
+    /// def show_device_menu(
+    ///     *,
+    ///     failed_backup: bool,
+    ///     battery_percentage: int,
+    ///     firmware_version: str,
+    ///     device_name: str,
+    ///     paired_devices: Iterable[str],
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Show the device menu."""
+    Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),
+
+    /// def show_pairing_device_name(
+    ///     *,
+    ///     device_name: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Pairing device: first screen (device name)."""
+    Qstr::MP_QSTR_show_pairing_device_name => obj_fn_kw!(0, new_show_pairing_device_name).as_obj(),
+
+    /// def show_pairing_code(
+    ///     *,
+    ///     code: str,
+    /// ) -> LayoutObj[UiResult]:
+    ///     """Pairing device: second screen (pairing code)."""
+    Qstr::MP_QSTR_show_pairing_code => obj_fn_kw!(0, new_show_pairing_code).as_obj(),
 
     /// def show_info(
     ///     *,
@@ -1627,7 +1702,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     """Show mnemonic for backup."""
     Qstr::MP_QSTR_show_share_words => obj_fn_kw!(0, new_show_share_words).as_obj(),
 
-    /// def show_share_words_delizia(
+    /// def show_share_words_extended(
     ///     *,
     ///     words: Iterable[str],
     ///     subtitle: str | None,
@@ -1637,7 +1712,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     /// ) -> LayoutObj[UiResult]:
     ///     """Show mnemonic for wallet backup preceded by an instruction screen and followed by a
     ///     confirmation screen."""
-    Qstr::MP_QSTR_show_share_words_delizia => obj_fn_kw!(0, new_show_share_words_delizia).as_obj(),
+    Qstr::MP_QSTR_show_share_words_extended => obj_fn_kw!(0, new_show_share_words_extended).as_obj(),
 
     /// def show_simple(
     ///     *,
@@ -1653,7 +1728,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     title: str,
     ///     button: str,
     ///     description: str = "",
-    ///     allow_cancel: bool = True,
+    ///     allow_cancel: bool = False,
     ///     time_ms: int = 0,
     /// ) -> LayoutObj[UiResult]:
     ///     """Success modal. No buttons shown when `button` is empty string."""

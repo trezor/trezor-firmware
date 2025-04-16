@@ -51,20 +51,6 @@ where
     T: Paginate,
     T: Component,
 {
-    pub fn with_hold(mut self) -> Result<Self, Error> {
-        self.button_confirm = Button::with_text(TR::buttons__hold_to_confirm.into())
-            .styled(theme::button_confirm())
-            .without_haptics();
-        self.loader = Some(Loader::new());
-        Ok(self)
-    }
-}
-
-impl<T> ButtonPage<T>
-where
-    T: Paginate,
-    T: Component,
-{
     pub fn new(content: T, background: Color) -> Self {
         Self {
             content,
@@ -120,6 +106,14 @@ where
         };
         self.button_cancel = Some(cancel);
         self
+    }
+
+    pub fn with_hold(mut self) -> Result<Self, Error> {
+        self.button_confirm = Button::with_text(TR::buttons__hold_to_confirm.into())
+            .styled(theme::button_confirm())
+            .without_haptics();
+        self.loader = Some(Loader::new());
+        Ok(self)
     }
 
     pub fn with_confirm_style(mut self, style: ButtonStyleSheet) -> Self {

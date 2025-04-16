@@ -494,6 +494,7 @@ def show_danger(
     title: str,
     description: str,
     value: str = "",
+    menu_title: str | None = None,
     verb_cancel: str | None = None,
 ) -> LayoutObj[UiResult]:
     """Warning modal that makes it easier to cancel than to continue."""
@@ -529,6 +530,34 @@ def show_homescreen(
     skip_first_paint: bool,
 ) -> LayoutObj[UiResult]:
     """Idle homescreen."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_device_menu(
+    *,
+    failed_backup: bool,
+    battery_percentage: int,
+    firmware_version: str,
+    device_name: str,
+    paired_devices: Iterable[str],
+) -> LayoutObj[UiResult]:
+    """Show the device menu."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_pairing_device_name(
+    *,
+    device_name: str,
+) -> LayoutObj[UiResult]:
+    """Pairing device: first screen (device name)."""
+
+
+# rust/src/ui/api/firmware_micropython.rs
+def show_pairing_code(
+    *,
+    code: str,
+) -> LayoutObj[UiResult]:
+    """Pairing device: second screen (pairing code)."""
 
 
 # rust/src/ui/api/firmware_micropython.rs
@@ -611,7 +640,7 @@ def show_share_words(
 
 
 # rust/src/ui/api/firmware_micropython.rs
-def show_share_words_delizia(
+def show_share_words_extended(
     *,
     words: Iterable[str],
     subtitle: str | None,
@@ -639,7 +668,7 @@ def show_success(
     title: str,
     button: str,
     description: str = "",
-    allow_cancel: bool = True,
+    allow_cancel: bool = False,
     time_ms: int = 0,
 ) -> LayoutObj[UiResult]:
     """Success modal. No buttons shown when `button` is empty string."""

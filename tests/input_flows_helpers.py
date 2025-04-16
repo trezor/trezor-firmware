@@ -99,7 +99,7 @@ class RecoveryFlow:
 
     def enter_your_backup(self) -> BRGeneratorType:
         assert (yield).name == "recovery"
-        if self.debug.layout_type is LayoutType.Delizia:
+        if self.debug.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             assert TR.recovery__enter_each_word in self._text_content()
         else:
             assert TR.recovery__enter_backup in self._text_content()
@@ -131,7 +131,16 @@ class RecoveryFlow:
 
     def abort_recovery(self, confirm: bool) -> BRGeneratorType:
         yield
-        if self.client.layout_type is LayoutType.Caesar:
+        if self.client.layout_type is LayoutType.Bolt:
+            assert TR.recovery__enter_any_share in self._text_content()
+            self.debug.press_no()
+            yield
+            assert TR.recovery__wanna_cancel_recovery in self._text_content()
+            if confirm:
+                self.debug.press_yes()
+            else:
+                self.debug.press_no()
+        elif self.client.layout_type is LayoutType.Caesar:
             assert TR.recovery__num_of_words in self._text_content()
             self.debug.press_no()
             yield
@@ -141,7 +150,7 @@ class RecoveryFlow:
                 self.debug.press_yes()
             else:
                 self.debug.press_no()
-        elif self.client.layout_type is LayoutType.Delizia:
+        elif self.client.layout_type in (LayoutType.Delizia, LayoutType.Eckhart):
             assert TR.recovery__enter_each_word in self._text_content()
             self.debug.click(self.debug.screen_buttons.menu())
             self.debug.synchronize_at("VerticalMenu")
@@ -150,18 +159,19 @@ class RecoveryFlow:
             else:
                 self.debug.click(self.debug.screen_buttons.menu())
         else:
-            assert TR.recovery__enter_any_share in self._text_content()
-            self.debug.press_no()
-            yield
-            assert TR.recovery__wanna_cancel_recovery in self._text_content()
-            if confirm:
-                self.debug.press_yes()
-            else:
-                self.debug.press_no()
+            raise ValueError("Unknown model!")
 
     def abort_recovery_between_shares(self) -> BRGeneratorType:
         yield
-        if self.client.layout_type is LayoutType.Caesar:
+        if self.client.layout_type is LayoutType.Bolt:
+            assert TR.regexp("recovery__x_of_y_entered_template").search(
+                self._text_content()
+            )
+            self.debug.press_no()
+            assert (yield).name == "abort_recovery"
+            assert TR.recovery__wanna_cancel_recovery in self._text_content()
+            self.debug.press_yes()
+        elif self.client.layout_type is LayoutType.Caesar:
             assert TR.regexp("recovery__x_of_y_entered_template").search(
                 self._text_content()
             )
@@ -182,14 +192,36 @@ class RecoveryFlow:
             layout = self.debug.read_layout()
             assert layout.title() == TR.recovery__title_cancel_recovery
             self.debug.click(self.debug.screen_buttons.tap_to_confirm())
-        else:
+        elif self.client.layout_type is LayoutType.Eckhart:
             assert TR.regexp("recovery__x_of_y_entered_template").search(
                 self._text_content()
             )
-            self.debug.press_no()
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.synchronize_at("VerticalMenu")
+            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[1])
             assert (yield).name == "abort_recovery"
-            assert TR.recovery__wanna_cancel_recovery in self._text_content()
-            self.debug.press_yes()
+            layout = self.debug.read_layout()
+            assert layout.title() == TR.recovery__title
+            self.debug.click(self.debug.screen_buttons.ok())
+        else:
+            raise ValueError("Unknown model!")
+
+    def share_info_between_shares(self) -> BRGeneratorType:
+        yield
+        if self.client.layout_type is LayoutType.Eckhart:
+            assert TR.regexp("recovery__x_of_y_entered_template").search(
+                self._text_content()
+            )
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.synchronize_at("VerticalMenu")
+            self.debug.click(self.debug.screen_buttons.vertical_menu_items()[0])
+            assert (yield).name == "recovery_share"
+            layout = self.debug.read_layout()
+            assert layout.title() == TR.words__recovery_share
+            self.debug.click(self.debug.screen_buttons.menu())
+            self.debug.click(self.debug.screen_buttons.menu())
+        else:
+            raise ValueError("Unsupported model!")
 
     def input_number_of_words(self, num_words: int | None) -> BRGeneratorType:
         br = yield
@@ -325,10 +357,11 @@ class RecoveryFlow:
                 if click_info:
                     if self.client.layout_type is LayoutType.Bolt:
                         yield from self.click_info_bolt()
-                    elif self.client.layout_type is LayoutType.Delizia:
-                        yield from self.click_info_delizia()
-                    else:
-                        raise ValueError("Unknown model!")
+                    elif self.client.layout_type in (
+                        LayoutType.Delizia,
+                        LayoutType.Eckhart,
+                    ):
+                        yield from self.click_info_delizia_eckhart()
                     yield from self.success_more_shares_needed()
 
     def click_info_bolt(self) -> t.Generator[t.Any, t.Any, None]:
@@ -339,7 +372,7 @@ class RecoveryFlow:
             self.debug.swipe_up()
         self.debug.press_yes()
 
-    def click_info_delizia(self) -> BRGeneratorType:
+    def click_info_delizia_eckhart(self) -> BRGeneratorType:
         # Moving through the menu into the show_shares screen
         self.debug.click(self.debug.screen_buttons.menu())
         self.debug.synchronize_at("VerticalMenu")
@@ -575,6 +608,31 @@ class EthereumFlow:
 
             self.debug.press_yes()
 
+        elif self.client.layout_type is LayoutType.Caesar:
+            # confirm intro
+            if info:
+                self.debug.press_right()
+                assert self.debug.read_layout().title() in (
+                    TR.ethereum__staking_stake_address,
+                    TR.ethereum__staking_claim_address,
+                )
+                self.debug.press_left()
+            self.debug.press_middle()
+            yield
+
+            # confirm summary
+            if info:
+                self.debug.press_right()
+                assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
+                self.debug.press_right()
+                assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
+                self.debug.press_left()
+                self.debug.press_left()
+            self.debug.press_middle()
+            yield
+
+            self.debug.press_yes()
+
         elif self.client.layout_type is LayoutType.Delizia:
             # confirm intro
             if info:
@@ -604,31 +662,6 @@ class EthereumFlow:
                 self.debug.click(self.debug.screen_buttons.menu())
             self.debug.swipe_up()
             # br = yield  # FIXME: no BR on sign transaction
-
-            self.debug.press_yes()
-
-        elif self.client.layout_type is LayoutType.Caesar:
-            # confirm intro
-            if info:
-                self.debug.press_right()
-                assert self.debug.read_layout().title() in (
-                    TR.ethereum__staking_stake_address,
-                    TR.ethereum__staking_claim_address,
-                )
-                self.debug.press_left()
-            self.debug.press_middle()
-            yield
-
-            # confirm summary
-            if info:
-                self.debug.press_right()
-                assert TR.ethereum__gas_limit in self.debug.read_layout().text_content()
-                self.debug.press_right()
-                assert TR.ethereum__gas_price in self.debug.read_layout().text_content()
-                self.debug.press_left()
-                self.debug.press_left()
-            self.debug.press_middle()
-            yield
 
             self.debug.press_yes()
 

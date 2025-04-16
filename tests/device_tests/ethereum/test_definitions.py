@@ -13,7 +13,11 @@ from ...input_flows import InputFlowConfirmAllWarnings
 from . import common
 from .test_sign_typed_data import DATA as TYPED_DATA
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.ethereum,
+    pytest.mark.models(skip=["eckhart"]),
+]
 
 ERC20_OPERATION = "a9059cbb000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000123"
 ERC20_BUILTIN_TOKEN = "0xdac17f958d2ee523a2206206994597c13d831ec7"  # USDT

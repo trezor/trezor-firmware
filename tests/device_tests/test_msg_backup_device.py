@@ -68,6 +68,8 @@ def test_backup_bip39(client: Client):
 def test_backup_slip39_basic(client: Client, click_info: bool):
     if click_info and client.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
+    if click_info and client.layout_type is LayoutType.Eckhart:
+        pytest.skip("click_info not yet implemented on T3W1")
 
     assert client.features.backup_availability == messages.BackupAvailability.Required
 
@@ -97,7 +99,10 @@ def test_backup_slip39_single(client: Client):
 
     with client:
         IF = InputFlowBip39Backup(
-            client, confirm_success=(client.layout_type is not LayoutType.Delizia)
+            client,
+            confirm_success=(
+                client.layout_type not in (LayoutType.Delizia, LayoutType.Eckhart)
+            ),
         )
         client.set_input_flow(IF.get())
         device.backup(client)
@@ -124,6 +129,8 @@ def test_backup_slip39_single(client: Client):
 def test_backup_slip39_advanced(client: Client, click_info: bool):
     if click_info and client.layout_type is LayoutType.Caesar:
         pytest.skip("click_info not implemented on T2B1")
+    if click_info and client.layout_type is LayoutType.Eckhart:
+        pytest.skip("click_info not yet implemented on T3W1")
 
     assert client.features.backup_availability == messages.BackupAvailability.Required
 

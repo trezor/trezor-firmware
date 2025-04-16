@@ -13,7 +13,7 @@ use crate::{
 
 use super::super::{
     component::{Button, ButtonMsg, ButtonStyleSheet},
-    theme::{self, TITLE_HEIGHT},
+    theme::{self, HEADER_HEIGHT},
 };
 
 const ANIMATION_TIME_MS: u32 = 1000;
@@ -103,6 +103,7 @@ impl Header {
             button_msg: HeaderMsg::Cancelled,
         }
     }
+
     #[inline(never)]
     pub fn with_subtitle(mut self, subtitle: TString<'static>) -> Self {
         let style = theme::TEXT_SUB_GREY;
@@ -110,12 +111,14 @@ impl Header {
         self.subtitle = Some(Label::new(subtitle, self.title.alignment(), style));
         self
     }
+
     #[inline(never)]
     pub fn styled(mut self, style: TextStyle) -> Self {
         self.title_style = style;
         self.title = self.title.styled(style);
         self
     }
+
     #[inline(never)]
     pub fn subtitle_styled(mut self, style: TextStyle) -> Self {
         if let Some(subtitle) = self.subtitle.take() {
@@ -123,11 +126,13 @@ impl Header {
         }
         self
     }
+
     #[inline(never)]
     pub fn update_title(&mut self, ctx: &mut EventCtx, title: TString<'static>) {
         self.title.set_text(title);
         ctx.request_paint();
     }
+
     #[inline(never)]
     pub fn update_subtitle(
         &mut self,
@@ -160,8 +165,8 @@ impl Header {
         self.button_msg = msg;
         self
     }
-    #[inline(never)]
 
+    #[inline(never)]
     pub fn button_styled(mut self, style: ButtonStyleSheet) -> Self {
         if self.button.is_some() {
             self.button = Some(self.button.unwrap().styled(style));
@@ -185,7 +190,7 @@ impl Component for Header {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         let header_area = if let Some(b) = &mut self.button {
-            let (rest, button_area) = bounds.split_right(TITLE_HEIGHT);
+            let (rest, button_area) = bounds.split_right(HEADER_HEIGHT);
             b.place(button_area);
             rest
         } else {

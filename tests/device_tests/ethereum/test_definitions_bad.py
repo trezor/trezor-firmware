@@ -13,7 +13,11 @@ from trezorlib.tools import parse_path
 from .common import make_defs, make_network, make_payload, make_token, sign_payload
 from .test_definitions import DEFAULT_ERC20_PARAMS, ERC20_FAKE_ADDRESS
 
-pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
+pytestmark = [
+    pytest.mark.altcoin,
+    pytest.mark.ethereum,
+    pytest.mark.models(skip=["eckhart"]),
+]
 
 
 def fails(client: Client, network: bytes, match: str) -> None:

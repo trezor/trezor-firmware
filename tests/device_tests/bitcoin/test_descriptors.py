@@ -153,6 +153,9 @@ VECTORS_DESCRIPTORS = (  # coin, account, script_type, descriptors
 )
 
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
+
 def _address_n(purpose, coin, account, script_type):
     res = [H_(purpose), H_(0) if coin == "Bitcoin" else H_(1), H_(account)]
     if purpose == 10025 and script_type == messages.InputScriptType.SPENDTAPROOT:

@@ -29,7 +29,7 @@ from .construct.transaction import Message, RawInstruction
 pytestmark = [
     pytest.mark.altcoin,
     pytest.mark.solana,
-    pytest.mark.models("core"),
+    pytest.mark.models("core", skip=["eckhart"]),
 ]
 
 

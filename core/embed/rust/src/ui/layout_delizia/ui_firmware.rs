@@ -825,6 +825,7 @@ impl FirmwareUI for UIDelizia {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        _menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let flow = flow::show_danger::new_show_danger(title, description, value, verb_cancel)?;
@@ -881,6 +882,32 @@ impl FirmwareUI for UIDelizia {
         let notification = notification.map(|w| (w, notification_level));
         let layout = RootComponent::new(Homescreen::new(label, notification, hold)?);
         Ok(layout)
+    }
+
+    fn show_device_menu(
+        _failed_backup: bool,
+        _battery_percentage: u8,
+        _firmware_version: TString<'static>,
+        _device_name: TString<'static>,
+        _paired_devices: heapless::Vec<TString<'static>, 1>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"show_device_menu not supported",
+        ))
+    }
+
+    fn show_pairing_device_name(
+        _device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"show_pairing_device_name not supported",
+        ))
+    }
+
+    fn show_pairing_code(_code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
+            c"show_pairing_code not supported",
+        ))
     }
 
     fn show_info(
@@ -994,11 +1021,11 @@ impl FirmwareUI for UIDelizia {
         _title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"use show_share_words_delizia instead",
+            c"use show_share_words_extended instead",
         ))
     }
 
-    fn show_share_words_delizia(
+    fn show_share_words_extended(
         words: heapless::Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,

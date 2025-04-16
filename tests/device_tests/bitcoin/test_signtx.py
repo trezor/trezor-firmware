@@ -1611,9 +1611,7 @@ def test_information_cancel(client: Client):
         )
 
 
-@pytest.mark.models(
-    "core",
-)
+@pytest.mark.models("core")
 def test_information_replacement(client: Client):
     # Use the change output and an external output to bump the fee.
     # Originally fee was 3780, now 108060 (94280 from change and 10000 from external).
