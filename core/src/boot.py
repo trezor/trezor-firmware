@@ -115,8 +115,8 @@ if not utils.USE_OPTIGA or (optiga.get_sec() or 0) < 150:
 config.init(show_pin_timeout)
 translations.init()
 
-if __debug__ and not utils.EMULATOR:
-    config.wipe()
+# if __debug__ and not utils.EMULATOR:
+#     config.wipe()
 
 loop.schedule(bootscreen())
 loop.run()
