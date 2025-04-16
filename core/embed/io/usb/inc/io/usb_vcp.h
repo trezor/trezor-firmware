@@ -50,8 +50,8 @@ typedef struct {
   uint8_t ep_out;  // Address of OUT endpoint
 #endif
   uint8_t polling_interval;  // In units of 1ms
-  uint8_t max_packet_len;  // Length of the biggest packet, and of tx_packet and
-                           // rx_packet
+  uint16_t max_packet_len;   // Length of the biggest packet, and of tx_packet
+                             // and rx_packet
 } usb_vcp_info_t;
 
 secbool __wur usb_vcp_add(const usb_vcp_info_t *vcp_info);

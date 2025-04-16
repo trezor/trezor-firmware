@@ -152,7 +152,7 @@ typedef struct {
   uint8_t ep_cmd;
   uint8_t ep_in;
   uint8_t ep_out;
-  uint8_t max_packet_len;
+  uint16_t max_packet_len;
   uint8_t ep_in_is_idle;  // Set to 1 after IN endpoint gets idle
   uint8_t cmd_buffer[USB_CDC_MAX_CMD_PACKET_LEN];
 } usb_vcp_state_t;
