@@ -288,4 +288,20 @@ bool tropic_ecc_sign__verified(uint16_t key_slot_index, const uint8_t *dig,
 
 #endif
 
+// ---------------------------------------------------------------------
+#ifdef USE_HASH_PROCESSOR
+
+#include <sec/hash_processor.h>
+
+void hash_processor_sha256_init__verified(hash_sha256_context_t *ctx);
+
+void hash_processor_sha256_update__verified(hash_sha256_context_t *ctx,
+                                            const uint8_t *data,
+                                            uint32_t data_len);
+
+void hash_processor_sha256_final__verified(hash_sha256_context_t *ctx,
+                                           uint8_t *digest);
+
+#endif
+
 #endif  // SYSCALL_DISPATCH

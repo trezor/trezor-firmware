@@ -1159,4 +1159,59 @@ access_violation:
 }
 #endif
 
+// ---------------------------------------------------------------------
+
+#ifdef USE_HASH_PROCESSOR
+
+void hash_processor_sha256_init__verified(hash_sha256_context_t *ctx) {
+  if (!probe_write_access(ctx, sizeof(*ctx))) {
+    goto access_violation;
+  }
+
+  hash_processor_sha256_init(ctx);
+  return;
+
+access_violation:
+  apptask_access_violation();
+  return;
+}
+
+void hash_processor_sha256_update__verified(hash_sha256_context_t *ctx,
+                                            const uint8_t *data,
+                                            uint32_t data_len) {
+  if (!probe_write_access(ctx, sizeof(*ctx))) {
+    goto access_violation;
+  }
+
+  if (!probe_read_access(data, data_len)) {
+    goto access_violation;
+  }
+
+  hash_processor_sha256_update(ctx, data, data_len);
+  return;
+
+access_violation:
+  apptask_access_violation();
+  return;
+}
+
+void hash_processor_sha256_final__verified(hash_sha256_context_t *ctx,
+                                           uint8_t *digest) {
+  if (!probe_read_access(ctx, sizeof(*ctx))) {
+    goto access_violation;
+  }
+
+  if (!probe_write_access(digest, 32)) {
+    goto access_violation;
+  }
+
+  hash_processor_sha256_final(ctx, digest);
+  return;
+
+access_violation:
+  apptask_access_violation();
+  return;
+}
+#endif
+
 #endif  // SYSCALL_DISPATCH

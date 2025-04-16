@@ -825,4 +825,28 @@ bool tropic_ecc_sign(uint16_t key_slot_index, const uint8_t *dig,
 
 #endif
 
+// =============================================================================
+// hash_processor.h
+// =============================================================================
+
+#ifdef USE_HASH_PROCESSOR
+
+#include <sec/hash_processor.h>
+
+void hash_processor_sha256_init(hash_sha256_context_t *ctx) {
+  syscall_invoke1((uint32_t)ctx, SYSCALL_SHA256_INIT);
+}
+
+void hash_processor_sha256_update(hash_sha256_context_t *ctx,
+                                  const uint8_t *data, uint32_t data_len) {
+  syscall_invoke3((uint32_t)ctx, (uint32_t)data, data_len,
+                  SYSCALL_SHA256_UPDATE);
+}
+
+void hash_processor_sha256_final(hash_sha256_context_t *ctx, uint8_t *digest) {
+  syscall_invoke2((uint32_t)ctx, (uint32_t)digest, SYSCALL_SHA256_FINAL);
+}
+
+#endif
+
 #endif  // KERNEL_MODE

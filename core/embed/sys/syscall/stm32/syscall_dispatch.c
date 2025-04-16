@@ -28,6 +28,7 @@
 #include <io/usb_vcp.h>
 #include <io/usb_webusb.h>
 #include <sec/entropy.h>
+#include <sec/hash_processor.h>
 #include <sec/rng.h>
 #include <sec/secret.h>
 #include <sys/bootutils.h>
@@ -878,6 +879,22 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
 
     } break;
 #endif
+
+    case SYSCALL_SHA256_INIT: {
+      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
+      hash_processor_sha256_init__verified(ctx);
+    } break;
+    case SYSCALL_SHA256_UPDATE: {
+      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
+      uint8_t *data = (uint8_t *)args[1];
+      uint32_t len = (uint32_t)args[2];
+      hash_processor_sha256_update__verified(ctx, data, len);
+    } break;
+    case SYSCALL_SHA256_FINAL: {
+      hash_sha256_context_t *ctx = (hash_sha256_context_t *)args[0];
+      uint8_t *output = (uint8_t *)args[1];
+      hash_processor_sha256_final__verified(ctx, output);
+    } break;
 
     default:
       system_exit_fatal("Invalid syscall", __FILE__, __LINE__);
