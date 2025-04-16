@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
 from trezor import TR, config, utils, wire, workflow
-from trezor.enums import HomescreenFormat, MessageType, ThpMessageType
+from trezor.enums import HomescreenFormat, MessageType
 from trezor.messages import Success, UnlockPath
 from trezor.ui.layouts import confirm_action
 from trezor.wire import context
@@ -29,6 +29,9 @@ if TYPE_CHECKING:
 
     if utils.USE_THP:
         from trezor.messages import Failure, ThpCreateNewSession
+
+if utils.USE_THP:
+    from trezor.enums import ThpMessageType
 
 
 _SCREENSAVER_IS_ON = False
