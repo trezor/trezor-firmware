@@ -92,7 +92,7 @@ impl VerticalMenu {
     /// Enable only buttons that are fully visible in the menu area.
     /// Meaningful only if the menu is scrollable.
     /// If the menu fits its area, all buttons are enabled.
-    pub fn update_menu(&mut self, ctx: &mut EventCtx) {
+    pub fn update_button_states(&mut self, ctx: &mut EventCtx) {
         for button in self.buttons.iter_mut() {
             let in_bounds = button
                 .area()
@@ -140,30 +140,34 @@ impl VerticalMenu {
     }
 
     fn set_max_offset(&mut self) {
+        // Relevant only for testing when the animations are disabled
+        // The menu is scrollable until the last button is visible
+        #[cfg(feature = "ui_debug")]
         if animation_disabled() {
-            // Relevant only for testing when the animations are disabled
-            // The menu is scrollable until the last button is visible
-            self.offset_y_max = if self.buttons.len() > 0 {
-                self.total_height - unwrap!(self.buttons.last()).area().height()
-            } else {
-                0
-            }
-        } else {
-            // Calculate the overflow of the menu area
-            let menu_overflow = (self.total_height - self.bounds.height()).max(0);
-
-            // Find the first button from the top that would completely fit in the menu area
-            // in the bottom position
-            for button in &self.buttons {
-                let offset = button.area().top_left().y - self.bounds.top_left().y;
-                if offset > menu_overflow {
-                    self.offset_y_max = offset;
-                    return;
-                }
-            }
-
-            self.offset_y_max = menu_overflow;
+            self.offset_y_max = self.total_height
+                - self
+                    .buttons
+                    .last()
+                    .unwrap_or(&Button::empty())
+                    .area()
+                    .height();
+            return;
         }
+
+        // Calculate the overflow of the menu area
+        let menu_overflow = (self.total_height - self.bounds.height()).max(0);
+
+        // Find the first button from the top that would completely fit in the menu area
+        // in the bottom position
+        for button in &self.buttons {
+            let offset = button.area().top_left().y - self.bounds.top_left().y;
+            if offset > menu_overflow {
+                self.offset_y_max = offset;
+                return;
+            }
+        }
+
+        self.offset_y_max = menu_overflow;
     }
 
     // Shift position of touch events in the menu area by an offset of the current

@@ -21,10 +21,8 @@ pub struct VerticalMenuScreen {
     menu: VerticalMenu,
     /// Base position of the menu sliding window to scroll around
     offset_base: i16,
-    /// Used to enable swipe detection only when the menu does not fit its area
-    swipe_enabled: bool,
     /// Swipe detector
-    swipe: SwipeDetect,
+    swipe: Option<SwipeDetect>,
     /// Swipe configuration
     swipe_config: SwipeConfig,
 }
@@ -44,8 +42,7 @@ impl VerticalMenuScreen {
             header: Header::new(TString::empty()),
             menu,
             offset_base: 0,
-            swipe_enabled: false,
-            swipe: SwipeDetect::new(),
+            swipe: None,
             swipe_config: SwipeConfig::new()
                 .with_swipe(Direction::Up, SwipeSettings::default())
                 .with_swipe(Direction::Down, SwipeSettings::default()),
@@ -59,20 +56,90 @@ impl VerticalMenuScreen {
 
     /// Update swipe detection and buttons state based on menu size
     pub fn initialize_screen(&mut self, ctx: &mut EventCtx) {
-        if !self.menu.fits_area() {
-            // Enable swipe
-            self.swipe_enabled = true;
-            self.swipe_config = SwipeConfig::new()
-                .with_swipe(Direction::Up, SwipeSettings::default())
-                .with_swipe(Direction::Down, SwipeSettings::default());
+        #[cfg(feature = "ui_debug")]
+        if animation_disabled() {
+            self.swipe = Some(SwipeDetect::new());
             ctx.enable_swipe();
-
+            // Set default position for the sliding window
+            self.menu.set_offset(0);
             // Update the menu buttons state
-            self.menu.update_menu(ctx);
+            self.menu.update_button_states(ctx);
+            return;
+        }
+
+        // Switch swiping on/off based on the menu fit
+        self.swipe = if !self.menu.fits_area() {
+            ctx.enable_swipe();
+            Some(SwipeDetect::new())
         } else {
-            // Disable swipe
-            self.swipe_enabled = false;
             ctx.disable_swipe();
+            None
+        };
+
+        // Set default position for the sliding window
+        self.menu.set_offset(0);
+        // Update button states
+        self.menu.update_button_states(ctx);
+    }
+
+    fn handle_swipe_event(&mut self, ctx: &mut EventCtx, event: Event) {
+        // Relevant only for testing when the animations are disabled
+        // The menu is scrollable until the last button is visible
+        #[cfg(feature = "ui_debug")]
+        if animation_disabled() {
+            if let Some(dir @ (Direction::Up | Direction::Down)) = self
+                .swipe
+                .as_mut()
+                .and_then(|swipe| swipe.event(ctx, event, self.swipe_config))
+                .and_then(|event| match event {
+                    SwipeEvent::End(dir) => Some(dir),
+                    _ => None,
+                })
+            {
+                self.menu.scroll_item(dir);
+                ctx.request_paint();
+            }
+            return;
+        }
+
+        if let Some(swipe) = &mut self.swipe {
+            match swipe.event(ctx, event, self.swipe_config) {
+                Some(SwipeEvent::Start(_)) => {
+                    // Lock the base position to scroll around
+                    self.offset_base = self.menu.get_offset();
+                }
+                Some(SwipeEvent::Move(dir @ (Direction::Up | Direction::Down), delta)) => {
+                    // Decrease the sensitivity of the swipe
+                    let delta = delta / Self::TOUCH_SENSITIVITY_DIVIDER;
+
+                    let offset = match dir {
+                        Direction::Up => self.offset_base + delta,
+                        Direction::Down => self.offset_base - delta,
+                        _ => unreachable!(), // already matched only Up or Down
+                    };
+
+                    self.menu.set_offset(offset);
+                    self.menu.update_button_states(ctx);
+                    return;
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn render_overflow_arrow<'s>(&'s self, target: &mut impl Renderer<'s>) {
+        // Do not render the arrow if animations are disabled
+        #[cfg(feature = "ui_debug")]
+        if animation_disabled() {
+            return;
+        }
+
+        // Render the down arrow if the menu overflows and can be scrolled further down
+        if self.swipe.is_some() && !self.menu.is_max_offset() {
+            ToifImage::new(SCREEN.bottom_center(), theme::ICON_CHEVRON_DOWN_MINI.toif)
+                .with_align(Alignment2D::BOTTOM_CENTER)
+                .with_fg(theme::GREY_LIGHT)
+                .render(target);
         }
     }
 }
@@ -97,47 +164,7 @@ impl Component for VerticalMenuScreen {
         // Update the screen after the menu fit is calculated
         // This is needed to enable swipe detection only when the menu does not fit
         if let Event::Attach(_) = event {
-            self.update_screen(ctx);
-        }
-
-        // Handle swipe events if swipe is enabled (menu does not fit)
-        if self.swipe_enabled && !animation_disabled() {
-            match self.swipe.event(ctx, event, self.swipe_config) {
-                Some(SwipeEvent::Start(_)) => {
-                    // Lock the base position to scroll around
-                    self.offset_base = self.menu.get_offset();
-                }
-                Some(SwipeEvent::End(_)) => {
-                    // Lock the base position to scroll around
-                    self.offset_base = self.menu.get_offset();
-                }
-                Some(SwipeEvent::Move(dir, delta)) => {
-                    // Decrease the sensitivity of the swipe
-                    let delta = delta / Self::TOUCH_SENSITIVITY_DIVIDER;
-                    // Scroll the menu based on the swipe direction
-                    match dir {
-                        Direction::Up => {
-                            self.menu.set_offset(self.offset_base + delta);
-                            self.menu.update_menu(ctx);
-                            return None;
-                        }
-                        Direction::Down => {
-                            self.menu.set_offset(self.offset_base - delta);
-                            self.menu.update_menu(ctx);
-                            return None;
-                        }
-                        _ => {}
-                    }
-                }
-                _ => {}
-            };
-        // Relevant only for testing testing purposes when the animations are
-        // disabled. The menu is scrollable up/down item-wise
-        } else if animation_disabled() {
-            if let Some(SwipeEvent::End(dir)) = self.swipe.event(ctx, event, self.swipe_config) {
-                self.menu.scroll_item(dir);
-                self.menu.update_menu(ctx);
-            }
+            self.initialize_screen(ctx);
         }
 
         if let Some(msg) = self.header.event(ctx, event) {
@@ -152,20 +179,14 @@ impl Component for VerticalMenuScreen {
             return Some(VerticalMenuScreenMsg::Selected(i));
         }
 
+        self.handle_swipe_event(ctx, event);
         None
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
         self.menu.render(target);
-
-        // Render the down arrow if the menu overflows and can be scrolled further down
-        if !self.menu.fits_area() && !self.menu.is_max_offset() {
-            ToifImage::new(SCREEN.bottom_center(), theme::ICON_CHEVRON_DOWN_MINI.toif)
-                .with_align(Alignment2D::BOTTOM_CENTER)
-                .with_fg(theme::GREY_LIGHT)
-                .render(target);
-        }
+        self.render_overflow_arrow(target);
     }
 }
 
