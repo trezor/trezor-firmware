@@ -107,8 +107,10 @@ stdenvNoCC.mkDerivation ({
     libusb1
     llvmPackages.clang
     openssl
+    perl
     pkg-config
     poetry
+    ps
     oldNixpkgs.protobuf3_19
     pyright
     (mkBinOnlyWrapper rustNightly)
