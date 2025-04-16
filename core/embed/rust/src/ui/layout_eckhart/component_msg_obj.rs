@@ -16,9 +16,9 @@ use crate::{
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
     Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg,
-    NumberInputScreen, NumberInputScreenMsg, PinKeyboard, PinKeyboardMsg, SelectWordCountMsg,
-    SelectWordCountScreen, SelectWordMsg, SelectWordScreen, SetBrightnessScreen, TextScreen,
-    TextScreenMsg,
+    NumberInputScreen, NumberInputScreenMsg, PinKeyboard, PinKeyboardMsg, ProgressScreen,
+    SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg, SelectWordScreen,
+    SetBrightnessScreen, TextScreen, TextScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -77,6 +77,12 @@ impl ComponentMsgObj for Homescreen {
             HomescreenMsg::Dismissed => Ok(CANCELLED.as_obj()),
             HomescreenMsg::Menu => Ok(INFO.as_obj()),
         }
+    }
+}
+
+impl ComponentMsgObj for ProgressScreen {
+    fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
+        unreachable!()
     }
 }
 
