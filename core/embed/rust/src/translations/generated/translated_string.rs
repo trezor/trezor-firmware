@@ -450,7 +450,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__gas_price = 275,  // "Gas price"
     #[cfg(feature = "universal_fw")]
-    ethereum__max_gas_price = 276,  // "Max gas price"
+    ethereum__max_gas_price = 276,  // "Max fee per gas"
     #[cfg(feature = "universal_fw")]
     ethereum__name_and_version = 277,  // "Name and version"
     #[cfg(feature = "universal_fw")]
@@ -458,7 +458,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     ethereum__no_message_field = 279,  // "No message field"
     #[cfg(feature = "universal_fw")]
-    ethereum__priority_fee = 280,  // "Priority fee"
+    ethereum__priority_fee = 280,  // "Max priority fee"
     #[cfg(feature = "universal_fw")]
     ethereum__show_full_array = 281,  // "Show full array"
     #[cfg(feature = "universal_fw")]
@@ -1853,7 +1853,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::ethereum__gas_price => "Gas price",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__max_gas_price => "Max gas price",
+            Self::ethereum__max_gas_price => "Max fee per gas",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__name_and_version => "Name and version",
             #[cfg(feature = "universal_fw")]
@@ -1861,7 +1861,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::ethereum__no_message_field => "No message field",
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__priority_fee => "Priority fee",
+            Self::ethereum__priority_fee => "Max priority fee",
             #[cfg(feature = "universal_fw")]
             Self::ethereum__show_full_array => "Show full array",
             #[cfg(feature = "universal_fw")]
