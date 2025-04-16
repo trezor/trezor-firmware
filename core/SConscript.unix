@@ -622,7 +622,11 @@ env.Ignore(micropy_defines, qstr_generated)
 if FROZEN:
     SOURCE_PY_DIR = 'src/'
 
-    SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py')
+    SOURCE_PY = Glob(SOURCE_PY_DIR + '*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'ble.py',
+        ] if "ble" not in FEATURES_AVAILABLE else []
+    )
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/sdcard.py',
