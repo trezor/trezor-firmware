@@ -15,7 +15,7 @@ use crate::{
                     Paragraphs, VecExt,
                 },
             },
-            Empty, FormattedText,
+            ComponentExt as _, Empty, FormattedText, Timeout,
         },
         geometry::{Alignment, LinearPlacement, Offset},
         layout::{
@@ -33,8 +33,8 @@ use super::{
     component::Button,
     firmware::{
         ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, Header, HeaderMsg, Hint,
-        Homescreen, MnemonicKeyboard, NumberInputScreen, PinKeyboard, SelectWordCountScreen,
-        SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
+        Homescreen, MnemonicKeyboard, NumberInputScreen, PinKeyboard, ProgressScreen,
+        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -921,7 +921,7 @@ impl FirmwareUI for UIEckhart {
 
     fn show_progress(
         description: TString<'static>,
-        _indeterminate: bool,
+        indeterminate: bool,
         title: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let (title, description) = if let Some(title) = title {
@@ -930,23 +930,35 @@ impl FirmwareUI for UIEckhart {
             (description, "".into())
         };
 
-        let paragraphs = Paragraph::new(&theme::TEXT_REGULAR, description)
-            .into_paragraphs()
-            .with_placement(LinearPlacement::vertical());
-        let header = Header::new(title);
-        let screen = TextScreen::new(paragraphs).with_header(header);
-
-        let layout = RootComponent::new(screen);
+        let layout = RootComponent::new(ProgressScreen::new_progress(
+            title,
+            indeterminate,
+            description,
+        ));
         Ok(layout)
     }
 
     fn show_progress_coinjoin(
-        _title: TString<'static>,
-        _indeterminate: bool,
-        _time_ms: u32,
-        _skip_first_paint: bool,
+        description: TString<'static>,
+        indeterminate: bool,
+        time_ms: u32,
+        skip_first_paint: bool,
     ) -> Result<Gc<LayoutObj>, Error> {
-        Err::<Gc<LayoutObj>, Error>(Error::ValueError(c"not implemented"))
+        let progress = ProgressScreen::new_coinjoin_progress(
+            TR::coinjoin__title_progress.into(),
+            indeterminate,
+            description,
+        );
+        let obj = if time_ms > 0 && indeterminate {
+            let timeout = Timeout::new(time_ms);
+            LayoutObj::new((timeout, progress.map(|_msg| None)))?
+        } else {
+            LayoutObj::new(progress)?
+        };
+        if skip_first_paint {
+            obj.skip_first_paint();
+        }
+        Ok(obj)
     }
 
     fn show_share_words(
