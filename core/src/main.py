@@ -52,14 +52,21 @@ usb.bus.open(storage.device.get_device_id())
 
 # enable BLE, allow connections
 if utils.USE_BLE:
+    # with unimport_manager:
+    import trezor.log
     import trezorble as ble
-    ble.start_comm()
 
-    # allow connections from bonded peers if any
-    if ble.peer_count() > 0:
-        ble.start_advertising(True, storage.device.get_label())
+    try:
+        ble.start_comm()
+
+        # allow connections from bonded peers if any
+        if ble.peer_count() > 0:
+            ble.start_advertising(True, storage.device.get_label())
+    except Exception as e:
+        trezor.log.exception(__name__, e)
 
     del ble
+    del trezor.log
 
 
 # run the endless loop

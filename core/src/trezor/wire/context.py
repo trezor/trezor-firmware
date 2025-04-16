@@ -107,6 +107,13 @@ def get_context() -> Context:
     return CURRENT_CONTEXT
 
 
+def maybe_get_context() -> Context | None:
+    """Variant of the function above, same limitations apply. Needed in special cases
+    where a handler might be invoked over wire or from a homescreen menu (e.g. wipe).
+    """
+    return CURRENT_CONTEXT
+
+
 def with_context(ctx: Context, workflow: loop.Task) -> Generator:
     """Run a workflow in a particular context.
 

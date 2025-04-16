@@ -1621,14 +1621,16 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     *,
     ///     device_name: str,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Pairing device: first screen (device name)."""
+    ///     """Pairing device: first screen (device name).
+    ///     Returns if BLEEvent::PairingRequest is received."""
     Qstr::MP_QSTR_show_pairing_device_name => obj_fn_kw!(0, new_show_pairing_device_name).as_obj(),
 
     /// def show_pairing_code(
     ///     *,
     ///     code: str,
     /// ) -> LayoutObj[UiResult]:
-    ///     """Pairing device: second screen (pairing code)."""
+    ///     """Pairing device: second screen (pairing code).
+    ///     Returns on BLEEvent::{PairingCanceled, Disconnected}."""
     Qstr::MP_QSTR_show_pairing_code => obj_fn_kw!(0, new_show_pairing_code).as_obj(),
 
     /// def show_info(
