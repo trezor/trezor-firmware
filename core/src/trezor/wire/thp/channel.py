@@ -183,12 +183,13 @@ class Channel:
             return received_message_handler.handle_received_message(self, buffer)
         elif self.expected_payload_length + INIT_HEADER_LENGTH > self.bytes_read:
             self.is_cont_packet_expected = True
-            self._log(
-                "CONT EXPECTED - read/expected:",
-                str(self.bytes_read)
-                + "/"
-                + str(self.expected_payload_length + INIT_HEADER_LENGTH),
-            )
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                self._log(
+                    "CONT EXPECTED - read/expected:",
+                    str(self.bytes_read)
+                    + "/"
+                    + str(self.expected_payload_length + INIT_HEADER_LENGTH),
+                )
         else:
             raise ThpError(
                 "Read more bytes than is the expected length of the message!"
@@ -238,7 +239,8 @@ class Channel:
                     raise Exception(
                         "Channel is in a state that does not support fallback."
                     )
-                self._log("Started fallback read")
+                if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                    self._log("Started fallback read")
                 self._prepare_fallback()
             except Exception:
                 self.fallback_decrypt = False
@@ -385,7 +387,8 @@ class Channel:
     def _finish_fallback(self) -> None:
         self.fallback_decrypt = False
         self.busy_decoder = None
-        self._log("Finish fallback")
+        if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+            self._log("Finish fallback")
 
     def _decrypt_single_packet_payload(
         self, payload: utils.BufferType
