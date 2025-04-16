@@ -63,7 +63,10 @@ class TrezorClient:
     _last_active_session: SessionV1 | None = None
 
     _session_id_counter: int = 0
-    _default_pairing_method: int = messages.ThpPairingMethod.CodeEntry
+    _default_pairing_method: messages.ThpPairingMethod = (
+        messages.ThpPairingMethod.CodeEntry
+    )
+
     def __init__(
         self,
         transport: Transport,
@@ -101,7 +104,9 @@ class TrezorClient:
         else:
             raise Exception("Unknown protocol version")
 
-    def do_pairing(self, pairing_method: int | None = None) -> None:
+    def do_pairing(
+        self, pairing_method: messages.ThpPairingMethod | None = None
+    ) -> None:
         from .transport.session import SessionV2
 
         assert self.protocol_version == ProtocolVersion.V2
