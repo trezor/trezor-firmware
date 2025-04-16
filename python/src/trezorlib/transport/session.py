@@ -200,7 +200,13 @@ class SessionV1(Session):
         assert self.client._last_active_session is self
         if t.TYPE_CHECKING:
             assert isinstance(self.client.protocol, ProtocolV1Channel)
-        return self.client.protocol.read()
+        resp = self.client.protocol.read()
+
+        from ..debuglink import TrezorClientDebugLink
+
+        if isinstance(self.client, TrezorClientDebugLink):
+            self.client.notify_read(resp)
+        return resp
 
     def init_session(self, derive_cardano: bool | None = None) -> None:
         if self.id == b"":

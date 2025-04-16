@@ -1003,7 +1003,6 @@ class SessionDebugWrapper(Session):
         msg = self._session._read()
         if isinstance(self.client, TrezorClientDebugLink):
             msg = self.client._filter_message(msg)
-            self.client.notify_read(msg)
         return msg
 
     def resume(self) -> None:
