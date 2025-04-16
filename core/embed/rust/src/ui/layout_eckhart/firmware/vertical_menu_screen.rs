@@ -58,7 +58,7 @@ impl VerticalMenuScreen {
     }
 
     /// Update swipe detection and buttons state based on menu size
-    pub fn update_screen(&mut self, ctx: &mut EventCtx) {
+    pub fn initialize_screen(&mut self, ctx: &mut EventCtx) {
         if !self.menu.fits_area() {
             // Enable swipe
             self.swipe_enabled = true;

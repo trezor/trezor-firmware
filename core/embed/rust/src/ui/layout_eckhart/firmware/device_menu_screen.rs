@@ -421,7 +421,7 @@ impl<'a> DeviceMenuScreen<'a> {
                         self.place(self.bounds);
                         self.menu_screen
                             .as_mut()
-                            .map(|screen| screen.update_screen(ctx));
+                            .map(|screen| screen.initialize_screen(ctx));
                         return None;
                     }
                     Some(Action::Return(msg)) => return Some(msg),
@@ -442,7 +442,7 @@ impl<'a> DeviceMenuScreen<'a> {
             self.place(self.bounds);
             self.menu_screen
                 .as_mut()
-                .map(|screen| screen.update_screen(ctx));
+                .map(|screen| screen.initialize_screen(ctx));
 
             None
         } else {
