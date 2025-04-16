@@ -36,3 +36,25 @@ class HashBenchmark:
             value=format_float(value),
             unit="MB/s",
         )
+
+
+class RateHashBenchmark:
+    def __init__(self, hash_ctx_constructor: Callable[[], HashCtx]) -> None:
+        self.hash_ctx_constructor = hash_ctx_constructor
+
+    def prepare(self) -> None:
+        self.hash_ctx = self.hash_ctx_constructor()
+        self.iterations_count = 10000
+        self.data = bytes(self.hash_ctx.block_size)
+
+    def run(self) -> None:
+        for _ in range(self.iterations_count):
+            self.hash_ctx.update(self.data)
+
+    def get_result(self, duration_us: int, repetitions: int) -> BenchmarkResult:
+        value = (repetitions * self.iterations_count * 1000 * 1000) / (duration_us)
+
+        return BenchmarkResult(
+            value=format_float(value),
+            unit="#/s",
+        )
