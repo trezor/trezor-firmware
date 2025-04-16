@@ -11,7 +11,7 @@ python = "^3.9"
 trezor = {path = "./python", develop = true}
 tvl = {path = "./vendor/ts-tvl", develop = true}
 scons = "*"
-protobuf = "*"
+protobuf = "~5.28.0"  # minor needs to stay in sync with shell.nix
 nanopb = "^0.4.3"
 
 ## test tools

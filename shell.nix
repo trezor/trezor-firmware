@@ -111,7 +111,7 @@ stdenvNoCC.mkDerivation ({
     pkg-config
     poetry
     ps
-    oldNixpkgs.protobuf3_19
+    protobuf_28  # needs to stay synced with poetry.lock
     pyright
     (mkBinOnlyWrapper rustNightly)
     wget
