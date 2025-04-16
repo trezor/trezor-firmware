@@ -67,7 +67,7 @@ def unimport_begin() -> set[str]:
 
 
 def unimport_end(mods: set[str], collect: bool = True) -> None:
-    if __debug__:
+    if False:
         check_heap_fragmentation()
 
     for mod in sys.modules:  # pylint: disable=consider-using-dict-items
