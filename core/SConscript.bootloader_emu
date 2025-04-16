@@ -207,7 +207,7 @@ ALLPATHS = ['embed/rust',
 env.Replace(
     COPT=env.get('ENV').get('OPTIMIZE', '-Os'),
     CCFLAGS='$COPT '
-    '-g3 '
+    '-g '
     '-nostdlib '
     '-std=gnu11 -Wall -Werror -Wpointer-arith -Wno-missing-braces -fno-common '
     '-fdata-sections -ffunction-sections '
