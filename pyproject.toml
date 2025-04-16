@@ -3,6 +3,7 @@ name = "trezor-firmware"
 version = "0.0.0"
 description = ""
 authors = ["SatoshiLabs <info@satoshilabs.com>"]
+package-mode = false
 
 [tool.poetry.dependencies]
 # all
@@ -15,7 +16,7 @@ nanopb = "^0.4.3"
 
 ## test tools
 pytest = "^8"
-coverage = "<5"  # coverage 5+ uses binary sqlite format
+coverage = "5.5"
 pytest-ordering = "*"
 pytest-random-order = "*"
 pytest-timeout = "*"
