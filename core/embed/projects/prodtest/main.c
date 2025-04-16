@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
@@ -116,12 +117,17 @@ static size_t console_write(void *context, const char *buf, size_t size) {
 
 static void vcp_intr(void) { cli_abort(&g_cli); }
 
-static void usb_init_all(void) {
-  enum {
-    VCP_PACKET_LEN = 64,
-    VCP_BUFFER_LEN = 1024,
-  };
+#if defined(USE_USB_HS)
+#define VCP_PACKET_LEN 512
+#elif defined(USE_USB_FS)
+#define VCP_PACKET_LEN 64
+#else
+#error "USB type not defined"
+#endif
 
+#define VCP_BUFFER_LEN 1024
+
+static void usb_init_all(void) {
   static const usb_dev_info_t dev_info = {
       .device_class = 0xEF,     // Composite Device Class
       .device_subclass = 0x02,  // Common Class
