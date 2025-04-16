@@ -7,7 +7,7 @@ from trezor import loop, protobuf, utils, workflow
 from trezor.enums import ButtonRequestType
 from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
-from trezor.wire.errors import ActionCancelled, SilentError
+from trezor.wire.errors import ActionCancelled, DataError, SilentError
 from trezor.wire.protocol_common import Context, Message
 from trezor.wire.thp import ChannelState, get_enabled_pairing_methods
 
@@ -144,7 +144,7 @@ class PairingContext(Context):
 
     def set_selected_method(self, selected_method: ThpPairingMethod) -> None:
         if selected_method not in get_enabled_pairing_methods(self.iface):
-            raise Exception("Not allowed to set this method")
+            raise DataError("Selected pairing method is not supported")
         self.selected_method = selected_method
 
     def _hotfix(self) -> None:
@@ -166,10 +166,11 @@ class PairingContext(Context):
         except RuntimeError:
             time.sleep(0.1)
             context.CURRENT_CONTEXT = self
-            log.debug(
-                __name__,
-                "Hotfix for current context being destroyed by workflow.close_others",
-            )
+            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                log.debug(
+                    __name__,
+                    "Hotfix for current context being destroyed by workflow.close_others",
+                )
         # --- HOTFIX END ---
 
     async def show_pairing_dialog(self, device_name: str | None = None) -> None:
