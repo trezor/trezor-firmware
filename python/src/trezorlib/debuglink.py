@@ -1126,7 +1126,7 @@ class TrezorClientDebugLink(TrezorClient):
         # and know the supported debug capabilities
         if self.protocol_version is ProtocolVersion.V2:
             assert isinstance(self.protocol, ProtocolV2Channel)
-            self.do_pairing()
+            self.do_pairing(pairing_method=messages.ThpPairingMethod.SkipPairing)
             # self.protocol = self.protocol.get_channel()
         self.debug.model = self.model
         self.debug.version = self.version
