@@ -2,8 +2,12 @@ import utime
 from typing import TYPE_CHECKING
 
 import storage.cache as storage_cache
-from trezor import log, loop
-from trezor.enums import MessageType, ThpMessageType
+from trezor import log, loop, utils
+from trezor.enums import MessageType
+
+if utils.USE_THP:
+    from trezor.enums import ThpMessageType
+
 
 if TYPE_CHECKING:
     from typing import Callable
@@ -14,8 +18,6 @@ if __debug__:
     # Used in `on_close` below for memory statistics.
 
     import micropython
-
-    from trezor import utils
 
 if utils.USE_THP:
     ALLOW_WHILE_LOCKED = (
