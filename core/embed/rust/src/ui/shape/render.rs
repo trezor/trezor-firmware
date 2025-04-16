@@ -101,17 +101,11 @@ where
         // TODO: consider storing original canvas.viewport
         //       and restoring it by drop() function
 
-        #[cfg(feature = "ui_debug")]
-        {
-            Self {
-                canvas,
-                cache,
-                overflow: false,
-            }
-        }
-        #[cfg(not(feature = "ui_debug"))]
-        {
-            Self { canvas, cache }
+        Self {
+            canvas,
+            cache,
+            #[cfg(feature = "ui_debug")]
+            overflow: false,
         }
     }
 }
@@ -157,8 +151,6 @@ where
     pub renderer: T,
     _env: core::marker::PhantomData<&'env mut &'env ()>,
     _alloc: core::marker::PhantomData<&'alloc ()>,
-    #[cfg(feature = "ui_debug")]
-    overflow: bool,
 }
 
 impl<'alloc, T> ScopedRenderer<'alloc, '_, T>
@@ -166,22 +158,10 @@ where
     T: Renderer<'alloc>,
 {
     pub fn new(renderer: T) -> Self {
-        #[cfg(feature = "ui_debug")]
-        {
-            Self {
-                renderer,
-                _env: core::marker::PhantomData,
-                _alloc: core::marker::PhantomData,
-                overflow: false,
-            }
-        }
-        #[cfg(not(feature = "ui_debug"))]
-        {
-            Self {
-                renderer,
-                _env: core::marker::PhantomData,
-                _alloc: core::marker::PhantomData,
-            }
+        Self {
+            renderer,
+            _env: core::marker::PhantomData,
+            _alloc: core::marker::PhantomData,
         }
     }
 
@@ -211,11 +191,11 @@ where
 
     #[cfg(feature = "ui_debug")]
     fn raise_overflow_exception(&mut self) {
-        self.overflow = true;
+        self.renderer.raise_overflow_exception();
     }
 
     #[cfg(feature = "ui_debug")]
     fn should_raise_overflow_exception(&self) -> bool {
-        self.overflow
+        self.renderer.should_raise_overflow_exception()
     }
 }

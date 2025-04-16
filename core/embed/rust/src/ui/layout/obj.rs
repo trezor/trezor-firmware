@@ -44,7 +44,7 @@ use crate::{
         },
         display::{self, Color},
         event::USBEvent,
-        shape::render_on_display,
+        shape::{render_on_display, Renderer},
         CommonUI, ModelUI,
     },
 };
@@ -147,11 +147,20 @@ where
     }
 
     fn paint(&mut self) -> Result<(), Error> {
+        let mut overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.inner.render(target);
+            #[cfg(feature = "ui_debug")]
+            if target.should_raise_overflow_exception() {
+                overflow = true;
+            }
         });
 
-        Ok(())
+        if overflow {
+            Err(Error::OutOfRange)
+        } else {
+            Ok(())
+        }
     }
 }
 
