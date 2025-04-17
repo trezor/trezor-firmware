@@ -2,6 +2,10 @@
  * crypto_hash/sha512/ref/ from http://bench.cr.yp.to/supercop.html
  * by D. J. Bernstein */
 
+#define USE_HASH_PROCESSOR
+
+#include <sec/hash_processor.h>
+
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -469,12 +473,14 @@ static const uint8_t iv_224[32] = {
     0x64, 0xf9, 0x8f, 0xa7, 0xbe, 0xfa, 0x4f, 0xa4
 };
 
+#ifndef USE_HASH_PROCESSOR
 static const uint8_t iv_256[32] = {
     0x6a, 0x09, 0xe6, 0x67, 0xbb, 0x67, 0xae, 0x85,
     0x3c, 0x6e, 0xf3, 0x72, 0xa5, 0x4f, 0xf5, 0x3a,
     0x51, 0x0e, 0x52, 0x7f, 0x9b, 0x05, 0x68, 0x8c,
     0x1f, 0x83, 0xd9, 0xab, 0x5b, 0xe0, 0xcd, 0x19
 };
+#endif
 
 static const uint8_t iv_384[64] = {
     0xcb, 0xbb, 0x9d, 0x5d, 0xc1, 0x05, 0x9e, 0xd8, 0x62, 0x9a, 0x29,
@@ -504,12 +510,16 @@ void sha224_inc_init(sha224ctx *state) {
 }
 
 void sha256_inc_init(sha256ctx *state) {
+#ifdef USE_HASH_PROCESSOR
+    hash_processor_sha256_init(&(state->ctx));
+#else
     for (size_t i = 0; i < 32; ++i) {
         state->ctx[i] = iv_256[i];
     }
     for (size_t i = 32; i < 40; ++i) {
         state->ctx[i] = 0;
     }
+#endif
 }
 
 void sha384_inc_init(sha384ctx *state) {
@@ -535,7 +545,11 @@ void sha224_inc_ctx_clone(sha224ctx *stateout, const sha224ctx *statein) {
 }
 
 void sha256_inc_ctx_clone(sha256ctx *stateout, const sha256ctx *statein) {
+#ifdef USE_HASH_PROCESSOR
+    memcpy(&(stateout->ctx), &(statein->ctx), sizeof(hash_sha256_context_t));
+#else
     memcpy(stateout->ctx, statein->ctx, PQC_SHA256CTX_BYTES);
+#endif
 }
 
 void sha384_inc_ctx_clone(sha384ctx *stateout, const sha384ctx *statein) {
@@ -563,16 +577,19 @@ void sha512_inc_ctx_release(sha512ctx *state) {
 }
 
 void sha256_inc_blocks(sha256ctx *state, const uint8_t *in, size_t inblocks) {
+#ifdef USE_HASH_PROCESSOR
+    hash_processor_sha256_update(&(state->ctx), (uint8_t *)in, inblocks * 64);
+#else
     uint64_t bytes = load_bigendian_64(state->ctx + 32);
 
     crypto_hashblocks_sha256(state->ctx, in, 64 * inblocks);
     bytes += 64 * inblocks;
 
     store_bigendian_64(state->ctx + 32, bytes);
+#endif
 }
 
 void sha224_inc_blocks(sha224ctx *state, const uint8_t *in, size_t inblocks) {
-    sha256_inc_blocks((sha256ctx *) state, in, inblocks);
 }
 
 void sha512_inc_blocks(sha512ctx *state, const uint8_t *in, size_t inblocks) {
@@ -589,6 +606,10 @@ void sha384_inc_blocks(sha384ctx *state, const uint8_t *in, size_t inblocks) {
 }
 
 void sha256_inc_finalize(uint8_t *out, sha256ctx *state, const uint8_t *in, size_t inlen) {
+#ifdef USE_HASH_PROCESSOR
+    hash_processor_sha256_update(&(state->ctx), (uint8_t *)in, inlen);
+    hash_processor_sha256_final(&(state->ctx), out);
+#else
     uint8_t padded[128];
     uint64_t bytes = load_bigendian_64(state->ctx + 32) + inlen;
 
@@ -634,15 +655,58 @@ void sha256_inc_finalize(uint8_t *out, sha256ctx *state, const uint8_t *in, size
         out[i] = state->ctx[i];
     }
     sha256_inc_ctx_release(state);
+#endif
 }
 
 void sha224_inc_finalize(uint8_t *out, sha224ctx *state, const uint8_t *in, size_t inlen) {
     uint8_t tmp[32];
     sha256_inc_finalize(tmp, (sha256ctx *)state, in, inlen);
 
-    for (size_t i = 0; i < 28; ++i) {
-        out[i] = tmp[i];
+    uint8_t padded[128];
+    uint64_t bytes = load_bigendian_64(state->ctx + 32) + inlen;
+
+    crypto_hashblocks_sha256(state->ctx, in, inlen);
+    in += inlen;
+    inlen &= 63;
+    in -= inlen;
+
+    for (size_t i = 0; i < inlen; ++i) {
+        padded[i] = in[i];
     }
+    padded[inlen] = 0x80;
+
+    if (inlen < 56) {
+        for (size_t i = inlen + 1; i < 56; ++i) {
+            padded[i] = 0;
+        }
+        padded[56] = (uint8_t) (bytes >> 53);
+        padded[57] = (uint8_t) (bytes >> 45);
+        padded[58] = (uint8_t) (bytes >> 37);
+        padded[59] = (uint8_t) (bytes >> 29);
+        padded[60] = (uint8_t) (bytes >> 21);
+        padded[61] = (uint8_t) (bytes >> 13);
+        padded[62] = (uint8_t) (bytes >> 5);
+        padded[63] = (uint8_t) (bytes << 3);
+        crypto_hashblocks_sha256(state->ctx, padded, 64);
+    } else {
+        for (size_t i = inlen + 1; i < 120; ++i) {
+            padded[i] = 0;
+        }
+        padded[120] = (uint8_t) (bytes >> 53);
+        padded[121] = (uint8_t) (bytes >> 45);
+        padded[122] = (uint8_t) (bytes >> 37);
+        padded[123] = (uint8_t) (bytes >> 29);
+        padded[124] = (uint8_t) (bytes >> 21);
+        padded[125] = (uint8_t) (bytes >> 13);
+        padded[126] = (uint8_t) (bytes >> 5);
+        padded[127] = (uint8_t) (bytes << 3);
+        crypto_hashblocks_sha256(state->ctx, padded, 128);
+    }
+
+    for (size_t i = 0; i < 28; ++i) {
+        out[i] = state->ctx[i];
+    }
+    sha256_inc_ctx_release(state);
 }
 
 void sha512_inc_finalize(uint8_t *out, sha512ctx *state, const uint8_t *in, size_t inlen) {

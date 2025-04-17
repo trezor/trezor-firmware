@@ -1,6 +1,10 @@
 #ifndef SHA2_H
 #define SHA2_H
 
+#define USE_HASH_PROCESSOR
+
+#include <sec/hash_processor.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -16,7 +20,11 @@ typedef struct {
 
 /* Structure for the incremental API */
 typedef struct {
+#ifdef USE_HASH_PROCESSOR
+    hash_sha256_context_t ctx;
+#else
     uint8_t ctx[PQC_SHA256CTX_BYTES];
+#endif
 } sha256ctx;
 
 #define PQC_SHA512CTX_BYTES 72
