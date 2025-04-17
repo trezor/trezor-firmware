@@ -23,11 +23,23 @@ def init_unlocked() -> None:
 
 def reset() -> None:
     """
-    Wipes storage but keeps the device id unchanged.
+    Wipes storage but keeps the device id, device secret, and credential counter unchanged.
     """
+    from trezor import utils
+
     device_id = device.get_device_id()
+    if utils.USE_THP:
+        device_secret = device.get_device_secret()
+        credential_counter = device.get_cred_auth_key_counter()
     wipe()
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
+    if utils.USE_THP:
+        common.set(common.APP_DEVICE, device._DEVICE_SECRET, device_secret)
+        common.set(
+            common.APP_DEVICE,
+            device._CRED_AUTH_KEY_COUNTER,
+            credential_counter,
+        )
 
 
 def _migrate_from_version_01() -> None:
