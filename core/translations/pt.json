@@ -952,7 +952,7 @@
     "wipe_code__diff_from_pin": "O código de limpeza deve ser diferente do seu PIN.",
     "wipe_code__disabled": "Código de limpeza desativado.",
     "wipe_code__enabled": "Código de limpeza ativado.",
-    "wipe_code__enter_new": "Inserir novo cód. limp.",
+    "wipe_code__enter_new": "Novo cód. limpeza",
     "wipe_code__info": "O cód. limpeza pode apagar todos os dados deste dispositivo.",
     "wipe_code__invalid": "Cód. limpeza inválido",
     "wipe_code__mismatch": "Cód. limpeza não coincidem.",
