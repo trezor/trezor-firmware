@@ -12,7 +12,9 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
 
-@with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
+@with_slip44_keychain(
+    *PATTERNS, slip44_id=SLIP44_ID, curve=CURVE, slip21_namespaces=[[b"SLIP-0024"]]
+)
 async def get_address(
     msg: SolanaGetAddress,
     keychain: Keychain,
@@ -22,11 +24,13 @@ async def get_address(
     from trezor.ui.layouts import show_address
 
     from apps.common import paths
+    from apps.common.address_mac import get_address_mac
 
     from .get_public_key import derive_public_key
 
     public_key = derive_public_key(keychain, msg.address_n)
     address = base58.encode(public_key)
+    mac = get_address_mac(address, SLIP44_ID, msg.address_n, keychain)
 
     if msg.show_display:
         await show_address(
@@ -36,4 +40,4 @@ async def get_address(
             chunkify=bool(msg.chunkify),
         )
 
-    return SolanaAddress(address=address)
+    return SolanaAddress(address=address, mac=mac)

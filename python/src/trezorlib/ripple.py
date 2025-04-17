@@ -14,7 +14,7 @@
 # You should have received a copy of the License along with this library.
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from . import messages
 from .protobuf import dict_to_proto
@@ -28,18 +28,22 @@ REQUIRED_FIELDS = ("Fee", "Sequence", "TransactionType", "Payment")
 REQUIRED_PAYMENT_FIELDS = ("Amount", "Destination")
 
 
-def get_address(
+def get_address(*args: Any, **kwargs: Any) -> str:
+    return get_authenticated_address(*args, **kwargs).address
+
+
+def get_authenticated_address(
     client: "TrezorClient",
     address_n: "Address",
     show_display: bool = False,
     chunkify: bool = False,
-) -> str:
+) -> messages.RippleAddress:
     return client.call(
         messages.RippleGetAddress(
             address_n=address_n, show_display=show_display, chunkify=chunkify
         ),
         expect=messages.RippleAddress,
-    ).address
+    )
 
 
 def sign_tx(
