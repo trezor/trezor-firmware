@@ -563,7 +563,7 @@
     "pin__mismatch": "Os PINs inseridos não coincidem!",
     "pin__pin_mismatch": "O PIN não coincide",
     "pin__please_check_again": "Verifique novamente.",
-    "pin__reenter_new": "Reinsira o novo PIN",
+    "pin__reenter_new": "Reinsira PIN",
     "pin__reenter_to_confirm": "Reinsira o PIN para confirmar.",
     "pin__should_be_long": "O PIN deve ter 4-50 dígitos.",
     "pin__title_check_pin": "Verificar PIN",
