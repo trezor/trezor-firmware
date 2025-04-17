@@ -45,12 +45,12 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
     return WF_OK_PAIRING_FAILED;
   }
 
-  uint8_t buf[1024] = {0};
-  screen_pairing_mode(ui_get_initial_setup(), buf, sizeof(buf));
+  c_layout_t layout = {0};
+  screen_pairing_mode(ui_get_initial_setup(), &layout);
 
   uint32_t code = 0;
   workflow_result_t res =
-      workflow_host_control(vhdr, hdr, buf, sizeof(buf), &code);
+      workflow_host_control(vhdr, hdr, &layout, &code);
 
   if (res != WF_OK_UI_ACTION) {
     ble_iface_end_pairing();

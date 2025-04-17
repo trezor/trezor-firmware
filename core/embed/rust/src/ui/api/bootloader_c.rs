@@ -10,22 +10,22 @@ use crate::{
         ModelUI,
     },
 };
-use core::slice;
+
+use super::super::super::trezorhal::c_layout_t;
 
 #[no_mangle]
-extern "C" fn screen_event(mem: *mut u8, mem_size: usize, signalled: &sysevents_t) -> u32 {
-    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
-
+extern "C" fn screen_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> u32 {
     let e = parse_event(signalled);
 
-    ModelUI::screen_event(buf, e)
+    let layout = unsafe { &mut *(layout) };
+
+    ModelUI::screen_event(&mut layout.buf, e)
 }
 
 #[no_mangle]
-extern "C" fn screen_welcome(mem: *mut u8, mem_size: usize) {
-    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
-
-    ModelUI::screen_welcome(buf);
+extern "C" fn screen_welcome(layout: *mut c_layout_t) {
+    let layout = unsafe { &mut *(layout) };
+    ModelUI::screen_welcome(&mut layout.buf);
 }
 
 #[no_mangle]
@@ -90,15 +90,9 @@ extern "C" fn screen_unlock_bootloader_success() {
 }
 
 #[no_mangle]
-extern "C" fn screen_menu(
-    initial_setup: bool,
-    firmware_present: secbool,
-    mem: *mut u8,
-    mem_size: usize,
-) {
-    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
-
-    ModelUI::screen_menu(initial_setup, firmware_present, buf);
+extern "C" fn screen_menu(initial_setup: bool, firmware_present: secbool, layout: *mut c_layout_t) {
+    let layout = unsafe { &mut *(layout) };
+    ModelUI::screen_menu(initial_setup, firmware_present, &mut layout.buf);
 }
 
 #[no_mangle]
@@ -153,15 +147,9 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_s
 }
 
 #[no_mangle]
-extern "C" fn screen_connect(
-    initial_setup: bool,
-    auto_update: bool,
-    mem: *mut u8,
-    mem_size: usize,
-) {
-    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
-
-    ModelUI::screen_connect(initial_setup, auto_update, buf)
+extern "C" fn screen_connect(initial_setup: bool, auto_update: bool, layout: *mut c_layout_t) {
+    let layout = unsafe { &mut *(layout) };
+    ModelUI::screen_connect(initial_setup, auto_update, &mut layout.buf)
 }
 
 #[no_mangle]
@@ -182,10 +170,9 @@ extern "C" fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
 
 #[cfg(feature = "ble")]
 #[no_mangle]
-extern "C" fn screen_pairing_mode(initial_setup: bool, mem: *mut u8, mem_size: usize) {
-    let buf = unsafe { slice::from_raw_parts_mut(mem, mem_size) };
-
-    ModelUI::screen_pairing_mode(initial_setup, buf);
+extern "C" fn screen_pairing_mode(initial_setup: bool, layout: *mut c_layout_t) {
+    let layout = unsafe { &mut *(layout) };
+    ModelUI::screen_pairing_mode(initial_setup, &mut layout.buf);
 }
 
 #[cfg(feature = "ble")]

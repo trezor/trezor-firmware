@@ -32,11 +32,11 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
                                 const image_header* const hdr,
                                 secbool firmware_present) {
   while (true) {
-    uint8_t buf[1024];
-    screen_menu(ui_get_initial_setup(), firmware_present, buf, sizeof(buf));
+    c_layout_t layout = {0};
+    screen_menu(ui_get_initial_setup(), firmware_present, &layout);
     uint32_t ui_result = 0;
     workflow_result_t result =
-        workflow_host_control(vhdr, hdr, buf, sizeof(buf), &ui_result);
+        workflow_host_control(vhdr, hdr, &layout, &ui_result);
 
     if (result != WF_OK_UI_ACTION) {
       return result;
@@ -107,12 +107,12 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
                                      const image_header* hdr,
                                      secbool firmware_present,
                                      workflow_result_t* out_result) {
-  uint8_t buf[1024] = {0};
+  c_layout_t layout = {0};
   uint32_t ui_res = 0;
 
-  screen_connect(false, true, buf, sizeof buf);
+  screen_connect(false, true, &layout);
   workflow_result_t res =
-      workflow_host_control(vhdr, hdr, buf, sizeof buf, &ui_res);
+      workflow_host_control(vhdr, hdr, &layout, &ui_res);
 
   switch (res) {
     case WF_OK_UI_ACTION: {

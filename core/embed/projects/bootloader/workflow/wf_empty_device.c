@@ -54,9 +54,9 @@ workflow_result_t workflow_empty_device(void) {
   uint32_t ui_result = WELCOME_CANCEL;
   while (res == WF_CANCELLED ||
          (res == WF_OK_UI_ACTION && ui_result == WELCOME_CANCEL)) {
-    uint8_t buf[1024] = {0};
-    screen_welcome(buf, sizeof(buf));
-    res = workflow_host_control(NULL, NULL, buf, sizeof(buf), &ui_result);
+    c_layout_t layout = {0};
+    screen_welcome(&layout);
+    res = workflow_host_control(NULL, NULL, &layout, &ui_result);
 #ifdef USE_BLE
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
       res = workflow_ble_pairing_request(NULL, NULL);

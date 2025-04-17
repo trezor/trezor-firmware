@@ -38,3 +38,5 @@ pub mod time;
 
 #[cfg(feature = "ui")]
 pub mod sysevent;
+
+pub use ffi::c_layout_t;

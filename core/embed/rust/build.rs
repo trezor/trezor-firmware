@@ -434,7 +434,9 @@ fn generate_trezorhal_bindings() {
         // sysevent
         .allowlist_type("syshandle_t")
         .allowlist_type("sysevents_t")
-        .allowlist_function("sysevents_poll");
+        .allowlist_function("sysevents_poll")
+        // c_layout
+        .allowlist_type("c_layout_t");
 
     // Write the bindings to a file in the OUR_DIR.
     bindings

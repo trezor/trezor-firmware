@@ -25,6 +25,7 @@
 #include <util/image.h>
 
 #include "protob/protob.h"
+#include "rust_ui_bootloader.h"
 
 typedef enum {
   WF_ERROR_FATAL = 0,
@@ -69,8 +70,7 @@ workflow_result_t workflow_empty_device(void);
 
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
-                                        uint8_t *wait_layout,
-                                        size_t wait_layout_len,
+                                        c_layout_t * wait_layout,
                                         uint32_t *ui_action_result);
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,

@@ -4,10 +4,12 @@
 
 #include <sys/sysevent.h>
 
+#include "rust_types.h"
+
 // todo: use bindgen to bind return values to rust
 
 // common event function for screens that need UI + communication
-uint32_t screen_event(uint8_t* mem, size_t mem_len, sysevents_t* signalled);
+uint32_t screen_event(c_layout_t * layout, sysevents_t* signalled);
 
 // result screens
 void screen_wipe_success(void);
@@ -66,25 +68,23 @@ typedef enum {
   MENU_WIPE = 0x55667788,
   MENU_BLUETOOTH = 0x99AABBCC,
 } menu_result_t;
-void screen_menu(bool initial_setup, secbool firmware_present, uint8_t* mem,
-                 size_t mem_len);
+void screen_menu(bool initial_setup, secbool firmware_present, c_layout_t * layout);
 
 typedef enum {
   CONNECT_CANCEL = 1,
   CONNECT_PAIRING_MODE = 2,
   CONNECT_MENU = 3,
 } connect_result_t;
-void screen_connect(bool initial_setup, bool auto_update, uint8_t* mem,
-                    size_t mem_len);
+void screen_connect(bool initial_setup, bool auto_update, c_layout_t * layout);
 typedef enum {
   WELCOME_CANCEL = 1,
   WELCOME_PAIRING_MODE = 2,
   WELCOME_MENU = 3,
 } welcome_result_t;
-void screen_welcome(uint8_t* mem, size_t mem_len);
+void screen_welcome(c_layout_t * layout);
 
 typedef enum {
   // 0 - 999999 - pairing code
   PAIRING_MODE_CANCEL = 1000000,
 } pairing_mode_result_t;
-void screen_pairing_mode(bool initial_setup, uint8_t* mem, size_t mem_len);
+void screen_pairing_mode(bool initial_setup,  c_layout_t * layout);

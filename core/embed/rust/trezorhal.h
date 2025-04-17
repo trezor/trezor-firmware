@@ -12,6 +12,7 @@
 #include <util/flash.h>
 #include <util/translations.h>
 #include "storage.h"
+#include "rust_types.h"
 
 #ifdef USE_HW_JPEG_DECODER
 #include <gfx/jpegdec.h>

@@ -38,8 +38,7 @@
 
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
-                                        uint8_t *wait_layout,
-                                        size_t wait_layout_len,
+                                        c_layout_t *wait_layout,
                                         uint32_t *ui_action_result) {
   protob_io_t protob_usb_iface = {0};
 
@@ -102,7 +101,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
     // no data, lets pass the event signal to UI
     if (active_iface == NULL) {
-      uint32_t res = screen_event(wait_layout, wait_layout_len, &signalled);
+      uint32_t res = screen_event(wait_layout, &signalled);
 
       if (res != 0) {
         if (ui_action_result != NULL) {
