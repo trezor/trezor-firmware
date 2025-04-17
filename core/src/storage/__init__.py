@@ -34,10 +34,10 @@ def reset() -> None:
     wipe()
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
     if utils.USE_THP:
-        common.set(common.APP_DEVICE, device._DEVICE_SECRET, device_secret)
+        common.set(common.APP_DEVICE, device.DEVICE_SECRET, device_secret)
         common.set(
             common.APP_DEVICE,
-            device._CRED_AUTH_KEY_COUNTER,
+            device.CRED_AUTH_KEY_COUNTER,
             credential_counter,
         )
 
