@@ -1,7 +1,11 @@
 use crate::{
     strutil::TString,
     ui::{
-        component::{image::Image, Child, Component, Event, EventCtx, Label},
+        component::{
+            image::Image,
+            text::paragraphs::{Paragraph, ParagraphSource, Paragraphs},
+            Child, Component, Event, EventCtx, Label,
+        },
         display,
         geometry::{Insets, Rect},
         shape,
@@ -32,7 +36,7 @@ pub enum FidoMsg {
 pub struct FidoConfirm<F: Fn(usize) -> TString<'static>, U> {
     page_swipe: Swipe,
     app_name: Label<'static>,
-    account_name: Label<'static>,
+    account_name: Paragraphs<Paragraph<'static>>,
     icon: Child<Image>,
     /// Function/closure that will return appropriate page on demand.
     get_account: F,
@@ -65,22 +69,10 @@ where
         page_swipe.allow_right = scrollbar.has_previous_page();
         page_swipe.allow_left = scrollbar.has_next_page();
 
-        // NOTE: This is an ugly hotfix for the erroneous behavior of
-        // TextLayout used in the account_name Label. In this
-        // particular case, TextLayout calculates the wrong height of
-        // fitted text that's higher than the TextLayout bound itself.
-        //
-        // The following two lines should be swapped when the problem with
-        // TextLayout is fixed.
-        //
-        // See also, continuation of this hotfix in the place() function.
-
-        // let current_account = get_account(scrollbar.active_page);
-        let current_account = "".into();
-
         Self {
             app_name: Label::centered(app_name, theme::TEXT_DEMIBOLD),
-            account_name: Label::centered(current_account, theme::TEXT_DEMIBOLD),
+            account_name: Paragraph::new(&theme::TEXT_MONO, get_account(scrollbar.active_page))
+                .into_paragraphs(),
             page_swipe,
             icon: Child::new(Image::new(icon_data)),
             get_account,
@@ -107,7 +99,7 @@ where
         self.page_swipe.allow_left = self.scrollbar.has_next_page();
 
         let current_account = (self.get_account)(self.active_page());
-        self.account_name.set_text(current_account);
+        self.account_name = Paragraph::new(&theme::TEXT_MONO, current_account).into_paragraphs();
 
         // Redraw the page.
         ctx.request_paint();
@@ -153,18 +145,10 @@ where
         self.icon.place(image_area);
 
         // Place the text labels.
-        let (app_name_area, account_name_area) = remaining_area
-            .inset(Insets::top(APP_NAME_PADDING))
-            .split_top(APP_NAME_HEIGHT);
+        let (app_name_area, account_name_area) = remaining_area.split_top(APP_NAME_HEIGHT);
 
         self.app_name.place(app_name_area);
         self.account_name.place(account_name_area);
-
-        // NOTE: This is a hotfix used due to the erroneous behavior of TextLayout.
-        // This line should be removed when the problem with TextLayout is fixed.
-        // See also the code for FidoConfirm::new().
-        self.account_name
-            .set_text((self.get_account)(self.scrollbar.active_page));
 
         bounds
     }
@@ -194,15 +178,14 @@ where
         }
 
         // Erasing the old text content before writing the new one.
-        let account_name_area = self.account_name.area();
-        let real_area = account_name_area
-            .with_height(account_name_area.height() + self.account_name.font().text_baseline() + 1);
-        shape::Bar::new(real_area).with_bg(theme::BG).render(target);
+        shape::Bar::new(self.account_name.area())
+            .with_bg(theme::BG)
+            .render(target);
 
         // Account name is optional.
         // Showing it only if it differs from app name.
         // (Dummy requests usually have some text as both app_name and account_name.)
-        let account_name = self.account_name.text();
+        let account_name = self.account_name.content();
         let app_name = self.app_name.text();
         if !account_name.is_empty() && account_name != app_name {
             self.account_name.render(target);
