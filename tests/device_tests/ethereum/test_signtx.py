@@ -16,7 +16,7 @@
 
 import pytest
 
-from trezorlib import ethereum, exceptions, messages
+from trezorlib import ethereum, exceptions, messages, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.debuglink import message_filters
 from trezorlib.exceptions import TrezorFailure
@@ -461,11 +461,12 @@ def test_signtx_data_pagination(client: Client, flow):
             _sign_tx_call()
 
 
-@pytest.mark.models("core")
 @parametrize_using_common_fixtures("ethereum/sign_tx_staking.json")
 @pytest.mark.parametrize("chunkify", (True, False))
 def test_signtx_staking(client: Client, chunkify: bool, parameters: dict, result: dict):
-    input_flow = InputFlowEthereumSignTxStaking(client).get()
+    input_flow = None
+    if client.model is not models.T1B1:
+        input_flow = InputFlowEthereumSignTxStaking(client).get()
     _do_test_signtx(
         client, parameters, result, input_flow=input_flow, chunkify=chunkify
     )
