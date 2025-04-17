@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
 
-@auto_keychain(__name__)
+@auto_keychain(__name__, slip21_namespaces=[[b"SLIP-0024"]])
 async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddress:
     # NOTE: local imports here saves 20 bytes
     from trezor import TR
@@ -16,7 +16,9 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
     from trezor.ui.layouts import show_address
 
     from apps.common import paths
+    from apps.common.address_mac import get_address_mac
 
+    from . import SLIP44_ID
     from .helpers import address_from_public_key
 
     address_n = msg.address_n  # local_cache_attribute
@@ -26,9 +28,10 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
     node = keychain.derive(address_n)
     pubkey = node.public_key()
     address = address_from_public_key(pubkey)
+    mac = get_address_mac(address, SLIP44_ID, address_n, keychain)
 
     if msg.show_display:
-        from . import PATTERN, SLIP44_ID
+        from . import PATTERN
 
         coin = "XRP"
         await show_address(
@@ -39,4 +42,4 @@ async def get_address(msg: RippleGetAddress, keychain: Keychain) -> RippleAddres
             chunkify=bool(msg.chunkify),
         )
 
-    return RippleAddress(address=address)
+    return RippleAddress(address=address, mac=mac)

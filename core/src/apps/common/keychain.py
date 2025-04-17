@@ -182,6 +182,7 @@ def with_slip44_keychain(
     slip44_id: int,
     curve: str = "secp256k1",
     allow_testnet: bool = True,
+    slip21_namespaces: Iterable[paths.Slip21Path] = (),
 ) -> Callable[[HandlerWithKeychain[MsgIn, MsgOut]], Handler[MsgIn, MsgOut]]:
     if not patterns:
         raise ValueError  # specify a pattern
@@ -195,7 +196,7 @@ def with_slip44_keychain(
 
     def decorator(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
         async def wrapper(msg: MsgIn) -> MsgOut:
-            keychain = await get_keychain(curve, schemas)
+            keychain = await get_keychain(curve, schemas, slip21_namespaces)
             with keychain:
                 return await func(msg, keychain)
 
@@ -205,7 +206,9 @@ def with_slip44_keychain(
 
 
 def auto_keychain(
-    modname: str, allow_testnet: bool = True
+    modname: str,
+    allow_testnet: bool = True,
+    slip21_namespaces: Iterable[paths.Slip21Path] = (),
 ) -> Callable[[HandlerWithKeychain[MsgIn, MsgOut]], Handler[MsgIn, MsgOut]]:
     import sys
 
@@ -217,5 +220,9 @@ def auto_keychain(
     curve = getattr(parent_module, "CURVE")
     slip44_id = getattr(parent_module, "SLIP44_ID")
     return with_slip44_keychain(
-        pattern, slip44_id=slip44_id, curve=curve, allow_testnet=allow_testnet
+        pattern,
+        slip44_id=slip44_id,
+        curve=curve,
+        allow_testnet=allow_testnet,
+        slip21_namespaces=slip21_namespaces,
     )
