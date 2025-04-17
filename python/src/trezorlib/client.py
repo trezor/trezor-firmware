@@ -101,6 +101,7 @@ class TrezorClient:
             self._protocol_version = ProtocolVersion.V1
         elif isinstance(self.protocol, ProtocolV2Channel):
             self._protocol_version = ProtocolVersion.V2
+            self.do_pairing()
         else:
             raise Exception("Unknown protocol version")
 
