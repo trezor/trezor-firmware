@@ -9907,7 +9907,7 @@
 "T2T1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "96009f5c0834cb4fcfe266bfd97309c0280a4cd053f906359021c4d8c78a3e63",
 "T2T1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "41e408617bb1d314602e03cc1d3bcdf2064096b99d08e9a07220dbd9347a81d3",
 "T2T1_en_test_shamir_persistence.py::test_recovery_single_reset": "1cefe6558c3dfcbbbda25a28441d289e313fe76fdd76227d719ec34e646dd149",
-"T2T1_en_test_wipe_code.py::test_wipe_code_activate_core": "584e85fd94c34205742b9d3117ac77b1727f55fa94ef41cd6957b467786fd90f"
+"T2T1_en_test_wipe_code.py::test_wipe_code_activate_core": "6984e9b87a9d7f13a2fefec61305b0acddeab64bc24f149f2a2998024a191d06"
 }
 },
 "T3B1": {
@@ -18541,10 +18541,10 @@
 "T3B1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "b2db0657b53a40b5ca32ba0bd5873bde18bb2d385c909518580d93398ee2bfe2",
 "T3B1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "4a4ac39daacae7e3e15d3e818f5e3bced74eb96bf627cde1b67172abf81cdfcf",
 "T3B1_en_test_shamir_persistence.py::test_abort": "835bcf66eede3351b7a98271b7c8bb897e418e3ce9251795190782fc4bd6eb5e",
-"T3B1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "324467777de656191ed05945cf25da00185b99009526265dbbee075808bceb43",
-"T3B1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "4ce6dc78cccebbad02d8bee8167cd9230db33ac66567101a07e0bdbf392488f5",
-"T3B1_en_test_shamir_persistence.py::test_recovery_single_reset": "23bdc9fdc3280b06cd2823a9714f9ff0f0af8c8c69516a23905c6369ac7c3ccc",
-"T3B1_en_test_wipe_code.py::test_wipe_code_activate_core": "b598be4d359d8cced0e1bf15e417d4d12f67ec44b929cc541788c83b90835e06"
+"T3B1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "65ca98ff5d20a49aaa579e05fbe6b8509f6e27e65a0406c90d87a6ac1282c6b9",
+"T3B1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "f3543f0eef741ee0049417583ad5d28d45dd3a28a881e76d157f19b03c553a84",
+"T3B1_en_test_shamir_persistence.py::test_recovery_single_reset": "a63babaf9d891c50b850106da2fc986a2d9f6a28f70a47e041385f01709f7804",
+"T3B1_en_test_wipe_code.py::test_wipe_code_activate_core": "2b3ccc9bfaa03a079f06adc20421288da201fa05633c16a66e8f453779713c49"
 }
 },
 "T3T1": {
