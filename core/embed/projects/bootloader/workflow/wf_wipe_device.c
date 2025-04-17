@@ -83,8 +83,8 @@ workflow_result_t workflow_wipe_device(protob_io_t* iface) {
     recv_msg_wipe_device(iface, &msg_recv);
   }
 
-  ui_result_t response = ui_screen_wipe_confirm();
-  if (UI_RESULT_CONFIRM != response) {
+  confirm_result_t response = ui_screen_wipe_confirm();
+  if (CONFIRM != response) {
     if (iface != NULL) {
       send_user_abort(iface, "Wipe cancelled");
     }

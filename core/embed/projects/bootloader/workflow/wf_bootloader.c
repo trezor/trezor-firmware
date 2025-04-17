@@ -117,10 +117,10 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
   switch (res) {
     case WF_OK_UI_ACTION: {
       switch (ui_res) {
-        case WAIT_CANCEL:
+        case CONNECT_CANCEL:
           return SCREEN_INTRO;
 #ifdef USE_BLE
-        case WAIT_PAIRING_MODE: {
+        case CONNECT_PAIRING_MODE: {
           workflow_result_t ble = workflow_ble_pairing_request(vhdr, hdr);
           if (ble == WF_OK_PAIRING_COMPLETED || ble == WF_OK_PAIRING_FAILED)
             return SCREEN_WAIT_FOR_HOST;
@@ -129,7 +129,7 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
           return SCREEN_DONE;
         }
 #endif
-        case WAIT_MENU:
+        case CONNECT_MENU:
           return SCREEN_MENU;
         default:
           *out_result = WF_ERROR_FATAL;

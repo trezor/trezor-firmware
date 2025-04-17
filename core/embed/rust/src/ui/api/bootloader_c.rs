@@ -190,6 +190,6 @@ extern "C" fn screen_pairing_mode(initial_setup: bool, mem: *mut u8, mem_size: u
 
 #[cfg(feature = "ble")]
 #[no_mangle]
-extern "C" fn screen_pairing_mode_finalizing(initial_setup: bool) {
-    ModelUI::screen_pairing_mode_finalizing(initial_setup);
+extern "C" fn screen_pairing_mode_finalizing(initial_setup: bool) -> u32 {
+    ModelUI::screen_pairing_mode_finalizing(initial_setup)
 }

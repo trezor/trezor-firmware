@@ -1,41 +1,90 @@
+#pragma once
+
 #include <trezor_types.h>
 
 #include <sys/sysevent.h>
 
+// todo: use bindgen to bind return values to rust
+
+// common event function for screens that need UI + communication
 uint32_t screen_event(uint8_t* mem, size_t mem_len, sysevents_t* signalled);
 
+// result screens
+void screen_wipe_success(void);
+void screen_wipe_fail(void);
+uint32_t screen_install_success(uint8_t restart_seconds, bool initial_setup,
+                                bool complete_draw);
+uint32_t screen_install_fail(void);
+void screen_unlock_bootloader_success(void);
+
+// progress screens
+void screen_install_progress(int16_t progress, bool initialize,
+                             bool initial_setup);
+void screen_wipe_progress(int16_t progress, bool initialize);
+
+// simple screens with no interaction
+
+void screen_boot_stage_1(bool fading);
+void screen_boot(bool warning, const char* vendor_str, size_t vendor_str_len,
+                 uint32_t version, const void* vendor_img,
+                 size_t vendor_img_len, int wait);
+
+// confirm screens
+typedef enum {
+  CANCEL = 1,
+  CONFIRM = 2,
+} confirm_result_t;
 uint32_t screen_install_confirm(const char* vendor_str, uint8_t vendor_str_len,
                                 const char* version_str,
                                 const uint8_t* fingerprint,
                                 bool should_keep_seed, bool is_newvendor,
                                 bool is_newinstall, int version_cmp);
 uint32_t screen_wipe_confirm(void);
-void screen_install_progress(int16_t progress, bool initialize,
-                             bool initial_setup);
-void screen_wipe_progress(int16_t progress, bool initialize);
+uint32_t screen_confirm_pairing(uint32_t code, bool initial_setup);
+uint32_t screen_unlock_bootloader_confirm(void);
+
+// screens with UI but no communication
+typedef enum {
+  INTRO_MENU = 1,
+  INTRO_HOST = 2,
+} intro_result_t;
 uint32_t screen_intro(const char* bld_version_str, const char* vendor_str,
                       uint8_t vendor_str_len, const char* version_str,
                       bool fw_ok);
+
+typedef enum {
+  PAIRING_FINALIZATION_COMPLETED = 1,
+  PAIRING_FINALIZATION_CANCEL = 2,
+  PAIRING_FINALIZATION_FAILED = 3,
+} pairing_mode_finalization_result_t;
+uint32_t screen_pairing_mode_finalizing(bool initial_setup);
+
+// screens with UI and communication interactions
+typedef enum {
+  MENU_EXIT = 0xAABBCCDD,
+  MENU_REBOOT = 0x11223344,
+  MENU_WIPE = 0x55667788,
+  MENU_BLUETOOTH = 0x99AABBCC,
+} menu_result_t;
 void screen_menu(bool initial_setup, secbool firmware_present, uint8_t* mem,
                  size_t mem_len);
+
+typedef enum {
+  CONNECT_CANCEL = 1,
+  CONNECT_PAIRING_MODE = 2,
+  CONNECT_MENU = 3,
+} connect_result_t;
 void screen_connect(bool initial_setup, bool auto_update, uint8_t* mem,
                     size_t mem_len);
-void screen_wipe_success(void);
-void screen_wipe_fail(void);
-uint32_t screen_install_success(uint8_t restart_seconds, bool initial_setup,
-                                bool complete_draw);
-uint32_t screen_install_fail(void);
+typedef enum {
+  WELCOME_CANCEL = 1,
+  WELCOME_PAIRING_MODE = 2,
+  WELCOME_MENU = 3,
+} welcome_result_t;
 void screen_welcome(uint8_t* mem, size_t mem_len);
-void screen_boot_stage_1(bool fading);
-uint32_t screen_unlock_bootloader_confirm(void);
-void screen_unlock_bootloader_success(void);
-void bld_continue_label(uint16_t bg_color);
-void screen_boot(bool warning, const char* vendor_str, size_t vendor_str_len,
-                 uint32_t version, const void* vendor_img,
-                 size_t vendor_img_len, int wait);
 
-uint32_t screen_pairing_mode(bool initial_setup, uint8_t* mem, size_t mem_len);
-
-uint32_t screen_confirm_pairing(uint32_t code, bool initial_setup);
-
-uint32_t screen_pairing_mode_finalizing(bool initial_setup);
+typedef enum {
+  // 0 - 999999 - pairing code
+  PAIRING_MODE_CANCEL = 1000000,
+} pairing_mode_result_t;
+void screen_pairing_mode(bool initial_setup, uint8_t* mem, size_t mem_len);

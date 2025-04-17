@@ -66,7 +66,7 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
 
   uint8_t pairing_code[BLE_PAIRING_CODE_LEN] = {0};
 
-  if (result != UI_RESULT_CONFIRM || !encode_pairing_code(code, pairing_code)) {
+  if (result != CONFIRM || !encode_pairing_code(code, pairing_code)) {
     ble_command_t cmd = {
         .cmd_type = BLE_REJECT_PAIRING,
     };

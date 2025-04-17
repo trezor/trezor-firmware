@@ -111,11 +111,12 @@ uint32_t ui_screen_intro(const vendor_header *const vhdr,
 
 // install UI
 
-ui_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
-                                      const image_header *const hdr,
-                                      secbool should_keep_seed,
-                                      secbool is_newvendor,
-                                      secbool is_newinstall, int version_cmp) {
+confirm_result_t ui_screen_install_confirm(const vendor_header *const vhdr,
+                                           const image_header *const hdr,
+                                           secbool should_keep_seed,
+                                           secbool is_newvendor,
+                                           secbool is_newinstall,
+                                           int version_cmp) {
   uint8_t fingerprint[32];
   char ver_str[64];
   get_image_fingerprint(hdr, fingerprint);
@@ -141,7 +142,7 @@ void ui_screen_install_progress_upload(int pos) {
 
 // wipe UI
 
-ui_result_t ui_screen_wipe_confirm(void) { return screen_wipe_confirm(); }
+confirm_result_t ui_screen_wipe_confirm(void) { return screen_wipe_confirm(); }
 
 void ui_screen_wipe(void) { screen_wipe_progress(0, true); }
 

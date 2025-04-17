@@ -309,12 +309,12 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
       }
 #endif
 
-      ui_result_t response = UI_RESULT_CANCEL;
+      confirm_result_t response = CANCEL;
       if (((vhdr.vtrust & VTRUST_NO_WARNING) == VTRUST_NO_WARNING) &&
           (sectrue == is_new || sectrue == is_ilu)) {
         // new installation or interaction less updated - auto confirm
         // only allowed for full-trust images
-        response = UI_RESULT_CONFIRM;
+        response = CONFIRM;
       } else {
         if (sectrue != is_new) {
           int version_cmp = version_compare(hdr.version, current_hdr->version);
@@ -326,7 +326,7 @@ static upload_status_t process_msg_FirmwareUpload(protob_io_t *iface,
         }
       }
 
-      if (UI_RESULT_CONFIRM != response) {
+      if (CONFIRM != response) {
         send_user_abort(iface, "Firmware install cancelled");
         return UPLOAD_ERR_USER_ABORT;
       }

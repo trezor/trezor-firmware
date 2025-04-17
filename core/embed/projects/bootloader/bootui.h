@@ -23,41 +23,7 @@
 
 #include <util/image.h>
 
-// todo: use bindgen to tie this to rust
-typedef enum {
-  UI_RESULT_CANCEL = 1,
-  UI_RESULT_CONFIRM = 2,
-} ui_result_t;
-
-// todo: use bindgen to tie this to rust
-typedef enum {
-  MENU_EXIT = 0xAABBCCDD,
-  MENU_REBOOT = 0x11223344,
-  MENU_WIPE = 0x55667788,
-  MENU_BLUETOOTH = 0x99AABBCC,
-} menu_result_t;
-
-// todo: use bindgen to tie this to rust
-typedef enum {
-  INTRO_MENU = 1,
-  INTRO_HOST = 2,
-} intro_result_t;
-
-typedef enum {
-  WAIT_CANCEL = 1,
-  WAIT_PAIRING_MODE = 2,
-  WAIT_MENU = 3,
-} wait_result_t;
-
-typedef enum {
-  PAIRING_MODE_CANCEL = 1000000,
-} pairing_mode_result_t;
-
-typedef enum {
-  PAIRING_FINALIZATION_COMPLETED = 1,
-  PAIRING_FINALIZATION_CANCEL = 2,
-  PAIRING_FINALIZATION_FAILED = 3,
-} pairing_mode_finalization_result_t;
+#include "rust_ui_bootloader.h"
 
 // Displays a warning screen before jumping to the untrusted firmware
 //
@@ -80,16 +46,17 @@ void ui_click(void);
 uint32_t ui_screen_intro(const vendor_header* const vhdr,
                          const image_header* const hdr, bool fw_ok);
 
-ui_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
-                                      const image_header* const hdr,
-                                      secbool shold_keep_seed,
-                                      secbool is_newvendor,
-                                      secbool is_newinstall, int version_cmp);
+confirm_result_t ui_screen_install_confirm(const vendor_header* const vhdr,
+                                           const image_header* const hdr,
+                                           secbool shold_keep_seed,
+                                           secbool is_newvendor,
+                                           secbool is_newinstall,
+                                           int version_cmp);
 void ui_screen_install_start();
 void ui_screen_install_progress_erase(int pos, int len);
 void ui_screen_install_progress_upload(int pos);
 
-ui_result_t ui_screen_wipe_confirm(void);
+confirm_result_t ui_screen_wipe_confirm(void);
 void ui_screen_wipe(void);
 void ui_screen_wipe_progress(int pos, int len);
 

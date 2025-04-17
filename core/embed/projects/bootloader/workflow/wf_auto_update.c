@@ -33,13 +33,13 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
   ui_set_initial_setup(true);
 
   workflow_result_t res = WF_CANCELLED;
-  uint32_t ui_result = WAIT_CANCEL;
+  uint32_t ui_result = CONNECT_CANCEL;
 
   uint8_t buf[1024] = {0};
   screen_connect(true, false, buf, sizeof(buf));
   res = workflow_host_control(vhdr, hdr, buf, sizeof(buf), &ui_result);
 
-  if (res == WF_OK_UI_ACTION && ui_result == WAIT_CANCEL) {
+  if (res == WF_OK_UI_ACTION && ui_result == CONNECT_CANCEL) {
     bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
     jump_allow_1();
     jump_allow_2();

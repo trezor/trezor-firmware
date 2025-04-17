@@ -51,30 +51,30 @@ workflow_result_t workflow_empty_device(void) {
 #endif
 
   workflow_result_t res = WF_CANCELLED;
-  uint32_t ui_result = WAIT_CANCEL;
+  uint32_t ui_result = WELCOME_CANCEL;
   while (res == WF_CANCELLED ||
-         (res == WF_OK_UI_ACTION && ui_result == WAIT_CANCEL)) {
+         (res == WF_OK_UI_ACTION && ui_result == WELCOME_CANCEL)) {
     uint8_t buf[1024] = {0};
     screen_welcome(buf, sizeof(buf));
     res = workflow_host_control(NULL, NULL, buf, sizeof(buf), &ui_result);
 #ifdef USE_BLE
-    if (res == WF_OK_UI_ACTION && ui_result == WAIT_PAIRING_MODE) {
+    if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
       res = workflow_ble_pairing_request(NULL, NULL);
       if (res == WF_OK_PAIRING_COMPLETED || res == WF_OK_PAIRING_FAILED) {
         res = WF_CANCELLED;
-        ui_result = WAIT_CANCEL;
+        ui_result = WELCOME_CANCEL;
         continue;
       }
     }
 #endif
-    if (res == WF_OK_UI_ACTION && ui_result == WAIT_MENU) {
+    if (res == WF_OK_UI_ACTION && ui_result == WELCOME_MENU) {
       do {
         res = workflow_menu(NULL, NULL, false);
       } while (res == WF_CANCELLED);
 
       if (res == WF_OK) {
         res = WF_CANCELLED;
-        ui_result = WAIT_CANCEL;
+        ui_result = WELCOME_CANCEL;
         continue;
       }
       return res;
