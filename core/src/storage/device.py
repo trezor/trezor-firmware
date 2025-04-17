@@ -378,7 +378,9 @@ if utils.USE_THP:
     def increment_cred_auth_key_counter() -> None:
         counter = int.from_bytes(get_cred_auth_key_counter(), "big")
         utils.ensure(counter < 0xFFFFFFFF, "Overflow of cred_auth_key_counter")
-        common.set(_NAMESPACE, CRED_AUTH_KEY_COUNTER, (counter + 1).to_bytes(4, "big"), True)
+        common.set(
+            _NAMESPACE, CRED_AUTH_KEY_COUNTER, (counter + 1).to_bytes(4, "big"), True
+        )
 
 
 def set_haptic_feedback(enable: bool) -> None:

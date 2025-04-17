@@ -45,6 +45,7 @@ def reset(excluded: Tuple[bytes, bytes] | None) -> None:
     from trezor import utils
 
     device_id = device.get_device_id()
+
     if utils.USE_THP:
         device_secret = device.get_device_secret()
         credential_counter = device.get_cred_auth_key_counter()
@@ -52,11 +53,9 @@ def reset(excluded: Tuple[bytes, bytes] | None) -> None:
     wipe_cache(excluded)
     common.set(common.APP_DEVICE, device.DEVICE_ID, device_id.encode(), public=True)
     if utils.USE_THP:
-        common.set(common.APP_DEVICE, device.DEVICE_SECRET, device_secret)
+        common.set(common.APP_DEVICE, device.DEVICE_SECRET, device_secret, True)
         common.set(
-            common.APP_DEVICE,
-            device.CRED_AUTH_KEY_COUNTER,
-            credential_counter,
+            common.APP_DEVICE, device.CRED_AUTH_KEY_COUNTER, credential_counter, True
         )
 
 
