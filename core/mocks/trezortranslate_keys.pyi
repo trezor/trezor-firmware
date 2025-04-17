@@ -927,7 +927,7 @@ class TR:
     wipe_code__diff_from_pin: str = "The wipe code must be different from your PIN."
     wipe_code__disabled: str = "Wipe code disabled."
     wipe_code__enabled: str = "Wipe code enabled."
-    wipe_code__enter_new: str = "Enter new wipe code"
+    wipe_code__enter_new: str = "New wipe code"
     wipe_code__info: str = "Wipe code can be used to erase all data from this device."
     wipe_code__invalid: str = "Invalid wipe code"
     wipe_code__mismatch: str = "The wipe codes you entered do not match."

@@ -953,7 +953,7 @@
     "wipe_code__diff_from_pin": "Le code d'eff. doit être différent de votre PIN.",
     "wipe_code__disabled": "Code d'eff. désactivé.",
     "wipe_code__enabled": "Code d'eff. activé.",
-    "wipe_code__enter_new": "Entrez nouv. code eff.",
+    "wipe_code__enter_new": "Nouv. code d'eff.",
     "wipe_code__info": "Le code d'eff. peut être utilisé pour eff. les données de ce disp.",
     "wipe_code__invalid": "Code d'eff. non valide",
     "wipe_code__mismatch": "Les codes d'eff. ne correspondent pas.",
