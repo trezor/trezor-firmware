@@ -70,7 +70,7 @@ impl VerticalMenu {
     /// Check if the menu fits its area without scrolling.
     pub fn fits_area(&self) -> bool {
         // Check if the menu fits its area without scrolling
-        self.total_height <= self.bounds.height() && self.offset_y == 0
+        self.total_height <= self.bounds.height()
     }
 
     /// Scroll the menu to the desired offset.
