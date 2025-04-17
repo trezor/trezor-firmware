@@ -16,17 +16,17 @@ _DATA_MASK = const(0xE7)
 
 def add_seq_bit_to_ctrl_byte(ctrl_byte: int, seq_bit: int) -> int:
     if seq_bit == 0:
-        return ctrl_byte & 0xEF
+        return ctrl_byte & 0xEF  # ...0 ....
     if seq_bit == 1:
-        return ctrl_byte | 0x10
+        return ctrl_byte | 0x10  # ...1 ....
     raise ThpError("Unexpected sequence bit")
 
 
 def add_ack_bit_to_ctrl_byte(ctrl_byte: int, ack_bit: int) -> int:
     if ack_bit == 0:
-        return ctrl_byte & 0xF7
+        return ctrl_byte & 0xF7  # .... 0...
     if ack_bit == 1:
-        return ctrl_byte | 0x08
+        return ctrl_byte | 0x08  # .... 1...
     raise ThpError("Unexpected acknowledgement bit")
 
 
