@@ -64,7 +64,7 @@ class TrezorClient:
 
     _session_id_counter: int = 0
     _default_pairing_method: messages.ThpPairingMethod = (
-        messages.ThpPairingMethod.CodeEntry
+        messages.ThpPairingMethod.SkipPairing
     )
 
     def __init__(
