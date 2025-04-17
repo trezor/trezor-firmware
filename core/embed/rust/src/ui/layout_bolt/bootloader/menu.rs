@@ -27,6 +27,7 @@ pub enum MenuMsg {
     Reboot = 0x11223344,
     FactoryReset = 0x55667788,
     Bluetooth = 0x99AABBCC,
+    PowerOff = 0x751A5BEF,
 }
 
 pub struct Menu {
@@ -36,6 +37,7 @@ pub struct Menu {
     reboot: Button,
     reset: Button,
     bluetooth: Button,
+    poweroff: Button,
 }
 
 impl Menu {
@@ -43,6 +45,7 @@ impl Menu {
         let content_reboot = IconText::new("REBOOT TREZOR", Icon::new(REFRESH24));
         let content_reset = IconText::new("FACTORY RESET", Icon::new(FIRE24));
         let content_bluetooth = IconText::new("BLUETOOTH", Icon::new(FIRE24));
+        let content_poweroff = IconText::new("POWER OFF", Icon::new(FIRE24));
 
         let mut instance = Self {
             bg: Pad::with_background(BLD_BG),
@@ -59,6 +62,7 @@ impl Menu {
 
             reset: Button::with_icon_and_text(content_reset).styled(button_bld()),
             bluetooth: Button::with_icon_and_text(content_bluetooth).styled(button_bld()),
+            poweroff: Button::with_icon_and_text(content_poweroff).styled(button_bld()),
         };
         instance.bg.clear();
         instance
@@ -89,6 +93,8 @@ impl Component for Menu {
         self.reset.place(self.get_button_pos(1));
         #[cfg(feature = "ble")]
         self.bluetooth.place(self.get_button_pos(2));
+        #[cfg(feature = "powerctl")]
+        self.poweroff.place(self.get_button_pos(3));
         bounds
     }
 
@@ -106,6 +112,10 @@ impl Component for Menu {
         if let Some(Clicked) = self.bluetooth.event(ctx, event) {
             return Some(Self::Msg::Bluetooth);
         }
+        #[cfg(feature = "powerctl")]
+        if let Some(Clicked) = self.poweroff.event(ctx, event) {
+            return Some(Self::Msg::PowerOff);
+        }
 
         None
     }
@@ -118,5 +128,7 @@ impl Component for Menu {
         self.reset.render(target);
         #[cfg(feature = "ble")]
         self.bluetooth.render(target);
+        #[cfg(feature = "powerctl")]
+        self.poweroff.render(target);
     }
 }
