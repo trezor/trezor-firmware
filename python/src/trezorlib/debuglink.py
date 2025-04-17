@@ -40,7 +40,7 @@ from .exceptions import (
     UnexpectedMessageError,
 )
 from .log import DUMP_BYTES
-from .messages import DebugWaitType
+from .messages import DebugWaitType, ThpPairingMethod
 from .tools import parse_path
 from .transport import Timeout
 from .transport.session import ProtocolV2Channel, Session
@@ -1060,6 +1060,7 @@ class TrezorClientDebugLink(TrezorClient):
         open_transport: bool = True,
         debug_transport: Transport | None = None,
     ) -> None:
+        self._default_pairing_method = ThpPairingMethod.SkipPairing
         try:
             debug_transport = debug_transport or transport.find_debug()
             self.debug = DebugLink(debug_transport, auto_interact)
