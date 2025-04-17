@@ -329,9 +329,7 @@ STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
   size_t n_pool, n_qstr, n_str_data_bytes, n_total_bytes;
   qstr_pool_info(&n_pool, &n_qstr, &n_str_data_bytes, &n_total_bytes);
   if (n_pool) {
-#ifdef TREZOR_EMULATOR
     qstr_dump_data();
-#endif
     mp_raise_msg_varg(&mp_type_AssertionError,
                       "Runtime QSTR allocation: " UINT_FMT " pools, " UINT_FMT
                       " strings, " UINT_FMT " data bytes, " UINT_FMT
