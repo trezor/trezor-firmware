@@ -1133,7 +1133,7 @@ pub enum TranslatedString {
     wipe_code__diff_from_pin = 776,  // "The wipe code must be different from your PIN."
     wipe_code__disabled = 777,  // "Wipe code disabled."
     wipe_code__enabled = 778,  // "Wipe code enabled."
-    wipe_code__enter_new = 779,  // "Enter new wipe code"
+    wipe_code__enter_new = 779,  // "New wipe code"
     wipe_code__info = 780,  // "Wipe code can be used to erase all data from this device."
     wipe_code__invalid = 781,  // "Invalid wipe code"
     wipe_code__mismatch = 782,  // "The wipe codes you entered do not match."
@@ -2544,7 +2544,7 @@ impl TranslatedString {
             (Self::wipe_code__diff_from_pin, "The wipe code must be different from your PIN."),
             (Self::wipe_code__disabled, "Wipe code disabled."),
             (Self::wipe_code__enabled, "Wipe code enabled."),
-            (Self::wipe_code__enter_new, "Enter new wipe code"),
+            (Self::wipe_code__enter_new, "New wipe code"),
             (Self::wipe_code__info, "Wipe code can be used to erase all data from this device."),
             (Self::wipe_code__invalid, "Invalid wipe code"),
             (Self::wipe_code__mismatch, "The wipe codes you entered do not match."),
