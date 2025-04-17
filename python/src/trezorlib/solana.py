@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, Any, List, Optional
 
 from . import messages
 
@@ -17,12 +17,16 @@ def get_public_key(
     ).public_key
 
 
-def get_address(
+def get_address(*args: Any, **kwargs: Any) -> str:
+    return get_authenticated_address(*args, **kwargs).address
+
+
+def get_authenticated_address(
     client: "TrezorClient",
     address_n: List[int],
     show_display: bool,
     chunkify: bool = False,
-) -> str:
+) -> messages.SolanaAddress:
     return client.call(
         messages.SolanaGetAddress(
             address_n=address_n,
@@ -30,7 +34,7 @@ def get_address(
             chunkify=chunkify,
         ),
         expect=messages.SolanaAddress,
-    ).address
+    )
 
 
 def sign_tx(
