@@ -564,7 +564,7 @@
     "pin__mismatch": "I PIN immessi non corrispondono.",
     "pin__pin_mismatch": "PIN non corrispondente",
     "pin__please_check_again": "Ricontrolla.",
-    "pin__reenter_new": "Reimmetti nuovo PIN",
+    "pin__reenter_new": "Reimmetti PIN",
     "pin__reenter_to_confirm": "Reimmettere PIN per confermare.",
     "pin__should_be_long": "Lunghezza PIN 4-50 cifre.",
     "pin__title_check_pin": "Controlla PIN",

@@ -564,7 +564,7 @@
     "pin__mismatch": "Die eingegebenen PINs stimmen nicht überein.",
     "pin__pin_mismatch": "PIN stimmt nicht",
     "pin__please_check_again": "Bitte noch einmal prüfen.",
-    "pin__reenter_new": "Neue PIN neu eingeben",
+    "pin__reenter_new": "PIN neu eingeben",
     "pin__reenter_to_confirm": "Gib die PIN zur Bestätigung erneut ein.",
     "pin__should_be_long": "PIN sollte aus 4-50 Ziffern bestehen.",
     "pin__title_check_pin": "PIN prüfen",

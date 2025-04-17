@@ -564,7 +564,7 @@
     "pin__mismatch": "Les codes PIN saisis ne correspondent pas.",
     "pin__pin_mismatch": "Erreur de PIN",
     "pin__please_check_again": "Revérifiez.",
-    "pin__reenter_new": "Réentrez nouv. PIN",
+    "pin__reenter_new": "Réentrez PIN",
     "pin__reenter_to_confirm": "Réentrez le PIN pour conf.",
     "pin__should_be_long": "Le PIN doit être composé de 4 à 50 chiffres.",
     "pin__title_check_pin": "Vérifier PIN",
