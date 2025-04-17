@@ -43,6 +43,8 @@ recalculate the full value: v = 2 * chain_id + 35 + v_bit */
 #define MAX_CHAIN_ID ((0xFFFFFFFF - 36) >> 1)
 #define EIP1559_TX_TYPE 2
 
+#define PUBKEYHASH_LEN 20
+
 static bool ethereum_signing = false;
 static uint32_t data_total, data_left;
 static EthereumTxRequest msg_tx_request;
@@ -60,7 +62,7 @@ _Static_assert(sizeof(signing_access_list) ==
 
 struct signing_params {
   bool pubkeyhash_set;
-  uint8_t pubkeyhash[20];
+  uint8_t pubkeyhash[PUBKEYHASH_LEN];
   uint64_t chain_id;
   const char *chain_suffix;
 
@@ -213,7 +215,7 @@ static uint32_t rlp_calculate_access_list_length(
     const EthereumAccessList access_list[8], uint32_t access_list_count) {
   uint32_t length = 0;
   for (size_t i = 0; i < access_list_count; i++) {
-    uint32_t address_length = rlp_calculate_length(20, 0xff);
+    uint32_t address_length = rlp_calculate_length(PUBKEYHASH_LEN, 0xff);
     uint32_t keys_length = rlp_calculate_access_list_keys_length(
         access_list[i].storage_keys, access_list[i].storage_keys_count);
     length += rlp_calculate_length(
@@ -246,7 +248,7 @@ static void send_signature(void) {
     hash_rlp_list_length(rlp_calculate_access_list_length(
         signing_access_list, signing_access_list_count));
     for (size_t i = 0; i < signing_access_list_count; i++) {
-      uint8_t address[20] = {0};
+      uint8_t address[PUBKEYHASH_LEN] = {0};
       if (!ethereum_parse(signing_access_list[i].address, address)) {
         fsm_sendFailure(FailureType_Failure_DataError, _("Malformed address"));
         ethereum_signing_abort();
@@ -334,7 +336,6 @@ static void ethereumFormatAmount(const bignum256 *amnt,
 static void parse_bignum256(const uint8_t *value, uint32_t value_len,
                             bignum256 *result) {
   uint8_t padded[32] = {0};
-  memzero(padded, sizeof(padded));
   memcpy(padded + (32 - value_len), value, value_len);
   bn_read_be(padded, result);
 }
@@ -560,18 +561,158 @@ static void ethereum_signing_handle_erc20(struct signing_params *params,
   }
 }
 
+// smart contract 'data' field lengths in bytes
+static const size_t SC_FUNC_SIG_BYTES = 4;
+static const size_t SC_ARGUMENT_BYTES = 32;
+
+// staking operations function signatures
+static const uint8_t SC_FUNC_SIG_STAKE[] = {0x3a, 0x29, 0xdb, 0xae};
+static const uint8_t SC_FUNC_SIG_UNSTAKE[] = {0x76, 0xec, 0x87, 0x1c};
+static const uint8_t SC_FUNC_SIG_CLAIM[] = {0x33, 0x98, 0x6f, 0xfa};
+
+// addresses for pool (stake/unstake) and accounting (claim) operations
+static const uint8_t POOL_HOLESKY_TESTNET[] = {
+    0xaf, 0xa8, 0x48, 0x35, 0x71, 0x54, 0xa6, 0xa6, 0x24, 0x68,
+    0x6b, 0x34, 0x83, 0x3,  0xef, 0x9a, 0x13, 0xf6, 0x32, 0x64};
+static const uint8_t POOL_MAINNET[] = {0xd5, 0x23, 0x79, 0x4c, 0x87, 0x9d, 0x9e,
+                                       0xc0, 0x28, 0x96, 0xa,  0x23, 0x1f, 0x86,
+                                       0x67, 0x58, 0xe4, 0x5,  0xbe, 0x34};
+static const uint8_t ACCOUNTING_HOLESKY_TESTNET[] = {
+    0x62, 0x40, 0x87, 0xdd, 0x19, 0x4,  0xab, 0x12, 0x2a, 0x32,
+    0x87, 0x8c, 0xe9, 0xe9, 0x33, 0xc7, 0x7,  0x1f, 0x53, 0xb9};
+static const uint8_t ACCOUNTING_MAINNET[] = {
+    0x7a, 0x7f, 0xb,  0x3c, 0x23, 0xc2, 0x3a, 0x31, 0xcf, 0xcb,
+    0xc,  0x44, 0x70, 0x9b, 0xe7, 0xd,  0x4d, 0x54, 0x5c, 0x6e};
+
+enum staking_operation_t {
+  ETH_STAKING_STAKE,
+  ETH_STAKING_UNSTAKE,
+  ETH_STAKING_CLAIM,
+};
+
+// Returns `true` if it is a staking-related transaction and updates `op` with
+// its specific operation.
+static bool isEthereumStakingTx(const struct signing_params *params,
+                                enum staking_operation_t *op) {
+  if (params->data_initial_chunk_size < SC_FUNC_SIG_BYTES) {
+    return false;
+  }
+  const uint8_t *pubkeyhash = params->pubkeyhash;
+  const uint8_t *data_chunk = params->data_initial_chunk_bytes;
+  bool is_address_pool =
+      ((memcmp(pubkeyhash, POOL_HOLESKY_TESTNET, PUBKEYHASH_LEN) == 0) ||
+       (memcmp(pubkeyhash, POOL_MAINNET, PUBKEYHASH_LEN) == 0));
+  if (is_address_pool) {
+    if (memcmp(data_chunk, SC_FUNC_SIG_STAKE, SC_FUNC_SIG_BYTES) == 0) {
+      *op = ETH_STAKING_STAKE;
+      return true;
+    }
+    if (memcmp(data_chunk, SC_FUNC_SIG_UNSTAKE, SC_FUNC_SIG_BYTES) == 0) {
+      *op = ETH_STAKING_UNSTAKE;
+      return true;
+    }
+  }
+  bool is_address_accounting =
+      ((memcmp(pubkeyhash, ACCOUNTING_HOLESKY_TESTNET, PUBKEYHASH_LEN) == 0) ||
+       (memcmp(pubkeyhash, ACCOUNTING_MAINNET, PUBKEYHASH_LEN) == 0));
+  if (is_address_accounting) {
+    if (memcmp(data_chunk, SC_FUNC_SIG_CLAIM, SC_FUNC_SIG_BYTES) == 0) {
+      *op = ETH_STAKING_CLAIM;
+      return true;
+    }
+  }
+  return false;
+}
+
+static bool layoutEthereumConfirmStakingTx(const struct signing_params *params,
+                                           enum staking_operation_t op) {
+  uint32_t args_size = params->data_initial_chunk_size - SC_FUNC_SIG_BYTES;
+  const uint8_t *args_bytes =
+      params->data_initial_chunk_bytes + SC_FUNC_SIG_BYTES;
+
+  bignum256 value = {0}, source = {0};
+  char value_str[64] = {0};
+  const char *_line1 = NULL;
+  const char *_line2 = NULL;
+  const char *_line3 = NULL;
+  switch (op) {
+    case ETH_STAKING_STAKE:
+      // stake args:
+      // - arg0: uint64, source (should be 1)
+      if (args_size != SC_ARGUMENT_BYTES) {
+        return false;
+      }
+      bn_read_be(args_bytes, &source);
+      if (!bn_is_one(&source)) {
+        return false;
+      }
+      parse_bignum256(params->value_bytes, params->value_size, &value);
+      ethereumFormatAmount(&value, NULL, value_str, sizeof(value_str));
+      _line1 = _("Stake");
+      _line2 = value_str;
+      _line3 = _("on Everstake?");
+      break;
+    case ETH_STAKING_UNSTAKE:
+      // unstake args:
+      // - arg0: uint256, value
+      // - arg1: uint16, isAllowedInterchange (bool) - skipped
+      // - arg2: uint64, source, should be 1
+      if (args_size != 3 * SC_ARGUMENT_BYTES) {
+        return false;
+      }
+      bn_read_be(args_bytes + 2 * SC_ARGUMENT_BYTES, &source);
+      if (!bn_is_one(&source)) {
+        return false;
+      }
+      bn_read_be(args_bytes, &value);
+      ethereumFormatAmount(&value, NULL, value_str, sizeof(value_str));
+      _line1 = _("Unstake");
+      _line2 = value_str;
+      _line3 = _("from Everstake?");
+      break;
+    case ETH_STAKING_CLAIM:
+      // claim has no args
+      if (args_size != 0) {
+        return false;
+      }
+      _line1 = _("Claim ETH");
+      _line2 = _("from Everstake?");
+      break;
+  }
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _line1,
+                    _line2, _line3, NULL, NULL, NULL);
+  return true;
+}
+
 static bool ethereum_signing_confirm_common(
     const struct signing_params *params) {
+  enum staking_operation_t staking_op;
+  if (isEthereumStakingTx(params, &staking_op)) {
+    if (!layoutEthereumConfirmStakingTx(params, staking_op)) {
+      fsm_sendFailure(FailureType_Failure_DataError,
+                      _("Invalid staking transaction call"));
+      return false;
+    }
+    if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
+      return false;
+    }
+    // in case of staking, skip common ETH confirmation layout
+    return true;
+  }
+
   if (params->token != NULL) {
-    layoutEthereumConfirmTx(params->data_initial_chunk_bytes + 16, 20,
-                            params->data_initial_chunk_bytes + 36, 32,
-                            params->token);
+    layoutEthereumConfirmTx(
+        params->data_initial_chunk_bytes + 16, PUBKEYHASH_LEN,
+        params->data_initial_chunk_bytes + 16 + PUBKEYHASH_LEN, 32,
+        params->token);
   } else {
-    layoutEthereumConfirmTx(params->pubkeyhash, 20, params->value_bytes,
-                            params->value_size, NULL);
+    layoutEthereumConfirmTx(params->pubkeyhash, PUBKEYHASH_LEN,
+                            params->value_bytes, params->value_size, NULL);
   }
 
   if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     return false;
   }
 
@@ -579,6 +720,7 @@ static bool ethereum_signing_confirm_common(
     layoutEthereumData(params->data_initial_chunk_bytes,
                        params->data_initial_chunk_size, data_total);
     if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
+      fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
       return false;
     }
   }
@@ -630,7 +772,6 @@ void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
   ethereum_signing_handle_erc20(&params, defs->token);
 
   if (!ethereum_signing_confirm_common(&params)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     ethereum_signing_abort();
     return;
   }
@@ -654,7 +795,7 @@ void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
       rlp_calculate_length(msg->gas_price.size, msg->gas_price.bytes[0]);
   rlp_length +=
       rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
-  rlp_length += rlp_calculate_length(params.pubkeyhash_set ? 20 : 0,
+  rlp_length += rlp_calculate_length(params.pubkeyhash_set ? PUBKEYHASH_LEN : 0,
                                      params.pubkeyhash[0]);
   rlp_length += rlp_calculate_length(params.value_size, params.value_bytes[0]);
   rlp_length +=
@@ -677,7 +818,7 @@ void ethereum_signing_init(const EthereumSignTx *msg, const HDNode *node,
   hash_rlp_field(msg->nonce.bytes, msg->nonce.size);
   hash_rlp_field(msg->gas_price.bytes, msg->gas_price.size);
   hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
-  hash_rlp_field(params.pubkeyhash, params.pubkeyhash_set ? 20 : 0);
+  hash_rlp_field(params.pubkeyhash, params.pubkeyhash_set ? PUBKEYHASH_LEN : 0);
   hash_rlp_field(params.value_bytes, params.value_size);
   hash_rlp_length(data_total, params.data_initial_chunk_bytes[0]);
   hash_data(params.data_initial_chunk_bytes, params.data_initial_chunk_size);
@@ -727,7 +868,6 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
   ethereum_signing_handle_erc20(&params, defs->token);
 
   if (!ethereum_signing_confirm_common(&params)) {
-    fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     ethereum_signing_abort();
     return;
   }
@@ -771,7 +911,7 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
       rlp_calculate_length(msg->max_gas_fee.size, msg->max_gas_fee.bytes[0]);
   rlp_length +=
       rlp_calculate_length(msg->gas_limit.size, msg->gas_limit.bytes[0]);
-  rlp_length += rlp_calculate_length(params.pubkeyhash_set ? 20 : 0,
+  rlp_length += rlp_calculate_length(params.pubkeyhash_set ? PUBKEYHASH_LEN : 0,
                                      params.pubkeyhash[0]);
   rlp_length += rlp_calculate_length(params.value_size, params.value_bytes[0]);
   rlp_length +=
@@ -793,7 +933,7 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
   hash_rlp_field(msg->max_priority_fee.bytes, msg->max_priority_fee.size);
   hash_rlp_field(msg->max_gas_fee.bytes, msg->max_gas_fee.size);
   hash_rlp_field(msg->gas_limit.bytes, msg->gas_limit.size);
-  hash_rlp_field(params.pubkeyhash, params.pubkeyhash_set ? 20 : 0);
+  hash_rlp_field(params.pubkeyhash, params.pubkeyhash_set ? PUBKEYHASH_LEN : 0);
   hash_rlp_field(params.value_bytes, params.value_size);
   hash_rlp_length(data_total, params.data_initial_chunk_bytes[0]);
   hash_data(params.data_initial_chunk_bytes, params.data_initial_chunk_size);
@@ -923,7 +1063,7 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg) {
     return 1;
   }
 
-  uint8_t pubkeyhash[20] = {0};
+  uint8_t pubkeyhash[PUBKEYHASH_LEN] = {0};
   if (!ethereum_parse(msg->address, pubkeyhash)) {
     fsm_sendFailure(FailureType_Failure_DataError, _("Malformed address"));
     return 1;
@@ -957,7 +1097,7 @@ int ethereum_message_verify(const EthereumVerifyMessage *msg) {
   keccak_Final(&ctx, hash);
 
   /* result are the least significant 160 bits */
-  if (memcmp(pubkeyhash, hash + 12, 20) != 0) {
+  if (memcmp(pubkeyhash, hash + 12, PUBKEYHASH_LEN) != 0) {
     return 2;
   }
   return 0;
@@ -1000,8 +1140,8 @@ void ethereum_typed_hash_sign(const EthereumSignTypedHash *msg,
   msg_write(MessageType_MessageType_EthereumTypedDataSignature, resp);
 }
 
-bool ethereum_parse(const char *address, uint8_t pubkeyhash[20]) {
-  memzero(pubkeyhash, 20);
+bool ethereum_parse(const char *address, uint8_t pubkeyhash[PUBKEYHASH_LEN]) {
+  memzero(pubkeyhash, PUBKEYHASH_LEN);
   size_t len = strlen(address);
   if (len == 40) {
     // do nothing
