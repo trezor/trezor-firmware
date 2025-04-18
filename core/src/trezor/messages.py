@@ -5275,6 +5275,7 @@ if TYPE_CHECKING:
         last_ledger_sequence: "int | None"
         payment: "RipplePayment"
         chunkify: "bool | None"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -5286,6 +5287,7 @@ if TYPE_CHECKING:
             flags: "int | None" = None,
             last_ledger_sequence: "int | None" = None,
             chunkify: "bool | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
