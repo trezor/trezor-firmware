@@ -21,7 +21,7 @@
 
 #include <trezor_types.h>
 
-// Fuel gauge state structure
+// fuel gauge state structure
 typedef struct {
   // State estimate (SOC)
   float soc;
@@ -38,7 +38,7 @@ typedef struct {
 
 /**
  * Initialize the fuel gauge state
- * @param state Pointer to fuel gauge state structure
+ * @param state Pointer to EKF state structure
  * @param R Measurement noise variance
  * @param Q Process noise variance
  * @param R_aggressive Aggressive mode measurement noise variance
@@ -49,14 +49,14 @@ void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
                      float R_aggressive, float Q_aggressive, float P_init);
 
 /**
- * Reset the fuel gauge state
- * @param state Pointer to fuel gauge state structure
+ * Reset the EKF state
+ * @param state Pointer to EKF state structure
  */
 void fuel_gauge_reset(fuel_gauge_state_t* state);
 
 /**
  * Make initial SOC guess based on OCV
- * @param state Pointer to fuel gauge state structure
+ * @param state Pointer to EKF state structure
  * @param voltage_V Current battery voltage (V)
  * @param current_mA Current battery current (mA), positive for discharge
  * @param temperature Battery temperature (°C)
@@ -66,7 +66,7 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
 
 /**
  * Update the fuel gauge with new measurements
- * @param state Pointer to fuel gauge state structure
+ * @param state Pointer to EKF state structure
  * @param dt Time step in milliseconds
  * @param voltage_V Current battery voltage (V)
  * @param current_mA Current battery current (mA), positive for discharge

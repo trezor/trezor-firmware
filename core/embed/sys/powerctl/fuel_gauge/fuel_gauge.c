@@ -17,11 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <math.h>
-#include <trezor_types.h>
-
-#include "battery_model.h"
 #include "fuel_gauge.h"
+#include <math.h>
+#include "battery_model.h"
 
 void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
                      float R_aggressive, float Q_aggressive, float P_init) {
@@ -44,16 +42,22 @@ void fuel_gauge_reset(fuel_gauge_state_t* state) {
 
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
                               float current_mA, float temperature) {
+  // Determine if we're in discharge mode
+  bool discharging_mode = current_mA >= 0.0f;
+
   // Calculate OCV from terminal voltage and current
   float ocv = battery_meas_to_ocv(voltage_V, current_mA, temperature);
 
   // Get SOC from OCV using lookup
-  state->soc = battery_soc(ocv, temperature);
+  state->soc = battery_soc(ocv, temperature, discharging_mode);
   state->soc_latched = state->soc;
 }
 
 float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
                         float current_mA, float temperature) {
+  // Determine if we're in discharge mode
+  bool discharging_mode = current_mA >= 0.0f;
+
   // Choose filter parameters based on temperature and SOC
   float R = state->R;
   float Q = state->Q;
@@ -72,7 +76,7 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
   float dt_sec = dt / 1000.0f;
 
   // Get total capacity at current temperature
-  float total_capacity = battery_total_capacity(temperature);
+  float total_capacity = battery_total_capacity(temperature, discharging_mode);
 
   // State prediction (coulomb counting)
   // SOC_k+1 = SOC_k - (I*dt)/(3600*capacity)
@@ -80,7 +84,7 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
       state->soc - (current_mA / (3600.0f * total_capacity)) * dt_sec;
 
   // Calculate Jacobian of measurement function h(x) = dOCV/dSOC
-  float h_jacobian = battery_ocv_slope(x_k1_k, temperature);
+  float h_jacobian = battery_ocv_slope(x_k1_k, temperature, discharging_mode);
 
   // Error covariance prediction
   float P_k1_k = state->P + Q;
@@ -92,7 +96,7 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
   float K_k1_k = P_k1_k * h_jacobian / S;
 
   // Calculate predicted terminal voltage
-  float v_pred = battery_ocv(x_k1_k, temperature) -
+  float v_pred = battery_ocv(x_k1_k, temperature, discharging_mode) -
                  (current_mA / 1000.0f) * battery_rint(temperature);
 
   // State update
