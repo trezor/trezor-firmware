@@ -9901,14 +9901,14 @@
 "T2T1_pt_zcash-test_sign_tx.py::test_version_group_id_missing": "e9e80e1bfd347b598699a7a84deb8932eff90fc5fb8b56771453e06fe3c4c216"
 },
 "persistence_tests": {
-"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptAlways--081810a6": "d1e7905797c25c34e1be947b2cbcb655b4497068e6e6bdaccf88a1c821339085",
-"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "d69338d8911fc6f4d4a9b4f23297537a9be60975694572d6c8cd1272c55d2af9",
-"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "458e2c14abebb664a50fef4082d8933d0db7c167439bcd7ffb11b7fca75dfb66",
+"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptAlways--081810a6": "acbc2c99e4706d6598b054bd77e68628bc2553cb2a0533909b0288ab350cfdb7",
+"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "ec6c94133f957bdfa4684d5219ac157f0b73ccc5a4380980fa602eb28345ec2f",
+"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "2158b5e92f47354360271a6e74c03b6f68c09c46ac6b4c84b792c2afd43fd8b5",
 "T2T1_en_test_shamir_persistence.py::test_abort": "44ad6164cfa4765aa4cc0806ff881d48fad0379300835b9c6108f741fa84962f",
 "T2T1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "96009f5c0834cb4fcfe266bfd97309c0280a4cd053f906359021c4d8c78a3e63",
 "T2T1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "41e408617bb1d314602e03cc1d3bcdf2064096b99d08e9a07220dbd9347a81d3",
 "T2T1_en_test_shamir_persistence.py::test_recovery_single_reset": "1cefe6558c3dfcbbbda25a28441d289e313fe76fdd76227d719ec34e646dd149",
-"T2T1_en_test_wipe_code.py::test_wipe_code_activate_core": "6984e9b87a9d7f13a2fefec61305b0acddeab64bc24f149f2a2998024a191d06"
+"T2T1_en_test_wipe_code.py::test_wipe_code_activate_core": "66c7417fff81c6e598e96616f91c60aa5fcd56d18bc4d1aa0b800c373045b511"
 }
 },
 "T3B1": {
