@@ -999,11 +999,10 @@ display and command line, exit the fuel gauge monitor with CTRL+C
 
 Example:
 fuel-gauge
-PROGRESS :V: 3.12 I: 122.13 SOC: 0.28
-PROGRESS :V: 3.12 I: 122.13 SOC: 0.28
-PROGRESS :V: 3.12 I: 122.13 SOC: 0.28
-CTRL+C pressed, exiting fuel gauge monitor
-OK
+# Initialize Fuel gauge.
+PROGRESS 3.123 122.13 0.281
+PROGRESS 3.125 122.18 0.281
+PROGRESS 3.123 122.13 0.280
 ```
 
 
