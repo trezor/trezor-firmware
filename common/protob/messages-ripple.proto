@@ -5,6 +5,9 @@ package hw.trezor.messages.ripple;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageRipple";
 
+import "messages-common.proto";
+import "options.proto";
+
 /**
  * Request: Address at the specified index
  * @start
@@ -38,6 +41,7 @@ message RippleSignTx {
     optional uint32 last_ledger_sequence = 5;   // see https://developers.ripple.com/reliable-transaction-submission.html#lastledgersequence
     required RipplePayment payment = 6;         // Payment transaction type
     optional bool chunkify = 7;                 // display the address in chunks of 4 characters
+    optional common.PaymentRequest payment_req = 8 [(experimental_field)=true]; // SLIP-24 payment reques
 
     /**
      * Payment transaction type
