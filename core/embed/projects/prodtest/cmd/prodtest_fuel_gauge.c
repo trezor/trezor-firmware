@@ -20,6 +20,7 @@
 #ifdef USE_POWERCTL
 
 #include <rust_ui_prodtest.h>
+#include <stdlib.h>
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
@@ -35,32 +36,27 @@ static void prodtest_fuel_gauge(cli_t *cli) {
     return;
   }
 
-  cli_trace(cli, "Initializing the PMIC driver ...");
-  if (!npm1300_init()) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize PMIC driver.");
-    return;
-  }
-
   char display_text[100];
 
   fuel_gauge_state_t fg;
 
+  // Fuel gauge noise covariance parameters.
+  // These parameters are used in the Kalman filter to adjust the weight
+  // given to the measurements versus the model predictions.
+  // Parameters are fine-tuned on battery model simulation.
   float Q = 0.001f;
   float R = 3000.0f;
-  float R_agressive = 3000.0f;
-  float Q_agressive = 0.001f;
+  float R_aggressive = 3000.0f;
+  float Q_aggressive = 0.001f;
   float P_init = 0.1;
 
   cli_trace(cli, "Initialize Fuel gauge.");
 
-  void fuel_gauge_init(fuel_gauge_state_t * state, float R, float Q,
-                       float R_aggressive, float Q_aggressive, float P_init);
-
-  fuel_gauge_init(&fg, R, Q, R_agressive, Q_agressive, P_init);
+  fuel_gauge_init(&fg, R, Q, R_aggressive, Q_aggressive, P_init);
 
   npm1300_report_t report;
   if (!npm1300_measure_sync(&report)) {
-    cli_error(cli, CLI_ERROR, "Failed to measure PMIC.");
+    cli_error(cli, CLI_ERROR, "Failed to get measurement data from PMIC.");
     return;
   }
 
@@ -76,7 +72,7 @@ static void prodtest_fuel_gauge(cli_t *cli) {
     }
 
     if (!npm1300_measure_sync(&report)) {
-      cli_error(cli, CLI_ERROR, "Failed to measure PMIC.");
+      cli_error(cli, CLI_ERROR, "Failed to get measurement data from PMIC.");
       break;
     }
 
@@ -84,23 +80,39 @@ static void prodtest_fuel_gauge(cli_t *cli) {
                       report.ntc_temp);
     tick = systick_ms();
 
-    cli_progress(cli, "V: %d.%02d I: %d.%02d SOC: %d.%02d", (int)report.vbat,
-                 (int)(report.vbat * 1000) % 1000, (int)report.ibat,
-                 (int)(report.ibat * 1000) % 1000, (int)fg.soc,
-                 (int)(fg.soc * 1000) % 1000);
+    // Calculate the integer and fractional parts correctly
+    int vbat_int = (int)report.vbat;
+    int vbat_frac =
+        abs((int)((report.vbat - vbat_int) * 1000));  // Only 3 decimal places
 
-    mini_snprintf(display_text, 100, "V: %d.%02d I: %d.%02d SOC: %d.%02d",
-                  (int)report.vbat, (int)(report.vbat * 1000) % 1000,
-                  (int)report.ibat, (int)(report.ibat * 1000) % 1000,
-                  (int)fg.soc, (int)(fg.soc * 1000) % 1000);
+    int ibat_int = (int)report.ibat;
+    int ibat_frac =
+        abs((int)((report.ibat - ibat_int) * 1000));  // Only 3 decimal places
+
+    int soc_int = (int)fg.soc;
+    int soc_frac =
+        abs((int)((fg.soc - soc_int) * 1000));  // Only 3 decimal places
+
+    const char *charge_state_str;
+    if (report.ibat > 0) {
+      charge_state_str = "DISCHARGING";
+    } else if (report.ibat < 0) {
+      charge_state_str = "CHARGING";
+    } else {
+      charge_state_str = "IDLE";
+    }
+
+    cli_progress(cli, "%d.%03d %d.%03d %d.%03d %s", vbat_int, vbat_frac,
+                 ibat_int, ibat_frac, soc_int, soc_frac, charge_state_str);
+
+    mini_snprintf(display_text, 100, "V: %d.%03d I: %d.%03d SOC: %d.%03d",
+                  vbat_int, vbat_frac, ibat_int, ibat_frac, soc_int, soc_frac);
+
     screen_prodtest_show_text(display_text, strlen(display_text));
 
     // Wait a second
     systick_delay_ms(1000);
   }
-
-  cli_trace(cli, "Cleanup PMIC driver.");
-  npm1300_deinit();
 }
 
 // clang-format off
