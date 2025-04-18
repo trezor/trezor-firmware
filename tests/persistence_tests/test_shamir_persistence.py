@@ -17,6 +17,7 @@
 import pytest
 
 from trezorlib import device, messages
+from trezorlib.client import ProtocolVersion
 from trezorlib.debuglink import DebugLink, LayoutType
 from trezorlib.messages import RecoveryStatus
 
@@ -167,7 +168,8 @@ def test_recovery_on_old_wallet(core_emulator: Emulator):
     layout = debug.read_layout()
 
     # while keyboard is open, hit the device with Initialize/GetFeatures
-    device_handler.client.get_seedless_session().call(messages.Initialize())
+    if device_handler.client.protocol_version == ProtocolVersion.V1:
+        device_handler.client.get_seedless_session().call(messages.Initialize())
     device_handler.client.refresh_features()
 
     # try entering remaining 19 words
