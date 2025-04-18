@@ -46,6 +46,9 @@
 #define BT_UUID_TRZ_RX BT_UUID_DECLARE_128(BT_UUID_TRZ_RX_VAL)
 #define BT_UUID_TRZ_TX BT_UUID_DECLARE_128(BT_UUID_TRZ_TX_VAL)
 
+#define BLE_TX_PACKET_SIZE 64
+#define BLE_RX_PACKET_SIZE 244
+
 #define BLE_PAIRING_CODE_LEN 6
 #define BLE_ADV_NAME_LEN 20
 
@@ -56,7 +59,8 @@ typedef struct {
   uint8_t advertising_whitelist;
 
   uint8_t peer_count;
-  uint8_t reserved[2];
+  uint8_t busy_flag;
+  uint8_t reserved;
   uint8_t sd_version_number;
 
   uint16_t sd_company_id;
@@ -88,6 +92,7 @@ typedef enum {
   INTERNAL_CMD_REJECT_PAIRING = 0x07,
   INTERNAL_CMD_UNPAIR = 0x08,
   INTERNAL_CMD_GET_MAC = 0x09,
+  INTERNAL_CMD_SET_BUSY = 0x0A,
 } internal_cmd_t;
 
 typedef struct {
@@ -103,6 +108,16 @@ typedef struct {
   uint8_t cmd_id;
   uint8_t code[BLE_PAIRING_CODE_LEN];
 } cmd_allow_pairing_t;
+
+typedef struct {
+  uint8_t cmd_id;
+  uint8_t flag;
+} cmd_set_busy_t;
+
+// Set device to busy state, autoresponse
+void ble_set_busy_flag(uint8_t flag);
+
+uint8_t ble_get_busy_flag(void);
 
 // BLE management functions
 // Initialization
@@ -165,3 +180,5 @@ typedef void (*service_received_cb)(struct bt_conn *conn,
 int service_init(service_received_cb callbacks);
 // Send data to the connected device
 int service_send(struct bt_conn *conn, trz_packet_t *data);
+// Send hard-coded error response
+void service_send_busy(void);
