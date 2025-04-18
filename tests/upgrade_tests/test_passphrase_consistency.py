@@ -91,7 +91,12 @@ def test_passphrase_works(emulator: Emulator):
             messages.Address,
         ]
     else:
-        expected_responses = [messages.Address]
+        expected_responses = [
+            messages.ButtonRequest,
+            messages.ButtonRequest,
+            messages.Success,
+            messages.Address,
+        ]
     with emulator.client as client:
         client.set_expected_responses(expected_responses)
         if protocol_v1:
@@ -146,6 +151,9 @@ def test_init_device(emulator: Emulator):
         ]
     else:
         expected_responses = [
+            messages.ButtonRequest,
+            messages.ButtonRequest,
+            messages.Success,
             messages.Address,
             messages.Features,
             messages.Address,
