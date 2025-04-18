@@ -36,29 +36,23 @@ static void prodtest_fuel_gauge(cli_t *cli) {
     return;
   }
 
-  cli_trace(cli, "Initializing the PMIC driver ...");
-  if (!npm1300_init()) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize PMIC driver.");
-    return;
-  }
-
   char display_text[100];
 
   fuel_gauge_state_t fg;
 
   float Q = 0.001f;
   float R = 3000.0f;
-  float R_agressive = 3000.0f;
-  float Q_agressive = 0.001f;
+  float R_aggressive = 3000.0f;
+  float Q_aggressive = 0.001f;
   float P_init = 0.1;
 
   cli_trace(cli, "Initialize Fuel gauge.");
 
-  fuel_gauge_init(&fg, R, Q, R_agressive, Q_agressive, P_init);
+  fuel_gauge_init(&fg, R, Q, R_aggressive, Q_aggressive, P_init);
 
   npm1300_report_t report;
   if (!npm1300_measure_sync(&report)) {
-    cli_error(cli, CLI_ERROR, "Failed to measure PMIC.");
+    cli_error(cli, CLI_ERROR, "Failed to get measurement data from PMIC.");
     return;
   }
 
@@ -74,7 +68,7 @@ static void prodtest_fuel_gauge(cli_t *cli) {
     }
 
     if (!npm1300_measure_sync(&report)) {
-      cli_error(cli, CLI_ERROR, "Failed to measure PMIC.");
+      cli_error(cli, CLI_ERROR, "Failed to get measurement data from PMIC.");
       break;
     }
 
@@ -95,8 +89,8 @@ static void prodtest_fuel_gauge(cli_t *cli) {
     int soc_frac =
         abs((int)((fg.soc - soc_int) * 1000));  // Only 3 decimal places
 
-    cli_progress(cli, "V: %d.%03d I: %d.%03d SOC: %d.%03d", vbat_int, vbat_frac,
-                 ibat_int, ibat_frac, soc_int, soc_frac);
+    cli_progress(cli, "%d.%03d %d.%03d %d.%03d", vbat_int, vbat_frac, ibat_int,
+                 ibat_frac, soc_int, soc_frac);
 
     mini_snprintf(display_text, 100, "V: %d.%03d I: %d.%03d SOC: %d.%03d",
                   vbat_int, vbat_frac, ibat_int, ibat_frac, soc_int, soc_frac);
@@ -106,9 +100,6 @@ static void prodtest_fuel_gauge(cli_t *cli) {
     // Wait a second
     systick_delay_ms(1000);
   }
-
-  cli_trace(cli, "Cleanup PMIC driver.");
-  npm1300_deinit();
 }
 
 // clang-format off
