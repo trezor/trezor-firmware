@@ -567,8 +567,101 @@ static void ethereum_signing_handle_erc20(struct signing_params *params,
   }
 }
 
+enum staking_operation_t {
+  ETH_STAKING_STAKE,
+  ETH_STAKING_UNSTAKE,
+  ETH_STAKING_CLAIM,
+};
+
+static void layoutEthereumConfirmStakingTx(enum staking_operation_t op) {
+  const char *_line1 = NULL;
+  const char *_line2 = NULL;
+
+  switch (op) {
+    case ETH_STAKING_STAKE:
+      _line1 = _("Stake ETH");
+      _line2 = _("on Everstake?");
+      break;
+    case ETH_STAKING_UNSTAKE:
+      _line1 = _("Unstake ETH");
+      _line2 = _("from Everstake?");
+      break;
+    case ETH_STAKING_CLAIM:
+      _line1 = _("Claim ETH");
+      _line2 = _("from Everstake?");
+      break;
+  }
+  layoutDialogSwipe(&bmp_icon_question, _("Cancel"), _("Confirm"), NULL, _line1,
+                    _line2, NULL, NULL, NULL, NULL);
+}
+
+// smart contract 'data' field lengths in bytes
+#define SC_FUNC_SIG_BYTES (4)
+#define SC_ARGUMENT_BYTES (32)
+
+// staking operations function signatures
+static const uint8_t SC_FUNC_SIG_STAKE[] = {0x3a, 0x29, 0xdb, 0xae};
+static const uint8_t SC_FUNC_SIG_UNSTAKE[] = {0x76, 0xec, 0x87, 0x1c};
+static const uint8_t SC_FUNC_SIG_CLAIM[] = {0x33, 0x98, 0x6f, 0xfa};
+
+// addresses for pool (stake/unstake) and accounting (claim) operations
+static const uint8_t ADDRESS_POOL_HOLESKY_TESTNET[] = {
+    0xaf, 0xa8, 0x48, 0x35, 0x71, 0x54, 0xa6, 0xa6, 0x24, 0x68,
+    0x6b, 0x34, 0x83, 0x3,  0xef, 0x9a, 0x13, 0xf6, 0x32, 0x64};
+static const uint8_t ADDRESS_POOL_MAINNET[] = {
+    0xd5, 0x23, 0x79, 0x4c, 0x87, 0x9d, 0x9e, 0xc0, 0x28, 0x96,
+    0xa,  0x23, 0x1f, 0x86, 0x67, 0x58, 0xe4, 0x5,  0xbe, 0x34};
+static const uint8_t ADDRESS_ACCOUNTING_HOLESKY_TESTNET[] = {
+    0x62, 0x40, 0x87, 0xdd, 0x19, 0x4,  0xab, 0x12, 0x2a, 0x32,
+    0x87, 0x8c, 0xe9, 0xe9, 0x33, 0xc7, 0x7,  0x1f, 0x53, 0xb9};
+static const uint8_t ADDRESS_ACCOUNTING_MAINNET[] = {
+    0x7a, 0x7f, 0xb,  0x3c, 0x23, 0xc2, 0x3a, 0x31, 0xcf, 0xcb,
+    0xc,  0x44, 0x70, 0x9b, 0xe7, 0xd,  0x4d, 0x54, 0x5c, 0x6e};
+
+// Returns `true` if it is a staking-related transaction and updates `op` with
+// its specific operation.
+static bool isEthereumStakingTx(const struct signing_params *params,
+                                enum staking_operation_t *op) {
+  if (params->data_initial_chunk_size < SC_FUNC_SIG_BYTES) {
+    return false;
+  }
+  bool is_address_pool =
+      ((memcmp(params->pubkeyhash, ADDRESS_POOL_HOLESKY_TESTNET, 20) == 0) ||
+       (memcmp(params->pubkeyhash, ADDRESS_POOL_MAINNET, 20) == 0));
+  if (is_address_pool) {
+    if (memcmp(params->data_initial_chunk_bytes, SC_FUNC_SIG_STAKE,
+               SC_FUNC_SIG_BYTES) == 0) {
+      *op = ETH_STAKING_STAKE;
+      return true;
+    }
+    if (memcmp(params->data_initial_chunk_bytes, SC_FUNC_SIG_UNSTAKE,
+               SC_FUNC_SIG_BYTES) == 0) {
+      *op = ETH_STAKING_UNSTAKE;
+      return true;
+    }
+  }
+  bool is_address_acconting =
+      ((memcmp(params->pubkeyhash, ADDRESS_ACCOUNTING_HOLESKY_TESTNET, 20) ==
+        0) ||
+       (memcmp(params->pubkeyhash, ADDRESS_ACCOUNTING_MAINNET, 20) == 0));
+  if (is_address_acconting) {
+    if (memcmp(params->data_initial_chunk_bytes, SC_FUNC_SIG_CLAIM,
+               SC_FUNC_SIG_BYTES) == 0) {
+      *op = ETH_STAKING_CLAIM;
+      return true;
+    }
+  }
+  return false;
+}
+
 static bool ethereum_signing_confirm_common(
     const struct signing_params *params) {
+  enum staking_operation_t staking_op;
+  if (isEthereumStakingTx(params, &staking_op)) {
+    layoutEthereumConfirmStakingTx(staking_op);
+    return protectButton(ButtonRequestType_ButtonRequest_SignTx, false);
+  }
+
   if (params->token != NULL) {
     layoutEthereumConfirmTx(params->data_initial_chunk_bytes + 16, 20,
                             params->data_initial_chunk_bytes + 36, 32,
