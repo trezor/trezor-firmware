@@ -57,11 +57,7 @@ int backlight_set(int val);
 // Returns 0 if the backlight driver is not initialized.
 int backlight_get(void);
 
-#ifdef TREZOR_MODEL_T3W1
-
 // Set maximal backlight limit, limits the requested level to max_level value.
 //
 // Returns 0 if the backlight driver is not initialized.
 int backlight_set_max_level(int max_level);
-
-#endif

@@ -158,6 +158,7 @@ void backlight_init(backlight_action_t action) {
 
   // Default no backlight max_level limit
   drv->max_level = BACKLIGHT_MAX_LEVEL;
+  drv->requested_level = BACKLIGHT_MIN_LEVEL;
 
   drv->initialized = true;
 }
