@@ -23,18 +23,24 @@
 
 #ifdef KERNEL_MODE
 
+#define SECRET_KEY_LEN 32
+
+// first page: static
 #define SECRET_HEADER_MAGIC "TRZS"
 #define SECRET_HEADER_LEN 16
 #define SECRET_OPTIGA_KEY_OFFSET 16
-#define SECRET_OPTIGA_KEY_LEN 32
-#define SECRET_TROPIC_KEY_LEN 32
 
 #define SECRET_MONOTONIC_COUNTER_OFFSET 48
 #define SECRET_MONOTONIC_COUNTER_LEN 1024
 #define SECRET_MONOTONIC_COUNTER2_OFFSET (SECRET_MONOTONIC_COUNTER_LEN + 48)
 
+#define SECRET_TROPIC_TRZ_PRIVKEY_OFFSET \
+  (SECRET_MONOTONIC_COUNTER_LEN + SECRET_MONOTONIC_COUNTER2_OFFSET)
+#define SECRET_TROPIC_TRO_PUBKEY_OFFSET \
+  (SECRET_TROPIC_TRZ_PRIVKEY_OFFSET + SECRET_KEY_LEN)
+
+// second page: refreshed on wallet wipe
 #define SECRET_BHK_OFFSET (1024 * 8)
-#define SECRET_BHK_LEN 32
 
 // Writes data to the secret storage
 void secret_write(const uint8_t* data, uint32_t offset, uint32_t len);
@@ -54,10 +60,12 @@ void secret_erase(void);
 // Writes the secret header to the secret storage
 void secret_write_header(void);
 
+#ifdef USE_OPTIGA
+// OPTIGA KEYS
 // Writes optiga pairing secret to the secret storage
 // Encrypts the secret if encryption is available on the platform
 // Returns true if the secret was written successfully
-secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]);
+secbool secret_optiga_set(const uint8_t secret[SECRET_KEY_LEN]);
 
 // Reads optiga pairing secret
 // Decrypts the secret if encryption is available on the platform
@@ -65,7 +73,7 @@ secbool secret_optiga_set(const uint8_t secret[SECRET_OPTIGA_KEY_LEN]);
 // Reading can fail if optiga is not paired, the pairing secret was not
 // provisioned to the firmware (by calling secret_optiga_backup), or the secret
 // was made unavailable by calling secret_optiga_hide
-secbool secret_optiga_get(uint8_t dest[SECRET_OPTIGA_KEY_LEN]);
+secbool secret_optiga_get(uint8_t dest[SECRET_KEY_LEN]);
 
 // Checks if the optiga pairing secret is present in the secret storage
 secbool secret_optiga_present(void);
@@ -75,10 +83,24 @@ secbool secret_optiga_writable(void);
 
 // Erases optiga pairing secret from the secret storage
 void secret_optiga_erase(void);
+#endif
 
-secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]);
+#ifdef USE_TROPIC
+// TROPIC KEYS
+secbool secret_tropic_get_trezor_privkey(uint8_t dest[SECRET_KEY_LEN]);
 
-secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_TROPIC_KEY_LEN]);
+secbool secret_tropic_get_tropic_pubkey(uint8_t dest[SECRET_KEY_LEN]);
+
+secbool secret_tropic_set(const uint8_t privkey[SECRET_KEY_LEN],
+                          const uint8_t pubkey[SECRET_KEY_LEN]);
+
+secbool secret_tropic_present(void);
+
+secbool secret_tropic_writable(void);
+
+void secret_tropic_erase(void);
+
+#endif
 
 // Regenerates the BHK and writes it to the secret storage
 void secret_bhk_regenerate(void);

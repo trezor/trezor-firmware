@@ -164,7 +164,7 @@ static bool set_metadata(cli_t* cli, uint16_t oid,
 }
 
 void pair_optiga(cli_t* cli) {
-  uint8_t secret[SECRET_OPTIGA_KEY_LEN] = {0};
+  uint8_t secret[SECRET_KEY_LEN] = {0};
 
   if (secret_optiga_get(secret) != sectrue) {
     if (secret_optiga_writable() != sectrue) {
