@@ -1284,7 +1284,6 @@ pub enum TranslatedString {
     instructions__hold_to_continue = 890,  // "Hold to continue"
     instructions__hold_to_exit_tutorial = 891,  // "Hold to exit tutorial"
     instructions__learn_more = 893,  // "Learn more"
-    instructions__shares_continue_with_x_template = 894,  // "Continue with Share #{0}"
     instructions__shares_start_with_1 = 895,  // "Start with share #1"
     instructions__tap_to_start = 896,  // "Tap to start"
     passphrase__title_passphrase = 897,  // "Passphrase"
@@ -1407,6 +1406,7 @@ pub enum TranslatedString {
     ble__unpair_all = 993,  // "Unpair all bluetooth devices"
     ble__unpair_current = 994,  // "Unpair connected device"
     ble__unpair_title = 995,  // "Unpair"
+    reset__next_share = 996,  // "Next share"
 }
 
 impl TranslatedString {
@@ -2687,7 +2687,6 @@ impl TranslatedString {
             Self::instructions__hold_to_continue => "Hold to continue",
             Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
             Self::instructions__learn_more => "Learn more",
-            Self::instructions__shares_continue_with_x_template => "Continue with Share #{0}",
             Self::instructions__shares_start_with_1 => "Start with share #1",
             Self::instructions__tap_to_start => "Tap to start",
             Self::passphrase__title_passphrase => "Passphrase",
@@ -2810,6 +2809,7 @@ impl TranslatedString {
             Self::ble__unpair_all => "Unpair all bluetooth devices",
             Self::ble__unpair_current => "Unpair connected device",
             Self::ble__unpair_title => "Unpair",
+            Self::reset__next_share => "Next share",
         }
     }
 
@@ -4089,7 +4089,6 @@ impl TranslatedString {
             Qstr::MP_QSTR_instructions__hold_to_continue => Some(Self::instructions__hold_to_continue),
             Qstr::MP_QSTR_instructions__hold_to_exit_tutorial => Some(Self::instructions__hold_to_exit_tutorial),
             Qstr::MP_QSTR_instructions__learn_more => Some(Self::instructions__learn_more),
-            Qstr::MP_QSTR_instructions__shares_continue_with_x_template => Some(Self::instructions__shares_continue_with_x_template),
             Qstr::MP_QSTR_instructions__shares_start_with_1 => Some(Self::instructions__shares_start_with_1),
             Qstr::MP_QSTR_instructions__tap_to_start => Some(Self::instructions__tap_to_start),
             Qstr::MP_QSTR_passphrase__title_passphrase => Some(Self::passphrase__title_passphrase),
@@ -4212,6 +4211,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_ble__unpair_all => Some(Self::ble__unpair_all),
             Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
             Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
+            Qstr::MP_QSTR_reset__next_share => Some(Self::reset__next_share),
             _ => None,
         }
     }
