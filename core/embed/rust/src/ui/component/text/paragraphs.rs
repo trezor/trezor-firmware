@@ -236,7 +236,7 @@ where
             &self.visible,
             self.offset,
             &mut |layout, content| {
-                layout.render_text(content, target);
+                layout.render_text(content, target, false);
             },
         )
     }
