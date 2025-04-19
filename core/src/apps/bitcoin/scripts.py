@@ -1,10 +1,12 @@
 from typing import TYPE_CHECKING
 
 from trezor import utils
+from trezor.crypto import base58, cashaddr
 from trezor.enums import InputScriptType
 from trezor.utils import BufferReader, empty_bytearray
 from trezor.wire import DataError
 
+from apps.common import address_type
 from apps.common.readers import read_compact_size
 from apps.common.writers import write_compact_size
 
@@ -78,10 +80,6 @@ def write_input_script_prefixed(
 
 
 def output_derive_script(address: str, coin: CoinInfo) -> bytes:
-    from trezor.crypto import base58, cashaddr
-
-    from apps.common import address_type
-
     if coin.bech32_prefix and address.startswith(coin.bech32_prefix):
         # p2wpkh or p2wsh or p2tr
         witver, witprog = common.decode_bech32_address(coin.bech32_prefix, address)

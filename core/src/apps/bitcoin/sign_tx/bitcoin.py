@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 
 from trezor import workflow
 from trezor.crypto.hashlib import sha256
-from trezor.enums import InputScriptType
-from trezor.utils import HashWriter, empty_bytearray
+from trezor.enums import InputScriptType, OutputScriptType
+from trezor.utils import HashWriter, empty_bytearray, ensure
 from trezor.wire import DataError, ProcessError
 
 from apps.common.writers import write_compact_size
@@ -919,8 +919,6 @@ class Bitcoin:
         self.write_tx_footer(w, tx)
 
     def set_serialized_signature(self, index: int, signature: bytes) -> None:
-        from trezor.utils import ensure
-
         serialized = self.tx_req.serialized  # local_cache_attribute
 
         # Only one signature per TxRequest can be serialized.
@@ -947,8 +945,6 @@ class Bitcoin:
         return scripts.output_derive_script(address, self.coin)
 
     def output_derive_script(self, txo: TxOutput) -> bytes:
-        from trezor.enums import OutputScriptType
-
         if txo.script_type == OutputScriptType.PAYTOOPRETURN:
             assert txo.op_return_data is not None  # checked in _sanitize_tx_output
             return scripts.output_script_paytoopreturn(txo.op_return_data)

@@ -99,8 +99,6 @@ def validate_path_against_script_type(
     script_type: InputScriptType | None = None,
     multisig: bool = False,
 ) -> bool:
-    from trezor.enums import InputScriptType
-
     patterns = []
     append = patterns.append  # local_cache_attribute
     slip44 = coin.slip44  # local_cache_attribute
