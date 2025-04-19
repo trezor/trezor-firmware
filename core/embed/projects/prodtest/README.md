@@ -969,6 +969,7 @@ Example:
 nfc-write_card <timeout_seconds>
 # NFC reader on, put the card on the reader (timeout <timeout_seconds> s)
 # Writting URI to NFC tag 7AF403
+
 ### unit-test-run
 Prodtest have capability to verify the overall firmware functionality by running built-in unit tests which should excercise the basic
 features of the firmware drivers. This command will run all registered unit tests and return 'OK' if all tests passed.
@@ -991,3 +992,21 @@ Example:
 # ut-pmic-init-deinit - Test PMIC driver initialization and deinitialization
 OK
 ```
+
+### fuel-gauge
+Activates fuel gauge which monitors battery state of charge and reports it on
+display and command line, exit the fuel gauge monitor with CTRL+C
+
+Example:
+fuel-gauge
+# Initialize Fuel gauge.
+PROGRESS 3.123 122.13 0.281
+PROGRESS 3.125 122.18 0.281
+PROGRESS 3.123 122.13 0.280
+```
+
+
+
+
+
+
