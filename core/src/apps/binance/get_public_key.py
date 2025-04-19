@@ -11,19 +11,23 @@ if TYPE_CHECKING:
 @auto_keychain(__name__)
 async def get_public_key(
     msg: BinanceGetPublicKey, keychain: Keychain
-) -> BinancePublicKey:
+) -> BinancePublicKey | None:
     from ubinascii import hexlify
 
     from trezor.messages import BinancePublicKey
-    from trezor.ui.layouts import show_pubkey
+    from trezor.ui.layouts import show_continue_in_app, show_pubkey
+    from trezor.wire import context
 
     from apps.common import paths
 
     await paths.validate_path(keychain, msg.address_n)
     node = keychain.derive(msg.address_n)
     pubkey = node.public_key()
+    response = BinancePublicKey(public_key=pubkey)
 
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERN, SLIP44_ID
 
         path = paths.address_n_to_str(msg.address_n)
@@ -32,5 +36,8 @@ async def get_public_key(
             account=paths.get_account_name("BNB", msg.address_n, PATTERN, SLIP44_ID),
             path=path,
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__public_key_confirmed)
+        return None
 
-    return BinancePublicKey(public_key=pubkey)
+    return response

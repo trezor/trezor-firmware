@@ -79,6 +79,16 @@ async def call_any(
     return await CURRENT_CONTEXT.read(expected_wire_types)
 
 
+async def write(msg: protobuf.MessageType) -> None:
+    """Send a message to the host.
+
+    Raises if there is no context for this workflow."""
+    if CURRENT_CONTEXT is None:
+        raise RuntimeError("No wire context")
+
+    await CURRENT_CONTEXT.write(msg)
+
+
 async def maybe_call(
     msg: protobuf.MessageType, expected_type: type[LoadedMessageType]
 ) -> None:
