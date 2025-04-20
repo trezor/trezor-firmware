@@ -1,6 +1,6 @@
 #
 # Copyright (c) 2015 David Keijser <keijser@gmail.com>
-# Copyright (c) 2016 Pavol Rusnak <stick@gk2.sk>
+# Copyright (c) 2016 Pavol Rusnak <stick@satoshilabs.com>
 #
 # Licensed under MIT License
 #
