@@ -331,14 +331,19 @@ static void ethereumFormatAmount(const bignum256 *amnt,
   bn_format(amnt, NULL, suffix, decimals, 0, false, ',', buf, buflen);
 }
 
+static void parse_bignum256(const uint8_t *value, uint32_t value_len,
+                            bignum256 *result) {
+  uint8_t padded[32] = {0};
+  memzero(padded, sizeof(padded));
+  memcpy(padded + (32 - value_len), value, value_len);
+  bn_read_be(padded, result);
+}
+
 static void layoutEthereumConfirmTx(const uint8_t *to, uint32_t to_len,
                                     const uint8_t *value, uint32_t value_len,
                                     const EthereumTokenInfo *token) {
   bignum256 val = {0};
-  uint8_t pad_val[32] = {0};
-  memzero(pad_val, sizeof(pad_val));
-  memcpy(pad_val + (32 - value_len), value, value_len);
-  bn_read_be(pad_val, &val);
+  parse_bignum256(value, value_len, &val);
 
   char amount[64] = {0};
   if (token == NULL) {
@@ -418,27 +423,19 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
                               const uint8_t *gas_limit, uint32_t gas_limit_len,
                               bool is_token) {
   bignum256 val = {0}, gas = {0};
-  uint8_t pad_val[32] = {0};
   char tx_value[32] = {0};
   char gas_value[32] = {0};
 
   memzero(tx_value, sizeof(tx_value));
   memzero(gas_value, sizeof(gas_value));
 
-  memzero(pad_val, sizeof(pad_val));
-  memcpy(pad_val + (32 - gas_price_len), gas_price, gas_price_len);
-  bn_read_be(pad_val, &val);
-
-  memzero(pad_val, sizeof(pad_val));
-  memcpy(pad_val + (32 - gas_limit_len), gas_limit, gas_limit_len);
-  bn_read_be(pad_val, &gas);
+  parse_bignum256(gas_price, gas_price_len, &val);
+  parse_bignum256(gas_limit, gas_limit_len, &gas);
   bn_multiply(&val, &gas, &secp256k1.prime);
 
   ethereumFormatAmount(&gas, NULL, gas_value, sizeof(gas_value));
 
-  memzero(pad_val, sizeof(pad_val));
-  memcpy(pad_val + (32 - value_len), value, value_len);
-  bn_read_be(pad_val, &val);
+  parse_bignum256(value, value_len, &val);
 
   if (bn_is_zero(&val)) {
     strcpy(tx_value, is_token ? _("token") : _("message"));
@@ -457,18 +454,14 @@ static void layoutEthereumFeeEIP1559(const char *description,
                                      const uint8_t *multiplier_bytes,
                                      uint32_t multiplier_len) {
   bignum256 amount_val = {0};
-  uint8_t padded[32] = {0};
   char amount_str[32] = {0};
 
-  memcpy(padded + (32 - amount_len), amount_bytes, amount_len);
-  bn_read_be(padded, &amount_val);
+  parse_bignum256(amount_bytes, amount_len, &amount_val);
 
   if (multiplier_len > 0) {
     bignum256 multiplier_val = {0};
 
-    memzero(padded, sizeof(padded));
-    memcpy(padded + (32 - multiplier_len), multiplier_bytes, multiplier_len);
-    bn_read_be(padded, &multiplier_val);
+    parse_bignum256(multiplier_bytes, multiplier_len, &multiplier_val);
     bn_multiply(&multiplier_val, &amount_val, &secp256k1.prime);
   }
 
