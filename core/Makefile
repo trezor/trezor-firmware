@@ -46,7 +46,6 @@ TREZOR_EMULATOR_DEBUGGABLE ?= 0
 QUIET_MODE ?= 0
 TREZOR_DISABLE_ANIMATION ?= $(if $(filter 0,$(PYOPT)),1,0)
 STORAGE_INSECURE_TESTING_MODE ?= 0
-MICROPY_ENABLE_SOURCE_LINE ?= 1
 UI_DEBUG_OVERLAY ?= 0
 
 # If set, VCP writes will be blocking, in order to allow reliable debug data transmission over VCP.
@@ -298,21 +297,26 @@ build_reflash: ## build reflash firmware + reflash image
 build_kernel: ## build kernel image
 	$(SCONS) $(KERNEL_BUILD_DIR)/kernel.bin
 
+build_firmware: MICROPY_ENABLE_SOURCE_LINE ?= 0
 build_firmware: templates build_cross build_kernel ## build firmware with frozen modules
 	$(SCONS) $(FIRMWARE_BUILD_DIR)/firmware.bin
 
+build_unix: MICROPY_ENABLE_SOURCE_LINE ?= 1
 build_unix: templates ## build unix port
 	$(SCONS) PYOPT=0 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS)
 
+build_unix_frozen: MICROPY_ENABLE_SOURCE_LINE ?= 1
 build_unix_frozen: templates build_cross ## build unix port with frozen modules
 	$(SCONS) $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) TREZOR_EMULATOR_FROZEN=1
 
+build_unix_debug: MICROPY_ENABLE_SOURCE_LINE ?= 1
 build_unix_debug: templates ## build unix port
 	$(SCONS) --max-drift=1 $(UNIX_BUILD_DIR)/trezor-emu-core $(UNIX_PORT_OPTS) \
 		TREZOR_EMULATOR_ASAN=1 TREZOR_EMULATOR_DEBUGGABLE=1
 
 build_cross: ## build mpy-cross port
-	$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS) \
+	INC=-I$(CURDIR)/embed/upymod/mpycross_include/ \
+		$(MAKE) -C vendor/micropython/mpy-cross $(CROSS_PORT_OPTS) \
 		CFLAGS_EXTRA=-DMICROPY_ENABLE_SOURCE_LINE=$(MICROPY_ENABLE_SOURCE_LINE)
 
 ## clean commands:
