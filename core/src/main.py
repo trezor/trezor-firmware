@@ -11,13 +11,13 @@ import trezor
 # trezor.utils import only C modules
 from trezor import utils
 # we need space for 30 items in the trezor module
-utils.presize_module("trezor", 30)
+utils.presize_module(trezor, 30)
 
 # storage imports storage.common, storage.cache and storage.device.
 # These import trezor, trezor.config (which is a C module), trezor.utils, and each other.
 import storage
 # we will need space for 12 items in the storage module
-utils.presize_module("storage", 12)
+utils.presize_module(storage, 12)
 
 if not utils.BITCOIN_ONLY:
     # storage.fido2 only imports C modules

@@ -108,11 +108,6 @@ Q(${letter})
 Q(${letter.upper()})
 % endfor
 
-// generate module presizing identifiers
-% for i in range(30):
-Q(___PRESIZE_MODULE_${i})
-% endfor
-
 Q())
 Q(()
 Q(<)
