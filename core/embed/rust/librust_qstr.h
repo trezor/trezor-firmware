@@ -56,6 +56,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_accounts;
   MP_QSTR_action;
   MP_QSTR_active;
+  MP_QSTR_add;
   MP_QSTR_addr_mismatch__contact_support_at;
   MP_QSTR_addr_mismatch__key_mismatch;
   MP_QSTR_addr_mismatch__mismatch;
@@ -229,6 +230,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_connection_flags;
   MP_QSTR_continue_recovery_homepage;
   MP_QSTR_count;
+  MP_QSTR_coveragedata;
   MP_QSTR_current;
   MP_QSTR_danger;
   MP_QSTR_data_hash;
@@ -266,6 +268,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_get_address;
+  MP_QSTR_get;
   MP_QSTR_get_language;
   MP_QSTR_get_transition_out;
   MP_QSTR_haptic_feedback__disable;
