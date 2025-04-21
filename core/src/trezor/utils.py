@@ -28,6 +28,7 @@ from trezorutils import (  # noqa: F401
     firmware_vendor,
     halt,
     memcpy,
+    presize_module,
     reboot_to_bootloader,
     sd_hotswap_enabled,
     unit_btconly,
@@ -112,20 +113,6 @@ class unimport:
         # So we prefer to skip the check, in order to preserve the exception.
         if __debug__ and exc_type is None:
             self.free_heap = check_free_heap(self.free_heap)
-
-
-def presize_module(modname: str, size: int) -> None:
-    """Ensure the module's dict is preallocated to an expected size.
-
-    This is used in modules like `trezor`, whose dict size depends not only on the
-    symbols defined in the file itself, but also on the number of submodules that will
-    be inserted into the module's namespace.
-    """
-    module = sys.modules[modname]
-    for i in range(size):
-        setattr(module, f"___PRESIZE_MODULE_{i}", None)
-    for i in range(size):
-        delattr(module, f"___PRESIZE_MODULE_{i}")
 
 
 if __debug__:

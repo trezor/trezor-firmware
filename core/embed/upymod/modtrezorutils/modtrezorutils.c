@@ -254,6 +254,26 @@ STATIC mp_obj_t mod_trezorutils_sd_hotswap_enabled(void) {
 STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_sd_hotswap_enabled_obj,
                                  mod_trezorutils_sd_hotswap_enabled);
 
+/// def presize_module(mod: module, n: int):
+///     """
+///     Ensure the module's dict is preallocated to an expected size.
+///
+///     This is used in modules like `trezor`, whose dict size depends not only
+///     on the symbols defined in the file itself, but also on the number of
+///     submodules that will be inserted into the module's namespace.
+///     """
+STATIC mp_obj_t mod_trezorutils_presize_module(mp_obj_t mod, mp_obj_t n) {
+  if (!mp_obj_is_type(mod, &mp_type_module)) {
+    mp_raise_TypeError("expected module type");
+  }
+  mp_uint_t size = trezor_obj_get_uint(n);
+  mp_obj_dict_t *globals = mp_obj_module_get_globals(mod);
+  mp_obj_dict_presize(globals, size);
+  return mp_const_none;
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorutils_presize_module_obj,
+                                 mod_trezorutils_presize_module);
+
 #if !PYOPT
 #if LOG_STACK_USAGE
 /// def zero_unused_stack() -> None:
@@ -601,6 +621,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
 #endif
     {MP_ROM_QSTR(MP_QSTR_sd_hotswap_enabled),
      MP_ROM_PTR(&mod_trezorutils_sd_hotswap_enabled_obj)},
+    {MP_ROM_QSTR(MP_QSTR_presize_module),
+     MP_ROM_PTR(&mod_trezorutils_presize_module_obj)},
     // various built-in constants
     {MP_ROM_QSTR(MP_QSTR_SCM_REVISION),
      MP_ROM_PTR(&mod_trezorutils_revision_obj)},

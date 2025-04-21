@@ -88,6 +88,17 @@ def sd_hotswap_enabled() -> bool:
 
 
 # upymod/modtrezorutils/modtrezorutils.c
+def presize_module(mod: module, n: int):
+    """
+    Ensure the module's dict is preallocated to an expected size.
+
+    This is used in modules like `trezor`, whose dict size depends not only
+    on the symbols defined in the file itself, but also on the number of
+    submodules that will be inserted into the module's namespace.
+    """
+
+
+# upymod/modtrezorutils/modtrezorutils.c
 def zero_unused_stack() -> None:
     """
     Zero unused stack memory.
