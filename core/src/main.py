@@ -36,11 +36,8 @@ import trezor.pin  # noqa: F401
 # usb imports trezor.utils and trezor.io which is a C module
 import usb
 
-# create an unimport manager that will be reused in the main loop
-unimport_manager = utils.unimport()
-
 # unlock the device, unload the boot module afterwards
-with unimport_manager:
+with utils.unimport():
     import boot
     del boot
 
@@ -63,6 +60,7 @@ if utils.USE_BLE:
 
 
 # run the endless loop
+unimport_manager = utils.unimport()
 while True:
     with unimport_manager:
         import session  # noqa: F401

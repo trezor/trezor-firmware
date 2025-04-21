@@ -37,7 +37,7 @@ from trezorutils import (  # noqa: F401
 from typing import TYPE_CHECKING
 
 if __debug__:
-    from trezorutils import LOG_STACK_USAGE, check_heap_fragmentation
+    from trezorutils import LOG_STACK_USAGE, check_free_heap, check_heap_fragmentation
 
     if LOG_STACK_USAGE:
         from trezorutils import estimate_unused_stack, zero_unused_stack  # noqa: F401
@@ -94,16 +94,21 @@ def unimport_end(mods: set[str], collect: bool = True) -> None:
 class unimport:
     def __init__(self) -> None:
         self.mods: set[str] | None = None
+        if __debug__:
+            self.free_heap = 0
 
     def __enter__(self) -> None:
         self.mods = unimport_begin()
 
-    def __exit__(self, _exc_type: Any, _exc_value: Any, _tb: Any) -> None:
+    def __exit__(self, exc_type: Any, _exc_value: Any, _tb: Any) -> None:
         assert self.mods is not None
         unimport_end(self.mods, collect=False)
         self.mods.clear()
         self.mods = None
         gc.collect()
+
+        if __debug__ and exc_type is not SystemExit:
+            self.free_heap = check_free_heap(self.free_heap)
 
 
 def presize_module(modname: str, size: int) -> None:

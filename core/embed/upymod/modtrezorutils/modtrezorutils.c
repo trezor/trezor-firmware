@@ -303,6 +303,31 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
 #endif  // MICROPY_OOM_CALLBACK
 
 /// if __debug__:
+///     def check_free_heap(previous: int) -> int:
+///         """
+///         Assert that free heap memory doesn't decrease.
+///         Returns current free heap memory (in bytes).
+///         Enabled only for frozen debug builds.
+///         """
+STATIC mp_obj_t mod_trezorutils_check_free_heap(mp_obj_t arg) {
+  mp_uint_t free_heap = trezor_obj_get_uint(arg);
+#if MICROPY_MODULE_FROZEN_MPY
+  gc_info_t info;
+  gc_info(&info);
+  if (free_heap > info.free) {
+    gc_dump_info();
+    mp_raise_msg_varg(&mp_type_AssertionError,
+                      "Free heap decreased by " UINT_FMT " bytes",
+                      free_heap - info.free);
+  }
+  free_heap = info.free;  // current free heap
+#endif
+  return mp_obj_new_int_from_uint(free_heap);
+}
+STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_free_heap_obj,
+                                 mod_trezorutils_check_free_heap);
+
+/// if __debug__:
 ///     def check_heap_fragmentation() -> None:
 ///         """
 ///         Assert known sources for heap fragmentation.
@@ -559,6 +584,8 @@ STATIC const mp_rom_map_elem_t mp_module_trezorutils_globals_table[] = {
     {MP_ROM_QSTR(MP_QSTR_enable_oom_dump),
      MP_ROM_PTR(&mod_trezorutils_enable_oom_dump_obj)},
 #endif
+    {MP_ROM_QSTR(MP_QSTR_check_free_heap),
+     MP_ROM_PTR(&mod_trezorutils_check_free_heap_obj)},
     {MP_ROM_QSTR(MP_QSTR_check_heap_fragmentation),
      MP_ROM_PTR(&mod_trezorutils_check_heap_fragmentation_obj)},
 #endif
