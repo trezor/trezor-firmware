@@ -2,6 +2,7 @@ import micropython
 import sys
 from typing import TYPE_CHECKING, Any, Callable, TypeAlias
 
+import coveragedata
 from uio import open
 from uos import getenv
 
@@ -18,29 +19,9 @@ sys.path.insert(0, "")
 PATH_PREFIX = (getenv("TREZOR_SRC") or ".") + "/"
 
 
-class Coverage:
-    def __init__(self) -> None:
-        self.__files = {}
-
-    def line_tick(self, filename: str, lineno: int) -> None:
-        if filename not in self.__files:
-            self.__files[filename] = set()
-        self.__files[filename].add(lineno)
-
-    def lines_execution(self) -> dict[str, list[int]]:
-        lines = {}
-        this_file = globals()["__file__"]
-        for filename, values in self.__files.items():
-            if filename != this_file:
-                lines[PATH_PREFIX + filename] = list(values)
-
-        return lines
-
-
 class _Prof:
     trace_count = 0
     display_flags = 0
-    __coverage = Coverage()
 
     def trace_tick(self, frame: FrameType, event: str) -> None:
         self.trace_count += 1
@@ -49,10 +30,17 @@ class _Prof:
         #     print(event, frame.f_code.co_filename, frame.f_lineno)
 
         if event == "line":
-            self.__coverage.line_tick(frame.f_code.co_filename, frame.f_lineno)
+            coveragedata.add(frame.f_code.co_filename, frame.f_lineno)
 
     def write_data(self) -> None:
-        print("Total traces executed: ", self.trace_count)
+        print("Traces count: ", self.trace_count)
+        data = coveragedata.get()
+        print("Lines covered:", len(data))
+        file_map = {}
+        for name, line in data:
+            file_map.setdefault(PATH_PREFIX + name, []).append(line)
+        print("Files covered:", len(file_map))
+
         # In case of multithreaded tests, we might be called multiple times.
         # Making sure the threads do not overwrite each other's data.
         worker_id = getenv("PYTEST_XDIST_WORKER")
@@ -62,7 +50,7 @@ class _Prof:
             file_name = ".coverage.json"
         with open(file_name, "w") as f:
             # poormans json
-            f.write(str(self.__coverage.lines_execution()).replace("'", '"'))
+            f.write(str(file_map).replace("'", '"'))
 
 
 class AllocCounter:
