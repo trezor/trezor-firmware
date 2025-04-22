@@ -30,19 +30,24 @@ typedef enum {
   MGMT_RESP_INFO = 0,
 } management_resp_t;
 
+void nrf_start(void);
+void nrf_stop(void);
+
 void nrf_dfu_comm_send(const uint8_t *data, uint32_t len);
 uint32_t nrf_dfu_comm_receive(uint8_t *data, uint32_t len);
 
 void nrf_int_send(const uint8_t *data, uint32_t len);
 uint32_t nrf_int_receive(uint8_t *data, uint32_t len);
 
-bool nrf_firmware_running(void);
-
 bool nrf_reboot(void);
 bool nrf_reboot_to_bootloader(void);
 
-void nrf_signal_running(void);
-void nrf_signal_off(void);
+void nrf_signal_data_ready(void);
+void nrf_signal_no_data(void);
 
+bool nrf_force_reset(void);
 void nrf_stay_in_bootloader(bool set);
-bool nrf_in_reserved_gpio(void);
+bool nrf_in_wakeup(void);
+
+void nrf_uart_send(uint8_t data);
+uint8_t nrf_uart_get_received(void);

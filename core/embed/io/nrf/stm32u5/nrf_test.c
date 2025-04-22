@@ -17,13 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/systick.h>
 #ifdef KERNEL_MODE
 
+#include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
 #include <io/nrf.h>
+#include <sys/systick.h>
 
 #include "../nrf_internal.h"
 
@@ -40,7 +41,6 @@ typedef enum {
 
 typedef struct {
   bool answered_spi;
-  bool answered_uart;
 
 } nrf_test_t;
 
@@ -50,9 +50,6 @@ void nrf_test_cb(const uint8_t *data, uint32_t len) {
   switch (data[0]) {
     case PRODTEST_RESP_SPI:
       g_nrf_test.answered_spi = true;
-      break;
-    case PRODTEST_RESP_UART:
-      g_nrf_test.answered_uart = true;
       break;
     default:
       break;
@@ -84,40 +81,40 @@ bool nrf_test_spi_comm(void) {
 bool nrf_test_uart_comm(void) {
   nrf_register_listener(NRF_SERVICE_PRODTEST, nrf_test_cb);
 
-  g_nrf_test.answered_uart = false;
+  nrf_uart_send(0xAB);
 
-  uint8_t data[1] = {PRODTEST_CMD_UART_DATA};
+  systick_delay_ms(10);
 
-  if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, 1, NULL, NULL)) {
+  uint8_t rx = nrf_uart_get_received();
+
+  if (rx != 0xAB) {
     return false;
   }
 
-  uint32_t timeout = ticks_timeout(100);
-
-  while (!ticks_expired(timeout)) {
-    if (g_nrf_test.answered_uart) {
-      return true;
-    }
-  }
-
-  return false;
+  return true;
 }
 
-bool nrf_test_reboot_to_bootloader(void) {
+bool nrf_test_reset(void) {
   bool result = false;
 
-  if (!nrf_firmware_running()) {
-    return false;
+  nrf_stop();
+
+  // looking at UART CTS PIN,
+  // it has pull up and is only reset when NRF is not in reset
+  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_11) == GPIO_PIN_SET) {
+    result = false;
+    goto cleanup;
   }
 
-  if (!nrf_reboot_to_bootloader()) {
-    return false;
+  if (!nrf_force_reset()) {
+    result = false;
+    goto cleanup;
   }
 
-  uint32_t timeout = ticks_timeout(10);
+  uint32_t timeout = ticks_timeout(1000);
 
   while (!ticks_expired(timeout)) {
-    if (!nrf_firmware_running()) {
+    if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_11) == GPIO_PIN_SET) {
       result = true;
       break;
     }
@@ -125,54 +122,20 @@ bool nrf_test_reboot_to_bootloader(void) {
 
   systick_delay_ms(10);
 
-  // todo test UART communication with MCUboot
-
   if (!nrf_reboot()) {
-    return false;
-  }
-
-  timeout = ticks_timeout(1000);
-  while (!ticks_expired(timeout)) {
-    if (nrf_firmware_running()) {
-      return result;
-    }
-  }
-
-  return false;
-}
-
-bool nrf_test_gpio_trz_ready(void) {
-  bool result = false;
-  nrf_signal_running();
-  systick_delay_ms(10);
-
-  nrf_info_t info = {0};
-  if (!nrf_get_info(&info)) {
     result = false;
     goto cleanup;
   }
 
-  if (!info.in_trz_ready) {
+  systick_delay_ms(2000);
+
+  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_11) == GPIO_PIN_SET) {
     result = false;
     goto cleanup;
   }
-
-  nrf_signal_off();
-  systick_delay_ms(10);
-  if (!nrf_get_info(&info)) {
-    result = false;
-    goto cleanup;
-  }
-
-  if (info.in_trz_ready) {
-    result = false;
-    goto cleanup;
-  }
-
-  result = true;
 
 cleanup:
-  nrf_signal_running();
+  nrf_start();
   return result;
 }
 
@@ -211,7 +174,7 @@ cleanup:
   return result;
 }
 
-bool nrf_test_gpio_reserved(void) {
+bool nrf_test_gpio_wakeup(void) {
   bool result = false;
   uint8_t data[2] = {PRODTEST_CMD_SET_OUTPUT, 0};
   if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL)) {
@@ -220,7 +183,7 @@ bool nrf_test_gpio_reserved(void) {
 
   systick_delay_ms(10);
 
-  if (nrf_in_reserved_gpio()) {
+  if (nrf_in_wakeup()) {
     result = false;
     goto cleanup;
   }
@@ -233,7 +196,7 @@ bool nrf_test_gpio_reserved(void) {
 
   systick_delay_ms(10);
 
-  if (!nrf_in_reserved_gpio()) {
+  if (!nrf_in_wakeup()) {
     result = false;
     goto cleanup;
   }

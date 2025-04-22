@@ -1,3 +1,4 @@
+import utime
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -96,6 +97,8 @@ async def reboot_to_bootloader(msg: RebootToBootloader) -> NoReturn:
     await ctx.write(Success(message="Rebooting"))
     # make sure the outgoing USB buffer is flushed
     await loop.wait(ctx.iface.iface_num() | io.POLL_WRITE)
+
+    utime.sleep_ms(10)
     # reboot to the bootloader, pass the firmware header hash if any
     utils.reboot_to_bootloader(boot_command, boot_args)
     raise RuntimeError
