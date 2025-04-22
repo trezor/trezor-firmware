@@ -47,7 +47,7 @@ if __debug__:
             # Starting with "refresh00", allowing for 100 emulator restarts
             # without losing the order of the screenshots based on filename.
             display.save(
-                storage.save_screen_directory + f"/refresh{REFRESH_INDEX:0>2}-"
+                f"{storage.save_screen_directory.decode()}/refresh{REFRESH_INDEX:0>2}-"
             )
             return True
         return False
@@ -298,7 +298,7 @@ if __debug__:
             # so that the screenshots are not overwritten.
             global REFRESH_INDEX
             REFRESH_INDEX = msg.refresh_index
-            storage.save_screen_directory = msg.target_directory
+            storage.save_screen_directory[:] = msg.target_directory.encode()
             storage.save_screen = True
 
             # force repaint current layout, in order to take an initial screenshot
