@@ -22,13 +22,14 @@
 #include <trezor_types.h>
 
 // maximum data size allowed to be sent
-#define NRF_MAX_TX_DATA_SIZE (64)
+#define NRF_MAX_TX_DATA_SIZE (244)
 
 typedef enum {
   NRF_SERVICE_BLE = 0,
   NRF_SERVICE_BLE_MANAGER = 1,
   NRF_SERVICE_MANAGEMENT = 2,
   NRF_SERVICE_PRODTEST = 3,
+  NRF_SERVICE_IDLE = 4,
 
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;
@@ -91,6 +92,7 @@ bool nrf_abort_msg(int32_t id);
 // Blocking function.
 bool nrf_get_info(nrf_info_t *info);
 
+///////////////////////////////////////////////////////////////////////////////
 // TEST only functions
 
 // Test SPI communication with NRF
@@ -99,11 +101,11 @@ bool nrf_test_spi_comm(void);
 // Test UART communication with NRF
 bool nrf_test_uart_comm(void);
 
-// Test reboot to bootloader
-bool nrf_test_reboot_to_bootloader(void);
+// Test reset pin
+bool nrf_test_reset(void);
 
-bool nrf_test_gpio_trz_ready(void);
-
+// Test GPIO stay in bootloader
 bool nrf_test_gpio_stay_in_bld(void);
 
-bool nrf_test_gpio_reserved(void);
+// Test GPIO wakeup
+bool nrf_test_gpio_wakeup(void);

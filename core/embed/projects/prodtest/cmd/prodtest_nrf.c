@@ -37,15 +37,9 @@ static void prodtest_nrf_communication(cli_t* cli) {
     return;
   }
 
-  cli_trace(cli, "Testing reboot to bootloader...");
-  if (!nrf_test_reboot_to_bootloader()) {
-    cli_error(cli, CLI_ERROR, "Reboot to bootloader failed.");
-    return;
-  }
-
-  cli_trace(cli, "Testing GPIO TRZ ready...");
-  if (!nrf_test_gpio_trz_ready()) {
-    cli_error(cli, CLI_ERROR, "TRZ ready GPIO failed.");
+  cli_trace(cli, "Testing reset..");
+  if (!nrf_test_reset()) {
+    cli_error(cli, CLI_ERROR, "Reset failed.");
     return;
   }
 
@@ -55,9 +49,9 @@ static void prodtest_nrf_communication(cli_t* cli) {
     return;
   }
 
-  cli_trace(cli, "Testing GPIO reserved...");
-  if (!nrf_test_gpio_reserved()) {
-    cli_error(cli, CLI_ERROR, "Reserved GPIO failed.");
+  cli_trace(cli, "Testing GPIO wakeup...");
+  if (!nrf_test_gpio_wakeup()) {
+    cli_error(cli, CLI_ERROR, "Wakeup GPIO failed.");
     return;
   }
 
