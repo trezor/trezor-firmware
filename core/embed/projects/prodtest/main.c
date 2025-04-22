@@ -125,7 +125,7 @@ static void vcp_intr(void) { cli_abort(&g_cli); }
 #error "USB type not defined"
 #endif
 
-#define VCP_BUFFER_LEN 1024
+#define VCP_BUFFER_LEN 2048
 
 static void usb_init_all(void) {
   static const usb_dev_info_t dev_info = {
