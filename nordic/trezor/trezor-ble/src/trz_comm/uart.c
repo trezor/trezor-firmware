@@ -48,18 +48,6 @@ static struct k_work_delayable uart_work;
 
 static volatile bool g_uart_rx_running = false;
 
-static bool nrf_is_valid_startbyte(uint8_t val) {
-  if ((val & 0xF0) != 0xA0) {
-    return false;
-  }
-
-  if ((val & 0x0F) >= NRF_SERVICE_CNT) {
-    return false;
-  }
-
-  return true;
-}
-
 static void uart_cb(const struct device *dev, struct uart_event *evt,
                     void *user_data) {
   ARG_UNUSED(dev);
@@ -68,11 +56,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
   trz_packet_t *buf;
   static uint8_t *aborted_buf;
   static bool disable_req;
-  static uint8_t rx_phase = 0;
-  static uint8_t rx_msg_type = 0;
-  static uint8_t rx_data_len = 0;
-  static uint8_t rx_len = 0;
-  static uint8_t crc = 0;
+  static uint8_t rx_data = 0;
 
   switch (evt->type) {
     case UART_TX_DONE:
@@ -116,52 +100,7 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       //      LOG_WRN("UART_RX_RDY");
       buf = CONTAINER_OF(evt->data.rx.buf, trz_packet_t, data[0]);
       buf->len += evt->data.rx.len;
-
-      switch (rx_phase) {
-        case 0:
-          if (buf->len == 1 && nrf_is_valid_startbyte(buf->data[0])) {
-            rx_phase = 1;
-            rx_msg_type = buf->data[0];
-            crc = crc8(buf->data, buf->len, 0x07, 0x00, false);
-          } else {
-            rx_phase = 0;
-          }
-          break;
-        case 1:
-          if (buf->len == 1) {
-            rx_data_len = buf->data[0];
-            crc = crc8(buf->data, buf->len, 0x07, crc, false);
-            rx_phase = 2;
-          } else {
-            rx_phase = 0;
-          }
-          break;
-        case 2:
-          if (buf->len != rx_data_len - COMM_HEADER_SIZE) {
-            rx_phase = 0;
-          }
-
-          crc = crc8(buf->data, buf->len - 1, 0x07, crc, false);
-
-          if (crc != buf->data[buf->len - 1]) {
-            LOG_WRN("UART_RX CRC ERROR");
-            rx_phase = 0;
-          }
-
-          rx_phase = 3;
-          break;
-      }
-
-      //		if (disable_req) {
-      //			return;
-      //		}
-
-      //		if ((evt->data.rx.buf[buf->len - 1] == '\n') ||
-      //		    (evt->data.rx.buf[buf->len - 1] == '\r')) {
-      //			disable_req = true;
-      //			uart_rx_disable(uart);
-      //		}
-
+      rx_data = buf->data[0];
       break;
 
     case UART_RX_DISABLED:
@@ -172,98 +111,36 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       buf = k_malloc(sizeof(*buf));
 
       if (buf) {
-        switch (rx_phase) {
-          case 0:
-            rx_len = 1;
-            break;
-          case 1:
-            rx_len = 1;
-            break;
-          case 2:
-            rx_len = rx_data_len - COMM_HEADER_SIZE;
-            break;
-
-          default:
-            rx_len = 1;
-            break;
-        }
-
-        buf->len = 0;
-        uart_rx_enable(uart, buf->data, rx_len, SYS_FOREVER_US);
+        uart_rx_enable(uart, buf->data, 1, SYS_FOREVER_US);
       } else {
         LOG_WRN("Not able to allocate UART receive buffer");
         k_work_reschedule(&uart_work, UART_WAIT_FOR_BUF_DELAY);
         g_uart_rx_running = false;
       }
 
-      //		buf = k_malloc(sizeof(*buf));
-      //		if (buf) {
-      //			buf->len = 0;
-      //		} else {
-      //			LOG_WRN("Not able to allocate UART receive
-      // buffer");
-      //
-      //			return;
-      //		}
-      //
-      //		uart_rx_enable(uart, buf->data, sizeof(buf->data),
-      //			       UART_WAIT_FOR_RX);
-
       break;
-
-      //	case UART_RX_BUF_REQUEST:
-      //		LOG_INF("UART_RX_BUF_REQUEST");
-      //		buf = k_malloc(sizeof(*buf));
-      //
-      //
-      //		if (buf) {
-      //
-      //      switch (rx_phase) {
-      //        case 0:
-      //          rx_len = 1;
-      //          break;
-      //        case 1:
-      //          rx_len = 2;
-      //          break;
-      //        default:
-      //          rx_len = 1;
-      //          break;
-      //      }
-      //
-      //			buf->len = 0;
-      //      LOG_INF("Providing buf %d", rx_len);
-      //			uart_rx_buf_rsp(uart, buf->data, rx_len);
-      //		} else {
-      //			LOG_WRN("Not able to allocate UART receive
-      // buffer");
-      //		}
-      //
-      //		break;
 
     case UART_RX_BUF_RELEASED:
       LOG_DBG("UART_RX_BUF_RELEASED");
       buf = CONTAINER_OF(evt->data.rx_buf.buf, trz_packet_t, data[0]);
-
-      if (rx_phase == 3 && buf->len > 0) {
-        buf->len -= COMM_FOOTER_SIZE;
-
-        process_rx_msg(rx_msg_type & 0x0F, buf->data,
-                       rx_data_len - OVERHEAD_SIZE);
-
-        rx_data_len = 0;
-        rx_len = 0;
-        rx_msg_type = 0;
-        rx_phase = 0;
-      }
       k_free(buf);
+
+      trz_packet_t *tx = k_malloc(sizeof(*tx));
+
+      if (tx == NULL) {
+        LOG_WRN("Not able to allocate UART send data buffer");
+        return;
+      }
+
+      tx->len = 1;
+      tx->data[0] = rx_data;
+
+      uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
+
       break;
     case UART_RX_STOPPED:
       LOG_DBG("UART_RX_STOPPED");
       g_uart_rx_running = false;
-      rx_data_len = 0;
-      rx_len = 0;
-      rx_msg_type = 0;
-      rx_phase = 0;
       k_work_reschedule(&uart_work, UART_WAIT_FOR_BUF_DELAY);
       break;
 
