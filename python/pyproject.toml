@@ -40,12 +40,14 @@ ethereum = ["web3>=5"]
 qt-widgets = ["PyQt5"]
 extra = ["Pillow>=10"]
 stellar = ["stellar-sdk>=6"]
+bleak = ["bleak>=1.1.0"]
 full = [
     "hidapi>=0.7.99.post20",
     "web3>=5",
     "PyQt5",
     "Pillow>=10",
     "stellar-sdk>=6",
+    "bleak>=1.1.0",
 ]
 
 [project.urls]
