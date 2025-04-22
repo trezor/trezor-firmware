@@ -186,6 +186,8 @@ trezor_message_impl! {
     EthereumTypedDataValueAck => MessageType_EthereumTypedDataValueAck,
     EthereumTypedDataSignature => MessageType_EthereumTypedDataSignature,
     EthereumSignTypedHash => MessageType_EthereumSignTypedHash,
+    EthereumSignAuth7702 => MessageType_EthereumSignAuth7702,
+    EthereumAuth7702Signature => MessageType_EthereumAuth7702Signature,
 }
 
 #[cfg(feature = "monero")]

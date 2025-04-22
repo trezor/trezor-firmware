@@ -994,5 +994,9 @@
   "992": "nostr__event_kind_template",
   "993": "ble__unpair_all",
   "994": "ble__unpair_current",
-  "995": "ble__unpair_title"
+  "995": "ble__unpair_title",
+  "996": "ethereum__auth7702_chainid",
+  "997": "ethereum__auth7702_delegate",
+  "998": "ethereum__auth7702_nonce",
+  "999": "ethereum__sign_auth7702"
 }

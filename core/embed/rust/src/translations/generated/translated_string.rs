@@ -1407,6 +1407,14 @@ pub enum TranslatedString {
     ble__unpair_all = 993,  // "Unpair all bluetooth devices"
     ble__unpair_current = 994,  // "Unpair connected device"
     ble__unpair_title = 995,  // "Unpair"
+    #[cfg(feature = "universal_fw")]
+    ethereum__auth7702_chainid = 996,  // "Chain ID:"
+    #[cfg(feature = "universal_fw")]
+    ethereum__auth7702_delegate = 997,  // "Delegate:"
+    #[cfg(feature = "universal_fw")]
+    ethereum__auth7702_nonce = 998,  // "Nonce:"
+    #[cfg(feature = "universal_fw")]
+    ethereum__sign_auth7702 = 999,  // "Sign EIP-7702 authorization"
 }
 
 impl TranslatedString {
@@ -2810,6 +2818,14 @@ impl TranslatedString {
             Self::ble__unpair_all => "Unpair all bluetooth devices",
             Self::ble__unpair_current => "Unpair connected device",
             Self::ble__unpair_title => "Unpair",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__auth7702_chainid => "Chain ID:",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__auth7702_delegate => "Delegate:",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__auth7702_nonce => "Nonce:",
+            #[cfg(feature = "universal_fw")]
+            Self::ethereum__sign_auth7702 => "Sign EIP-7702 authorization",
         }
     }
 
@@ -4212,6 +4228,14 @@ impl TranslatedString {
             Qstr::MP_QSTR_ble__unpair_all => Some(Self::ble__unpair_all),
             Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
             Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__auth7702_chainid => Some(Self::ethereum__auth7702_chainid),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__auth7702_delegate => Some(Self::ethereum__auth7702_delegate),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__auth7702_nonce => Some(Self::ethereum__auth7702_nonce),
+            #[cfg(feature = "universal_fw")]
+            Qstr::MP_QSTR_ethereum__sign_auth7702 => Some(Self::ethereum__sign_auth7702),
             _ => None,
         }
     }

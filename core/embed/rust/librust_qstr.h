@@ -997,6 +997,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__vote_for_proxy;
   MP_QSTR_eos__voter;
   MP_QSTR_ethereum__amount_sent;
+  MP_QSTR_ethereum__auth7702_chainid;
+  MP_QSTR_ethereum__auth7702_delegate;
+  MP_QSTR_ethereum__auth7702_nonce;
   MP_QSTR_ethereum__contract;
   MP_QSTR_ethereum__data_size_template;
   MP_QSTR_ethereum__gas_limit;
@@ -1011,6 +1014,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_ethereum__show_full_domain;
   MP_QSTR_ethereum__show_full_message;
   MP_QSTR_ethereum__show_full_struct;
+  MP_QSTR_ethereum__sign_auth7702;
   MP_QSTR_ethereum__sign_eip712;
   MP_QSTR_ethereum__staking_claim;
   MP_QSTR_ethereum__staking_claim_address;

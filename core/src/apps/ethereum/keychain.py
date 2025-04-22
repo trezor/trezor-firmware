@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
     from trezor.messages import (
         EthereumGetAddress,
+        EthereumSignAuth7702,
         EthereumSignMessage,
         EthereumSignTx,
         EthereumSignTxEIP1559,
@@ -26,6 +27,7 @@ if TYPE_CHECKING:
         EthereumGetAddress,
         EthereumSignMessage,
         EthereumSignTypedData,
+        EthereumSignAuth7702,
     )
 
     HandlerAddressN = Callable[

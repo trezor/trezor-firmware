@@ -126,6 +126,33 @@ def _parse_access_list_item(value: str) -> ethereum.messages.EthereumAccessList:
         raise click.BadParameter("Access List format invalid")
 
 
+def _parse_auth7702_list(
+    ctx: click.Context, param: Any, value: str
+) -> List[ethereum.messages.EthereumSignedAuth7702]:
+    try:
+        return [_parse_auth7702_list_item(val) for val in value]
+
+    except Exception:
+        raise click.BadParameter("Auth List format invalid")
+
+
+def _parse_auth7702_list_item(value: str) -> ethereum.messages.EthereumSignedAuth7702:
+    try:
+        arr = value.split(":")
+        chain_id, delegate, nonce, signature_v, signature_r, signature_s = arr[0], arr[1], arr[2], arr[3], arr[4], arr[5]
+        return ethereum.messages.EthereumSignedAuth7702(
+            chain_id=int(chain_id),
+            delegate=delegate,
+            nonce=int(nonce),
+            signature_v=int(signature_v),
+            signature_r=ethereum.decode_hex(signature_r),
+            signature_s=ethereum.decode_hex(signature_s)
+        )
+
+    except Exception:
+        raise click.BadParameter("Auth List format invalid")
+
+
 def _list_units(ctx: click.Context, param: Any, value: bool) -> None:
     if not value or ctx.resilient_parsing:
         return
@@ -159,6 +186,15 @@ def _format_access_list(
 ) -> "_rlp.RLPItem":
     return [
         (ethereum.decode_hex(item.address), item.storage_keys) for item in access_list
+    ]
+
+
+def _format_auth7702_list(
+    auth7702_list: List[ethereum.messages.EthereumSignedAuth7702],
+) -> "_rlp.RLPItem":
+    return [
+        (item.chain_id, ethereum.decode_hex(item.delegate), item.nonce,
+            item.signature_v, item.signature_r, item.signature_s) for item in auth7702_list
     ]
 
 
@@ -342,6 +378,12 @@ def get_public_node(client: "TrezorClient", address: str, show_display: bool) ->
     expose_value=False,
 )
 @click.option("-C", "--chunkify", is_flag=True)
+@click.option(
+    "--auth7702-list",
+    help="Auth List (EIP7702)",
+    callback=_parse_auth7702_list,
+    multiple=True,
+)
 @click.argument("to_address")
 @click.argument("amount", callback=_amount_to_int)
 @with_client
@@ -363,6 +405,7 @@ def sign_tx(
     access_list: List[ethereum.messages.EthereumAccessList],
     eip2718_type: Optional[int],
     chunkify: bool,
+    auth7702_list: List[ethereum.messages.EthereumSignedAuth7702],
 ) -> str:
     """Sign (and optionally publish) Ethereum transaction.
 
@@ -380,7 +423,7 @@ def sign_tx(
     try to connect to an ethereum node and auto-fill these values. You can configure
     the connection with WEB3_PROVIDER_URI environment variable.
     """
-    is_eip1559 = eip2718_type == 2
+    is_eip1559 = (eip2718_type == 2 or eip2718_type == 4)
     if (
         (not is_eip1559 and gas_price is None)
         or any(x is None for x in (gas_limit, nonce))
@@ -459,6 +502,7 @@ def sign_tx(
             access_list=access_list,
             definitions=defs,
             chunkify=chunkify,
+            auth7702_list=auth7702_list
         )
     else:
         if gas_price is None:
@@ -492,8 +536,10 @@ def sign_tx(
             amount,
             data_bytes,
             _format_access_list(access_list) if access_list is not None else [],
-            *sig,
         ]
+        if len(auth7702_list) != 0:
+            transaction_items.append(_format_auth7702_list(auth7702_list))
+        transaction_items += sig
     elif tx_type is None:
         transaction_items = [nonce, gas_price, gas_limit, to, amount, data_bytes, *sig]
     else:
@@ -625,5 +671,29 @@ def sign_typed_data_hash(
         "message_hash": message_hash_hex,
         "address": ret.address,
         "signature": f"0x{ret.signature.hex()}",
+    }
+    return output
+
+
+@cli.command()
+@click.option("-n", "--address", required=True, help=PATH_HELP)
+@click.option(
+    "-i", "--nonce", type=int, help="Transaction counter (required for offline signing)", required=True
+)
+@click.option(
+    "-c", "--chain-id", type=int, default=1, help="EIP-155 chain id (replay protection)", required=True
+)
+@click.argument("delegate")
+@with_client
+def sign_auth_7702(
+    client: "TrezorClient", address: str, nonce: int, chain_id: int, delegate: str
+) -> Dict[str, str]:
+    """Sign an EIP 7702 delegation authorization."""
+    address_n = tools.parse_path(address)
+    ret = ethereum.sign_auth_7702(client, address_n, nonce, chain_id, delegate)
+    output = {
+        "v": str(ret.signature_v),
+        "r":  f"0x{ret.signature_r.hex()}",
+        "s":  f"0x{ret.signature_s.hex()}"
     }
     return output
