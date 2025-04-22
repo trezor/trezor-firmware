@@ -60,8 +60,6 @@ int main(void) {
 
   prodtest_init();
 
-  signals_nrf_ready(true);
-
   for (;;) {
     k_sleep(K_FOREVER);
   }

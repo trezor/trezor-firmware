@@ -44,10 +44,8 @@ void trz_comm_init(void) {
 
 bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
                        uint32_t len) {
-  if (len == SPI_TX_DATA_LEN) {
+  if (len <= SPI_TX_DATA_LEN) {
     return spi_send(service, data, len);
-  } else if (len <= MAX_UART_DATA_SIZE) {
-    return uart_send(service, data, len);
   }
   return false;
 }
@@ -56,7 +54,7 @@ void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len) {
   trz_packet_t *buf = k_malloc(sizeof(*buf));
 
   if (!buf) {
-    LOG_WRN("Not able to allocate UART receive buffer");
+    LOG_WRN("Not able to allocate receive buffer");
     return;
   }
 
@@ -77,7 +75,7 @@ void process_rx_msg(uint8_t service_id, uint8_t *data, uint32_t len) {
       k_fifo_put(&fifo_uart_rx_prodtest, buf);
       break;
     default:
-      LOG_WRN("UART_RX unknown service");
+      LOG_WRN("Unknown service");
       k_free(buf);
       break;
   }
@@ -94,7 +92,7 @@ trz_packet_t *trz_comm_poll_data(nrf_service_id_t service) {
     case NRF_SERVICE_PRODTEST:
       return k_fifo_get(&fifo_uart_rx_prodtest, K_FOREVER);
     default:
-      LOG_WRN("UART_RX unknown service");
+      LOG_WRN("Unknown service");
       return NULL;
   }
 }

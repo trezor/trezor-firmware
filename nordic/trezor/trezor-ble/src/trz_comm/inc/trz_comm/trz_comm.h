@@ -22,13 +22,14 @@
 #include <stdbool.h>
 #include <zephyr/types.h>
 
-#define PACKET_DATA_SIZE 246
+#define PACKET_DATA_SIZE 247
 
 typedef enum {
   NRF_SERVICE_BLE = 0,
   NRF_SERVICE_BLE_MANAGER = 1,
   NRF_SERVICE_MANAGEMENT = 2,
   NRF_SERVICE_PRODTEST = 3,
+  NRF_SERVICE_IDLE = 4,
 
   NRF_SERVICE_CNT  // Number of services
 } nrf_service_id_t;
