@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 import click
 
 from .. import ble, exceptions
+from ..transport.ble import BleProxy
 from . import with_session
 
 if TYPE_CHECKING:
@@ -43,7 +44,7 @@ def unpair(
     session: "Session",
     all: bool,
 ) -> None:
-    """Erase bond of currently connected device, or all devices (on device side)"""
+    """Erase bond of currently connected device, or all devices (on device side)."""
 
     try:
         ble.unpair(session, all)
@@ -53,3 +54,29 @@ def unpair(
     except exceptions.TrezorException as e:
         click.echo(f"Unpair failed: {e}")
         sys.exit(3)
+
+
+@cli.command()
+def connect() -> None:
+    """Connect to the device via BLE. Device has to be disconnected beforehand.
+
+    If the device hasn't been paired you also need to have system bluetooth pairing dialog open.
+    """
+    ble = BleProxy()
+
+    click.echo("Scanning...")
+    devices = ble.scan()
+
+    if len(devices) == 0:
+        click.echo("No BLE devices found")
+        return
+    else:
+        click.echo(f"Found {len(devices)} BLE device(s)")
+
+    for address, name in devices:
+        click.echo(f"Device: {name}, {address}")
+
+    device = devices[0]
+    click.echo(f"Connecting to {device[1]}...")
+    ble.connect(device[0])
+    click.echo("Connected")
