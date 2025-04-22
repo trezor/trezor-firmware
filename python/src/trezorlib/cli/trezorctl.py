@@ -320,7 +320,7 @@ def version() -> str:
 @cli.command()
 @click.argument("message")
 @click.option("-b", "--button-protection", is_flag=True)
-@with_session(empty_passphrase=True)
+@with_session(seedless=True)
 def ping(session: "Session", message: str, button_protection: bool) -> str:
     """Send ping message."""
     return session.ping(message, button_protection)
