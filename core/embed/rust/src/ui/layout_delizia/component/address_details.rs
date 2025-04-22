@@ -2,6 +2,7 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
+    micropython::buffer::StrBuffer,
     strutil::TString,
     translations::TR,
     ui::{
@@ -25,7 +26,7 @@ const MAX_XPUBS: usize = 16;
 pub struct AddressDetails {
     details: Frame<Paragraphs<ParagraphVecShort<'static>>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
-    xpubs: Vec<(TString<'static>, TString<'static>), MAX_XPUBS>,
+    xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
     xpub_page_count: Vec<u8, MAX_XPUBS>,
     current_page: u16,
 }
@@ -75,11 +76,7 @@ impl AddressDetails {
         Ok(result)
     }
 
-    pub fn add_xpub(
-        &mut self,
-        title: TString<'static>,
-        xpub: TString<'static>,
-    ) -> Result<(), Error> {
+    pub fn add_xpub(&mut self, title: StrBuffer, xpub: StrBuffer) -> Result<(), Error> {
         self.xpubs
             .push((title, xpub))
             .map_err(|_| Error::OutOfRange)
@@ -90,7 +87,8 @@ impl AddressDetails {
         // case the parent component that handles paging always requests complete
         // repaint after page change so we can use a dummy context here.
         let mut dummy_ctx = EventCtx::new();
-        self.xpub_view.update_title(&mut dummy_ctx, self.xpubs[i].0);
+        self.xpub_view
+            .update_title(&mut dummy_ctx, self.xpubs[i].0.into());
         self.xpub_view.update_content(&mut dummy_ctx, |_ctx, p| {
             p.update(self.xpubs[i].1);
             p.change_page(page);

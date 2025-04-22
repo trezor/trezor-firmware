@@ -4,7 +4,7 @@ use crate::{
     error::Error,
     io::BinaryData,
     maybe_trace::MaybeTrace,
-    micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -933,7 +933,7 @@ impl FirmwareUI for UICaesar {
         let mut ad = AddressDetails::new(address, case_sensitive, account, path)?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [TString; 2] = util::iter_into_array(i)?;
+            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
 

@@ -1,4 +1,4 @@
-#[cfg(feature = "translations")]
+#[cfg(all(feature = "micropython", feature = "translations"))]
 mod address_details;
 #[cfg(feature = "ui_overlay")]
 mod binary_selection;
@@ -40,7 +40,7 @@ mod tap_to_confirm;
 mod updatable_more_info;
 mod welcome_screen;
 
-#[cfg(feature = "translations")]
+#[cfg(all(feature = "micropython", feature = "translations"))]
 pub use address_details::AddressDetails;
 #[cfg(feature = "ui_overlay")]
 pub use binary_selection::{BinarySelection, BinarySelectionMsg};
