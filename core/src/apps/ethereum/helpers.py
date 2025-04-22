@@ -134,9 +134,7 @@ def get_fee_items_regular(
 ) -> Iterable[tuple[str, str]]:
     # regular
     gas_limit_str = TR.ethereum__units_template.format(gas_limit)
-    gas_price_str = format_ethereum_amount(
-        gas_price, None, network, force_unit_gwei=True
-    )
+    gas_price_str = format_ethereum_amount(gas_price, None, network, use_gwei=True)
 
     return (
         (TR.ethereum__gas_limit, gas_limit_str),
@@ -152,11 +150,9 @@ def get_fee_items_eip1559(
 ) -> Iterable[tuple[str, str]]:
     # EIP-1559
     gas_limit_str = TR.ethereum__units_template.format(gas_limit)
-    max_gas_fee_str = format_ethereum_amount(
-        max_gas_fee, None, network, force_unit_gwei=True
-    )
+    max_gas_fee_str = format_ethereum_amount(max_gas_fee, None, network, use_gwei=True)
     max_priority_fee_str = format_ethereum_amount(
-        max_priority_fee, None, network, force_unit_gwei=True
+        max_priority_fee, None, network, use_gwei=True
     )
 
     return (
@@ -170,7 +166,7 @@ def format_ethereum_amount(
     value: int,
     token: EthereumTokenInfo | None,
     network: EthereumNetworkInfo,
-    force_unit_gwei: bool = False,
+    use_gwei: bool = False,
 ) -> str:
     from trezor.strings import format_amount
 
@@ -181,7 +177,7 @@ def format_ethereum_amount(
         suffix = network.symbol
         decimals = 18
 
-    if force_unit_gwei:
+    if use_gwei and value >= 1000:
         assert token is None
         assert decimals >= 9
         decimals = decimals - 9

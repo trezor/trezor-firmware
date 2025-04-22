@@ -1,0 +1,1 @@
+Don't use `Gwei` when fee amount is below 1000 `Wei`.
