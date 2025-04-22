@@ -13,7 +13,6 @@ use crate::{
         typ::Type,
         util,
     },
-    strutil::ShortString,
 };
 
 extern "C" fn py_erase_bonds() -> Obj {
