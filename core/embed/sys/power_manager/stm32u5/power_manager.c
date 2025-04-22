@@ -55,9 +55,20 @@ power_manager_status_t power_manager_init(power_manager_state_t initial_state) {
     return POWER_MANAGER_ERROR;
   }
 
+  // Clear fuel gauge state
+  memcpy(drv->fuel_gauge, 0, sizeof(fuel_gauge_state_t));
+
+  // Initialize fuel gauge
+  fuel_gauge_init(&(drv->fuel_gauge), POWER_MANAGER_FUEL_GAUGE_R,
+                  POWER_MANAGER_FUEL_GAUGE_Q,
+                  POWER_MANAGER_FUEL_GAUGE_R_AGGRESSIVE,
+                  POWER_MANAGER_FUEL_GAUGE_Q_AGGRESSIVE,
+                  POWER_MANAGER_FUEL_GAUGE_P_INIT);
+
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
-  systimer_set_periodic(drv->monitoring_timer, POWER_MANAGER_TIMER_PERIOD_MS);
+  systimer_set_periodic(drv->monitoring_timer,
+                        POWER_MANAGER_BATTERY_SAMPLING_PERIOD_MS);
 
   // Create shutdown timer
   drv->shutdown_timer = systimer_create(pm_shutdown_timer_handler, NULL);
@@ -171,6 +182,16 @@ power_manager_status_t power_manager_turn_on(void) {
     return POWER_MANAGER_REQUEST_REJECTED;
   }
 
+  irq_key_t irq_key = irq_lock();
+
+  pm_battery_initial_soc_guess();
+
+  // Set monitoiring timer with longer period
+  systimer_set_periodic(drv->monitoring_timer, POWER_MANAGER_TIMER_PERIOD_MS);
+
+  drv->fuel_gauge_initialized = true;
+  irq_unlock(irq_key);
+
   return POWER_MANAGER_OK;
 }
 
@@ -203,7 +224,6 @@ power_manager_status_t power_manager_get_report(
 }
 
 // Timer handlers
-
 static void pm_monitoring_timer_handler(void* context) {
   pm_monitor_power_sources();
 }

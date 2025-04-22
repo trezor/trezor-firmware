@@ -25,27 +25,52 @@
 
 #include "../../powerctl/npm1300/npm1300.h"
 #include "../../powerctl/stwlc38/stwlc38.h"
+#include "../../powerctl/fuel_gauge/fuel_gauge.h"
 
 // Power manager thresholds & timings
 #define POWER_MANAGER_TIMER_PERIOD_MS 300
+#define POWER_MANAGER_BATTERY_SAMPLING_PERIOD_MS 100
 #define POWER_MANAGER_SHUTDOWN_TIMEOUT_MS 15000
 #define POWER_MANAGER_BATTERY_UNDERVOLT_THRESHOLD_V 3.0f
 #define POWER_MANAGER_BATTERY_UNDERVOLT_HYSTERESIS_V 0.5f
 #define POWER_MANAGER_BATTERY_LOW_THRESHOLD_V 3.15f
 #define POWER_MANAGER_BATTERY_LOW_RECOVERY_V 3.2f
+#define POWER_MANAGER_BATTERY_SAMPLING_BUF_SIZE 10
+
 #define POWER_MANAGER_WPC_CHARGE_CURR_STEP_MA 50
 #define POWER_MANAGER_WPC_CHARGE_CURR_STEP_TIMEOUT_MS 1000
+#define POWER_MANAGER_FUEL_GAUGE_R 3000.0f
+#define POWER_MANAGER_FUEL_GAUGE_Q 0.001f
+#define POWER_MANAGER_FUEL_GAUGE_R_AGGRESSIVE 3000.0f
+#define POWER_MANAGER_FUEL_GAUGE_Q_AGGRESSIVE 0.001f
+#define POWER_MANAGER_FUEL_GAUGE_P_INIT 0.1f
 
 // Event flag manipulation macros
 #define PM_SET_EVENT(flags, event) ((flags) |= (event))
 #define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
 #define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
 
+// Power manager battery sampling data structure)
+typedef struct {
+  float vbat;      // Battery voltage [V]
+  float ibat;      // Battery current [mA]
+  float ntc_temp;  // NTC temperature [°C]
+} power_manager_sampling_data_t;
+
 // Power manager core driver structure
 typedef struct {
   bool initialized;
   power_manager_state_t state;
   power_manager_event_t event_flags;
+
+  // Fuel gauge
+  fuel_gauge_state_t fuel_gauge;
+  bool fuel_gauge_initialized;
+  power_manager_sampling_data_t bat_sampling_buf[
+                                POWER_MANAGER_BATTERY_SAMPLING_BUF_SIZE];
+  uint8_t bat_sampling_buf_tail_idx = 0;
+  uint8_t bat_sampling_buf_head_idx = 0;
+
 
   // Battery charging state
   uint16_t charging_current_target_ma;
@@ -89,6 +114,7 @@ void pm_monitor_power_sources(void);
 void pm_process_state_machine(void);
 void pm_pmic_data_ready(void* context, npm1300_report_t* report);
 void pm_charging_controller(power_manager_driver_t* drv);
+void pm_battery_initial_soc_guess(void);
 
 // State handlers
 power_manager_state_t pm_handle_state_active(power_manager_driver_t* drv);

@@ -23,10 +23,28 @@
 
 #include "../../powerctl/npm1300/npm1300.h"
 #include "../../powerctl/stwlc38/stwlc38.h"
+#include "../../powerctl/fuel_gauge/fuel_gauge.h"
 #include "power_manager_internal.h"
 
 void pm_monitor_power_sources(void) {
   power_manager_driver_t* drv = &g_power_manager;
+
+  // Check if PMIC data is ready, otherwise skip processing
+  if(!drv->pmic_measurement_ready) {
+    return;
+  }
+
+  // Update fuel gauge state
+  if (drv->fuel_gauge_initialized) {
+    fuel_gauge_update(&drv->fuel_gauge, POWER_MANAGER_BATTERY_SAMPLING_PERIOD_MS,
+                      drv->pmic_data.vbat, drv->pmic_data.ibat,
+                      drv->pmic_data.ntc_temp);
+  } else {
+
+    // Battery sampling period, collect data before initial guess is made.
+    fuel_gauge_initial_guess(&drv->fuel_gauge, drv->pmic_data.vbat,
+                             drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+  }
 
   // Check USB power source status
   if (drv->pmic_data.usb_status != 0x0) {
@@ -144,4 +162,67 @@ void pm_charging_controller(power_manager_driver_t* drv) {
   } else {
     npm1300_set_charging(true);
   }
+}
+
+void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
+  power_manager_driver_t* drv = &g_power_manager;
+
+  // Store battery data in the buffer
+  drv->bat_sampling_buf[bat_sampling_buf_head_idx].vbat = vbat;
+  drv->bat_sampling_buf[bat_sampling_buf_head_idx].ibat = ibat;
+  drv->bat_sampling_buf[bat_sampling_buf_head_idx].ntc_temp = ntc_temp;
+
+  // Update head index
+  drv->bat_sampling_buf_head_idx++;
+  if (bat_sampling_buf_head_idx >= POWER_MANAGER_BAT_DATA_BUF_SIZE) {
+    bat_sampling_buf_head_idx = 0;
+  }
+
+  // Check if the buffer is full
+  if (bat_sampling_buf_head_idx == bat_sampling_buf_tail_idx) {
+    // Buffer is full, move tail index forward
+    bat_sampling_buf_tail_idx++;
+    if (bat_sampling_buf_tail_idx >= POWER_MANAGER_BAT_DATA_BUF_SIZE) {
+      bat_sampling_buf_tail_idx = 0;
+    }
+  }
+
+}
+
+void pm_battery_initial_soc_guess(void){
+  power_manager_driver_t* drv = &g_power_manager;
+
+  // Check if the buffer is full
+  if (bat_sampling_buf_head_idx == bat_sampling_buf_tail_idx) {
+    // Buffer is empty, no data to process
+    return;
+  }
+
+  // Calculate average voltage, current and temperature from the sampling
+  // buffer and run the fuel gauge initial guess
+  uint8_t buf_idx = bat_sampling_buf_tail_idx;
+  uint8_t samples_count = 0;
+  float vbat_g, ibat_g, ntc_temp_g = 0.0f;
+  while(bat_sampling_buf_head_idx != buf_idx) {
+
+    vbat_g += drv->bat_sampling_buf[buf_idx].vbat;
+    ibat_g += drv->bat_sampling_buf[buf_idx].ibat;
+    ntc_temp_g += drv->bat_sampling_buf[buf_idx].ntc_temp;
+
+    buf_idx++;
+    if (buf_idx >= POWER_MANAGER_BAT_DATA_BUF_SIZE) {
+      buf_idx = 0;
+    }
+
+    samples_count++;
+
+  }
+
+  // Calculate average values
+  vbat_g /= samples_count;
+  ibat_g /= samples_count;
+  ntc_temp_g /= samples_count;
+
+  fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
+
 }
