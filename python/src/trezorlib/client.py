@@ -163,7 +163,7 @@ class TrezorClient:
 
             if self._session_id_counter >= 255:
                 self._session_id_counter = 0
-            assert isinstance(passphrase, str) or passphrase is None
+
             self._session_id_counter += 1
 
             return SessionV2.new(
