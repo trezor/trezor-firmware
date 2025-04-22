@@ -4,7 +4,7 @@ import logging
 import typing as t
 
 from .. import exceptions, messages, models
-from ..client import MAX_PIN_LENGTH
+from ..client import MAX_PIN_LENGTH, PASSPHRASE_ON_DEVICE
 from ..protobuf import MessageType
 from .thp.protocol_v1 import ProtocolV1Channel
 from .thp.protocol_v2 import ProtocolV2Channel
@@ -252,15 +252,22 @@ class SessionV2(Session):
     def new(
         cls,
         client: TrezorClient,
-        passphrase: str | None,
+        passphrase: str | object | None,
         derive_cardano: bool,
         session_id: int = 0,
     ) -> SessionV2:
         assert isinstance(client.protocol, ProtocolV2Channel)
         session = cls(client, session_id.to_bytes(1, "big"))
+        if passphrase is PASSPHRASE_ON_DEVICE:
+            passphrase = None
+            on_device = True
+        else:
+            on_device = False
         session.call(
             messages.ThpCreateNewSession(
-                passphrase=passphrase, derive_cardano=derive_cardano
+                passphrase=passphrase,
+                on_device=on_device,
+                derive_cardano=derive_cardano,
             ),
             expect=messages.Success,
         )
