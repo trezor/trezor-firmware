@@ -125,6 +125,11 @@ static void process_command(uint8_t *data, uint16_t len) {
       cmd_advertising_on_t *cmd = (cmd_advertising_on_t *)data;
 
       int name_len = strnlen(cmd->name, BLE_ADV_NAME_LEN);
+
+      if (cmd->whitelist != 0) {
+        pairing_num_comp_reply(false, NULL);
+      }
+
       advertising_start(cmd->whitelist != 0, cmd->color, cmd->device_code,
                         cmd->static_addr, (char *)cmd->name, name_len);
     } break;
