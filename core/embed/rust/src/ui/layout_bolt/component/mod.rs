@@ -1,4 +1,4 @@
-#[cfg(feature = "translations")]
+#[cfg(all(feature = "micropython", feature = "translations"))]
 mod address_details;
 pub mod bl_confirm;
 mod button;
@@ -29,7 +29,7 @@ mod simple_page;
 mod swipe;
 mod welcome_screen;
 
-#[cfg(feature = "translations")]
+#[cfg(all(feature = "micropython", feature = "translations"))]
 pub use address_details::AddressDetails;
 pub use button::{
     Button, ButtonContent, ButtonMsg, ButtonStyle, ButtonStyleSheet, CancelConfirmMsg,

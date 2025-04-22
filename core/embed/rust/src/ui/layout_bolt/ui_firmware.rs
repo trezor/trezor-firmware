@@ -3,7 +3,7 @@ use core::cmp::Ordering;
 use crate::{
     error::{value_error, Error},
     io::BinaryData,
-    micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
+    micropython::{buffer::StrBuffer, gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -754,7 +754,7 @@ impl FirmwareUI for UIBolt {
         )?;
 
         for i in IterBuf::new().try_iterate(xpubs)? {
-            let [xtitle, text]: [TString; 2] = util::iter_into_array(i)?;
+            let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
             ad.add_xpub(xtitle, text)?;
         }
 

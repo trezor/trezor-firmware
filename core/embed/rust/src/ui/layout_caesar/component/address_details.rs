@@ -2,6 +2,7 @@ use heapless::Vec;
 
 use crate::{
     error::Error,
+    micropython::buffer::StrBuffer,
     strutil::TString,
     translations::TR,
     ui::{
@@ -25,7 +26,7 @@ pub struct AddressDetails {
     qr_code: Qr,
     details_view: Paragraphs<ParagraphVecShort<'static>>,
     xpub_view: Frame<Paragraphs<Paragraph<'static>>>,
-    xpubs: Vec<(TString<'static>, TString<'static>), MAX_XPUBS>,
+    xpubs: Vec<(StrBuffer, StrBuffer), MAX_XPUBS>,
     current_page: usize,
     current_subpage: usize,
     area: Rect,
@@ -77,11 +78,7 @@ impl AddressDetails {
         Ok(result)
     }
 
-    pub fn add_xpub(
-        &mut self,
-        title: TString<'static>,
-        xpub: TString<'static>,
-    ) -> Result<(), Error> {
+    pub fn add_xpub(&mut self, title: StrBuffer, xpub: StrBuffer) -> Result<(), Error> {
         self.xpubs
             .push((title, xpub))
             .map_err(|_| Error::OutOfRange)
@@ -156,7 +153,7 @@ impl AddressDetails {
 
     fn fill_xpub_page(&mut self, ctx: &mut EventCtx) {
         let i = self.current_page - 2;
-        self.xpub_view.update_title(ctx, self.xpubs[i].0);
+        self.xpub_view.update_title(ctx, self.xpubs[i].0.into());
         self.xpub_view.update_content(ctx, |p| {
             p.update(self.xpubs[i].1);
             p.change_page(0)

@@ -1,6 +1,6 @@
 use crate::{
     error,
-    micropython::{iter::IterBuf, obj::Obj, util},
+    micropython::{buffer::StrBuffer, iter::IterBuf, obj::Obj, util},
     strutil::TString,
     translations::TR,
     ui::{
@@ -168,7 +168,7 @@ pub fn new_get_address(
     // AccountInfo
     let mut ad = AddressDetails::new(TR::address_details__account_info.into(), account, path)?;
     for i in IterBuf::new().try_iterate(xpubs)? {
-        let [xtitle, text]: [TString; 2] = util::iter_into_array(i)?;
+        let [xtitle, text]: [StrBuffer; 2] = util::iter_into_array(i)?;
         ad.add_xpub(xtitle, text)?;
     }
     let content_account = ad.map(|_| Some(FlowMsg::Cancelled));
