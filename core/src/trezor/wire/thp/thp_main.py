@@ -35,37 +35,41 @@ _CHANNELS: dict[int, Channel] = {}
 
 async def thp_main_loop(iface: WireInterface) -> None:
     global _CHANNELS
-    _CHANNELS = channel_manager.load_cached_channels()
+    channel_manager.load_cached_channels(_CHANNELS)
 
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     packet = bytearray(iface.RX_PACKET_LEN)
-    while True:
-        try:
-            if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-                log.debug(__name__, "thp_main_loop")
-            packet_len = await read
-            assert packet_len == len(packet)
-            iface.read(packet, 0)
+    try:
+        while True:
+            try:
+                if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
+                    log.debug(
+                        __name__, f"thp_main_loop from iface: {iface.iface_num()}"
+                    )
+                packet_len = await read
+                assert packet_len == len(packet)
+                iface.read(packet, 0)
 
-            if _get_ctrl_byte(packet) == CODEC_V1:
-                await _handle_codec_v1(iface, packet)
-                continue
+                if _get_ctrl_byte(packet) == CODEC_V1:
+                    await _handle_codec_v1(iface, packet)
+                    continue
 
-            cid = ustruct.unpack(">BH", packet)[1]
+                cid = ustruct.unpack(">BH", packet)[1]
 
-            if cid == BROADCAST_CHANNEL_ID:
-                await _handle_broadcast(iface, packet)
-                continue
+                if cid == BROADCAST_CHANNEL_ID:
+                    await _handle_broadcast(iface, packet)
+                    continue
 
-            if cid in _CHANNELS:
-                await _handle_allocated(iface, cid, packet)
-            else:
-                await _handle_unallocated(iface, cid, packet)
+                if cid in _CHANNELS:
+                    await _handle_allocated(iface, cid, packet)
+                else:
+                    await _handle_unallocated(iface, cid, packet)
 
-        except ThpError as e:
-            if __debug__:
-                log.exception(__name__, e)
-
+            except ThpError as e:
+                if __debug__:
+                    log.exception(__name__, e)
+    finally:
+        channel_manager.CHANNELS_LOADED = False
 
 async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:
     # If the received packet is not an initial codec_v1 packet, do not send error message
