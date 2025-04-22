@@ -22,43 +22,55 @@
 		zephyr,sram = &sram0;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
-                zephyr,bt-hci = &bt_hci_controller;
+		zephyr,bt-hci = &bt_hci_controller;
 	};
 
 	leds {
 		compatible = "gpio-leds";
+
 		led0: led_0 {
 			gpios = <&gpio0 25 GPIO_ACTIVE_HIGH>;
-			label = "Reserved output";
+			label = "Wake up Trezor";
 		};
-		led1: led_1 {
-			gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
-			label = "NRF ready";
-		};
+
 	};
 
 	buttons {
 		compatible = "gpio-keys";
+
 		button0: button_0 {
 			gpios = <&gpio0 14 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
 			label = "Stay in bootloader";
 			zephyr,code = <INPUT_KEY_0>;
 		};
-		trezor_ready: trezor_ready {
-			gpios = <&gpio0 29 ( GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
-			label = "Trezor ready";
-			zephyr,code = <INPUT_KEY_1>;
+	};
+
+	spi_sync_in
+	{
+		compatible = "gpio-keys";
+		spi_ready: spi_ready {
+		gpios = <&gpio0 12 (GPIO_PULL_DOWN | GPIO_ACTIVE_HIGH)>;
+		label = "Trezor has data ready";
+		};
+	};
+	spi_sync_out
+	{
+		compatible = "gpio-leds";
+		spi_request: spi_request {
+			gpios = <&gpio0 29 (GPIO_ACTIVE_HIGH)>;
+			label = "NRF is requesting to send data to trezor";
 		};
 	};
 
 	/* These aliases are provided for compatibility with samples */
 	aliases {
 		led0 = &led0;
-		led1 = &led1;
 		sw0 = &button0;
 		bootloader-botton0 = &button0;
 		mcuboot-button0 = &button0;
 		watchdog0 = &wdt0;
+		spi-ready = &spi_ready;
+		spi-request = &spi_request;
 	};
 };
 

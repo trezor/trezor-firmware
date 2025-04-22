@@ -29,7 +29,6 @@
 LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #define OUT_RESERVED DK_LED1
-#define OUT_NRF_READY DK_LED2
 
 #define IN_STAY_IN_BOOTLOADER DK_BTN1_MSK
 #define IN_TRZ_READY DK_BTN2_MSK
@@ -69,11 +68,6 @@ bool signals_init(void) {
   k_sem_give(&signals_ok);
 
   return true;
-}
-
-void signals_nrf_ready(bool set) {
-  out_nrf_ready = set;
-  dk_set_led(OUT_NRF_READY, set);
 }
 
 bool signals_out_get_nrf_ready(void) { return out_nrf_ready; }

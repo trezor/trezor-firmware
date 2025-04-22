@@ -34,9 +34,6 @@ bool signals_is_stay_in_bootloader(void);
 
 // OUTPUTS
 
-// Signals that NRF firmware is running and initialized
-void signals_nrf_ready(bool set);
-
 // Sets the reserved output
 void signals_reserved(bool set);
 
