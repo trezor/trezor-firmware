@@ -181,6 +181,8 @@ async def _handle_ack(ctx: Channel, ack_bit: int) -> None:
         ctx.transmission_loop.stop_immediately()
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(__name__, "Stopped transmission loop")
+    elif __debug__:
+        log.debug(__name__, "Transmission loop was not stopped!")
 
     ABP.set_sending_allowed(ctx.channel_cache, True)
 
