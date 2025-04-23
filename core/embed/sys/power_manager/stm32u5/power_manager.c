@@ -22,7 +22,10 @@
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
 
+
 #include "power_manager_internal.h"
+#include "../../powerctl/npm1300/npm1300.h"
+#include "../../powerctl/stwlc38/stwlc38.h"
 
 // Global driver instance
 power_manager_driver_t g_power_manager = {

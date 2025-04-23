@@ -97,12 +97,13 @@ void pm_monitor_power_sources(void) {
   // Run battery charging controller
   pm_charging_controller(drv);
 
-  // Request fresh measurements from PMIC
+  // Process state machine with updated battery and power source information
+  pm_process_state_machine();
+
+  // Request fresh measurements
   npm1300_measure(pm_pmic_data_ready, NULL);
   drv->pmic_measurement_ready = false;
 
-  // Process state machine with updated battery and power source information
-  pm_process_state_machine();
 }
 
 // PMIC measurement callback
