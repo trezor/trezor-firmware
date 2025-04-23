@@ -679,6 +679,10 @@ impl Grid {
         let to = self.row_col(cells.to.0, cells.to.1);
         from.union(to)
     }
+
+    pub const fn cell_count(&self) -> usize {
+        self.rows * self.cols
+    }
 }
 
 #[derive(Copy, Clone)]
