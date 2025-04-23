@@ -68,8 +68,8 @@ typedef struct {
   bool fuel_gauge_initialized;
   power_manager_sampling_data_t bat_sampling_buf[
                                 POWER_MANAGER_BATTERY_SAMPLING_BUF_SIZE];
-  uint8_t bat_sampling_buf_tail_idx = 0;
-  uint8_t bat_sampling_buf_head_idx = 0;
+  uint8_t bat_sampling_buf_tail_idx;
+  uint8_t bat_sampling_buf_head_idx;
 
 
   // Battery charging state
@@ -114,6 +114,7 @@ void pm_monitor_power_sources(void);
 void pm_process_state_machine(void);
 void pm_pmic_data_ready(void* context, npm1300_report_t* report);
 void pm_charging_controller(power_manager_driver_t* drv);
+void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 void pm_battery_initial_soc_guess(void);
 
 // State handlers
