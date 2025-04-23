@@ -501,6 +501,7 @@ class MessageType(IntEnum):
     SignedIdentity = 54
     GetECDHSessionKey = 61
     ECDHSessionKey = 62
+    PaymentNotification = 52
     DebugLinkDecision = 100
     DebugLinkGetState = 101
     DebugLinkState = 102
@@ -3040,6 +3041,20 @@ class ECDHSessionKey(protobuf.MessageType):
     ) -> None:
         self.session_key = session_key
         self.public_key = public_key
+
+
+class PaymentNotification(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = 52
+    FIELDS = {
+        1: protobuf.Field("payment_req", "PaymentRequest", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        payment_req: Optional["PaymentRequest"] = None,
+    ) -> None:
+        self.payment_req = payment_req
 
 
 class Initialize(protobuf.MessageType):

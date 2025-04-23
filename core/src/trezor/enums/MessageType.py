@@ -83,6 +83,7 @@ SignIdentity = 53
 SignedIdentity = 54
 GetECDHSessionKey = 61
 ECDHSessionKey = 62
+PaymentNotification = 52
 BenchmarkListNames = 9100
 BenchmarkNames = 9101
 BenchmarkRun = 9102

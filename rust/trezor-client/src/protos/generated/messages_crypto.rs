@@ -2022,34 +2022,159 @@ impl ::protobuf::reflect::ProtobufValue for ECDHSessionKey {
     type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
 }
 
+// @@protoc_insertion_point(message:hw.trezor.messages.crypto.PaymentNotification)
+#[derive(PartialEq,Clone,Default,Debug)]
+pub struct PaymentNotification {
+    // message fields
+    // @@protoc_insertion_point(field:hw.trezor.messages.crypto.PaymentNotification.payment_req)
+    pub payment_req: ::protobuf::MessageField<super::messages_common::PaymentRequest>,
+    // special fields
+    // @@protoc_insertion_point(special_field:hw.trezor.messages.crypto.PaymentNotification.special_fields)
+    pub special_fields: ::protobuf::SpecialFields,
+}
+
+impl<'a> ::std::default::Default for &'a PaymentNotification {
+    fn default() -> &'a PaymentNotification {
+        <PaymentNotification as ::protobuf::Message>::default_instance()
+    }
+}
+
+impl PaymentNotification {
+    pub fn new() -> PaymentNotification {
+        ::std::default::Default::default()
+    }
+
+    fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
+        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut oneofs = ::std::vec::Vec::with_capacity(0);
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::PaymentRequest>(
+            "payment_req",
+            |m: &PaymentNotification| { &m.payment_req },
+            |m: &mut PaymentNotification| { &mut m.payment_req },
+        ));
+        ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<PaymentNotification>(
+            "PaymentNotification",
+            fields,
+            oneofs,
+        )
+    }
+}
+
+impl ::protobuf::Message for PaymentNotification {
+    const NAME: &'static str = "PaymentNotification";
+
+    fn is_initialized(&self) -> bool {
+        true
+    }
+
+    fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream<'_>) -> ::protobuf::Result<()> {
+        while let Some(tag) = is.read_raw_tag_or_eof()? {
+            match tag {
+                10 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment_req)?;
+                },
+                tag => {
+                    ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
+                },
+            };
+        }
+        ::std::result::Result::Ok(())
+    }
+
+    // Compute sizes of nested messages
+    #[allow(unused_variables)]
+    fn compute_size(&self) -> u64 {
+        let mut my_size = 0;
+        if let Some(v) = self.payment_req.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
+        my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
+        self.special_fields.cached_size().set(my_size as u32);
+        my_size
+    }
+
+    fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
+        if let Some(v) = self.payment_req.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(1, v, os)?;
+        }
+        os.write_unknown_fields(self.special_fields.unknown_fields())?;
+        ::std::result::Result::Ok(())
+    }
+
+    fn special_fields(&self) -> &::protobuf::SpecialFields {
+        &self.special_fields
+    }
+
+    fn mut_special_fields(&mut self) -> &mut ::protobuf::SpecialFields {
+        &mut self.special_fields
+    }
+
+    fn new() -> PaymentNotification {
+        PaymentNotification::new()
+    }
+
+    fn clear(&mut self) {
+        self.payment_req.clear();
+        self.special_fields.clear();
+    }
+
+    fn default_instance() -> &'static PaymentNotification {
+        static instance: PaymentNotification = PaymentNotification {
+            payment_req: ::protobuf::MessageField::none(),
+            special_fields: ::protobuf::SpecialFields::new(),
+        };
+        &instance
+    }
+}
+
+impl ::protobuf::MessageFull for PaymentNotification {
+    fn descriptor() -> ::protobuf::reflect::MessageDescriptor {
+        static descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::MessageDescriptor> = ::protobuf::rt::Lazy::new();
+        descriptor.get(|| file_descriptor().message_by_package_relative_name("PaymentNotification").unwrap()).clone()
+    }
+}
+
+impl ::std::fmt::Display for PaymentNotification {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+        ::protobuf::text_format::fmt(self, f)
+    }
+}
+
+impl ::protobuf::reflect::ProtobufValue for PaymentNotification {
+    type RuntimeType = ::protobuf::reflect::rt::RuntimeTypeMessage<Self>;
+}
+
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x15messages-crypto.proto\x12\x19hw.trezor.messages.crypto\x1a\roption\
-    s.proto\"\xcb\x01\n\x0eCipherKeyValue\x12\x1b\n\taddress_n\x18\x01\x20\
-    \x03(\rR\x08addressN\x12\x10\n\x03key\x18\x02\x20\x02(\tR\x03key\x12\x14\
-    \n\x05value\x18\x03\x20\x02(\x0cR\x05value\x12\x18\n\x07encrypt\x18\x04\
-    \x20\x01(\x08R\x07encrypt\x12$\n\x0eask_on_encrypt\x18\x05\x20\x01(\x08R\
-    \x0caskOnEncrypt\x12$\n\x0eask_on_decrypt\x18\x06\x20\x01(\x08R\x0caskOn\
-    Decrypt\x12\x0e\n\x02iv\x18\x07\x20\x01(\x0cR\x02iv\"(\n\x10CipheredKeyV\
-    alue\x12\x14\n\x05value\x18\x01\x20\x02(\x0cR\x05value\"\x8d\x01\n\x0cId\
-    entityType\x12\x14\n\x05proto\x18\x01\x20\x01(\tR\x05proto\x12\x12\n\x04\
-    user\x18\x02\x20\x01(\tR\x04user\x12\x12\n\x04host\x18\x03\x20\x01(\tR\
-    \x04host\x12\x12\n\x04port\x18\x04\x20\x01(\tR\x04port\x12\x12\n\x04path\
-    \x18\x05\x20\x01(\tR\x04path\x12\x17\n\x05index\x18\x06\x20\x01(\r:\x010\
-    R\x05index\"\xd7\x01\n\x0cSignIdentity\x12C\n\x08identity\x18\x01\x20\
-    \x02(\x0b2'.hw.trezor.messages.crypto.IdentityTypeR\x08identity\x12+\n\
-    \x10challenge_hidden\x18\x02\x20\x01(\x0c:\0R\x0fchallengeHidden\x12+\n\
-    \x10challenge_visual\x18\x03\x20\x01(\t:\0R\x0fchallengeVisual\x12(\n\
-    \x10ecdsa_curve_name\x18\x04\x20\x01(\tR\x0eecdsaCurveName\"g\n\x0eSigne\
-    dIdentity\x12\x18\n\x07address\x18\x01\x20\x01(\tR\x07address\x12\x1d\n\
-    \npublic_key\x18\x02\x20\x02(\x0cR\tpublicKey\x12\x1c\n\tsignature\x18\
-    \x03\x20\x02(\x0cR\tsignature\"\xaa\x01\n\x11GetECDHSessionKey\x12C\n\
-    \x08identity\x18\x01\x20\x02(\x0b2'.hw.trezor.messages.crypto.IdentityTy\
-    peR\x08identity\x12&\n\x0fpeer_public_key\x18\x02\x20\x02(\x0cR\rpeerPub\
-    licKey\x12(\n\x10ecdsa_curve_name\x18\x03\x20\x01(\tR\x0eecdsaCurveName\
-    \"P\n\x0eECDHSessionKey\x12\x1f\n\x0bsession_key\x18\x01\x20\x02(\x0cR\n\
-    sessionKey\x12\x1d\n\npublic_key\x18\x02\x20\x01(\x0cR\tpublicKeyB>\n#co\
-    m.satoshilabs.trezor.lib.protobufB\x13TrezorMessageCrypto\x80\xa6\x1d\
-    \x01\
+    \n\x15messages-crypto.proto\x12\x19hw.trezor.messages.crypto\x1a\x15mess\
+    ages-common.proto\x1a\roptions.proto\"\xcb\x01\n\x0eCipherKeyValue\x12\
+    \x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03key\x18\
+    \x02\x20\x02(\tR\x03key\x12\x14\n\x05value\x18\x03\x20\x02(\x0cR\x05valu\
+    e\x12\x18\n\x07encrypt\x18\x04\x20\x01(\x08R\x07encrypt\x12$\n\x0eask_on\
+    _encrypt\x18\x05\x20\x01(\x08R\x0caskOnEncrypt\x12$\n\x0eask_on_decrypt\
+    \x18\x06\x20\x01(\x08R\x0caskOnDecrypt\x12\x0e\n\x02iv\x18\x07\x20\x01(\
+    \x0cR\x02iv\"(\n\x10CipheredKeyValue\x12\x14\n\x05value\x18\x01\x20\x02(\
+    \x0cR\x05value\"\x8d\x01\n\x0cIdentityType\x12\x14\n\x05proto\x18\x01\
+    \x20\x01(\tR\x05proto\x12\x12\n\x04user\x18\x02\x20\x01(\tR\x04user\x12\
+    \x12\n\x04host\x18\x03\x20\x01(\tR\x04host\x12\x12\n\x04port\x18\x04\x20\
+    \x01(\tR\x04port\x12\x12\n\x04path\x18\x05\x20\x01(\tR\x04path\x12\x17\n\
+    \x05index\x18\x06\x20\x01(\r:\x010R\x05index\"\xd7\x01\n\x0cSignIdentity\
+    \x12C\n\x08identity\x18\x01\x20\x02(\x0b2'.hw.trezor.messages.crypto.Ide\
+    ntityTypeR\x08identity\x12+\n\x10challenge_hidden\x18\x02\x20\x01(\x0c:\
+    \0R\x0fchallengeHidden\x12+\n\x10challenge_visual\x18\x03\x20\x01(\t:\0R\
+    \x0fchallengeVisual\x12(\n\x10ecdsa_curve_name\x18\x04\x20\x01(\tR\x0eec\
+    dsaCurveName\"g\n\x0eSignedIdentity\x12\x18\n\x07address\x18\x01\x20\x01\
+    (\tR\x07address\x12\x1d\n\npublic_key\x18\x02\x20\x02(\x0cR\tpublicKey\
+    \x12\x1c\n\tsignature\x18\x03\x20\x02(\x0cR\tsignature\"\xaa\x01\n\x11Ge\
+    tECDHSessionKey\x12C\n\x08identity\x18\x01\x20\x02(\x0b2'.hw.trezor.mess\
+    ages.crypto.IdentityTypeR\x08identity\x12&\n\x0fpeer_public_key\x18\x02\
+    \x20\x02(\x0cR\rpeerPublicKey\x12(\n\x10ecdsa_curve_name\x18\x03\x20\x01\
+    (\tR\x0eecdsaCurveName\"P\n\x0eECDHSessionKey\x12\x1f\n\x0bsession_key\
+    \x18\x01\x20\x02(\x0cR\nsessionKey\x12\x1d\n\npublic_key\x18\x02\x20\x01\
+    (\x0cR\tpublicKey\"g\n\x13PaymentNotification\x12J\n\x0bpayment_req\x18\
+    \x01\x20\x01(\x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentRe\
+    q:\x04\x88\xb2\x19\x01B>\n#com.satoshilabs.trezor.lib.protobufB\x13Trezo\
+    rMessageCrypto\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file
@@ -2066,9 +2191,10 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(1);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
+            deps.push(super::messages_common::file_descriptor().clone());
             deps.push(super::options::file_descriptor().clone());
-            let mut messages = ::std::vec::Vec::with_capacity(7);
+            let mut messages = ::std::vec::Vec::with_capacity(8);
             messages.push(CipherKeyValue::generated_message_descriptor_data());
             messages.push(CipheredKeyValue::generated_message_descriptor_data());
             messages.push(IdentityType::generated_message_descriptor_data());
@@ -2076,6 +2202,7 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
             messages.push(SignedIdentity::generated_message_descriptor_data());
             messages.push(GetECDHSessionKey::generated_message_descriptor_data());
             messages.push(ECDHSessionKey::generated_message_descriptor_data());
+            messages.push(PaymentNotification::generated_message_descriptor_data());
             let mut enums = ::std::vec::Vec::with_capacity(0);
             ::protobuf::reflect::GeneratedFileDescriptor::new_generated(
                 file_descriptor_proto(),
