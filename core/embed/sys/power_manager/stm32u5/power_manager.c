@@ -59,7 +59,7 @@ power_manager_status_t power_manager_init(power_manager_state_t initial_state) {
   }
 
   // Clear fuel gauge state
-  memcpy(drv->fuel_gauge, 0, sizeof(fuel_gauge_state_t));
+  memset(&drv->fuel_gauge, 0, sizeof(fuel_gauge_state_t));
 
   // Initialize fuel gauge
   fuel_gauge_init(&(drv->fuel_gauge), POWER_MANAGER_FUEL_GAUGE_R,
