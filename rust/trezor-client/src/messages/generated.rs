@@ -68,6 +68,7 @@ trezor_message_impl! {
     SignedIdentity => MessageType_SignedIdentity,
     GetECDHSessionKey => MessageType_GetECDHSessionKey,
     ECDHSessionKey => MessageType_ECDHSessionKey,
+    PaymentNotification => MessageType_PaymentNotification,
     DebugLinkDecision => MessageType_DebugLinkDecision,
     DebugLinkGetState => MessageType_DebugLinkGetState,
     DebugLinkState => MessageType_DebugLinkState,
