@@ -6,7 +6,12 @@ pub mod firmware;
 #[cfg(feature = "micropython")]
 pub use firmware::*;
 
-use crate::ui::{component::text::TextStyle, display::Color, geometry::Insets, util::include_icon};
+use crate::ui::{
+    component::text::TextStyle,
+    display::Color,
+    geometry::{Grid, Insets, Offset, Rect},
+    util::include_icon,
+};
 
 use super::{
     component::{ButtonStyle, ButtonStyleSheet},
@@ -50,6 +55,18 @@ pub const HEADER_HEIGHT: i16 = 96; // [px]
 pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
+
+// Tile pattern grid constants
+const TILE_SIZE: i16 = ICON_TILE_STRIPES_BACKSLASH.toif.width();
+const TILES_ROWS: i16 = 6;
+const TILES_COLS: i16 = 4;
+// Slightly larger than SCREEN because the bottom row is not full
+const TILES_AREA: Rect =
+    Rect::from_size(Offset::new(TILES_COLS * TILE_SIZE, TILES_ROWS * TILE_SIZE));
+/// Grid for the tiles pattern used in default homescreen and progress screen.
+pub const TILES_GRID: Grid = Grid::new(TILES_AREA, TILES_ROWS as usize, TILES_COLS as usize);
+/// Indices of the tiles that are slashes ("///") in the default pattern.
+pub const TILES_SLASH_INDICES: [usize; 12] = [0, 4, 7, 11, 14, 15, 16, 18, 19, 20, 22, 23];
 
 // UI icons (white color).
 include_icon!(ICON_CHEVRON_DOWN, "layout_eckhart/res/chevron_down.toif");
@@ -111,13 +128,13 @@ include_icon!(ICON_BORDER_TR, "layout_eckhart/res/border/TR.toif");
 include_icon!(ICON_PLUS, "layout_eckhart/res/plus.toif");
 include_icon!(ICON_MINUS, "layout_eckhart/res/minus.toif");
 
-// Icon tiles for default homescreen
+// Icon tiles for default pattern
 include_icon!(
-    ICON_HS_TILE_1,
+    ICON_TILE_STRIPES_BACKSLASH, // for "\\\"
     "layout_eckhart/res/defaut_homescreen/hs_tile1.toif"
 );
 include_icon!(
-    ICON_HS_TILE_2,
+    ICON_TILE_STRIPES_SLASH, // for "///"
     "layout_eckhart/res/defaut_homescreen/hs_tile2.toif"
 );
 
