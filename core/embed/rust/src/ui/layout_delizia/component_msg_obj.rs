@@ -8,7 +8,7 @@ use super::component::{
 };
 use crate::{
     error::Error,
-    micropython::obj::Obj,
+    micropython::{gc::GcBox, obj::Obj},
     ui::{
         component::{paginated::PaginateFull, Component, Never},
         flow::Swipable,
@@ -174,7 +174,7 @@ where
     }
 }
 
-impl ComponentMsgObj for AddressDetails {
+impl ComponentMsgObj for GcBox<AddressDetails> {
     fn msg_try_into_obj(&self, _msg: Self::Msg) -> Result<Obj, Error> {
         Ok(CANCELLED.as_obj())
     }
