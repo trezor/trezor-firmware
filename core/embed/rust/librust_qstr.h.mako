@@ -13,21 +13,6 @@ from typing import Union, Set
 
 RUST_SRC = THIS_FILE.parent / "src"
 
-ALTCOIN_PREFIXES = (
-    "binance",
-    "cardano",
-    "eos",
-    "ethereum",
-    "fido",
-    "monero",
-    "nem",
-    "ripple",
-    "solana",
-    "stellar",
-    "tezos",
-    "u2f",
-)
-
 def find_unique_patterns_in_dir(directory: Union[str, Path], pattern: str) -> Set[str]:
     command = f"grep -ro '{pattern}' {directory}"
     result = subprocess.run(command, stdout=subprocess.PIPE, text=True, shell=True)
@@ -42,12 +27,18 @@ for prefix in ALTCOIN_PREFIXES:
     mp_prefix = f"MP_QSTR_{prefix}__"
     qstrings_universal |= {qstr for qstr in qstrings if qstr.startswith(mp_prefix)}
 
-qstrings_btconly = qstrings - qstrings_universal
+qstrings_debug = set()
+for prefix in DEBUG_PREFIXES:
+    mp_prefix = f"MP_QSTR_{prefix}__"
+    qstrings_debug |= {qstr for qstr in qstrings if qstr.startswith(mp_prefix)}
+
+qstrings_btconly = qstrings - qstrings_universal - qstrings_debug
 
 # sort result alphabetically
 digits = range(10)
 qstrings_btconly_sorted = sorted(qstrings_btconly)
 qstrings_universal_sorted = sorted(qstrings_universal)
+qstrings_debug_sorted = sorted(qstrings_debug)
 %>\
 % for digit in digits:
   MP_QSTR_${digit};
@@ -57,6 +48,11 @@ qstrings_universal_sorted = sorted(qstrings_universal)
 % endfor
 #if !BITCOIN_ONLY
 % for qstr in qstrings_universal_sorted:
+  ${qstr};
+% endfor
+#endif
+#if !PYOPT
+% for qstr in qstrings_debug_sorted:
   ${qstr};
 % endfor
 #endif

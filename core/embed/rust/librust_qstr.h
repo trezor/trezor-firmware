@@ -235,8 +235,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_danger;
   MP_QSTR_data_hash;
   MP_QSTR_data_len;
-  MP_QSTR_debug__loading_seed;
-  MP_QSTR_debug__loading_seed_not_recommended;
   MP_QSTR_decode;
   MP_QSTR_deinit;
   MP_QSTR_description;
@@ -366,7 +364,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_modify_fee__transaction_fee;
   MP_QSTR_more_info_callback;
   MP_QSTR_multiple_pages_texts;
-  MP_QSTR_nostr__event_kind_template;
   MP_QSTR_notification;
   MP_QSTR_notification_level;
   MP_QSTR_page_count;
@@ -1130,6 +1127,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_nem__under_namespace;
   MP_QSTR_nem__unencrypted;
   MP_QSTR_nem__unknown_mosaic;
+  MP_QSTR_nostr__event_kind_template;
   MP_QSTR_ripple__confirm_tag;
   MP_QSTR_ripple__destination_tag_template;
   MP_QSTR_solana__account_index;
@@ -1244,5 +1242,9 @@ static void _librust_qstrs(void) {
   MP_QSTR_u2f__set_template;
   MP_QSTR_u2f__title_get;
   MP_QSTR_u2f__title_set;
+#endif
+#if !PYOPT
+  MP_QSTR_debug__loading_seed;
+  MP_QSTR_debug__loading_seed_not_recommended;
 #endif
 }

@@ -7,22 +7,6 @@
 import json
 import re
 
-ALTCOIN_PREFIXES = (
-    "binance",
-    "cardano",
-    "eos",
-    "ethereum",
-    "fido",
-    "monero",
-    "nem",
-    "nostr",
-    "ripple",
-    "solana",
-    "stellar",
-    "tezos",
-    "u2f",
-)
-
 TR_DIR = ROOT / "core" / "translations"
 
 order_file = TR_DIR / "order.json"
@@ -53,6 +37,9 @@ pub enum TranslatedString {
     %if any(name.startswith(prefix + "__") for prefix in ALTCOIN_PREFIXES):
     #[cfg(feature = "universal_fw")]
     %endif
+    %if any(name.startswith(prefix + "__") for prefix in DEBUG_PREFIXES):
+    #[cfg(feature = "debug")]
+    %endif
     ${name} = ${idx},  // ${encode_str(en_data.get(name))}
 % endfor
 }
@@ -69,11 +56,15 @@ impl TranslatedString {
                 continue
             layouts_dict = value if isinstance(value, dict) else None
             universal_fw = any(name.startswith(prefix + "__") for prefix in ALTCOIN_PREFIXES)
+            is_debug = any(name.startswith(prefix + "__") for prefix in DEBUG_PREFIXES)
 %>\
 %if layouts_dict is not None:
     % for layout_name, layout_value in layouts_dict.items():
         %if universal_fw:
             #[cfg(feature = "universal_fw")]
+        %endif
+        %if is_debug:
+            #[cfg(feature = "debug")]
         %endif
             #[cfg(feature = "${f"layout_{layout_name.lower()}"}")]
             Self::${name} => ${encode_str(layout_value)},
@@ -81,6 +72,9 @@ impl TranslatedString {
 %else:
     %if universal_fw:
             #[cfg(feature = "universal_fw")]
+    %endif
+    %if is_debug:
+            #[cfg(feature = "debug")]
     %endif
             Self::${name} => ${encode_str(value)},
 %endif
@@ -98,6 +92,9 @@ impl TranslatedString {
 %>\
             %if any(name.startswith(prefix + "__") for prefix in ALTCOIN_PREFIXES):
             #[cfg(feature = "universal_fw")]
+            %endif
+            %if any(name.startswith(prefix + "__") for prefix in DEBUG_PREFIXES):
+            #[cfg(feature = "debug")]
             %endif
             Qstr::MP_QSTR_${name} => Some(Self::${name}),
 % endfor
