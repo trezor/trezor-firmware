@@ -40,6 +40,12 @@ void fuel_gauge_reset(fuel_gauge_state_t* state) {
   state->soc_latched = 0.0f;
 }
 
+void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc) {
+  // Set SOC directly
+  state->soc = soc;
+  state->soc_latched = soc;
+}
+
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
                               float current_mA, float temperature) {
   // Determine if we're in discharge mode
