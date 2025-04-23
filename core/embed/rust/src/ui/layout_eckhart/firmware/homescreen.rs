@@ -6,7 +6,7 @@ use crate::{
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label, Never},
         display::{image::ImageInfo, Color},
-        geometry::{Alignment2D, Grid, Insets, Offset, Point, Rect},
+        geometry::{Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         lerp::Lerp,
         shape::{self, Renderer},
@@ -20,7 +20,7 @@ use super::{
         fonts,
     },
     constant::{HEIGHT, SCREEN, WIDTH},
-    theme::{self, firmware::button_homebar_style, BG, BLACK, GREY_EXTRA_DARK},
+    theme::{self, firmware::button_homebar_style, TILES_GRID},
     ActionBar, ActionBarMsg, Hint, HoldToConfirmAnim,
 };
 
@@ -235,10 +235,10 @@ impl HomeLabel {
     const LABEL_TEXT_STYLE: TextStyle = theme::firmware::TEXT_BIG;
     const LABEL_SHADOW_TEXT_STYLE: TextStyle = TextStyle::new(
         fonts::FONT_SATOSHI_EXTRALIGHT_46,
-        BLACK,
-        BLACK,
-        BLACK,
-        BLACK,
+        theme::BLACK,
+        theme::BLACK,
+        theme::BLACK,
+        theme::BLACK,
     );
 
     fn new(label: TString<'static>) -> Self {
@@ -282,26 +282,9 @@ pub fn check_homescreen_format(image: BinaryData) -> bool {
 }
 
 fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color>) {
-    const DEFAULT_HS_TILE_ROWS: usize = 4;
-    const DEFAULT_HS_TILE_COLS: usize = 4;
-    const DEFAULT_HS_AREA: Rect = SCREEN.inset(Insets::bottom(140));
-    const DEFAULT_HS_GRID: Grid =
-        Grid::new(DEFAULT_HS_AREA, DEFAULT_HS_TILE_ROWS, DEFAULT_HS_TILE_COLS);
-    const DEFAULT_HS_TILES_2: [(usize, usize); 9] = [
-        (0, 0),
-        (1, 0),
-        (1, 3),
-        (2, 3),
-        (3, 2),
-        (3, 3),
-        (4, 0),
-        (4, 2),
-        (4, 3),
-    ];
-
     // Layer 1: Base Solid Colour
     shape::Bar::new(SCREEN)
-        .with_bg(GREY_EXTRA_DARK)
+        .with_bg(theme::GREY_EXTRA_DARK)
         .render(target);
 
     // Layer 2: Base Gradient overlay
@@ -309,7 +292,7 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
         let slice = Rect::new(Point::new(SCREEN.x0, y), Point::new(SCREEN.x1, y + 1));
         let factor = (y - SCREEN.y0) as f32 / SCREEN.height() as f32;
         shape::Bar::new(slice)
-            .with_bg(BG)
+            .with_bg(theme::BG)
             .with_alpha(u8::lerp(u8::MIN, u8::MAX, factor))
             .render(target);
     }
@@ -321,19 +304,17 @@ fn render_default_hs<'a>(target: &mut impl Renderer<'a>, led_color: Option<Color
 
     // Layer 4: Tile pattern
     // TODO: improve frame rate
-    for row in 0..DEFAULT_HS_TILE_ROWS {
-        for col in 0..DEFAULT_HS_TILE_COLS {
-            let tile_area = DEFAULT_HS_GRID.row_col(row, col);
-            let icon = if DEFAULT_HS_TILES_2.contains(&(row, col)) {
-                theme::ICON_HS_TILE_2.toif
-            } else {
-                theme::ICON_HS_TILE_1.toif
-            };
-            shape::ToifImage::new(tile_area.top_left(), icon)
-                .with_align(Alignment2D::TOP_LEFT)
-                .with_fg(BLACK)
-                .render(target);
-        }
+    for idx in 0..TILES_GRID.cell_count() {
+        let tile_area = TILES_GRID.cell(idx);
+        let icon = if theme::TILES_SLASH_INDICES.contains(&idx) {
+            theme::ICON_TILE_STRIPES_SLASH.toif
+        } else {
+            theme::ICON_TILE_STRIPES_BACKSLASH.toif
+        };
+        shape::ToifImage::new(tile_area.top_left(), icon)
+            .with_align(Alignment2D::TOP_LEFT)
+            .with_fg(theme::BLACK)
+            .render(target);
     }
 }
 
@@ -379,7 +360,7 @@ fn render_led_simulation<'a>(color: Color, target: &mut impl Renderer<'a>) {
         // edges)
         let dist_from_mid = (x - X_MID).abs() as f32 / X_HALF_WIDTH;
         shape::Bar::new(slice)
-            .with_bg(BG)
+            .with_bg(theme::BG)
             .with_alpha(u8::lerp(u8::MIN, u8::MAX, dist_from_mid))
             .render(target);
     }
