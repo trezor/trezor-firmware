@@ -1917,6 +1917,20 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ECDHSessionKey"]:
             return isinstance(msg, cls)
 
+    class PaymentNotification(protobuf.MessageType):
+        payment_req: "PaymentRequest | None"
+
+        def __init__(
+            self,
+            *,
+            payment_req: "PaymentRequest | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PaymentNotification"]:
+            return isinstance(msg, cls)
+
     class Initialize(protobuf.MessageType):
         session_id: "bytes | None"
         derive_cardano: "bool | None"

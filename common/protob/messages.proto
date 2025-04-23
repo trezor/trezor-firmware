@@ -118,6 +118,7 @@ enum MessageType {
     MessageType_GetECDHSessionKey = 61 [(bitcoin_only) = true, (wire_in) = true];
     MessageType_ECDHSessionKey = 62 [(bitcoin_only) = true, (wire_out) = true];
     // dropped: CosiCommit, CosiCommitment, CosiSign, CosiSignature
+    MessageType_PaymentNotification = 52 [(bitcoin_only) = true, (wire_in) = true];
     reserved 71 to 74;
 
     // Debug
