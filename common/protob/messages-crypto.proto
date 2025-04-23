@@ -5,6 +5,7 @@ package hw.trezor.messages.crypto;
 option java_package = "com.satoshilabs.trezor.lib.protobuf";
 option java_outer_classname = "TrezorMessageCrypto";
 
+import "messages-common.proto";
 import "options.proto";
 
 option (include_in_bitcoin_only) = true;
@@ -88,4 +89,15 @@ message GetECDHSessionKey {
 message ECDHSessionKey {
     required bytes session_key = 1;     // ECDH session key
     optional bytes public_key = 2;  // identity public key
+}
+
+/**
+ * Request: Ask the device to verify and display a payment notification.
+ * @start
+ * @next Success
+ */
+message PaymentNotification {
+    option (experimental_message) = true;
+
+    optional common.PaymentRequest payment_req = 1;  // SLIP-24 payment request
 }

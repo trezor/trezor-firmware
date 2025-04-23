@@ -109,3 +109,11 @@ def decrypt_keyvalue(
 
 def get_nonce(client: "TrezorClient") -> bytes:
     return client.call(messages.GetNonce(), expect=messages.Nonce).nonce
+
+
+def payment_notification(
+    client: "TrezorClient", payment_req: messages.PaymentRequest
+) -> None:
+    client.call(
+        messages.PaymentNotification(payment_req=payment_req), expect=messages.Success
+    )
