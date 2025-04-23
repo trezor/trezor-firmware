@@ -254,6 +254,8 @@ def configure(
         "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
         "embed/sys/powerctl/fuel_gauge/battery_model.c",
         "embed/sys/powerctl/stwlc38/stwlc38.c",
+        "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
+        "embed/sys/powerctl/fuel_gauge/battery_model.c",
         "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
         "embed/sys/powerctl/stm32u5/powerctl.c",
         "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
