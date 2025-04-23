@@ -354,7 +354,9 @@ pub enum TranslatedString {
     confirm_total__sending_from_account = 221,  // "Sending from account:"
     confirm_total__title_fee = 222,  // "Fee info"
     confirm_total__title_sending_from = 223,  // "Sending from"
+    #[cfg(feature = "debug")]
     debug__loading_seed = 224,  // "Loading seed"
+    #[cfg(feature = "debug")]
     debug__loading_seed_not_recommended = 225,  // "Loading private seed is not recommended."
     device_name__change_template = 226,  // "Change device name to {0}?"
     device_name__title = 227,  // "Device name"
@@ -1757,7 +1759,9 @@ impl TranslatedString {
             Self::confirm_total__sending_from_account => "Sending from account:",
             Self::confirm_total__title_fee => "Fee info",
             Self::confirm_total__title_sending_from => "Sending from",
+            #[cfg(feature = "debug")]
             Self::debug__loading_seed => "Loading seed",
+            #[cfg(feature = "debug")]
             Self::debug__loading_seed_not_recommended => "Loading private seed is not recommended.",
             Self::device_name__change_template => "Change device name to {0}?",
             Self::device_name__title => "Device name",
@@ -3159,7 +3163,9 @@ impl TranslatedString {
             Qstr::MP_QSTR_confirm_total__sending_from_account => Some(Self::confirm_total__sending_from_account),
             Qstr::MP_QSTR_confirm_total__title_fee => Some(Self::confirm_total__title_fee),
             Qstr::MP_QSTR_confirm_total__title_sending_from => Some(Self::confirm_total__title_sending_from),
+            #[cfg(feature = "debug")]
             Qstr::MP_QSTR_debug__loading_seed => Some(Self::debug__loading_seed),
+            #[cfg(feature = "debug")]
             Qstr::MP_QSTR_debug__loading_seed_not_recommended => Some(Self::debug__loading_seed_not_recommended),
             Qstr::MP_QSTR_device_name__change_template => Some(Self::device_name__change_template),
             Qstr::MP_QSTR_device_name__title => Some(Self::device_name__title),

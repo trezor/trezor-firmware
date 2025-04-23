@@ -559,6 +559,8 @@ PROTO_SOURCES_DIR = '../../../common/protob/'
 exclude_list = [PROTO_SOURCES_DIR + 'messages-bootloader.proto']
 if not THP:
     exclude_list.append(PROTO_SOURCES_DIR + 'messages-thp.proto')
+if PYOPT != '0':
+    exclude_list.append(PROTO_SOURCES_DIR + 'messages-debug.proto')
 
 PROTO_SOURCES = Glob(PROTO_SOURCES_DIR + '*.proto',
     exclude=exclude_list
@@ -656,12 +658,14 @@ if FROZEN:
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
-        exclude=[
-            SOURCE_PY_DIR + 'storage/sd_salt.py',
-        ] if 'sd_card' not in FEATURES_AVAILABLE else []
+        exclude=(
+            ([SOURCE_PY_DIR + 'storage/sd_salt.py'] if 'sd_card' not in FEATURES_AVAILABLE else []) +
+            ([SOURCE_PY_DIR + 'storage/debug.py'] if PYOPT != '0' else [])
+        )
     ))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/messages/__init__.py'))
+    SOURCE_PY_DEBUG_ENUMS = [SOURCE_PY_DIR + 'trezor/enums/Debug*.py']
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/enums/*.py',
         exclude=[
             SOURCE_PY_DIR + 'trezor/enums/Binance*.py',
@@ -676,7 +680,7 @@ if FROZEN:
             SOURCE_PY_DIR + 'trezor/enums/Stellar*.py',
             SOURCE_PY_DIR + 'trezor/enums/Tezos*.py',
             SOURCE_PY_DIR + 'trezor/enums/Zcash*.py',
-        ])
+        ] + (SOURCE_PY_DEBUG_ENUMS if PYOPT != '0' else []))
     )
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/*.py'))
@@ -685,7 +689,8 @@ if FROZEN:
             SOURCE_PY_DIR + 'apps/common/sdcard.py',
         ] if "sd_card" not in FEATURES_AVAILABLE else []
     ))
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
+    if PYOPT == '0':
+        SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/debug/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/homescreen/*.py'))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'apps/management/*.py',
         exclude=[

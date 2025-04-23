@@ -226,7 +226,7 @@ jobs:
         with:
           submodules: recursive
       - uses: ./.github/actions/environment
-      - run: nix-shell --run "poetry run make -C core build_unix_frozen"
+      - run: nix-shell --run "poetry run make -C core build_unix"
       # Ensure that "cargo build" works when NOT executed through our makefiles,
       # indicating that it does not rely on particular envvars or other flags.
       # This makes sure that rust-analyzer will work on our codebase.

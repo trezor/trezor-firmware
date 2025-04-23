@@ -6,12 +6,32 @@
 from trezor import utils
 
 % endif
-% for value in values_always:
+<%
+values_debug = [v for v in values_always if v.name.startswith('DebugLink')]
+values_nondebug = [v for v in values_always if not v.name.startswith('DebugLink')]
+%>\
+% for value in values_nondebug:
 ${value.name} = ${value.number}
 % endfor
-% if values_altcoin:
-if not utils.BITCOIN_ONLY:
-% for value in values_altcoin:
+% if values_debug:
+if __debug__:
+% for value in values_debug:
     ${value.name} = ${value.number}
 % endfor
+% endif
+% if values_altcoin:
+if not utils.BITCOIN_ONLY:
+<%
+values_debug = [v for v in values_altcoin if v.name.startswith('DebugLink')]
+values_nondebug = [v for v in values_altcoin if not v.name.startswith('DebugLink')]
+%>\
+% for value in values_nondebug:
+    ${value.name} = ${value.number}
+% endfor
+% if values_debug:
+    if __debug__:
+% for value in values_debug:
+        ${value.name} = ${value.number}
+% endfor
+% endif
 % endif
