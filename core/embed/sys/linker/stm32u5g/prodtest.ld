@@ -11,6 +11,7 @@ MEMORY {
   SAES_RAM (wal) : ORIGIN = SAES_RAM_START, LENGTH = SAES_RAM_SIZE
   FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
+  BACKUP_RAM (wal) : ORIGIN = BACKUP_RAM_START, LENGTH = BACKUP_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -34,6 +35,9 @@ _accessible_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
+
+_backup_ram_start = ORIGIN(BACKUP_RAM);
+_backup_ram_end = ORIGIN(BACKUP_RAM) + LENGTH(BACKUP_RAM);
 
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 
@@ -113,6 +117,11 @@ SECTIONS {
     . = ALIGN(4);
   } >AUX1_RAM
 
+  .backup_ram (NOLOAD) : {
+    . = ALIGN(4);
+    *(.backup_ram)
+    . = ALIGN(4);
+  } > BACKUP_RAM
 
   .boot_args : ALIGN(8) {
     *(.boot_command*);
