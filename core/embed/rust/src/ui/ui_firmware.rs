@@ -326,7 +326,12 @@ pub trait FirmwareUI {
         device_name: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
-    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
+    fn show_pairing_code(
+        title: TString<'static>,
+        description: TString<'static>,
+        code: TString<'static>,
+        button: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_info(
         title: TString<'static>,

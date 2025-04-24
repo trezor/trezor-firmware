@@ -1092,7 +1092,12 @@ impl FirmwareUI for UICaesar {
         ))
     }
 
-    fn show_pairing_code(_code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
+    fn show_pairing_code(
+        title: TString<'static>,
+        description: TString<'static>,
+        code: TString<'static>,
+        button: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_pairing_code not supported",
         ))
