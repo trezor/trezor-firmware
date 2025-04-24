@@ -64,7 +64,7 @@ def build_and_sign_blob(
     return sign_blob(blob)
 
 
-def set_language(client: Client, lang: str, *, force: bool = True):
+def set_language(client: Client, lang: str, *, force: bool = False):
     if lang.startswith("en"):
         language_data = b""
     else:
