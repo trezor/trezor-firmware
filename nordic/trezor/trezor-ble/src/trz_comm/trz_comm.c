@@ -39,7 +39,7 @@ static K_FIFO_DEFINE(fifo_uart_rx_prodtest);
 
 void trz_comm_init(void) {
   spi_init();
-  uart_init();
+  uart_power_down();
 }
 
 bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
@@ -96,3 +96,7 @@ trz_packet_t *trz_comm_poll_data(nrf_service_id_t service) {
       return NULL;
   }
 }
+
+void trz_comm_start_uart(void) { uart_init(); }
+
+void trz_comm_stop_uart(void) { uart_deinit(); }

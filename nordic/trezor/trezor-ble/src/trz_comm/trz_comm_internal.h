@@ -30,6 +30,10 @@ void spi_init(void);
 
 int uart_init(void);
 
+void uart_deinit(void);
+
+void uart_power_down(void);
+
 bool spi_send(uint8_t service_id, const uint8_t *data, uint32_t len);
 
 bool uart_send(uint8_t service_id, const uint8_t *tx_data, uint8_t len);
