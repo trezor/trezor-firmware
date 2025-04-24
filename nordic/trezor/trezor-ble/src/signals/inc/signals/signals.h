@@ -26,19 +26,13 @@ bool signals_init(void);
 
 // INPUTS
 
-// Checks if the TRZ is ready to communicate
-bool signals_is_trz_ready(void);
-
 // Checks if the device should stay in the bootloader
 bool signals_is_stay_in_bootloader(void);
 
 // OUTPUTS
 
-// Sets the reserved output
-void signals_reserved(bool set);
-
-// Reads the current output setting
-bool signals_out_get_nrf_ready(void);
+// Set wake up signal
+void signals_set_reserved(bool set);
 
 // Reads the current output setting
 bool signals_out_get_reserved(void);
