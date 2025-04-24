@@ -50,6 +50,10 @@
 #include <sec/tropic.h>
 #endif
 
+#ifdef USE_BLE
+#include <io/ble.h>
+#endif
+
 #ifdef KERNEL_MODE
 
 static void background_tasks_suspend(void) {
@@ -92,6 +96,10 @@ void powerctl_suspend(void) {
 #ifdef USE_TOUCH
   touch_deinit();
 #endif
+#ifdef USE_BLE
+  ble_deinit();
+#endif
+
   int backlight_level = display_get_backlight();
   display_deinit(DISPLAY_RESET_CONTENT);
 
@@ -170,6 +178,9 @@ void powerctl_suspend(void) {
 #endif
 #ifdef USE_TROPIC
   tropic_init();
+#endif
+#ifdef USE_BLE
+  ble_init();
 #endif
 }
 
