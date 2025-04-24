@@ -118,3 +118,88 @@ def test_ripple_sign_invalid_fee(client: Client):
         match="ProcessError: Fee must be in the range of 10 to 10,000 drops",
     ):
         ripple.sign_tx(client, parse_path("m/44h/144h/0h/0/2"), msg)
+
+
+@pytest.mark.experimental
+@pytest.mark.models("core", reason="T1 does not support payment requests")
+def test_signtx_payment_req(client: Client):
+    from trezorlib import ethereum, misc
+
+    from ..payment_req import CoinPurchaseMemo, make_payment_request
+
+    memo = CoinPurchaseMemo(
+        amount="6.36 ETH",
+        coin_name="Ethereum",
+        slip44=60,
+        address_n=parse_path("m/44h/60h/0h"),
+    )
+    memo.address_resp = ethereum.get_authenticated_address(client, memo.address_n)
+
+    msg = ripple.create_sign_tx_msg(
+        {
+            "TransactionType": "Payment",
+            "Payment": {
+                "Amount": 100000000,
+                "Destination": "rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws",
+            },
+            "Flags": 0x80000000,
+            "Fee": 100000,
+            "Sequence": 25,
+        }
+    )
+    nonce = misc.get_nonce(client)
+    payment_req = make_payment_request(
+        client,
+        recipient_name="trezor.io",
+        slip44=144,
+        outputs=[(msg.payment.amount, msg.payment.destination)],
+        memos=[memo],
+        nonce=nonce,
+    )
+    resp = ripple.sign_tx(
+        client, parse_path("m/44h/144h/0h/0/0"), msg, payment_req=payment_req
+    )
+    assert (
+        resp.signature.hex()
+        == "3045022100e243ef623675eeeb95965c35c3e06d63a9fc68bb37e17dc87af9c0af83ec057e02206ca8aa5eaab8396397aef6d38d25710441faf7c79d292ee1d627df15ad9346c0"
+    )
+    assert (
+        resp.serialized_tx.hex()
+        == "12000022800000002400000019614000000005f5e1006840000000000186a0732102131facd1eab748d6cddc492f54b04e8c35658894f4add2232ebc5afe7521dbe474473045022100e243ef623675eeeb95965c35c3e06d63a9fc68bb37e17dc87af9c0af83ec057e02206ca8aa5eaab8396397aef6d38d25710441faf7c79d292ee1d627df15ad9346c081148fb40e1ffa5d557ce9851a535af94965e0dd098883147148ebebf7304ccdf1676fefcf9734cf1e780826"
+    )
+
+    msg = ripple.create_sign_tx_msg(
+        {
+            "TransactionType": "Payment",
+            "Payment": {
+                "Amount": 100000009,
+                "Destination": "rNaqKtKrMSwpwZSzRckPf7S96DkimjkF4H",
+                "DestinationTag": 123456,
+            },
+            "Flags": 0,
+            "Fee": 100,
+            "Sequence": 100,
+            "LastLedgerSequence": 333111,
+        }
+    )
+    nonce = misc.get_nonce(client)
+    address = f"{msg.payment.destination}?dt={msg.payment.destination_tag}"
+    payment_req = make_payment_request(
+        client,
+        recipient_name="trezor.io",
+        slip44=144,
+        outputs=[(msg.payment.amount, address)],
+        memos=[memo],
+        nonce=nonce,
+    )
+    resp = ripple.sign_tx(
+        client, parse_path("m/44h/144h/0h/0/2"), msg, payment_req=payment_req
+    )
+    assert (
+        resp.signature.hex()
+        == "30450221008770743a472bb2d1c746a53ef131cc17cc118d538ec910ca928d221db4494cf702201e4ef242d6c3bff110c3cc3897a471fed0f5ac10987ea57da63f98dfa01e94df"
+    )
+    assert (
+        resp.serialized_tx.hex()
+        == "120000228000000024000000642e0001e240201b00051537614000000005f5e109684000000000000064732103dbed1e77cb91a005e2ec71afbccce5444c9be58276665a3859040f692de8fed2744730450221008770743a472bb2d1c746a53ef131cc17cc118d538ec910ca928d221db4494cf702201e4ef242d6c3bff110c3cc3897a471fed0f5ac10987ea57da63f98dfa01e94df8114bdf86f3ae715ba346b7772ea0e133f48828b766483148fb40e1ffa5d557ce9851a535af94965e0dd0988"
+    )
