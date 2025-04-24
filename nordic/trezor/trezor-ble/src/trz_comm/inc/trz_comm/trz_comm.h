@@ -49,3 +49,6 @@ bool trz_comm_send_msg(nrf_service_id_t service, const uint8_t *data,
 
 // Polls for incoming data from the specified service
 trz_packet_t *trz_comm_poll_data(nrf_service_id_t service);
+
+void trz_comm_start_uart(void);
+void trz_comm_stop_uart(void);
