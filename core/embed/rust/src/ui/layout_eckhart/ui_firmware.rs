@@ -1055,16 +1055,21 @@ impl FirmwareUI for UIEckhart {
         Ok(layout)
     }
 
-    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error> {
-        let text: TString<'static> = "Pairing code match?".into();
+    fn show_pairing_code(
+        title: TString<'static>,
+        description: TString<'static>,
+        code: TString<'static>,
+        button: bool,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
         let mut ops = OpTextLayout::new(theme::firmware::TEXT_REGULAR);
-        ops = ops.text(text, fonts::FONT_SATOSHI_REGULAR_38);
+        ops = ops.text(description, fonts::FONT_SATOSHI_REGULAR_38);
         ops = ops.newline().newline().newline();
         ops = ops.alignment(Alignment::Center);
         ops = ops.text(code, fonts::FONT_SATOSHI_EXTRALIGHT_72);
-        let screen = TextScreen::new(FormattedText::new(ops))
-            .with_header(Header::new("Bluetooth pairing".into()))
-            .with_action_bar(ActionBar::new_cancel_confirm());
+        let mut screen = TextScreen::new(FormattedText::new(ops)).with_header(Header::new(title));
+        if button {
+            screen = screen.with_action_bar(ActionBar::new_cancel_confirm());
+        }
         #[cfg(feature = "ble")]
         let screen = crate::ui::component::BLEHandler::new(screen, false);
         let layout = RootComponent::new(screen);
