@@ -27,6 +27,7 @@
 #include <sys/mpu.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
+#include <sys/wakeup_flags.h>
 #include <util/tsqueue.h>
 
 #include "../crc8.h"
@@ -78,6 +79,8 @@ typedef struct {
 
   bool comm_running;
   bool initialized;
+  bool wakeup;
+  bool pending_request;
 
   nrf_rx_callback_t service_listeners[NRF_SERVICE_CNT];
 
@@ -90,6 +93,8 @@ typedef struct {
 } nrf_driver_t;
 
 static nrf_driver_t g_nrf_driver = {0};
+
+static void nrf_prepare_spi_data(nrf_driver_t *drv);
 
 void nrf_start(void) {
   nrf_driver_t *drv = &g_nrf_driver;
@@ -183,6 +188,8 @@ void nrf_init(void) {
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  bool tmp_pending_request = drv->pending_request;
 
   memset(drv, 0, sizeof(*drv));
   tsqueue_init(&drv->tx_queue, drv->tx_queue_entries,
@@ -349,6 +356,10 @@ void nrf_init(void) {
   nrf_register_listener(NRF_SERVICE_MANAGEMENT, nrf_management_rx_cb);
 
   nrf_start();
+
+  if (tmp_pending_request) {
+    nrf_prepare_spi_data(drv);
+  }
 }
 
 void nrf_deinit(void) {
@@ -371,6 +382,7 @@ void nrf_deinit(void) {
   __HAL_RCC_USART3_RELEASE_RESET();
 
   drv->initialized = false;
+  drv->wakeup = true;
 }
 
 bool nrf_register_listener(nrf_service_id_t service,
@@ -751,6 +763,15 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_DEFAULT);
 
   nrf_driver_t *drv = &g_nrf_driver;
+
+#ifdef USE_POWERCTL
+  if (drv->wakeup) {
+    // Inform the powerctl module about nrf/ble wakeup
+    wakeup_flags_set(WAKEUP_FLAG_BLE);
+    drv->wakeup = false;
+    drv->pending_request = true;
+  }
+#endif
 
   if (drv->initialized) {
     if (HAL_GPIO_ReadPin(NRF_OUT_SPI_READY_PORT, NRF_OUT_SPI_READY_PIN) == 0) {
