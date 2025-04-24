@@ -77,6 +77,10 @@ def configure(
     paths += ["embed/io/i2c_bus/inc"]
     defines += [("USE_I2C", "1")]
 
+    sources += ["embed/sys/backup_ram/backup_ram.c"]
+    paths += ["embed/sys/backup_ram/inc"]
+    defines += [("USE_BACKUP_RAM", "1")]
+
     if "haptic" in features_wanted:
         sources += [
             "embed/io/haptic/drv2625/drv2625.c",

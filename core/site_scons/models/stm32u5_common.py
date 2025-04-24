@@ -68,6 +68,7 @@ def stm32u5_common_files(env, defines, sources, paths):
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pcd_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pwr.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_pwr_ex.c",
+        "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_ramcfg.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rcc_ex.c",
         "vendor/stm32u5xx_hal_driver/Src/stm32u5xx_hal_rtc.c",
