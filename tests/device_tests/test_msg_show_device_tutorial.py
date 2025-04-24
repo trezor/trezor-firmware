@@ -21,7 +21,7 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 
 
 @pytest.mark.setup_client(uninitialized=True)
-@pytest.mark.models("safe")
+@pytest.mark.models("safe", skip=["eckhart"])
 def test_tutorial(client: Client):
     device.show_device_tutorial(client)
     assert client.features.initialized is False

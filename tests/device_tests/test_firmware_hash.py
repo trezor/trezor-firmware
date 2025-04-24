@@ -5,6 +5,8 @@ import pytest
 from trezorlib import firmware, models
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 
+pytestmark = pytest.mark.models(skip=["eckhart"])
+
 # size of FIRMWARE_AREA, see core/embed/models/model_*_layout.c
 FIRMWARE_LENGTHS = {
     models.T1B1: 7 * 128 * 1024 + 64 * 1024,
@@ -12,6 +14,7 @@ FIRMWARE_LENGTHS = {
     models.T2B1: 13 * 128 * 1024,
     models.T3T1: 208 * 8 * 1024,
     models.T3B1: 208 * 8 * 1024,
+    models.T3W1: 208 * 8 * 1024,  # FIXME: fill in the correct value
 }
 
 

@@ -66,6 +66,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_address;
   MP_QSTR_address__cancel_contact_support;
   MP_QSTR_address__cancel_receive;
+  MP_QSTR_address__check_with_source;
   MP_QSTR_address__confirmed;
   MP_QSTR_address__public_key;
   MP_QSTR_address__public_key_confirmed;
@@ -105,12 +106,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_backup__it_should_be_backed_up_now;
   MP_QSTR_backup__new_wallet_created;
   MP_QSTR_backup__new_wallet_successfully_created;
+  MP_QSTR_backup__not_recommend;
   MP_QSTR_backup__recover_anytime;
   MP_QSTR_backup__title_backup_completed;
   MP_QSTR_backup__title_backup_wallet;
   MP_QSTR_backup__title_create_wallet_backup;
   MP_QSTR_backup__title_skip;
   MP_QSTR_backup__want_to_skip;
+  MP_QSTR_battery_percentage;
   MP_QSTR_bitcoin__commitment_data;
   MP_QSTR_bitcoin__confirm_locktime;
   MP_QSTR_bitcoin__create_proof_of_ownership;
@@ -197,6 +200,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_case_sensitive;
   MP_QSTR_check_homescreen_format;
   MP_QSTR_chunkify;
+  MP_QSTR_code;
   MP_QSTR_coinjoin__access_account;
   MP_QSTR_coinjoin__do_not_disconnect;
   MP_QSTR_coinjoin__max_mining_fee;
@@ -241,6 +245,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_deinit;
   MP_QSTR_description;
   MP_QSTR_details_title;
+  MP_QSTR_device_name;
   MP_QSTR_device_name__change_template;
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
@@ -258,6 +263,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_extra_item;
   MP_QSTR_extra_items;
   MP_QSTR_extra_title;
+  MP_QSTR_failed_backup;
   MP_QSTR_fee;
   MP_QSTR_fee_items;
   MP_QSTR_fee_label;
@@ -265,6 +271,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_fingerprint;
   MP_QSTR_firmware_update__title;
   MP_QSTR_firmware_update__title_fingerprint;
+  MP_QSTR_firmware_version;
   MP_QSTR_flow_confirm_output;
   MP_QSTR_flow_confirm_set_new_pin;
   MP_QSTR_flow_get_address;
@@ -347,6 +354,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
   MP_QSTR_max_rounds;
+  MP_QSTR_menu_title;
   MP_QSTR_message;
   MP_QSTR_min_count;
   MP_QSTR_misc__decrypt_value;
@@ -373,6 +381,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_page_counter;
   MP_QSTR_pages;
   MP_QSTR_paint;
+  MP_QSTR_paired_devices;
   MP_QSTR_passphrase__access_wallet;
   MP_QSTR_passphrase__always_on_device;
   MP_QSTR_passphrase__continue_with_empty_passphrase;
@@ -549,6 +558,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__number_of_shares_info;
   MP_QSTR_reset__one_share;
   MP_QSTR_reset__only_one_share_will_be_created;
+  MP_QSTR_reset__recovery_share_description;
+  MP_QSTR_reset__recovery_share_number;
   MP_QSTR_reset__recovery_share_title_template;
   MP_QSTR_reset__recovery_wallet_backup_title;
   MP_QSTR_reset__repeat_for_all_shares;
@@ -560,6 +571,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_reset__set_it_to_count_template;
   MP_QSTR_reset__share_checked_successfully_template;
   MP_QSTR_reset__share_completed_template;
+  MP_QSTR_reset__share_words_first;
   MP_QSTR_reset__share_words_title;
   MP_QSTR_reset__slip39_checklist_more_info_threshold;
   MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template;
@@ -645,6 +657,8 @@ static void _librust_qstrs(void) {
   MP_QSTR_send__maximum_fee;
   MP_QSTR_send__receiving_to_multisig;
   MP_QSTR_send__send_from;
+  MP_QSTR_send__send_in_the_app;
+  MP_QSTR_send__sign_cancelled;
   MP_QSTR_send__sign_transaction;
   MP_QSTR_send__title_confirm_sending;
   MP_QSTR_send__title_joint_transaction;
@@ -665,6 +679,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_address_details;
   MP_QSTR_show_checklist;
   MP_QSTR_show_danger;
+  MP_QSTR_show_device_menu;
   MP_QSTR_show_error;
   MP_QSTR_show_group_share_success;
   MP_QSTR_show_homescreen;
@@ -673,11 +688,13 @@ static void _librust_qstrs(void) {
   MP_QSTR_show_instructions;
   MP_QSTR_show_lockscreen;
   MP_QSTR_show_mismatch;
+  MP_QSTR_show_pairing_code;
+  MP_QSTR_show_pairing_device_name;
   MP_QSTR_show_progress;
   MP_QSTR_show_progress_coinjoin;
   MP_QSTR_show_remaining_shares;
   MP_QSTR_show_share_words;
-  MP_QSTR_show_share_words_delizia;
+  MP_QSTR_show_share_words_extended;
   MP_QSTR_show_simple;
   MP_QSTR_show_success;
   MP_QSTR_show_wait_text;
@@ -808,10 +825,14 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__not_recommended;
   MP_QSTR_words__operation_cancelled;
   MP_QSTR_words__outputs;
+  MP_QSTR_words__pay_attention;
   MP_QSTR_words__please_check_again;
   MP_QSTR_words__please_try_again;
   MP_QSTR_words__really_wanna;
+  MP_QSTR_words__receive;
   MP_QSTR_words__recipient;
+  MP_QSTR_words__recovery_share;
+  MP_QSTR_words__send;
   MP_QSTR_words__settings;
   MP_QSTR_words__sign;
   MP_QSTR_words__signer;
@@ -827,6 +848,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__title_threshold;
   MP_QSTR_words__try_again;
   MP_QSTR_words__unknown;
+  MP_QSTR_words__wallet;
   MP_QSTR_words__warning;
   MP_QSTR_words__writable;
   MP_QSTR_words__yes;

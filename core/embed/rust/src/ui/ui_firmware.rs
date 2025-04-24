@@ -280,6 +280,7 @@ pub trait FirmwareUI {
         title: TString<'static>,
         description: TString<'static>,
         value: TString<'static>,
+        menu_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
@@ -301,6 +302,20 @@ pub trait FirmwareUI {
         notification: Option<TString<'static>>,
         notification_level: u8,
     ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_device_menu(
+        failed_backup: bool,
+        battery_percentage: u8,
+        firmware_version: TString<'static>,
+        device_name: TString<'static>,
+        paired_devices: Vec<TString<'static>, 1>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_pairing_device_name(
+        device_name: TString<'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn show_pairing_code(code: TString<'static>) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_info(
         title: TString<'static>,
@@ -347,8 +362,8 @@ pub trait FirmwareUI {
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     // TODO: merge with `show_share_words` instead of having specific version for
-    // Delizia UI
-    fn show_share_words_delizia(
+    // Delizia/Eckhart UI
+    fn show_share_words_extended(
         words: Vec<TString<'static>, 33>,
         subtitle: Option<TString<'static>>,
         instructions: Obj,                     // TODO: replace Obj
