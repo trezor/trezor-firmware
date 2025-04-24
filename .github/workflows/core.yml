@@ -376,7 +376,8 @@ jobs:
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_UPGRADE_TEST: core
-      PYTEST_TIMEOUT: 400
+      PYTEST_TIMEOUT: 20
+      TESTOPTS: "--durations 50"
     steps:
       - uses: actions/checkout@v4
         with:
