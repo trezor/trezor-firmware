@@ -22,6 +22,7 @@
 #include <zephyr/drivers/uart.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/pm/device.h>
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/crc.h>
 #include <zephyr/types.h>
@@ -101,6 +102,17 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       buf = CONTAINER_OF(evt->data.rx.buf, trz_packet_t, data[0]);
       buf->len += evt->data.rx.len;
       rx_data = buf->data[0];
+
+      trz_packet_t *tx = k_malloc(sizeof(*tx));
+
+      if (tx == NULL) {
+        LOG_WRN("Not able to allocate UART send data buffer");
+        return;
+      }
+      tx->len = 1;
+      tx->data[0] = rx_data;
+
+      uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
       break;
 
     case UART_RX_DISABLED:
@@ -110,32 +122,23 @@ static void uart_cb(const struct device *dev, struct uart_event *evt,
       LOG_DBG("UART_RX_MALLOC");
       buf = k_malloc(sizeof(*buf));
 
-      if (buf) {
-        uart_rx_enable(uart, buf->data, 1, SYS_FOREVER_US);
+      if (g_uart_rx_running) {
+        if (buf) {
+          uart_rx_enable(uart, buf->data, 1, SYS_FOREVER_US);
+        } else {
+          LOG_WRN("Not able to allocate UART receive buffer");
+          k_work_reschedule(&uart_work, UART_WAIT_FOR_BUF_DELAY);
+          g_uart_rx_running = false;
+        }
       } else {
-        LOG_WRN("Not able to allocate UART receive buffer");
-        k_work_reschedule(&uart_work, UART_WAIT_FOR_BUF_DELAY);
-        g_uart_rx_running = false;
+        uart_power_down();
       }
-
       break;
 
     case UART_RX_BUF_RELEASED:
       LOG_DBG("UART_RX_BUF_RELEASED");
       buf = CONTAINER_OF(evt->data.rx_buf.buf, trz_packet_t, data[0]);
       k_free(buf);
-
-      trz_packet_t *tx = k_malloc(sizeof(*tx));
-
-      if (tx == NULL) {
-        LOG_WRN("Not able to allocate UART send data buffer");
-        return;
-      }
-
-      tx->len = 1;
-      tx->data[0] = rx_data;
-
-      uart_tx(uart, tx->data, tx->len, SYS_FOREVER_MS);
 
       break;
     case UART_RX_STOPPED:
@@ -189,6 +192,10 @@ int uart_start_rx(void) {
 static void uart_work_handler(struct k_work *item) {
   trz_packet_t *buf;
 
+  if (!g_uart_rx_running) {
+    uart_power_down();
+    return;
+  }
   buf = k_malloc(sizeof(*buf));
   if (buf) {
     buf->len = 0;
@@ -203,6 +210,8 @@ static void uart_work_handler(struct k_work *item) {
 
 int uart_init(void) {
   int err;
+
+  pm_device_action_run(uart, PM_DEVICE_ACTION_RESUME);
 
   if (!device_is_ready(uart)) {
     return -ENODEV;
@@ -230,6 +239,26 @@ int uart_init(void) {
   return uart_start_rx();
 }
 
+void uart_deinit(void) {
+  int err;
+
+  if (!g_uart_rx_running) {
+    return;
+  }
+
+  g_uart_rx_running = false;
+
+  err = uart_rx_disable(uart);
+  if (err) {
+    LOG_ERR("Cannot disable UART RX (err: %d)", err);
+  }
+
+  err = uart_tx_abort(uart);
+  if (err) {
+    LOG_ERR("Cannot abort UART TX (err: %d)", err);
+  }
+}
+
 bool uart_send(uint8_t service_id, const uint8_t *tx_data, uint8_t len) {
   trz_packet_t *tx = k_malloc(sizeof(*tx));
 
@@ -255,4 +284,16 @@ bool uart_send(uint8_t service_id, const uint8_t *tx_data, uint8_t len) {
     k_fifo_put(&fifo_uart_tx_data, tx);
   }
   return true;
+}
+
+void uart_power_down(void) {
+  int err;
+
+  uart_callback_set(uart, NULL, NULL);
+
+  /* Power down the UART device */
+  err = pm_device_action_run(uart, PM_DEVICE_ACTION_SUSPEND);
+  if (err) {
+    printk("pm_device_action_run() failed (%d)\n", err);
+  }
 }

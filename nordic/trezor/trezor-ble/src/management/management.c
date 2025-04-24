@@ -39,6 +39,8 @@ static K_SEM_DEFINE(management_ok, 0, 1);
 typedef enum {
   MGMT_CMD_SYSTEM_OFF = 0x00,
   MGMT_CMD_INFO = 0x01,
+  MGMT_CMD_START_UART = 0x02,
+  MGMT_CMD_STOP_UART = 0x03,
 } management_cmd_t;
 
 typedef enum {
@@ -73,6 +75,14 @@ static void process_command(uint8_t *data, uint16_t len) {
     case MGMT_CMD_INFO:
       LOG_INF("Info command");
       send_info();
+      break;
+    case MGMT_CMD_START_UART:
+      LOG_INF("Start UART");
+      trz_comm_start_uart();
+      break;
+    case MGMT_CMD_STOP_UART:
+      LOG_INF("Stop UART");
+      trz_comm_stop_uart();
       break;
     default:
       break;
