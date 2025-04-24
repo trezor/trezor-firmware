@@ -24,6 +24,8 @@
 typedef enum {
   MGMT_CMD_SYSTEM_OFF = 0x00,
   MGMT_CMD_INFO = 0x01,
+  MGMT_CMD_START_UART = 0x02,
+  MGMT_CMD_STOP_UART = 0x03,
 } management_cmd_t;
 
 typedef enum {
@@ -47,7 +49,7 @@ void nrf_signal_no_data(void);
 
 bool nrf_force_reset(void);
 void nrf_stay_in_bootloader(bool set);
-bool nrf_in_wakeup(void);
+bool nrf_in_reserved(void);
 
 void nrf_uart_send(uint8_t data);
 uint8_t nrf_uart_get_received(void);
