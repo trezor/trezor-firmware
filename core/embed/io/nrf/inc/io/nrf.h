@@ -47,10 +47,10 @@ typedef struct {
   uint8_t version_patch;
   uint8_t version_tweak;
 
-  bool in_trz_ready;
+  bool reserved;
   bool in_stay_in_bootloader;
-  bool out_nrf_ready;
-  bool out_reserved;
+  bool reserved2;
+  bool out_wakeup;
 } nrf_info_t;
 
 typedef void (*nrf_rx_callback_t)(const uint8_t *data, uint32_t len);
@@ -107,5 +107,5 @@ bool nrf_test_reset(void);
 // Test GPIO stay in bootloader
 bool nrf_test_gpio_stay_in_bld(void);
 
-// Test GPIO wakeup
-bool nrf_test_gpio_wakeup(void);
+// Test GPIO reserved
+bool nrf_test_gpio_reserved(void);
