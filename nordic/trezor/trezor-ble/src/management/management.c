@@ -57,9 +57,9 @@ static void send_info(void) {
   data[2] = APP_VERSION_MINOR;
   data[3] = APP_PATCHLEVEL;
   data[4] = APP_TWEAK;
-  data[5] = signals_is_trz_ready();
+  data[5] = 0;
   data[6] = signals_is_stay_in_bootloader();
-  data[7] = signals_out_get_nrf_ready();
+  data[7] = 0;
   data[8] = signals_out_get_reserved();
 
   trz_comm_send_msg(NRF_SERVICE_MANAGEMENT, data, sizeof(data));

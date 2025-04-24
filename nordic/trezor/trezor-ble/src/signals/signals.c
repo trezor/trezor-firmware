@@ -31,11 +31,9 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #define OUT_RESERVED DK_LED1
 
 #define IN_STAY_IN_BOOTLOADER DK_BTN1_MSK
-#define IN_TRZ_READY DK_BTN2_MSK
 
 static K_SEM_DEFINE(signals_ok, 0, 1);
 
-static bool out_nrf_ready = false;
 static bool out_reserved = false;
 
 void button_changed(uint32_t button_state, uint32_t has_changed) {}
@@ -45,17 +43,13 @@ static void configure_gpio(void) {
 
   err = dk_buttons_init(button_changed);
   if (err) {
-    LOG_ERR("Cannot init buttons (err: %d)", err);
+    LOG_ERR("Cannot init INPUT (err: %d)", err);
   }
 
   err = dk_leds_init();
   if (err) {
-    LOG_ERR("Cannot init LEDs (err: %d)", err);
+    LOG_ERR("Cannot init OUTPUT (err: %d)", err);
   }
-}
-
-bool signals_is_trz_ready(void) {
-  return (dk_get_buttons() & IN_TRZ_READY) != 0;
 }
 
 bool signals_is_stay_in_bootloader(void) {
@@ -70,9 +64,7 @@ bool signals_init(void) {
   return true;
 }
 
-bool signals_out_get_nrf_ready(void) { return out_nrf_ready; }
-
-void signals_reserved(bool set) {
+void signals_set_reserved(bool set) {
   out_reserved = set;
   dk_set_led(OUT_RESERVED, set);
 }

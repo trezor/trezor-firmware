@@ -29,7 +29,7 @@
 		compatible = "gpio-leds";
 		led0: led_0 {
 			gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
-			label = "Wake up Trezor";
+			label = "Reserved";
 		};
 		led1: led_1 {
 			gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
