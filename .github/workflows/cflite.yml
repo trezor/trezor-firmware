@@ -2,9 +2,8 @@ name: ClusterFuzzLite PR fuzzing
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '**'
+  schedule:
+    - cron: '55 23 * * *'  # every day @ 23:55
 
 # cancel any previous runs on the same PR
 concurrency:
