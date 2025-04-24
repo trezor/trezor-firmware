@@ -59,7 +59,7 @@ static void process_command(uint8_t *data, uint16_t len) {
       trz_comm_send_msg(NRF_SERVICE_PRODTEST, resp_data, 64);
       break;
     case PRODTEST_CMD_SET_OUTPUT:
-      signals_wakeup(data[1]);
+      signals_set_reserved(data[1]);
       break;
     default:
       break;
