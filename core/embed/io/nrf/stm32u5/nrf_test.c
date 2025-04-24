@@ -81,6 +81,15 @@ bool nrf_test_spi_comm(void) {
 bool nrf_test_uart_comm(void) {
   nrf_register_listener(NRF_SERVICE_PRODTEST, nrf_test_cb);
 
+  bool result = true;
+
+  uint8_t data[1] = {MGMT_CMD_START_UART};
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
+    return false;
+  }
+
+  systick_delay_ms(10);
+
   nrf_uart_send(0xAB);
 
   systick_delay_ms(10);
@@ -88,51 +97,45 @@ bool nrf_test_uart_comm(void) {
   uint8_t rx = nrf_uart_get_received();
 
   if (rx != 0xAB) {
-    return false;
+    result = false;
+    goto cleanup;
   }
 
-  return true;
+cleanup:
+  data[0] = MGMT_CMD_STOP_UART;
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
+    return false;
+  }
+  return result;
 }
 
 bool nrf_test_reset(void) {
   bool result = false;
-
-  nrf_stop();
-
-  // looking at UART CTS PIN,
-  // it has pull up and is only reset when NRF is not in reset
-  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_11) == GPIO_PIN_SET) {
-    result = false;
-    goto cleanup;
-  }
-
-  if (!nrf_force_reset()) {
-    result = false;
-    goto cleanup;
-  }
-
-  uint32_t timeout = ticks_timeout(1000);
-
-  while (!ticks_expired(timeout)) {
-    if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_11) == GPIO_PIN_SET) {
-      result = true;
-      break;
-    }
+  uint8_t data[2] = {PRODTEST_CMD_SET_OUTPUT, 1};
+  if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL)) {
+    return false;
   }
 
   systick_delay_ms(10);
 
-  if (!nrf_reboot()) {
+  if (!nrf_in_reserved()) {
     result = false;
     goto cleanup;
   }
 
-  systick_delay_ms(2000);
+  nrf_stop();
+  nrf_reboot();
 
-  if (HAL_GPIO_ReadPin(GPIOD, GPIO_PIN_11) == GPIO_PIN_SET) {
+  systick_delay_ms(10);
+
+  if (nrf_in_reserved()) {
     result = false;
     goto cleanup;
   }
+
+  result = true;
+
+  systick_delay_ms(1000);
 
 cleanup:
   nrf_start();
@@ -174,7 +177,7 @@ cleanup:
   return result;
 }
 
-bool nrf_test_gpio_wakeup(void) {
+bool nrf_test_gpio_reserved(void) {
   bool result = false;
   uint8_t data[2] = {PRODTEST_CMD_SET_OUTPUT, 0};
   if (!nrf_send_msg(NRF_SERVICE_PRODTEST, data, sizeof(data), NULL, NULL)) {
@@ -183,7 +186,7 @@ bool nrf_test_gpio_wakeup(void) {
 
   systick_delay_ms(10);
 
-  if (nrf_in_wakeup()) {
+  if (nrf_in_reserved()) {
     result = false;
     goto cleanup;
   }
@@ -196,7 +199,7 @@ bool nrf_test_gpio_wakeup(void) {
 
   systick_delay_ms(10);
 
-  if (!nrf_in_wakeup()) {
+  if (!nrf_in_reserved()) {
     result = false;
     goto cleanup;
   }

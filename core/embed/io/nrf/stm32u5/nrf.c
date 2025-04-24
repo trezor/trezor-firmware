@@ -200,12 +200,12 @@ void nrf_init(void) {
   GPIO_InitStructure.Pin = NRF_OUT_RESET_PIN;
   HAL_GPIO_Init(NRF_OUT_RESET_PORT, &GPIO_InitStructure);
 
-  NRF_IN_WAKEUP_CLK_ENA();
+  NRF_IN_RESERVED_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
   GPIO_InitStructure.Pull = GPIO_PULLDOWN;
   GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStructure.Pin = NRF_IN_WAKEUP_PIN;
-  HAL_GPIO_Init(NRF_IN_WAKEUP_PORT, &GPIO_InitStructure);
+  GPIO_InitStructure.Pin = NRF_IN_RESERVED_PIN;
+  HAL_GPIO_Init(NRF_IN_RESERVED_PORT, &GPIO_InitStructure);
 
   NRF_OUT_SPI_READY_CLK_ENA();
   GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
@@ -796,8 +796,8 @@ void nrf_stay_in_bootloader(bool set) {
   }
 }
 
-bool nrf_in_wakeup(void) {
-  return HAL_GPIO_ReadPin(NRF_IN_WAKEUP_PORT, NRF_IN_WAKEUP_PIN) != 0;
+bool nrf_in_reserved(void) {
+  return HAL_GPIO_ReadPin(NRF_IN_RESERVED_PORT, NRF_IN_RESERVED_PIN) != 0;
 }
 
 bool nrf_reboot(void) {

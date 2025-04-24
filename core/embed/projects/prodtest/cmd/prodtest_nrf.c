@@ -49,9 +49,9 @@ static void prodtest_nrf_communication(cli_t* cli) {
     return;
   }
 
-  cli_trace(cli, "Testing GPIO wakeup...");
-  if (!nrf_test_gpio_wakeup()) {
-    cli_error(cli, CLI_ERROR, "Wakeup GPIO failed.");
+  cli_trace(cli, "Testing GPIO reserved...");
+  if (!nrf_test_gpio_reserved()) {
+    cli_error(cli, CLI_ERROR, "Reserved GPIO failed.");
     return;
   }
 
