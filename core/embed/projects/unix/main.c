@@ -422,8 +422,8 @@ STATIC void set_sys_argv(char *argv[], int argc, int start_arg) {
   }
 }
 
-// Inject SystemExit exception. This is primarily needed by prof.py to run the
-// atexit() handler.
+// Inject SystemExit exception. This is primarily needed by `prof/__main__.py`
+// to run the flush the coverage data.
 static void __attribute__((noreturn)) main_clean_exit() {
   const int status = 3;
   fflush(stdout);
