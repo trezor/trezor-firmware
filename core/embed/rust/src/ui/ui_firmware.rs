@@ -130,13 +130,14 @@ pub trait FirmwareUI {
 
     #[allow(clippy::too_many_arguments)]
     fn confirm_summary(
-        amount: TString<'static>,
-        amount_label: TString<'static>,
+        amount: Option<TString<'static>>,
+        amount_label: Option<TString<'static>>,
         fee: TString<'static>,
         fee_label: TString<'static>,
         title: Option<TString<'static>>,
         account_items: Option<Obj>, // TODO: replace Obj
-        extra_items: Option<Obj>,   // TODO: replace Obj
+        account_title: Option<TString<'static>>,
+        extra_items: Option<Obj>, // TODO: replace Obj
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;

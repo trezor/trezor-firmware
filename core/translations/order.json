@@ -998,5 +998,19 @@
   "996": "words__unlocked",
   "997": "solana__max_fees_rent",
   "998": "solana__max_rent_fee",
-  "999": "solana__transaction_fee"
+  "999": "solana__transaction_fee",
+  "1000": "ethereum__approve",
+  "1001": "ethereum__approve_amount_allowance",
+  "1002": "ethereum__approve_chain_id",
+  "1003": "ethereum__approve_intro",
+  "1004": "ethereum__approve_intro_title",
+  "1005": "ethereum__approve_to",
+  "1006": "ethereum__approve_unlimited_template",
+  "1007": "words__unlimited",
+  "1008": "ethereum__approve_intro_revoke",
+  "1009": "ethereum__approve_intro_title_revoke",
+  "1010": "ethereum__approve_revoke",
+  "1011": "ethereum__approve_revoke_from",
+  "1012": "words__chain",
+  "1013": "words__token"
 }

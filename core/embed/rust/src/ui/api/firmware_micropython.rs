@@ -339,8 +339,14 @@ extern "C" fn new_confirm_reset_device(n_args: usize, args: *const Obj, kwargs: 
 
 extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
     let block = move |_args: &[Obj], kwargs: &Map| {
-        let amount: TString = kwargs.get(Qstr::MP_QSTR_amount)?.try_into()?;
-        let amount_label: TString = kwargs.get(Qstr::MP_QSTR_amount_label)?.try_into()?;
+        let amount: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_amount)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let amount_label: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_amount_label)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
         let fee: TString = kwargs.get(Qstr::MP_QSTR_fee)?.try_into()?;
         let fee_label: TString = kwargs.get(Qstr::MP_QSTR_fee_label)?.try_into()?;
         let title: Option<TString> = kwargs
@@ -349,6 +355,10 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             .try_into_option()?;
         let account_items: Option<Obj> = kwargs
             .get(Qstr::MP_QSTR_account_items)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+        let account_title: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_account_title)
             .unwrap_or_else(|_| Obj::const_none())
             .try_into_option()?;
         let extra_items: Option<Obj> = kwargs
@@ -371,6 +381,7 @@ extern "C" fn new_confirm_summary(n_args: usize, args: *const Obj, kwargs: *mut 
             fee_label,
             title,
             account_items,
+            account_title,
             extra_items,
             extra_title,
             verb_cancel,
@@ -1315,12 +1326,13 @@ pub static mp_module_trezorui_api: Module = obj_module! {
 
     /// def confirm_summary(
     ///     *,
-    ///     amount: str,
-    ///     amount_label: str,
+    ///     amount: str | None,
+    ///     amount_label: str | None,
     ///     fee: str,
     ///     fee_label: str,
     ///     title: str | None = None,
     ///     account_items: Iterable[tuple[str, str]] | None = None,
+    ///     account_title: str | None = None,
     ///     extra_items: Iterable[tuple[str, str]] | None = None,
     ///     extra_title: str | None = None,
     ///     verb_cancel: str | None = None,
