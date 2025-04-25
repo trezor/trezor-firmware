@@ -45,20 +45,21 @@ def configure(
         ("USE_HSE", "1"),
     ]
 
-    sources += ["embed/io/display/st-7789/display_nofb.c"]
-    sources += ["embed/io/display/st-7789/display_driver.c"]
-    sources += ["embed/io/display/st-7789/display_io.c"]
-    sources += ["embed/io/display/st-7789/display_panel.c"]
-    sources += ["embed/io/display/st-7789/panels/tf15411a.c"]
-    sources += ["embed/io/display/st-7789/panels/154a.c"]
-    sources += ["embed/io/display/st-7789/panels/lx154a2411.c"]
-    sources += ["embed/io/display/st-7789/panels/lx154a2422.c"]
-    paths += ["embed/io/display/inc"]
+    if "display" in features_wanted:
+        sources += ["embed/io/display/st-7789/display_nofb.c"]
+        sources += ["embed/io/display/st-7789/display_driver.c"]
+        sources += ["embed/io/display/st-7789/display_io.c"]
+        sources += ["embed/io/display/st-7789/display_panel.c"]
+        sources += ["embed/io/display/st-7789/panels/tf15411a.c"]
+        sources += ["embed/io/display/st-7789/panels/154a.c"]
+        sources += ["embed/io/display/st-7789/panels/lx154a2411.c"]
+        sources += ["embed/io/display/st-7789/panels/lx154a2422.c"]
+        paths += ["embed/io/display/inc"]
 
-    features_available.append("backlight")
-    defines += [("USE_BACKLIGHT", "1")]
-    sources += ["embed/io/backlight/stm32/tps61043.c"]
-    paths += ["embed/io/backlight/inc"]
+        features_available.append("backlight")
+        defines += [("USE_BACKLIGHT", "1")]
+        sources += ["embed/io/backlight/stm32/tps61043.c"]
+        paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32f4/i2c_bus.c"]

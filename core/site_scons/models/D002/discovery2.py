@@ -38,20 +38,21 @@ def configure(
         ("USE_HSE", "1"),
     ]
 
-    sources += [
-        "embed/io/display/ltdc_dsi/display_driver.c",
-        "embed/io/display/ltdc_dsi/panels/stm32u5a9j-dk/stm32u5a9j-dk.c",
-        "embed/io/display/ltdc_dsi/display_fb.c",
-        "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
-        # "embed/io/display/ltdc_dsi/display_gfxmmu.c",
-        "embed/io/display/fb_queue/fb_queue.c",
-    ]
-    paths += ["embed/io/display/inc"]
+    if "display" in features_wanted:
+        sources += [
+            "embed/io/display/ltdc_dsi/display_driver.c",
+            "embed/io/display/ltdc_dsi/panels/stm32u5a9j-dk/stm32u5a9j-dk.c",
+            "embed/io/display/ltdc_dsi/display_fb.c",
+            "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
+            # "embed/io/display/ltdc_dsi/display_gfxmmu.c",
+            "embed/io/display/fb_queue/fb_queue.c",
+        ]
+        paths += ["embed/io/display/inc"]
 
-    features_available.append("backlight")
-    defines += [("USE_BACKLIGHT", "1")]
-    sources += ["embed/io/backlight/stm32/backlight_pin.c"]
-    paths += ["embed/io/backlight/inc"]
+        features_available.append("backlight")
+        defines += [("USE_BACKLIGHT", "1")]
+        sources += ["embed/io/backlight/stm32/backlight_pin.c"]
+        paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]

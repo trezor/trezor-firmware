@@ -44,8 +44,9 @@ def configure(
         ("HW_REVISION", str(hw_revision)),
     ]
 
-    sources += ["embed/io/display/vg-2864/display_driver.c"]
-    paths += ["embed/io/display/inc"]
+    if "display" in features_wanted:
+        sources += ["embed/io/display/vg-2864/display_driver.c"]
+        paths += ["embed/io/display/inc"]
 
     if "input" in features_wanted:
         sources += ["embed/io/button/stm32/button.c"]

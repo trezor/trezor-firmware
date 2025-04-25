@@ -46,22 +46,23 @@ def configure(
         ("HW_REVISION", str(hw_revision)),
     ]
 
-    sources += ["embed/io/display/st-7789/display_fb.c"]
-    sources += ["embed/io/display/st-7789/display_driver.c"]
-    sources += ["embed/io/display/st-7789/display_io.c"]
-    sources += ["embed/io/display/st-7789/display_panel.c"]
-    sources += ["embed/io/display/st-7789/panels/lx154a2482.c"]
-    sources += ["embed/io/display/fb_queue/fb_queue.c"]
-    paths += ["embed/io/display/inc"]
+    if "display" in features_wanted:
+        sources += ["embed/io/display/st-7789/display_fb.c"]
+        sources += ["embed/io/display/st-7789/display_driver.c"]
+        sources += ["embed/io/display/st-7789/display_io.c"]
+        sources += ["embed/io/display/st-7789/display_panel.c"]
+        sources += ["embed/io/display/st-7789/panels/lx154a2482.c"]
+        sources += ["embed/io/display/fb_queue/fb_queue.c"]
+        paths += ["embed/io/display/inc"]
 
-    features_available.append("backlight")
-    defines += [("USE_BACKLIGHT", "1")]
-    sources += ["embed/io/backlight/stm32/tps61043.c"]
-    paths += ["embed/io/backlight/inc"]
+        features_available.append("backlight")
+        defines += [("USE_BACKLIGHT", "1")]
+        sources += ["embed/io/backlight/stm32/tps61043.c"]
+        paths += ["embed/io/backlight/inc"]
 
-    env_constraints = env.get("CONSTRAINTS")
-    if not (env_constraints and "limited_util_s" in env_constraints):
-        sources += ["embed/io/display/bg_copy/stm32u5/bg_copy.c"]
+        env_constraints = env.get("CONSTRAINTS")
+        if not (env_constraints and "limited_util_s" in env_constraints):
+            sources += ["embed/io/display/bg_copy/stm32u5/bg_copy.c"]
 
     if "input" in features_wanted:
         sources += ["embed/io/i2c_bus/stm32u5/i2c_bus.c"]
