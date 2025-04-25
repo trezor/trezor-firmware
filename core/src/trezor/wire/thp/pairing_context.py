@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     pass
 
 if __debug__:
-    from trezor import log
+    from .. import wire_log as log
 
 
 class PairingContext(Context):
@@ -60,7 +60,7 @@ class PairingContext(Context):
                         message: Message = await self.incoming_message
                     except protocol_common.WireError as e:
                         if __debug__:
-                            log.exception(__name__, e)
+                            log.exception(__name__, self.iface, e)
                         await self.write(message_handler.failure(e))
                         continue
                 else:
@@ -74,7 +74,7 @@ class PairingContext(Context):
                     # Log and ignore. The context handler can only exit explicitly in the
                     # following finally block.
                     if __debug__:
-                        log.exception(__name__, exc)
+                        log.exception(__name__, self.iface, exc)
                 finally:
                     if next_message is None:
 
@@ -85,7 +85,7 @@ class PairingContext(Context):
                 # Log and try again. The context handler can only exit explicitly via
                 # finally block above
                 if __debug__:
-                    log.exception(__name__, exc)
+                    log.exception(__name__, self.iface, exc)
 
     async def read(
         self,
@@ -98,6 +98,7 @@ class PairingContext(Context):
                 exp_type = expected_type.MESSAGE_NAME
             log.debug(
                 __name__,
+                self.iface,
                 "Read - with expected types %s and expected type %s",
                 str(expected_types),
                 exp_type,
@@ -169,6 +170,7 @@ class PairingContext(Context):
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
                 log.debug(
                     __name__,
+                    self.iface,
                     "Hotfix for current context being destroyed by workflow.close_others",
                 )
         # --- HOTFIX END ---
@@ -218,7 +220,9 @@ class PairingContext(Context):
             br_code=ButtonRequestType.Other,
         )
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-            log.debug(__name__, "Result of connection dialog %s", str(result))
+            log.debug(
+                __name__, self.iface, "Result of connection dialog %s", str(result)
+            )
 
     async def show_autoconnect_credential_confirmation_screen(self) -> None:
         from trezor.ui.layouts.common import interact
@@ -297,7 +301,7 @@ class PairingContext(Context):
         if self.code_code_entry is not None:
             code_str = f"{self.code_code_entry:06}"
             if __debug__:
-                log.debug(__name__, "code_code_entry: %s", code_str)
+                log.debug(__name__, self.iface, "code_code_entry: %s", code_str)
 
             return code_str[:3] + " " + code_str[3:]
         raise Exception("Code entry string is not available")
@@ -306,7 +310,7 @@ class PairingContext(Context):
         if self.code_qr_code is not None:
             code_str = (hexlify(self.code_qr_code)).decode("utf-8")
             if __debug__:
-                log.debug(__name__, "code_qr_code_hexlified: %s", code_str)
+                log.debug(__name__, self.iface, "code_qr_code_hexlified: %s", code_str)
             return code_str
         raise Exception("QR code string is not available")
 
@@ -364,7 +368,7 @@ async def handle_message(
         return exc.msg
     except SilentError as exc:
         if __debug__:
-            log.error(__name__, "SilentError: %s", exc.message)
+            log.error(__name__, pairing_ctx.iface, "SilentError: %s", exc.message)
     except BaseException as exc:
         # Either:
         # - the message had a type that has a registered handler, but does not have
@@ -374,11 +378,13 @@ async def handle_message(
         # - something canceled the workflow from the outside
         if __debug__:
             if isinstance(exc, ActionCancelled):
-                log.debug(__name__, "cancelled: %s", exc.message)
+                log.debug(__name__, pairing_ctx.iface, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):
-                log.debug(__name__, "cancelled: loop task was closed")
+                log.debug(
+                    __name__, pairing_ctx.iface, "cancelled: loop task was closed"
+                )
             else:
-                log.exception(__name__, exc)
+                log.exception(__name__, pairing_ctx.iface, exc)
         res_msg = message_handler.failure(exc)
 
     if res_msg is not None:
