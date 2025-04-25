@@ -13,6 +13,7 @@ HERE = Path(__file__).parent
 ROOT = HERE.parent.resolve()
 
 TEMPLATES = (
+    ROOT / "common" / "defs" / "solana" / "programs.md.mako",
     ROOT / "core" / "src" / "apps" / "solana" / "transaction" / "instructions.py.mako",
     ROOT / "tests" / "device_tests" / "solana" / "construct" / "instructions.py.mako",
     ROOT / "core" / "tests" / "test_apps.solana.predefined_transaction.py.mako",
@@ -38,7 +39,8 @@ def render_single(template_path: Path, programs: Munch) -> str:
         f.flush()
 
         # after flushing the contents, on-disk file will be formatted...
-        format(Path(f.name))
+        if ".py" in template_path.suffixes:
+            format(Path(f.name))
         # ...and we need to explicitly open it again to get the updated contents,
         # otherwise we get cached results?
         with open(f.name, "r") as new_f:
