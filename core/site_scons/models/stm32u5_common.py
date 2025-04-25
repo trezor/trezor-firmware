@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-def stm32u5_common_files(env, defines, sources, paths):
+def stm32u5_common_files(env, features_wanted, defines, sources, paths):
     defines += [
         ("STM32_HAL_H", "<stm32u5xx.h>"),
         ("FLASH_BLOCK_WORDS", "4"),
@@ -104,7 +104,6 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/sys/syscall/stm32/syscall_stubs.c",
         "embed/sys/syscall/stm32/syscall_verifiers.c",
         "embed/sys/tamper/stm32u5/tamper.c",
-        "embed/sys/task/stm32/applet.c",
         "embed/sys/task/stm32/systask.c",
         "embed/sys/task/stm32/system.c",
         "embed/sys/time/stm32/systick.c",
@@ -120,5 +119,8 @@ def stm32u5_common_files(env, defines, sources, paths):
         "embed/util/tsqueue/tsqueue.c",
         "embed/util/unit_properties/stm32/unit_properties.c",
     ]
+
+    if "applet" in features_wanted:
+        sources += ["embed/sys/task/stm32/applet.c"]
 
     env.get("ENV")["SUFFIX"] = "stm32u5"
