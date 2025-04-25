@@ -3,7 +3,7 @@ from micropython import const
 from typing import TYPE_CHECKING
 
 from storage.cache_thp import BROADCAST_CHANNEL_ID
-from trezor import io, log, loop, utils
+from trezor import io, loop, utils
 
 from . import (
     CHANNEL_ALLOCATION_REQ,
@@ -26,6 +26,9 @@ from .writer import (
     write_payload_to_wire_and_add_checksum,
 )
 
+if __debug__:
+    from .. import wire_log as log
+
 if TYPE_CHECKING:
     from trezorio import WireInterface
 
@@ -35,7 +38,7 @@ _CHANNELS: dict[int, Channel] = {}
 
 async def thp_main_loop(iface: WireInterface) -> None:
     global _CHANNELS
-    channel_manager.load_cached_channels(_CHANNELS)
+    channel_manager.load_cached_channels(_CHANNELS, iface)
 
     read = loop.wait(iface.iface_num() | io.POLL_READ)
     packet = bytearray(iface.RX_PACKET_LEN)
@@ -43,9 +46,8 @@ async def thp_main_loop(iface: WireInterface) -> None:
         while True:
             try:
                 if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-                    log.debug(
-                        __name__, f"thp_main_loop from iface: {iface.iface_num()}"
-                    )
+                    log.debug(__name__, iface, "thp_main_loop")
+                    # wire_log.debug(__name__, iface, "thp main loop")
                 packet_len = await read
                 assert packet_len == len(packet)
                 iface.read(packet, 0)
@@ -67,7 +69,7 @@ async def thp_main_loop(iface: WireInterface) -> None:
 
             except ThpError as e:
                 if __debug__:
-                    log.exception(__name__, e)
+                    log.exception(__name__, iface, e)
     finally:
         channel_manager.CHANNELS_LOADED = False
 
@@ -77,7 +79,7 @@ async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:
     if not packet[1:3] == b"##":
         return
     if __debug__:
-        log.debug(__name__, "Received codec_v1 message, returning error")
+        log.debug(__name__, iface, "Received codec_v1 message, returning error")
     error_message = _get_codec_v1_error_message()
     await writer.write_packet_to_wire(iface, error_message)
 
@@ -86,7 +88,7 @@ async def _handle_broadcast(iface: WireInterface, packet: utils.BufferType) -> N
     if _get_ctrl_byte(packet) != CHANNEL_ALLOCATION_REQ:
         raise ThpError("Unexpected ctrl_byte in a broadcast channel packet")
     if __debug__:
-        log.debug(__name__, "Received valid message on the broadcast channel")
+        log.debug(__name__, iface, "Received valid message on the broadcast channel")
 
     length, nonce = ustruct.unpack(">H8s", packet[3:])
     payload = _get_buffer_for_payload(length, packet[5:], _CID_REQ_PAYLOAD_LENGTH)
@@ -107,7 +109,7 @@ async def _handle_broadcast(iface: WireInterface, packet: utils.BufferType) -> N
         len(response_data) + CHECKSUM_LENGTH,
     )
     if __debug__:
-        log.debug(__name__, "New channel allocated with id %d", cid)
+        log.debug(__name__, iface, "New channel allocated with id %d", cid)
 
     await write_payload_to_wire_and_add_checksum(iface, response_header, response_data)
 
