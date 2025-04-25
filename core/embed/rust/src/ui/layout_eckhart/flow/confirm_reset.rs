@@ -9,7 +9,7 @@ use crate::{
             FlowController, FlowMsg, SwipeFlow,
         },
         geometry::{Alignment, Direction, Offset},
-        layout_eckhart::component::Button,
+        layout_eckhart::{component::Button, firmware::ShortMenuVec},
     },
 };
 
@@ -84,7 +84,7 @@ pub fn new_confirm_reset(recovery: bool) -> Result<SwipeFlow, error::Error> {
         .one_button_request(br);
 
     let content_menu = VerticalMenuScreen::new(
-        VerticalMenu::empty().item(
+        VerticalMenu::<ShortMenuVec>::empty().with_item(
             Button::with_text(TR::buttons__cancel.into())
                 .styled(theme::menu_item_title_orange())
                 .with_text_align(Alignment::Start)
