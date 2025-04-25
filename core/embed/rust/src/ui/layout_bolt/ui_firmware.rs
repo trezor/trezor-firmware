@@ -887,9 +887,19 @@ impl FirmwareUI for UIBolt {
         code: TString<'static>,
         button: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
-        Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
-            c"show_pairing_code not supported",
-        ))
+        Self::confirm_action(
+            title,
+            Some(code),
+            Some(description),
+            None,
+            button.then_some(TR::buttons__confirm.into()),
+            None,
+            false,
+            false,
+            false,
+            false,
+            None,
+        )
     }
 
     fn show_info(
