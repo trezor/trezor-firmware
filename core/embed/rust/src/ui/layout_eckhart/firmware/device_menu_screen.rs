@@ -18,14 +18,14 @@ use crate::{
             constant::SCREEN,
             firmware::{
                 Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-                VerticalMenuScreenMsg, MENU_MAX_ITEMS,
+                VerticalMenuScreenMsg, SHORT_MENU_ITEMS,
             },
         },
         shape::Renderer,
     },
 };
 
-use super::theme;
+use super::{theme, ShortMenuVec};
 use heapless::Vec;
 
 const MAX_DEPTH: usize = 3;
@@ -96,11 +96,11 @@ impl MenuItem {
 struct Submenu {
     header_text: TString<'static>,
     show_battery: bool,
-    items: Vec<MenuItem, MENU_MAX_ITEMS>,
+    items: Vec<MenuItem, SHORT_MENU_ITEMS>,
 }
 
 impl Submenu {
-    pub fn new(header_text: TString<'static>, items: Vec<MenuItem, MENU_MAX_ITEMS>) -> Self {
+    pub fn new(header_text: TString<'static>, items: Vec<MenuItem, SHORT_MENU_ITEMS>) -> Self {
         Self {
             header_text,
             show_battery: false,
@@ -140,7 +140,7 @@ pub struct DeviceMenuScreen<'a> {
     // as defined by `enum Subscreen` (DeviceScreen is still a VerticalMenuScreen!)
     // The active one will be Some(...) and the other one will be None.
     // This way we only need to keep one screen at any time in memory.
-    menu_screen: GcBox<Option<VerticalMenuScreen>>,
+    menu_screen: GcBox<Option<VerticalMenuScreen<ShortMenuVec>>>,
     about_screen: GcBox<Option<TextScreen<Paragraphs<[Paragraph<'a>; 2]>>>>,
 
     // Information needed to construct any subscreen on demand
@@ -209,7 +209,7 @@ impl<'a> DeviceMenuScreen<'a> {
         paired_devices: Vec<TString<'static>, 1>,
         paired_device_indices: Vec<usize, 1>,
     ) -> usize {
-        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         for (device, idx) in paired_devices.iter().zip(paired_device_indices) {
             unwrap!(items.push(
                 MenuItem::new(*device, Some(Action::GoTo(idx))).with_subtext(Some((
@@ -224,7 +224,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 
     fn add_pair_and_connect_menu(&mut self, manage_devices_index: usize) -> usize {
-        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(
             MenuItem::new(
                 "Manage paired devices".into(),
@@ -245,7 +245,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 
     fn add_settings_menu(&mut self, security_index: usize, device_index: usize) -> usize {
-        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(MenuItem::new(
             "Security".into(),
             Some(Action::GoTo(security_index))
@@ -260,7 +260,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 
     fn add_security_menu(&mut self) -> usize {
-        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(items.push(MenuItem::new(
             "Check backup".into(),
             Some(Action::Return(DeviceMenuMsg::CheckBackup)),
@@ -275,7 +275,7 @@ impl<'a> DeviceMenuScreen<'a> {
     }
 
     fn add_device_menu(&mut self, device_name: TString<'static>, about_index: usize) -> usize {
-        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(
             items.push(MenuItem::new("Name".into(), None).with_subtext(Some((device_name, None))))
         );
@@ -298,7 +298,7 @@ impl<'a> DeviceMenuScreen<'a> {
         pair_and_connect_index: usize,
         settings_index: usize,
     ) -> usize {
-        let mut items: Vec<MenuItem, MENU_MAX_ITEMS> = Vec::new();
+        let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         if failed_backup {
             unwrap!(items.push(
                 MenuItem::new(
@@ -349,7 +349,7 @@ impl<'a> DeviceMenuScreen<'a> {
             Subscreen::Submenu(ref mut submenu_index) => {
                 let submenu = &self.submenus[*submenu_index];
                 *self.about_screen.deref_mut() = None;
-                let mut menu = VerticalMenu::empty().with_separators();
+                let mut menu = VerticalMenu::<ShortMenuVec>::empty().with_separators();
                 for item in &submenu.items {
                     let button = if let Some((subtext, subtext_style)) = item.subtext {
                         Button::new_menu_item_with_subtext(
@@ -361,7 +361,7 @@ impl<'a> DeviceMenuScreen<'a> {
                     } else {
                         Button::new_menu_item(item.text, item.stylesheet)
                     };
-                    menu = menu.item(button);
+                    menu.item(button);
                 }
                 let mut header = Header::new(submenu.header_text).with_close_button();
                 if submenu.show_battery {
@@ -385,8 +385,8 @@ impl<'a> DeviceMenuScreen<'a> {
             Subscreen::DeviceScreen(device, _) => {
                 *self.about_screen.deref_mut() = None;
                 let mut menu = VerticalMenu::empty().with_separators();
-                menu = menu.item(Button::new_menu_item(device, theme::menu_item_title()));
-                menu = menu.item(Button::new_menu_item(
+                menu.item(Button::new_menu_item(device, theme::menu_item_title()));
+                menu.item(Button::new_menu_item(
                     "Disconnect".into(),
                     theme::menu_item_title_red(),
                 ));
