@@ -325,7 +325,7 @@ async def confirm_token_transfer(
     value = token.name + "\n" + base58.encode(token.mint)
 
     await confirm_value(
-        title=TR.solana__title_token,
+        title=TR.words__token,
         value=value,
         description="",
         br_name="confirm_token_address",

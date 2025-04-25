@@ -484,12 +484,13 @@ impl FirmwareUI for UICaesar {
     }
 
     fn confirm_summary(
-        amount: TString<'static>,
-        amount_label: TString<'static>,
+        amount: Option<TString<'static>>,
+        amount_label: Option<TString<'static>>,
         fee: TString<'static>,
         fee_label: TString<'static>,
         title: Option<TString<'static>>,
         account_items: Option<Obj>,
+        account_title: Option<TString<'static>>,
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
@@ -502,7 +503,9 @@ impl FirmwareUI for UICaesar {
             unwrap!(info_pages.push((extra_title, info)));
         }
         if let Some(info) = account_items {
-            unwrap!(info_pages.push((TR::confirm_total__title_sending_from.into(), info)));
+            let account_title =
+                account_title.unwrap_or(TR::confirm_total__title_sending_from.into());
+            unwrap!(info_pages.push((account_title, info)));
         }
 
         // button layouts and actions
@@ -553,14 +556,23 @@ impl FirmwareUI for UICaesar {
                     if let Some(title) = title {
                         ops = ops.text(title, fonts::FONT_BOLD_UPPER).newline();
                     }
-                    ops = ops
-                        .text(amount_label, fonts::FONT_BOLD)
-                        .newline()
-                        .text(amount, fonts::FONT_MONO);
+
+                    let mut has_amount = false;
+                    if let Some(amount) = amount {
+                        if let Some(amount_label) = amount_label {
+                            has_amount = true;
+                            ops = ops
+                                .text(amount_label, fonts::FONT_BOLD)
+                                .newline()
+                                .text(amount, fonts::FONT_MONO);
+                        }
+                    }
 
                     if !fee_label.is_empty() || !fee.is_empty() {
+                        if has_amount {
+                            ops = ops.newline();
+                        }
                         ops = ops
-                            .newline()
                             .newline()
                             .text(fee_label, fonts::FONT_BOLD)
                             .newline()
@@ -1298,10 +1310,14 @@ fn content_in_button_page<T: Component + Paginate + MaybeTrace + 'static>(
     // Left button - icon, text or nothing.
     let cancel_btn = verb_cancel.map(ButtonDetails::from_text_possible_icon);
 
-    // Right button - text or nothing.
+    // Right button - down arrow, text or nothing.
     // Optional HoldToConfirm
     let mut confirm_btn = if !verb.is_empty() {
-        Some(ButtonDetails::text(verb))
+        if verb == TString::Str("V") {
+            Some(ButtonDetails::down_arrow_icon_wide())
+        } else {
+            Some(ButtonDetails::text(verb))
+        }
     } else {
         None
     };

@@ -27,6 +27,54 @@ if TYPE_CHECKING:
     )
 
 
+async def require_confirm_approve(
+    to_bytes: bytes,
+    value: int | None,
+    address_n: list[int],
+    maximum_fee: str,
+    fee_info_items: Iterable[tuple[str, str]],
+    chain_id: int,
+    network: EthereumNetworkInfo,
+    token: EthereumTokenInfo,
+    token_address: bytes,
+    chunkify: bool,
+) -> None:
+    from trezor.ui.layouts import confirm_ethereum_approve
+
+    from apps.ethereum.sc_constants import APPROVE_KNOWN_ADDRESSES as KNOWN_ADDRESSES
+
+    from . import networks, tokens
+
+    if to_bytes in KNOWN_ADDRESSES:
+        to_str = KNOWN_ADDRESSES[to_bytes]
+        chunkify = False
+    else:
+        to_str = address_from_bytes(to_bytes, network)
+    chain_id_str = f"{chain_id} ({hex(chain_id)})"
+    token_address_str = address_from_bytes(token_address, network)
+    total_amount = (
+        format_ethereum_amount(value, token, network) if value is not None else None
+    )
+    account, account_path = get_account_and_path(address_n)
+
+    await confirm_ethereum_approve(
+        to_str,
+        token is tokens.UNKNOWN_TOKEN,
+        token_address_str,
+        token.symbol,
+        network is networks.UNKNOWN_NETWORK,
+        chain_id_str,
+        network.name,
+        value == 0,
+        total_amount,
+        account,
+        account_path,
+        maximum_fee,
+        fee_info_items,
+        chunkify=chunkify,
+    )
+
+
 async def require_confirm_tx(
     to_bytes: bytes,
     value: int,
@@ -141,36 +189,30 @@ async def require_confirm_claim(
     )
 
 
-async def require_confirm_unknown_token(address_bytes: bytes) -> None:
-    from ubinascii import hexlify
-
-    from trezor.ui.layouts import (
-        confirm_address,
-        confirm_ethereum_unknown_contract_warning,
-    )
+async def require_confirm_unknown_token() -> None:
+    from trezor.ui.layouts import confirm_ethereum_unknown_contract_warning
 
     await confirm_ethereum_unknown_contract_warning()
 
-    contract_address_hex = "0x" + hexlify(address_bytes).decode()
-    await confirm_address(
-        TR.words__address,
-        contract_address_hex,
-        subtitle=TR.ethereum__token_contract,
-        verb=TR.buttons__continue,
-        br_name="unknown_token",
-        br_code=ButtonRequestType.SignTx,
-    )
 
-
-def require_confirm_address(address_bytes: bytes) -> Awaitable[None]:
+def require_confirm_address(
+    address_bytes: bytes,
+    title: str | None = None,
+    subtitle: str | None = None,
+    verb: str | None = None,
+    br_name: str | None = None,
+) -> Awaitable[None]:
     from ubinascii import hexlify
 
     from trezor.ui.layouts import confirm_address
 
     address_hex = "0x" + hexlify(address_bytes).decode()
     return confirm_address(
-        TR.ethereum__title_signing_address,
+        title or TR.ethereum__title_signing_address,
         address_hex,
+        subtitle=subtitle,
+        verb=verb,
+        br_name=br_name,
         br_code=ButtonRequestType.SignTx,
     )
 

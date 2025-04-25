@@ -943,8 +943,6 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     solana__multiple_signers = 672,  // "Multiple signers"
     #[cfg(feature = "universal_fw")]
-    solana__title_token = 673,  // "Token"
-    #[cfg(feature = "universal_fw")]
     solana__transaction_contains_unknown_instructions = 674,  // "Transaction contains unknown instructions."
     #[cfg(feature = "universal_fw")]
     solana__transaction_requires_x_signers_template = 675,  // "Transaction requires {0} signers which increases the fee."
@@ -1392,6 +1390,31 @@ pub enum TranslatedString {
     solana__max_rent_fee = 998,  // "Max rent fee"
     #[cfg(feature = "universal_fw")]
     solana__transaction_fee = 999,  // "Transaction fee"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve = 1000,  // "Approve"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_amount_allowance = 1001,  // "Amount allowance"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_chain_id = 1002,  // "Chain ID"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_intro = 1003,  // "Review details to approve token spending."
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_intro_title = 1004,  // "Token approval"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_to = 1005,  // "Approve to"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_unlimited_template = 1006,  // "Approving unlimited amount of {0}"
+    words__unlimited = 1007,  // "Unlimited"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_intro_revoke = 1008,  // "Review details to revoke token approval."
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_intro_title_revoke = 1009,  // "Token revocation"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_revoke = 1010,  // "Revoke"
+    #[cfg(feature = "universal_fw")]
+    ethereum__approve_revoke_from = 1011,  // "Revoke from"
+    words__chain = 1012,  // "Chain"
+    words__token = 1013,  // "Token"
 }
 
 impl TranslatedString {
@@ -2328,8 +2351,6 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             (Self::solana__multiple_signers, "Multiple signers"),
             #[cfg(feature = "universal_fw")]
-            (Self::solana__title_token, "Token"),
-            #[cfg(feature = "universal_fw")]
             (Self::solana__transaction_contains_unknown_instructions, "Transaction contains unknown instructions."),
             #[cfg(feature = "universal_fw")]
             (Self::solana__transaction_requires_x_signers_template, "Transaction requires {0} signers which increases the fee."),
@@ -2777,6 +2798,31 @@ impl TranslatedString {
             (Self::solana__max_rent_fee, "Max rent fee"),
             #[cfg(feature = "universal_fw")]
             (Self::solana__transaction_fee, "Transaction fee"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve, "Approve"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_amount_allowance, "Amount allowance"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_chain_id, "Chain ID"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_intro, "Review details to approve token spending."),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_intro_title, "Token approval"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_to, "Approve to"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_unlimited_template, "Approving unlimited amount of {0}"),
+            (Self::words__unlimited, "Unlimited"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_intro_revoke, "Review details to revoke token approval."),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_intro_title_revoke, "Token revocation"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_revoke, "Revoke"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ethereum__approve_revoke_from, "Revoke from"),
+            (Self::words__chain, "Chain"),
+            (Self::words__token, "Token"),
     ];
 
     #[cfg(feature = "micropython")]
@@ -3221,6 +3267,28 @@ impl TranslatedString {
         (Qstr::MP_QSTR_eos__voter, Self::eos__voter),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__amount_sent, Self::ethereum__amount_sent),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve, Self::ethereum__approve),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_amount_allowance, Self::ethereum__approve_amount_allowance),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_chain_id, Self::ethereum__approve_chain_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_intro, Self::ethereum__approve_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_intro_revoke, Self::ethereum__approve_intro_revoke),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_intro_title, Self::ethereum__approve_intro_title),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_intro_title_revoke, Self::ethereum__approve_intro_title_revoke),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_revoke, Self::ethereum__approve_revoke),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_revoke_from, Self::ethereum__approve_revoke_from),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_to, Self::ethereum__approve_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__approve_unlimited_template, Self::ethereum__approve_unlimited_template),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
         #[cfg(feature = "universal_fw")]
@@ -3878,8 +3946,6 @@ impl TranslatedString {
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__stake_withdrawal_warning_title, Self::solana__stake_withdrawal_warning_title),
         #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_solana__title_token, Self::solana__title_token),
-        #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__transaction_contains_unknown_instructions, Self::solana__transaction_contains_unknown_instructions),
         #[cfg(feature = "universal_fw")]
         (Qstr::MP_QSTR_solana__transaction_fee, Self::solana__transaction_fee),
@@ -4120,6 +4186,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
         (Qstr::MP_QSTR_words__buying, Self::words__buying),
         (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
+        (Qstr::MP_QSTR_words__chain, Self::words__chain),
         (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
         (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
         (Qstr::MP_QSTR_words__contains, Self::words__contains),
@@ -4156,8 +4223,10 @@ impl TranslatedString {
         (Qstr::MP_QSTR_words__title_success, Self::words__title_success),
         (Qstr::MP_QSTR_words__title_summary, Self::words__title_summary),
         (Qstr::MP_QSTR_words__title_threshold, Self::words__title_threshold),
+        (Qstr::MP_QSTR_words__token, Self::words__token),
         (Qstr::MP_QSTR_words__try_again, Self::words__try_again),
         (Qstr::MP_QSTR_words__unknown, Self::words__unknown),
+        (Qstr::MP_QSTR_words__unlimited, Self::words__unlimited),
         (Qstr::MP_QSTR_words__unlocked, Self::words__unlocked),
         (Qstr::MP_QSTR_words__warning, Self::words__warning),
         (Qstr::MP_QSTR_words__writable, Self::words__writable),

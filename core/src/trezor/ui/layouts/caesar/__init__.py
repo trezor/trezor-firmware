@@ -672,11 +672,11 @@ def confirm_address(
     description: str | None = None,
     verb: str | None = None,
     chunkify: bool = True,
-    br_name: str = "confirm_address",
+    br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return confirm_blob(
-        br_name,
+        br_name or "confirm_address",
         subtitle or title,
         address,
         description,
@@ -763,6 +763,7 @@ async def confirm_value(
     hold: bool = False,
     is_data: bool = True,
     info_items: Iterable[tuple[str, str]] | None = None,
+    chunkify: bool = False,
     chunkify_info: bool = False,
 ) -> None:
     """General confirmation dialog, used by many other confirm_* functions."""
@@ -781,6 +782,7 @@ async def confirm_value(
                 info=False,
                 hold=hold,
                 is_data=is_data,
+                chunkify=chunkify,
             ),
             br_name,
             br_code,
@@ -871,6 +873,117 @@ if not utils.BITCOIN_ONLY:
     def confirm_ethereum_unknown_contract_warning() -> Awaitable[ui.UiResult]:
         return show_danger(
             "unknown_contract_warning", TR.ethereum__unknown_contract_address_short
+        )
+
+    async def confirm_ethereum_approve(
+        recipient: str,
+        is_unknown_token: bool,
+        token_address: str,
+        token_symbol: str,
+        is_unknown_network: bool,
+        chain_id: str,
+        network_name: str,
+        is_revoke: bool,
+        total_amount: str | None,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        chunkify: bool = False,
+    ) -> None:
+        await confirm_value(
+            (
+                TR.ethereum__approve_intro_title_revoke
+                if is_revoke
+                else TR.ethereum__approve_intro_title
+            ),
+            (
+                TR.ethereum__approve_intro_revoke
+                if is_revoke
+                else TR.ethereum__approve_intro
+            ),
+            None,
+            verb=TR.buttons__continue,
+            hold=False,
+            is_data=False,
+            br_name="confirm_ethereum_approve",
+        )
+
+        await confirm_value(
+            TR.ethereum__approve_revoke_from if is_revoke else TR.ethereum__approve_to,
+            recipient,
+            None,
+            verb=TR.buttons__continue,
+            hold=False,
+            br_name="confirm_ethereum_approve",
+            chunkify=chunkify,
+        )
+
+        if total_amount is None:
+            await show_warning(
+                "confirm_ethereum_approve",
+                TR.ethereum__approve_unlimited_template.format(token_symbol),
+                TR.words__continue_anyway_question,
+            )
+
+        if is_unknown_token:
+            await confirm_value(
+                TR.ethereum__token_contract + " | " + TR.words__address,
+                token_address,
+                None,
+                verb="V",
+                hold=False,
+                br_name="confirm_ethereum_approve",
+                chunkify=chunkify,
+            )
+
+        if is_unknown_network:
+            assert is_unknown_token
+            await confirm_value(
+                TR.ethereum__approve_chain_id,
+                chain_id,
+                None,
+                verb="V",
+                hold=False,
+                br_name="confirm_ethereum_approve",
+            )
+
+        properties = (
+            [(TR.words__token, token_symbol)]
+            if is_revoke
+            else [
+                (
+                    TR.ethereum__approve_amount_allowance,
+                    total_amount or TR.words__unlimited,
+                )
+            ]
+        )
+        if not is_unknown_network:
+            properties.append((TR.words__chain, network_name))
+        await confirm_properties(
+            "confirm_ethereum_approve",
+            TR.ethereum__approve_revoke if is_revoke else TR.ethereum__approve,
+            properties,
+            False,
+        )
+
+        account_items = []
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+
+        await raise_if_not_confirmed(
+            trezorui_api.confirm_summary(
+                amount=None,
+                amount_label=None,
+                fee=maximum_fee,
+                fee_label=f"{TR.send__maximum_fee}:",
+                title=TR.words__title_summary,
+                account_items=[(f"{k}:", v) for (k, v) in account_items],
+                account_title=TR.address_details__account_info,
+                extra_items=fee_info_items,
+                extra_title=TR.confirm_total__title_fee,
+            ),
+            br_name="confirm_ethereum_approve",
         )
 
     async def confirm_ethereum_staking_tx(

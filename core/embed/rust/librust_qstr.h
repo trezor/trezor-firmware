@@ -786,6 +786,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__blockhash;
   MP_QSTR_words__buying;
   MP_QSTR_words__cancel_and_exit;
+  MP_QSTR_words__chain;
   MP_QSTR_words__confirm;
   MP_QSTR_words__confirm_fee;
   MP_QSTR_words__contains;
@@ -822,8 +823,10 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__title_success;
   MP_QSTR_words__title_summary;
   MP_QSTR_words__title_threshold;
+  MP_QSTR_words__token;
   MP_QSTR_words__try_again;
   MP_QSTR_words__unknown;
+  MP_QSTR_words__unlimited;
   MP_QSTR_words__unlocked;
   MP_QSTR_words__warning;
   MP_QSTR_words__writable;
@@ -986,6 +989,17 @@ static void _librust_qstrs(void) {
   MP_QSTR_eos__vote_for_proxy;
   MP_QSTR_eos__voter;
   MP_QSTR_ethereum__amount_sent;
+  MP_QSTR_ethereum__approve;
+  MP_QSTR_ethereum__approve_amount_allowance;
+  MP_QSTR_ethereum__approve_chain_id;
+  MP_QSTR_ethereum__approve_intro;
+  MP_QSTR_ethereum__approve_intro_revoke;
+  MP_QSTR_ethereum__approve_intro_title;
+  MP_QSTR_ethereum__approve_intro_title_revoke;
+  MP_QSTR_ethereum__approve_revoke;
+  MP_QSTR_ethereum__approve_revoke_from;
+  MP_QSTR_ethereum__approve_to;
+  MP_QSTR_ethereum__approve_unlimited_template;
   MP_QSTR_ethereum__contract;
   MP_QSTR_ethereum__data_size_template;
   MP_QSTR_ethereum__gas_limit;
@@ -1143,7 +1157,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__stake_question;
   MP_QSTR_solana__stake_withdrawal_warning;
   MP_QSTR_solana__stake_withdrawal_warning_title;
-  MP_QSTR_solana__title_token;
   MP_QSTR_solana__transaction_contains_unknown_instructions;
   MP_QSTR_solana__transaction_fee;
   MP_QSTR_solana__transaction_requires_x_signers_template;

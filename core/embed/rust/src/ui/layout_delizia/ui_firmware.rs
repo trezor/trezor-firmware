@@ -358,12 +358,13 @@ impl FirmwareUI for UIDelizia {
     }
 
     fn confirm_summary(
-        amount: TString<'static>,
-        amount_label: TString<'static>,
+        amount: Option<TString<'static>>,
+        amount_label: Option<TString<'static>>,
         fee: TString<'static>,
         fee_label: TString<'static>,
         title: Option<TString<'static>>,
         account_items: Option<Obj>,
+        account_title: Option<TString<'static>>,
         extra_items: Option<Obj>,
         extra_title: Option<TString<'static>>,
         verb_cancel: Option<TString<'static>>,
@@ -371,13 +372,17 @@ impl FirmwareUI for UIDelizia {
         let mut summary_params = ShowInfoParams::new(title.unwrap_or(TString::empty()))
             .with_menu_button()
             .with_swipeup_footer(None);
-        summary_params = unwrap!(summary_params.add(amount_label, amount));
+        if let Some(amount) = amount {
+            if let Some(amount_label) = amount_label {
+                summary_params = unwrap!(summary_params.add(amount_label, amount));
+            }
+        }
         summary_params = unwrap!(summary_params.add(fee_label, fee));
 
         // collect available info
         let account_params = if let Some(items) = account_items {
-            let mut account_params =
-                ShowInfoParams::new(TR::send__send_from.into()).with_cancel_button();
+            let account_title = account_title.unwrap_or(TR::send__send_from.into());
+            let mut account_params = ShowInfoParams::new(account_title).with_cancel_button();
             for pair in IterBuf::new().try_iterate(items)? {
                 let [label, value]: [TString; 2] = util::iter_into_array(pair)?;
                 account_params = unwrap!(account_params.add(label, value));
