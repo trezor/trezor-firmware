@@ -76,7 +76,10 @@ void pm_monitor_power_sources(void) {
     drv->battery_low = false;
   }
 
-  // Request fresh measurements
+  // Run battery charging controller
+  pm_charging_controller(drv);
+
+  // Request fresh measurements from PMIC
   npm1300_measure(pm_pmic_data_ready, NULL);
   drv->pmic_measurement_ready = false;
 
@@ -100,4 +103,45 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
   }
 
   drv->pmic_measurement_ready = true;
+}
+
+void pm_charging_controller(power_manager_driver_t* drv) {
+  // Check if external power is available
+  if (drv->usb_connected) {
+    // USB connected, set maximum charging current right away
+    drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MAX;
+
+  } else if (drv->wireless_connected) {
+    // Gradually increase charging current to the maximum
+    if (drv->charging_current_target_ma == NPM1300_CHARGING_LIMIT_MAX) {
+      // No action required
+    } else if (drv->charging_current_target_ma == 0) {
+      drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MIN;
+      drv->charging_target_timestamp = systick_ms();
+    } else if (systick_ms() - drv->charging_target_timestamp >
+               POWER_MANAGER_WPC_CHARGE_CURR_STEP_TIMEOUT_MS) {
+      drv->charging_current_target_ma += POWER_MANAGER_WPC_CHARGE_CURR_STEP_MA;
+      drv->charging_target_timestamp = systick_ms();
+
+      if (drv->charging_current_target_ma > NPM1300_CHARGING_LIMIT_MAX) {
+        drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MAX;
+      }
+    }
+
+  } else {
+    // No external power source, turn off charging
+    drv->charging_current_target_ma = 0;
+  }
+
+  // Set charging target
+  if (drv->charging_current_target_ma != npm1300_get_charging_limit()) {
+    // Set charging current limit
+    npm1300_set_charging_limit(drv->charging_current_target_ma);
+  }
+
+  if (drv->charging_current_target_ma == 0) {
+    npm1300_set_charging(false);
+  } else {
+    npm1300_set_charging(true);
+  }
 }
