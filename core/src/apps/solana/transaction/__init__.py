@@ -309,39 +309,19 @@ class Transaction:
             SOLANA_TOKEN_ACCOUNT_SIZE,
         )
         from ..transaction.instructions import (
-            _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
-            _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
-            _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
-            _SYSTEM_PROGRAM_ID,
-            _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
-            _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
-            _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
-            _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+            is_system_program_account_creation,
+            is_atap_account_creation,
             _TOKEN_2022_PROGRAM_ID,
             _TOKEN_PROGRAM_ID,
         )
 
         allocation = 0
         for instruction in self.instructions:
-            if instruction.program_id == _SYSTEM_PROGRAM_ID and (
-                instruction.instruction_id
-                in (
-                    _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
-                    _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
-                    _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
-                    _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
-                )
-            ):
+            if is_system_program_account_creation(instruction):
                 allocation += (
                     instruction.parsed_data["space"] + SOLANA_ACCOUNT_OVERHEAD_SIZE
                 )
-            elif instruction.program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID and (
-                instruction.instruction_id
-                in (
-                    _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
-                    _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
-                )
-            ):
+            elif is_atap_account_creation(instruction):
                 spl_token_account = self.get_account_address(
                     instruction.parsed_accounts["spl_token"]
                 )

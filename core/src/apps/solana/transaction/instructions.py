@@ -117,6 +117,30 @@ COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE = (
 )
 
 
+def is_system_program_account_creation(instruction: Instruction) -> bool:
+    return (
+        instruction.program_id == _SYSTEM_PROGRAM_ID
+        and instruction.instruction_id
+        in (
+            _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
+            _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
+            _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
+            _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
+        )
+    )
+
+
+def is_atap_account_creation(instruction: Instruction) -> bool:
+    return (
+        instruction.program_id == _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID
+        and instruction.instruction_id
+        in (
+            _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
+            _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
+        )
+    )
+
+
 def __getattr__(name: str) -> Type[Instruction]:
     def get_id(name: str) -> tuple[str, InstructionId]:
         if name == "SystemProgramCreateAccountInstruction":
