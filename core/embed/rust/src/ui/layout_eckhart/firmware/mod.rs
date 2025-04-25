@@ -40,7 +40,10 @@ pub use qr_screen::{QrMsg, QrScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
-pub use vertical_menu::{VerticalMenu, VerticalMenuMsg, MENU_MAX_ITEMS};
+pub use vertical_menu::{
+    LongMenuGc, MenuItems, ShortMenuVec, VerticalMenu, VerticalMenuMsg, LONG_MENU_ITEMS,
+    SHORT_MENU_ITEMS,
+};
 pub use vertical_menu_screen::{VerticalMenuScreen, VerticalMenuScreenMsg};
 
 use super::{constant, theme};
