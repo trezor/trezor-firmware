@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
 
 from .definitions import Definitions
+from .transaction.parse import parse_pubkey
 
 if TYPE_CHECKING:
     from enum import IntEnum
@@ -9,8 +10,6 @@ if TYPE_CHECKING:
     from trezor.messages import SolanaTxAdditionalInfo, SolanaTxTokenAccountInfo
     from trezor.utils import BufferReader
     from typing_extensions import Self
-
-    from .transaction import Instruction
 
     Address = tuple[bytes, "AddressType"]
     AddressReference = tuple[bytes, int, "AddressType"]
@@ -42,26 +41,19 @@ class PropertyTemplate(Generic[T]):
     def __init__(
         self,
         name: str,
-        is_authority: bool,
-        is_optional: bool,
+        optional: bool,
         parse: Callable[[BufferReader], T],
-        format: Callable[[Instruction, T], str],
+        format: Callable[..., str],
+        args: tuple[str, ...],
     ) -> None:
         self.name = name
-        self.is_authority = is_authority
-        self.is_optional = is_optional
+        self.optional = optional
         self.parse = parse
         self.format = format
+        self.args = args
 
-
-class AccountTemplate:
-    def __init__(
-        self, name: str, is_authority: bool, optional: bool, is_token_mint: bool
-    ) -> None:
-        self.name = name
-        self.is_authority = is_authority
-        self.optional = optional
-        self.is_token_mint = is_token_mint
+    def is_pubkey(self) -> bool:
+        return self.parse is parse_pubkey
 
 
 class UIProperty:
@@ -70,13 +62,11 @@ class UIProperty:
         parameter: str | None,
         account: str | None,
         display_name: str,
-        is_authority: bool,
         default_value_to_hide: Any | None,
     ) -> None:
         self.parameter = parameter
         self.account = account
         self.display_name = display_name
-        self.is_authority = is_authority
         self.default_value_to_hide = default_value_to_hide
 
 

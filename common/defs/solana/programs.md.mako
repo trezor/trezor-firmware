@@ -9,7 +9,7 @@ ${'##'} ${program.name}
 ${'###'} (${instruction.id}) ${instruction.name}
 <%
     all_params = { param.name: param for param in instruction.parameters }
-    all_accounts = [ref.name for ref in instruction.references]
+    all_accounts = list(instruction.references)
 %>
 | Label | Value | Type |
 |-------|-------|------|

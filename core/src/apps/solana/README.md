@@ -168,14 +168,22 @@ The `programs.json` file serves as a structured configuration file in the Solana
       - `name`: The parameter name.
       - `type`: The data type of the parameter, such as `u64` for 64-bit unsigned integers.
       - `optional`: Indicates whether the parameter is optional.
-    - `references`: Defines the references to accounts that this instruction requires.
-      - `name`: The account name.
-      - `is_authority`: A boolean specifying whether the account is considered an authority for this instruction.
-      - `optional`: Indicates whether the account is optional.
+      - `args`: An optional dict of arguments for the formatter, see explanation below.
+    - `references`: An array of account names that are used by the instruction.
+    - `references_required`: The number of references required by the instruction. If more `references` are specified than required, the extra ones are optional, and may or may not be present in the transaction.
     - `ui_properties`: Contains user interface-related information for this instruction.
       - `account`: Reference to one account in the references list identified by its `name`
       - `parameter`: Reference to one parameter in the parameters list identified by its `name`
       - `display_name`: A human-readable label for the parameter or account, suitable for user interfaces.
+      - `default_value_to_hide`: Optional. If this value is found in the account / parameter, the UI property will not be shown for confirmation. This is useful when the default value is considered safe. In particular, if the value of the property is a public key, and the special word `"signer"` is used for `default_value_to_hide`, the UI property will be hidden if the public key matches the Trezor's account.
+
+Certain types of parameters, specified in `types` dict of the `programs.json` file, have special formatting capabilities.
+In particular, the type `token_amount` is a regular `u64` type, but the formatter function accepts additional parameters:
+* a special parameter `#definitions` that will be pre-set to the loadable definitions manager
+* a parameter `decimals` that specifies the number of decimals of the token
+* a parameter `mint` that specifies the mint address of the token
+
+The corresponding parameter of `token_amount` type must provide the `args` dict, mapping the `decimals` and `mint` arguments to fields of the instruction. E.g.: in a hypothetical Swap instruction, you would have two parameters of `token_amount` type. On the first one, the `args` dict would map `decimals` to the `from_amount_decimals` field and `mint` to the `from_amount_mint` field. On the second one, the mapping would go to the `to_amount_decimals` and `to_amount_mint` fields.
 
 
 After the message has been parsed, the Solana app utilizes the Trezor UI engine to present all the necessary information to the user for review and confirmation. If all the programs and instructions contained within the message are recognized and known, the software ensures that all the relevant information is displayed to the user. Each piece of data, including parameters, account references, and instruction details, is presented on the Trezor's user interface for user confirmation.
