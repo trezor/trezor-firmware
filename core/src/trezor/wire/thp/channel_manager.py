@@ -9,7 +9,7 @@ if TYPE_CHECKING:
     from trezorio import WireInterface
 
 if __debug__:
-    from trezor import log
+    from .. import wire_log as log
 
 CHANNELS_LOADED: bool = False
 
@@ -24,7 +24,9 @@ def create_new_channel(iface: WireInterface) -> Channel:
     return channel
 
 
-def load_cached_channels(channels_dict: dict[int, Channel]) -> None:
+def load_cached_channels(
+    channels_dict: dict[int, Channel], iface: WireInterface
+) -> None:
     """
     Returns all allocated channels from cache.
     """
@@ -32,7 +34,7 @@ def load_cached_channels(channels_dict: dict[int, Channel]) -> None:
 
     if CHANNELS_LOADED:
         if __debug__:
-            log.debug(__name__, "Channels already loaded, process skipped.")
+            log.debug(__name__, iface, "Channels already loaded, process skipped.")
         return
 
     cached_channels = cache_thp.get_all_allocated_channels()
@@ -40,5 +42,5 @@ def load_cached_channels(channels_dict: dict[int, Channel]) -> None:
         channel_id = int.from_bytes(channel.channel_id, "big")
         channels_dict[channel_id] = Channel(channel)
     if __debug__:
-        log.debug(__name__, "Channels loaded from cache.")
+        log.debug(__name__, iface, "Channels loaded from cache.")
     CHANNELS_LOADED = True

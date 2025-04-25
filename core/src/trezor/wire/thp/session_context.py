@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from storage import cache_thp
 from storage.cache_common import InvalidSessionError
 from storage.cache_thp import SessionThpCache
-from trezor import log, loop, protobuf, utils
+from trezor import loop, protobuf, utils
 from trezor.wire import message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.message_handler import failure
@@ -26,6 +26,8 @@ _REPEAT_LOOP = False
 if __debug__:
     from trezor.utils import get_bytes_as_str
 
+    from .. import wire_log as log
+
 
 class GenericSessionContext(Context):
 
@@ -39,6 +41,7 @@ class GenericSessionContext(Context):
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
                 __name__,
+                self.iface,
                 "handle - start (channel_id (bytes): %s, session_id: %d)",
                 get_bytes_as_str(self.channel_id),
                 self.session_id,
@@ -61,7 +64,7 @@ class GenericSessionContext(Context):
             except Exception as exc:
                 # Log and try again.
                 if __debug__:
-                    log.exception(__name__, exc)
+                    log.exception(__name__, self.iface, exc)
 
     async def _handle_message(
         self,
@@ -79,7 +82,7 @@ class GenericSessionContext(Context):
 
         except protocol_common.WireError as e:
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
-                log.exception(__name__, e)
+                log.exception(__name__, self.iface, e)
             await self.write(failure(e))
             return _REPEAT_LOOP
 
@@ -97,6 +100,7 @@ class GenericSessionContext(Context):
                 exp_type = expected_type.MESSAGE_NAME
             log.debug(
                 __name__,
+                self.iface,
                 "Read - with expected types %s and expected type %s",
                 str(expected_types),
                 exp_type,
@@ -106,6 +110,7 @@ class GenericSessionContext(Context):
             if __debug__:
                 log.debug(
                     __name__,
+                    self.iface,
                     "EXPECTED TYPES: %s\nRECEIVED TYPE: %s",
                     str(expected_types),
                     str(message.type),

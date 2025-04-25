@@ -2,7 +2,7 @@ from micropython import const
 from trezorcrypto import crc
 from typing import TYPE_CHECKING
 
-from trezor import io, log, loop, utils
+from trezor import io, loop, utils
 
 from . import PacketHeader
 
@@ -15,6 +15,9 @@ MESSAGE_TYPE_LENGTH = const(2)
 if TYPE_CHECKING:
     from trezorio import WireInterface
     from typing import Awaitable, Sequence
+
+if __debug__:
+    from .. import wire_log as log
 
 
 def write_payload_to_wire_and_add_checksum(
@@ -71,7 +74,10 @@ async def write_payloads_to_wire(
         # write packet to wire (in-lined)
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
-                __name__, "write_packet_to_wire: %s", utils.get_bytes_as_str(packet)
+                __name__,
+                iface,
+                "write_packet_to_wire: %s",
+                utils.get_bytes_as_str(packet),
             )
         written_by_iface: int = 0
         while written_by_iface < len(packet):
@@ -84,7 +90,10 @@ async def write_packet_to_wire(iface: WireInterface, packet: bytes) -> None:
         await loop.wait(iface.iface_num() | io.POLL_WRITE)
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             log.debug(
-                __name__, "write_packet_to_wire: %s", utils.get_bytes_as_str(packet)
+                __name__,
+                iface,
+                "write_packet_to_wire: %s",
+                utils.get_bytes_as_str(packet),
             )
         n_written = iface.write(packet)
         if n_written == len(packet):
