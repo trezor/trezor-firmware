@@ -22,8 +22,8 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
+        ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -213,11 +213,11 @@ fn content_main_menu(
     address_params: bool,
     account_params: bool,
     cancel_menu_label: TString<'static>,
-) -> MsgMap<VerticalMenuScreen, impl Fn(VerticalMenuScreenMsg) -> Option<FlowMsg>> {
-    let mut main_menu = VerticalMenu::empty();
+) -> MsgMap<VerticalMenuScreen<ShortMenuVec>, impl Fn(VerticalMenuScreenMsg) -> Option<FlowMsg>> {
+    let mut main_menu = VerticalMenu::<ShortMenuVec>::empty();
     let mut main_menu_items = Vec::<usize, 3>::new();
     if address_params {
-        main_menu = main_menu.item(
+        main_menu.item(
             Button::with_text(address_title)
                 .styled(theme::menu_item_title())
                 .with_text_align(Alignment::Start),
@@ -225,7 +225,7 @@ fn content_main_menu(
         unwrap!(main_menu_items.push(MENU_ITEM_ADDRESS_INFO));
     }
     if account_params {
-        main_menu = main_menu.item(
+        main_menu.item(
             Button::with_text(TR::address_details__account_info.into())
                 .styled(theme::menu_item_title())
                 .with_text_align(Alignment::Start)
@@ -233,7 +233,7 @@ fn content_main_menu(
         );
         unwrap!(main_menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
-    main_menu = main_menu.item(
+    main_menu.item(
         Button::with_text(cancel_menu_label)
             .styled(theme::menu_item_title_orange())
             .with_text_align(Alignment::Start)
@@ -241,7 +241,7 @@ fn content_main_menu(
     );
     unwrap!(main_menu_items.push(MENU_ITEM_CANCEL));
 
-    VerticalMenuScreen::new(main_menu)
+    VerticalMenuScreen::<ShortMenuVec>::new(main_menu)
         .with_header(Header::new(TString::empty()).with_close_button())
         .map(move |msg| match msg {
             VerticalMenuScreenMsg::Selected(i) => {
@@ -434,18 +434,17 @@ pub fn new_confirm_output(
         .with_pages(|_| 1);
 
         // SummaryMenu
-        let mut summary_menu = VerticalMenu::empty();
+        let mut summary_menu = VerticalMenu::<ShortMenuVec>::empty();
         let mut summary_menu_items = Vec::<usize, 3>::new();
         if account_menu_item {
-            summary_menu = summary_menu.item(Button::with_text(account_title));
+            summary_menu.item(Button::with_text(account_title));
             unwrap!(summary_menu_items.push(MENU_ITEM_EXTRA_INFO));
         }
         if fee_menu_item {
-            summary_menu =
-                summary_menu.item(Button::with_text(TR::confirm_total__title_fee.into()));
+            summary_menu.item(Button::with_text(TR::confirm_total__title_fee.into()));
             unwrap!(summary_menu_items.push(MENU_ITEM_FEE_INFO));
         }
-        summary_menu = summary_menu
+        summary_menu
             .item(Button::with_text(cancel_menu_label).styled(theme::menu_item_title_orange()));
         unwrap!(summary_menu_items.push(MENU_ITEM_CANCEL));
         let content_summary_menu = VerticalMenuScreen::new(summary_menu)

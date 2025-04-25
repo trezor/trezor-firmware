@@ -18,8 +18,8 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, HeaderMsg, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
+        ActionBar, Header, HeaderMsg, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -89,15 +89,15 @@ pub fn new_show_danger(
 
     // Menu
     let content_menu = VerticalMenuScreen::new(
-        VerticalMenu::empty()
+        VerticalMenu::<ShortMenuVec>::empty()
             .with_separators()
-            .item(
+            .with_item(
                 Button::with_text(verb_cancel)
                     .styled(theme::menu_item_title())
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
             )
-            .item(
+            .with_item(
                 Button::with_text(TR::words__continue_anyway.into())
                     .styled(theme::menu_item_title_orange())
                     .with_text_align(Alignment::Start)
