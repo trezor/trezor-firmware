@@ -16,24 +16,31 @@ CONSTRUCT_TYPES = {
     "string": "String",
     "memo": "Memo",
 }
+
 INSTRUCTION_TYPES = {
     0: "Pass",
     1: "Byte",
     4: "Int32ul",
 }
+
 def upper_snake_case(name):
     return "_".join(name.split(" ")).upper()
+
 def camelcase(name):
     return "".join([word.capitalize() for word in name.split(" ")])
+
 def instruction_id(instruction):
     return "INS_" + upper_snake_case(instruction.name)
+
 def instruction_struct_name(program, instruction):
     return camelcase(program.name) + "_" + camelcase(instruction.name) + "_Instruction"
+
 def instruction_subcon(program, instruction):
     if instruction.id is None:
         return "Pass"
     instruction_id_type = INSTRUCTION_TYPES[program.instruction_id_length]
     return f"Const({instruction.id}, {instruction_id_type})"
+
 %>\
 from enum import Enum
 from construct import (
@@ -76,12 +83,11 @@ class ${camelcase(program.name)}Instruction(Enum):
 ${camelcase(program.name)}_${camelcase(instruction.name)} = Struct(
     "program_index" / Byte,
     "accounts" / CompactStruct(
-        % for reference in instruction.references:
-            % if reference.optional:
-        "${reference.name}" / Optional(Byte),
-            % else:
-        "${reference.name}" / Byte,
-            % endif
+        % for reference in instruction.references[:instruction.references_required]:
+        "${reference}" / Byte,
+        % endfor
+        % for reference in instruction.references[instruction.references_required:]:
+        "${reference}" / Optional(Byte),
         % endfor
         % if instruction.is_multisig:
         "multisig_signers" / Optional(GreedyRange(Byte))

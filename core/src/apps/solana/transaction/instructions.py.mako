@@ -1,32 +1,41 @@
 # generated from instructions.py.mako
+# (by running `make solana_templates` in root)
 # do not edit manually!
-<%def name="getProgramId(program)">${"_" + "_".join(program["name"].upper().split(" ") + ["ID"])}</%def>\
-<%def name="getInstructionIdText(program, instruction)">${"_".join([getProgramId(program)] + ["INS"] + instruction["name"].upper().split(" "))}</%def>\
-<%def name="getClassName(program, instruction)">${program["name"].replace(" ", "")}${instruction["name"].replace(" ", "")}Instruction</%def>\
-<%def name="getReferenceName(reference)">${"_".join(reference["name"].lower().split(" "))}</%def>\
-<%def name="getReferenceOptionalType(reference)">\
-% if reference["optional"]:
- | None\
-% endif
-</%def>\
-<%def name="getReferenceOptionalTemplate(reference)">\
-% if reference["optional"]:
-, True\
-% else:
-, False\
-% endif
-</%def>\
-<%def name="getPythonType(type)">\
-% if type in ("u32", "u64", "i32", "i64", "timestamp", "lamports", "token_amount"):
-int\
-% elif type in ("pubKey", "authority"):
-Account\
-% elif type in ("string", "memo"):
-str\
-% else:
-int\
-% endif
-</%def>\
+
+<%
+def getProgramId(program):
+    return "_" + "_".join(program["name"].upper().split(" ") + ["ID"])
+
+def getInstructionIdText(program, instruction):
+    return "_".join([getProgramId(program)] + ["INS"] + instruction["name"].upper().split(" "))
+
+def getClassName(program, instruction):
+    return program["name"].replace(" ", "") + instruction["name"].replace(" ", "") + "Instruction"
+
+INT_TYPES = ("u8", "u32", "u64", "i32", "i64", "timestamp", "lamports", "token_amount", "unix_timestamp")
+
+def getPythonType(type):
+    if type in INT_TYPES:
+        return "int"
+    elif type in ("pubkey", "authority"):
+        return "Account"
+    elif type in ("string", "memo"):
+        return "str"
+    elif type in programs["types"] and programs["types"][type].get("is_enum"):
+        return "int"
+    else:
+        raise Exception(f"Unknown type: {type}")
+
+def args_tuple(required_parameters, args_dict):
+    args = []
+    for required_parameter in required_parameters:
+        if required_parameter.startswith("#"):
+            args.append(required_parameter)
+        else:
+            args.append(args_dict[required_parameter])
+    return repr(tuple(args))
+
+%>\
 from micropython import const
 from typing import TYPE_CHECKING
 
@@ -34,7 +43,7 @@ from trezor.wire import DataError
 
 from apps.common.readers import read_uint32_le, read_uint64_le
 
-from ..types import AccountTemplate, PropertyTemplate, UIProperty
+from ..types import PropertyTemplate, UIProperty
 from ..format import (
     format_int,
     format_lamports,
@@ -106,8 +115,11 @@ if TYPE_CHECKING:
         % endfor
 
         ## generates properties for reference accounts
-        % for reference in instruction["references"]:
-        ${getReferenceName(reference)}: Account${getReferenceOptionalType(reference)}
+        % for reference in instruction["references"][:instruction["references_required"]]:
+        ${reference}: Account
+        % endfor
+        % for reference in instruction["references"][instruction["references_required"]:]:
+        ${reference}: Account | None
         % endfor
     % endfor
 % endfor
@@ -123,7 +135,7 @@ def get_instruction_id_length(program_id: str) -> int:
 
 % for _, type in programs["types"].items():
     % if "is_enum" in type and type["is_enum"]:
-def ${type["format"]}(_: Instruction, value: int) -> str:
+def ${type["format"]}(value: int) -> str:
     % for variant in type["fields"]:
     if value == ${variant["value"]}:
         return "${variant["name"]}"
@@ -132,23 +144,24 @@ def ${type["format"]}(_: Instruction, value: int) -> str:
     % endif
 % endfor
 
-<%def name="getOptionalString(obj, string)">\
-% if string in obj:
-"${obj[string]}"\
-%else:
-None\
-% endif
-</%def>\
 <%
     # Make sure that all required parameters are present in the instruction.
     for program in programs["programs"]:
         for instruction in program["instructions"]:
+            param_names = [parameter["name"] for parameter in instruction["parameters"]]
             for parameter in instruction["parameters"]:
-                if "required_parameters" in programs["types"][parameter["type"]]:
-                    for required_parameter in programs["types"][parameter["type"]]["required_parameters"]:
-                        instruction_parameter_names = [parameter["name"] for parameter in instruction["parameters"]]
-                        if required_parameter not in instruction_parameter_names:
-                            raise Exception(f"Instruction \"{instruction['name']}\" is missing the required parameter \"{required_parameter}\" from paremeter \"{parameter['name']}\".")
+                required_parameters = programs["types"][parameter["type"]].get("required_parameters")
+                if not required_parameters:
+                    continue
+                args = parameter.get("args", {})
+                for required_parameter in required_parameters:
+                    if required_parameter.startswith("#"):
+                        continue
+                    if required_parameter not in args:
+                        raise Exception(f"Parameter \"{parameter['name']}\" is missing the required argument \"{required_parameter}\".")
+                    target = args[required_parameter]
+                    if target not in param_names and target not in instruction["references"]:
+                        raise Exception(f"Instruction \"{instruction['name']}\" is missing the required parameter \"{required_parameter}\" from parameter \"{parameter['name']}\".")
 %>
 
 def get_instruction(
@@ -164,44 +177,35 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 ${getInstructionIdText(program, instruction)},
-                [
+                (
                 % for parameter in instruction["parameters"]:
                     PropertyTemplate(
                         "${parameter["name"]}",
-                        ${parameter["type"] == "authority"},
                         ${parameter["optional"]},
                         ${programs["types"][parameter["type"]]["parse"]},
                         ${programs["types"][parameter["type"]]["format"]},
+                        ${args_tuple(programs["types"][parameter["type"]].get("required_parameters", []), parameter.get("args", {}))},
                     ),
                 % endfor
-                ],
-                [
-                % for reference in instruction["references"]:
-                    AccountTemplate(
-                        "${reference["name"]}",
-                        ${reference["is_authority"]},
-                        ${reference["optional"]},
-                        ${reference.get("is_token_mint", False)},
-                    ),
-                % endfor
-                ],
-                [
+                ),
+                ${instruction["references_required"]},
+                ${repr(tuple(instruction["references"]))},
+                (
                 % for ui_property in instruction["ui_properties"]:
                     UIProperty(
-                        ${getOptionalString(ui_property, "parameter")},
-                        ${getOptionalString(ui_property, "account")},
+                        ${repr(ui_property.get("parameter"))},
+                        ${repr(ui_property.get("account"))},
                         "${ui_property["display_name"]}",
-                        ${ui_property["is_authority"] if "is_authority" in ui_property else False},
-                        ${ui_property["default_value_to_hide"] if "default_value_to_hide" in ui_property else None},
+                        ${repr(ui_property.get("default_value_to_hide"))},
                     ),
                 % endfor
-                ],
+                ),
                 "${program["name"]}: ${instruction["name"]}",
                 True,
                 True,
                 ${instruction.get("is_ui_hidden", False)},
                 ${instruction["is_multisig"]},
-                ${getOptionalString(instruction, "is_deprecated_warning")},
+                ${repr(instruction.get("is_deprecated_warning"))},
             )
     % endfor
         return Instruction(
@@ -209,9 +213,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "${program["name"]}",
             True,
             False,
@@ -225,9 +230,10 @@ def get_instruction(
         program_id,
         instruction_accounts,
         0,
-        [],
-        [],
-        [],
+        (),
+        0,
+        (),
+        (),
         "Unsupported program",
         False,
         False,

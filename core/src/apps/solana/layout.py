@@ -84,14 +84,29 @@ async def confirm_instruction(
             property_template = instruction.get_property_template(ui_property.parameter)
             value = instruction.parsed_data[ui_property.parameter]
 
-            if property_template.is_authority and signer_public_key == value:
-                continue
-
-            if property_template.is_optional and value is None:
+            if property_template.optional and value is None:
                 continue
 
             if ui_property.default_value_to_hide == value:
                 continue
+
+            if (
+                property_template.is_pubkey()
+                and ui_property.default_value_to_hide == "signer"
+                and signer_public_key == value
+            ):
+                continue
+
+            args = []
+            for arg in property_template.args:
+                if arg == "#definitions":
+                    args.append(definitions)
+                elif arg in instruction.parsed_data:
+                    args.append(instruction.parsed_data[arg])
+                elif arg in instruction.parsed_accounts:
+                    args.append(instruction.parsed_accounts[arg][0])
+                else:
+                    raise ValueError  # Invalid property template
 
             await confirm_properties(
                 "confirm_instruction",
@@ -99,30 +114,27 @@ async def confirm_instruction(
                 (
                     (
                         ui_property.display_name,
-                        property_template.format(instruction, value),
+                        property_template.format(value, *args),
                     ),
                 ),
             )
         elif ui_property.account is not None:
-            account_template = instruction.get_account_template(ui_property.account)
-
             # optional account, skip if not present
             if ui_property.account not in instruction.parsed_accounts:
                 continue
 
             account_value = instruction.parsed_accounts[ui_property.account]
 
-            if account_template.is_authority:
-                if signer_public_key == account_value[0]:
-                    continue
+            if ui_property.default_value_to_hide == "signer" and signer_public_key == account_value[0]:
+                continue
 
             account_data: list[tuple[str, str]] = []
             # account included in the transaction directly
             if len(account_value) == 2:
                 account_description = f"{base58.encode(account_value[0])}"
-                if account_template.is_token_mint:
-                    token = definitions.get_token(account_value[0])
-                    account_description = f"{token.symbol}\n{account_description}"
+                token = definitions.get_token(account_value[0])
+                if token is not None:
+                    account_description = f"{token.name}\n{account_description}"
                 elif account_value[0] == signer_public_key:
                     account_description = f"{account_description} ({TR.words__signer})"
 

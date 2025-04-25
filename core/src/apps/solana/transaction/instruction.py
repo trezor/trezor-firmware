@@ -5,25 +5,20 @@ if TYPE_CHECKING:
 
     from typing_extensions import Self
 
-    from ..types import (
-        Account,
-        AccountTemplate,
-        InstructionData,
-        PropertyTemplate,
-        UIProperty,
-    )
+    from ..types import Account, InstructionData, PropertyTemplate, UIProperty
 
 
 class Instruction:
     program_id: str
     instruction_id: int | None
 
-    property_templates: list[PropertyTemplate]
-    accounts_template: list[AccountTemplate]
+    property_templates: tuple[PropertyTemplate, ...]
+    accounts_required: int
+    account_templates: tuple[str, ...]
 
     ui_name: str
 
-    ui_properties: list[UIProperty]
+    ui_properties: tuple[UIProperty, ...]
 
     parsed_data: dict[str, Any]
     parsed_accounts: dict[str, Account]
@@ -40,7 +35,8 @@ class Instruction:
 
     @staticmethod
     def parse_instruction_data(
-        instruction_data: InstructionData, property_templates: list[PropertyTemplate]
+        instruction_data: InstructionData,
+        property_templates: tuple[PropertyTemplate, ...],
     ) -> dict[str, Any]:
         from trezor.utils import BufferReader
         from trezor.wire import DataError
@@ -50,7 +46,7 @@ class Instruction:
         parsed_data = {}
         for property_template in property_templates:
             is_included = True
-            if property_template.is_optional:
+            if property_template.optional:
                 is_included = True if reader.get() == 1 else False
 
             parsed_data[property_template.name] = (
@@ -64,18 +60,19 @@ class Instruction:
 
     @staticmethod
     def parse_instruction_accounts(
-        accounts: list[Account], accounts_template: list[AccountTemplate]
+        accounts: list[Account],
+        accounts_required: int,
+        account_templates: tuple[str, ...],
     ) -> dict[str, Account]:
-        parsed_account = {}
-        for i, account_template in enumerate(accounts_template):
-            if i >= len(accounts):
-                if account_template.optional:
-                    continue
-                else:
-                    raise ValueError  # "Account is missing
+        parsed_accounts = {}
+        if len(accounts) < accounts_required:
+            raise ValueError  # "Account is missing
 
-            parsed_account[account_template.name] = accounts[i]
-        return parsed_account
+        for i, account_name in enumerate(account_templates):
+            if i >= len(accounts):
+                break
+            parsed_accounts[account_name] = accounts[i]
+        return parsed_accounts
 
     def __init__(
         self,
@@ -83,9 +80,10 @@ class Instruction:
         program_id: str,
         accounts: list[Account],
         instruction_id: int | None,
-        property_templates: list[PropertyTemplate],
-        accounts_template: list[AccountTemplate],
-        ui_properties: list[UIProperty],
+        property_templates: tuple[PropertyTemplate, ...],
+        accounts_required: int,
+        account_templates: tuple[str, ...],
+        ui_properties: tuple[UIProperty, ...],
         ui_name: str,
         is_program_supported: bool = True,
         is_instruction_supported: bool = True,
@@ -97,7 +95,8 @@ class Instruction:
         self.instruction_id = instruction_id
 
         self.property_templates = property_templates
-        self.accounts_template = accounts_template
+        self.accounts_required = accounts_required
+        self.account_templates = account_templates
 
         self.ui_name = ui_name
 
@@ -118,10 +117,12 @@ class Instruction:
             )
 
             self.parsed_accounts = self.parse_instruction_accounts(
-                accounts, accounts_template
+                accounts,
+                accounts_required,
+                account_templates,
             )
 
-            self.multisig_signers = accounts[len(accounts_template) :]
+            self.multisig_signers = accounts[len(account_templates) :]
             if self.multisig_signers and not supports_multisig:
                 raise ValueError  # Multisig not supported
         else:
@@ -143,13 +144,6 @@ class Instruction:
                 return property_template
 
         raise ValueError  # Property not found
-
-    def get_account_template(self, account_name: str) -> AccountTemplate:
-        for account_template in self.accounts_template:
-            if account_template.name == account_name:
-                return account_template
-
-        raise ValueError  # Account not found
 
     @classmethod
     def is_type_of(cls, ins: Any) -> TypeGuard[Self]:

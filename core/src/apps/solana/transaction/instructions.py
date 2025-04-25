@@ -1,5 +1,7 @@
 # generated from instructions.py.mako
+# (by running `make solana_templates` in root)
 # do not edit manually!
+
 from micropython import const
 from typing import TYPE_CHECKING
 
@@ -15,7 +17,7 @@ from ..format import (
     format_token_amount,
     format_unix_timestamp,
 )
-from ..types import AccountTemplate, PropertyTemplate, UIProperty
+from ..types import PropertyTemplate, UIProperty
 from .instruction import Instruction
 from .parse import parse_byte, parse_memo, parse_pubkey, parse_string
 
@@ -331,11 +333,11 @@ if TYPE_CHECKING:
         recipient_account: Account
 
     class SystemProgramCreateAccountWithSeedInstruction(Instruction):
-        base: int
+        base: Account
         seed: str
         lamports: int
         space: int
-        owner: int
+        owner: Account
 
         funding_account: Account
         created_account: Account
@@ -375,18 +377,18 @@ if TYPE_CHECKING:
         new_account: Account
 
     class SystemProgramAllocateWithSeedInstruction(Instruction):
-        base: int
+        base: Account
         seed: str
         space: int
-        owner: int
+        owner: Account
 
         allocated_account: Account
         base_account: Account
 
     class SystemProgramAssignWithSeedInstruction(Instruction):
-        base: int
+        base: Account
         seed: str
-        owner: int
+        owner: Account
 
         assigned_account: Account
         base_account: Account
@@ -394,7 +396,7 @@ if TYPE_CHECKING:
     class SystemProgramTransferWithSeedInstruction(Instruction):
         lamports: int
         from_seed: str
-        from_owner: int
+        from_owner: Account
 
         funding_account: Account
         base_account: Account
@@ -415,7 +417,7 @@ if TYPE_CHECKING:
         rent_sysvar: Account
 
     class StakeProgramAuthorizeInstruction(Instruction):
-        pubkey: int
+        pubkey: Account
         stake_authorize: int
 
         stake_account: Account
@@ -458,7 +460,7 @@ if TYPE_CHECKING:
     class StakeProgramSetLockupInstruction(Instruction):
         unix_timestamp: int
         epoch: int
-        custodian: int
+        custodian: Account
 
         initialized_stake_account: Account
         lockup_or_withdraw_authority: Account
@@ -472,10 +474,10 @@ if TYPE_CHECKING:
         stake_authority: Account
 
     class StakeProgramAuthorizeWithSeedInstruction(Instruction):
-        new_authorized_pubkey: int
+        new_authorized_pubkey: Account
         stake_authorize: int
         authority_seed: str
-        authority_owner: int
+        authority_owner: Account
 
         stake_account: Account
         stake_or_withdraw_authority: Account
@@ -501,7 +503,7 @@ if TYPE_CHECKING:
     class StakeProgramAuthorizeCheckedWithSeedInstruction(Instruction):
         stake_authorize: int
         authority_seed: str
-        authority_owner: int
+        authority_owner: Account
 
         stake_account: Account
         stake_or_withdraw_authority: Account
@@ -633,7 +635,7 @@ if TYPE_CHECKING:
         owner: Account
 
     class TokenProgramInitializeAccount2Instruction(Instruction):
-        owner: int
+        owner: Account
 
         account_to_initialize: Account
         mint_account: Account
@@ -644,7 +646,7 @@ if TYPE_CHECKING:
         token_account: Account
 
     class TokenProgramInitializeAccount3Instruction(Instruction):
-        owner: int
+        owner: Account
 
         account_to_initialize: Account
         mint_account: Account
@@ -760,7 +762,7 @@ if TYPE_CHECKING:
         owner: Account
 
     class Token2022ProgramInitializeAccount2Instruction(Instruction):
-        owner: int
+        owner: Account
 
         account_to_initialize: Account
         mint_account: Account
@@ -771,7 +773,7 @@ if TYPE_CHECKING:
         token_account: Account
 
     class Token2022ProgramInitializeAccount3Instruction(Instruction):
-        owner: int
+        owner: Account
 
         account_to_initialize: Account
         mint_account: Account
@@ -841,7 +843,7 @@ def get_instruction_id_length(program_id: str) -> int:
     return 0
 
 
-def format_StakeAuthorize(_: Instruction, value: int) -> str:
+def format_StakeAuthorize(value: int) -> str:
     if value == 0:
         return "Stake"
     if value == 1:
@@ -849,7 +851,7 @@ def format_StakeAuthorize(_: Instruction, value: int) -> str:
     raise DataError("Unknown value")
 
 
-def format_AuthorityType(_: Instruction, value: int) -> str:
+def format_AuthorityType(value: int) -> str:
     if value == 0:
         return "Mint tokens"
     if value == 1:
@@ -874,66 +876,51 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT,
-                [
+                (
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_lamports,
+                        (),
                     ),
                     PropertyTemplate(
                         "space",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
                     PropertyTemplate(
                         "owner",
-                        True,
                         False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "funding_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "new_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("funding_account", "new_account"),
+                (
                     UIProperty(
                         None,
                         "new_account",
                         "Create account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "lamports",
                         None,
                         "Deposit",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "funding_account",
                         "From",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Create Account",
                 True,
                 True,
@@ -947,39 +934,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_ASSIGN,
-                [
+                (
                     PropertyTemplate(
                         "owner",
-                        True,
                         False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "assigned_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                1,
+                ("assigned_account",),
+                (
                     UIProperty(
                         None,
                         "assigned_account",
                         "Assign account",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "owner",
                         None,
                         "Assign account to program",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Assign",
                 True,
                 True,
@@ -993,52 +972,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_TRANSFER,
-                [
+                (
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_lamports,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "funding_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "recipient_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("funding_account", "recipient_account"),
+                (
                     UIProperty(
                         None,
                         "recipient_account",
                         "Recipient",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "lamports",
                         None,
                         "Amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "funding_account",
                         "Sender",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Transfer",
                 True,
                 True,
@@ -1052,86 +1016,65 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_CREATE_ACCOUNT_WITH_SEED,
-                [
+                (
                     PropertyTemplate(
                         "base",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
                     PropertyTemplate(
                         "seed",
                         False,
-                        False,
                         parse_string,
                         format_identity,
+                        (),
                     ),
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_lamports,
+                        (),
                     ),
                     PropertyTemplate(
                         "space",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
                     PropertyTemplate(
                         "owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "funding_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "created_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "base_account",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("funding_account", "created_account", "base_account"),
+                (
                     UIProperty(
                         None,
                         "created_account",
                         "Create account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "lamports",
                         None,
                         "Deposit",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "funding_account",
                         "From",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Create Account With Seed",
                 True,
                 True,
@@ -1145,43 +1088,23 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_ADVANCE_NONCE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "nonce_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "recent_blockhashes_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "nonce_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("nonce_account", "recent_blockhashes_sysvar", "nonce_authority"),
+                (
                     UIProperty(
                         None,
                         "nonce_account",
                         "Advance nonce",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "nonce_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Advance Nonce Account",
                 True,
                 True,
@@ -1195,77 +1118,49 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_WITHDRAW_NONCE_ACCOUNT,
-                [
+                (
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_lamports,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "nonce_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "recipient_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "recent_blockhashes_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "nonce_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                5,
+                (
+                    "nonce_account",
+                    "recipient_account",
+                    "recent_blockhashes_sysvar",
+                    "rent_sysvar",
+                    "nonce_authority",
+                ),
+                (
                     UIProperty(
                         "lamports",
                         None,
                         "Nonce withdraw",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "nonce_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "recipient_account",
                         "To",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "nonce_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Withdraw Nonce Account",
                 True,
                 True,
@@ -1279,51 +1174,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_INITIALIZE_NONCE_ACCOUNT,
-                [
+                (
                     PropertyTemplate(
                         "nonce_authority",
-                        True,
                         False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "nonce_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "recent_blockhashes_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("nonce_account", "recent_blockhashes_sysvar", "rent_sysvar"),
+                (
                     UIProperty(
                         None,
                         "nonce_account",
                         "Initialize nonce account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "nonce_authority",
                         None,
                         "New authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Initialize Nonce Account",
                 True,
                 True,
@@ -1337,52 +1212,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_AUTHORIZE_NONCE_ACCOUNT,
-                [
+                (
                     PropertyTemplate(
                         "nonce_authority",
-                        True,
                         False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "nonce_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "nonce_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("nonce_account", "nonce_authority"),
+                (
                     UIProperty(
                         None,
                         "nonce_account",
                         "Set nonce authority",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "nonce_authority",
                         None,
                         "New authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "nonce_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "System Program: Authorize Nonce Account",
                 True,
                 True,
@@ -1396,39 +1256,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_ALLOCATE,
-                [
+                (
                     PropertyTemplate(
                         "space",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "new_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                1,
+                ("new_account",),
+                (
                     UIProperty(
                         None,
                         "new_account",
                         "Allocate account",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "space",
                         None,
                         "Data size",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "System Program: Allocate",
                 True,
                 True,
@@ -1442,66 +1294,52 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_ALLOCATE_WITH_SEED,
-                [
+                (
                     PropertyTemplate(
                         "base",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
                     PropertyTemplate(
                         "seed",
                         False,
-                        False,
                         parse_string,
                         format_identity,
+                        (),
                     ),
                     PropertyTemplate(
                         "space",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
                     PropertyTemplate(
                         "owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "allocated_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "base_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("allocated_account", "base_account"),
+                (
                     UIProperty(
                         None,
                         "allocated_account",
                         "Allocate data for account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "space",
                         None,
                         "Data size",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "System Program: Allocate With Seed",
                 True,
                 True,
@@ -1515,59 +1353,45 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_ASSIGN_WITH_SEED,
-                [
+                (
                     PropertyTemplate(
                         "base",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
                     PropertyTemplate(
                         "seed",
                         False,
-                        False,
                         parse_string,
                         format_identity,
+                        (),
                     ),
                     PropertyTemplate(
                         "owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "assigned_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "base_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("assigned_account", "base_account"),
+                (
                     UIProperty(
                         None,
                         "assigned_account",
                         "Assign account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "owner",
                         None,
                         "Assign account to program",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "System Program: Assign With Seed",
                 True,
                 True,
@@ -1581,72 +1405,51 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_TRANSFER_WITH_SEED,
-                [
+                (
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_lamports,
+                        (),
                     ),
                     PropertyTemplate(
                         "from_seed",
                         False,
-                        False,
                         parse_string,
                         format_identity,
+                        (),
                     ),
                     PropertyTemplate(
                         "from_owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "funding_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "base_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "recipient_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("funding_account", "base_account", "recipient_account"),
+                (
                     UIProperty(
                         None,
                         "recipient_account",
                         "Recipient",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "lamports",
                         None,
                         "Amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "funding_account",
                         "Sender",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "System Program: Transfer With Seed",
                 True,
                 True,
@@ -1660,24 +1463,17 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _SYSTEM_PROGRAM_ID_INS_UPGRADE_NONCE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "nonce_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                1,
+                ("nonce_account",),
+                (
                     UIProperty(
                         None,
                         "nonce_account",
                         "Upgrade nonce account",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "System Program: Upgrade Nonce Account",
                 True,
                 True,
@@ -1690,9 +1486,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "System Program",
             True,
             False,
@@ -1706,101 +1503,83 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_INITIALIZE,
-                [
+                (
                     PropertyTemplate(
                         "staker",
-                        True,
                         False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
                     PropertyTemplate(
                         "withdrawer",
-                        True,
                         False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
                     PropertyTemplate(
                         "unix_timestamp",
                         False,
-                        False,
                         read_uint64_le,
                         format_unix_timestamp,
+                        (),
                     ),
                     PropertyTemplate(
                         "epoch",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
                     PropertyTemplate(
                         "custodian",
-                        True,
                         False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "uninitialized_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("uninitialized_stake_account", "rent_sysvar"),
+                (
                     UIProperty(
                         None,
                         "uninitialized_stake_account",
                         "Initialize stake account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "staker",
                         None,
                         "New stake authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "withdrawer",
                         None,
                         "New withdraw authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "unix_timestamp",
                         None,
                         "Lockup time",
-                        False,
                         0,
                     ),
                     UIProperty(
                         "epoch",
                         None,
                         "Lockup epoch",
-                        False,
                         0,
                     ),
                     UIProperty(
                         "custodian",
                         None,
                         "Lockup authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Initialize",
                 True,
                 True,
@@ -1814,85 +1593,61 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_AUTHORIZE,
-                [
+                (
                     PropertyTemplate(
                         "pubkey",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
                     PropertyTemplate(
                         "stake_authorize",
                         False,
-                        False,
                         read_uint32_le,
                         format_StakeAuthorize,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "lockup_authority",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                (
+                    "stake_account",
+                    "clock_sysvar",
+                    "stake_or_withdraw_authority",
+                    "lockup_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "stake_account",
                         "Set authority for",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "pubkey",
                         None,
                         "New authority",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "stake_authorize",
                         None,
                         "Authority type",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_or_withdraw_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "lockup_authority",
                         "Custodian",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Authorize",
                 True,
                 True,
@@ -1906,68 +1661,36 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_DELEGATE_STAKE,
-                [],
-                [
-                    AccountTemplate(
-                        "initialized_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "vote_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_history_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "config_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                6,
+                (
+                    "initialized_stake_account",
+                    "vote_account",
+                    "clock_sysvar",
+                    "stake_history_sysvar",
+                    "config_account",
+                    "stake_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "initialized_stake_account",
                         "Delegate from",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "vote_account",
                         "Vote account",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Stake Program: Delegate Stake",
                 True,
                 True,
@@ -1981,65 +1704,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_SPLIT,
-                [
+                (
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_lamports,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "uninitialized_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("stake_account", "uninitialized_stake_account", "stake_authority"),
+                (
                     UIProperty(
                         "lamports",
                         None,
                         "Split stake",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "uninitialized_stake_account",
                         "To",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Split",
                 True,
                 True,
@@ -2053,83 +1754,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_WITHDRAW,
-                [
+                (
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_lamports,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "recipient_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_history_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "withdrawal_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "lockup_authority",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                5,
+                (
+                    "stake_account",
+                    "recipient_account",
+                    "clock_sysvar",
+                    "stake_history_sysvar",
+                    "withdrawal_authority",
+                    "lockup_authority",
+                ),
+                (
                     UIProperty(
                         "lamports",
                         None,
                         "Withdraw stake",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "recipient_account",
                         "To",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "withdrawal_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Withdraw",
                 True,
                 True,
@@ -2143,43 +1811,23 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_DEACTIVATE,
-                [],
-                [
-                    AccountTemplate(
-                        "delegated_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("delegated_stake_account", "clock_sysvar", "stake_authority"),
+                (
                     UIProperty(
                         None,
                         "delegated_stake_account",
                         "Deactivate stake account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Deactivate",
                 True,
                 True,
@@ -2193,80 +1841,63 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_SET_LOCKUP,
-                [
+                (
                     PropertyTemplate(
                         "unix_timestamp",
-                        False,
                         True,
                         read_uint64_le,
                         format_unix_timestamp,
+                        (),
                     ),
                     PropertyTemplate(
                         "epoch",
-                        False,
                         True,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
                     PropertyTemplate(
                         "custodian",
-                        False,
                         True,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "initialized_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "lockup_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("initialized_stake_account", "lockup_or_withdraw_authority"),
+                (
                     UIProperty(
                         None,
                         "initialized_stake_account",
                         "Set lockup for account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "unix_timestamp",
                         None,
                         "Time",
-                        False,
                         0,
                     ),
                     UIProperty(
                         "epoch",
                         None,
                         "Epoch",
-                        False,
                         0,
                     ),
                     UIProperty(
                         "custodian",
                         None,
                         "New lockup authority",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "lockup_or_withdraw_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Set Lockup",
                 True,
                 True,
@@ -2280,62 +1911,35 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_MERGE,
-                [],
-                [
-                    AccountTemplate(
-                        "destination_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "source_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_history_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                5,
+                (
+                    "destination_stake_account",
+                    "source_stake_account",
+                    "clock_sysvar",
+                    "stake_history_sysvar",
+                    "stake_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "source_stake_account",
                         "Merge stake account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "destination_stake_account",
                         "Into",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Merge",
                 True,
                 True,
@@ -2349,99 +1953,75 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_AUTHORIZE_WITH_SEED,
-                [
+                (
                     PropertyTemplate(
                         "new_authorized_pubkey",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
                     PropertyTemplate(
                         "stake_authorize",
                         False,
-                        False,
                         read_uint32_le,
                         format_StakeAuthorize,
+                        (),
                     ),
                     PropertyTemplate(
                         "authority_seed",
                         False,
-                        False,
                         parse_string,
                         format_identity,
+                        (),
                     ),
                     PropertyTemplate(
                         "authority_owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "lockup_authority",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                (
+                    "stake_account",
+                    "stake_or_withdraw_authority",
+                    "clock_sysvar",
+                    "lockup_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "stake_account",
                         "Set authority for",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "new_authorized_pubkey",
                         None,
                         "New authority",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "stake_authorize",
                         None,
                         "Authority type",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_or_withdraw_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "lockup_authority",
                         "Custodian",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Authorize With Seed",
                 True,
                 True,
@@ -2455,56 +2035,34 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_INITIALIZE_CHECKED,
-                [],
-                [
-                    AccountTemplate(
-                        "uninitialized_stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_authority",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "withdrawal_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                4,
+                (
+                    "uninitialized_stake_account",
+                    "rent_sysvar",
+                    "stake_authority",
+                    "withdrawal_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "uninitialized_stake_account",
                         "Uninitialized stake account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_authority",
                         "New stake authority",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "withdrawal_authority",
                         "New withdraw authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Initialize Checked",
                 True,
                 True,
@@ -2518,84 +2076,55 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "stake_authorize",
                         False,
-                        False,
                         read_uint32_le,
                         format_StakeAuthorize,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "new_stake_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "lockup_authority",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                4,
+                (
+                    "stake_account",
+                    "clock_sysvar",
+                    "stake_or_withdraw_authority",
+                    "new_stake_or_withdraw_authority",
+                    "lockup_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "stake_account",
                         "Set authority for",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "new_stake_or_withdraw_authority",
                         "New authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "stake_authorize",
                         None,
                         "Authority type",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_or_withdraw_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "lockup_authority",
                         "Custodian",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Authorize Checked",
                 True,
                 True,
@@ -2609,98 +2138,69 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_AUTHORIZE_CHECKED_WITH_SEED,
-                [
+                (
                     PropertyTemplate(
                         "stake_authorize",
                         False,
-                        False,
                         read_uint32_le,
                         format_StakeAuthorize,
+                        (),
                     ),
                     PropertyTemplate(
                         "authority_seed",
                         False,
-                        False,
                         parse_string,
                         format_identity,
+                        (),
                     ),
                     PropertyTemplate(
                         "authority_owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "stake_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "clock_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "new_stake_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "lockup_authority",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                4,
+                (
+                    "stake_account",
+                    "stake_or_withdraw_authority",
+                    "clock_sysvar",
+                    "new_stake_or_withdraw_authority",
+                    "lockup_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "stake_account",
                         "Set authority for",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "new_stake_or_withdraw_authority",
                         "New authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "stake_authorize",
                         None,
                         "Authority type",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "stake_or_withdraw_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "lockup_authority",
                         "Custodian",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Authorize Checked With Seed",
                 True,
                 True,
@@ -2714,79 +2214,60 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _STAKE_PROGRAM_ID_INS_SET_LOCKUP_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "unix_timestamp",
-                        False,
                         True,
                         read_uint64_le,
                         format_unix_timestamp,
+                        (),
                     ),
                     PropertyTemplate(
                         "epoch",
-                        False,
                         True,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "stake_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "lockup_or_withdraw_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "new_lockup_authority",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                (
+                    "stake_account",
+                    "lockup_or_withdraw_authority",
+                    "new_lockup_authority",
+                ),
+                (
                     UIProperty(
                         None,
                         "stake_account",
                         "Set lockup for stake account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "unix_timestamp",
                         None,
                         "Time",
-                        False,
                         0,
                     ),
                     UIProperty(
                         "epoch",
                         None,
                         "Epoch",
-                        False,
                         0,
                     ),
                     UIProperty(
                         None,
                         "new_lockup_authority",
                         "New lockup authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "lockup_or_withdraw_authority",
                         "Authorized by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Stake Program: Set Lockup Checked",
                 True,
                 True,
@@ -2799,9 +2280,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "Stake Program",
             True,
             False,
@@ -2815,25 +2297,25 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _COMPUTE_BUDGET_PROGRAM_ID_INS_REQUEST_HEAP_FRAME,
-                [
+                (
                     PropertyTemplate(
                         "bytes",
                         False,
-                        False,
                         read_uint32_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [],
-                [
+                ),
+                0,
+                (),
+                (
                     UIProperty(
                         "bytes",
                         None,
                         "Bytes",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Compute Budget Program: Request Heap Frame",
                 True,
                 True,
@@ -2847,25 +2329,25 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_LIMIT,
-                [
+                (
                     PropertyTemplate(
                         "units",
                         False,
-                        False,
                         read_uint32_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [],
-                [
+                ),
+                0,
+                (),
+                (
                     UIProperty(
                         "units",
                         None,
                         "Units",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Compute Budget Program: Set Compute Unit Limit",
                 True,
                 True,
@@ -2879,25 +2361,25 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _COMPUTE_BUDGET_PROGRAM_ID_INS_SET_COMPUTE_UNIT_PRICE,
-                [
+                (
                     PropertyTemplate(
                         "lamports",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [],
-                [
+                ),
+                0,
+                (),
+                (
                     UIProperty(
                         "lamports",
                         None,
                         "Compute unit price",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Compute Budget Program: Set Compute Unit Price",
                 True,
                 True,
@@ -2910,9 +2392,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "Compute Budget Program",
             True,
             False,
@@ -2926,56 +2409,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                4,
+                ("account_to_initialize", "mint_account", "owner", "rent_sysvar"),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Initialize account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "mint_account",
                         "For token",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token Program: Initialize Account",
                 True,
                 True,
@@ -2989,51 +2445,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
-                [
+                (
                     PropertyTemplate(
                         "number_of_signers",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "multisig_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "signer_accounts",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("multisig_account", "rent_sysvar", "signer_accounts"),
+                (
                     UIProperty(
                         None,
                         "multisig_account",
                         "Initialize multisig",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "signer_accounts",
                         "Required signers",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token Program: Initialize Multisig",
                 True,
                 True,
@@ -3047,65 +2483,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_TRANSFER,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "destination_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("source_account", "destination_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "destination_account",
                         "Recipient",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "source_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Transfer",
                 True,
                 True,
@@ -3119,58 +2533,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_APPROVE,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "delegate_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("source_account", "delegate_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "delegate_account",
                         "Approve delegate",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Allowance",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Approve",
                 True,
                 True,
@@ -3184,37 +2577,23 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_REVOKE,
-                [],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                2,
+                ("source_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "source_account",
                         "Revoke delegate",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Revoke",
                 True,
                 True,
@@ -3228,66 +2607,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_SET_AUTHORITY,
-                [
+                (
                     PropertyTemplate(
                         "authority_type",
                         False,
-                        False,
                         parse_byte,
                         format_AuthorityType,
+                        (),
                     ),
                     PropertyTemplate(
                         "new_authority",
                         True,
-                        True,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "current_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("mint_account", "current_authority"),
+                (
                     UIProperty(
                         None,
                         "mint_account",
                         "Set authority for",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "new_authority",
                         None,
                         "New authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "authority_type",
                         None,
                         "Authority type",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "current_authority",
                         "Current authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Set Authority",
                 True,
                 True,
@@ -3301,65 +2664,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_MINT_TO,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "account_to_mint",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "minting_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("mint", "account_to_mint", "minting_authority"),
+                (
                     UIProperty(
                         None,
                         "mint",
                         "Mint token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Mint amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_mint",
                         "To",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "minting_authority",
                         "Mint authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Mint To",
                 True,
                 True,
@@ -3373,65 +2714,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_BURN,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_burn_from",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("account_to_burn_from", "token_mint", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Burn token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Burn amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_burn_from",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Mint authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Burn",
                 True,
                 True,
@@ -3445,50 +2764,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_CLOSE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_close",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "destination_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("account_to_close", "destination_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "account_to_close",
                         "Close account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "destination_account",
                         "Withdraw to",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Close Account",
                 True,
                 True,
@@ -3502,50 +2800,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_FREEZE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_freeze",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "freeze_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("account_to_freeze", "token_mint", "freeze_authority"),
+                (
                     UIProperty(
                         None,
                         "account_to_freeze",
                         "Freeze account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "token_mint",
                         "Token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "freeze_authority",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Freeze Account",
                 True,
                 True,
@@ -3559,50 +2836,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_THAW_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_freeze",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "freeze_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("account_to_freeze", "token_mint", "freeze_authority"),
+                (
                     UIProperty(
                         None,
                         "account_to_freeze",
                         "Thaw account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "token_mint",
                         "Token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "freeze_authority",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Thaw Account",
                 True,
                 True,
@@ -3616,85 +2872,56 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_TRANSFER_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "token_mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "destination_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                4,
+                ("source_account", "token_mint", "destination_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "destination_account",
                         "Recipient",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "source_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Transfer Checked",
                 True,
                 True,
@@ -3708,85 +2935,56 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_APPROVE_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "token_mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "delegate",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                4,
+                ("source_account", "token_mint", "delegate", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Approve token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "delegate",
                         "Approve delegate",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Allowance",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "source_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Approve Checked",
                 True,
                 True,
@@ -3800,72 +2998,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_MINT_TO_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "account_to_mint",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "minting_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("mint", "account_to_mint", "minting_authority"),
+                (
                     UIProperty(
                         None,
                         "mint",
                         "Mint token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Mint amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_mint",
                         "To",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "minting_authority",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Mint to Checked",
                 True,
                 True,
@@ -3879,72 +3055,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_BURN_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "token_mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_burn_from",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("account_to_burn_from", "token_mint", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Burn token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Burn amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_burn_from",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token Program: Burn Checked",
                 True,
                 True,
@@ -3958,58 +3112,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
-                [
+                (
                     PropertyTemplate(
                         "owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("account_to_initialize", "mint_account", "rent_sysvar"),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Initialize account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "owner",
                         None,
                         "Owner",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "mint_account",
                         "For token",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token Program: Initialize Account 2",
                 True,
                 True,
@@ -4023,24 +3156,17 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_SYNC_NATIVE,
-                [],
-                [
-                    AccountTemplate(
-                        "token_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                1,
+                ("token_account",),
+                (
                     UIProperty(
                         None,
                         "token_account",
                         "Sync native account",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token Program: Sync Native",
                 True,
                 True,
@@ -4054,52 +3180,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
-                [
+                (
                     PropertyTemplate(
                         "owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("account_to_initialize", "mint_account"),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Initialize account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "owner",
                         None,
                         "Owner",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "mint_account",
                         "For token",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token Program: Initialize Account 3",
                 True,
                 True,
@@ -4113,24 +3224,17 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                1,
+                ("account_to_initialize",),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Init account",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token Program: Initialize Immutable Owner",
                 True,
                 True,
@@ -4143,9 +3247,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "Token Program",
             True,
             False,
@@ -4159,56 +3264,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                4,
+                ("account_to_initialize", "mint_account", "owner", "rent_sysvar"),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Initialize account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "mint_account",
                         "For token",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token 2022 Program: Initialize Account",
                 True,
                 True,
@@ -4222,51 +3300,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_MULTISIG,
-                [
+                (
                     PropertyTemplate(
                         "number_of_signers",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "multisig_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "signer_accounts",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("multisig_account", "rent_sysvar", "signer_accounts"),
+                (
                     UIProperty(
                         None,
                         "multisig_account",
                         "Init multisig",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "signer_accounts",
                         "Required signers",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token 2022 Program: Initialize Multisig",
                 True,
                 True,
@@ -4280,65 +3338,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_TRANSFER,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "destination_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("source_account", "destination_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "destination_account",
                         "Recipient",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "source_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Transfer",
                 True,
                 True,
@@ -4352,58 +3388,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_APPROVE,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "delegate_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("source_account", "delegate_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "delegate_account",
                         "Approve delegate",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Allowance",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Approve",
                 True,
                 True,
@@ -4417,37 +3432,23 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_REVOKE,
-                [],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                2,
+                ("source_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "source_account",
                         "Rewoke delegate",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Revoke",
                 True,
                 True,
@@ -4461,66 +3462,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_SET_AUTHORITY,
-                [
+                (
                     PropertyTemplate(
                         "authority_type",
                         False,
-                        False,
                         parse_byte,
                         format_AuthorityType,
+                        (),
                     ),
                     PropertyTemplate(
                         "new_authority",
                         True,
-                        True,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "current_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("mint_account", "current_authority"),
+                (
                     UIProperty(
                         None,
                         "mint_account",
                         "Set authority for",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "new_authority",
                         None,
                         "New authority",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         "authority_type",
                         None,
                         "Authority type",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "current_authority",
                         "Current authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Set Authority",
                 True,
                 True,
@@ -4534,65 +3519,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_MINT_TO,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "account_to_mint",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "minting_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("mint", "account_to_mint", "minting_authority"),
+                (
                     UIProperty(
                         None,
                         "mint",
                         "Mint token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Mint amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_mint",
                         "To",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "minting_authority",
                         "Mint authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Mint to",
                 True,
                 True,
@@ -4606,65 +3569,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_BURN,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_burn_from",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("account_to_burn_from", "token_mint", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Burn token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Burn amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_burn_from",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Mint authority",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Burn",
                 True,
                 True,
@@ -4678,50 +3619,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_CLOSE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_close",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "destination_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("account_to_close", "destination_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "account_to_close",
                         "Close account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "destination_account",
                         "Withdraw to",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Close Account",
                 True,
                 True,
@@ -4735,50 +3655,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_FREEZE_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_freeze",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "freeze_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("account_to_freeze", "token_mint", "freeze_authority"),
+                (
                     UIProperty(
                         None,
                         "account_to_freeze",
                         "Freeze account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "token_mint",
                         "Token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "freeze_authority",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Freeze Account",
                 True,
                 True,
@@ -4792,50 +3691,29 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_THAW_ACCOUNT,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_freeze",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "freeze_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                3,
+                ("account_to_freeze", "token_mint", "freeze_authority"),
+                (
                     UIProperty(
                         None,
                         "account_to_freeze",
                         "Thaw account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "token_mint",
                         "Token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "freeze_authority",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Thaw Account",
                 True,
                 True,
@@ -4849,85 +3727,56 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_TRANSFER_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "token_mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "destination_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                4,
+                ("source_account", "token_mint", "destination_account", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "destination_account",
                         "Recipient",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "source_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Transfer Checked",
                 True,
                 True,
@@ -4941,85 +3790,56 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_APPROVE_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "token_mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "source_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "delegate",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                4,
+                ("source_account", "token_mint", "delegate", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Approve token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "delegate",
                         "Approve delegate",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Allowance",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "source_account",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Approve Checked",
                 True,
                 True,
@@ -5033,72 +3853,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_MINT_TO_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "account_to_mint",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "minting_authority",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("mint", "account_to_mint", "minting_authority"),
+                (
                     UIProperty(
                         None,
                         "mint",
                         "Mint token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Mint amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_mint",
                         "To",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "minting_authority",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Mint to Checked",
                 True,
                 True,
@@ -5112,72 +3910,50 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_BURN_CHECKED,
-                [
+                (
                     PropertyTemplate(
                         "amount",
                         False,
-                        False,
                         read_uint64_le,
                         format_token_amount,
+                        ("#definitions", "decimals", "token_mint"),
                     ),
                     PropertyTemplate(
                         "decimals",
                         False,
-                        False,
                         parse_byte,
                         format_int,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_burn_from",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        True,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("account_to_burn_from", "token_mint", "owner"),
+                (
                     UIProperty(
                         None,
                         "token_mint",
                         "Burn token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "amount",
                         None,
                         "Burn amount",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "account_to_burn_from",
                         "From",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "owner",
                         "Owner",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Token 2022 Program: Burn Checked",
                 True,
                 True,
@@ -5191,58 +3967,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_2,
-                [
+                (
                     PropertyTemplate(
                         "owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                3,
+                ("account_to_initialize", "mint_account", "rent_sysvar"),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Initialize account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "owner",
                         None,
                         "Owner",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "mint_account",
                         "For token",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token 2022 Program: Initialize Account 2",
                 True,
                 True,
@@ -5256,24 +4011,17 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_SYNC_NATIVE,
-                [],
-                [
-                    AccountTemplate(
-                        "token_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                1,
+                ("token_account",),
+                (
                     UIProperty(
                         None,
                         "token_account",
                         "Sync native account",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token 2022 Program: Sync Native",
                 True,
                 True,
@@ -5287,52 +4035,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_ACCOUNT_3,
-                [
+                (
                     PropertyTemplate(
                         "owner",
                         False,
-                        False,
                         parse_pubkey,
                         format_pubkey,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "mint_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                2,
+                ("account_to_initialize", "mint_account"),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Initialize account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         "owner",
                         None,
                         "Owner",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "mint_account",
                         "For token",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token 2022 Program: Initialize Account 3",
                 True,
                 True,
@@ -5346,24 +4079,17 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _TOKEN_2022_PROGRAM_ID_INS_INITIALIZE_IMMUTABLE_OWNER,
-                [],
-                [
-                    AccountTemplate(
-                        "account_to_initialize",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                1,
+                ("account_to_initialize",),
+                (
                     UIProperty(
                         None,
                         "account_to_initialize",
                         "Initialize immutable owner extension for account",
-                        False,
                         None,
                     ),
-                ],
+                ),
                 "Token 2022 Program: Initialize Immutable Owner",
                 True,
                 True,
@@ -5376,9 +4102,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "Token 2022 Program",
             True,
             False,
@@ -5392,81 +4119,43 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE,
-                [],
-                [
-                    AccountTemplate(
-                        "funding_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "associated_token_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "wallet_address",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "system_program",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "spl_token",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "rent_sysvar",
-                        False,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                6,
+                (
+                    "funding_account",
+                    "associated_token_account",
+                    "wallet_address",
+                    "token_mint",
+                    "system_program",
+                    "spl_token",
+                    "rent_sysvar",
+                ),
+                (
                     UIProperty(
                         None,
                         "associated_token_account",
                         "Create token account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "token_mint",
                         "For token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "wallet_address",
                         "Owned by",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "funding_account",
                         "Funded by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Associated Token Account Program: Create",
                 True,
                 True,
@@ -5480,75 +4169,42 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_CREATE_IDEMPOTENT,
-                [],
-                [
-                    AccountTemplate(
-                        "funding_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "associated_token_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "wallet_addr",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint",
-                        False,
-                        False,
-                        True,
-                    ),
-                    AccountTemplate(
-                        "system_program",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "spl_token",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                6,
+                (
+                    "funding_account",
+                    "associated_token_account",
+                    "wallet_addr",
+                    "token_mint",
+                    "system_program",
+                    "spl_token",
+                ),
+                (
                     UIProperty(
                         None,
                         "associated_token_account",
                         "Create token account",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "token_mint",
                         "For token",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "wallet_addr",
                         "Owned by",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "funding_account",
                         "Funded by",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Associated Token Account Program: Create Idempotent",
                 True,
                 True,
@@ -5562,74 +4218,37 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID_INS_RECOVER_NESTED,
-                [],
-                [
-                    AccountTemplate(
-                        "nested_account",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint_nested",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "associated_token_account",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "owner",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "token_mint_owner",
-                        False,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "wallet_address",
-                        True,
-                        False,
-                        False,
-                    ),
-                    AccountTemplate(
-                        "spl_token",
-                        False,
-                        False,
-                        False,
-                    ),
-                ],
-                [
+                (),
+                7,
+                (
+                    "nested_account",
+                    "token_mint_nested",
+                    "associated_token_account",
+                    "owner",
+                    "token_mint_owner",
+                    "wallet_address",
+                    "spl_token",
+                ),
+                (
                     UIProperty(
                         None,
                         "nested_account",
                         "Recover nested token account",
-                        False,
-                        None,
+                        "signer",
                     ),
                     UIProperty(
                         None,
                         "associated_token_account",
                         "Transfer recovered tokens to",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "wallet_address",
                         "Transfer recovered SOL to",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Associated Token Account Program: Recover Nested",
                 True,
                 True,
@@ -5642,9 +4261,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "Associated Token Account Program",
             True,
             False,
@@ -5658,39 +4278,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _MEMO_PROGRAM_ID_INS_MEMO,
-                [
+                (
                     PropertyTemplate(
                         "memo",
                         False,
-                        False,
                         parse_memo,
                         format_identity,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "signer_accounts",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                0,
+                ("signer_accounts",),
+                (
                     UIProperty(
                         "memo",
                         None,
                         "Memo",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "signer_accounts",
                         "Signer accounts",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Memo Program: Memo",
                 True,
                 True,
@@ -5703,9 +4315,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "Memo Program",
             True,
             False,
@@ -5719,39 +4332,31 @@ def get_instruction(
                 program_id,
                 instruction_accounts,
                 _MEMO_LEGACY_PROGRAM_ID_INS_MEMO,
-                [
+                (
                     PropertyTemplate(
                         "memo",
                         False,
-                        False,
                         parse_memo,
                         format_identity,
+                        (),
                     ),
-                ],
-                [
-                    AccountTemplate(
-                        "signer_accounts",
-                        True,
-                        True,
-                        False,
-                    ),
-                ],
-                [
+                ),
+                0,
+                ("signer_accounts",),
+                (
                     UIProperty(
                         "memo",
                         None,
                         "Memo",
-                        False,
                         None,
                     ),
                     UIProperty(
                         None,
                         "signer_accounts",
                         "Signer accounts",
-                        False,
-                        None,
+                        "signer",
                     ),
-                ],
+                ),
                 "Memo Legacy Program: Memo",
                 True,
                 True,
@@ -5764,9 +4369,10 @@ def get_instruction(
             program_id,
             instruction_accounts,
             instruction_id,
-            [],
-            [],
-            [],
+            (),
+            0,
+            (),
+            (),
             "Memo Legacy Program",
             True,
             False,
@@ -5778,9 +4384,10 @@ def get_instruction(
         program_id,
         instruction_accounts,
         0,
-        [],
-        [],
-        [],
+        (),
+        0,
+        (),
+        (),
         "Unsupported program",
         False,
         False,
