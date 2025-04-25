@@ -31,8 +31,10 @@
 #define POWER_MANAGER_SHUTDOWN_TIMEOUT_MS 15000
 #define POWER_MANAGER_BATTERY_UNDERVOLT_THRESHOLD_V 3.0f
 #define POWER_MANAGER_BATTERY_UNDERVOLT_HYSTERESIS_V 0.5f
-#define POWER_MANAGER_BATTERY_LOW_THRESHOLD_V 3.2f
-#define POWER_MANAGER_BATTERY_LOW_RECOVERY_V 3.3f
+#define POWER_MANAGER_BATTERY_LOW_THRESHOLD_V 3.15f
+#define POWER_MANAGER_BATTERY_LOW_RECOVERY_V 3.2f
+#define POWER_MANAGER_WPC_CHARGE_CURR_STEP_MA 50
+#define POWER_MANAGER_WPC_CHARGE_CURR_STEP_TIMEOUT_MS 1000
 
 // Event flag manipulation macros
 #define PM_SET_EVENT(flags, event) ((flags) |= (event))
@@ -44,6 +46,10 @@ typedef struct {
   bool initialized;
   power_manager_state_t state;
   power_manager_event_t event_flags;
+
+  // Battery charging state
+  uint16_t charging_current_target_ma;
+  uint32_t charging_target_timestamp;
 
   // Power source hardware state
   npm1300_report_t pmic_data;
@@ -82,6 +88,7 @@ extern power_manager_driver_t g_power_manager;
 void pm_monitor_power_sources(void);
 void pm_process_state_machine(void);
 void pm_pmic_data_ready(void* context, npm1300_report_t* report);
+void pm_charging_controller(power_manager_driver_t* drv);
 
 // State handlers
 power_manager_state_t pm_handle_state_active(power_manager_driver_t* drv);
