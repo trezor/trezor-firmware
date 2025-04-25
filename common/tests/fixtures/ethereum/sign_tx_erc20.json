@@ -1,0 +1,199 @@
+{
+    "setup": {
+        "mnemonic": "alcohol woman abuse must during monitor noble actual mixed trade anger aisle",
+        "passphrase": ""
+    },
+    "tests": [
+        {
+            "name": "approve_known_token_known_chain",
+            "parameters": {
+                "comment": "Approve",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000064",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "3be4aa3820a4afd92664f1d6811610c7205fcb34da3dbacc881f514b04d46276",
+                "sig_s": "7367fa66ebf7cb0f8497b035d9de6e035cd9c24f04a19b106c62b1cfb96393ce"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "revoke_known_token_known_chain",
+            "parameters": {
+                "comment": "Revoke",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdac17f958d2ee523a2206206994597c13d831ec7",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "eb4a6eb73e657fb4bd9e622f7af7cc49019fdac457a59376d596b86ec1cf8104",
+                "sig_s": "0cf53c99917d603635686898035eb9f2611ccc0c388e89ec02ec640a9e0e30eb"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "approve_uniswap_unknown_token",
+            "parameters": {
+                "comment": "Approve - Uniswap - unknown token",
+                "data": "095ea7b3000000000000000000000000e592427a0aece92de3edee1f18e0157c058615640000000000000000000000000000000000000000000000000000000000000064",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "2854b6fd729e66f2fde19da60442612ae775aa3950cf2b7702a925b584b9e520",
+                "sig_s": "1dae1dfe009ba01edb3b96d61490c2eeea12dc20ef71c31fb846c5b60283310a"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "revoke_uniswap_unknown_token",
+            "parameters": {
+                "comment": "Revoke - Uniswap - unknown token",
+                "data": "095ea7b3000000000000000000000000e592427a0aece92de3edee1f18e0157c058615640000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x00"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "461c9aaa41b851bf64157521d5aa4f367f5af27db243de52545247184a594d24",
+                "sig_s": "45a6cb062a304f06c4a56e5357ad50381283433d65ea687a7c1f50a221267c4a"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "approve_unlimited",
+            "parameters": {
+                "comment": "Approve - unlimited",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880bffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 38,
+                "sig_r": "34b03573f2436ec3a90f0dc4f0ebe1f2f850cdad1baf17ff6d762210ab0d0e37",
+                "sig_s": "5906821df079dfb4fb515e64582eda5ca6307e35074f059a7abf8c7a1917362a"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "approve_unknown_token_unknown_chain",
+            "parameters": {
+                "comment": "Approve - unknown token unknown chain",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000064",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdddddddddddddddddddddddddddddddddddddddd",
+                "chain_id": 200901,
+                "fake_defs": false,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 401837,
+                "sig_r": "cf8cb9bd0aa970617c989108e80ee222f5d0af74cef4baa952c63584c8fe713a",
+                "sig_s": "08253cf6904c7c6d78ff19999bce746a0d97396c196228ee67dbf4e3e8cc3798"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "revoke_unknown_token_unknown_chain",
+            "parameters": {
+                "comment": "Revoke - unknown token unknown chain",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xdddddddddddddddddddddddddddddddddddddddd",
+                "chain_id": 200901,
+                "fake_defs": false,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 401838,
+                "sig_r": "976c17f8833b8260682ab7b3cfec810f3f9239d53baa0ed622a8cccb2ba9d018",
+                "sig_s": "3e1072f823e90a029b48a5aaa57630c4b1e9b6808c3af441c8abcb16b5823ca5"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "approve_unknown_token_known_chain",
+            "parameters": {
+                "comment": "Approve - unknown token known chain",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000064",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "b10bb751b48d72bbb6d55ecb34800c08f92fda818480f67190d923c5bd73d2c4",
+                "sig_s": "78fb7fa237bc6bfa0e5bdb96164db4162f41866f2f30b54295d947fe87a813a8"
+            },
+            "skip_models": ["t1"]
+        },
+        {
+            "name": "revoke_unknown_token_known_chain",
+            "parameters": {
+                "comment": "Revoke - unknown token known chain",
+                "data": "095ea7b3000000000000000000000000574bbb36871ba6b78e27f4b4dcfb76ea0091880b0000000000000000000000000000000000000000000000000000000000000000",
+                "path": "m/44'/60'/0'/0/0",
+                "to_address": "0xfc6b5d6af8a13258f7cbd0d39e11b35e01a32f93",
+                "chain_id": 1,
+                "nonce": "0x0",
+                "gas_price": "0x14",
+                "gas_limit": "0x14",
+                "tx_type": null,
+                "value": "0x0"
+            },
+            "result": {
+                "sig_v": 37,
+                "sig_r": "21393dee0befb33c52b4916019df6b1bbace9015221e8f32de82f2554a8fad2d",
+                "sig_s": "42f03f5dd99ed5b2368e85048546468fd9ae962bb0c7b6650bf0a39b9b2bb517"
+            },
+            "skip_models": ["t1"]
+        }
+    ]
+}
