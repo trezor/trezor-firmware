@@ -17,7 +17,7 @@ from storage.cache_thp import (
     conditionally_replace_channel,
     is_there_a_channel_to_replace,
 )
-from trezor import log, loop, protobuf, utils, workflow
+from trezor import loop, protobuf, utils, workflow
 from trezor.wire.errors import WireBufferError
 
 from . import ENCRYPTED, ChannelState, PacketHeader, ThpDecryptionError, ThpError
@@ -42,11 +42,12 @@ from .writer import (
 if __debug__:
     from trezor.utils import get_bytes_as_str
 
+    from .. import wire_log as log
     from . import state_to_str
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
-    from typing import Awaitable
+    from typing import Any, Awaitable
 
     from trezor.messages import ThpPairingCredential
 
@@ -63,9 +64,9 @@ class Channel:
 
         # Channel properties
         self.channel_id: bytes = channel_cache.channel_id
+        self.iface: WireInterface = interface_manager.decode_iface(channel_cache.iface)
         if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
             self._log("channel initialization")
-        self.iface: WireInterface = interface_manager.decode_iface(channel_cache.iface)
         self.channel_cache: ChannelCache = channel_cache
 
         # Shared variables
@@ -463,8 +464,18 @@ class Channel:
         force: bool = False,
         fallback: bool = False,
     ) -> None:
-        if __debug__ and utils.EMULATOR:
-            self._log(f"write message: {msg.MESSAGE_NAME}\n", utils.dump_protobuf(msg))
+        if __debug__:
+            self._log(
+                f"write message: {msg.MESSAGE_NAME}",
+                logger=log.info,
+            )
+            if utils.EMULATOR:
+                log.debug(
+                    __name__,
+                    self.iface,
+                    "message contents:\n%s",
+                    utils.dump_protobuf(msg),
+                )
 
         cid = self.get_channel_id_int()
         msg_size = protobuf.encoded_length(msg)
@@ -540,8 +551,8 @@ class Channel:
         payload_length = noise_payload_len + TAG_LENGTH
 
         if self.write_task_spawn is not None:
-            self.write_task_spawn.close()  # UPS TODO might break something
-            print("\nCLOSED\n")
+            self.write_task_spawn.close()  # TODO might break something
+            self._log("Closed write task", logger=log.warning)
         self._prepare_write()
         if fallback:
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
@@ -585,8 +596,12 @@ class Channel:
         header = PacketHeader(ctrl_byte, self.get_channel_id_int(), payload_len)
         self.transmission_loop = TransmissionLoop(self, header, payload)
         if only_once:
+            if __debug__:
+                self._log('Starting transmission loop "only once"')
             await self.transmission_loop.start(max_retransmission_count=1)
         else:
+            if __debug__:
+                self._log("Starting transmission loop")
             await self.transmission_loop.start()
 
         ABP.set_send_seq_bit_to_opposite(self.channel_cache)
@@ -639,9 +654,10 @@ class Channel:
 
     if __debug__:
 
-        def _log(self, text_1: str, text_2: str = "") -> None:
-            log.debug(
+        def _log(self, text_1: str, text_2: str = "", logger: Any = log.debug) -> None:
+            logger(
                 __name__,
+                self.iface,
                 "(cid: %s) %s%s",
                 get_bytes_as_str(self.channel_id),
                 text_1,
