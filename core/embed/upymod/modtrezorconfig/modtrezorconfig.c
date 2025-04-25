@@ -84,7 +84,8 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
   if (ext_salt != mp_const_none) {
     mp_get_buffer_raise(ext_salt, &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
-      mp_raise_msg(&mp_type_ValueError, "Invalid length of external salt.");
+      mp_raise_msg(&mp_type_ValueError,
+                   MP_ERROR_TEXT("Invalid length of external salt."));
   }
 
   if (sectrue != storage_unlock(pin_b.buf, pin_b.len, ext_salt_b.buf)) {
@@ -175,14 +176,16 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
   if (args[2] != mp_const_none) {
     mp_get_buffer_raise(args[2], &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
-      mp_raise_msg(&mp_type_ValueError, "Invalid length of external salt.");
+      mp_raise_msg(&mp_type_ValueError,
+                   MP_ERROR_TEXT("Invalid length of external salt."));
     old_ext_salt = ext_salt_b.buf;
   }
   const uint8_t *new_ext_salt = NULL;
   if (args[3] != mp_const_none) {
     mp_get_buffer_raise(args[3], &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
-      mp_raise_msg(&mp_type_ValueError, "Invalid length of external salt.");
+      mp_raise_msg(&mp_type_ValueError,
+                   MP_ERROR_TEXT("Invalid length of external salt."));
     new_ext_salt = ext_salt_b.buf;
   }
 
@@ -242,7 +245,8 @@ STATIC mp_obj_t mod_trezorconfig_change_wipe_code(size_t n_args,
   if (args[1] != mp_const_none) {
     mp_get_buffer_raise(args[1], &ext_salt_b, MP_BUFFER_READ);
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
-      mp_raise_msg(&mp_type_ValueError, "Invalid length of external salt.");
+      mp_raise_msg(&mp_type_ValueError,
+                   MP_ERROR_TEXT("Invalid length of external salt."));
     ext_salt = ext_salt_b.buf;
   }
 
@@ -265,7 +269,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(
 STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+    mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
   }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
@@ -283,7 +287,8 @@ STATIC mp_obj_t mod_trezorconfig_get(size_t n_args, const mp_obj_t *args) {
   vstr_init_len(&vstr, len);
   if (sectrue != storage_get(appkey, vstr.buf, vstr.len, &len)) {
     vstr_clear(&vstr);
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to get value from storage.");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to get value from storage."));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -297,7 +302,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_get_obj, 2, 3,
 STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+    mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
   }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
@@ -308,7 +313,7 @@ STATIC mp_obj_t mod_trezorconfig_set(size_t n_args, const mp_obj_t *args) {
   mp_get_buffer_raise(args[2], &value, MP_BUFFER_READ);
   if (value.len > UINT16_MAX ||
       sectrue != storage_set(appkey, value.buf, value.len)) {
-    mp_raise_msg(&mp_type_RuntimeError, "Could not save value");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Could not save value"));
   }
   return mp_const_none;
 }
@@ -324,7 +329,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_set_obj, 3, 4,
 STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+    mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
   }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
@@ -333,7 +338,8 @@ STATIC mp_obj_t mod_trezorconfig_delete(size_t n_args, const mp_obj_t *args) {
   if (n_args > 3 && args[3] == mp_const_true) {
     app |= FLAGS_WRITE;
     if (args[2] != mp_const_true) {
-      mp_raise_msg(&mp_type_ValueError, "Writable entry must be public.");
+      mp_raise_msg(&mp_type_ValueError,
+                   MP_ERROR_TEXT("Writable entry must be public."));
     }
   }
   uint16_t appkey = (app << 8) | key;
@@ -355,7 +361,7 @@ STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
                                              const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+    mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
   }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 3 && args[3] == mp_const_true) {
@@ -366,7 +372,8 @@ STATIC mp_obj_t mod_trezorconfig_set_counter(size_t n_args,
   uint16_t appkey = (app << 8) | key;
   mp_uint_t count = trezor_obj_get_uint(args[2]);
   if (count > UINT32_MAX || sectrue != storage_set_counter(appkey, count)) {
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to set value in storage.");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to set value in storage."));
   }
   return mp_const_none;
 }
@@ -384,7 +391,7 @@ STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
                                               const mp_obj_t *args) {
   uint8_t app = trezor_obj_get_uint8(args[0]);
   if (app == 0 || app > MAX_APPID) {
-    mp_raise_msg(&mp_type_ValueError, "Invalid app ID.");
+    mp_raise_msg(&mp_type_ValueError, MP_ERROR_TEXT("Invalid app ID."));
   }
   uint8_t key = trezor_obj_get_uint8(args[1]);
   if (n_args > 2 && args[2] == mp_const_true) {
@@ -395,7 +402,8 @@ STATIC mp_obj_t mod_trezorconfig_next_counter(size_t n_args,
   uint16_t appkey = (app << 8) | key;
   uint32_t count = 0;
   if (sectrue != storage_next_counter(appkey, &count)) {
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to set value in storage.");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to set value in storage."));
   }
   return mp_obj_new_int_from_uint(count);
 }

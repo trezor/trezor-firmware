@@ -85,7 +85,7 @@ STATIC mp_obj_t mod_trezorio_HID_make_new(const mp_obj_type_t *type,
 
   if (report_desc.buf == NULL || report_desc.len == 0 ||
       report_desc.len > 255) {
-    mp_raise_ValueError("report_desc is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("report_desc is invalid"));
   }
   CHECK_PARAM_RANGE(iface_num, 0, 32)
   CHECK_PARAM_RANGE(ep_in, 0, 255)
@@ -156,24 +156,25 @@ STATIC mp_obj_t mod_trezorio_HID_read(size_t n_args, const mp_obj_t *args) {
   }
 
   if (offset < 0) {
-    mp_raise_ValueError("Negative offset not allowed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Negative offset not allowed"));
   }
 
   if (offset > buf.len) {
-    mp_raise_ValueError("Offset out of bounds");
+    mp_raise_ValueError(MP_ERROR_TEXT("Offset out of bounds"));
   }
 
   uint32_t buffer_space = buf.len - offset;
 
   if (buffer_space < USB_PACKET_LEN) {
-    mp_raise_ValueError("Buffer too small");
+    mp_raise_ValueError(MP_ERROR_TEXT("Buffer too small"));
   }
 
   ssize_t r = usb_hid_read(o->info.iface_num, &((uint8_t *)buf.buf)[offset],
                            USB_PACKET_LEN);
 
   if (r != USB_PACKET_LEN) {
-    mp_raise_msg(&mp_type_RuntimeError, "Unexpected read length");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Unexpected read length"));
   }
 
   return MP_OBJ_NEW_SMALL_INT(r);

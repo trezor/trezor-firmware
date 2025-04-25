@@ -47,10 +47,10 @@ STATIC mp_obj_t mod_trezorcrypto_ChaCha20Poly1305_make_new(
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &nonce, MP_BUFFER_READ);
   if (key.len != 32) {
-    mp_raise_ValueError("Invalid length of key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of key"));
   }
   if (nonce.len != 12) {
-    mp_raise_ValueError("Invalid length of nonce");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of nonce"));
   }
   mp_obj_ChaCha20Poly1305_t *o =
       m_new_obj_with_finaliser(mp_obj_ChaCha20Poly1305_t);

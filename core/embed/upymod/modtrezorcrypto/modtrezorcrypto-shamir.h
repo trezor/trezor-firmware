@@ -43,7 +43,7 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   mp_obj_t *share_items = NULL;
   mp_obj_get_array(shares, &share_count, &share_items);
   if (share_count < 1 || share_count > SHAMIR_MAX_SHARE_COUNT) {
-    mp_raise_ValueError("Invalid number of shares.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid number of shares."));
   }
   uint8_t x_uint8 = trezor_obj_get_uint8(x);
   uint8_t share_indices[SHAMIR_MAX_SHARE_COUNT] = {0};
@@ -58,11 +58,13 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
     if (value_len == 0) {
       value_len = value.len;
       if (value_len > SHAMIR_MAX_LEN) {
-        mp_raise_ValueError("Share value exceeds maximum supported length.");
+        mp_raise_ValueError(
+            MP_ERROR_TEXT("Share value exceeds maximum supported length."));
       }
     }
     if (value.len != value_len) {
-      mp_raise_ValueError("All shares must have the same length.");
+      mp_raise_ValueError(
+          MP_ERROR_TEXT("All shares must have the same length."));
     }
     share_values[i] = value.buf;
   }
@@ -71,7 +73,8 @@ mp_obj_t mod_trezorcrypto_shamir_interpolate(mp_obj_t shares, mp_obj_t x) {
   if (shamir_interpolate((uint8_t *)vstr.buf, x_uint8, share_indices,
                          share_values, share_count, value_len) != true) {
     vstr_clear(&vstr);
-    mp_raise_ValueError("Share indices must be pairwise distinct.");
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("Share indices must be pairwise distinct."));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }

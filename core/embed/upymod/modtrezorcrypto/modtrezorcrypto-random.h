@@ -36,7 +36,7 @@
 STATIC mp_obj_t mod_trezorcrypto_random_uniform(mp_obj_t n) {
   uint32_t nn = trezor_obj_get_uint(n);
   if (nn == 0) {
-    mp_raise_ValueError("Maximum can't be zero");
+    mp_raise_ValueError(MP_ERROR_TEXT("Maximum can't be zero"));
   }
   return mp_obj_new_int_from_uint(random_uniform(nn));
 }
@@ -53,7 +53,7 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
                                               const mp_obj_t *args) {
   uint32_t len = trezor_obj_get_uint(args[0]);
   if (len > 1024) {
-    mp_raise_ValueError("Maximum requested size is 1024");
+    mp_raise_ValueError(MP_ERROR_TEXT("Maximum requested size is 1024"));
   }
   vstr_t vstr = {0};
   vstr_init_len(&vstr, len);
@@ -62,7 +62,7 @@ STATIC mp_obj_t mod_trezorcrypto_random_bytes(size_t n_args,
     if (!optiga_random_buffer((uint8_t *)vstr.buf, len)) {
       vstr_clear(&vstr);
       mp_raise_msg(&mp_type_RuntimeError,
-                   "Failed to get randomness from Optiga.");
+                   MP_ERROR_TEXT("Failed to get randomness from Optiga."));
     }
 
     random_xor((uint8_t *)vstr.buf, len);
@@ -85,7 +85,7 @@ STATIC mp_obj_t mod_trezorcrypto_random_shuffle(mp_obj_t data) {
   mp_obj_t *items = NULL;
   mp_obj_get_array(data, &count, &items);
   if (count > 256) {
-    mp_raise_ValueError("Maximum list size is 256 items");
+    mp_raise_ValueError(MP_ERROR_TEXT("Maximum list size is 256 items"));
   }
   if (count <= 1) {
     return mp_const_none;

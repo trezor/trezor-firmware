@@ -74,7 +74,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_make_new(const mp_obj_type_t *type,
     hmac_sha512_Init(&(o->ctx512), key.buf, key.len);
   } else {
     m_del_obj(mp_obj_Hmac_t, o);
-    mp_raise_ValueError("Invalid hashtype");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid hashtype"));
   }
   // constructor called with message as third parameter
   if (n_args > 2) {
@@ -96,7 +96,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_update(mp_obj_t self, mp_obj_t message) {
   } else if (o->hashtype == SHA512) {
     hmac_sha512_Update(&(o->ctx512), msg.buf, msg.len);
   } else {
-    mp_raise_ValueError("Invalid hashtype");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid hashtype"));
   }
   return mp_const_none;
 }
@@ -123,7 +123,7 @@ STATIC mp_obj_t mod_trezorcrypto_Hmac_digest(mp_obj_t self) {
     hmac_sha512_Final(&ctx, (uint8_t *)mac.buf);
     memzero(&ctx, sizeof(HMAC_SHA512_CTX));
   } else {
-    mp_raise_ValueError("Invalid hashtype");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid hashtype"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &mac);
 }

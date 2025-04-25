@@ -67,13 +67,13 @@ STATIC const mp_obj_type_t mod_trezorcrypto_monero_hasher_type;
 
 static inline void assert_ge25519(const mp_obj_t o) {
   if (!MP_OBJ_IS_GE25519(o)) {
-    mp_raise_ValueError("ge25519 expected");
+    mp_raise_ValueError(MP_ERROR_TEXT("ge25519 expected"));
   }
 }
 
 static inline void assert_scalar(const mp_obj_t o) {
   if (!MP_OBJ_IS_SCALAR(o)) {
-    mp_raise_ValueError("scalar expected");
+    mp_raise_ValueError(MP_ERROR_TEXT("scalar expected"));
   }
 }
 
@@ -113,12 +113,12 @@ STATIC void mp_unpack_ge25519(ge25519 *r, const mp_obj_t arg, mp_int_t offset) {
   mp_buffer_info_t buff = {0};
   mp_get_buffer_raise(arg, &buff, MP_BUFFER_READ);
   if (buff.len < 32 + offset) {
-    mp_raise_ValueError("Invalid length of the EC point");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of the EC point"));
   }
 
   const int res = ge25519_unpack_vartime(r, ((uint8_t *)buff.buf) + offset);
   if (res != 1) {
-    mp_raise_ValueError("Point decoding error");
+    mp_raise_ValueError(MP_ERROR_TEXT("Point decoding error"));
   }
 }
 
@@ -127,7 +127,7 @@ STATIC void mp_unpack_scalar(bignum256modm r, const mp_obj_t arg,
   mp_buffer_info_t buff = {0};
   mp_get_buffer_raise(arg, &buff, MP_BUFFER_READ);
   if (buff.len < 32 + offset) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   expand256_modm(r, ((uint8_t *)buff.buf) + offset, 32);
 }
@@ -161,7 +161,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_make_new(
     mp_unpack_ge25519(&o->p, args[0], 0);
   } else {
     m_del_obj(mp_obj_ge25519_t, o);
-    mp_raise_ValueError("Invalid ge25519 constructor");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid ge25519 constructor"));
   }
 
   return MP_OBJ_FROM_PTR(o);
@@ -203,7 +203,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_bignum256modm_make_new(
     set256_modm(o->p, v);
   } else {
     m_del_obj(mp_obj_bignum256modm_t, o);
-    mp_raise_ValueError("Invalid scalar constructor");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid scalar constructor"));
   }
 
   return MP_OBJ_FROM_PTR(o);
@@ -292,7 +292,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_sc_copy(const mp_obj_t dest,
     uint64_t v = trezor_obj_get_uint64(src);
     set256_modm(MP_OBJ_SCALAR(res), v);
   } else {
-    mp_raise_ValueError("Invalid scalar def");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid scalar def"));
   }
   return res;
 }
@@ -306,7 +306,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_monero_sc_copy_obj,
 STATIC mp_obj_t mod_trezorcrypto_monero_sc_check(const mp_obj_t arg) {
   assert_scalar(arg);
   if (check256_modm(MP_OBJ_C_SCALAR(arg)) != 1) {
-    mp_raise_ValueError("Ed25519 scalar invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("Ed25519 scalar invalid"));
   }
   return mp_const_none;
 }
@@ -485,7 +485,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_encodeint_into(size_t n_args,
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
     const mp_int_t offset = n_args >= 3 ? mp_obj_get_int(args[2]) : 0;
     if (bufm.len < 32 + offset) {
-      mp_raise_ValueError("Buffer too small");
+      mp_raise_ValueError(MP_ERROR_TEXT("Buffer too small"));
     }
 
     contract256_modm(((uint8_t *)bufm.buf) + offset, MP_OBJ_C_SCALAR(args[1]));
@@ -529,7 +529,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_decodeint_into_noreduce(
   mp_buffer_info_t buff = {0};
   mp_get_buffer_raise(args[1], &buff, MP_BUFFER_READ);
   if (buff.len != 32 + offset) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
 
   expand_raw256_modm(MP_OBJ_SCALAR(res), ((uint8_t *)buff.buf) + offset);
@@ -577,7 +577,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorcrypto_monero_xmr_H_obj, 0,
 STATIC mp_obj_t mod_trezorcrypto_monero_ge25519_check(const mp_obj_t arg) {
   assert_ge25519(arg);
   if (ge25519_check(&MP_OBJ_C_GE25519(arg)) != 1) {
-    mp_raise_ValueError("Ed25519 point not on curve");
+    mp_raise_ValueError(MP_ERROR_TEXT("Ed25519 point not on curve"));
   }
   return mp_const_none;
 }
@@ -688,7 +688,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_scalarmult_base_into(
     set256_modm(mlt, mp_obj_get_int(src));
     ge25519_scalarmult_base_wrapper(&MP_OBJ_GE25519(res), mlt);
   } else {
-    mp_raise_ValueError("unknown base mult type");
+    mp_raise_ValueError(MP_ERROR_TEXT("unknown base mult type"));
   }
 
   return res;
@@ -717,7 +717,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_scalarmult_into(const mp_obj_t dest,
     set256_modm(mlt, mp_obj_get_int(s));
     ge25519_scalarmult(&MP_OBJ_GE25519(res), &MP_OBJ_C_GE25519(p), mlt);
   } else {
-    mp_raise_ValueError("unknown mult type");
+    mp_raise_ValueError(MP_ERROR_TEXT("unknown mult type"));
   }
 
   return res;
@@ -743,7 +743,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_encodepoint_into(size_t n_args,
     mp_get_buffer_raise(args[0], &bufm, MP_BUFFER_WRITE);
     const mp_int_t offset = n_args >= 3 ? mp_obj_get_int(args[2]) : 0;
     if (bufm.len < 32 + offset) {
-      mp_raise_ValueError("Buffer too small");
+      mp_raise_ValueError(MP_ERROR_TEXT("Buffer too small"));
     }
 
     ge25519_pack(((uint8_t *)bufm.buf) + offset, &MP_OBJ_C_GE25519(args[1]));
@@ -791,7 +791,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_xmr_base58_addr_encode_check(
                                         out.buf, out.alloc);
   if (sz <= 0) {
     vstr_clear(&out);
-    mp_raise_ValueError("b58 encoding error");
+    mp_raise_ValueError(MP_ERROR_TEXT("b58 encoding error"));
   }
   out.len = sz;
 
@@ -819,7 +819,7 @@ mod_trezorcrypto_monero_xmr_base58_addr_decode_check(const mp_obj_t buff) {
                                         out.alloc);
   if (sz <= 0) {
     vstr_clear(&out);
-    mp_raise_ValueError("b58 decoding error");
+    mp_raise_ValueError(MP_ERROR_TEXT("b58 decoding error"));
   }
   out.len = sz;
 
@@ -865,7 +865,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_fast_hash_into(size_t n_args,
     mp_get_buffer_raise(args[0], &odata, MP_BUFFER_WRITE);
     if (odata.len < HASHER_DIGEST_LENGTH) {
       vstr_clear(&out);
-      mp_raise_ValueError("Output buffer too small");
+      mp_raise_ValueError(MP_ERROR_TEXT("Output buffer too small"));
     }
     buff_use = odata.buf;
   } else {
@@ -880,7 +880,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_fast_hash_into(size_t n_args,
   if (length < 0) length += data.len;
   if (offset < 0) offset += data.len;
   if (length < 0 || offset < 0 || offset + length > data.len) {
-    mp_raise_ValueError("Illegal offset/length");
+    mp_raise_ValueError(MP_ERROR_TEXT("Illegal offset/length"));
   }
   xmr_fast_hash(buff_use, (const char *)data.buf + offset, length);
   return args[0] != mp_const_none
@@ -911,7 +911,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_hash_to_point_into(
   if (length < 0) length += data.len;
   if (offset < 0) offset += data.len;
   if (length < 0 || offset < 0 || offset + length > data.len) {
-    mp_raise_ValueError("Illegal offset/length");
+    mp_raise_ValueError(MP_ERROR_TEXT("Illegal offset/length"));
   }
 
   xmr_hash_to_ec(&MP_OBJ_GE25519(res), (const char *)data.buf + offset, length);
@@ -941,7 +941,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_hash_to_scalar_into(
   if (length < 0) length += data.len;
   if (offset < 0) offset += data.len;
   if (length < 0 || offset < 0 || offset + length > data.len) {
-    mp_raise_ValueError("Illegal offset/length");
+    mp_raise_ValueError(MP_ERROR_TEXT("Illegal offset/length"));
   }
   xmr_hash_to_scalar(MP_OBJ_SCALAR(res), (const char *)data.buf + offset,
                      length);
@@ -1159,7 +1159,7 @@ STATIC mp_obj_t mod_trezorcrypto_monero_hasher_digest(size_t n_args,
     mp_get_buffer_raise(args[1], &bufm, MP_BUFFER_WRITE);
     const mp_int_t offset = n_args >= 3 ? mp_obj_get_int(args[2]) : 0;
     if (bufm.len < SHA3_256_DIGEST_LENGTH + offset) {
-      mp_raise_ValueError("Buffer too small");
+      mp_raise_ValueError(MP_ERROR_TEXT("Buffer too small"));
     }
 
     xmr_hasher_final(&ctx, (uint8_t *)bufm.buf + offset);

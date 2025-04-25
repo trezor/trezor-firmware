@@ -64,7 +64,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_publickey(size_t n_args,
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   vstr_t pk = {0};
   bool compressed = n_args < 2 || args[1] == mp_const_true;
@@ -72,13 +72,13 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_publickey(size_t n_args,
     vstr_init_len(&pk, 33);
     if (ecdsa_get_public_key33(&nist256p1, (const uint8_t *)sk.buf,
                                (uint8_t *)pk.buf) != 0) {
-      mp_raise_ValueError("Invalid secret key");
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret key"));
     }
   } else {
     vstr_init_len(&pk, 65);
     if (ecdsa_get_public_key65(&nist256p1, (const uint8_t *)sk.buf,
                                (uint8_t *)pk.buf) != 0) {
-      mp_raise_ValueError("Invalid secret key");
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret key"));
     }
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
@@ -101,10 +101,10 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
   mp_get_buffer_raise(args[1], &dig, MP_BUFFER_READ);
   bool compressed = n_args < 3 || args[2] == mp_const_true;
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (dig.len != 32) {
-    mp_raise_ValueError("Invalid length of digest");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest"));
   }
   vstr_t sig = {0};
   vstr_init_len(&sig, 65);
@@ -113,7 +113,7 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_sign(size_t n_args,
                              (const uint8_t *)dig.buf, (uint8_t *)sig.buf + 1,
                              &pby, NULL)) {
     vstr_clear(&sig);
-    mp_raise_ValueError("Signing failed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Signing failed"));
   }
   sig.buf[0] = 27 + pby + compressed * 4;
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
@@ -202,17 +202,17 @@ STATIC mp_obj_t mod_trezorcrypto_nist256p1_multiply(mp_obj_t secret_key,
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (pk.len != 33 && pk.len != 65) {
-    mp_raise_ValueError("Invalid length of public key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of public key"));
   }
   vstr_t out = {0};
   vstr_init_len(&out, 65);
   if (0 != ecdh_multiply(&nist256p1, (const uint8_t *)sk.buf,
                          (const uint8_t *)pk.buf, (uint8_t *)out.buf)) {
     vstr_clear(&out);
-    mp_raise_ValueError("Multiply failed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Multiply failed"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }

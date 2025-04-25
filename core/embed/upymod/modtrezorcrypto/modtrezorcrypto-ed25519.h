@@ -47,7 +47,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_publickey(mp_obj_t secret_key) {
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   vstr_t pk = {0};
   vstr_init_len(&pk, sizeof(ed25519_public_key));
@@ -68,10 +68,10 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &msg, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (msg.len == 0) {
-    mp_raise_ValueError("Empty data to sign");
+    mp_raise_ValueError(MP_ERROR_TEXT("Empty data to sign"));
   }
   mp_buffer_info_t hash_func = {0};
   vstr_t sig = {0};
@@ -85,7 +85,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign(size_t n_args,
                           *(ed25519_signature *)sig.buf);
     } else {
       vstr_clear(&sig);
-      mp_raise_ValueError("Unknown hash function");
+      mp_raise_ValueError(MP_ERROR_TEXT("Unknown hash function"));
     }
   } else {
     ed25519_sign(msg.buf, msg.len, *(const ed25519_secret_key *)sk.buf,
@@ -113,13 +113,14 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_sign_ext(mp_obj_t secret_scalar,
   mp_get_buffer_raise(secret_extension, &skext, MP_BUFFER_READ);
   mp_get_buffer_raise(message, &msg, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (skext.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key extension");
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("Invalid length of secret key extension"));
   }
   if (msg.len == 0) {
-    mp_raise_ValueError("Empty data to sign");
+    mp_raise_ValueError(MP_ERROR_TEXT("Empty data to sign"));
   }
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_signature));
@@ -173,7 +174,8 @@ mod_trezorcrypto_ed25519_cosi_combine_publickeys(mp_obj_t public_keys) {
   mp_obj_t *pkitems = NULL;
   mp_obj_get_array(public_keys, &pklen, &pkitems);
   if (pklen > 15) {
-    mp_raise_ValueError("Can't combine more than 15 public keys");
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("Can't combine more than 15 public keys"));
   }
   mp_buffer_info_t buf = {0};
   ed25519_public_key pks[pklen];
@@ -181,7 +183,7 @@ mod_trezorcrypto_ed25519_cosi_combine_publickeys(mp_obj_t public_keys) {
   for (int i = 0; i < pklen; i++) {
     mp_get_buffer_raise(pkitems[i], &buf, MP_BUFFER_READ);
     if (buf.len != 32) {
-      mp_raise_ValueError("Invalid length of public key");
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of public key"));
     }
     memcpy(pks[i], buf.buf, buf.len);
   }
@@ -190,7 +192,7 @@ mod_trezorcrypto_ed25519_cosi_combine_publickeys(mp_obj_t public_keys) {
   if (0 != ed25519_cosi_combine_publickeys(*(ed25519_public_key *)pk.buf, pks,
                                            pklen)) {
     vstr_clear(&pk);
-    mp_raise_ValueError("Error combining public keys");
+    mp_raise_ValueError(MP_ERROR_TEXT("Error combining public keys"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }
@@ -207,13 +209,14 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_combine_signatures(
   mp_buffer_info_t sigR = {0};
   mp_get_buffer_raise(R, &sigR, MP_BUFFER_READ);
   if (sigR.len != 32) {
-    mp_raise_ValueError("Invalid length of R");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of R"));
   }
   size_t siglen = 0;
   mp_obj_t *sigitems = NULL;
   mp_obj_get_array(signatures, &siglen, &sigitems);
   if (siglen > 15) {
-    mp_raise_ValueError("Can't combine more than 15 COSI signatures");
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("Can't combine more than 15 COSI signatures"));
   }
   mp_buffer_info_t buf = {0};
   ed25519_cosi_signature sigs[siglen];
@@ -221,7 +224,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_combine_signatures(
   for (int i = 0; i < siglen; i++) {
     mp_get_buffer_raise(sigitems[i], &buf, MP_BUFFER_READ);
     if (buf.len != 32) {
-      mp_raise_ValueError("Invalid length of COSI signature");
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of COSI signature"));
     }
     memcpy(sigs[i], buf.buf, buf.len);
   }
@@ -274,16 +277,17 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_sign(size_t n_args,
   mp_get_buffer_raise(args[3], &sigR, MP_BUFFER_READ);
   mp_get_buffer_raise(args[4], &pk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (nonce.len != 32) {
-    mp_raise_ValueError("Invalid length of nonce");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of nonce"));
   }
   if (sigR.len != 32) {
-    mp_raise_ValueError("Invalid length of R");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of R"));
   }
   if (pk.len != 32) {
-    mp_raise_ValueError("Invalid length of aggregated public key");
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("Invalid length of aggregated public key"));
   }
   vstr_t sig = {0};
   vstr_init_len(&sig, sizeof(ed25519_cosi_signature));
@@ -294,7 +298,7 @@ STATIC mp_obj_t mod_trezorcrypto_ed25519_cosi_sign(size_t n_args,
                              *(const ed25519_secret_key *)pk.buf,
                              *(ed25519_cosi_signature *)sig.buf)) {
     vstr_clear(&sig);
-    mp_raise_ValueError("Signing failed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Signing failed"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }

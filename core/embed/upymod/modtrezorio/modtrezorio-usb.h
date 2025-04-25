@@ -118,13 +118,13 @@ STATIC mp_obj_t mod_trezorio_USB_make_new(const mp_obj_type_t *type,
   CHECK_PARAM_RANGE(product_id, 0, 65535)
   CHECK_PARAM_RANGE(release_num, 0, 65535)
   if (manufacturer == NULL) {
-    mp_raise_ValueError("manufacturer is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("manufacturer is invalid"));
   }
   if (product == NULL) {
-    mp_raise_ValueError("product is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("product is invalid"));
   }
   if (interface == NULL) {
-    mp_raise_ValueError("interface is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("interface is invalid"));
   }
 
   mp_obj_USB_t *o = m_new_obj_with_finaliser(mp_obj_USB_t);
@@ -158,7 +158,7 @@ STATIC mp_obj_t mod_trezorio_USB_add(mp_obj_t self, mp_obj_t iface) {
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 
   if (o->state != USB_CLOSED) {
-    mp_raise_msg(&mp_type_RuntimeError, "already initialized");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("already initialized"));
   }
   mp_obj_list_append(MP_OBJ_FROM_PTR(&o->ifaces), iface);
 
@@ -176,12 +176,12 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 
   if (o->state != USB_CLOSED) {
-    mp_raise_msg(&mp_type_RuntimeError, "already initialized");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("already initialized"));
   }
 
   const char *serial_number = get_0str(serial_number_obj, 0, 32);
   if (serial_number == NULL) {
-    mp_raise_ValueError("serial_number is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("serial_number is invalid"));
   }
   o->info.serial_number = serial_number;
 
@@ -191,7 +191,8 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
 
   // Initialize the USB stack
   if (sectrue != usb_init(&o->info)) {
-    mp_raise_msg(&mp_type_RuntimeError, "failed to initialize usb driver");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("failed to initialize usb driver"));
   }
 
   int vcp_iface_num = -1;
@@ -204,31 +205,35 @@ STATIC mp_obj_t mod_trezorio_USB_open(mp_obj_t self,
       mp_obj_HID_t *hid = MP_OBJ_TO_PTR(iface);
       if (sectrue != usb_hid_add(&hid->info)) {
         usb_deinit();
-        mp_raise_msg(&mp_type_RuntimeError, "failed to add HID interface");
+        mp_raise_msg(&mp_type_RuntimeError,
+                     MP_ERROR_TEXT("failed to add HID interface"));
       }
     } else if (MP_OBJ_IS_TYPE(iface, &mod_trezorio_WebUSB_type)) {
       mp_obj_WebUSB_t *webusb = MP_OBJ_TO_PTR(iface);
       if (sectrue != usb_webusb_add(&webusb->info)) {
         usb_deinit();
-        mp_raise_msg(&mp_type_RuntimeError, "failed to add WebUSB interface");
+        mp_raise_msg(&mp_type_RuntimeError,
+                     MP_ERROR_TEXT("failed to add WebUSB interface"));
       }
     } else if (MP_OBJ_IS_TYPE(iface, &mod_trezorio_VCP_type)) {
       mp_obj_VCP_t *vcp = MP_OBJ_TO_PTR(iface);
       if (sectrue != usb_vcp_add(&vcp->info)) {
         usb_deinit();
-        mp_raise_msg(&mp_type_RuntimeError, "failed to add VCP interface");
+        mp_raise_msg(&mp_type_RuntimeError,
+                     MP_ERROR_TEXT("failed to add VCP interface"));
       }
       vcp_iface_num = vcp->info.iface_num;
     } else {
       usb_deinit();
-      mp_raise_TypeError("expected HID, WebUSB or VCP type");
+      mp_raise_TypeError(MP_ERROR_TEXT("expected HID, WebUSB or VCP type"));
     }
   }
 
   // Start the USB stack
   if (sectrue != usb_start()) {
     usb_deinit();
-    mp_raise_msg(&mp_type_RuntimeError, "failed to start usb driver");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("failed to start usb driver"));
   }
   o->state = USB_OPENED;
 
@@ -249,7 +254,7 @@ STATIC mp_obj_t mod_trezorio_USB_close(mp_obj_t self) {
   mp_obj_USB_t *o = MP_OBJ_TO_PTR(self);
 
   if (o->state != USB_OPENED) {
-    mp_raise_msg(&mp_type_RuntimeError, "not initialized");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("not initialized"));
   }
   usb_deinit();
   mp_obj_list_set_len(MP_OBJ_FROM_PTR(&o->ifaces), 0);

@@ -45,7 +45,7 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_ping(mp_obj_t message) {
   uint8_t msg_in[message_b.len];
   bool ret = tropic_ping(message_b.buf, msg_in, message_b.len);
   if (!ret) {
-    mp_raise_msg(&mp_type_TropicError, "tropic_ping failed.");
+    mp_raise_msg(&mp_type_TropicError, MP_ERROR_TEXT("tropic_ping failed."));
   }
 
   vstr_t result = {0};
@@ -66,7 +66,8 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_get_certificate() {
   uint8_t X509_cert[CERT_SIZE] = {0};
   bool ret = tropic_get_cert(X509_cert, CERT_SIZE);
   if (!ret) {
-    mp_raise_msg(&mp_type_TropicError, "tropic_get_cert failed.");
+    mp_raise_msg(&mp_type_TropicError,
+                 MP_ERROR_TEXT("tropic_get_cert failed."));
   }
 
   vstr_t vstr = {0};
@@ -88,12 +89,13 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorcrypto_tropic_get_certificate_obj,
 STATIC mp_obj_t mod_trezorcrypto_tropic_key_generate(mp_obj_t key_index) {
   mp_int_t idx = mp_obj_get_int(key_index);
   if (idx < 0 || idx >= ECC_SLOT_COUNT) {
-    mp_raise_ValueError("Invalid index.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid index."));
   }
 
   bool ret = tropic_ecc_key_generate(idx);
   if (!ret) {
-    mp_raise_msg(&mp_type_TropicError, "tropic_ecc_key_generate failed.");
+    mp_raise_msg(&mp_type_TropicError,
+                 MP_ERROR_TEXT("tropic_ecc_key_generate failed."));
   }
 
   return mp_const_none;
@@ -112,13 +114,13 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
                                              mp_obj_t digest) {
   mp_int_t idx = mp_obj_get_int(key_index);
   if (idx < 0 || idx >= ECC_SLOT_COUNT) {
-    mp_raise_ValueError("Invalid index.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid index."));
   }
 
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
   if (dig.len != 32) {
-    mp_raise_ValueError("Invalid length of digest.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest."));
   }
 
   vstr_t sig = {0};
@@ -128,7 +130,8 @@ STATIC mp_obj_t mod_trezorcrypto_tropic_sign(mp_obj_t key_index,
                              ((uint8_t *)sig.buf), SIG_SIZE);
   if (!ret) {
     vstr_clear(&sig);
-    mp_raise_msg(&mp_type_TropicError, "lt_ecc_eddsa_sign failed.");
+    mp_raise_msg(&mp_type_TropicError,
+                 MP_ERROR_TEXT("lt_ecc_eddsa_sign failed."));
   }
 
   sig.len = SIG_SIZE;

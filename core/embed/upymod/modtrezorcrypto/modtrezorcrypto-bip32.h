@@ -92,16 +92,17 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type,
   mp_get_buffer_raise(vals[6].u_obj, &curve_name, MP_BUFFER_READ);
 
   if (32 != chain_code.len) {
-    mp_raise_ValueError("chain_code is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("chain_code is invalid"));
   }
   if (0 == public_key.len && 0 == private_key.len) {
-    mp_raise_ValueError("either public_key or private_key is required");
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("either public_key or private_key is required"));
   }
   if (0 != private_key.len && 32 != private_key.len) {
-    mp_raise_ValueError("private_key is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("private_key is invalid"));
   }
   if (0 != public_key.len && 33 != public_key.len) {
-    mp_raise_ValueError("public_key is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("public_key is invalid"));
   }
 
   const curve_info *curve = NULL;
@@ -111,7 +112,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_make_new(const mp_obj_type_t *type,
     curve = get_curve_by_name(curve_name.buf);
   }
   if (NULL == curve) {
-    mp_raise_ValueError("curve_name is invalid");
+    mp_raise_ValueError(MP_ERROR_TEXT("curve_name is invalid"));
   }
 
   mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
@@ -163,13 +164,14 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive(size_t n_args,
             "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00",
             32)) {
       memzero(&o->hdnode, sizeof(o->hdnode));
-      mp_raise_ValueError("Failed to derive, private key not set");
+      mp_raise_ValueError(
+          MP_ERROR_TEXT("Failed to derive, private key not set"));
     }
     res = hdnode_private_ckd(&o->hdnode, i);
   }
   if (!res) {
     memzero(&o->hdnode, sizeof(o->hdnode));
-    mp_raise_ValueError("Failed to derive");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to derive"));
   }
   o->fingerprint = fp;
 
@@ -193,7 +195,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self,
   mp_obj_t *pitems = NULL;
   mp_obj_get_array(path, &plen, &pitems);
   if (plen > 32) {
-    mp_raise_ValueError("Path cannot be longer than 32 indexes");
+    mp_raise_ValueError(MP_ERROR_TEXT("Path cannot be longer than 32 indexes"));
   }
 
   for (uint32_t pi = 0; pi < plen; pi++) {
@@ -205,7 +207,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_derive_path(mp_obj_t self,
     if (!hdnode_private_ckd(&o->hdnode, pitem)) {
       o->fingerprint = 0;
       memzero(&o->hdnode, sizeof(o->hdnode));
-      mp_raise_ValueError("Failed to derive path");
+      mp_raise_ValueError(MP_ERROR_TEXT("Failed to derive path"));
     }
   }
 
@@ -223,7 +225,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
   uint32_t ver = trezor_obj_get_uint(version);
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   if (hdnode_fill_public_key(&o->hdnode) != 0) {
-    mp_raise_ValueError("Failed to serialize");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to serialize"));
   }
 
   vstr_t xpub = {0};
@@ -232,7 +234,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_serialize_public(mp_obj_t self,
                                         xpub.buf, xpub.alloc);
   if (written <= 0) {
     vstr_clear(&xpub);
-    mp_raise_ValueError("Failed to serialize");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to serialize"));
   }
   // written includes NULL at the end of the string
   xpub.len = written - 1;
@@ -330,7 +332,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorcrypto_HDNode_private_key_ext_obj,
 STATIC mp_obj_t mod_trezorcrypto_HDNode_public_key(mp_obj_t self) {
   mp_obj_HDNode_t *o = MP_OBJ_TO_PTR(self);
   if (hdnode_fill_public_key(&o->hdnode) != 0) {
-    mp_raise_ValueError("Invalid private key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid private key"));
   }
   return mp_obj_new_bytes(o->hdnode.public_key, sizeof(o->hdnode.public_key));
 }
@@ -350,7 +352,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_address(mp_obj_t self,
   vstr_t address = {0};
   vstr_init_len(&address, ADDRESS_MAXLEN);
   if (hdnode_get_address(&o->hdnode, v, address.buf, address.alloc) != 0) {
-    mp_raise_ValueError("Failed to get address");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to get address"));
   }
   address.len = strlen(address.buf);
   return mp_obj_new_str_from_vstr(&mp_type_str, &address);
@@ -375,7 +377,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_address(mp_obj_t self,
   vstr_init_len(&address, NEM_ADDRESS_SIZE);
   if (!hdnode_get_nem_address(&o->hdnode, n, address.buf)) {
     vstr_clear(&address);
-    mp_raise_ValueError("Failed to compute a NEM address");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to compute a NEM address"));
   }
   address.len = strlen(address.buf);
   return mp_obj_new_str_from_vstr(&mp_type_str, &address);
@@ -396,23 +398,24 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_encrypt(size_t n_args,
   mp_buffer_info_t transfer_pk = {0};
   mp_get_buffer_raise(args[1], &transfer_pk, MP_BUFFER_READ);
   if (transfer_pk.len != 32) {
-    mp_raise_ValueError("transfer_public_key has invalid length");
+    mp_raise_ValueError(
+        MP_ERROR_TEXT("transfer_public_key has invalid length"));
   }
 
   mp_buffer_info_t iv = {0};
   mp_get_buffer_raise(args[2], &iv, MP_BUFFER_READ);
   if (iv.len != 16) {
-    mp_raise_ValueError("iv has invalid length");
+    mp_raise_ValueError(MP_ERROR_TEXT("iv has invalid length"));
   }
   mp_buffer_info_t salt = {0};
   mp_get_buffer_raise(args[3], &salt, MP_BUFFER_READ);
   if (salt.len != NEM_SALT_SIZE) {
-    mp_raise_ValueError("salt has invalid length");
+    mp_raise_ValueError(MP_ERROR_TEXT("salt has invalid length"));
   }
   mp_buffer_info_t payload = {0};
   mp_get_buffer_raise(args[4], &payload, MP_BUFFER_READ);
   if (payload.len == 0) {
-    mp_raise_ValueError("payload is empty");
+    mp_raise_ValueError(MP_ERROR_TEXT("payload is empty"));
   }
 
   vstr_t vstr = {0};
@@ -420,7 +423,7 @@ STATIC mp_obj_t mod_trezorcrypto_HDNode_nem_encrypt(size_t n_args,
   if (!hdnode_nem_encrypt(
           &o->hdnode, *(const ed25519_public_key *)transfer_pk.buf, iv.buf,
           salt.buf, payload.buf, payload.len, (uint8_t *)vstr.buf)) {
-    mp_raise_ValueError("HDNode nem encrypt failed");
+    mp_raise_ValueError(MP_ERROR_TEXT("HDNode nem encrypt failed"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
@@ -520,19 +523,19 @@ STATIC mp_obj_t mod_trezorcrypto_bip32_from_seed(mp_obj_t seed,
   mp_buffer_info_t seedb = {0};
   mp_get_buffer_raise(seed, &seedb, MP_BUFFER_READ);
   if (seedb.len == 0) {
-    mp_raise_ValueError("Invalid seed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid seed"));
   }
   mp_buffer_info_t curveb = {0};
   mp_get_buffer_raise(curve_name, &curveb, MP_BUFFER_READ);
   if (curveb.len == 0) {
-    mp_raise_ValueError("Invalid curve name");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid curve name"));
   }
 
   HDNode hdnode = {0};
   int res = hdnode_from_seed(seedb.buf, seedb.len, curveb.buf, &hdnode);
 
   if (!res) {
-    mp_raise_ValueError("Failed to derive the root node");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to derive the root node"));
   }
 
   mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);

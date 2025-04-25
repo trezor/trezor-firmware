@@ -155,7 +155,7 @@ MP_REGISTER_MODULE(MP_QSTR_trezorcrypto, mp_module_trezorcrypto);
 #ifdef USE_SECP256K1_ZKP
 void secp256k1_default_illegal_callback_fn(const char *str, void *data) {
   (void)data;
-  mp_raise_ValueError(str);
+  mp_raise_ValueError((mp_rom_error_text_t)str);
   return;
 }
 

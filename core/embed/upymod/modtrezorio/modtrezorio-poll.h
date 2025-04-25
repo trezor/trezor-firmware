@@ -56,7 +56,7 @@ static mp_obj_t parse_ble_event_data(const ble_event_t *event) {
     if (byte >= '0' && byte <= '9') {
       code = 10 * code + (byte - '0');
     } else {
-      mp_raise_ValueError("Invalid pairing code");
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid pairing code"));
     }
   }
   return mp_obj_new_int_from_uint(code);
@@ -85,7 +85,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
                                   mp_obj_t timeout_ms) {
   mp_obj_list_t *ret = MP_OBJ_TO_PTR(list_ref);
   if (!MP_OBJ_IS_TYPE(list_ref, &mp_type_list) || ret->len < 2) {
-    mp_raise_TypeError("invalid list_ref");
+    mp_raise_TypeError(MP_ERROR_TEXT("invalid list_ref"));
   }
 
   sysevents_t awaited = {0};

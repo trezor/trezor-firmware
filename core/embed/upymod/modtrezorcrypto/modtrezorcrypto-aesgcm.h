@@ -52,8 +52,8 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_make_new(const mp_obj_type_t *type,
   mp_get_buffer_raise(args[0], &key, MP_BUFFER_READ);
   mp_get_buffer_raise(args[1], &iv, MP_BUFFER_READ);
   if (key.len != 16 && key.len != 24 && key.len != 32) {
-    mp_raise_ValueError(
-        "Invalid length of key (has to be 128, 192 or 256 bits)");
+    mp_raise_ValueError(MP_ERROR_TEXT(
+        "Invalid length of key (has to be 128, 192 or 256 bits)"));
   }
 
   mp_obj_AesGcm_t *o = m_new_obj_with_finaliser(mp_obj_AesGcm_t);
@@ -92,7 +92,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_reset_obj,
 STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt(mp_obj_t self, mp_obj_t data) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != STATE_INIT && o->state != STATE_ENCRYPTING) {
-    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
   o->state = STATE_ENCRYPTING;
   mp_buffer_info_t in = {0};
@@ -118,7 +118,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_encrypt_in_place(mp_obj_t self,
                                                          mp_obj_t data) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != STATE_INIT && o->state != STATE_ENCRYPTING) {
-    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
   o->state = STATE_ENCRYPTING;
   mp_buffer_info_t in = {0};
@@ -139,7 +139,7 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_2(mod_trezorcrypto_AesGcm_encrypt_in_place_obj,
 STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt(mp_obj_t self, mp_obj_t data) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != STATE_INIT && o->state != STATE_DECRYPTING) {
-    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
   o->state = STATE_DECRYPTING;
   mp_buffer_info_t in = {0};
@@ -165,7 +165,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_decrypt_in_place(mp_obj_t self,
                                                          mp_obj_t data) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != STATE_INIT && o->state != STATE_DECRYPTING) {
-    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
   o->state = STATE_DECRYPTING;
   mp_buffer_info_t in = {0};
@@ -189,7 +189,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_auth(mp_obj_t self, mp_obj_t data) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != STATE_INIT && o->state != STATE_ENCRYPTING &&
       o->state != STATE_DECRYPTING) {
-    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
   mp_buffer_info_t in = {0};
   mp_get_buffer_raise(data, &in, MP_BUFFER_READ);
@@ -210,7 +210,7 @@ STATIC mp_obj_t mod_trezorcrypto_AesGcm_finish(mp_obj_t self) {
   mp_obj_AesGcm_t *o = MP_OBJ_TO_PTR(self);
   if (o->state != STATE_INIT && o->state != STATE_ENCRYPTING &&
       o->state != STATE_DECRYPTING) {
-    mp_raise_msg(&mp_type_RuntimeError, "Invalid state.");
+    mp_raise_msg(&mp_type_RuntimeError, MP_ERROR_TEXT("Invalid state."));
   }
   o->state = STATE_FINISHED;
   vstr_t tag = {0};

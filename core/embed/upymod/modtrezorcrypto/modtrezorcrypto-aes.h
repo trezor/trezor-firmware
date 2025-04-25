@@ -64,20 +64,20 @@ STATIC mp_obj_t mod_trezorcrypto_AES_make_new(const mp_obj_type_t *type,
   mp_arg_check_num(n_args, n_kw, 2, 3, false);
   mp_int_t mode = mp_obj_get_int(args[0]);
   if (mode < ECB || mode > CTR) {
-    mp_raise_ValueError("Invalid AES mode");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid AES mode"));
   }
   mp_buffer_info_t key = {0};
   mp_get_buffer_raise(args[1], &key, MP_BUFFER_READ);
   if (key.len != 16 && key.len != 24 && key.len != 32) {
-    mp_raise_ValueError(
-        "Invalid length of key (has to be 128, 192 or 256 bits)");
+    mp_raise_ValueError(MP_ERROR_TEXT(
+        "Invalid length of key (has to be 128, 192 or 256 bits)"));
   }
   mp_buffer_info_t iv = {0};
   if (n_args > 2) {
     mp_get_buffer_raise(args[2], &iv, MP_BUFFER_READ);
     if (iv.len != AES_BLOCK_SIZE) {
-      mp_raise_ValueError(
-          "Invalid length of initialization vector (has to be 128 bits)");
+      mp_raise_ValueError(MP_ERROR_TEXT(
+          "Invalid length of initialization vector (has to be 128 bits)"));
     }
   }
 
@@ -118,7 +118,7 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
   switch (o->mode) {
     case ECB:
       if (buf.len & (AES_BLOCK_SIZE - 1)) {
-        mp_raise_ValueError("Invalid data length");
+        mp_raise_ValueError(MP_ERROR_TEXT("Invalid data length"));
       }
       if (encrypt) {
         aes_ecb_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len,
@@ -130,7 +130,7 @@ static mp_obj_t aes_update(mp_obj_t self, mp_obj_t data, bool encrypt) {
       break;
     case CBC:
       if (buf.len & (AES_BLOCK_SIZE - 1)) {
-        mp_raise_ValueError("Invalid data length");
+        mp_raise_ValueError(MP_ERROR_TEXT("Invalid data length"));
       }
       if (encrypt) {
         aes_cbc_encrypt(buf.buf, (uint8_t *)vstr.buf, buf.len, o->iv,

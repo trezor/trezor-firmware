@@ -33,8 +33,8 @@ STATIC mp_obj_t mod_trezorcrypto_bip39_from_data(mp_obj_t data) {
   mp_buffer_info_t bin = {0};
   mp_get_buffer_raise(data, &bin, MP_BUFFER_READ);
   if (bin.len % 4 || bin.len < 16 || bin.len > 32) {
-    mp_raise_ValueError(
-        "Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)");
+    mp_raise_ValueError(MP_ERROR_TEXT(
+        "Invalid data length (only 16, 20, 24, 28 and 32 bytes are allowed)"));
   }
   const char *mnemo = mnemonic_from_data(bin.buf, bin.len);
   mp_obj_t res =
