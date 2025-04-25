@@ -161,7 +161,8 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
 
   if (firmware_hash_start(chal.buf, chal.len) < 0) {
     vstr_clear(&vstr);
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to start firmware hash.");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to start firmware hash."));
   }
 
   int progress = 0;
@@ -171,7 +172,8 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
 
     if (progress < 0) {
       vstr_clear(&vstr);
-      mp_raise_msg(&mp_type_RuntimeError, "Failed to calculate firmware hash.");
+      mp_raise_msg(&mp_type_RuntimeError,
+                   MP_ERROR_TEXT("Failed to calculate firmware hash."));
       break;
     }
 
@@ -197,7 +199,8 @@ STATIC mp_obj_t mod_trezorutils_firmware_vendor(void) {
 #else
   char vendor[64] = {0};
   if (sectrue != firmware_get_vendor(vendor, sizeof(vendor))) {
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to read vendor header.");
+    mp_raise_msg(&mp_type_RuntimeError,
+                 MP_ERROR_TEXT("Failed to read vendor header."));
   }
   return mp_obj_new_str_copy(&mp_type_str, (byte *)vendor, strlen(vendor));
 #endif
@@ -325,7 +328,7 @@ STATIC mp_obj_t mod_trezorutils_check_free_heap(mp_obj_t arg) {
   if (free_heap > info.free) {
     gc_dump_info();
     mp_raise_msg_varg(&mp_type_AssertionError,
-                      "Free heap decreased by " UINT_FMT " bytes",
+                      MP_ERROR_TEXT("Free heap size decreased"),
                       free_heap - info.free);
   }
   free_heap = info.free;  // current free heap
@@ -345,7 +348,8 @@ STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
 #if MICROPY_MODULE_FROZEN_MPY
   mp_obj_dict_t *modules = &MP_STATE_VM(mp_loaded_modules_dict);
   if (modules->map.alloc > MICROPY_LOADED_MODULES_DICT_SIZE) {
-    mp_raise_msg(&mp_type_AssertionError, "sys.modules dict is reallocated");
+    mp_raise_msg(&mp_type_AssertionError,
+                 MP_ERROR_TEXT("sys.modules dict is reallocated"));
   }
 #ifdef TREZOR_EMULATOR
   // when profiling, __main__ module is `prof`, not `main`
@@ -356,7 +360,8 @@ STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
   size_t main_map_alloc = MP_STATE_VM(dict_main).map.alloc;
 #endif
   if (main_map_alloc > MICROPY_MAIN_DICT_SIZE) {
-    mp_raise_msg(&mp_type_AssertionError, "main globals dict is reallocated");
+    mp_raise_msg(&mp_type_AssertionError,
+                 MP_ERROR_TEXT("main globals dict is reallocated"));
   }
 
   size_t n_pool, n_qstr, n_str_data_bytes, n_total_bytes;
@@ -364,10 +369,8 @@ STATIC mp_obj_t mod_trezorutils_check_heap_fragmentation(void) {
   if (n_pool) {
     qstr_dump_data();
     mp_raise_msg_varg(&mp_type_AssertionError,
-                      "Runtime QSTR allocation: " UINT_FMT " pools, " UINT_FMT
-                      " strings, " UINT_FMT " data bytes, " UINT_FMT
-                      " total bytes",
-                      n_pool, n_qstr, n_str_data_bytes, n_total_bytes);
+                      MP_ERROR_TEXT("Runtime QSTR allocation detected"), n_pool,
+                      n_qstr, n_str_data_bytes, n_total_bytes);
   }
 #endif  // MICROPY_MODULE_FROZEN_MPY
   return mp_const_none;
@@ -403,13 +406,13 @@ STATIC mp_obj_t mod_trezorutils_reboot_to_bootloader(size_t n_args,
         }
 
         if (hash.len != 32) {
-          mp_raise_ValueError("Invalid value.");
+          mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
         }
 
         reboot_and_upgrade((uint8_t *)hash.buf);
         break;
       default:
-        mp_raise_ValueError("Invalid value.");
+        mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
         break;
     }
   } else {
@@ -458,7 +461,7 @@ STATIC mp_obj_t mod_trezorutils_check_firmware_header(mp_obj_t header) {
     return mp_obj_new_attrtuple(fields, MP_ARRAY_SIZE(fields), values);
   }
 
-  mp_raise_ValueError("Invalid value.");
+  mp_raise_ValueError(MP_ERROR_TEXT("Invalid value."));
 }
 
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorutils_check_firmware_header_obj,

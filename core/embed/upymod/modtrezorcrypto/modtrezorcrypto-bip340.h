@@ -65,7 +65,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_publickey(mp_obj_t secret_key) {
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   vstr_t pk = {0};
   vstr_init_len(&pk, 32);
@@ -73,7 +73,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_publickey(mp_obj_t secret_key) {
       zkp_bip340_get_public_key((const uint8_t *)sk.buf, (uint8_t *)pk.buf);
   if (0 != ret) {
     vstr_clear(&pk);
-    mp_raise_ValueError("Invalid secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret key"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &pk);
 }
@@ -94,10 +94,10 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (dig.len != 32) {
-    mp_raise_ValueError("Invalid length of digest");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest"));
   }
 
   vstr_t sig = {0};
@@ -107,7 +107,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_sign(mp_obj_t secret_key,
                              (uint8_t *)sig.buf, NULL);
   if (0 != ret) {
     vstr_clear(&sig);
-    mp_raise_ValueError("Signing failed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Signing failed"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &sig);
 }
@@ -173,7 +173,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_public_key(size_t n_args,
   mp_buffer_info_t pk = {0};
   mp_get_buffer_raise(args[0], &pk, MP_BUFFER_READ);
   if (pk.len != 32) {
-    mp_raise_ValueError("Invalid length of public key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of public key"));
   }
 
   mp_buffer_info_t rh = {0};
@@ -181,7 +181,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_public_key(size_t n_args,
   if (n_args > 1 && args[1] != mp_const_none) {
     mp_get_buffer_raise(args[1], &rh, MP_BUFFER_READ);
     if (rh.len != 32) {
-      mp_raise_ValueError("Invalid length of root hash");
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of root hash"));
     }
     rh_ptr = (const uint8_t *)rh.buf;
   }
@@ -192,7 +192,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_public_key(size_t n_args,
                                         (uint8_t *)tpk.buf);
   if (ret != 0) {
     vstr_clear(&tpk);
-    mp_raise_ValueError("Failed to tweak public key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to tweak public key"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &tpk);
 }
@@ -213,7 +213,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_secret_key(size_t n_args,
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(args[0], &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
 
   mp_buffer_info_t rh = {0};
@@ -221,7 +221,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_secret_key(size_t n_args,
   if (n_args > 1 && args[1] != mp_const_none) {
     mp_get_buffer_raise(args[1], &rh, MP_BUFFER_READ);
     if (rh.len != 32) {
-      mp_raise_ValueError("Invalid length of root hash");
+      mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of root hash"));
     }
     rh_ptr = (const uint8_t *)rh.buf;
   }
@@ -232,7 +232,7 @@ STATIC mp_obj_t mod_trezorcrypto_bip340_tweak_secret_key(size_t n_args,
                                          (uint8_t *)tsk.buf);
   if (ret != 0) {
     vstr_clear(&tsk);
-    mp_raise_ValueError("Failed to tweak secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Failed to tweak secret key"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &tsk);
 }

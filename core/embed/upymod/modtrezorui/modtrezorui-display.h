@@ -86,7 +86,7 @@ STATIC mp_obj_t mod_trezorui_Display_orientation(size_t n_args,
   if (n_args > 1) {
     deg = mp_obj_get_int(args[1]);
     if (deg != 0 && deg != 90 && deg != 180 && deg != 270) {
-      mp_raise_ValueError("Value must be 0, 90, 180 or 270");
+      mp_raise_ValueError(MP_ERROR_TEXT("Value must be 0, 90, 180 or 270"));
     }
     deg = display_set_orientation(deg);
   } else {

@@ -36,7 +36,7 @@ STATIC mp_obj_t mod_trezorcrypto_slip39_word_index(mp_obj_t _word) {
 
   uint16_t result = 0;
   if (word_index(&result, word.buf, word.len) == false) {
-    mp_raise_ValueError("Invalid mnemonic word");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid mnemonic word"));
   }
   return mp_obj_new_int_from_uint(result);
 }
@@ -52,8 +52,8 @@ STATIC mp_obj_t mod_trezorcrypto_slip39_get_word(mp_obj_t _index) {
 
   const char *word = get_word(index);
   if (word == NULL) {
-    mp_raise_ValueError(
-        "Invalid wordlist index (range between 0 and 1023 is allowed)");
+    mp_raise_ValueError(MP_ERROR_TEXT(
+        "Invalid wordlist index (range between 0 and 1023 is allowed)"));
   }
 
   return mp_obj_new_str_copy(&mp_type_str, (const uint8_t *)word, strlen(word));

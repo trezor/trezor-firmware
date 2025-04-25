@@ -57,7 +57,7 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
   uint8_t mnemonic_bits[64] = {0};
   int mnemonic_bits_len = mnemonic_to_bits(pmnemonic, mnemonic_bits);
   if (mnemonic_bits_len == 0 || mnemonic_bits_len % 33 != 0) {
-    mp_raise_ValueError("Invalid mnemonic");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid mnemonic"));
   }
 
   vstr_t vstr = {0};
@@ -88,7 +88,7 @@ STATIC mp_obj_t mod_trezorcrypto_cardano_derive_icarus(size_t n_args,
 
   if (res != 1) {
     mp_raise_msg(&mp_type_RuntimeError,
-                 "Unexpected failure in Icarus derivation.");
+                 MP_ERROR_TEXT("Unexpected failure in Icarus derivation."));
   }
 
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
@@ -106,7 +106,7 @@ STATIC mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(secret, &bufinfo, MP_BUFFER_READ);
   if (bufinfo.len != CARDANO_SECRET_LENGTH) {
-    mp_raise_ValueError("Invalid secret length");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid secret length"));
   }
 
   mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
@@ -114,8 +114,9 @@ STATIC mp_obj_t mod_trezorcrypto_from_secret(mp_obj_t secret) {
   const int res = hdnode_from_secret_cardano(bufinfo.buf, &o->hdnode);
   if (res != 1) {
     m_del_obj(mp_obj_HDNode_t, o);
-    mp_raise_msg(&mp_type_RuntimeError,
-                 "Unexpected failure in constructing Cardano node.");
+    mp_raise_msg(
+        &mp_type_RuntimeError,
+        MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
   o->fingerprint = hdnode_fingerprint(&o->hdnode);
   return MP_OBJ_FROM_PTR(o);
@@ -132,7 +133,7 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(seed, &bufinfo, MP_BUFFER_READ);
   if (bufinfo.len == 0) {
-    mp_raise_ValueError("Invalid seed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid seed"));
   }
 
   uint8_t secret[CARDANO_SECRET_LENGTH] = {0};
@@ -142,12 +143,13 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_slip23(mp_obj_t seed) {
   res = secret_from_seed_cardano_slip23(bufinfo.buf, bufinfo.len, secret);
   if (res != 1) {
     mp_raise_msg(&mp_type_RuntimeError,
-                 "Unexpected failure in SLIP-23 derivation.");
+                 MP_ERROR_TEXT("Unexpected failure in SLIP-23 derivation."));
   }
   res = hdnode_from_secret_cardano(secret, &hdnode);
   if (res != 1) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 "Unexpected failure in constructing Cardano node.");
+    mp_raise_msg(
+        &mp_type_RuntimeError,
+        MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
   mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
@@ -168,7 +170,7 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
   mp_buffer_info_t bufinfo;
   mp_get_buffer_raise(seed, &bufinfo, MP_BUFFER_READ);
   if (bufinfo.len == 0) {
-    mp_raise_ValueError("Invalid seed");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid seed"));
   }
 
   uint8_t secret[CARDANO_SECRET_LENGTH] = {0};
@@ -178,12 +180,13 @@ STATIC mp_obj_t mod_trezorcrypto_from_seed_ledger(mp_obj_t seed) {
   res = secret_from_seed_cardano_ledger(bufinfo.buf, bufinfo.len, secret);
   if (res != 1) {
     mp_raise_msg(&mp_type_RuntimeError,
-                 "Unexpected failure in Ledger derivation.");
+                 MP_ERROR_TEXT("Unexpected failure in Ledger derivation."));
   }
   res = hdnode_from_secret_cardano(secret, &hdnode);
   if (res != 1) {
-    mp_raise_msg(&mp_type_RuntimeError,
-                 "Unexpected failure in constructing Cardano node.");
+    mp_raise_msg(
+        &mp_type_RuntimeError,
+        MP_ERROR_TEXT("Unexpected failure in constructing Cardano node."));
   }
 
   mp_obj_HDNode_t *o = m_new_obj_with_finaliser(mp_obj_HDNode_t);
