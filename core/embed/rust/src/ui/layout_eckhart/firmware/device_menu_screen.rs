@@ -1,4 +1,8 @@
+use core::ops::DerefMut;
+
 use crate::{
+    error::Error,
+    micropython::gc::GcBox,
     strutil::TString,
     ui::{
         component::{
@@ -136,11 +140,11 @@ pub struct DeviceMenuScreen<'a> {
     // as defined by `enum Subscreen` (DeviceScreen is still a VerticalMenuScreen!)
     // The active one will be Some(...) and the other one will be None.
     // This way we only need to keep one screen at any time in memory.
-    menu_screen: Option<VerticalMenuScreen>,
-    about_screen: Option<TextScreen<Paragraphs<[Paragraph<'a>; 2]>>>,
+    menu_screen: GcBox<Option<VerticalMenuScreen>>,
+    about_screen: GcBox<Option<TextScreen<Paragraphs<[Paragraph<'a>; 2]>>>>,
 
     // Information needed to construct any subscreen on demand
-    submenus: Vec<Submenu, MAX_SUBMENUS>,
+    submenus: GcBox<Vec<Submenu, MAX_SUBMENUS>>,
     subscreens: Vec<Subscreen, MAX_SUBSCREENS>,
 
     // index of the current subscreen in the list of subscreens
@@ -162,15 +166,15 @@ impl<'a> DeviceMenuScreen<'a> {
         // (see component_msg_obj.rs, which currently just returns "DeviceDisconnect" with no
         // index!)
         paired_devices: Vec<TString<'static>, 1>,
-    ) -> Self {
+    ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
             battery_percentage,
             firmware_version,
-            menu_screen: None,
-            about_screen: None,
+            menu_screen: GcBox::new(None)?,
+            about_screen: GcBox::new(None)?,
             active_subscreen: 0,
-            submenus: Vec::new(),
+            submenus: GcBox::new(Vec::new())?,
             subscreens: Vec::new(),
             parent_subscreens: Vec::new(),
         };
@@ -193,7 +197,7 @@ impl<'a> DeviceMenuScreen<'a> {
 
         screen.set_active_subscreen(root);
 
-        screen
+        Ok(screen)
     }
 
     fn is_low_battery(&self) -> bool {
@@ -344,7 +348,7 @@ impl<'a> DeviceMenuScreen<'a> {
         match self.subscreens[self.active_subscreen] {
             Subscreen::Submenu(ref mut submenu_index) => {
                 let submenu = &self.submenus[*submenu_index];
-                self.about_screen = None;
+                *self.about_screen.deref_mut() = None;
                 let mut menu = VerticalMenu::empty().with_separators();
                 for item in &submenu.items {
                     let button = if let Some((subtext, subtext_style)) = item.subtext {
@@ -375,17 +379,18 @@ impl<'a> DeviceMenuScreen<'a> {
                         HeaderMsg::Back,
                     );
                 }
-                self.menu_screen = Some(VerticalMenuScreen::new(menu).with_header(header));
+                *self.menu_screen.deref_mut() =
+                    Some(VerticalMenuScreen::new(menu).with_header(header));
             }
             Subscreen::DeviceScreen(device, _) => {
-                self.about_screen = None;
+                *self.about_screen.deref_mut() = None;
                 let mut menu = VerticalMenu::empty().with_separators();
                 menu = menu.item(Button::new_menu_item(device, theme::menu_item_title()));
                 menu = menu.item(Button::new_menu_item(
                     "Disconnect".into(),
                     theme::menu_item_title_red(),
                 ));
-                self.menu_screen = Some(
+                *self.menu_screen.deref_mut() = Some(
                     VerticalMenuScreen::new(menu).with_header(
                         Header::new("Manage".into())
                             .with_close_button()
@@ -397,13 +402,13 @@ impl<'a> DeviceMenuScreen<'a> {
                 );
             }
             Subscreen::AboutScreen => {
-                self.menu_screen = None;
+                *self.menu_screen.deref_mut() = None;
                 let about_content = Paragraphs::new([
                     Paragraph::new(&theme::firmware::TEXT_REGULAR, "Firmware version"),
                     Paragraph::new(&theme::firmware::TEXT_REGULAR, self.firmware_version),
                 ]);
 
-                self.about_screen = Some(
+                *self.about_screen.deref_mut() = Some(
                     TextScreen::new(about_content)
                         .with_header(Header::new("About".into()).with_close_button()),
                 );
