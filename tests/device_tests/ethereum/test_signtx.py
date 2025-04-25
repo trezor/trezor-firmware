@@ -354,6 +354,181 @@ def test_signtx_eip1559_access_list_larger(client: Client):
     )
 
 
+@pytest.mark.models("core", reason="T1 does not support EIP 7702 yet")
+def test_signtx_eip1559_auth7702(client: Client):
+    with client:
+
+        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/100"),
+            nonce=0,
+            gas_limit=20,
+            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+            chain_id=1,
+            value=10,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            auth7702_list=[
+                messages.EthereumSignedAuth7702(
+                    chain_id=1,
+                    delegate="0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9",
+                    nonce=1,
+                    signature_v=0,
+                    signature_r=bytes.fromhex(
+                        "7e299c7d1f3790eddb5f8ebedaabc35e206c0f045db67b4c94029c7e4b543d42"
+                    ),
+                    signature_s=bytes.fromhex(
+                        "2493d77e371f9ca5dc5c5e03934e762da3b9f80e6f8d874f5ddfca2b66321a04"
+                    ),
+                )
+            ],
+        )
+
+    assert sig_v == 1
+    assert (
+        sig_r.hex()
+        == "cc6c92301008d1a2debfb8cd80550f82fe06e406e0ec991f3d7c2a37bac720e6"
+    )
+    assert (
+        sig_s.hex()
+        == "402a2b41bcde1bb2eef9de753ed5b194053d04344f527ccb7ec49e6ef8682766"
+    )
+
+
+@pytest.mark.models("core", reason="T1 does not support EIP 7702 yet")
+def test_signtx_eip1559_access_list_auth7702(client: Client):
+    with client:
+
+        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/100"),
+            nonce=0,
+            gas_limit=20,
+            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+            chain_id=1,
+            value=10,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            access_list=[
+                messages.EthereumAccessList(
+                    address="0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
+                    storage_keys=[
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000003"
+                        ),
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000007"
+                        ),
+                    ],
+                )
+            ],
+            auth7702_list=[
+                messages.EthereumSignedAuth7702(
+                    chain_id=1,
+                    delegate="0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9",
+                    nonce=1,
+                    signature_v=0,
+                    signature_r=bytes.fromhex(
+                        "7e299c7d1f3790eddb5f8ebedaabc35e206c0f045db67b4c94029c7e4b543d42"
+                    ),
+                    signature_s=bytes.fromhex(
+                        "2493d77e371f9ca5dc5c5e03934e762da3b9f80e6f8d874f5ddfca2b66321a04"
+                    ),
+                )
+            ],
+        )
+
+    assert sig_v == 1
+    assert (
+        sig_r.hex()
+        == "4c10767f9728a70abb2755c21520527f258c0aac93dbb69add291574134094e1"
+    )
+    assert (
+        sig_s.hex()
+        == "09fea15e306e03e768f0ed259bd735287387cd5877e52eda917772a5693674f0"
+    )
+
+
+@pytest.mark.models("core", reason="T1 does not support EIP 7702 yet")
+def test_signtx_eip1559_access_list_auth7702_larger(client: Client):
+    with client:
+
+        sig_v, sig_r, sig_s = ethereum.sign_tx_eip1559(
+            client,
+            n=parse_path("m/44h/60h/0h/0/100"),
+            nonce=0,
+            gas_limit=20,
+            to="0x1d1c328764a41bda0492b66baa30c4a339ff85ef",
+            chain_id=1,
+            value=10,
+            max_gas_fee=20,
+            max_priority_fee=1,
+            access_list=[
+                messages.EthereumAccessList(
+                    address="0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae",
+                    storage_keys=[
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000003"
+                        ),
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000007"
+                        ),
+                    ],
+                ),
+                messages.EthereumAccessList(
+                    address="0xbb9bc244d798123fde783fcc1c72d3bb8c189413",
+                    storage_keys=[
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000006"
+                        ),
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000007"
+                        ),
+                        bytes.fromhex(
+                            "0000000000000000000000000000000000000000000000000000000000000009"
+                        ),
+                    ],
+                ),
+            ],
+            auth7702_list=[
+                messages.EthereumSignedAuth7702(
+                    chain_id=1,
+                    delegate="0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9",
+                    nonce=1,
+                    signature_v=0,
+                    signature_r=bytes.fromhex(
+                        "7e299c7d1f3790eddb5f8ebedaabc35e206c0f045db67b4c94029c7e4b543d42"
+                    ),
+                    signature_s=bytes.fromhex(
+                        "2493d77e371f9ca5dc5c5e03934e762da3b9f80e6f8d874f5ddfca2b66321a04"
+                    ),
+                ),
+                messages.EthereumSignedAuth7702(
+                    chain_id=18446744073709551614,
+                    delegate="0x4Cd241E8d1510e30b2076397afc7508Ae59C66c9",
+                    nonce=18446744073709551615,
+                    signature_v=1,
+                    signature_r=bytes.fromhex(
+                        "78c0fae1884b6951c4c3b148c4ecf16f393b231ac34cd3bb0642dfb2a9f377e8"
+                    ),
+                    signature_s=bytes.fromhex(
+                        "058c82fe4bc947625da62f76b3931e31de2de889689db2dbe63d8517c56904e0"
+                    ),
+                ),
+            ],
+        )
+
+    assert sig_v == 1
+    assert (
+        sig_r.hex()
+        == "38bf74ebbc6e0ad9d981550023d0e0720c5f4fa7568d14f89dd01ddc9a88800f"
+    )
+    assert (
+        sig_s.hex()
+        == "7f43ac1fb24e6ced47b77241edef6c896fcd9593370826f6eb2596394e365fa1"
+    )
+
+
 def test_sanity_checks_eip1559(client: Client):
     """Is not vectorized because these are internal-only tests that do not
     need to be exposed to the public.

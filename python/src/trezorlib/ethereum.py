@@ -264,6 +264,7 @@ def sign_tx_eip1559(
     access_list: Optional[List[messages.EthereumAccessList]] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
+    auth7702_list: Optional[List[messages.EthereumSignedAuth7702]] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -281,6 +282,7 @@ def sign_tx_eip1559(
         data_initial_chunk=chunk,
         definitions=definitions,
         chunkify=chunkify,
+        auth7702_list=auth7702_list,
     )
 
     response = client.call(msg)
@@ -427,4 +429,22 @@ def sign_typed_data_hash(
             encoded_network=encoded_network,
         ),
         expect=messages.EthereumTypedDataSignature,
+    )
+
+
+def sign_auth_7702(
+    client: "TrezorClient",
+    n: "Address",
+    nonce: int,
+    chain_id: int,
+    delegate: str,
+) -> messages.EthereumAuth7702Signature:
+    return client.call(
+        messages.EthereumSignAuth7702(
+            address_n=n,
+            nonce=nonce,
+            chain_id=chain_id,
+            delegate=delegate
+        ),
+        expect=messages.EthereumAuth7702Signature,
     )

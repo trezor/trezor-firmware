@@ -9,6 +9,7 @@ from .keychain import with_keychain_from_chain_id
 if TYPE_CHECKING:
     from trezor.messages import (
         EthereumAccessList,
+        EthereumSignedAuth7702,
         EthereumSignTxEIP1559,
         EthereumTxRequest,
     )
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
 
 
 _TX_TYPE = const(2)
+_TX_TYPE_7702 = const(4)
 
 
 def access_list_item_length(item: EthereumAccessList) -> int:
@@ -27,6 +29,21 @@ def access_list_item_length(item: EthereumAccessList) -> int:
     return (
         rlp.header_length(address_length + keys_length) + address_length + keys_length
     )
+
+
+def auth_list_item_length(item: EthereumSignedAuth7702) -> int:
+    fields: tuple[rlp.RLPItem, ...] = (
+        item.chain_id,
+        bytes_from_address(item.delegate),
+        item.nonce,
+        item.signature_v,
+        item.signature_r,
+        item.signature_s,
+    )
+    length = 0
+    for field in fields:
+        length += rlp.length(field)
+    return rlp.header_length(length) + length
 
 
 @with_keychain_from_chain_id
@@ -80,7 +97,7 @@ async def sign_tx_eip1559(
 
     sha = HashWriter(sha3_256(keccak=True))
 
-    rlp.write(sha, _TX_TYPE)
+    rlp.write(sha, _TX_TYPE if len(msg.auth7702_list) == 0 else _TX_TYPE_7702)
 
     rlp.write_header(sha, total_length, rlp.LIST_HEADER_BYTE)
 
@@ -118,6 +135,26 @@ async def sign_tx_eip1559(
         rlp.write(sha, address_bytes)
         rlp.write(sha, item.storage_keys)
 
+    # write auth7702_list
+    if len(msg.auth7702_list) != 0:
+        payload_length = sum(auth_list_item_length(i) for i in msg.auth7702_list)
+        rlp.write_header(sha, payload_length, rlp.LIST_HEADER_BYTE)
+        for item in msg.auth7702_list:
+            fieldsAuth: tuple[rlp.RLPItem, ...] = (
+                item.chain_id,
+                bytes_from_address(item.delegate),
+                item.nonce,
+                item.signature_v,
+                item.signature_r,
+                item.signature_s,
+            )
+            length = 0
+            for field in fieldsAuth:
+                length += rlp.length(field)
+            rlp.write_header(sha, length, rlp.LIST_HEADER_BYTE)
+            for field in fieldsAuth:
+                rlp.write(sha, field)
+
     digest = sha.get_digest()
     result = _sign_digest(msg, keychain, digest)
 
@@ -147,6 +184,12 @@ def _get_total_length(msg: EthereumSignTxEIP1559, data_total: int) -> int:
     access_list_length = rlp.header_length(payload_length) + payload_length
 
     length += access_list_length
+
+    # auth list length
+    if len(msg.auth7702_list) != 0:
+        payload_length = sum(auth_list_item_length(i) for i in msg.auth7702_list)
+        auth_list_length = rlp.header_length(payload_length) + payload_length
+        length += auth_list_length
 
     return length
 

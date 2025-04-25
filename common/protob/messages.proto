@@ -156,6 +156,8 @@ enum MessageType {
     MessageType_EthereumTypedDataValueAck = 468 [(wire_in) = true];
     MessageType_EthereumTypedDataSignature = 469 [(wire_out) = true];
     MessageType_EthereumSignTypedHash = 470 [(wire_in) = true];
+    MessageType_EthereumSignAuth7702 = 471 [(wire_in) = true];
+    MessageType_EthereumAuth7702Signature = 472 [(wire_out) = true];
 
     // NEM
     MessageType_NEMGetAddress = 67 [(wire_in) = true];

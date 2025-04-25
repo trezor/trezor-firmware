@@ -95,10 +95,20 @@ message EthereumSignTxEIP1559 {
     repeated EthereumAccessList access_list = 11;                              // Access List
     optional ethereum_definitions.EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
     optional bool chunkify = 13;                                               // display the address in chunks of 4 characters
+    repeated EthereumSignedAuth7702 auth7702_list = 14;
 
     message EthereumAccessList {
         required string address = 1;
         repeated bytes storage_keys = 2;
+    }
+
+    message EthereumSignedAuth7702 {
+        required uint64 chain_id = 1;
+        required string delegate = 2;
+        required uint64 nonce = 3;
+        required uint32 signature_v = 4;
+        required bytes signature_r = 5;
+        required bytes signature_s = 6;
     }
 }
 
@@ -179,4 +189,27 @@ message EthereumSignTypedHash {
 message EthereumTypedDataSignature {
     required bytes signature = 1;    // signature of the typed data
     required string address = 2;     // address used to sign the typed data
+}
+
+/**
+ * Request: Ask device to sign an EIP 7702 delegation authorization
+ * @start
+ * @next EthereumAuth7702Signature
+ * @next Failure
+ */
+message EthereumSignAuth7702 {
+    repeated uint32 address_n = 1;  // BIP-32 path to derive the key from master node
+    required uint64 chain_id = 2;   // chain id on which the authorization is valid, or 0 for all
+    required string delegate = 3;   // address of the code that'll be delegated to the EOA
+    required uint64 nonce = 4;      // nonce for which the authorization is valid
+}
+
+/**
+ * Response: Signed EIP 7702 delegation authorization
+ * @end
+ */
+message EthereumAuth7702Signature {
+    required uint32 signature_v = 1;    // Computed signature (recovery parameter, limited to 27 or 28)
+    required bytes signature_r = 2;     // Computed signature R component (256 bit)
+    required bytes signature_s = 3;     // Computed signature S component (256 bit)
 }
