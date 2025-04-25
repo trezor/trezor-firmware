@@ -672,11 +672,11 @@ def confirm_address(
     description: str | None = None,
     verb: str | None = None,
     chunkify: bool = True,
-    br_name: str = "confirm_address",
+    br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return confirm_blob(
-        br_name,
+        br_name or "confirm_address",
         subtitle or title,
         address,
         description,
@@ -871,6 +871,55 @@ if not utils.BITCOIN_ONLY:
     def confirm_ethereum_unknown_contract_warning() -> Awaitable[ui.UiResult]:
         return show_danger(
             "unknown_contract_warning", TR.ethereum__unknown_contract_address_short
+        )
+
+    async def confirm_ethereum_approve(
+        recipient: str | None,
+        is_unknown_token: bool,
+        token_address: str,
+        token_symbol: str,
+        is_unknown_network: bool,
+        chain_id: str,
+        network_name: str,
+        total_amount: str | None,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        chunkify: bool = False,
+    ) -> None:
+        await confirm_value("Token approval", "Review message to approve token spending.", None, verb=TR.buttons__continue, hold=False, is_data=False, br_name="confirm_ethereum_approve")
+
+        await confirm_value("Approve to", recipient, None, verb=TR.buttons__continue, hold=False, br_name="confirm_ethereum_approve")
+
+        if total_amount is None:
+            await show_warning("confirm_ethereum_approve", f"Approve unlimited amount of {token_symbol}")
+
+        if is_unknown_token:
+            await confirm_value("Token contract Address", token_address, None, verb=TR.buttons__continue, hold=False, br_name="confirm_ethereum_approve")
+
+        if is_unknown_network:
+            await confirm_value("Chain ID", chain_id, None, verb=TR.buttons__continue, hold=False, br_name="confirm_ethereum_approve")
+
+        properties = [("Amount allowance", total_amount or "Unlimited")]
+        if not is_unknown_network:
+            properties.append(("Chain", network_name))
+        await confirm_properties("confirm_ethereum_approve", "Approve", properties, False)
+
+        account_items = []
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+
+        await raise_if_not_confirmed(
+            trezorui_api.confirm_summary(
+                amount="",
+                amount_label="",
+                fee=maximum_fee,
+                fee_label=f"{TR.send__maximum_fee}:",
+                extra_items=[(f"{k}:", v) for (k, v) in account_items],
+                extra_title="Account info",
+            ),
+            br_name="confirm_ethereum_approve",
         )
 
     async def confirm_ethereum_staking_tx(

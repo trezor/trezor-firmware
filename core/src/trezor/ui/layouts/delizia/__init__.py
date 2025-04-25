@@ -557,14 +557,14 @@ def confirm_address(
     description: str | None = None,
     verb: str | None = None,
     chunkify: bool = True,
-    br_name: str = "confirm_address",
+    br_name: str | None = None,
     br_code: ButtonRequestType = BR_CODE_OTHER,
 ) -> Awaitable[None]:
     return confirm_value(
         title,
         address,
         description or "",
-        br_name,
+        br_name or "confirm_address",
         br_code,
         subtitle=subtitle,
         verb=(verb or TR.buttons__confirm),
@@ -796,6 +796,45 @@ if not utils.BITCOIN_ONLY:
             ),
             None,
         )
+
+    async def confirm_ethereum_approve(
+        recipient: str | None,
+        is_unknown_token: bool,
+        token_address: str,
+        token_symbol: str,
+        is_unknown_network: bool,
+        chain_id: str,
+        network_name: str,
+        total_amount: str | None,
+        account: str | None,
+        account_path: str | None,
+        maximum_fee: str,
+        fee_info_items: Iterable[tuple[str, str]],
+        chunkify: bool = False,
+    ) -> None:
+        await confirm_value("Token approval", "Review message to approve token spending.", None, is_data=False, br_name="confirm_ethereum_approve")
+
+        await confirm_value("Approve to", recipient, None, chunkify=chunkify, br_name="confirm_ethereum_approve")
+
+        if total_amount is None:
+            await show_warning("confirm_ethereum_approve", f"Approve unlimited amount of {token_symbol}")
+
+        if is_unknown_token:
+            await confirm_value("Address", token_address, None, subtitle="Token contract", chunkify=chunkify, br_name="confirm_ethereum_approve")
+
+        if is_unknown_network:
+            await confirm_value("Chain ID", chain_id, None, br_name="confirm_ethereum_approve")
+
+        properties = [("Amount allowance", total_amount or "Unlimited")]
+        if not is_unknown_network:
+            properties.append(("Chain", network_name))
+        await confirm_properties("confirm_ethereum_approve", "Approve", properties, False)
+
+        account_items = []
+        if account_path:
+            account_items.append((TR.address_details__derivation_path, account_path))
+
+        await _confirm_summary("", "", maximum_fee, "Maximum Fee", "Summary", account_items, fee_info_items, "Fee info")
 
     async def confirm_ethereum_staking_tx(
         title: str,
