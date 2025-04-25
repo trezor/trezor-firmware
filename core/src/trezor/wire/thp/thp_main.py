@@ -71,6 +71,7 @@ async def thp_main_loop(iface: WireInterface) -> None:
     finally:
         channel_manager.CHANNELS_LOADED = False
 
+
 async def _handle_codec_v1(iface: WireInterface, packet: bytes) -> None:
     # If the received packet is not an initial codec_v1 packet, do not send error message
     if not packet[1:3] == b"##":

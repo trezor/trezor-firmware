@@ -13,6 +13,7 @@ if __debug__:
 
 CHANNELS_LOADED: bool = False
 
+
 def create_new_channel(iface: WireInterface) -> Channel:
     """
     Creates a new channel for the interface `iface`.

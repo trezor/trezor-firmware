@@ -261,6 +261,8 @@ class SessionV2(Session):
         if passphrase is PASSPHRASE_ON_DEVICE:
             passphrase = None
             on_device = True
+        elif passphrase is not None and not isinstance(passphrase, str):
+            raise Exception("Passphrase is not string or None")
         else:
             on_device = False
         session.call(
