@@ -18,7 +18,7 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, HeaderMsg, Hint, TextScreen, TextScreenMsg, VerticalMenu,
+        ActionBar, Header, HeaderMsg, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
@@ -73,7 +73,7 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
         });
 
     let content_menu = VerticalMenuScreen::new(
-        VerticalMenu::empty().item(
+        VerticalMenu::<ShortMenuVec>::empty().with_item(
             Button::with_text(TR::backup__title_skip.into())
                 .styled(theme::menu_item_title_orange())
                 .with_text_align(Alignment::Start)

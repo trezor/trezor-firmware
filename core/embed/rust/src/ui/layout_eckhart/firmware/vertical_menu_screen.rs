@@ -13,12 +13,12 @@ use crate::{
     },
 };
 
-use super::{constant::SCREEN, theme, Header, HeaderMsg, VerticalMenu, VerticalMenuMsg};
+use super::{constant::SCREEN, theme, Header, HeaderMsg, MenuItems, VerticalMenu, VerticalMenuMsg};
 
-pub struct VerticalMenuScreen {
+pub struct VerticalMenuScreen<T> {
     header: Header,
     /// Scrollable vertical menu
-    menu: VerticalMenu,
+    menu: VerticalMenu<T>,
     /// Base position of the menu sliding window to scroll around
     offset_base: i16,
     /// Swipe detector
@@ -37,9 +37,9 @@ pub enum VerticalMenuScreenMsg {
     Menu,
 }
 
-impl VerticalMenuScreen {
+impl<T: MenuItems> VerticalMenuScreen<T> {
     const TOUCH_SENSITIVITY_DIVIDER: i16 = 15;
-    pub fn new(menu: VerticalMenu) -> Self {
+    pub fn new(menu: VerticalMenu<T>) -> Self {
         Self {
             header: Header::new(TString::empty()),
             menu,
@@ -164,7 +164,7 @@ impl VerticalMenuScreen {
     }
 }
 
-impl Component for VerticalMenuScreen {
+impl<T: MenuItems> Component for VerticalMenuScreen<T> {
     type Msg = VerticalMenuScreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -211,7 +211,7 @@ impl Component for VerticalMenuScreen {
 }
 
 #[cfg(feature = "micropython")]
-impl Swipable for VerticalMenuScreen {
+impl<T: MenuItems> Swipable for VerticalMenuScreen<T> {
     fn get_swipe_config(&self) -> SwipeConfig {
         self.swipe_config
     }
@@ -222,7 +222,7 @@ impl Swipable for VerticalMenuScreen {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for VerticalMenuScreen {
+impl<T: MenuItems> crate::trace::Trace for VerticalMenuScreen<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("VerticalMenuScreen");
         t.child("Header", &self.header);
