@@ -50,6 +50,7 @@ EthereumGetPublicKey.address_n          max_count:8
 
 EthereumAddress._old_address            max_size:20
 EthereumAddress.address                 max_size:43
+EthereumAddress.mac                     type:FT_IGNORE
 EthereumPublicKey.xpub                  max_size:113
 
 EthereumDefinitions.encoded_network max_size:1024
