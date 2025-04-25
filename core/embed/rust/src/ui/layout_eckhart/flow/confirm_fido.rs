@@ -19,8 +19,8 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, FidoCredential, Header, TextScreen, TextScreenMsg, VerticalMenu,
-        VerticalMenuScreen, VerticalMenuScreenMsg,
+        ActionBar, FidoCredential, Header, LongMenuGc, ShortMenuVec, TextScreen, TextScreenMsg,
+        VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -111,13 +111,13 @@ pub fn new_confirm_fido(
     });
 
     // Choose credential screen
-    let mut credentials = VerticalMenu::empty();
+    let mut credentials = VerticalMenu::<LongMenuGc>::empty();
     for i in 0..num_accounts {
         let account = unwrap!(accounts.get(i));
         let label = account
             .try_into()
             .unwrap_or_else(|_| TString::from_str("-"));
-        credentials = credentials.item(Button::new_menu_item(label, theme::menu_item_title()));
+        credentials.item(Button::new_menu_item(label, theme::menu_item_title()));
     }
     let content_choose_credential = VerticalMenuScreen::new(credentials)
         .with_header(Header::new(TR::fido__title_select_credential.into()))
@@ -158,10 +158,9 @@ pub fn new_confirm_fido(
             });
 
     // Menu screen
-    let content_menu = VerticalMenuScreen::new(VerticalMenu::empty().item(Button::new_menu_item(
-        TR::buttons__cancel.into(),
-        theme::menu_item_title_orange(),
-    )))
+    let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
+        Button::new_menu_item(TR::buttons__cancel.into(), theme::menu_item_title_orange()),
+    ))
     .with_header(Header::new(title).with_close_button())
     .map(|msg| match msg {
         VerticalMenuScreenMsg::Selected(0) => Some(FlowMsg::Choice(0)),

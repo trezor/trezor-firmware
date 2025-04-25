@@ -23,8 +23,8 @@ use crate::{
 use super::super::{
     component::Button,
     firmware::{
-        ActionBar, Header, TextScreen, TextScreenMsg, VerticalMenu, VerticalMenuScreen,
-        VerticalMenuScreenMsg,
+        ActionBar, Header, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
+        VerticalMenuScreen, VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -208,7 +208,7 @@ pub fn new_continue_recovery_homepage(
 
     let res = if show_instructions {
         let content_menu = VerticalMenuScreen::new(
-            VerticalMenu::empty().item(
+            VerticalMenu::<ShortMenuVec>::empty().with_item(
                 Button::with_text(cancel_btn.into())
                     .styled(theme::menu_item_title_orange())
                     .with_text_align(Alignment::Start)
@@ -228,8 +228,8 @@ pub fn new_continue_recovery_homepage(
         res
     } else if pages.is_none() {
         let content_menu = VerticalMenuScreen::new(
-            VerticalMenu::empty()
-                .item(
+            VerticalMenu::<ShortMenuVec>::empty()
+                .with_item(
                     Button::with_text_and_subtext(
                         TR::words__recovery_share.into(),
                         TR::buttons__more_info.into(),
@@ -239,7 +239,7 @@ pub fn new_continue_recovery_homepage(
                     .with_text_align(Alignment::Start)
                     .with_content_offset(Offset::x(12)),
                 )
-                .item(
+                .with_item(
                     Button::with_text(cancel_btn.into())
                         .styled(theme::menu_item_title_orange())
                         .with_text_align(Alignment::Start)
@@ -280,14 +280,14 @@ pub fn new_continue_recovery_homepage(
         res
     } else {
         let content_menu = VerticalMenuScreen::new(
-            VerticalMenu::empty()
-                .item(
+            VerticalMenu::<ShortMenuVec>::empty()
+                .with_item(
                     Button::with_text(TR::recovery__title_remaining_shares.into())
                         .styled(theme::menu_item_title())
                         .with_text_align(Alignment::Start)
                         .with_content_offset(Offset::x(12)),
                 )
-                .item(
+                .with_item(
                     Button::with_text(cancel_btn.into())
                         .styled(theme::menu_item_title_orange())
                         .with_text_align(Alignment::Start)
