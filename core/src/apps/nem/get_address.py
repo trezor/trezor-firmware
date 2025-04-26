@@ -11,9 +11,10 @@ if TYPE_CHECKING:
 
 
 @with_slip44_keychain(*PATTERNS, slip44_id=SLIP44_ID, curve=CURVE)
-async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
+async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress | None:
     from trezor.messages import NEMAddress
-    from trezor.ui.layouts import show_address
+    from trezor.ui.layouts import show_address, show_continue_in_app
+    from trezor.wire import context
 
     from apps.common import paths
 
@@ -28,8 +29,11 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
 
     node = keychain.derive(address_n)
     address = node.nem_address(network)
+    response = NEMAddress(address=address)
 
     if msg.show_display:
+        from trezor import TR
+
         from . import PATTERNS, SLIP44_ID
 
         await show_address(
@@ -40,5 +44,8 @@ async def get_address(msg: NEMGetAddress, keychain: Keychain) -> NEMAddress:
             network=get_network_str(network),
             chunkify=bool(msg.chunkify),
         )
+        await context.write(response)
+        await show_continue_in_app(TR.address__confirmed)
+        return None
 
-    return NEMAddress(address=address)
+    return response
