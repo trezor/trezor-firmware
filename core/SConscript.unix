@@ -543,6 +543,7 @@ BYTECODE_OPTIMIZATION = {'0': '0', '1': '3'}[PYOPT]
 
 env.Replace(
     PYTHON='python',
+    MAKECOMPRESSEDDATA='$PYTHON vendor/micropython/py/makecompresseddata.py',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
@@ -610,6 +611,18 @@ hdr_moduledefs = env.Command(
 env.Ignore(moduledefs_collected, moduledefs_collected)
 env.Ignore(moduledefs_collected, qstr_generated)
 env.Ignore(moduledefs_collected, hdr_moduledefs)
+
+#
+# Compressed Qstrings
+#
+
+compressed_collected = env.CollectCompressed(
+    target='genhdr/compressed.collected', source=micropy_defines)
+
+compressed_data = env.GenerateCompressed(
+    target='genhdr/compressed.data.h', source=compressed_collected)
+
+env.Ignore(micropy_defines, compressed_data)
 
 #
 # Micropython version

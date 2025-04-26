@@ -91,7 +91,7 @@ CPPDEFINES_MOD += [
     ('MICROPY_ENABLE_SOURCE_LINE', MICROPY_ENABLE_SOURCE_LINE),
     ('DISABLE_ANIMATION', '1' if DISABLE_ANIMATION else '0'),
     ('LOG_STACK_USAGE', '1' if LOG_STACK_USAGE else '0'),
-    ('BLOCK_ON_VCP', '1' if BLOCK_ON_VCP else '0')
+    ('BLOCK_ON_VCP', '1' if BLOCK_ON_VCP else '0'),
 ]
 SOURCE_MOD += [
     'embed/upymod/trezorobj.c',
@@ -489,6 +489,7 @@ BYTECODE_OPTIMIZATION = {'0': '0', '1': '3'}[PYOPT]
 env.Replace(
     HEADERTOOL='headertool',
     PYTHON='python',
+    MAKECOMPRESSEDDATA='$PYTHON vendor/micropython/py/makecompresseddata.py',
     MAKEQSTRDATA='$PYTHON vendor/micropython/py/makeqstrdata.py',
     MAKEVERSIONHDR='$PYTHON vendor/micropython/py/makeversionhdr.py',
     MAKEMODULEDEFS='$PYTHON vendor/micropython/py/makemoduledefs.py',
@@ -555,6 +556,18 @@ hdr_moduledefs = env.Command(
 env.Ignore(micropy_defines, micropy_defines)
 env.Ignore(micropy_defines, qstr_generated)
 env.Ignore(micropy_defines, hdr_moduledefs)
+
+#
+# Compressed Qstrings
+#
+
+compressed_collected = env.CollectCompressed(
+    target='genhdr/compressed.collected', source=micropy_defines)
+
+compressed_data = env.GenerateCompressed(
+    target='genhdr/compressed.data.h', source=compressed_collected)
+
+env.Ignore(micropy_defines, compressed_data)
 
 #
 # Micropython version
