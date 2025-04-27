@@ -1155,7 +1155,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_solana__stake_question;
   MP_QSTR_solana__stake_withdrawal_warning;
   MP_QSTR_solana__stake_withdrawal_warning_title;
-  MP_QSTR_solana__token_address;
+  MP_QSTR_solana__title_token;
   MP_QSTR_solana__transaction_contains_unknown_instructions;
   MP_QSTR_solana__transaction_fee;
   MP_QSTR_solana__transaction_requires_x_signers_template;

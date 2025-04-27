@@ -76,10 +76,7 @@ async def sign_tx(
             address_n, signer_public_key, transaction, additional_tx_info
         )
         await confirm_transaction(
-            address_n,
-            transaction.blockhash,
-            fee,
-            _has_unsupported_instructions(transaction),
+            transaction.blockhash, fee, _has_unsupported_instructions(transaction)
         )
 
     signature = ed25519.sign(node.private_key(), serialized_tx)

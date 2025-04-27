@@ -25,12 +25,7 @@ def format_token_amount(
 ) -> str:
     formatted = format_amount(value, decimals=decimals)
     token = definitions.get_token(mint)
-    if token:
-        symbol = token.symbol
-    else:
-        symbol = "[UNKN]"
-
-    return f"{formatted} {symbol}"
+    return f"{formatted} {token.symbol}"
 
 
 def format_unix_timestamp(value: int) -> str:
