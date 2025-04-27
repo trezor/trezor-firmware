@@ -13,6 +13,14 @@ from trezor import utils
 # we need space for 30 items in the trezor module
 utils.presize_module("trezor", 30)
 
+# Preemptive import :)
+import trezor.log
+import trezor.wire
+import apps.base
+import apps.debug
+import apps.homescreen
+import apps.webauthn.fido2
+
 # storage imports storage.common, storage.cache and storage.device.
 # These import trezor, trezor.config (which is a C module), trezor.utils, and each other.
 import storage
