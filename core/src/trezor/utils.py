@@ -67,9 +67,6 @@ def unimport_begin() -> set[str]:
 
 
 def unimport_end(mods: set[str], collect: bool = True) -> None:
-    if __debug__:
-        check_heap_fragmentation()
-
     for mod in sys.modules:  # pylint: disable=consider-using-dict-items
         if mod not in mods:
             # remove reference from sys.modules
@@ -106,9 +103,6 @@ class unimport:
         self.mods.clear()
         self.mods = None
         gc.collect()
-
-        if __debug__ and exc_type is not SystemExit:
-            self.free_heap = check_free_heap(self.free_heap)
 
 
 def presize_module(modname: str, size: int) -> None:
