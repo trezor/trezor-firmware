@@ -37,6 +37,8 @@ use super::{
 };
 
 const AREA: Rect = constant::screen();
+const AREA_TAP_TO_UNLOCK: Rect =
+    Rect::snap(AREA.center(), Offset::uniform(80), Alignment2D::CENTER);
 const TOP_CENTER: Point = AREA.top_center();
 const LABEL_Y: i16 = HEIGHT - 18;
 const LOCKED_Y: i16 = HEIGHT / 2 - 13;
@@ -905,14 +907,30 @@ impl Component for Lockscreen {
         // SAFETY: Single threaded access
         let resume_label = unsafe { LOCKSCREEN_STATE.label };
 
-        self.label_anim.process_event(ctx, event, resume_label);
-
-        if let Event::Touch(TouchEvent::TouchEnd(_)) = event {
-            #[cfg(feature = "haptic")]
-            play(HapticEffect::ButtonPress);
-            return Some(HomescreenMsg::Dismissed);
-        }
-
+        let label_hidden = self.label_anim.get_state().hidden;
+        let middle = |pos| AREA_TAP_TO_UNLOCK.contains(pos);
+        match event {
+            // Always dismiss on TouchEnd in the middle area
+            Event::Touch(TouchEvent::TouchEnd(pos)) if middle(pos) => {
+                #[cfg(feature = "haptic")]
+                play(HapticEffect::ButtonPress);
+                return Some(HomescreenMsg::Dismissed);
+            }
+            // Do nothing on TouchStart in the middle area
+            Event::Touch(TouchEvent::TouchStart(pos)) if middle(pos) => {}
+            // Show label if hidden and tap outside middle area
+            Event::Touch(TouchEvent::TouchEnd(pos)) if label_hidden => {
+                self.label_anim.process_event(
+                    ctx,
+                    Event::Touch(TouchEvent::TouchStart(pos)),
+                    self.label_anim.get_state(),
+                );
+                ctx.request_paint();
+            }
+            // For all other touch events, propagate as usual
+            // Ans also for non-touch events
+            _ => self.label_anim.process_event(ctx, event, resume_label),
+        };
         None
     }
 
