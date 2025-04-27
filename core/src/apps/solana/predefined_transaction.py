@@ -154,20 +154,14 @@ async def try_confirm_token_transfer_transaction(
         ]
     )
 
-    token_symbol = "[UNKN]"
     token = additional_info.definitions.get_token(token_mint)
-    if token is not None:
-        token_symbol = token.symbol
-
     await confirm_token_transfer(
         token_account if base_address is None else base_address,
         token_account,
-        token_mint,
-        token_symbol,
+        token,
         total_token_amount,
         transfer_token_instructions[0].decimals,
         fee,
-        signer_path,
         blockhash,
     )
     return True
@@ -193,9 +187,7 @@ async def try_confirm_predefined_transaction(
 
     if instructions_count == 1:
         if SystemProgramTransferInstruction.is_type_of(instructions[0]):
-            await confirm_system_transfer(
-                instructions[0], fee, signer_path, blockhash
-            )
+            await confirm_system_transfer(instructions[0], fee, blockhash)
             return True
 
     if await try_confirm_staking_transaction(

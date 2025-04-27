@@ -672,7 +672,7 @@
   "solana__is_provided_via_lookup_table_template": "text,2",
   "solana__lookup_table_address": "text,1",
   "solana__multiple_signers": "text,1",
-  "solana__token_address": "text,1",
+  "solana__token_mint": "text,1",
   "solana__transaction_contains_unknown_instructions": "text,2",
   "solana__transaction_requires_x_signers_template": "text,3",
   "stellar__account_merge": "text,1",

@@ -22,6 +22,8 @@ from .types import AddressType
 if TYPE_CHECKING:
     from typing import Sequence
 
+    from trezor.messages import SolanaTokenInfo
+
     from .definitions import Definitions
     from .transaction import Fee
     from .transaction.instructions import Instruction, SystemProgramTransferInstruction
@@ -125,15 +127,18 @@ async def confirm_instruction(
 
             account_value = instruction.parsed_accounts[ui_property.account]
 
-            if ui_property.default_value_to_hide == "signer" and signer_public_key == account_value[0]:
+            if (
+                ui_property.default_value_to_hide == "signer"
+                and signer_public_key == account_value[0]
+            ):
                 continue
 
             account_data: list[tuple[str, str]] = []
             # account included in the transaction directly
             if len(account_value) == 2:
                 account_description = f"{base58.encode(account_value[0])}"
-                token = definitions.get_token(account_value[0])
-                if token is not None:
+                if definitions.has_token(account_value[0]):
+                    token = definitions.get_token(account_value[0])
                     account_description = f"{token.name}\n{account_description}"
                 elif account_value[0] == signer_public_key:
                     account_description = f"{account_description} ({TR.words__signer})"
@@ -284,34 +289,28 @@ async def confirm_unsupported_program_confirm(
 async def confirm_system_transfer(
     transfer_instruction: SystemProgramTransferInstruction,
     fee: Fee,
-    signer_path: list[int],
     blockhash: bytes,
 ) -> None:
     await confirm_solana_recipient(
         recipient=base58.encode(transfer_instruction.recipient_account[0]),
         title=TR.words__recipient,
-        items=(
-            (f"{TR.words__account}:", _format_path(signer_path)),
-            (f"{TR.address_details__derivation_path}:", address_n_to_str(signer_path)),
-            (f"{TR.words__blockhash}:", base58.encode(blockhash)),
-        ),
     )
 
-    await confirm_custom_transaction(transfer_instruction.lamports, 9, "SOL", fee)
+    await confirm_custom_transaction(
+        transfer_instruction.lamports, 9, "SOL", fee, blockhash
+    )
 
 
 async def confirm_token_transfer(
     destination_account: bytes,
     token_account: bytes,
-    token_mint: bytes,
-    token_symbol: str,
+    token: SolanaTokenInfo,
     amount: int,
     decimals: int,
     fee: Fee,
-    signer_path: list[int],
     blockhash: bytes,
 ) -> None:
-    items = [(TR.words__recipient, base58.encode(destination_account))]
+    items = []
     if token_account != destination_account:
         items.append(
             (f"{TR.solana__associated_token_account}:", base58.encode(token_account))
@@ -320,23 +319,21 @@ async def confirm_token_transfer(
     await confirm_solana_recipient(
         recipient=base58.encode(destination_account),
         title=TR.words__recipient,
-        items=(
-            (f"{TR.words__account}:", _format_path(signer_path)),
-            (f"{TR.address_details__derivation_path}:", address_n_to_str(signer_path)),
-            (f"{TR.words__blockhash}:", base58.encode(blockhash)),
-        ),
+        items=items,
     )
 
+    value = token.name + "\n" + base58.encode(token.mint)
+
     await confirm_value(
-        title=TR.solana__token_address,
-        value=base58.encode(token_mint),
+        title=TR.solana__title_token,
+        value=value,
         description="",
         br_name="confirm_token_address",
         br_code=ButtonRequestType.ConfirmOutput,
         verb=TR.buttons__continue,
     )
 
-    await confirm_custom_transaction(amount, decimals, token_symbol, fee)
+    await confirm_custom_transaction(amount, decimals, token.symbol, fee, blockhash)
 
 
 def _fee_ui_info(
@@ -367,8 +364,10 @@ async def confirm_custom_transaction(
     decimals: int,
     unit: str,
     fee: Fee,
+    blockhash: bytes,
 ) -> None:
     fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
+    fee_items.append((TR.words__blockhash, base58.encode(blockhash)))
     await confirm_solana_tx(
         amount=f"{format_amount(amount, decimals)} {unit}",
         fee=fee_str,
@@ -502,21 +501,12 @@ async def confirm_claim_transaction(
 
 
 async def confirm_transaction(
-    signer_path: list[int],
     blockhash: bytes,
     fee: Fee,
     has_unsupported_instructions: bool,
 ) -> None:
     fee_title, fee_str, fee_items = _fee_ui_info(has_unsupported_instructions, fee)
-    await confirm_properties(
-        "confirm_account_blockhash",
-        TR.words__title_information,
-        (
-            (f"{TR.words__account}:", _format_path(signer_path)),
-            (f"{TR.address_details__derivation_path}:", address_n_to_str(signer_path)),
-            (f"{TR.words__blockhash}:", base58.encode(blockhash)),
-        ),
-    )
+    fee_items.append((TR.words__blockhash, base58.encode(blockhash)))
     await confirm_solana_tx(
         amount="",
         amount_title="",

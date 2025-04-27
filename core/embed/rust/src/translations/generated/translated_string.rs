@@ -967,7 +967,7 @@ pub enum TranslatedString {
     #[cfg(feature = "universal_fw")]
     solana__multiple_signers = 672,  // "Multiple signers"
     #[cfg(feature = "universal_fw")]
-    solana__token_address = 673,  // "Token address"
+    solana__title_token = 673,  // "Token"
     #[cfg(feature = "universal_fw")]
     solana__transaction_contains_unknown_instructions = 674,  // "Transaction contains unknown instructions."
     #[cfg(feature = "universal_fw")]
@@ -2379,7 +2379,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Self::solana__multiple_signers => "Multiple signers",
             #[cfg(feature = "universal_fw")]
-            Self::solana__token_address => "Token address",
+            Self::solana__title_token => "Token",
             #[cfg(feature = "universal_fw")]
             Self::solana__transaction_contains_unknown_instructions => "Transaction contains unknown instructions.",
             #[cfg(feature = "universal_fw")]
@@ -3790,7 +3790,7 @@ impl TranslatedString {
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_solana__multiple_signers => Some(Self::solana__multiple_signers),
             #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__token_address => Some(Self::solana__token_address),
+            Qstr::MP_QSTR_solana__title_token => Some(Self::solana__title_token),
             #[cfg(feature = "universal_fw")]
             Qstr::MP_QSTR_solana__transaction_contains_unknown_instructions => Some(Self::solana__transaction_contains_unknown_instructions),
             #[cfg(feature = "universal_fw")]

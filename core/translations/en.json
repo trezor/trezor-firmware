@@ -802,7 +802,7 @@
     "solana__stake_question": "Stake SOL?",
     "solana__stake_withdrawal_warning": "The current wallet isn't the SOL staking withdraw authority.",
     "solana__stake_withdrawal_warning_title": "Withdraw authority address",
-    "solana__token_address": "Token address",
+    "solana__title_token": "Token",
     "solana__transaction_contains_unknown_instructions": "Transaction contains unknown instructions.",
     "solana__transaction_requires_x_signers_template": "Transaction requires {0} signers which increases the fee.",
     "solana__unstake": "Unstake",

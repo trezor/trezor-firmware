@@ -797,7 +797,7 @@ class TR:
     solana__stake_question: str = "Stake SOL?"
     solana__stake_withdrawal_warning: str = "The current wallet isn't the SOL staking withdraw authority."
     solana__stake_withdrawal_warning_title: str = "Withdraw authority address"
-    solana__token_address: str = "Token address"
+    solana__title_token: str = "Token"
     solana__transaction_contains_unknown_instructions: str = "Transaction contains unknown instructions."
     solana__transaction_fee: str = "Transaction fee"
     solana__transaction_requires_x_signers_template: str = "Transaction requires {0} signers which increases the fee."
