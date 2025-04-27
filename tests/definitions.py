@@ -6,7 +6,7 @@ from hashlib import sha256
 
 from trezorlib import cosi, definitions, messages, protobuf
 
-from ...common import PRIVATE_KEYS_DEV
+from .common import PRIVATE_KEYS_DEV
 
 
 def make_network(
@@ -40,7 +40,7 @@ def make_token(
 
 
 def make_payload(
-    data_type: messages.EthereumDefinitionType = messages.EthereumDefinitionType.NETWORK,
+    data_type: messages.DefinitionType = messages.DefinitionType.ETHEREUM_NETWORK,
     timestamp: int = 0xFFFF_FFFF,
     message: (
         messages.EthereumNetworkInfo | messages.EthereumTokenInfo | bytes
@@ -92,9 +92,7 @@ def encode_network(
 ) -> bytes:
     if network is None:
         network = make_network(chain_id, slip44, symbol, name)
-    payload = make_payload(
-        data_type=messages.EthereumDefinitionType.NETWORK, message=network
-    )
+    payload = make_payload(data_type=messages.DefinitionType.ETHEREUM_NETWORK, message=network)
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
 
@@ -113,9 +111,7 @@ def encode_token(
                 address = address[2:]
             address = bytes.fromhex(address)  # type: ignore (typechecker is lying)
         token = make_token(symbol, decimals, address, chain_id, name)  # type: ignore (typechecker is lying)
-    payload = make_payload(
-        data_type=messages.EthereumDefinitionType.TOKEN, message=token
-    )
+    payload = make_payload(data_type=messages.DefinitionType.ETHEREUM_TOKEN, message=token)
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
 
