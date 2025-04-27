@@ -824,6 +824,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_words__title_threshold;
   MP_QSTR_words__try_again;
   MP_QSTR_words__unknown;
+  MP_QSTR_words__unlocked;
   MP_QSTR_words__warning;
   MP_QSTR_words__writable;
   MP_QSTR_words__yes;

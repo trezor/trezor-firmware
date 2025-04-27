@@ -1,3 +1,6 @@
+#[cfg(feature = "haptic")]
+use crate::trezorhal::haptic::{play, HapticEffect};
+
 use crate::{
     error::Error,
     io::BinaryData,
@@ -9,7 +12,7 @@ use crate::{
         component::{Component, Event, EventCtx, Timer},
         display::{image::ImageInfo, Color},
         event::TouchEvent,
-        geometry::{Alignment, Alignment2D, Offset, Point, Rect},
+        geometry::{Alignment, Alignment2D, Insets, Offset, Point, Rect},
         layout::util::get_user_custom_image,
         shape::{self, Renderer},
     },
@@ -28,8 +31,8 @@ use super::{
         cshape::{self, UnlockOverlay},
         fonts,
     },
-    constant, theme,
-    theme::{GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
+    constant,
+    theme::{self, GREY_LIGHT, HOMESCREEN_ICON, ICON_KEY},
     Loader, LoaderMsg,
 };
 
@@ -43,6 +46,7 @@ const COINJOIN_Y: i16 = 30;
 const LOADER_OFFSET: Offset = Offset::y(-10);
 const LOADER_DELAY: Duration = Duration::from_millis(500);
 const LOADER_DURATION: Duration = Duration::from_millis(2000);
+const LABELS_ALPHA: u8 = 160;
 
 pub const HOMESCREEN_IMAGE_WIDTH: i16 = WIDTH;
 pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
@@ -50,16 +54,47 @@ pub const HOMESCREEN_IMAGE_HEIGHT: i16 = HEIGHT;
 const DEFAULT_HS_RADIUS: i16 = UnlockOverlay::RADIUS;
 const DEFAULT_HS_SPAN: i16 = UnlockOverlay::SPAN;
 const DEFAULT_HS_THICKNESS: i16 = 6;
-const DEFAULT_HS_NUM_CIRCLES: i16 = 5;
+const DEFAULT_HS_NUM_CIRCLES: i16 = DEFAULT_HS_COLORS.len() as i16;
+#[cfg(any(feature = "universal_fw", feature = "ui_debug"))]
+const DEFAULT_HS_COLORS: [Color; 5] = [
+    Color::from_u32(0x0BB671),
+    Color::from_u32(0x247553),
+    Color::from_u32(0x235C44),
+    Color::from_u32(0x1D3E30),
+    Color::from_u32(0x14271F),
+];
+#[cfg(not(any(feature = "universal_fw", feature = "ui_debug")))]
+const DEFAULT_HS_COLORS: [Color; 5] = [
+    Color::from_u32(0xEEA600),
+    Color::from_u32(0xB27C00),
+    Color::from_u32(0x775300),
+    Color::from_u32(0x463100),
+    Color::from_u32(0x2C1F00),
+];
+const DEFAULT_HS_RADII: [i16; 5] = default_hs_radii();
+const _: () = debug_assert!(
+    DEFAULT_HS_RADII.len() == DEFAULT_HS_COLORS.len(),
+    "DEFAULT_HS length mismatch"
+);
 
 const NOTIFICATION_HEIGHT: i16 = 30;
-const NOTIFICATION_TOP: i16 = 208;
+const NOTIFICATION_TOP: i16 = 182;
 const NOTIFICATION_LOCKSCREEN_TOP: i16 = 190;
 const NOTIFICATION_BORDER: i16 = 13;
 
 const NOTIFICATION_BG_ALPHA: u8 = 204;
 
 const NOTIFICATION_BG_RADIUS: i16 = 14;
+
+const fn default_hs_radii() -> [i16; 5] {
+    let mut arr = [0i16; 5];
+    let mut i = 0;
+    while i < DEFAULT_HS_NUM_CIRCLES {
+        arr[i as usize] = DEFAULT_HS_RADIUS - DEFAULT_HS_SPAN * i;
+        i += 1;
+    }
+    arr
+}
 
 fn render_notif<'s>(notif: HomescreenNotification, top: i16, target: &mut impl Renderer<'s>) {
     notif.text.map(|t| {
@@ -92,31 +127,48 @@ fn render_notif<'s>(notif: HomescreenNotification, top: i16, target: &mut impl R
     });
 }
 
+fn render_instruction<'s>(instruction: TString<'static>, target: &mut impl Renderer<'s>) {
+    instruction.map(|t| {
+        let offset = theme::TEXT_SUB_GREY.text_font.text_baseline() + theme::SPACING;
+        let text_pos = Point::new(
+            theme::TEXT_SUB_GREY
+                .text_font
+                .horz_center(screen().x0, screen().x1, t),
+            screen().y1 - offset,
+        );
+        let rect = Rect::from_bottom_left_and_size(
+            screen().bottom_left(),
+            Offset::new(screen().width(), 22),
+        );
+
+        shape::Bar::new(rect)
+            .with_bg(Color::black())
+            .with_alpha(LABELS_ALPHA)
+            .render(target);
+        shape::Text::new(text_pos, t, theme::TEXT_SUB_GREY.text_font)
+            .with_fg(theme::GREY_DARK)
+            .render(target);
+    });
+}
+
 fn render_default_hs<'a>(target: &mut impl Renderer<'a>) {
     shape::Bar::new(AREA)
         .with_fg(theme::BG)
         .with_bg(theme::BG)
         .render(target);
 
-    #[cfg(any(feature = "universal_fw", feature = "ui_debug"))]
-    let colors = [0x0BB671, 0x247553, 0x235C44, 0x1D3E30, 0x14271F];
-    #[cfg(not(any(feature = "universal_fw", feature = "ui_debug")))]
-    let colors = [0xEEA600, 0xB27C00, 0x775300, 0x463100, 0x2C1F00];
-
-    for i in 0..DEFAULT_HS_NUM_CIRCLES {
-        let r = DEFAULT_HS_RADIUS - i * DEFAULT_HS_SPAN;
-        let fg = Color::from_u32(colors[i as usize]);
-        let bg = theme::BG;
-        let thickness = DEFAULT_HS_THICKNESS;
-        shape::Circle::new(AREA.center(), r)
-            .with_fg(fg)
-            .with_bg(bg)
-            .with_thickness(thickness)
+    for (rad, color) in DEFAULT_HS_RADII.iter().zip(DEFAULT_HS_COLORS.iter()) {
+        shape::Circle::new(AREA.center(), *rad)
+            .with_fg(*color)
+            .with_bg(theme::BG)
+            .with_thickness(DEFAULT_HS_THICKNESS)
             .render(target);
     }
 
+    let innermost_color = unwrap!(DEFAULT_HS_COLORS.last());
     shape::ToifImage::new(AREA.center(), HOMESCREEN_ICON.toif)
         .with_align(Alignment2D::CENTER)
+        .with_fg(*innermost_color)
         .render(target);
 }
 
@@ -327,6 +379,36 @@ impl HideLabelAnimation {
         Offset::x(i16::lerp(-(label_width + 12), 0, pos))
     }
 
+    fn eval_for_instruction(&self, text_height: i16) -> Offset {
+        if animation_disabled() {
+            return Offset::zero();
+        }
+
+        let t = self.stopwatch.elapsed().to_millis() as f32 / 1000.0;
+
+        let pos = if self.hidden {
+            pareen::constant(0.0)
+                .seq_ease_out(
+                    0.0,
+                    easer::functions::Cubic,
+                    self.duration.to_millis() as f32 / 1000.0,
+                    pareen::constant(1.0),
+                )
+                .eval(t)
+        } else {
+            pareen::constant(1.0)
+                .seq_ease_in(
+                    0.0,
+                    easer::functions::Cubic,
+                    self.duration.to_millis() as f32 / 1000.0,
+                    pareen::constant(0.0),
+                )
+                .eval(t)
+        };
+
+        Offset::y(i16::lerp(text_height + 12, 0, pos))
+    }
+
     fn process_event(&mut self, ctx: &mut EventCtx, event: Event, resume: HideLabelAnimationState) {
         match event {
             Event::Attach(AttachType::Initial) => {
@@ -412,9 +494,14 @@ pub struct HomescreenNotification {
 }
 
 pub struct Homescreen {
-    label: Label<'static>,
-    label_width: i16,
-    label_height: i16,
+    /// Label for the device name, a.k.a "label"
+    label_device: Label<'static>,
+    /// Label for the "Unlocked" text
+    label_unlocked: Label<'static>,
+    /// Combined width of both labels
+    labels_width: i16,
+    /// Combined height of both labels
+    labels_height: i16,
     notification: Option<(TString<'static>, u8)>,
     image: Option<BinaryData<'static>>,
     bg_image: ImageBuffer<Rgb565Canvas<'static>>,
@@ -436,7 +523,14 @@ impl Homescreen {
         hold_to_lock: bool,
     ) -> Result<Self, Error> {
         let label_width = label.map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
-        let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
+        let label_unlocked = TString::from_translation(TR::words__unlocked);
+        let label_unlocked_width =
+            label_unlocked.map(|t| theme::TEXT_SUB_GREEN_LIME.text_font.text_width(t));
+        let labels_width = label_width.max(label_unlocked_width);
+
+        let label_device_height = theme::TEXT_DEMIBOLD.text_font.text_height();
+        let label_unlocked_height = theme::TEXT_SUB_GREEN_LIME.text_font.text_height();
+        let labels_height = label_device_height + label_unlocked_height;
 
         let image = get_homescreen_image();
         let mut buf = ImageBuffer::new(AREA.size())?;
@@ -450,9 +544,16 @@ impl Homescreen {
         });
 
         Ok(Self {
-            label: Label::new(label, Alignment::Center, theme::TEXT_DEMIBOLD).vertically_centered(),
-            label_width,
-            label_height,
+            label_device: Label::new(label, Alignment::Start, theme::TEXT_DEMIBOLD)
+                .vertically_centered(),
+            label_unlocked: Label::new(
+                label_unlocked,
+                Alignment::Start,
+                theme::TEXT_SUB_GREEN_LIME,
+            )
+            .vertically_centered(),
+            labels_width,
+            labels_height,
             notification,
             image,
             bg_image: buf,
@@ -460,7 +561,7 @@ impl Homescreen {
             loader: Loader::with_lock_icon().with_durations(LOADER_DURATION, LOADER_DURATION / 3),
             delay: Timer::new(),
             attach_animation: AttachAnimation::default(),
-            label_anim: HideLabelAnimation::new(label_width),
+            label_anim: HideLabelAnimation::new(label_width.max(label_unlocked_width)),
         })
     }
 
@@ -551,8 +652,16 @@ impl Component for Homescreen {
 
     fn place(&mut self, bounds: Rect) -> Rect {
         self.loader.place(AREA.translate(LOADER_OFFSET));
-        self.label
-            .place(bounds.split_top(32).0.with_width(self.label_width + 12));
+        let label_device_height = theme::TEXT_DEMIBOLD.text_font.text_height();
+        let label_unlocked_height = theme::TEXT_SUB_GREEN_LIME.text_font.text_height();
+        let bounds = bounds.inset(Insets::sides(4));
+        let (label_area, rest) = bounds.split_top(label_device_height);
+        let (text_unlocked_area, _) = rest.split_top(label_unlocked_height);
+
+        self.label_device
+            .place(label_area.with_width(self.labels_width));
+        self.label_unlocked
+            .place(text_unlocked_area.with_width(self.labels_width));
         bounds
     }
 
@@ -591,27 +700,33 @@ impl Component for Homescreen {
                 render_default_hs(target);
             }
 
-            let y_offset = self.label_anim.eval(self.label_width);
+            let x_offset = self.label_anim.eval(self.labels_width);
+            let instruction_text_height = theme::TEXT_SUB_GREY.text_font.text_height();
+            let y_offset = self
+                .label_anim
+                .eval_for_instruction(instruction_text_height);
 
-            target.with_origin(y_offset, &|target| {
-                let label_width = self
-                    .label
-                    .text()
-                    .map(|t| theme::TEXT_DEMIBOLD.text_font.text_width(t));
-
-                let r = Rect::new(Point::new(-30, -30), Point::new(label_width + 12, 32));
+            target.with_origin(x_offset, &|target| {
+                let r = Rect::new(
+                    Point::new(-30, -30),
+                    Point::new(self.labels_width + 12, self.labels_height + 2),
+                );
                 shape::Bar::new(r)
                     .with_bg(Color::black())
-                    .with_alpha(160)
+                    .with_alpha(LABELS_ALPHA)
                     .with_radius(16)
                     .render(target);
 
-                self.label.render(target);
+                self.label_device.render(target);
+                self.label_unlocked.render(target);
             });
 
-            if let Some(notif) = self.get_notification() {
-                render_notif(notif, NOTIFICATION_TOP, target);
-            }
+            target.with_origin(y_offset, &|target| {
+                if let Some(notif) = self.get_notification() {
+                    render_notif(notif, NOTIFICATION_TOP, target);
+                }
+                render_instruction(TR::instructions__continue_in_app.into(), target);
+            });
 
             shape::Bar::new(AREA)
                 .with_bg(Color::black())
@@ -631,7 +746,7 @@ impl Component for Homescreen {
 impl crate::trace::Trace for Homescreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("Homescreen");
-        t.child("label", &self.label);
+        t.child("label", &self.label_device);
     }
 }
 
@@ -751,7 +866,7 @@ impl Lockscreen {
             name_width
         };
 
-        let label_height = label.map(|t| theme::TEXT_DEMIBOLD.text_font.visible_text_height(t));
+        let label_height = theme::TEXT_DEMIBOLD.text_font.text_height();
 
         Ok(Self {
             anim: LockscreenAnim::default(),
@@ -793,6 +908,8 @@ impl Component for Lockscreen {
         self.label_anim.process_event(ctx, event, resume_label);
 
         if let Event::Touch(TouchEvent::TouchEnd(_)) = event {
+            #[cfg(feature = "haptic")]
+            play(HapticEffect::ButtonPress);
             return Some(HomescreenMsg::Dismissed);
         }
 
@@ -863,20 +980,7 @@ impl Component for Lockscreen {
             };
         });
 
-        tap.map_translated(|t| {
-            offset = theme::TEXT_SUB_GREY.text_font.text_baseline();
-
-            let text_pos = Point::new(
-                theme::TEXT_SUB_GREY
-                    .text_font
-                    .horz_center(screen().x0, screen().x1, t),
-                screen().y1 - offset,
-            );
-
-            shape::Text::new(text_pos, t, theme::TEXT_SUB_GREY.text_font)
-                .with_fg(theme::GREY_DARK)
-                .render(target);
-        });
+        render_instruction(tap.into(), target);
 
         if self.coinjoin_authorized {
             let notif = HomescreenNotification {

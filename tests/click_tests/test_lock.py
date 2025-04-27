@@ -53,6 +53,8 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     def hold(duration: int) -> None:
         if debug.layout_type is LayoutType.Caesar:
             debug.press_right(hold_ms=duration)
+        elif debug.layout_type is LayoutType.Delizia:
+            debug.click(debug.screen_buttons.tap_to_confirm(), hold_ms=duration)
         else:
             debug.click((13, 37), hold_ms=duration)
 
@@ -80,6 +82,8 @@ def test_hold_to_lock(device_handler: "BackgroundDeviceHandler"):
     # unlock by touching
     if debug.layout_type is LayoutType.Caesar:
         debug.press_right()
+    elif debug.layout_type is LayoutType.Delizia:
+        debug.click(debug.screen_buttons.tap_to_confirm())
     else:
         debug.click(debug.screen_buttons.info())
     layout = debug.read_layout()

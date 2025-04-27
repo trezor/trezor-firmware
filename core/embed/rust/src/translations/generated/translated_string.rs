@@ -1409,6 +1409,7 @@ pub enum TranslatedString {
     ble__unpair_all = 993,  // "Unpair all bluetooth devices"
     ble__unpair_current = 994,  // "Unpair connected device"
     ble__unpair_title = 995,  // "Unpair"
+    words__unlocked = 996,  // "Unlocked"
 }
 
 impl TranslatedString {
@@ -2814,6 +2815,7 @@ impl TranslatedString {
             Self::ble__unpair_all => "Unpair all bluetooth devices",
             Self::ble__unpair_current => "Unpair connected device",
             Self::ble__unpair_title => "Unpair",
+            Self::words__unlocked => "Unlocked",
         }
     }
 
@@ -4218,6 +4220,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_ble__unpair_all => Some(Self::ble__unpair_all),
             Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
             Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
+            Qstr::MP_QSTR_words__unlocked => Some(Self::words__unlocked),
             _ => None,
         }
     }
