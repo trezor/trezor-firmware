@@ -984,6 +984,7 @@ class TR:
     words__title_threshold: str = "Threshold"
     words__try_again: str = "Try again."
     words__unknown: str = "Unknown"
+    words__unlocked: str = "Unlocked"
     words__warning: str = "Warning"
     words__writable: str = "Writable"
     words__yes: str = "Yes"
