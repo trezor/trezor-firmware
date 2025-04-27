@@ -7,10 +7,16 @@ import pytest
 from trezorlib import ethereum
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
-from trezorlib.messages import EthereumDefinitionType
+from trezorlib.messages import DefinitionType
 from trezorlib.tools import parse_path
 
-from .common import make_defs, make_network, make_payload, make_token, sign_payload
+from ...definitions import (
+    make_defs,
+    make_network,
+    make_payload,
+    make_token,
+    sign_payload,
+)
 from .test_definitions import DEFAULT_ERC20_PARAMS, ERC20_FAKE_ADDRESS
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
@@ -86,7 +92,9 @@ def test_bad_prefix(client: Client) -> None:
 
 def test_bad_type(client: Client) -> None:
     # assuming we expect a network definition
-    payload = make_payload(data_type=EthereumDefinitionType.TOKEN, message=make_token())
+    payload = make_payload(
+        data_type=DefinitionType.ETHEREUM_TOKEN, message=make_token()
+    )
     proof, signature = sign_payload(payload, [])
     fails(client, payload + proof + signature, "Definition type mismatch")
 
@@ -105,13 +113,13 @@ def test_malformed_protobuf(client: Client) -> None:
 
 def test_protobuf_mismatch(client: Client) -> None:
     payload = make_payload(
-        data_type=EthereumDefinitionType.NETWORK, message=make_token()
+        data_type=DefinitionType.ETHEREUM_NETWORK, message=make_token()
     )
     proof, signature = sign_payload(payload, [])
     fails(client, payload + proof + signature, "Invalid Ethereum definition")
 
     payload = make_payload(
-        data_type=EthereumDefinitionType.TOKEN, message=make_network()
+        data_type=DefinitionType.ETHEREUM_TOKEN, message=make_network()
     )
     proof, signature = sign_payload(payload, [])
     # have to do this manually to invoke a method that eats token definitions
