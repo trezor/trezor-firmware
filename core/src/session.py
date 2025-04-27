@@ -20,14 +20,18 @@ if __debug__:
 apps.base.set_homescreen()
 workflow.start_default()
 
+# Reallocated once per session and shared between all wire interfaces.
+# Acquired by the first call to `CodecContext.read_from_wire()`.
+WIRE_BUFFER_PROVIDER = wire.BufferProvider(8192)
+
 # initialize the wire codec over USB
-wire.setup(usb.iface_wire)
+wire.setup(usb.iface_wire, WIRE_BUFFER_PROVIDER)
 
 if utils.USE_BLE:
     import trezorble as ble
 
     # initialize the wire codec over BLE
-    wire.setup(ble.interface)
+    wire.setup(ble.interface, WIRE_BUFFER_PROVIDER)
 
 # start the event loop
 loop.run()

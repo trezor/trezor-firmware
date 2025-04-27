@@ -60,18 +60,13 @@ class BufferProvider:
         return buf
 
 
-# Reallocated once per session and shared between all wire interfaces.
-# Acquired by the first call to `CodecContext.read_from_wire()`.
-WIRE_BUFFER_PROVIDER = BufferProvider(8192)
-
-
-def setup(iface: WireInterface) -> None:
+def setup(iface: WireInterface, buffer_provider: BufferProvider) -> None:
     """Initialize the wire stack on the provided WireInterface."""
-    loop.schedule(handle_session(iface))
+    loop.schedule(handle_session(iface, buffer_provider))
 
 
-async def handle_session(iface: WireInterface) -> None:
-    ctx = CodecContext(iface, WIRE_BUFFER_PROVIDER)
+async def handle_session(iface: WireInterface, buffer_provider: BufferProvider) -> None:
+    ctx = CodecContext(iface, buffer_provider)
     next_msg: protocol_common.Message | None = None
 
     # Take a mark of modules that are imported at this point, so we can
