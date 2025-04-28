@@ -32,13 +32,6 @@
 
 #include "ble_comm_defs.h"
 
-typedef enum {
-  BLE_MODE_OFF,
-  BLE_MODE_CONNECTABLE,
-  BLE_MODE_PAIRING,
-  BLE_MODE_DFU,
-} ble_mode_t;
-
 // changing value of TX_QUEUE_LEN is not allowed
 // as it might result in order of messages being changed
 #define TX_QUEUE_LEN 1
@@ -55,6 +48,7 @@ typedef struct {
   bool initialized;
   bool status_valid;
   bool accept_msgs;
+  bool reboot_on_resume;
   uint8_t busy_flag;
   bool pairing_requested;
   ble_event_t event_queue_buffers[EVENT_QUEUE_LEN];
@@ -319,6 +313,10 @@ static void ble_process_data(const uint8_t *data, uint32_t len) {
     return;
   }
 
+  if (!drv->accept_msgs) {
+    return;
+  }
+
   if (len != BLE_RX_PACKET_SIZE) {
     return;
   }
@@ -445,9 +443,7 @@ cleanup:
   return false;
 }
 
-void ble_deinit(void) {
-  ble_driver_t *drv = &g_ble_driver;
-
+static void ble_deinit_common(ble_driver_t *drv) {
   if (!drv->initialized) {
     return;
   }
@@ -463,10 +459,62 @@ void ble_deinit(void) {
   tsqueue_reset(&drv->event_queue);
   tsqueue_reset(&drv->rx_queue);
   tsqueue_reset(&drv->tx_queue);
+}
 
-  nrf_deinit();
+void ble_deinit(void) {
+  ble_driver_t *drv = &g_ble_driver;
 
-  drv->initialized = false;
+  if (drv->initialized) {
+    ble_deinit_common(drv);
+    nrf_deinit();
+    drv->initialized = false;
+  }
+}
+
+void ble_suspend(ble_wakeup_params_t *wakeup_params) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (drv->initialized) {
+    bool connected = drv->connected;
+    wakeup_params->accept_msgs = connected;
+    wakeup_params->mode_requested = drv->mode_requested;
+
+    ble_deinit_common(drv);
+
+    if (!connected) {
+      wakeup_params->reboot_on_resume = true;
+
+      // if not connected, we can turn off the radio
+      nrf_system_off();
+      nrf_deinit();
+    } else {
+      nrf_suspend();
+    }
+
+    drv->initialized = false;
+  }
+}
+
+bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (!ble_init()) {
+    return false;
+  }
+
+  if (wakeup_params->reboot_on_resume) {
+    nrf_reboot();
+  }
+
+  if (wakeup_params->mode_requested) {
+    ble_start();
+  }
+
+  irq_key_t key = irq_lock();
+  drv->mode_requested = wakeup_params->mode_requested;
+  irq_unlock(key);
+
+  return true;
 }
 
 bool ble_connected(void) {
