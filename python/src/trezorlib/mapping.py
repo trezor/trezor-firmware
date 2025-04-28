@@ -17,27 +17,28 @@
 from __future__ import annotations
 
 import io
+import typing as t
 from types import ModuleType
-from typing import Dict, Optional, Tuple, Type, TypeVar
 
 from typing_extensions import Self
 
 from . import messages, protobuf
 
-T = TypeVar("T")
+T = t.TypeVar("T")
+MT = t.TypeVar("MT", bound=protobuf.MessageType)
 
 
 class ProtobufMapping:
     """Mapping of protobuf classes to Python classes"""
 
     def __init__(self) -> None:
-        self.type_to_class: Dict[int, Type[protobuf.MessageType]] = {}
-        self.class_to_type_override: Dict[Type[protobuf.MessageType], int] = {}
+        self.type_to_class: t.Dict[int, t.Type[protobuf.MessageType]] = {}
+        self.class_to_type_override: t.Dict[t.Type[protobuf.MessageType], int] = {}
 
     def register(
         self,
-        msg_class: Type[protobuf.MessageType],
-        msg_wire_type: Optional[int] = None,
+        msg_class: t.Type[protobuf.MessageType],
+        msg_wire_type: int | None = None,
     ) -> None:
         """Register a Python class as a protobuf type.
 
@@ -55,7 +56,7 @@ class ProtobufMapping:
 
         self.type_to_class[msg_wire_type] = msg_class
 
-    def encode(self, msg: protobuf.MessageType) -> Tuple[int, bytes]:
+    def encode(self, msg: protobuf.MessageType) -> tuple[int, bytes]:
         """Serialize a Python protobuf class.
 
         Returns the message wire type and a byte representation of the protobuf message.
@@ -83,6 +84,14 @@ class ProtobufMapping:
     def decode(self, msg_wire_type: int, msg_bytes: bytes) -> protobuf.MessageType:
         """Deserialize a protobuf message into a Python class."""
         cls = self.type_to_class[msg_wire_type]
+        buf = io.BytesIO(msg_bytes)
+        return protobuf.load_message(buf, cls)
+
+    def decode_without_wire_type(
+        self, message_type: type[MT], msg_bytes: bytes
+    ) -> protobuf.MessageType:
+        """Deserialize a protobuf message into a Python class."""
+        cls = message_type
         buf = io.BytesIO(msg_bytes)
         return protobuf.load_message(buf, cls)
 
