@@ -600,7 +600,11 @@ if FROZEN:
         ] if not EVERYTHING else []
     ))
 
-    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py'))
+    SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/*.py',
+        exclude=[
+            SOURCE_PY_DIR + 'trezor/wire/wire_log.py'
+        ] if PYOPT != '0' else []
+    ))
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'trezor/wire/codec/*.py'))
 
     SOURCE_PY.extend(Glob(SOURCE_PY_DIR + 'storage/*.py',
