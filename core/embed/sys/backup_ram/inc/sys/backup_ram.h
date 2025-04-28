@@ -19,7 +19,6 @@
 
 #pragma once
 
-#include <trezor_model.h>
 #include <trezor_types.h>
 
 /**

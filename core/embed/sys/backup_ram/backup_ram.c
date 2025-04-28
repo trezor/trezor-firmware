@@ -17,7 +17,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// #include <trezor_types.h>
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
 
@@ -26,7 +25,8 @@
 #define BACKUP_RAM_HEADER_BYTES 4
 #define BACKUP_RAM_MAGIC_HEADER "BRAM"
 #define BACKUP_RAM_VERSION 0x0001
-
+#define BACKUP_RAM_BASE_ADDRESS 0x50036400
+#define BACKUP_RAM_SIZE 0x800
 #define ASSERT_IN_RANGE(x, min, max) ((x) >= (min) && (x) <= (max))
 
 typedef union {
@@ -44,7 +44,7 @@ typedef union {
 } backup_ram_data_t;
 
 // Place backup RAM data structure in the linker backup SRAM section
-__attribute__((section(".backup_ram"))) backup_ram_data_t backup_ram;
+static backup_ram_data_t *backup_ram = NULL;
 
 typedef struct {
   bool initialized;
@@ -77,13 +77,17 @@ backup_ram_status_t backup_ram_init(void) {
   __HAL_RCC_BKPSRAM_CLK_ENABLE();
 
   // Clear driver instance
-  (drv, 0, sizeof(backup_ram_driver_t));
+  memset(drv, 0, sizeof(backup_ram_driver_t));
   drv->hramcfg.Instance = RAMCFG_BKPRAM;
 
   HAL_StatusTypeDef hal_status = HAL_RAMCFG_Init(&drv->hramcfg);
   if (hal_status != HAL_OK) {
     goto cleanup;
   }
+
+  // Initialize the backup RAM pointer to the actual backup RAM region
+  // This is done directly with the hardware address
+  backup_ram = (backup_ram_data_t *)BACKUP_RAM_BASE_ADDRESS;
 
   backup_ram_status_t status = backup_ram_consistency_check();
   if (status != BACKUP_RAM_OK) {
@@ -137,8 +141,8 @@ backup_ram_status_t backup_ram_erase_unused(void) {
     return BACKUP_RAM_ERROR;
   }
 
-  memset(backup_ram.bytes + sizeof(backup_ram.storage), 0,
-         sizeof(backup_ram.bytes) - sizeof(backup_ram.storage));
+  memset(backup_ram->bytes + sizeof(backup_ram->storage), 0,
+         sizeof(backup_ram->bytes) - sizeof(backup_ram->storage));
 
   return BACKUP_RAM_OK;
 }
@@ -151,7 +155,7 @@ backup_ram_status_t backup_ram_store_power_manager_data(
     return BACKUP_RAM_ERROR;
   }
 
-  memcpy((void *)&backup_ram.storage.data.pm_data, pm_data,
+  memcpy(&backup_ram->storage.data.pm_data, pm_data,
          sizeof(backup_ram_power_manager_data_t));
 
   // Update CRC after writing new data
@@ -174,7 +178,7 @@ backup_ram_status_t backup_ram_read_power_manager_data(
     return cc_status;
   }
 
-  memcpy(pm_data, (const void *)&backup_ram.storage.data.pm_data,
+  memcpy(pm_data, (const void *)&backup_ram->storage.data.pm_data,
          sizeof(backup_ram_power_manager_data_t));
 
   // Assert the fuel gauge data is valid
@@ -201,11 +205,11 @@ static backup_ram_status_t backup_ram_initialize_storage(void) {
   }
 
   // Initialize backup RAM header
-  memcpy(backup_ram.storage.header, BACKUP_RAM_MAGIC_HEADER,
+  memcpy(backup_ram->storage.header, BACKUP_RAM_MAGIC_HEADER,
          BACKUP_RAM_HEADER_BYTES);
 
   // Initialize version
-  backup_ram.storage.version = BACKUP_RAM_VERSION;
+  backup_ram->storage.version = BACKUP_RAM_VERSION;
 
   // Calulcate checksum of empty backup RAM
   backup_ram_update_crc();
@@ -221,13 +225,13 @@ static backup_ram_status_t backup_ram_initialize_storage(void) {
  */
 static backup_ram_status_t backup_ram_consistency_check(void) {
   // Check magic header
-  if (memcmp(backup_ram.storage.header, BACKUP_RAM_MAGIC_HEADER,
+  if (memcmp(backup_ram->storage.header, BACKUP_RAM_MAGIC_HEADER,
              BACKUP_RAM_HEADER_BYTES) != 0) {
     return BACKUP_RAM_HEADER_CHECK_ERROR;
   }
 
   // Check version
-  if (backup_ram.storage.version != BACKUP_RAM_VERSION) {
+  if (backup_ram->storage.version != BACKUP_RAM_VERSION) {
     return BACKUP_RAM_VERSION_CHECK_ERROR;
   }
 
@@ -277,11 +281,11 @@ static backup_ram_status_t backup_ram_update_crc(void) {
   size_t data_size = offsetof(backup_ram_data_t, storage.crc);
 
   // Calculate CRC for everything in storage up to the CRC field
-  uint16_t calculated_crc =
-      backup_ram_calculate_crc((const uint8_t *)&backup_ram.storage, data_size);
+  uint16_t calculated_crc = backup_ram_calculate_crc(
+      (const uint8_t *)&backup_ram->storage, data_size);
 
   // Store the calculated CRC
-  backup_ram.storage.crc = calculated_crc;
+  backup_ram->storage.crc = calculated_crc;
 
   return BACKUP_RAM_OK;
 }
@@ -297,11 +301,11 @@ static backup_ram_status_t backup_ram_verify_crc(void) {
   size_t data_size = offsetof(backup_ram_data_t, storage.crc);
 
   // Calculate CRC for everything in storage up to the CRC field.
-  uint16_t calculated_crc =
-      backup_ram_calculate_crc((const uint8_t *)&backup_ram.storage, data_size);
+  uint16_t calculated_crc = backup_ram_calculate_crc(
+      (const uint8_t *)&backup_ram->storage, data_size);
 
   // Compare calculated CRC with stored CRC.
-  if (backup_ram.storage.crc != calculated_crc) {
+  if (backup_ram->storage.crc != calculated_crc) {
     return BACKUP_RAM_CRC_CHECK_ERROR;
   }
 
