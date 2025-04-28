@@ -77,10 +77,11 @@ typedef struct {
   DMA_HandleTypeDef spi_tx_dma;
   spi_packet_t long_rx_buffer;
 
+  EXTI_HandleTypeDef exti;
+
   bool comm_running;
   bool initialized;
   bool wakeup;
-  bool pending_request;
 
   nrf_rx_callback_t service_listeners[NRF_SERVICE_CNT];
 
@@ -189,8 +190,6 @@ void nrf_init(void) {
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
-  bool tmp_pending_request = drv->pending_request;
-
   memset(drv, 0, sizeof(*drv));
   tsqueue_init(&drv->tx_queue, drv->tx_queue_entries,
                (uint8_t *)drv->tx_buffers, sizeof(nrf_tx_request_t),
@@ -235,14 +234,12 @@ void nrf_init(void) {
   GPIO_InitStructure.Pin = NRF_IN_SPI_REQUEST_PIN;
   HAL_GPIO_Init(NRF_IN_SPI_REQUEST_PORT, &GPIO_InitStructure);
 
-  EXTI_HandleTypeDef EXTI_Handle = {0};
   EXTI_ConfigTypeDef EXTI_Config = {0};
   EXTI_Config.GPIOSel = NRF_EXTI_INTERRUPT_GPIOSEL;
   EXTI_Config.Line = NRF_EXTI_INTERRUPT_LINE;
   EXTI_Config.Mode = EXTI_MODE_INTERRUPT;
   EXTI_Config.Trigger = EXTI_TRIGGER_RISING;
-  HAL_EXTI_SetConfigLine(&EXTI_Handle, &EXTI_Config);
-  NVIC_SetPriority(NRF_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
+  HAL_EXTI_SetConfigLine(&drv->exti, &EXTI_Config);
   __HAL_GPIO_EXTI_CLEAR_FLAG(NRF_EXTI_INTERRUPT_PIN);
 
   // UART PINS
@@ -338,7 +335,13 @@ void nrf_init(void) {
 
   HAL_SPI_Init(&drv->spi);
 
+  drv->tx_request_id = -1;
+  nrf_register_listener(NRF_SERVICE_MANAGEMENT, nrf_management_rx_cb);
+
+  drv->initialized = true;
+
   drv->timer = systimer_create(nrf_timer_callback, drv);
+  nrf_start();
 
   NVIC_SetPriority(USART3_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(USART3_IRQn);
@@ -348,21 +351,16 @@ void nrf_init(void) {
   NVIC_EnableIRQ(GPDMA1_Channel2_IRQn);
   NVIC_SetPriority(SPI1_IRQn, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(SPI1_IRQn);
+  NVIC_SetPriority(NRF_EXTI_INTERRUPT_NUM, IRQ_PRI_NORMAL);
   NVIC_EnableIRQ(NRF_EXTI_INTERRUPT_NUM);
 
-  drv->tx_request_id = -1;
-  drv->initialized = true;
-
-  nrf_register_listener(NRF_SERVICE_MANAGEMENT, nrf_management_rx_cb);
-
-  nrf_start();
-
-  if (tmp_pending_request) {
+  if (HAL_GPIO_ReadPin(NRF_IN_SPI_REQUEST_PORT, NRF_IN_SPI_REQUEST_PIN) ==
+      GPIO_PIN_SET) {
     nrf_prepare_spi_data(drv);
   }
 }
 
-void nrf_deinit(void) {
+void nrf_suspend(void) {
   nrf_driver_t *drv = &g_nrf_driver;
 
   nrf_stop();
@@ -373,7 +371,6 @@ void nrf_deinit(void) {
   NVIC_DisableIRQ(GPDMA1_Channel2_IRQn);
   NVIC_DisableIRQ(SPI1_IRQn);
   NVIC_DisableIRQ(USART3_IRQn);
-  NVIC_DisableIRQ(NRF_EXTI_INTERRUPT_NUM);
 
   __HAL_RCC_SPI1_FORCE_RESET();
   __HAL_RCC_SPI1_RELEASE_RESET();
@@ -381,8 +378,41 @@ void nrf_deinit(void) {
   __HAL_RCC_USART3_FORCE_RESET();
   __HAL_RCC_USART3_RELEASE_RESET();
 
+  HAL_GPIO_DeInit(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN);
+  HAL_GPIO_DeInit(NRF_OUT_SPI_READY_PORT, NRF_OUT_SPI_READY_PIN);
+  HAL_GPIO_DeInit(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN);
+  HAL_GPIO_DeInit(NRF_IN_RESERVED_PORT, NRF_IN_RESERVED_PIN);
+
+  // UART Pins
+
+  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_10);
+  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_1);
+  HAL_GPIO_DeInit(GPIOD, GPIO_PIN_11);
+  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_5);
+
+  // SPI Pins
+  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_1);
+  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
+  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6);
+  HAL_GPIO_DeInit(GPIOA, GPIO_PIN_7);
+
   drv->initialized = false;
+
+  drv->pending_spi_transaction = false;
   drv->wakeup = true;
+}
+
+void nrf_deinit(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+
+  if (drv->initialized) {
+    NVIC_DisableIRQ(NRF_EXTI_INTERRUPT_NUM);
+
+    HAL_GPIO_DeInit(NRF_IN_SPI_REQUEST_PORT, NRF_IN_SPI_REQUEST_PIN);
+    HAL_EXTI_ClearConfigLine(&drv->exti);
+
+    nrf_suspend();
+  }
 }
 
 bool nrf_register_listener(nrf_service_id_t service,
@@ -769,7 +799,6 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
     // Inform the powerctl module about nrf/ble wakeup
     wakeup_flags_set(WAKEUP_FLAG_BLE);
     drv->wakeup = false;
-    drv->pending_request = true;
   }
 #endif
 
@@ -821,13 +850,12 @@ bool nrf_in_reserved(void) {
   return HAL_GPIO_ReadPin(NRF_IN_RESERVED_PORT, NRF_IN_RESERVED_PIN) != 0;
 }
 
-bool nrf_reboot(void) {
+void nrf_reboot(void) {
   HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
                     GPIO_PIN_RESET);
   systick_delay_ms(50);
   HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
-  return true;
 }
 
 void nrf_signal_data_ready(void) {
@@ -874,6 +902,31 @@ bool nrf_get_info(nrf_info_t *info) {
   }
 
   return false;
+}
+
+bool nrf_system_off(void) {
+  nrf_driver_t *drv = &g_nrf_driver;
+  if (!drv->initialized) {
+    return false;
+  }
+
+  uint8_t data[1] = {MGMT_CMD_SYSTEM_OFF};
+  if (!nrf_send_msg(NRF_SERVICE_MANAGEMENT, data, 1, NULL, NULL)) {
+    return false;
+  }
+
+  uint32_t timeout = ticks_timeout(100);
+
+  bool finished = false;
+
+  while (!ticks_expired(timeout) && !finished) {
+    irq_key_t key = irq_lock();
+    finished = tsqueue_empty(&drv->tx_queue) && !drv->pending_spi_transaction;
+    irq_unlock(key);
+    __WFI();
+  }
+
+  return true;
 }
 
 void nrf_set_dfu_mode(void) {

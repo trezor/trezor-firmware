@@ -62,6 +62,9 @@ void nrf_init(void);
 // Deinitialize the NRF driver
 void nrf_deinit(void);
 
+// Suspend NRF driver
+void nrf_suspend(void);
+
 // Check that NRF is running
 bool nrf_is_running(void);
 
@@ -109,3 +112,7 @@ bool nrf_test_gpio_stay_in_bld(void);
 
 // Test GPIO reserved
 bool nrf_test_gpio_reserved(void);
+
+bool nrf_system_off(void);
+
+void nrf_reboot(void);

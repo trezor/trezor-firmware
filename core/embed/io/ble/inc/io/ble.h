@@ -42,6 +42,13 @@ typedef enum {
   BLE_UNPAIR = 7,          // Erase bond for currently connected device
 } ble_command_type_t;
 
+typedef enum {
+  BLE_MODE_OFF,
+  BLE_MODE_CONNECTABLE,
+  BLE_MODE_PAIRING,
+  BLE_MODE_DFU,
+} ble_mode_t;
+
 typedef struct {
   uint8_t name[BLE_ADV_NAME_LEN];
   bool static_mac;
@@ -58,6 +65,12 @@ typedef struct {
   uint8_t data_len;
   ble_command_data_t data;
 } ble_command_t;
+
+typedef struct {
+  bool accept_msgs;
+  bool reboot_on_resume;
+  ble_mode_t mode_requested;
+} ble_wakeup_params_t;
 
 typedef enum {
   BLE_NONE = 0,               // No event
@@ -96,6 +109,12 @@ bool ble_init(void);
 // Releases resources allocated during initialization
 // and shuts down the BLE module.
 void ble_deinit(void);
+
+// Suspends the BLE module
+void ble_suspend(ble_wakeup_params_t *wakeup_params);
+
+// Resumes the BLE module
+bool ble_resume(const ble_wakeup_params_t *wakeup_params);
 
 // Starts BLE operations
 //
