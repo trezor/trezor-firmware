@@ -81,9 +81,13 @@ void prodtest_power_manager_report(cli_t* cli) {
             (int)(report.battery_voltage_v * 1000) % 1000);
   cli_trace(cli, "  Battery current: %d.%03d mA",
             (int)report.battery_current_ma,
-            (int)(report.battery_current_ma * 1000) % 1000);
+            abs((int)(report.battery_current_ma * 1000) % 1000));
   cli_trace(cli, "  Battery temperature: %d.%03d C", (int)report.battery_temp_c,
-            (int)(report.battery_temp_c * 1000) % 1000);
+            abs((int)(report.battery_temp_c * 1000) % 1000));
+  cli_trace(cli, "  Battery SoC: %d.%03d", (int)report.battery_soc*100,
+            (int)(report.battery_soc * 10000) % 100);
+  cli_trace(cli, "  Battery SoC latched: %d.%03d", (int)report.battery_soc_latched*100,
+            (int)(report.battery_soc_latched * 10000) % 100);
   cli_trace(cli, "  PMIC die temperature: %d.%03d C", (int)report.pmic_temp_c,
             (int)(report.pmic_temp_c * 1000) % 1000);
   cli_trace(cli, "  WLC voltage: %d.%03d V",

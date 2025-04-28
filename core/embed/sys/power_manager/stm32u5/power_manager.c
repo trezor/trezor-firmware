@@ -218,6 +218,8 @@ power_manager_status_t power_manager_get_report(
   report->battery_voltage_v = drv->pmic_data.vbat;
   report->battery_current_ma = drv->pmic_data.ibat;
   report->battery_temp_c = drv->pmic_data.ntc_temp;
+  report->battery_soc = drv->fuel_gauge.soc;
+  report->battery_soc_latched = drv->fuel_gauge.soc_latched;
   report->pmic_temp_c = drv->pmic_data.die_temp;
   report->wireless_rectifier_voltage_v = drv->wireless_data.vrect;
   report->wireless_output_voltage_v = drv->wireless_data.vout;
