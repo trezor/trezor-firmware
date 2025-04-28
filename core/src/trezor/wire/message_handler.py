@@ -8,6 +8,9 @@ from trezor.wire.context import UnexpectedMessageException, with_context
 from trezor.wire.errors import ActionCancelled, DataError, Error, UnexpectedMessage
 from trezor.wire.protocol_common import Context, Message
 
+if __debug__:
+    from . import wire_log
+
 if TYPE_CHECKING:
     from typing import Any, Callable, Container
 
@@ -65,10 +68,10 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
             msg_type = protobuf.type_for_wire(msg.type).MESSAGE_NAME
         except Exception:
             msg_type = f"{msg.type} - unknown message type"
-        log.debug(
+        wire_log.info(
             __name__,
-            "%d receive: <%s>",
-            ctx.iface.iface_num(),
+            ctx.iface,
+            "received message: %s",
             msg_type,
         )
 
@@ -149,11 +152,11 @@ async def handle_single_message(ctx: Context, msg: Message) -> bool:
         # - something canceled the workflow from the outside
         if __debug__:
             if isinstance(exc, ActionCancelled):
-                log.debug(__name__, "cancelled: %s", exc.message)
+                wire_log.debug(__name__, ctx.iface, "cancelled: %s", exc.message)
             elif isinstance(exc, loop.TaskClosed):
-                log.debug(__name__, "cancelled: loop task was closed")
+                wire_log.debug(__name__, ctx.iface, "cancelled: loop task was closed")
             else:
-                log.exception(__name__, exc)
+                wire_log.exception(__name__, ctx.iface, exc)
         res_msg = failure(exc)
 
     if res_msg is not None:

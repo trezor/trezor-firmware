@@ -25,7 +25,7 @@ reads the message's header. When the message type is known the first handler is 
 
 from typing import TYPE_CHECKING
 
-from trezor import log, loop, protobuf, utils
+from trezor import loop, protobuf, utils
 
 from . import message_handler, protocol_common
 from .codec.codec_context import CodecContext
@@ -35,6 +35,9 @@ from .message_handler import failure
 # Import all errors into namespace, so that `wire.Error` is available from
 # other packages.
 from .errors import *  # isort:skip # noqa: F401,F403
+
+if __debug__:
+    from . import wire_log as log
 
 if TYPE_CHECKING:
     from trezorio import WireInterface
@@ -86,7 +89,7 @@ async def handle_session(iface: WireInterface) -> None:
                     msg = await ctx.read_from_wire()
                 except protocol_common.WireError as exc:
                     if __debug__:
-                        log.exception(__name__, exc)
+                        log.exception(__name__, iface, exc)
                     await ctx.write(failure(exc))
                     continue
 
@@ -109,7 +112,7 @@ async def handle_session(iface: WireInterface) -> None:
                 # Log and ignore. The session handler can only exit explicitly in the
                 # following finally block.
                 if __debug__:
-                    log.exception(__name__, exc)
+                    log.exception(__name__, iface, exc)
             finally:
                 # Unload modules imported by the workflow. Should not raise.
                 utils.unimport_end(modules)
@@ -123,4 +126,4 @@ async def handle_session(iface: WireInterface) -> None:
             # Log and try again. The session handler can only exit explicitly via
             # loop.clear() above.
             if __debug__:
-                log.exception(__name__, exc)
+                log.exception(__name__, iface, exc)
