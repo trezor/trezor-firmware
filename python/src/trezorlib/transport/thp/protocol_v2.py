@@ -36,6 +36,7 @@ class ProtocolV2Channel(Channel):
     sync_bit_send: int
     sync_bit_receive: int
     handshake_hash: bytes
+    device_properties: bytes
 
     _has_valid_channel: bool = False
     _features: messages.Features | None = None

@@ -20,16 +20,18 @@ import os
 import typing as t
 import warnings
 from enum import IntEnum
+from hashlib import sha256
 
 from . import exceptions, mapping, messages, models
 from .tools import parse_path
 from .transport import Transport, get_transport
+from .transport.thp.cpace import Cpace
 from .transport.thp.protocol_and_channel import Channel
 from .transport.thp.protocol_v1 import ProtocolV1Channel
 from .transport.thp.protocol_v2 import ProtocolV2Channel, TrezorState
 
 if t.TYPE_CHECKING:
-    from .transport.session import Session, SessionV1
+    from .transport.session import Session, SessionV1, SessionV2
 
 LOG = logging.getLogger(__name__)
 
@@ -63,9 +65,6 @@ class TrezorClient:
     _last_active_session: SessionV1 | None = None
 
     _session_id_counter: int = 0
-    _default_pairing_method: messages.ThpPairingMethod = (
-        messages.ThpPairingMethod.CodeEntry
-    )
 
     def __init__(
         self,
@@ -111,18 +110,103 @@ class TrezorClient:
 
         assert self.protocol_version == ProtocolVersion.V2
         if pairing_method is None:
-            pairing_method = self._default_pairing_method
+            supported_methods = self.device_properties.pairing_methods
+            if messages.ThpPairingMethod.SkipPairing in supported_methods:
+                pairing_method = messages.ThpPairingMethod.SkipPairing
+            elif messages.ThpPairingMethod.CodeEntry in supported_methods:
+                pairing_method = messages.ThpPairingMethod.CodeEntry
+            else:
+                raise RuntimeError(
+                    "Connected Trezor does not support any trezorlib-compatible pairing method."
+                )
         session = SessionV2(client=self, id=b"\x00")
         session.call(
             messages.ThpPairingRequest(host_name="Trezorlib"),
             expect=messages.ThpPairingRequestApproved,
             skip_firmware_version_check=True,
         )
+        if pairing_method is messages.ThpPairingMethod.SkipPairing:
+            return self._handle_skip_pairing(session)
+        if pairing_method is messages.ThpPairingMethod.CodeEntry:
+            return self._handle_code_entry(session)
+
+        raise RuntimeError("Unexpected pairing method")
+
+    def _handle_skip_pairing(self, session: SessionV2) -> None:
         session.call(
-            messages.ThpSelectMethod(selected_pairing_method=pairing_method),
+            messages.ThpSelectMethod(
+                selected_pairing_method=messages.ThpPairingMethod.SkipPairing
+            ),
             expect=messages.ThpEndResponse,
             skip_firmware_version_check=True,
         )
+        assert isinstance(self.protocol, ProtocolV2Channel)
+        self.protocol._has_valid_channel = True
+
+    def _handle_code_entry(self, session: SessionV2) -> None:
+        from .cli import get_code_entry_code
+
+        commitment_msg = session.call(
+            messages.ThpSelectMethod(
+                selected_pairing_method=messages.ThpPairingMethod.CodeEntry
+            ),
+            expect=messages.ThpCodeEntryCommitment,
+            skip_firmware_version_check=True,
+        )
+        challenge = os.urandom(16)
+        cpace_trezor_msg = session.call(
+            messages.ThpCodeEntryChallenge(challenge=challenge),
+            expect=messages.ThpCodeEntryCpaceTrezor,
+            skip_firmware_version_check=True,
+        )
+
+        code = get_code_entry_code()
+        assert isinstance(session.client.protocol, ProtocolV2Channel)
+        cpace = Cpace(handshake_hash=session.client.protocol.handshake_hash)
+        cpace.random_bytes = os.urandom
+        assert cpace_trezor_msg.cpace_trezor_public_key is not None
+        cpace.generate_keys_and_secret(
+            code.to_bytes(6, "big"), cpace_trezor_msg.cpace_trezor_public_key
+        )
+        sha_ctx = sha256(cpace.shared_secret)
+        tag = sha_ctx.digest()
+
+        try:
+            secret_msg = session.call(
+                messages.ThpCodeEntryCpaceHostTag(
+                    cpace_host_public_key=cpace.host_public_key,
+                    tag=tag,
+                ),
+                expect=messages.ThpCodeEntrySecret,
+                skip_firmware_version_check=True,
+            )
+        except exceptions.TrezorFailure as e:
+            if e.message == "Unexpected Code Entry Tag":
+                raise exceptions.UnexpectedCodeEntryTagException
+            else:
+                raise e
+
+        # Check `commitment` and `code`
+        assert secret_msg.secret is not None
+        sha_ctx = sha256(secret_msg.secret)
+        computed_commitment = sha_ctx.digest()
+
+        assert commitment_msg.commitment == computed_commitment
+
+        sha_ctx = sha256(messages.ThpPairingMethod.CodeEntry.to_bytes(1, "big"))
+        sha_ctx.update(session.client.protocol.handshake_hash)
+        sha_ctx.update(secret_msg.secret)
+        sha_ctx.update(challenge)
+        code_hash = sha_ctx.digest()
+        computed_code = int.from_bytes(code_hash, "big") % 1000000
+        assert code == computed_code
+
+        session.call(
+            messages.ThpEndRequest(),
+            expect=messages.ThpEndResponse,
+            skip_firmware_version_check=True,
+        )
+
         assert isinstance(self.protocol, ProtocolV2Channel)
         self.protocol._has_valid_channel = True
 
@@ -221,6 +305,19 @@ class TrezorClient:
     @property
     def is_invalidated(self) -> bool:
         return self._is_invalidated
+
+    @property
+    def device_properties(self) -> messages.ThpDeviceProperties:
+        if self.protocol_version == ProtocolVersion.V1:
+            raise RuntimeError("Device properties are not avaialble with ProtocolV1.")
+        assert isinstance(self.protocol, ProtocolV2Channel)
+        if self.protocol.device_properties is None:
+            raise RuntimeError("Device properties are not avaialble.")
+        dp = self.mapping.decode_without_wire_type(
+            messages.ThpDeviceProperties, self.protocol.device_properties
+        )
+        assert isinstance(dp, messages.ThpDeviceProperties)
+        return dp
 
     def refresh_features(self) -> messages.Features:
         self.protocol.update_features()
