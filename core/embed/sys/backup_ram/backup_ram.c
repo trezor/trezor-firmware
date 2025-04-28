@@ -122,10 +122,6 @@ void backup_ram_deinit(void) {
 backup_ram_status_t backup_ram_erase(void) {
   backup_ram_driver_t *drv = &backup_ram_driver;
 
-  if (!drv->initialized) {
-    return BACKUP_RAM_ERROR;
-  }
-
   HAL_StatusTypeDef status = HAL_RAMCFG_Erase(&drv->hramcfg);
   if (status != HAL_OK) {
     return BACKUP_RAM_ERROR;
