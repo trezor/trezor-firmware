@@ -68,6 +68,9 @@ power_manager_status_t power_manager_init(power_manager_state_t initial_state) {
                   POWER_MANAGER_FUEL_GAUGE_Q_AGGRESSIVE,
                   POWER_MANAGER_FUEL_GAUGE_P_INIT);
 
+  // Disable charging by default
+  drv->charging_enabled = false;
+
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
   systimer_set_periodic(drv->monitoring_timer,
@@ -225,6 +228,37 @@ power_manager_status_t power_manager_get_report(
 
   return POWER_MANAGER_OK;
 }
+
+power_manager_status_t power_manager_charging_enable(void){
+
+  power_manager_driver_t* drv = &g_power_manager;
+
+  if (!drv->initialized) {
+    return POWER_MANAGER_NOT_INITIALIZED;
+  }
+
+  drv->charging_enabled = true;
+  pm_charging_controller(drv);
+
+  return POWER_MANAGER_OK;
+
+}
+
+power_manager_status_t power_manager_charging_disable(void){
+
+  power_manager_driver_t* drv = &g_power_manager;
+
+  if (!drv->initialized) {
+    return POWER_MANAGER_NOT_INITIALIZED;
+  }
+
+  drv->charging_enabled = false;
+  pm_charging_controller(drv);
+
+  return POWER_MANAGER_OK;
+
+}
+
 
 // Timer handlers
 static void pm_monitoring_timer_handler(void* context) {

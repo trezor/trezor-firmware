@@ -71,8 +71,8 @@ typedef struct {
   uint8_t bat_sampling_buf_tail_idx;
   uint8_t bat_sampling_buf_head_idx;
 
-
   // Battery charging state
+  bool charging_enabled;
   uint16_t charging_current_target_ma;
   uint32_t charging_target_timestamp;
 
