@@ -97,6 +97,12 @@ bool ble_init(void);
 // and shuts down the BLE module.
 void ble_deinit(void);
 
+// Suspends the BLE module
+void ble_suspend(void);
+
+// Resumes the BLE module
+void ble_resume(void);
+
 // Starts BLE operations
 //
 // Enables reception of messages over BLE

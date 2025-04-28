@@ -55,6 +55,7 @@ typedef struct {
   bool initialized;
   bool status_valid;
   bool accept_msgs;
+  bool reboot_on_resume;
   uint8_t busy_flag;
   bool pairing_requested;
   ble_event_t event_queue_buffers[EVENT_QUEUE_LEN];
@@ -319,6 +320,10 @@ static void ble_process_data(const uint8_t *data, uint32_t len) {
     return;
   }
 
+  if (!drv->accept_msgs) {
+    return;
+  }
+
   if (len != BLE_RX_PACKET_SIZE) {
     return;
   }
@@ -445,9 +450,7 @@ cleanup:
   return false;
 }
 
-void ble_deinit(void) {
-  ble_driver_t *drv = &g_ble_driver;
-
+static void ble_deinit_common(ble_driver_t *drv) {
   if (!drv->initialized) {
     return;
   }
@@ -463,10 +466,58 @@ void ble_deinit(void) {
   tsqueue_reset(&drv->event_queue);
   tsqueue_reset(&drv->rx_queue);
   tsqueue_reset(&drv->tx_queue);
+}
 
-  nrf_deinit();
+void ble_deinit(void) {
+  ble_driver_t *drv = &g_ble_driver;
 
-  drv->initialized = false;
+  if (drv->initialized) {
+    ble_deinit_common(drv);
+    nrf_deinit();
+    drv->initialized = false;
+  }
+}
+
+void ble_suspend(void) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  if (drv->initialized) {
+    bool connected = drv->connected;
+
+    ble_deinit_common(drv);
+
+    if (!connected) {
+      drv->reboot_on_resume = true;
+
+      // if not connected, we can turn off the radio
+      nrf_system_off();
+      nrf_deinit();
+    } else {
+      nrf_suspend();
+    }
+
+    drv->initialized = false;
+  }
+}
+
+void ble_resume(void) {
+  ble_driver_t *drv = &g_ble_driver;
+
+  bool accept_msgs = drv->accept_msgs;
+  ble_mode_t mode = drv->mode_requested;
+  bool reboot = drv->reboot_on_resume;
+
+  ble_init();
+
+  if (reboot) {
+    nrf_reboot();
+  }
+
+  if (accept_msgs) {
+    ble_start();
+  }
+
+  drv->mode_requested = mode;
 }
 
 bool ble_connected(void) {
