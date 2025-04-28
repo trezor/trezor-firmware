@@ -12,19 +12,31 @@ jobs:
   project-add-pull-request:
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
       - name: Add new pull request to the Firmware project
         uses: actions/add-to-project@main
         if: github.event_name == 'pull_request' && github.event.action == 'opened'
         with:
           project-url: https://github.com/orgs/trezor/projects/60
-          github-token: ${{ secrets.GH_BOT_TOKEN }}
+          github-token: ${{ steps.trezor-bot-token.outputs.token }}
 
   project-add-issue:
     name: Add new issue to the Firmware project
     runs-on: ubuntu-latest
     steps:
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
       - uses: actions/add-to-project@main
         if: github.event_name == 'issues' && github.event.action == 'opened'
         with:
           project-url: https://github.com/orgs/trezor/projects/60
-          github-token: ${{ secrets.GH_BOT_TOKEN }}
+          github-token: ${{ steps.trezor-bot-token.outputs.token }}
