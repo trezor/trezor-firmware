@@ -494,6 +494,9 @@ upload_prodtest: ## upload prodtest using trezorctl
 coverage:  ## generate coverage report
 	./tools/coverage-report
 
+coverage_hits:  ## generate annotated source with per-line hits
+	./tools/coverage-annotate.py $(shell find . -name '.coverage*.json*') > htmlcov/hits.md
+
 unused:  ## find unused micropython code
 	vulture src src/_vulture_ignore.txt --exclude "messages.py,*/enums/*"
 
