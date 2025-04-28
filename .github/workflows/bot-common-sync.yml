@@ -12,14 +12,19 @@ jobs:
   sync-common:
     runs-on: ubuntu-latest
     env:
-      BOT_TOKEN: ${{ secrets.BOT_TOKEN_COMMON_FINE }}
-      BOT_USERNAME: ${{ secrets.TREZOR_BOT_USERNAME }}
-      BOT_EMAIL: ${{ secrets.TREZOR_BOT_EMAIL }}
+      BOT_USERNAME: "trezor-bot[bot]"
+      BOT_EMAIL: "208941332+trezor-bot[bot]@users.noreply.github.com"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Generate GitHub App token
+        id: trezor-bot-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
+          private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
 
       - name: Copy git-filter and script to temporary directory
         run: |
@@ -37,6 +42,8 @@ jobs:
           echo '${{runner.temp}}' >> $GITHUB_PATH
 
       - name: Sync trezor-common repository
+        env:
+          GITHUB_TOKEN: ${{ steps.trezor-bot-token.outputs.token }}
         run: |
           echo "Synchronizing common with the trezor-common repository"
           git config --unset-all http.https://github.com/.extraheader
