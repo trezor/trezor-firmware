@@ -22,44 +22,79 @@
 #include <trezor_model.h>
 #include <trezor_types.h>
 
+/**
+ * @brief Status codes for backup RAM operations
+ */
 typedef enum {
   BACKUP_RAM_OK = 0,
+  BACKUP_RAM_OK_STORAGE_INITIALIZED,
   BACKUP_RAM_ERROR,
+  BACKUP_RAM_HEADER_CHECK_ERROR,
+  BACKUP_RAM_VERSION_CHECK_ERROR,
+  BACKUP_RAM_CRC_CHECK_ERROR,
+  BACKUP_RAM_DATA_CHECK_ERROR,
 } backup_ram_status_t;
 
-// Fuel gauge backup storage definition
+/**
+ * @brief Structure for power management data stored in backup RAM
+ *
+ * This structure contains critical power management information that needs to
+ * persist across power cycles and resets. It stores battery state of charge
+ * (SOC), timing information, and system state data required for proper power
+ * management. The data is stored in battery-backed RAM to ensure availability
+ * after power loss.
+ */
 typedef struct {
   float soc;  // Captured state of charge <0, 1>
   // Captures RTC time at which SOC was captured
   uint32_t last_capture_timestamp;
-} fuel_gauge_backup_storage_t;
+  // Captures power manager state at bootloader exit so it could be correctly
+  // restored in the firwmare.
+  uint32_t bootloader_exit_state;
+} backup_ram_power_manager_data_t;
 
-typedef union {
-  uint8_t bytes[BACKUP_RAM_SIZE];
-  struct {
-    volatile fuel_gauge_backup_storage_t fg;
-    // < Room for other data structures >
-  } data;
-} backup_ram_data_t;
-
-// Initialize backup RAM driver
+/**
+ * @brief Initialize backup RAM driver
+ *
+ * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful or
+ *                             backup allready initialized.
+ */
 backup_ram_status_t backup_ram_init(void);
 
-// Deinitialize backup RAM driver
-backup_ram_status_t backup_ram_deinit(void);
+/**
+ * @brief Deinitialize backup RAM driver
+ */
+void backup_ram_deinit(void);
 
-// Erase backup ram
+/**
+ * @brief Erase backup RAM completely.
+ *
+ * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ */
 backup_ram_status_t backup_ram_erase(void);
 
-// Erase unused space in backup ram
-// This function clears the remaining part of the backup ram not alocated by
-// data struct.
+/**
+ * @brief Erase unused space of the backup RAM (everything unallocated by the
+ *        defined storage structure).
+ *
+ * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ */
 backup_ram_status_t backup_ram_erase_unused(void);
 
-// Store fuel gauge state in backup ram
-backup_ram_status_t backup_ram_store_fuel_gauge_state(
-    const fuel_gauge_backup_storage_t* fg_state);
+/**
+ * @brief Store power manager data in backup RAM.
+ *
+ * @param fg_state Pointer to the structure containing the data to be stored
+ * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ */
+backup_ram_status_t backup_ram_store_power_manager_data(
+    const backup_ram_power_manager_data_t* pm_data);
 
-// Read fuel gauge state from backup ram
-backup_ram_status_t backup_ram_read_fuel_gauge_state(
-    fuel_gauge_backup_storage_t* fg_state);
+/**
+ * @brief Read power manager data from backup RAM.
+ *
+ * @param fg_state Pointer to the structure where the data will be stored
+ * @return backup_ram_status_t BACKUP_RAM_OK if the operation was successful.
+ */
+backup_ram_status_t backup_ram_read_power_manager_data(
+    backup_ram_power_manager_data_t* pm_data);

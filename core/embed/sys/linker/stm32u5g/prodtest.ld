@@ -36,9 +36,6 @@ _accessible_ram_1_end = MCU_SRAM4 + MCU_SRAM4_SIZE;
 _bootargs_ram_start = BOOTARGS_START;
 _bootargs_ram_end = BOOTARGS_START + BOOTARGS_SIZE;
 
-_backup_ram_start = ORIGIN(BACKUP_RAM);
-_backup_ram_end = ORIGIN(BACKUP_RAM) + LENGTH(BACKUP_RAM);
-
 _codelen = SIZEOF(.padding) + SIZEOF(.flash) + SIZEOF(.data) + SIZEOF(.confidential);
 
 _flash_start = ORIGIN(FLASH);
