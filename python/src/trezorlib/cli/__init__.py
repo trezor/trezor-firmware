@@ -20,6 +20,7 @@ import atexit
 import functools
 import logging
 import os
+import re
 import sys
 import typing as t
 from contextlib import contextmanager
@@ -100,6 +101,28 @@ def get_passphrase(
                 return passphrase
             else:
                 ui.echo("Passphrase did not match. Please try again.")
+        except click.Abort:
+            raise exceptions.Cancelled from None
+
+
+def get_code_entry_code() -> int:
+    while True:
+        try:
+            code_input = ui.prompt(
+                "Enter code from Trezor",
+                hide_input=False,
+                default="",
+                show_default=False,
+            )
+
+            # Keep only digits 0-9, ignore all other symbols
+            code_str = re.sub(r"\D", "", code_input)
+
+            if len(code_str) != 6:
+                ui.echo("Code must be 6-digits long.")
+                continue
+            code = int(code_str)
+            return code
         except click.Abort:
             raise exceptions.Cancelled from None
 
@@ -277,6 +300,9 @@ class TrezorConnection:
             )
         except transport.DeviceIsBusy:
             click.echo("Device is in use by another process.")
+            sys.exit(1)
+        except exceptions.UnexpectedCodeEntryTagException:
+            click.echo("Entered Code is invalid.")
             sys.exit(1)
         except exceptions.FailedSessionResumption:
             sys.exit(1)

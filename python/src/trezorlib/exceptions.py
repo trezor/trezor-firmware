@@ -113,3 +113,7 @@ class DerivationOnUninitaizedDeviceError(TrezorException):
 
 class DeviceLockedException(TrezorException):
     pass
+
+
+class UnexpectedCodeEntryTagException(TrezorException):
+    pass
