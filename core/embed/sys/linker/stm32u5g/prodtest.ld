@@ -11,7 +11,6 @@ MEMORY {
   SAES_RAM (wal) : ORIGIN = SAES_RAM_START, LENGTH = SAES_RAM_SIZE
   FB1_RAM (wal) : ORIGIN = FB1_RAM_START, LENGTH = FB1_RAM_SIZE
   FB2_RAM (wal) : ORIGIN = FB2_RAM_START, LENGTH = FB2_RAM_SIZE
-  BACKUP_RAM (wal) : ORIGIN = BACKUP_RAM_START, LENGTH = BACKUP_RAM_SIZE
 }
 
 _stack_section_start = ADDR(.stack);
@@ -113,12 +112,6 @@ SECTIONS {
     *(.buf*);
     . = ALIGN(4);
   } >AUX1_RAM
-
-  .backup_ram (NOLOAD) : {
-    . = ALIGN(4);
-    *(.backup_ram)
-    . = ALIGN(4);
-  } > BACKUP_RAM
 
   .boot_args : ALIGN(8) {
     *(.boot_command*);
