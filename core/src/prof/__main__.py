@@ -37,8 +37,9 @@ class _Prof:
         data = coveragedata.get()
         print("Lines covered:", len(data))
         file_map = {}
-        for name, line in data:
-            file_map.setdefault(PATH_PREFIX + name, []).append(line)
+        for (name, line), count in data:
+            value = [line, count]
+            file_map.setdefault(PATH_PREFIX + name, []).append(value)
         print("Files covered:", len(file_map))
 
         # In case of multithreaded tests, we might be called multiple times.
@@ -51,6 +52,7 @@ class _Prof:
         with open(file_name, "w") as f:
             # poormans json
             f.write(str(file_map).replace("'", '"'))
+        print(f"Coverage data: {file_name}")
 
 
 class AllocCounter:
