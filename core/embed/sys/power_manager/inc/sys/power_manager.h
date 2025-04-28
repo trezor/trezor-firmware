@@ -87,3 +87,5 @@ power_manager_status_t power_manager_suspend(void);
 power_manager_status_t power_manager_hibernate(void);
 power_manager_status_t power_manager_turn_on(void);
 power_manager_status_t power_manager_get_report(power_manager_report_t* report);
+power_manager_status_t power_manager_charging_enable(void);
+power_manager_status_t power_manager_charging_disable(void);
