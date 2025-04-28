@@ -35,17 +35,23 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
   workflow_result_t res = WF_CANCELLED;
   uint32_t ui_result = CONNECT_CANCEL;
 
+  protob_io_t ifaces[2];
+  size_t num_ifaces = workflow_ifaces_init(NULL, NULL, ifaces);
+
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
   screen_connect(true, false, &layout);
-  res = workflow_host_control(vhdr, hdr, &layout, &ui_result);
+  res =
+      workflow_host_control(vhdr, hdr, &layout, &ui_result, ifaces, num_ifaces);
 
   if (res == WF_OK_UI_ACTION && ui_result == CONNECT_CANCEL) {
     bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
     jump_allow_1();
     jump_allow_2();
+    workflow_ifaces_deinit(ifaces);
     return WF_OK_REBOOT_SELECTED;
   }
 
+  workflow_ifaces_deinit(ifaces);
   return res;
 }

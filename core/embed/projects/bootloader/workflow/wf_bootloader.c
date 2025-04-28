@@ -37,14 +37,15 @@
 
 workflow_result_t workflow_menu(const vendor_header* const vhdr,
                                 const image_header* const hdr,
-                                secbool firmware_present) {
+                                secbool firmware_present, protob_io_t* ifaces,
+                                size_t iface_count) {
   while (true) {
     c_layout_t layout;
     memset(&layout, 0, sizeof(layout));
     screen_menu(ui_get_initial_setup(), firmware_present, &layout);
     uint32_t ui_result = 0;
-    workflow_result_t result =
-        workflow_host_control(vhdr, hdr, &layout, &ui_result);
+    workflow_result_t result = workflow_host_control(
+        vhdr, hdr, &layout, &ui_result, ifaces, iface_count);
 
     if (result != WF_OK_UI_ACTION) {
       return result;
@@ -57,7 +58,9 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
     }
 #ifdef USE_BLE
     if (menu_result == MENU_BLUETOOTH) {
+      workflow_ifaces_pause(ifaces);
       workflow_ble_pairing_request(vhdr, hdr);
+      workflow_ifaces_resume(vhdr, hdr, ifaces);
       continue;
     }
 #endif
@@ -75,7 +78,9 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
       return WF_OK_REBOOT_SELECTED;
     }
     if (menu_result == MENU_WIPE) {  // wipe
+      workflow_ifaces_pause(ifaces);
       workflow_result_t r = workflow_wipe_device(NULL);
+      workflow_ifaces_resume(vhdr, hdr, ifaces);
       if (r == WF_ERROR || r == WF_OK_DEVICE_WIPED || r == WF_CANCELLED) {
         return r;
       }
@@ -107,7 +112,7 @@ static screen_t handle_intro(const vendor_header* vhdr, const image_header* hdr,
 static screen_t handle_menu(const vendor_header* vhdr, const image_header* hdr,
                             secbool firmware_present,
                             workflow_result_t* out_result) {
-  workflow_result_t res = workflow_menu(vhdr, hdr, firmware_present);
+  workflow_result_t res = workflow_menu(vhdr, hdr, firmware_present, NULL, 0);
   switch (res) {
     case WF_OK:
       return SCREEN_INTRO;  // back to intro
@@ -127,39 +132,75 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
   memset(&layout, 0, sizeof(layout));
   uint32_t ui_res = 0;
 
-  screen_connect(false, true, &layout);
-  workflow_result_t res = workflow_host_control(vhdr, hdr, &layout, &ui_res);
+  protob_io_t ifaces[2];
+  size_t num_ifaces = workflow_ifaces_init(NULL, NULL, ifaces);
 
-  switch (res) {
-    case WF_OK_UI_ACTION: {
-      switch (ui_res) {
-        case CONNECT_CANCEL:
-          return SCREEN_INTRO;
+  screen_t next_screen = SCREEN_WAIT_FOR_HOST;
+
+  while (next_screen == SCREEN_WAIT_FOR_HOST) {
+    screen_connect(false, true, &layout);
+    workflow_result_t res =
+        workflow_host_control(vhdr, hdr, &layout, &ui_res, ifaces, num_ifaces);
+
+    switch (res) {
+      case WF_OK_UI_ACTION: {
+        switch (ui_res) {
+          case CONNECT_CANCEL:
+            next_screen = SCREEN_INTRO;
+            break;
 #ifdef USE_BLE
-        case CONNECT_PAIRING_MODE: {
-          workflow_result_t ble = workflow_ble_pairing_request(vhdr, hdr);
-          if (ble == WF_OK_PAIRING_COMPLETED || ble == WF_OK_PAIRING_FAILED)
-            return SCREEN_WAIT_FOR_HOST;
-          if (ble == WF_CANCELLED) return SCREEN_INTRO;
-          *out_result = ble;
-          return SCREEN_DONE;
-        }
+          case CONNECT_PAIRING_MODE: {
+            workflow_ifaces_pause(ifaces);
+            workflow_result_t ble = workflow_ble_pairing_request(vhdr, hdr);
+            workflow_ifaces_resume(vhdr, hdr, ifaces);
+            if (ble == WF_OK_PAIRING_COMPLETED || ble == WF_OK_PAIRING_FAILED) {
+              next_screen = SCREEN_WAIT_FOR_HOST;
+            } else if (ble == WF_CANCELLED) {
+              next_screen = SCREEN_INTRO;
+            } else {
+              *out_result = ble;
+              next_screen = SCREEN_DONE;
+            }
+            break;
+          }
 #endif
-        case CONNECT_MENU:
-          return SCREEN_MENU;
-        default:
-          *out_result = WF_ERROR_FATAL;
-          return SCREEN_DONE;
-      }
-    }
+          case CONNECT_MENU: {
+            workflow_result_t menu_result = WF_CANCELLED;
+            while (menu_result == WF_CANCELLED) {
+              menu_result = workflow_menu(vhdr, hdr, firmware_present, ifaces,
+                                          num_ifaces);
+              switch (menu_result) {
+                case WF_OK:
+                  next_screen = SCREEN_WAIT_FOR_HOST;
+                  break;
+                case WF_CANCELLED:
+                  // stay in menu
+                  break;
+                default:
+                  *out_result = menu_result;  // final result
+                  break;
+              }
+            }
+          } break;
+          default:
+            *out_result = WF_ERROR_FATAL;
+            next_screen = SCREEN_DONE;
+            break;
+        }
 
-    case WF_CANCELLED: {
-      return SCREEN_INTRO;
+      } break;
+      case WF_CANCELLED: {
+        next_screen = SCREEN_INTRO;
+      } break;
+      default:
+        *out_result = res;
+        next_screen = SCREEN_DONE;
+        break;
     }
-    default:
-      *out_result = res;
-      return SCREEN_DONE;
   }
+
+  workflow_ifaces_deinit(ifaces);
+  return next_screen;
 }
 
 workflow_result_t workflow_bootloader(const vendor_header* vhdr,

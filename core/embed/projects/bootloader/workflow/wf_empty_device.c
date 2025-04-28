@@ -50,6 +50,9 @@ workflow_result_t workflow_empty_device(void) {
   systick_delay_ms(1000);
 #endif
 
+  protob_io_t ifaces[2];
+  size_t num_ifaces = workflow_ifaces_init(NULL, NULL, ifaces);
+
   workflow_result_t res = WF_CANCELLED;
   uint32_t ui_result = WELCOME_CANCEL;
   while (res == WF_CANCELLED ||
@@ -57,7 +60,8 @@ workflow_result_t workflow_empty_device(void) {
     c_layout_t layout;
     memset(&layout, 0, sizeof(layout));
     screen_welcome(&layout);
-    res = workflow_host_control(NULL, NULL, &layout, &ui_result);
+    res = workflow_host_control(NULL, NULL, &layout, &ui_result, ifaces,
+                                num_ifaces);
 #ifdef USE_BLE
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_PAIRING_MODE) {
       res = workflow_ble_pairing_request(NULL, NULL);
@@ -70,7 +74,7 @@ workflow_result_t workflow_empty_device(void) {
 #endif
     if (res == WF_OK_UI_ACTION && ui_result == WELCOME_MENU) {
       do {
-        res = workflow_menu(NULL, NULL, false);
+        res = workflow_menu(NULL, NULL, false, ifaces, num_ifaces);
       } while (res == WF_CANCELLED);
 
       if (res == WF_OK) {
@@ -78,8 +82,10 @@ workflow_result_t workflow_empty_device(void) {
         ui_result = WELCOME_CANCEL;
         continue;
       }
+      workflow_ifaces_deinit(ifaces);
       return res;
     }
   }
+  workflow_ifaces_deinit(ifaces);
   return res;
 }

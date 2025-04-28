@@ -39,31 +39,18 @@
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
                                         c_layout_t *wait_layout,
-                                        uint32_t *ui_action_result) {
-  protob_io_t protob_usb_iface = {0};
-
-  // if both are NULL, we don't have a firmware installed
-  // let's show a webusb landing page in this case
-  wire_iface_t *usb_iface =
-      usb_iface_init((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
-
-  protob_init(&protob_usb_iface, usb_iface);
-
-#ifdef USE_BLE
-  wire_iface_t *ble_iface = ble_iface_init();
-  protob_io_t protob_ble_iface = {0};
-
-  protob_init(&protob_ble_iface, ble_iface);
-#endif
-
+                                        uint32_t *ui_action_result,
+                                        protob_io_t *ifaces,
+                                        size_t iface_count) {
   workflow_result_t result = WF_ERROR_FATAL;
 
   sysevents_t awaited = {0};
 
-  awaited.read_ready |= 1 << protob_get_iface_flag(&protob_usb_iface);
+  for (size_t i = 0; i < iface_count; i++) {
+    awaited.read_ready |= 1 << protob_get_iface_flag(&ifaces[i]);
+  }
 
 #ifdef USE_BLE
-  awaited.read_ready |= 1 << protob_get_iface_flag(&protob_ble_iface);
   awaited.read_ready |= 1 << SYSHANDLE_BLE;
 #endif
 #ifdef USE_BUTTON
@@ -85,19 +72,13 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
     uint16_t msg_id = 0;
     protob_io_t *active_iface = NULL;
 
-    if (signalled.read_ready ==
-            (1 << protob_get_iface_flag(&protob_usb_iface)) &&
-        sectrue == protob_get_msg_header(&protob_usb_iface, &msg_id)) {
-      active_iface = &protob_usb_iface;
+    for (size_t i = 0; i < iface_count; i++) {
+      if (signalled.read_ready == (1 << protob_get_iface_flag(&ifaces[i])) &&
+          sectrue == protob_get_msg_header(&ifaces[i], &msg_id)) {
+        active_iface = &ifaces[i];
+        break;
+      }
     }
-
-#ifdef USE_BLE
-    if (signalled.read_ready ==
-            (1 << protob_get_iface_flag(&protob_ble_iface)) &&
-        sectrue == protob_get_msg_header(&protob_ble_iface, &msg_id)) {
-      active_iface = &protob_ble_iface;
-    }
-#endif
 
     // no data, lets pass the event signal to UI
     if (active_iface == NULL) {
@@ -151,10 +132,55 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
   }
 
 exit_host_control:
+  return result;
+}
+
+size_t workflow_ifaces_init(const vendor_header *const vhdr,
+                            const image_header *const hdr,
+                            protob_io_t ifaces[2]) {
+  size_t cnt = 1;
+  memset(ifaces, 0, sizeof(protob_io_t) * 2);
+
+  // if both are NULL, we don't have a firmware installed
+  // let's show a webusb landing page in this case
+  wire_iface_t *usb_iface =
+      usb_iface_init((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
+
+  protob_init(&ifaces[0], usb_iface);
+
+#ifdef USE_BLE
+  wire_iface_t *ble_iface = ble_iface_init();
+
+  protob_init(&ifaces[1], ble_iface);
+  cnt++;
+#endif
+
+  return cnt;
+}
+
+void workflow_ifaces_deinit(protob_io_t ifaces[2]) {
   systick_delay_ms(100);
   usb_iface_deinit();
 #ifdef USE_BLE
   ble_iface_deinit();
 #endif
-  return result;
+}
+
+void workflow_ifaces_pause(protob_io_t ifaces[2]) {
+  if (ifaces == NULL) {
+    return;
+  }
+  usb_iface_deinit();
+#ifdef USE_BLE
+  ble_iface_deinit();
+#endif
+}
+
+void workflow_ifaces_resume(const vendor_header *const vhdr,
+                            const image_header *const hdr,
+                            protob_io_t ifaces[2]) {
+  if (ifaces == NULL) {
+    return;
+  }
+  workflow_ifaces_init(vhdr, hdr, ifaces);
 }

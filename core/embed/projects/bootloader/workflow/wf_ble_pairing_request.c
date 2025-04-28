@@ -49,7 +49,8 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   screen_pairing_mode(ui_get_initial_setup(), &layout);
 
   uint32_t code = 0;
-  workflow_result_t res = workflow_host_control(vhdr, hdr, &layout, &code);
+  workflow_result_t res =
+      workflow_host_control(vhdr, hdr, &layout, &code, NULL, 0);
 
   if (res != WF_OK_UI_ACTION) {
     ble_iface_end_pairing();
