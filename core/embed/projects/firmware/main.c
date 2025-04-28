@@ -44,7 +44,7 @@
 #include "zkp_context.h"
 #endif
 
-int main(uint32_t cmd, void *arg) {
+int main_func(uint32_t cmd, void *arg) {
   if (cmd == 1) {
     systask_postmortem_t *info = (systask_postmortem_t *)arg;
     rsod_gui(info);
@@ -125,7 +125,7 @@ __attribute((no_stack_protector)) void reset_handler(uint32_t cmd, void *arg,
   // Now everything is perfectly initialized and we can do anything
   // in C code
 
-  int main_result = main(cmd, arg);
+  int main_result = main_func(cmd, arg);
 
   system_exit(main_result);
 }
