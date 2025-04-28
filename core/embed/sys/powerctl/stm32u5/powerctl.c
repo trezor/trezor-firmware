@@ -99,6 +99,14 @@ bool powerctl_hibernate(void) {
     return false;
   }
 
+
+  // TEMPORARY FIX:
+  // Enable Backup domain retentaion in VBAT mode before entering the
+  // hiberbation. BREN bit can be accessed only in LDO mode.
+  __HAL_RCC_PWR_CLK_ENABLE();
+  PWR->CR3 &= ~PWR_CR3_REGSEL; // Select LDO mode
+  PWR->BDCR1 |= PWR_BDCR1_BREN;
+
   if (!npm1300_enter_shipmode()) {
     return false;
   }
