@@ -676,10 +676,6 @@ jobs:
       fail-fast: false
       matrix:
         model: [T2T1, T3B1, T3T1]
-        # T3B1 fails due to https://github.com/trezor/trezor-firmware/issues/3280
-        # remove after single global layout is implemented (or bug above fixed):
-        exclude:
-          - model: T3B1
     env:
       COVERAGE_THRESHOLD: ${{ matrix.model == 'T2T1' && 78 || 77 }}
     steps:
