@@ -1,4 +1,4 @@
-use heapless::FnvIndexSet;
+use heapless::{Entry, FnvIndexMap};
 
 use crate::{
     error::Error,
@@ -7,48 +7,69 @@ use crate::{
 
 use super::{buffer::StrBuffer, list::List, module::Module, obj::Obj, util};
 
-struct Entry {
+struct Key {
     file: StrBuffer,
     line: u16,
 }
 
-impl TryFrom<&Entry> for Obj {
+impl TryFrom<&Key> for Obj {
     type Error = Error;
 
-    fn try_from(val: &Entry) -> Result<Self, Self::Error> {
+    fn try_from(val: &Key) -> Result<Self, Self::Error> {
         let file: Obj = val.file.as_ref().try_into()?;
         let line: Obj = val.line.into();
-        let tuple = (file, line);
-        tuple.try_into()
+        (file, line).try_into()
     }
 }
 
-impl core::hash::Hash for Entry {
+impl core::hash::Hash for Key {
     fn hash<H: core::hash::Hasher>(&self, state: &mut H) {
         self.file.hash(state);
         self.line.hash(state);
     }
 }
 
-impl core::cmp::PartialEq for Entry {
-    fn eq(&self, other: &Entry) -> bool {
+impl core::cmp::PartialEq for Key {
+    fn eq(&self, other: &Key) -> bool {
         self.file.as_ref() == other.file.as_ref() && self.line == other.line
     }
 }
 
-impl core::cmp::Eq for Entry {}
+impl core::cmp::Eq for Key {}
 
-static mut COVERAGE_DATA: FnvIndexSet<Entry, { 1024 * 1024 }> = FnvIndexSet::new();
+static mut COVERAGE_DATA: FnvIndexMap<Key, u64, { 1024 * 1024 }> = FnvIndexMap::new();
+
+struct Item<'a>((&'a Key, &'a u64));
+
+impl<'a> TryFrom<Item<'a>> for Obj {
+    type Error = Error;
+
+    fn try_from(item: Item<'a>) -> Result<Self, Self::Error> {
+        let (key, &value) = item.0;
+        let key: Obj = key.try_into()?;
+        let value: Obj = value.try_into()?;
+        (key, value).try_into()
+    }
+}
 
 extern "C" fn py_add(file: Obj, line: Obj) -> Obj {
     let block = || {
-        let entry = Entry {
+        let key = Key {
             file: file.try_into()?,
             line: line.try_into()?,
         };
         // SAFETY: we are in single-threaded environment
-        let res = unsafe { COVERAGE_DATA.insert(entry) };
-        res.map_err(|_| Error::RuntimeError(c"COVERAGE_DATA is too small"))?;
+        unsafe {
+            match COVERAGE_DATA.entry(key) {
+                Entry::Occupied(e) => {
+                    *e.into_mut() += 1;
+                }
+                Entry::Vacant(e) => {
+                    e.insert(1)
+                        .map_err(|_| Error::RuntimeError(c"COVERAGE_DATA is too small"))?;
+                }
+            }
+        };
         Ok(Obj::const_none())
     };
     unsafe { util::try_or_raise(block) }
@@ -57,7 +78,7 @@ extern "C" fn py_add(file: Obj, line: Obj) -> Obj {
 extern "C" fn py_get() -> Obj {
     let block = || {
         // SAFETY: we are in single-threaded environment
-        let list = unsafe { List::from_iter(COVERAGE_DATA.iter())? };
+        let list = unsafe { List::from_iter(COVERAGE_DATA.iter().map(Item))? };
         Ok(list.leak().into())
     };
     unsafe { util::try_or_raise(block) }
