@@ -1000,14 +1000,14 @@ if not utils.BITCOIN_ONLY:
         account_path: str,
         vote_account: str,
         stake_item: tuple[str, str] | None,
-        amount_item: tuple[str, str],
+        amount_item: tuple[str, str] | None,
         fee_item: tuple[str, str],
         fee_details: Iterable[tuple[str, str]],
         blockhash_item: tuple[str, str],
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        (amount_label, amount) = amount_item
+        (amount_label, amount) = amount_item or ("", "")
         (fee_label, fee) = fee_item
 
         confirm_layout = trezorui_api.confirm_value(

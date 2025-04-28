@@ -950,7 +950,6 @@ if not utils.BITCOIN_ONLY:
             amount_title if amount_title is not None else f"{TR.words__amount}:"
         )  # def_arg
         fee_title = fee_title or TR.words__fee  # def_arg
-        info_title = TR.confirm_total__title_fee
         return raise_if_not_confirmed(
             trezorui_api.confirm_summary(
                 amount=amount,
@@ -958,7 +957,7 @@ if not utils.BITCOIN_ONLY:
                 fee=fee,
                 fee_label=fee_title,
                 extra_items=items,  # TODO: extra_title here?
-                extra_title=info_title,
+                extra_title=TR.words__title_information,
             ),
             br_name=br_name,
             br_code=br_code,
@@ -971,17 +970,21 @@ if not utils.BITCOIN_ONLY:
         account_path: str,
         vote_account: str,
         stake_item: tuple[str, str] | None,
-        amount_item: tuple[str, str],
+        amount_item: tuple[str, str] | None,
         fee_item: tuple[str, str],
         fee_details: Iterable[tuple[str, str]],
         blockhash_item: tuple[str, str],
         br_name: str = "confirm_solana_staking_tx",
         br_code: ButtonRequestType = ButtonRequestType.SignTx,
     ) -> None:
-        (amount_label, amount) = amount_item
-        (fee_label, fee) = fee_item
-        if not fee_label and not fee:
+        if not amount_item:
+            amount_label, amount = fee_item
             amount_label = f"\n\n{amount_label}"
+            fee_label = ""
+            fee = ""
+        else:
+            amount_label, amount = amount_item
+            fee_label, fee = fee_item
 
         items = [
             (f"{TR.words__account}:", account),

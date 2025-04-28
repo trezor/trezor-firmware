@@ -376,17 +376,6 @@ async def confirm_custom_transaction(
     )
 
 
-def _fee_details(fee: Fee) -> tuple[tuple[str, str], ...]:
-    return (
-        (TR.solana__base_fee, f"{format_amount(fee.base, 9)} SOL"),
-        (TR.solana__priority_fee, f"{format_amount(fee.priority, 9)} SOL"),
-    )
-
-
-def _fee_summary(fee: Fee) -> tuple[str, str]:
-    return (f"{TR.solana__expected_fee}:", f"{format_amount(fee.total, 9)} SOL")
-
-
 async def confirm_stake_withdrawer(withdrawer_account: bytes) -> None:
     await show_danger(
         title=TR.words__important,
@@ -434,6 +423,8 @@ async def confirm_stake_transaction(
         description = TR.solana__stake_on_question.format(vote_account_label)
         vote_account_label = ""
 
+    fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
+
     await confirm_solana_staking_tx(
         title=TR.solana__stake,
         description=description,
@@ -448,8 +439,8 @@ async def confirm_stake_transaction(
             f"{TR.words__amount}:",
             f"{format_amount(create.lamports, 9)} SOL",
         ),
-        fee_item=_fee_summary(fee),
-        fee_details=_fee_details(fee),
+        fee_item=(fee_title, fee_str),
+        fee_details=fee_items,
         blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
     )
 
@@ -461,6 +452,8 @@ async def confirm_unstake_transaction(
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
+    fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
+
     await confirm_solana_staking_tx(
         title=TR.solana__unstake,
         description=TR.solana__unstake_question,
@@ -468,9 +461,9 @@ async def confirm_unstake_transaction(
         account_path=address_n_to_str(signer_path),
         vote_account="",
         stake_item=None,
-        amount_item=_fee_summary(fee),
-        fee_item=("", ""),
-        fee_details=_fee_details(fee),
+        amount_item=None,
+        fee_item=(fee_title, fee_str),
+        fee_details=fee_items,
         blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
     )
 
@@ -483,6 +476,7 @@ async def confirm_claim_transaction(
 ) -> None:
     from trezor.ui.layouts import confirm_solana_staking_tx
 
+    fee_title, fee_str, fee_items = _fee_ui_info(False, fee)
     await confirm_solana_staking_tx(
         title=TR.solana__claim,
         description=TR.solana__claim_question,
@@ -494,8 +488,8 @@ async def confirm_claim_transaction(
             f"{TR.words__amount}:",
             f"{format_amount(total_amount, 9)} SOL",
         ),
-        fee_item=_fee_summary(fee),
-        fee_details=_fee_details(fee),
+        fee_item=(fee_title, fee_str),
+        fee_details=fee_items,
         blockhash_item=(TR.words__blockhash, base58.encode(blockhash)),
     )
 
