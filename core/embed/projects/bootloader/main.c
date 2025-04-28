@@ -423,11 +423,6 @@ int bootloader_main(void) {
       result = workflow_empty_device();
     }
 
-    usb_iface_deinit();
-#ifdef USE_BLE
-    ble_iface_deinit();
-#endif
-
     switch (result) {
       case WF_OK_FIRMWARE_INSTALLED:
         firmware_present = sectrue;

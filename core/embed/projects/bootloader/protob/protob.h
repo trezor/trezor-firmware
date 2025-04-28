@@ -34,6 +34,11 @@ typedef struct {
 
 } protob_io_t;
 
+typedef struct {
+  protob_io_t ifaces[2];
+  size_t count;
+} protob_ios_t;
+
 secbool send_user_abort(protob_io_t *iface, const char *msg);
 
 secbool send_msg_features(protob_io_t *iface, const vendor_header *const vhdr,
