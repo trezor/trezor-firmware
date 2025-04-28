@@ -70,6 +70,8 @@ typedef struct {
   float battery_voltage_v;
   float battery_current_ma;
   float battery_temp_c;
+  float battery_soc;
+  float battery_soc_latched;
   float pmic_temp_c;
   float wireless_rectifier_voltage_v;
   float wireless_output_voltage_v;
