@@ -26,7 +26,7 @@
 #include <trezor_types.h>
 
 #define BLE_RX_PACKET_SIZE 244
-#define BLE_TX_PACKET_SIZE 64
+#define BLE_TX_PACKET_SIZE 244
 
 #define BLE_ADV_NAME_LEN 20
 #define BLE_PAIRING_CODE_LEN 6
