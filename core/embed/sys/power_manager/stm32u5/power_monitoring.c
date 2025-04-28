@@ -128,8 +128,17 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
 }
 
 void pm_charging_controller(power_manager_driver_t* drv) {
-  // Check if external power is available
-  if (drv->usb_connected) {
+
+  if(drv->charging_enabled == false) {
+       // Charging is disabled
+    if(drv->charging_current_target_ma != 0) {
+      drv->charging_current_target_ma = 0;
+      drv->charging_target_timestamp = systick_ms();
+    }else{
+      // No action required
+      return;
+    }
+  } else if (drv->usb_connected) {
     // USB connected, set maximum charging current right away
     drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MAX;
 
@@ -151,7 +160,7 @@ void pm_charging_controller(power_manager_driver_t* drv) {
     }
 
   } else {
-    // No external power source, turn off charging
+    // Charging enabled but no external power source, clear charging target
     drv->charging_current_target_ma = 0;
   }
 
