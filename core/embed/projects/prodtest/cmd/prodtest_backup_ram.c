@@ -17,11 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_rtl.h>
-
 #include <rtl/cli.h>
 #include <sys/backup_ram.h>
 #include <sys/systick.h>
+#include <trezor_rtl.h>
 
 static void prodtest_backup_ram_write(cli_t* cli) {
   uint32_t soc = 0;
@@ -31,7 +30,8 @@ static void prodtest_backup_ram_write(cli_t* cli) {
     return;
   }
 
-  if (cli_has_arg(cli, "soc") && !cli_arg_uint32(cli, "soc", &soc)) {
+  if (cli_has_arg(cli, "soc_percent") &&
+      !cli_arg_uint32(cli, "soc_percent", &soc)) {
     cli_error_arg(cli, "Expecting soc value to store to backup RAM.");
     return;
   }
@@ -41,17 +41,28 @@ static void prodtest_backup_ram_write(cli_t* cli) {
     return;
   }
 
-  if (backup_ram_init() != BACKUP_RAM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
-    return;
+  backup_ram_status_t status = backup_ram_init();
+  if (status != BACKUP_RAM_OK) {
+    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
+      cli_trace(cli, "Backup storage had to be initialized");
+    } else {
+      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+      return;
+    }
   }
 
-  fuel_gauge_backup_storage_t fg_state;
+  backup_ram_power_manager_data_t pm_data;
 
-  fg_state.soc = (float)soc;
-  fg_state.last_capture_timestamp = systick_cycles();
+  pm_data.soc = ((float)soc / 100);
+  pm_data.last_capture_timestamp = systick_cycles();
 
-  backup_ram_store_fuel_gauge_state(&fg_state);
+  status = backup_ram_store_power_manager_data(&pm_data);
+
+  if (status != BACKUP_RAM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to write backup RAM");
+    backup_ram_deinit();
+    return;
+  }
 
   backup_ram_deinit();
 
@@ -64,17 +75,28 @@ static void prodtest_backup_ram_read(cli_t* cli) {
     return;
   }
 
-  if (backup_ram_init() != BACKUP_RAM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+  backup_ram_status_t status = backup_ram_init();
+  if (status != BACKUP_RAM_OK) {
+    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
+      cli_trace(cli, "Backup storage had to be initialized");
+    } else {
+      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+      return;
+    }
+  }
+
+  backup_ram_power_manager_data_t pm_data;
+  status = backup_ram_read_power_manager_data(&pm_data);
+
+  if (status != BACKUP_RAM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to read backup RAM");
+    backup_ram_deinit();
     return;
   }
-  fuel_gauge_backup_storage_t fg_state;
-  backup_ram_read_fuel_gauge_state(&fg_state);
 
   backup_ram_deinit();
 
-  cli_ok(cli, "SOC: %d.%03d", (int)fg_state.soc,
-         (int)(fg_state.soc * 1000) % 1000);
+  cli_ok(cli, "SOC: %d\%", (int)(pm_data.soc * 100));
 }
 
 static void prodtest_backup_ram_erase(cli_t* cli) {
@@ -83,9 +105,14 @@ static void prodtest_backup_ram_erase(cli_t* cli) {
     return;
   }
 
-  if (backup_ram_init() != BACKUP_RAM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
-    return;
+  backup_ram_status_t status = backup_ram_init();
+  if (status != BACKUP_RAM_OK) {
+    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
+      cli_trace(cli, "Backup storage had to be initialized");
+    } else {
+      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+      return;
+    }
   }
 
   backup_ram_erase();
@@ -101,9 +128,14 @@ static void prodtest_backup_ram_erase_unused(cli_t* cli) {
     return;
   }
 
-  if (backup_ram_init() != BACKUP_RAM_OK) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
-    return;
+  backup_ram_status_t status = backup_ram_init();
+  if (status != BACKUP_RAM_OK) {
+    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
+      cli_trace(cli, "Backup storage had to be initialized");
+    } else {
+      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
+      return;
+    }
   }
 
   backup_ram_erase_unused();
@@ -119,7 +151,7 @@ static void prodtest_backup_ram_erase_unused(cli_t* cli) {
    .name = "backup-ram-write",
    .func = prodtest_backup_ram_write,
    .info = "Write fuel gauge state to backup RAM",
-   .args = "<soc>"
+   .args = "<soc_percent>"
  );
 
 PRODTEST_CLI_CMD(
