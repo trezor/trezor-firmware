@@ -26,6 +26,7 @@
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
+#include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
@@ -35,17 +36,22 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
   workflow_result_t res = WF_CANCELLED;
   uint32_t ui_result = CONNECT_CANCEL;
 
+  protob_ios_t ios;
+  workflow_ifaces_init(secfalse, &ios);
+
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
   screen_connect(true, false, &layout);
-  res = workflow_host_control(vhdr, hdr, &layout, &ui_result);
+  res = workflow_host_control(vhdr, hdr, &layout, &ui_result, &ios);
 
   if (res == WF_OK_UI_ACTION && ui_result == CONNECT_CANCEL) {
     bootargs_set(BOOT_COMMAND_NONE, NULL, 0);
     jump_allow_1();
     jump_allow_2();
+    workflow_ifaces_deinit(&ios);
     return WF_OK_REBOOT_SELECTED;
   }
 
+  workflow_ifaces_deinit(&ios);
   return res;
 }

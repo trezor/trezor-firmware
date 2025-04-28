@@ -61,7 +61,8 @@ workflow_result_t workflow_get_features(protob_io_t *iface,
 
 workflow_result_t workflow_menu(const vendor_header *const vhdr,
                                 const image_header *const hdr,
-                                secbool firmware_present);
+                                secbool firmware_present, protob_ios_t *ios);
+
 workflow_result_t workflow_bootloader(const vendor_header *const vhdr,
                                       const image_header *const hdr,
                                       secbool firmware_present);
@@ -71,7 +72,8 @@ workflow_result_t workflow_empty_device(void);
 workflow_result_t workflow_host_control(const vendor_header *const vhdr,
                                         const image_header *const hdr,
                                         c_layout_t *wait_layout,
-                                        uint32_t *ui_action_result);
+                                        uint32_t *ui_action_result,
+                                        protob_ios_t *ios);
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
                                        const image_header *const hdr);
@@ -80,3 +82,11 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
 workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
                                                const image_header *const hdr);
 #endif
+
+void workflow_ifaces_init(secbool usb21_landing, protob_ios_t *ios);
+
+void workflow_ifaces_deinit(protob_ios_t *ios);
+
+void workflow_ifaces_pause(protob_ios_t *ios);
+
+void workflow_ifaces_resume(protob_ios_t *ios);
