@@ -100,6 +100,9 @@ impl Decoder {
             let prim_type = u8::try_from(field_key & 7)?;
 
             match msg.field(field_tag) {
+                Some(field) if field.get_type().primitive_type() != prim_type => {
+                    return Err(error::invalid_value(field.name.into()));
+                }
                 Some(field) => {
                     let field_value = self.decode_field(stream, field)?;
                     let field_name = Qstr::from(field.name);
