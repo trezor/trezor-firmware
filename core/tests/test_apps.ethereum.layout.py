@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-    from ethereum_common import make_network, make_token
+    from ethereum_common import make_eth_network, make_eth_token
 
     from apps.ethereum import networks
     from apps.ethereum.helpers import format_ethereum_amount
@@ -65,7 +65,7 @@ class TestFormatEthereumAmount(unittest.TestCase):
         self.assertEqual(text, "10.000000000000000001 ETH")
 
     def test_symbols(self):
-        fake_network = make_network(symbol="FAKE")
+        fake_network = make_eth_network(symbol="FAKE")
         text = format_ethereum_amount(1, None, fake_network)
         self.assertEqual(text, "1 Wei FAKE")
         text = format_ethereum_amount(1000000000000000000, None, fake_network)
@@ -85,7 +85,7 @@ class TestFormatEthereumAmount(unittest.TestCase):
     def test_tokens(self):
         # tokens with low decimal values
         # USDC has 6 decimals
-        usdc_token = make_token(symbol="USDC", decimals=6)
+        usdc_token = make_eth_token(symbol="USDC", decimals=6)
         # when decimals < 10, should never display 'Wei' format
         text = format_ethereum_amount(1, usdc_token, ETH)
         self.assertEqual(text, "0.000001 USDC")
@@ -93,7 +93,7 @@ class TestFormatEthereumAmount(unittest.TestCase):
         self.assertEqual(text, "0 USDC")
 
         # ICO has 10 decimals
-        ico_token = make_token(symbol="ICO", decimals=10)
+        ico_token = make_eth_token(symbol="ICO", decimals=10)
         text = format_ethereum_amount(1, ico_token, ETH)
         self.assertEqual(text, "1 Wei ICO")
         text = format_ethereum_amount(9, ico_token, ETH)

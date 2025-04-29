@@ -2,7 +2,7 @@
 from common import *  # isort:skip
 
 if not utils.BITCOIN_ONLY:
-    from ethereum_common import make_network
+    from ethereum_common import make_eth_network
 
     from apps.ethereum.helpers import address_from_bytes
 
@@ -41,13 +41,13 @@ class TestEthereumGetAddress(unittest.TestCase):
             "0xd1220a0CF47c7B9Be7A2E6Ba89f429762E7b9adB",
         ]
 
-        n = make_network(chain_id=30)
+        n = make_eth_network(chain_id=30)
         for s in rskip60_chain_30:
             b = unhexlify(s[2:])
             h = address_from_bytes(b, n)
             self.assertEqual(h, s)
 
-        n = make_network(chain_id=31)
+        n = make_eth_network(chain_id=31)
         for s in rskip60_chain_31:
             b = unhexlify(s[2:])
             h = address_from_bytes(b, n)
