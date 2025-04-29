@@ -25,6 +25,7 @@ jobs:
         id: build
         uses: google/clusterfuzzlite/actions/build_fuzzers@v1
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           sanitizer: ${{ matrix.sanitizer }}
           language: c
       - name: Run Fuzzers (${{ matrix.sanitizer }})
