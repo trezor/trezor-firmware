@@ -58,6 +58,10 @@
 #include <sec/optiga_config.h>
 #endif
 
+#ifdef USE_BACKUP_RAM
+#include <sys/backup_ram.h>
+#endif
+
 #ifdef USE_TROPIC
 #include <sec/tropic.h>
 #endif
@@ -95,6 +99,11 @@
 #endif
 
 void drivers_init() {
+
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
+
 #ifdef USE_POWERCTL
   powerctl_init();
 #endif

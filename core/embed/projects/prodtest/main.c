@@ -44,6 +44,10 @@
 #include <io/sdcard.h>
 #endif
 
+#ifdef USE_BACKUP_RAM
+#include <sys/backup_ram.h>
+#endif
+
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
@@ -206,6 +210,9 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_SD_CARD
   sdcard_init();
+#endif
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
 #endif
 #ifdef USE_BUTTON
   button_init();

@@ -41,30 +41,17 @@ static void prodtest_backup_ram_write(cli_t* cli) {
     return;
   }
 
-  backup_ram_status_t status = backup_ram_init();
-  if (status != BACKUP_RAM_OK) {
-    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
-      cli_trace(cli, "Backup storage had to be initialized");
-    } else {
-      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
-      return;
-    }
-  }
-
   backup_ram_power_manager_data_t pm_data;
 
   pm_data.soc = ((float)soc / 100);
   pm_data.last_capture_timestamp = systick_cycles();
 
-  status = backup_ram_store_power_manager_data(&pm_data);
+  backup_ram_status_t status = backup_ram_store_power_manager_data(&pm_data);
 
   if (status != BACKUP_RAM_OK) {
     cli_error(cli, CLI_ERROR, "Failed to write backup RAM");
-    backup_ram_deinit();
     return;
   }
-
-  backup_ram_deinit();
 
   cli_ok(cli, "");
 }
@@ -75,26 +62,13 @@ static void prodtest_backup_ram_read(cli_t* cli) {
     return;
   }
 
-  backup_ram_status_t status = backup_ram_init();
-  if (status != BACKUP_RAM_OK) {
-    if (status == BACKUP_RAM_OK_STORAGE_INITIALIZED) {
-      cli_trace(cli, "Backup storage had to be initialized");
-    } else {
-      cli_error(cli, CLI_ERROR, "Failed to initialize backup RAM");
-      return;
-    }
-  }
-
   backup_ram_power_manager_data_t pm_data;
-  status = backup_ram_read_power_manager_data(&pm_data);
+  backup_ram_status_t status = backup_ram_read_power_manager_data(&pm_data);
 
   if (status != BACKUP_RAM_OK) {
     cli_error(cli, CLI_ERROR, "Failed to read backup RAM");
-    backup_ram_deinit();
     return;
   }
-
-  backup_ram_deinit();
 
   cli_ok(cli, "SOC: %d\%", (int)(pm_data.soc * 100));
 }
@@ -117,8 +91,6 @@ static void prodtest_backup_ram_erase(cli_t* cli) {
 
   backup_ram_erase();
 
-  backup_ram_deinit();
-
   cli_ok(cli, "");
 }
 
@@ -139,8 +111,6 @@ static void prodtest_backup_ram_erase_unused(cli_t* cli) {
   }
 
   backup_ram_erase_unused();
-
-  backup_ram_deinit();
 
   cli_ok(cli, "");
 }
