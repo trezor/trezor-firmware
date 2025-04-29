@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-from trezor.crypto import base58
 from trezor.wire import DataError
 
 from apps.common.keychain import with_slip44_keychain

@@ -13,8 +13,8 @@ from trezorlib.tools import parse_path
 from ...definitions import (
     make_eth_defs,
     make_eth_network,
-    make_payload,
     make_eth_token,
+    make_payload,
     sign_payload,
 )
 from .test_definitions import DEFAULT_ERC20_PARAMS, ERC20_FAKE_ADDRESS

@@ -309,10 +309,10 @@ class Transaction:
             SOLANA_TOKEN_ACCOUNT_SIZE,
         )
         from ..transaction.instructions import (
-            is_system_program_account_creation,
-            is_atap_account_creation,
             _TOKEN_2022_PROGRAM_ID,
             _TOKEN_PROGRAM_ID,
+            is_atap_account_creation,
+            is_system_program_account_creation,
         )
 
         allocation = 0

@@ -9,8 +9,8 @@ from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path
 
-from ...input_flows import InputFlowConfirmAllWarnings
 from ... import definitions
+from ...input_flows import InputFlowConfirmAllWarnings
 from .test_sign_typed_data import DATA as TYPED_DATA
 
 pytestmark = [pytest.mark.altcoin, pytest.mark.ethereum]
@@ -65,7 +65,9 @@ def test_slip44_external(client: Client) -> None:
     network = definitions.encode_eth_network(chain_id=66666, slip44=66666)
     params = DEFAULT_TX_PARAMS.copy()
     params.update(n=parse_path("m/44h/66666h/0h/0/0"), chain_id=66666)
-    ethereum.sign_tx(client, **params, definitions=definitions.make_eth_defs(network, None))
+    ethereum.sign_tx(
+        client, **params, definitions=definitions.make_eth_defs(network, None)
+    )
 
 
 def test_slip44_external_disallowed(client: Client) -> None:
@@ -121,10 +123,14 @@ def test_builtin_token(client: Client) -> None:
 
 def test_external_token(client: Client) -> None:
     # A valid token definition must be provided to use a non-builtin token
-    token = definitions.encode_eth_token(address=ERC20_FAKE_ADDRESS, chain_id=1, decimals=8)
+    token = definitions.encode_eth_token(
+        address=ERC20_FAKE_ADDRESS, chain_id=1, decimals=8
+    )
     params = DEFAULT_ERC20_PARAMS.copy()
     params.update(to=ERC20_FAKE_ADDRESS)
-    ethereum.sign_tx(client, **params, definitions=definitions.make_eth_defs(None, token))
+    ethereum.sign_tx(
+        client, **params, definitions=definitions.make_eth_defs(None, token)
+    )
     # TODO check that FakeTok symbol is shown
 
 
