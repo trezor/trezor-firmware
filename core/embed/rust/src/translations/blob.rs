@@ -299,8 +299,49 @@ fn read_fixedsize_str<'a>(reader: &mut InputStream<'a>, len: usize) -> Result<&'
     core::str::from_utf8(bytes_trimmed).map_err(|_| INVALID_TRANSLATIONS_BLOB)
 }
 
+enum BlobVersion {
+    V0,
+    V1,
+}
+
+impl BlobVersion {
+    fn parse_length(&self, reader: &mut InputStream<'_>) -> Result<usize, Error> {
+        Ok(match self {
+            Self::V0 => reader.read_u16_le()?.into(),
+            Self::V1 => reader
+                .read_u32_le()?
+                .try_into() // can fail only on 16-bit system
+                .map_err(|_| Error::OutOfRange)?,
+        })
+    }
+}
+
+struct ContainerPrefix {
+    version: BlobVersion,
+    container_length: usize,
+    prefix_length: usize,
+}
+
+impl ContainerPrefix {
+    fn parse_from(reader: &mut InputStream<'_>) -> Result<Self, Error> {
+        let offset = reader.tell();
+        let data = reader.read(6)?;
+        let version = match data {
+            b"TRTR00" => BlobVersion::V0,
+            b"TRTR01" => BlobVersion::V1,
+            _ => return Err(Error::ValueError(c"Unknown blob magic")),
+        };
+        let container_length = version.parse_length(reader)?;
+        let prefix_length = reader.tell() - offset;
+        Ok(Self {
+            version,
+            container_length,
+            prefix_length,
+        })
+    }
+}
+
 impl<'a> TranslationsHeader<'a> {
-    const BLOB_MAGIC: &'static [u8] = b"TRTR00";
     const HEADER_MAGIC: &'static [u8] = b"TR";
     const LANGUAGE_TAG_LEN: usize = 8;
 
@@ -320,16 +361,13 @@ impl<'a> TranslationsHeader<'a> {
         //
         // 1. parse outer container
         //
-        let magic = reader.read(Self::BLOB_MAGIC.len())?;
-        if magic != Self::BLOB_MAGIC {
-            return Err(INVALID_TRANSLATIONS_BLOB);
-        }
 
-        // read length of contained data
-        let container_length = reader.read_u16_le()? as usize;
+        // read the blob magic and length of contained data
+        let prefix = ContainerPrefix::parse_from(reader)?;
+
         // continue working on the contained data (i.e., read beyond the bounds of
         // container_length will result in EOF).
-        let mut reader = reader.read_stream(container_length.min(reader.remaining()))?;
+        let mut reader = reader.read_stream(prefix.container_length.min(reader.remaining()))?;
 
         //
         // 2. parse the header section
@@ -356,7 +394,7 @@ impl<'a> TranslationsHeader<'a> {
         let version_bytes = header_reader.read(4)?;
         let version = unwrap!(version_bytes.try_into());
 
-        let data_len: usize = header_reader.read_u16_le()?.into();
+        let data_len: usize = prefix.version.parse_length(&mut header_reader)?;
         let data_hash: sha256::Digest =
             unwrap!(header_reader.read(sha256::DIGEST_SIZE)?.try_into());
 
@@ -389,7 +427,7 @@ impl<'a> TranslationsHeader<'a> {
         }
 
         // check that the declared data section length matches the container size
-        if container_length - reader.tell() != data_len {
+        if prefix.container_length - reader.tell() != data_len {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
 
@@ -401,7 +439,7 @@ impl<'a> TranslationsHeader<'a> {
             data_hash,
             merkle_proof,
             signature,
-            total_len: container_length + Self::BLOB_MAGIC.len() + mem::size_of::<u16>(),
+            total_len: prefix.container_length + prefix.prefix_length,
         };
         new.verify()?;
         Ok((new, reader))
