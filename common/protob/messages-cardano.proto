@@ -183,6 +183,7 @@ message CardanoGetAddress {
  */
 message CardanoAddress {
     required string address = 1;    // Base58 cardano address
+    optional bytes mac = 2;         // Address authentication code
 }
 
 /**

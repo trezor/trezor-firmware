@@ -22,7 +22,9 @@ if TYPE_CHECKING:
     from trezor.crypto import bip32
     from trezor.enums import CardanoDerivationType
 
-    from apps.common.keychain import Handler, MsgOut
+    from apps.common.keychain import Handler
+    from apps.common.keychain import Keychain as Slip21Keychain
+    from apps.common.keychain import MsgOut
     from apps.common.paths import Bip32Path
 
     CardanoMessages = (
@@ -33,7 +35,9 @@ if TYPE_CHECKING:
     )
     MsgIn = TypeVar("MsgIn", bound=CardanoMessages)
 
-    HandlerWithKeychain = Callable[[MsgIn, "Keychain"], Awaitable[MsgOut]]
+    HandlerWithKeychain = Callable[
+        [MsgIn, "Keychain", "Slip21Keychain"], Awaitable[MsgOut]
+    ]
 
 
 class Keychain:
@@ -184,7 +188,11 @@ async def _get_keychain(derivation_type: CardanoDerivationType) -> Keychain:
 
 def with_keychain(func: HandlerWithKeychain[MsgIn, MsgOut]) -> Handler[MsgIn, MsgOut]:
     async def wrapper(msg: MsgIn) -> MsgOut:
+        from apps.common.keychain import get_keychain
+
         keychain = await _get_keychain(msg.derivation_type)
-        return await func(msg, keychain)
+        slip21_keychain = await get_keychain("", [], [[b"SLIP-0024"]])
+        with slip21_keychain:
+            return await func(msg, keychain, slip21_keychain)
 
     return wrapper

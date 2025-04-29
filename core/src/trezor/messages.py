@@ -456,6 +456,118 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["HDNodeType"]:
             return isinstance(msg, cls)
 
+    class PaymentRequest(protobuf.MessageType):
+        nonce: "bytes | None"
+        recipient_name: "str"
+        memos: "list[PaymentRequestMemo]"
+        amount: "int"
+        signature: "bytes"
+
+        def __init__(
+            self,
+            *,
+            memos: "list[PaymentRequestMemo] | None" = None,
+            nonce: "bytes | None" = None,
+            recipient_name: "str | None" = None,
+            amount: "int | None" = None,
+            signature: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PaymentRequest"]:
+            return isinstance(msg, cls)
+
+    class PaymentRequestMemo(protobuf.MessageType):
+        text_memo: "TextMemo | None"
+        refund_memo: "RefundMemo | None"
+        coin_purchase_memo: "CoinPurchaseMemo | None"
+        text_details_memo: "TextDetailsMemo | None"
+
+        def __init__(
+            self,
+            *,
+            text_memo: "TextMemo | None" = None,
+            refund_memo: "RefundMemo | None" = None,
+            coin_purchase_memo: "CoinPurchaseMemo | None" = None,
+            text_details_memo: "TextDetailsMemo | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PaymentRequestMemo"]:
+            return isinstance(msg, cls)
+
+    class TextMemo(protobuf.MessageType):
+        text: "str"
+
+        def __init__(
+            self,
+            *,
+            text: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TextMemo"]:
+            return isinstance(msg, cls)
+
+    class TextDetailsMemo(protobuf.MessageType):
+        title: "str"
+        text: "str"
+
+        def __init__(
+            self,
+            *,
+            title: "str | None" = None,
+            text: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["TextDetailsMemo"]:
+            return isinstance(msg, cls)
+
+    class RefundMemo(protobuf.MessageType):
+        address: "str"
+        address_n: "list[int]"
+        mac: "bytes"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            address: "str | None" = None,
+            mac: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["RefundMemo"]:
+            return isinstance(msg, cls)
+
+    class CoinPurchaseMemo(protobuf.MessageType):
+        coin_type: "int"
+        amount: "str"
+        address: "str"
+        address_n: "list[int]"
+        mac: "bytes"
+
+        def __init__(
+            self,
+            *,
+            address_n: "list[int] | None" = None,
+            coin_type: "int | None" = None,
+            amount: "str | None" = None,
+            address: "str | None" = None,
+            mac: "bytes | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["CoinPurchaseMemo"]:
+            return isinstance(msg, cls)
+
     class MultisigRedeemScriptType(protobuf.MessageType):
         pubkeys: "list[HDNodePathType]"
         signatures: "list[bytes]"
@@ -866,28 +978,6 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["PrevOutput"]:
             return isinstance(msg, cls)
 
-    class TxAckPaymentRequest(protobuf.MessageType):
-        nonce: "bytes | None"
-        recipient_name: "str"
-        memos: "list[PaymentRequestMemo]"
-        amount: "int | None"
-        signature: "bytes"
-
-        def __init__(
-            self,
-            *,
-            recipient_name: "str",
-            signature: "bytes",
-            memos: "list[PaymentRequestMemo] | None" = None,
-            nonce: "bytes | None" = None,
-            amount: "int | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TxAckPaymentRequest"]:
-            return isinstance(msg, cls)
-
     class TxAckInput(protobuf.MessageType):
         tx: "TxAckInputWrapper"
 
@@ -1118,74 +1208,6 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["TxRequestSerializedType"]:
             return isinstance(msg, cls)
 
-    class PaymentRequestMemo(protobuf.MessageType):
-        text_memo: "TextMemo | None"
-        refund_memo: "RefundMemo | None"
-        coin_purchase_memo: "CoinPurchaseMemo | None"
-
-        def __init__(
-            self,
-            *,
-            text_memo: "TextMemo | None" = None,
-            refund_memo: "RefundMemo | None" = None,
-            coin_purchase_memo: "CoinPurchaseMemo | None" = None,
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["PaymentRequestMemo"]:
-            return isinstance(msg, cls)
-
-    class TextMemo(protobuf.MessageType):
-        text: "str"
-
-        def __init__(
-            self,
-            *,
-            text: "str",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TextMemo"]:
-            return isinstance(msg, cls)
-
-    class RefundMemo(protobuf.MessageType):
-        address: "str"
-        mac: "bytes"
-
-        def __init__(
-            self,
-            *,
-            address: "str",
-            mac: "bytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["RefundMemo"]:
-            return isinstance(msg, cls)
-
-    class CoinPurchaseMemo(protobuf.MessageType):
-        coin_type: "int"
-        amount: "str"
-        address: "str"
-        mac: "bytes"
-
-        def __init__(
-            self,
-            *,
-            coin_type: "int",
-            amount: "str",
-            address: "str",
-            mac: "bytes",
-        ) -> None:
-            pass
-
-        @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["CoinPurchaseMemo"]:
-            return isinstance(msg, cls)
-
     class TxAckInputWrapper(protobuf.MessageType):
         input: "TxInput"
 
@@ -1398,11 +1420,13 @@ if TYPE_CHECKING:
 
     class CardanoAddress(protobuf.MessageType):
         address: "str"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -2100,6 +2124,20 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["ECDHSessionKey"]:
+            return isinstance(msg, cls)
+
+    class PaymentNotification(protobuf.MessageType):
+        payment_req: "PaymentRequest | None"
+
+        def __init__(
+            self,
+            *,
+            payment_req: "PaymentRequest | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["PaymentNotification"]:
             return isinstance(msg, cls)
 
     class Initialize(protobuf.MessageType):
@@ -3822,11 +3860,13 @@ if TYPE_CHECKING:
 
     class EthereumAddress(protobuf.MessageType):
         address: "str | None"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str | None" = None,
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -3847,6 +3887,7 @@ if TYPE_CHECKING:
         tx_type: "int | None"
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -3863,6 +3904,7 @@ if TYPE_CHECKING:
             tx_type: "int | None" = None,
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
@@ -3884,6 +3926,7 @@ if TYPE_CHECKING:
         access_list: "list[EthereumAccessList]"
         definitions: "EthereumDefinitions | None"
         chunkify: "bool | None"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -3901,6 +3944,7 @@ if TYPE_CHECKING:
             data_initial_chunk: "bytes | None" = None,
             definitions: "EthereumDefinitions | None" = None,
             chunkify: "bool | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
@@ -5336,11 +5380,13 @@ if TYPE_CHECKING:
 
     class RippleAddress(protobuf.MessageType):
         address: "str"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -5356,6 +5402,7 @@ if TYPE_CHECKING:
         last_ledger_sequence: "int | None"
         payment: "RipplePayment"
         chunkify: "bool | None"
+        payment_req: "PaymentRequest | None"
 
         def __init__(
             self,
@@ -5367,6 +5414,7 @@ if TYPE_CHECKING:
             flags: "int | None" = None,
             last_ledger_sequence: "int | None" = None,
             chunkify: "bool | None" = None,
+            payment_req: "PaymentRequest | None" = None,
         ) -> None:
             pass
 
@@ -5458,11 +5506,13 @@ if TYPE_CHECKING:
 
     class SolanaAddress(protobuf.MessageType):
         address: "str"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -5574,11 +5624,13 @@ if TYPE_CHECKING:
 
     class StellarAddress(protobuf.MessageType):
         address: "str"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 
@@ -5972,11 +6024,13 @@ if TYPE_CHECKING:
 
     class TezosAddress(protobuf.MessageType):
         address: "str"
+        mac: "bytes | None"
 
         def __init__(
             self,
             *,
             address: "str",
+            mac: "bytes | None" = None,
         ) -> None:
             pass
 

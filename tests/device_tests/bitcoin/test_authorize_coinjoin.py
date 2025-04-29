@@ -25,7 +25,7 @@ from trezorlib.tools import parse_path
 
 from ...common import is_core
 from ...tx_cache import TxCache
-from .payment_req import make_coinjoin_request
+from .coinjoin_req import make_coinjoin_request
 from .signtx import (
     assert_tx_matches,
     request_finished,

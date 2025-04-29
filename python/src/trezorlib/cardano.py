@@ -817,7 +817,11 @@ def _get_collateral_inputs_items(
 # ====== Client functions ====== #
 
 
-def get_address(
+def get_address(*args: Any, **kwargs: Any) -> str:
+    return get_authenticated_address(*args, **kwargs).address
+
+
+def get_authenticated_address(
     client: "TrezorClient",
     address_parameters: m.CardanoAddressParametersType,
     protocol_magic: int = PROTOCOL_MAGICS["mainnet"],
@@ -825,7 +829,7 @@ def get_address(
     show_display: bool = False,
     derivation_type: m.CardanoDerivationType = m.CardanoDerivationType.ICARUS,
     chunkify: bool = False,
-) -> str:
+) -> m.CardanoAddress:
     return client.call(
         m.CardanoGetAddress(
             address_parameters=address_parameters,
@@ -836,7 +840,7 @@ def get_address(
             chunkify=chunkify,
         ),
         expect=m.CardanoAddress,
-    ).address
+    )
 
 
 def get_public_key(

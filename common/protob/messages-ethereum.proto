@@ -7,6 +7,7 @@ option java_outer_classname = "TrezorMessageEthereum";
 
 import "messages-common.proto";
 import "messages-ethereum-definitions.proto";
+import "options.proto";
 
 /**
  * Request: Ask device for public key corresponding to address_n path
@@ -47,7 +48,8 @@ message EthereumGetAddress {
  */
 message EthereumAddress {
     optional bytes _old_address = 1 [deprecated=true];  // trezor <1.8.0, <2.1.0 - raw bytes of Ethereum address
-    optional string address = 2;                       // Ethereum address as hex-encoded string
+    optional string address = 2;                        // Ethereum address as hex-encoded string
+    optional bytes mac = 3;                             // Address authentication code
 }
 
 /**
@@ -72,6 +74,7 @@ message EthereumSignTx {
     optional uint32 tx_type = 10;                                        // Used for Wanchain
     optional ethereum_definitions.EthereumDefinitions definitions = 12;  // network and/or token definitions for tx
     optional bool chunkify = 13;                                         // display the address in chunks of 4 characters
+    optional common.PaymentRequest payment_req = 14 [(experimental_field)=true]; // SLIP-24 payment request
 }
 
 /**
@@ -95,6 +98,7 @@ message EthereumSignTxEIP1559 {
     repeated EthereumAccessList access_list = 11;                              // Access List
     optional ethereum_definitions.EthereumDefinitions definitions = 12;        // network and/or token definitions for tx
     optional bool chunkify = 13;                                               // display the address in chunks of 4 characters
+    optional common.PaymentRequest payment_req = 14 [(experimental_field)=true]; // SLIP-24 payment request
 
     message EthereumAccessList {
         required string address = 1;

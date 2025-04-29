@@ -8,14 +8,15 @@ if TYPE_CHECKING:
     from apps.common.keychain import Keychain
 
 
-@auto_keychain(__name__)
+@auto_keychain(__name__, slip21_namespaces=[[b"SLIP-0024"]])
 async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddress:
     from trezor.messages import StellarAddress
     from trezor.ui.layouts import show_address
 
     from apps.common import paths, seed
+    from apps.common.address_mac import get_address_mac
 
-    from . import helpers
+    from . import SLIP44_ID, helpers
 
     address_n = msg.address_n  # local_cache_attribute
 
@@ -24,9 +25,10 @@ async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddr
     node = keychain.derive(address_n)
     pubkey = seed.remove_ed25519_prefix(node.public_key())
     address = helpers.address_from_public_key(pubkey)
+    mac = get_address_mac(address, SLIP44_ID, address_n, keychain)
 
     if msg.show_display:
-        from . import PATTERN, SLIP44_ID
+        from . import PATTERN
 
         await show_address(
             address,
@@ -36,4 +38,4 @@ async def get_address(msg: StellarGetAddress, keychain: Keychain) -> StellarAddr
             chunkify=bool(msg.chunkify),
         )
 
-    return StellarAddress(address=address)
+    return StellarAddress(address=address, mac=mac)

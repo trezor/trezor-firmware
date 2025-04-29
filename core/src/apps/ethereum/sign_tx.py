@@ -7,7 +7,7 @@ from trezor.wire import DataError
 
 from apps.ethereum import staking_tx_constants as constants
 
-from .helpers import bytes_from_address
+from .helpers import address_from_bytes, bytes_from_address
 from .keychain import with_keychain_from_chain_id
 
 if TYPE_CHECKING:
@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     )
 
     from apps.common.keychain import Keychain
+    from apps.common.payment_request import PaymentRequestVerifier
 
     from .definitions import Definitions
     from .keychain import MsgInSignTx
@@ -67,7 +68,25 @@ async def sign_tx(
         gas_limit,
         defs.network,
     )
-    await confirm_tx_data(msg, defs, address_bytes, maximum_fee, fee_items, data_total)
+
+    payment_req_verifier = None
+    if msg.payment_req:
+        from apps.common.payment_request import PaymentRequestVerifier
+
+        slip44_id = paths.unharden(msg.address_n[1])
+        payment_req_verifier = PaymentRequestVerifier(
+            msg.payment_req, slip44_id, keychain
+        )
+
+    await confirm_tx_data(
+        msg,
+        defs,
+        address_bytes,
+        maximum_fee,
+        fee_items,
+        data_total,
+        payment_req_verifier,
+    )
 
     progress_obj = progress(title=TR.progress__signing_transaction)
     progress_obj.report(30)
@@ -121,6 +140,7 @@ async def confirm_tx_data(
     maximum_fee: str,
     fee_items: Iterable[tuple[str, str]],
     data_total_len: int,
+    payment_req_verifier: PaymentRequestVerifier | None,
 ) -> None:
     # function distinguishes between staking / smart contracts / regular transactions
     from .layout import require_confirm_other_data, require_confirm_tx
@@ -131,13 +151,21 @@ async def confirm_tx_data(
     # Handle ERC-20, currently only 'transfer' function
     token, recipient, value = await _handle_erc20_transfer(msg, defs, address_bytes)
 
+    recipient_str = address_from_bytes(recipient, defs.network) if recipient else None
+    if payment_req_verifier is not None:
+        # If a payment_req_verifier is provided, then msg.payment_req must have been set.
+        assert msg.payment_req is not None
+        payment_req_verifier.add_output(value, recipient_str or "")
+        payment_req_verifier.verify()
+        recipient_str = msg.payment_req.recipient_name
+
     is_contract_interaction = token is None and data_total_len > 0
 
     if is_contract_interaction:
         await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
 
     await require_confirm_tx(
-        recipient,
+        recipient_str,
         value,
         msg.address_n,
         maximum_fee,

@@ -230,6 +230,8 @@ pub struct RippleAddress {
     // message fields
     // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleAddress.address)
     pub address: ::std::option::Option<::std::string::String>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleAddress.mac)
+    pub mac: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ripple.RippleAddress.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -282,13 +284,54 @@ impl RippleAddress {
         self.address.take().unwrap_or_else(|| ::std::string::String::new())
     }
 
+    // optional bytes mac = 2;
+
+    pub fn mac(&self) -> &[u8] {
+        match self.mac.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_mac(&mut self) {
+        self.mac = ::std::option::Option::None;
+    }
+
+    pub fn has_mac(&self) -> bool {
+        self.mac.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_mac(&mut self, v: ::std::vec::Vec<u8>) {
+        self.mac = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_mac(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.mac.is_none() {
+            self.mac = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.mac.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_mac(&mut self) -> ::std::vec::Vec<u8> {
+        self.mac.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(1);
+        let mut fields = ::std::vec::Vec::with_capacity(2);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "address",
             |m: &RippleAddress| { &m.address },
             |m: &mut RippleAddress| { &mut m.address },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "mac",
+            |m: &RippleAddress| { &m.mac },
+            |m: &mut RippleAddress| { &mut m.mac },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RippleAddress>(
             "RippleAddress",
@@ -314,6 +357,9 @@ impl ::protobuf::Message for RippleAddress {
                 10 => {
                     self.address = ::std::option::Option::Some(is.read_string()?);
                 },
+                18 => {
+                    self.mac = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -329,6 +375,9 @@ impl ::protobuf::Message for RippleAddress {
         if let Some(v) = self.address.as_ref() {
             my_size += ::protobuf::rt::string_size(1, &v);
         }
+        if let Some(v) = self.mac.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(2, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -337,6 +386,9 @@ impl ::protobuf::Message for RippleAddress {
     fn write_to_with_cached_sizes(&self, os: &mut ::protobuf::CodedOutputStream<'_>) -> ::protobuf::Result<()> {
         if let Some(v) = self.address.as_ref() {
             os.write_string(1, v)?;
+        }
+        if let Some(v) = self.mac.as_ref() {
+            os.write_bytes(2, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -356,12 +408,14 @@ impl ::protobuf::Message for RippleAddress {
 
     fn clear(&mut self) {
         self.address = ::std::option::Option::None;
+        self.mac = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
     fn default_instance() -> &'static RippleAddress {
         static instance: RippleAddress = RippleAddress {
             address: ::std::option::Option::None,
+            mac: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -403,6 +457,8 @@ pub struct RippleSignTx {
     pub payment: ::protobuf::MessageField<ripple_sign_tx::RipplePayment>,
     // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleSignTx.chunkify)
     pub chunkify: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.ripple.RippleSignTx.payment_req)
+    pub payment_req: ::protobuf::MessageField<super::messages_common::PaymentRequest>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.ripple.RippleSignTx.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -515,7 +571,7 @@ impl RippleSignTx {
     }
 
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(7);
+        let mut fields = ::std::vec::Vec::with_capacity(8);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_vec_simpler_accessor::<_, _>(
             "address_n",
@@ -552,6 +608,11 @@ impl RippleSignTx {
             |m: &RippleSignTx| { &m.chunkify },
             |m: &mut RippleSignTx| { &mut m.chunkify },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_message_field_accessor::<_, super::messages_common::PaymentRequest>(
+            "payment_req",
+            |m: &RippleSignTx| { &m.payment_req },
+            |m: &mut RippleSignTx| { &mut m.payment_req },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<RippleSignTx>(
             "RippleSignTx",
             fields,
@@ -574,6 +635,11 @@ impl ::protobuf::Message for RippleSignTx {
             return false;
         }
         for v in &self.payment {
+            if !v.is_initialized() {
+                return false;
+            }
+        };
+        for v in &self.payment_req {
             if !v.is_initialized() {
                 return false;
             }
@@ -607,6 +673,9 @@ impl ::protobuf::Message for RippleSignTx {
                 },
                 56 => {
                     self.chunkify = ::std::option::Option::Some(is.read_bool()?);
+                },
+                66 => {
+                    ::protobuf::rt::read_singular_message_into_field(is, &mut self.payment_req)?;
                 },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
@@ -642,6 +711,10 @@ impl ::protobuf::Message for RippleSignTx {
         if let Some(v) = self.chunkify {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.payment_req.as_ref() {
+            let len = v.compute_size();
+            my_size += 1 + ::protobuf::rt::compute_raw_varint64_size(len) + len;
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -669,6 +742,9 @@ impl ::protobuf::Message for RippleSignTx {
         if let Some(v) = self.chunkify {
             os.write_bool(7, v)?;
         }
+        if let Some(v) = self.payment_req.as_ref() {
+            ::protobuf::rt::write_message_field_with_cached_size(8, v, os)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -693,6 +769,7 @@ impl ::protobuf::Message for RippleSignTx {
         self.last_ledger_sequence = ::std::option::Option::None;
         self.payment.clear();
         self.chunkify = ::std::option::Option::None;
+        self.payment_req.clear();
         self.special_fields.clear();
     }
 
@@ -705,6 +782,7 @@ impl ::protobuf::Message for RippleSignTx {
             last_ledger_sequence: ::std::option::Option::None,
             payment: ::protobuf::MessageField::none(),
             chunkify: ::std::option::Option::None,
+            payment_req: ::protobuf::MessageField::none(),
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -1188,18 +1266,21 @@ impl ::protobuf::reflect::ProtobufValue for RippleSignedTx {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x15messages-ripple.proto\x12\x19hw.trezor.messages.ripple\"n\n\x10Rip\
-    pleGetAddress\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\
-    \n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chu\
-    nkify\x18\x03\x20\x01(\x08R\x08chunkify\")\n\rRippleAddress\x12\x18\n\
-    \x07address\x18\x01\x20\x02(\tR\x07address\"\x85\x03\n\x0cRippleSignTx\
-    \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03fee\
-    \x18\x02\x20\x02(\x04R\x03fee\x12\x17\n\x05flags\x18\x03\x20\x01(\r:\x01\
-    0R\x05flags\x12\x1a\n\x08sequence\x18\x04\x20\x02(\rR\x08sequence\x120\n\
-    \x14last_ledger_sequence\x18\x05\x20\x01(\rR\x12lastLedgerSequence\x12O\
-    \n\x07payment\x18\x06\x20\x02(\x0b25.hw.trezor.messages.ripple.RippleSig\
-    nTx.RipplePaymentR\x07payment\x12\x1a\n\x08chunkify\x18\x07\x20\x01(\x08\
-    R\x08chunkify\x1ar\n\rRipplePayment\x12\x16\n\x06amount\x18\x01\x20\x02(\
+    \n\x15messages-ripple.proto\x12\x19hw.trezor.messages.ripple\x1a\x15mess\
+    ages-common.proto\x1a\roptions.proto\"n\n\x10RippleGetAddress\x12\x1b\n\
+    \taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12!\n\x0cshow_display\x18\
+    \x02\x20\x01(\x08R\x0bshowDisplay\x12\x1a\n\x08chunkify\x18\x03\x20\x01(\
+    \x08R\x08chunkify\";\n\rRippleAddress\x12\x18\n\x07address\x18\x01\x20\
+    \x02(\tR\x07address\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"\xd7\
+    \x03\n\x0cRippleSignTx\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addre\
+    ssN\x12\x10\n\x03fee\x18\x02\x20\x02(\x04R\x03fee\x12\x17\n\x05flags\x18\
+    \x03\x20\x01(\r:\x010R\x05flags\x12\x1a\n\x08sequence\x18\x04\x20\x02(\r\
+    R\x08sequence\x120\n\x14last_ledger_sequence\x18\x05\x20\x01(\rR\x12last\
+    LedgerSequence\x12O\n\x07payment\x18\x06\x20\x02(\x0b25.hw.trezor.messag\
+    es.ripple.RippleSignTx.RipplePaymentR\x07payment\x12\x1a\n\x08chunkify\
+    \x18\x07\x20\x01(\x08R\x08chunkify\x12P\n\x0bpayment_req\x18\x08\x20\x01\
+    (\x0b2).hw.trezor.messages.common.PaymentRequestR\npaymentReqB\x04\xc8\
+    \xf0\x19\x01\x1ar\n\rRipplePayment\x12\x16\n\x06amount\x18\x01\x20\x02(\
     \x04R\x06amount\x12\x20\n\x0bdestination\x18\x02\x20\x02(\tR\x0bdestinat\
     ion\x12'\n\x0fdestination_tag\x18\x03\x20\x01(\rR\x0edestinationTag\"S\n\
     \x0eRippleSignedTx\x12\x1c\n\tsignature\x18\x01\x20\x02(\x0cR\tsignature\
@@ -1221,7 +1302,9 @@ pub fn file_descriptor() -> &'static ::protobuf::reflect::FileDescriptor {
     static file_descriptor: ::protobuf::rt::Lazy<::protobuf::reflect::FileDescriptor> = ::protobuf::rt::Lazy::new();
     file_descriptor.get(|| {
         let generated_file_descriptor = generated_file_descriptor_lazy.get(|| {
-            let mut deps = ::std::vec::Vec::with_capacity(0);
+            let mut deps = ::std::vec::Vec::with_capacity(2);
+            deps.push(super::messages_common::file_descriptor().clone());
+            deps.push(super::options::file_descriptor().clone());
             let mut messages = ::std::vec::Vec::with_capacity(5);
             messages.push(RippleGetAddress::generated_message_descriptor_data());
             messages.push(RippleAddress::generated_message_descriptor_data());

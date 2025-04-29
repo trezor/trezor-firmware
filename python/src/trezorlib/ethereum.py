@@ -160,13 +160,19 @@ def network_from_address_n(
 # ====== Client functions ====== #
 
 
-def get_address(
+def get_address(*args: Any, **kwargs: Any) -> str:
+    resp = get_authenticated_address(*args, **kwargs)
+    assert resp.address is not None
+    return resp.address
+
+
+def get_authenticated_address(
     client: "TrezorClient",
     n: "Address",
     show_display: bool = False,
     encoded_network: Optional[bytes] = None,
     chunkify: bool = False,
-) -> str:
+) -> messages.EthereumAddress:
     resp = client.call(
         messages.EthereumGetAddress(
             address_n=n,
@@ -176,8 +182,7 @@ def get_address(
         ),
         expect=messages.EthereumAddress,
     )
-    assert resp.address is not None
-    return resp.address
+    return resp
 
 
 def get_public_node(
@@ -203,6 +208,7 @@ def sign_tx(
     tx_type: Optional[int] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
+    payment_req: Optional[messages.PaymentRequest] = None,
 ) -> Tuple[int, bytes, bytes]:
     if chain_id is None:
         raise exceptions.TrezorException("Chain ID cannot be undefined")
@@ -218,6 +224,7 @@ def sign_tx(
         tx_type=tx_type,
         definitions=definitions,
         chunkify=chunkify,
+        payment_req=payment_req,
     )
 
     if data is None:
@@ -264,6 +271,7 @@ def sign_tx_eip1559(
     access_list: Optional[List[messages.EthereumAccessList]] = None,
     definitions: Optional[messages.EthereumDefinitions] = None,
     chunkify: bool = False,
+    payment_req: Optional[messages.PaymentRequest] = None,
 ) -> Tuple[int, bytes, bytes]:
     length = len(data)
     data, chunk = data[1024:], data[:1024]
@@ -281,6 +289,7 @@ def sign_tx_eip1559(
         data_initial_chunk=chunk,
         definitions=definitions,
         chunkify=chunkify,
+        payment_req=payment_req,
     )
 
     response = client.call(msg)
