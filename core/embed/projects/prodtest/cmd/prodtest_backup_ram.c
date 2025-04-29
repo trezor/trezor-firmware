@@ -23,21 +23,19 @@
 #include <trezor_rtl.h>
 
 static void prodtest_backup_ram_write(cli_t* cli) {
+
+  if (cli_arg_count(cli) != 1) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
   uint32_t soc = 0;
 
-  if (cli_arg_count(cli) == 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
+  cli_arg_uint32(cli, "soc_percent", &soc);
 
-  if (cli_has_arg(cli, "soc_percent") &&
-      !cli_arg_uint32(cli, "soc_percent", &soc)) {
-    cli_error_arg(cli, "Expecting soc value to store to backup RAM.");
-    return;
-  }
-
-  if (cli_arg_count(cli) > 1) {
-    cli_error_arg_count(cli);
+  if (!cli_arg_uint32(cli, "soc_percent", &soc) ||
+          soc > 100) {
+    cli_error_arg(cli, "Expecting soc_percent argument in range 0-100");
     return;
   }
 
