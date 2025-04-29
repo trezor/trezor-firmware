@@ -51,7 +51,7 @@ fn validate_offset_table(
     }
     // sentinel needs to be at least data_len - MAX_TABLE_PADDING, and at most
     // data_len
-    let sentinel = prev as usize;
+    let sentinel: usize = prev.into();
     if sentinel < data_len - MAX_TABLE_PADDING || sentinel > data_len {
         return Err(INVALID_TRANSLATIONS_BLOB);
     }
@@ -62,7 +62,8 @@ impl<'a> Table<'a> {
     pub fn new(mut reader: InputStream<'a>) -> Result<Self, Error> {
         let count = reader.read_u16_le()?;
         // The offsets table is (count + 1) entries long, the last entry is a sentinel.
-        let offsets_data = reader.read((count + 1) as usize * mem::size_of::<OffsetEntry>())?;
+        let offsets_len: usize = (count + 1).into();
+        let offsets_data = reader.read(offsets_len * mem::size_of::<OffsetEntry>())?;
         // SAFETY: OffsetEntry is repr(packed) of two u16 values, so any four bytes are
         // a valid OffsetEntry value.
         let (_prefix, offsets, _suffix) = unsafe { offsets_data.align_to::<OffsetEntry>() };
@@ -104,8 +105,8 @@ impl<'a> Table<'a> {
             .binary_search_by_key(&id, |it| it.id)
             .ok()
             .and_then(|idx| {
-                let start = self.offsets[idx].offset as usize;
-                let end = self.offsets[idx + 1].offset as usize;
+                let start = self.offsets[idx].offset.into();
+                let end = self.offsets[idx + 1].offset.into();
                 self.data.get(start..end)
             })
     }
@@ -114,7 +115,7 @@ impl<'a> Table<'a> {
         let mut prev_offset = 0usize;
         self.offsets.iter().skip(1).map(move |entry| {
             let start = prev_offset;
-            let end = entry.offset as usize;
+            let end = entry.offset.into();
             prev_offset = end;
             (entry.id, &self.data[start..end])
         })
@@ -129,8 +130,8 @@ pub struct Translations<'a> {
 }
 
 fn read_u16_prefixed_block<'a>(reader: &mut InputStream<'a>) -> Result<InputStream<'a>, Error> {
-    let len = reader.read_u16_le()? as usize;
-    reader.read_stream(len)
+    let len = reader.read_u16_le()?;
+    reader.read_stream(len.into())
 }
 
 impl<'a> Translations<'a> {
@@ -163,7 +164,7 @@ impl<'a> Translations<'a> {
         }
 
         // construct translations data
-        let translations_count = translations_reader.read_u16_le()? as usize;
+        let translations_count: usize = translations_reader.read_u16_le()?.into();
         let translations_offsets_bytes =
             translations_reader.read((translations_count + 1) * mem::size_of::<u16>())?;
         // SAFETY: any bytes are valid u16 values, so casting any data to
@@ -212,8 +213,8 @@ impl<'a> Translations<'a> {
             return None;
         }
 
-        let start_offset = self.translations_offsets[index] as usize;
-        let end_offset = self.translations_offsets[index + 1] as usize;
+        let start_offset = self.translations_offsets[index].into();
+        let end_offset = self.translations_offsets[index + 1].into();
 
         // Construct the relevant slice
         let string = &self.translations[start_offset..end_offset];
@@ -355,7 +356,7 @@ impl<'a> TranslationsHeader<'a> {
         let version_bytes = header_reader.read(4)?;
         let version = unwrap!(version_bytes.try_into());
 
-        let data_len = header_reader.read_u16_le()? as usize;
+        let data_len: usize = header_reader.read_u16_le()?.into();
         let data_hash: sha256::Digest =
             unwrap!(header_reader.read(sha256::DIGEST_SIZE)?.try_into());
 
@@ -367,7 +368,7 @@ impl<'a> TranslationsHeader<'a> {
         // 3. parse the proof section
         //
         let mut proof_reader = read_u16_prefixed_block(&mut reader)?;
-        let proof_count = proof_reader.read_byte()? as usize;
+        let proof_count: usize = proof_reader.read_byte()?.into();
         let proof_length = proof_count * sha256::DIGEST_SIZE;
         let proof_bytes = proof_reader.read(proof_length)?;
 
