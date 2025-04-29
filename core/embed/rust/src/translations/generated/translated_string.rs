@@ -27,7 +27,7 @@ pub enum TranslatedString {
     authenticate__confirm_template = 13,  // "Allow connected computer to confirm your {0} is genuine?"
     authenticate__header = 14,  // "Authenticate device"
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
-    auto_lock__title = 16,  // "Auto-lock delay"
+    auto_lock__title = 16,  // {"Bolt": "Auto-lock delay", "Caesar": "Auto-lock delay", "Delizia": "Auto-lock delay", "Eckhart": "Auto-lock"}
     backup__can_back_up_anytime = 17,  // "You can back up your Trezor once, at any time."
     backup__it_should_be_backed_up = 18,  // {"Bolt": "You should back up your new wallet right now.", "Caesar": "You should back up your new wallet right now.", "Delizia": "You should back up your new wallet right now.", "Eckhart": "Back up your new wallet now."}
     backup__it_should_be_backed_up_now = 19,  // "It should be backed up now!"
@@ -1436,7 +1436,14 @@ impl TranslatedString {
             (Self::authenticate__confirm_template, "Allow connected computer to confirm your {0} is genuine?"),
             (Self::authenticate__header, "Authenticate device"),
             (Self::auto_lock__change_template, "Auto-lock Trezor after {0} of inactivity?"),
+            #[cfg(feature = "layout_bolt")]
             (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_caesar")]
+            (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_delizia")]
+            (Self::auto_lock__title, "Auto-lock delay"),
+            #[cfg(feature = "layout_eckhart")]
+            (Self::auto_lock__title, "Auto-lock"),
             (Self::backup__can_back_up_anytime, "You can back up your Trezor once, at any time."),
             (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
             (Self::backup__it_should_be_backed_up_now, "It should be backed up now!"),
@@ -2852,6 +2859,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_authenticate__confirm_template, Self::authenticate__confirm_template),
         (Qstr::MP_QSTR_authenticate__header, Self::authenticate__header),
         (Qstr::MP_QSTR_auto_lock__change_template, Self::auto_lock__change_template),
+        (Qstr::MP_QSTR_auto_lock__description, Self::auto_lock__description),
         (Qstr::MP_QSTR_auto_lock__title, Self::auto_lock__title),
         (Qstr::MP_QSTR_auto_lock__turned_on, Self::auto_lock__turned_on),
         (Qstr::MP_QSTR_backup__can_back_up_anytime, Self::backup__can_back_up_anytime),
@@ -3672,6 +3680,7 @@ impl TranslatedString {
         (Qstr::MP_QSTR_pin__turn_on, Self::pin__turn_on),
         (Qstr::MP_QSTR_pin__wrong_pin, Self::pin__wrong_pin),
         (Qstr::MP_QSTR_plurals__contains_x_keys, Self::plurals__contains_x_keys),
+        (Qstr::MP_QSTR_plurals__lock_after_x_days, Self::plurals__lock_after_x_days),
         (Qstr::MP_QSTR_plurals__lock_after_x_hours, Self::plurals__lock_after_x_hours),
         (Qstr::MP_QSTR_plurals__lock_after_x_milliseconds, Self::plurals__lock_after_x_milliseconds),
         (Qstr::MP_QSTR_plurals__lock_after_x_minutes, Self::plurals__lock_after_x_minutes),
