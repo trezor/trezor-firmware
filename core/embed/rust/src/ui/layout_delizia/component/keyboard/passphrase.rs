@@ -6,6 +6,7 @@ use crate::{
             base::ComponentExt, swipe_detect::SwipeConfig, text::common::TextBox, Component, Event,
             EventCtx, Label, Maybe, Never, Swipe,
         },
+        constant::MAX_PASSPHRASE_LENGTH,
         display,
         geometry::{Alignment, Direction, Grid, Insets, Offset, Rect},
         shape::{self, Renderer},
@@ -98,8 +99,6 @@ const KEYBOARD: [[&str; KEY_COUNT]; PAGE_COUNT] = [
     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"],
     ["_<>", ".:@", "/|\\", "!()", "+%&", "-[]", "?{}", ",'`", ";\"~", "$^="],
     ];
-
-const MAX_LENGTH: usize = 50;
 
 const CONFIRM_BTN_INSETS: Insets = Insets::new(5, 0, 5, 0);
 const CONFIRM_EMPTY_BTN_MARGIN_RIGHT: i16 = 7;
@@ -248,7 +247,7 @@ impl PassphraseKeyboard {
     /// We should disable the input when the passphrase has reached maximum
     /// length and we are not cycling through the characters.
     fn is_button_active(&self, key: usize) -> bool {
-        let textbox_not_full = self.input.textbox.len() < MAX_LENGTH;
+        let textbox_not_full = self.input.textbox.len() < MAX_PASSPHRASE_LENGTH;
         let key_is_pending = {
             if let Some(pending) = self.input.multi_tap.pending_key() {
                 pending == key
@@ -420,7 +419,7 @@ impl Input {
     fn new() -> Self {
         Self {
             area: Rect::zero(),
-            textbox: TextBox::empty(MAX_LENGTH),
+            textbox: TextBox::empty(MAX_PASSPHRASE_LENGTH),
             multi_tap: MultiTapKeyboard::new(),
         }
     }

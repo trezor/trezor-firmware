@@ -10,7 +10,7 @@ use crate::micropython::{buffer::StrBuffer, obj::Obj};
 use crate::translations::TR;
 
 /// Unified-length String type, long enough for most simple use-cases.
-pub type ShortString = String<50>;
+pub type ShortString = String<128>;
 
 pub fn hexlify(data: &[u8], buffer: &mut [u8]) {
     const HEX_LOWER: [u8; 16] = *b"0123456789abcdef";
