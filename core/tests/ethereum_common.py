@@ -9,7 +9,7 @@ from trezor.enums import DefinitionType
 PRIVATE_KEYS_DEV = [byte * 32 for byte in (b"\xdd", b"\xde", b"\xdf")]
 
 
-def make_network(
+def make_eth_network(
     chain_id: int = 0,
     slip44: int = 0,
     symbol: str = "FAKE",
@@ -23,7 +23,7 @@ def make_network(
     )
 
 
-def make_token(
+def make_eth_token(
     symbol: str = "FAKE",
     decimals: int = 18,
     address: bytes = b"",
@@ -39,13 +39,24 @@ def make_token(
     )
 
 
+def make_solana_token(
+    symbol: str = "FAKE",
+    mint: bytes = b"\x00" * 32,
+    name: str = "Fake token",
+) -> messages.SolanaTokenInfo:
+    return messages.SolanaTokenInfo(symbol=symbol, mint=mint, name=name)
+
+
 def make_payload(
     prefix: bytes = b"trzd1",
     data_type: DefinitionType = DefinitionType.ETHEREUM_NETWORK,
     timestamp: int = 0xFFFF_FFFF,
     message: (
-        messages.EthereumNetworkInfo | messages.EthereumTokenInfo | bytes
-    ) = make_network(),
+        messages.EthereumNetworkInfo
+        | messages.EthereumTokenInfo
+        | messages.SolanaTokenInfo
+        | bytes
+    ) = make_eth_network(),
 ) -> bytes:
     payload = prefix
     payload += data_type.to_bytes(1, "little")
@@ -97,7 +108,7 @@ def sign_payload(
     return merkle_proof, sigmask_byte + signature
 
 
-def encode_network(
+def encode_eth_network(
     network: messages.EthereumNetworkInfo | None = None,
     chain_id: int = 0,
     slip44: int = 0,
@@ -105,13 +116,13 @@ def encode_network(
     name: str = "Fake network",
 ) -> bytes:
     if network is None:
-        network = make_network(chain_id, slip44, symbol, name)
+        network = make_eth_network(chain_id, slip44, symbol, name)
     payload = make_payload(data_type=DefinitionType.ETHEREUM_NETWORK, message=network)
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature
 
 
-def encode_token(
+def encode_eth_token(
     token: messages.EthereumTokenInfo | None = None,
     symbol: str = "FAKE",
     decimals: int = 18,
@@ -120,7 +131,20 @@ def encode_token(
     name: str = "Fake token",
 ) -> bytes:
     if token is None:
-        token = make_token(symbol, decimals, address, chain_id, name)
+        token = make_eth_token(symbol, decimals, address, chain_id, name)
     payload = make_payload(data_type=DefinitionType.ETHEREUM_TOKEN, message=token)
+    proof, signature = sign_payload(payload, [])
+    return payload + proof + signature
+
+
+def encode_solana_token(
+    token: messages.SolanaTokenInfo | None = None,
+    symbol: str = "FAKE",
+    mint: bytes = b"\x00" * 32,
+    name: str = "Fake token",
+) -> bytes:
+    if token is None:
+        token = make_solana_token(symbol, mint, name)
+    payload = make_payload(data_type=DefinitionType.SOLANA_TOKEN, message=token)
     proof, signature = sign_payload(payload, [])
     return payload + proof + signature

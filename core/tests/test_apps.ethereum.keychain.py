@@ -13,7 +13,7 @@ from apps.common.keychain import get_keychain
 from apps.common.paths import HARDENED
 
 if not utils.BITCOIN_ONLY:
-    from ethereum_common import encode_network, make_network
+    from ethereum_common import encode_eth_network, make_eth_network
     from trezor.messages import (
         EthereumDefinitions,
         EthereumGetAddress,
@@ -87,7 +87,7 @@ class TestEthereumKeychain(unittest.TestCase):
 
     def from_address_n(self, address_n):
         slip44 = _slip44_from_address_n(address_n)
-        network = make_network(slip44=slip44)
+        network = make_eth_network(slip44=slip44)
         schemas = _schemas_from_network(PATTERNS_ADDRESS, network)
         return await_result(get_keychain(CURVE, schemas))
 
@@ -163,9 +163,9 @@ class TestEthereumKeychain(unittest.TestCase):
             # invalid network is ignored when there is a builtin
             (60, b"hello"),
             # valid network is ignored when there is a builtin
-            (60, encode_network(slip44=60, symbol=FORBIDDEN_SYMBOL)),
+            (60, encode_eth_network(slip44=60, symbol=FORBIDDEN_SYMBOL)),
             # valid network is accepted for unknown slip44 ids
-            (33333, encode_network(slip44=33333)),
+            (33333, encode_eth_network(slip44=33333)),
         )
 
         for slip44, encoded_network in vectors_valid:
@@ -182,7 +182,7 @@ class TestEthereumKeychain(unittest.TestCase):
             # invalid network is rejected
             (30000, b"hello"),
             # invalid network does not prove mismatched slip44 id
-            (30000, encode_network(slip44=666)),
+            (30000, encode_eth_network(slip44=666)),
         )
 
         for slip44, encoded_network in vectors_invalid:
@@ -262,25 +262,25 @@ class TestEthereumKeychain(unittest.TestCase):
             (
                 1,
                 [44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
-                encode_network(slip44=60, symbol=FORBIDDEN_SYMBOL),
+                encode_eth_network(slip44=60, symbol=FORBIDDEN_SYMBOL),
             ),
             # valid network is accepted for unknown chain ids
             (
                 33333,
                 [44 | HARDENED, 33333 | HARDENED, 0 | HARDENED],
-                encode_network(slip44=33333, chain_id=33333),
+                encode_eth_network(slip44=33333, chain_id=33333),
             ),
             # valid network is allowed to cross-sign for Ethereum slip44
             (
                 33333,
                 [44 | HARDENED, 60 | HARDENED, 0 | HARDENED],
-                encode_network(slip44=33333, chain_id=33333),
+                encode_eth_network(slip44=33333, chain_id=33333),
             ),
             # valid network where slip44 and chain_id are different
             (
                 44444,
                 [44 | HARDENED, 33333 | HARDENED, 0 | HARDENED],
-                encode_network(slip44=33333, chain_id=44444),
+                encode_eth_network(slip44=33333, chain_id=44444),
             ),
         )
 
@@ -306,13 +306,13 @@ class TestEthereumKeychain(unittest.TestCase):
             (
                 30000,
                 [44 | HARDENED, 30000 | HARDENED, 0 | HARDENED],
-                encode_network(chain_id=30000, slip44=666),
+                encode_eth_network(chain_id=30000, slip44=666),
             ),
             # invalid network does not prove mismatched chain_id
             (
                 30000,
                 [44 | HARDENED, 30000 | HARDENED, 0 | HARDENED],
-                encode_network(chain_id=666, slip44=30000),
+                encode_eth_network(chain_id=666, slip44=30000),
             ),
         )
 
@@ -333,8 +333,8 @@ class TestEthereumKeychain(unittest.TestCase):
                 )
 
     def test_message_types(self) -> None:
-        network = make_network(symbol="Testing Network")
-        encoded_network = encode_network(network)
+        network = make_eth_network(symbol="Testing Network")
+        encoded_network = encode_eth_network(network)
 
         messages = (
             EthereumSignTx(
