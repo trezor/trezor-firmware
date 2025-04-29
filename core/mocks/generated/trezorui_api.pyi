@@ -419,6 +419,18 @@ def request_number(
 
 
 # rust/src/ui/api/firmware_micropython.rs
+def request_duration(
+    *,
+    title: str,
+    duration_ms: int,
+    min_ms: int,
+    max_ms: int,
+    description: str | None = None,
+) -> LayoutObj[tuple[UiResult, int]]:
+    """Duration input with + and - buttons, optional static description. """
+
+
+# rust/src/ui/api/firmware_micropython.rs
 def request_pin(
     *,
     prompt: str,
@@ -541,6 +553,7 @@ def show_device_menu(
     firmware_version: str,
     device_name: str,
     paired_devices: Iterable[str],
+    auto_lock_delay: str,
 ) -> LayoutObj[UiResult]:
     """Show the device menu."""
 
