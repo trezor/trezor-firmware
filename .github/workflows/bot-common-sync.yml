@@ -43,7 +43,7 @@ jobs:
 
       - name: Sync trezor-common repository
         env:
-          GITHUB_TOKEN: ${{ steps.trezor-bot-token.outputs.token }}
+          BOT_TOKEN: ${{ steps.trezor-bot-token.outputs.token }}
         run: |
           echo "Synchronizing common with the trezor-common repository"
           git config --unset-all http.https://github.com/.extraheader
