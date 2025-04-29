@@ -23,6 +23,7 @@ from trezorlib.exceptions import TrezorFailure
 from trezorlib.tools import parse_path, unharden
 
 from ...common import parametrize_using_common_fixtures
+from ...definitions import encode_eth_network
 from ...input_flows import (
     InputFlowConfirmAllWarnings,
     InputFlowEthereumSignTxDataGoBack,
@@ -32,7 +33,6 @@ from ...input_flows import (
     InputFlowEthereumSignTxShowFeeInfo,
     InputFlowEthereumSignTxStaking,
 )
-from ...definitions import encode_eth_network
 
 TO_ADDR = "0x1d1c328764a41bda0492b66baa30c4a339ff85ef"
 

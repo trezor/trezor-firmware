@@ -19,13 +19,13 @@ import pytest
 from trezorlib import messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
 from trezorlib.solana import sign_tx
-from trezorlib.tools import parse_path, b58decode
+from trezorlib.tools import b58decode, parse_path
 
 from ...common import parametrize_using_common_fixtures
+from ...definitions import encode_solana_token
 from ...input_flows import InputFlowConfirmAllWarnings
 from .construct.instructions import PROGRAMS, UnknownInstruction
 from .construct.transaction import Message, RawInstruction
-from ...definitions import encode_solana_token
 
 pytestmark = [
     pytest.mark.altcoin,
