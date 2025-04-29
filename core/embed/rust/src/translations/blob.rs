@@ -134,8 +134,6 @@ fn read_u16_prefixed_block<'a>(reader: &mut InputStream<'a>) -> Result<InputStre
 }
 
 impl<'a> Translations<'a> {
-    const MAGIC: &'static [u8] = b"TRTR00";
-
     pub fn new(blob: &'a [u8]) -> Result<Self, Error> {
         let mut blob_reader = InputStream::new(blob);
 
