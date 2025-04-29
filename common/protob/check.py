@@ -15,7 +15,14 @@ EXPECTED_PREFIX_RE = re.compile(r"messages-(\w+)(?:-.*)?\.proto")
 for fn in sorted(glob(os.path.join(MYDIR, "messages-*.proto"))):
     with open(fn, "rt") as f:
         prefix = EXPECTED_PREFIX_RE.search(fn).group(1).capitalize()
-        if prefix in ("Bitcoin", "Bootloader", "Common", "Crypto", "Management"):
+        if prefix in (
+            "Bitcoin",
+            "Bootloader",
+            "Common",
+            "Crypto",
+            "Definitions",
+            "Management",
+        ):
             continue
         if prefix == "Nem":
             prefix = "NEM"
