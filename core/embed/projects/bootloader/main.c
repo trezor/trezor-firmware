@@ -44,6 +44,9 @@
 #ifdef USE_TOUCH
 #include <io/touch.h>
 #endif
+#ifdef USE_BACKUP_RAM
+#include <sys/backup_ram.h>
+#endif
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
@@ -113,6 +116,9 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_OPTIGA
   optiga_hal_init();
 #endif
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
 #ifdef USE_BUTTON
   button_init();
 #endif
@@ -126,6 +132,9 @@ static void drivers_init(secbool *touch_initialized) {
 
 static void drivers_deinit(void) {
 #ifdef FIXED_HW_DEINIT
+#ifdef USE_BACKUP_RAM
+  backup_ram_deinit();
+#endif
 #ifdef USE_BUTTON
   button_deinit();
 #endif
