@@ -21,26 +21,25 @@
 #include <sys/systick.h>
 #include <trezor_rtl.h>
 
+#include "../../powerctl/fuel_gauge/fuel_gauge.h"
 #include "../../powerctl/npm1300/npm1300.h"
 #include "../../powerctl/stwlc38/stwlc38.h"
-#include "../../powerctl/fuel_gauge/fuel_gauge.h"
 #include "power_manager_internal.h"
 
 void pm_monitor_power_sources(void) {
-  power_manager_driver_t* drv = &g_power_manager;
+  pm_driver_t* drv = &g_pm;
 
   // Check if PMIC data is ready, otherwise skip processing
-  if(!drv->pmic_measurement_ready) {
+  if (!drv->pmic_measurement_ready) {
     return;
   }
 
   // Update fuel gauge state
   if (drv->fuel_gauge_initialized) {
-    fuel_gauge_update(&drv->fuel_gauge, POWER_MANAGER_BATTERY_SAMPLING_PERIOD_MS,
-                      drv->pmic_data.vbat, drv->pmic_data.ibat,
-                      drv->pmic_data.ntc_temp);
+    fuel_gauge_update(
+        &drv->fuel_gauge, PM_BATTERY_SAMPLING_PERIOD_MS,
+        drv->pmic_data.vbat, drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
   } else {
-
     pm_battery_sampling(drv->pmic_data.vbat, drv->pmic_data.ibat,
                         drv->pmic_data.ntc_temp);
 
@@ -53,12 +52,12 @@ void pm_monitor_power_sources(void) {
   if (drv->pmic_data.usb_status != 0x0) {
     if (!drv->usb_connected) {
       drv->usb_connected = true;
-      PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_USB_CONNECTED);
+      PM_SET_EVENT(drv->event_flags, PM_EVENT_USB_CONNECTED);
     }
   } else {
     if (drv->usb_connected) {
       drv->usb_connected = false;
-      PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_USB_DISCONNECTED);
+      PM_SET_EVENT(drv->event_flags, PM_EVENT_USB_DISCONNECTED);
     }
   }
 
@@ -66,33 +65,33 @@ void pm_monitor_power_sources(void) {
   if (drv->wireless_data.vout_ready) {
     if (!drv->wireless_connected) {
       drv->wireless_connected = true;
-      PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_WIRELESS_CONNECTED);
+      PM_SET_EVENT(drv->event_flags, PM_EVENT_WIRELESS_CONNECTED);
     }
   } else {
     if (drv->wireless_connected) {
       drv->wireless_connected = false;
-      PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_WIRELESS_DISCONNECTED);
+      PM_SET_EVENT(drv->event_flags, PM_EVENT_WIRELESS_DISCONNECTED);
     }
   }
 
   // Check battery voltage for critical (undervoltage) threshold
-  if ((drv->pmic_data.vbat < POWER_MANAGER_BATTERY_UNDERVOLT_THRESHOLD_V) &&
+  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THRESHOLD_V) &&
       !drv->battery_critical) {
     drv->battery_critical = true;
-    PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_BATTERY_CRITICAL);
+    PM_SET_EVENT(drv->event_flags, PM_EVENT_BATTERY_CRITICAL);
   } else if (drv->pmic_data.vbat >
-                 (POWER_MANAGER_BATTERY_UNDERVOLT_THRESHOLD_V +
-                  POWER_MANAGER_BATTERY_UNDERVOLT_HYSTERESIS_V) &&
+                 (PM_BATTERY_UNDERVOLT_THRESHOLD_V +
+                  PM_BATTERY_UNDERVOLT_HYSTERESIS_V) &&
              drv->battery_critical) {
     drv->battery_critical = false;
   }
 
   // Check battery voltage for low threshold
-  if (drv->pmic_data.vbat < POWER_MANAGER_BATTERY_LOW_THRESHOLD_V &&
+  if (drv->pmic_data.vbat < PM_BATTERY_LOW_THRESHOLD_V &&
       !drv->battery_low) {
     drv->battery_low = true;
-    PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_BATTERY_LOW);
-  } else if (drv->pmic_data.vbat > POWER_MANAGER_BATTERY_LOW_RECOVERY_V &&
+    PM_SET_EVENT(drv->event_flags, PM_EVENT_BATTERY_LOW);
+  } else if (drv->pmic_data.vbat > PM_BATTERY_LOW_RECOVERY_V &&
              drv->battery_low) {
     drv->battery_low = false;
   }
@@ -106,12 +105,11 @@ void pm_monitor_power_sources(void) {
   // Request fresh measurements
   npm1300_measure(pm_pmic_data_ready, NULL);
   drv->pmic_measurement_ready = false;
-
 }
 
 // PMIC measurement callback
 void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
-  power_manager_driver_t* drv = &g_power_manager;
+  pm_driver_t* drv = &g_pm;
 
   // Store measurement timestamp
   drv->pmic_last_update_ms = systick_ms();
@@ -121,20 +119,19 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
 
   // Get wireless charger data
   if (!stwlc38_get_report(&drv->wireless_data)) {
-    PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_ERROR);
+    PM_SET_EVENT(drv->event_flags, PM_EVENT_ERROR);
   }
 
   drv->pmic_measurement_ready = true;
 }
 
-void pm_charging_controller(power_manager_driver_t* drv) {
-
-  if(drv->charging_enabled == false) {
-       // Charging is disabled
-    if(drv->charging_current_target_ma != 0) {
+void pm_charging_controller(pm_driver_t* drv) {
+  if (drv->charging_enabled == false) {
+    // Charging is disabled
+    if (drv->charging_current_target_ma != 0) {
       drv->charging_current_target_ma = 0;
       drv->charging_target_timestamp = systick_ms();
-    }else{
+    } else {
       // No action required
       return;
     }
@@ -150,8 +147,8 @@ void pm_charging_controller(power_manager_driver_t* drv) {
       drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MIN;
       drv->charging_target_timestamp = systick_ms();
     } else if (systick_ms() - drv->charging_target_timestamp >
-               POWER_MANAGER_WPC_CHARGE_CURR_STEP_TIMEOUT_MS) {
-      drv->charging_current_target_ma += POWER_MANAGER_WPC_CHARGE_CURR_STEP_MA;
+               PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS) {
+      drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
       drv->charging_target_timestamp = systick_ms();
 
       if (drv->charging_current_target_ma > NPM1300_CHARGING_LIMIT_MAX) {
@@ -178,7 +175,7 @@ void pm_charging_controller(power_manager_driver_t* drv) {
 }
 
 void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
-  power_manager_driver_t* drv = &g_power_manager;
+  pm_driver_t* drv = &g_pm;
 
   // Store battery data in the buffer
   drv->bat_sampling_buf[drv->bat_sampling_buf_head_idx].vbat = vbat;
@@ -187,7 +184,8 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
 
   // Update head index
   drv->bat_sampling_buf_head_idx++;
-  if (drv->bat_sampling_buf_head_idx >= POWER_MANAGER_BATTERY_SAMPLING_BUF_SIZE) {
+  if (drv->bat_sampling_buf_head_idx >=
+      PM_BATTERY_SAMPLING_BUF_SIZE) {
     drv->bat_sampling_buf_head_idx = 0;
   }
 
@@ -195,15 +193,15 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
   if (drv->bat_sampling_buf_head_idx == drv->bat_sampling_buf_tail_idx) {
     // Buffer is full, move tail index forward
     drv->bat_sampling_buf_tail_idx++;
-    if (drv->bat_sampling_buf_tail_idx >= POWER_MANAGER_BATTERY_SAMPLING_BUF_SIZE) {
+    if (drv->bat_sampling_buf_tail_idx >=
+        PM_BATTERY_SAMPLING_BUF_SIZE) {
       drv->bat_sampling_buf_tail_idx = 0;
     }
   }
-
 }
 
-void pm_battery_initial_soc_guess(void){
-  power_manager_driver_t* drv = &g_power_manager;
+void pm_battery_initial_soc_guess(void) {
+  pm_driver_t* drv = &g_pm;
 
   // Check if the buffer is full
   if (drv->bat_sampling_buf_head_idx == drv->bat_sampling_buf_tail_idx) {
@@ -218,19 +216,17 @@ void pm_battery_initial_soc_guess(void){
   float vbat_g = 0.0f;
   float ibat_g = 0.0f;
   float ntc_temp_g = 0.0f;
-  while(drv->bat_sampling_buf_head_idx != buf_idx) {
-
+  while (drv->bat_sampling_buf_head_idx != buf_idx) {
     vbat_g += drv->bat_sampling_buf[buf_idx].vbat;
     ibat_g += drv->bat_sampling_buf[buf_idx].ibat;
     ntc_temp_g += drv->bat_sampling_buf[buf_idx].ntc_temp;
 
     buf_idx++;
-    if (buf_idx >= POWER_MANAGER_BATTERY_SAMPLING_BUF_SIZE) {
+    if (buf_idx >= PM_BATTERY_SAMPLING_BUF_SIZE) {
       buf_idx = 0;
     }
 
     samples_count++;
-
   }
 
   // Calculate average values
@@ -239,5 +235,4 @@ void pm_battery_initial_soc_guess(void){
   ntc_temp_g /= samples_count;
 
   fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
-
 }
