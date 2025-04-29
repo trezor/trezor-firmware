@@ -8072,6 +8072,7 @@ class ThpCredentialRequest(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("host_static_pubkey", "bytes", repeated=False, required=False, default=None),
         2: protobuf.Field("autoconnect", "bool", repeated=False, required=False, default=None),
+        3: protobuf.Field("credential", "bytes", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -8079,9 +8080,11 @@ class ThpCredentialRequest(protobuf.MessageType):
         *,
         host_static_pubkey: Optional["bytes"] = None,
         autoconnect: Optional["bool"] = None,
+        credential: Optional["bytes"] = None,
     ) -> None:
         self.host_static_pubkey = host_static_pubkey
         self.autoconnect = autoconnect
+        self.credential = credential
 
 
 class ThpCredentialResponse(protobuf.MessageType):
