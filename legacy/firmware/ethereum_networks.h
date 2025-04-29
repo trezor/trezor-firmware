@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "messages-ethereum-definitions.pb.h"
+#include "messages-definitions.pb.h"
 
 extern const EthereumNetworkInfo UNKNOWN_NETWORK;
 #define SLIP44_UNKNOWN UINT32_MAX

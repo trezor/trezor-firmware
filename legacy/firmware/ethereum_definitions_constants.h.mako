@@ -7,10 +7,9 @@
 #include <stdint.h>
 
 #include "crypto.h"
-#include "messages-ethereum-definitions.pb.h"
 #include "pb.h"
 
-#define MIN_DATA_VERSION ${ethereum_defs_timestamp}
+#define MIN_DATA_VERSION ${defs_timestamp}
 #define FORMAT_VERSION_LENGTH 5
 #define FORMAT_VERSION (const pb_byte_t *)"trzd1"
 
