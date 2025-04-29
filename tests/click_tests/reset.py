@@ -75,7 +75,7 @@ def cancel_backup(
 def set_selection(debug: "DebugLink", diff: int) -> None:
     if debug.layout_type in (LayoutType.Bolt, LayoutType.Delizia, LayoutType.Eckhart):
         if debug.layout_type is LayoutType.Eckhart:
-            assert "NumberInputScreen" in debug.read_layout().all_components()
+            assert "ValueInputScreen" in debug.read_layout().all_components()
         else:
             assert "NumberInputDialog" in debug.read_layout().all_components()
 

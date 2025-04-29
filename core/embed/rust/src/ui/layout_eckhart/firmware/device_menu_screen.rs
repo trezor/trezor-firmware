@@ -4,6 +4,7 @@ use crate::{
     error::Error,
     micropython::gc::GcBox,
     strutil::TString,
+    trezorhal::storage::has_pin,
     ui::{
         component::{
             text::{
@@ -60,6 +61,7 @@ pub enum DeviceMenuMsg {
 
     // Device menu
     ScreenBrightness,
+    AutoLockDelay,
 
     // nothing selected
     Close,
@@ -166,6 +168,7 @@ impl<'a> DeviceMenuScreen<'a> {
         // (see component_msg_obj.rs, which currently just returns "DeviceDisconnect" with no
         // index!)
         paired_devices: Vec<TString<'static>, 1>,
+        auto_lock_delay: TString<'static>,
     ) -> Result<Self, Error> {
         let mut screen = Self {
             bounds: Rect::zero(),
@@ -181,7 +184,7 @@ impl<'a> DeviceMenuScreen<'a> {
 
         let about = screen.add_subscreen(Subscreen::AboutScreen);
         let security = screen.add_security_menu();
-        let device = screen.add_device_menu(device_name, about);
+        let device = screen.add_device_menu(device_name, about, auto_lock_delay);
         let settings = screen.add_settings_menu(security, device);
 
         let mut paired_device_indices: Vec<usize, 1> = Vec::new();
@@ -274,7 +277,12 @@ impl<'a> DeviceMenuScreen<'a> {
         self.add_subscreen(Subscreen::Submenu(submenu_index))
     }
 
-    fn add_device_menu(&mut self, device_name: TString<'static>, about_index: usize) -> usize {
+    fn add_device_menu(
+        &mut self,
+        device_name: TString<'static>,
+        about_index: usize,
+        auto_lock_delay: TString<'static>,
+    ) -> usize {
         let mut items: Vec<MenuItem, SHORT_MENU_ITEMS> = Vec::new();
         unwrap!(
             items.push(MenuItem::new("Name".into(), None).with_subtext(Some((device_name, None))))
@@ -283,6 +291,17 @@ impl<'a> DeviceMenuScreen<'a> {
             "Screen brightness".into(),
             Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
         )));
+
+        if has_pin() {
+            unwrap!(items.push(
+                MenuItem::new(
+                    "Auto-lock delay".into(),
+                    Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
+                )
+                .with_subtext(Some((auto_lock_delay, None)))
+            ));
+        }
+
         unwrap!(items.push(MenuItem::new(
             "About".into(),
             Some(Action::GoTo(about_index))
