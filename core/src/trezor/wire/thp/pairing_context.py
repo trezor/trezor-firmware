@@ -9,7 +9,7 @@ from trezor.wire import context, message_handler, protocol_common
 from trezor.wire.context import UnexpectedMessageException
 from trezor.wire.errors import ActionCancelled, DataError, SilentError
 from trezor.wire.protocol_common import Context, Message
-from trezor.wire.thp import ChannelState, get_enabled_pairing_methods
+from trezor.wire.thp import ChannelState, get_enabled_pairing_methods, ui
 
 if TYPE_CHECKING:
     from typing import Awaitable, Container
@@ -225,20 +225,7 @@ class PairingContext(Context):
             )
 
     async def show_autoconnect_credential_confirmation_screen(self) -> None:
-        from trezor.ui.layouts.common import interact
-
-        # TODO FIXME
-        self._hotfix()
-
-        await interact(
-            trezorui_api.confirm_action(
-                title="Autoconnect credential",
-                action=f"Do you want to pair with {self.host_name} without confirmation?",
-                description=None,
-            ),
-            br_name="thp_autoconnect_credential_request",
-            br_code=ButtonRequestType.Other,
-        )
+        await ui.show_autoconnect_credential_confirmation_screen(self, self.host_name)
 
     async def show_pairing_method_screen(
         self, selected_method: ThpPairingMethod | None = None
