@@ -549,6 +549,7 @@ class TR:
     pin__turn_on: str = "Turn on PIN protection?"
     pin__wrong_pin: str = "Wrong PIN"
     plurals__contains_x_keys: str = "key|keys"
+    plurals__lock_after_x_days: str = "day|days"
     plurals__lock_after_x_hours: str = "hour|hours"
     plurals__lock_after_x_milliseconds: str = "millisecond|milliseconds"
     plurals__lock_after_x_minutes: str = "minute|minutes"

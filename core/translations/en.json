@@ -576,6 +576,7 @@
     "pin__turn_on": "Turn on PIN protection?",
     "pin__wrong_pin": "Wrong PIN",
     "plurals__contains_x_keys": "key|keys",
+    "plurals__lock_after_x_days": "day|days",
     "plurals__lock_after_x_hours": "hour|hours",
     "plurals__lock_after_x_milliseconds": "millisecond|milliseconds",
     "plurals__lock_after_x_minutes": "minute|minutes",

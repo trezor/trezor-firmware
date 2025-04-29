@@ -585,7 +585,7 @@ impl FirmwareUI for UIEckhart {
         _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let description = description.unwrap_or(TString::empty());
-        let component = NumberInputScreen::new(min_count, max_count, count, description)
+        let component = NumberInputScreen::new(min_count, max_count, count, description, false)
             .with_header(Header::new(title));
 
         let layout = RootComponent::new(component);

@@ -427,6 +427,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_pin__turn_on;
   MP_QSTR_pin__wrong_pin;
   MP_QSTR_plurals__contains_x_keys;
+  MP_QSTR_plurals__lock_after_x_days;
   MP_QSTR_plurals__lock_after_x_hours;
   MP_QSTR_plurals__lock_after_x_milliseconds;
   MP_QSTR_plurals__lock_after_x_minutes;

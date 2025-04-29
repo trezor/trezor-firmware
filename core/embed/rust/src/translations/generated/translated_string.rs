@@ -1419,6 +1419,7 @@ pub enum TranslatedString {
     send__sign_cancelled = 1005,  // "Sign cancelled."
     words__send = 1006,  // "Send"
     words__wallet = 1007,  // "Wallet"
+    plurals__lock_after_x_days = 1008,  // "day|days"
 }
 
 impl TranslatedString {
@@ -2939,6 +2940,7 @@ impl TranslatedString {
             Self::send__sign_cancelled => "Sign cancelled.",
             Self::words__send => "Send",
             Self::words__wallet => "Wallet",
+            Self::plurals__lock_after_x_days => "day|days",
         }
     }
 
@@ -4353,6 +4355,7 @@ impl TranslatedString {
             Qstr::MP_QSTR_send__sign_cancelled => Some(Self::send__sign_cancelled),
             Qstr::MP_QSTR_words__send => Some(Self::words__send),
             Qstr::MP_QSTR_words__wallet => Some(Self::words__wallet),
+            Qstr::MP_QSTR_plurals__lock_after_x_days => Some(Self::plurals__lock_after_x_days),
             _ => None,
         }
     }
