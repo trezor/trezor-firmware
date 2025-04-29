@@ -22,21 +22,20 @@
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
 
-
-#include "power_manager_internal.h"
 #include "../../powerctl/npm1300/npm1300.h"
 #include "../../powerctl/stwlc38/stwlc38.h"
+#include "power_manager_internal.h"
 
 // Global driver instance
-power_manager_driver_t g_power_manager = {
+pm_driver_t g_pm = {
     .initialized = false,
 };
 
 // State name string table
-const char* const power_manager_state_names[POWER_MANAGER_STATE_COUNT] = {
-#define POWER_MANAGER_STATE_STRING(state) #state,
-    POWER_MANAGER_STATE_LIST(POWER_MANAGER_STATE_STRING)
-#undef POWER_MANAGER_STATE_STRING
+const char* const pm_state_names[PM_STATE_COUNT] = {
+#define PM_STATE_STRING(state) #state,
+    PM_STATE_LIST(PM_STATE_STRING)
+#undef PM_STATE_STRING
 };
 
 // Forward declarations of static functions
@@ -45,36 +44,33 @@ static void pm_shutdown_timer_handler(void* context);
 
 // API Implementation
 
-power_manager_status_t power_manager_init(power_manager_state_t initial_state) {
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_init(pm_state_t initial_state) {
+  pm_driver_t* drv = &g_pm;
 
   if (drv->initialized) {
-    return POWER_MANAGER_OK;
+    return PM_OK;
   }
 
   // Initialize hardware subsystems
   if (!npm1300_init() || !stwlc38_init()) {
-    power_manager_deinit();
-    return POWER_MANAGER_ERROR;
+    pm_deinit();
+    return PM_ERROR;
   }
 
   // Clear fuel gauge state
   memset(&drv->fuel_gauge, 0, sizeof(fuel_gauge_state_t));
 
   // Initialize fuel gauge
-  fuel_gauge_init(&(drv->fuel_gauge), POWER_MANAGER_FUEL_GAUGE_R,
-                  POWER_MANAGER_FUEL_GAUGE_Q,
-                  POWER_MANAGER_FUEL_GAUGE_R_AGGRESSIVE,
-                  POWER_MANAGER_FUEL_GAUGE_Q_AGGRESSIVE,
-                  POWER_MANAGER_FUEL_GAUGE_P_INIT);
+  fuel_gauge_init(&(drv->fuel_gauge), PM_FUEL_GAUGE_R, PM_FUEL_GAUGE_Q,
+                  PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
+                  PM_FUEL_GAUGE_P_INIT);
 
   // Disable charging by default
   drv->charging_enabled = false;
 
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
-  systimer_set_periodic(drv->monitoring_timer,
-                        POWER_MANAGER_BATTERY_SAMPLING_PERIOD_MS);
+  systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
 
   // Create shutdown timer
   drv->shutdown_timer = systimer_create(pm_shutdown_timer_handler, NULL);
@@ -84,11 +80,11 @@ power_manager_status_t power_manager_init(power_manager_state_t initial_state) {
 
   drv->state = initial_state;
   drv->initialized = true;
-  return POWER_MANAGER_OK;
+  return PM_OK;
 }
 
-void power_manager_deinit(void) {
-  power_manager_driver_t* drv = &g_power_manager;
+void pm_deinit(void) {
+  pm_driver_t* drv = &g_pm;
 
   if (drv->monitoring_timer) {
     systimer_delete(drv->monitoring_timer);
@@ -104,11 +100,11 @@ void power_manager_deinit(void) {
   stwlc38_deinit();
 }
 
-power_manager_status_t power_manager_get_events(power_manager_event_t* event) {
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_get_events(pm_event_t* event) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   irq_key_t irq_key = irq_lock();
@@ -116,32 +112,32 @@ power_manager_status_t power_manager_get_events(power_manager_event_t* event) {
   PM_CLEAR_ALL_EVENTS(drv->event_flags);
   irq_unlock(irq_key);
 
-  return POWER_MANAGER_OK;
+  return PM_OK;
 }
 
-power_manager_status_t power_manager_get_state(power_manager_state_t* state) {
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_get_state(pm_state_t* state) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   *state = drv->state;
-  return POWER_MANAGER_OK;
+  return PM_OK;
 }
 
-const char* power_manager_get_state_name(power_manager_state_t state) {
-  if (state >= POWER_MANAGER_STATE_COUNT) {
+const char* pm_get_state_name(pm_state_t state) {
+  if (state >= PM_STATE_COUNT) {
     return "UNKNOWN";
   }
-  return power_manager_state_names[state];
+  return pm_state_names[state];
 }
 
-power_manager_status_t power_manager_suspend(void) {
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_suspend(void) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   irq_key_t irq_key = irq_lock();
@@ -149,43 +145,42 @@ power_manager_status_t power_manager_suspend(void) {
   pm_process_state_machine();
   irq_unlock(irq_key);
 
-  if (drv->state != POWER_MANAGER_STATE_SUSPEND) {
-    return POWER_MANAGER_REQUEST_REJECTED;
+  if (drv->state != PM_STATE_SUSPEND) {
+    return PM_REQUEST_REJECTED;
   }
 
-  return POWER_MANAGER_OK;
+  return PM_OK;
 }
 
-power_manager_status_t power_manager_hibernate(void) {
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_hibernate(void) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   drv->request_hibernate = true;
   pm_process_state_machine();
 
-  if (drv->state != POWER_MANAGER_STATE_HIBERNATE) {
-    return POWER_MANAGER_REQUEST_REJECTED;
+  if (drv->state != PM_STATE_HIBERNATE) {
+    return PM_REQUEST_REJECTED;
   }
 
-  return POWER_MANAGER_OK;
+  return PM_OK;
 }
 
-power_manager_status_t power_manager_turn_on(void) {
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_turn_on(void) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   drv->request_turn_on = true;
   pm_process_state_machine();
 
-  if (drv->state == POWER_MANAGER_STATE_HIBERNATE ||
-      drv->state == POWER_MANAGER_STATE_CHARGING) {
-    return POWER_MANAGER_REQUEST_REJECTED;
+  if (drv->state == PM_STATE_HIBERNATE || drv->state == PM_STATE_CHARGING) {
+    return PM_REQUEST_REJECTED;
   }
 
   irq_key_t irq_key = irq_lock();
@@ -193,20 +188,19 @@ power_manager_status_t power_manager_turn_on(void) {
   pm_battery_initial_soc_guess();
 
   // Set monitoiring timer with longer period
-  systimer_set_periodic(drv->monitoring_timer, POWER_MANAGER_TIMER_PERIOD_MS);
+  systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
 
   drv->fuel_gauge_initialized = true;
   irq_unlock(irq_key);
 
-  return POWER_MANAGER_OK;
+  return PM_OK;
 }
 
-power_manager_status_t power_manager_get_report(
-    power_manager_report_t* report) {
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_get_report(pm_report_t* report) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   irq_key_t irq_key = irq_lock();
@@ -228,39 +222,34 @@ power_manager_status_t power_manager_get_report(
 
   irq_unlock(irq_key);
 
-  return POWER_MANAGER_OK;
+  return PM_OK;
 }
 
-power_manager_status_t power_manager_charging_enable(void){
-
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_charging_enable(void) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   drv->charging_enabled = true;
   pm_charging_controller(drv);
 
-  return POWER_MANAGER_OK;
-
+  return PM_OK;
 }
 
-power_manager_status_t power_manager_charging_disable(void){
-
-  power_manager_driver_t* drv = &g_power_manager;
+pm_status_t pm_charging_disable(void) {
+  pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
-    return POWER_MANAGER_NOT_INITIALIZED;
+    return PM_NOT_INITIALIZED;
   }
 
   drv->charging_enabled = false;
   pm_charging_controller(drv);
 
-  return POWER_MANAGER_OK;
-
+  return PM_OK;
 }
-
 
 // Timer handlers
 static void pm_monitoring_timer_handler(void* context) {
@@ -268,7 +257,7 @@ static void pm_monitoring_timer_handler(void* context) {
 }
 
 static void pm_shutdown_timer_handler(void* context) {
-  power_manager_driver_t* drv = &g_power_manager;
+  pm_driver_t* drv = &g_pm;
   drv->shutdown_timer_elapsed = true;
   pm_process_state_machine();
 }
