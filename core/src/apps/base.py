@@ -28,7 +28,12 @@ if TYPE_CHECKING:
     from trezor.wire import Handler, Msg
 
     if utils.USE_THP:
-        from trezor.messages import Failure, ThpCreateNewSession
+        from trezor.messages import (
+            Failure,
+            ThpCreateNewSession,
+            ThpCredentialRequest,
+            ThpPairingCredential,
+        )
 
 if utils.USE_THP:
     from trezor.enums import ThpMessageType
@@ -275,6 +280,63 @@ if utils.USE_THP:
         loop.schedule(new_session.handle())
 
         return Success(message="New session created.")
+
+    async def handle_ThpCredentialRequest(
+        message: ThpCredentialRequest,
+    ) -> ThpPairingCredential | Failure:
+        from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
+        from trezor.messages import ThpCredentialMetadata
+        from trezor.wire.context import get_context
+        from trezor.wire.thp.session_context import GenericSessionContext
+
+        from apps.thp.credential_manager import (
+            decode_credential,
+            issue_credential,
+            validate_credential,
+        )
+
+        ctx = get_context()
+
+        # Assert that context `ctx` is `GenericSessionContext`
+        assert isinstance(ctx, GenericSessionContext)
+
+        host_static_pubkey = ctx.channel.channel_cache.get(CHANNEL_HOST_STATIC_PUBKEY)
+
+        assert host_static_pubkey is not None
+
+        # Check that request contains valid credential
+        if message.credential is None:
+            return _get_autoconnect_failure()
+        credential = decode_credential(message.credential)
+        if not validate_credential(credential, host_static_pubkey):
+            return _get_autoconnect_failure()
+
+        autoconnect = False
+        if message.autoconnect is not None:
+            autoconnect = message.autoconnect
+
+        assert credential.cred_metadata is not None
+        cred_metadata = ThpCredentialMetadata(
+            host_name=credential.cred_metadata.host_name, autoconnect=autoconnect
+        )
+        if autoconnect:
+            from trezor.wire.thp import ui
+
+            await ui.show_autoconnect_credential_confirmation_screen(
+                ctx, cred_metadata.host_name
+            )
+        return issue_credential(
+            host_static_pubkey=host_static_pubkey,
+            credential_metadata=cred_metadata,
+        )
+
+    def _get_autoconnect_failure() -> Failure:
+        from trezor.enums import FailureType
+
+        return Failure(
+            code=FailureType.DataError,
+            message="Credential request must contain a valid credential (previously issued).",
+        )
 
 else:
 
@@ -543,6 +605,9 @@ def boot() -> None:
     if utils.USE_THP:
         TMT = ThpMessageType
         workflow_handlers.register(TMT.ThpCreateNewSession, handle_ThpCreateNewSession)
+        workflow_handlers.register(
+            TMT.ThpCredentialRequest, handle_ThpCredentialRequest
+        )
     else:
         workflow_handlers.register(MT.Initialize, handle_Initialize)
     for msg_type, handler in [
