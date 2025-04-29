@@ -414,7 +414,9 @@ Q(trezor.wire.thp.session_context)
 Q(trezor.wire.thp.session_manager)
 Q(trezor.wire.thp.thp_main)
 Q(trezor.wire.thp.transmission_loop)
+Q(trezor.wire.thp.ui)
 Q(trezor.wire.thp.writer)
+Q(ui)
 Q(writer)
 #endif
 
