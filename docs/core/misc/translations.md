@@ -18,29 +18,35 @@ To upload blobs with foreign-language translations, use `trezorctl set language 
 
 To switch the language back into `english`, use `trezorctl set language -r`.
 
-# Translations blob format
+# Translations blob format (v1)
 
-| offset | length             | name              | description                                       | hash   |
-|-------:|-------------------:|-------------------|---------------------------------------------------|--------|
-| 0x0000 |                  6 | magic             | blob magic `TRTR00`                               |        |
-| 0x0006 |                  2 | container\_len    | total length (up to padding)                      |        |
-| 0x0008 |                  2 | header\_len       | header length                                     |        |
-| 0x000A |                  2 | header\_magic     | header magic `TR`                                 |        |
-| 0x000C |                  8 | language\_tag     | BCP 47 language tag (e.g. `cs-CZ`, `en-US`, ...)  | header |
-| 0x0014 |                  4 | version           | 4 bytes of version (major, minor, patch, build)   | header |
-| 0x0018 |                  2 | data\_len         | length of the raw data, i.e. translations + fonts | header |
-| 0x001A |                 32 | data\_hash        | SHA-256 hash of the data                          | header |
-| 0x003A |  `header_len - 48` | ignored           | reserved for forward compatibility                | header |
-|      ? |                  2 | proof\_len        | length of merkle proof and signature in bytes     |        |
-|      ? |                  1 | proof\_count      | number of merkle proof items following            |        |
-|      ? | `proof_count * 20` | proof             | array of SHA-256 hashes                           |        |
-|      ? |                  1 | sig\_mask         | CoSi signature mask                               |        |
-|      ? |                 64 | sig               | ed25519 CoSi signature of merkle root             |        |
-|      ? |                  2 | translations\_len | length of the translated strings                  | data   |
-|      ? | `translations_len` | translations      | translated string data                            | data   |
-|      ? |                  2 | fonts\_len        | length of the font data                           | data   |
-|      ? |        `fonts_len` | fonts             | font data                                         | data   |
-|      ? |                  ? | padding           | `0xff` bytes padding to flash sector boundary     |        |
+| offset | length                           | name                           | description                                       | hash   |
+|-------:|---------------------------------:|--------------------------------|---------------------------------------------------|--------|
+| 0x0000 |                                6 | magic                          | blob magic `TRTR01`                               |        |
+| 0x0006 |                                4 | container\_len                 | total length (up to padding)                      |        |
+| 0x000A |                                2 | header\_len                    | header length                                     |        |
+| 0x000C |                                2 | header\_magic                  | header magic `TR`                                 |        |
+| 0x000E |                                8 | language\_tag                  | BCP 47 language tag (e.g. `cs-CZ`, `en-US`, ...)  | header |
+| 0x0016 |                                4 | version                        | 4 bytes of version (major, minor, patch, build)   | header |
+| 0x001A |                                4 | data\_len                      | length of the raw data, i.e. translations + fonts | header |
+| 0x001E |                               32 | data\_hash                     | SHA-256 hash of the data                          | header |
+| 0x003E |                `header_len - 46` | ignored                        | reserved for forward compatibility                | header |
+|      ? |                                2 | proof\_len                     | length of merkle proof and signature in bytes     |        |
+|      ? |                                1 | proof\_count                   | number of merkle proof items following            |        |
+|      ? |               `proof_count * 20` | proof                          | array of SHA-256 hashes                           |        |
+|      ? |                                1 | sig\_mask                      | CoSi signature mask                               |        |
+|      ? |                               64 | sig                            | ed25519 CoSi signature of merkle root             |        |
+|      ? |                                2 | translations\_chunks\_count    | number of translated strings chunks               | data   |
+|      ? |                                2 | 1st\_translations\_chunk\_len  | length of the 1st translated strings chunk        | data   |
+|      ? |    1st\_translations\_chunk\_len | 1st\_translations\_chunk       | 1st translated string chunk data                  | data   |
+|      ? |                                2 | 2nd\_translations\_chunk\_len  | length of the 2nd translated strings chunk        | data   |
+|      ? |    2nd\_translations\_chunk\_len | 2nd\_translations\_chunk       | 2nd translated string chunk data                  | data   |
+|      ? |                              ... | ...                            | ...                                               | data   |
+|      ? |                                2 | last\_translations\_chunk\_len | last translated string chunk data                 | data   |
+|      ? |   last\_translations\_chunk\_len | last\_translations\_chunk      | length of the last translated strings chunk       | data   |
+|      ? |                                2 | fonts\_len                     | length of the font data                           | data   |
+|      ? |                       fonts\_len | fonts                          | font data                                         | data   |
+|      ? |                                ? | padding                        | `0xff` bytes padding to flash sector boundary     |        |
 
 ## Translation data
 
@@ -92,3 +98,22 @@ the interpretation of the payload.
 | ?      | ?                                    | sentinel\_offset  | offset past the end of last element                         |
 |        | ?                                    | glyphs            | concatenation of glyph bitmaps                              |
 | ?      | 0-3                                  | padding           | padding (any value) for alignment purposes                  |
+
+# Previous versions
+
+## Translations blob format (v0)
+
+| offset | length             | name              | description                                       | hash   |
+|-------:|-------------------:|-------------------|---------------------------------------------------|--------|
+| 0x0000 |                  6 | magic             | blob magic `TRTR00`                               |        |
+| 0x0006 |                  2 | container\_len    | total length (up to padding)                      |        |
+| 0x0008 |                  2 | header\_len       | header length                                     |        |
+| 0x000A |                  2 | header\_magic     | header magic `TR`                                 |        |
+| 0x000C |                  8 | language\_tag     | BCP 47 language tag (e.g. `cs-CZ`, `en-US`, ...)  | header |
+| 0x0014 |                  4 | version           | 4 bytes of version (major, minor, patch, build)   | header |
+| 0x0018 |                  2 | data\_len         | length of the raw data, i.e. translations + fonts | header |
+| 0x001A |                 32 | data\_hash        | SHA-256 hash of the data                          | header |
+| 0x003A |  `header_len - 48` | ignored           | reserved for forward compatibility                | header |
+|      ? |                  2 | proof\_len        | length of merkle proof and signature in bytes     |        |
+|      ? |                  1 | proof\_count      | number of merkle proof items following            |        |
+|      ? | `proof_count * 20` | proof             | array of SHA-256 hashes                           |        |

@@ -1,5 +1,7 @@
 use core::{mem, str};
 
+use heapless::Vec;
+
 use crate::{
     crypto::{cosi, ed25519, merkle::merkle_root, sha256},
     error::{value_error, Error},
@@ -122,10 +124,47 @@ impl<'a> Table<'a> {
     }
 }
 
+struct TranslationStringsChunk<'a> {
+    strings: &'a [u8],
+    offsets: &'a [u16],
+}
+
+impl<'a> TranslationStringsChunk<'a> {
+    fn parse_from(mut reader: InputStream<'a>) -> Result<Self, Error> {
+        let count: usize = reader.read_u16_le()?.into();
+        let offsets_bytes = reader.read((count + 1) * mem::size_of::<u16>())?;
+        // SAFETY: any bytes are valid u16 values, so casting any data to
+        // a sequence of u16 values is safe.
+        let (_prefix, offsets, _suffix) = unsafe { offsets_bytes.align_to::<u16>() };
+        if !_prefix.is_empty() || !_suffix.is_empty() {
+            return Err(INVALID_TRANSLATIONS_BLOB);
+        }
+        let strings = reader.rest();
+        validate_offset_table(strings.len(), offsets.iter().copied())?;
+        Ok(Self { strings, offsets })
+    }
+
+    const fn len(&self) -> usize {
+        // The last entry is a sentinel
+        self.offsets.len() - 1
+    }
+
+    fn get(&self, index: usize) -> Option<&'a [u8]> {
+        if index >= self.len() {
+            return None;
+        }
+        let start_offset = self.offsets[index].into();
+        let end_offset = self.offsets[index + 1].into();
+        // Construct the relevant slice
+        Some(&self.strings[start_offset..end_offset])
+    }
+}
+
+const MAX_TRANSLATION_CHUNKS: usize = 4;
+
 pub struct Translations<'a> {
     header: TranslationsHeader<'a>,
-    translations: &'a [u8],
-    translations_offsets: &'a [u16],
+    chunks: Vec<TranslationStringsChunk<'a>, MAX_TRANSLATION_CHUNKS>,
     fonts: Table<'a>,
 }
 
@@ -156,26 +195,13 @@ impl<'a> Translations<'a> {
 
         let mut payload_reader = InputStream::new(payload_bytes);
 
-        let mut translations_reader = read_u16_prefixed_block(&mut payload_reader)?;
+        // construct translations data
+        let chunks = header.parse_translation_chunks(&mut payload_reader)?;
         let fonts_reader = read_u16_prefixed_block(&mut payload_reader)?;
 
         if payload_reader.remaining() > 0 {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
-
-        // construct translations data
-        let translations_count: usize = translations_reader.read_u16_le()?.into();
-        let translations_offsets_bytes =
-            translations_reader.read((translations_count + 1) * mem::size_of::<u16>())?;
-        // SAFETY: any bytes are valid u16 values, so casting any data to
-        // a sequence of u16 values is safe.
-        let (_prefix, translations_offsets, _suffix) =
-            unsafe { translations_offsets_bytes.align_to::<u16>() };
-        if !_prefix.is_empty() || !_suffix.is_empty() {
-            return Err(INVALID_TRANSLATIONS_BLOB);
-        }
-        let translations = translations_reader.rest();
-        validate_offset_table(translations.len(), translations_offsets.iter().copied())?;
 
         // construct and validate font table
         let fonts = Table::new(fonts_reader)?;
@@ -185,11 +211,9 @@ impl<'a> Translations<'a> {
             let font_table = Table::new(reader)?;
             font_table.validate()?;
         }
-
         Ok(Self {
             header,
-            translations,
-            translations_offsets,
+            chunks,
             fonts,
         })
     }
@@ -203,31 +227,26 @@ impl<'a> Translations<'a> {
     /// translations object. This is to facilitate safe interface to
     /// flash-based translations. See docs for `flash::get` for details.
     #[allow(clippy::needless_lifetimes)]
-    pub fn translation<'b>(&'b self, index: usize) -> Option<&'b str> {
-        if index + 1 >= self.translations_offsets.len() {
-            // The index is out of bounds.
-            // (The last entry is a sentinel, so the last valid index is len - 2)
-            // May happen when new firmware is using older translations and the string
-            // is not defined yet.
-            // Fallback to english.
-            return None;
+    pub fn translation<'b>(&'b self, mut index: usize) -> Option<&'b str> {
+        for chunk in &self.chunks {
+            match chunk.get(index) {
+                Some(string) => {
+                    if string.is_empty() {
+                        // The string is not defined in the blob.
+                        // May happen when old firmware is using newer translations and the string
+                        // was deleted in the newer version.
+                        // Fallback to english.
+                        return None;
+                    }
+                    return str::from_utf8(string).ok();
+                }
+                None => {
+                    index -= chunk.len();
+                    continue; // search next chunks
+                }
+            }
         }
-
-        let start_offset = self.translations_offsets[index].into();
-        let end_offset = self.translations_offsets[index + 1].into();
-
-        // Construct the relevant slice
-        let string = &self.translations[start_offset..end_offset];
-
-        if string.is_empty() {
-            // The string is not defined in the blob.
-            // May happen when old firmware is using newer translations and the string
-            // was deleted in the newer version.
-            // Fallback to english.
-            return None;
-        }
-
-        str::from_utf8(string).ok()
+        None
     }
 
     /// Returns the font table at the given index.
@@ -274,6 +293,8 @@ impl<'a> Translations<'a> {
 }
 
 pub struct TranslationsHeader<'a> {
+    /// Blob magic
+    blob_magic: BlobMagic,
     /// Raw content of the header, for signature verification
     pub header_bytes: &'a [u8],
     /// BCP 47 language tag (cs-CZ, en-US, ...)
@@ -299,8 +320,49 @@ fn read_fixedsize_str<'a>(reader: &mut InputStream<'a>, len: usize) -> Result<&'
     core::str::from_utf8(bytes_trimmed).map_err(|_| INVALID_TRANSLATIONS_BLOB)
 }
 
+enum BlobMagic {
+    V0,
+    V1,
+}
+
+impl BlobMagic {
+    fn parse_length(&self, reader: &mut InputStream<'_>) -> Result<usize, Error> {
+        Ok(match self {
+            Self::V0 => reader.read_u16_le()?.into(),
+            Self::V1 => reader
+                .read_u32_le()?
+                .try_into() // can fail only on 16-bit system
+                .map_err(|_| Error::OutOfRange)?,
+        })
+    }
+}
+
+struct ContainerPrefix {
+    blob_magic: BlobMagic,
+    container_length: usize,
+    prefix_length: usize,
+}
+
+impl ContainerPrefix {
+    fn parse_from(reader: &mut InputStream<'_>) -> Result<Self, Error> {
+        let offset = reader.tell();
+        let data = reader.read(6)?;
+        let blob_magic = match data {
+            b"TRTR00" => BlobMagic::V0,
+            b"TRTR01" => BlobMagic::V1,
+            _ => return Err(Error::ValueError(c"Unknown blob magic")),
+        };
+        let container_length = blob_magic.parse_length(reader)?;
+        let prefix_length = reader.tell() - offset;
+        Ok(Self {
+            blob_magic,
+            container_length,
+            prefix_length,
+        })
+    }
+}
+
 impl<'a> TranslationsHeader<'a> {
-    const BLOB_MAGIC: &'static [u8] = b"TRTR00";
     const HEADER_MAGIC: &'static [u8] = b"TR";
     const LANGUAGE_TAG_LEN: usize = 8;
 
@@ -320,16 +382,13 @@ impl<'a> TranslationsHeader<'a> {
         //
         // 1. parse outer container
         //
-        let magic = reader.read(Self::BLOB_MAGIC.len())?;
-        if magic != Self::BLOB_MAGIC {
-            return Err(INVALID_TRANSLATIONS_BLOB);
-        }
 
-        // read length of contained data
-        let container_length = reader.read_u16_le()? as usize;
+        // read the blob magic and length of contained data
+        let prefix = ContainerPrefix::parse_from(reader)?;
+
         // continue working on the contained data (i.e., read beyond the bounds of
         // container_length will result in EOF).
-        let mut reader = reader.read_stream(container_length.min(reader.remaining()))?;
+        let mut reader = reader.read_stream(prefix.container_length.min(reader.remaining()))?;
 
         //
         // 2. parse the header section
@@ -356,7 +415,7 @@ impl<'a> TranslationsHeader<'a> {
         let version_bytes = header_reader.read(4)?;
         let version = unwrap!(version_bytes.try_into());
 
-        let data_len: usize = header_reader.read_u16_le()?.into();
+        let data_len: usize = prefix.blob_magic.parse_length(&mut header_reader)?;
         let data_hash: sha256::Digest =
             unwrap!(header_reader.read(sha256::DIGEST_SIZE)?.try_into());
 
@@ -389,7 +448,7 @@ impl<'a> TranslationsHeader<'a> {
         }
 
         // check that the declared data section length matches the container size
-        if container_length - reader.tell() != data_len {
+        if prefix.container_length - reader.tell() != data_len {
             return Err(INVALID_TRANSLATIONS_BLOB);
         }
 
@@ -401,10 +460,31 @@ impl<'a> TranslationsHeader<'a> {
             data_hash,
             merkle_proof,
             signature,
-            total_len: container_length + Self::BLOB_MAGIC.len() + mem::size_of::<u16>(),
+            total_len: prefix.container_length + prefix.prefix_length,
+            blob_magic: prefix.blob_magic,
         };
         new.verify()?;
         Ok((new, reader))
+    }
+
+    fn parse_translation_chunks(
+        &self,
+        reader: &mut InputStream<'a>,
+    ) -> Result<Vec<TranslationStringsChunk<'a>, MAX_TRANSLATION_CHUNKS>, Error> {
+        let chunks_count = match self.blob_magic {
+            BlobMagic::V0 => 1,
+            BlobMagic::V1 => reader.read_u16_le()?.into(),
+        };
+        if chunks_count > MAX_TRANSLATION_CHUNKS {
+            return Err(Error::OutOfRange);
+        }
+        let mut chunks = Vec::new();
+        for _ in 0..chunks_count {
+            let chunk_reader = read_u16_prefixed_block(reader)?;
+            let chunk = TranslationStringsChunk::parse_from(chunk_reader)?;
+            chunks.push(chunk).map_err(|_| INVALID_TRANSLATIONS_BLOB)?;
+        }
+        Ok(chunks)
     }
 
     fn verify_with_keys(&self, public_keys: &[ed25519::PublicKey]) -> Result<(), Error> {
