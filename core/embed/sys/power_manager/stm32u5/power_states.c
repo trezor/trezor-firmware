@@ -28,50 +28,50 @@
 #include "power_manager_internal.h"
 
 // State handler lookup table
-static const power_manager_state_handler_t state_handlers[] = {
-    [POWER_MANAGER_STATE_ACTIVE] =
+static const pm_state_handler_t state_handlers[] = {
+    [PM_STATE_ACTIVE] =
         {
             .enter = pm_enter_active,
             .handle = pm_handle_state_active,
             .exit = NULL,
         },
-    [POWER_MANAGER_STATE_POWER_SAVE] =
+    [PM_STATE_POWER_SAVE] =
         {
             .enter = pm_enter_power_save,
             .handle = pm_handle_state_power_save,
             .exit = NULL,
         },
-    [POWER_MANAGER_STATE_ULTRA_POWER_SAVE] =
+    [PM_STATE_ULTRA_POWER_SAVE] =
         {
             .enter = NULL,
             .handle = pm_handle_state_ultra_power_save,
             .exit = NULL,
         },
-    [POWER_MANAGER_STATE_SHUTTING_DOWN] =
+    [PM_STATE_SHUTTING_DOWN] =
         {
             .enter = pm_enter_shutting_down,
             .handle = pm_handle_state_shutting_down,
             .exit = pm_exit_shutting_down,
         },
-    [POWER_MANAGER_STATE_SUSPEND] =
+    [PM_STATE_SUSPEND] =
         {
             .enter = pm_enter_suspend,
             .handle = pm_handle_state_suspend,
             .exit = NULL,
         },
-    [POWER_MANAGER_STATE_REPORT_LOW_BATTERY] =
+    [PM_STATE_REPORT_LOW_BATTERY] =
         {
             .enter = NULL,
             .handle = pm_handle_state_report_low_battery,
             .exit = NULL,
         },
-    [POWER_MANAGER_STATE_CHARGING] =
+    [PM_STATE_CHARGING] =
         {
             .enter = pm_enter_charging,
             .handle = pm_handle_state_charging,
             .exit = pm_exit_charging,
         },
-    [POWER_MANAGER_STATE_HIBERNATE] =
+    [PM_STATE_HIBERNATE] =
         {
             .enter = pm_enter_hibernate,
             .handle = pm_handle_state_hibernate,
@@ -80,11 +80,11 @@ static const power_manager_state_handler_t state_handlers[] = {
 };
 
 void pm_process_state_machine(void) {
-  power_manager_driver_t* drv = &g_power_manager;
-  power_manager_state_t old_state = drv->state;
+  pm_driver_t* drv = &g_pm;
+  pm_state_t old_state = drv->state;
 
   // Get next state from current state's handler
-  power_manager_state_t new_state = state_handlers[old_state].handle(drv);
+  pm_state_t new_state = state_handlers[old_state].handle(drv);
 
   // Handle state transition if needed
   if (new_state != old_state) {
@@ -95,7 +95,7 @@ void pm_process_state_machine(void) {
 
     // Update state
     drv->state = new_state;
-    PM_SET_EVENT(drv->event_flags, POWER_MANAGER_EVENT_STATE_CHANGED);
+    PM_SET_EVENT(drv->event_flags, PM_EVENT_STATE_CHANGED);
 
     // Enter new state
     if (state_handlers[new_state].enter != NULL) {
@@ -109,17 +109,17 @@ void pm_process_state_machine(void) {
 
 // State handler implementations
 
-void pm_enter_active(power_manager_driver_t* drv) {
+void pm_enter_active(pm_driver_t* drv) {
   // Set unlimited backlight
   backlight_set_max_level(255);
 }
 
-power_manager_state_t pm_handle_state_active(power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_active(pm_driver_t* drv) {
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
 
-    return POWER_MANAGER_STATE_HIBERNATE;
+    return PM_STATE_HIBERNATE;
   }
 
   // Handle suspend request
@@ -127,31 +127,31 @@ power_manager_state_t pm_handle_state_active(power_manager_driver_t* drv) {
     drv->request_suspend = false;
 
     if (drv->usb_connected || drv->wireless_connected) {
-      return POWER_MANAGER_STATE_CHARGING;
+      return PM_STATE_CHARGING;
     }
 
-    return POWER_MANAGER_STATE_SUSPEND;
+    return PM_STATE_SUSPEND;
   }
 
   // Handle low battery with no external power
   if (!drv->usb_connected && drv->battery_low) {
-    return POWER_MANAGER_STATE_POWER_SAVE;
+    return PM_STATE_POWER_SAVE;
   }
 
   return drv->state;
 }
 
-void pm_enter_power_save(power_manager_driver_t* drv) {
+void pm_enter_power_save(pm_driver_t* drv) {
   // Limit backlight
   backlight_set_max_level(130);
 }
 
-power_manager_state_t pm_handle_state_power_save(power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_power_save(pm_driver_t* drv) {
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
 
-    return POWER_MANAGER_STATE_HIBERNATE;
+    return PM_STATE_HIBERNATE;
   }
 
   // Handle suspend request
@@ -159,72 +159,69 @@ power_manager_state_t pm_handle_state_power_save(power_manager_driver_t* drv) {
     drv->request_suspend = false;
 
     if (drv->usb_connected || drv->wireless_connected) {
-      return POWER_MANAGER_STATE_CHARGING;
+      return PM_STATE_CHARGING;
     }
 
-    return POWER_MANAGER_STATE_SUSPEND;
+    return PM_STATE_SUSPEND;
   }
 
   // Return to active if external power or battery recovered
   if (drv->usb_connected || !drv->battery_low) {
-    return POWER_MANAGER_STATE_ACTIVE;
+    return PM_STATE_ACTIVE;
   }
 
   // Go to shutdown if battery critical
   if (!drv->usb_connected && drv->battery_critical) {
-    return POWER_MANAGER_STATE_SHUTTING_DOWN;
+    return PM_STATE_SHUTTING_DOWN;
   }
 
   return drv->state;
 }
 
-power_manager_state_t pm_handle_state_ultra_power_save(
-    power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv) {
   // Go to power save if external power or battery above critical
   if (drv->usb_connected || !drv->battery_critical) {
-    return POWER_MANAGER_STATE_POWER_SAVE;
+    return PM_STATE_POWER_SAVE;
   } else {
-    return POWER_MANAGER_STATE_REPORT_LOW_BATTERY;
+    return PM_STATE_REPORT_LOW_BATTERY;
   }
 
   return drv->state;
 }
 
-power_manager_state_t pm_handle_state_shutting_down(
-    power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
   // Return to power save if external power or battery recovered
   if (drv->usb_connected || !drv->battery_critical) {
-    return POWER_MANAGER_STATE_POWER_SAVE;
+    return PM_STATE_POWER_SAVE;
   }
 
   // Enter hibernate when shutdown timer elapses
   if (drv->shutdown_timer_elapsed) {
-    return POWER_MANAGER_STATE_HIBERNATE;
+    return PM_STATE_HIBERNATE;
   }
 
   return drv->state;
 }
 
-power_manager_state_t pm_handle_state_suspend(power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_suspend(pm_driver_t* drv) {
   // Not implemented yet
   return drv->state;
 }
 
-power_manager_state_t pm_handle_state_report_low_battery(
-    power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_report_low_battery(pm_driver_t* drv) {
   // Wait until RGB sequence is done and go back to hibernate
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
 
     // Device is charging, request is rejected with no action
-    return POWER_MANAGER_STATE_HIBERNATE;
+    return PM_STATE_HIBERNATE;
   }
 
   // Not implemented yet
   return drv->state;
 }
 
-void pm_enter_charging(power_manager_driver_t* drv) {
+void pm_enter_charging(pm_driver_t* drv) {
   // Initialize RGB
   rgb_led_init();
 
@@ -232,15 +229,15 @@ void pm_enter_charging(power_manager_driver_t* drv) {
   rgb_led_set_color(0x0000FF);
 }
 
-power_manager_state_t pm_handle_state_charging(power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_charging(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
-    return POWER_MANAGER_STATE_ULTRA_POWER_SAVE;
+    return PM_STATE_ULTRA_POWER_SAVE;
   }
 
   // Go back to hibernate if external power was removed.
   if (!drv->usb_connected && !drv->wireless_connected) {
-    return POWER_MANAGER_STATE_HIBERNATE;
+    return PM_STATE_HIBERNATE;
   }
 
   // Hibernate again
@@ -248,27 +245,27 @@ power_manager_state_t pm_handle_state_charging(power_manager_driver_t* drv) {
     drv->request_hibernate = false;
 
     // Device is charging, request is rejected with no action
-    return POWER_MANAGER_STATE_CHARGING;
+    return PM_STATE_CHARGING;
   }
 
   // Not implemented yet
   return drv->state;
 }
 
-void pm_exit_charging(power_manager_driver_t* drv) {
+void pm_exit_charging(pm_driver_t* drv) {
   // Turn off RGB LED
   rgb_led_set_color(0x0);
 }
 
-power_manager_state_t pm_handle_state_hibernate(power_manager_driver_t* drv) {
+pm_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
-    return POWER_MANAGER_STATE_ULTRA_POWER_SAVE;
+    return PM_STATE_ULTRA_POWER_SAVE;
   }
 
   // External power source, start charging
   if (drv->usb_connected || drv->wireless_connected) {
-    return POWER_MANAGER_STATE_CHARGING;
+    return PM_STATE_CHARGING;
   }
 
   // Hibernate again
@@ -277,7 +274,7 @@ power_manager_state_t pm_handle_state_hibernate(power_manager_driver_t* drv) {
 
     // Put PMIC into ship mode (ultra-low power)
     npm1300_enter_shipmode();
-    return POWER_MANAGER_STATE_HIBERNATE;
+    return PM_STATE_HIBERNATE;
   }
 
   return drv->state;
@@ -285,7 +282,7 @@ power_manager_state_t pm_handle_state_hibernate(power_manager_driver_t* drv) {
 
 // State enter/exit actions
 
-void pm_enter_report_low_battery(power_manager_driver_t* drv) {
+void pm_enter_report_low_battery(pm_driver_t* drv) {
   // Set backlight to minimum
   backlight_set_max_level(0);
 
@@ -293,22 +290,22 @@ void pm_enter_report_low_battery(power_manager_driver_t* drv) {
   // rgb_led_set_color(RGB_LED_COLOR_RED);
 }
 
-void pm_enter_shutting_down(power_manager_driver_t* drv) {
+void pm_enter_shutting_down(pm_driver_t* drv) {
   // Set shutdown timer
-  systimer_set(drv->shutdown_timer, POWER_MANAGER_SHUTDOWN_TIMEOUT_MS);
+  systimer_set(drv->shutdown_timer, PM_SHUTDOWN_TIMEOUT_MS);
 }
 
-void pm_exit_shutting_down(power_manager_driver_t* drv) {
+void pm_exit_shutting_down(pm_driver_t* drv) {
   // Stop the shutdown timer
   systimer_unset(drv->shutdown_timer);
   drv->shutdown_timer_elapsed = false;
 }
 
-void pm_enter_suspend(power_manager_driver_t* drv) {
+void pm_enter_suspend(pm_driver_t* drv) {
   // Not implemented yet
 }
 
-void pm_enter_hibernate(power_manager_driver_t* drv) {
+void pm_enter_hibernate(pm_driver_t* drv) {
   reboot_device();
   // Put PMIC into ship mode (ultra-low power)
   // npm1300_enter_shipmode();
