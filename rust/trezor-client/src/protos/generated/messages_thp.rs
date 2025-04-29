@@ -2696,6 +2696,8 @@ pub struct ThpCredentialRequest {
     pub host_static_pubkey: ::std::option::Option<::std::vec::Vec<u8>>,
     // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialRequest.autoconnect)
     pub autoconnect: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.thp.ThpCredentialRequest.credential)
+    pub credential: ::std::option::Option<::std::vec::Vec<u8>>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.thp.ThpCredentialRequest.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -2767,8 +2769,44 @@ impl ThpCredentialRequest {
         self.autoconnect = ::std::option::Option::Some(v);
     }
 
+    // optional bytes credential = 3;
+
+    pub fn credential(&self) -> &[u8] {
+        match self.credential.as_ref() {
+            Some(v) => v,
+            None => &[],
+        }
+    }
+
+    pub fn clear_credential(&mut self) {
+        self.credential = ::std::option::Option::None;
+    }
+
+    pub fn has_credential(&self) -> bool {
+        self.credential.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_credential(&mut self, v: ::std::vec::Vec<u8>) {
+        self.credential = ::std::option::Option::Some(v);
+    }
+
+    // Mutable pointer to the field.
+    // If field is not initialized, it is initialized with default value first.
+    pub fn mut_credential(&mut self) -> &mut ::std::vec::Vec<u8> {
+        if self.credential.is_none() {
+            self.credential = ::std::option::Option::Some(::std::vec::Vec::new());
+        }
+        self.credential.as_mut().unwrap()
+    }
+
+    // Take field
+    pub fn take_credential(&mut self) -> ::std::vec::Vec<u8> {
+        self.credential.take().unwrap_or_else(|| ::std::vec::Vec::new())
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(2);
+        let mut fields = ::std::vec::Vec::with_capacity(3);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "host_static_pubkey",
@@ -2779,6 +2817,11 @@ impl ThpCredentialRequest {
             "autoconnect",
             |m: &ThpCredentialRequest| { &m.autoconnect },
             |m: &mut ThpCredentialRequest| { &mut m.autoconnect },
+        ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "credential",
+            |m: &ThpCredentialRequest| { &m.credential },
+            |m: &mut ThpCredentialRequest| { &mut m.credential },
         ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ThpCredentialRequest>(
             "ThpCredentialRequest",
@@ -2804,6 +2847,9 @@ impl ::protobuf::Message for ThpCredentialRequest {
                 16 => {
                     self.autoconnect = ::std::option::Option::Some(is.read_bool()?);
                 },
+                26 => {
+                    self.credential = ::std::option::Option::Some(is.read_bytes()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -2822,6 +2868,9 @@ impl ::protobuf::Message for ThpCredentialRequest {
         if let Some(v) = self.autoconnect {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.credential.as_ref() {
+            my_size += ::protobuf::rt::bytes_size(3, &v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -2833,6 +2882,9 @@ impl ::protobuf::Message for ThpCredentialRequest {
         }
         if let Some(v) = self.autoconnect {
             os.write_bool(2, v)?;
+        }
+        if let Some(v) = self.credential.as_ref() {
+            os.write_bytes(3, v)?;
         }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
@@ -2853,6 +2905,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
     fn clear(&mut self) {
         self.host_static_pubkey = ::std::option::Option::None;
         self.autoconnect = ::std::option::Option::None;
+        self.credential = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -2860,6 +2913,7 @@ impl ::protobuf::Message for ThpCredentialRequest {
         static instance: ThpCredentialRequest = ThpCredentialRequest {
             host_static_pubkey: ::std::option::Option::None,
             autoconnect: ::std::option::Option::None,
+            credential: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -4117,46 +4171,46 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \n\x0cThpQrCodeTag\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\")\n\
     \x0fThpQrCodeSecret\x12\x16\n\x06secret\x18\x01\x20\x01(\x0cR\x06secret\
     \"!\n\rThpNfcTagHost\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\"#\n\
-    \x0fThpNfcTagTrezor\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\"f\n\
-    \x14ThpCredentialRequest\x12,\n\x12host_static_pubkey\x18\x01\x20\x01(\
-    \x0cR\x10hostStaticPubkey\x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\x08R\
-    \x0bautoconnect\"i\n\x15ThpCredentialResponse\x120\n\x14trezor_static_pu\
-    bkey\x18\x01\x20\x01(\x0cR\x12trezorStaticPubkey\x12\x1e\n\ncredential\
-    \x18\x02\x20\x01(\x0cR\ncredential\"\x0f\n\rThpEndRequest\"\x10\n\x0eThp\
-    EndResponse\"\\\n\x15ThpCredentialMetadata\x12\x1b\n\thost_name\x18\x01\
-    \x20\x01(\tR\x08hostName\x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\x08R\
-    \x0bautoconnect:\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\
-    \x12R\n\rcred_metadata\x18\x01\x20\x01(\x0b2-.hw.trezor.messages.thp.Thp\
-    CredentialMetadataR\x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x01(\
-    \x0cR\x03mac:\x04\x98\xb2\x19\x01\"\xa8\x01\n\x1eThpAuthenticatedCredent\
-    ialData\x12,\n\x12host_static_pubkey\x18\x01\x20\x01(\x0cR\x10hostStatic\
-    Pubkey\x12R\n\rcred_metadata\x18\x02\x20\x01(\x0b2-.hw.trezor.messages.t\
-    hp.ThpCredentialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01*\xeb\x06\
-    \n\x0eThpMessageType\x12-\n\"ThpMessageType_ThpCreateNewSession\x10\xe8\
-    \x07\x1a\x04\x80\xa6\x1d\x01\x12+\n\x20ThpMessageType_ThpPairingRequest\
-    \x10\xee\x07\x1a\x04\x80\xa6\x1d\x01\x123\n(ThpMessageType_ThpPairingReq\
-    uestApproved\x10\xef\x07\x1a\x04\x80\xa6\x1d\x01\x12)\n\x1eThpMessageTyp\
-    e_ThpSelectMethod\x10\xf0\x07\x1a\x04\x80\xa6\x1d\x01\x128\n-ThpMessageT\
-    ype_ThpPairingPreparationsFinished\x10\xf1\x07\x1a\x04\x80\xa6\x1d\x01\
-    \x12.\n#ThpMessageType_ThpCredentialRequest\x10\xf2\x07\x1a\x04\x80\xa6\
-    \x1d\x01\x12/\n$ThpMessageType_ThpCredentialResponse\x10\xf3\x07\x1a\x04\
-    \x80\xa6\x1d\x01\x12'\n\x1cThpMessageType_ThpEndRequest\x10\xf4\x07\x1a\
-    \x04\x80\xa6\x1d\x01\x12(\n\x1dThpMessageType_ThpEndResponse\x10\xf5\x07\
-    \x1a\x04\x80\xa6\x1d\x01\x120\n%ThpMessageType_ThpCodeEntryCommitment\
-    \x10\xf8\x07\x1a\x04\x80\xa6\x1d\x01\x12/\n$ThpMessageType_ThpCodeEntryC\
-    hallenge\x10\xf9\x07\x1a\x04\x80\xa6\x1d\x01\x121\n&ThpMessageType_ThpCo\
-    deEntryCpaceTrezor\x10\xfa\x07\x1a\x04\x80\xa6\x1d\x01\x122\n'ThpMessage\
-    Type_ThpCodeEntryCpaceHostTag\x10\xfb\x07\x1a\x04\x80\xa6\x1d\x01\x12,\n\
-    !ThpMessageType_ThpCodeEntrySecret\x10\xfc\x07\x1a\x04\x80\xa6\x1d\x01\
-    \x12&\n\x1bThpMessageType_ThpQrCodeTag\x10\x80\x08\x1a\x04\x80\xa6\x1d\
-    \x01\x12)\n\x1eThpMessageType_ThpQrCodeSecret\x10\x81\x08\x1a\x04\x80\
-    \xa6\x1d\x01\x12'\n\x1cThpMessageType_ThpNfcTagHost\x10\x88\x08\x1a\x04\
-    \x80\xa6\x1d\x01\x12)\n\x1eThpMessageType_ThpNfcTagTrezor\x10\x89\x08\
-    \x1a\x04\x80\xa6\x1d\x01\"\x05\x08\0\x10\xe7\x07\"\t\x08\xcc\x08\x10\xff\
-    \xff\xff\xff\x07*G\n\x10ThpPairingMethod\x12\x0f\n\x0bSkipPairing\x10\
-    \x01\x12\r\n\tCodeEntry\x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x07\n\x03N\
-    FC\x10\x04B;\n#com.satoshilabs.trezor.lib.protobufB\x10TrezorMessageThp\
-    \x80\xa6\x1d\x01\
+    \x0fThpNfcTagTrezor\x12\x10\n\x03tag\x18\x01\x20\x01(\x0cR\x03tag\"\x86\
+    \x01\n\x14ThpCredentialRequest\x12,\n\x12host_static_pubkey\x18\x01\x20\
+    \x01(\x0cR\x10hostStaticPubkey\x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\
+    \x08R\x0bautoconnect\x12\x1e\n\ncredential\x18\x03\x20\x01(\x0cR\ncreden\
+    tial\"i\n\x15ThpCredentialResponse\x120\n\x14trezor_static_pubkey\x18\
+    \x01\x20\x01(\x0cR\x12trezorStaticPubkey\x12\x1e\n\ncredential\x18\x02\
+    \x20\x01(\x0cR\ncredential\"\x0f\n\rThpEndRequest\"\x10\n\x0eThpEndRespo\
+    nse\"\\\n\x15ThpCredentialMetadata\x12\x1b\n\thost_name\x18\x01\x20\x01(\
+    \tR\x08hostName\x12\x20\n\x0bautoconnect\x18\x02\x20\x01(\x08R\x0bautoco\
+    nnect:\x04\x98\xb2\x19\x01\"\x82\x01\n\x14ThpPairingCredential\x12R\n\rc\
+    red_metadata\x18\x01\x20\x01(\x0b2-.hw.trezor.messages.thp.ThpCredential\
+    MetadataR\x0ccredMetadata\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac:\
+    \x04\x98\xb2\x19\x01\"\xa8\x01\n\x1eThpAuthenticatedCredentialData\x12,\
+    \n\x12host_static_pubkey\x18\x01\x20\x01(\x0cR\x10hostStaticPubkey\x12R\
+    \n\rcred_metadata\x18\x02\x20\x01(\x0b2-.hw.trezor.messages.thp.ThpCrede\
+    ntialMetadataR\x0ccredMetadata:\x04\x98\xb2\x19\x01*\xeb\x06\n\x0eThpMes\
+    sageType\x12-\n\"ThpMessageType_ThpCreateNewSession\x10\xe8\x07\x1a\x04\
+    \x80\xa6\x1d\x01\x12+\n\x20ThpMessageType_ThpPairingRequest\x10\xee\x07\
+    \x1a\x04\x80\xa6\x1d\x01\x123\n(ThpMessageType_ThpPairingRequestApproved\
+    \x10\xef\x07\x1a\x04\x80\xa6\x1d\x01\x12)\n\x1eThpMessageType_ThpSelectM\
+    ethod\x10\xf0\x07\x1a\x04\x80\xa6\x1d\x01\x128\n-ThpMessageType_ThpPairi\
+    ngPreparationsFinished\x10\xf1\x07\x1a\x04\x80\xa6\x1d\x01\x12.\n#ThpMes\
+    sageType_ThpCredentialRequest\x10\xf2\x07\x1a\x04\x80\xa6\x1d\x01\x12/\n\
+    $ThpMessageType_ThpCredentialResponse\x10\xf3\x07\x1a\x04\x80\xa6\x1d\
+    \x01\x12'\n\x1cThpMessageType_ThpEndRequest\x10\xf4\x07\x1a\x04\x80\xa6\
+    \x1d\x01\x12(\n\x1dThpMessageType_ThpEndResponse\x10\xf5\x07\x1a\x04\x80\
+    \xa6\x1d\x01\x120\n%ThpMessageType_ThpCodeEntryCommitment\x10\xf8\x07\
+    \x1a\x04\x80\xa6\x1d\x01\x12/\n$ThpMessageType_ThpCodeEntryChallenge\x10\
+    \xf9\x07\x1a\x04\x80\xa6\x1d\x01\x121\n&ThpMessageType_ThpCodeEntryCpace\
+    Trezor\x10\xfa\x07\x1a\x04\x80\xa6\x1d\x01\x122\n'ThpMessageType_ThpCode\
+    EntryCpaceHostTag\x10\xfb\x07\x1a\x04\x80\xa6\x1d\x01\x12,\n!ThpMessageT\
+    ype_ThpCodeEntrySecret\x10\xfc\x07\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bThp\
+    MessageType_ThpQrCodeTag\x10\x80\x08\x1a\x04\x80\xa6\x1d\x01\x12)\n\x1eT\
+    hpMessageType_ThpQrCodeSecret\x10\x81\x08\x1a\x04\x80\xa6\x1d\x01\x12'\n\
+    \x1cThpMessageType_ThpNfcTagHost\x10\x88\x08\x1a\x04\x80\xa6\x1d\x01\x12\
+    )\n\x1eThpMessageType_ThpNfcTagTrezor\x10\x89\x08\x1a\x04\x80\xa6\x1d\
+    \x01\"\x05\x08\0\x10\xe7\x07\"\t\x08\xcc\x08\x10\xff\xff\xff\xff\x07*G\n\
+    \x10ThpPairingMethod\x12\x0f\n\x0bSkipPairing\x10\x01\x12\r\n\tCodeEntry\
+    \x10\x02\x12\n\n\x06QrCode\x10\x03\x12\x07\n\x03NFC\x10\x04B;\n#com.sato\
+    shilabs.trezor.lib.protobufB\x10TrezorMessageThp\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

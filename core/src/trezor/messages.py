@@ -6358,12 +6358,14 @@ if TYPE_CHECKING:
     class ThpCredentialRequest(protobuf.MessageType):
         host_static_pubkey: "bytes | None"
         autoconnect: "bool | None"
+        credential: "bytes | None"
 
         def __init__(
             self,
             *,
             host_static_pubkey: "bytes | None" = None,
             autoconnect: "bool | None" = None,
+            credential: "bytes | None" = None,
         ) -> None:
             pass
 
