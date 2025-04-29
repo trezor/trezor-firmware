@@ -76,7 +76,7 @@ class Header(Struct):
         "language" / c.PaddedString(8, "ascii"),  # BCP47 language tag
         "model" / EnumAdapter(c.Bytes(4), Model),
         "firmware_version" / TupleAdapter(c.Int8ul, c.Int8ul, c.Int8ul, c.Int8ul),
-        "data_len" / c.Int16ul,
+        "data_len" / c.Int32ul,
         "data_hash" / c.Bytes(32),
         ALIGN_SUBCON,
         c.Terminated,
@@ -240,9 +240,9 @@ class TranslationsBlob(Struct):
 
     # fmt: off
     SUBCON = c.Struct(
-        "magic" / c.Const(b"TRTR00"),
+        "magic" / c.Const(b"TRTR01"),
         "total_length" / c.Rebuild(
-            c.Int16ul,
+            c.Int32ul,
             (
                 c.len_(c.this.header_bytes)
                 + c.len_(c.this.proof_bytes)
