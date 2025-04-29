@@ -21,7 +21,7 @@ SKIPPED_MESSAGES += Ethereum NEM Stellar
 endif
 
 PROTO_NAMES = messages messages-bitcoin messages-common messages-crypto messages-debug \
-	messages-ethereum messages-ethereum-definitions messages-management messages-nem \
+	messages-ethereum messages-definitions messages-management messages-nem \
 	messages-stellar options
 
 PROTO_OPTIONS = $(PROTO_NAMES:=.options)

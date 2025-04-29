@@ -20,7 +20,8 @@
 #ifndef __ETHEREUM_DEFINITIONS_H__
 #define __ETHEREUM_DEFINITIONS_H__
 
-#include "messages-ethereum-definitions.pb.h"
+#include "messages-definitions.pb.h"
+#include "messages-ethereum.pb.h"
 
 typedef EthereumDefinitions_encoded_network_t EncodedNetwork;
 typedef EthereumDefinitions_encoded_token_t EncodedToken;

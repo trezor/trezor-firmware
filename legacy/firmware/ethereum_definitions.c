@@ -126,7 +126,7 @@ static bool parse_encoded_definition(struct EncodedDefinition *const result,
 }
 
 static bool decode_definition(const pb_size_t size, const pb_byte_t *bytes,
-                              const EthereumDefinitionType expected_type,
+                              const DefinitionType expected_type,
                               void *definition) {
   // parse received definition
   static struct EncodedDefinition parsed_def;
@@ -201,7 +201,7 @@ static bool decode_definition(const pb_size_t size, const pb_byte_t *bytes,
   }
 
   // decode message
-  const pb_msgdesc_t *fields = (expected_type == EthereumDefinitionType_NETWORK
+  const pb_msgdesc_t *fields = (expected_type == DefinitionType_ETHEREUM_NETWORK
                                     ? EthereumNetworkInfo_fields
                                     : EthereumTokenInfo_fields);
   pb_istream_t stream =
@@ -244,7 +244,7 @@ static const EthereumNetworkInfo *get_network(
   // if we still do not have any network definition try to decode received data
   memzero(&decoded_network, sizeof(decoded_network));
   if (!decode_definition(encoded_network->size, encoded_network->bytes,
-                         EthereumDefinitionType_NETWORK, &decoded_network)) {
+                         DefinitionType_ETHEREUM_NETWORK, &decoded_network)) {
     // error already sent by decode_definition
     return NULL;
   }
@@ -292,7 +292,7 @@ static const EthereumTokenInfo *get_token(const EncodedToken *encoded_token,
   // try to decode received definition
   memzero(&decoded_token, sizeof(decoded_token));
   if (!decode_definition(encoded_token->size, encoded_token->bytes,
-                         EthereumDefinitionType_TOKEN, &decoded_token)) {
+                         DefinitionType_ETHEREUM_TOKEN, &decoded_token)) {
     // error already sent by decode_definition
     return NULL;
   }
