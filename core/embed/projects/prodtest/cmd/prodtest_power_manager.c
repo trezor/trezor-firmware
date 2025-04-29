@@ -19,11 +19,17 @@
 
 #ifdef USE_POWERCTL
 
+#include <rust_ui_prodtest.h>
 #include <rtl/cli.h>
 #include <rtl/unit_test.h>
+#include <rtl/mini_printf.h>
 #include <sys/power_manager.h>
 #include <sys/systick.h>
+
 #include <trezor_rtl.h>
+
+
+#include <stdlib.h>
 
 void prodtest_power_manager_hibernate(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
@@ -60,7 +66,59 @@ void prodtest_power_manager_suspend(cli_t* cli) {
   cli_ok(cli, "");
 }
 
+void prodtest_power_manager_watch(cli_t* cli) {
+
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  char screen_text_buf[100];
+
+  while(1){
+
+    power_manager_report_t report;
+    power_manager_status_t status = power_manager_get_report(&report);
+    if (status != POWER_MANAGER_OK) {
+      cli_error(cli, CLI_ERROR, "Failed to get power manager report");
+      return;
+    }
+
+    if(cli_aborted(cli)){
+      cli_trace(cli, "aborted");
+      break;
+    }
+
+  cli_progress(cli, "%d.%03d %d.%03d %d.%03d %d.%02d",
+              (int)report.battery_voltage_v,
+              (int)(report.battery_voltage_v * 1000) % 1000,
+              (int)report.battery_current_ma,
+              abs((int)(report.battery_current_ma * 1000) % 1000),
+              (int)report.battery_temp_c,
+              abs((int)(report.battery_temp_c * 1000) % 1000),
+              (int)(report.battery_soc*100),
+              (int)(report.battery_soc * 10000) % 100);
+
+
+    mini_snprintf(screen_text_buf, 100, "%d.%03dV %d.%03dmA %d.%02d ",
+                  (int)report.battery_voltage_v,
+                  (int)(report.battery_voltage_v * 1000) % 1000,
+                  (int)report.battery_current_ma,
+                  abs((int)(report.battery_current_ma * 1000) % 1000),
+                  (int)(report.battery_soc*100),
+                  (int)(report.battery_soc * 10000) % 100);
+
+    screen_prodtest_show_text(screen_text_buf, strlen(screen_text_buf));
+
+    systick_delay_ms(500);
+  }
+
+  cli_ok(cli, "");
+
+}
+
 void prodtest_power_manager_report(cli_t* cli) {
+
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -84,9 +142,9 @@ void prodtest_power_manager_report(cli_t* cli) {
             abs((int)(report.battery_current_ma * 1000) % 1000));
   cli_trace(cli, "  Battery temperature: %d.%03d C", (int)report.battery_temp_c,
             abs((int)(report.battery_temp_c * 1000) % 1000));
-  cli_trace(cli, "  Battery SoC: %d.%03d", (int)report.battery_soc*100,
+  cli_trace(cli, "  Battery SoC: %d.%02d", (int)(report.battery_soc*100),
             (int)(report.battery_soc * 10000) % 100);
-  cli_trace(cli, "  Battery SoC latched: %d.%03d", (int)report.battery_soc_latched*100,
+  cli_trace(cli, "  Battery SoC latched: %d.%02d", (int)(report.battery_soc_latched*100),
             (int)(report.battery_soc_latched * 10000) % 100);
   cli_trace(cli, "  PMIC die temperature: %d.%03d C", (int)report.pmic_temp_c,
             (int)(report.pmic_temp_c * 1000) % 1000);
@@ -169,6 +227,13 @@ PRODTEST_CLI_CMD(
     .func = prodtest_power_manager_monitor,
     .info = "Run power manager monitor",
     .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "power-manager-watch",
+  .func = prodtest_power_manager_watch,
+  .info = "Watch power manager reports",
+  .args = ""
 );
 
 PRODTEST_CLI_CMD(
