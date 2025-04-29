@@ -184,6 +184,8 @@ if [ $INIT -eq 1 ]; then
 
     mkdir -p /reproducible-build
     cd /reproducible-build
+    # ignore ownership of the local repo
+    git config --global --add safe.directory /local/.git
     git clone --branch="$TAG" --depth=1 "$REPOSITORY" trezor-firmware
     cd trezor-firmware
 EOF
