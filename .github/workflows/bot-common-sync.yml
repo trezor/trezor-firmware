@@ -25,6 +25,9 @@ jobs:
         with:
           app-id: ${{ secrets.TREZOR_BOT_APP_ID }}
           private-key: ${{ secrets.TREZOR_BOT_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            trezor-common
 
       - name: Copy git-filter and script to temporary directory
         run: |
