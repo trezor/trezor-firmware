@@ -17,7 +17,8 @@ use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
     Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
     PinKeyboardMsg, ProgressScreen, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg,
-    SelectWordScreen, SetBrightnessScreen, TextScreen, TextScreenMsg,
+    SelectWordScreen, SetBrightnessScreen, TextScreen, TextScreenMsg, ValueInput, ValueInputScreen,
+    ValueInputScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -116,6 +117,19 @@ impl ComponentMsgObj for SelectWordCountScreen {
     }
 }
 
+impl<T: ValueInput> ComponentMsgObj for ValueInputScreen<T> {
+    fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
+        match msg {
+            ValueInputScreenMsg::Confirmed(i) => i.try_into(),
+            ValueInputScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            // menu message is handled only in the flow
+            ValueInputScreenMsg::Menu => unreachable!(),
+            // changed value message is handled only in the flow
+            ValueInputScreenMsg::Changed(_) => unreachable!(),
+        }
+    }
+}
+
 impl ComponentMsgObj for ConfirmHomescreen {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
@@ -140,6 +154,7 @@ impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
             DeviceMenuMsg::CheckBackup => "CheckBackup".try_into(),
             DeviceMenuMsg::WipeDevice => "WipeDevice".try_into(),
             DeviceMenuMsg::ScreenBrightness => "ScreenBrightness".try_into(),
+            DeviceMenuMsg::AutoLockDelay => "AutoLockDelay".try_into(),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }
