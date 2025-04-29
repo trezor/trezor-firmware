@@ -136,7 +136,7 @@ stdenvNoCC.mkDerivation ({
   ] ++ lib.optionals hardwareTest [
     uhubctl
     tio
-    ffmpeg_5-full
+    ffmpeg_7-headless
     dejavu_fonts
   ] ++ lib.optionals devTools [
     shellcheck
