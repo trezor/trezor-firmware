@@ -130,7 +130,7 @@ static bool decode_definition(const pb_size_t size, const pb_byte_t *bytes,
                               void *definition) {
   // parse received definition
   static struct EncodedDefinition parsed_def;
-  const char *error_str = _("Invalid Ethereum definition");
+  const char *error_str = _("Invalid definition");
 
   memzero(&parsed_def, sizeof(parsed_def));
   if (!parse_encoded_definition(&parsed_def, size, bytes)) {

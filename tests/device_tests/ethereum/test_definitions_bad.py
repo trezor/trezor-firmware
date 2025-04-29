@@ -33,7 +33,7 @@ def fails(client: Client, network: bytes, match: str) -> None:
 
 
 def test_short_message(client: Client) -> None:
-    fails(client, b"\x00", "Invalid Ethereum definition")
+    fails(client, b"\x00", "Invalid definition")
 
 
 def test_mangled_signature(client: Client) -> None:
@@ -52,7 +52,7 @@ def test_not_enough_signatures(client: Client) -> None:
 def test_missing_signature(client: Client) -> None:
     payload = make_payload()
     proof, _ = sign_payload(payload, [])
-    fails(client, payload + proof, "Invalid Ethereum definition")
+    fails(client, payload + proof, "Invalid definition")
 
 
 def test_mangled_payload(client: Client) -> None:
@@ -66,7 +66,7 @@ def test_proof_length_mismatch(client: Client) -> None:
     payload = make_payload()
     _, signature = sign_payload(payload, [])
     bad_proof = b"\x01"
-    fails(client, payload + bad_proof + signature, "Invalid Ethereum definition")
+    fails(client, payload + bad_proof + signature, "Invalid definition")
 
 
 def test_bad_proof(client: Client) -> None:
@@ -80,14 +80,14 @@ def test_trimmed_proof(client: Client) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [])
     bad_proof = proof[:-1]
-    fails(client, payload + bad_proof + signature, "Invalid Ethereum definition")
+    fails(client, payload + bad_proof + signature, "Invalid definition")
 
 
 def test_bad_prefix(client: Client) -> None:
     payload = make_payload()
     payload = b"trzd2" + payload[5:]
     proof, signature = sign_payload(payload, [])
-    fails(client, payload + proof + signature, "Invalid Ethereum definition")
+    fails(client, payload + proof + signature, "Invalid definition")
 
 
 def test_bad_type(client: Client) -> None:
@@ -108,7 +108,7 @@ def test_outdated(client: Client) -> None:
 def test_malformed_protobuf(client: Client) -> None:
     payload = make_payload(message=b"\x00")
     proof, signature = sign_payload(payload, [])
-    fails(client, payload + proof + signature, "Invalid Ethereum definition")
+    fails(client, payload + proof + signature, "Invalid definition")
 
 
 def test_protobuf_mismatch(client: Client) -> None:
@@ -116,14 +116,14 @@ def test_protobuf_mismatch(client: Client) -> None:
         data_type=DefinitionType.ETHEREUM_NETWORK, message=make_eth_token()
     )
     proof, signature = sign_payload(payload, [])
-    fails(client, payload + proof + signature, "Invalid Ethereum definition")
+    fails(client, payload + proof + signature, "Invalid definition")
 
     payload = make_payload(
         data_type=DefinitionType.ETHEREUM_TOKEN, message=make_eth_network()
     )
     proof, signature = sign_payload(payload, [])
     # have to do this manually to invoke a method that eats token definitions
-    with pytest.raises(TrezorFailure, match="Invalid Ethereum definition"):
+    with pytest.raises(TrezorFailure, match="Invalid definition"):
         params = DEFAULT_ERC20_PARAMS.copy()
         params.update(to=ERC20_FAKE_ADDRESS)
         ethereum.sign_tx(
@@ -136,4 +136,4 @@ def test_protobuf_mismatch(client: Client) -> None:
 def test_trailing_garbage(client: Client) -> None:
     payload = make_payload()
     proof, signature = sign_payload(payload, [])
-    fails(client, payload + proof + signature + b"\x00", "Invalid Ethereum definition")
+    fails(client, payload + proof + signature + b"\x00", "Invalid definition")
