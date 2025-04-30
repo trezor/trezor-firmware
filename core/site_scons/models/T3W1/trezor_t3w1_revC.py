@@ -211,6 +211,7 @@ def configure(
             "embed/sys/power_manager/stm32u5/power_manager.c",
             "embed/sys/power_manager/stm32u5/power_monitoring.c",
             "embed/sys/power_manager/stm32u5/power_states.c",
+            "embed/sys/power_manager/stm32u5/power_control.c",
         ]
         paths += ["embed/sys/power_manager/stm32u5/inc/"]
         paths += ["embed/sys/power_manager/inc"]
