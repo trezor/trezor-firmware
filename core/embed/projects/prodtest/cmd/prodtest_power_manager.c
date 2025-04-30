@@ -172,9 +172,6 @@ void prodtest_pm_monitor(cli_t* cli) {
   // Clear leftover events
   pm_get_events(&event_flag);
 
-  cli_trace(cli, "Start power manager monitor, current state: {%s}",
-            pm_get_state_name(state));
-
   while (true) {
     if (cli_aborted(cli)) {
       cli_trace(cli, "power manager test aborted");
@@ -184,13 +181,6 @@ void prodtest_pm_monitor(cli_t* cli) {
     status = pm_get_events(&event_flag);
     if (status != PM_OK) {
       cli_error(cli, CLI_ERROR, "Failed to get power manager events");
-    }
-
-    if (event_flag & PM_EVENT_STATE_CHANGED) {
-      status = pm_get_state(&state);
-
-      cli_trace(cli, "Power manager state changed to {%s}",
-                pm_get_state_name(state));
     }
 
     if (event_flag & PM_EVENT_USB_CONNECTED) {
@@ -207,6 +197,23 @@ void prodtest_pm_monitor(cli_t* cli) {
 
     if (event_flag & PM_EVENT_WIRELESS_DISCONNECTED) {
       cli_trace(cli, "WLC disconnected");
+    }
+
+    if (event_flag & PM_EVENT_ENTERED_MODE_ACTIVE) {
+      cli_trace(cli, "Power manager entered active mode");
+    }
+
+    if (event_flag & PM_EVENT_ENTERED_MODE_POWER_SAVE) {
+      cli_trace(cli, "Power manager entered power save mode");
+    }
+
+    if (event_flag & PM_EVENT_ENTERED_MODE_SHUTTING_DOWN) {
+      cli_trace(cli, "Power manager entered shutting down mode");
+    }
+
+    if (event_flag & PM_EVENT_SOC_UPDATED) {
+      status = pm_get_state(&state);
+      cli_trace(cli, "Power manager SOC changed to %d %%", state.soc);
     }
 
     systick_delay_ms(50);

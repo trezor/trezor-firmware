@@ -78,8 +78,9 @@
 #include <sec/hash_processor.h>
 #endif
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 #include <sys/power_manager.h>
+#include <sys/powerctl.h>
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -193,8 +194,8 @@ static bool g_rgbled_control_disabled = false;
 void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
-#ifdef USE_POWERCTL
-  power_manager_init();
+#ifdef USE_POWER_MANAGER
+  pm_init(true);
   // powerctl_init();
 #endif
 
