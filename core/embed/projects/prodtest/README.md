@@ -945,8 +945,8 @@ each 100ms.
 
 Example:
 ```
-nfc-read-card [<timeout_seconds>]
-# NFC activated in reader mode for <timeout_seconds> seconds.
+nfc-read-card [<timeout_ms>]
+# NFC activated in reader mode for <timeout_ms> ms.
 # NFC card detected.
 # NFC Type A: UID: %s
 OK
@@ -958,8 +958,8 @@ Activate NFC in Card Emulator mode for given time, or infinite time if no timeou
 
 Example:
 ```
-nfc-emulate-card [<timeout_seconds>]
-# Emulation started for <timeout_seconds>
+nfc-emulate-card [<timeout_ms>]
+# Emulation started for <timeout_ms>
 # Emulation over
 OK
 ```
@@ -972,8 +972,8 @@ each 100ms.
 
 Example:
 ```
-nfc-write-card [<timeout_seconds>]
-# NFC reader on, put the card on the reader (timeout <timeout_seconds> s)
+nfc-write-card [<timeout_ms>]
+# NFC reader on, put the card on the reader (timeout <timeout_ms> ms)
 # Writting URI to NFC tag 7AF403
 
 ### unit-test-run
