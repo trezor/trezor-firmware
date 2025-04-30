@@ -82,7 +82,7 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
       drv->state = pm_recovery_data.bootloader_exit_state;
       drv->fuel_gauge.soc = pm_recovery_data.soc;
       drv->fuel_gauge_request_new_guess = false;
-      drv->fuel_gauge_initialized = true;
+
     }
 
     drv->fuel_gauge_initialized = true;
@@ -314,6 +314,27 @@ pm_status_t pm_charging_disable(void) {
   return PM_OK;
 }
 
+pm_status_t pm_store_data_to_backup_ram(void){
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  backup_ram_power_manager_data_t pm_data = {0};
+  pm_data.bootloader_exit_state = drv->state;
+  pm_data.soc = drv->fuel_gauge.soc;
+
+  backup_ram_status_t status
+      = backup_ram_store_power_manager_data(&pm_data);
+
+  if (status != BACKUP_RAM_OK) {
+    return PM_ERROR;
+  }
+
+  return PM_OK;
+}
+
 // Timer handlers
 static void pm_monitoring_timer_handler(void* context) {
   pm_monitor_power_sources();
@@ -324,3 +345,5 @@ static void pm_shutdown_timer_handler(void* context) {
   drv->shutdown_timer_elapsed = true;
   pm_process_state_machine();
 }
+
+
