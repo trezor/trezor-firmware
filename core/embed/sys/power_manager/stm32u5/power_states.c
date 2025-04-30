@@ -59,10 +59,10 @@ static const pm_state_handler_t state_handlers[] = {
             .handle = pm_handle_state_suspend,
             .exit = NULL,
         },
-    [PM_STATE_REPORT_LOW_BATTERY] =
+    [PM_STATE_STARTUP_REJECTED] =
         {
             .enter = NULL,
-            .handle = pm_handle_state_report_low_battery,
+            .handle = pm_handle_state_startup_rejected,
             .exit = NULL,
         },
     [PM_STATE_CHARGING] =
@@ -183,7 +183,7 @@ pm_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv) {
   if (drv->usb_connected || !drv->battery_critical) {
     return PM_STATE_POWER_SAVE;
   } else {
-    return PM_STATE_REPORT_LOW_BATTERY;
+    return PM_STATE_STARTUP_REJECTED;
   }
 
   return drv->state;
@@ -208,7 +208,7 @@ pm_state_t pm_handle_state_suspend(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_state_t pm_handle_state_report_low_battery(pm_driver_t* drv) {
+pm_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
   // Wait until RGB sequence is done and go back to hibernate
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
