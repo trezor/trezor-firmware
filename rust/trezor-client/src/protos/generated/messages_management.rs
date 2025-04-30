@@ -2754,6 +2754,8 @@ pub mod features {
         Capability_Haptic = 21,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_BLE)
         Capability_BLE = 22,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_NFC)
+        Capability_NFC = 23,
     }
 
     impl ::protobuf::Enum for Capability {
@@ -2787,6 +2789,7 @@ pub mod features {
                 20 => ::std::option::Option::Some(Capability::Capability_Brightness),
                 21 => ::std::option::Option::Some(Capability::Capability_Haptic),
                 22 => ::std::option::Option::Some(Capability::Capability_BLE),
+                23 => ::std::option::Option::Some(Capability::Capability_NFC),
                 _ => ::std::option::Option::None
             }
         }
@@ -2815,6 +2818,7 @@ pub mod features {
                 "Capability_Brightness" => ::std::option::Option::Some(Capability::Capability_Brightness),
                 "Capability_Haptic" => ::std::option::Option::Some(Capability::Capability_Haptic),
                 "Capability_BLE" => ::std::option::Option::Some(Capability::Capability_BLE),
+                "Capability_NFC" => ::std::option::Option::Some(Capability::Capability_NFC),
                 _ => ::std::option::Option::None
             }
         }
@@ -2842,6 +2846,7 @@ pub mod features {
             Capability::Capability_Brightness,
             Capability::Capability_Haptic,
             Capability::Capability_BLE,
+            Capability::Capability_NFC,
         ];
     }
 
@@ -2875,6 +2880,7 @@ pub mod features {
                 Capability::Capability_Brightness => 19,
                 Capability::Capability_Haptic => 20,
                 Capability::Capability_BLE => 21,
+                Capability::Capability_NFC => 22,
             };
             Self::enum_descriptor().value_by_index(index)
         }
@@ -11570,7 +11576,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \roptions.proto\"\x80\x01\n\nInitialize\x12\x1d\n\nsession_id\x18\x01\
     \x20\x01(\x0cR\tsessionId\x12,\n\x10_skip_passphrase\x18\x02\x20\x01(\
     \x08R\x0eSkipPassphraseB\x02\x18\x01\x12%\n\x0ederive_cardano\x18\x03\
-    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\x86\x18\n\x08Featur\
+    \x20\x01(\x08R\rderiveCardano\"\r\n\x0bGetFeatures\"\xba\x18\n\x08Featur\
     es\x12\x16\n\x06vendor\x18\x01\x20\x01(\tR\x06vendor\x12#\n\rmajor_versi\
     on\x18\x02\x20\x02(\rR\x0cmajorVersion\x12#\n\rminor_version\x18\x03\x20\
     \x02(\rR\x0cminorVersion\x12#\n\rpatch_version\x18\x04\x20\x02(\rR\x0cpa\
@@ -11624,7 +11630,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \toptigaSec\"C\n\x12BackupAvailability\x12\x10\n\x0cNotAvailable\x10\0\
     \x12\x0c\n\x08Required\x10\x01\x12\r\n\tAvailable\x10\x02\"7\n\x0eRecove\
     ryStatus\x12\x0b\n\x07Nothing\x10\0\x12\x0c\n\x08Recovery\x10\x01\x12\n\
-    \n\x06Backup\x10\x02\"\xc2\x04\n\nCapability\x12\x1c\n\x12Capability_Bit\
+    \n\x06Backup\x10\x02\"\xf6\x04\n\nCapability\x12\x1c\n\x12Capability_Bit\
     coin\x10\x01\x1a\x04\x80\xa6\x1d\x01\x12\x1b\n\x17Capability_Bitcoin_lik\
     e\x10\x02\x12\x16\n\x12Capability_Binance\x10\x03\x12\x16\n\x12Capabilit\
     y_Cardano\x10\x04\x12\x1b\n\x11Capability_Crypto\x10\x05\x1a\x04\x80\xa6\
@@ -11639,113 +11645,115 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     Capability_Solana\x10\x12\x12!\n\x17Capability_Translations\x10\x13\x1a\
     \x04\x80\xa6\x1d\x01\x12\x1f\n\x15Capability_Brightness\x10\x14\x1a\x04\
     \x80\xa6\x1d\x01\x12\x1b\n\x11Capability_Haptic\x10\x15\x1a\x04\x80\xa6\
-    \x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\
-    \x1b\n\texpiry_ms\x18\x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\
-    \xf4\x04\n\rApplySettings\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08l\
-    anguageB\x02\x18\x01\x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12\
-    %\n\x0euse_passphrase\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nho\
-    mescreen\x18\x04\x20\x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\
-    \x18\x05\x20\x01(\rR\x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_loc\
-    k_delay_ms\x18\x06\x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rota\
-    tion\x18\x07\x20\x01(\x0e2..hw.trezor.messages.management.DisplayRotatio\
-    nR\x0fdisplayRotation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\
-    \x01(\x08R\x18passphraseAlwaysOnDevice\x12T\n\rsafety_checks\x18\t\x20\
-    \x01(\x0e2/.hw.trezor.messages.management.SafetyCheckLevelR\x0csafetyChe\
-    cks\x123\n\x15experimental_features\x18\n\x20\x01(\x08R\x14experimentalF\
-    eatures\x129\n\x19hide_passphrase_from_host\x18\x0b\x20\x01(\x08R\x16hid\
-    ePassphraseFromHost\x12'\n\x0fhaptic_feedback\x18\r\x20\x01(\x08R\x0ehap\
-    ticFeedback\"T\n\x0eChangeLanguage\x12\x1f\n\x0bdata_length\x18\x01\x20\
-    \x02(\rR\ndataLength\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bsho\
-    wDisplay\"Z\n\x16TranslationDataRequest\x12\x1f\n\x0bdata_length\x18\x01\
-    \x20\x02(\rR\ndataLength\x12\x1f\n\x0bdata_offset\x18\x02\x20\x02(\rR\nd\
-    ataOffset\"3\n\x12TranslationDataAck\x12\x1d\n\ndata_chunk\x18\x01\x20\
-    \x02(\x0cR\tdataChunk\"\"\n\nApplyFlags\x12\x14\n\x05flags\x18\x01\x20\
-    \x02(\rR\x05flags\"#\n\tChangePin\x12\x16\n\x06remove\x18\x01\x20\x01(\
-    \x08R\x06remove\"(\n\x0eChangeWipeCode\x12\x16\n\x06remove\x18\x01\x20\
-    \x01(\x08R\x06remove\"\xaa\x01\n\tSdProtect\x12]\n\toperation\x18\x01\
-    \x20\x02(\x0e2?.hw.trezor.messages.management.SdProtect.SdProtectOperati\
-    onTypeR\toperation\">\n\x16SdProtectOperationType\x12\x0b\n\x07DISABLE\
-    \x10\0\x12\n\n\x06ENABLE\x10\x01\x12\x0b\n\x07REFRESH\x10\x02\"O\n\x04Pi\
-    ng\x12\x1a\n\x07message\x18\x01\x20\x01(\t:\0R\x07message\x12+\n\x11butt\
-    on_protection\x18\x02\x20\x01(\x08R\x10buttonProtection\"\x08\n\x06Cance\
-    l\"\x20\n\nGetEntropy\x12\x12\n\x04size\x18\x01\x20\x02(\rR\x04size\"#\n\
-    \x07Entropy\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"/\n\
-    \x0fGetFirmwareHash\x12\x1c\n\tchallenge\x18\x01\x20\x01(\x0cR\tchalleng\
-    e\"\"\n\x0cFirmwareHash\x12\x12\n\x04hash\x18\x01\x20\x02(\x0cR\x04hash\
-    \"2\n\x12AuthenticateDevice\x12\x1c\n\tchallenge\x18\x01\x20\x02(\x0cR\t\
-    challenge\"U\n\x11AuthenticityProof\x12\"\n\x0ccertificates\x18\x01\x20\
-    \x03(\x0cR\x0ccertificates\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\ts\
-    ignature\"\x0c\n\nWipeDevice\"\xad\x02\n\nLoadDevice\x12\x1c\n\tmnemonic\
-    s\x18\x01\x20\x03(\tR\tmnemonics\x12\x10\n\x03pin\x18\x03\x20\x01(\tR\
-    \x03pin\x123\n\x15passphrase_protection\x18\x04\x20\x01(\x08R\x14passphr\
-    aseProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08languageB\x02\
-    \x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12#\n\rskip_ch\
-    ecksum\x18\x07\x20\x01(\x08R\x0cskipChecksum\x12\x1f\n\x0bu2f_counter\
-    \x18\x08\x20\x01(\rR\nu2fCounter\x12!\n\x0cneeds_backup\x18\t\x20\x01(\
-    \x08R\x0bneedsBackup\x12\x1b\n\tno_backup\x18\n\x20\x01(\x08R\x08noBacku\
-    p\"\x9d\x03\n\x0bResetDevice\x12\x1f\n\x08strength\x18\x02\x20\x01(\r:\
-    \x03256R\x08strength\x123\n\x15passphrase_protection\x18\x03\x20\x01(\
-    \x08R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x04\x20\x01(\
-    \x08R\rpinProtection\x12\x1e\n\x08language\x18\x05\x20\x01(\tR\x08langua\
-    geB\x02\x18\x01\x12\x14\n\x05label\x18\x06\x20\x01(\tR\x05label\x12\x1f\
-    \n\x0bu2f_counter\x18\x07\x20\x01(\rR\nu2fCounter\x12\x1f\n\x0bskip_back\
-    up\x18\x08\x20\x01(\x08R\nskipBackup\x12\x1b\n\tno_backup\x18\t\x20\x01(\
-    \x08R\x08noBackup\x12Q\n\x0bbackup_type\x18\n\x20\x01(\x0e2).hw.trezor.m\
-    essages.management.BackupType:\x05Bip39R\nbackupType\x12#\n\rentropy_che\
-    ck\x18\x0b\x20\x01(\x08R\x0centropyCheckJ\x04\x08\x01\x10\x02\"\xe5\x01\
-    \n\x0cBackupDevice\x12'\n\x0fgroup_threshold\x18\x01\x20\x01(\rR\x0egrou\
-    pThreshold\x12O\n\x06groups\x18\x02\x20\x03(\x0b27.hw.trezor.messages.ma\
-    nagement.BackupDevice.Slip39GroupR\x06groups\x1a[\n\x0bSlip39Group\x12)\
-    \n\x10member_threshold\x18\x01\x20\x02(\rR\x0fmemberThreshold\x12!\n\x0c\
-    member_count\x18\x02\x20\x02(\rR\x0bmemberCount\"b\n\x0eEntropyRequest\
-    \x12-\n\x12entropy_commitment\x18\x01\x20\x01(\x0cR\x11entropyCommitment\
-    \x12!\n\x0cprev_entropy\x18\x02\x20\x01(\x0cR\x0bprevEntropy\"&\n\nEntro\
-    pyAck\x12\x18\n\x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"\x13\n\x11E\
-    ntropyCheckReady\"5\n\x14EntropyCheckContinue\x12\x1d\n\x06finish\x18\
-    \x01\x20\x01(\x08:\x05falseR\x06finish\"\x8d\x04\n\x0eRecoveryDevice\x12\
-    \x1d\n\nword_count\x18\x01\x20\x01(\rR\twordCount\x123\n\x15passphrase_p\
-    rotection\x18\x02\x20\x01(\x08R\x14passphraseProtection\x12%\n\x0epin_pr\
-    otection\x18\x03\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08language\x18\
-    \x04\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\x18\x05\x20\
-    \x01(\tR\x05label\x12)\n\x10enforce_wordlist\x18\x06\x20\x01(\x08R\x0fen\
-    forceWordlist\x12j\n\x0cinput_method\x18\x08\x20\x01(\x0e2G.hw.trezor.me\
-    ssages.management.RecoveryDevice.RecoveryDeviceInputMethodR\x0binputMeth\
-    od\x12\x1f\n\x0bu2f_counter\x18\t\x20\x01(\rR\nu2fCounter\x12O\n\x04type\
-    \x18\n\x20\x01(\x0e2+.hw.trezor.messages.management.RecoveryType:\x0eNor\
-    malRecoveryR\x04type\";\n\x19RecoveryDeviceInputMethod\x12\x12\n\x0eScra\
-    mbledWords\x10\0\x12\n\n\x06Matrix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\
-    \x01\n\x0bWordRequest\x12N\n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.me\
-    ssages.management.WordRequest.WordRequestTypeR\x04type\"f\n\x0fWordReque\
-    stType\x12\x19\n\x15WordRequestType_Plain\x10\0\x12\x1b\n\x17WordRequest\
-    Type_Matrix9\x10\x01\x12\x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\
-    \n\x07WordAck\x12\x12\n\x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2F\
-    Counter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\
-    \x11GetNextU2FCounter\"1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\
-    \x18\x01\x20\x02(\rR\nu2fCounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14P\
-    reauthorizedRequest\"\x15\n\x13CancelAuthorization\"\x9a\x02\n\x12Reboot\
-    ToBootloader\x12o\n\x0cboot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.mes\
-    sages.management.RebootToBootloader.BootCommand:\rSTOP_AND_WAITR\x0bboot\
-    Command\x12'\n\x0ffirmware_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeade\
-    r\x123\n\x14language_data_length\x18\x03\x20\x01(\r:\x010R\x12languageDa\
-    taLength\"5\n\x0bBootCommand\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\
-    \x0fINSTALL_UPGRADE\x10\x01\"\x10\n\x08GetNonce:\x04\x88\xb2\x19\x01\"#\
-    \n\x05Nonce\x12\x14\n\x05nonce\x18\x01\x20\x02(\x0cR\x05nonce:\x04\x88\
-    \xb2\x19\x01\";\n\nUnlockPath\x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\
-    \x08addressN\x12\x10\n\x03mac\x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13Unloc\
-    kedPathRequest\x12\x10\n\x03mac\x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12\
-    ShowDeviceTutorial\"\x12\n\x10UnlockBootloader\"%\n\rSetBrightness\x12\
-    \x14\n\x05value\x18\x01\x20\x01(\rR\x05value*\x99\x01\n\nBackupType\x12\
-    \t\n\x05Bip39\x10\0\x12\x10\n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip3\
-    9_Advanced\x10\x02\x12\x1c\n\x18Slip39_Single_Extendable\x10\x03\x12\x1b\
-    \n\x17Slip39_Basic_Extendable\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Exten\
-    dable\x10\x05*G\n\x10SafetyCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\
-    \x0cPromptAlways\x10\x01\x12\x15\n\x11PromptTemporarily\x10\x02*=\n\x0fD\
-    isplayRotation\x12\t\n\x05North\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05\
-    South\x10\xb4\x01\x12\t\n\x04West\x10\x8e\x02*0\n\x10HomescreenFormat\
-    \x12\x08\n\x04Toif\x10\x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\
-    \x10\x03*H\n\x0cRecoveryType\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\
-    \x06DryRun\x10\x01\x12\x18\n\x14UnlockRepeatedBackup\x10\x02BB\n#com.sat\
-    oshilabs.trezor.lib.protobufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
+    \x1d\x01\x12\x18\n\x0eCapability_BLE\x10\x16\x1a\x04\x80\xa6\x1d\x01\x12\
+    \x18\n\x0eCapability_NFC\x10\x17\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\
+    \x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_ms\x18\
+    \x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xf4\x04\n\rApplySetti\
+    ngs\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\x02\x18\x01\
+    \x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_passphras\
+    e\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\x04\x20\
+    \x01(\x0cR\nhomescreen\x120\n\x12_passphrase_source\x18\x05\x20\x01(\rR\
+    \x10PassphraseSourceB\x02\x18\x01\x12+\n\x12auto_lock_delay_ms\x18\x06\
+    \x20\x01(\rR\x0fautoLockDelayMs\x12Y\n\x10display_rotation\x18\x07\x20\
+    \x01(\x0e2..hw.trezor.messages.management.DisplayRotationR\x0fdisplayRot\
+    ation\x12=\n\x1bpassphrase_always_on_device\x18\x08\x20\x01(\x08R\x18pas\
+    sphraseAlwaysOnDevice\x12T\n\rsafety_checks\x18\t\x20\x01(\x0e2/.hw.trez\
+    or.messages.management.SafetyCheckLevelR\x0csafetyChecks\x123\n\x15exper\
+    imental_features\x18\n\x20\x01(\x08R\x14experimentalFeatures\x129\n\x19h\
+    ide_passphrase_from_host\x18\x0b\x20\x01(\x08R\x16hidePassphraseFromHost\
+    \x12'\n\x0fhaptic_feedback\x18\r\x20\x01(\x08R\x0ehapticFeedback\"T\n\
+    \x0eChangeLanguage\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndataLen\
+    gth\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\"Z\n\x16\
+    TranslationDataRequest\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndat\
+    aLength\x12\x1f\n\x0bdata_offset\x18\x02\x20\x02(\rR\ndataOffset\"3\n\
+    \x12TranslationDataAck\x12\x1d\n\ndata_chunk\x18\x01\x20\x02(\x0cR\tdata\
+    Chunk\"\"\n\nApplyFlags\x12\x14\n\x05flags\x18\x01\x20\x02(\rR\x05flags\
+    \"#\n\tChangePin\x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06remove\"(\
+    \n\x0eChangeWipeCode\x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06remove\
+    \"\xaa\x01\n\tSdProtect\x12]\n\toperation\x18\x01\x20\x02(\x0e2?.hw.trez\
+    or.messages.management.SdProtect.SdProtectOperationTypeR\toperation\">\n\
+    \x16SdProtectOperationType\x12\x0b\n\x07DISABLE\x10\0\x12\n\n\x06ENABLE\
+    \x10\x01\x12\x0b\n\x07REFRESH\x10\x02\"O\n\x04Ping\x12\x1a\n\x07message\
+    \x18\x01\x20\x01(\t:\0R\x07message\x12+\n\x11button_protection\x18\x02\
+    \x20\x01(\x08R\x10buttonProtection\"\x08\n\x06Cancel\"\x20\n\nGetEntropy\
+    \x12\x12\n\x04size\x18\x01\x20\x02(\rR\x04size\"#\n\x07Entropy\x12\x18\n\
+    \x07entropy\x18\x01\x20\x02(\x0cR\x07entropy\"/\n\x0fGetFirmwareHash\x12\
+    \x1c\n\tchallenge\x18\x01\x20\x01(\x0cR\tchallenge\"\"\n\x0cFirmwareHash\
+    \x12\x12\n\x04hash\x18\x01\x20\x02(\x0cR\x04hash\"2\n\x12AuthenticateDev\
+    ice\x12\x1c\n\tchallenge\x18\x01\x20\x02(\x0cR\tchallenge\"U\n\x11Authen\
+    ticityProof\x12\"\n\x0ccertificates\x18\x01\x20\x03(\x0cR\x0ccertificate\
+    s\x12\x1c\n\tsignature\x18\x02\x20\x02(\x0cR\tsignature\"\x0c\n\nWipeDev\
+    ice\"\xad\x02\n\nLoadDevice\x12\x1c\n\tmnemonics\x18\x01\x20\x03(\tR\tmn\
+    emonics\x12\x10\n\x03pin\x18\x03\x20\x01(\tR\x03pin\x123\n\x15passphrase\
+    _protection\x18\x04\x20\x01(\x08R\x14passphraseProtection\x12\x1e\n\x08l\
+    anguage\x18\x05\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\
+    \x18\x06\x20\x01(\tR\x05label\x12#\n\rskip_checksum\x18\x07\x20\x01(\x08\
+    R\x0cskipChecksum\x12\x1f\n\x0bu2f_counter\x18\x08\x20\x01(\rR\nu2fCount\
+    er\x12!\n\x0cneeds_backup\x18\t\x20\x01(\x08R\x0bneedsBackup\x12\x1b\n\t\
+    no_backup\x18\n\x20\x01(\x08R\x08noBackup\"\x9d\x03\n\x0bResetDevice\x12\
+    \x1f\n\x08strength\x18\x02\x20\x01(\r:\x03256R\x08strength\x123\n\x15pas\
+    sphrase_protection\x18\x03\x20\x01(\x08R\x14passphraseProtection\x12%\n\
+    \x0epin_protection\x18\x04\x20\x01(\x08R\rpinProtection\x12\x1e\n\x08lan\
+    guage\x18\x05\x20\x01(\tR\x08languageB\x02\x18\x01\x12\x14\n\x05label\
+    \x18\x06\x20\x01(\tR\x05label\x12\x1f\n\x0bu2f_counter\x18\x07\x20\x01(\
+    \rR\nu2fCounter\x12\x1f\n\x0bskip_backup\x18\x08\x20\x01(\x08R\nskipBack\
+    up\x12\x1b\n\tno_backup\x18\t\x20\x01(\x08R\x08noBackup\x12Q\n\x0bbackup\
+    _type\x18\n\x20\x01(\x0e2).hw.trezor.messages.management.BackupType:\x05\
+    Bip39R\nbackupType\x12#\n\rentropy_check\x18\x0b\x20\x01(\x08R\x0centrop\
+    yCheckJ\x04\x08\x01\x10\x02\"\xe5\x01\n\x0cBackupDevice\x12'\n\x0fgroup_\
+    threshold\x18\x01\x20\x01(\rR\x0egroupThreshold\x12O\n\x06groups\x18\x02\
+    \x20\x03(\x0b27.hw.trezor.messages.management.BackupDevice.Slip39GroupR\
+    \x06groups\x1a[\n\x0bSlip39Group\x12)\n\x10member_threshold\x18\x01\x20\
+    \x02(\rR\x0fmemberThreshold\x12!\n\x0cmember_count\x18\x02\x20\x02(\rR\
+    \x0bmemberCount\"b\n\x0eEntropyRequest\x12-\n\x12entropy_commitment\x18\
+    \x01\x20\x01(\x0cR\x11entropyCommitment\x12!\n\x0cprev_entropy\x18\x02\
+    \x20\x01(\x0cR\x0bprevEntropy\"&\n\nEntropyAck\x12\x18\n\x07entropy\x18\
+    \x01\x20\x02(\x0cR\x07entropy\"\x13\n\x11EntropyCheckReady\"5\n\x14Entro\
+    pyCheckContinue\x12\x1d\n\x06finish\x18\x01\x20\x01(\x08:\x05falseR\x06f\
+    inish\"\x8d\x04\n\x0eRecoveryDevice\x12\x1d\n\nword_count\x18\x01\x20\
+    \x01(\rR\twordCount\x123\n\x15passphrase_protection\x18\x02\x20\x01(\x08\
+    R\x14passphraseProtection\x12%\n\x0epin_protection\x18\x03\x20\x01(\x08R\
+    \rpinProtection\x12\x1e\n\x08language\x18\x04\x20\x01(\tR\x08languageB\
+    \x02\x18\x01\x12\x14\n\x05label\x18\x05\x20\x01(\tR\x05label\x12)\n\x10e\
+    nforce_wordlist\x18\x06\x20\x01(\x08R\x0fenforceWordlist\x12j\n\x0cinput\
+    _method\x18\x08\x20\x01(\x0e2G.hw.trezor.messages.management.RecoveryDev\
+    ice.RecoveryDeviceInputMethodR\x0binputMethod\x12\x1f\n\x0bu2f_counter\
+    \x18\t\x20\x01(\rR\nu2fCounter\x12O\n\x04type\x18\n\x20\x01(\x0e2+.hw.tr\
+    ezor.messages.management.RecoveryType:\x0eNormalRecoveryR\x04type\";\n\
+    \x19RecoveryDeviceInputMethod\x12\x12\n\x0eScrambledWords\x10\0\x12\n\n\
+    \x06Matrix\x10\x01J\x04\x08\x07\x10\x08\"\xc5\x01\n\x0bWordRequest\x12N\
+    \n\x04type\x18\x01\x20\x02(\x0e2:.hw.trezor.messages.management.WordRequ\
+    est.WordRequestTypeR\x04type\"f\n\x0fWordRequestType\x12\x19\n\x15WordRe\
+    questType_Plain\x10\0\x12\x1b\n\x17WordRequestType_Matrix9\x10\x01\x12\
+    \x1b\n\x17WordRequestType_Matrix6\x10\x02\"\x1d\n\x07WordAck\x12\x12\n\
+    \x04word\x18\x01\x20\x02(\tR\x04word\"0\n\rSetU2FCounter\x12\x1f\n\x0bu2\
+    f_counter\x18\x01\x20\x02(\rR\nu2fCounter\"\x13\n\x11GetNextU2FCounter\"\
+    1\n\x0eNextU2FCounter\x12\x1f\n\x0bu2f_counter\x18\x01\x20\x02(\rR\nu2fC\
+    ounter\"\x11\n\x0fDoPreauthorized\"\x16\n\x14PreauthorizedRequest\"\x15\
+    \n\x13CancelAuthorization\"\x9a\x02\n\x12RebootToBootloader\x12o\n\x0cbo\
+    ot_command\x18\x01\x20\x01(\x0e2=.hw.trezor.messages.management.RebootTo\
+    Bootloader.BootCommand:\rSTOP_AND_WAITR\x0bbootCommand\x12'\n\x0ffirmwar\
+    e_header\x18\x02\x20\x01(\x0cR\x0efirmwareHeader\x123\n\x14language_data\
+    _length\x18\x03\x20\x01(\r:\x010R\x12languageDataLength\"5\n\x0bBootComm\
+    and\x12\x11\n\rSTOP_AND_WAIT\x10\0\x12\x13\n\x0fINSTALL_UPGRADE\x10\x01\
+    \"\x10\n\x08GetNonce:\x04\x88\xb2\x19\x01\"#\n\x05Nonce\x12\x14\n\x05non\
+    ce\x18\x01\x20\x02(\x0cR\x05nonce:\x04\x88\xb2\x19\x01\";\n\nUnlockPath\
+    \x12\x1b\n\taddress_n\x18\x01\x20\x03(\rR\x08addressN\x12\x10\n\x03mac\
+    \x18\x02\x20\x01(\x0cR\x03mac\"'\n\x13UnlockedPathRequest\x12\x10\n\x03m\
+    ac\x18\x01\x20\x02(\x0cR\x03mac\"\x14\n\x12ShowDeviceTutorial\"\x12\n\
+    \x10UnlockBootloader\"%\n\rSetBrightness\x12\x14\n\x05value\x18\x01\x20\
+    \x01(\rR\x05value*\x99\x01\n\nBackupType\x12\t\n\x05Bip39\x10\0\x12\x10\
+    \n\x0cSlip39_Basic\x10\x01\x12\x13\n\x0fSlip39_Advanced\x10\x02\x12\x1c\
+    \n\x18Slip39_Single_Extendable\x10\x03\x12\x1b\n\x17Slip39_Basic_Extenda\
+    ble\x10\x04\x12\x1e\n\x1aSlip39_Advanced_Extendable\x10\x05*G\n\x10Safet\
+    yCheckLevel\x12\n\n\x06Strict\x10\0\x12\x10\n\x0cPromptAlways\x10\x01\
+    \x12\x15\n\x11PromptTemporarily\x10\x02*=\n\x0fDisplayRotation\x12\t\n\
+    \x05North\x10\0\x12\x08\n\x04East\x10Z\x12\n\n\x05South\x10\xb4\x01\x12\
+    \t\n\x04West\x10\x8e\x02*0\n\x10HomescreenFormat\x12\x08\n\x04Toif\x10\
+    \x01\x12\x08\n\x04Jpeg\x10\x02\x12\x08\n\x04ToiG\x10\x03*H\n\x0cRecovery\
+    Type\x12\x12\n\x0eNormalRecovery\x10\0\x12\n\n\x06DryRun\x10\x01\x12\x18\
+    \n\x14UnlockRepeatedBackup\x10\x02BB\n#com.satoshilabs.trezor.lib.protob\
+    ufB\x17TrezorMessageManagement\x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

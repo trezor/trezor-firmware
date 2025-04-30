@@ -259,6 +259,7 @@ class Capability(IntEnum):
     Brightness = 20
     Haptic = 21
     BLE = 22
+    NFC = 23
 
 
 class SdProtectOperationType(IntEnum):

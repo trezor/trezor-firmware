@@ -151,6 +151,9 @@ def get_features() -> Features:
     if utils.USE_BLE:
         f.capabilities.append(Capability.BLE)
 
+    if utils.INTERNAL_MODEL == "T3W1":  # TODO utils.USE_NFC
+        f.capabilities.append(Capability.NFC)
+
     # Only some models are capable of SD card
     if utils.USE_SD_CARD:
         from trezor import sdcard
