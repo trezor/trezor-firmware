@@ -478,6 +478,8 @@ class ProgressLayout:
     def __init__(self, layout: LayoutObj[UiResult]) -> None:
         self.layout = layout
         self.transition_out = None
+        self.value = 0
+        self.progress_step = 20
 
     def is_layout_attached(self) -> bool:
         return True
@@ -495,10 +497,21 @@ class ProgressLayout:
         if utils.DISABLE_ANIMATION:
             return
 
-        msg = self.layout.progress_event(value, description or "")
-        assert msg is None
-        if self.layout.paint():
-            refresh()
+        def do_progress_event(val: int) -> None:
+            msg = self.layout.progress_event(val, description or "")
+            assert msg is None
+            if self.layout.paint():
+                refresh()
+
+        # animate the progress bar in a blocking fashion
+        step = min(self.progress_step, max(value - self.value, 1))
+        last_value = self.value
+        for v in range(self.value, min(value, 1000) + 1, step):
+            do_progress_event(v)
+            last_value = v
+        if value >= 1000 and last_value != 1000:
+            do_progress_event(1000)
+        self.value = value
 
     def start(self) -> None:
         global CURRENT_LAYOUT
