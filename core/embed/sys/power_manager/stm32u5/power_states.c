@@ -81,10 +81,10 @@ static const pm_state_handler_t state_handlers[] = {
 
 void pm_process_state_machine(void) {
   pm_driver_t* drv = &g_pm;
-  pm_state_t old_state = drv->state;
+  pm_internal_state_t old_state = drv->state;
 
   // Get next state from current state's handler
-  pm_state_t new_state = state_handlers[old_state].handle(drv);
+  pm_internal_state_t new_state = state_handlers[old_state].handle(drv);
 
   // Handle state transition if needed
   if (new_state != old_state) {
@@ -112,9 +112,10 @@ void pm_process_state_machine(void) {
 void pm_enter_active(pm_driver_t* drv) {
   // Set unlimited backlight
   backlight_set_max_level(255);
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_ACTIVE);
 }
 
-pm_state_t pm_handle_state_active(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -144,9 +145,10 @@ pm_state_t pm_handle_state_active(pm_driver_t* drv) {
 void pm_enter_power_save(pm_driver_t* drv) {
   // Limit backlight
   backlight_set_max_level(130);
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_POWER_SAVE);
 }
 
-pm_state_t pm_handle_state_power_save(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -178,7 +180,7 @@ pm_state_t pm_handle_state_power_save(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv) {
   // Go to power save if external power or battery above critical
   if (drv->usb_connected || !drv->battery_critical) {
     return PM_STATE_POWER_SAVE;
@@ -189,7 +191,7 @@ pm_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
   // Return to power save if external power or battery recovered
   if (drv->usb_connected || !drv->battery_critical) {
     return PM_STATE_POWER_SAVE;
@@ -203,12 +205,12 @@ pm_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_state_t pm_handle_state_suspend(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv) {
   // Not implemented yet
   return drv->state;
 }
 
-pm_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
   // Wait until RGB sequence is done and go back to hibernate
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -229,7 +231,7 @@ void pm_enter_charging(pm_driver_t* drv) {
   rgb_led_set_color(0x0000FF);
 }
 
-pm_state_t pm_handle_state_charging(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
     return PM_STATE_ULTRA_POWER_SAVE;
@@ -257,7 +259,7 @@ void pm_exit_charging(pm_driver_t* drv) {
   rgb_led_set_color(0x0);
 }
 
-pm_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
     return PM_STATE_ULTRA_POWER_SAVE;
@@ -293,6 +295,7 @@ void pm_enter_report_low_battery(pm_driver_t* drv) {
 void pm_enter_shutting_down(pm_driver_t* drv) {
   // Set shutdown timer
   systimer_set(drv->shutdown_timer, PM_SHUTDOWN_TIMEOUT_MS);
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_SHUTTING_DOWN);
 }
 
 void pm_exit_shutting_down(pm_driver_t* drv) {

@@ -50,6 +50,24 @@
 #define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
 #define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
 
+/* Power manager states */
+#define PM_STATE_LIST(STATE) \
+  STATE(HIBERNATE)           \
+  STATE(CHARGING)            \
+  STATE(STARTUP_REJECTED)    \
+  STATE(SUSPEND)             \
+  STATE(ULTRA_POWER_SAVE)    \
+  STATE(SHUTTING_DOWN)       \
+  STATE(POWER_SAVE)          \
+  STATE(ACTIVE)
+
+typedef enum {
+#define STATE(name) PM_STATE_##name,
+  PM_STATE_LIST(STATE)
+#undef STATE
+      PM_STATE_COUNT
+} pm_internal_state_t;
+
 // Power manager battery sampling data structure)
 typedef struct {
   float vbat;      // Battery voltage [V]
@@ -60,7 +78,7 @@ typedef struct {
 // Power manager core driver structure
 typedef struct {
   bool initialized;
-  pm_state_t state;
+  pm_internal_state_t state;
   pm_event_t event_flags;
 
   // Fuel gauge
@@ -69,6 +87,7 @@ typedef struct {
   pm_sampling_data_t bat_sampling_buf[PM_BATTERY_SAMPLING_BUF_SIZE];
   uint8_t bat_sampling_buf_tail_idx;
   uint8_t bat_sampling_buf_head_idx;
+  uint8_t soc_ceiled;
 
   // Battery charging state
   bool charging_enabled;
@@ -101,7 +120,7 @@ typedef struct {
 // State handler function definition
 typedef struct {
   void (*enter)(pm_driver_t* drv);
-  pm_state_t (*handle)(pm_driver_t* drv);
+  pm_internal_state_t (*handle)(pm_driver_t* drv);
   void (*exit)(pm_driver_t* drv);
 } pm_state_handler_t;
 
@@ -117,14 +136,14 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 void pm_battery_initial_soc_guess(void);
 
 // State handlers
-pm_state_t pm_handle_state_active(pm_driver_t* drv);
-pm_state_t pm_handle_state_power_save(pm_driver_t* drv);
-pm_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv);
-pm_state_t pm_handle_state_shutting_down(pm_driver_t* drv);
-pm_state_t pm_handle_state_suspend(pm_driver_t* drv);
-pm_state_t pm_handle_state_startup_rejected(pm_driver_t* drv);
-pm_state_t pm_handle_state_charging(pm_driver_t* drv);
-pm_state_t pm_handle_state_hibernate(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_active(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv);
+pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv);
 
 void pm_enter_active(pm_driver_t* drv);
 void pm_enter_power_save(pm_driver_t* drv);
