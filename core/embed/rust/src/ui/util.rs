@@ -140,14 +140,38 @@ pub fn long_line_content_with_ellipsis(
     }
 }
 
+/// Selects the correct plural form from a template string based on a count.
+///
+/// The `template` is a `&str` containing 2 or 3 variants separated by `|`:
+/// - 2 forms: "singular|plural" (e.g., `"day|days"`)
+/// - 3 forms: "singular|few|many" (e.g., `"den|dny|dnů"` for Czech)
+///
+/// # Arguments
+/// * `template` - A pipe-separated string with plural forms.
+/// * `count` - The numeric count to select the correct plural form.
+///
+/// # Returns
+/// A `ShortString` containing the correct plural form.
+///
+/// # Panics
+/// Panics if:
+/// - The `template` has fewer than two forms.
+/// - Conversion to `ShortString` fails (via `unwrap!`).
 pub fn format_plural(template: &str, count: u32) -> ShortString {
+    // Split the template by '|' into components
     let mut parts = template.split('|');
+
+    // First form (singular), must exist
     let first = unwrap!(parts.next().ok_or(()));
+    // Second form (plural or few), must exist
     let second = unwrap!(parts.next().ok_or(()));
+    // Third form (many), optional
     let third = parts.next();
 
+    // Choose appropriate form based on `count`
     let selected = match third {
         Some(many) => {
+            // Czech-style: 1 → singular, 2–4 → few, 0 or ≥5 → many
             if count == 1 {
                 first
             } else if (2..=4).contains(&count) {
@@ -157,6 +181,7 @@ pub fn format_plural(template: &str, count: u32) -> ShortString {
             }
         }
         None => {
+            // Simple fallback: 1 → singular, all others → plural
             if count == 1 {
                 first
             } else {
@@ -165,8 +190,10 @@ pub fn format_plural(template: &str, count: u32) -> ShortString {
         }
     };
 
+    // Convert the selected form into ShortString, panicking if it fails
     unwrap!(ShortString::try_from(selected))
 }
+
 
 /// Create the `Icon` constant with given name and path.
 macro_rules! include_icon {
