@@ -21,6 +21,7 @@
 #include <sys/systick.h>
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
+#include <sys/backup_ram.h>
 
 #include "../../powerctl/npm1300/npm1300.h"
 #include "../../powerctl/stwlc38/stwlc38.h"
@@ -37,7 +38,7 @@ static void pm_shutdown_timer_handler(void* context);
 
 // API Implementation
 
-pm_status_t pm_init(bool turned_on) {
+pm_status_t pm_init(bool skip_bootup_sequence) {
   pm_driver_t* drv = &g_pm;
 
   if (drv->initialized) {
@@ -58,10 +59,41 @@ pm_status_t pm_init(bool turned_on) {
                   PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
                   PM_FUEL_GAUGE_P_INIT);
 
-  if (turned_on) {
-    drv->state = PM_STATE_POWER_SAVE;
-  } else {
+
+  if(skip_bootup_sequence) {
+
+    // Skip bootup sequence and try to recover the power manages state left
+    // by the bootloader in backup ram.
+
+    backup_ram_power_manager_data_t pm_recovery_data;
+    backup_ram_status_t status
+              = backup_ram_read_power_manager_data(&pm_recovery_data);
+
+    if (status != BACKUP_RAM_OK &&
+        (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
+         pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
+
+      drv->state = PM_STATE_POWER_SAVE;
+      drv->fuel_gauge_request_new_guess = true;
+
+    }else{
+
+      // Backup RAM contain valid data
+      drv->state = pm_recovery_data.bootloader_exit_state;
+      drv->fuel_gauge.soc = pm_recovery_data.soc;
+      drv->fuel_gauge_request_new_guess = false;
+      drv->fuel_gauge_initialized = true;
+    }
+
+    drv->fuel_gauge_initialized = true;
+
+  }else{
+
+    // Start in lowest state and wait for the bootup sequence to
+    // finish (call of pm_turn_on())
     drv->state = PM_STATE_HIBERNATE;
+    drv->initialized = false;
+
   }
 
   // Disable charging by default
@@ -206,12 +238,22 @@ pm_status_t pm_turn_on(void) {
 
   irq_key_t irq_key = irq_lock();
 
-  pm_battery_initial_soc_guess();
+  // Try to recover SoC from the backup RAM
+  backup_ram_power_manager_data_t pm_recovery_data;
+  backup_ram_status_t status =
+  backup_ram_read_power_manager_data(&pm_recovery_data);
+
+  if(status == BACKUP_RAM_OK && pm_recovery_data.soc != 0.0f) {
+    drv->fuel_gauge.soc = pm_recovery_data.soc;
+  } else {
+    pm_battery_initial_soc_guess();
+  }
 
   // Set monitoiring timer with longer period
   systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
 
   drv->fuel_gauge_initialized = true;
+
   irq_unlock(irq_key);
 
   return PM_OK;
