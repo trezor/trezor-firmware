@@ -36,9 +36,17 @@ void pm_monitor_power_sources(void) {
 
   // Update fuel gauge state
   if (drv->fuel_gauge_initialized) {
-    fuel_gauge_update(
-        &drv->fuel_gauge, PM_BATTERY_SAMPLING_PERIOD_MS,
-        drv->pmic_data.vbat, drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+    fuel_gauge_update(&drv->fuel_gauge, PM_BATTERY_SAMPLING_PERIOD_MS,
+                      drv->pmic_data.vbat, drv->pmic_data.ibat,
+                      drv->pmic_data.ntc_temp);
+
+    // Ceil the float soc to user friendly integer
+    uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
+    if (soc_ceiled_temp != drv->soc_ceiled) {
+      drv->soc_ceiled = soc_ceiled_temp;
+      PM_SET_EVENT(drv->event_flags, PM_EVENT_SOC_UPDATED);
+    }
+
   } else {
     pm_battery_sampling(drv->pmic_data.vbat, drv->pmic_data.ibat,
                         drv->pmic_data.ntc_temp);
@@ -78,19 +86,15 @@ void pm_monitor_power_sources(void) {
   if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THRESHOLD_V) &&
       !drv->battery_critical) {
     drv->battery_critical = true;
-    PM_SET_EVENT(drv->event_flags, PM_EVENT_BATTERY_CRITICAL);
-  } else if (drv->pmic_data.vbat >
-                 (PM_BATTERY_UNDERVOLT_THRESHOLD_V +
-                  PM_BATTERY_UNDERVOLT_HYSTERESIS_V) &&
+  } else if (drv->pmic_data.vbat > (PM_BATTERY_UNDERVOLT_THRESHOLD_V +
+                                    PM_BATTERY_UNDERVOLT_HYSTERESIS_V) &&
              drv->battery_critical) {
     drv->battery_critical = false;
   }
 
   // Check battery voltage for low threshold
-  if (drv->pmic_data.vbat < PM_BATTERY_LOW_THRESHOLD_V &&
-      !drv->battery_low) {
+  if (drv->pmic_data.vbat < PM_BATTERY_LOW_THRESHOLD_V && !drv->battery_low) {
     drv->battery_low = true;
-    PM_SET_EVENT(drv->event_flags, PM_EVENT_BATTERY_LOW);
   } else if (drv->pmic_data.vbat > PM_BATTERY_LOW_RECOVERY_V &&
              drv->battery_low) {
     drv->battery_low = false;
@@ -182,8 +186,7 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
 
   // Update head index
   drv->bat_sampling_buf_head_idx++;
-  if (drv->bat_sampling_buf_head_idx >=
-      PM_BATTERY_SAMPLING_BUF_SIZE) {
+  if (drv->bat_sampling_buf_head_idx >= PM_BATTERY_SAMPLING_BUF_SIZE) {
     drv->bat_sampling_buf_head_idx = 0;
   }
 
@@ -191,8 +194,7 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp) {
   if (drv->bat_sampling_buf_head_idx == drv->bat_sampling_buf_tail_idx) {
     // Buffer is full, move tail index forward
     drv->bat_sampling_buf_tail_idx++;
-    if (drv->bat_sampling_buf_tail_idx >=
-        PM_BATTERY_SAMPLING_BUF_SIZE) {
+    if (drv->bat_sampling_buf_tail_idx >= PM_BATTERY_SAMPLING_BUF_SIZE) {
       drv->bat_sampling_buf_tail_idx = 0;
     }
   }
