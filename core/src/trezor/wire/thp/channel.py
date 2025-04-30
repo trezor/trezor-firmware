@@ -552,7 +552,8 @@ class Channel:
 
         if self.write_task_spawn is not None:
             self.write_task_spawn.close()  # TODO might break something
-            self._log("Closed write task", logger=log.warning)
+            if __debug__:
+                self._log("Closed write task", logger=log.warning)
         self._prepare_write()
         if fallback:
             if __debug__ and utils.ALLOW_DEBUG_MESSAGES:
