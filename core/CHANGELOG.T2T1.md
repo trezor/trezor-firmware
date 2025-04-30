@@ -24,16 +24,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New UI for confirming long messages.  [#4541]
 - Solana staking confirmation dialogs.  [#4560]
 
-### Changed
-- Changed "swipe to continue" to "tap to continue". Screens still respond to swipe-up, but the preferred interaction method is now tapping the lower part of the screen.  [#4571]
-
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
 
 ## [2.8.8] (19th February 2025)
 
 ### Fixed
-- [T2B1, T3B1] Fix "PIN attempts exceeded" screen.  [#3324]
 - Fix wrong RSOD color on some older Model T devices.  [#4491]
 - Fixed a bug resulting in restarting the recovery flow when inputting 33-word mnemonic.  [#4537]
 

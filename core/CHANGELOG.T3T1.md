@@ -29,10 +29,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
 
-## [2.8.8] (19th February 2025)
+## [2.8.8] (internal release)
 
 ### Fixed
-- [T2B1, T3B1] Fix "PIN attempts exceeded" screen.  [#3324]
 - Fixed flashing old content when fading.  [#4492]
 
 ## [2.8.7] (22th January 2025)

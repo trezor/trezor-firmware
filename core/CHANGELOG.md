@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.8.10] (21st May 2025)
 
 ### Added
-- [T3B1] Upgrade bundled bootloader to 2.1.10.  [#noissue]
+- [T3B1] Upgrade bundled bootloader to 2.1.10.
 - Add Nostr support (in debug mode only!).  [#4160]
 - [T3T1] Visual cues to distinguish unlocked state on Homescreen.  [#4964]
 

@@ -7,7 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [2.8.10] (21st May 2025)
 
 ### Added
-- Upgrade bundled bootloader to 2.1.10.  [#noissue]
+- Upgrade bundled bootloader to 2.1.10.
 - Add Nostr support (in debug mode only!).  [#4160]
 
 ### Fixed
@@ -23,16 +23,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New UI for confirming long messages.  [#4541]
 - Solana staking confirmation dialogs.  [#4560]
 
-### Changed
-- Changed "swipe to continue" to "tap to continue". Screens still respond to swipe-up, but the preferred interaction method is now tapping the lower part of the screen.  [#4571]
-
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
 
-## [2.8.8] (19th February 2025)
+## [2.8.8] (internal release)
 
 ### Fixed
-- [T2B1, T3B1] Fix "PIN attempts exceeded" screen.  [#3324]
+- Fix "PIN attempts exceeded" screen.  [#3324]
 - Fix behavior of a button press during "hold to confirm".  [#3772]
 - Fix backup failing if middle button is pressed during confirmation.  [#4500]
 
