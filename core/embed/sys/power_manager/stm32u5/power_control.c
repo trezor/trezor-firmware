@@ -17,36 +17,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#include <sys/systick.h>
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
-#include <sys/systick.h>
 
-#include "power_manager_internal.h"
 #include "../../powerctl/npm1300/npm1300.h"
+#include "power_manager_internal.h"
 
-pm_status_t pm_control_hibernate(){
+pm_status_t pm_control_hibernate() {
+  // TEMPORARY FIX:
+  // Enable Backup domain retentaion in VBAT mode before entering the
+  // hiberbation. BREN bit can be accessed only in LDO mode.
+  __HAL_RCC_PWR_CLK_ENABLE();
 
-    // TEMPORARY FIX:
-    // Enable Backup domain retentaion in VBAT mode before entering the
-    // hiberbation. BREN bit can be accessed only in LDO mode.
-    __HAL_RCC_PWR_CLK_ENABLE();
+  // Switch to LDO regulator
+  CLEAR_BIT(PWR->CR3, PWR_CR3_REGSEL);
+  // Wait until system switch on new regulator
+  while (HAL_IS_BIT_SET(PWR->SVMSR, PWR_SVMSR_REGS))
+    ;
+  // Enable backup domain retention
+  PWR->BDCR1 |= PWR_BDCR1_BREN;
 
-    // Switch to LDO regulator
-    CLEAR_BIT(PWR->CR3, PWR_CR3_REGSEL);
-    // Wait until system switch on new regulator
-    while (HAL_IS_BIT_SET(PWR->SVMSR, PWR_SVMSR_REGS))
-      ;
-    // Enable backup domain retention
-    PWR->BDCR1 |= PWR_BDCR1_BREN;
-
-    if (!npm1300_enter_shipmode()) {
-      return PM_ERROR;
-    }
-
-    // Wait for the device to power off
-    systick_delay_ms(50);
-
+  if (!npm1300_enter_shipmode()) {
     return PM_ERROR;
-    
+  }
+
+  // Wait for the device to power off
+  systick_delay_ms(50);
+
+  return PM_ERROR;
 }
