@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [2.8.10] (21st May 2025)
+
+### Added
+- Upgrade bundled bootloader to 2.1.10.  [#noissue]
+- Add Nostr support (in debug mode only!).  [#4160]
+
+### Fixed
+- Replaced "next page" icon with "..." ellipsis when confirming long message.  [#4623]
+- Fixed Solana staking dialog title.  [#4787]
+- Updated EIP-1559 fee-related labels.  [#4819]
+- Allow firmware upgrade even if language change failed.  [#4827]
+
 ## [2.8.9] (19th March 2025)
 
 ### Added
@@ -11,13 +23,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - New UI for confirming long messages.  [#4541]
 - Solana staking confirmation dialogs.  [#4560]
 
+### Changed
+- Changed "swipe to continue" to "tap to continue". Screens still respond to swipe-up, but the preferred interaction method is now tapping the lower part of the screen.  [#4571]
+
 ### Fixed
 - Cancelling device recovery after aborting from Suite.  [#3503]
 
-## [2.8.8] (internal release)
+## [2.8.8] (19th February 2025)
 
 ### Fixed
-- Fix "PIN attempts exceeded" screen.  [#3324]
+- [T2B1, T3B1] Fix "PIN attempts exceeded" screen.  [#3324]
 - Fix behavior of a button press during "hold to confirm".  [#3772]
 - Fix backup failing if middle button is pressed during confirmation.  [#4500]
 
@@ -1024,6 +1039,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4142]: https://github.com/trezor/trezor-firmware/pull/4142
 [#4151]: https://github.com/trezor/trezor-firmware/pull/4151
 [#4155]: https://github.com/trezor/trezor-firmware/pull/4155
+[#4160]: https://github.com/trezor/trezor-firmware/pull/4160
 [#4161]: https://github.com/trezor/trezor-firmware/pull/4161
 [#4165]: https://github.com/trezor/trezor-firmware/pull/4165
 [#4167]: https://github.com/trezor/trezor-firmware/pull/4167
@@ -1048,4 +1064,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 [#4541]: https://github.com/trezor/trezor-firmware/pull/4541
 [#4560]: https://github.com/trezor/trezor-firmware/pull/4560
 [#4571]: https://github.com/trezor/trezor-firmware/pull/4571
-[#1658739]: https://github.com/trezor/trezor-firmware/pull/1658739
+[#4623]: https://github.com/trezor/trezor-firmware/pull/4623
+[#4665]: https://github.com/trezor/trezor-firmware/pull/4665
+[#4771]: https://github.com/trezor/trezor-firmware/pull/4771
+[#4786]: https://github.com/trezor/trezor-firmware/pull/4786
+[#4787]: https://github.com/trezor/trezor-firmware/pull/4787
+[#4819]: https://github.com/trezor/trezor-firmware/pull/4819
+[#4827]: https://github.com/trezor/trezor-firmware/pull/4827
+[#4964]: https://github.com/trezor/trezor-firmware/pull/4964
