@@ -263,6 +263,9 @@ int main(void) {
       &g_cli, &_prodtest_cli_cmd_section_start,
       &_prodtest_cli_cmd_section_end - &_prodtest_cli_cmd_section_start);
 
+  pm_turn_on();
+  pm_charging_enable();
+
 #ifdef USE_OPTIGA
   optiga_init();
   optiga_open_application();
