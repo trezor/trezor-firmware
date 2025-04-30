@@ -940,9 +940,12 @@ wpc-update
 ### nfc-read-card
 Activate the NFC in reader mode for a given time. Read general information from firstly discovered NFC tag or exits on timeout.
 
+When used without a timeout, the command will wait indefinitely for a card to be placed on the reader and will repeat the read operation
+each 100ms.
+
 Example:
 ```
-nfc-read-card <timeout_seconds>
+nfc-read-card [<timeout_seconds>]
 # NFC activated in reader mode for <timeout_seconds> seconds.
 # NFC card detected.
 # NFC Type A: UID: %s
@@ -951,11 +954,11 @@ OK
 
 
 ### nfc-emulate-card
-Activate NFC in Card Emulator mode for given time.
+Activate NFC in Card Emulator mode for given time, or infinite time if no timeout is specified.
 
 Example:
 ```
-nfc-emulate-card <timeout_seconds>
+nfc-emulate-card [<timeout_seconds>]
 # Emulation started for <timeout_seconds>
 # Emulation over
 OK
@@ -964,9 +967,12 @@ OK
 ### nfc-write-card
 Activates the NFC reader for given time. Writes the NDEF URI message into the first discovered NFC tag type A or exits on timeout.
 
+When used without a timeout, the command will wait indefinitely for a card to be placed on the reader and will repeat the write operation
+each 100ms.
+
 Example:
 ```
-nfc-write_card <timeout_seconds>
+nfc-write_card [<timeout_seconds>]
 # NFC reader on, put the card on the reader (timeout <timeout_seconds> s)
 # Writting URI to NFC tag 7AF403
 
