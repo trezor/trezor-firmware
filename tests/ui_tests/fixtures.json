@@ -723,7 +723,6 @@
 "T1B1_en_test_protection_levels.py::test_get_entropy": "a663543411fa7e6c4de0a81efce207bef7fafeeedd93be38565f05c4ac1c5c3c",
 "T1B1_en_test_protection_levels.py::test_get_public_key": "c35b594cea2bb8c371b471be8d0a6a4fc7e7d7699cbd332b3a7cff762798d13c",
 "T1B1_en_test_protection_levels.py::test_initialize": "f8d19ee2236de1579d00a6f29dfecda98596963b8701e314fcf1ccc2aa166bc4",
-"T1B1_en_test_protection_levels.py::test_passphrase_cached": "79a607736c6833a04561231c8db1df8cf6ac186715fc3798be9cc3456a588e24",
 "T1B1_en_test_protection_levels.py::test_ping": "de7fc40b2f35e82fa486f1b97ee3e34a96d0a67412537e8a0fddacc0b0b1649d",
 "T1B1_en_test_protection_levels.py::test_recovery_device": "9bcc413cf3e44af03f2dbb038c4df43bf503805447b71dd5713ab34335f9341b",
 "T1B1_en_test_protection_levels.py::test_reset_device": "be500e3deae0cd45c11d2086c919d7be1ad06ee2818a088508385083a62570db",
@@ -9951,14 +9950,14 @@
 "T2T1_pt_zcash-test_sign_tx.py::test_version_group_id_missing": "e9e80e1bfd347b598699a7a84deb8932eff90fc5fb8b56771453e06fe3c4c216"
 },
 "persistence_tests": {
-"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptAlways--081810a6": "acbc2c99e4706d6598b054bd77e68628bc2553cb2a0533909b0288ab350cfdb7",
-"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "ec6c94133f957bdfa4684d5219ac157f0b73ccc5a4380980fa602eb28345ec2f",
-"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "2158b5e92f47354360271a6e74c03b6f68c09c46ac6b4c84b792c2afd43fd8b5",
+"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptAlways--081810a6": "d1e7905797c25c34e1be947b2cbcb655b4497068e6e6bdaccf88a1c821339085",
+"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.PromptTempora-b3d21f4a": "d69338d8911fc6f4d4a9b4f23297537a9be60975694572d6c8cd1272c55d2af9",
+"T2T1_en_test_safety_checks.py::test_safety_checks_level_after_reboot[SafetyCheckLevel.Strict-Safety-f1ff9c26": "458e2c14abebb664a50fef4082d8933d0db7c167439bcd7ffb11b7fca75dfb66",
 "T2T1_en_test_shamir_persistence.py::test_abort": "44ad6164cfa4765aa4cc0806ff881d48fad0379300835b9c6108f741fa84962f",
 "T2T1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "96009f5c0834cb4fcfe266bfd97309c0280a4cd053f906359021c4d8c78a3e63",
 "T2T1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "41e408617bb1d314602e03cc1d3bcdf2064096b99d08e9a07220dbd9347a81d3",
 "T2T1_en_test_shamir_persistence.py::test_recovery_single_reset": "1cefe6558c3dfcbbbda25a28441d289e313fe76fdd76227d719ec34e646dd149",
-"T2T1_en_test_wipe_code.py::test_wipe_code_activate_core": "66c7417fff81c6e598e96616f91c60aa5fcd56d18bc4d1aa0b800c373045b511"
+"T2T1_en_test_wipe_code.py::test_wipe_code_activate_core": "6984e9b87a9d7f13a2fefec61305b0acddeab64bc24f149f2a2998024a191d06"
 }
 },
 "T3B1": {
@@ -20251,7 +20250,6 @@
 "T3T1_cs_test_basic.py::test_capabilities": "592adf9c06f8f39132298b46037dd524fac99e58237a0c023197bf47df67d632",
 "T3T1_cs_test_basic.py::test_device_id_different": "dd9c1e3813b6efe63bc2d025aac0bbb4fa98880ec0d75ccaa0489ae2b32d3e93",
 "T3T1_cs_test_basic.py::test_device_id_same": "592adf9c06f8f39132298b46037dd524fac99e58237a0c023197bf47df67d632",
-"T3T1_cs_test_basic.py::test_features": "592adf9c06f8f39132298b46037dd524fac99e58237a0c023197bf47df67d632",
 "T3T1_cs_test_basic.py::test_ping": "592adf9c06f8f39132298b46037dd524fac99e58237a0c023197bf47df67d632",
 "T3T1_cs_test_busy_state.py::test_busy_expiry_core": "8809e312d55cb5db2dc59ec008a5c77dbbc1125811382148f0492f50622c50a6",
 "T3T1_cs_test_busy_state.py::test_busy_state": "8a20d865f95dce8f5fc9fa066bf182adec74881245a889fafad73c724d15133c",
@@ -20350,7 +20348,6 @@
 "T3T1_cs_test_protection_levels.py::test_get_entropy": "9d277fff2a078668405915372530cd285ecce1c6096d65df88e8f44b3d03bcfc",
 "T3T1_cs_test_protection_levels.py::test_get_public_key": "219c68098f5ea24ff99f373ca72bdaaeecb0454edc872b4b304c4ab98ac97815",
 "T3T1_cs_test_protection_levels.py::test_initialize": "dc88efcc297ee96f1ad9782945e23d0116e62b58b2783b51ca76999b1fe329e6",
-"T3T1_cs_test_protection_levels.py::test_passphrase_cached": "a938e5026a9aa45196ef3ba1efb0724a55032accc7a6d8bf09818c67022d4f66",
 "T3T1_cs_test_protection_levels.py::test_passphrase_reporting[False]": "fd73a4e9ae6698819af320e2b2573952e7268b5d201472e292e7f80cf420cb7e",
 "T3T1_cs_test_protection_levels.py::test_passphrase_reporting[True]": "0b9e73b27065919c6fb9f260fb1fb30ef0841649fdf5dd1093860d3a6cb519d0",
 "T3T1_cs_test_protection_levels.py::test_ping": "b7248c186ab42e3ee0a6ec72d123ecf734e049c9215fcfdbc9a8a0ee8b19780e",
@@ -21675,7 +21672,6 @@
 "T3T1_de_test_basic.py::test_capabilities": "f2fcbbd7ad83aff9adc0ee97fe98e7272d8bcfcc4a023798e2ab1c9895fda70f",
 "T3T1_de_test_basic.py::test_device_id_different": "bc1c9192634f396337344bbdbe36d2507dc55899c915fbe0b52f928893b08a22",
 "T3T1_de_test_basic.py::test_device_id_same": "f2fcbbd7ad83aff9adc0ee97fe98e7272d8bcfcc4a023798e2ab1c9895fda70f",
-"T3T1_de_test_basic.py::test_features": "f2fcbbd7ad83aff9adc0ee97fe98e7272d8bcfcc4a023798e2ab1c9895fda70f",
 "T3T1_de_test_basic.py::test_ping": "f2fcbbd7ad83aff9adc0ee97fe98e7272d8bcfcc4a023798e2ab1c9895fda70f",
 "T3T1_de_test_busy_state.py::test_busy_expiry_core": "b1e30f91e5f5983a2331715cdd08e09de24ff1d9d65b924abf5eac8d605430b1",
 "T3T1_de_test_busy_state.py::test_busy_state": "a0ecde2427006a743f55e4087ad40a6beb10e12765c8bac6cea11cc41419fa7f",
@@ -21774,7 +21770,6 @@
 "T3T1_de_test_protection_levels.py::test_get_entropy": "41629794fddbc0d252519a459908c3c58759e23aacde8262e81e401fdb44f3e6",
 "T3T1_de_test_protection_levels.py::test_get_public_key": "eae0af9d1b453e8254249e2f0a101e95d91f175efce833aa4148e226f86e9c2e",
 "T3T1_de_test_protection_levels.py::test_initialize": "32e25ff76dcad87703faf2898cfe06dd9066553b149cb2006a5313d7b6f7b7b5",
-"T3T1_de_test_protection_levels.py::test_passphrase_cached": "686c91c1444475204f9319406834eca87e74a2e7cbf9a979daeb804de2df218a",
 "T3T1_de_test_protection_levels.py::test_passphrase_reporting[False]": "399ff12315de49154486cb64a4f5ee2ea0a39e1dde7bf3931d24c1e5677143b2",
 "T3T1_de_test_protection_levels.py::test_passphrase_reporting[True]": "e7c6b97295b5e84915aac6e2e5af86d900a7c1a28bbe962169122b5173ed92d6",
 "T3T1_de_test_protection_levels.py::test_ping": "8cfe2e7a0d0042e0c958737dff70d79b137d74ee3c4d1964407a82e53f141000",
@@ -23099,7 +23094,6 @@
 "T3T1_en_test_basic.py::test_capabilities": "cb8641952bec9e793e7d19f281a85a0ca1be2c3397ca5c0cf4ee7ad905429984",
 "T3T1_en_test_basic.py::test_device_id_different": "cbb18ae6caad6e32d24d95344884ab480e64e63d01b6807c3db4d066ae170ac9",
 "T3T1_en_test_basic.py::test_device_id_same": "cb8641952bec9e793e7d19f281a85a0ca1be2c3397ca5c0cf4ee7ad905429984",
-"T3T1_en_test_basic.py::test_features": "cb8641952bec9e793e7d19f281a85a0ca1be2c3397ca5c0cf4ee7ad905429984",
 "T3T1_en_test_basic.py::test_ping": "cb8641952bec9e793e7d19f281a85a0ca1be2c3397ca5c0cf4ee7ad905429984",
 "T3T1_en_test_busy_state.py::test_busy_expiry_core": "a42639b9338898eb17fdb71dd9246f750147383dfaa75b3d4f94009d279fc45d",
 "T3T1_en_test_busy_state.py::test_busy_state": "c4a0c51de30e8cd5bb27ab3ae54b612ae158c1815f71c66eeefe1041d320e002",
@@ -23198,7 +23192,6 @@
 "T3T1_en_test_protection_levels.py::test_get_entropy": "9ca42369b430b9abb7f64c34d9aa2d76476e620aab617177746b2d4315f0e13b",
 "T3T1_en_test_protection_levels.py::test_get_public_key": "33fc38106af26ca90c19af0b9bae88504ca51900a8ea2116b5a4ea5d923c61c3",
 "T3T1_en_test_protection_levels.py::test_initialize": "d0c54dab9e80e3b7b9d9f6210b8eddce1ba5cb0fff53f870b774388bef025939",
-"T3T1_en_test_protection_levels.py::test_passphrase_cached": "febe891b7b477bd630298f3dde10d02c8190a43084f32f616d374fd5d9eca15f",
 "T3T1_en_test_protection_levels.py::test_passphrase_reporting[False]": "006c74cbbb68e7db9c9ad5ce796aaf1c60b4f5f42762167df0ef3cc8bb96ac31",
 "T3T1_en_test_protection_levels.py::test_passphrase_reporting[True]": "1b951246cb4413e55ee120fcc586fccd122b47408bbaa4471aeb805480efb7b4",
 "T3T1_en_test_protection_levels.py::test_ping": "7e7a7a9dfc166a4bb182aa5ee17e335880ab434743407fcdbeb1176e50a3ffcf",
@@ -24523,7 +24516,6 @@
 "T3T1_es_test_basic.py::test_capabilities": "c568b82943d9f63ad6b29b7dee6f5ed9dca78fc9610d4fa7f12bb8a061a6882a",
 "T3T1_es_test_basic.py::test_device_id_different": "409700790c368003f25ca8c0cd557495ea108c90cae885cdfb110729614bdc68",
 "T3T1_es_test_basic.py::test_device_id_same": "c568b82943d9f63ad6b29b7dee6f5ed9dca78fc9610d4fa7f12bb8a061a6882a",
-"T3T1_es_test_basic.py::test_features": "c568b82943d9f63ad6b29b7dee6f5ed9dca78fc9610d4fa7f12bb8a061a6882a",
 "T3T1_es_test_basic.py::test_ping": "c568b82943d9f63ad6b29b7dee6f5ed9dca78fc9610d4fa7f12bb8a061a6882a",
 "T3T1_es_test_busy_state.py::test_busy_expiry_core": "0c624e84a2dafacc96825b93660cfc377911125b64acac0eefc18abb4785d370",
 "T3T1_es_test_busy_state.py::test_busy_state": "a0fcb051c7ca00382680675627500af617f3a9c30c6a13998c8eea61f932a5e6",
@@ -24622,7 +24614,6 @@
 "T3T1_es_test_protection_levels.py::test_get_entropy": "9f234f9ef4b7d38ddcb60fa058c07c19df97cce6f3143ab05b00a04dc9d9cf11",
 "T3T1_es_test_protection_levels.py::test_get_public_key": "6f005d31ec55fb1d6b0712fa456422a4ec2fc3b2efffe97856d3cf812697a642",
 "T3T1_es_test_protection_levels.py::test_initialize": "09e5c13878ea4ae12db36a508af1f533c9658f1724772c3ccd43ce0fc958f7e9",
-"T3T1_es_test_protection_levels.py::test_passphrase_cached": "037e640b5b56f2ae604c55bbf0550225f6c9319603e866ddb10d20ebbfe038f9",
 "T3T1_es_test_protection_levels.py::test_passphrase_reporting[False]": "0a4b82e4343171d576eb93f5a0fc69082d63fd8d1b5d0a1a837a01d25ca6b918",
 "T3T1_es_test_protection_levels.py::test_passphrase_reporting[True]": "2278d3affcf7b6feb43e8f1c258b21c030a3701d7db850e12084976b3b6adaa5",
 "T3T1_es_test_protection_levels.py::test_ping": "29e9d8265f78881ffdecd6fc097d22934c67d46e69f2982d80eb2098e0ddaa29",
@@ -25947,7 +25938,6 @@
 "T3T1_fr_test_basic.py::test_capabilities": "c4dffa9195d175f9bc4a23e9e0f80b92f7c6687128918a5a70c14b4a6e7e3694",
 "T3T1_fr_test_basic.py::test_device_id_different": "4f263a2a99f14e5c17ef1119749b3430089b55c19229261a96982eb7c428f913",
 "T3T1_fr_test_basic.py::test_device_id_same": "c4dffa9195d175f9bc4a23e9e0f80b92f7c6687128918a5a70c14b4a6e7e3694",
-"T3T1_fr_test_basic.py::test_features": "c4dffa9195d175f9bc4a23e9e0f80b92f7c6687128918a5a70c14b4a6e7e3694",
 "T3T1_fr_test_basic.py::test_ping": "c4dffa9195d175f9bc4a23e9e0f80b92f7c6687128918a5a70c14b4a6e7e3694",
 "T3T1_fr_test_busy_state.py::test_busy_expiry_core": "02a33ac29d1fd36a8ae64f3c9c5a3223ec53f3a6228324eb71aea2189705a4c1",
 "T3T1_fr_test_busy_state.py::test_busy_state": "39e0b8617ebd2226e9e9a572d2f272d818d826a3bfbb3795c02cb0fa8633ac2d",
@@ -26046,7 +26036,6 @@
 "T3T1_fr_test_protection_levels.py::test_get_entropy": "b25d8d7456e2c51a309c51f9acd3a7fe7e7cd84d21ab9fffd0b9f14400a06893",
 "T3T1_fr_test_protection_levels.py::test_get_public_key": "be3650d10a9e2d01dad33c94050a50ea429337cd8affc30ae7cf4824ab8a44f1",
 "T3T1_fr_test_protection_levels.py::test_initialize": "b03ce38f64fcc88e29e78b16dd84cc90e01aad859d77c777eab1b797cba99c1e",
-"T3T1_fr_test_protection_levels.py::test_passphrase_cached": "ea2ec3dcde3451b8f8783b5239d457725fc1e3110033ba862344b0fbf1425af0",
 "T3T1_fr_test_protection_levels.py::test_passphrase_reporting[False]": "009b7a3786ed9523d2803ba554441b68175a022e9edf3741ca3c28020de4beb3",
 "T3T1_fr_test_protection_levels.py::test_passphrase_reporting[True]": "367b5bc6babdddd23378d658b50d668630aed9edb916e2232f4259637cd0827f",
 "T3T1_fr_test_protection_levels.py::test_ping": "9394ca80465362731186d19ecd0d76b7f12694dc63a23dda6cae456a6179e98d",
@@ -27371,7 +27360,6 @@
 "T3T1_pt_test_basic.py::test_capabilities": "c15216b8aa033bd81f0a8fb6415c6728320b0c30fe3150eeb8a1749ae0a1a83c",
 "T3T1_pt_test_basic.py::test_device_id_different": "be498fc626ceac37ab8e833e1c17ef3e3c7ec91758fc6db9c1f611e2c78b6c0c",
 "T3T1_pt_test_basic.py::test_device_id_same": "c15216b8aa033bd81f0a8fb6415c6728320b0c30fe3150eeb8a1749ae0a1a83c",
-"T3T1_pt_test_basic.py::test_features": "c15216b8aa033bd81f0a8fb6415c6728320b0c30fe3150eeb8a1749ae0a1a83c",
 "T3T1_pt_test_basic.py::test_ping": "c15216b8aa033bd81f0a8fb6415c6728320b0c30fe3150eeb8a1749ae0a1a83c",
 "T3T1_pt_test_busy_state.py::test_busy_expiry_core": "eecd186e3e14417e7bb6c9c872ffdf17ac881c505195cb22594df3587cae7045",
 "T3T1_pt_test_busy_state.py::test_busy_state": "d68f49f4ffe9d10c98da46d402dc380e2bf0dc08d5631ad1121b5aac0352e333",
@@ -27470,7 +27458,6 @@
 "T3T1_pt_test_protection_levels.py::test_get_entropy": "aa95ef14c0bb077bf0f880e1a6747879bd528730cc3e2c53c866acaff181936a",
 "T3T1_pt_test_protection_levels.py::test_get_public_key": "d10861fdff38965dc2a4e91c60f470d36ab4df55d5c5e123f1627b8a97c32367",
 "T3T1_pt_test_protection_levels.py::test_initialize": "9d17c9ad7f307cdc781df2d1e62e58857c249fc21c38358c00adae8fef02d300",
-"T3T1_pt_test_protection_levels.py::test_passphrase_cached": "690da2ce6490c82fd58e157a24c95a599f4b753846515fa37f901d7637087f90",
 "T3T1_pt_test_protection_levels.py::test_passphrase_reporting[False]": "d2833e0825511f2bd39e4b3686c7135f580f5007fc4e28aa76fff7afb318e339",
 "T3T1_pt_test_protection_levels.py::test_passphrase_reporting[True]": "892d0562a9256e3391c5256fa83b088f7825b11a4f96be1a4c9307d53ecb54e6",
 "T3T1_pt_test_protection_levels.py::test_ping": "525c0b05be731daf3eff1ae9ee675e44abf24a50fac5d7d08de5e42d5803fa0b",
@@ -27544,7 +27531,7 @@
 "T3T1_en_test_shamir_persistence.py::test_recovery_multiple_resets": "83ec37ee3f6f09a73a1b4364e71dfec465f29b9c586af127c67bd1575465a1d2",
 "T3T1_en_test_shamir_persistence.py::test_recovery_on_old_wallet": "5e10c2031a47ebce57c927754821b7551edf7a1712186c4205b806ae1926598b",
 "T3T1_en_test_shamir_persistence.py::test_recovery_single_reset": "7c4a57a42733c5da4e0ee5272345f9a6ef4586522e2c2a5961608f3779a11301",
-"T3T1_en_test_wipe_code.py::test_wipe_code_activate_core": "39d81819b5b14361de48ca23048a447897e856f94d3e6eff93f8d9c0f54b7292"
+"T3T1_en_test_wipe_code.py::test_wipe_code_activate_core": "d1b0b92e9612288692ed58c1ea534c3926ce222f43d7df108dca73465a594388"
 }
 }
 }
