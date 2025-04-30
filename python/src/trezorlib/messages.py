@@ -277,6 +277,7 @@ class Capability(IntEnum):
     Translations = 19
     Brightness = 20
     Haptic = 21
+    BLE = 22
 
 
 class SdProtectOperationType(IntEnum):

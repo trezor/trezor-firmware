@@ -245,6 +245,7 @@ if TYPE_CHECKING:
         Translations = 19
         Brightness = 20
         Haptic = 21
+        BLE = 22
 
     class SdProtectOperationType(IntEnum):
         DISABLE = 0

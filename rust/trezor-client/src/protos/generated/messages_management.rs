@@ -2752,6 +2752,8 @@ pub mod features {
         Capability_Brightness = 20,
         // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_Haptic)
         Capability_Haptic = 21,
+        // @@protoc_insertion_point(enum_value:hw.trezor.messages.management.Features.Capability.Capability_BLE)
+        Capability_BLE = 22,
     }
 
     impl ::protobuf::Enum for Capability {
@@ -2784,6 +2786,7 @@ pub mod features {
                 19 => ::std::option::Option::Some(Capability::Capability_Translations),
                 20 => ::std::option::Option::Some(Capability::Capability_Brightness),
                 21 => ::std::option::Option::Some(Capability::Capability_Haptic),
+                22 => ::std::option::Option::Some(Capability::Capability_BLE),
                 _ => ::std::option::Option::None
             }
         }
@@ -2811,6 +2814,7 @@ pub mod features {
                 "Capability_Translations" => ::std::option::Option::Some(Capability::Capability_Translations),
                 "Capability_Brightness" => ::std::option::Option::Some(Capability::Capability_Brightness),
                 "Capability_Haptic" => ::std::option::Option::Some(Capability::Capability_Haptic),
+                "Capability_BLE" => ::std::option::Option::Some(Capability::Capability_BLE),
                 _ => ::std::option::Option::None
             }
         }
@@ -2837,6 +2841,7 @@ pub mod features {
             Capability::Capability_Translations,
             Capability::Capability_Brightness,
             Capability::Capability_Haptic,
+            Capability::Capability_BLE,
         ];
     }
 
@@ -2869,6 +2874,7 @@ pub mod features {
                 Capability::Capability_Translations => 18,
                 Capability::Capability_Brightness => 19,
                 Capability::Capability_Haptic => 20,
+                Capability::Capability_BLE => 21,
             };
             Self::enum_descriptor().value_by_index(index)
         }
