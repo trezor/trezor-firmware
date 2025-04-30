@@ -118,9 +118,7 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
   memcpy(&drv->pmic_data, report, sizeof(npm1300_report_t));
 
   // Get wireless charger data
-  if (!stwlc38_get_report(&drv->wireless_data)) {
-    PM_SET_EVENT(drv->event_flags, PM_EVENT_ERROR);
-  }
+  stwlc38_get_report(&drv->wireless_data);
 
   drv->pmic_measurement_ready = true;
 }
