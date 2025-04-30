@@ -31,20 +31,13 @@ pm_driver_t g_pm = {
     .initialized = false,
 };
 
-// State name string table
-const char* const pm_state_names[PM_STATE_COUNT] = {
-#define PM_STATE_STRING(state) #state,
-    PM_STATE_LIST(PM_STATE_STRING)
-#undef PM_STATE_STRING
-};
-
 // Forward declarations of static functions
 static void pm_monitoring_timer_handler(void* context);
 static void pm_shutdown_timer_handler(void* context);
 
 // API Implementation
 
-pm_status_t pm_init(pm_state_t initial_state) {
+pm_status_t pm_init(bool turned_on) {
   pm_driver_t* drv = &g_pm;
 
   if (drv->initialized) {
@@ -65,6 +58,12 @@ pm_status_t pm_init(pm_state_t initial_state) {
                   PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
                   PM_FUEL_GAUGE_P_INIT);
 
+  if (turned_on) {
+    drv->state = PM_STATE_POWER_SAVE;
+  } else {
+    drv->state = PM_STATE_HIBERNATE;
+  }
+
   // Disable charging by default
   drv->charging_enabled = false;
 
@@ -78,7 +77,6 @@ pm_status_t pm_init(pm_state_t initial_state) {
   // Initial power source measurement
   npm1300_measure(pm_pmic_data_ready, NULL);
 
-  drv->state = initial_state;
   drv->initialized = true;
   return PM_OK;
 }
@@ -100,7 +98,7 @@ void pm_deinit(void) {
   stwlc38_deinit();
 }
 
-pm_status_t pm_get_events(pm_event_t* event) {
+pm_status_t pm_get_events(pm_event_t* event_flags) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -108,7 +106,7 @@ pm_status_t pm_get_events(pm_event_t* event) {
   }
 
   irq_key_t irq_key = irq_lock();
-  *event = drv->event_flags;
+  *event_flags = drv->event_flags;
   PM_CLEAR_ALL_EVENTS(drv->event_flags);
   irq_unlock(irq_key);
 
@@ -122,15 +120,38 @@ pm_status_t pm_get_state(pm_state_t* state) {
     return PM_NOT_INITIALIZED;
   }
 
-  *state = drv->state;
-  return PM_OK;
-}
+  irq_key_t irq_key = irq_lock();
 
-const char* pm_get_state_name(pm_state_t state) {
-  if (state >= PM_STATE_COUNT) {
-    return "UNKNOWN";
+  state->usb_connected = drv->usb_connected;
+  state->wireless_connected = drv->wireless_connected;
+
+  if (drv->pmic_data.ibat > 0.0f) {
+    state->charging_status = PM_BATTERY_DISCHARGING;
+  } else if (drv->pmic_data.ibat < 0.0f) {
+    state->charging_status = PM_BATTERY_CHARGING;
+  } else {
+    state->charging_status = PM_BATTERY_IDLE;
   }
-  return pm_state_names[state];
+
+  switch (drv->state) {
+    case PM_STATE_POWER_SAVE:
+      state->power_mode = PM_POWER_MODE_POWER_SAVE;
+      break;
+    case PM_STATE_SHUTTING_DOWN:
+      state->power_mode = PM_POWER_MODE_SHUTTING_DOWN;
+      break;
+    case PM_STATE_ACTIVE:
+      state->power_mode = PM_POWER_MODE_ACTIVE;
+      break;
+    default:
+      state->power_mode = PM_POWER_MODE_NOT_INITIALIZED;
+  }
+
+  state->soc = drv->soc_ceiled;
+
+  irq_unlock(irq_key);
+
+  return PM_OK;
 }
 
 pm_status_t pm_suspend(void) {
