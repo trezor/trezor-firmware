@@ -84,6 +84,7 @@ typedef struct {
   // Fuel gauge
   fuel_gauge_state_t fuel_gauge;
   bool fuel_gauge_initialized;
+  bool fuel_gauge_request_new_guess;
   pm_sampling_data_t bat_sampling_buf[PM_BATTERY_SAMPLING_BUF_SIZE];
   uint8_t bat_sampling_buf_tail_idx;
   uint8_t bat_sampling_buf_head_idx;
@@ -134,6 +135,7 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report);
 void pm_charging_controller(pm_driver_t* drv);
 void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 void pm_battery_initial_soc_guess(void);
+void pm_store_power_manager_data(pm_driver_t* drv);
 
 // State handlers
 pm_internal_state_t pm_handle_state_active(pm_driver_t* drv);
