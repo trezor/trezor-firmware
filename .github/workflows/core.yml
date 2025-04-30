@@ -80,9 +80,19 @@ jobs:
             coins: btconly
             type: debuglink
             protocol: v2
+          - model: T3W1
+            coins: universal
+            type: normal
+            protocol: v2
+          - model: T3W1
+            coins: universal
+            type: debuglink
+            protocol: v2
         exclude:
           - model: T3W1
             type: production
+          - model: T3W1
+            protocol: v1
     env:
       TREZOR_MODEL: ${{ matrix.model }}
       BITCOIN_ONLY: ${{ matrix.coins == 'universal' && '0' || '1' }}
