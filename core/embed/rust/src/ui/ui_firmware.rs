@@ -235,6 +235,7 @@ pub trait FirmwareUI {
         max_count: u32,
         description: Option<TString<'static>>,
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
+        time_unit: bool,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn request_pin(

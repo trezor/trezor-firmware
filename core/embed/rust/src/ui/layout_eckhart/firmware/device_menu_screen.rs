@@ -60,6 +60,7 @@ pub enum DeviceMenuMsg {
 
     // Device menu
     ScreenBrightness,
+    AutoLockDelay,
 
     // nothing selected
     Close,
@@ -282,6 +283,10 @@ impl<'a> DeviceMenuScreen<'a> {
         unwrap!(items.push(MenuItem::new(
             "Screen brightness".into(),
             Some(Action::Return(DeviceMenuMsg::ScreenBrightness)),
+        )));
+        unwrap!(items.push(MenuItem::new(
+            "Auto-lock delay".into(),
+            Some(Action::Return(DeviceMenuMsg::AutoLockDelay)),
         )));
         unwrap!(items.push(MenuItem::new(
             "About".into(),

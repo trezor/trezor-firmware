@@ -1007,5 +1007,6 @@
   "1005": "send__sign_cancelled",
   "1006": "words__send",
   "1007": "words__wallet",
-  "1008": "plurals__lock_after_x_days"
+  "1008": "plurals__lock_after_x_days",
+  "1009": "auto_lock__description"
 }

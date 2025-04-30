@@ -622,6 +622,8 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
             }
         });
 
+        let time_unit: bool = kwargs.get(Qstr::MP_QSTR_time_unit)?.try_into()?;
+
         let layout = ModelUI::request_number(
             title,
             count,
@@ -629,6 +631,7 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
             max_count,
             description,
             more_info_cb,
+            time_unit,
         )?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
@@ -1497,6 +1500,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     max_count: int,
     ///     description: str | None = None,
     ///     more_info_callback: Callable[[int], str] | None = None,
+    ///     time_unit: bool = False,
     /// ) -> LayoutObj[tuple[UiResult, int]]:
     ///     """Number input with + and - buttons, optional static description and optional dynamic
     ///     description."""

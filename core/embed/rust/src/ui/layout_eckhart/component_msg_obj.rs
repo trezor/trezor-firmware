@@ -145,6 +145,7 @@ impl<'a> ComponentMsgObj for DeviceMenuScreen<'a> {
             DeviceMenuMsg::CheckBackup => "CheckBackup".try_into(),
             DeviceMenuMsg::WipeDevice => "WipeDevice".try_into(),
             DeviceMenuMsg::ScreenBrightness => "ScreenBrightness".try_into(),
+            DeviceMenuMsg::AutoLockDelay => "AutoLockDelay".try_into(),
             DeviceMenuMsg::Close => Ok(CANCELLED.as_obj()),
         }
     }

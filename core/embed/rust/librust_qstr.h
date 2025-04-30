@@ -93,6 +93,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_authenticate__confirm_template;
   MP_QSTR_authenticate__header;
   MP_QSTR_auto_lock__change_template;
+  MP_QSTR_auto_lock__description;
   MP_QSTR_auto_lock__title;
   MP_QSTR_auto_lock__turned_on;
   MP_QSTR_backlight_fade;
@@ -724,6 +725,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_text_footer;
   MP_QSTR_text_mono;
   MP_QSTR_time_ms;
+  MP_QSTR_time_unit;
   MP_QSTR_timer;
   MP_QSTR_title;
   MP_QSTR_title_success;

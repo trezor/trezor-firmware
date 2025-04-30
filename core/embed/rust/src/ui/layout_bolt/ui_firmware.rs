@@ -649,6 +649,7 @@ impl FirmwareUI for UIBolt {
         max_count: u32,
         _description: Option<TString<'static>>,
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
+        _time_unit: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         debug_assert!(more_info_callback.is_some());
         let layout = RootComponent::new(Frame::left_aligned(
