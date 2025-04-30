@@ -92,3 +92,4 @@ pm_status_t pm_turn_on(void);
 pm_status_t pm_get_report(pm_report_t* report);
 pm_status_t pm_charging_enable(void);
 pm_status_t pm_charging_disable(void);
+pm_status_t pm_store_data_to_backup_ram(void);
