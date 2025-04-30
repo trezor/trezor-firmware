@@ -122,7 +122,7 @@ pm_state_t pm_handle_state_power_save(pm_driver_t* drv);
 pm_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv);
 pm_state_t pm_handle_state_shutting_down(pm_driver_t* drv);
 pm_state_t pm_handle_state_suspend(pm_driver_t* drv);
-pm_state_t pm_handle_state_report_low_battery(pm_driver_t* drv);
+pm_state_t pm_handle_state_startup_rejected(pm_driver_t* drv);
 pm_state_t pm_handle_state_charging(pm_driver_t* drv);
 pm_state_t pm_handle_state_hibernate(pm_driver_t* drv);
 
