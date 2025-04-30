@@ -57,7 +57,6 @@ typedef enum {
   PM_EVENT_WIRELESS_DISCONNECTED = 1 << 4,
   PM_EVENT_BATTERY_LOW = 1 << 5,
   PM_EVENT_BATTERY_CRITICAL = 1 << 6,
-  PM_EVENT_ERROR = 1 << 7
 } pm_event_t;
 
 /* Power system report */
