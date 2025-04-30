@@ -148,6 +148,9 @@ def get_features() -> Features:
     if utils.USE_BACKLIGHT:
         f.capabilities.append(Capability.Brightness)
 
+    if utils.USE_BLE:
+        f.capabilities.append(Capability.BLE)
+
     # Only some models are capable of SD card
     if utils.USE_SD_CARD:
         from trezor import sdcard
