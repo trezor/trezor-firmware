@@ -275,7 +275,7 @@ pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
     drv->request_hibernate = false;
 
     // Put PMIC into ship mode (ultra-low power)
-    npm1300_enter_shipmode();
+    pm_control_hibernate();
     return PM_STATE_HIBERNATE;
   }
 
