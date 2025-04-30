@@ -17,25 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef USE_BACKUP_RAM
+
 #include <rtl/cli.h>
 #include <sys/backup_ram.h>
 #include <sys/systick.h>
 #include <trezor_rtl.h>
 
 static void prodtest_backup_ram_write(cli_t* cli) {
+  uint32_t soc = 0;
 
-  if (cli_arg_count(cli) != 1) {
-    cli_error_arg_count(cli);
+  if (!cli_arg_uint32(cli, "soc_percent", &soc) || soc > 100) {
+    cli_error_arg(cli, "Expecting soc_percent argument in range 0-100");
     return;
   }
 
-  uint32_t soc = 0;
-
-  cli_arg_uint32(cli, "soc_percent", &soc);
-
-  if (!cli_arg_uint32(cli, "soc_percent", &soc) ||
-          soc > 100) {
-    cli_error_arg(cli, "Expecting soc_percent argument in range 0-100");
+  if (cli_arg_count(cli) > 1) {
+    cli_error_arg_count(cli);
     return;
   }
 
@@ -142,3 +140,5 @@ PRODTEST_CLI_CMD(
     .info = "Erase unused regions of backup RAM",
     .args = ""
 );
+
+#endif // #ifdef USE_BACKUP_RAM

@@ -99,7 +99,6 @@
 #endif
 
 void drivers_init() {
-
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
