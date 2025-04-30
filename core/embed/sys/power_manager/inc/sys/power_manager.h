@@ -21,31 +21,26 @@
 
 #include <trezor_types.h>
 
-/* Power manager states */
-#define PM_STATE_LIST(STATE) \
-  STATE(HIBERNATE)           \
-  STATE(CHARGING)            \
-  STATE(STARTUP_REJECTED)    \
-  STATE(SUSPEND)             \
-  STATE(ULTRA_POWER_SAVE)    \
-  STATE(SHUTTING_DOWN)       \
-  STATE(POWER_SAVE)          \
-  STATE(ACTIVE)
-
-typedef enum {
-#define STATE(name) PM_STATE_##name,
-  PM_STATE_LIST(STATE)
-#undef STATE
-      PM_STATE_COUNT
-} pm_state_t;
-
 /* API return status codes */
 typedef enum {
   PM_OK = 0,
   PM_NOT_INITIALIZED,
   PM_REQUEST_REJECTED,
-  PM_ERROR
+  PM_ERROR,
 } pm_status_t;
+
+typedef enum {
+  PM_BATTERY_IDLE = 0,
+  PM_BATTERY_DISCHARGING,
+  PM_BATTERY_CHARGING,
+} pm_charging_status_t;
+
+typedef enum {
+  PM_POWER_MODE_ACTIVE,
+  PM_POWER_MODE_POWER_SAVE,
+  PM_POWER_MODE_SHUTTING_DOWN,
+  PM_POWER_MODE_NOT_INITIALIZED,
+} pm_power_mode_t;
 
 /* Power system events */
 typedef enum {
@@ -55,9 +50,19 @@ typedef enum {
   PM_EVENT_USB_DISCONNECTED = 1 << 2,
   PM_EVENT_WIRELESS_CONNECTED = 1 << 3,
   PM_EVENT_WIRELESS_DISCONNECTED = 1 << 4,
-  PM_EVENT_BATTERY_LOW = 1 << 5,
-  PM_EVENT_BATTERY_CRITICAL = 1 << 6,
+  PM_EVENT_ENTERED_MODE_ACTIVE = 1 << 5,
+  PM_EVENT_ENTERED_MODE_POWER_SAVE = 1 << 6,
+  PM_EVENT_ENTERED_MODE_SHUTTING_DOWN = 1 << 7,
+  PM_EVENT_SOC_UPDATED = 1 << 8,
 } pm_event_t;
+
+typedef struct {
+  bool usb_connected;
+  bool wireless_connected;
+  pm_charging_status_t charging_status;
+  pm_power_mode_t power_mode;
+  uint8_t soc;
+} pm_state_t;
 
 /* Power system report */
 typedef struct {
@@ -77,11 +82,10 @@ typedef struct {
 } pm_report_t;
 
 /* Public API functions */
-pm_status_t pm_init(pm_state_t initial_state);
+pm_status_t pm_init(bool turned_on);
 void pm_deinit(void);
-pm_status_t pm_get_events(pm_event_t* event_flag);
+pm_status_t pm_get_events(pm_event_t* event_flags);
 pm_status_t pm_get_state(pm_state_t* state);
-const char* pm_get_state_name(pm_state_t state);
 pm_status_t pm_suspend(void);
 pm_status_t pm_hibernate(void);
 pm_status_t pm_turn_on(void);
