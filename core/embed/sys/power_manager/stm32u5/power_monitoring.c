@@ -20,6 +20,7 @@
 
 #include <sys/systick.h>
 #include <trezor_rtl.h>
+#include <sys/backup_ram.h>
 
 #include "../../powerctl/fuel_gauge/fuel_gauge.h"
 #include "../../powerctl/npm1300/npm1300.h"
@@ -36,25 +37,42 @@ void pm_monitor_power_sources(void) {
 
   // Update fuel gauge state
   if (drv->fuel_gauge_initialized) {
-    fuel_gauge_update(&drv->fuel_gauge, PM_BATTERY_SAMPLING_PERIOD_MS,
-                      drv->pmic_data.vbat, drv->pmic_data.ibat,
-                      drv->pmic_data.ntc_temp);
 
-    // Ceil the float soc to user friendly integer
-    uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
-    if (soc_ceiled_temp != drv->soc_ceiled) {
-      drv->soc_ceiled = soc_ceiled_temp;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_SOC_UPDATED);
+    if(drv->fuel_gauge_request_new_guess){
+
+      // Request new single SoC guess based on the latest measurements
+      fuel_gauge_initial_guess(&drv->fuel_gauge, drv->pmic_data.vbat,
+      drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+
+      drv->fuel_gauge_request_new_guess = false;
+
+    }else{
+
+      fuel_gauge_update(&drv->fuel_gauge, PM_BATTERY_SAMPLING_PERIOD_MS,
+      drv->pmic_data.vbat, drv->pmic_data.ibat,
+      drv->pmic_data.ntc_temp);
+
+      // Ceil the float soc to user friendly integer
+      uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
+      if (soc_ceiled_temp != drv->soc_ceiled) {
+        drv->soc_ceiled = soc_ceiled_temp;
+        PM_SET_EVENT(drv->event_flags, PM_EVENT_SOC_UPDATED);
+      }
+
     }
 
   } else {
+
     pm_battery_sampling(drv->pmic_data.vbat, drv->pmic_data.ibat,
                         drv->pmic_data.ntc_temp);
 
     // Battery sampling period, collect data before initial guess is made.
     fuel_gauge_initial_guess(&drv->fuel_gauge, drv->pmic_data.vbat,
                              drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
+
   }
+
+
 
   // Check USB power source status
   if (drv->pmic_data.usb_status != 0x0) {
@@ -236,3 +254,17 @@ void pm_battery_initial_soc_guess(void) {
 
   fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
 }
+
+void pm_store_power_manager_data(pm_driver_t* drv){
+
+  backup_ram_power_manager_data_t pm_data = {0};
+
+  // Store the current state of the power manager
+  pm_data.soc = drv->fuel_gauge.soc;
+  pm_data.last_capture_timestamp = systick_ms();
+
+  // Store the data in backup RAM
+  backup_ram_store_power_manager_data(&pm_data);
+
+}
+
