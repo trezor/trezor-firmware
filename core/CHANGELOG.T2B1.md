@@ -8,12 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Add Nostr support (in debug mode only!).  [#4160]
+- Solana: rent fee calculation  [#4933]
+- Solana: loadable token definitions  [#3541]
 
 ### Fixed
 - Replaced "next page" icon with "..." ellipsis when confirming long message.  [#4623]
 - Fixed Solana staking dialog title.  [#4787]
 - Updated EIP-1559 fee-related labels.  [#4819]
 - Allow firmware upgrade even if language change failed.  [#4827]
+- Solana: fees calculation is now exact  [#4965]
 
 ## [2.8.9] (19th March 2025)
 
