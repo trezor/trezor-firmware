@@ -320,24 +320,24 @@ static void ethereumFormatAmount(const bignum256 *amnt,
   bignum256 bn1e9 = {0};
   bn_read_uint32(1000000000, &bn1e9);
 
-  bignum256 bn1e3 = {0};
-  bn_read_uint32(1000, &bn1e3);
-
   char suffix[50] = {' ', 0};
   int decimals = 18;
   if (token) {
     strlcpy(suffix + 1, token->symbol, sizeof(suffix) - 1);
     decimals = token->decimals;
-  } else if (bn_is_less(amnt, &bn1e9)) {
-    if (use_gwei && !bn_is_less(amnt, &bn1e3)) {
+  } else {
+    if (use_gwei) {
+      // "per gas" fees should always use Gwei
       strlcpy(suffix + 1, "Gwei", sizeof(suffix) - 1);
       decimals = 9;
     } else {
-      strlcpy(suffix + 1, "Wei", sizeof(suffix) - 1);
-      decimals = 0;
+      if (bn_is_less(amnt, &bn1e9)) {
+        strlcpy(suffix + 1, "Wei", sizeof(suffix) - 1);
+        decimals = 0;
+      } else {
+        strlcpy(suffix + 1, chain_suffix, sizeof(suffix) - 1);
+      }
     }
-  } else {
-    strlcpy(suffix + 1, chain_suffix, sizeof(suffix) - 1);
   }
   bn_format(amnt, NULL, suffix, decimals, 0, false, ',', buf, buflen);
 }
@@ -446,7 +446,7 @@ static void layoutEthereumFee(const uint8_t *value, uint32_t value_len,
   bn_multiply(&val, &gas, &secp256k1.prime);
 
   ethereumFormatAmount(&gas, NULL, gas_value, sizeof(gas_value),
-                       /*use_gwei=*/true);
+                       /*use_gwei=*/false);
 
   parse_bignum256(value, value_len, &val);
 
@@ -466,7 +466,7 @@ static void layoutEthereumFeeEIP1559(const char *description,
                                      const uint8_t *amount_bytes,
                                      uint32_t amount_len,
                                      const uint8_t *multiplier_bytes,
-                                     uint32_t multiplier_len) {
+                                     uint32_t multiplier_len, bool use_gwei) {
   bignum256 amount_val = {0};
   char amount_str[32] = {0};
 
@@ -480,7 +480,7 @@ static void layoutEthereumFeeEIP1559(const char *description,
   }
 
   ethereumFormatAmount(&amount_val, NULL, amount_str, sizeof(amount_str),
-                       /*use_gwei=*/true);
+                       use_gwei);
 
   layoutDialogSwipeWrapping(&bmp_icon_question, _("Cancel"), _("Confirm"),
                             _("Confirm fee"), description, amount_str);
@@ -889,7 +889,8 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
   }
 
   layoutEthereumFeeEIP1559(_("Maximum fee per gas"), msg->max_gas_fee.bytes,
-                           msg->max_gas_fee.size, NULL, 0);
+                           msg->max_gas_fee.size, NULL, 0,
+                           /*use_gwei=*/true);
   if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     ethereum_signing_abort();
@@ -898,7 +899,8 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
 
   layoutEthereumFeeEIP1559(_("Priority fee per gas"),
                            msg->max_priority_fee.bytes,
-                           msg->max_priority_fee.size, NULL, 0);
+                           msg->max_priority_fee.size, NULL, 0,
+                           /*use_gwei=*/true);
   if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     ethereum_signing_abort();
@@ -907,7 +909,7 @@ void ethereum_signing_init_eip1559(const EthereumSignTxEIP1559 *msg,
 
   layoutEthereumFeeEIP1559(_("Maximum fee"), msg->gas_limit.bytes,
                            msg->gas_limit.size, msg->max_gas_fee.bytes,
-                           msg->max_gas_fee.size);
+                           msg->max_gas_fee.size, /*use_gwei=*/false);
   if (!protectButton(ButtonRequestType_ButtonRequest_SignTx, false)) {
     fsm_sendFailure(FailureType_Failure_ActionCancelled, NULL);
     ethereum_signing_abort();
