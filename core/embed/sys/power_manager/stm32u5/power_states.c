@@ -309,7 +309,6 @@ void pm_enter_suspend(pm_driver_t* drv) {
 }
 
 void pm_enter_hibernate(pm_driver_t* drv) {
-
   pm_store_power_manager_data(drv);
 
   reboot_device();
