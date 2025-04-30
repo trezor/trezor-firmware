@@ -96,7 +96,7 @@ stdenvNoCC.mkDerivation ({
     crowdin-cli  # for translations
     curl  # for connect tests
     editorconfig-checker
-    gcc-arm-embedded
+    gcc-arm-embedded-13
     gcc14
     git
     gitAndTools.git-subrepo
