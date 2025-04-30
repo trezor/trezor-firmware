@@ -4,7 +4,7 @@
 
 #define VERSION_MAJOR 2
 #define VERSION_MINOR 8
-#define VERSION_PATCH 10
+#define VERSION_PATCH 11
 #define VERSION_BUILD 0
 
 #define FIX_VERSION_MAJOR 2

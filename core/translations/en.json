@@ -1,7 +1,7 @@
 {
   "header": {
     "language": "en-US",
-    "version": "2.8.10"
+    "version": "2.8.11"
   },
   "translations": {
     "addr_mismatch__contact_support_at": "Please contact Trezor support at",
@@ -82,9 +82,9 @@
     "bitcoin__unverified_external_inputs": "The transaction contains unverified external inputs.",
     "bitcoin__valid_signature": "The signature is valid.",
     "bitcoin__voting_rights": "Voting rights to",
-    "ble__unpair_title": "Unpair",
-    "ble__unpair_current": "Unpair connected device",
     "ble__unpair_all": "Unpair all bluetooth devices",
+    "ble__unpair_current": "Unpair connected device",
+    "ble__unpair_title": "Unpair",
     "brightness__change_title": "Change display brightness",
     "brightness__changed_title": "Display brightness changed",
     "brightness__title": "Display brightness",
@@ -783,16 +783,13 @@
     "solana__claim_recipient_warning": "Claiming SOL to address outside your current wallet.",
     "solana__confirm_multisig": "Confirm multisig",
     "solana__expected_fee": "Expected fee",
-    "solana__transaction_fee": "Transaction fee",
-    "solana__base_fee": "Base fee",
-    "solana__priority_fee": "Priority fee",
-    "solana__max_rent_fee": "Max rent fee",
-    "solana__max_fees_rent": "Max fees and rent",
     "solana__instruction_accounts_template": "Instruction contains {0} accounts and its data is {1} bytes long.",
     "solana__instruction_data": "Instruction data",
     "solana__instruction_is_multisig": "The following instruction is a multisig instruction.",
     "solana__is_provided_via_lookup_table_template": "{0} is provided via a lookup table.",
     "solana__lookup_table_address": "Lookup table address",
+    "solana__max_fees_rent": "Max fees and rent",
+    "solana__max_rent_fee": "Max rent fee",
     "solana__multiple_signers": "Multiple signers",
     "solana__priority_fee": "Priority fee",
     "solana__stake": "Stake",
@@ -804,6 +801,7 @@
     "solana__stake_withdrawal_warning_title": "Withdraw authority address",
     "solana__title_token": "Token",
     "solana__transaction_contains_unknown_instructions": "Transaction contains unknown instructions.",
+    "solana__transaction_fee": "Transaction fee",
     "solana__transaction_requires_x_signers_template": "Transaction requires {0} signers which increases the fee.",
     "solana__unstake": "Unstake",
     "solana__unstake_question": "Unstake SOL from stake account?",
