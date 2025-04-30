@@ -131,10 +131,10 @@ static void drivers_init(secbool *touch_initialized) {
 }
 
 static void drivers_deinit(void) {
-#ifdef FIXED_HW_DEINIT
 #ifdef USE_BACKUP_RAM
   backup_ram_deinit();
 #endif
+#ifdef FIXED_HW_DEINIT
 #ifdef USE_BUTTON
   button_deinit();
 #endif
