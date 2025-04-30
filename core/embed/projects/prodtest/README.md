@@ -972,7 +972,7 @@ each 100ms.
 
 Example:
 ```
-nfc-write_card [<timeout_seconds>]
+nfc-write-card [<timeout_seconds>]
 # NFC reader on, put the card on the reader (timeout <timeout_seconds> s)
 # Writting URI to NFC tag 7AF403
 

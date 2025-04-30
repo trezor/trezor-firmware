@@ -252,7 +252,7 @@ static void prodtest_nfc_write_card(cli_t* cli) {
         goto cleanup;
       }
 
-      cli_trace(cli, "Writting URI to NFC tag %s", dev_info.uid);
+      cli_trace(cli, "Writing URI to NFC tag %s", dev_info.uid);
       nfc_dev_write_ndef_uri();
 
       if (timeout_set) {
