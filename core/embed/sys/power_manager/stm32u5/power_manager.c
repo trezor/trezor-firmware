@@ -109,6 +109,10 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
 void pm_deinit(void) {
   pm_driver_t* drv = &g_pm;
 
+  if(drv->fuel_gauge_initialized){
+    pm_store_data_to_backup_ram();
+  }
+
   if (drv->monitoring_timer) {
     systimer_delete(drv->monitoring_timer);
     drv->monitoring_timer = NULL;
@@ -373,4 +377,5 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
   *flags = drv->wakeup_flags;
   irq_unlock(irq_key);
   return PM_OK;
+
 }
