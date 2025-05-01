@@ -206,8 +206,8 @@ pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv) {
-  // Not implemented yet
-  return drv->state;
+  // immediatelly return to power save state after wakeup
+  return PM_STATE_POWER_SAVE;
 }
 
 pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
@@ -305,13 +305,17 @@ void pm_exit_shutting_down(pm_driver_t* drv) {
 }
 
 void pm_enter_suspend(pm_driver_t* drv) {
+
+  pm_control_suspend();
   // Not implemented yet
 }
 
 void pm_enter_hibernate(pm_driver_t* drv) {
-  pm_store_power_manager_data(drv);
 
-  reboot_device();
+  pm_store_power_manager_data(drv);
+  pm_control_hibernate();
+
+  // reboot_device();
   // Put PMIC into ship mode (ultra-low power)
   // npm1300_enter_shipmode();
 }
