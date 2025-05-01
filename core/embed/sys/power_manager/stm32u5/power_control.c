@@ -25,7 +25,7 @@
 #include <sys/irq.h>
 #include <sys/systick.h>
 
-#include "../../powerctl/npm1300/npm1300.h"
+#include "../npm1300/npm1300.h"
 #include "power_manager_internal.h"
 
 #ifdef USE_OPTIGA
