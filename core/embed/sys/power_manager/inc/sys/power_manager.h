@@ -21,6 +21,15 @@
 
 #include <trezor_types.h>
 
+typedef enum {
+  PM_WAKEUP_FLAG_BUTTON = 0x1 << 0,  // Button pressed
+  PM_WAKEUP_FLAG_WPC    = 0x1 << 1,  // Wireless power charging event
+  PM_WAKEUP_FLAG_BLE    = 0x1 << 2,  // Bluetooth connection event
+  PM_WAKEUP_FLAG_NFC    = 0x1 << 3,  // NFC event
+  PM_WAKEUP_FLAG_USB    = 0x1 << 4,  // USB event
+  PM_WAKEUP_FLAG_TIMER  = 0x1 << 5,  // Timer event
+} pm_wakeup_flags_t;
+
 /* API return status codes */
 typedef enum {
   PM_OK = 0,
@@ -93,3 +102,7 @@ pm_status_t pm_get_report(pm_report_t* report);
 pm_status_t pm_charging_enable(void);
 pm_status_t pm_charging_disable(void);
 pm_status_t pm_store_data_to_backup_ram(void);
+pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags);
+pm_status_t pm_wakeup_flags_reset(void);
+pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags);
+
