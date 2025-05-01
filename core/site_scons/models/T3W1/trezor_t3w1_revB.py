@@ -206,18 +206,6 @@ def configure(
         paths += ["embed/util/hw_revision/inc"]
         sources += ["embed/util/hw_revision/stm32/hw_revision.c"]
 
-
-    if "power_manager" in features_wanted:
-        sources += [
-            "embed/sys/power_manager/stm32u5/power_manager.c",
-            "embed/sys/power_manager/stm32u5/power_monitoring.c",
-            "embed/sys/power_manager/stm32u5/power_states.c",
-        ]
-        paths += ["embed/sys/power_manager/stm32u5/inc/"]
-        paths += ["embed/sys/power_manager/inc"]
-        defines += [("USE_POWER_MANAGER", "1")]
-        features_available.append("power_manager")
-
     defines += [
         "FRAMEBUFFER",
         "DISPLAY_RGBA8888",
@@ -251,18 +239,18 @@ def configure(
     ]
 
     sources += [
-        "embed/sys/powerctl/npm1300/npm1300.c",
-        "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
-        "embed/sys/powerctl/fuel_gauge/battery_model.c",
-        "embed/sys/powerctl/stwlc38/stwlc38.c",
-        "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
-        "embed/sys/powerctl/stm32u5/powerctl.c",
-        "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
-        "embed/sys/powerctl/wakeup_flags.c",
+        "embed/sys/power_manager/stm32u5/power_manager.c",
+        "embed/sys/power_manager/stm32u5/power_monitoring.c",
+        "embed/sys/power_manager/stm32u5/power_states.c",
+        "embed/sys/power_manager/stm32u5/power_control.c",
+        "embed/sys/power_manager/npm1300/npm1300.c",
+        "embed/sys/power_manager/fuel_gauge/fuel_gauge.c",
+        "embed/sys/power_manager/fuel_gauge/battery_model.c",
+        "embed/sys/power_manager/stwlc38/stwlc38.c",
+        "embed/sys/power_manager/stwlc38/stwlc38_patching.c",
     ]
-    paths += ["embed/sys/powerctl/inc"]
-    defines += [("USE_POWERCTL", "1")]
-    features_available.append("powerctl")
+    paths += ["embed/sys/power_manager/inc"]
+    defines += [("USE_POWER_MANAGER", "1")]
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

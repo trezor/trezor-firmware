@@ -23,8 +23,8 @@
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
 
-#include "../../powerctl/npm1300/npm1300.h"
-#include "../../powerctl/stwlc38/stwlc38.h"
+#include "../npm1300/npm1300.h"
+#include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 // Global driver instance

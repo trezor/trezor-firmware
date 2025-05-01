@@ -23,9 +23,9 @@
 #include <sys/systimer.h>
 #include <trezor_types.h>
 
-#include "../../powerctl/fuel_gauge/fuel_gauge.h"
-#include "../../powerctl/npm1300/npm1300.h"
-#include "../../powerctl/stwlc38/stwlc38.h"
+#include "../fuel_gauge/fuel_gauge.h"
+#include "../npm1300/npm1300.h"
+#include "../stwlc38/stwlc38.h"
 
 // Power manager thresholds & timings
 #define PM_TIMER_PERIOD_MS 300
