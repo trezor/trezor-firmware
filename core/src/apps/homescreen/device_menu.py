@@ -7,13 +7,13 @@ from trezor.wire import ActionCancelled, NotInitialized, ProcessError
 
 
 async def _prompt_auto_lock_delay() -> int:
-    DEFAUTL_AUTOLOCK_DELAY_S = 300  # 5 minutes
+    DEFAULT_AUTOLOCK_DELAY_S = 300  # 5 minutes
     MIN_AUTOLOCK_DELAY_S = 10  # 10 seconds
     MAX_AUTOLOCK_DELAY_S = 518400  # 6 days
     result = await interact(
         trezorui_api.request_number(
             title=TR.auto_lock__title,
-            count=DEFAUTL_AUTOLOCK_DELAY_S,
+            count=DEFAULT_AUTOLOCK_DELAY_S,
             min_count=MIN_AUTOLOCK_DELAY_S,
             max_count=MAX_AUTOLOCK_DELAY_S,
             time_unit=True,
