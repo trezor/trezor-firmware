@@ -23,9 +23,9 @@
 #include <sys/systimer.h>
 #include <trezor_types.h>
 
-#include "../../powerctl/fuel_gauge/fuel_gauge.h"
-#include "../../powerctl/npm1300/npm1300.h"
-#include "../../powerctl/stwlc38/stwlc38.h"
+#include "../fuel_gauge/fuel_gauge.h"
+#include "../npm1300/npm1300.h"
+#include "../stwlc38/stwlc38.h"
 
 // Power manager thresholds & timings
 #define PM_TIMER_PERIOD_MS 300
@@ -116,6 +116,10 @@ typedef struct {
   // Timers
   systimer_t* monitoring_timer;
   systimer_t* shutdown_timer;
+
+  // Wakeup flags
+  volatile pm_wakeup_flags_t wakeup_flags;
+
 } pm_driver_t;
 
 // State handler function definition
@@ -137,6 +141,7 @@ void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 void pm_battery_initial_soc_guess(void);
 void pm_store_power_manager_data(pm_driver_t* drv);
 pm_status_t pm_control_hibernate(void);
+void pm_control_suspend(void);
 void pm_control_suspend(void);
 
 // State handlers
