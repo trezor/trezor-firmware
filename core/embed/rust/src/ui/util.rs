@@ -194,7 +194,6 @@ pub fn format_plural(template: &str, count: u32) -> ShortString {
     unwrap!(ShortString::try_from(selected))
 }
 
-
 /// Create the `Icon` constant with given name and path.
 macro_rules! include_icon {
     ($name:ident, $path:expr) => {
