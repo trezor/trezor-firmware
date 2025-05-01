@@ -73,7 +73,7 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 
 static void drivers_init(void) {
 #ifdef USE_POWER_MANAGER
-  // npm1300_init();
+  npm1300_init();
 #endif
 #ifdef USE_PVD
   pvd_init();
@@ -99,7 +99,7 @@ static void drivers_deinit(void) {
 #endif
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 #ifdef USE_POWER_MANAGER
-  // npm1300_deinit();
+  npm1300_deinit();
 #endif
 }
 
