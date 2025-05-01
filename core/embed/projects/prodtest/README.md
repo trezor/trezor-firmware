@@ -16,9 +16,10 @@ To exit from interactive mode type `.+ENTER`.
 
 ### Commands
 These commands begin with the command name and may optionally include parameters separated by spaces.
+Parameters are marked with angle brackets (`<...>`), square brackets (`[<...>]`) indicate optional parameters.
 
 Command Format:
-`command <arg1> <arg2> ...`
+`command <arg1> <arg2> [<optional_arg3>]...`
 
 Example:
 ```
