@@ -145,6 +145,7 @@ async def _prompt_number(
         count=count,
         min_count=min_count,
         max_count=max_count,
+        time_unit=False,
     )
 
     result = await interact(

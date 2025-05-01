@@ -692,9 +692,9 @@ impl FirmwareUI for UIDelizia {
         count: u32,
         min_count: u32,
         max_count: u32,
+        _time_unit: bool,
         description: Option<TString<'static>>,
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
-        _time_unit: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         debug_assert!(
             description.is_some(),

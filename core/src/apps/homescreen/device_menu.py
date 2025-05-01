@@ -16,8 +16,8 @@ async def _prompt_auto_lock_delay() -> int:
             count=DEFAUTL_AUTOLOCK_DELAY_S,
             min_count=MIN_AUTOLOCK_DELAY_S,
             max_count=MAX_AUTOLOCK_DELAY_S,
-            description=TR.auto_lock__description,
             time_unit=True,
+            description=TR.auto_lock__description,
         ),
         br_name=None,
     )

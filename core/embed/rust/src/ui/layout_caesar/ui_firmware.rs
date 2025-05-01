@@ -850,9 +850,9 @@ impl FirmwareUI for UICaesar {
         count: u32,
         min_count: u32,
         max_count: u32,
+        _time_unit: bool,
         _description: Option<TString<'static>>,
         _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
-        _time_unit: bool,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(
             Frame::new(title, NumberInput::new(min_count, max_count, count)).with_title_centered(),

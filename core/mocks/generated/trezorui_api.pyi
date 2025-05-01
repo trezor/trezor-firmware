@@ -410,9 +410,9 @@ def request_number(
     count: int,
     min_count: int,
     max_count: int,
+    time_unit: bool = False,
     description: str | None = None,
     more_info_callback: Callable[[int], str] | None = None,
-    time_unit: bool = False,
 ) -> LayoutObj[tuple[UiResult, int]]:
     """Number input with + and - buttons, optional static description and optional dynamic
     description."""
