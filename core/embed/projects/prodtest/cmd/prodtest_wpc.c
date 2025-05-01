@@ -17,165 +17,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
 #include <sys/systick.h>
+#include <sys/power_manager.h>
 
 #include <stdlib.h>
-#include "../../../sys/powerctl/stwlc38/stwlc38.h"
-
-static void prodtest_wpc_init(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  cli_trace(cli, "Initializing the WPC driver...");
-
-  stwlc38_deinit();
-
-  if (!stwlc38_init()) {
-    cli_error(cli, CLI_ERROR, "Failed to initialize STWLC38.");
-    return;
-  }
-
-  cli_ok(cli, "");
-}
-
-static void prodtest_wpc_enable(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  cli_trace(cli, "Enabling STWLC38...");
-
-  if (!stwlc38_enable(true)) {
-    cli_error(cli, CLI_ERROR, "Failed to enable STWLC38.");
-    return;
-  }
-
-  cli_ok(cli, "");
-}
-
-static void prodtest_wpc_disable(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  cli_trace(cli, "Disabling STWLC38...");
-
-  if (!stwlc38_enable(false)) {
-    cli_error(cli, CLI_ERROR, "Failed to disable STWLC38.");
-    return;
-  }
-
-  cli_ok(cli, "");
-}
-
-static void prodtest_wpc_vout_enable(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  cli_trace(cli, "Enabling STWLC38 output...");
-
-  if (!stwlc38_enable_vout(true)) {
-    cli_error(cli, CLI_ERROR, "Failed to enable STWLC38 output.");
-    return;
-  }
-
-  cli_ok(cli, "");
-}
-
-static void prodtest_wpc_vout_disable(cli_t* cli) {
-  if (cli_arg_count(cli) > 0) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  cli_trace(cli, "Disabling STWLC38 output...");
-
-  if (!stwlc38_enable_vout(false)) {
-    cli_error(cli, CLI_ERROR, "Failed to disable STWLC38 output.");
-    return;
-  }
-
-  cli_ok(cli, "");
-}
-
-static void prodtest_wpc_report(cli_t* cli) {
-  uint32_t count = 1;
-  uint32_t period = 1000;
-
-  if (cli_has_arg(cli, "count") && !cli_arg_uint32(cli, "count", &count)) {
-    cli_error_arg(cli, "Expecting count of measurements.");
-    return;
-  }
-
-  if (cli_has_arg(cli, "timeout") && !cli_arg_uint32(cli, "timeout", &period)) {
-    cli_error_arg(cli, "Expecting period in milliseconds.");
-    return;
-  }
-
-  if (cli_arg_count(cli) > 2) {
-    cli_error_arg_count(cli);
-    return;
-  }
-
-  cli_trace(
-      cli,
-      "      time       ready vout_ready vrect vout icur tmeas opfreq ntc");
-
-  uint32_t ticks = hal_ticks_ms();
-
-  while (count-- > 0) {
-    stwlc38_report_t report;
-
-    if (!stwlc38_get_report(&report)) {
-      cli_error(cli, CLI_ERROR, "Failed to get STWLC38 report.");
-      return;
-    }
-
-    cli_progress(cli, "%09d %d %d %d.%03d %d.%03d %d.%03d %d.%03d %d %d.%03d",
-                 ticks, report.ready ? 1 : 0, report.vout_ready ? 1 : 0,
-                 (int)report.vrect, (int)abs(report.vrect * 1000) % 1000,
-                 (int)report.vout, (int)(report.vout * 1000) % 1000,
-                 (int)report.icur, (int)abs(report.icur * 1000) % 1000,
-                 (int)report.tmeas, (int)abs(report.tmeas * 1000) % 1000,
-                 report.opfreq, (int)report.ntc,
-                 (int)abs(report.ntc * 1000) % 1000);
-
-    if (count > 0) {
-      do {
-        if (cli_aborted(cli)) {
-          return;
-        }
-      } while (!ticks_expired(ticks + period));
-      ticks += period;
-    }
-  }
-
-  cli_ok(cli, "");
-}
+#include "../stwlc38/stwlc38.h"
 
 static void prodtest_wpc_info(cli_t* cli) {
+
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
   }
 
   stwlc38_chip_info_t chip_info;
+  pm_status_t status_pm;
+
+  // Deinit power manager to not interfere with STWLC38
+  pm_deinit();
 
   cli_trace(cli, "Reading STWLC38 info...");
   if (!stwlc38_read_chip_info(&chip_info)) {
     cli_error(cli, CLI_ERROR, "Cannot read STWLC38 info.");
-    return;
+    goto cleanup;
   }
 
   char device_id[sizeof(chip_info.device_id) * 2 + 1];
@@ -183,7 +52,7 @@ static void prodtest_wpc_info(cli_t* cli) {
   if (!cstr_encode_hex(device_id, sizeof(device_id), chip_info.device_id,
                        sizeof(chip_info.device_id))) {
     cli_error(cli, CLI_ERROR_FATAL, "Buffer too small.");
-    return;
+    goto cleanup;
   }
 
   cli_trace(cli, "chip_id    0x%d ", chip_info.chip_id);
@@ -205,7 +74,24 @@ static void prodtest_wpc_info(cli_t* cli) {
   cli_trace(cli, "  nvm_patch_err:     0x%X ", chip_info.nvm_patch_err);
   cli_trace(cli, "  nvm_prod_info_err: 0x%X ", chip_info.nvm_prod_info_err);
 
+  // initlize power manager again
+  status_pm = pm_init(true);
+  if (status_pm != PM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
+    return;
+  }
+
   cli_ok(cli, "");
+
+cleanup:
+
+  // initlize power manager again
+  status_pm = pm_init(true);
+  if (status_pm != PM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
+    return;
+  }
+
 }
 
 static void prodtest_wpc_update(cli_t* cli) {
@@ -214,12 +100,17 @@ static void prodtest_wpc_update(cli_t* cli) {
     return;
   }
 
+  pm_status_t status_pm;
+
+  // Deinit power manager to not interfere with STWLC38
+  pm_deinit();
+
   cli_trace(cli, "Updating STWLC38...");
 
   stwlc38_chip_info_t chip_info;
   if (!stwlc38_read_chip_info(&chip_info)) {
     cli_error(cli, CLI_ERROR, "Cannot read STWLC38 info.");
-    return;
+    goto cleanup;
   }
 
   if (chip_info.chip_rev == STWLC38_CUT_1_2) {
@@ -228,7 +119,7 @@ static void prodtest_wpc_update(cli_t* cli) {
     cli_trace(cli, "STWLC38 chip revision 1.3");
   } else {
     cli_error(cli, CLI_ERROR, "Unknown chip revision, update aborted.");
-    return;
+    goto cleanup;
   }
 
   // Update STWLC38 firmware and configuration
@@ -238,56 +129,31 @@ static void prodtest_wpc_update(cli_t* cli) {
 
   if (status == false) {
     cli_error(cli, CLI_ERROR, "Failed to update STWLC38.");
-    return;
+    goto cleanup;
   }
 
   cli_trace(cli, "WPC update completed {%d ms}", update_time);
+
+  // initlize power manager again
+  status_pm = pm_init(true);
+  if (status_pm != PM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
+    return;
+  }
+
   cli_ok(cli, "");
+
+cleanup:
+
+  // initlize power manager again
+  status_pm = pm_init(true);
+  if (status_pm != PM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
+    return;
+  }
 }
 
 // clang-format off
-
-PRODTEST_CLI_CMD(
-  .name = "wpc-init",
-  .func = prodtest_wpc_init,
-  .info = "Initialize the WPC driver",
-  .args = ""
-);
-
-PRODTEST_CLI_CMD(
-  .name = "wpc-enable",
-  .func = prodtest_wpc_enable,
-  .info = "Enable the WPC chip",
-  .args = ""
-);
-
-PRODTEST_CLI_CMD(
-  .name = "wpc-disable",
-  .func = prodtest_wpc_disable,
-  .info = "Disable the WPC chip",
-  .args = ""
-);
-
-PRODTEST_CLI_CMD(
-  .name = "wpc-out-enable",
-  .func = prodtest_wpc_vout_enable,
-  .info = "Enable WPC output",
-  .args = ""
-);
-
-PRODTEST_CLI_CMD(
-  .name = "wpc-out-disable",
-  .func = prodtest_wpc_vout_disable,
-  .info = "Disable WPC output",
-  .args = ""
-);
-
-PRODTEST_CLI_CMD(
-  .name = "wpc-report",
-  .func = prodtest_wpc_report,
-  .info = "Retrieve WPC report",
-  .args = "[<count>] [<timeout>]"
-);
 
 PRODTEST_CLI_CMD(
   .name = "wpc-info",
@@ -303,4 +169,4 @@ PRODTEST_CLI_CMD(
   .args = ""
 );
 
-#endif // USE_POWERCTL
+#endif // USE_POWER_MANAGER
