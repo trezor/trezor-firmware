@@ -150,7 +150,6 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_otp_batch.c',
     'embed/projects/prodtest/cmd/prodtest_otp_variant.c',
     'embed/projects/prodtest/cmd/prodtest_ping.c',
-    'embed/projects/prodtest/cmd/prodtest_pmic.c',
     'embed/projects/prodtest/cmd/prodtest_power_manager.c',
     'embed/projects/prodtest/cmd/prodtest_reboot.c',
     'embed/projects/prodtest/cmd/prodtest_rgbled.c',
