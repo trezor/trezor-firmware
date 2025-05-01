@@ -27,8 +27,8 @@
 
 #include "../button_fsm.h"
 
-#ifdef USE_POWERCTL
-#include <sys/wakeup_flags.h>
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
 #endif
 
 #ifdef KERNEL_MODE
@@ -180,9 +180,9 @@ void BTN_EXTI_INTERRUPT_HANDLER(void) {
   // Clear the EXTI line pending bit
   __HAL_GPIO_EXTI_CLEAR_FLAG(BTN_EXTI_INTERRUPT_PIN);
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
   // Inform the powerctl module about button press
-  wakeup_flags_set(WAKEUP_FLAG_BUTTON);
+  pm_wakeup_flags_set(PM_WAKEUP_FLAG_BUTTON);
 #endif
 
   mpu_restore(mpu_mode);
