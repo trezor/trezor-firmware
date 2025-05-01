@@ -65,7 +65,41 @@ void prodtest_pm_suspend(cli_t* cli) {
   cli_ok(cli, "");
 }
 
-void prodtest_pm_watch(cli_t* cli) {
+void prodtest_pm_charge_disable(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Enabling battery charging");
+
+  pm_status_t status = pm_charging_disable();
+  if (status != PM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to enable battery charging");
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
+void prodtest_pm_charge_enable(cli_t* cli) {
+  if (cli_arg_count(cli) > 0) {
+    cli_error_arg_count(cli);
+    return;
+  }
+
+  cli_trace(cli, "Enabling battery charging");
+
+  pm_status_t status = pm_charging_enable();
+  if (status != PM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to enable battery charging");
+    return;
+  }
+
+  cli_ok(cli, "");
+}
+
+void prodtest_pm_fuel_gauge_monitor(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -157,7 +191,7 @@ void prodtest_pm_report(cli_t* cli) {
   cli_ok(cli, "");
 }
 
-void prodtest_pm_monitor(cli_t* cli) {
+void prodtest_pm_event_monitor(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -225,38 +259,52 @@ void prodtest_pm_monitor(cli_t* cli) {
 // clang-format off
 
 PRODTEST_CLI_CMD(
-    .name = "power-manager-monitor",
-    .func = prodtest_pm_monitor,
-    .info = "Run power manager monitor",
-    .args = ""
-);
-
-PRODTEST_CLI_CMD(
-  .name = "power-manager-watch",
-  .func = prodtest_pm_watch,
-  .info = "Watch power manager reports",
-  .args = ""
-);
-
-PRODTEST_CLI_CMD(
-    .name = "power-manager-report",
-    .func = prodtest_pm_report,
-    .info = "Get power manager report",
-    .args = ""
-);
-
-PRODTEST_CLI_CMD(
-    .name = "power-manager-suspend",
+    .name = "pm-suspend",
     .func = prodtest_pm_suspend,
     .info = "Suspend the device to low-power mode",
     .args = ""
 );
 
 PRODTEST_CLI_CMD(
-    .name = "power-manager-hibernate",
+    .name = "pm-hibernate",
     .func = prodtest_pm_hibernate,
     .info = "Hibernate the device into a near power-off state",
     .args = ""
+);
+
+PRODTEST_CLI_CMD(
+    .name = "pm-charge-enable",
+    .func = prodtest_pm_charge_enable,
+    .info = "Enable battery charging",
+    .args = ""
+);
+
+PRODTEST_CLI_CMD(
+    .name = "pm-charge-disable",
+    .func = prodtest_pm_charge_disable,
+    .info = "Disable battery charging",
+    .args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "pm-event-monitor",
+  .func = prodtest_pm_event_monitor,
+  .info = "Run power manager event monitor",
+  .args = ""
+);
+
+PRODTEST_CLI_CMD(
+.name = "pm-fuel-gauge-monitor",
+.func = prodtest_pm_fuel_gauge_monitor,
+.info = "Watch fuel gauge ",
+.args = ""
+);
+
+PRODTEST_CLI_CMD(
+  .name = "pm-report",
+  .func = prodtest_pm_report,
+  .info = "Get power manager report",
+  .args = ""
 );
 
 #endif /* USE POWER_MANAGER */
