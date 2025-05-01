@@ -125,6 +125,9 @@ void pm_deinit(void) {
 
   npm1300_deinit();
   stwlc38_deinit();
+
+  drv->initialized = false;
+
 }
 
 pm_status_t pm_get_events(pm_event_t* event_flags) {
