@@ -41,6 +41,9 @@ static void prodtest_wpc_info(cli_t* cli) {
   // Deinit power manager to not interfere with STWLC38
   pm_deinit();
 
+
+  stwlc38_init();
+
   cli_trace(cli, "Reading STWLC38 info...");
   if (!stwlc38_read_chip_info(&chip_info)) {
     cli_error(cli, CLI_ERROR, "Cannot read STWLC38 info.");
@@ -74,6 +77,9 @@ static void prodtest_wpc_info(cli_t* cli) {
   cli_trace(cli, "  nvm_patch_err:     0x%X ", chip_info.nvm_patch_err);
   cli_trace(cli, "  nvm_prod_info_err: 0x%X ", chip_info.nvm_prod_info_err);
 
+
+  stwlc38_deinit();
+
   // initlize power manager again
   status_pm = pm_init(true);
   if (status_pm != PM_OK) {
@@ -105,6 +111,8 @@ static void prodtest_wpc_update(cli_t* cli) {
   // Deinit power manager to not interfere with STWLC38
   pm_deinit();
 
+  stwlc38_init();
+
   cli_trace(cli, "Updating STWLC38...");
 
   stwlc38_chip_info_t chip_info;
@@ -133,6 +141,8 @@ static void prodtest_wpc_update(cli_t* cli) {
   }
 
   cli_trace(cli, "WPC update completed {%d ms}", update_time);
+
+  stwlc38_deinit();
 
   // initlize power manager again
   status_pm = pm_init(true);
