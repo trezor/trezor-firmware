@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 
 #include <rtl/cli.h>
 #include <rtl/mini_printf.h>
@@ -259,4 +259,4 @@ PRODTEST_CLI_CMD(
     .args = ""
 );
 
-#endif /* USE POWERCTL */
+#endif /* USE POWER_MANAGER */

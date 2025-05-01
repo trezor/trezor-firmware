@@ -14,7 +14,7 @@ FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision", "power_manager"]
+FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -151,7 +151,6 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_otp_variant.c',
     'embed/projects/prodtest/cmd/prodtest_ping.c',
     'embed/projects/prodtest/cmd/prodtest_pmic.c',
-    'embed/projects/prodtest/cmd/prodtest_powerctl.c',
     'embed/projects/prodtest/cmd/prodtest_power_manager.c',
     'embed/projects/prodtest/cmd/prodtest_reboot.c',
     'embed/projects/prodtest/cmd/prodtest_rgbled.c',

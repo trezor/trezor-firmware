@@ -18,13 +18,17 @@
  */
 
 #include <io/backlight.h>
+#ifdef USE_BUTTON
 #include <io/button.h>
+#endif
+#ifdef USE_RGB_LED
 #include <io/rgb_led.h>
+#endif
 #include <sys/bootutils.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
-#include "../../powerctl/npm1300/npm1300.h"
+#include "../npm1300/npm1300.h"
 #include "power_manager_internal.h"
 
 // State handler lookup table
@@ -206,8 +210,8 @@ pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv) {
-  // Not implemented yet
-  return drv->state;
+  // immediatelly return to power save state after wakeup
+  return PM_STATE_POWER_SAVE;
 }
 
 pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
@@ -224,11 +228,13 @@ pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
 }
 
 void pm_enter_charging(pm_driver_t* drv) {
+
+#ifdef USE_RGB_LED
   // Initialize RGB
   rgb_led_init();
-
-  // Set RGB LED to blue
   rgb_led_set_color(0x0000FF);
+#endif
+
 }
 
 pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
@@ -255,8 +261,12 @@ pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
 }
 
 void pm_exit_charging(pm_driver_t* drv) {
+
+#ifdef USE_RGB_LED
   // Turn off RGB LED
   rgb_led_set_color(0x0);
+#endif
+
 }
 
 pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
@@ -305,13 +315,17 @@ void pm_exit_shutting_down(pm_driver_t* drv) {
 }
 
 void pm_enter_suspend(pm_driver_t* drv) {
+
+  pm_control_suspend();
   // Not implemented yet
 }
 
 void pm_enter_hibernate(pm_driver_t* drv) {
-  pm_store_power_manager_data(drv);
 
-  reboot_device();
+  pm_store_power_manager_data(drv);
+  pm_control_hibernate();
+
+  // reboot_device();
   // Put PMIC into ship mode (ultra-low power)
   // npm1300_enter_shipmode();
 }

@@ -23,8 +23,8 @@
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
 
-#include "../../powerctl/npm1300/npm1300.h"
-#include "../../powerctl/stwlc38/stwlc38.h"
+#include "../npm1300/npm1300.h"
+#include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
 // Global driver instance
@@ -186,10 +186,8 @@ pm_status_t pm_suspend(void) {
     return PM_NOT_INITIALIZED;
   }
 
-  irq_key_t irq_key = irq_lock();
   drv->request_suspend = true;
   pm_process_state_machine();
-  irq_unlock(irq_key);
 
   if (drv->state != PM_STATE_SUSPEND) {
     return PM_REQUEST_REJECTED;
@@ -336,4 +334,43 @@ static void pm_shutdown_timer_handler(void* context) {
   pm_driver_t* drv = &g_pm;
   drv->shutdown_timer_elapsed = true;
   pm_process_state_machine();
+}
+
+pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags) {
+  pm_driver_t* drv = &g_pm;
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+  irq_key_t irq_key = irq_lock();
+  drv->wakeup_flags |= flags;
+  irq_unlock(irq_key);
+
+  return PM_OK;
+}
+
+pm_status_t pm_wakeup_flags_reset(void) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  drv->wakeup_flags = 0;
+  irq_unlock(irq_key);
+  return PM_OK;
+}
+
+pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
+
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  irq_key_t irq_key = irq_lock();
+  *flags = drv->wakeup_flags;
+  irq_unlock(irq_key);
+  return PM_OK;
 }
