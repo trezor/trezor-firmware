@@ -107,7 +107,10 @@ class unimport:
         self.mods = None
         gc.collect()
 
-        if __debug__ and exc_type is not SystemExit:
+        # If an exception is being handled here, `check_free_heap()` will fail
+        # (since the exception survives `gc.collect()` call above).
+        # So we prefer to skip the check, in order to preserve the exception.
+        if __debug__ and exc_type is None:
             self.free_heap = check_free_heap(self.free_heap)
 
 
