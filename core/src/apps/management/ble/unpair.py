@@ -10,16 +10,15 @@ if TYPE_CHECKING:
 async def unpair(msg: BleUnpair) -> None:
     from trezor.messages import Success
     from trezor.ui.layouts import confirm_action
-    from trezor.wire.context import get_context
+    from trezor.wire.context import maybe_get_context
 
     if msg.all:
         await confirm_action("erase bonds", TR.ble__unpair_title, TR.ble__unpair_all)
     else:
         await confirm_action("unpair", TR.ble__unpair_title, TR.ble__unpair_current)
 
-    ctx = get_context()
-
-    await ctx.write(Success(message="Erasing.."))
+    if ctx := maybe_get_context():
+        await ctx.write(Success(message="Erasing..."))
 
     if msg.all:
         ble.erase_bonds()
