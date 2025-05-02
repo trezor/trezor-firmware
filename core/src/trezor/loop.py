@@ -130,6 +130,9 @@ def run() -> None:
 
 def clear() -> None:
     """Clear all queue state.  Any scheduled or paused tasks will be forgotten."""
+    global this_task
+    this_task = None
+
     _ = [0, 0, 0]
     while _queue:
         _queue.pop(_)
