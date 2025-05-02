@@ -1,12 +1,11 @@
 use crate::{
-    strutil::{self, ShortString, TString},
+    strutil::{self, ShortString, TString, plural_form},
     time::Duration,
     translations::TR,
     ui::{
         component::{Component, Event, EventCtx, Label, Maybe, Never, Timer},
         geometry::{Alignment, Insets, Offset, Rect},
         shape::{self, Renderer},
-        util::format_plural,
     },
 };
 
@@ -301,7 +300,7 @@ impl NumberInput {
     }
 
     fn format_time_value(value: u32) -> (u32, Option<ShortString>) {
-        let get_plural = |s: TString, value| s.map(|template| format_plural(template, value));
+        let get_plural = |s: TString, value| s.map(|template| plural_form(template, value));
 
         if value < MIN_S {
             (
