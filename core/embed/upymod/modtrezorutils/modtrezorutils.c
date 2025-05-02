@@ -311,7 +311,9 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_0(mod_trezorutils_enable_oom_dump_obj,
 ///         """
 STATIC mp_obj_t mod_trezorutils_check_free_heap(mp_obj_t arg) {
   mp_uint_t free_heap = trezor_obj_get_uint(arg);
-#if MICROPY_MODULE_FROZEN_MPY
+#if MICROPY_MODULE_FROZEN_MPY && defined(TREZOR_EMULATOR)
+  // Currently, it may misdetect on-heap buffers' data as valid heap
+  // pointers (resulting in `gc_mark_subtree` false-positives).
   gc_info_t info;
   gc_info(&info);
   if (free_heap > info.free) {
