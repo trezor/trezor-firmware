@@ -150,7 +150,7 @@ impl NumberInput {
     const LABEL_OFFSET: i16 = 21;
     const BUTTON_SIZE: Offset = Offset::new(138, 130);
     const BORDER_PADDING: i16 = 24;
-    const HOLD_TIMEOUT_S: u32 = 500;
+    const HOLD_TIMEOUT_MS: u32 = 500;
     const BIG_INCREMENT: u32 = 10;
     const BIG_INCREMENT_THRESHOLD: u32 = 5;
     pub fn new(min: u32, max: u32, value: u32, time_conversion: bool) -> Self {
@@ -196,7 +196,7 @@ impl NumberInput {
             }
             ButtonMsg::Pressed => {
                 self.hold_timer
-                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_S));
+                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_MS));
             }
             _ => {}
         }
@@ -443,13 +443,13 @@ impl Component for NumberInput {
             if self.dec.is_visible() && self.dec.inner().is_pressed() {
                 self.decrease(ctx);
                 self.hold_timer
-                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_S));
+                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_MS));
                 self.counter += 1;
                 return None;
             } else if self.inc.is_visible() && self.inc.inner().is_pressed() {
                 self.increase(ctx);
                 self.hold_timer
-                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_S));
+                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_MS));
                 self.counter += 1;
                 return None;
             } else {
