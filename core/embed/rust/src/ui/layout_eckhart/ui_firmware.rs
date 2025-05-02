@@ -5,6 +5,7 @@ use crate::{
     io::BinaryData,
     micropython::{gc::Gc, iter::IterBuf, list::List, obj::Obj, util},
     strutil::TString,
+    time::Duration,
     translations::TR,
     ui::{
         component::{
@@ -33,9 +34,10 @@ use crate::{
 use super::{
     component::Button,
     firmware::{
-        ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, Header, HeaderMsg, Hint,
-        Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen, SelectWordCountScreen,
-        SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
+        ActionBar, Bip39Input, ConfirmHomescreen, DeviceMenuScreen, DurationInput, Header,
+        HeaderMsg, Hint, Homescreen, MnemonicKeyboard, PinKeyboard, ProgressScreen,
+        SelectWordCountScreen, SelectWordScreen, SetBrightnessScreen, Slip39Input, TextScreen,
+        ValueInputScreen,
     },
     flow, fonts, theme, UIEckhart,
 };
@@ -762,7 +764,6 @@ impl FirmwareUI for UIEckhart {
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let description = description.unwrap_or(TString::empty());
-
         let flow = flow::request_number::new_request_number(
             title,
             count,
@@ -772,6 +773,29 @@ impl FirmwareUI for UIEckhart {
             unwrap!(more_info_callback),
         )?;
         Ok(flow)
+    }
+
+    fn request_duration(
+        title: TString<'static>,
+        duration_ms: u32,
+        min_ms: u32,
+        max_ms: u32,
+        description: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        let description = description.unwrap_or(TString::empty());
+        let component = ValueInputScreen::new(
+            DurationInput::new(
+                Duration::from_millis(min_ms),
+                Duration::from_millis(max_ms),
+                Duration::from_millis(duration_ms),
+            ),
+            description,
+        )
+        .with_header(Header::new(title));
+
+        let layout = RootComponent::new(component);
+
+        Ok(layout)
     }
 
     fn request_pin(
@@ -974,6 +998,7 @@ impl FirmwareUI for UIEckhart {
         firmware_version: TString<'static>,
         device_name: TString<'static>,
         paired_devices: Vec<TString<'static>, 1>,
+        auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         let layout = RootComponent::new(DeviceMenuScreen::new(
             failed_backup,
@@ -981,6 +1006,7 @@ impl FirmwareUI for UIEckhart {
             firmware_version,
             device_name,
             paired_devices,
+            auto_lock_delay,
         )?);
         Ok(layout)
     }

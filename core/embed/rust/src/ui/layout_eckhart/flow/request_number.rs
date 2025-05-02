@@ -17,8 +17,9 @@ use core::sync::atomic::{AtomicU16, Ordering};
 use super::super::{
     component::Button,
     firmware::{
-        Header, NumberInputScreen, NumberInputScreenMsg, ShortMenuVec, TextScreenMsg,
-        UpdatableInfoScreen, VerticalMenu, VerticalMenuScreen, VerticalMenuScreenMsg,
+        ActionBar, Header, NumberInput, ShortMenuVec, TextScreenMsg, UpdatableInfoScreen,
+        ValueInputScreen, ValueInputScreenMsg, VerticalMenu, VerticalMenuScreen,
+        VerticalMenuScreenMsg,
     },
     theme,
 };
@@ -72,20 +73,25 @@ pub fn new_request_number(
         info_closure(curr_number as u32)
     };
 
-    let content_input = NumberInputScreen::new(min_count, max_count, count, description)
-        .with_header(Header::new(title).with_menu_button())
-        .map(|msg| match msg {
-            NumberInputScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-            NumberInputScreenMsg::Confirmed(n) => {
-                NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
-                Some(FlowMsg::Choice(n as usize))
-            }
-            NumberInputScreenMsg::Changed(n) => {
-                NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
-                None
-            }
-            NumberInputScreenMsg::Menu => Some(FlowMsg::Info),
-        });
+    let content_input =
+        ValueInputScreen::new(NumberInput::new(min_count, max_count, count), description)
+            .with_header(Header::new(title).with_menu_button())
+            .with_action_bar(ActionBar::new_single(Button::with_text(
+                TR::buttons__confirm.into(),
+            )))
+            .with_changed_value_handling()
+            .map(|msg| match msg {
+                ValueInputScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+                ValueInputScreenMsg::Confirmed(n) => {
+                    NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
+                    Some(FlowMsg::Choice(n as usize))
+                }
+                ValueInputScreenMsg::Changed(n) => {
+                    NUM_DISPLAYED.store(n as u16, Ordering::Relaxed);
+                    None
+                }
+                ValueInputScreenMsg::Menu => Some(FlowMsg::Info),
+            });
 
     let menu_items = VerticalMenu::<ShortMenuVec>::empty()
         .with_item(Button::new_menu_item(

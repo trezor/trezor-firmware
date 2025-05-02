@@ -666,6 +666,16 @@ impl FirmwareUI for UIBolt {
         Ok(layout)
     }
 
+    fn request_duration(
+        _title: TString<'static>,
+        _duration_ms: u32,
+        _min_ms: u32,
+        _max_ms: u32,
+        _description: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
+    }
+
     fn request_pin(
         prompt: TString<'static>,
         subprompt: TString<'static>,
@@ -874,6 +884,7 @@ impl FirmwareUI for UIBolt {
         _firmware_version: TString<'static>,
         _device_name: TString<'static>,
         _paired_devices: heapless::Vec<TString<'static>, 1>,
+        _auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_device_menu not supported",
