@@ -308,7 +308,7 @@ env.Replace(
     '-ffreestanding '
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
-    LINKFLAGS='-T build/kernel/memory.ld -Wl,--gc-sections -Wl,--print-memory-usage '
+    LINKFLAGS=f'-T build/kernel/{env.get("ENV")["MEMORY_LAYOUT"]} -Wl,--gc-sections -Wl,--print-memory-usage '
         ' -Wl,-Map=build/kernel/kernel.map -Wl,--warn-common -Wl,--undefined=__errno',
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
@@ -392,8 +392,8 @@ tools.embed_compressed_binary(
         )
 
 linkerscript_gen = env.Command(
-    target='memory.ld',
-    source=[f'embed/models/{TREZOR_MODEL}/memory.ld', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
+    target=env.get("ENV")["MEMORY_LAYOUT"],
+    source=[f'embed/models/{TREZOR_MODEL}/{env.get("ENV")["MEMORY_LAYOUT"]}', env.get('ENV')['LINKER_SCRIPT'].format(target='kernel')],
     action='$CAT $SOURCES > $TARGET',
 )
 

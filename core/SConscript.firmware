@@ -471,7 +471,7 @@ env.Replace(
     '-fstack-protector-all '
     +  env.get('ENV')["CPU_CCFLAGS"] + CCFLAGS_MOD,
     CCFLAGS_QSTR='-DNO_QSTR -DN_X64 -DN_X86 -DN_THUMB',
-    LINKFLAGS=['-Tbuild/firmware/memory.ld', '-Wl,--gc-sections', '-Wl,--print-memory-usage', '-Wl,-Map=build/firmware/firmware.map', '-Wl,--warn-common'],
+    LINKFLAGS=[f'-Tbuild/firmware/{env.get("ENV")["MEMORY_LAYOUT"]}', '-Wl,--gc-sections', '-Wl,--print-memory-usage', '-Wl,-Map=build/firmware/firmware.map', '-Wl,--warn-common'],
     CPPPATH=ALLPATHS,
     CPPDEFINES=[
         'FIRMWARE',
@@ -877,8 +877,8 @@ tools.embed_raw_binary(
 env.Depends(obj_program, qstr_generated)
 
 linkerscript_gen = env.Command(
-    target='memory.ld',
-    source=[f'embed/models/{TREZOR_MODEL}/memory.ld',  env.get('ENV')['LINKER_SCRIPT'].format(target='firmware')],
+    target=env.get("ENV")["MEMORY_LAYOUT"],
+    source=[f'embed/models/{TREZOR_MODEL}/{env.get("ENV")["MEMORY_LAYOUT"]}',  env.get('ENV')['LINKER_SCRIPT'].format(target='firmware')],
     action='$CAT $SOURCES > $TARGET',
 )
 

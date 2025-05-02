@@ -104,3 +104,4 @@ def stm32f4_common_files(env, defines, sources, paths):
 
     env.get("ENV")["SUFFIX"] = "stm32f4"
     env.get("ENV")["LINKER_SCRIPT"] = """embed/sys/linker/stm32f4/{target}.ld"""
+    env.get("ENV")["MEMORY_LAYOUT"] = "memory.ld"
