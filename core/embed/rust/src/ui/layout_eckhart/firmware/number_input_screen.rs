@@ -1,5 +1,5 @@
 use crate::{
-    strutil::{self, ShortString, TString, plural_form},
+    strutil::{self, plural_form, ShortString, TString},
     time::Duration,
     translations::TR,
     ui::{
@@ -149,7 +149,7 @@ impl NumberInput {
     const LABEL_OFFSET: i16 = 21;
     const BUTTON_SIZE: Offset = Offset::new(138, 130);
     const BORDER_PADDING: i16 = 24;
-    const HOLD_TIMEOUT_MS: u32 = 500;
+    const HOLD_TIMEOUT_MS: Duration = Duration::from_millis(500);
     const BIG_INCREMENT: u32 = 10;
     const BIG_INCREMENT_THRESHOLD: u32 = 5;
     pub fn new(min: u32, max: u32, value: u32, time_conversion: bool) -> Self {
@@ -194,8 +194,7 @@ impl NumberInput {
                 self.counter = 0;
             }
             ButtonMsg::Pressed => {
-                self.hold_timer
-                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_MS));
+                self.hold_timer.start(ctx);
             }
             _ => {}
         }
@@ -441,14 +440,12 @@ impl Component for NumberInput {
             // increase/decrease the value and restart the timer
             if self.dec.is_visible() && self.dec.inner().is_pressed() {
                 self.decrease(ctx);
-                self.hold_timer
-                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_MS));
+                self.hold_timer.start(ctx, Self::HOLD_TIMEOUT_MS);
                 self.counter += 1;
                 return None;
             } else if self.inc.is_visible() && self.inc.inner().is_pressed() {
                 self.increase(ctx);
-                self.hold_timer
-                    .start(ctx, Duration::from_millis(Self::HOLD_TIMEOUT_MS));
+                self.hold_timer.start(ctx, Self::HOLD_TIMEOUT_MS);
                 self.counter += 1;
                 return None;
             } else {
