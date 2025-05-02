@@ -185,17 +185,29 @@ pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv) {
+  // Handle hibernate request
+  if (drv->request_hibernate) {
+    drv->request_hibernate = false;
+
+    return PM_STATE_HIBERNATE;
+  }
+
   // Go to power save if external power or battery above critical
-  if (drv->usb_connected || !drv->battery_critical) {
+  if (drv->usb_connected || drv->wireless_connected || !drv->battery_critical) {
     return PM_STATE_POWER_SAVE;
-  } else {
-    return PM_STATE_STARTUP_REJECTED;
   }
 
   return drv->state;
 }
 
 pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
+  // Handle hibernate request
+  if (drv->request_hibernate) {
+    drv->request_hibernate = false;
+
+    return PM_STATE_HIBERNATE;
+  }
+
   // Return to power save if external power or battery recovered
   if (drv->usb_connected || !drv->battery_critical) {
     return PM_STATE_POWER_SAVE;
@@ -229,18 +241,20 @@ pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
 
 void pm_enter_charging(pm_driver_t* drv) {
 
+  // no backlight to indicate device off
+  backlight_set_max_level(0);
 #ifdef USE_RGB_LED
   // Initialize RGB
   rgb_led_init();
   rgb_led_set_color(0x0000FF);
 #endif
-
 }
 
 pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
-    return PM_STATE_ULTRA_POWER_SAVE;
+    // from hibernate charging state lets turn on by rebooting
+    reboot_device();
   }
 
   // Go back to hibernate if external power was removed.
@@ -261,12 +275,10 @@ pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
 }
 
 void pm_exit_charging(pm_driver_t* drv) {
-
 #ifdef USE_RGB_LED
   // Turn off RGB LED
   rgb_led_set_color(0x0);
 #endif
-
 }
 
 pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
@@ -315,17 +327,18 @@ void pm_exit_shutting_down(pm_driver_t* drv) {
 }
 
 void pm_enter_suspend(pm_driver_t* drv) {
-
   pm_control_suspend();
   // Not implemented yet
 }
 
 void pm_enter_hibernate(pm_driver_t* drv) {
-
   pm_store_power_manager_data(drv);
-  pm_control_hibernate();
 
-  // reboot_device();
+  if (!drv->usb_connected && !drv->wireless_connected) {
+    pm_control_hibernate();
+  }
+
+  reboot_to_charging();
   // Put PMIC into ship mode (ultra-low power)
   // npm1300_enter_shipmode();
 }

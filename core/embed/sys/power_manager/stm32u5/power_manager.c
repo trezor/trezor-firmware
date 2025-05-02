@@ -38,7 +38,7 @@ static void pm_shutdown_timer_handler(void* context);
 
 // API Implementation
 
-pm_status_t pm_init(bool skip_bootup_sequence) {
+pm_status_t pm_init(bool skip_bootup_sequence, bool reboot_to_charing) {
   pm_driver_t* drv = &g_pm;
 
   if (drv->initialized) {
@@ -59,36 +59,41 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
                   PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
                   PM_FUEL_GAUGE_P_INIT);
 
-  if (skip_bootup_sequence) {
-    // Skip bootup sequence and try to recover the power manages state left
-    // by the bootloader in backup ram.
 
-    backup_ram_power_manager_data_t pm_recovery_data;
-    backup_ram_status_t status =
-        backup_ram_read_power_manager_data(&pm_recovery_data);
+  drv->check_initial_voltage = !skip_bootup_sequence;
 
-    if (status != BACKUP_RAM_OK &&
-        (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
-         pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
-      drv->state = PM_STATE_POWER_SAVE;
-      drv->fuel_gauge_request_new_guess = true;
+  // Try to recover the power manages state left in backup ram.
 
-    } else {
-      // Backup RAM contain valid data
-      drv->state = pm_recovery_data.bootloader_exit_state;
-      drv->fuel_gauge.soc = pm_recovery_data.soc;
-      drv->fuel_gauge_request_new_guess = false;
-    }
+  backup_ram_power_manager_data_t pm_recovery_data;
+  backup_ram_status_t status =
+      backup_ram_read_power_manager_data(&pm_recovery_data);
 
-    drv->fuel_gauge_initialized = true;
-
+  if (reboot_to_charing) {
+    drv->state = PM_STATE_CHARGING;
   } else {
-    // Start in lowest state and wait for the bootup sequence to
-    // finish (call of pm_turn_on())
     drv->state = PM_STATE_HIBERNATE;
-    drv->initialized = false;
   }
 
+  if (status != BACKUP_RAM_OK) {
+    drv->fuel_gauge_request_new_guess = false;
+    drv->fuel_gauge_initialized = false;
+  } else {
+    // Backup RAM contain valid data
+    if (skip_bootup_sequence) {
+      // only inherit state on later stages
+      drv->state = pm_recovery_data.bootloader_exit_state;
+    }
+    drv->battery_critical = pm_recovery_data.bat_crittical;
+
+    // SOC sanity check
+    if (pm_recovery_data.soc < 0.01f) {
+      drv->fuel_gauge_initialized = false;
+    } else {
+      drv->fuel_gauge.soc = pm_recovery_data.soc;
+      drv->fuel_gauge_request_new_guess = false;
+      drv->fuel_gauge_initialized = true;
+    }
+  }
   // Disable charging by default
   drv->charging_enabled = false;
 
@@ -109,7 +114,7 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
 void pm_deinit(void) {
   pm_driver_t* drv = &g_pm;
 
-  if(drv->fuel_gauge_initialized){
+  if (drv->fuel_gauge_initialized) {
     pm_store_data_to_backup_ram();
   }
 
@@ -127,7 +132,6 @@ void pm_deinit(void) {
   stwlc38_deinit();
 
   drv->initialized = false;
-
 }
 
 pm_status_t pm_get_events(pm_event_t* event_flags) {
@@ -203,7 +207,7 @@ pm_status_t pm_suspend(void) {
   return PM_OK;
 }
 
-pm_status_t pm_hibernate(void) {
+pm_status_t  pm_hibernate(void) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -228,31 +232,29 @@ pm_status_t pm_turn_on(void) {
   }
 
   drv->request_turn_on = true;
+
+  if (drv->check_initial_voltage) {
+    while (drv->pmic_last_update_ms == 0 || !wireless_data_valid) {
+      systick_delay_ms(10);
+    }
+
+    if (((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THRESHOLD_V || (drv->battery_critical && drv->pmic_data.vbat < (PM_BATTERY_UNDERVOLT_THRESHOLD_V + PM_BATTERY_UNDERVOLT_HYSTERESIS_V))) && drv->pmic_data.usb_status == 0x0 &&
+        !drv->wireless_connected) ) {
+      pm_store_data_to_backup_ram();
+      return PM_REQUEST_REJECTED;
+    }
+  }
+
   pm_process_state_machine();
 
-  if (drv->state == PM_STATE_HIBERNATE || drv->state == PM_STATE_CHARGING) {
-    return PM_REQUEST_REJECTED;
-  }
-
-  irq_key_t irq_key = irq_lock();
-
-  // Try to recover SoC from the backup RAM
-  backup_ram_power_manager_data_t pm_recovery_data;
-  backup_ram_status_t status =
-      backup_ram_read_power_manager_data(&pm_recovery_data);
-
-  if (status == BACKUP_RAM_OK && pm_recovery_data.soc != 0.0f) {
-    drv->fuel_gauge.soc = pm_recovery_data.soc;
-  } else {
+  if (!drv->fuel_gauge_initialized) {
+    systick_delay_ms(1000);
     pm_battery_initial_soc_guess();
+    drv->fuel_gauge_initialized = true;
   }
 
-  // Set monitoiring timer with longer period
+  // Set monitoring timer with longer period
   systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
-
-  drv->fuel_gauge_initialized = true;
-
-  irq_unlock(irq_key);
 
   return PM_OK;
 }
@@ -322,6 +324,7 @@ pm_status_t pm_store_data_to_backup_ram(void) {
   backup_ram_power_manager_data_t pm_data = {0};
   pm_data.bootloader_exit_state = drv->state;
   pm_data.soc = drv->fuel_gauge.soc;
+  pm_data.bat_crittical = drv->battery_critical;
 
   backup_ram_status_t status = backup_ram_store_power_manager_data(&pm_data);
 
@@ -368,8 +371,7 @@ pm_status_t pm_wakeup_flags_reset(void) {
   return PM_OK;
 }
 
-pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
-
+pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -380,5 +382,4 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
   *flags = drv->wakeup_flags;
   irq_unlock(irq_key);
   return PM_OK;
-
 }

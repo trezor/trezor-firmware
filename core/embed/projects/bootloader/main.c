@@ -79,6 +79,28 @@ CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
 static void drivers_init(secbool *touch_initialized) {
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
+
+#ifdef USE_RGB_LED
+  rgb_led_init();
+#endif
+
+  //systick_delay_ms(5000);
+#ifdef USE_POWER_MANAGER
+  pm_init(false, reboot_to_charging);
+  // systick_delay_ms(1000);
+  while (pm_turn_on() != PM_OK) {
+    rgb_led_set_color(0x400000);
+    systick_delay_ms(1000);
+    pm_hibernate();
+  }
+  pm_charging_enable();
+  pm_wait_for_stable_state();
+  // cekat na stabilizaci state machine
+#endif
+
   random_delays_init();
 #ifdef USE_PVD
   pvd_init();
@@ -124,9 +146,6 @@ static void drivers_init(secbool *touch_initialized) {
 #endif
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
-#endif
-#ifdef USE_RGB_LED
-  rgb_led_init();
 #endif
 }
 

@@ -32,7 +32,8 @@
 #define PM_BATTERY_SAMPLING_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
 #define PM_BATTERY_UNDERVOLT_THRESHOLD_V 3.0f
-#define PM_BATTERY_UNDERVOLT_HYSTERESIS_V 0.5f
+#define PM_BATTERY_INITIAL_UNDERVOLT_THRESHOLD_V 3.3f
+#define PM_BATTERY_UNDERVOLT_HYSTERESIS_V 0.3f
 #define PM_BATTERY_LOW_THRESHOLD_V 3.15f
 #define PM_BATTERY_LOW_RECOVERY_V 3.2f
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
@@ -78,6 +79,7 @@ typedef struct {
 // Power manager core driver structure
 typedef struct {
   bool initialized;
+  bool check_initial_voltage;
   pm_internal_state_t state;
   pm_event_t event_flags;
 
@@ -100,6 +102,8 @@ typedef struct {
   stwlc38_report_t wireless_data;
   uint32_t pmic_last_update_ms;
   bool pmic_measurement_ready;
+
+  float recovered_vbat;
 
   // Power source logical state
   bool usb_connected;
