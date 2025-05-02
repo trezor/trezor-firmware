@@ -6,6 +6,9 @@ use core::{
 use crate::trezorhal::time;
 
 const MILLIS_PER_SEC: u32 = 1000;
+const MILLIS_PER_MINUTE: u32 = MILLIS_PER_SEC * 60;
+const MILLIS_PER_HOUR: u32 = MILLIS_PER_MINUTE * 60;
+const MILLIS_PER_DAY: u32 = MILLIS_PER_HOUR * 24;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Default)]
 pub struct Duration {
@@ -25,8 +28,32 @@ impl Duration {
         }
     }
 
+    pub const fn from_mins(mins: u32) -> Self {
+        Self::from_millis(mins * MILLIS_PER_MINUTE)
+    }
+
+    pub const fn from_hours(hours: u32) -> Self {
+        Self::from_millis(hours * MILLIS_PER_HOUR)
+    }
+    pub const fn from_days(days: u32) -> Self {
+        Self::from_millis(days * MILLIS_PER_DAY)
+    }
+
     pub fn to_millis(self) -> u32 {
         self.millis
+    }
+
+    pub fn to_secs(self) -> u32 {
+        self.millis / MILLIS_PER_SEC
+    }
+    pub fn to_mins(self) -> u32 {
+        self.millis / MILLIS_PER_MINUTE
+    }
+    pub fn to_hours(self) -> u32 {
+        self.millis / MILLIS_PER_HOUR
+    }
+    pub fn to_days(self) -> u32 {
+        self.millis / MILLIS_PER_DAY
     }
 
     pub fn checked_add(self, rhs: Self) -> Option<Self> {
@@ -35,6 +62,54 @@ impl Duration {
 
     pub fn checked_sub(self, rhs: Self) -> Option<Self> {
         self.millis.checked_sub(rhs.millis).map(Self::from_millis)
+    }
+
+    /// Crops the duration to the nearest lower whole duration unit (day, hour,
+    /// minute, second)
+    pub fn crop_to_largest_unit(self) -> Self {
+        if self.millis >= MILLIS_PER_DAY {
+            Duration::from_days(self.to_days())
+        } else if self.millis >= MILLIS_PER_HOUR {
+            Duration::from_hours(self.to_hours())
+        } else if self.millis >= MILLIS_PER_MINUTE {
+            Duration::from_mins(self.to_mins())
+        } else {
+            Duration::from_secs(self.to_secs())
+        }
+    }
+
+    /// Increment by one unit of current magnitude, e.g. 59s → 60s, 1m → 2m.
+    pub fn increment_unit(self) -> Option<Self> {
+        let base = self.crop_to_largest_unit();
+
+        let step = if base.millis < MILLIS_PER_MINUTE {
+            Duration::from_secs(1)
+        } else if base.millis < MILLIS_PER_HOUR {
+            Duration::from_mins(1)
+        } else if base.millis < MILLIS_PER_DAY {
+            Duration::from_hours(1)
+        } else {
+            Duration::from_days(1)
+        };
+
+        base.checked_add(step)
+    }
+
+    /// Decrement by one unit of current magnitude, saturates at zero.
+    pub fn decrement_unit(self) -> Option<Self> {
+        let base = self.crop_to_largest_unit();
+
+        let step = if base.millis <= MILLIS_PER_MINUTE {
+            Duration::from_secs(1)
+        } else if base.millis <= MILLIS_PER_HOUR {
+            Duration::from_mins(1)
+        } else if base.millis <= MILLIS_PER_DAY {
+            Duration::from_hours(1)
+        } else {
+            Duration::from_days(1)
+        };
+
+        base.checked_sub(step)
     }
 }
 
@@ -279,5 +354,66 @@ mod tests {
         assert!(sw.elapsed() == elapsed);
         assert!(!sw.is_running_within(Duration::from_millis(5)));
         assert!(!sw.is_running_within(Duration::from_millis(10000)));
+    }
+
+    fn test_crop_to_largest_unit() {
+        assert_eq!(
+            Duration::from_secs(59).crop_to_largest_unit(),
+            Duration::from_secs(59)
+        );
+        assert_eq!(
+            Duration::from_secs(60).crop_to_largest_unit(),
+            Duration::from_mins(1)
+        );
+        assert_eq!(
+            Duration::from_secs(61).crop_to_largest_unit(),
+            Duration::from_mins(1)
+        );
+        assert_eq!(
+            Duration::from_secs(3600).crop_to_largest_unit(),
+            Duration::from_hours(1)
+        );
+        assert_eq!(
+            Duration::from_secs(86399).crop_to_largest_unit(),
+            Duration::from_hours(23)
+        );
+    }
+
+    fn test_increment_decrement_unit() {
+        // Increment
+        assert_eq!(
+            unwrap!(Duration::from_secs(59).increment_unit()),
+            Duration::from_mins(1)
+        );
+        assert_eq!(
+            unwrap!(Duration::from_mins(1).increment_unit()),
+            Duration::from_mins(2)
+        );
+        assert_eq!(
+            unwrap!(Duration::from_secs(61).increment_unit()),
+            Duration::from_mins(2)
+        );
+        assert_eq!(
+            unwrap!(Duration::from_days(3).increment_unit()),
+            Duration::from_days(4)
+        );
+
+        // Decrement
+        assert_eq!(
+            unwrap!(Duration::from_mins(1).decrement_unit()),
+            Duration::from_secs(59)
+        );
+        assert_eq!(
+            unwrap!(Duration::from_secs(61).decrement_unit()),
+            Duration::from_secs(59)
+        );
+        assert_eq!(
+            unwrap!(Duration::from_mins(3).decrement_unit()),
+            Duration::from_mins(2)
+        );
+        assert_eq!(
+            unwrap!(Duration::from_hours(1).decrement_unit()),
+            Duration::from_mins(59)
+        );
     }
 }
