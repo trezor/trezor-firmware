@@ -831,6 +831,22 @@ access_violation:
   return PM_ERROR;
 }
 
+pm_status_t pm_get_events__verified(pm_event_t *event) {
+  if (!probe_write_access(event, sizeof(*event))) {
+    goto access_violation;
+  }
+
+  pm_event_t event_copy = {0};
+  pm_status_t retval = pm_get_events(&event_copy);
+  *event = event_copy;
+
+  return retval;
+
+access_violation:
+  apptask_access_violation();
+  return PM_ERROR;
+}
+
 #endif
 
 // ---------------------------------------------------------------------
