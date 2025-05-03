@@ -144,7 +144,7 @@ static void on_event_poll(void* context, bool read_awaited,
   if (read_awaited) {
     pm_state_t state = {0};
     pm_get_state(&state);
-    syshandle_signal_read_ready(SYSHANDLE_BUTTON, &state);
+    syshandle_signal_read_ready(SYSHANDLE_POWER_MANAGER, &state);
   }
 }
 
