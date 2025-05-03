@@ -50,7 +50,7 @@ def configure(
 
     if "input" in features_wanted:
         sources += ["embed/io/button/unix/button.c"]
-        sources += ["embed/io/button/button_fsm.c"]
+        sources += ["embed/io/button/button_poll.c"]
         paths += ["embed/io/button/inc"]
         features_available.append("button")
         defines += [("USE_BUTTON", "1")]

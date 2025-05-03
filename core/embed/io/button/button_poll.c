@@ -21,11 +21,41 @@
 
 #include <trezor_rtl.h>
 
+#include <sys/systask.h>
 #include <sys/systick.h>
 
-#include "button_fsm.h"
+#include "button_poll.h"
 
-void button_fsm_init(button_fsm_t* fsm) {
+#include "sys/sysevent_source.h"
+
+typedef struct {
+  // Time of last update of pressed/released data
+  uint64_t time;
+  // Button presses that were detected since last get_event call
+  uint32_t pressed;
+  // Button releases that were detected since last get_event call
+  uint32_t released;
+  // State of buttons signalled to the poller
+  uint32_t state;
+} button_fsm_t;
+
+static const syshandle_vmt_t g_button_handle_vmt;
+
+// Each task has its own state machine
+static button_fsm_t g_button_tls[SYSTASK_MAX_TASKS];
+
+bool button_poll_init(void) {
+  memset(g_button_tls, 0, sizeof(g_button_tls));
+
+  return syshandle_register(SYSHANDLE_BUTTON, &g_button_handle_vmt, NULL);
+}
+
+void button_poll_deinit(void) {
+  memset(g_button_tls, 0, sizeof(g_button_tls));
+  syshandle_unregister(SYSHANDLE_BUTTON);
+}
+
+void button_fsm_clear(button_fsm_t* fsm) {
   memset(fsm, 0, sizeof(button_fsm_t));
 }
 
@@ -82,5 +112,46 @@ bool button_fsm_get_event(button_fsm_t* fsm, uint32_t new_state,
 
   return false;
 }
+
+bool button_get_event(button_event_t* event) {
+  memset(event, 0, sizeof(*event));
+
+  uint32_t new_state = button_get_state();
+
+  button_fsm_t* fsm = &g_button_tls[systask_id(systask_active())];
+  return button_fsm_get_event(fsm, new_state, event);
+}
+
+static void on_task_created(void* context, systask_id_t task_id) {
+  button_fsm_t* fsm = &g_button_tls[task_id];
+  button_fsm_clear(fsm);
+}
+
+static void on_event_poll(void* context, bool read_awaited,
+                          bool write_awaited) {
+  UNUSED(write_awaited);
+
+  if (read_awaited) {
+    uint32_t state = button_get_state();
+    syshandle_signal_read_ready(SYSHANDLE_BUTTON, &state);
+  }
+}
+
+static bool on_check_read_ready(void* context, systask_id_t task_id,
+                                void* param) {
+  button_fsm_t* fsm = &g_button_tls[task_id];
+
+  uint32_t new_state = *(uint32_t*)param;
+
+  return button_fsm_event_ready(fsm, new_state);
+}
+
+static const syshandle_vmt_t g_button_handle_vmt = {
+    .task_created = on_task_created,
+    .task_killed = NULL,
+    .check_read_ready = on_check_read_ready,
+    .check_write_ready = NULL,
+    .poll = on_event_poll,
+};
 
 #endif  // KERNEL_MODE
