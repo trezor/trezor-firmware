@@ -38,6 +38,10 @@
 #include <io/touch.h>
 #endif
 
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
+#endif
+
 #include "bip39.h"
 #include "rand.h"
 #include "slip39.h"
