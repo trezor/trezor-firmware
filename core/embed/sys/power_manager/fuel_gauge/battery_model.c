@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include "battery_model.h"
 #include <math.h>
@@ -282,3 +283,5 @@ float battery_soc(float ocv, float temperature, bool discharging_mode) {
                                          : BATTERY_OCV_CHARGE_PARAMS[0];
   return calc_soc_from_ocv(params, ocv);
 }
+
+#endif

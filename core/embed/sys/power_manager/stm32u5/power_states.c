@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <io/backlight.h>
 #include <sys/bootutils.h>
@@ -267,3 +268,5 @@ void pm_exit_shutting_down(pm_driver_t* drv) {
   systimer_unset(drv->shutdown_timer);
   drv->shutdown_timer_elapsed = false;
 }
+
+#endif
