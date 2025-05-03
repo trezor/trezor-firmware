@@ -25,6 +25,7 @@
 #include <trezor_rtl.h>
 
 #include "../npm1300/npm1300.h"
+#include "../power_manager_poll.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
@@ -48,6 +49,11 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
 
   // Initialize hardware subsystems
   if (!npm1300_init() || !stwlc38_init()) {
+    pm_deinit();
+    return PM_ERROR;
+  }
+
+  if (!pm_poll_init()) {
     pm_deinit();
     return PM_ERROR;
   }
@@ -110,7 +116,9 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
 void pm_deinit(void) {
   pm_driver_t* drv = &g_pm;
 
-  if(drv->fuel_gauge_initialized){
+  pm_poll_deinit();
+
+  if (drv->fuel_gauge_initialized) {
     pm_store_data_to_backup_ram();
   }
 
@@ -129,21 +137,6 @@ void pm_deinit(void) {
 
   drv->initialized = false;
 
-}
-
-pm_status_t pm_get_events(pm_event_t* event_flags) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-
-  irq_key_t irq_key = irq_lock();
-  *event_flags = drv->event_flags;
-  PM_CLEAR_ALL_EVENTS(drv->event_flags);
-  irq_unlock(irq_key);
-
-  return PM_OK;
 }
 
 pm_status_t pm_get_state(pm_state_t* state) {
