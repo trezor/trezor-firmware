@@ -226,13 +226,11 @@ pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
 }
 
 void pm_enter_charging(pm_driver_t* drv) {
-
 #ifdef USE_RGB_LED
   // Initialize RGB
   rgb_led_init();
   rgb_led_set_color(0x0000FF);
 #endif
-
 }
 
 pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
@@ -259,12 +257,10 @@ pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
 }
 
 void pm_exit_charging(pm_driver_t* drv) {
-
 #ifdef USE_RGB_LED
   // Turn off RGB LED
   rgb_led_set_color(0x0);
 #endif
-
 }
 
 pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
@@ -312,13 +308,11 @@ void pm_exit_shutting_down(pm_driver_t* drv) {
 }
 
 void pm_enter_suspend(pm_driver_t* drv) {
-
   pm_control_suspend();
   // Not implemented yet
 }
 
 void pm_enter_hibernate(pm_driver_t* drv) {
-
   pm_store_power_manager_data(drv);
   pm_control_hibernate();
 

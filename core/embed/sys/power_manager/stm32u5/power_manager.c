@@ -136,7 +136,6 @@ void pm_deinit(void) {
   stwlc38_deinit();
 
   drv->initialized = false;
-
 }
 
 pm_status_t pm_get_state(pm_state_t* state) {
@@ -362,7 +361,7 @@ pm_status_t pm_wakeup_flags_reset(void) {
   return PM_OK;
 }
 
-pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
+pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
