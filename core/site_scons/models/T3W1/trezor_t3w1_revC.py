@@ -257,11 +257,11 @@ def configure(
             "embed/sys/power_manager/fuel_gauge/battery_model.c",
             "embed/sys/power_manager/stwlc38/stwlc38.c",
             "embed/sys/power_manager/stwlc38/stwlc38_patching.c",
+            "embed/sys/power_manager/power_manager_poll.c",
         ]
         paths += ["embed/sys/power_manager/inc"]
         defines += [("USE_POWER_MANAGER", "1")]
         features_available.append("power_manager")
-
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
