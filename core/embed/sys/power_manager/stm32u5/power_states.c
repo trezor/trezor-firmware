@@ -85,7 +85,6 @@ void pm_process_state_machine(void) {
 
     // Update state
     drv->state = new_state;
-    PM_SET_EVENT(drv->event_flags, PM_EVENT_STATE_CHANGED);
 
     // Enter new state
     if (state_handlers[new_state].enter != NULL) {
@@ -102,7 +101,6 @@ void pm_process_state_machine(void) {
 void pm_enter_active(pm_driver_t* drv) {
   // Set unlimited backlight
   backlight_set_max_level(255);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_ACTIVE);
 }
 
 pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
@@ -135,7 +133,6 @@ pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
 void pm_enter_power_save(pm_driver_t* drv) {
   // Limit backlight
   backlight_set_max_level(130);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_POWER_SAVE);
 }
 
 pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
@@ -258,7 +255,6 @@ void pm_enter_report_low_battery(pm_driver_t* drv) {
 void pm_enter_shutting_down(pm_driver_t* drv) {
   // Set shutdown timer
   systimer_set(drv->shutdown_timer, PM_SHUTDOWN_TIMEOUT_MS);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_SHUTTING_DOWN);
 }
 
 void pm_exit_shutting_down(pm_driver_t* drv) {
