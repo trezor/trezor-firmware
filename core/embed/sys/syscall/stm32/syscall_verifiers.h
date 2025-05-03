@@ -216,6 +216,8 @@ secbool ble_read__verified(uint8_t *data, size_t len);
 
 pm_status_t pm_get_state__verified(pm_state_t *status);
 
+pm_status_t pm_get_events__verified(pm_event_t *event);
+
 #endif
 
 // ---------------------------------------------------------------------

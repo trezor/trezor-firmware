@@ -708,6 +708,11 @@ pm_status_t pm_get_status(pm_state_t *status) {
                                       SYSCALL_POWER_MANAGER_GET_STATE);
 }
 
+pm_status_t pm_get_events(pm_event_t *events) {
+  return (pm_status_t)syscall_invoke1((uint32_t)events,
+                                      SYSCALL_POWER_MANAGER_GET_EVENTS);
+}
+
 #endif  // USE_POWER_MANAGER
 
 // =============================================================================
