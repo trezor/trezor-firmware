@@ -15,12 +15,11 @@ from apps.base import set_homescreen
 from apps.common import cbor
 
 from . import common
-from .credential import Credential, Fido2Credential
 
 if TYPE_CHECKING:
     from typing import Any, Awaitable, Callable, Coroutine, Iterable, Iterator
 
-    from .credential import U2fCredential
+    from .credential import Credential, Fido2Credential, U2fCredential
 
     HID = io.HID
 
@@ -960,6 +959,8 @@ class Fido2ConfirmNoPin(State):
 
 class Fido2ConfirmNoCredentials(Fido2ConfirmGetAssertion):
     def __init__(self, cid: int, iface: HID, rp_id: str) -> None:
+        from .credential import Fido2Credential
+
         cred = Fido2Credential()
         cred.rp_id = rp_id
         cred.rp_id_hash = hashlib.sha256(rp_id).digest()
@@ -1335,6 +1336,8 @@ def _msg_register_sign(challenge: bytes, cred: U2fCredential) -> bytes:
 
 
 def _msg_authenticate(req: Msg, dialog_mgr: DialogManager) -> Cmd:
+    from credential import Credential
+
     global _last_auth_valid
     _last_auth_valid = False
 
@@ -1451,6 +1454,8 @@ def cbor_error(cid: int, code: int) -> Cmd:
 def credentials_from_descriptor_list(
     descriptor_list: list[dict], rp_id_hash: bytes
 ) -> Iterator[Credential]:
+    from credential import Credential
+
     for credential_descriptor in descriptor_list:
         credential_type = credential_descriptor["type"]
         if not isinstance(credential_type, str):
@@ -1472,6 +1477,8 @@ def credentials_from_descriptor_list(
 def _distinguishable_cred_list(credentials: Iterable[Credential]) -> list[Credential]:
     """Reduces the input to a list of credentials which can be distinguished by
     the user. It is assumed that all input credentials share the same RP ID."""
+    from .credential import Fido2Credential
+
     cred_list: list[Credential] = []
     for cred in credentials:
         for i, prev_cred in enumerate(cred_list):
@@ -1519,6 +1526,7 @@ def _cbor_make_credential(req: Cmd, dialog_mgr: DialogManager) -> Cmd | None:
 
 def _cbor_make_credential_process(req: Cmd, dialog_mgr: DialogManager) -> State | Cmd:
     from . import knownapps
+    from .credential import Fido2Credential
 
     cid = req.cid  # local_cache_attribute
 
