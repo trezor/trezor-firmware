@@ -25,7 +25,7 @@
 #include <sys/mpu.h>
 #include <sys/sysevent_source.h>
 
-#include "../button_fsm.h"
+#include "../button_poll.h"
 
 #ifdef USE_POWERCTL
 #include <sys/wakeup_flags.h>
@@ -37,18 +37,12 @@
 typedef struct {
   bool initialized;
 
-  // Each task has its own state machine
-  button_fsm_t tls[SYSTASK_MAX_TASKS];
-
 } button_driver_t;
 
 // Button driver instance
 static button_driver_t g_button_driver = {
     .initialized = false,
 };
-
-// Forward declarations
-static const syshandle_vmt_t g_button_handle_vmt;
 
 static void button_setup_pin(GPIO_TypeDef* port, uint16_t pin) {
   GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -98,7 +92,7 @@ bool button_init(void) {
   NVIC_EnableIRQ(BTN_EXTI_INTERRUPT_NUM);
 #endif  // BTN_EXTI_INTERRUPT_HANDLER
 
-  if (!syshandle_register(SYSHANDLE_BUTTON, &g_button_handle_vmt, drv)) {
+  if (!button_poll_init()) {
     goto cleanup;
   }
 
@@ -113,7 +107,7 @@ cleanup:
 void button_deinit(void) {
   button_driver_t* drv = &g_button_driver;
 
-  syshandle_unregister(SYSHANDLE_BUTTON);
+  button_poll_deinit();
 
 #ifdef BTN_EXIT_INTERRUPT_HANDLER
   NVIC_DisableIRQ(BTN_EXTI_INTERRUPT_NUM);
@@ -122,8 +116,13 @@ void button_deinit(void) {
   memset(drv, 0, sizeof(button_driver_t));
 }
 
-static uint32_t button_read_state(button_driver_t* drv) {
-  UNUSED(drv);
+uint32_t button_get_state(void) {
+  button_driver_t* drv = &g_button_driver;
+
+  if (!drv->initialized) {
+    return 0;
+  }
+
   uint32_t state = 0;
 
 #ifdef BTN_LEFT_PIN
@@ -146,20 +145,6 @@ static uint32_t button_read_state(button_driver_t* drv) {
   return state;
 }
 
-bool button_get_event(button_event_t* event) {
-  button_driver_t* drv = &g_button_driver;
-  memset(event, 0, sizeof(*event));
-
-  if (!drv->initialized) {
-    return false;
-  }
-
-  uint32_t new_state = button_read_state(drv);
-
-  button_fsm_t* fsm = &drv->tls[systask_id(systask_active())];
-  return button_fsm_get_event(fsm, new_state, event);
-}
-
 bool button_is_down(button_t button) {
   button_driver_t* drv = &g_button_driver;
 
@@ -167,7 +152,7 @@ bool button_is_down(button_t button) {
     return false;
   }
 
-  return (button_read_state(drv) & (1 << button)) != 0;
+  return (button_get_state() & (1 << button)) != 0;
 }
 
 #ifdef BTN_EXTI_INTERRUPT_HANDLER
@@ -189,41 +174,5 @@ void BTN_EXTI_INTERRUPT_HANDLER(void) {
   IRQ_LOG_EXIT();
 }
 #endif
-
-static void on_task_created(void* context, systask_id_t task_id) {
-  button_driver_t* drv = (button_driver_t*)context;
-  button_fsm_t* fsm = &drv->tls[task_id];
-  button_fsm_init(fsm);
-}
-
-static void on_event_poll(void* context, bool read_awaited,
-                          bool write_awaited) {
-  button_driver_t* drv = (button_driver_t*)context;
-
-  UNUSED(write_awaited);
-
-  if (read_awaited) {
-    uint32_t state = button_read_state(drv);
-    syshandle_signal_read_ready(SYSHANDLE_BUTTON, &state);
-  }
-}
-
-static bool on_check_read_ready(void* context, systask_id_t task_id,
-                                void* param) {
-  button_driver_t* drv = (button_driver_t*)context;
-  button_fsm_t* fsm = &drv->tls[task_id];
-
-  uint32_t new_state = *(uint32_t*)param;
-
-  return button_fsm_event_ready(fsm, new_state);
-}
-
-static const syshandle_vmt_t g_button_handle_vmt = {
-    .task_created = on_task_created,
-    .task_killed = NULL,
-    .check_read_ready = on_check_read_ready,
-    .check_write_ready = NULL,
-    .poll = on_event_poll,
-};
 
 #endif  // KERNEL_MODE

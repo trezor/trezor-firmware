@@ -67,5 +67,8 @@ void button_deinit(void);
 // Returns false if no event is available
 bool button_get_event(button_event_t* event);
 
+// Returns the current state of all buttons
+uint32_t button_get_state(void);
+
 // Checks if the specified button is currently pressed
 bool button_is_down(button_t button);
