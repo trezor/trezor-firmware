@@ -817,22 +817,22 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 
-bool powerctl_get_status__verified(powerctl_status_t *status) {
+pm_status_t pm_get_state__verified(pm_state_t *status) {
   if (!probe_write_access(status, sizeof(*status))) {
     goto access_violation;
   }
 
-  powerctl_status_t status_copy = {0};
-  bool retval = powerctl_get_status(&status_copy);
+  pm_state_t status_copy = {0};
+  pm_status_t retval = pm_get_state(&status_copy);
   *status = status_copy;
 
   return retval;
 
 access_violation:
   apptask_access_violation();
-  return false;
+  return PM_ERROR;
 }
 
 #endif

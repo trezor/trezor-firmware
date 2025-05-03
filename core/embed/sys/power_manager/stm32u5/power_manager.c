@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <sys/backup_ram.h>
 #include <sys/irq.h>
@@ -409,3 +410,5 @@ static void pm_shutdown_timer_handler(void* context) {
   drv->shutdown_timer_elapsed = true;
   pm_process_state_machine();
 }
+
+#endif
