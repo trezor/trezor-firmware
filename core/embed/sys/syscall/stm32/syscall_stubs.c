@@ -680,24 +680,27 @@ uint32_t ble_read(uint8_t *data, uint16_t len) {
 #endif
 
 // =============================================================================
-// powerctl.h
+// power_manager.h
 // =============================================================================
 
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 
-#include <sys/powerctl.h>
+#include <sys/power_manager.h>
 
-void powerctl_suspend(void) { syscall_invoke0(SYSCALL_POWERCTL_SUSPEND); }
-
-bool powerctl_hibernate(void) {
-  return (bool)syscall_invoke0(SYSCALL_POWERCTL_HIBERNATE);
+pm_status_t pm_suspend(void) {
+  return (pm_status_t)syscall_invoke0(SYSCALL_POWER_MANAGER_SUSPEND);
 }
 
-bool powerctl_get_status(powerctl_status_t *status) {
-  return (bool)syscall_invoke1((uint32_t)status, SYSCALL_POWERCTL_GET_STATUS);
+pm_status_t pm_hibernate(void) {
+  return (pm_status_t)syscall_invoke0(SYSCALL_POWER_MANAGER_HIBERNATE);
 }
 
-#endif  // USE_POWERCTL
+pm_status_t pm_get_status(pm_state_t *status) {
+  return (pm_status_t)syscall_invoke1((uint32_t)status,
+                                      SYSCALL_POWER_MANAGER_GET_STATE);
+}
+
+#endif  // USE_POWER_MANAGER
 
 // =============================================================================
 // jpegdec.h

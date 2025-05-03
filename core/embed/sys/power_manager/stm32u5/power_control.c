@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <trezor_bsp.h>
 #include <trezor_rtl.h>
@@ -234,3 +235,5 @@ static void pm_background_tasks_suspend(void) {
 static bool pm_background_tasks_suspended(void) { return true; }
 
 static void pm_background_tasks_resume(void) {}
+
+#endif
