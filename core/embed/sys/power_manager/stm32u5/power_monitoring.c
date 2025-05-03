@@ -55,7 +55,6 @@ void pm_monitor_power_sources(void) {
           (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
       if (soc_ceiled_temp != drv->soc_ceiled) {
         drv->soc_ceiled = soc_ceiled_temp;
-        PM_SET_EVENT(drv->event_flags, PM_EVENT_SOC_UPDATED);
       }
     }
 
@@ -72,12 +71,10 @@ void pm_monitor_power_sources(void) {
   if (drv->pmic_data.usb_status != 0x0) {
     if (!drv->usb_connected) {
       drv->usb_connected = true;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_USB_CONNECTED);
     }
   } else {
     if (drv->usb_connected) {
       drv->usb_connected = false;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_USB_DISCONNECTED);
     }
   }
 
@@ -85,12 +82,10 @@ void pm_monitor_power_sources(void) {
   if (drv->wireless_data.vout_ready) {
     if (!drv->wireless_connected) {
       drv->wireless_connected = true;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_WIRELESS_CONNECTED);
     }
   } else {
     if (drv->wireless_connected) {
       drv->wireless_connected = false;
-      PM_SET_EVENT(drv->event_flags, PM_EVENT_WIRELESS_DISCONNECTED);
     }
   }
 
