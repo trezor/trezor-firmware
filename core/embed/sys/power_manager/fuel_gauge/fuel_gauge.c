@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#ifdef KERNEL_MODE
 #include "fuel_gauge.h"
 #include <math.h>
 #include "battery_model.h"
@@ -130,3 +130,5 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
 
   return state->soc_latched;
 }
+
+#endif

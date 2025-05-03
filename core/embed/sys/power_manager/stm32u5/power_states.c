@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <io/backlight.h>
 #ifdef USE_BUTTON
@@ -329,3 +330,5 @@ void pm_enter_hibernate(pm_driver_t* drv) {
   // Put PMIC into ship mode (ultra-low power)
   // npm1300_enter_shipmode();
 }
+
+#endif

@@ -34,9 +34,9 @@
 
 #ifdef KERNEL_MODE
 
-// Battery powered devices (USE_POWERCTL) should not stall
+// Battery powered devices (USE_POWER_MANAGER) should not stall
 // after showing RSOD, as it would drain the battery.
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 #ifdef RSOD_INFINITE_LOOP
 #error "RSOD_INFINITE_LOOP is not supported on battery powered devices"
 #endif
