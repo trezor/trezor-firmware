@@ -45,10 +45,16 @@
 #define PM_FUEL_GAUGE_Q_AGGRESSIVE 0.001f
 #define PM_FUEL_GAUGE_P_INIT 0.1f
 
-// Event flag manipulation macros
-#define PM_SET_EVENT(flags, event) ((flags) |= (event))
-#define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
-#define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
+/* Power manager states */
+#define PM_STATE_LIST(STATE) \
+  STATE(HIBERNATE)           \
+  STATE(CHARGING)            \
+  STATE(STARTUP_REJECTED)    \
+  STATE(SUSPEND)             \
+  STATE(ULTRA_POWER_SAVE)    \
+  STATE(SHUTTING_DOWN)       \
+  STATE(POWER_SAVE)          \
+  STATE(ACTIVE)
 
 // Power manager battery sampling data structure
 typedef struct {
@@ -62,7 +68,6 @@ typedef struct {
   bool initialized;
   bool state_machine_stabilized;
   pm_internal_state_t state;
-  pm_event_t event_flags;
 
   // Fuel gauge
   fuel_gauge_state_t fuel_gauge;

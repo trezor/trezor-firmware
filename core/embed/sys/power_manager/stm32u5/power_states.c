@@ -82,7 +82,6 @@ void pm_process_state_machine(void) {
 
     // Update state
     drv->state = new_state;
-    PM_SET_EVENT(drv->event_flags, PM_EVENT_STATE_CHANGED);
 
     // Enter new state
     if (state_handlers[new_state].enter != NULL) {
@@ -228,39 +227,29 @@ pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
 // State enter/exit actions
 
 void pm_enter_hibernate(pm_driver_t* drv) {
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_HIBERNATE);
-
   // Store power manager data with request to hibernate, power manager
   // will try to hibernate immediately after reboot.
   pm_store_data_to_backup_ram();
   reboot_device();
 }
 
-void pm_enter_charging(pm_driver_t* drv) {
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_CHARGING);
-}
+void pm_enter_charging(pm_driver_t* drv) {}
 
-void pm_enter_suspend(pm_driver_t* drv) {
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_SUSPEND);
-  pm_control_suspend();
-}
+void pm_enter_suspend(pm_driver_t* drv) { pm_control_suspend(); }
 
 void pm_enter_shutting_down(pm_driver_t* drv) {
   // Set shutdown timer
   systimer_set(drv->shutdown_timer, PM_SHUTDOWN_TIMEOUT_MS);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_SHUTTING_DOWN);
 }
 
 void pm_enter_power_save(pm_driver_t* drv) {
   // Limit backlight
   backlight_set_max_level(130);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_POWER_SAVE);
 }
 
 void pm_enter_active(pm_driver_t* drv) {
   // Set unlimited backlight
   backlight_set_max_level(255);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_ACTIVE);
 }
 
 void pm_exit_shutting_down(pm_driver_t* drv) {

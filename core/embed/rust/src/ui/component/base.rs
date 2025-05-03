@@ -16,6 +16,8 @@ use crate::{
 use crate::ui::event::BLEEvent;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
+#[cfg(feature = "power_manager")]
+use crate::ui::event::PMEvent;
 use crate::ui::event::USBEvent;
 #[cfg(feature = "touch")]
 use crate::ui::{
@@ -324,6 +326,8 @@ pub enum Event {
     Touch(TouchEvent),
     #[cfg(feature = "ble")]
     BLE(BLEEvent),
+    #[cfg(feature = "power_manager")]
+    PM(PMEvent),
     USB(USBEvent),
     /// Previously requested timer was triggered. This invalidates the timer
     /// token (another timer has to be requested).
