@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <sys/backup_ram.h>
 #include <sys/irq.h>
@@ -400,3 +401,5 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   irq_unlock(irq_key);
   return PM_OK;
 }
+
+#endif
