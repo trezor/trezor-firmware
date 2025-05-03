@@ -61,8 +61,8 @@
 #include <sec/optiga.h>
 #endif
 
-#ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
 #endif
 
 #ifdef USE_RGB_LED
@@ -732,18 +732,18 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 #endif
 
-#ifdef USE_POWERCTL
-    case SYSCALL_POWERCTL_SUSPEND: {
-      powerctl_suspend();
+#ifdef USE_POWER_MANAGER
+    case SYSCALL_POWER_MANAGER_SUSPEND: {
+      args[0] = pm_suspend();
     } break;
 
-    case SYSCALL_POWERCTL_HIBERNATE: {
-      args[0] = powerctl_hibernate();
+    case SYSCALL_POWER_MANAGER_HIBERNATE: {
+      args[0] = pm_hibernate();
     }
 
-    case SYSCALL_POWERCTL_GET_STATUS: {
-      powerctl_status_t *status = (powerctl_status_t *)args[0];
-      args[0] = powerctl_get_status__verified(status);
+    case SYSCALL_POWER_MANAGER_GET_STATE: {
+      pm_state_t *status = (pm_state_t *)args[0];
+      args[0] = pm_get_state__verified(status);
     }
 #endif
 
