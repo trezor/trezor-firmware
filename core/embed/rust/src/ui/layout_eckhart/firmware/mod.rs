@@ -11,6 +11,7 @@ mod hold_to_confirm;
 mod homescreen;
 mod keyboard;
 mod number_input_screen;
+mod progress_screen;
 mod qr_screen;
 mod select_word_screen;
 mod share_words;
@@ -36,6 +37,7 @@ pub use keyboard::{
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
 pub use number_input_screen::{NumberInputScreen, NumberInputScreenMsg};
+pub use progress_screen::ProgressScreen;
 pub use qr_screen::{QrMsg, QrScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
