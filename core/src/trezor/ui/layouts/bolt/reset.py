@@ -118,7 +118,6 @@ async def _prompt_number(
         count=count,
         min_count=min_count,
         max_count=max_count,
-        time_unit=False,
         description=None,
         more_info_callback=description,
     )

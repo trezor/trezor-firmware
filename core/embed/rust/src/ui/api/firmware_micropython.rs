@@ -606,7 +606,6 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
         let count: u32 = kwargs.get(Qstr::MP_QSTR_count)?.try_into()?;
         let min_count: u32 = kwargs.get(Qstr::MP_QSTR_min_count)?.try_into()?;
         let max_count: u32 = kwargs.get(Qstr::MP_QSTR_max_count)?.try_into()?;
-        let time_unit: bool = kwargs.get(Qstr::MP_QSTR_time_unit)?.try_into()?;
         let description: Option<TString> = kwargs
             .get(Qstr::MP_QSTR_description)
             .unwrap_or_else(|_| Obj::const_none())
@@ -628,10 +627,26 @@ extern "C" fn new_request_number(n_args: usize, args: *const Obj, kwargs: *mut M
             count,
             min_count,
             max_count,
-            time_unit,
             description,
             more_info_cb,
         )?;
+        Ok(LayoutObj::new_root(layout)?.into())
+    };
+    unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
+}
+
+extern "C" fn new_request_duration(n_args: usize, args: *const Obj, kwargs: *mut Map) -> Obj {
+    let block = move |_args: &[Obj], kwargs: &Map| {
+        let title: TString = kwargs.get(Qstr::MP_QSTR_title)?.try_into()?;
+        let duration_ms: u32 = kwargs.get(Qstr::MP_QSTR_duration_ms)?.try_into()?;
+        let min_ms: u32 = kwargs.get(Qstr::MP_QSTR_min_ms)?.try_into()?;
+        let max_ms: u32 = kwargs.get(Qstr::MP_QSTR_max_ms)?.try_into()?;
+        let description: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_description)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
+
+        let layout = ModelUI::request_duration(title, duration_ms, min_ms, max_ms, description)?;
         Ok(LayoutObj::new_root(layout)?.into())
     };
     unsafe { util::try_with_args_and_kwargs(n_args, args, kwargs, block) }
@@ -812,12 +827,15 @@ extern "C" fn new_show_device_menu(n_args: usize, args: *const Obj, kwargs: *mut
         let device_name: TString = kwargs.get(Qstr::MP_QSTR_device_name)?.try_into()?;
         let paired_devices: Obj = kwargs.get(Qstr::MP_QSTR_paired_devices)?;
         let paired_devices: Vec<TString, 1> = util::iter_into_vec(paired_devices)?;
+        let auto_lock_delay: TString<'static> =
+            kwargs.get(Qstr::MP_QSTR_auto_lock_delay)?.try_into()?;
         let layout = ModelUI::show_device_menu(
             failed_backup,
             battery_percentage,
             firmware_version,
             device_name,
             paired_devices,
+            auto_lock_delay,
         )?;
         let layout_obj = LayoutObj::new_root(layout)?;
         Ok(layout_obj.into())
@@ -1497,13 +1515,23 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     count: int,
     ///     min_count: int,
     ///     max_count: int,
-    ///     time_unit: bool = False,
     ///     description: str | None = None,
     ///     more_info_callback: Callable[[int], str] | None = None,
     /// ) -> LayoutObj[tuple[UiResult, int]]:
     ///     """Number input with + and - buttons, optional static description and optional dynamic
     ///     description."""
     Qstr::MP_QSTR_request_number => obj_fn_kw!(0, new_request_number).as_obj(),
+
+    /// def request_duration(
+    ///     *,
+    ///     title: str,
+    ///     duration_ms: int,
+    ///     min_ms: int,
+    ///     max_ms: int,
+    ///     description: str | None = None,
+    /// ) -> LayoutObj[tuple[UiResult, int]]:
+    ///     """Duration input with + and - buttons, optional static description. """
+    Qstr::MP_QSTR_request_duration => obj_fn_kw!(0, new_request_duration).as_obj(),
 
     /// def request_pin(
     ///     *,
@@ -1616,6 +1644,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     firmware_version: str,
     ///     device_name: str,
     ///     paired_devices: Iterable[str],
+    ///     auto_lock_delay: str,
     /// ) -> LayoutObj[UiResult]:
     ///     """Show the device menu."""
     Qstr::MP_QSTR_show_device_menu => obj_fn_kw!(0, new_show_device_menu).as_obj(),

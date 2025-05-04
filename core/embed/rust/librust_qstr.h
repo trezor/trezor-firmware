@@ -96,6 +96,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_auto_lock__description;
   MP_QSTR_auto_lock__title;
   MP_QSTR_auto_lock__turned_on;
+  MP_QSTR_auto_lock_delay;
   MP_QSTR_backlight_fade;
   MP_QSTR_backlight_set;
   MP_QSTR_backup__can_back_up_anytime;
@@ -249,6 +250,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_device_name__title;
   MP_QSTR_disable_animation;
   MP_QSTR_disconnect;
+  MP_QSTR_duration_ms;
   MP_QSTR_encode;
   MP_QSTR_encoded_length;
   MP_QSTR_entropy__send;
@@ -351,10 +353,12 @@ static void _librust_qstrs(void) {
   MP_QSTR_max_count;
   MP_QSTR_max_feerate;
   MP_QSTR_max_len;
+  MP_QSTR_max_ms;
   MP_QSTR_max_rounds;
   MP_QSTR_menu_title;
   MP_QSTR_message;
   MP_QSTR_min_count;
+  MP_QSTR_min_ms;
   MP_QSTR_misc__decrypt_value;
   MP_QSTR_misc__enable_labeling;
   MP_QSTR_misc__encrypt_value;
@@ -514,6 +518,7 @@ static void _librust_qstrs(void) {
   MP_QSTR_remaining_shares;
   MP_QSTR_request_bip39;
   MP_QSTR_request_complete_repaint;
+  MP_QSTR_request_duration;
   MP_QSTR_request_number;
   MP_QSTR_request_passphrase;
   MP_QSTR_request_pin;
@@ -725,7 +730,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_text_footer;
   MP_QSTR_text_mono;
   MP_QSTR_time_ms;
-  MP_QSTR_time_unit;
   MP_QSTR_timer;
   MP_QSTR_title;
   MP_QSTR_title_success;

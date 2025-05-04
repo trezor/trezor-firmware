@@ -233,9 +233,16 @@ pub trait FirmwareUI {
         count: u32,
         min_count: u32,
         max_count: u32,
-        time_unit: bool,
         description: Option<TString<'static>>,
         more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
+    ) -> Result<impl LayoutMaybeTrace, Error>;
+
+    fn request_duration(
+        title: TString<'static>,
+        duration_ms: u32,
+        min_ms: u32,
+        max_ms: u32,
+        description: Option<TString<'static>>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn request_pin(
@@ -310,6 +317,7 @@ pub trait FirmwareUI {
         firmware_version: TString<'static>,
         device_name: TString<'static>,
         paired_devices: Vec<TString<'static>, 1>,
+        auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error>;
 
     fn show_pairing_device_name(

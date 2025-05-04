@@ -15,10 +15,10 @@ use crate::{
 
 use super::firmware::{
     AllowedTextContent, ConfirmHomescreen, ConfirmHomescreenMsg, DeviceMenuMsg, DeviceMenuScreen,
-    Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg,
-    NumberInputScreen, NumberInputScreenMsg, PinKeyboard, PinKeyboardMsg, SelectWordCountMsg,
-    SelectWordCountScreen, SelectWordMsg, SelectWordScreen, SetBrightnessScreen, TextScreen,
-    TextScreenMsg,
+    Homescreen, HomescreenMsg, MnemonicInput, MnemonicKeyboard, MnemonicKeyboardMsg, PinKeyboard,
+    PinKeyboardMsg, SelectWordCountMsg, SelectWordCountScreen, SelectWordMsg, SelectWordScreen,
+    SetBrightnessScreen, TextScreen, TextScreenMsg, ValueInput, ValueInputScreen,
+    ValueInputScreenMsg,
 };
 
 impl ComponentMsgObj for PinKeyboard<'_> {
@@ -111,12 +111,12 @@ impl ComponentMsgObj for SelectWordCountScreen {
     }
 }
 
-impl ComponentMsgObj for NumberInputScreen {
+impl<T: ValueInput> ComponentMsgObj for ValueInputScreen<T> {
     fn msg_try_into_obj(&self, msg: Self::Msg) -> Result<Obj, Error> {
         match msg {
-            NumberInputScreenMsg::Confirmed(i) => i.try_into(),
-            NumberInputScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
-            NumberInputScreenMsg::Menu => Ok(INFO.as_obj()),
+            ValueInputScreenMsg::Confirmed(i) => i.try_into(),
+            ValueInputScreenMsg::Cancelled => Ok(CANCELLED.as_obj()),
+            ValueInputScreenMsg::Menu => Ok(INFO.as_obj()),
         }
     }
 }

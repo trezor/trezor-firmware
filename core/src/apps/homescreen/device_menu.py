@@ -3,33 +3,33 @@ import trezorui_api
 from trezor import TR, config, utils
 from trezor.ui.layouts import raise_if_not_confirmed
 from trezor.ui.layouts.common import interact
-from trezor.wire import ActionCancelled, NotInitialized, ProcessError
+from trezor.wire import ActionCancelled
 
 
 async def _prompt_auto_lock_delay() -> int:
-    DEFAULT_AUTOLOCK_DELAY_S = 300  # 5 minutes
-    MIN_AUTOLOCK_DELAY_S = 10  # 10 seconds
-    MAX_AUTOLOCK_DELAY_S = 518400  # 6 days
-    result = await interact(
-        trezorui_api.request_number(
+    auto_lock_delay_ms = await interact(
+        trezorui_api.request_duration(
             title=TR.auto_lock__title,
-            count=DEFAULT_AUTOLOCK_DELAY_S,
-            min_count=MIN_AUTOLOCK_DELAY_S,
-            max_count=MAX_AUTOLOCK_DELAY_S,
-            time_unit=True,
+            duration_ms=storage.device.get_autolock_delay_ms(),
+            min_ms=storage.device.AUTOLOCK_DELAY_MINIMUM,
+            max_ms=storage.device.AUTOLOCK_DELAY_MAXIMUM,
             description=TR.auto_lock__description,
         ),
         br_name=None,
     )
 
-    if result is not trezorui_api.CANCELLED:
-        assert isinstance(result, int)
-        return result
+    if auto_lock_delay_ms is not trezorui_api.CANCELLED:
+        assert isinstance(auto_lock_delay_ms, int)
+        assert auto_lock_delay_ms >= storage.device.AUTOLOCK_DELAY_MINIMUM
+        assert auto_lock_delay_ms <= storage.device.AUTOLOCK_DELAY_MAXIMUM
+        return auto_lock_delay_ms
     else:
         raise ActionCancelled  # user cancelled request number prompt
 
 
 async def handle_device_menu() -> None:
+    from trezor import strings
+
     # MOCK DATA
     failed_backup = True
     battery_percentage = 22
@@ -37,6 +37,29 @@ async def handle_device_menu() -> None:
     # ###
     firmware_version = ".".join(map(str, utils.VERSION))
     device_name = storage.device.get_label() or "Trezor"
+    # Determine appropriate unit and count for auto-lock delay
+    auto_lock_ms = storage.device.get_autolock_delay_ms()
+    MS = 1000
+    MIN = MS * 60
+    HOUR = MIN * 60
+    DAY = HOUR * 24
+
+    if auto_lock_ms >= DAY:
+        auto_lock_num = auto_lock_ms // DAY
+        auto_lock_label = TR.plurals__lock_after_x_days
+    elif auto_lock_ms >= HOUR:
+        auto_lock_num = auto_lock_ms // HOUR
+        auto_lock_label = TR.plurals__lock_after_x_hours
+    elif auto_lock_ms >= MIN:
+        auto_lock_num = auto_lock_ms // MIN
+        auto_lock_label = TR.plurals__lock_after_x_minutes
+    else:
+        auto_lock_num = auto_lock_ms // MS
+        auto_lock_label = TR.plurals__lock_after_x_seconds
+
+    auto_lock_str = strings.format_plural(
+        "{count} {plural}", auto_lock_num, auto_lock_label
+    )
 
     menu_result = await raise_if_not_confirmed(
         trezorui_api.show_device_menu(
@@ -45,6 +68,7 @@ async def handle_device_menu() -> None:
             paired_devices=paired_devices,
             firmware_version=firmware_version,
             device_name=device_name,
+            auto_lock_delay=auto_lock_str,
         ),
         None,
     )
@@ -63,21 +87,10 @@ async def handle_device_menu() -> None:
 
         await wipe_device(WipeDevice())
     elif menu_result == "AutoLockDelay":
-        import storage.device as storage_device
 
-        if not storage_device.is_initialized():
-            raise NotInitialized("Device is not initialized")
+        if config.has_pin():
 
-        if not config.has_pin():
-            raise ProcessError("Set up a PIN first")
-
-        auto_lock_delay_s = await _prompt_auto_lock_delay()
-
-        if auto_lock_delay_s * 1000 < storage_device.AUTOLOCK_DELAY_MINIMUM:
-            raise ProcessError("Auto-lock delay too short")
-        if auto_lock_delay_s * 1000 > storage_device.AUTOLOCK_DELAY_MAXIMUM:
-            raise ProcessError("Auto-lock delay too long")
-
-        storage_device.set_autolock_delay_ms(auto_lock_delay_s * 1000)
+            auto_lock_delay_ms = await _prompt_auto_lock_delay()
+            storage.device.set_autolock_delay_ms(auto_lock_delay_ms)
     else:
         raise RuntimeError(f"Unknown menu {menu_result}")

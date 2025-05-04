@@ -850,7 +850,6 @@ impl FirmwareUI for UICaesar {
         count: u32,
         min_count: u32,
         max_count: u32,
-        _time_unit: bool,
         _description: Option<TString<'static>>,
         _more_info_callback: Option<impl Fn(u32) -> TString<'static> + 'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
@@ -858,6 +857,16 @@ impl FirmwareUI for UICaesar {
             Frame::new(title, NumberInput::new(min_count, max_count, count)).with_title_centered(),
         );
         Ok(layout)
+    }
+
+    fn request_duration(
+        _title: TString<'static>,
+        _duration_ms: u32,
+        _min_ms: u32,
+        _max_ms: u32,
+        _description: Option<TString<'static>>,
+    ) -> Result<impl LayoutMaybeTrace, Error> {
+        Err::<RootComponent<Empty, ModelUI>, Error>(ERROR_NOT_IMPLEMENTED)
     }
 
     fn request_pin(
@@ -1034,6 +1043,7 @@ impl FirmwareUI for UICaesar {
         _firmware_version: TString<'static>,
         _device_name: TString<'static>,
         _paired_devices: Vec<TString<'static>, 1>,
+        _auto_lock_delay: TString<'static>,
     ) -> Result<impl LayoutMaybeTrace, Error> {
         Err::<RootComponent<Empty, ModelUI>, Error>(Error::ValueError(
             c"show_device_menu not supported",
