@@ -53,11 +53,11 @@ inputs:
   report-unreproducible-crashes:
     description: 'If True, then unreproducible crashes will be reported.'
     required: false
-    default: False
+    default: false
   minimize-crashes:
     description: 'If True, reportable crashes will be minimized.'
     required: false
-    default: False
+    default: false
   parallel-fuzzing:
     description: "Whether to use all available cores for fuzzing."
     required: false
@@ -91,7 +91,11 @@ runs:
     REPORT_UNREPRODUCIBLE_CRASHES: ${{ inputs.report-unreproducible-crashes }}
     OUTPUT_SARIF: ${{ inputs.output-sarif }}
     MINIMIZE_CRASHES: ${{ inputs.minimize-crashes }}
-    CFL_PLATFORM: 'github'
+    CFL_PLATFORM: 'standalone'  # don't access GitHub artifacts
+    FILESTORE_ROOT_DIR: '/no/such/dir'  # no corpus is available
+    WORKSPACE: '/github/workspace'
+    REPOSITORY: 'trezor-firmware'
+    CIFUZZ_DEBUG: 'True'
     PARALLEL_FUZZING: ${{ inputs.parallel-fuzzing }}
     REPORT_TIMEOUTS: ${{ inputs.report-timeouts }}
     REPORT_OOMS: ${{ inputs.report-ooms}}
