@@ -637,7 +637,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        model: [T2T1, T3T1]  # XXX T3B1 https://github.com/trezor/trezor-firmware/issues/2724
+        model: [T2T1, T3B1, T3T1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
