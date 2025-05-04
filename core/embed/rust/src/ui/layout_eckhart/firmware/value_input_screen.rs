@@ -18,42 +18,144 @@ use super::{
     ActionBar, ActionBarMsg, Header, HeaderMsg,
 };
 
-// Time conversion constants used to convert between different time units
-const MIN_S: u32 = 60;
-const HOUR_S: u32 = 3600;
-const DAY_S: u32 = 86400;
-
-pub enum NumberInputScreenMsg {
+pub enum ValueInputScreenMsg {
     Cancelled,
     Confirmed(u32),
     Menu,
 }
 
-pub struct NumberInputScreen {
+pub trait ValueInput {
+    fn num(&self) -> u32;
+    fn converted(&self) -> (u32, Option<ShortString>);
+    fn increment(&mut self);
+    fn decrement(&mut self);
+    fn is_max(&self) -> bool;
+    fn is_min(&self) -> bool;
+}
+
+pub struct NumberInput {
+    value: u32,
+    min: u32,
+    max: u32,
+}
+
+impl ValueInput for NumberInput {
+    fn num(&self) -> u32 {
+        self.value
+    }
+
+    fn converted(&self) -> (u32, Option<ShortString>) {
+        (self.value, None)
+    }
+
+    fn increment(&mut self) {
+        self.value = self.value.saturating_add(1).min(self.max);
+    }
+
+    fn decrement(&mut self) {
+        self.value = self.value.saturating_sub(1).max(self.min);
+    }
+
+    fn is_max(&self) -> bool {
+        self.value == self.max
+    }
+
+    fn is_min(&self) -> bool {
+        self.value == self.min
+    }
+}
+
+impl NumberInput {
+    pub fn new(min: u32, max: u32, value: u32) -> Self {
+        Self {
+            value: value.clamp(min, max),
+            min,
+            max,
+        }
+    }
+}
+
+pub struct DurationInput {
+    duration: Duration,
+    min: Duration,
+    max: Duration,
+}
+
+impl ValueInput for DurationInput {
+    fn num(&self) -> u32 {
+        self.duration.to_millis()
+    }
+
+    fn converted(&self) -> (u32, Option<ShortString>) {
+        let units = [
+            (self.duration.to_days(), TR::plurals__lock_after_x_days),
+            (self.duration.to_hours(), TR::plurals__lock_after_x_hours),
+            (self.duration.to_mins(), TR::plurals__lock_after_x_minutes),
+        ];
+
+        for &(count, tr) in &units {
+            if count > 0 {
+                let plural =
+                    TString::from_translation(tr).map(|template| plural_form(template, count));
+                return (count, Some(plural));
+            }
+        }
+
+        // Fallback to seconds if all are 0
+        let count = self.duration.to_secs();
+        let plural = TString::from_translation(TR::plurals__lock_after_x_seconds)
+            .map(|template| plural_form(template, count));
+        (count, Some(plural))
+    }
+
+    fn increment(&mut self) {
+        self.duration = unwrap!(self.duration.increment_unit()).min(self.max);
+    }
+
+    fn decrement(&mut self) {
+        self.duration = unwrap!(self.duration.decrement_unit()).max(self.min);
+    }
+
+    fn is_max(&self) -> bool {
+        self.duration == self.max
+    }
+
+    fn is_min(&self) -> bool {
+        self.duration == self.min
+    }
+}
+
+impl DurationInput {
+    pub fn new(min: Duration, max: Duration, duration: Duration) -> Self {
+        let max_crop = max.crop_to_largest_unit();
+        let min_crop = min.crop_to_largest_unit();
+        Self {
+            duration: duration.clamp(min_crop, max_crop).crop_to_largest_unit(),
+            min: min_crop,
+            max: max_crop,
+        }
+    }
+}
+
+pub struct ValueInputScreen<T: ValueInput> {
     /// Screen header
     header: Header,
     /// Screeen description
     description: Label<'static>,
-    /// Number input dialog
-    number_input: NumberInput,
+    /// Value input dialog
+    input_dialog: ValueInputDialog<T>,
     /// Screen action bar
     action_bar: ActionBar,
 }
 
-impl NumberInputScreen {
+impl<T: ValueInput> ValueInputScreen<T> {
     const DESCRIPTION_HEIGHT: i16 = 123;
     const INPUT_HEIGHT: i16 = 170;
-    pub fn new(
-        min: u32,
-        max: u32,
-        init_value: u32,
-        text: TString<'static>,
-        time_conversion: bool,
-    ) -> Self {
+    pub fn new(value: T, text: TString<'static>) -> Self {
         Self {
             header: Header::new(TString::empty()),
             action_bar: ActionBar::new_cancel_confirm(),
-            number_input: NumberInput::new(min, max, init_value, time_conversion),
+            input_dialog: ValueInputDialog::new(value),
             description: Label::new(text, Alignment::Start, theme::TEXT_MEDIUM),
         }
     }
@@ -64,12 +166,12 @@ impl NumberInputScreen {
     }
 
     pub fn value(&self) -> u32 {
-        self.number_input.value
+        self.input_dialog.value_input.num()
     }
 }
 
-impl Component for NumberInputScreen {
-    type Msg = NumberInputScreenMsg;
+impl<T: ValueInput> Component for ValueInputScreen<T> {
+    type Msg = ValueInputScreenMsg;
 
     fn place(&mut self, bounds: Rect) -> Rect {
         // assert full screen
@@ -89,28 +191,28 @@ impl Component for NumberInputScreen {
 
         self.header.place(header_area);
         self.description.place(description_area);
-        self.number_input.place(input_area);
+        self.input_dialog.place(input_area);
         self.action_bar.place(action_bar_area);
 
         bounds
     }
 
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
-        self.number_input.event(ctx, event);
-
         if let Some(HeaderMsg::Menu) = self.header.event(ctx, event) {
-            return Some(NumberInputScreenMsg::Menu);
+            return Some(ValueInputScreenMsg::Menu);
         }
 
         if let Some(msg) = self.action_bar.event(ctx, event) {
             match msg {
                 ActionBarMsg::Confirmed => {
-                    return Some(NumberInputScreenMsg::Confirmed(self.value()))
+                    return Some(ValueInputScreenMsg::Confirmed(self.value()))
                 }
-                ActionBarMsg::Cancelled => return Some(NumberInputScreenMsg::Cancelled),
+                ActionBarMsg::Cancelled => return Some(ValueInputScreenMsg::Cancelled),
                 _ => {}
             }
         }
+
+        self.input_dialog.event(ctx, event);
 
         None
     }
@@ -118,59 +220,49 @@ impl Component for NumberInputScreen {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.header.render(target);
         self.description.render(target);
-        self.number_input.render(target);
+        self.input_dialog.render(target);
         self.action_bar.render(target);
     }
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for NumberInputScreen {
+impl<T: ValueInput> crate::trace::Trace for ValueInputScreen<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("NumberInputScreen");
-        t.child("number_input", &self.number_input);
+        t.component("ValueInputScreen");
+        t.child("input_dialog", &self.input_dialog);
         t.child("description", &self.description);
     }
 }
 
-struct NumberInput {
+struct ValueInputDialog<T: ValueInput> {
     area: Rect,
     dec: Maybe<Button>,
     inc: Maybe<Button>,
-    min: u32,
-    max: u32,
-    value: u32,
-    time_conversion: bool,
+    value_input: T,
     hold_timer: Timer,
     counter: u32,
 }
 
-impl NumberInput {
+impl<T: ValueInput> ValueInputDialog<T> {
     const BUTTON_PADDING: i16 = 10;
     const LABEL_OFFSET: i16 = 21;
     const BUTTON_SIZE: Offset = Offset::new(138, 130);
     const BORDER_PADDING: i16 = 24;
-    const HOLD_TIMEOUT_MS: Duration = Duration::from_millis(500);
+    const HOLD_TIMEOUT_DURATION: Duration = Duration::from_millis(500);
     const BIG_INCREMENT: u32 = 10;
     const BIG_INCREMENT_THRESHOLD: u32 = 5;
-    pub fn new(min: u32, max: u32, value: u32, time_conversion: bool) -> Self {
+    fn new(value_input: T) -> Self {
         let dec = Button::with_icon(theme::ICON_MINUS)
             .styled(theme::button_keyboard())
             .with_radius(12);
         let inc = Button::with_icon(theme::ICON_PLUS)
             .styled(theme::button_keyboard())
             .with_radius(12);
-        let mut value = value.clamp(min, max);
-        if time_conversion {
-            value = Self::align_time_value(value);
-        }
         Self {
             area: Rect::zero(),
-            dec: Maybe::new(theme::BG, dec, value > min),
-            inc: Maybe::new(theme::BG, inc, value < max),
-            min,
-            max,
-            value,
-            time_conversion,
+            dec: Maybe::new(theme::BG, dec, !value_input.is_min()),
+            inc: Maybe::new(theme::BG, inc, !value_input.is_max()),
+            value_input,
             hold_timer: Timer::new(),
             counter: 0,
         }
@@ -194,64 +286,24 @@ impl NumberInput {
                 self.counter = 0;
             }
             ButtonMsg::Pressed => {
-                self.hold_timer.start(ctx);
+                self.hold_timer.start(ctx, Self::HOLD_TIMEOUT_DURATION);
             }
             _ => {}
         }
     }
 
-    fn increment_value(&mut self) {
-        self.value = if self.time_conversion {
-            if self.value < MIN_S {
-                self.value.saturating_add(1).min(self.max)
-            } else if self.value < HOUR_S {
-                let aligned = (self.value / MIN_S) * MIN_S;
-                aligned.saturating_add(MIN_S).min(self.max)
-            } else if self.value < DAY_S {
-                let aligned = (self.value / HOUR_S) * HOUR_S;
-                aligned.saturating_add(HOUR_S).min(self.max)
-            } else {
-                let aligned = (self.value / DAY_S) * DAY_S;
-                aligned.saturating_add(DAY_S).min(self.max)
-            }
-        } else {
-            self.value.saturating_add(1).min(self.max)
-        };
-    }
     fn increase(&mut self, ctx: &mut EventCtx) {
         let n = if self.counter < Self::BIG_INCREMENT_THRESHOLD {
             1
         } else {
             Self::BIG_INCREMENT
         };
-        let old = self.value;
 
         for _ in 0..n {
-            self.increment_value();
+            self.value_input.increment();
         }
 
-        if old != self.value {
-            self.on_change(ctx);
-        } else {
-            self.on_saturation();
-        }
-    }
-
-    fn decrement_value(&mut self) {
-        self.value = if self.time_conversion {
-            let aligned = Self::align_time_value(self.value);
-            if aligned < MIN_S * 2 {
-                aligned.saturating_sub(1).max(self.min)
-            } else if aligned < HOUR_S * 2 {
-                aligned.saturating_sub(MIN_S).max(self.min)
-            } else if aligned < DAY_S * 2 {
-                aligned.saturating_sub(HOUR_S).max(self.min)
-            } else {
-                aligned.saturating_sub(DAY_S).max(self.min)
-            }
-        } else {
-            self.value.saturating_sub(1).max(self.min)
-        };
+        self.on_change(ctx);
     }
 
     fn decrease(&mut self, ctx: &mut EventCtx) {
@@ -261,89 +313,38 @@ impl NumberInput {
             Self::BIG_INCREMENT
         };
 
-        let old = self.value;
         for _ in 0..n {
-            self.decrement_value();
+            self.value_input.decrement();
         }
 
-        if old != self.value {
-            self.on_change(ctx);
-        } else {
+        self.on_change(ctx);
+        ctx.request_paint();
+    }
+
+    fn on_change(&mut self, ctx: &mut EventCtx) {
+        if self.value_input.is_min() {
+            self.dec.hide(ctx);
+            // If the value is saturated by a long hold, the button state is reset to
+            // initial
+            self.dec.inner_mut().enable(ctx);
             self.on_saturation();
+        } else {
+            self.dec.show(ctx);
+        }
+
+        if self.value_input.is_max() {
+            self.inc.hide(ctx);
+            // If the value is saturated by a long hold, the button state must be reset
+            self.inc.inner_mut().enable(ctx);
+            self.on_saturation();
+        } else {
+            self.inc.show(ctx);
         }
     }
 
     fn on_saturation(&mut self) {
         self.hold_timer.stop();
         self.counter = 0;
-    }
-
-    fn on_change(&mut self, ctx: &mut EventCtx) {
-        if self.value > self.min {
-            self.dec.show(ctx);
-        } else {
-            self.dec.hide(ctx);
-            // If the value is saturated by a long hold, the button state is reset to
-            // initial
-            self.dec.inner_mut().enable(ctx);
-        }
-
-        if self.value < self.max {
-            self.inc.show(ctx);
-        } else {
-            self.inc.hide(ctx);
-            // If the value is saturated by a long hold, the button state must be reset
-            self.inc.inner_mut().enable(ctx);
-        }
-        ctx.request_paint();
-    }
-
-    fn format_time_value(value: u32) -> (u32, Option<ShortString>) {
-        let get_plural = |s: TString, value| s.map(|template| plural_form(template, value));
-
-        if value < MIN_S {
-            (
-                value,
-                Some(get_plural(TR::plurals__lock_after_x_seconds.into(), value)),
-            )
-        } else if value < HOUR_S {
-            let minutes = value / MIN_S;
-            (
-                minutes,
-                Some(get_plural(
-                    TR::plurals__lock_after_x_minutes.into(),
-                    minutes,
-                )),
-            )
-        } else if value < DAY_S {
-            let hours = value / HOUR_S;
-            (
-                hours,
-                Some(get_plural(TR::plurals__lock_after_x_hours.into(), hours)),
-            )
-        } else {
-            let days = value / DAY_S;
-            (
-                days,
-                Some(get_plural(TR::plurals__lock_after_x_days.into(), days)),
-            )
-        }
-    }
-
-    fn align_to_unit(value: u32, unit: u32) -> u32 {
-        (value / unit) * unit
-    }
-
-    fn align_time_value(value: u32) -> u32 {
-        if value < MIN_S {
-            value
-        } else if value < HOUR_S {
-            Self::align_to_unit(value, MIN_S)
-        } else if value < DAY_S {
-            Self::align_to_unit(value, HOUR_S)
-        } else {
-            Self::align_to_unit(value, DAY_S)
-        }
     }
 
     fn render_borders<'s>(&'s self, target: &mut impl Renderer<'s>) {
@@ -367,11 +368,8 @@ impl NumberInput {
 
     fn render_number<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut buf = [0u8; 3];
-        let (num, label) = if self.time_conversion {
-            Self::format_time_value(self.value)
-        } else {
-            (self.value, None)
-        };
+
+        let (num, label) = self.value_input.converted();
 
         if let Some(num_str) = strutil::format_i64(num as i64, &mut buf) {
             let num_font = fonts::FONT_SATOSHI_EXTRALIGHT_72;
@@ -406,7 +404,7 @@ impl NumberInput {
     }
 }
 
-impl Component for NumberInput {
+impl<T: ValueInput> Component for ValueInputDialog<T> {
     type Msg = Never;
 
     fn place(&mut self, bounds: Rect) -> Rect {
@@ -440,13 +438,15 @@ impl Component for NumberInput {
             // increase/decrease the value and restart the timer
             if self.dec.is_visible() && self.dec.inner().is_pressed() {
                 self.decrease(ctx);
-                self.hold_timer.start(ctx, Self::HOLD_TIMEOUT_MS);
+                self.hold_timer.start(ctx, Self::HOLD_TIMEOUT_DURATION);
                 self.counter += 1;
+                ctx.request_paint();
                 return None;
             } else if self.inc.is_visible() && self.inc.inner().is_pressed() {
                 self.increase(ctx);
-                self.hold_timer.start(ctx, Self::HOLD_TIMEOUT_MS);
+                self.hold_timer.start(ctx, Self::HOLD_TIMEOUT_DURATION);
                 self.counter += 1;
+                ctx.request_paint();
                 return None;
             } else {
                 self.on_saturation();
@@ -478,10 +478,10 @@ impl Component for NumberInput {
 }
 
 #[cfg(feature = "ui_debug")]
-impl crate::trace::Trace for NumberInput {
+impl<T: ValueInput> crate::trace::Trace for ValueInputDialog<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
-        t.component("NumberInput");
-        t.int("value", self.value as i64);
+        t.component("ValueInput");
+        t.int("value", self.value_input.num() as i64);
     }
 }
 
@@ -492,73 +492,12 @@ mod tests {
     #[test]
     fn test_component_heights_fit_screen() {
         assert!(
-            NumberInputScreen::DESCRIPTION_HEIGHT
-                + NumberInputScreen::INPUT_HEIGHT
+            ValueInputScreen::<DurationInput>::DESCRIPTION_HEIGHT
+                + ValueInputScreen::<DurationInput>::INPUT_HEIGHT
                 + Header::HEADER_HEIGHT
                 + ActionBar::ACTION_BAR_HEIGHT
                 <= SCREEN.height(),
             "Components overflow the screen height",
         );
-    }
-
-    #[test]
-    fn test_time_value_formatting() {
-        assert_eq!(
-            NumberInput::format_time_value(0),
-            (0, Some(unwrap!(ShortString::try_from("seconds"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(1),
-            (1, Some(unwrap!(ShortString::try_from("second"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(2),
-            (2, Some(unwrap!(ShortString::try_from("seconds"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(60),
-            (1, Some(unwrap!(ShortString::try_from("minute"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(120),
-            (2, Some(unwrap!(ShortString::try_from("minutes"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(3540),
-            (59, Some(unwrap!(ShortString::try_from("minutes"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(3600),
-            (1, Some(unwrap!(ShortString::try_from("hour"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(7200),
-            (2, Some(unwrap!(ShortString::try_from("hours"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(82800),
-            (23, Some(unwrap!(ShortString::try_from("hours"))))
-        );
-        assert_eq!(
-            NumberInput::format_time_value(86400),
-            (1, Some(unwrap!(ShortString::try_from("day"))))
-        );
-    }
-
-    #[test]
-    fn test_align_time_value() {
-        // Below 60 seconds stays the same
-        assert_eq!(NumberInput::align_time_value(59), 59);
-        // Minutes (60..3600)
-        assert_eq!(NumberInput::align_time_value(61), 60);
-        assert_eq!(NumberInput::align_time_value(119), 60);
-        assert_eq!(NumberInput::align_time_value(3599), 3540);
-        // Hours (3600..86400)
-        assert_eq!(NumberInput::align_time_value(3601), 3600);
-        assert_eq!(NumberInput::align_time_value(7199), 3600);
-        assert_eq!(NumberInput::align_time_value(86399), 82800);
-        // Days (86400+)
-        assert_eq!(NumberInput::align_time_value(86400), 86400);
-        assert_eq!(NumberInput::align_time_value(172801), 172800);
     }
 }
