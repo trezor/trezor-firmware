@@ -21,6 +21,7 @@ jobs:
       matrix:
         sanitizer: [address]
     steps:
+      - uses: actions/checkout@v4  # needed to use the modified `run-fuzzers` action
       - name: Build Fuzzers (${{ matrix.sanitizer }})
         id: build
         uses: google/clusterfuzzlite/actions/build_fuzzers@v1
@@ -29,7 +30,7 @@ jobs:
           language: c
       - name: Run Fuzzers (${{ matrix.sanitizer }})
         id: run
-        uses: google/clusterfuzzlite/actions/run_fuzzers@v1
+        uses: ./.github/actions/run-fuzzers
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           fuzz-seconds: 400
