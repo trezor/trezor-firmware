@@ -75,7 +75,8 @@ class WebUsbHandle:
                 self.handle.releaseInterface(self.interface)
                 self.handle.close()
             except Exception as e:
-                raise TransportException(f"USB close failed: {e}") from e
+                # the device may restart before/during `USBDeviceHandle.close()` is called.
+                LOG.warning("Failed to close %s: %s", self.handle, e)
         self.handle = None
 
     def write_chunk(self, chunk: bytes) -> None:
