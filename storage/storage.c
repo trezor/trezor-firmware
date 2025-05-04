@@ -494,8 +494,11 @@ static secbool ui_progress(void) {
   ui_next_update = now + MIN_PROGRESS_UPDATE_MS;
   uint32_t ui_elapsed = now - ui_begin;
 
+  // Prevent overflow.
+  int32_t diff = (int32_t)ui_total - (int32_t)ui_elapsed;
+  if (diff < 0) diff = 0;
   // Round the remaining time to the nearest second.
-  uint32_t ui_rem_sec = (ui_total - ui_elapsed + 500) / 1000;
+  uint32_t ui_rem_sec = (diff + 500) / 1000;
 
 #ifndef TREZOR_EMULATOR
   uint32_t progress = 0;
