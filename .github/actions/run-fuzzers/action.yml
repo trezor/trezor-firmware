@@ -1,0 +1,97 @@
+# Vendored from https://github.com/google/clusterfuzzlite/blob/40f9a53e632516d2ec9f738eadd284635529fbad/actions/run_fuzzers/action.yml
+
+# action.yml
+name: 'run-fuzzers'
+description: 'Runs fuzz target binaries.'
+inputs:
+  language:
+    description: 'Programming language project is written in.'
+    required: false
+    default: 'c++'
+  fuzz-seconds:
+    description: 'The total time allotted for fuzzing in seconds.'
+    required: true
+    default: 600
+  dry-run:
+    description: 'If set, run the action without actually reporting a failure.'
+    default: false
+  sanitizer:
+    description: 'The sanitizer to run the fuzzers with.'
+    default: 'address'
+  mode:
+    description: |
+      The mode to run the fuzzers with ("code-change", "batch", "coverage", or "prune").
+      "code-change" is for fuzzing a pull request or commit.
+      "batch" is for non-interactive fuzzing of an entire project.
+      "coverage" is for coverage generation.
+      "prune" is for corpus pruning.
+    required: false
+    default: 'code-change'
+  github-token:
+    description: |
+      Token for GitHub API.
+      You should use "secrets.GITHUB_TOKEN" in your workflow file, do not
+      hardcode the token.
+      TODO(https://github.com/google/oss-fuzz/pull/5841#discussion_r639393361):
+      Document locking this down.
+    required: true
+  storage-repo:
+    description: |
+      The git repo to use for storing certain artifacts from fuzzing.
+    required: false
+  storage-repo-branch:
+    description: |
+      The branch of the git repo to use for storing certain artifacts from
+      fuzzing.
+    default: main
+    required: false
+  storage-repo-branch-coverage:
+    description: |
+      The branch of the git repo to use for storing coverage reports.
+    default: gh-pages
+    required: false
+  report-unreproducible-crashes:
+    description: 'If True, then unreproducible crashes will be reported.'
+    required: false
+    default: False
+  minimize-crashes:
+    description: 'If True, reportable crashes will be minimized.'
+    required: false
+    default: False
+  parallel-fuzzing:
+    description: "Whether to use all available cores for fuzzing."
+    required: false
+    default: false
+  output-sarif:
+    description: "Whether to output fuzzing results to SARIF."
+    required: false
+    default: false
+  report-timeouts:
+    description: "Whether to report fails due to timeout."
+    required: false
+    default: true
+  report-ooms:
+    description: "Whether to report fails due to OOM."
+    required: false
+    default: true
+runs:
+  using: 'docker'
+  image: 'docker://gcr.io/oss-fuzz-base/clusterfuzzlite-run-fuzzers:v1'
+  env:
+    FUZZ_SECONDS: ${{ inputs.fuzz-seconds }}
+    MODE: ${{ inputs.mode }}
+    LANGUAGE: ${{ inputs.language }}
+    DRY_RUN: ${{ inputs.dry-run}}
+    SANITIZER: ${{ inputs.sanitizer }}
+    GITHUB_TOKEN: ${{ inputs.github-token }}
+    LOW_DISK_SPACE: 'True'
+    GIT_STORE_REPO: ${{ inputs.storage-repo }}
+    GIT_STORE_BRANCH: ${{ inputs.storage-repo-branch }}
+    GIT_STORE_BRANCH_COVERAGE: ${{ inputs.storage-repo-branch-coverage }}
+    REPORT_UNREPRODUCIBLE_CRASHES: ${{ inputs.report-unreproducible-crashes }}
+    OUTPUT_SARIF: ${{ inputs.output-sarif }}
+    MINIMIZE_CRASHES: ${{ inputs.minimize-crashes }}
+    CFL_PLATFORM: 'github'
+    PARALLEL_FUZZING: ${{ inputs.parallel-fuzzing }}
+    REPORT_TIMEOUTS: ${{ inputs.report-timeouts }}
+    REPORT_OOMS: ${{ inputs.report-ooms}}
