@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memzero.h>
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -110,6 +111,11 @@
 
 // Command line interface context
 cli_t g_cli = {0};
+
+struct {
+  c_layout_t layout;
+  bool set;
+} g_layout __attribute__((aligned(4))) = {0};
 
 #define VCP_IFACE 0
 
@@ -244,7 +250,21 @@ static void drivers_init(void) {
 #endif
 }
 
-#define BACKLIGHT_NORMAL 150
+void prodtest_show_homescreen(void) {
+  memset(&g_layout, 0, sizeof(g_layout));
+  g_layout.set = true;
+
+  char device_id[FLASH_OTP_BLOCK_SIZE] = {0};
+
+  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
+                                (uint8_t *)device_id, sizeof(device_id)) &&
+      (device_id[0] != 0xFF)) {
+    screen_prodtest_welcome(&g_layout.layout, device_id,
+                            strnlen(device_id, sizeof(device_id) - 1));
+  } else {
+    screen_prodtest_welcome(&g_layout.layout, NULL, 0);
+  }
+}
 
 int main(void) {
   system_init(&rsod_panic_handler);
@@ -282,24 +302,11 @@ int main(void) {
   rgb_led_set_color(RGBLED_GREEN);
 #endif
 
-  char device_id[FLASH_OTP_BLOCK_SIZE] =
-      "test d"
-      "evice id";
-  c_layout_t layout;
-  memset(&layout, 0, sizeof(layout));
-
-  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
-                                (uint8_t *)device_id, sizeof(device_id)) &&
-      (device_id[0] != 0xFF)) {
-    screen_prodtest_welcome(&layout, device_id,
-                            strnlen(device_id, sizeof(device_id) - 1));
-  } else {
-    screen_prodtest_welcome(&layout, NULL, 0);
-  }
+  prodtest_show_homescreen();
 
   while (true) {
     sysevents_t awaited = {0};
-    awaited.read_ready = 1 << VCP_IFACE;
+    awaited.read_ready |= 1 << VCP_IFACE;
 #ifdef USE_BUTTON
     awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
 #endif
@@ -313,7 +320,13 @@ int main(void) {
     sysevents_poll(&awaited, &signalled, 100);
 
     if (signalled.read_ready & (1 << VCP_IFACE)) {
-      cli_process_io(&g_cli);
+      const cli_command_t *cmd = cli_process_io(&g_cli);
+
+      if (cmd != NULL) {
+        memzero(&g_layout, sizeof(g_layout));
+        cli_process_command(&g_cli, cmd);
+      }
+
       continue;
     }
 
@@ -338,14 +351,22 @@ int main(void) {
     }
 #endif
 
-    // proceed to UI
-    screen_prodtest_event(&layout, &signalled);
-
 #ifdef USE_RGB_LED
     if (ticks_expired(led_start_deadline) && !g_rgbled_control_disabled) {
       rgb_led_set_color(0);
     }
 #endif
+
+    if (signalled.read_ready == 0) {
+      // timeout, let's wait again
+      continue;
+    }
+
+    // proceed to UI
+
+    if (g_layout.set) {
+      screen_prodtest_event(&g_layout.layout, &signalled);
+    }
   }
 
   return 0;

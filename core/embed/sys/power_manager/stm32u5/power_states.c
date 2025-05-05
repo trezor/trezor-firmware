@@ -115,9 +115,9 @@ pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
   if (drv->request_suspend) {
     drv->request_suspend = false;
 
-    if (drv->usb_connected || drv->wireless_connected) {
-      return PM_STATE_CHARGING;
-    }
+    // if (drv->usb_connected || drv->wireless_connected) {
+    //   return PM_STATE_CHARGING;
+    // }
 
     return PM_STATE_SUSPEND;
   }
