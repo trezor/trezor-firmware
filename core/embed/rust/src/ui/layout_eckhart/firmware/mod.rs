@@ -7,11 +7,11 @@ mod hint;
 mod hold_to_confirm;
 mod homescreen;
 mod keyboard;
-mod number_input_screen;
 mod qr_screen;
 mod select_word_screen;
 mod share_words;
 mod text_screen;
+mod value_input_screen;
 mod vertical_menu;
 mod vertical_menu_screen;
 
@@ -31,11 +31,13 @@ pub use keyboard::{
     slip39::Slip39Input,
     word_count_screen::{SelectWordCountMsg, SelectWordCountScreen},
 };
-pub use number_input_screen::{NumberInputScreen, NumberInputScreenMsg};
 pub use qr_screen::{QrMsg, QrScreen};
 pub use select_word_screen::{SelectWordMsg, SelectWordScreen};
 pub use share_words::{ShareWordsScreen, ShareWordsScreenMsg};
 pub use text_screen::{AllowedTextContent, TextScreen, TextScreenMsg};
+pub use value_input_screen::{
+    DurationInput, NumberInput, ValueInput, ValueInputScreen, ValueInputScreenMsg,
+};
 pub use vertical_menu::{VerticalMenu, VerticalMenuMsg, MENU_MAX_ITEMS};
 pub use vertical_menu_screen::{VerticalMenuScreen, VerticalMenuScreenMsg};
 

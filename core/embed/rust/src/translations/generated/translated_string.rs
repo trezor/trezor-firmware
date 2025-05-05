@@ -27,7 +27,7 @@ pub enum TranslatedString {
     authenticate__confirm_template = 13,  // "Allow connected computer to confirm your {0} is genuine?"
     authenticate__header = 14,  // "Authenticate device"
     auto_lock__change_template = 15,  // "Auto-lock Trezor after {0} of inactivity?"
-    auto_lock__title = 16,  // "Auto-lock delay"
+    auto_lock__title = 16,  // {"Bolt": "Auto-lock delay", "Caesar": "Auto-lock delay", "Delizia": "Auto-lock delay", "Eckhart": "Auto-lock"}
     backup__can_back_up_anytime = 17,  // "You can back up your Trezor once, at any time."
     backup__it_should_be_backed_up = 18,  // {"Bolt": "You should back up your new wallet right now.", "Caesar": "You should back up your new wallet right now.", "Delizia": "You should back up your new wallet right now.", "Eckhart": "Back up your new wallet now."}
     backup__it_should_be_backed_up_now = 19,  // "It should be backed up now!"
@@ -1419,6 +1419,8 @@ pub enum TranslatedString {
     send__sign_cancelled = 1005,  // "Sign cancelled."
     words__send = 1006,  // "Send"
     words__wallet = 1007,  // "Wallet"
+    plurals__lock_after_x_days = 1008,  // "day|days"
+    auto_lock__description = 1009,  // "Set the time before your Trezor locks automatically."
 }
 
 impl TranslatedString {
@@ -1442,7 +1444,14 @@ impl TranslatedString {
             Self::authenticate__confirm_template => "Allow connected computer to confirm your {0} is genuine?",
             Self::authenticate__header => "Authenticate device",
             Self::auto_lock__change_template => "Auto-lock Trezor after {0} of inactivity?",
+            #[cfg(feature = "layout_bolt")]
             Self::auto_lock__title => "Auto-lock delay",
+            #[cfg(feature = "layout_caesar")]
+            Self::auto_lock__title => "Auto-lock delay",
+            #[cfg(feature = "layout_delizia")]
+            Self::auto_lock__title => "Auto-lock delay",
+            #[cfg(feature = "layout_eckhart")]
+            Self::auto_lock__title => "Auto-lock",
             Self::backup__can_back_up_anytime => "You can back up your Trezor once, at any time.",
             #[cfg(feature = "layout_bolt")]
             Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
@@ -2939,6 +2948,8 @@ impl TranslatedString {
             Self::send__sign_cancelled => "Sign cancelled.",
             Self::words__send => "Send",
             Self::words__wallet => "Wallet",
+            Self::plurals__lock_after_x_days => "day|days",
+            Self::auto_lock__description => "Set the time before your Trezor locks automatically.",
         }
     }
 
@@ -4353,6 +4364,8 @@ impl TranslatedString {
             Qstr::MP_QSTR_send__sign_cancelled => Some(Self::send__sign_cancelled),
             Qstr::MP_QSTR_words__send => Some(Self::words__send),
             Qstr::MP_QSTR_words__wallet => Some(Self::words__wallet),
+            Qstr::MP_QSTR_plurals__lock_after_x_days => Some(Self::plurals__lock_after_x_days),
+            Qstr::MP_QSTR_auto_lock__description => Some(Self::auto_lock__description),
             _ => None,
         }
     }
