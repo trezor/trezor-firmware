@@ -115,4 +115,4 @@ bool nrf_test_gpio_reserved(void);
 
 bool nrf_system_off(void);
 
-bool nrf_reboot(void);
+void nrf_reboot(void);

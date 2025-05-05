@@ -32,13 +32,6 @@
 
 #include "ble_comm_defs.h"
 
-typedef enum {
-  BLE_MODE_OFF,
-  BLE_MODE_CONNECTABLE,
-  BLE_MODE_PAIRING,
-  BLE_MODE_DFU,
-} ble_mode_t;
-
 // changing value of TX_QUEUE_LEN is not allowed
 // as it might result in order of messages being changed
 #define TX_QUEUE_LEN 1
@@ -478,16 +471,18 @@ void ble_deinit(void) {
   }
 }
 
-void ble_suspend(void) {
+void ble_suspend(ble_wakeup_params_t *wakeup_params) {
   ble_driver_t *drv = &g_ble_driver;
 
   if (drv->initialized) {
     bool connected = drv->connected;
+    wakeup_params->accept_msgs = connected;
+    wakeup_params->mode_requested = drv->mode_requested;
 
     ble_deinit_common(drv);
 
     if (!connected) {
-      drv->reboot_on_resume = true;
+      wakeup_params->reboot_on_resume = true;
 
       // if not connected, we can turn off the radio
       nrf_system_off();
@@ -500,24 +495,26 @@ void ble_suspend(void) {
   }
 }
 
-void ble_resume(void) {
+bool ble_resume(const ble_wakeup_params_t *wakeup_params) {
   ble_driver_t *drv = &g_ble_driver;
 
-  bool accept_msgs = drv->accept_msgs;
-  ble_mode_t mode = drv->mode_requested;
-  bool reboot = drv->reboot_on_resume;
+  if (!ble_init()) {
+    return false;
+  }
 
-  ble_init();
-
-  if (reboot) {
+  if (wakeup_params->reboot_on_resume) {
     nrf_reboot();
   }
 
-  if (accept_msgs) {
+  if (wakeup_params->mode_requested) {
     ble_start();
   }
 
-  drv->mode_requested = mode;
+  irq_key_t key = irq_lock();
+  drv->mode_requested = wakeup_params->mode_requested;
+  irq_unlock(key);
+
+  return true;
 }
 
 bool ble_connected(void) {

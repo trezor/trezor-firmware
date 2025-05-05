@@ -850,13 +850,12 @@ bool nrf_in_reserved(void) {
   return HAL_GPIO_ReadPin(NRF_IN_RESERVED_PORT, NRF_IN_RESERVED_PIN) != 0;
 }
 
-bool nrf_reboot(void) {
+void nrf_reboot(void) {
   HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(NRF_OUT_STAY_IN_BLD_PORT, NRF_OUT_STAY_IN_BLD_PIN,
                     GPIO_PIN_RESET);
   systick_delay_ms(50);
   HAL_GPIO_WritePin(NRF_OUT_RESET_PORT, NRF_OUT_RESET_PIN, GPIO_PIN_SET);
-  return true;
 }
 
 void nrf_signal_data_ready(void) {
@@ -916,7 +915,14 @@ bool nrf_system_off(void) {
     return false;
   }
 
-  systick_delay_ms(100);
+  uint32_t timeout = ticks_timeout(100);
+
+  while (!ticks_expired(timeout)) {
+    if (tsqueue_empty(&drv->tx_queue) && !drv->pending_spi_transaction) {
+      break;
+    }
+  }
+  systick_delay_ms(10);
 
   return true;
 }

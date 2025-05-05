@@ -97,7 +97,8 @@ void powerctl_suspend(void) {
   touch_deinit();
 #endif
 #ifdef USE_BLE
-  ble_suspend();
+  ble_wakeup_params_t ble_wakeup_params = {0};
+  ble_suspend(&ble_wakeup_params);
 #endif
 
   int backlight_level = display_get_backlight();
@@ -180,7 +181,7 @@ void powerctl_suspend(void) {
   tropic_init();
 #endif
 #ifdef USE_BLE
-  ble_resume();
+  ble_resume(&ble_wakeup_params);
 #endif
 }
 
