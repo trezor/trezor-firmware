@@ -59,7 +59,7 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
   state->soc_latched = state->soc;
 }
 
-float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
+float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms, float voltage_V,
                         float current_mA, float temperature) {
   // Determine if we're in discharge mode
   bool discharging_mode = current_mA >= 0.0f;
@@ -79,7 +79,7 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt, float voltage_V,
   }
 
   // Convert milliseconds to seconds
-  float dt_sec = dt / 1000.0f;
+  float dt_sec = dt_ms / 1000.0f;
 
   // Get total capacity at current temperature
   float total_capacity = battery_total_capacity(temperature, discharging_mode);
