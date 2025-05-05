@@ -96,6 +96,7 @@ extern "C" fn screen_unlock_bootloader_success() {
 #[no_mangle]
 extern "C" fn screen_menu(initial_setup: bool, firmware_present: secbool, layout: *mut c_layout_t) {
     let screen = <ModelUI as BootloaderUI>::CLayoutType::init_menu(initial_setup, firmware_present);
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
     let layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);
 }
@@ -154,6 +155,7 @@ extern "C" fn screen_install_progress(progress: u16, initialize: bool, initial_s
 #[no_mangle]
 extern "C" fn screen_connect(initial_setup: bool, auto_update: bool, layout: *mut c_layout_t) {
     let screen = <ModelUI as BootloaderUI>::CLayoutType::init_connect(initial_setup, auto_update);
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
     let layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);
 }
@@ -178,6 +180,7 @@ extern "C" fn screen_confirm_pairing(code: u32, initial_setup: bool) -> u32 {
 #[no_mangle]
 extern "C" fn screen_pairing_mode(initial_setup: bool, layout: *mut c_layout_t) {
     let screen = <ModelUI as BootloaderUI>::CLayoutType::init_pairing_mode(initial_setup);
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
     let layout = unsafe { LayoutBuffer::new(layout) };
     layout.store(screen);
 }
