@@ -193,6 +193,9 @@ static bool g_rgbled_control_disabled = false;
 void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
 #ifdef USE_POWER_MANAGER
   pm_init(true);
 #endif
@@ -210,9 +213,6 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_SD_CARD
   sdcard_init();
-#endif
-#ifdef USE_BACKUP_RAM
-  backup_ram_init();
 #endif
 #ifdef USE_BUTTON
   button_init();
@@ -260,9 +260,6 @@ int main(void) {
   cli_set_commands(
       &g_cli, &_prodtest_cli_cmd_section_start,
       &_prodtest_cli_cmd_section_end - &_prodtest_cli_cmd_section_start);
-
-  pm_turn_on();
-  pm_charging_enable();
 
 #ifdef USE_OPTIGA
   optiga_init();
