@@ -30,6 +30,7 @@
 
 #ifdef USE_OPTIGA
 #include <sec/optiga_config.h>
+#include <sec/optiga_hal.h>
 #include <sec/optiga_transport.h>
 #endif
 
@@ -76,17 +77,15 @@ pm_status_t pm_control_hibernate() {
   }
 
   // Wait for the device to power off
-  systick_delay_ms(50);
+  //systick_delay_ms(50);
 
   return PM_ERROR;
-
 }
 
-void pm_control_suspend(){
-
-// Clear all wakeup flags. From this point, any wakeup event that
-// sets a wakeup flag causes this function to return.
-pm_wakeup_flags_reset();
+void pm_control_suspend() {
+  // Clear all wakeup flags. From this point, any wakeup event that
+  // sets a wakeup flag causes this function to return.
+  pm_wakeup_flags_reset();
 
 // Deinitialize all drivers that are not required in low-power mode
 // (e.g., USB, display, touch, haptic, etc.).
@@ -122,9 +121,8 @@ pm_wakeup_flags_reset();
   pm_wakeup_flags_t wakeup_flags = 0;
 
   while (true) {
-
     pm_wakeup_flags_get(&wakeup_flags);
-    if(wakeup_flags != 0) {
+    if (wakeup_flags != 0) {
       // If any wakeup flag is set, exit the loop.
       break;
     }
@@ -148,9 +146,8 @@ pm_wakeup_flags_reset();
     } while (!pm_background_tasks_suspended() && (wakeup_flags == 0));
 
     if (true) {
-
       pm_wakeup_flags_get(&wakeup_flags);
-      if(wakeup_flags != 0) {
+      if (wakeup_flags != 0) {
         // If any wakeup flag is set, exit the loop.
         break;
       }
@@ -213,7 +210,6 @@ pm_wakeup_flags_reset();
 
 
 }
-
 
 static void pm_background_tasks_suspend(void) {
   // stwlc38
