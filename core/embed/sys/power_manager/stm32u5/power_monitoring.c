@@ -46,7 +46,7 @@ void pm_monitor_power_sources(void) {
 
 
     } else {
-      fuel_gauge_update(&drv->fuel_gauge, PM_BATTERY_SAMPLING_PERIOD_MS,
+      fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
                         drv->pmic_data.vbat, drv->pmic_data.ibat,
                         drv->pmic_data.ntc_temp);
 
@@ -129,6 +129,13 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
   pm_driver_t* drv = &g_pm;
 
   // Store measurement timestamp
+  if(drv->pmic_last_update_ms == 0) {
+    drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
+  } else {
+    // Timeout, reset the last update timestamp
+    drv->pmic_sampling_period_ms = drv->pmic_last_update_ms - systick_ms();
+  }
+
   drv->pmic_last_update_ms = systick_ms();
 
   // Copy PMIC data
