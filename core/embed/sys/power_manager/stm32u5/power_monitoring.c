@@ -117,6 +117,8 @@ void pm_monitor_power_sources(void) {
   // Process state machine with updated battery and power source information
   pm_process_state_machine();
 
+  pm_store_data_to_backup_ram();
+
   // Request fresh measurements
   npm1300_measure(pm_pmic_data_ready, NULL);
   drv->pmic_measurement_ready = false;
@@ -252,7 +254,12 @@ void pm_store_power_manager_data(pm_driver_t* drv) {
   backup_ram_power_manager_data_t pm_data = {0};
 
   // Store the current state of the power manager
-  pm_data.soc = drv->fuel_gauge.soc;
+  if (drv->battery_critical) {
+    pm_data.soc = 0;
+  } else {
+    pm_data.soc = drv->fuel_gauge.soc;
+  }
+  pm_data.bat_critical = drv->battery_critical;
   pm_data.last_capture_timestamp = systick_ms();
 
   // Store the data in backup RAM
