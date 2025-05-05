@@ -89,8 +89,8 @@ typedef struct {
   // Power source hardware state
   npm1300_report_t pmic_data;
   stwlc38_report_t wireless_data;
-  uint32_t pmic_last_update_ms;
-  uint32_t pmic_sampling_period_ms;
+  volatile uint32_t pmic_last_update_ms;
+  volatile uint32_t pmic_sampling_period_ms;
   bool pmic_measurement_ready;
 
   // Power source logical state
