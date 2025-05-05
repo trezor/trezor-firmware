@@ -256,19 +256,3 @@ void pm_battery_initial_soc_guess(void) {
 
   fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
 }
-
-void pm_store_power_manager_data(pm_driver_t* drv) {
-  backup_ram_power_manager_data_t pm_data = {0};
-
-  // Store the current state of the power manager
-  if (drv->battery_critical) {
-    pm_data.soc = 0;
-  } else {
-    pm_data.soc = drv->fuel_gauge.soc;
-  }
-  pm_data.bat_critical = drv->battery_critical;
-  pm_data.last_capture_timestamp = systick_ms();
-
-  // Store the data in backup RAM
-  backup_ram_store_power_manager_data(&pm_data);
-}
