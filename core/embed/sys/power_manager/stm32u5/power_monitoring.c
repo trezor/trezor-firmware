@@ -27,6 +27,8 @@
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
+#pragma GCC optimize ("O0")
+
 void pm_monitor_power_sources(void) {
   pm_driver_t* drv = &g_pm;
 
@@ -133,7 +135,7 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
     drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
   } else {
     // Timeout, reset the last update timestamp
-    drv->pmic_sampling_period_ms = drv->pmic_last_update_ms - systick_ms();
+    drv->pmic_sampling_period_ms = systick_ms() - drv->pmic_last_update_ms;
   }
 
   drv->pmic_last_update_ms = systick_ms();
