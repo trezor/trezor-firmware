@@ -770,7 +770,7 @@ async def confirm_value(
     if description and value:
         description += ":"
 
-    if info_items is None:
+    if not info_items:
         return await raise_if_not_confirmed(
             trezorui_api.confirm_value(
                 title=title,
