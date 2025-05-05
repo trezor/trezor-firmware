@@ -60,55 +60,55 @@ bool pm_fsm_event_ready(pm_fsm_t* fsm, pm_state_t* new_state) {
 
   // Return true if there are any state changes
   if (new_state->soc != fsm->pm_state.soc) {
-    fsm->event |= PM_EVENT_SOC_UPDATED;
+    fsm->event.flags.soc_updated = true;
     event_detected = true;
   }
 
   if (new_state->usb_connected && !fsm->pm_state.usb_connected) {
-    fsm->event |= PM_EVENT_USB_CONNECTED;
-    fsm->event &= ~PM_EVENT_USB_DISCONNECTED;
+    fsm->event.flags.usb_connected = true;
+    fsm->event.flags.usb_disconnected = false;
   }
 
   if (!new_state->usb_connected && fsm->pm_state.usb_connected) {
-    fsm->event |= PM_EVENT_USB_DISCONNECTED;
-    fsm->event &= ~PM_EVENT_USB_CONNECTED;
+    fsm->event.flags.usb_disconnected = true;
+    fsm->event.flags.usb_connected = false;
   }
 
   if (new_state->wireless_connected && !fsm->pm_state.wireless_connected) {
-    fsm->event |= PM_EVENT_WIRELESS_CONNECTED;
-    fsm->event &= ~PM_EVENT_WIRELESS_DISCONNECTED;
+    fsm->event.flags.wireless_connected = true;
+    fsm->event.flags.wireless_disconnected = false;
   }
 
   if (!new_state->wireless_connected && fsm->pm_state.wireless_connected) {
-    fsm->event |= PM_EVENT_WIRELESS_DISCONNECTED;
-    fsm->event &= ~PM_EVENT_WIRELESS_CONNECTED;
+    fsm->event.flags.wireless_disconnected = true;
+    fsm->event.flags.wireless_connected = false;
   }
 
   if (new_state->power_mode == PM_POWER_MODE_ACTIVE) {
     if (fsm->pm_state.power_mode != PM_POWER_MODE_ACTIVE) {
-      fsm->event |= PM_EVENT_ENTERED_MODE_ACTIVE;
-      fsm->event &= ~PM_EVENT_ENTERED_MODE_POWER_SAVE;
-      fsm->event &= ~PM_EVENT_ENTERED_MODE_SHUTTING_DOWN;
+      fsm->event.flags.entered_mode_active = true;
+      fsm->event.flags.entered_mode_power_save = false;
+      fsm->event.flags.entered_mode_shutting_down = false;
       event_detected = true;
     }
   } else if (new_state->power_mode == PM_POWER_MODE_POWER_SAVE) {
     if (fsm->pm_state.power_mode != PM_POWER_MODE_POWER_SAVE) {
-      fsm->event |= PM_EVENT_ENTERED_MODE_POWER_SAVE;
-      fsm->event &= ~PM_EVENT_ENTERED_MODE_ACTIVE;
-      fsm->event &= ~PM_EVENT_ENTERED_MODE_SHUTTING_DOWN;
+      fsm->event.flags.entered_mode_active = false;
+      fsm->event.flags.entered_mode_power_save = true;
+      fsm->event.flags.entered_mode_shutting_down = false;
       event_detected = true;
     }
   } else if (new_state->power_mode == PM_POWER_MODE_SHUTTING_DOWN) {
     if (fsm->pm_state.power_mode != PM_POWER_MODE_SHUTTING_DOWN) {
-      fsm->event |= PM_EVENT_ENTERED_MODE_SHUTTING_DOWN;
-      fsm->event &= ~PM_EVENT_ENTERED_MODE_ACTIVE;
-      fsm->event &= ~PM_EVENT_ENTERED_MODE_POWER_SAVE;
+      fsm->event.flags.entered_mode_active = false;
+      fsm->event.flags.entered_mode_power_save = false;
+      fsm->event.flags.entered_mode_shutting_down = true;
       event_detected = true;
     }
   }
 
   if (new_state->charging_status != fsm->pm_state.charging_status) {
-    fsm->event |= PM_EVENT_STATE_CHANGED;
+    fsm->event.flags.state_changed = true;
     event_detected = true;
   }
 
@@ -165,7 +165,7 @@ static const syshandle_vmt_t g_pm_handle_vmt = {
     .poll = on_event_poll,
 };
 
-pm_status_t pm_get_events(pm_event_t* event_flags) {
+bool pm_get_events(pm_event_t* event_flags) {
   pm_fsm_t* fsm = &tls[systask_id(systask_active())];
 
   return pm_fsm_get_event(fsm, event_flags);

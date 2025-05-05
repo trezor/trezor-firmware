@@ -130,7 +130,7 @@ static void prodtest_touch_test(cli_t* cli) {
     }
   }
 
-  screen_prodtest_welcome();
+  // screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_custom(cli_t* cli) {
@@ -213,7 +213,7 @@ static void prodtest_touch_test_custom(cli_t* cli) {
     }
   }
 
-  screen_prodtest_welcome();
+  // screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_idle(cli_t* cli) {
@@ -257,7 +257,7 @@ static void prodtest_touch_test_idle(cli_t* cli) {
   cli_ok(cli, "");
 
 cleanup:
-  screen_prodtest_welcome();
+  // screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_power(cli_t* cli) {
@@ -292,7 +292,7 @@ static void prodtest_touch_test_power(cli_t* cli) {
 
 cleanup:
   touch_power_set(false);
-  screen_prodtest_welcome();
+  // screen_prodtest_welcome();
 }
 
 static void prodtest_touch_test_sensitivity(cli_t* cli) {
@@ -333,7 +333,7 @@ static void prodtest_touch_test_sensitivity(cli_t* cli) {
     }
   }
 
-  screen_prodtest_welcome();
+  // screen_prodtest_welcome();
 }
 
 static void prodtest_touch_draw(cli_t* cli) {
@@ -367,7 +367,7 @@ static void prodtest_touch_draw(cli_t* cli) {
     }
   }
 
-  screen_prodtest_welcome();
+  // screen_prodtest_welcome();
 }
 
 // clang-format off

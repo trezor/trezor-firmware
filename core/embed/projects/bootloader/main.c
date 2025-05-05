@@ -98,7 +98,7 @@ static void drivers_init(secbool *touch_initialized) {
   rgb_led_init();
 #endif
 
-  //systick_delay_ms(5000);
+  // systick_delay_ms(5000);
 #ifdef USE_POWER_MANAGER
   pm_init(false);
   while (pm_turn_on() != PM_OK) {

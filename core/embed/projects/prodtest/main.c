@@ -30,7 +30,9 @@
 #include <util/rsod.h>
 #include <util/unit_properties.h>
 
+#include "rust_types.h"
 #include "rust_ui_prodtest.h"
+#include "sys/sysevent.h"
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -175,17 +177,18 @@ static void usb_init_all(void) {
   ensure(usb_start(), NULL);
 }
 
-static void show_welcome_screen(void) {
-  char device_id[FLASH_OTP_BLOCK_SIZE];
-
-  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
-                                (uint8_t *)device_id, sizeof(device_id)) &&
-      (device_id[0] != 0xFF)) {
-    screen_prodtest_info(device_id, strnlen(device_id, sizeof(device_id) - 1));
-  } else {
-    screen_prodtest_welcome();
-  }
-}
+// static void show_welcome_screen(void) {
+//   char device_id[FLASH_OTP_BLOCK_SIZE];
+//
+//   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
+//                                 (uint8_t *)device_id, sizeof(device_id)) &&
+//       (device_id[0] != 0xFF)) {
+//     screen_prodtest_info(device_id, strnlen(device_id, sizeof(device_id) -
+//     1));
+//   } else {
+//     screen_prodtest_welcome();
+//   }
+// }
 
 // Set if the RGB LED must not be controlled by the main loop
 static bool g_rgbled_control_disabled = false;
@@ -249,7 +252,7 @@ int main(void) {
   drivers_init();
   usb_init_all();
 
-  show_welcome_screen();
+  // show_welcome_screen();
 
   // Initialize command line interface
   cli_init(&g_cli, console_read, console_write, NULL);
@@ -279,22 +282,54 @@ int main(void) {
   rgb_led_set_color(RGBLED_GREEN);
 #endif
 
+  char device_id[FLASH_OTP_BLOCK_SIZE] =
+      "test d"
+      "evice id";
+  c_layout_t layout;
+  memset(&layout, 0, sizeof(layout));
+
+  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
+                                (uint8_t *)device_id, sizeof(device_id)) &&
+      (device_id[0] != 0xFF)) {
+    screen_prodtest_welcome(&layout, device_id,
+                            strnlen(device_id, sizeof(device_id) - 1));
+  } else {
+    screen_prodtest_welcome(&layout, NULL, 0);
+  }
+
   while (true) {
-    if (usb_vcp_can_read(VCP_IFACE)) {
+    sysevents_t awaited = {0};
+    awaited.read_ready = 1 << VCP_IFACE;
+#ifdef USE_BUTTON
+    awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
+#endif
+#ifdef USE_TOUCH
+    awaited.read_ready |= 1 << SYSHANDLE_TOUCH;
+#endif
+#ifdef USE_POWER_MANAGER
+    awaited.read_ready |= 1 << SYSHANDLE_POWER_MANAGER;
+#endif
+    sysevents_t signalled = {0};
+    sysevents_poll(&awaited, &signalled, 100);
+
+    if (signalled.read_ready & (1 << VCP_IFACE)) {
       cli_process_io(&g_cli);
+      continue;
     }
 
 #if defined USE_BUTTON && defined USE_POWER_MANAGER
-    button_event_t btn_event = {0};
-    if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
-      if (btn_event.event_type == BTN_EVENT_DOWN) {
-        btn_deadline = ticks_timeout(1000);
-      } else if (btn_event.event_type == BTN_EVENT_UP) {
-        if (ticks_expired(btn_deadline)) {
-          pm_hibernate();
-          rgb_led_set_color(RGBLED_YELLOW);
-          systick_delay_ms(1000);
-          rgb_led_set_color(0);
+    if (signalled.read_ready & (1 << SYSHANDLE_BUTTON)) {
+      button_event_t btn_event = {0};
+      if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
+        if (btn_event.event_type == BTN_EVENT_DOWN) {
+          btn_deadline = ticks_timeout(1000);
+        } else if (btn_event.event_type == BTN_EVENT_UP) {
+          if (ticks_expired(btn_deadline)) {
+            pm_hibernate();
+            rgb_led_set_color(RGBLED_YELLOW);
+            systick_delay_ms(1000);
+            rgb_led_set_color(0);
+          }
         }
       }
     }
@@ -302,6 +337,9 @@ int main(void) {
       rgb_led_set_color(RGBLED_RED);
     }
 #endif
+
+    // proceed to UI
+    screen_prodtest_event(&layout, &signalled);
 
 #ifdef USE_RGB_LED
     if (ticks_expired(led_start_deadline) && !g_rgbled_control_disabled) {

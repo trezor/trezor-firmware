@@ -1,4 +1,7 @@
-use crate::ui::{ui_prodtest::ProdtestUI, util::from_c_array, ModelUI};
+use crate::{
+    trezorhal::sysevent::{parse_event, sysevents_t},
+    ui::{ui_prodtest::ProdtestUI, util::from_c_array, ModelUI},
+};
 
 #[cfg(feature = "touch")]
 use crate::ui::geometry::{Offset, Point, Rect};
@@ -9,16 +12,28 @@ use cty::int16_t;
 #[cfg(feature = "touch")]
 use heapless::Vec;
 
+use super::super::super::trezorhal::c_layout_t;
+
 #[no_mangle]
-extern "C" fn screen_prodtest_welcome() {
-    ModelUI::screen_prodtest_welcome();
+extern "C" fn screen_prodtest_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> u32 {
+    let e = parse_event(signalled);
+
+    let layout = unsafe { &mut *(layout) };
+
+    ModelUI::screen_prodtest_event(&mut layout.buf, e)
 }
 
 #[no_mangle]
-extern "C" fn screen_prodtest_info(id: *const cty::c_char, id_len: u8) {
-    let id = unwrap!(unsafe { from_c_array(id, id_len as usize) });
+extern "C" fn screen_prodtest_welcome(layout: *mut c_layout_t, id: *const cty::c_char, id_len: u8) {
+    let layout = unsafe { &mut *(layout) };
 
-    ModelUI::screen_prodtest_info(id);
+    let id = if id.is_null() {
+        None
+    } else {
+        unsafe { from_c_array(id, id_len as usize) }
+    };
+
+    ModelUI::screen_prodtest_welcome(&mut layout.buf, id);
 }
 
 #[no_mangle]

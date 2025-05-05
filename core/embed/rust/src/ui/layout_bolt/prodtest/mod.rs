@@ -1,5 +1,7 @@
+mod welcome;
+
 use crate::ui::{
-    component::{base::Component, Qr},
+    component::Event,
     constant::screen,
     display,
     display::Color,
@@ -8,58 +10,39 @@ use crate::ui::{
         TouchEvent::{TouchEnd, TouchMove, TouchStart},
     },
     geometry::{Alignment, Offset, Rect},
-    layout_bolt::{fonts, theme, UIBolt},
+    layout::simplified::{get_layout, init_layout, process_frame_event, show},
+    layout_bolt::{fonts, prodtest::welcome::Welcome, theme, UIBolt},
     shape,
     shape::render_on_display,
     ui_prodtest::ProdtestUI,
 };
 use heapless::Vec;
 
+#[allow(clippy::large_enum_variant)]
+enum ProdtestLayout {
+    Welcome(Welcome),
+}
+
+impl ProdtestLayout {
+    fn process_event(&mut self, event: Option<Event>) -> u32 {
+        match self {
+            ProdtestLayout::Welcome(f) => process_frame_event::<Welcome>(f, event),
+        }
+    }
+}
+
 impl ProdtestUI for UIBolt {
-    fn screen_prodtest_welcome() {
-        display::sync();
-
-        render_on_display(None, Some(Color::black()), |target| {
-            let area = screen();
-            shape::Bar::new(area)
-                .with_fg(Color::white())
-                .with_thickness(1)
-                .render(target);
-        });
-
-        display::refresh();
-        display::fade_backlight_duration(theme::backlight::get_backlight_normal(), 150);
+    fn screen_prodtest_event(buf: &mut [u8], event: Option<Event>) -> u32 {
+        let layout = get_layout::<ProdtestLayout>(buf);
+        layout.process_event(event)
     }
 
-    fn screen_prodtest_info(id: &str) {
-        display::sync();
-        let qr = Qr::new(id, true);
-        let mut qr = unwrap!(qr).with_border(4);
+    fn screen_prodtest_welcome(buf: &mut [u8], id: Option<&'static str>) {
+        let mut welcome = Welcome::new(id);
 
-        // place the qr in the middle of the screen and size it to half the screen
-        let qr_width = screen().width() / 2;
+        show(&mut welcome, true);
 
-        let qr_area = Rect::from_center_and_size(screen().center(), Offset::uniform(qr_width));
-        qr.place(qr_area);
-
-        render_on_display(None, Some(Color::black()), |target| {
-            let area = screen();
-            shape::Bar::new(area).with_fg(Color::white()).render(target);
-
-            qr.render(target);
-
-            shape::Text::new(
-                screen().bottom_center() - Offset::y(10),
-                id,
-                fonts::FONT_BOLD_UPPER,
-            )
-            .with_fg(Color::white())
-            .with_align(Alignment::Center)
-            .render(target);
-        });
-
-        display::refresh();
-        display::fade_backlight_duration(theme::backlight::get_backlight_normal(), 150);
+        init_layout(buf, ProdtestLayout::Welcome(welcome));
     }
 
     fn screen_prodtest_show_text(text: &str) {
