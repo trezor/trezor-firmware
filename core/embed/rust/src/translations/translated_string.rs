@@ -3,11 +3,31 @@ use crate::strutil::TString;
 use super::blob::Translations;
 pub use super::generated::translated_string::TranslatedString;
 
+#[cfg(feature = "micropython")]
+use crate::micropython::qstr::Qstr;
+
 impl TranslatedString {
+    pub(super) fn untranslated(self) -> &'static str {
+        // DATA_MAP must be sorted by its first element
+        match Self::DATA_MAP.binary_search_by(|(key, _)| key.cmp(&self)) {
+            Ok(index) => Self::DATA_MAP[index].1,
+            Err(_) => fatal_error!("not found"),
+        }
+    }
+
     pub fn translate<'a>(self, source: Option<&'a Translations>) -> &'a str {
         source
             .and_then(|s| s.translation(self as _))
             .unwrap_or(self.untranslated())
+    }
+
+    #[cfg(feature = "micropython")]
+    pub(super) fn from_qstr(qstr: Qstr) -> Option<Self> {
+        // QSTR_MAP must be sorted by its first element
+        match Self::QSTR_MAP.binary_search_by(|(key, _)| key.to_u16().cmp(&qstr.to_u16())) {
+            Ok(index) => Some(Self::QSTR_MAP[index].1),
+            Err(_) => None,
+        }
     }
 
     /// Maps the translated string to a value using a closure.
@@ -48,3 +68,39 @@ impl TranslatedString {
 //         assert!(matches!(opt, Some("Address / Public key")));
 //     }
 // }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_sorted_qstr_map() {
+        for pair in TranslatedString::QSTR_MAP.windows(2) {
+            assert!(pair[0].0.to_u16() < pair[1].0.to_u16())
+        }
+    }
+
+    #[test]
+    fn test_sorted_data_map() {
+        for pair in TranslatedString::DATA_MAP.windows(2) {
+            assert!(pair[0].0 < pair[1].0)
+        }
+    }
+
+    #[test]
+    fn test_lookup_data_map() {
+        for &(name, value) in TranslatedString::DATA_MAP {
+            assert_eq!(name.untranslated(), value);
+        }
+    }
+
+    #[test]
+    #[cfg(feature = "micropython")]
+    fn test_lookup_qstr_map() {
+        for &(qstr, name) in TranslatedString::QSTR_MAP {
+            assert!(TranslatedString::from_qstr(qstr) == Some(name));
+        }
+        // Test a Qstr without translation mapping
+        assert!(TranslatedString::from_qstr(Qstr::MP_QSTR_write).is_none());
+    }
+}
