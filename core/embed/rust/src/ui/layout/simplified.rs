@@ -8,10 +8,6 @@ use crate::ui::{
     component::{Component, EventCtx, Never},
     display, CommonUI, ModelUI,
 };
-use core::{
-    mem::{align_of, size_of, MaybeUninit},
-    ptr,
-};
 
 use crate::ui::{component::Event, display::color::Color, shape::render_on_display};
 use num_traits::ToPrimitive;
@@ -37,6 +33,7 @@ where
         self.to_u32().unwrap()
     }
 }
+
 #[cfg(feature = "button")]
 fn button_eval() -> Option<ButtonEvent> {
     let event = button_get_event();
@@ -67,52 +64,6 @@ pub(crate) fn render(frame: &mut impl Component) {
         frame.render(target);
     });
     display::refresh();
-}
-
-fn convert_layout<A>(buf: &mut [u8]) -> *mut MaybeUninit<A> {
-    let required_size = size_of::<A>();
-    let required_align = align_of::<A>();
-
-    let ptr = buf.as_mut_ptr();
-    let addr = ptr as usize;
-
-    // Check alignment and size
-    if addr % required_align != 0 || buf.len() < required_size {
-        panic!("Buffer is not aligned or too small");
-    }
-
-    // SAFETY: we have just verified alignment and size
-    ptr as *mut MaybeUninit<A>
-}
-
-pub fn get_layout<A>(buf: &mut [u8]) -> &mut A {
-    let required_size = size_of::<A>();
-    let required_align = align_of::<A>();
-
-    let ptr = buf.as_mut_ptr();
-    let addr = ptr as usize;
-
-    // Check alignment and size
-    if addr % required_align != 0 || buf.len() < required_size {
-        panic!("Buffer is not aligned or too small");
-    }
-
-    // SAFETY: we have just verified alignment and size
-    let layout = ptr as *mut MaybeUninit<A>;
-
-    unsafe { &mut *layout.cast::<A>() }
-}
-
-pub fn init_layout<A>(buf: &mut [u8], frame: A) -> &mut A {
-    let frame_ptr: *mut MaybeUninit<A> = convert_layout(buf);
-
-    unsafe {
-        // Construct in-place
-        ptr::write(frame_ptr as *mut A, frame);
-
-        // Get mutable reference to initialized object
-        &mut *frame_ptr.cast::<A>()
-    }
 }
 
 pub fn process_frame_event<A>(frame: &mut A, event: Option<Event>) -> u32

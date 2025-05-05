@@ -40,4 +40,4 @@ pub mod time;
 pub mod sysevent;
 
 #[cfg(feature = "bootloader")]
-pub use ffi::c_layout_t;
+pub mod layout_buf;

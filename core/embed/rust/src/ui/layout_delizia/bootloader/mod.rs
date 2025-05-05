@@ -7,6 +7,7 @@ use crate::{
         display::{self, Color, Icon},
         geometry::{Alignment, Offset, Point, Rect},
         layout::simplified::{run, show},
+        ui_bootloader::BootloaderLayoutType,
     },
 };
 
@@ -43,10 +44,7 @@ use crate::ui::{
 use ufmt::uwrite;
 
 use super::theme::bootloader::BLD_WARN_COLOR;
-use crate::ui::{
-    component::Event,
-    layout::simplified::{get_layout, init_layout, process_frame_event},
-};
+use crate::ui::{component::Event, layout::simplified::process_frame_event};
 use connect::Connect;
 use intro::Intro;
 use menu::Menu;
@@ -128,33 +126,54 @@ impl UIDelizia {
         }
     }
 }
+
 #[allow(clippy::large_enum_variant)]
-enum BootloaderLayout {
+pub enum BootloaderLayout {
     Welcome(Welcome),
     Menu(Menu),
     Connect(Connect),
 }
 
-impl BootloaderLayout {
-    fn process_event(&mut self, event: Option<Event>) -> u32 {
+impl BootloaderLayoutType for BootloaderLayout {
+    fn event(&mut self, event: Option<Event>) -> u32 {
         match self {
             BootloaderLayout::Welcome(f) => process_frame_event::<Welcome>(f, event),
             BootloaderLayout::Menu(f) => process_frame_event::<Menu>(f, event),
             BootloaderLayout::Connect(f) => process_frame_event::<Connect>(f, event),
         }
     }
-}
-impl BootloaderUI for UIDelizia {
-    fn screen_event(buf: &mut [u8], event: Option<Event>) -> u32 {
-        let layout = get_layout::<BootloaderLayout>(buf);
-        layout.process_event(event)
+
+    fn show(&mut self) {
+        match self {
+            BootloaderLayout::Welcome(f) => show(f, true),
+            BootloaderLayout::Menu(f) => show(f, true),
+            BootloaderLayout::Connect(f) => show(f, true),
+        }
+    }
+    fn init_welcome() -> Self {
+        Self::Welcome(Welcome::new())
     }
 
-    fn screen_welcome(buf: &mut [u8]) {
-        let mut frame = Welcome::new();
-        show(&mut frame, true);
-        init_layout(buf, BootloaderLayout::Welcome(frame));
+    fn init_menu(_initial_setup: bool, firmware_present: secbool) -> Self {
+        Self::Menu(Menu::new(firmware_present))
     }
+
+    fn init_connect(_initial_setup: bool, _auto_update: bool) -> Self {
+        Self::Connect(Connect::new(
+            "Waiting for host...",
+            fonts::FONT_DEMIBOLD,
+            BLD_TITLE_COLOR,
+            BLD_BG,
+        ))
+    }
+
+    #[cfg(feature = "ble")]
+    fn init_pairing_mode(_initial_setup: bool) -> Self {
+        unimplemented!()
+    }
+}
+impl BootloaderUI for UIDelizia {
+    type CLayoutType = BootloaderLayout;
 
     fn screen_install_success(restart_seconds: u8, initial_setup: bool, complete_draw: bool) {
         let mut reboot_msg = BootloaderString::new();
@@ -318,14 +337,6 @@ impl BootloaderUI for UIDelizia {
         show(&mut frame, true);
     }
 
-    fn screen_menu(_initial_setup: bool, firmware_present: secbool, buf: &mut [u8]) {
-        let mut frame = Menu::new(firmware_present);
-
-        show(&mut frame, true);
-
-        init_layout(buf, BootloaderLayout::Menu(frame));
-    }
-
     fn screen_intro(bld_version: &str, vendor: &str, version: &str, fw_ok: bool) -> u32 {
         let mut title_str: BootloaderString = String::new();
         unwrap!(title_str.push_str("BOOTLOADER "));
@@ -387,18 +398,6 @@ impl BootloaderUI for UIDelizia {
             Some((Icon::new(DOWNLOAD24), icon_color)),
             None,
         )
-    }
-
-    fn screen_connect(initial_setup: bool, _auto_update: bool, buf: &mut [u8]) {
-        let bg = if initial_setup { WELCOME_COLOR } else { BLD_BG };
-        let mut frame = Connect::new(
-            "Waiting for host...",
-            fonts::FONT_DEMIBOLD,
-            BLD_TITLE_COLOR,
-            bg,
-        );
-        show(&mut frame, true);
-        init_layout(buf, BootloaderLayout::Connect(frame));
     }
 
     fn screen_wipe_success() {
@@ -511,11 +510,6 @@ impl BootloaderUI for UIDelizia {
 
     #[cfg(feature = "ble")]
     fn screen_confirm_pairing(_code: u32, _initial_setup: bool) -> u32 {
-        unimplemented!()
-    }
-
-    #[cfg(feature = "ble")]
-    fn screen_pairing_mode(_initial_setup: bool, _buf: &mut [u8]) {
         unimplemented!()
     }
 
