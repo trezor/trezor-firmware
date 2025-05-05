@@ -21,9 +21,6 @@
 #ifdef USE_BUTTON
 #include <io/button.h>
 #endif
-#ifdef USE_RGB_LED
-#include <io/rgb_led.h>
-#endif
 #include <sys/bootutils.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
@@ -45,12 +42,6 @@ static const pm_state_handler_t state_handlers[] = {
             .handle = pm_handle_state_power_save,
             .exit = NULL,
         },
-    [PM_STATE_ULTRA_POWER_SAVE] =
-        {
-            .enter = NULL,
-            .handle = pm_handle_state_ultra_power_save,
-            .exit = NULL,
-        },
     [PM_STATE_SHUTTING_DOWN] =
         {
             .enter = pm_enter_shutting_down,
@@ -63,17 +54,11 @@ static const pm_state_handler_t state_handlers[] = {
             .handle = pm_handle_state_suspend,
             .exit = NULL,
         },
-    [PM_STATE_STARTUP_REJECTED] =
-        {
-            .enter = NULL,
-            .handle = pm_handle_state_startup_rejected,
-            .exit = NULL,
-        },
     [PM_STATE_CHARGING] =
         {
-            .enter = pm_enter_charging,
+            .enter = NULL,
             .handle = pm_handle_state_charging,
-            .exit = pm_exit_charging,
+            .exit = NULL,
         },
     [PM_STATE_HIBERNATE] =
         {
@@ -184,17 +169,6 @@ pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_internal_state_t pm_handle_state_ultra_power_save(pm_driver_t* drv) {
-  // Go to power save if external power or battery above critical
-  if (drv->usb_connected || !drv->battery_critical) {
-    return PM_STATE_POWER_SAVE;
-  } else {
-    return PM_STATE_STARTUP_REJECTED;
-  }
-
-  return drv->state;
-}
-
 pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
   // Return to power save if external power or battery recovered
   if (drv->usb_connected || !drv->battery_critical) {
@@ -227,20 +201,11 @@ pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
   return drv->state;
 }
 
-void pm_enter_charging(pm_driver_t* drv) {
-
-#ifdef USE_RGB_LED
-  // Initialize RGB
-  rgb_led_init();
-  rgb_led_set_color(0x0000FF);
-#endif
-
-}
-
 pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
+
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
-    return PM_STATE_ULTRA_POWER_SAVE;
+    return PM_STATE_POWER_SAVE;
   }
 
   // Go back to hibernate if external power was removed.
@@ -260,19 +225,12 @@ pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
   return drv->state;
 }
 
-void pm_exit_charging(pm_driver_t* drv) {
-
-#ifdef USE_RGB_LED
-  // Turn off RGB LED
-  rgb_led_set_color(0x0);
-#endif
-
-}
 
 pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
+
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
-    return PM_STATE_ULTRA_POWER_SAVE;
+    return PM_STATE_POWER_SAVE;
   }
 
   // External power source, start charging
@@ -298,8 +256,6 @@ void pm_enter_report_low_battery(pm_driver_t* drv) {
   // Set backlight to minimum
   backlight_set_max_level(0);
 
-  // Set RGB LED to red
-  // rgb_led_set_color(RGB_LED_COLOR_RED);
 }
 
 void pm_enter_shutting_down(pm_driver_t* drv) {
