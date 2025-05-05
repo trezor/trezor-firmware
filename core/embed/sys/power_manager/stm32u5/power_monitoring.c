@@ -259,7 +259,7 @@ void pm_store_power_manager_data(pm_driver_t* drv) {
   } else {
     pm_data.soc = drv->fuel_gauge.soc;
   }
-  pm_data.bat_crittical = drv->battery_critical;
+  pm_data.bat_critical = drv->battery_critical;
   pm_data.last_capture_timestamp = systick_ms();
 
   // Store the data in backup RAM
