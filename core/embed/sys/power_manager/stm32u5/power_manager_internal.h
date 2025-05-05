@@ -31,10 +31,10 @@
 #define PM_TIMER_PERIOD_MS 300
 #define PM_BATTERY_SAMPLING_PERIOD_MS 100
 #define PM_SHUTDOWN_TIMEOUT_MS 15000
-#define PM_BATTERY_UNDERVOLT_THRESHOLD_V 3.0f
-#define PM_BATTERY_UNDERVOLT_HYSTERESIS_V 0.5f
-#define PM_BATTERY_LOW_THRESHOLD_V 3.15f
-#define PM_BATTERY_LOW_RECOVERY_V 3.2f
+#define PM_BATTERY_UNDERVOLT_THR_V 3.0f
+#define PM_BATTERY_UNDERVOLT_RECOVERY_THR_V 3.3f
+#define PM_BATTERY_LOW_THRESHOLD_SOC 15
+
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
 
 #define PM_WPC_CHARGE_CURR_STEP_MA 50
@@ -50,22 +50,13 @@
 #define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
 #define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
 
-/* Power manager states */
-#define PM_STATE_LIST(STATE) \
-  STATE(HIBERNATE)           \
-  STATE(CHARGING)            \
-  STATE(STARTUP_REJECTED)    \
-  STATE(SUSPEND)             \
-  STATE(ULTRA_POWER_SAVE)    \
-  STATE(SHUTTING_DOWN)       \
-  STATE(POWER_SAVE)          \
-  STATE(ACTIVE)
-
 typedef enum {
-#define STATE(name) PM_STATE_##name,
-  PM_STATE_LIST(STATE)
-#undef STATE
-      PM_STATE_COUNT
+  PM_STATE_HIBERNATE,
+  PM_STATE_CHARGING,
+  PM_STATE_SUSPEND,
+  PM_STATE_SHUTTING_DOWN,
+  PM_STATE_POWER_SAVE,
+  PM_STATE_ACTIVE,
 } pm_internal_state_t;
 
 // Power manager battery sampling data structure)

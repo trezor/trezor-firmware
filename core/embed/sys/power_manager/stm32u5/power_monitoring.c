@@ -44,6 +44,7 @@ void pm_monitor_power_sources(void) {
 
       drv->fuel_gauge_request_new_guess = false;
 
+
     } else {
       fuel_gauge_update(&drv->fuel_gauge, PM_BATTERY_SAMPLING_PERIOD_MS,
                         drv->pmic_data.vbat, drv->pmic_data.ibat,
@@ -94,19 +95,18 @@ void pm_monitor_power_sources(void) {
   }
 
   // Check battery voltage for critical (undervoltage) threshold
-  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THRESHOLD_V) &&
+  if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
       !drv->battery_critical) {
     drv->battery_critical = true;
-  } else if (drv->pmic_data.vbat > (PM_BATTERY_UNDERVOLT_THRESHOLD_V +
-                                    PM_BATTERY_UNDERVOLT_HYSTERESIS_V) &&
+  } else if (drv->pmic_data.vbat > (PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) &&
              drv->battery_critical) {
     drv->battery_critical = false;
   }
 
   // Check battery voltage for low threshold
-  if (drv->pmic_data.vbat < PM_BATTERY_LOW_THRESHOLD_V && !drv->battery_low) {
+  if (drv->soc_ceiled <= PM_BATTERY_LOW_THRESHOLD_SOC && !drv->battery_low) {
     drv->battery_low = true;
-  } else if (drv->pmic_data.vbat > PM_BATTERY_LOW_RECOVERY_V &&
+  } else if (drv->soc_ceiled > PM_BATTERY_LOW_THRESHOLD_SOC &&
              drv->battery_low) {
     drv->battery_low = false;
   }
