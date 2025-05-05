@@ -131,7 +131,6 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report);
 void pm_charging_controller(pm_driver_t* drv);
 void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 void pm_battery_initial_soc_guess(void);
-void pm_store_power_manager_data(pm_driver_t* drv);
 pm_status_t pm_control_hibernate(void);
 void pm_control_suspend(void);
 void pm_control_suspend(void);
