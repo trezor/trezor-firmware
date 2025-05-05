@@ -45,6 +45,7 @@ typedef enum {
  */
 typedef struct {
   float soc;  // Captured state of charge <0, 1>
+  bool bat_critical;
   // Captures RTC time at which SOC was captured
   uint32_t last_capture_timestamp;
   // Captures power manager state at bootloader exit so it could be correctly
