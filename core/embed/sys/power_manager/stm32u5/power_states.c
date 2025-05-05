@@ -278,10 +278,10 @@ void pm_enter_suspend(pm_driver_t* drv) {
 
 void pm_enter_hibernate(pm_driver_t* drv) {
 
-  pm_store_power_manager_data(drv);
-  pm_control_hibernate();
+  // TODO: Store power manager data with request to hibernate
+  // after reboot?
+  pm_store_data_to_backup_ram();
 
-  // reboot_device();
-  // Put PMIC into ship mode (ultra-low power)
-  // npm1300_enter_shipmode();
+  reboot_device();
+
 }
