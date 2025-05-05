@@ -228,9 +228,9 @@ pm_status_t pm_turn_on(void) {
   }
 
   // Poll until at least single PMIC measurement is done
-  while(drv->pmic_last_update_ms == 0){
-  }
+  while(drv->pmic_last_update_ms == 0){};
 
+  // Check if device has enough power to startup
   if(drv->pmic_data.usb_status == 0x0 &&
      drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V){
      return PM_REQUEST_REJECTED;
@@ -243,8 +243,6 @@ pm_status_t pm_turn_on(void) {
     return PM_REQUEST_REJECTED;
   }
 
-  irq_key_t irq_key = irq_lock();
-
   // Try to recover SoC from the backup RAM
   backup_ram_power_manager_data_t pm_recovery_data;
   backup_ram_status_t status =
@@ -253,6 +251,8 @@ pm_status_t pm_turn_on(void) {
   if (status == BACKUP_RAM_OK && pm_recovery_data.soc != 0.0f) {
     drv->fuel_gauge.soc = pm_recovery_data.soc;
   } else {
+    // Wait for 1s to sample battery data
+    systick_delay_ms(1000);
     pm_battery_initial_soc_guess();
   }
 
@@ -260,8 +260,6 @@ pm_status_t pm_turn_on(void) {
   systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
 
   drv->fuel_gauge_initialized = true;
-
-  irq_unlock(irq_key);
 
   return PM_OK;
 }
