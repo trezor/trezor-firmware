@@ -186,6 +186,11 @@ backup_ram_status_t backup_ram_read_power_manager_data(
     return BACKUP_RAM_DATA_CHECK_ERROR;
   }
 
+  // If SoC is equal to 0.0f, battery critical flag must be set
+  if (pm_data->soc == 0.0f && !pm_data->bat_critical) {
+    return BACKUP_RAM_DATA_CHECK_ERROR;
+  }
+
   return BACKUP_RAM_OK;
 }
 
