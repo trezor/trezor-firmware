@@ -45,14 +45,14 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
     return PM_OK;
   }
 
+  // Clear driver instance
+  memset(drv, 0, sizeof(pm_driver_t));
+
   // Initialize hardware subsystems
   if (!npm1300_init() || !stwlc38_init()) {
     pm_deinit();
     return PM_ERROR;
   }
-
-  // Clear fuel gauge state
-  memset(&drv->fuel_gauge, 0, sizeof(fuel_gauge_state_t));
 
   // Initialize fuel gauge
   fuel_gauge_init(&(drv->fuel_gauge), PM_FUEL_GAUGE_R, PM_FUEL_GAUGE_Q,
@@ -227,6 +227,15 @@ pm_status_t pm_turn_on(void) {
     return PM_NOT_INITIALIZED;
   }
 
+  // Poll until at least single PMIC measurement is done
+  while(drv->pmic_last_update_ms == 0){
+  }
+
+  if(drv->pmic_data.usb_status == 0x0 &&
+     drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V){
+     return PM_REQUEST_REJECTED;
+  }
+
   drv->request_turn_on = true;
   pm_process_state_machine();
 
@@ -320,8 +329,15 @@ pm_status_t pm_store_data_to_backup_ram(void) {
   }
 
   backup_ram_power_manager_data_t pm_data = {0};
+
+  if (drv->battery_critical) {
+    pm_data.soc = 0;
+  } else {
+    pm_data.soc = drv->fuel_gauge.soc;
+  }
+
+  pm_data.bat_critical = drv->battery_critical;
   pm_data.bootloader_exit_state = drv->state;
-  pm_data.soc = drv->fuel_gauge.soc;
 
   backup_ram_status_t status = backup_ram_store_power_manager_data(&pm_data);
 
