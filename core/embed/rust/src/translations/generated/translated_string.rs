@@ -6,7 +6,7 @@
 #[cfg(feature = "micropython")]
 use crate::micropython::qstr::Qstr;
 
-#[derive(Copy, Clone, FromPrimitive, PartialEq, Eq)]
+#[derive(Copy, Clone, FromPrimitive, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "debug", derive(ufmt::derive::uDebug))]
 #[repr(u16)]
 #[allow(non_camel_case_types)]
@@ -1419,2827 +1419,2820 @@ pub enum TranslatedString {
 }
 
 impl TranslatedString {
-    // Allow building with `--all-features` (enabling all layouts results in duplicate match keys) for clippy
-    #[allow(unreachable_patterns)]
-    pub fn untranslated(self) -> &'static str {
-        match self {
-            Self::addr_mismatch__contact_support_at => "Please contact Trezor support at",
-            Self::addr_mismatch__key_mismatch => "Key mismatch?",
-            Self::addr_mismatch__mismatch => "Address mismatch?",
-            Self::addr_mismatch__support_url => "trezor.io/support",
-            Self::addr_mismatch__wrong_derivation_path => "Wrong derivation path for selected account.",
-            Self::addr_mismatch__xpub_mismatch => "XPUB mismatch?",
-            Self::address__public_key => "Public key",
-            Self::address__title_cosigner => "Cosigner",
-            Self::address__title_receive_address => "Receive address",
-            Self::address__title_yours => "Yours",
-            Self::address_details__derivation_path_colon => "Derivation path:",
-            Self::address_details__title_receive_address => "Receive address",
-            Self::address_details__title_receiving_to => "Receiving to",
-            Self::authenticate__confirm_template => "Allow connected computer to confirm your {0} is genuine?",
-            Self::authenticate__header => "Authenticate device",
-            Self::auto_lock__change_template => "Auto-lock Trezor after {0} of inactivity?",
-            Self::auto_lock__title => "Auto-lock delay",
-            Self::backup__can_back_up_anytime => "You can back up your Trezor once, at any time.",
-            Self::backup__it_should_be_backed_up => "You should back up your new wallet right now.",
-            Self::backup__it_should_be_backed_up_now => "It should be backed up now!",
-            Self::backup__new_wallet_created => "Wallet created.\n",
-            Self::backup__new_wallet_successfully_created => "Wallet created successfully.",
-            Self::backup__recover_anytime => "You can use your backup to recover your wallet at any time.",
-            Self::backup__title_backup_wallet => "Back up wallet",
-            Self::backup__title_skip => "Skip backup",
-            Self::backup__want_to_skip => "Are you sure you want to skip the backup?",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__buy => "Buy",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__confirm_cancel => "Confirm cancel",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__confirm_input => "Confirm input",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__confirm_order => "Confirm order",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__confirm_output => "Confirm output",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__order_id => "Order ID:",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__pair => "Pair:",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__price => "Price:",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__quantity => "Quantity:",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__sell => "Sell",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__sender_address => "Sender address:",
-            #[cfg(feature = "universal_fw")]
-            Self::binance__side => "Side:",
-            Self::bitcoin__commitment_data => "Commitment data",
-            Self::bitcoin__confirm_locktime => "Confirm locktime",
-            Self::bitcoin__create_proof_of_ownership => "Do you want to create a proof of ownership?",
-            Self::bitcoin__high_mining_fee_template => "The mining fee of\n{0}\nis unexpectedly high.",
-            Self::bitcoin__locktime_no_effect => "Locktime is set but will have no effect.",
-            Self::bitcoin__locktime_set_to => "Locktime set to",
-            Self::bitcoin__locktime_set_to_blockheight => "Locktime set to blockheight",
-            Self::bitcoin__lot_of_change_outputs => "A lot of change-outputs.",
-            Self::bitcoin__multiple_accounts => "Multiple accounts",
-            Self::bitcoin__new_fee_rate => "New fee rate:",
-            Self::bitcoin__simple_send_of => "Simple send of",
-            Self::bitcoin__ticket_amount => "Ticket amount",
-            Self::bitcoin__title_confirm_details => "Confirm details",
-            Self::bitcoin__title_finalize_transaction => "Finalize transaction",
-            Self::bitcoin__title_high_mining_fee => "High mining fee",
-            Self::bitcoin__title_meld_transaction => "Meld transactions",
-            Self::bitcoin__title_modify_amount => "Modify amount",
-            Self::bitcoin__title_payjoin => "Payjoin",
-            Self::bitcoin__title_proof_of_ownership => "Proof of ownership",
-            Self::bitcoin__title_purchase_ticket => "Purchase ticket",
-            Self::bitcoin__title_update_transaction => "Update transaction",
-            Self::bitcoin__unknown_path => "Unknown path",
-            Self::bitcoin__unknown_transaction => "Unknown transaction",
-            Self::bitcoin__unusually_high_fee => "Unusually high fee.",
-            Self::bitcoin__unverified_external_inputs => "The transaction contains unverified external inputs.",
-            Self::bitcoin__valid_signature => "The signature is valid.",
-            Self::bitcoin__voting_rights => "Voting rights to",
-            Self::buttons__abort => "Abort",
-            Self::buttons__access => "Access",
-            Self::buttons__again => "Again",
-            Self::buttons__allow => "Allow",
-            Self::buttons__back => "Back",
-            Self::buttons__back_up => "Back up",
-            Self::buttons__cancel => "Cancel",
-            Self::buttons__change => "Change",
-            Self::buttons__check => "Check",
-            Self::buttons__check_again => "Check again",
-            Self::buttons__close => "Close",
-            Self::buttons__confirm => "Confirm",
-            Self::buttons__continue => "Continue",
-            Self::buttons__details => "Details",
-            Self::buttons__enable => "Enable",
-            Self::buttons__enter => "Enter",
-            Self::buttons__enter_share => "Enter share",
-            Self::buttons__export => "Export",
-            Self::buttons__format => "Format",
-            Self::buttons__go_back => "Go back",
-            Self::buttons__hold_to_confirm => "Hold to confirm",
-            Self::buttons__info => "Info",
-            Self::buttons__install => "Install",
-            Self::buttons__more_info => "More info",
-            Self::buttons__ok_i_understand => "Ok, I understand",
-            Self::buttons__purchase => "Purchase",
-            Self::buttons__quit => "Quit",
-            Self::buttons__restart => "Restart",
-            Self::buttons__retry => "Retry",
-            Self::buttons__select => "Select",
-            Self::buttons__set => "Set",
-            Self::buttons__show_all => "Show all",
-            Self::buttons__show_details => "Show details",
-            Self::buttons__show_words => "Show words",
-            Self::buttons__skip => "Skip",
-            Self::buttons__try_again => "Try again",
-            Self::buttons__turn_off => "Turn off",
-            Self::buttons__turn_on => "Turn on",
+    pub const DATA_MAP: &'static [(Self, &'static str)] = &[
+            (Self::addr_mismatch__contact_support_at, "Please contact Trezor support at"),
+            (Self::addr_mismatch__key_mismatch, "Key mismatch?"),
+            (Self::addr_mismatch__mismatch, "Address mismatch?"),
+            (Self::addr_mismatch__support_url, "trezor.io/support"),
+            (Self::addr_mismatch__wrong_derivation_path, "Wrong derivation path for selected account."),
+            (Self::addr_mismatch__xpub_mismatch, "XPUB mismatch?"),
+            (Self::address__public_key, "Public key"),
+            (Self::address__title_cosigner, "Cosigner"),
+            (Self::address__title_receive_address, "Receive address"),
+            (Self::address__title_yours, "Yours"),
+            (Self::address_details__derivation_path_colon, "Derivation path:"),
+            (Self::address_details__title_receive_address, "Receive address"),
+            (Self::address_details__title_receiving_to, "Receiving to"),
+            (Self::authenticate__confirm_template, "Allow connected computer to confirm your {0} is genuine?"),
+            (Self::authenticate__header, "Authenticate device"),
+            (Self::auto_lock__change_template, "Auto-lock Trezor after {0} of inactivity?"),
+            (Self::auto_lock__title, "Auto-lock delay"),
+            (Self::backup__can_back_up_anytime, "You can back up your Trezor once, at any time."),
+            (Self::backup__it_should_be_backed_up, "You should back up your new wallet right now."),
+            (Self::backup__it_should_be_backed_up_now, "It should be backed up now!"),
+            (Self::backup__new_wallet_created, "Wallet created.\n"),
+            (Self::backup__new_wallet_successfully_created, "Wallet created successfully."),
+            (Self::backup__recover_anytime, "You can use your backup to recover your wallet at any time."),
+            (Self::backup__title_backup_wallet, "Back up wallet"),
+            (Self::backup__title_skip, "Skip backup"),
+            (Self::backup__want_to_skip, "Are you sure you want to skip the backup?"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__buy, "Buy"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__confirm_cancel, "Confirm cancel"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__confirm_input, "Confirm input"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__confirm_order, "Confirm order"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__confirm_output, "Confirm output"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__order_id, "Order ID:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__pair, "Pair:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__price, "Price:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__quantity, "Quantity:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__sell, "Sell"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__sender_address, "Sender address:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::binance__side, "Side:"),
+            (Self::bitcoin__commitment_data, "Commitment data"),
+            (Self::bitcoin__confirm_locktime, "Confirm locktime"),
+            (Self::bitcoin__create_proof_of_ownership, "Do you want to create a proof of ownership?"),
+            (Self::bitcoin__high_mining_fee_template, "The mining fee of\n{0}\nis unexpectedly high."),
+            (Self::bitcoin__locktime_no_effect, "Locktime is set but will have no effect."),
+            (Self::bitcoin__locktime_set_to, "Locktime set to"),
+            (Self::bitcoin__locktime_set_to_blockheight, "Locktime set to blockheight"),
+            (Self::bitcoin__lot_of_change_outputs, "A lot of change-outputs."),
+            (Self::bitcoin__multiple_accounts, "Multiple accounts"),
+            (Self::bitcoin__new_fee_rate, "New fee rate:"),
+            (Self::bitcoin__simple_send_of, "Simple send of"),
+            (Self::bitcoin__ticket_amount, "Ticket amount"),
+            (Self::bitcoin__title_confirm_details, "Confirm details"),
+            (Self::bitcoin__title_finalize_transaction, "Finalize transaction"),
+            (Self::bitcoin__title_high_mining_fee, "High mining fee"),
+            (Self::bitcoin__title_meld_transaction, "Meld transactions"),
+            (Self::bitcoin__title_modify_amount, "Modify amount"),
+            (Self::bitcoin__title_payjoin, "Payjoin"),
+            (Self::bitcoin__title_proof_of_ownership, "Proof of ownership"),
+            (Self::bitcoin__title_purchase_ticket, "Purchase ticket"),
+            (Self::bitcoin__title_update_transaction, "Update transaction"),
+            (Self::bitcoin__unknown_path, "Unknown path"),
+            (Self::bitcoin__unknown_transaction, "Unknown transaction"),
+            (Self::bitcoin__unusually_high_fee, "Unusually high fee."),
+            (Self::bitcoin__unverified_external_inputs, "The transaction contains unverified external inputs."),
+            (Self::bitcoin__valid_signature, "The signature is valid."),
+            (Self::bitcoin__voting_rights, "Voting rights to"),
+            (Self::buttons__abort, "Abort"),
+            (Self::buttons__access, "Access"),
+            (Self::buttons__again, "Again"),
+            (Self::buttons__allow, "Allow"),
+            (Self::buttons__back, "Back"),
+            (Self::buttons__back_up, "Back up"),
+            (Self::buttons__cancel, "Cancel"),
+            (Self::buttons__change, "Change"),
+            (Self::buttons__check, "Check"),
+            (Self::buttons__check_again, "Check again"),
+            (Self::buttons__close, "Close"),
+            (Self::buttons__confirm, "Confirm"),
+            (Self::buttons__continue, "Continue"),
+            (Self::buttons__details, "Details"),
+            (Self::buttons__enable, "Enable"),
+            (Self::buttons__enter, "Enter"),
+            (Self::buttons__enter_share, "Enter share"),
+            (Self::buttons__export, "Export"),
+            (Self::buttons__format, "Format"),
+            (Self::buttons__go_back, "Go back"),
+            (Self::buttons__hold_to_confirm, "Hold to confirm"),
+            (Self::buttons__info, "Info"),
+            (Self::buttons__install, "Install"),
+            (Self::buttons__more_info, "More info"),
+            (Self::buttons__ok_i_understand, "Ok, I understand"),
+            (Self::buttons__purchase, "Purchase"),
+            (Self::buttons__quit, "Quit"),
+            (Self::buttons__restart, "Restart"),
+            (Self::buttons__retry, "Retry"),
+            (Self::buttons__select, "Select"),
+            (Self::buttons__set, "Set"),
+            (Self::buttons__show_all, "Show all"),
+            (Self::buttons__show_details, "Show details"),
+            (Self::buttons__show_words, "Show words"),
+            (Self::buttons__skip, "Skip"),
+            (Self::buttons__try_again, "Try again"),
+            (Self::buttons__turn_off, "Turn off"),
+            (Self::buttons__turn_on, "Turn on"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__addr_base => "Base",
+            (Self::cardano__addr_base, "Base"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__addr_enterprise => "Enterprise",
+            (Self::cardano__addr_enterprise, "Enterprise"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__addr_legacy => "Legacy",
+            (Self::cardano__addr_legacy, "Legacy"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__addr_pointer => "Pointer",
+            (Self::cardano__addr_pointer, "Pointer"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__addr_reward => "Reward",
+            (Self::cardano__addr_reward, "Reward"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__address_no_staking => "address - no staking rewards.",
+            (Self::cardano__address_no_staking, "address - no staking rewards."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__amount_burned_decimals_unknown => "Amount burned (decimals unknown):",
+            (Self::cardano__amount_burned_decimals_unknown, "Amount burned (decimals unknown):"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__amount_minted_decimals_unknown => "Amount minted (decimals unknown):",
+            (Self::cardano__amount_minted_decimals_unknown, "Amount minted (decimals unknown):"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__amount_sent_decimals_unknown => "Amount sent (decimals unknown):",
+            (Self::cardano__amount_sent_decimals_unknown, "Amount sent (decimals unknown):"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__anonymous_pool => "Pool has no metadata (anonymous pool)",
+            (Self::cardano__anonymous_pool, "Pool has no metadata (anonymous pool)"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__asset_fingerprint => "Asset fingerprint:",
+            (Self::cardano__asset_fingerprint, "Asset fingerprint:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__auxiliary_data_hash => "Auxiliary data hash:",
+            (Self::cardano__auxiliary_data_hash, "Auxiliary data hash:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__block => "Block",
+            (Self::cardano__block, "Block"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__catalyst => "Catalyst",
+            (Self::cardano__catalyst, "Catalyst"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__certificate => "Certificate",
+            (Self::cardano__certificate, "Certificate"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__change_output => "Change output",
+            (Self::cardano__change_output, "Change output"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__check_all_items => "Check all items carefully.",
+            (Self::cardano__check_all_items, "Check all items carefully."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__choose_level_of_details => "Choose level of details:",
+            (Self::cardano__choose_level_of_details, "Choose level of details:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__collateral_input_id => "Collateral input ID:",
+            (Self::cardano__collateral_input_id, "Collateral input ID:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__collateral_input_index => "Collateral input index:",
+            (Self::cardano__collateral_input_index, "Collateral input index:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__collateral_output_contains_tokens => "The collateral return output contains tokens.",
+            (Self::cardano__collateral_output_contains_tokens, "The collateral return output contains tokens."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__collateral_return => "Collateral return",
+            (Self::cardano__collateral_return, "Collateral return"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirm_signing_stake_pool => "Confirm signing the stake pool registration as an owner.",
+            (Self::cardano__confirm_signing_stake_pool, "Confirm signing the stake pool registration as an owner."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirm_transaction => "Confirm transaction",
+            (Self::cardano__confirm_transaction, "Confirm transaction"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirming_a_multisig_transaction => "Confirming a multisig transaction.",
+            (Self::cardano__confirming_a_multisig_transaction, "Confirming a multisig transaction."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirming_a_plutus_transaction => "Confirming a Plutus transaction.",
+            (Self::cardano__confirming_a_plutus_transaction, "Confirming a Plutus transaction."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirming_pool_registration => "Confirming pool registration as owner.",
+            (Self::cardano__confirming_pool_registration, "Confirming pool registration as owner."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__confirming_transction => "Confirming a transaction.",
+            (Self::cardano__confirming_transction, "Confirming a transaction."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__cost => "Cost",
+            (Self::cardano__cost, "Cost"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__credential_mismatch => "Credential doesn't match payment credential.",
+            (Self::cardano__credential_mismatch, "Credential doesn't match payment credential."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__datum_hash => "Datum hash:",
+            (Self::cardano__datum_hash, "Datum hash:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__delegating_to => "Delegating to:",
+            (Self::cardano__delegating_to, "Delegating to:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__for_account_and_index_template => "for account {0} and index {1}:",
+            (Self::cardano__for_account_and_index_template, "for account {0} and index {1}:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__for_account_template => "for account {0}:",
+            (Self::cardano__for_account_template, "for account {0}:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__for_key_hash => "for key hash:",
+            (Self::cardano__for_key_hash, "for key hash:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__for_script => "for script:",
+            (Self::cardano__for_script, "for script:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__inline_datum => "Inline datum",
+            (Self::cardano__inline_datum, "Inline datum"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__input_id => "Input ID:",
+            (Self::cardano__input_id, "Input ID:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__input_index => "Input index:",
+            (Self::cardano__input_index, "Input index:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__intro_text_change => "The following address is a change address. Its",
+            (Self::cardano__intro_text_change, "The following address is a change address. Its"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__intro_text_owned_by_device => "The following address is owned by this device. Its",
+            (Self::cardano__intro_text_owned_by_device, "The following address is owned by this device. Its"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__intro_text_registration_payment => "The vote key registration payment address is owned by this device. Its",
+            (Self::cardano__intro_text_registration_payment, "The vote key registration payment address is owned by this device. Its"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__key_hash => "key hash",
+            (Self::cardano__key_hash, "key hash"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__margin => "Margin",
+            (Self::cardano__margin, "Margin"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__multisig_path => "multi-sig path",
+            (Self::cardano__multisig_path, "multi-sig path"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__nested_scripts_template => "Contains {0} nested scripts.",
+            (Self::cardano__nested_scripts_template, "Contains {0} nested scripts."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__network => "Network:",
+            (Self::cardano__network, "Network:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__no_output_tx => "Transaction has no outputs, network cannot be verified.",
+            (Self::cardano__no_output_tx, "Transaction has no outputs, network cannot be verified."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__nonce => "Nonce:",
+            (Self::cardano__nonce, "Nonce:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__other => "other",
+            (Self::cardano__other, "other"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__path => "path",
+            (Self::cardano__path, "path"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__pledge => "Pledge",
+            (Self::cardano__pledge, "Pledge"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__pointer => "pointer",
+            (Self::cardano__pointer, "pointer"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__policy_id => "Policy ID",
+            (Self::cardano__policy_id, "Policy ID"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__pool_metadata_hash => "Pool metadata hash:",
+            (Self::cardano__pool_metadata_hash, "Pool metadata hash:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__pool_metadata_url => "Pool metadata url:",
+            (Self::cardano__pool_metadata_url, "Pool metadata url:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__pool_owner => "Pool owner:",
+            (Self::cardano__pool_owner, "Pool owner:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__pool_reward_account => "Pool reward account:",
+            (Self::cardano__pool_reward_account, "Pool reward account:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__reference_input_id => "Reference input ID:",
+            (Self::cardano__reference_input_id, "Reference input ID:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__reference_input_index => "Reference input index:",
+            (Self::cardano__reference_input_index, "Reference input index:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__reference_script => "Reference script",
+            (Self::cardano__reference_script, "Reference script"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__required_signer => "Required signer",
+            (Self::cardano__required_signer, "Required signer"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__reward => "reward",
+            (Self::cardano__reward, "reward"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__reward_address => "Address is a reward address.",
+            (Self::cardano__reward_address, "Address is a reward address."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__reward_eligibility_warning => "Warning: The address is not a payment address, it is not eligible for rewards.",
+            (Self::cardano__reward_eligibility_warning, "Warning: The address is not a payment address, it is not eligible for rewards."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__rewards_go_to => "Rewards go to:",
+            (Self::cardano__rewards_go_to, "Rewards go to:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script => "script",
+            (Self::cardano__script, "script"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_all => "All",
+            (Self::cardano__script_all, "All"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_any => "Any",
+            (Self::cardano__script_any, "Any"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_data_hash => "Script data hash:",
+            (Self::cardano__script_data_hash, "Script data hash:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_hash => "Script hash:",
+            (Self::cardano__script_hash, "Script hash:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_invalid_before => "Invalid before",
+            (Self::cardano__script_invalid_before, "Invalid before"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_invalid_hereafter => "Invalid hereafter",
+            (Self::cardano__script_invalid_hereafter, "Invalid hereafter"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_key => "Key",
+            (Self::cardano__script_key, "Key"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_n_of_k => "N of K",
+            (Self::cardano__script_n_of_k, "N of K"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__script_reward => "script reward",
+            (Self::cardano__script_reward, "script reward"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__sending => "Sending",
+            (Self::cardano__sending, "Sending"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__show_simple => "Show Simple",
+            (Self::cardano__show_simple, "Show Simple"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__sign_tx_path_template => "Sign transaction with {0}",
+            (Self::cardano__sign_tx_path_template, "Sign transaction with {0}"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__stake_delegation => "Stake delegation",
+            (Self::cardano__stake_delegation, "Stake delegation"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__stake_deregistration => "Stake key deregistration",
+            (Self::cardano__stake_deregistration, "Stake key deregistration"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__stake_pool_registration => "Stakepool registration",
+            (Self::cardano__stake_pool_registration, "Stakepool registration"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__stake_pool_registration_pool_id => "Stake pool registration\nPool ID:",
+            (Self::cardano__stake_pool_registration_pool_id, "Stake pool registration\nPool ID:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__stake_registration => "Stake key registration",
+            (Self::cardano__stake_registration, "Stake key registration"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__staking_key_for_account => "Staking key for account",
+            (Self::cardano__staking_key_for_account, "Staking key for account"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__to_pool => "to pool:",
+            (Self::cardano__to_pool, "to pool:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__token_minting_path => "token minting path",
+            (Self::cardano__token_minting_path, "token minting path"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__total_collateral => "Total collateral:",
+            (Self::cardano__total_collateral, "Total collateral:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction => "Transaction",
+            (Self::cardano__transaction, "Transaction"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction_contains_minting_or_burning => "The transaction contains minting or burning of tokens.",
+            (Self::cardano__transaction_contains_minting_or_burning, "The transaction contains minting or burning of tokens."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction_contains_script_address_no_datum => "The following transaction output contains a script address, but does not contain a datum.",
+            (Self::cardano__transaction_contains_script_address_no_datum, "The following transaction output contains a script address, but does not contain a datum."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction_fee => "Transaction fee:",
+            (Self::cardano__transaction_fee, "Transaction fee:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction_id => "Transaction ID:",
+            (Self::cardano__transaction_id, "Transaction ID:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction_no_collateral_input => "The transaction contains no collateral inputs. Plutus script will not be able to run.",
+            (Self::cardano__transaction_no_collateral_input, "The transaction contains no collateral inputs. Plutus script will not be able to run."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction_no_script_data_hash => "The transaction contains no script data hash. Plutus script will not be able to run.",
+            (Self::cardano__transaction_no_script_data_hash, "The transaction contains no script data hash. Plutus script will not be able to run."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__transaction_output_contains_tokens => "The following transaction output contains tokens.",
+            (Self::cardano__transaction_output_contains_tokens, "The following transaction output contains tokens."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__ttl => "TTL:",
+            (Self::cardano__ttl, "TTL:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__unknown_collateral_amount => "Unknown collateral amount.",
+            (Self::cardano__unknown_collateral_amount, "Unknown collateral amount."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__unusual_path => "Path is unusual.",
+            (Self::cardano__unusual_path, "Path is unusual."),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__valid_since => "Valid since:",
+            (Self::cardano__valid_since, "Valid since:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__verify_script => "Verify script",
+            (Self::cardano__verify_script, "Verify script"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__vote_key_registration => "Vote key registration (CIP-36)",
+            (Self::cardano__vote_key_registration, "Vote key registration (CIP-36)"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__vote_public_key => "Vote public key:",
+            (Self::cardano__vote_public_key, "Vote public key:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__voting_purpose => "Voting purpose:",
+            (Self::cardano__voting_purpose, "Voting purpose:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__warning => "Warning",
+            (Self::cardano__warning, "Warning"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__weight => "Weight:",
+            (Self::cardano__weight, "Weight:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__withdrawal_for_address_template => "Confirm withdrawal for {0} address:",
+            (Self::cardano__withdrawal_for_address_template, "Confirm withdrawal for {0} address:"),
             #[cfg(feature = "universal_fw")]
-            Self::cardano__x_of_y_signatures_template => "Requires {0} out of {1} signatures.",
-            Self::coinjoin__access_account => "Access your coinjoin account?",
-            Self::coinjoin__do_not_disconnect => "Do not disconnect your Trezor!",
-            Self::coinjoin__max_mining_fee => "Max mining fee",
-            Self::coinjoin__max_rounds => "Max rounds",
-            Self::coinjoin__title => "Authorize coinjoin",
-            Self::coinjoin__title_do_not_disconnect => "Do not disconnect your trezor!",
-            Self::coinjoin__title_progress => "Coinjoin in progress",
-            Self::coinjoin__waiting_for_others => "Waiting for others",
-            Self::confirm_total__fee_rate_colon => "Fee rate:",
-            Self::confirm_total__sending_from_account => "Sending from account:",
-            Self::confirm_total__title_fee => "Fee info",
-            Self::confirm_total__title_sending_from => "Sending from",
+            (Self::cardano__x_of_y_signatures_template, "Requires {0} out of {1} signatures."),
+            (Self::coinjoin__access_account, "Access your coinjoin account?"),
+            (Self::coinjoin__do_not_disconnect, "Do not disconnect your Trezor!"),
+            (Self::coinjoin__max_mining_fee, "Max mining fee"),
+            (Self::coinjoin__max_rounds, "Max rounds"),
+            (Self::coinjoin__title, "Authorize coinjoin"),
+            (Self::coinjoin__title_do_not_disconnect, "Do not disconnect your trezor!"),
+            (Self::coinjoin__title_progress, "Coinjoin in progress"),
+            (Self::coinjoin__waiting_for_others, "Waiting for others"),
+            (Self::confirm_total__fee_rate_colon, "Fee rate:"),
+            (Self::confirm_total__sending_from_account, "Sending from account:"),
+            (Self::confirm_total__title_fee, "Fee info"),
+            (Self::confirm_total__title_sending_from, "Sending from"),
             #[cfg(feature = "debug")]
-            Self::debug__loading_seed => "Loading seed",
+            (Self::debug__loading_seed, "Loading seed"),
             #[cfg(feature = "debug")]
-            Self::debug__loading_seed_not_recommended => "Loading private seed is not recommended.",
-            Self::device_name__change_template => "Change device name to {0}?",
-            Self::device_name__title => "Device name",
-            Self::entropy__send => "Do you really want to send entropy?",
-            Self::entropy__title_confirm => "Confirm entropy",
+            (Self::debug__loading_seed_not_recommended, "Loading private seed is not recommended."),
+            (Self::device_name__change_template, "Change device name to {0}?"),
+            (Self::device_name__title, "Device name"),
+            (Self::entropy__send, "Do you really want to send entropy?"),
+            (Self::entropy__title_confirm, "Confirm entropy"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__about_to_sign_template => "You are about to sign {0}.",
+            (Self::eos__about_to_sign_template, "You are about to sign {0}."),
             #[cfg(feature = "universal_fw")]
-            Self::eos__action_name => "Action Name:",
+            (Self::eos__action_name, "Action Name:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__arbitrary_data => "Arbitrary data",
+            (Self::eos__arbitrary_data, "Arbitrary data"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__buy_ram => "Buy RAM",
+            (Self::eos__buy_ram, "Buy RAM"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__bytes => "Bytes:",
+            (Self::eos__bytes, "Bytes:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__cancel_vote => "Cancel vote",
+            (Self::eos__cancel_vote, "Cancel vote"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__checksum => "Checksum:",
+            (Self::eos__checksum, "Checksum:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__code => "Code:",
+            (Self::eos__code, "Code:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__contract => "Contract:",
+            (Self::eos__contract, "Contract:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__cpu => "CPU:",
+            (Self::eos__cpu, "CPU:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__creator => "Creator:",
+            (Self::eos__creator, "Creator:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__delegate => "Delegate",
+            (Self::eos__delegate, "Delegate"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__delete_auth => "Delete Auth",
+            (Self::eos__delete_auth, "Delete Auth"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__from => "From:",
+            (Self::eos__from, "From:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__link_auth => "Link Auth",
+            (Self::eos__link_auth, "Link Auth"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__memo => "Memo",
+            (Self::eos__memo, "Memo"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__name => "Name:",
+            (Self::eos__name, "Name:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__net => "NET:",
+            (Self::eos__net, "NET:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__new_account => "New account",
+            (Self::eos__new_account, "New account"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__owner => "Owner:",
+            (Self::eos__owner, "Owner:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__parent => "Parent:",
+            (Self::eos__parent, "Parent:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__payer => "Payer:",
+            (Self::eos__payer, "Payer:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__permission => "Permission:",
+            (Self::eos__permission, "Permission:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__proxy => "Proxy:",
+            (Self::eos__proxy, "Proxy:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__receiver => "Receiver:",
+            (Self::eos__receiver, "Receiver:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__refund => "Refund",
+            (Self::eos__refund, "Refund"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__requirement => "Requirement:",
+            (Self::eos__requirement, "Requirement:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__sell_ram => "Sell RAM",
+            (Self::eos__sell_ram, "Sell RAM"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__sender => "Sender:",
-            Self::send__sign_transaction => "Sign transaction",
+            (Self::eos__sender, "Sender:"),
+            (Self::send__sign_transaction, "Sign transaction"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__threshold => "Threshold:",
+            (Self::eos__threshold, "Threshold:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__to => "To:",
+            (Self::eos__to, "To:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__transfer => "Transfer:",
+            (Self::eos__transfer, "Transfer:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__type => "Type:",
+            (Self::eos__type, "Type:"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__undelegate => "Undelegate",
+            (Self::eos__undelegate, "Undelegate"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__unlink_auth => "Unlink Auth",
+            (Self::eos__unlink_auth, "Unlink Auth"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__update_auth => "Update Auth",
+            (Self::eos__update_auth, "Update Auth"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__vote_for_producers => "Vote for producers",
+            (Self::eos__vote_for_producers, "Vote for producers"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__vote_for_proxy => "Vote for proxy",
+            (Self::eos__vote_for_proxy, "Vote for proxy"),
             #[cfg(feature = "universal_fw")]
-            Self::eos__voter => "Voter:",
+            (Self::eos__voter, "Voter:"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__amount_sent => "Amount sent:",
+            (Self::ethereum__amount_sent, "Amount sent:"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__contract => "Contract:",
+            (Self::ethereum__contract, "Contract:"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__data_size_template => "Size: {0} bytes",
+            (Self::ethereum__data_size_template, "Size: {0} bytes"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__gas_limit => "Gas limit",
+            (Self::ethereum__gas_limit, "Gas limit"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__gas_price => "Gas price",
+            (Self::ethereum__gas_price, "Gas price"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__max_gas_price => "Max fee per gas",
+            (Self::ethereum__max_gas_price, "Max fee per gas"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__name_and_version => "Name and version",
+            (Self::ethereum__name_and_version, "Name and version"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__new_contract => "New contract will be deployed",
+            (Self::ethereum__new_contract, "New contract will be deployed"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__no_message_field => "No message field",
+            (Self::ethereum__no_message_field, "No message field"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__priority_fee => "Max priority fee",
+            (Self::ethereum__priority_fee, "Max priority fee"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__show_full_array => "Show full array",
+            (Self::ethereum__show_full_array, "Show full array"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__show_full_domain => "Show full domain",
+            (Self::ethereum__show_full_domain, "Show full domain"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__show_full_message => "Show full message",
+            (Self::ethereum__show_full_message, "Show full message"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__show_full_struct => "Show full struct",
+            (Self::ethereum__show_full_struct, "Show full struct"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__sign_eip712 => "Really sign EIP-712 typed data?",
+            (Self::ethereum__sign_eip712, "Really sign EIP-712 typed data?"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__title_input_data => "Input data",
+            (Self::ethereum__title_input_data, "Input data"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__title_confirm_domain => "Confirm domain",
+            (Self::ethereum__title_confirm_domain, "Confirm domain"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__title_confirm_message => "Confirm message",
+            (Self::ethereum__title_confirm_message, "Confirm message"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__title_confirm_struct => "Confirm struct",
+            (Self::ethereum__title_confirm_struct, "Confirm struct"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__title_confirm_typed_data => "Confirm typed data",
+            (Self::ethereum__title_confirm_typed_data, "Confirm typed data"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__title_signing_address => "Signing address",
+            (Self::ethereum__title_signing_address, "Signing address"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__units_template => "{0} units",
+            (Self::ethereum__units_template, "{0} units"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__unknown_token => "Unknown token",
+            (Self::ethereum__unknown_token, "Unknown token"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__valid_signature => "The signature is valid.",
-            Self::experimental_mode__enable => "Enable experimental features?",
-            Self::experimental_mode__only_for_dev => "Only for development and beta testing!",
-            Self::experimental_mode__title => "Experimental mode",
+            (Self::ethereum__valid_signature, "The signature is valid."),
+            (Self::experimental_mode__enable, "Enable experimental features?"),
+            (Self::experimental_mode__only_for_dev, "Only for development and beta testing!"),
+            (Self::experimental_mode__title, "Experimental mode"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__already_registered => "Already registered",
+            (Self::fido__already_registered, "Already registered"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__device_already_registered => "This device is already registered with this application.",
+            (Self::fido__device_already_registered, "This device is already registered with this application."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__device_already_registered_with_template => "This device is already registered with {0}.",
+            (Self::fido__device_already_registered_with_template, "This device is already registered with {0}."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__device_not_registered => "This device is not registered with this application.",
+            (Self::fido__device_not_registered, "This device is not registered with this application."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__does_not_belong => "The credential you are trying to import does\nnot belong to this authenticator.",
+            (Self::fido__does_not_belong, "The credential you are trying to import does\nnot belong to this authenticator."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__erase_credentials => "erase all credentials?",
+            (Self::fido__erase_credentials, "erase all credentials?"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__export_credentials => "Export information about the credentials stored on this device?",
+            (Self::fido__export_credentials, "Export information about the credentials stored on this device?"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__not_registered => "Not registered",
+            (Self::fido__not_registered, "Not registered"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__not_registered_with_template => "This device is not registered with\n{0}.",
+            (Self::fido__not_registered_with_template, "This device is not registered with\n{0}."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__please_enable_pin_protection => "Please enable PIN protection.",
+            (Self::fido__please_enable_pin_protection, "Please enable PIN protection."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_authenticate => "FIDO2 authenticate",
+            (Self::fido__title_authenticate, "FIDO2 authenticate"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_import_credential => "Import credential",
+            (Self::fido__title_import_credential, "Import credential"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_list_credentials => "List credentials",
+            (Self::fido__title_list_credentials, "List credentials"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_register => "FIDO2 register",
+            (Self::fido__title_register, "FIDO2 register"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_remove_credential => "Remove credential",
+            (Self::fido__title_remove_credential, "Remove credential"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_reset => "FIDO2 reset",
+            (Self::fido__title_reset, "FIDO2 reset"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_u2f_auth => "U2F authenticate",
+            (Self::fido__title_u2f_auth, "U2F authenticate"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_u2f_register => "U2F register",
+            (Self::fido__title_u2f_register, "U2F register"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_verify_user => "FIDO2 verify user",
+            (Self::fido__title_verify_user, "FIDO2 verify user"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__unable_to_verify_user => "Unable to verify user.",
+            (Self::fido__unable_to_verify_user, "Unable to verify user."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__wanna_erase_credentials => "Do you really want to erase all credentials?",
-            Self::firmware_update__title => "Update firmware",
-            Self::firmware_update__title_fingerprint => "FW fingerprint",
-            Self::homescreen__click_to_connect => "Click to Connect",
-            Self::homescreen__click_to_unlock => "Click to Unlock",
-            Self::homescreen__title_backup_failed => "Backup failed",
-            Self::homescreen__title_backup_needed => "Backup needed",
-            Self::homescreen__title_coinjoin_authorized => "Coinjoin authorized",
-            Self::homescreen__title_experimental_mode => "Experimental mode",
-            Self::homescreen__title_no_usb_connection => "No USB connection",
-            Self::homescreen__title_pin_not_set => "PIN not set",
-            Self::homescreen__title_seedless => "Seedless",
-            Self::homescreen__title_set => "Change wallpaper",
-            Self::inputs__back => "BACK",
-            Self::inputs__cancel => "CANCEL",
-            Self::inputs__delete => "DELETE",
-            Self::inputs__enter => "ENTER",
-            Self::inputs__return => "RETURN",
-            Self::inputs__show => "SHOW",
-            Self::inputs__space => "SPACE",
-            Self::joint__title => "Joint transaction",
-            Self::joint__to_the_total_amount => "To the total amount:",
-            Self::joint__you_are_contributing => "You are contributing:",
-            Self::language__change_to_template => "Change language to {0}?",
-            Self::language__changed => "Language changed successfully",
-            Self::language__progress => "Changing language",
-            Self::language__title => "Language settings",
-            Self::lockscreen__tap_to_connect => "Tap to connect",
-            Self::lockscreen__tap_to_unlock => "Tap to unlock",
-            Self::lockscreen__title_locked => "Locked",
-            Self::lockscreen__title_not_connected => "Not connected",
-            Self::misc__decrypt_value => "Decrypt value",
-            Self::misc__encrypt_value => "Encrypt value",
-            Self::misc__title_suite_labeling => "Suite labeling",
-            Self::modify_amount__decrease_amount => "Decrease amount by:",
-            Self::modify_amount__increase_amount => "Increase amount by:",
-            Self::modify_amount__new_amount => "New amount:",
-            Self::modify_amount__title => "Modify amount",
-            Self::modify_fee__decrease_fee => "Decrease fee by:",
-            Self::modify_fee__fee_rate => "Fee rate:",
-            Self::modify_fee__increase_fee => "Increase fee by:",
-            Self::modify_fee__new_transaction_fee => "New transaction fee:",
-            Self::modify_fee__no_change => "Fee did not change.\n",
-            Self::modify_fee__title => "Modify fee",
-            Self::modify_fee__transaction_fee => "Transaction fee:",
+            (Self::fido__wanna_erase_credentials, "Do you really want to erase all credentials?"),
+            (Self::firmware_update__title, "Update firmware"),
+            (Self::firmware_update__title_fingerprint, "FW fingerprint"),
+            (Self::homescreen__click_to_connect, "Click to Connect"),
+            (Self::homescreen__click_to_unlock, "Click to Unlock"),
+            (Self::homescreen__title_backup_failed, "Backup failed"),
+            (Self::homescreen__title_backup_needed, "Backup needed"),
+            (Self::homescreen__title_coinjoin_authorized, "Coinjoin authorized"),
+            (Self::homescreen__title_experimental_mode, "Experimental mode"),
+            (Self::homescreen__title_no_usb_connection, "No USB connection"),
+            (Self::homescreen__title_pin_not_set, "PIN not set"),
+            (Self::homescreen__title_seedless, "Seedless"),
+            (Self::homescreen__title_set, "Change wallpaper"),
+            (Self::inputs__back, "BACK"),
+            (Self::inputs__cancel, "CANCEL"),
+            (Self::inputs__delete, "DELETE"),
+            (Self::inputs__enter, "ENTER"),
+            (Self::inputs__return, "RETURN"),
+            (Self::inputs__show, "SHOW"),
+            (Self::inputs__space, "SPACE"),
+            (Self::joint__title, "Joint transaction"),
+            (Self::joint__to_the_total_amount, "To the total amount:"),
+            (Self::joint__you_are_contributing, "You are contributing:"),
+            (Self::language__change_to_template, "Change language to {0}?"),
+            (Self::language__changed, "Language changed successfully"),
+            (Self::language__progress, "Changing language"),
+            (Self::language__title, "Language settings"),
+            (Self::lockscreen__tap_to_connect, "Tap to connect"),
+            (Self::lockscreen__tap_to_unlock, "Tap to unlock"),
+            (Self::lockscreen__title_locked, "Locked"),
+            (Self::lockscreen__title_not_connected, "Not connected"),
+            (Self::misc__decrypt_value, "Decrypt value"),
+            (Self::misc__encrypt_value, "Encrypt value"),
+            (Self::misc__title_suite_labeling, "Suite labeling"),
+            (Self::modify_amount__decrease_amount, "Decrease amount by:"),
+            (Self::modify_amount__increase_amount, "Increase amount by:"),
+            (Self::modify_amount__new_amount, "New amount:"),
+            (Self::modify_amount__title, "Modify amount"),
+            (Self::modify_fee__decrease_fee, "Decrease fee by:"),
+            (Self::modify_fee__fee_rate, "Fee rate:"),
+            (Self::modify_fee__increase_fee, "Increase fee by:"),
+            (Self::modify_fee__new_transaction_fee, "New transaction fee:"),
+            (Self::modify_fee__no_change, "Fee did not change.\n"),
+            (Self::modify_fee__title, "Modify fee"),
+            (Self::modify_fee__transaction_fee, "Transaction fee:"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__confirm_export => "Confirm export",
+            (Self::monero__confirm_export, "Confirm export"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__confirm_ki_sync => "Confirm ki sync",
+            (Self::monero__confirm_ki_sync, "Confirm ki sync"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__confirm_refresh => "Confirm refresh",
+            (Self::monero__confirm_refresh, "Confirm refresh"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__confirm_unlock_time => "Confirm unlock time",
+            (Self::monero__confirm_unlock_time, "Confirm unlock time"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__hashing_inputs => "Hashing inputs",
+            (Self::monero__hashing_inputs, "Hashing inputs"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__payment_id => "Payment ID",
+            (Self::monero__payment_id, "Payment ID"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__postprocessing => "Postprocessing...",
+            (Self::monero__postprocessing, "Postprocessing..."),
             #[cfg(feature = "universal_fw")]
-            Self::monero__processing => "Processing...",
+            (Self::monero__processing, "Processing..."),
             #[cfg(feature = "universal_fw")]
-            Self::monero__processing_inputs => "Processing inputs",
+            (Self::monero__processing_inputs, "Processing inputs"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__processing_outputs => "Processing outputs",
+            (Self::monero__processing_outputs, "Processing outputs"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__signing => "Signing...",
+            (Self::monero__signing, "Signing..."),
             #[cfg(feature = "universal_fw")]
-            Self::monero__signing_inputs => "Signing inputs",
+            (Self::monero__signing_inputs, "Signing inputs"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__unlock_time_set_template => "Unlock time for this transaction is set to {0}",
+            (Self::monero__unlock_time_set_template, "Unlock time for this transaction is set to {0}"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__wanna_export_tx_der => "Do you really want to export tx_der\nfor tx_proof?",
+            (Self::monero__wanna_export_tx_der, "Do you really want to export tx_der\nfor tx_proof?"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__wanna_export_tx_key => "Do you really want to export tx_key?",
+            (Self::monero__wanna_export_tx_key, "Do you really want to export tx_key?"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__wanna_export_watchkey => "Do you really want to export watch-only credentials?",
+            (Self::monero__wanna_export_watchkey, "Do you really want to export watch-only credentials?"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__wanna_start_refresh => "Do you really want to\nstart refresh?",
+            (Self::monero__wanna_start_refresh, "Do you really want to\nstart refresh?"),
             #[cfg(feature = "universal_fw")]
-            Self::monero__wanna_sync_key_images => "Do you really want to\nsync key images?",
+            (Self::monero__wanna_sync_key_images, "Do you really want to\nsync key images?"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__absolute => "absolute",
+            (Self::nem__absolute, "absolute"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__activate => "Activate",
+            (Self::nem__activate, "Activate"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__add => "Add",
+            (Self::nem__add, "Add"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_action => "Confirm action",
+            (Self::nem__confirm_action, "Confirm action"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_address => "Confirm address",
+            (Self::nem__confirm_address, "Confirm address"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_creation_fee => "Confirm creation fee",
+            (Self::nem__confirm_creation_fee, "Confirm creation fee"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_mosaic => "Confirm mosaic",
+            (Self::nem__confirm_mosaic, "Confirm mosaic"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_multisig_fee => "Confirm multisig fee",
+            (Self::nem__confirm_multisig_fee, "Confirm multisig fee"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_namespace => "Confirm namespace",
+            (Self::nem__confirm_namespace, "Confirm namespace"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_payload => "Confirm payload",
+            (Self::nem__confirm_payload, "Confirm payload"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_properties => "Confirm properties",
+            (Self::nem__confirm_properties, "Confirm properties"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_rental_fee => "Confirm rental fee",
+            (Self::nem__confirm_rental_fee, "Confirm rental fee"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__confirm_transfer_of => "Confirm transfer of",
+            (Self::nem__confirm_transfer_of, "Confirm transfer of"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__convert_account_to_multisig => "Convert account to multisig account?",
+            (Self::nem__convert_account_to_multisig, "Convert account to multisig account?"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__cosign_transaction_for => "Cosign transaction for",
+            (Self::nem__cosign_transaction_for, "Cosign transaction for"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__cosignatory => " cosignatory",
+            (Self::nem__cosignatory, " cosignatory"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__create_mosaic => "Create mosaic",
+            (Self::nem__create_mosaic, "Create mosaic"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__create_namespace => "Create namespace",
+            (Self::nem__create_namespace, "Create namespace"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__deactivate => "Deactivate",
+            (Self::nem__deactivate, "Deactivate"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__decrease => "Decrease",
+            (Self::nem__decrease, "Decrease"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__description => "Description:",
+            (Self::nem__description, "Description:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__divisibility_and_levy_cannot_be_shown => "Divisibility and levy cannot be shown for unknown mosaics",
+            (Self::nem__divisibility_and_levy_cannot_be_shown, "Divisibility and levy cannot be shown for unknown mosaics"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__encrypted => "Encrypted",
+            (Self::nem__encrypted, "Encrypted"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__final_confirm => "Final confirm",
+            (Self::nem__final_confirm, "Final confirm"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__immutable => "immutable",
+            (Self::nem__immutable, "immutable"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__increase => "Increase",
+            (Self::nem__increase, "Increase"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__initial_supply => "Initial supply:",
+            (Self::nem__initial_supply, "Initial supply:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__initiate_transaction_for => "Initiate transaction for",
+            (Self::nem__initiate_transaction_for, "Initiate transaction for"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__levy_divisibility => "Levy divisibility:",
+            (Self::nem__levy_divisibility, "Levy divisibility:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__levy_fee => "Levy fee:",
+            (Self::nem__levy_fee, "Levy fee:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__levy_fee_of => "Confirm mosaic levy fee of",
+            (Self::nem__levy_fee_of, "Confirm mosaic levy fee of"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__levy_mosaic => "Levy mosaic:",
+            (Self::nem__levy_mosaic, "Levy mosaic:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__levy_namespace => "Levy namespace:",
+            (Self::nem__levy_namespace, "Levy namespace:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__levy_recipient => "Levy recipient:",
+            (Self::nem__levy_recipient, "Levy recipient:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__levy_type => "Levy type:",
+            (Self::nem__levy_type, "Levy type:"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__modify_supply_for => "Modify supply for",
+            (Self::nem__modify_supply_for, "Modify supply for"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__modify_the_number_of_cosignatories_by => "Modify the number of cosignatories by ",
+            (Self::nem__modify_the_number_of_cosignatories_by, "Modify the number of cosignatories by "),
             #[cfg(feature = "universal_fw")]
-            Self::nem__mutable => "mutable",
+            (Self::nem__mutable, "mutable"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__of => "of",
+            (Self::nem__of, "of"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__percentile => "percentile",
+            (Self::nem__percentile, "percentile"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__raw_units_template => "{0} raw units",
+            (Self::nem__raw_units_template, "{0} raw units"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__remote_harvesting => " remote harvesting?",
+            (Self::nem__remote_harvesting, " remote harvesting?"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__remove => "Remove",
+            (Self::nem__remove, "Remove"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__set_minimum_cosignatories_to => "Set minimum cosignatories to ",
+            (Self::nem__set_minimum_cosignatories_to, "Set minimum cosignatories to "),
             #[cfg(feature = "universal_fw")]
-            Self::nem__sign_tx_fee_template => "Sign this transaction\nand pay {0}\nfor network fee?",
+            (Self::nem__sign_tx_fee_template, "Sign this transaction\nand pay {0}\nfor network fee?"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__supply_change => "Supply change",
+            (Self::nem__supply_change, "Supply change"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__supply_units_template => "{0} supply by {1} whole units?",
+            (Self::nem__supply_units_template, "{0} supply by {1} whole units?"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__transferable => "Transferable?",
+            (Self::nem__transferable, "Transferable?"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__under_namespace => "under namespace",
+            (Self::nem__under_namespace, "under namespace"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__unencrypted => "Unencrypted",
+            (Self::nem__unencrypted, "Unencrypted"),
             #[cfg(feature = "universal_fw")]
-            Self::nem__unknown_mosaic => "Unknown mosaic!",
-            Self::passphrase__access_wallet => "Access passphrase wallet?",
-            Self::passphrase__always_on_device => "Always enter your passphrase on Trezor?",
-            Self::passphrase__from_host_not_shown => "Passphrase provided by host will be used but will not be displayed due to the device settings.",
-            Self::passphrase__wallet => "Passphrase wallet",
-            Self::passphrase__hide => "Hide passphrase coming from host?",
-            Self::passphrase__next_screen_will_show_passphrase => "The next screen shows your passphrase.",
-            Self::passphrase__please_enter => "Please enter your passphrase.",
-            Self::passphrase__revoke_on_device => "Do you want to revoke the passphrase on device setting?",
-            Self::passphrase__title_confirm => "Confirm passphrase",
-            Self::passphrase__title_enter => "Enter passphrase",
-            Self::passphrase__title_hide => "Hide passphrase",
-            Self::passphrase__title_settings => "Passphrase settings",
-            Self::passphrase__title_source => "Passphrase source",
-            Self::passphrase__turn_off => "Turn off passphrase protection?",
-            Self::passphrase__turn_on => "Turn on passphrase protection?",
-            Self::pin__change => "Change PIN?",
-            Self::pin__changed => "PIN changed.",
-            Self::pin__cursor_will_change => "Position of the cursor will change between entries for enhanced security.",
-            Self::pin__diff_from_wipe_code => "The new PIN must be different from your wipe code.",
-            Self::pin__disabled => "PIN protection\nturned off.",
-            Self::pin__enabled => "PIN protection\nturned on.",
-            Self::pin__enter => "Enter PIN",
-            Self::pin__enter_new => "Enter new PIN",
-            Self::pin__entered_not_valid => "The PIN you have entered is not valid.",
-            Self::pin__info => "PIN will be required to access this device.",
-            Self::pin__invalid_pin => "Invalid PIN",
-            Self::pin__last_attempt => "Last attempt",
-            Self::pin__mismatch => "Entered PINs do not match!",
-            Self::pin__pin_mismatch => "PIN mismatch",
-            Self::pin__please_check_again => "Please check again.",
-            Self::pin__reenter_new => "Re-enter new PIN",
-            Self::pin__reenter_to_confirm => "Please re-enter PIN to confirm.",
-            Self::pin__should_be_long => "PIN should be 4-50 digits long.",
-            Self::pin__title_check_pin => "Check PIN",
-            Self::pin__title_settings => "PIN settings",
-            Self::pin__title_wrong_pin => "Wrong PIN",
-            Self::pin__tries_left => "tries left",
-            Self::pin__turn_off => "Are you sure you want to turn off PIN protection?",
-            Self::pin__turn_on => "Turn on PIN protection?",
-            Self::pin__wrong_pin => "Wrong PIN",
-            Self::plurals__contains_x_keys => "key|keys",
-            Self::plurals__lock_after_x_hours => "hour|hours",
-            Self::plurals__lock_after_x_milliseconds => "millisecond|milliseconds",
-            Self::plurals__lock_after_x_minutes => "minute|minutes",
-            Self::plurals__lock_after_x_seconds => "second|seconds",
-            Self::plurals__sign_x_actions => "action|actions",
-            Self::plurals__transaction_of_x_operations => "operation|operations",
-            Self::plurals__x_groups_needed => "group|groups",
-            Self::plurals__x_shares_needed => "share|shares",
-            Self::progress__authenticity_check => "Checking authenticity...",
-            Self::progress__done => "Done",
-            Self::progress__loading_transaction => "Loading transaction...",
-            Self::progress__locking_device => "Locking the device...",
-            Self::progress__one_second_left => "1 second left",
-            Self::progress__please_wait => "Please wait",
-            Self::storage_msg__processing => "Processing",
-            Self::progress__refreshing => "Refreshing...",
-            Self::progress__signing_transaction => "Signing transaction...",
-            Self::progress__syncing => "Syncing...",
-            Self::progress__x_seconds_left_template => "{0} seconds left",
-            Self::reboot_to_bootloader__restart => "Trezor will restart in bootloader mode.",
-            Self::reboot_to_bootloader__title => "Go to bootloader",
-            Self::reboot_to_bootloader__version_by_template => "Firmware version {0}\nby {1}",
-            Self::recovery__cancel_dry_run => "Cancel backup check",
-            Self::recovery__check_dry_run => "Check your backup?",
-            Self::recovery__cursor_will_change => "Position of the cursor will change between entries for enhanced security.",
-            Self::recovery__dry_run_bip39_valid_match => "The entered wallet backup is valid and matches the one in this device.",
-            Self::recovery__dry_run_bip39_valid_mismatch => "The entered wallet backup is valid but does not match the one in the device.",
-            Self::recovery__dry_run_slip39_valid_match => "The entered recovery shares are valid and match what is currently in the device.",
-            Self::recovery__dry_run_slip39_valid_mismatch => "The entered recovery shares are valid but do not match what is currently in the device.",
-            Self::recovery__enter_any_share => "Enter any share",
-            Self::recovery__enter_backup => "Enter your backup.",
-            Self::recovery__enter_different_share => "Enter a different share.",
-            Self::recovery__enter_share_from_diff_group => "Enter share from a different group.",
-            Self::recovery__group_num_template => "Group {0}",
-            Self::recovery__group_threshold_reached => "Group threshold reached.",
-            Self::recovery__invalid_wallet_backup_entered => "Invalid wallet backup entered.",
-            Self::recovery__invalid_share_entered => "Invalid recovery share entered.",
-            Self::recovery__more_shares_needed => "More shares needed",
-            Self::recovery__num_of_words => "Select the number of words in your backup.",
-            Self::recovery__only_first_n_letters => "You'll only have to select the first 2-4 letters of each word.",
-            Self::recovery__progress_will_be_lost => "All progress will be lost.",
-            Self::recovery__share_already_entered => "Share already entered",
-            Self::recovery__share_from_another_multi_share_backup => "You have entered a share from a different backup.",
-            Self::recovery__share_num_template => "Share {0}",
-            Self::recovery__title => "Recover wallet",
-            Self::recovery__title_cancel_dry_run => "Cancel backup check",
-            Self::recovery__title_cancel_recovery => "Cancel recovery",
-            Self::recovery__title_dry_run => "Backup check",
-            Self::recovery__title_recover => "Recover wallet",
-            Self::recovery__title_remaining_shares => "Remaining shares",
-            Self::recovery__type_word_x_of_y_template => "Type word {0} of {1}",
-            Self::recovery__wallet_recovered => "Wallet recovery completed",
-            Self::recovery__wanna_cancel_dry_run => "Are you sure you want to cancel the backup check?",
-            Self::recovery__wanna_cancel_recovery => "Are you sure you want to cancel the recovery process?",
-            Self::recovery__word_count_template => "({0} words)",
-            Self::recovery__word_x_of_y_template => "Word {0} of {1}",
-            Self::recovery__x_more_items_starting_template_plural => "{count} more {plural} starting",
-            Self::recovery__x_more_shares_needed_template_plural => "{count} more {plural} needed",
-            Self::recovery__x_of_y_entered_template => "{0} of {1} shares entered",
-            Self::recovery__you_have_entered => "You have entered",
-            Self::reset__advanced_group_threshold_info => "The group threshold specifies the number of groups required to recover your wallet.",
-            Self::reset__all_x_of_y_template => "all {0} of {1} shares",
-            Self::reset__any_x_of_y_template => "any {0} of {1} shares",
-            Self::reset__button_create => "Create wallet",
-            Self::reset__button_recover => "Recover wallet",
-            Self::reset__by_continuing => "By continuing you agree to Trezor Company's terms and conditions.",
-            Self::reset__check_backup_title => "Check backup",
-            Self::reset__check_group_share_title_template => "Check g{0} - share {1}",
-            Self::reset__check_wallet_backup_title => "Check wallet backup",
-            Self::reset__check_share_title_template => "Check share #{0}",
-            Self::reset__continue_with_next_share => "Continue with the next share.",
-            Self::reset__continue_with_share_template => "Continue with share #{0}.",
-            Self::reset__finished_verifying_group_template => "You have finished verifying your recovery shares for group {0}.",
-            Self::reset__finished_verifying_wallet_backup => "You have finished verifying your wallet backup.",
-            Self::reset__finished_verifying_shares => "You have finished verifying your recovery shares.",
-            Self::reset__group_description => "A group is made up of recovery shares.",
-            Self::reset__group_info => "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds.",
-            Self::reset__group_share_checked_successfully_template => "Group {0} - Share {1} checked successfully.",
-            Self::reset__group_share_title_template => "Group {0} - share {1}",
-            Self::reset__more_info_at => "More info at",
-            Self::reset__need_all_share_template => "For recovery you need all {0} of the shares.",
-            Self::reset__need_any_share_template => "For recovery you need any {0} of the shares.",
-            Self::reset__needed_to_form_a_group => "needed to form a group. ",
-            Self::reset__needed_to_recover_your_wallet => "needed to recover your wallet. ",
-            Self::reset__never_make_digital_copy => "Never put your backup anywhere digital.",
-            Self::reset__num_of_share_holders_template => "{0} people or locations will each hold one share.",
-            Self::reset__num_of_shares_advanced_info_template => "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}.",
-            Self::reset__num_of_shares_basic_info_template => "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet.",
-            Self::reset__num_shares_for_group_template => "The required number of shares to form Group {0}.",
-            Self::reset__number_of_shares_info => "= total number of unique word lists used for wallet backup.",
-            Self::reset__one_share => "1 share",
-            Self::reset__only_one_share_will_be_created => "Only one share will be created.",
-            Self::reset__recovery_wallet_backup_title => "Wallet backup",
-            Self::reset__recovery_share_title_template => "Recovery share #{0}",
-            Self::reset__required_number_of_groups => "The required number of groups for recovery.",
-            Self::reset__select_correct_word => "Select the correct word for each position.",
-            Self::reset__select_word_template => "Select {0} word",
-            Self::reset__select_word_x_of_y_template => "Select word {0} of {1}:",
-            Self::reset__set_it_to_count_template => "Set it to {0} and you will need ",
-            Self::reset__share_checked_successfully_template => "Share #{0} checked successfully.",
-            Self::reset__share_words_title => "Standard backup",
-            Self::reset__slip39_checklist_num_groups => "Number of groups",
-            Self::reset__slip39_checklist_num_shares => "Number of shares",
-            Self::reset__slip39_checklist_set_num_groups => "Set number of groups",
-            Self::reset__slip39_checklist_set_num_shares => "Set number of shares",
-            Self::reset__slip39_checklist_set_sizes => "Set sizes and thresholds",
-            Self::reset__slip39_checklist_set_sizes_longer => "Set size and threshold for each group",
-            Self::reset__slip39_checklist_set_threshold => "Set threshold",
-            Self::reset__slip39_checklist_title => "Backup checklist",
-            Self::reset__slip39_checklist_write_down => "Write down and check all shares",
-            Self::reset__slip39_checklist_write_down_recovery => "Write down & check all wallet backup shares",
-            Self::reset__the_threshold_sets_the_number_of_shares => "The threshold sets the number of shares ",
-            Self::reset__threshold_info => "= minimum number of unique word lists used for recovery.",
-            Self::reset__title_backup_is_done => "Backup is done",
-            Self::reset__title_create_wallet => "Create wallet",
-            Self::reset__title_group_threshold => "Group threshold",
-            Self::reset__title_number_of_groups => "Number of groups",
-            Self::reset__title_number_of_shares => "Number of shares",
-            Self::reset__title_set_group_threshold => "Set group threshold",
-            Self::reset__title_set_number_of_groups => "Set number of groups",
-            Self::reset__title_set_number_of_shares => "Set number of shares",
-            Self::reset__title_set_threshold => "Set threshold",
-            Self::reset__to_form_group_template => "to form Group {0}.",
-            Self::reset__tos_link => "trezor.io/tos",
-            Self::reset__total_number_of_shares_in_group_template => "Set the total number of shares in Group {0}.",
-            Self::reset__use_your_backup => "Use your backup when you need to recover your wallet.",
-            Self::reset__write_down_words_template => "Write the following {0} words in order on your wallet backup card.",
-            Self::reset__wrong_word_selected => "Wrong word selected!",
-            Self::reset__you_need_one_share => "For recovery you need 1 share.",
-            Self::reset__your_backup_is_done => "Your backup is done.",
-            #[cfg(feature = "universal_fw")]
-            Self::ripple__confirm_tag => "Confirm tag",
-            #[cfg(feature = "universal_fw")]
-            Self::ripple__destination_tag_template => "Destination tag:\n{0}",
-            Self::rotation__change_template => "Change display orientation to {0}?",
-            Self::rotation__east => "east",
-            Self::rotation__north => "north",
-            Self::rotation__south => "south",
-            Self::rotation__title_change => "Display orientation",
-            Self::rotation__west => "west",
-            Self::safety_checks__approve_unsafe_always => "Trezor will allow you to approve some actions which might be unsafe.",
-            Self::safety_checks__approve_unsafe_temporary => "Trezor will temporarily allow you to approve some actions which might be unsafe.",
-            Self::safety_checks__enforce_strict => "Do you really want to enforce strict safety checks (recommended)?",
-            Self::safety_checks__title => "Safety checks",
-            Self::safety_checks__title_safety_override => "Safety override",
-            Self::sd_card__all_data_will_be_lost => "All data on the SD card will be lost.",
-            Self::sd_card__card_required => "SD card required.",
-            Self::sd_card__disable => "Do you really want to remove SD card protection from your device?",
-            Self::sd_card__disabled => "You have successfully disabled SD protection.",
-            Self::sd_card__enable => "Do you really want to secure your device with SD card protection?",
-            Self::sd_card__enabled => "You have successfully enabled SD protection.",
-            Self::sd_card__error => "SD card error",
-            Self::sd_card__format_card => "Format SD card",
-            Self::sd_card__insert_correct_card => "Please insert the correct SD card for this device.",
-            Self::sd_card__please_insert => "Please insert your SD card.",
-            Self::sd_card__please_unplug_and_insert => "Please unplug the device and insert your SD card.",
-            Self::sd_card__problem_accessing => "There was a problem accessing the SD card.",
-            Self::sd_card__refresh => "Do you really want to replace the current SD card secret with a newly generated one?",
-            Self::sd_card__refreshed => "You have successfully refreshed SD protection.",
-            Self::sd_card__restart => "Do you want to restart Trezor in bootloader mode?",
-            Self::sd_card__title => "SD card protection",
-            Self::sd_card__title_problem => "SD card problem",
-            Self::sd_card__unknown_filesystem => "Unknown filesystem.",
-            Self::sd_card__unplug_and_insert_correct => "Please unplug the device and insert the correct SD card.",
-            Self::sd_card__use_different_card => "Use a different card or format the SD card to the FAT32 filesystem.",
-            Self::sd_card__wanna_format => "Do you really want to format the SD card?",
-            Self::sd_card__wrong_sd_card => "Wrong SD card.",
-            Self::send__address_path => "address path",
-            Self::send__confirm_sending => "Sending amount",
-            Self::send__from_multiple_accounts => "Sending from multiple accounts.",
-            Self::send__including_fee => "Including fee:",
-            Self::send__maximum_fee => "Maximum fee",
-            Self::send__receiving_to_multisig => "Receiving to a multisig address.",
-            Self::send__title_confirm_sending => "Confirm sending",
-            Self::send__title_joint_transaction => "Joint transaction",
-            Self::send__title_receiving_to => "Receiving to",
-            Self::send__title_sending => "Sending",
-            Self::send__title_sending_amount => "Sending amount",
-            Self::send__title_sending_to => "Sending to",
-            Self::send__to_the_total_amount => "To the total amount:",
-            Self::send__transaction_id => "Transaction ID",
-            Self::send__you_are_contributing => "You are contributing:",
-            Self::share_words__words_in_order => " words in order.",
-            Self::share_words__wrote_down_all => "I wrote down all ",
-            Self::sign_message__bytes_template => "{0} Bytes",
-            Self::sign_message__confirm_address => "Signing address",
-            Self::sign_message__confirm_message => "Confirm message",
-            Self::sign_message__message_size => "Message size",
-            Self::sign_message__verify_address => "Verify address",
+            (Self::nem__unknown_mosaic, "Unknown mosaic!"),
+            (Self::passphrase__access_wallet, "Access passphrase wallet?"),
+            (Self::passphrase__always_on_device, "Always enter your passphrase on Trezor?"),
+            (Self::passphrase__from_host_not_shown, "Passphrase provided by host will be used but will not be displayed due to the device settings."),
+            (Self::passphrase__wallet, "Passphrase wallet"),
+            (Self::passphrase__hide, "Hide passphrase coming from host?"),
+            (Self::passphrase__next_screen_will_show_passphrase, "The next screen shows your passphrase."),
+            (Self::passphrase__please_enter, "Please enter your passphrase."),
+            (Self::passphrase__revoke_on_device, "Do you want to revoke the passphrase on device setting?"),
+            (Self::passphrase__title_confirm, "Confirm passphrase"),
+            (Self::passphrase__title_enter, "Enter passphrase"),
+            (Self::passphrase__title_hide, "Hide passphrase"),
+            (Self::passphrase__title_settings, "Passphrase settings"),
+            (Self::passphrase__title_source, "Passphrase source"),
+            (Self::passphrase__turn_off, "Turn off passphrase protection?"),
+            (Self::passphrase__turn_on, "Turn on passphrase protection?"),
+            (Self::pin__change, "Change PIN?"),
+            (Self::pin__changed, "PIN changed."),
+            (Self::pin__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
+            (Self::pin__diff_from_wipe_code, "The new PIN must be different from your wipe code."),
+            (Self::pin__disabled, "PIN protection\nturned off."),
+            (Self::pin__enabled, "PIN protection\nturned on."),
+            (Self::pin__enter, "Enter PIN"),
+            (Self::pin__enter_new, "Enter new PIN"),
+            (Self::pin__entered_not_valid, "The PIN you have entered is not valid."),
+            (Self::pin__info, "PIN will be required to access this device."),
+            (Self::pin__invalid_pin, "Invalid PIN"),
+            (Self::pin__last_attempt, "Last attempt"),
+            (Self::pin__mismatch, "Entered PINs do not match!"),
+            (Self::pin__pin_mismatch, "PIN mismatch"),
+            (Self::pin__please_check_again, "Please check again."),
+            (Self::pin__reenter_new, "Re-enter new PIN"),
+            (Self::pin__reenter_to_confirm, "Please re-enter PIN to confirm."),
+            (Self::pin__should_be_long, "PIN should be 4-50 digits long."),
+            (Self::pin__title_check_pin, "Check PIN"),
+            (Self::pin__title_settings, "PIN settings"),
+            (Self::pin__title_wrong_pin, "Wrong PIN"),
+            (Self::pin__tries_left, "tries left"),
+            (Self::pin__turn_off, "Are you sure you want to turn off PIN protection?"),
+            (Self::pin__turn_on, "Turn on PIN protection?"),
+            (Self::pin__wrong_pin, "Wrong PIN"),
+            (Self::plurals__contains_x_keys, "key|keys"),
+            (Self::plurals__lock_after_x_hours, "hour|hours"),
+            (Self::plurals__lock_after_x_milliseconds, "millisecond|milliseconds"),
+            (Self::plurals__lock_after_x_minutes, "minute|minutes"),
+            (Self::plurals__lock_after_x_seconds, "second|seconds"),
+            (Self::plurals__sign_x_actions, "action|actions"),
+            (Self::plurals__transaction_of_x_operations, "operation|operations"),
+            (Self::plurals__x_groups_needed, "group|groups"),
+            (Self::plurals__x_shares_needed, "share|shares"),
+            (Self::progress__authenticity_check, "Checking authenticity..."),
+            (Self::progress__done, "Done"),
+            (Self::progress__loading_transaction, "Loading transaction..."),
+            (Self::progress__locking_device, "Locking the device..."),
+            (Self::progress__one_second_left, "1 second left"),
+            (Self::progress__please_wait, "Please wait"),
+            (Self::storage_msg__processing, "Processing"),
+            (Self::progress__refreshing, "Refreshing..."),
+            (Self::progress__signing_transaction, "Signing transaction..."),
+            (Self::progress__syncing, "Syncing..."),
+            (Self::progress__x_seconds_left_template, "{0} seconds left"),
+            (Self::reboot_to_bootloader__restart, "Trezor will restart in bootloader mode."),
+            (Self::reboot_to_bootloader__title, "Go to bootloader"),
+            (Self::reboot_to_bootloader__version_by_template, "Firmware version {0}\nby {1}"),
+            (Self::recovery__cancel_dry_run, "Cancel backup check"),
+            (Self::recovery__check_dry_run, "Check your backup?"),
+            (Self::recovery__cursor_will_change, "Position of the cursor will change between entries for enhanced security."),
+            (Self::recovery__dry_run_bip39_valid_match, "The entered wallet backup is valid and matches the one in this device."),
+            (Self::recovery__dry_run_bip39_valid_mismatch, "The entered wallet backup is valid but does not match the one in the device."),
+            (Self::recovery__dry_run_slip39_valid_match, "The entered recovery shares are valid and match what is currently in the device."),
+            (Self::recovery__dry_run_slip39_valid_mismatch, "The entered recovery shares are valid but do not match what is currently in the device."),
+            (Self::recovery__enter_any_share, "Enter any share"),
+            (Self::recovery__enter_backup, "Enter your backup."),
+            (Self::recovery__enter_different_share, "Enter a different share."),
+            (Self::recovery__enter_share_from_diff_group, "Enter share from a different group."),
+            (Self::recovery__group_num_template, "Group {0}"),
+            (Self::recovery__group_threshold_reached, "Group threshold reached."),
+            (Self::recovery__invalid_wallet_backup_entered, "Invalid wallet backup entered."),
+            (Self::recovery__invalid_share_entered, "Invalid recovery share entered."),
+            (Self::recovery__more_shares_needed, "More shares needed"),
+            (Self::recovery__num_of_words, "Select the number of words in your backup."),
+            (Self::recovery__only_first_n_letters, "You'll only have to select the first 2-4 letters of each word."),
+            (Self::recovery__progress_will_be_lost, "All progress will be lost."),
+            (Self::recovery__share_already_entered, "Share already entered"),
+            (Self::recovery__share_from_another_multi_share_backup, "You have entered a share from a different backup."),
+            (Self::recovery__share_num_template, "Share {0}"),
+            (Self::recovery__title, "Recover wallet"),
+            (Self::recovery__title_cancel_dry_run, "Cancel backup check"),
+            (Self::recovery__title_cancel_recovery, "Cancel recovery"),
+            (Self::recovery__title_dry_run, "Backup check"),
+            (Self::recovery__title_recover, "Recover wallet"),
+            (Self::recovery__title_remaining_shares, "Remaining shares"),
+            (Self::recovery__type_word_x_of_y_template, "Type word {0} of {1}"),
+            (Self::recovery__wallet_recovered, "Wallet recovery completed"),
+            (Self::recovery__wanna_cancel_dry_run, "Are you sure you want to cancel the backup check?"),
+            (Self::recovery__wanna_cancel_recovery, "Are you sure you want to cancel the recovery process?"),
+            (Self::recovery__word_count_template, "({0} words)"),
+            (Self::recovery__word_x_of_y_template, "Word {0} of {1}"),
+            (Self::recovery__x_more_items_starting_template_plural, "{count} more {plural} starting"),
+            (Self::recovery__x_more_shares_needed_template_plural, "{count} more {plural} needed"),
+            (Self::recovery__x_of_y_entered_template, "{0} of {1} shares entered"),
+            (Self::recovery__you_have_entered, "You have entered"),
+            (Self::reset__advanced_group_threshold_info, "The group threshold specifies the number of groups required to recover your wallet."),
+            (Self::reset__all_x_of_y_template, "all {0} of {1} shares"),
+            (Self::reset__any_x_of_y_template, "any {0} of {1} shares"),
+            (Self::reset__button_create, "Create wallet"),
+            (Self::reset__button_recover, "Recover wallet"),
+            (Self::reset__by_continuing, "By continuing you agree to Trezor Company's terms and conditions."),
+            (Self::reset__check_backup_title, "Check backup"),
+            (Self::reset__check_group_share_title_template, "Check g{0} - share {1}"),
+            (Self::reset__check_wallet_backup_title, "Check wallet backup"),
+            (Self::reset__check_share_title_template, "Check share #{0}"),
+            (Self::reset__continue_with_next_share, "Continue with the next share."),
+            (Self::reset__continue_with_share_template, "Continue with share #{0}."),
+            (Self::reset__finished_verifying_group_template, "You have finished verifying your recovery shares for group {0}."),
+            (Self::reset__finished_verifying_wallet_backup, "You have finished verifying your wallet backup."),
+            (Self::reset__finished_verifying_shares, "You have finished verifying your recovery shares."),
+            (Self::reset__group_description, "A group is made up of recovery shares."),
+            (Self::reset__group_info, "Each group has a set number of shares and its own threshold. In the next steps you will set the numbers of shares and the thresholds."),
+            (Self::reset__group_share_checked_successfully_template, "Group {0} - Share {1} checked successfully."),
+            (Self::reset__group_share_title_template, "Group {0} - share {1}"),
+            (Self::reset__more_info_at, "More info at"),
+            (Self::reset__need_all_share_template, "For recovery you need all {0} of the shares."),
+            (Self::reset__need_any_share_template, "For recovery you need any {0} of the shares."),
+            (Self::reset__needed_to_form_a_group, "needed to form a group. "),
+            (Self::reset__needed_to_recover_your_wallet, "needed to recover your wallet. "),
+            (Self::reset__never_make_digital_copy, "Never put your backup anywhere digital."),
+            (Self::reset__num_of_share_holders_template, "{0} people or locations will each hold one share."),
+            (Self::reset__num_of_shares_advanced_info_template, "Each recovery share is a sequence of {0} words. Next you will choose the threshold number of shares needed to form Group {1}."),
+            (Self::reset__num_of_shares_basic_info_template, "Each recovery share is a sequence of {0} words. Next you will choose how many shares you need to recover your wallet."),
+            (Self::reset__num_shares_for_group_template, "The required number of shares to form Group {0}."),
+            (Self::reset__number_of_shares_info, "= total number of unique word lists used for wallet backup."),
+            (Self::reset__one_share, "1 share"),
+            (Self::reset__only_one_share_will_be_created, "Only one share will be created."),
+            (Self::reset__recovery_wallet_backup_title, "Wallet backup"),
+            (Self::reset__recovery_share_title_template, "Recovery share #{0}"),
+            (Self::reset__required_number_of_groups, "The required number of groups for recovery."),
+            (Self::reset__select_correct_word, "Select the correct word for each position."),
+            (Self::reset__select_word_template, "Select {0} word"),
+            (Self::reset__select_word_x_of_y_template, "Select word {0} of {1}:"),
+            (Self::reset__set_it_to_count_template, "Set it to {0} and you will need "),
+            (Self::reset__share_checked_successfully_template, "Share #{0} checked successfully."),
+            (Self::reset__share_words_title, "Standard backup"),
+            (Self::reset__slip39_checklist_num_groups, "Number of groups"),
+            (Self::reset__slip39_checklist_num_shares, "Number of shares"),
+            (Self::reset__slip39_checklist_set_num_groups, "Set number of groups"),
+            (Self::reset__slip39_checklist_set_num_shares, "Set number of shares"),
+            (Self::reset__slip39_checklist_set_sizes, "Set sizes and thresholds"),
+            (Self::reset__slip39_checklist_set_sizes_longer, "Set size and threshold for each group"),
+            (Self::reset__slip39_checklist_set_threshold, "Set threshold"),
+            (Self::reset__slip39_checklist_title, "Backup checklist"),
+            (Self::reset__slip39_checklist_write_down, "Write down and check all shares"),
+            (Self::reset__slip39_checklist_write_down_recovery, "Write down & check all wallet backup shares"),
+            (Self::reset__the_threshold_sets_the_number_of_shares, "The threshold sets the number of shares "),
+            (Self::reset__threshold_info, "= minimum number of unique word lists used for recovery."),
+            (Self::reset__title_backup_is_done, "Backup is done"),
+            (Self::reset__title_create_wallet, "Create wallet"),
+            (Self::reset__title_group_threshold, "Group threshold"),
+            (Self::reset__title_number_of_groups, "Number of groups"),
+            (Self::reset__title_number_of_shares, "Number of shares"),
+            (Self::reset__title_set_group_threshold, "Set group threshold"),
+            (Self::reset__title_set_number_of_groups, "Set number of groups"),
+            (Self::reset__title_set_number_of_shares, "Set number of shares"),
+            (Self::reset__title_set_threshold, "Set threshold"),
+            (Self::reset__to_form_group_template, "to form Group {0}."),
+            (Self::reset__tos_link, "trezor.io/tos"),
+            (Self::reset__total_number_of_shares_in_group_template, "Set the total number of shares in Group {0}."),
+            (Self::reset__use_your_backup, "Use your backup when you need to recover your wallet."),
+            (Self::reset__write_down_words_template, "Write the following {0} words in order on your wallet backup card."),
+            (Self::reset__wrong_word_selected, "Wrong word selected!"),
+            (Self::reset__you_need_one_share, "For recovery you need 1 share."),
+            (Self::reset__your_backup_is_done, "Your backup is done."),
+            #[cfg(feature = "universal_fw")]
+            (Self::ripple__confirm_tag, "Confirm tag"),
+            #[cfg(feature = "universal_fw")]
+            (Self::ripple__destination_tag_template, "Destination tag:\n{0}"),
+            (Self::rotation__change_template, "Change display orientation to {0}?"),
+            (Self::rotation__east, "east"),
+            (Self::rotation__north, "north"),
+            (Self::rotation__south, "south"),
+            (Self::rotation__title_change, "Display orientation"),
+            (Self::rotation__west, "west"),
+            (Self::safety_checks__approve_unsafe_always, "Trezor will allow you to approve some actions which might be unsafe."),
+            (Self::safety_checks__approve_unsafe_temporary, "Trezor will temporarily allow you to approve some actions which might be unsafe."),
+            (Self::safety_checks__enforce_strict, "Do you really want to enforce strict safety checks (recommended)?"),
+            (Self::safety_checks__title, "Safety checks"),
+            (Self::safety_checks__title_safety_override, "Safety override"),
+            (Self::sd_card__all_data_will_be_lost, "All data on the SD card will be lost."),
+            (Self::sd_card__card_required, "SD card required."),
+            (Self::sd_card__disable, "Do you really want to remove SD card protection from your device?"),
+            (Self::sd_card__disabled, "You have successfully disabled SD protection."),
+            (Self::sd_card__enable, "Do you really want to secure your device with SD card protection?"),
+            (Self::sd_card__enabled, "You have successfully enabled SD protection."),
+            (Self::sd_card__error, "SD card error"),
+            (Self::sd_card__format_card, "Format SD card"),
+            (Self::sd_card__insert_correct_card, "Please insert the correct SD card for this device."),
+            (Self::sd_card__please_insert, "Please insert your SD card."),
+            (Self::sd_card__please_unplug_and_insert, "Please unplug the device and insert your SD card."),
+            (Self::sd_card__problem_accessing, "There was a problem accessing the SD card."),
+            (Self::sd_card__refresh, "Do you really want to replace the current SD card secret with a newly generated one?"),
+            (Self::sd_card__refreshed, "You have successfully refreshed SD protection."),
+            (Self::sd_card__restart, "Do you want to restart Trezor in bootloader mode?"),
+            (Self::sd_card__title, "SD card protection"),
+            (Self::sd_card__title_problem, "SD card problem"),
+            (Self::sd_card__unknown_filesystem, "Unknown filesystem."),
+            (Self::sd_card__unplug_and_insert_correct, "Please unplug the device and insert the correct SD card."),
+            (Self::sd_card__use_different_card, "Use a different card or format the SD card to the FAT32 filesystem."),
+            (Self::sd_card__wanna_format, "Do you really want to format the SD card?"),
+            (Self::sd_card__wrong_sd_card, "Wrong SD card."),
+            (Self::send__address_path, "address path"),
+            (Self::send__confirm_sending, "Sending amount"),
+            (Self::send__from_multiple_accounts, "Sending from multiple accounts."),
+            (Self::send__including_fee, "Including fee:"),
+            (Self::send__maximum_fee, "Maximum fee"),
+            (Self::send__receiving_to_multisig, "Receiving to a multisig address."),
+            (Self::send__title_confirm_sending, "Confirm sending"),
+            (Self::send__title_joint_transaction, "Joint transaction"),
+            (Self::send__title_receiving_to, "Receiving to"),
+            (Self::send__title_sending, "Sending"),
+            (Self::send__title_sending_amount, "Sending amount"),
+            (Self::send__title_sending_to, "Sending to"),
+            (Self::send__to_the_total_amount, "To the total amount:"),
+            (Self::send__transaction_id, "Transaction ID"),
+            (Self::send__you_are_contributing, "You are contributing:"),
+            (Self::share_words__words_in_order, " words in order."),
+            (Self::share_words__wrote_down_all, "I wrote down all "),
+            (Self::sign_message__bytes_template, "{0} Bytes"),
+            (Self::sign_message__confirm_address, "Signing address"),
+            (Self::sign_message__confirm_message, "Confirm message"),
+            (Self::sign_message__message_size, "Message size"),
+            (Self::sign_message__verify_address, "Verify address"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__account_index => "Account index",
+            (Self::solana__account_index, "Account index"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__associated_token_account => "Associated token account",
+            (Self::solana__associated_token_account, "Associated token account"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__confirm_multisig => "Confirm multisig",
+            (Self::solana__confirm_multisig, "Confirm multisig"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__expected_fee => "Expected fee",
+            (Self::solana__expected_fee, "Expected fee"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__instruction_accounts_template => "Instruction contains {0} accounts and its data is {1} bytes long.",
+            (Self::solana__instruction_accounts_template, "Instruction contains {0} accounts and its data is {1} bytes long."),
             #[cfg(feature = "universal_fw")]
-            Self::solana__instruction_data => "Instruction data",
+            (Self::solana__instruction_data, "Instruction data"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__instruction_is_multisig => "The following instruction is a multisig instruction.",
+            (Self::solana__instruction_is_multisig, "The following instruction is a multisig instruction."),
             #[cfg(feature = "universal_fw")]
-            Self::solana__is_provided_via_lookup_table_template => "{0} is provided via a lookup table.",
+            (Self::solana__is_provided_via_lookup_table_template, "{0} is provided via a lookup table."),
             #[cfg(feature = "universal_fw")]
-            Self::solana__lookup_table_address => "Lookup table address",
+            (Self::solana__lookup_table_address, "Lookup table address"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__multiple_signers => "Multiple signers",
+            (Self::solana__multiple_signers, "Multiple signers"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__title_token => "Token",
+            (Self::solana__title_token, "Token"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__transaction_contains_unknown_instructions => "Transaction contains unknown instructions.",
+            (Self::solana__transaction_contains_unknown_instructions, "Transaction contains unknown instructions."),
             #[cfg(feature = "universal_fw")]
-            Self::solana__transaction_requires_x_signers_template => "Transaction requires {0} signers which increases the fee.",
+            (Self::solana__transaction_requires_x_signers_template, "Transaction requires {0} signers which increases the fee."),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__account_merge => "Account Merge",
+            (Self::stellar__account_merge, "Account Merge"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__account_thresholds => "Account Thresholds",
+            (Self::stellar__account_thresholds, "Account Thresholds"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__add_signer => "Add Signer",
+            (Self::stellar__add_signer, "Add Signer"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__add_trust => "Add trust",
+            (Self::stellar__add_trust, "Add trust"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__all_will_be_sent_to => "All XLM will be sent to",
+            (Self::stellar__all_will_be_sent_to, "All XLM will be sent to"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__allow_trust => "Allow trust",
+            (Self::stellar__allow_trust, "Allow trust"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__asset => "Asset",
+            (Self::stellar__asset, "Asset"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__balance_id => "Balance ID",
+            (Self::stellar__balance_id, "Balance ID"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__bump_sequence => "Bump Sequence",
+            (Self::stellar__bump_sequence, "Bump Sequence"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__buying => "Buying:",
+            (Self::stellar__buying, "Buying:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__claim_claimable_balance => "Claim Claimable Balance",
+            (Self::stellar__claim_claimable_balance, "Claim Claimable Balance"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__clear_data => "Clear data",
+            (Self::stellar__clear_data, "Clear data"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__clear_flags => "Clear flags",
+            (Self::stellar__clear_flags, "Clear flags"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__confirm_issuer => "Confirm Issuer",
+            (Self::stellar__confirm_issuer, "Confirm Issuer"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__confirm_memo => "Confirm memo",
+            (Self::stellar__confirm_memo, "Confirm memo"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__confirm_network => "Confirm network",
+            (Self::stellar__confirm_network, "Confirm network"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__confirm_operation => "Confirm operation",
+            (Self::stellar__confirm_operation, "Confirm operation"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__confirm_stellar => "Confirm Stellar",
+            (Self::stellar__confirm_stellar, "Confirm Stellar"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__confirm_timebounds => "Confirm timebounds",
+            (Self::stellar__confirm_timebounds, "Confirm timebounds"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__create_account => "Create Account",
+            (Self::stellar__create_account, "Create Account"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__debited_amount => "Debited amount",
+            (Self::stellar__debited_amount, "Debited amount"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__delete => "Delete",
+            (Self::stellar__delete, "Delete"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__delete_passive_offer => "Delete Passive Offer",
+            (Self::stellar__delete_passive_offer, "Delete Passive Offer"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__delete_trust => "Delete trust",
+            (Self::stellar__delete_trust, "Delete trust"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__destination => "Destination",
+            (Self::stellar__destination, "Destination"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__exchanges_require_memo => "Important: Many exchanges require a memo when depositing",
+            (Self::stellar__exchanges_require_memo, "Important: Many exchanges require a memo when depositing"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__final_confirm => "Final confirm",
+            (Self::stellar__final_confirm, "Final confirm"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__hash => "Hash",
+            (Self::stellar__hash, "Hash"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__high => "High:",
+            (Self::stellar__high, "High:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__home_domain => "Home Domain",
+            (Self::stellar__home_domain, "Home Domain"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__inflation => "Inflation",
+            (Self::stellar__inflation, "Inflation"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__initial_balance => "Initial Balance",
+            (Self::stellar__initial_balance, "Initial Balance"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__initialize_signing_with => "Initialize signing with",
+            (Self::stellar__initialize_signing_with, "Initialize signing with"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__issuer_template => "{0} issuer",
+            (Self::stellar__issuer_template, "{0} issuer"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__key => "Key:",
+            (Self::stellar__key, "Key:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__limit => "Limit",
+            (Self::stellar__limit, "Limit"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__low => "Low:",
+            (Self::stellar__low, "Low:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__master_weight => "Master Weight:",
+            (Self::stellar__master_weight, "Master Weight:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__medium => "Medium:",
+            (Self::stellar__medium, "Medium:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__new_offer => "New Offer",
+            (Self::stellar__new_offer, "New Offer"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__new_passive_offer => "New Passive Offer",
+            (Self::stellar__new_passive_offer, "New Passive Offer"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__no_memo_set => "No memo set!",
+            (Self::stellar__no_memo_set, "No memo set!"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__no_restriction => "[no restriction]",
+            (Self::stellar__no_restriction, "[no restriction]"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__on_network_template => "Transaction is on {0}",
+            (Self::stellar__on_network_template, "Transaction is on {0}"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__path_pay => "Path Pay",
+            (Self::stellar__path_pay, "Path Pay"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__path_pay_at_least => "Path Pay at least",
+            (Self::stellar__path_pay_at_least, "Path Pay at least"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__pay => "Pay",
+            (Self::stellar__pay, "Pay"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__pay_at_most => "Pay at most",
+            (Self::stellar__pay_at_most, "Pay at most"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__preauth_transaction => "Pre-auth transaction",
+            (Self::stellar__preauth_transaction, "Pre-auth transaction"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__price_per_template => "Price per {0}:",
+            (Self::stellar__price_per_template, "Price per {0}:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__private_network => "private network",
+            (Self::stellar__private_network, "private network"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__remove_signer => "Remove Signer",
+            (Self::stellar__remove_signer, "Remove Signer"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__revoke_trust => "Revoke trust",
+            (Self::stellar__revoke_trust, "Revoke trust"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__selling => "Selling:",
+            (Self::stellar__selling, "Selling:"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__set_data => "Set data",
+            (Self::stellar__set_data, "Set data"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__set_flags => "Set flags",
+            (Self::stellar__set_flags, "Set flags"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__set_sequence_to_template => "Set sequence to {0}?",
+            (Self::stellar__set_sequence_to_template, "Set sequence to {0}?"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__sign_tx_count_template => "Sign this transaction made up of {0}",
+            (Self::stellar__sign_tx_count_template, "Sign this transaction made up of {0}"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__sign_tx_fee_template => "and pay {0}\nfor fee?",
+            (Self::stellar__sign_tx_fee_template, "and pay {0}\nfor fee?"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__source_account => "Source account",
+            (Self::stellar__source_account, "Source account"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__testnet_network => "testnet network",
+            (Self::stellar__testnet_network, "testnet network"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__trusted_account => "Trusted Account",
+            (Self::stellar__trusted_account, "Trusted Account"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__update => "Update",
+            (Self::stellar__update, "Update"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__valid_from => "Valid from (UTC)",
+            (Self::stellar__valid_from, "Valid from (UTC)"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__valid_to => "Valid to (UTC)",
+            (Self::stellar__valid_to, "Valid to (UTC)"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__value_sha256 => "Value (SHA-256):",
+            (Self::stellar__value_sha256, "Value (SHA-256):"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__wanna_clean_value_key_template => "Do you want to clear value key {0}?",
+            (Self::stellar__wanna_clean_value_key_template, "Do you want to clear value key {0}?"),
             #[cfg(feature = "universal_fw")]
-            Self::stellar__your_account => " your account",
+            (Self::stellar__your_account, " your account"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__baker_address => "Baker address",
+            (Self::tezos__baker_address, "Baker address"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__balance => "Balance:",
+            (Self::tezos__balance, "Balance:"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__ballot => "Ballot:",
+            (Self::tezos__ballot, "Ballot:"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__confirm_delegation => "Confirm delegation",
+            (Self::tezos__confirm_delegation, "Confirm delegation"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__confirm_origination => "Confirm origination",
+            (Self::tezos__confirm_origination, "Confirm origination"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__delegator => "Delegator",
+            (Self::tezos__delegator, "Delegator"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__proposal => "Proposal",
+            (Self::tezos__proposal, "Proposal"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__register_delegate => "Register delegate",
+            (Self::tezos__register_delegate, "Register delegate"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__remove_delegation => "Remove delegation",
+            (Self::tezos__remove_delegation, "Remove delegation"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__submit_ballot => "Submit ballot",
+            (Self::tezos__submit_ballot, "Submit ballot"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__submit_proposal => "Submit proposal",
+            (Self::tezos__submit_proposal, "Submit proposal"),
             #[cfg(feature = "universal_fw")]
-            Self::tezos__submit_proposals => "Submit proposals",
-            Self::tutorial__middle_click => "Press both left and right at the same\ntime to confirm.",
-            Self::tutorial__press_and_hold => "Press and hold the right button to\napprove important operations.",
-            Self::tutorial__ready_to_use => "You're ready to\nuse Trezor.",
-            Self::tutorial__scroll_down => "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up.",
-            Self::tutorial__sure_you_want_skip => "Are you sure you\nwant to skip the tutorial?",
-            Self::tutorial__title_hello => "Hello",
-            Self::tutorial__title_screen_scroll => "Screen scroll",
-            Self::tutorial__title_skip => "Skip tutorial",
-            Self::tutorial__title_tutorial_complete => "Tutorial complete",
-            Self::tutorial__use_trezor => "Use Trezor by\nclicking the left and right buttons.\n\rContinue right.",
-            Self::tutorial__welcome_press_right => "Welcome to Trezor. Press right to continue.",
+            (Self::tezos__submit_proposals, "Submit proposals"),
+            (Self::tutorial__middle_click, "Press both left and right at the same\ntime to confirm."),
+            (Self::tutorial__press_and_hold, "Press and hold the right button to\napprove important operations."),
+            (Self::tutorial__ready_to_use, "You're ready to\nuse Trezor."),
+            (Self::tutorial__scroll_down, "Press right to scroll down to read all content when text doesn't fit on one screen.\n\rPress left to scroll up."),
+            (Self::tutorial__sure_you_want_skip, "Are you sure you\nwant to skip the tutorial?"),
+            (Self::tutorial__title_hello, "Hello"),
+            (Self::tutorial__title_screen_scroll, "Screen scroll"),
+            (Self::tutorial__title_skip, "Skip tutorial"),
+            (Self::tutorial__title_tutorial_complete, "Tutorial complete"),
+            (Self::tutorial__use_trezor, "Use Trezor by\nclicking the left and right buttons.\n\rContinue right."),
+            (Self::tutorial__welcome_press_right, "Welcome to Trezor. Press right to continue."),
             #[cfg(feature = "universal_fw")]
-            Self::u2f__get => "Increase and retrieve the U2F counter?",
+            (Self::u2f__get, "Increase and retrieve the U2F counter?"),
             #[cfg(feature = "universal_fw")]
-            Self::u2f__set_template => "Set the U2F counter to {0}?",
+            (Self::u2f__set_template, "Set the U2F counter to {0}?"),
             #[cfg(feature = "universal_fw")]
-            Self::u2f__title_get => "Get U2F counter",
+            (Self::u2f__title_get, "Get U2F counter"),
             #[cfg(feature = "universal_fw")]
-            Self::u2f__title_set => "Set U2F counter",
-            Self::wipe__info => "All data will be erased.",
-            Self::wipe__title => "Wipe device",
-            Self::wipe__want_to_wipe => "Do you really want to wipe the device?\n",
-            Self::wipe_code__change => "Change wipe code?",
-            Self::wipe_code__changed => "Wipe code changed.",
-            Self::wipe_code__diff_from_pin => "The wipe code must be different from your PIN.",
-            Self::wipe_code__disabled => "Wipe code disabled.",
-            Self::wipe_code__enabled => "Wipe code enabled.",
-            Self::wipe_code__enter_new => "Enter new wipe code",
-            Self::wipe_code__info => "Wipe code can be used to erase all data from this device.",
-            Self::wipe_code__invalid => "Invalid wipe code",
-            Self::wipe_code__mismatch => "The wipe codes you entered do not match.",
-            Self::wipe_code__reenter => "Re-enter wipe code",
-            Self::wipe_code__reenter_to_confirm => "Please re-enter wipe code to confirm.",
-            Self::wipe_code__title_check => "Check wipe code",
-            Self::wipe_code__title_invalid => "Invalid wipe code",
-            Self::wipe_code__title_settings => "Wipe code settings",
-            Self::wipe_code__turn_off => "Turn off wipe code protection?",
-            Self::wipe_code__turn_on => "Turn on wipe code protection?",
-            Self::wipe_code__wipe_code_mismatch => "Wipe code mismatch",
-            Self::word_count__title => "Number of words",
-            Self::words__account => "Account",
-            Self::words__account_colon => "Account:",
-            Self::words__address => "Address",
-            Self::words__amount => "Amount",
-            Self::words__are_you_sure => "Are you sure?",
-            Self::words__array_of => "Array of",
-            Self::words__blockhash => "Blockhash",
-            Self::words__buying => "Buying",
-            Self::words__confirm => "Confirm",
-            Self::words__confirm_fee => "Confirm fee",
-            Self::words__contains => "Contains",
-            Self::words__continue_anyway_question => "Continue anyway?",
-            Self::words__continue_with => "Continue with",
-            Self::words__error => "Error",
-            Self::words__fee => "Fee",
-            Self::words__from => "from",
-            Self::words__keep_it_safe => "Keep it safe!",
-            Self::words__know_what_your_doing => "Continue only if you know what you are doing!",
-            Self::words__my_trezor => "My Trezor",
-            Self::words__no => "No",
-            Self::words__outputs => "outputs",
-            Self::words__please_check_again => "Please check again",
-            Self::words__please_try_again => "Please try again",
-            Self::words__really_wanna => "Do you really want to",
-            Self::words__recipient => "Recipient",
-            Self::words__sign => "Sign",
-            Self::words__signer => "Signer",
-            Self::words__title_check => "Check",
-            Self::words__title_group => "Group",
-            Self::words__title_information => "Information",
-            Self::words__title_remember => "Remember",
-            Self::words__title_share => "Share",
-            Self::words__title_shares => "Shares",
-            Self::words__title_success => "Success",
-            Self::words__title_summary => "Summary",
-            Self::words__title_threshold => "Threshold",
-            Self::words__unknown => "Unknown",
-            Self::words__warning => "Warning",
-            Self::words__writable => "Writable",
-            Self::words__yes => "Yes",
-            Self::reboot_to_bootloader__just_a_moment => "Just a moment...",
-            Self::inputs__previous => "PREVIOUS",
+            (Self::u2f__title_set, "Set U2F counter"),
+            (Self::wipe__info, "All data will be erased."),
+            (Self::wipe__title, "Wipe device"),
+            (Self::wipe__want_to_wipe, "Do you really want to wipe the device?\n"),
+            (Self::wipe_code__change, "Change wipe code?"),
+            (Self::wipe_code__changed, "Wipe code changed."),
+            (Self::wipe_code__diff_from_pin, "The wipe code must be different from your PIN."),
+            (Self::wipe_code__disabled, "Wipe code disabled."),
+            (Self::wipe_code__enabled, "Wipe code enabled."),
+            (Self::wipe_code__enter_new, "Enter new wipe code"),
+            (Self::wipe_code__info, "Wipe code can be used to erase all data from this device."),
+            (Self::wipe_code__invalid, "Invalid wipe code"),
+            (Self::wipe_code__mismatch, "The wipe codes you entered do not match."),
+            (Self::wipe_code__reenter, "Re-enter wipe code"),
+            (Self::wipe_code__reenter_to_confirm, "Please re-enter wipe code to confirm."),
+            (Self::wipe_code__title_check, "Check wipe code"),
+            (Self::wipe_code__title_invalid, "Invalid wipe code"),
+            (Self::wipe_code__title_settings, "Wipe code settings"),
+            (Self::wipe_code__turn_off, "Turn off wipe code protection?"),
+            (Self::wipe_code__turn_on, "Turn on wipe code protection?"),
+            (Self::wipe_code__wipe_code_mismatch, "Wipe code mismatch"),
+            (Self::word_count__title, "Number of words"),
+            (Self::words__account, "Account"),
+            (Self::words__account_colon, "Account:"),
+            (Self::words__address, "Address"),
+            (Self::words__amount, "Amount"),
+            (Self::words__are_you_sure, "Are you sure?"),
+            (Self::words__array_of, "Array of"),
+            (Self::words__blockhash, "Blockhash"),
+            (Self::words__buying, "Buying"),
+            (Self::words__confirm, "Confirm"),
+            (Self::words__confirm_fee, "Confirm fee"),
+            (Self::words__contains, "Contains"),
+            (Self::words__continue_anyway_question, "Continue anyway?"),
+            (Self::words__continue_with, "Continue with"),
+            (Self::words__error, "Error"),
+            (Self::words__fee, "Fee"),
+            (Self::words__from, "from"),
+            (Self::words__keep_it_safe, "Keep it safe!"),
+            (Self::words__know_what_your_doing, "Continue only if you know what you are doing!"),
+            (Self::words__my_trezor, "My Trezor"),
+            (Self::words__no, "No"),
+            (Self::words__outputs, "outputs"),
+            (Self::words__please_check_again, "Please check again"),
+            (Self::words__please_try_again, "Please try again"),
+            (Self::words__really_wanna, "Do you really want to"),
+            (Self::words__recipient, "Recipient"),
+            (Self::words__sign, "Sign"),
+            (Self::words__signer, "Signer"),
+            (Self::words__title_check, "Check"),
+            (Self::words__title_group, "Group"),
+            (Self::words__title_information, "Information"),
+            (Self::words__title_remember, "Remember"),
+            (Self::words__title_share, "Share"),
+            (Self::words__title_shares, "Shares"),
+            (Self::words__title_success, "Success"),
+            (Self::words__title_summary, "Summary"),
+            (Self::words__title_threshold, "Threshold"),
+            (Self::words__unknown, "Unknown"),
+            (Self::words__warning, "Warning"),
+            (Self::words__writable, "Writable"),
+            (Self::words__yes, "Yes"),
+            (Self::reboot_to_bootloader__just_a_moment, "Just a moment..."),
+            (Self::inputs__previous, "PREVIOUS"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_claim => "Claim",
+            (Self::ethereum__staking_claim, "Claim"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_claim_address => "Claim address",
+            (Self::ethereum__staking_claim_address, "Claim address"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_claim_intro => "Claim ETH from Everstake?",
+            (Self::ethereum__staking_claim_intro, "Claim ETH from Everstake?"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_stake => "Stake",
+            (Self::ethereum__staking_stake, "Stake"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_stake_address => "Stake address",
+            (Self::ethereum__staking_stake_address, "Stake address"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_stake_intro => "Stake ETH on Everstake?",
+            (Self::ethereum__staking_stake_intro, "Stake ETH on Everstake?"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_unstake => "Unstake",
+            (Self::ethereum__staking_unstake, "Unstake"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__staking_unstake_intro => "Unstake ETH from Everstake?",
-            Self::storage_msg__starting => "Starting up",
-            Self::storage_msg__verifying_pin => "Verifying PIN",
-            Self::storage_msg__wrong_pin => "Wrong PIN",
-            Self::reset__create_x_of_y_multi_share_backup_template => "Do you want to create a {0} of {1} multi-share backup?",
-            Self::reset__title_shamir_backup => "Multi-share backup",
-            #[cfg(feature = "universal_fw")]
-            Self::cardano__always_abstain => "Always Abstain",
-            #[cfg(feature = "universal_fw")]
-            Self::cardano__always_no_confidence => "Always No Confidence",
-            #[cfg(feature = "universal_fw")]
-            Self::cardano__delegating_to_key_hash => "Delegating to key hash:",
-            #[cfg(feature = "universal_fw")]
-            Self::cardano__delegating_to_script => "Delegating to script:",
-            #[cfg(feature = "universal_fw")]
-            Self::cardano__deposit => "Deposit:",
-            #[cfg(feature = "universal_fw")]
-            Self::cardano__vote_delegation => "Vote delegation",
-            Self::instructions__tap_to_confirm => "Tap to confirm",
-            Self::instructions__hold_to_confirm => "Hold to confirm",
-            Self::words__important => "Important",
-            Self::reset__words_written_down_template => "I wrote down all {0} words in order.",
-            Self::backup__create_backup_to_prevent_loss => "Create a backup to avoid losing access to your funds",
-            Self::reset__check_backup_instructions => "Let's do a quick check of your backup.",
-            Self::words__instructions => "Instructions",
-            Self::words__not_recommended => "Not recommended!",
-            Self::address_details__account_info => "Account info",
-            Self::address__cancel_contact_support => "If receive address doesn't match, contact Trezor Support at trezor.io/support.",
-            Self::address__cancel_receive => "Cancel receive",
-            Self::address__qr_code => "QR code",
-            Self::address_details__derivation_path => "Derivation path",
-            Self::instructions__continue_in_app => "Continue in the app",
-            Self::words__cancel_and_exit => "Cancel and exit",
-            Self::address__confirmed => "Receive address confirmed",
-            Self::pin__cancel_description => "Continue without PIN",
-            Self::pin__cancel_info => "Without a PIN, anyone can access this device.",
-            Self::pin__cancel_setup => "Cancel PIN setup",
-            Self::send__cancel_sign => "Cancel sign",
-            Self::send__send_from => "Send from",
-            Self::instructions__hold_to_sign => "Hold to sign",
-            Self::confirm_total__fee_rate => "Fee rate",
-            Self::send__incl_transaction_fee => "incl. Transaction fee",
-            Self::send__total_amount => "Total amount",
-            Self::auto_lock__turned_on => "Auto-lock turned on",
-            Self::backup__info_multi_share_backup => "Your wallet backup contains multiple lists of words in a specific order (shares).",
-            Self::backup__info_single_share_backup => "Your wallet backup contains {0} words in a specific order.",
-            Self::backup__title_backup_completed => "Wallet backup completed",
-            Self::backup__title_create_wallet_backup => "Create wallet backup",
-            Self::haptic_feedback__disable => "Disable haptic feedback?",
-            Self::haptic_feedback__enable => "Enable haptic feedback?",
-            Self::haptic_feedback__subtitle => "Setting",
-            Self::haptic_feedback__title => "Haptic feedback",
-            Self::instructions__continue_holding => "Continue\nholding",
-            Self::instructions__enter_next_share => "Enter next share",
-            Self::instructions__hold_to_continue => "Hold to continue",
-            Self::instructions__hold_to_exit_tutorial => "Hold to exit tutorial",
-            Self::instructions__learn_more => "Learn more",
-            Self::instructions__shares_continue_with_x_template => "Continue with Share #{0}",
-            Self::instructions__shares_start_with_1 => "Start with share #1",
-            Self::instructions__tap_to_start => "Tap to start",
-            Self::passphrase__title_passphrase => "Passphrase",
-            Self::recovery__dry_run_backup_not_on_this_device => "Wallet backup not on this device",
-            Self::recovery__dry_run_invalid_backup_entered => "Invalid wallet backup entered",
-            Self::recovery__dry_run_slip39_valid_all_shares => "All shares are valid and belong to the backup in this device",
-            Self::recovery__dry_run_slip39_valid_share => "Entered share is valid and belongs to the backup in the device",
-            Self::recovery__dry_run_verify_remaining_shares => "Verify remaining recovery shares?",
-            Self::recovery__enter_each_word => "Enter each word of your wallet backup in order.",
-            Self::recovery__info_about_disconnect => "It's safe to disconnect your Trezor while recovering your wallet and continue later.",
-            Self::recovery__share_does_not_match => "Share doesn't match",
-            Self::reset__cancel_create_wallet => "Cancel create wallet",
-            Self::reset__incorrect_word_selected => "Incorrect word selected",
-            Self::reset__more_at => "More at",
-            Self::reset__num_of_shares_how_many => "How many wallet backup shares do you want to create?",
-            Self::reset__num_of_shares_long_info_template => "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet.",
-            Self::reset__select_threshold => "Select the minimum shares required to recover your wallet.",
-            Self::reset__share_completed_template => "Share #{0} completed",
-            Self::reset__slip39_checklist_num_shares_x_template => "Number of shares: {0}",
-            Self::reset__slip39_checklist_threshold_x_template => "Recovery threshold: {0}",
-            Self::send__transaction_signed => "Transaction signed",
-            Self::tutorial__continue => "Continue tutorial",
-            Self::tutorial__exit => "Exit tutorial",
-            Self::tutorial__menu => "Find context-specific actions and options in the menu.",
-            Self::tutorial__ready_to_use_safe5 => "You're all set to start using your device!",
-            Self::tutorial__swipe_up_and_down => "Tap the lower half of the screen to continue, or swipe down to go back.",
-            Self::tutorial__title_easy_navigation => "Easy navigation",
-            Self::tutorial__welcome_safe5 => "Welcome to\nTrezor Safe 5",
-            Self::words__good_to_know => "Good to know",
-            Self::words__operation_cancelled => "Operation cancelled",
-            Self::words__settings => "Settings",
-            Self::words__try_again => "Try again.",
-            Self::reset__slip39_checklist_num_groups_x_template => "Number of groups: {0}",
-            Self::brightness__title => "Display brightness",
-            Self::recovery__title_unlock_repeated_backup => "Multi-share backup",
-            Self::recovery__unlock_repeated_backup => "Create additional backup?",
-            Self::recovery__unlock_repeated_backup_verb => "Create backup",
-            Self::homescreen__set_default => "Change wallpaper to default image?",
-            Self::reset__words_may_repeat => "Words may repeat.",
-            Self::reset__repeat_for_all_shares => "Repeat for all shares.",
-            Self::homescreen__settings_subtitle => "Settings",
-            Self::homescreen__settings_title => "Homescreen",
-            Self::reset__the_word_is_repeated => "The word is repeated",
-            Self::tutorial__title_lets_begin => "Let's begin",
-            Self::tutorial__did_you_know => "Did you know?",
-            Self::tutorial__first_wallet => "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet.",
-            Self::tutorial__restart_tutorial => "Restart tutorial",
-            Self::tutorial__title_handy_menu => "Handy menu",
-            Self::tutorial__title_hold => "Hold to confirm important actions",
-            Self::tutorial__title_well_done => "Well done!",
-            Self::tutorial__lets_begin => "Learn how to use and navigate this device with ease.",
-            Self::tutorial__get_started => "Get started!",
-            Self::instructions__swipe_horizontally => "Swipe horizontally",
-            Self::setting__adjust => "Adjust",
-            Self::setting__apply => "Apply",
-            Self::brightness__changed_title => "Display brightness changed",
-            Self::brightness__change_title => "Change display brightness",
-            Self::words__title_done => "Done",
-            Self::reset__slip39_checklist_more_info_threshold => "The threshold sets the minumum number of shares needed to recover your wallet.",
-            Self::reset__slip39_checklist_more_info_threshold_example_template => "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet.",
-            Self::passphrase__continue_with_empty_passphrase => "Continue with empty passphrase?",
+            (Self::ethereum__staking_unstake_intro, "Unstake ETH from Everstake?"),
+            (Self::storage_msg__starting, "Starting up"),
+            (Self::storage_msg__verifying_pin, "Verifying PIN"),
+            (Self::storage_msg__wrong_pin, "Wrong PIN"),
+            (Self::reset__create_x_of_y_multi_share_backup_template, "Do you want to create a {0} of {1} multi-share backup?"),
+            (Self::reset__title_shamir_backup, "Multi-share backup"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__always_abstain, "Always Abstain"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__always_no_confidence, "Always No Confidence"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__delegating_to_key_hash, "Delegating to key hash:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__delegating_to_script, "Delegating to script:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__deposit, "Deposit:"),
+            #[cfg(feature = "universal_fw")]
+            (Self::cardano__vote_delegation, "Vote delegation"),
+            (Self::instructions__tap_to_confirm, "Tap to confirm"),
+            (Self::instructions__hold_to_confirm, "Hold to confirm"),
+            (Self::words__important, "Important"),
+            (Self::reset__words_written_down_template, "I wrote down all {0} words in order."),
+            (Self::backup__create_backup_to_prevent_loss, "Create a backup to avoid losing access to your funds"),
+            (Self::reset__check_backup_instructions, "Let's do a quick check of your backup."),
+            (Self::words__instructions, "Instructions"),
+            (Self::words__not_recommended, "Not recommended!"),
+            (Self::address_details__account_info, "Account info"),
+            (Self::address__cancel_contact_support, "If receive address doesn't match, contact Trezor Support at trezor.io/support."),
+            (Self::address__cancel_receive, "Cancel receive"),
+            (Self::address__qr_code, "QR code"),
+            (Self::address_details__derivation_path, "Derivation path"),
+            (Self::instructions__continue_in_app, "Continue in the app"),
+            (Self::words__cancel_and_exit, "Cancel and exit"),
+            (Self::address__confirmed, "Receive address confirmed"),
+            (Self::pin__cancel_description, "Continue without PIN"),
+            (Self::pin__cancel_info, "Without a PIN, anyone can access this device."),
+            (Self::pin__cancel_setup, "Cancel PIN setup"),
+            (Self::send__cancel_sign, "Cancel sign"),
+            (Self::send__send_from, "Send from"),
+            (Self::instructions__hold_to_sign, "Hold to sign"),
+            (Self::confirm_total__fee_rate, "Fee rate"),
+            (Self::send__incl_transaction_fee, "incl. Transaction fee"),
+            (Self::send__total_amount, "Total amount"),
+            (Self::auto_lock__turned_on, "Auto-lock turned on"),
+            (Self::backup__info_multi_share_backup, "Your wallet backup contains multiple lists of words in a specific order (shares)."),
+            (Self::backup__info_single_share_backup, "Your wallet backup contains {0} words in a specific order."),
+            (Self::backup__title_backup_completed, "Wallet backup completed"),
+            (Self::backup__title_create_wallet_backup, "Create wallet backup"),
+            (Self::haptic_feedback__disable, "Disable haptic feedback?"),
+            (Self::haptic_feedback__enable, "Enable haptic feedback?"),
+            (Self::haptic_feedback__subtitle, "Setting"),
+            (Self::haptic_feedback__title, "Haptic feedback"),
+            (Self::instructions__continue_holding, "Continue\nholding"),
+            (Self::instructions__enter_next_share, "Enter next share"),
+            (Self::instructions__hold_to_continue, "Hold to continue"),
+            (Self::instructions__hold_to_exit_tutorial, "Hold to exit tutorial"),
+            (Self::instructions__learn_more, "Learn more"),
+            (Self::instructions__shares_continue_with_x_template, "Continue with Share #{0}"),
+            (Self::instructions__shares_start_with_1, "Start with share #1"),
+            (Self::instructions__tap_to_start, "Tap to start"),
+            (Self::passphrase__title_passphrase, "Passphrase"),
+            (Self::recovery__dry_run_backup_not_on_this_device, "Wallet backup not on this device"),
+            (Self::recovery__dry_run_invalid_backup_entered, "Invalid wallet backup entered"),
+            (Self::recovery__dry_run_slip39_valid_all_shares, "All shares are valid and belong to the backup in this device"),
+            (Self::recovery__dry_run_slip39_valid_share, "Entered share is valid and belongs to the backup in the device"),
+            (Self::recovery__dry_run_verify_remaining_shares, "Verify remaining recovery shares?"),
+            (Self::recovery__enter_each_word, "Enter each word of your wallet backup in order."),
+            (Self::recovery__info_about_disconnect, "It's safe to disconnect your Trezor while recovering your wallet and continue later."),
+            (Self::recovery__share_does_not_match, "Share doesn't match"),
+            (Self::reset__cancel_create_wallet, "Cancel create wallet"),
+            (Self::reset__incorrect_word_selected, "Incorrect word selected"),
+            (Self::reset__more_at, "More at"),
+            (Self::reset__num_of_shares_how_many, "How many wallet backup shares do you want to create?"),
+            (Self::reset__num_of_shares_long_info_template, "Each backup share is a sequence of {0} words. Store each wordlist in a separate, safe location or share with trusted individuals. Collect as needed to recover your wallet."),
+            (Self::reset__select_threshold, "Select the minimum shares required to recover your wallet."),
+            (Self::reset__share_completed_template, "Share #{0} completed"),
+            (Self::reset__slip39_checklist_num_shares_x_template, "Number of shares: {0}"),
+            (Self::reset__slip39_checklist_threshold_x_template, "Recovery threshold: {0}"),
+            (Self::send__transaction_signed, "Transaction signed"),
+            (Self::tutorial__continue, "Continue tutorial"),
+            (Self::tutorial__exit, "Exit tutorial"),
+            (Self::tutorial__menu, "Find context-specific actions and options in the menu."),
+            (Self::tutorial__ready_to_use_safe5, "You're all set to start using your device!"),
+            (Self::tutorial__swipe_up_and_down, "Tap the lower half of the screen to continue, or swipe down to go back."),
+            (Self::tutorial__title_easy_navigation, "Easy navigation"),
+            (Self::tutorial__welcome_safe5, "Welcome to\nTrezor Safe 5"),
+            (Self::words__good_to_know, "Good to know"),
+            (Self::words__operation_cancelled, "Operation cancelled"),
+            (Self::words__settings, "Settings"),
+            (Self::words__try_again, "Try again."),
+            (Self::reset__slip39_checklist_num_groups_x_template, "Number of groups: {0}"),
+            (Self::brightness__title, "Display brightness"),
+            (Self::recovery__title_unlock_repeated_backup, "Multi-share backup"),
+            (Self::recovery__unlock_repeated_backup, "Create additional backup?"),
+            (Self::recovery__unlock_repeated_backup_verb, "Create backup"),
+            (Self::homescreen__set_default, "Change wallpaper to default image?"),
+            (Self::reset__words_may_repeat, "Words may repeat."),
+            (Self::reset__repeat_for_all_shares, "Repeat for all shares."),
+            (Self::homescreen__settings_subtitle, "Settings"),
+            (Self::homescreen__settings_title, "Homescreen"),
+            (Self::reset__the_word_is_repeated, "The word is repeated"),
+            (Self::tutorial__title_lets_begin, "Let's begin"),
+            (Self::tutorial__did_you_know, "Did you know?"),
+            (Self::tutorial__first_wallet, "The Trezor Model One, created in 2013,\nwas the world's first hardware wallet."),
+            (Self::tutorial__restart_tutorial, "Restart tutorial"),
+            (Self::tutorial__title_handy_menu, "Handy menu"),
+            (Self::tutorial__title_hold, "Hold to confirm important actions"),
+            (Self::tutorial__title_well_done, "Well done!"),
+            (Self::tutorial__lets_begin, "Learn how to use and navigate this device with ease."),
+            (Self::tutorial__get_started, "Get started!"),
+            (Self::instructions__swipe_horizontally, "Swipe horizontally"),
+            (Self::setting__adjust, "Adjust"),
+            (Self::setting__apply, "Apply"),
+            (Self::brightness__changed_title, "Display brightness changed"),
+            (Self::brightness__change_title, "Change display brightness"),
+            (Self::words__title_done, "Done"),
+            (Self::reset__slip39_checklist_more_info_threshold, "The threshold sets the minumum number of shares needed to recover your wallet."),
+            (Self::reset__slip39_checklist_more_info_threshold_example_template, "If you set {0} out of {1} shares, you'll need {2} backup shares to recover your wallet."),
+            (Self::passphrase__continue_with_empty_passphrase, "Continue with empty passphrase?"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__more_credentials => "More credentials",
+            (Self::fido__more_credentials, "More credentials"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__select_intro => "Select the credential that you would like to use for authentication.",
+            (Self::fido__select_intro, "Select the credential that you would like to use for authentication."),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_for_authentication => "for authentication",
+            (Self::fido__title_for_authentication, "for authentication"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_select_credential => "Select credential",
-            Self::instructions__swipe_down => "Swipe down",
+            (Self::fido__title_select_credential, "Select credential"),
+            (Self::instructions__swipe_down, "Swipe down"),
             #[cfg(feature = "universal_fw")]
-            Self::fido__title_credential_details => "Credential details",
-            Self::address__public_key_confirmed => "Public key confirmed",
-            Self::words__continue_anyway => "Continue anyway",
+            (Self::fido__title_credential_details, "Credential details"),
+            (Self::address__public_key_confirmed, "Public key confirmed"),
+            (Self::words__continue_anyway, "Continue anyway"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__unknown_contract_address => "Unknown contract address. Continue only if you know what you are doing.",
+            (Self::ethereum__unknown_contract_address, "Unknown contract address. Continue only if you know what you are doing."),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__token_contract => "Token contract",
-            Self::buttons__view_all_data => "View all data",
-            Self::instructions__view_all_data => "View all data in the menu.",
+            (Self::ethereum__token_contract, "Token contract"),
+            (Self::buttons__view_all_data, "View all data"),
+            (Self::instructions__view_all_data, "View all data in the menu."),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__interaction_contract => "Interaction contract",
-            Self::misc__enable_labeling => "Enable labeling?",
+            (Self::ethereum__interaction_contract, "Interaction contract"),
+            (Self::misc__enable_labeling, "Enable labeling?"),
             #[cfg(feature = "universal_fw")]
-            Self::ethereum__unknown_contract_address_short => "Unknown contract address.",
+            (Self::ethereum__unknown_contract_address_short, "Unknown contract address."),
             #[cfg(feature = "universal_fw")]
-            Self::solana__base_fee => "Base fee",
+            (Self::solana__base_fee, "Base fee"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__claim => "Claim",
+            (Self::solana__claim, "Claim"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__claim_question => "Claim SOL from stake account?",
+            (Self::solana__claim_question, "Claim SOL from stake account?"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__claim_recipient_warning => "Claiming SOL to address outside your current wallet.",
+            (Self::solana__claim_recipient_warning, "Claiming SOL to address outside your current wallet."),
             #[cfg(feature = "universal_fw")]
-            Self::solana__priority_fee => "Priority fee",
+            (Self::solana__priority_fee, "Priority fee"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__stake => "Stake",
+            (Self::solana__stake, "Stake"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__stake_account => "Stake account",
+            (Self::solana__stake_account, "Stake account"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__stake_provider => "Provider",
+            (Self::solana__stake_provider, "Provider"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__stake_question => "Stake SOL?",
+            (Self::solana__stake_question, "Stake SOL?"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__stake_withdrawal_warning => "The current wallet isn't the SOL staking withdraw authority.",
+            (Self::solana__stake_withdrawal_warning, "The current wallet isn't the SOL staking withdraw authority."),
             #[cfg(feature = "universal_fw")]
-            Self::solana__stake_withdrawal_warning_title => "Withdraw authority address",
+            (Self::solana__stake_withdrawal_warning_title, "Withdraw authority address"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__unstake => "Unstake",
+            (Self::solana__unstake, "Unstake"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__unstake_question => "Unstake SOL from stake account?",
+            (Self::solana__unstake_question, "Unstake SOL from stake account?"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__vote_account => "Vote account",
+            (Self::solana__vote_account, "Vote account"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__stake_on_question => "Stake SOL on {0}?",
-            Self::sign_message__confirm_without_review => "Confirm without review",
-            Self::instructions__tap_to_continue => "Tap to continue",
+            (Self::solana__stake_on_question, "Stake SOL on {0}?"),
+            (Self::sign_message__confirm_without_review, "Confirm without review"),
+            (Self::instructions__tap_to_continue, "Tap to continue"),
             #[cfg(feature = "universal_fw")]
-            Self::nostr__event_kind_template => "Event kind: {0}",
-            Self::ble__unpair_all => "Unpair all bluetooth devices",
-            Self::ble__unpair_current => "Unpair connected device",
-            Self::ble__unpair_title => "Unpair",
-            Self::words__unlocked => "Unlocked",
+            (Self::nostr__event_kind_template, "Event kind: {0}"),
+            (Self::ble__unpair_all, "Unpair all bluetooth devices"),
+            (Self::ble__unpair_current, "Unpair connected device"),
+            (Self::ble__unpair_title, "Unpair"),
+            (Self::words__unlocked, "Unlocked"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__max_fees_rent => "Max fees and rent",
+            (Self::solana__max_fees_rent, "Max fees and rent"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__max_rent_fee => "Max rent fee",
+            (Self::solana__max_rent_fee, "Max rent fee"),
             #[cfg(feature = "universal_fw")]
-            Self::solana__transaction_fee => "Transaction fee",
-        }
-    }
+            (Self::solana__transaction_fee, "Transaction fee"),
+    ];
 
     #[cfg(feature = "micropython")]
-    pub fn from_qstr(qstr: Qstr) -> Option<Self> {
-        match qstr {
-            Qstr::MP_QSTR_addr_mismatch__contact_support_at => Some(Self::addr_mismatch__contact_support_at),
-            Qstr::MP_QSTR_addr_mismatch__key_mismatch => Some(Self::addr_mismatch__key_mismatch),
-            Qstr::MP_QSTR_addr_mismatch__mismatch => Some(Self::addr_mismatch__mismatch),
-            Qstr::MP_QSTR_addr_mismatch__support_url => Some(Self::addr_mismatch__support_url),
-            Qstr::MP_QSTR_addr_mismatch__wrong_derivation_path => Some(Self::addr_mismatch__wrong_derivation_path),
-            Qstr::MP_QSTR_addr_mismatch__xpub_mismatch => Some(Self::addr_mismatch__xpub_mismatch),
-            Qstr::MP_QSTR_address__public_key => Some(Self::address__public_key),
-            Qstr::MP_QSTR_address__title_cosigner => Some(Self::address__title_cosigner),
-            Qstr::MP_QSTR_address__title_receive_address => Some(Self::address__title_receive_address),
-            Qstr::MP_QSTR_address__title_yours => Some(Self::address__title_yours),
-            Qstr::MP_QSTR_address_details__derivation_path_colon => Some(Self::address_details__derivation_path_colon),
-            Qstr::MP_QSTR_address_details__title_receive_address => Some(Self::address_details__title_receive_address),
-            Qstr::MP_QSTR_address_details__title_receiving_to => Some(Self::address_details__title_receiving_to),
-            Qstr::MP_QSTR_authenticate__confirm_template => Some(Self::authenticate__confirm_template),
-            Qstr::MP_QSTR_authenticate__header => Some(Self::authenticate__header),
-            Qstr::MP_QSTR_auto_lock__change_template => Some(Self::auto_lock__change_template),
-            Qstr::MP_QSTR_auto_lock__title => Some(Self::auto_lock__title),
-            Qstr::MP_QSTR_backup__can_back_up_anytime => Some(Self::backup__can_back_up_anytime),
-            Qstr::MP_QSTR_backup__it_should_be_backed_up => Some(Self::backup__it_should_be_backed_up),
-            Qstr::MP_QSTR_backup__it_should_be_backed_up_now => Some(Self::backup__it_should_be_backed_up_now),
-            Qstr::MP_QSTR_backup__new_wallet_created => Some(Self::backup__new_wallet_created),
-            Qstr::MP_QSTR_backup__new_wallet_successfully_created => Some(Self::backup__new_wallet_successfully_created),
-            Qstr::MP_QSTR_backup__recover_anytime => Some(Self::backup__recover_anytime),
-            Qstr::MP_QSTR_backup__title_backup_wallet => Some(Self::backup__title_backup_wallet),
-            Qstr::MP_QSTR_backup__title_skip => Some(Self::backup__title_skip),
-            Qstr::MP_QSTR_backup__want_to_skip => Some(Self::backup__want_to_skip),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__buy => Some(Self::binance__buy),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__confirm_cancel => Some(Self::binance__confirm_cancel),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__confirm_input => Some(Self::binance__confirm_input),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__confirm_order => Some(Self::binance__confirm_order),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__confirm_output => Some(Self::binance__confirm_output),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__order_id => Some(Self::binance__order_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__pair => Some(Self::binance__pair),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__price => Some(Self::binance__price),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__quantity => Some(Self::binance__quantity),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__sell => Some(Self::binance__sell),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__sender_address => Some(Self::binance__sender_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_binance__side => Some(Self::binance__side),
-            Qstr::MP_QSTR_bitcoin__commitment_data => Some(Self::bitcoin__commitment_data),
-            Qstr::MP_QSTR_bitcoin__confirm_locktime => Some(Self::bitcoin__confirm_locktime),
-            Qstr::MP_QSTR_bitcoin__create_proof_of_ownership => Some(Self::bitcoin__create_proof_of_ownership),
-            Qstr::MP_QSTR_bitcoin__high_mining_fee_template => Some(Self::bitcoin__high_mining_fee_template),
-            Qstr::MP_QSTR_bitcoin__locktime_no_effect => Some(Self::bitcoin__locktime_no_effect),
-            Qstr::MP_QSTR_bitcoin__locktime_set_to => Some(Self::bitcoin__locktime_set_to),
-            Qstr::MP_QSTR_bitcoin__locktime_set_to_blockheight => Some(Self::bitcoin__locktime_set_to_blockheight),
-            Qstr::MP_QSTR_bitcoin__lot_of_change_outputs => Some(Self::bitcoin__lot_of_change_outputs),
-            Qstr::MP_QSTR_bitcoin__multiple_accounts => Some(Self::bitcoin__multiple_accounts),
-            Qstr::MP_QSTR_bitcoin__new_fee_rate => Some(Self::bitcoin__new_fee_rate),
-            Qstr::MP_QSTR_bitcoin__simple_send_of => Some(Self::bitcoin__simple_send_of),
-            Qstr::MP_QSTR_bitcoin__ticket_amount => Some(Self::bitcoin__ticket_amount),
-            Qstr::MP_QSTR_bitcoin__title_confirm_details => Some(Self::bitcoin__title_confirm_details),
-            Qstr::MP_QSTR_bitcoin__title_finalize_transaction => Some(Self::bitcoin__title_finalize_transaction),
-            Qstr::MP_QSTR_bitcoin__title_high_mining_fee => Some(Self::bitcoin__title_high_mining_fee),
-            Qstr::MP_QSTR_bitcoin__title_meld_transaction => Some(Self::bitcoin__title_meld_transaction),
-            Qstr::MP_QSTR_bitcoin__title_modify_amount => Some(Self::bitcoin__title_modify_amount),
-            Qstr::MP_QSTR_bitcoin__title_payjoin => Some(Self::bitcoin__title_payjoin),
-            Qstr::MP_QSTR_bitcoin__title_proof_of_ownership => Some(Self::bitcoin__title_proof_of_ownership),
-            Qstr::MP_QSTR_bitcoin__title_purchase_ticket => Some(Self::bitcoin__title_purchase_ticket),
-            Qstr::MP_QSTR_bitcoin__title_update_transaction => Some(Self::bitcoin__title_update_transaction),
-            Qstr::MP_QSTR_bitcoin__unknown_path => Some(Self::bitcoin__unknown_path),
-            Qstr::MP_QSTR_bitcoin__unknown_transaction => Some(Self::bitcoin__unknown_transaction),
-            Qstr::MP_QSTR_bitcoin__unusually_high_fee => Some(Self::bitcoin__unusually_high_fee),
-            Qstr::MP_QSTR_bitcoin__unverified_external_inputs => Some(Self::bitcoin__unverified_external_inputs),
-            Qstr::MP_QSTR_bitcoin__valid_signature => Some(Self::bitcoin__valid_signature),
-            Qstr::MP_QSTR_bitcoin__voting_rights => Some(Self::bitcoin__voting_rights),
-            Qstr::MP_QSTR_buttons__abort => Some(Self::buttons__abort),
-            Qstr::MP_QSTR_buttons__access => Some(Self::buttons__access),
-            Qstr::MP_QSTR_buttons__again => Some(Self::buttons__again),
-            Qstr::MP_QSTR_buttons__allow => Some(Self::buttons__allow),
-            Qstr::MP_QSTR_buttons__back => Some(Self::buttons__back),
-            Qstr::MP_QSTR_buttons__back_up => Some(Self::buttons__back_up),
-            Qstr::MP_QSTR_buttons__cancel => Some(Self::buttons__cancel),
-            Qstr::MP_QSTR_buttons__change => Some(Self::buttons__change),
-            Qstr::MP_QSTR_buttons__check => Some(Self::buttons__check),
-            Qstr::MP_QSTR_buttons__check_again => Some(Self::buttons__check_again),
-            Qstr::MP_QSTR_buttons__close => Some(Self::buttons__close),
-            Qstr::MP_QSTR_buttons__confirm => Some(Self::buttons__confirm),
-            Qstr::MP_QSTR_buttons__continue => Some(Self::buttons__continue),
-            Qstr::MP_QSTR_buttons__details => Some(Self::buttons__details),
-            Qstr::MP_QSTR_buttons__enable => Some(Self::buttons__enable),
-            Qstr::MP_QSTR_buttons__enter => Some(Self::buttons__enter),
-            Qstr::MP_QSTR_buttons__enter_share => Some(Self::buttons__enter_share),
-            Qstr::MP_QSTR_buttons__export => Some(Self::buttons__export),
-            Qstr::MP_QSTR_buttons__format => Some(Self::buttons__format),
-            Qstr::MP_QSTR_buttons__go_back => Some(Self::buttons__go_back),
-            Qstr::MP_QSTR_buttons__hold_to_confirm => Some(Self::buttons__hold_to_confirm),
-            Qstr::MP_QSTR_buttons__info => Some(Self::buttons__info),
-            Qstr::MP_QSTR_buttons__install => Some(Self::buttons__install),
-            Qstr::MP_QSTR_buttons__more_info => Some(Self::buttons__more_info),
-            Qstr::MP_QSTR_buttons__ok_i_understand => Some(Self::buttons__ok_i_understand),
-            Qstr::MP_QSTR_buttons__purchase => Some(Self::buttons__purchase),
-            Qstr::MP_QSTR_buttons__quit => Some(Self::buttons__quit),
-            Qstr::MP_QSTR_buttons__restart => Some(Self::buttons__restart),
-            Qstr::MP_QSTR_buttons__retry => Some(Self::buttons__retry),
-            Qstr::MP_QSTR_buttons__select => Some(Self::buttons__select),
-            Qstr::MP_QSTR_buttons__set => Some(Self::buttons__set),
-            Qstr::MP_QSTR_buttons__show_all => Some(Self::buttons__show_all),
-            Qstr::MP_QSTR_buttons__show_details => Some(Self::buttons__show_details),
-            Qstr::MP_QSTR_buttons__show_words => Some(Self::buttons__show_words),
-            Qstr::MP_QSTR_buttons__skip => Some(Self::buttons__skip),
-            Qstr::MP_QSTR_buttons__try_again => Some(Self::buttons__try_again),
-            Qstr::MP_QSTR_buttons__turn_off => Some(Self::buttons__turn_off),
-            Qstr::MP_QSTR_buttons__turn_on => Some(Self::buttons__turn_on),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__addr_base => Some(Self::cardano__addr_base),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__addr_enterprise => Some(Self::cardano__addr_enterprise),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__addr_legacy => Some(Self::cardano__addr_legacy),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__addr_pointer => Some(Self::cardano__addr_pointer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__addr_reward => Some(Self::cardano__addr_reward),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__address_no_staking => Some(Self::cardano__address_no_staking),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__amount_burned_decimals_unknown => Some(Self::cardano__amount_burned_decimals_unknown),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__amount_minted_decimals_unknown => Some(Self::cardano__amount_minted_decimals_unknown),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__amount_sent_decimals_unknown => Some(Self::cardano__amount_sent_decimals_unknown),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__anonymous_pool => Some(Self::cardano__anonymous_pool),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__asset_fingerprint => Some(Self::cardano__asset_fingerprint),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__auxiliary_data_hash => Some(Self::cardano__auxiliary_data_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__block => Some(Self::cardano__block),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__catalyst => Some(Self::cardano__catalyst),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__certificate => Some(Self::cardano__certificate),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__change_output => Some(Self::cardano__change_output),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__check_all_items => Some(Self::cardano__check_all_items),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__choose_level_of_details => Some(Self::cardano__choose_level_of_details),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__collateral_input_id => Some(Self::cardano__collateral_input_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__collateral_input_index => Some(Self::cardano__collateral_input_index),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__collateral_output_contains_tokens => Some(Self::cardano__collateral_output_contains_tokens),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__collateral_return => Some(Self::cardano__collateral_return),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__confirm_signing_stake_pool => Some(Self::cardano__confirm_signing_stake_pool),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__confirm_transaction => Some(Self::cardano__confirm_transaction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__confirming_a_multisig_transaction => Some(Self::cardano__confirming_a_multisig_transaction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__confirming_a_plutus_transaction => Some(Self::cardano__confirming_a_plutus_transaction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__confirming_pool_registration => Some(Self::cardano__confirming_pool_registration),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__confirming_transction => Some(Self::cardano__confirming_transction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__cost => Some(Self::cardano__cost),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__credential_mismatch => Some(Self::cardano__credential_mismatch),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__datum_hash => Some(Self::cardano__datum_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__delegating_to => Some(Self::cardano__delegating_to),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__for_account_and_index_template => Some(Self::cardano__for_account_and_index_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__for_account_template => Some(Self::cardano__for_account_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__for_key_hash => Some(Self::cardano__for_key_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__for_script => Some(Self::cardano__for_script),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__inline_datum => Some(Self::cardano__inline_datum),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__input_id => Some(Self::cardano__input_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__input_index => Some(Self::cardano__input_index),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__intro_text_change => Some(Self::cardano__intro_text_change),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__intro_text_owned_by_device => Some(Self::cardano__intro_text_owned_by_device),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__intro_text_registration_payment => Some(Self::cardano__intro_text_registration_payment),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__key_hash => Some(Self::cardano__key_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__margin => Some(Self::cardano__margin),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__multisig_path => Some(Self::cardano__multisig_path),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__nested_scripts_template => Some(Self::cardano__nested_scripts_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__network => Some(Self::cardano__network),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__no_output_tx => Some(Self::cardano__no_output_tx),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__nonce => Some(Self::cardano__nonce),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__other => Some(Self::cardano__other),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__path => Some(Self::cardano__path),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__pledge => Some(Self::cardano__pledge),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__pointer => Some(Self::cardano__pointer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__policy_id => Some(Self::cardano__policy_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__pool_metadata_hash => Some(Self::cardano__pool_metadata_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__pool_metadata_url => Some(Self::cardano__pool_metadata_url),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__pool_owner => Some(Self::cardano__pool_owner),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__pool_reward_account => Some(Self::cardano__pool_reward_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__reference_input_id => Some(Self::cardano__reference_input_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__reference_input_index => Some(Self::cardano__reference_input_index),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__reference_script => Some(Self::cardano__reference_script),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__required_signer => Some(Self::cardano__required_signer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__reward => Some(Self::cardano__reward),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__reward_address => Some(Self::cardano__reward_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__reward_eligibility_warning => Some(Self::cardano__reward_eligibility_warning),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__rewards_go_to => Some(Self::cardano__rewards_go_to),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script => Some(Self::cardano__script),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_all => Some(Self::cardano__script_all),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_any => Some(Self::cardano__script_any),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_data_hash => Some(Self::cardano__script_data_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_hash => Some(Self::cardano__script_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_invalid_before => Some(Self::cardano__script_invalid_before),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_invalid_hereafter => Some(Self::cardano__script_invalid_hereafter),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_key => Some(Self::cardano__script_key),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_n_of_k => Some(Self::cardano__script_n_of_k),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__script_reward => Some(Self::cardano__script_reward),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__sending => Some(Self::cardano__sending),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__show_simple => Some(Self::cardano__show_simple),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__sign_tx_path_template => Some(Self::cardano__sign_tx_path_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__stake_delegation => Some(Self::cardano__stake_delegation),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__stake_deregistration => Some(Self::cardano__stake_deregistration),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__stake_pool_registration => Some(Self::cardano__stake_pool_registration),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__stake_pool_registration_pool_id => Some(Self::cardano__stake_pool_registration_pool_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__stake_registration => Some(Self::cardano__stake_registration),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__staking_key_for_account => Some(Self::cardano__staking_key_for_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__to_pool => Some(Self::cardano__to_pool),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__token_minting_path => Some(Self::cardano__token_minting_path),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__total_collateral => Some(Self::cardano__total_collateral),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction => Some(Self::cardano__transaction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction_contains_minting_or_burning => Some(Self::cardano__transaction_contains_minting_or_burning),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction_contains_script_address_no_datum => Some(Self::cardano__transaction_contains_script_address_no_datum),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction_fee => Some(Self::cardano__transaction_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction_id => Some(Self::cardano__transaction_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction_no_collateral_input => Some(Self::cardano__transaction_no_collateral_input),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction_no_script_data_hash => Some(Self::cardano__transaction_no_script_data_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__transaction_output_contains_tokens => Some(Self::cardano__transaction_output_contains_tokens),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__ttl => Some(Self::cardano__ttl),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__unknown_collateral_amount => Some(Self::cardano__unknown_collateral_amount),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__unusual_path => Some(Self::cardano__unusual_path),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__valid_since => Some(Self::cardano__valid_since),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__verify_script => Some(Self::cardano__verify_script),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__vote_key_registration => Some(Self::cardano__vote_key_registration),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__vote_public_key => Some(Self::cardano__vote_public_key),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__voting_purpose => Some(Self::cardano__voting_purpose),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__warning => Some(Self::cardano__warning),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__weight => Some(Self::cardano__weight),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__withdrawal_for_address_template => Some(Self::cardano__withdrawal_for_address_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__x_of_y_signatures_template => Some(Self::cardano__x_of_y_signatures_template),
-            Qstr::MP_QSTR_coinjoin__access_account => Some(Self::coinjoin__access_account),
-            Qstr::MP_QSTR_coinjoin__do_not_disconnect => Some(Self::coinjoin__do_not_disconnect),
-            Qstr::MP_QSTR_coinjoin__max_mining_fee => Some(Self::coinjoin__max_mining_fee),
-            Qstr::MP_QSTR_coinjoin__max_rounds => Some(Self::coinjoin__max_rounds),
-            Qstr::MP_QSTR_coinjoin__title => Some(Self::coinjoin__title),
-            Qstr::MP_QSTR_coinjoin__title_do_not_disconnect => Some(Self::coinjoin__title_do_not_disconnect),
-            Qstr::MP_QSTR_coinjoin__title_progress => Some(Self::coinjoin__title_progress),
-            Qstr::MP_QSTR_coinjoin__waiting_for_others => Some(Self::coinjoin__waiting_for_others),
-            Qstr::MP_QSTR_confirm_total__fee_rate_colon => Some(Self::confirm_total__fee_rate_colon),
-            Qstr::MP_QSTR_confirm_total__sending_from_account => Some(Self::confirm_total__sending_from_account),
-            Qstr::MP_QSTR_confirm_total__title_fee => Some(Self::confirm_total__title_fee),
-            Qstr::MP_QSTR_confirm_total__title_sending_from => Some(Self::confirm_total__title_sending_from),
-            #[cfg(feature = "debug")]
-            Qstr::MP_QSTR_debug__loading_seed => Some(Self::debug__loading_seed),
-            #[cfg(feature = "debug")]
-            Qstr::MP_QSTR_debug__loading_seed_not_recommended => Some(Self::debug__loading_seed_not_recommended),
-            Qstr::MP_QSTR_device_name__change_template => Some(Self::device_name__change_template),
-            Qstr::MP_QSTR_device_name__title => Some(Self::device_name__title),
-            Qstr::MP_QSTR_entropy__send => Some(Self::entropy__send),
-            Qstr::MP_QSTR_entropy__title_confirm => Some(Self::entropy__title_confirm),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__about_to_sign_template => Some(Self::eos__about_to_sign_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__action_name => Some(Self::eos__action_name),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__arbitrary_data => Some(Self::eos__arbitrary_data),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__buy_ram => Some(Self::eos__buy_ram),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__bytes => Some(Self::eos__bytes),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__cancel_vote => Some(Self::eos__cancel_vote),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__checksum => Some(Self::eos__checksum),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__code => Some(Self::eos__code),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__contract => Some(Self::eos__contract),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__cpu => Some(Self::eos__cpu),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__creator => Some(Self::eos__creator),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__delegate => Some(Self::eos__delegate),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__delete_auth => Some(Self::eos__delete_auth),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__from => Some(Self::eos__from),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__link_auth => Some(Self::eos__link_auth),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__memo => Some(Self::eos__memo),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__name => Some(Self::eos__name),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__net => Some(Self::eos__net),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__new_account => Some(Self::eos__new_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__owner => Some(Self::eos__owner),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__parent => Some(Self::eos__parent),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__payer => Some(Self::eos__payer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__permission => Some(Self::eos__permission),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__proxy => Some(Self::eos__proxy),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__receiver => Some(Self::eos__receiver),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__refund => Some(Self::eos__refund),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__requirement => Some(Self::eos__requirement),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__sell_ram => Some(Self::eos__sell_ram),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__sender => Some(Self::eos__sender),
-            Qstr::MP_QSTR_send__sign_transaction => Some(Self::send__sign_transaction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__threshold => Some(Self::eos__threshold),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__to => Some(Self::eos__to),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__transfer => Some(Self::eos__transfer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__type => Some(Self::eos__type),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__undelegate => Some(Self::eos__undelegate),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__unlink_auth => Some(Self::eos__unlink_auth),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__update_auth => Some(Self::eos__update_auth),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__vote_for_producers => Some(Self::eos__vote_for_producers),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__vote_for_proxy => Some(Self::eos__vote_for_proxy),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_eos__voter => Some(Self::eos__voter),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__amount_sent => Some(Self::ethereum__amount_sent),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__contract => Some(Self::ethereum__contract),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__data_size_template => Some(Self::ethereum__data_size_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__gas_limit => Some(Self::ethereum__gas_limit),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__gas_price => Some(Self::ethereum__gas_price),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__max_gas_price => Some(Self::ethereum__max_gas_price),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__name_and_version => Some(Self::ethereum__name_and_version),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__new_contract => Some(Self::ethereum__new_contract),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__no_message_field => Some(Self::ethereum__no_message_field),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__priority_fee => Some(Self::ethereum__priority_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__show_full_array => Some(Self::ethereum__show_full_array),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__show_full_domain => Some(Self::ethereum__show_full_domain),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__show_full_message => Some(Self::ethereum__show_full_message),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__show_full_struct => Some(Self::ethereum__show_full_struct),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__sign_eip712 => Some(Self::ethereum__sign_eip712),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__title_input_data => Some(Self::ethereum__title_input_data),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__title_confirm_domain => Some(Self::ethereum__title_confirm_domain),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__title_confirm_message => Some(Self::ethereum__title_confirm_message),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__title_confirm_struct => Some(Self::ethereum__title_confirm_struct),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__title_confirm_typed_data => Some(Self::ethereum__title_confirm_typed_data),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__title_signing_address => Some(Self::ethereum__title_signing_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__units_template => Some(Self::ethereum__units_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__unknown_token => Some(Self::ethereum__unknown_token),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__valid_signature => Some(Self::ethereum__valid_signature),
-            Qstr::MP_QSTR_experimental_mode__enable => Some(Self::experimental_mode__enable),
-            Qstr::MP_QSTR_experimental_mode__only_for_dev => Some(Self::experimental_mode__only_for_dev),
-            Qstr::MP_QSTR_experimental_mode__title => Some(Self::experimental_mode__title),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__already_registered => Some(Self::fido__already_registered),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__device_already_registered => Some(Self::fido__device_already_registered),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__device_already_registered_with_template => Some(Self::fido__device_already_registered_with_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__device_not_registered => Some(Self::fido__device_not_registered),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__does_not_belong => Some(Self::fido__does_not_belong),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__erase_credentials => Some(Self::fido__erase_credentials),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__export_credentials => Some(Self::fido__export_credentials),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__not_registered => Some(Self::fido__not_registered),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__not_registered_with_template => Some(Self::fido__not_registered_with_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__please_enable_pin_protection => Some(Self::fido__please_enable_pin_protection),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_authenticate => Some(Self::fido__title_authenticate),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_import_credential => Some(Self::fido__title_import_credential),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_list_credentials => Some(Self::fido__title_list_credentials),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_register => Some(Self::fido__title_register),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_remove_credential => Some(Self::fido__title_remove_credential),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_reset => Some(Self::fido__title_reset),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_u2f_auth => Some(Self::fido__title_u2f_auth),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_u2f_register => Some(Self::fido__title_u2f_register),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_verify_user => Some(Self::fido__title_verify_user),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__unable_to_verify_user => Some(Self::fido__unable_to_verify_user),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__wanna_erase_credentials => Some(Self::fido__wanna_erase_credentials),
-            Qstr::MP_QSTR_firmware_update__title => Some(Self::firmware_update__title),
-            Qstr::MP_QSTR_firmware_update__title_fingerprint => Some(Self::firmware_update__title_fingerprint),
-            Qstr::MP_QSTR_homescreen__click_to_connect => Some(Self::homescreen__click_to_connect),
-            Qstr::MP_QSTR_homescreen__click_to_unlock => Some(Self::homescreen__click_to_unlock),
-            Qstr::MP_QSTR_homescreen__title_backup_failed => Some(Self::homescreen__title_backup_failed),
-            Qstr::MP_QSTR_homescreen__title_backup_needed => Some(Self::homescreen__title_backup_needed),
-            Qstr::MP_QSTR_homescreen__title_coinjoin_authorized => Some(Self::homescreen__title_coinjoin_authorized),
-            Qstr::MP_QSTR_homescreen__title_experimental_mode => Some(Self::homescreen__title_experimental_mode),
-            Qstr::MP_QSTR_homescreen__title_no_usb_connection => Some(Self::homescreen__title_no_usb_connection),
-            Qstr::MP_QSTR_homescreen__title_pin_not_set => Some(Self::homescreen__title_pin_not_set),
-            Qstr::MP_QSTR_homescreen__title_seedless => Some(Self::homescreen__title_seedless),
-            Qstr::MP_QSTR_homescreen__title_set => Some(Self::homescreen__title_set),
-            Qstr::MP_QSTR_inputs__back => Some(Self::inputs__back),
-            Qstr::MP_QSTR_inputs__cancel => Some(Self::inputs__cancel),
-            Qstr::MP_QSTR_inputs__delete => Some(Self::inputs__delete),
-            Qstr::MP_QSTR_inputs__enter => Some(Self::inputs__enter),
-            Qstr::MP_QSTR_inputs__return => Some(Self::inputs__return),
-            Qstr::MP_QSTR_inputs__show => Some(Self::inputs__show),
-            Qstr::MP_QSTR_inputs__space => Some(Self::inputs__space),
-            Qstr::MP_QSTR_joint__title => Some(Self::joint__title),
-            Qstr::MP_QSTR_joint__to_the_total_amount => Some(Self::joint__to_the_total_amount),
-            Qstr::MP_QSTR_joint__you_are_contributing => Some(Self::joint__you_are_contributing),
-            Qstr::MP_QSTR_language__change_to_template => Some(Self::language__change_to_template),
-            Qstr::MP_QSTR_language__changed => Some(Self::language__changed),
-            Qstr::MP_QSTR_language__progress => Some(Self::language__progress),
-            Qstr::MP_QSTR_language__title => Some(Self::language__title),
-            Qstr::MP_QSTR_lockscreen__tap_to_connect => Some(Self::lockscreen__tap_to_connect),
-            Qstr::MP_QSTR_lockscreen__tap_to_unlock => Some(Self::lockscreen__tap_to_unlock),
-            Qstr::MP_QSTR_lockscreen__title_locked => Some(Self::lockscreen__title_locked),
-            Qstr::MP_QSTR_lockscreen__title_not_connected => Some(Self::lockscreen__title_not_connected),
-            Qstr::MP_QSTR_misc__decrypt_value => Some(Self::misc__decrypt_value),
-            Qstr::MP_QSTR_misc__encrypt_value => Some(Self::misc__encrypt_value),
-            Qstr::MP_QSTR_misc__title_suite_labeling => Some(Self::misc__title_suite_labeling),
-            Qstr::MP_QSTR_modify_amount__decrease_amount => Some(Self::modify_amount__decrease_amount),
-            Qstr::MP_QSTR_modify_amount__increase_amount => Some(Self::modify_amount__increase_amount),
-            Qstr::MP_QSTR_modify_amount__new_amount => Some(Self::modify_amount__new_amount),
-            Qstr::MP_QSTR_modify_amount__title => Some(Self::modify_amount__title),
-            Qstr::MP_QSTR_modify_fee__decrease_fee => Some(Self::modify_fee__decrease_fee),
-            Qstr::MP_QSTR_modify_fee__fee_rate => Some(Self::modify_fee__fee_rate),
-            Qstr::MP_QSTR_modify_fee__increase_fee => Some(Self::modify_fee__increase_fee),
-            Qstr::MP_QSTR_modify_fee__new_transaction_fee => Some(Self::modify_fee__new_transaction_fee),
-            Qstr::MP_QSTR_modify_fee__no_change => Some(Self::modify_fee__no_change),
-            Qstr::MP_QSTR_modify_fee__title => Some(Self::modify_fee__title),
-            Qstr::MP_QSTR_modify_fee__transaction_fee => Some(Self::modify_fee__transaction_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__confirm_export => Some(Self::monero__confirm_export),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__confirm_ki_sync => Some(Self::monero__confirm_ki_sync),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__confirm_refresh => Some(Self::monero__confirm_refresh),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__confirm_unlock_time => Some(Self::monero__confirm_unlock_time),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__hashing_inputs => Some(Self::monero__hashing_inputs),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__payment_id => Some(Self::monero__payment_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__postprocessing => Some(Self::monero__postprocessing),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__processing => Some(Self::monero__processing),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__processing_inputs => Some(Self::monero__processing_inputs),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__processing_outputs => Some(Self::monero__processing_outputs),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__signing => Some(Self::monero__signing),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__signing_inputs => Some(Self::monero__signing_inputs),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__unlock_time_set_template => Some(Self::monero__unlock_time_set_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__wanna_export_tx_der => Some(Self::monero__wanna_export_tx_der),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__wanna_export_tx_key => Some(Self::monero__wanna_export_tx_key),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__wanna_export_watchkey => Some(Self::monero__wanna_export_watchkey),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__wanna_start_refresh => Some(Self::monero__wanna_start_refresh),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_monero__wanna_sync_key_images => Some(Self::monero__wanna_sync_key_images),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__absolute => Some(Self::nem__absolute),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__activate => Some(Self::nem__activate),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__add => Some(Self::nem__add),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_action => Some(Self::nem__confirm_action),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_address => Some(Self::nem__confirm_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_creation_fee => Some(Self::nem__confirm_creation_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_mosaic => Some(Self::nem__confirm_mosaic),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_multisig_fee => Some(Self::nem__confirm_multisig_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_namespace => Some(Self::nem__confirm_namespace),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_payload => Some(Self::nem__confirm_payload),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_properties => Some(Self::nem__confirm_properties),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_rental_fee => Some(Self::nem__confirm_rental_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__confirm_transfer_of => Some(Self::nem__confirm_transfer_of),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__convert_account_to_multisig => Some(Self::nem__convert_account_to_multisig),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__cosign_transaction_for => Some(Self::nem__cosign_transaction_for),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__cosignatory => Some(Self::nem__cosignatory),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__create_mosaic => Some(Self::nem__create_mosaic),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__create_namespace => Some(Self::nem__create_namespace),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__deactivate => Some(Self::nem__deactivate),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__decrease => Some(Self::nem__decrease),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__description => Some(Self::nem__description),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__divisibility_and_levy_cannot_be_shown => Some(Self::nem__divisibility_and_levy_cannot_be_shown),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__encrypted => Some(Self::nem__encrypted),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__final_confirm => Some(Self::nem__final_confirm),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__immutable => Some(Self::nem__immutable),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__increase => Some(Self::nem__increase),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__initial_supply => Some(Self::nem__initial_supply),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__initiate_transaction_for => Some(Self::nem__initiate_transaction_for),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__levy_divisibility => Some(Self::nem__levy_divisibility),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__levy_fee => Some(Self::nem__levy_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__levy_fee_of => Some(Self::nem__levy_fee_of),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__levy_mosaic => Some(Self::nem__levy_mosaic),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__levy_namespace => Some(Self::nem__levy_namespace),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__levy_recipient => Some(Self::nem__levy_recipient),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__levy_type => Some(Self::nem__levy_type),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__modify_supply_for => Some(Self::nem__modify_supply_for),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__modify_the_number_of_cosignatories_by => Some(Self::nem__modify_the_number_of_cosignatories_by),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__mutable => Some(Self::nem__mutable),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__of => Some(Self::nem__of),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__percentile => Some(Self::nem__percentile),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__raw_units_template => Some(Self::nem__raw_units_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__remote_harvesting => Some(Self::nem__remote_harvesting),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__remove => Some(Self::nem__remove),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__set_minimum_cosignatories_to => Some(Self::nem__set_minimum_cosignatories_to),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__sign_tx_fee_template => Some(Self::nem__sign_tx_fee_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__supply_change => Some(Self::nem__supply_change),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__supply_units_template => Some(Self::nem__supply_units_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__transferable => Some(Self::nem__transferable),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__under_namespace => Some(Self::nem__under_namespace),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__unencrypted => Some(Self::nem__unencrypted),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nem__unknown_mosaic => Some(Self::nem__unknown_mosaic),
-            Qstr::MP_QSTR_passphrase__access_wallet => Some(Self::passphrase__access_wallet),
-            Qstr::MP_QSTR_passphrase__always_on_device => Some(Self::passphrase__always_on_device),
-            Qstr::MP_QSTR_passphrase__from_host_not_shown => Some(Self::passphrase__from_host_not_shown),
-            Qstr::MP_QSTR_passphrase__wallet => Some(Self::passphrase__wallet),
-            Qstr::MP_QSTR_passphrase__hide => Some(Self::passphrase__hide),
-            Qstr::MP_QSTR_passphrase__next_screen_will_show_passphrase => Some(Self::passphrase__next_screen_will_show_passphrase),
-            Qstr::MP_QSTR_passphrase__please_enter => Some(Self::passphrase__please_enter),
-            Qstr::MP_QSTR_passphrase__revoke_on_device => Some(Self::passphrase__revoke_on_device),
-            Qstr::MP_QSTR_passphrase__title_confirm => Some(Self::passphrase__title_confirm),
-            Qstr::MP_QSTR_passphrase__title_enter => Some(Self::passphrase__title_enter),
-            Qstr::MP_QSTR_passphrase__title_hide => Some(Self::passphrase__title_hide),
-            Qstr::MP_QSTR_passphrase__title_settings => Some(Self::passphrase__title_settings),
-            Qstr::MP_QSTR_passphrase__title_source => Some(Self::passphrase__title_source),
-            Qstr::MP_QSTR_passphrase__turn_off => Some(Self::passphrase__turn_off),
-            Qstr::MP_QSTR_passphrase__turn_on => Some(Self::passphrase__turn_on),
-            Qstr::MP_QSTR_pin__change => Some(Self::pin__change),
-            Qstr::MP_QSTR_pin__changed => Some(Self::pin__changed),
-            Qstr::MP_QSTR_pin__cursor_will_change => Some(Self::pin__cursor_will_change),
-            Qstr::MP_QSTR_pin__diff_from_wipe_code => Some(Self::pin__diff_from_wipe_code),
-            Qstr::MP_QSTR_pin__disabled => Some(Self::pin__disabled),
-            Qstr::MP_QSTR_pin__enabled => Some(Self::pin__enabled),
-            Qstr::MP_QSTR_pin__enter => Some(Self::pin__enter),
-            Qstr::MP_QSTR_pin__enter_new => Some(Self::pin__enter_new),
-            Qstr::MP_QSTR_pin__entered_not_valid => Some(Self::pin__entered_not_valid),
-            Qstr::MP_QSTR_pin__info => Some(Self::pin__info),
-            Qstr::MP_QSTR_pin__invalid_pin => Some(Self::pin__invalid_pin),
-            Qstr::MP_QSTR_pin__last_attempt => Some(Self::pin__last_attempt),
-            Qstr::MP_QSTR_pin__mismatch => Some(Self::pin__mismatch),
-            Qstr::MP_QSTR_pin__pin_mismatch => Some(Self::pin__pin_mismatch),
-            Qstr::MP_QSTR_pin__please_check_again => Some(Self::pin__please_check_again),
-            Qstr::MP_QSTR_pin__reenter_new => Some(Self::pin__reenter_new),
-            Qstr::MP_QSTR_pin__reenter_to_confirm => Some(Self::pin__reenter_to_confirm),
-            Qstr::MP_QSTR_pin__should_be_long => Some(Self::pin__should_be_long),
-            Qstr::MP_QSTR_pin__title_check_pin => Some(Self::pin__title_check_pin),
-            Qstr::MP_QSTR_pin__title_settings => Some(Self::pin__title_settings),
-            Qstr::MP_QSTR_pin__title_wrong_pin => Some(Self::pin__title_wrong_pin),
-            Qstr::MP_QSTR_pin__tries_left => Some(Self::pin__tries_left),
-            Qstr::MP_QSTR_pin__turn_off => Some(Self::pin__turn_off),
-            Qstr::MP_QSTR_pin__turn_on => Some(Self::pin__turn_on),
-            Qstr::MP_QSTR_pin__wrong_pin => Some(Self::pin__wrong_pin),
-            Qstr::MP_QSTR_plurals__contains_x_keys => Some(Self::plurals__contains_x_keys),
-            Qstr::MP_QSTR_plurals__lock_after_x_hours => Some(Self::plurals__lock_after_x_hours),
-            Qstr::MP_QSTR_plurals__lock_after_x_milliseconds => Some(Self::plurals__lock_after_x_milliseconds),
-            Qstr::MP_QSTR_plurals__lock_after_x_minutes => Some(Self::plurals__lock_after_x_minutes),
-            Qstr::MP_QSTR_plurals__lock_after_x_seconds => Some(Self::plurals__lock_after_x_seconds),
-            Qstr::MP_QSTR_plurals__sign_x_actions => Some(Self::plurals__sign_x_actions),
-            Qstr::MP_QSTR_plurals__transaction_of_x_operations => Some(Self::plurals__transaction_of_x_operations),
-            Qstr::MP_QSTR_plurals__x_groups_needed => Some(Self::plurals__x_groups_needed),
-            Qstr::MP_QSTR_plurals__x_shares_needed => Some(Self::plurals__x_shares_needed),
-            Qstr::MP_QSTR_progress__authenticity_check => Some(Self::progress__authenticity_check),
-            Qstr::MP_QSTR_progress__done => Some(Self::progress__done),
-            Qstr::MP_QSTR_progress__loading_transaction => Some(Self::progress__loading_transaction),
-            Qstr::MP_QSTR_progress__locking_device => Some(Self::progress__locking_device),
-            Qstr::MP_QSTR_progress__one_second_left => Some(Self::progress__one_second_left),
-            Qstr::MP_QSTR_progress__please_wait => Some(Self::progress__please_wait),
-            Qstr::MP_QSTR_storage_msg__processing => Some(Self::storage_msg__processing),
-            Qstr::MP_QSTR_progress__refreshing => Some(Self::progress__refreshing),
-            Qstr::MP_QSTR_progress__signing_transaction => Some(Self::progress__signing_transaction),
-            Qstr::MP_QSTR_progress__syncing => Some(Self::progress__syncing),
-            Qstr::MP_QSTR_progress__x_seconds_left_template => Some(Self::progress__x_seconds_left_template),
-            Qstr::MP_QSTR_reboot_to_bootloader__restart => Some(Self::reboot_to_bootloader__restart),
-            Qstr::MP_QSTR_reboot_to_bootloader__title => Some(Self::reboot_to_bootloader__title),
-            Qstr::MP_QSTR_reboot_to_bootloader__version_by_template => Some(Self::reboot_to_bootloader__version_by_template),
-            Qstr::MP_QSTR_recovery__cancel_dry_run => Some(Self::recovery__cancel_dry_run),
-            Qstr::MP_QSTR_recovery__check_dry_run => Some(Self::recovery__check_dry_run),
-            Qstr::MP_QSTR_recovery__cursor_will_change => Some(Self::recovery__cursor_will_change),
-            Qstr::MP_QSTR_recovery__dry_run_bip39_valid_match => Some(Self::recovery__dry_run_bip39_valid_match),
-            Qstr::MP_QSTR_recovery__dry_run_bip39_valid_mismatch => Some(Self::recovery__dry_run_bip39_valid_mismatch),
-            Qstr::MP_QSTR_recovery__dry_run_slip39_valid_match => Some(Self::recovery__dry_run_slip39_valid_match),
-            Qstr::MP_QSTR_recovery__dry_run_slip39_valid_mismatch => Some(Self::recovery__dry_run_slip39_valid_mismatch),
-            Qstr::MP_QSTR_recovery__enter_any_share => Some(Self::recovery__enter_any_share),
-            Qstr::MP_QSTR_recovery__enter_backup => Some(Self::recovery__enter_backup),
-            Qstr::MP_QSTR_recovery__enter_different_share => Some(Self::recovery__enter_different_share),
-            Qstr::MP_QSTR_recovery__enter_share_from_diff_group => Some(Self::recovery__enter_share_from_diff_group),
-            Qstr::MP_QSTR_recovery__group_num_template => Some(Self::recovery__group_num_template),
-            Qstr::MP_QSTR_recovery__group_threshold_reached => Some(Self::recovery__group_threshold_reached),
-            Qstr::MP_QSTR_recovery__invalid_wallet_backup_entered => Some(Self::recovery__invalid_wallet_backup_entered),
-            Qstr::MP_QSTR_recovery__invalid_share_entered => Some(Self::recovery__invalid_share_entered),
-            Qstr::MP_QSTR_recovery__more_shares_needed => Some(Self::recovery__more_shares_needed),
-            Qstr::MP_QSTR_recovery__num_of_words => Some(Self::recovery__num_of_words),
-            Qstr::MP_QSTR_recovery__only_first_n_letters => Some(Self::recovery__only_first_n_letters),
-            Qstr::MP_QSTR_recovery__progress_will_be_lost => Some(Self::recovery__progress_will_be_lost),
-            Qstr::MP_QSTR_recovery__share_already_entered => Some(Self::recovery__share_already_entered),
-            Qstr::MP_QSTR_recovery__share_from_another_multi_share_backup => Some(Self::recovery__share_from_another_multi_share_backup),
-            Qstr::MP_QSTR_recovery__share_num_template => Some(Self::recovery__share_num_template),
-            Qstr::MP_QSTR_recovery__title => Some(Self::recovery__title),
-            Qstr::MP_QSTR_recovery__title_cancel_dry_run => Some(Self::recovery__title_cancel_dry_run),
-            Qstr::MP_QSTR_recovery__title_cancel_recovery => Some(Self::recovery__title_cancel_recovery),
-            Qstr::MP_QSTR_recovery__title_dry_run => Some(Self::recovery__title_dry_run),
-            Qstr::MP_QSTR_recovery__title_recover => Some(Self::recovery__title_recover),
-            Qstr::MP_QSTR_recovery__title_remaining_shares => Some(Self::recovery__title_remaining_shares),
-            Qstr::MP_QSTR_recovery__type_word_x_of_y_template => Some(Self::recovery__type_word_x_of_y_template),
-            Qstr::MP_QSTR_recovery__wallet_recovered => Some(Self::recovery__wallet_recovered),
-            Qstr::MP_QSTR_recovery__wanna_cancel_dry_run => Some(Self::recovery__wanna_cancel_dry_run),
-            Qstr::MP_QSTR_recovery__wanna_cancel_recovery => Some(Self::recovery__wanna_cancel_recovery),
-            Qstr::MP_QSTR_recovery__word_count_template => Some(Self::recovery__word_count_template),
-            Qstr::MP_QSTR_recovery__word_x_of_y_template => Some(Self::recovery__word_x_of_y_template),
-            Qstr::MP_QSTR_recovery__x_more_items_starting_template_plural => Some(Self::recovery__x_more_items_starting_template_plural),
-            Qstr::MP_QSTR_recovery__x_more_shares_needed_template_plural => Some(Self::recovery__x_more_shares_needed_template_plural),
-            Qstr::MP_QSTR_recovery__x_of_y_entered_template => Some(Self::recovery__x_of_y_entered_template),
-            Qstr::MP_QSTR_recovery__you_have_entered => Some(Self::recovery__you_have_entered),
-            Qstr::MP_QSTR_reset__advanced_group_threshold_info => Some(Self::reset__advanced_group_threshold_info),
-            Qstr::MP_QSTR_reset__all_x_of_y_template => Some(Self::reset__all_x_of_y_template),
-            Qstr::MP_QSTR_reset__any_x_of_y_template => Some(Self::reset__any_x_of_y_template),
-            Qstr::MP_QSTR_reset__button_create => Some(Self::reset__button_create),
-            Qstr::MP_QSTR_reset__button_recover => Some(Self::reset__button_recover),
-            Qstr::MP_QSTR_reset__by_continuing => Some(Self::reset__by_continuing),
-            Qstr::MP_QSTR_reset__check_backup_title => Some(Self::reset__check_backup_title),
-            Qstr::MP_QSTR_reset__check_group_share_title_template => Some(Self::reset__check_group_share_title_template),
-            Qstr::MP_QSTR_reset__check_wallet_backup_title => Some(Self::reset__check_wallet_backup_title),
-            Qstr::MP_QSTR_reset__check_share_title_template => Some(Self::reset__check_share_title_template),
-            Qstr::MP_QSTR_reset__continue_with_next_share => Some(Self::reset__continue_with_next_share),
-            Qstr::MP_QSTR_reset__continue_with_share_template => Some(Self::reset__continue_with_share_template),
-            Qstr::MP_QSTR_reset__finished_verifying_group_template => Some(Self::reset__finished_verifying_group_template),
-            Qstr::MP_QSTR_reset__finished_verifying_wallet_backup => Some(Self::reset__finished_verifying_wallet_backup),
-            Qstr::MP_QSTR_reset__finished_verifying_shares => Some(Self::reset__finished_verifying_shares),
-            Qstr::MP_QSTR_reset__group_description => Some(Self::reset__group_description),
-            Qstr::MP_QSTR_reset__group_info => Some(Self::reset__group_info),
-            Qstr::MP_QSTR_reset__group_share_checked_successfully_template => Some(Self::reset__group_share_checked_successfully_template),
-            Qstr::MP_QSTR_reset__group_share_title_template => Some(Self::reset__group_share_title_template),
-            Qstr::MP_QSTR_reset__more_info_at => Some(Self::reset__more_info_at),
-            Qstr::MP_QSTR_reset__need_all_share_template => Some(Self::reset__need_all_share_template),
-            Qstr::MP_QSTR_reset__need_any_share_template => Some(Self::reset__need_any_share_template),
-            Qstr::MP_QSTR_reset__needed_to_form_a_group => Some(Self::reset__needed_to_form_a_group),
-            Qstr::MP_QSTR_reset__needed_to_recover_your_wallet => Some(Self::reset__needed_to_recover_your_wallet),
-            Qstr::MP_QSTR_reset__never_make_digital_copy => Some(Self::reset__never_make_digital_copy),
-            Qstr::MP_QSTR_reset__num_of_share_holders_template => Some(Self::reset__num_of_share_holders_template),
-            Qstr::MP_QSTR_reset__num_of_shares_advanced_info_template => Some(Self::reset__num_of_shares_advanced_info_template),
-            Qstr::MP_QSTR_reset__num_of_shares_basic_info_template => Some(Self::reset__num_of_shares_basic_info_template),
-            Qstr::MP_QSTR_reset__num_shares_for_group_template => Some(Self::reset__num_shares_for_group_template),
-            Qstr::MP_QSTR_reset__number_of_shares_info => Some(Self::reset__number_of_shares_info),
-            Qstr::MP_QSTR_reset__one_share => Some(Self::reset__one_share),
-            Qstr::MP_QSTR_reset__only_one_share_will_be_created => Some(Self::reset__only_one_share_will_be_created),
-            Qstr::MP_QSTR_reset__recovery_wallet_backup_title => Some(Self::reset__recovery_wallet_backup_title),
-            Qstr::MP_QSTR_reset__recovery_share_title_template => Some(Self::reset__recovery_share_title_template),
-            Qstr::MP_QSTR_reset__required_number_of_groups => Some(Self::reset__required_number_of_groups),
-            Qstr::MP_QSTR_reset__select_correct_word => Some(Self::reset__select_correct_word),
-            Qstr::MP_QSTR_reset__select_word_template => Some(Self::reset__select_word_template),
-            Qstr::MP_QSTR_reset__select_word_x_of_y_template => Some(Self::reset__select_word_x_of_y_template),
-            Qstr::MP_QSTR_reset__set_it_to_count_template => Some(Self::reset__set_it_to_count_template),
-            Qstr::MP_QSTR_reset__share_checked_successfully_template => Some(Self::reset__share_checked_successfully_template),
-            Qstr::MP_QSTR_reset__share_words_title => Some(Self::reset__share_words_title),
-            Qstr::MP_QSTR_reset__slip39_checklist_num_groups => Some(Self::reset__slip39_checklist_num_groups),
-            Qstr::MP_QSTR_reset__slip39_checklist_num_shares => Some(Self::reset__slip39_checklist_num_shares),
-            Qstr::MP_QSTR_reset__slip39_checklist_set_num_groups => Some(Self::reset__slip39_checklist_set_num_groups),
-            Qstr::MP_QSTR_reset__slip39_checklist_set_num_shares => Some(Self::reset__slip39_checklist_set_num_shares),
-            Qstr::MP_QSTR_reset__slip39_checklist_set_sizes => Some(Self::reset__slip39_checklist_set_sizes),
-            Qstr::MP_QSTR_reset__slip39_checklist_set_sizes_longer => Some(Self::reset__slip39_checklist_set_sizes_longer),
-            Qstr::MP_QSTR_reset__slip39_checklist_set_threshold => Some(Self::reset__slip39_checklist_set_threshold),
-            Qstr::MP_QSTR_reset__slip39_checklist_title => Some(Self::reset__slip39_checklist_title),
-            Qstr::MP_QSTR_reset__slip39_checklist_write_down => Some(Self::reset__slip39_checklist_write_down),
-            Qstr::MP_QSTR_reset__slip39_checklist_write_down_recovery => Some(Self::reset__slip39_checklist_write_down_recovery),
-            Qstr::MP_QSTR_reset__the_threshold_sets_the_number_of_shares => Some(Self::reset__the_threshold_sets_the_number_of_shares),
-            Qstr::MP_QSTR_reset__threshold_info => Some(Self::reset__threshold_info),
-            Qstr::MP_QSTR_reset__title_backup_is_done => Some(Self::reset__title_backup_is_done),
-            Qstr::MP_QSTR_reset__title_create_wallet => Some(Self::reset__title_create_wallet),
-            Qstr::MP_QSTR_reset__title_group_threshold => Some(Self::reset__title_group_threshold),
-            Qstr::MP_QSTR_reset__title_number_of_groups => Some(Self::reset__title_number_of_groups),
-            Qstr::MP_QSTR_reset__title_number_of_shares => Some(Self::reset__title_number_of_shares),
-            Qstr::MP_QSTR_reset__title_set_group_threshold => Some(Self::reset__title_set_group_threshold),
-            Qstr::MP_QSTR_reset__title_set_number_of_groups => Some(Self::reset__title_set_number_of_groups),
-            Qstr::MP_QSTR_reset__title_set_number_of_shares => Some(Self::reset__title_set_number_of_shares),
-            Qstr::MP_QSTR_reset__title_set_threshold => Some(Self::reset__title_set_threshold),
-            Qstr::MP_QSTR_reset__to_form_group_template => Some(Self::reset__to_form_group_template),
-            Qstr::MP_QSTR_reset__tos_link => Some(Self::reset__tos_link),
-            Qstr::MP_QSTR_reset__total_number_of_shares_in_group_template => Some(Self::reset__total_number_of_shares_in_group_template),
-            Qstr::MP_QSTR_reset__use_your_backup => Some(Self::reset__use_your_backup),
-            Qstr::MP_QSTR_reset__write_down_words_template => Some(Self::reset__write_down_words_template),
-            Qstr::MP_QSTR_reset__wrong_word_selected => Some(Self::reset__wrong_word_selected),
-            Qstr::MP_QSTR_reset__you_need_one_share => Some(Self::reset__you_need_one_share),
-            Qstr::MP_QSTR_reset__your_backup_is_done => Some(Self::reset__your_backup_is_done),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ripple__confirm_tag => Some(Self::ripple__confirm_tag),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ripple__destination_tag_template => Some(Self::ripple__destination_tag_template),
-            Qstr::MP_QSTR_rotation__change_template => Some(Self::rotation__change_template),
-            Qstr::MP_QSTR_rotation__east => Some(Self::rotation__east),
-            Qstr::MP_QSTR_rotation__north => Some(Self::rotation__north),
-            Qstr::MP_QSTR_rotation__south => Some(Self::rotation__south),
-            Qstr::MP_QSTR_rotation__title_change => Some(Self::rotation__title_change),
-            Qstr::MP_QSTR_rotation__west => Some(Self::rotation__west),
-            Qstr::MP_QSTR_safety_checks__approve_unsafe_always => Some(Self::safety_checks__approve_unsafe_always),
-            Qstr::MP_QSTR_safety_checks__approve_unsafe_temporary => Some(Self::safety_checks__approve_unsafe_temporary),
-            Qstr::MP_QSTR_safety_checks__enforce_strict => Some(Self::safety_checks__enforce_strict),
-            Qstr::MP_QSTR_safety_checks__title => Some(Self::safety_checks__title),
-            Qstr::MP_QSTR_safety_checks__title_safety_override => Some(Self::safety_checks__title_safety_override),
-            Qstr::MP_QSTR_sd_card__all_data_will_be_lost => Some(Self::sd_card__all_data_will_be_lost),
-            Qstr::MP_QSTR_sd_card__card_required => Some(Self::sd_card__card_required),
-            Qstr::MP_QSTR_sd_card__disable => Some(Self::sd_card__disable),
-            Qstr::MP_QSTR_sd_card__disabled => Some(Self::sd_card__disabled),
-            Qstr::MP_QSTR_sd_card__enable => Some(Self::sd_card__enable),
-            Qstr::MP_QSTR_sd_card__enabled => Some(Self::sd_card__enabled),
-            Qstr::MP_QSTR_sd_card__error => Some(Self::sd_card__error),
-            Qstr::MP_QSTR_sd_card__format_card => Some(Self::sd_card__format_card),
-            Qstr::MP_QSTR_sd_card__insert_correct_card => Some(Self::sd_card__insert_correct_card),
-            Qstr::MP_QSTR_sd_card__please_insert => Some(Self::sd_card__please_insert),
-            Qstr::MP_QSTR_sd_card__please_unplug_and_insert => Some(Self::sd_card__please_unplug_and_insert),
-            Qstr::MP_QSTR_sd_card__problem_accessing => Some(Self::sd_card__problem_accessing),
-            Qstr::MP_QSTR_sd_card__refresh => Some(Self::sd_card__refresh),
-            Qstr::MP_QSTR_sd_card__refreshed => Some(Self::sd_card__refreshed),
-            Qstr::MP_QSTR_sd_card__restart => Some(Self::sd_card__restart),
-            Qstr::MP_QSTR_sd_card__title => Some(Self::sd_card__title),
-            Qstr::MP_QSTR_sd_card__title_problem => Some(Self::sd_card__title_problem),
-            Qstr::MP_QSTR_sd_card__unknown_filesystem => Some(Self::sd_card__unknown_filesystem),
-            Qstr::MP_QSTR_sd_card__unplug_and_insert_correct => Some(Self::sd_card__unplug_and_insert_correct),
-            Qstr::MP_QSTR_sd_card__use_different_card => Some(Self::sd_card__use_different_card),
-            Qstr::MP_QSTR_sd_card__wanna_format => Some(Self::sd_card__wanna_format),
-            Qstr::MP_QSTR_sd_card__wrong_sd_card => Some(Self::sd_card__wrong_sd_card),
-            Qstr::MP_QSTR_send__address_path => Some(Self::send__address_path),
-            Qstr::MP_QSTR_send__confirm_sending => Some(Self::send__confirm_sending),
-            Qstr::MP_QSTR_send__from_multiple_accounts => Some(Self::send__from_multiple_accounts),
-            Qstr::MP_QSTR_send__including_fee => Some(Self::send__including_fee),
-            Qstr::MP_QSTR_send__maximum_fee => Some(Self::send__maximum_fee),
-            Qstr::MP_QSTR_send__receiving_to_multisig => Some(Self::send__receiving_to_multisig),
-            Qstr::MP_QSTR_send__title_confirm_sending => Some(Self::send__title_confirm_sending),
-            Qstr::MP_QSTR_send__title_joint_transaction => Some(Self::send__title_joint_transaction),
-            Qstr::MP_QSTR_send__title_receiving_to => Some(Self::send__title_receiving_to),
-            Qstr::MP_QSTR_send__title_sending => Some(Self::send__title_sending),
-            Qstr::MP_QSTR_send__title_sending_amount => Some(Self::send__title_sending_amount),
-            Qstr::MP_QSTR_send__title_sending_to => Some(Self::send__title_sending_to),
-            Qstr::MP_QSTR_send__to_the_total_amount => Some(Self::send__to_the_total_amount),
-            Qstr::MP_QSTR_send__transaction_id => Some(Self::send__transaction_id),
-            Qstr::MP_QSTR_send__you_are_contributing => Some(Self::send__you_are_contributing),
-            Qstr::MP_QSTR_share_words__words_in_order => Some(Self::share_words__words_in_order),
-            Qstr::MP_QSTR_share_words__wrote_down_all => Some(Self::share_words__wrote_down_all),
-            Qstr::MP_QSTR_sign_message__bytes_template => Some(Self::sign_message__bytes_template),
-            Qstr::MP_QSTR_sign_message__confirm_address => Some(Self::sign_message__confirm_address),
-            Qstr::MP_QSTR_sign_message__confirm_message => Some(Self::sign_message__confirm_message),
-            Qstr::MP_QSTR_sign_message__message_size => Some(Self::sign_message__message_size),
-            Qstr::MP_QSTR_sign_message__verify_address => Some(Self::sign_message__verify_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__account_index => Some(Self::solana__account_index),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__associated_token_account => Some(Self::solana__associated_token_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__confirm_multisig => Some(Self::solana__confirm_multisig),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__expected_fee => Some(Self::solana__expected_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__instruction_accounts_template => Some(Self::solana__instruction_accounts_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__instruction_data => Some(Self::solana__instruction_data),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__instruction_is_multisig => Some(Self::solana__instruction_is_multisig),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__is_provided_via_lookup_table_template => Some(Self::solana__is_provided_via_lookup_table_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__lookup_table_address => Some(Self::solana__lookup_table_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__multiple_signers => Some(Self::solana__multiple_signers),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__title_token => Some(Self::solana__title_token),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__transaction_contains_unknown_instructions => Some(Self::solana__transaction_contains_unknown_instructions),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__transaction_requires_x_signers_template => Some(Self::solana__transaction_requires_x_signers_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__account_merge => Some(Self::stellar__account_merge),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__account_thresholds => Some(Self::stellar__account_thresholds),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__add_signer => Some(Self::stellar__add_signer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__add_trust => Some(Self::stellar__add_trust),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__all_will_be_sent_to => Some(Self::stellar__all_will_be_sent_to),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__allow_trust => Some(Self::stellar__allow_trust),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__asset => Some(Self::stellar__asset),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__balance_id => Some(Self::stellar__balance_id),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__bump_sequence => Some(Self::stellar__bump_sequence),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__buying => Some(Self::stellar__buying),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__claim_claimable_balance => Some(Self::stellar__claim_claimable_balance),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__clear_data => Some(Self::stellar__clear_data),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__clear_flags => Some(Self::stellar__clear_flags),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__confirm_issuer => Some(Self::stellar__confirm_issuer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__confirm_memo => Some(Self::stellar__confirm_memo),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__confirm_network => Some(Self::stellar__confirm_network),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__confirm_operation => Some(Self::stellar__confirm_operation),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__confirm_stellar => Some(Self::stellar__confirm_stellar),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__confirm_timebounds => Some(Self::stellar__confirm_timebounds),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__create_account => Some(Self::stellar__create_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__debited_amount => Some(Self::stellar__debited_amount),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__delete => Some(Self::stellar__delete),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__delete_passive_offer => Some(Self::stellar__delete_passive_offer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__delete_trust => Some(Self::stellar__delete_trust),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__destination => Some(Self::stellar__destination),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__exchanges_require_memo => Some(Self::stellar__exchanges_require_memo),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__final_confirm => Some(Self::stellar__final_confirm),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__hash => Some(Self::stellar__hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__high => Some(Self::stellar__high),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__home_domain => Some(Self::stellar__home_domain),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__inflation => Some(Self::stellar__inflation),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__initial_balance => Some(Self::stellar__initial_balance),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__initialize_signing_with => Some(Self::stellar__initialize_signing_with),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__issuer_template => Some(Self::stellar__issuer_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__key => Some(Self::stellar__key),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__limit => Some(Self::stellar__limit),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__low => Some(Self::stellar__low),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__master_weight => Some(Self::stellar__master_weight),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__medium => Some(Self::stellar__medium),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__new_offer => Some(Self::stellar__new_offer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__new_passive_offer => Some(Self::stellar__new_passive_offer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__no_memo_set => Some(Self::stellar__no_memo_set),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__no_restriction => Some(Self::stellar__no_restriction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__on_network_template => Some(Self::stellar__on_network_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__path_pay => Some(Self::stellar__path_pay),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__path_pay_at_least => Some(Self::stellar__path_pay_at_least),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__pay => Some(Self::stellar__pay),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__pay_at_most => Some(Self::stellar__pay_at_most),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__preauth_transaction => Some(Self::stellar__preauth_transaction),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__price_per_template => Some(Self::stellar__price_per_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__private_network => Some(Self::stellar__private_network),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__remove_signer => Some(Self::stellar__remove_signer),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__revoke_trust => Some(Self::stellar__revoke_trust),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__selling => Some(Self::stellar__selling),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__set_data => Some(Self::stellar__set_data),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__set_flags => Some(Self::stellar__set_flags),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__set_sequence_to_template => Some(Self::stellar__set_sequence_to_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__sign_tx_count_template => Some(Self::stellar__sign_tx_count_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__sign_tx_fee_template => Some(Self::stellar__sign_tx_fee_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__source_account => Some(Self::stellar__source_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__testnet_network => Some(Self::stellar__testnet_network),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__trusted_account => Some(Self::stellar__trusted_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__update => Some(Self::stellar__update),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__valid_from => Some(Self::stellar__valid_from),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__valid_to => Some(Self::stellar__valid_to),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__value_sha256 => Some(Self::stellar__value_sha256),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__wanna_clean_value_key_template => Some(Self::stellar__wanna_clean_value_key_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_stellar__your_account => Some(Self::stellar__your_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__baker_address => Some(Self::tezos__baker_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__balance => Some(Self::tezos__balance),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__ballot => Some(Self::tezos__ballot),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__confirm_delegation => Some(Self::tezos__confirm_delegation),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__confirm_origination => Some(Self::tezos__confirm_origination),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__delegator => Some(Self::tezos__delegator),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__proposal => Some(Self::tezos__proposal),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__register_delegate => Some(Self::tezos__register_delegate),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__remove_delegation => Some(Self::tezos__remove_delegation),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__submit_ballot => Some(Self::tezos__submit_ballot),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__submit_proposal => Some(Self::tezos__submit_proposal),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_tezos__submit_proposals => Some(Self::tezos__submit_proposals),
-            Qstr::MP_QSTR_tutorial__middle_click => Some(Self::tutorial__middle_click),
-            Qstr::MP_QSTR_tutorial__press_and_hold => Some(Self::tutorial__press_and_hold),
-            Qstr::MP_QSTR_tutorial__ready_to_use => Some(Self::tutorial__ready_to_use),
-            Qstr::MP_QSTR_tutorial__scroll_down => Some(Self::tutorial__scroll_down),
-            Qstr::MP_QSTR_tutorial__sure_you_want_skip => Some(Self::tutorial__sure_you_want_skip),
-            Qstr::MP_QSTR_tutorial__title_hello => Some(Self::tutorial__title_hello),
-            Qstr::MP_QSTR_tutorial__title_screen_scroll => Some(Self::tutorial__title_screen_scroll),
-            Qstr::MP_QSTR_tutorial__title_skip => Some(Self::tutorial__title_skip),
-            Qstr::MP_QSTR_tutorial__title_tutorial_complete => Some(Self::tutorial__title_tutorial_complete),
-            Qstr::MP_QSTR_tutorial__use_trezor => Some(Self::tutorial__use_trezor),
-            Qstr::MP_QSTR_tutorial__welcome_press_right => Some(Self::tutorial__welcome_press_right),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_u2f__get => Some(Self::u2f__get),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_u2f__set_template => Some(Self::u2f__set_template),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_u2f__title_get => Some(Self::u2f__title_get),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_u2f__title_set => Some(Self::u2f__title_set),
-            Qstr::MP_QSTR_wipe__info => Some(Self::wipe__info),
-            Qstr::MP_QSTR_wipe__title => Some(Self::wipe__title),
-            Qstr::MP_QSTR_wipe__want_to_wipe => Some(Self::wipe__want_to_wipe),
-            Qstr::MP_QSTR_wipe_code__change => Some(Self::wipe_code__change),
-            Qstr::MP_QSTR_wipe_code__changed => Some(Self::wipe_code__changed),
-            Qstr::MP_QSTR_wipe_code__diff_from_pin => Some(Self::wipe_code__diff_from_pin),
-            Qstr::MP_QSTR_wipe_code__disabled => Some(Self::wipe_code__disabled),
-            Qstr::MP_QSTR_wipe_code__enabled => Some(Self::wipe_code__enabled),
-            Qstr::MP_QSTR_wipe_code__enter_new => Some(Self::wipe_code__enter_new),
-            Qstr::MP_QSTR_wipe_code__info => Some(Self::wipe_code__info),
-            Qstr::MP_QSTR_wipe_code__invalid => Some(Self::wipe_code__invalid),
-            Qstr::MP_QSTR_wipe_code__mismatch => Some(Self::wipe_code__mismatch),
-            Qstr::MP_QSTR_wipe_code__reenter => Some(Self::wipe_code__reenter),
-            Qstr::MP_QSTR_wipe_code__reenter_to_confirm => Some(Self::wipe_code__reenter_to_confirm),
-            Qstr::MP_QSTR_wipe_code__title_check => Some(Self::wipe_code__title_check),
-            Qstr::MP_QSTR_wipe_code__title_invalid => Some(Self::wipe_code__title_invalid),
-            Qstr::MP_QSTR_wipe_code__title_settings => Some(Self::wipe_code__title_settings),
-            Qstr::MP_QSTR_wipe_code__turn_off => Some(Self::wipe_code__turn_off),
-            Qstr::MP_QSTR_wipe_code__turn_on => Some(Self::wipe_code__turn_on),
-            Qstr::MP_QSTR_wipe_code__wipe_code_mismatch => Some(Self::wipe_code__wipe_code_mismatch),
-            Qstr::MP_QSTR_word_count__title => Some(Self::word_count__title),
-            Qstr::MP_QSTR_words__account => Some(Self::words__account),
-            Qstr::MP_QSTR_words__account_colon => Some(Self::words__account_colon),
-            Qstr::MP_QSTR_words__address => Some(Self::words__address),
-            Qstr::MP_QSTR_words__amount => Some(Self::words__amount),
-            Qstr::MP_QSTR_words__are_you_sure => Some(Self::words__are_you_sure),
-            Qstr::MP_QSTR_words__array_of => Some(Self::words__array_of),
-            Qstr::MP_QSTR_words__blockhash => Some(Self::words__blockhash),
-            Qstr::MP_QSTR_words__buying => Some(Self::words__buying),
-            Qstr::MP_QSTR_words__confirm => Some(Self::words__confirm),
-            Qstr::MP_QSTR_words__confirm_fee => Some(Self::words__confirm_fee),
-            Qstr::MP_QSTR_words__contains => Some(Self::words__contains),
-            Qstr::MP_QSTR_words__continue_anyway_question => Some(Self::words__continue_anyway_question),
-            Qstr::MP_QSTR_words__continue_with => Some(Self::words__continue_with),
-            Qstr::MP_QSTR_words__error => Some(Self::words__error),
-            Qstr::MP_QSTR_words__fee => Some(Self::words__fee),
-            Qstr::MP_QSTR_words__from => Some(Self::words__from),
-            Qstr::MP_QSTR_words__keep_it_safe => Some(Self::words__keep_it_safe),
-            Qstr::MP_QSTR_words__know_what_your_doing => Some(Self::words__know_what_your_doing),
-            Qstr::MP_QSTR_words__my_trezor => Some(Self::words__my_trezor),
-            Qstr::MP_QSTR_words__no => Some(Self::words__no),
-            Qstr::MP_QSTR_words__outputs => Some(Self::words__outputs),
-            Qstr::MP_QSTR_words__please_check_again => Some(Self::words__please_check_again),
-            Qstr::MP_QSTR_words__please_try_again => Some(Self::words__please_try_again),
-            Qstr::MP_QSTR_words__really_wanna => Some(Self::words__really_wanna),
-            Qstr::MP_QSTR_words__recipient => Some(Self::words__recipient),
-            Qstr::MP_QSTR_words__sign => Some(Self::words__sign),
-            Qstr::MP_QSTR_words__signer => Some(Self::words__signer),
-            Qstr::MP_QSTR_words__title_check => Some(Self::words__title_check),
-            Qstr::MP_QSTR_words__title_group => Some(Self::words__title_group),
-            Qstr::MP_QSTR_words__title_information => Some(Self::words__title_information),
-            Qstr::MP_QSTR_words__title_remember => Some(Self::words__title_remember),
-            Qstr::MP_QSTR_words__title_share => Some(Self::words__title_share),
-            Qstr::MP_QSTR_words__title_shares => Some(Self::words__title_shares),
-            Qstr::MP_QSTR_words__title_success => Some(Self::words__title_success),
-            Qstr::MP_QSTR_words__title_summary => Some(Self::words__title_summary),
-            Qstr::MP_QSTR_words__title_threshold => Some(Self::words__title_threshold),
-            Qstr::MP_QSTR_words__unknown => Some(Self::words__unknown),
-            Qstr::MP_QSTR_words__warning => Some(Self::words__warning),
-            Qstr::MP_QSTR_words__writable => Some(Self::words__writable),
-            Qstr::MP_QSTR_words__yes => Some(Self::words__yes),
-            Qstr::MP_QSTR_reboot_to_bootloader__just_a_moment => Some(Self::reboot_to_bootloader__just_a_moment),
-            Qstr::MP_QSTR_inputs__previous => Some(Self::inputs__previous),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_claim => Some(Self::ethereum__staking_claim),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_claim_address => Some(Self::ethereum__staking_claim_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_claim_intro => Some(Self::ethereum__staking_claim_intro),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_stake => Some(Self::ethereum__staking_stake),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_stake_address => Some(Self::ethereum__staking_stake_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_stake_intro => Some(Self::ethereum__staking_stake_intro),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_unstake => Some(Self::ethereum__staking_unstake),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__staking_unstake_intro => Some(Self::ethereum__staking_unstake_intro),
-            Qstr::MP_QSTR_storage_msg__starting => Some(Self::storage_msg__starting),
-            Qstr::MP_QSTR_storage_msg__verifying_pin => Some(Self::storage_msg__verifying_pin),
-            Qstr::MP_QSTR_storage_msg__wrong_pin => Some(Self::storage_msg__wrong_pin),
-            Qstr::MP_QSTR_reset__create_x_of_y_multi_share_backup_template => Some(Self::reset__create_x_of_y_multi_share_backup_template),
-            Qstr::MP_QSTR_reset__title_shamir_backup => Some(Self::reset__title_shamir_backup),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__always_abstain => Some(Self::cardano__always_abstain),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__always_no_confidence => Some(Self::cardano__always_no_confidence),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__delegating_to_key_hash => Some(Self::cardano__delegating_to_key_hash),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__delegating_to_script => Some(Self::cardano__delegating_to_script),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__deposit => Some(Self::cardano__deposit),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_cardano__vote_delegation => Some(Self::cardano__vote_delegation),
-            Qstr::MP_QSTR_instructions__tap_to_confirm => Some(Self::instructions__tap_to_confirm),
-            Qstr::MP_QSTR_instructions__hold_to_confirm => Some(Self::instructions__hold_to_confirm),
-            Qstr::MP_QSTR_words__important => Some(Self::words__important),
-            Qstr::MP_QSTR_reset__words_written_down_template => Some(Self::reset__words_written_down_template),
-            Qstr::MP_QSTR_backup__create_backup_to_prevent_loss => Some(Self::backup__create_backup_to_prevent_loss),
-            Qstr::MP_QSTR_reset__check_backup_instructions => Some(Self::reset__check_backup_instructions),
-            Qstr::MP_QSTR_words__instructions => Some(Self::words__instructions),
-            Qstr::MP_QSTR_words__not_recommended => Some(Self::words__not_recommended),
-            Qstr::MP_QSTR_address_details__account_info => Some(Self::address_details__account_info),
-            Qstr::MP_QSTR_address__cancel_contact_support => Some(Self::address__cancel_contact_support),
-            Qstr::MP_QSTR_address__cancel_receive => Some(Self::address__cancel_receive),
-            Qstr::MP_QSTR_address__qr_code => Some(Self::address__qr_code),
-            Qstr::MP_QSTR_address_details__derivation_path => Some(Self::address_details__derivation_path),
-            Qstr::MP_QSTR_instructions__continue_in_app => Some(Self::instructions__continue_in_app),
-            Qstr::MP_QSTR_words__cancel_and_exit => Some(Self::words__cancel_and_exit),
-            Qstr::MP_QSTR_address__confirmed => Some(Self::address__confirmed),
-            Qstr::MP_QSTR_pin__cancel_description => Some(Self::pin__cancel_description),
-            Qstr::MP_QSTR_pin__cancel_info => Some(Self::pin__cancel_info),
-            Qstr::MP_QSTR_pin__cancel_setup => Some(Self::pin__cancel_setup),
-            Qstr::MP_QSTR_send__cancel_sign => Some(Self::send__cancel_sign),
-            Qstr::MP_QSTR_send__send_from => Some(Self::send__send_from),
-            Qstr::MP_QSTR_instructions__hold_to_sign => Some(Self::instructions__hold_to_sign),
-            Qstr::MP_QSTR_confirm_total__fee_rate => Some(Self::confirm_total__fee_rate),
-            Qstr::MP_QSTR_send__incl_transaction_fee => Some(Self::send__incl_transaction_fee),
-            Qstr::MP_QSTR_send__total_amount => Some(Self::send__total_amount),
-            Qstr::MP_QSTR_auto_lock__turned_on => Some(Self::auto_lock__turned_on),
-            Qstr::MP_QSTR_backup__info_multi_share_backup => Some(Self::backup__info_multi_share_backup),
-            Qstr::MP_QSTR_backup__info_single_share_backup => Some(Self::backup__info_single_share_backup),
-            Qstr::MP_QSTR_backup__title_backup_completed => Some(Self::backup__title_backup_completed),
-            Qstr::MP_QSTR_backup__title_create_wallet_backup => Some(Self::backup__title_create_wallet_backup),
-            Qstr::MP_QSTR_haptic_feedback__disable => Some(Self::haptic_feedback__disable),
-            Qstr::MP_QSTR_haptic_feedback__enable => Some(Self::haptic_feedback__enable),
-            Qstr::MP_QSTR_haptic_feedback__subtitle => Some(Self::haptic_feedback__subtitle),
-            Qstr::MP_QSTR_haptic_feedback__title => Some(Self::haptic_feedback__title),
-            Qstr::MP_QSTR_instructions__continue_holding => Some(Self::instructions__continue_holding),
-            Qstr::MP_QSTR_instructions__enter_next_share => Some(Self::instructions__enter_next_share),
-            Qstr::MP_QSTR_instructions__hold_to_continue => Some(Self::instructions__hold_to_continue),
-            Qstr::MP_QSTR_instructions__hold_to_exit_tutorial => Some(Self::instructions__hold_to_exit_tutorial),
-            Qstr::MP_QSTR_instructions__learn_more => Some(Self::instructions__learn_more),
-            Qstr::MP_QSTR_instructions__shares_continue_with_x_template => Some(Self::instructions__shares_continue_with_x_template),
-            Qstr::MP_QSTR_instructions__shares_start_with_1 => Some(Self::instructions__shares_start_with_1),
-            Qstr::MP_QSTR_instructions__tap_to_start => Some(Self::instructions__tap_to_start),
-            Qstr::MP_QSTR_passphrase__title_passphrase => Some(Self::passphrase__title_passphrase),
-            Qstr::MP_QSTR_recovery__dry_run_backup_not_on_this_device => Some(Self::recovery__dry_run_backup_not_on_this_device),
-            Qstr::MP_QSTR_recovery__dry_run_invalid_backup_entered => Some(Self::recovery__dry_run_invalid_backup_entered),
-            Qstr::MP_QSTR_recovery__dry_run_slip39_valid_all_shares => Some(Self::recovery__dry_run_slip39_valid_all_shares),
-            Qstr::MP_QSTR_recovery__dry_run_slip39_valid_share => Some(Self::recovery__dry_run_slip39_valid_share),
-            Qstr::MP_QSTR_recovery__dry_run_verify_remaining_shares => Some(Self::recovery__dry_run_verify_remaining_shares),
-            Qstr::MP_QSTR_recovery__enter_each_word => Some(Self::recovery__enter_each_word),
-            Qstr::MP_QSTR_recovery__info_about_disconnect => Some(Self::recovery__info_about_disconnect),
-            Qstr::MP_QSTR_recovery__share_does_not_match => Some(Self::recovery__share_does_not_match),
-            Qstr::MP_QSTR_reset__cancel_create_wallet => Some(Self::reset__cancel_create_wallet),
-            Qstr::MP_QSTR_reset__incorrect_word_selected => Some(Self::reset__incorrect_word_selected),
-            Qstr::MP_QSTR_reset__more_at => Some(Self::reset__more_at),
-            Qstr::MP_QSTR_reset__num_of_shares_how_many => Some(Self::reset__num_of_shares_how_many),
-            Qstr::MP_QSTR_reset__num_of_shares_long_info_template => Some(Self::reset__num_of_shares_long_info_template),
-            Qstr::MP_QSTR_reset__select_threshold => Some(Self::reset__select_threshold),
-            Qstr::MP_QSTR_reset__share_completed_template => Some(Self::reset__share_completed_template),
-            Qstr::MP_QSTR_reset__slip39_checklist_num_shares_x_template => Some(Self::reset__slip39_checklist_num_shares_x_template),
-            Qstr::MP_QSTR_reset__slip39_checklist_threshold_x_template => Some(Self::reset__slip39_checklist_threshold_x_template),
-            Qstr::MP_QSTR_send__transaction_signed => Some(Self::send__transaction_signed),
-            Qstr::MP_QSTR_tutorial__continue => Some(Self::tutorial__continue),
-            Qstr::MP_QSTR_tutorial__exit => Some(Self::tutorial__exit),
-            Qstr::MP_QSTR_tutorial__menu => Some(Self::tutorial__menu),
-            Qstr::MP_QSTR_tutorial__ready_to_use_safe5 => Some(Self::tutorial__ready_to_use_safe5),
-            Qstr::MP_QSTR_tutorial__swipe_up_and_down => Some(Self::tutorial__swipe_up_and_down),
-            Qstr::MP_QSTR_tutorial__title_easy_navigation => Some(Self::tutorial__title_easy_navigation),
-            Qstr::MP_QSTR_tutorial__welcome_safe5 => Some(Self::tutorial__welcome_safe5),
-            Qstr::MP_QSTR_words__good_to_know => Some(Self::words__good_to_know),
-            Qstr::MP_QSTR_words__operation_cancelled => Some(Self::words__operation_cancelled),
-            Qstr::MP_QSTR_words__settings => Some(Self::words__settings),
-            Qstr::MP_QSTR_words__try_again => Some(Self::words__try_again),
-            Qstr::MP_QSTR_reset__slip39_checklist_num_groups_x_template => Some(Self::reset__slip39_checklist_num_groups_x_template),
-            Qstr::MP_QSTR_brightness__title => Some(Self::brightness__title),
-            Qstr::MP_QSTR_recovery__title_unlock_repeated_backup => Some(Self::recovery__title_unlock_repeated_backup),
-            Qstr::MP_QSTR_recovery__unlock_repeated_backup => Some(Self::recovery__unlock_repeated_backup),
-            Qstr::MP_QSTR_recovery__unlock_repeated_backup_verb => Some(Self::recovery__unlock_repeated_backup_verb),
-            Qstr::MP_QSTR_homescreen__set_default => Some(Self::homescreen__set_default),
-            Qstr::MP_QSTR_reset__words_may_repeat => Some(Self::reset__words_may_repeat),
-            Qstr::MP_QSTR_reset__repeat_for_all_shares => Some(Self::reset__repeat_for_all_shares),
-            Qstr::MP_QSTR_homescreen__settings_subtitle => Some(Self::homescreen__settings_subtitle),
-            Qstr::MP_QSTR_homescreen__settings_title => Some(Self::homescreen__settings_title),
-            Qstr::MP_QSTR_reset__the_word_is_repeated => Some(Self::reset__the_word_is_repeated),
-            Qstr::MP_QSTR_tutorial__title_lets_begin => Some(Self::tutorial__title_lets_begin),
-            Qstr::MP_QSTR_tutorial__did_you_know => Some(Self::tutorial__did_you_know),
-            Qstr::MP_QSTR_tutorial__first_wallet => Some(Self::tutorial__first_wallet),
-            Qstr::MP_QSTR_tutorial__restart_tutorial => Some(Self::tutorial__restart_tutorial),
-            Qstr::MP_QSTR_tutorial__title_handy_menu => Some(Self::tutorial__title_handy_menu),
-            Qstr::MP_QSTR_tutorial__title_hold => Some(Self::tutorial__title_hold),
-            Qstr::MP_QSTR_tutorial__title_well_done => Some(Self::tutorial__title_well_done),
-            Qstr::MP_QSTR_tutorial__lets_begin => Some(Self::tutorial__lets_begin),
-            Qstr::MP_QSTR_tutorial__get_started => Some(Self::tutorial__get_started),
-            Qstr::MP_QSTR_instructions__swipe_horizontally => Some(Self::instructions__swipe_horizontally),
-            Qstr::MP_QSTR_setting__adjust => Some(Self::setting__adjust),
-            Qstr::MP_QSTR_setting__apply => Some(Self::setting__apply),
-            Qstr::MP_QSTR_brightness__changed_title => Some(Self::brightness__changed_title),
-            Qstr::MP_QSTR_brightness__change_title => Some(Self::brightness__change_title),
-            Qstr::MP_QSTR_words__title_done => Some(Self::words__title_done),
-            Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold => Some(Self::reset__slip39_checklist_more_info_threshold),
-            Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template => Some(Self::reset__slip39_checklist_more_info_threshold_example_template),
-            Qstr::MP_QSTR_passphrase__continue_with_empty_passphrase => Some(Self::passphrase__continue_with_empty_passphrase),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__more_credentials => Some(Self::fido__more_credentials),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__select_intro => Some(Self::fido__select_intro),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_for_authentication => Some(Self::fido__title_for_authentication),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_select_credential => Some(Self::fido__title_select_credential),
-            Qstr::MP_QSTR_instructions__swipe_down => Some(Self::instructions__swipe_down),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_fido__title_credential_details => Some(Self::fido__title_credential_details),
-            Qstr::MP_QSTR_address__public_key_confirmed => Some(Self::address__public_key_confirmed),
-            Qstr::MP_QSTR_words__continue_anyway => Some(Self::words__continue_anyway),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__unknown_contract_address => Some(Self::ethereum__unknown_contract_address),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__token_contract => Some(Self::ethereum__token_contract),
-            Qstr::MP_QSTR_buttons__view_all_data => Some(Self::buttons__view_all_data),
-            Qstr::MP_QSTR_instructions__view_all_data => Some(Self::instructions__view_all_data),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__interaction_contract => Some(Self::ethereum__interaction_contract),
-            Qstr::MP_QSTR_misc__enable_labeling => Some(Self::misc__enable_labeling),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_ethereum__unknown_contract_address_short => Some(Self::ethereum__unknown_contract_address_short),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__base_fee => Some(Self::solana__base_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__claim => Some(Self::solana__claim),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__claim_question => Some(Self::solana__claim_question),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__claim_recipient_warning => Some(Self::solana__claim_recipient_warning),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__priority_fee => Some(Self::solana__priority_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__stake => Some(Self::solana__stake),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__stake_account => Some(Self::solana__stake_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__stake_provider => Some(Self::solana__stake_provider),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__stake_question => Some(Self::solana__stake_question),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__stake_withdrawal_warning => Some(Self::solana__stake_withdrawal_warning),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__stake_withdrawal_warning_title => Some(Self::solana__stake_withdrawal_warning_title),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__unstake => Some(Self::solana__unstake),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__unstake_question => Some(Self::solana__unstake_question),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__vote_account => Some(Self::solana__vote_account),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__stake_on_question => Some(Self::solana__stake_on_question),
-            Qstr::MP_QSTR_sign_message__confirm_without_review => Some(Self::sign_message__confirm_without_review),
-            Qstr::MP_QSTR_instructions__tap_to_continue => Some(Self::instructions__tap_to_continue),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_nostr__event_kind_template => Some(Self::nostr__event_kind_template),
-            Qstr::MP_QSTR_ble__unpair_all => Some(Self::ble__unpair_all),
-            Qstr::MP_QSTR_ble__unpair_current => Some(Self::ble__unpair_current),
-            Qstr::MP_QSTR_ble__unpair_title => Some(Self::ble__unpair_title),
-            Qstr::MP_QSTR_words__unlocked => Some(Self::words__unlocked),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__max_fees_rent => Some(Self::solana__max_fees_rent),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__max_rent_fee => Some(Self::solana__max_rent_fee),
-            #[cfg(feature = "universal_fw")]
-            Qstr::MP_QSTR_solana__transaction_fee => Some(Self::solana__transaction_fee),
-            _ => None,
-        }
-    }
+    pub const QSTR_MAP: &'static [(Qstr, Self)] = &[
+        (Qstr::MP_QSTR_addr_mismatch__contact_support_at, Self::addr_mismatch__contact_support_at),
+        (Qstr::MP_QSTR_addr_mismatch__key_mismatch, Self::addr_mismatch__key_mismatch),
+        (Qstr::MP_QSTR_addr_mismatch__mismatch, Self::addr_mismatch__mismatch),
+        (Qstr::MP_QSTR_addr_mismatch__support_url, Self::addr_mismatch__support_url),
+        (Qstr::MP_QSTR_addr_mismatch__wrong_derivation_path, Self::addr_mismatch__wrong_derivation_path),
+        (Qstr::MP_QSTR_addr_mismatch__xpub_mismatch, Self::addr_mismatch__xpub_mismatch),
+        (Qstr::MP_QSTR_address__cancel_contact_support, Self::address__cancel_contact_support),
+        (Qstr::MP_QSTR_address__cancel_receive, Self::address__cancel_receive),
+        (Qstr::MP_QSTR_address__confirmed, Self::address__confirmed),
+        (Qstr::MP_QSTR_address__public_key, Self::address__public_key),
+        (Qstr::MP_QSTR_address__public_key_confirmed, Self::address__public_key_confirmed),
+        (Qstr::MP_QSTR_address__qr_code, Self::address__qr_code),
+        (Qstr::MP_QSTR_address__title_cosigner, Self::address__title_cosigner),
+        (Qstr::MP_QSTR_address__title_receive_address, Self::address__title_receive_address),
+        (Qstr::MP_QSTR_address__title_yours, Self::address__title_yours),
+        (Qstr::MP_QSTR_address_details__account_info, Self::address_details__account_info),
+        (Qstr::MP_QSTR_address_details__derivation_path, Self::address_details__derivation_path),
+        (Qstr::MP_QSTR_address_details__derivation_path_colon, Self::address_details__derivation_path_colon),
+        (Qstr::MP_QSTR_address_details__title_receive_address, Self::address_details__title_receive_address),
+        (Qstr::MP_QSTR_address_details__title_receiving_to, Self::address_details__title_receiving_to),
+        (Qstr::MP_QSTR_authenticate__confirm_template, Self::authenticate__confirm_template),
+        (Qstr::MP_QSTR_authenticate__header, Self::authenticate__header),
+        (Qstr::MP_QSTR_auto_lock__change_template, Self::auto_lock__change_template),
+        (Qstr::MP_QSTR_auto_lock__title, Self::auto_lock__title),
+        (Qstr::MP_QSTR_auto_lock__turned_on, Self::auto_lock__turned_on),
+        (Qstr::MP_QSTR_backup__can_back_up_anytime, Self::backup__can_back_up_anytime),
+        (Qstr::MP_QSTR_backup__create_backup_to_prevent_loss, Self::backup__create_backup_to_prevent_loss),
+        (Qstr::MP_QSTR_backup__info_multi_share_backup, Self::backup__info_multi_share_backup),
+        (Qstr::MP_QSTR_backup__info_single_share_backup, Self::backup__info_single_share_backup),
+        (Qstr::MP_QSTR_backup__it_should_be_backed_up, Self::backup__it_should_be_backed_up),
+        (Qstr::MP_QSTR_backup__it_should_be_backed_up_now, Self::backup__it_should_be_backed_up_now),
+        (Qstr::MP_QSTR_backup__new_wallet_created, Self::backup__new_wallet_created),
+        (Qstr::MP_QSTR_backup__new_wallet_successfully_created, Self::backup__new_wallet_successfully_created),
+        (Qstr::MP_QSTR_backup__recover_anytime, Self::backup__recover_anytime),
+        (Qstr::MP_QSTR_backup__title_backup_completed, Self::backup__title_backup_completed),
+        (Qstr::MP_QSTR_backup__title_backup_wallet, Self::backup__title_backup_wallet),
+        (Qstr::MP_QSTR_backup__title_create_wallet_backup, Self::backup__title_create_wallet_backup),
+        (Qstr::MP_QSTR_backup__title_skip, Self::backup__title_skip),
+        (Qstr::MP_QSTR_backup__want_to_skip, Self::backup__want_to_skip),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__buy, Self::binance__buy),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__confirm_cancel, Self::binance__confirm_cancel),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__confirm_input, Self::binance__confirm_input),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__confirm_order, Self::binance__confirm_order),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__confirm_output, Self::binance__confirm_output),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__order_id, Self::binance__order_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__pair, Self::binance__pair),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__price, Self::binance__price),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__quantity, Self::binance__quantity),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__sell, Self::binance__sell),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__sender_address, Self::binance__sender_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_binance__side, Self::binance__side),
+        (Qstr::MP_QSTR_bitcoin__commitment_data, Self::bitcoin__commitment_data),
+        (Qstr::MP_QSTR_bitcoin__confirm_locktime, Self::bitcoin__confirm_locktime),
+        (Qstr::MP_QSTR_bitcoin__create_proof_of_ownership, Self::bitcoin__create_proof_of_ownership),
+        (Qstr::MP_QSTR_bitcoin__high_mining_fee_template, Self::bitcoin__high_mining_fee_template),
+        (Qstr::MP_QSTR_bitcoin__locktime_no_effect, Self::bitcoin__locktime_no_effect),
+        (Qstr::MP_QSTR_bitcoin__locktime_set_to, Self::bitcoin__locktime_set_to),
+        (Qstr::MP_QSTR_bitcoin__locktime_set_to_blockheight, Self::bitcoin__locktime_set_to_blockheight),
+        (Qstr::MP_QSTR_bitcoin__lot_of_change_outputs, Self::bitcoin__lot_of_change_outputs),
+        (Qstr::MP_QSTR_bitcoin__multiple_accounts, Self::bitcoin__multiple_accounts),
+        (Qstr::MP_QSTR_bitcoin__new_fee_rate, Self::bitcoin__new_fee_rate),
+        (Qstr::MP_QSTR_bitcoin__simple_send_of, Self::bitcoin__simple_send_of),
+        (Qstr::MP_QSTR_bitcoin__ticket_amount, Self::bitcoin__ticket_amount),
+        (Qstr::MP_QSTR_bitcoin__title_confirm_details, Self::bitcoin__title_confirm_details),
+        (Qstr::MP_QSTR_bitcoin__title_finalize_transaction, Self::bitcoin__title_finalize_transaction),
+        (Qstr::MP_QSTR_bitcoin__title_high_mining_fee, Self::bitcoin__title_high_mining_fee),
+        (Qstr::MP_QSTR_bitcoin__title_meld_transaction, Self::bitcoin__title_meld_transaction),
+        (Qstr::MP_QSTR_bitcoin__title_modify_amount, Self::bitcoin__title_modify_amount),
+        (Qstr::MP_QSTR_bitcoin__title_payjoin, Self::bitcoin__title_payjoin),
+        (Qstr::MP_QSTR_bitcoin__title_proof_of_ownership, Self::bitcoin__title_proof_of_ownership),
+        (Qstr::MP_QSTR_bitcoin__title_purchase_ticket, Self::bitcoin__title_purchase_ticket),
+        (Qstr::MP_QSTR_bitcoin__title_update_transaction, Self::bitcoin__title_update_transaction),
+        (Qstr::MP_QSTR_bitcoin__unknown_path, Self::bitcoin__unknown_path),
+        (Qstr::MP_QSTR_bitcoin__unknown_transaction, Self::bitcoin__unknown_transaction),
+        (Qstr::MP_QSTR_bitcoin__unusually_high_fee, Self::bitcoin__unusually_high_fee),
+        (Qstr::MP_QSTR_bitcoin__unverified_external_inputs, Self::bitcoin__unverified_external_inputs),
+        (Qstr::MP_QSTR_bitcoin__valid_signature, Self::bitcoin__valid_signature),
+        (Qstr::MP_QSTR_bitcoin__voting_rights, Self::bitcoin__voting_rights),
+        (Qstr::MP_QSTR_ble__unpair_all, Self::ble__unpair_all),
+        (Qstr::MP_QSTR_ble__unpair_current, Self::ble__unpair_current),
+        (Qstr::MP_QSTR_ble__unpair_title, Self::ble__unpair_title),
+        (Qstr::MP_QSTR_brightness__change_title, Self::brightness__change_title),
+        (Qstr::MP_QSTR_brightness__changed_title, Self::brightness__changed_title),
+        (Qstr::MP_QSTR_brightness__title, Self::brightness__title),
+        (Qstr::MP_QSTR_buttons__abort, Self::buttons__abort),
+        (Qstr::MP_QSTR_buttons__access, Self::buttons__access),
+        (Qstr::MP_QSTR_buttons__again, Self::buttons__again),
+        (Qstr::MP_QSTR_buttons__allow, Self::buttons__allow),
+        (Qstr::MP_QSTR_buttons__back, Self::buttons__back),
+        (Qstr::MP_QSTR_buttons__back_up, Self::buttons__back_up),
+        (Qstr::MP_QSTR_buttons__cancel, Self::buttons__cancel),
+        (Qstr::MP_QSTR_buttons__change, Self::buttons__change),
+        (Qstr::MP_QSTR_buttons__check, Self::buttons__check),
+        (Qstr::MP_QSTR_buttons__check_again, Self::buttons__check_again),
+        (Qstr::MP_QSTR_buttons__close, Self::buttons__close),
+        (Qstr::MP_QSTR_buttons__confirm, Self::buttons__confirm),
+        (Qstr::MP_QSTR_buttons__continue, Self::buttons__continue),
+        (Qstr::MP_QSTR_buttons__details, Self::buttons__details),
+        (Qstr::MP_QSTR_buttons__enable, Self::buttons__enable),
+        (Qstr::MP_QSTR_buttons__enter, Self::buttons__enter),
+        (Qstr::MP_QSTR_buttons__enter_share, Self::buttons__enter_share),
+        (Qstr::MP_QSTR_buttons__export, Self::buttons__export),
+        (Qstr::MP_QSTR_buttons__format, Self::buttons__format),
+        (Qstr::MP_QSTR_buttons__go_back, Self::buttons__go_back),
+        (Qstr::MP_QSTR_buttons__hold_to_confirm, Self::buttons__hold_to_confirm),
+        (Qstr::MP_QSTR_buttons__info, Self::buttons__info),
+        (Qstr::MP_QSTR_buttons__install, Self::buttons__install),
+        (Qstr::MP_QSTR_buttons__more_info, Self::buttons__more_info),
+        (Qstr::MP_QSTR_buttons__ok_i_understand, Self::buttons__ok_i_understand),
+        (Qstr::MP_QSTR_buttons__purchase, Self::buttons__purchase),
+        (Qstr::MP_QSTR_buttons__quit, Self::buttons__quit),
+        (Qstr::MP_QSTR_buttons__restart, Self::buttons__restart),
+        (Qstr::MP_QSTR_buttons__retry, Self::buttons__retry),
+        (Qstr::MP_QSTR_buttons__select, Self::buttons__select),
+        (Qstr::MP_QSTR_buttons__set, Self::buttons__set),
+        (Qstr::MP_QSTR_buttons__show_all, Self::buttons__show_all),
+        (Qstr::MP_QSTR_buttons__show_details, Self::buttons__show_details),
+        (Qstr::MP_QSTR_buttons__show_words, Self::buttons__show_words),
+        (Qstr::MP_QSTR_buttons__skip, Self::buttons__skip),
+        (Qstr::MP_QSTR_buttons__try_again, Self::buttons__try_again),
+        (Qstr::MP_QSTR_buttons__turn_off, Self::buttons__turn_off),
+        (Qstr::MP_QSTR_buttons__turn_on, Self::buttons__turn_on),
+        (Qstr::MP_QSTR_buttons__view_all_data, Self::buttons__view_all_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__addr_base, Self::cardano__addr_base),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__addr_enterprise, Self::cardano__addr_enterprise),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__addr_legacy, Self::cardano__addr_legacy),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__addr_pointer, Self::cardano__addr_pointer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__addr_reward, Self::cardano__addr_reward),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__address_no_staking, Self::cardano__address_no_staking),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__always_abstain, Self::cardano__always_abstain),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__always_no_confidence, Self::cardano__always_no_confidence),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__amount_burned_decimals_unknown, Self::cardano__amount_burned_decimals_unknown),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__amount_minted_decimals_unknown, Self::cardano__amount_minted_decimals_unknown),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__amount_sent_decimals_unknown, Self::cardano__amount_sent_decimals_unknown),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__anonymous_pool, Self::cardano__anonymous_pool),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__asset_fingerprint, Self::cardano__asset_fingerprint),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__auxiliary_data_hash, Self::cardano__auxiliary_data_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__block, Self::cardano__block),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__catalyst, Self::cardano__catalyst),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__certificate, Self::cardano__certificate),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__change_output, Self::cardano__change_output),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__check_all_items, Self::cardano__check_all_items),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__choose_level_of_details, Self::cardano__choose_level_of_details),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__collateral_input_id, Self::cardano__collateral_input_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__collateral_input_index, Self::cardano__collateral_input_index),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__collateral_output_contains_tokens, Self::cardano__collateral_output_contains_tokens),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__collateral_return, Self::cardano__collateral_return),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirm_signing_stake_pool, Self::cardano__confirm_signing_stake_pool),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirm_transaction, Self::cardano__confirm_transaction),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirming_a_multisig_transaction, Self::cardano__confirming_a_multisig_transaction),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirming_a_plutus_transaction, Self::cardano__confirming_a_plutus_transaction),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirming_pool_registration, Self::cardano__confirming_pool_registration),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__confirming_transction, Self::cardano__confirming_transction),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__cost, Self::cardano__cost),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__credential_mismatch, Self::cardano__credential_mismatch),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__datum_hash, Self::cardano__datum_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__delegating_to, Self::cardano__delegating_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__delegating_to_key_hash, Self::cardano__delegating_to_key_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__delegating_to_script, Self::cardano__delegating_to_script),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__deposit, Self::cardano__deposit),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__for_account_and_index_template, Self::cardano__for_account_and_index_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__for_account_template, Self::cardano__for_account_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__for_key_hash, Self::cardano__for_key_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__for_script, Self::cardano__for_script),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__inline_datum, Self::cardano__inline_datum),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__input_id, Self::cardano__input_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__input_index, Self::cardano__input_index),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__intro_text_change, Self::cardano__intro_text_change),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__intro_text_owned_by_device, Self::cardano__intro_text_owned_by_device),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__intro_text_registration_payment, Self::cardano__intro_text_registration_payment),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__key_hash, Self::cardano__key_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__margin, Self::cardano__margin),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__multisig_path, Self::cardano__multisig_path),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__nested_scripts_template, Self::cardano__nested_scripts_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__network, Self::cardano__network),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__no_output_tx, Self::cardano__no_output_tx),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__nonce, Self::cardano__nonce),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__other, Self::cardano__other),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__path, Self::cardano__path),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__pledge, Self::cardano__pledge),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__pointer, Self::cardano__pointer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__policy_id, Self::cardano__policy_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__pool_metadata_hash, Self::cardano__pool_metadata_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__pool_metadata_url, Self::cardano__pool_metadata_url),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__pool_owner, Self::cardano__pool_owner),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__pool_reward_account, Self::cardano__pool_reward_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__reference_input_id, Self::cardano__reference_input_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__reference_input_index, Self::cardano__reference_input_index),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__reference_script, Self::cardano__reference_script),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__required_signer, Self::cardano__required_signer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__reward, Self::cardano__reward),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__reward_address, Self::cardano__reward_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__reward_eligibility_warning, Self::cardano__reward_eligibility_warning),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__rewards_go_to, Self::cardano__rewards_go_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script, Self::cardano__script),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_all, Self::cardano__script_all),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_any, Self::cardano__script_any),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_data_hash, Self::cardano__script_data_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_hash, Self::cardano__script_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_invalid_before, Self::cardano__script_invalid_before),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_invalid_hereafter, Self::cardano__script_invalid_hereafter),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_key, Self::cardano__script_key),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_n_of_k, Self::cardano__script_n_of_k),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__script_reward, Self::cardano__script_reward),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__sending, Self::cardano__sending),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__show_simple, Self::cardano__show_simple),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__sign_tx_path_template, Self::cardano__sign_tx_path_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__stake_delegation, Self::cardano__stake_delegation),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__stake_deregistration, Self::cardano__stake_deregistration),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__stake_pool_registration, Self::cardano__stake_pool_registration),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__stake_pool_registration_pool_id, Self::cardano__stake_pool_registration_pool_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__stake_registration, Self::cardano__stake_registration),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__staking_key_for_account, Self::cardano__staking_key_for_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__to_pool, Self::cardano__to_pool),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__token_minting_path, Self::cardano__token_minting_path),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__total_collateral, Self::cardano__total_collateral),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction, Self::cardano__transaction),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction_contains_minting_or_burning, Self::cardano__transaction_contains_minting_or_burning),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction_contains_script_address_no_datum, Self::cardano__transaction_contains_script_address_no_datum),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction_fee, Self::cardano__transaction_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction_id, Self::cardano__transaction_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction_no_collateral_input, Self::cardano__transaction_no_collateral_input),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction_no_script_data_hash, Self::cardano__transaction_no_script_data_hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__transaction_output_contains_tokens, Self::cardano__transaction_output_contains_tokens),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__ttl, Self::cardano__ttl),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__unknown_collateral_amount, Self::cardano__unknown_collateral_amount),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__unusual_path, Self::cardano__unusual_path),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__valid_since, Self::cardano__valid_since),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__verify_script, Self::cardano__verify_script),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__vote_delegation, Self::cardano__vote_delegation),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__vote_key_registration, Self::cardano__vote_key_registration),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__vote_public_key, Self::cardano__vote_public_key),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__voting_purpose, Self::cardano__voting_purpose),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__warning, Self::cardano__warning),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__weight, Self::cardano__weight),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__withdrawal_for_address_template, Self::cardano__withdrawal_for_address_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_cardano__x_of_y_signatures_template, Self::cardano__x_of_y_signatures_template),
+        (Qstr::MP_QSTR_coinjoin__access_account, Self::coinjoin__access_account),
+        (Qstr::MP_QSTR_coinjoin__do_not_disconnect, Self::coinjoin__do_not_disconnect),
+        (Qstr::MP_QSTR_coinjoin__max_mining_fee, Self::coinjoin__max_mining_fee),
+        (Qstr::MP_QSTR_coinjoin__max_rounds, Self::coinjoin__max_rounds),
+        (Qstr::MP_QSTR_coinjoin__title, Self::coinjoin__title),
+        (Qstr::MP_QSTR_coinjoin__title_do_not_disconnect, Self::coinjoin__title_do_not_disconnect),
+        (Qstr::MP_QSTR_coinjoin__title_progress, Self::coinjoin__title_progress),
+        (Qstr::MP_QSTR_coinjoin__waiting_for_others, Self::coinjoin__waiting_for_others),
+        (Qstr::MP_QSTR_confirm_total__fee_rate, Self::confirm_total__fee_rate),
+        (Qstr::MP_QSTR_confirm_total__fee_rate_colon, Self::confirm_total__fee_rate_colon),
+        (Qstr::MP_QSTR_confirm_total__sending_from_account, Self::confirm_total__sending_from_account),
+        (Qstr::MP_QSTR_confirm_total__title_fee, Self::confirm_total__title_fee),
+        (Qstr::MP_QSTR_confirm_total__title_sending_from, Self::confirm_total__title_sending_from),
+        #[cfg(feature = "debug")]
+        (Qstr::MP_QSTR_debug__loading_seed, Self::debug__loading_seed),
+        #[cfg(feature = "debug")]
+        (Qstr::MP_QSTR_debug__loading_seed_not_recommended, Self::debug__loading_seed_not_recommended),
+        (Qstr::MP_QSTR_device_name__change_template, Self::device_name__change_template),
+        (Qstr::MP_QSTR_device_name__title, Self::device_name__title),
+        (Qstr::MP_QSTR_entropy__send, Self::entropy__send),
+        (Qstr::MP_QSTR_entropy__title_confirm, Self::entropy__title_confirm),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__about_to_sign_template, Self::eos__about_to_sign_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__action_name, Self::eos__action_name),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__arbitrary_data, Self::eos__arbitrary_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__buy_ram, Self::eos__buy_ram),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__bytes, Self::eos__bytes),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__cancel_vote, Self::eos__cancel_vote),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__checksum, Self::eos__checksum),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__code, Self::eos__code),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__contract, Self::eos__contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__cpu, Self::eos__cpu),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__creator, Self::eos__creator),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__delegate, Self::eos__delegate),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__delete_auth, Self::eos__delete_auth),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__from, Self::eos__from),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__link_auth, Self::eos__link_auth),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__memo, Self::eos__memo),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__name, Self::eos__name),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__net, Self::eos__net),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__new_account, Self::eos__new_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__owner, Self::eos__owner),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__parent, Self::eos__parent),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__payer, Self::eos__payer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__permission, Self::eos__permission),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__proxy, Self::eos__proxy),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__receiver, Self::eos__receiver),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__refund, Self::eos__refund),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__requirement, Self::eos__requirement),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__sell_ram, Self::eos__sell_ram),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__sender, Self::eos__sender),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__threshold, Self::eos__threshold),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__to, Self::eos__to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__transfer, Self::eos__transfer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__type, Self::eos__type),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__undelegate, Self::eos__undelegate),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__unlink_auth, Self::eos__unlink_auth),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__update_auth, Self::eos__update_auth),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__vote_for_producers, Self::eos__vote_for_producers),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__vote_for_proxy, Self::eos__vote_for_proxy),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_eos__voter, Self::eos__voter),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__amount_sent, Self::ethereum__amount_sent),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__contract, Self::ethereum__contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__data_size_template, Self::ethereum__data_size_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__gas_limit, Self::ethereum__gas_limit),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__gas_price, Self::ethereum__gas_price),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__interaction_contract, Self::ethereum__interaction_contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__max_gas_price, Self::ethereum__max_gas_price),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__name_and_version, Self::ethereum__name_and_version),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__new_contract, Self::ethereum__new_contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__no_message_field, Self::ethereum__no_message_field),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__priority_fee, Self::ethereum__priority_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__show_full_array, Self::ethereum__show_full_array),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__show_full_domain, Self::ethereum__show_full_domain),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__show_full_message, Self::ethereum__show_full_message),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__show_full_struct, Self::ethereum__show_full_struct),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__sign_eip712, Self::ethereum__sign_eip712),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_claim, Self::ethereum__staking_claim),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_claim_address, Self::ethereum__staking_claim_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_claim_intro, Self::ethereum__staking_claim_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_stake, Self::ethereum__staking_stake),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_stake_address, Self::ethereum__staking_stake_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_stake_intro, Self::ethereum__staking_stake_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_unstake, Self::ethereum__staking_unstake),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__staking_unstake_intro, Self::ethereum__staking_unstake_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_confirm_domain, Self::ethereum__title_confirm_domain),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_confirm_message, Self::ethereum__title_confirm_message),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_confirm_struct, Self::ethereum__title_confirm_struct),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_confirm_typed_data, Self::ethereum__title_confirm_typed_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_input_data, Self::ethereum__title_input_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__title_signing_address, Self::ethereum__title_signing_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__token_contract, Self::ethereum__token_contract),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__units_template, Self::ethereum__units_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__unknown_contract_address, Self::ethereum__unknown_contract_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__unknown_contract_address_short, Self::ethereum__unknown_contract_address_short),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__unknown_token, Self::ethereum__unknown_token),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ethereum__valid_signature, Self::ethereum__valid_signature),
+        (Qstr::MP_QSTR_experimental_mode__enable, Self::experimental_mode__enable),
+        (Qstr::MP_QSTR_experimental_mode__only_for_dev, Self::experimental_mode__only_for_dev),
+        (Qstr::MP_QSTR_experimental_mode__title, Self::experimental_mode__title),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__already_registered, Self::fido__already_registered),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__device_already_registered, Self::fido__device_already_registered),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__device_already_registered_with_template, Self::fido__device_already_registered_with_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__device_not_registered, Self::fido__device_not_registered),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__does_not_belong, Self::fido__does_not_belong),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__erase_credentials, Self::fido__erase_credentials),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__export_credentials, Self::fido__export_credentials),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__more_credentials, Self::fido__more_credentials),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__not_registered, Self::fido__not_registered),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__not_registered_with_template, Self::fido__not_registered_with_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__please_enable_pin_protection, Self::fido__please_enable_pin_protection),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__select_intro, Self::fido__select_intro),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_authenticate, Self::fido__title_authenticate),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_credential_details, Self::fido__title_credential_details),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_for_authentication, Self::fido__title_for_authentication),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_import_credential, Self::fido__title_import_credential),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_list_credentials, Self::fido__title_list_credentials),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_register, Self::fido__title_register),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_remove_credential, Self::fido__title_remove_credential),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_reset, Self::fido__title_reset),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_select_credential, Self::fido__title_select_credential),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_u2f_auth, Self::fido__title_u2f_auth),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_u2f_register, Self::fido__title_u2f_register),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__title_verify_user, Self::fido__title_verify_user),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__unable_to_verify_user, Self::fido__unable_to_verify_user),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_fido__wanna_erase_credentials, Self::fido__wanna_erase_credentials),
+        (Qstr::MP_QSTR_firmware_update__title, Self::firmware_update__title),
+        (Qstr::MP_QSTR_firmware_update__title_fingerprint, Self::firmware_update__title_fingerprint),
+        (Qstr::MP_QSTR_haptic_feedback__disable, Self::haptic_feedback__disable),
+        (Qstr::MP_QSTR_haptic_feedback__enable, Self::haptic_feedback__enable),
+        (Qstr::MP_QSTR_haptic_feedback__subtitle, Self::haptic_feedback__subtitle),
+        (Qstr::MP_QSTR_haptic_feedback__title, Self::haptic_feedback__title),
+        (Qstr::MP_QSTR_homescreen__click_to_connect, Self::homescreen__click_to_connect),
+        (Qstr::MP_QSTR_homescreen__click_to_unlock, Self::homescreen__click_to_unlock),
+        (Qstr::MP_QSTR_homescreen__set_default, Self::homescreen__set_default),
+        (Qstr::MP_QSTR_homescreen__settings_subtitle, Self::homescreen__settings_subtitle),
+        (Qstr::MP_QSTR_homescreen__settings_title, Self::homescreen__settings_title),
+        (Qstr::MP_QSTR_homescreen__title_backup_failed, Self::homescreen__title_backup_failed),
+        (Qstr::MP_QSTR_homescreen__title_backup_needed, Self::homescreen__title_backup_needed),
+        (Qstr::MP_QSTR_homescreen__title_coinjoin_authorized, Self::homescreen__title_coinjoin_authorized),
+        (Qstr::MP_QSTR_homescreen__title_experimental_mode, Self::homescreen__title_experimental_mode),
+        (Qstr::MP_QSTR_homescreen__title_no_usb_connection, Self::homescreen__title_no_usb_connection),
+        (Qstr::MP_QSTR_homescreen__title_pin_not_set, Self::homescreen__title_pin_not_set),
+        (Qstr::MP_QSTR_homescreen__title_seedless, Self::homescreen__title_seedless),
+        (Qstr::MP_QSTR_homescreen__title_set, Self::homescreen__title_set),
+        (Qstr::MP_QSTR_inputs__back, Self::inputs__back),
+        (Qstr::MP_QSTR_inputs__cancel, Self::inputs__cancel),
+        (Qstr::MP_QSTR_inputs__delete, Self::inputs__delete),
+        (Qstr::MP_QSTR_inputs__enter, Self::inputs__enter),
+        (Qstr::MP_QSTR_inputs__previous, Self::inputs__previous),
+        (Qstr::MP_QSTR_inputs__return, Self::inputs__return),
+        (Qstr::MP_QSTR_inputs__show, Self::inputs__show),
+        (Qstr::MP_QSTR_inputs__space, Self::inputs__space),
+        (Qstr::MP_QSTR_instructions__continue_holding, Self::instructions__continue_holding),
+        (Qstr::MP_QSTR_instructions__continue_in_app, Self::instructions__continue_in_app),
+        (Qstr::MP_QSTR_instructions__enter_next_share, Self::instructions__enter_next_share),
+        (Qstr::MP_QSTR_instructions__hold_to_confirm, Self::instructions__hold_to_confirm),
+        (Qstr::MP_QSTR_instructions__hold_to_continue, Self::instructions__hold_to_continue),
+        (Qstr::MP_QSTR_instructions__hold_to_exit_tutorial, Self::instructions__hold_to_exit_tutorial),
+        (Qstr::MP_QSTR_instructions__hold_to_sign, Self::instructions__hold_to_sign),
+        (Qstr::MP_QSTR_instructions__learn_more, Self::instructions__learn_more),
+        (Qstr::MP_QSTR_instructions__shares_continue_with_x_template, Self::instructions__shares_continue_with_x_template),
+        (Qstr::MP_QSTR_instructions__shares_start_with_1, Self::instructions__shares_start_with_1),
+        (Qstr::MP_QSTR_instructions__swipe_down, Self::instructions__swipe_down),
+        (Qstr::MP_QSTR_instructions__swipe_horizontally, Self::instructions__swipe_horizontally),
+        (Qstr::MP_QSTR_instructions__tap_to_confirm, Self::instructions__tap_to_confirm),
+        (Qstr::MP_QSTR_instructions__tap_to_continue, Self::instructions__tap_to_continue),
+        (Qstr::MP_QSTR_instructions__tap_to_start, Self::instructions__tap_to_start),
+        (Qstr::MP_QSTR_instructions__view_all_data, Self::instructions__view_all_data),
+        (Qstr::MP_QSTR_joint__title, Self::joint__title),
+        (Qstr::MP_QSTR_joint__to_the_total_amount, Self::joint__to_the_total_amount),
+        (Qstr::MP_QSTR_joint__you_are_contributing, Self::joint__you_are_contributing),
+        (Qstr::MP_QSTR_language__change_to_template, Self::language__change_to_template),
+        (Qstr::MP_QSTR_language__changed, Self::language__changed),
+        (Qstr::MP_QSTR_language__progress, Self::language__progress),
+        (Qstr::MP_QSTR_language__title, Self::language__title),
+        (Qstr::MP_QSTR_lockscreen__tap_to_connect, Self::lockscreen__tap_to_connect),
+        (Qstr::MP_QSTR_lockscreen__tap_to_unlock, Self::lockscreen__tap_to_unlock),
+        (Qstr::MP_QSTR_lockscreen__title_locked, Self::lockscreen__title_locked),
+        (Qstr::MP_QSTR_lockscreen__title_not_connected, Self::lockscreen__title_not_connected),
+        (Qstr::MP_QSTR_misc__decrypt_value, Self::misc__decrypt_value),
+        (Qstr::MP_QSTR_misc__enable_labeling, Self::misc__enable_labeling),
+        (Qstr::MP_QSTR_misc__encrypt_value, Self::misc__encrypt_value),
+        (Qstr::MP_QSTR_misc__title_suite_labeling, Self::misc__title_suite_labeling),
+        (Qstr::MP_QSTR_modify_amount__decrease_amount, Self::modify_amount__decrease_amount),
+        (Qstr::MP_QSTR_modify_amount__increase_amount, Self::modify_amount__increase_amount),
+        (Qstr::MP_QSTR_modify_amount__new_amount, Self::modify_amount__new_amount),
+        (Qstr::MP_QSTR_modify_amount__title, Self::modify_amount__title),
+        (Qstr::MP_QSTR_modify_fee__decrease_fee, Self::modify_fee__decrease_fee),
+        (Qstr::MP_QSTR_modify_fee__fee_rate, Self::modify_fee__fee_rate),
+        (Qstr::MP_QSTR_modify_fee__increase_fee, Self::modify_fee__increase_fee),
+        (Qstr::MP_QSTR_modify_fee__new_transaction_fee, Self::modify_fee__new_transaction_fee),
+        (Qstr::MP_QSTR_modify_fee__no_change, Self::modify_fee__no_change),
+        (Qstr::MP_QSTR_modify_fee__title, Self::modify_fee__title),
+        (Qstr::MP_QSTR_modify_fee__transaction_fee, Self::modify_fee__transaction_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__confirm_export, Self::monero__confirm_export),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__confirm_ki_sync, Self::monero__confirm_ki_sync),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__confirm_refresh, Self::monero__confirm_refresh),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__confirm_unlock_time, Self::monero__confirm_unlock_time),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__hashing_inputs, Self::monero__hashing_inputs),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__payment_id, Self::monero__payment_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__postprocessing, Self::monero__postprocessing),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__processing, Self::monero__processing),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__processing_inputs, Self::monero__processing_inputs),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__processing_outputs, Self::monero__processing_outputs),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__signing, Self::monero__signing),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__signing_inputs, Self::monero__signing_inputs),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__unlock_time_set_template, Self::monero__unlock_time_set_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__wanna_export_tx_der, Self::monero__wanna_export_tx_der),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__wanna_export_tx_key, Self::monero__wanna_export_tx_key),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__wanna_export_watchkey, Self::monero__wanna_export_watchkey),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__wanna_start_refresh, Self::monero__wanna_start_refresh),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_monero__wanna_sync_key_images, Self::monero__wanna_sync_key_images),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__absolute, Self::nem__absolute),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__activate, Self::nem__activate),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__add, Self::nem__add),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_action, Self::nem__confirm_action),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_address, Self::nem__confirm_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_creation_fee, Self::nem__confirm_creation_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_mosaic, Self::nem__confirm_mosaic),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_multisig_fee, Self::nem__confirm_multisig_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_namespace, Self::nem__confirm_namespace),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_payload, Self::nem__confirm_payload),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_properties, Self::nem__confirm_properties),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_rental_fee, Self::nem__confirm_rental_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__confirm_transfer_of, Self::nem__confirm_transfer_of),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__convert_account_to_multisig, Self::nem__convert_account_to_multisig),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__cosign_transaction_for, Self::nem__cosign_transaction_for),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__cosignatory, Self::nem__cosignatory),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__create_mosaic, Self::nem__create_mosaic),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__create_namespace, Self::nem__create_namespace),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__deactivate, Self::nem__deactivate),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__decrease, Self::nem__decrease),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__description, Self::nem__description),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__divisibility_and_levy_cannot_be_shown, Self::nem__divisibility_and_levy_cannot_be_shown),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__encrypted, Self::nem__encrypted),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__final_confirm, Self::nem__final_confirm),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__immutable, Self::nem__immutable),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__increase, Self::nem__increase),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__initial_supply, Self::nem__initial_supply),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__initiate_transaction_for, Self::nem__initiate_transaction_for),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__levy_divisibility, Self::nem__levy_divisibility),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__levy_fee, Self::nem__levy_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__levy_fee_of, Self::nem__levy_fee_of),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__levy_mosaic, Self::nem__levy_mosaic),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__levy_namespace, Self::nem__levy_namespace),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__levy_recipient, Self::nem__levy_recipient),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__levy_type, Self::nem__levy_type),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__modify_supply_for, Self::nem__modify_supply_for),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__modify_the_number_of_cosignatories_by, Self::nem__modify_the_number_of_cosignatories_by),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__mutable, Self::nem__mutable),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__of, Self::nem__of),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__percentile, Self::nem__percentile),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__raw_units_template, Self::nem__raw_units_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__remote_harvesting, Self::nem__remote_harvesting),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__remove, Self::nem__remove),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__set_minimum_cosignatories_to, Self::nem__set_minimum_cosignatories_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__sign_tx_fee_template, Self::nem__sign_tx_fee_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__supply_change, Self::nem__supply_change),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__supply_units_template, Self::nem__supply_units_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__transferable, Self::nem__transferable),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__under_namespace, Self::nem__under_namespace),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__unencrypted, Self::nem__unencrypted),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nem__unknown_mosaic, Self::nem__unknown_mosaic),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_nostr__event_kind_template, Self::nostr__event_kind_template),
+        (Qstr::MP_QSTR_passphrase__access_wallet, Self::passphrase__access_wallet),
+        (Qstr::MP_QSTR_passphrase__always_on_device, Self::passphrase__always_on_device),
+        (Qstr::MP_QSTR_passphrase__continue_with_empty_passphrase, Self::passphrase__continue_with_empty_passphrase),
+        (Qstr::MP_QSTR_passphrase__from_host_not_shown, Self::passphrase__from_host_not_shown),
+        (Qstr::MP_QSTR_passphrase__hide, Self::passphrase__hide),
+        (Qstr::MP_QSTR_passphrase__next_screen_will_show_passphrase, Self::passphrase__next_screen_will_show_passphrase),
+        (Qstr::MP_QSTR_passphrase__please_enter, Self::passphrase__please_enter),
+        (Qstr::MP_QSTR_passphrase__revoke_on_device, Self::passphrase__revoke_on_device),
+        (Qstr::MP_QSTR_passphrase__title_confirm, Self::passphrase__title_confirm),
+        (Qstr::MP_QSTR_passphrase__title_enter, Self::passphrase__title_enter),
+        (Qstr::MP_QSTR_passphrase__title_hide, Self::passphrase__title_hide),
+        (Qstr::MP_QSTR_passphrase__title_passphrase, Self::passphrase__title_passphrase),
+        (Qstr::MP_QSTR_passphrase__title_settings, Self::passphrase__title_settings),
+        (Qstr::MP_QSTR_passphrase__title_source, Self::passphrase__title_source),
+        (Qstr::MP_QSTR_passphrase__turn_off, Self::passphrase__turn_off),
+        (Qstr::MP_QSTR_passphrase__turn_on, Self::passphrase__turn_on),
+        (Qstr::MP_QSTR_passphrase__wallet, Self::passphrase__wallet),
+        (Qstr::MP_QSTR_pin__cancel_description, Self::pin__cancel_description),
+        (Qstr::MP_QSTR_pin__cancel_info, Self::pin__cancel_info),
+        (Qstr::MP_QSTR_pin__cancel_setup, Self::pin__cancel_setup),
+        (Qstr::MP_QSTR_pin__change, Self::pin__change),
+        (Qstr::MP_QSTR_pin__changed, Self::pin__changed),
+        (Qstr::MP_QSTR_pin__cursor_will_change, Self::pin__cursor_will_change),
+        (Qstr::MP_QSTR_pin__diff_from_wipe_code, Self::pin__diff_from_wipe_code),
+        (Qstr::MP_QSTR_pin__disabled, Self::pin__disabled),
+        (Qstr::MP_QSTR_pin__enabled, Self::pin__enabled),
+        (Qstr::MP_QSTR_pin__enter, Self::pin__enter),
+        (Qstr::MP_QSTR_pin__enter_new, Self::pin__enter_new),
+        (Qstr::MP_QSTR_pin__entered_not_valid, Self::pin__entered_not_valid),
+        (Qstr::MP_QSTR_pin__info, Self::pin__info),
+        (Qstr::MP_QSTR_pin__invalid_pin, Self::pin__invalid_pin),
+        (Qstr::MP_QSTR_pin__last_attempt, Self::pin__last_attempt),
+        (Qstr::MP_QSTR_pin__mismatch, Self::pin__mismatch),
+        (Qstr::MP_QSTR_pin__pin_mismatch, Self::pin__pin_mismatch),
+        (Qstr::MP_QSTR_pin__please_check_again, Self::pin__please_check_again),
+        (Qstr::MP_QSTR_pin__reenter_new, Self::pin__reenter_new),
+        (Qstr::MP_QSTR_pin__reenter_to_confirm, Self::pin__reenter_to_confirm),
+        (Qstr::MP_QSTR_pin__should_be_long, Self::pin__should_be_long),
+        (Qstr::MP_QSTR_pin__title_check_pin, Self::pin__title_check_pin),
+        (Qstr::MP_QSTR_pin__title_settings, Self::pin__title_settings),
+        (Qstr::MP_QSTR_pin__title_wrong_pin, Self::pin__title_wrong_pin),
+        (Qstr::MP_QSTR_pin__tries_left, Self::pin__tries_left),
+        (Qstr::MP_QSTR_pin__turn_off, Self::pin__turn_off),
+        (Qstr::MP_QSTR_pin__turn_on, Self::pin__turn_on),
+        (Qstr::MP_QSTR_pin__wrong_pin, Self::pin__wrong_pin),
+        (Qstr::MP_QSTR_plurals__contains_x_keys, Self::plurals__contains_x_keys),
+        (Qstr::MP_QSTR_plurals__lock_after_x_hours, Self::plurals__lock_after_x_hours),
+        (Qstr::MP_QSTR_plurals__lock_after_x_milliseconds, Self::plurals__lock_after_x_milliseconds),
+        (Qstr::MP_QSTR_plurals__lock_after_x_minutes, Self::plurals__lock_after_x_minutes),
+        (Qstr::MP_QSTR_plurals__lock_after_x_seconds, Self::plurals__lock_after_x_seconds),
+        (Qstr::MP_QSTR_plurals__sign_x_actions, Self::plurals__sign_x_actions),
+        (Qstr::MP_QSTR_plurals__transaction_of_x_operations, Self::plurals__transaction_of_x_operations),
+        (Qstr::MP_QSTR_plurals__x_groups_needed, Self::plurals__x_groups_needed),
+        (Qstr::MP_QSTR_plurals__x_shares_needed, Self::plurals__x_shares_needed),
+        (Qstr::MP_QSTR_progress__authenticity_check, Self::progress__authenticity_check),
+        (Qstr::MP_QSTR_progress__done, Self::progress__done),
+        (Qstr::MP_QSTR_progress__loading_transaction, Self::progress__loading_transaction),
+        (Qstr::MP_QSTR_progress__locking_device, Self::progress__locking_device),
+        (Qstr::MP_QSTR_progress__one_second_left, Self::progress__one_second_left),
+        (Qstr::MP_QSTR_progress__please_wait, Self::progress__please_wait),
+        (Qstr::MP_QSTR_progress__refreshing, Self::progress__refreshing),
+        (Qstr::MP_QSTR_progress__signing_transaction, Self::progress__signing_transaction),
+        (Qstr::MP_QSTR_progress__syncing, Self::progress__syncing),
+        (Qstr::MP_QSTR_progress__x_seconds_left_template, Self::progress__x_seconds_left_template),
+        (Qstr::MP_QSTR_reboot_to_bootloader__just_a_moment, Self::reboot_to_bootloader__just_a_moment),
+        (Qstr::MP_QSTR_reboot_to_bootloader__restart, Self::reboot_to_bootloader__restart),
+        (Qstr::MP_QSTR_reboot_to_bootloader__title, Self::reboot_to_bootloader__title),
+        (Qstr::MP_QSTR_reboot_to_bootloader__version_by_template, Self::reboot_to_bootloader__version_by_template),
+        (Qstr::MP_QSTR_recovery__cancel_dry_run, Self::recovery__cancel_dry_run),
+        (Qstr::MP_QSTR_recovery__check_dry_run, Self::recovery__check_dry_run),
+        (Qstr::MP_QSTR_recovery__cursor_will_change, Self::recovery__cursor_will_change),
+        (Qstr::MP_QSTR_recovery__dry_run_backup_not_on_this_device, Self::recovery__dry_run_backup_not_on_this_device),
+        (Qstr::MP_QSTR_recovery__dry_run_bip39_valid_match, Self::recovery__dry_run_bip39_valid_match),
+        (Qstr::MP_QSTR_recovery__dry_run_bip39_valid_mismatch, Self::recovery__dry_run_bip39_valid_mismatch),
+        (Qstr::MP_QSTR_recovery__dry_run_invalid_backup_entered, Self::recovery__dry_run_invalid_backup_entered),
+        (Qstr::MP_QSTR_recovery__dry_run_slip39_valid_all_shares, Self::recovery__dry_run_slip39_valid_all_shares),
+        (Qstr::MP_QSTR_recovery__dry_run_slip39_valid_match, Self::recovery__dry_run_slip39_valid_match),
+        (Qstr::MP_QSTR_recovery__dry_run_slip39_valid_mismatch, Self::recovery__dry_run_slip39_valid_mismatch),
+        (Qstr::MP_QSTR_recovery__dry_run_slip39_valid_share, Self::recovery__dry_run_slip39_valid_share),
+        (Qstr::MP_QSTR_recovery__dry_run_verify_remaining_shares, Self::recovery__dry_run_verify_remaining_shares),
+        (Qstr::MP_QSTR_recovery__enter_any_share, Self::recovery__enter_any_share),
+        (Qstr::MP_QSTR_recovery__enter_backup, Self::recovery__enter_backup),
+        (Qstr::MP_QSTR_recovery__enter_different_share, Self::recovery__enter_different_share),
+        (Qstr::MP_QSTR_recovery__enter_each_word, Self::recovery__enter_each_word),
+        (Qstr::MP_QSTR_recovery__enter_share_from_diff_group, Self::recovery__enter_share_from_diff_group),
+        (Qstr::MP_QSTR_recovery__group_num_template, Self::recovery__group_num_template),
+        (Qstr::MP_QSTR_recovery__group_threshold_reached, Self::recovery__group_threshold_reached),
+        (Qstr::MP_QSTR_recovery__info_about_disconnect, Self::recovery__info_about_disconnect),
+        (Qstr::MP_QSTR_recovery__invalid_share_entered, Self::recovery__invalid_share_entered),
+        (Qstr::MP_QSTR_recovery__invalid_wallet_backup_entered, Self::recovery__invalid_wallet_backup_entered),
+        (Qstr::MP_QSTR_recovery__more_shares_needed, Self::recovery__more_shares_needed),
+        (Qstr::MP_QSTR_recovery__num_of_words, Self::recovery__num_of_words),
+        (Qstr::MP_QSTR_recovery__only_first_n_letters, Self::recovery__only_first_n_letters),
+        (Qstr::MP_QSTR_recovery__progress_will_be_lost, Self::recovery__progress_will_be_lost),
+        (Qstr::MP_QSTR_recovery__share_already_entered, Self::recovery__share_already_entered),
+        (Qstr::MP_QSTR_recovery__share_does_not_match, Self::recovery__share_does_not_match),
+        (Qstr::MP_QSTR_recovery__share_from_another_multi_share_backup, Self::recovery__share_from_another_multi_share_backup),
+        (Qstr::MP_QSTR_recovery__share_num_template, Self::recovery__share_num_template),
+        (Qstr::MP_QSTR_recovery__title, Self::recovery__title),
+        (Qstr::MP_QSTR_recovery__title_cancel_dry_run, Self::recovery__title_cancel_dry_run),
+        (Qstr::MP_QSTR_recovery__title_cancel_recovery, Self::recovery__title_cancel_recovery),
+        (Qstr::MP_QSTR_recovery__title_dry_run, Self::recovery__title_dry_run),
+        (Qstr::MP_QSTR_recovery__title_recover, Self::recovery__title_recover),
+        (Qstr::MP_QSTR_recovery__title_remaining_shares, Self::recovery__title_remaining_shares),
+        (Qstr::MP_QSTR_recovery__title_unlock_repeated_backup, Self::recovery__title_unlock_repeated_backup),
+        (Qstr::MP_QSTR_recovery__type_word_x_of_y_template, Self::recovery__type_word_x_of_y_template),
+        (Qstr::MP_QSTR_recovery__unlock_repeated_backup, Self::recovery__unlock_repeated_backup),
+        (Qstr::MP_QSTR_recovery__unlock_repeated_backup_verb, Self::recovery__unlock_repeated_backup_verb),
+        (Qstr::MP_QSTR_recovery__wallet_recovered, Self::recovery__wallet_recovered),
+        (Qstr::MP_QSTR_recovery__wanna_cancel_dry_run, Self::recovery__wanna_cancel_dry_run),
+        (Qstr::MP_QSTR_recovery__wanna_cancel_recovery, Self::recovery__wanna_cancel_recovery),
+        (Qstr::MP_QSTR_recovery__word_count_template, Self::recovery__word_count_template),
+        (Qstr::MP_QSTR_recovery__word_x_of_y_template, Self::recovery__word_x_of_y_template),
+        (Qstr::MP_QSTR_recovery__x_more_items_starting_template_plural, Self::recovery__x_more_items_starting_template_plural),
+        (Qstr::MP_QSTR_recovery__x_more_shares_needed_template_plural, Self::recovery__x_more_shares_needed_template_plural),
+        (Qstr::MP_QSTR_recovery__x_of_y_entered_template, Self::recovery__x_of_y_entered_template),
+        (Qstr::MP_QSTR_recovery__you_have_entered, Self::recovery__you_have_entered),
+        (Qstr::MP_QSTR_reset__advanced_group_threshold_info, Self::reset__advanced_group_threshold_info),
+        (Qstr::MP_QSTR_reset__all_x_of_y_template, Self::reset__all_x_of_y_template),
+        (Qstr::MP_QSTR_reset__any_x_of_y_template, Self::reset__any_x_of_y_template),
+        (Qstr::MP_QSTR_reset__button_create, Self::reset__button_create),
+        (Qstr::MP_QSTR_reset__button_recover, Self::reset__button_recover),
+        (Qstr::MP_QSTR_reset__by_continuing, Self::reset__by_continuing),
+        (Qstr::MP_QSTR_reset__cancel_create_wallet, Self::reset__cancel_create_wallet),
+        (Qstr::MP_QSTR_reset__check_backup_instructions, Self::reset__check_backup_instructions),
+        (Qstr::MP_QSTR_reset__check_backup_title, Self::reset__check_backup_title),
+        (Qstr::MP_QSTR_reset__check_group_share_title_template, Self::reset__check_group_share_title_template),
+        (Qstr::MP_QSTR_reset__check_share_title_template, Self::reset__check_share_title_template),
+        (Qstr::MP_QSTR_reset__check_wallet_backup_title, Self::reset__check_wallet_backup_title),
+        (Qstr::MP_QSTR_reset__continue_with_next_share, Self::reset__continue_with_next_share),
+        (Qstr::MP_QSTR_reset__continue_with_share_template, Self::reset__continue_with_share_template),
+        (Qstr::MP_QSTR_reset__create_x_of_y_multi_share_backup_template, Self::reset__create_x_of_y_multi_share_backup_template),
+        (Qstr::MP_QSTR_reset__finished_verifying_group_template, Self::reset__finished_verifying_group_template),
+        (Qstr::MP_QSTR_reset__finished_verifying_shares, Self::reset__finished_verifying_shares),
+        (Qstr::MP_QSTR_reset__finished_verifying_wallet_backup, Self::reset__finished_verifying_wallet_backup),
+        (Qstr::MP_QSTR_reset__group_description, Self::reset__group_description),
+        (Qstr::MP_QSTR_reset__group_info, Self::reset__group_info),
+        (Qstr::MP_QSTR_reset__group_share_checked_successfully_template, Self::reset__group_share_checked_successfully_template),
+        (Qstr::MP_QSTR_reset__group_share_title_template, Self::reset__group_share_title_template),
+        (Qstr::MP_QSTR_reset__incorrect_word_selected, Self::reset__incorrect_word_selected),
+        (Qstr::MP_QSTR_reset__more_at, Self::reset__more_at),
+        (Qstr::MP_QSTR_reset__more_info_at, Self::reset__more_info_at),
+        (Qstr::MP_QSTR_reset__need_all_share_template, Self::reset__need_all_share_template),
+        (Qstr::MP_QSTR_reset__need_any_share_template, Self::reset__need_any_share_template),
+        (Qstr::MP_QSTR_reset__needed_to_form_a_group, Self::reset__needed_to_form_a_group),
+        (Qstr::MP_QSTR_reset__needed_to_recover_your_wallet, Self::reset__needed_to_recover_your_wallet),
+        (Qstr::MP_QSTR_reset__never_make_digital_copy, Self::reset__never_make_digital_copy),
+        (Qstr::MP_QSTR_reset__num_of_share_holders_template, Self::reset__num_of_share_holders_template),
+        (Qstr::MP_QSTR_reset__num_of_shares_advanced_info_template, Self::reset__num_of_shares_advanced_info_template),
+        (Qstr::MP_QSTR_reset__num_of_shares_basic_info_template, Self::reset__num_of_shares_basic_info_template),
+        (Qstr::MP_QSTR_reset__num_of_shares_how_many, Self::reset__num_of_shares_how_many),
+        (Qstr::MP_QSTR_reset__num_of_shares_long_info_template, Self::reset__num_of_shares_long_info_template),
+        (Qstr::MP_QSTR_reset__num_shares_for_group_template, Self::reset__num_shares_for_group_template),
+        (Qstr::MP_QSTR_reset__number_of_shares_info, Self::reset__number_of_shares_info),
+        (Qstr::MP_QSTR_reset__one_share, Self::reset__one_share),
+        (Qstr::MP_QSTR_reset__only_one_share_will_be_created, Self::reset__only_one_share_will_be_created),
+        (Qstr::MP_QSTR_reset__recovery_share_title_template, Self::reset__recovery_share_title_template),
+        (Qstr::MP_QSTR_reset__recovery_wallet_backup_title, Self::reset__recovery_wallet_backup_title),
+        (Qstr::MP_QSTR_reset__repeat_for_all_shares, Self::reset__repeat_for_all_shares),
+        (Qstr::MP_QSTR_reset__required_number_of_groups, Self::reset__required_number_of_groups),
+        (Qstr::MP_QSTR_reset__select_correct_word, Self::reset__select_correct_word),
+        (Qstr::MP_QSTR_reset__select_threshold, Self::reset__select_threshold),
+        (Qstr::MP_QSTR_reset__select_word_template, Self::reset__select_word_template),
+        (Qstr::MP_QSTR_reset__select_word_x_of_y_template, Self::reset__select_word_x_of_y_template),
+        (Qstr::MP_QSTR_reset__set_it_to_count_template, Self::reset__set_it_to_count_template),
+        (Qstr::MP_QSTR_reset__share_checked_successfully_template, Self::reset__share_checked_successfully_template),
+        (Qstr::MP_QSTR_reset__share_completed_template, Self::reset__share_completed_template),
+        (Qstr::MP_QSTR_reset__share_words_title, Self::reset__share_words_title),
+        (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold, Self::reset__slip39_checklist_more_info_threshold),
+        (Qstr::MP_QSTR_reset__slip39_checklist_more_info_threshold_example_template, Self::reset__slip39_checklist_more_info_threshold_example_template),
+        (Qstr::MP_QSTR_reset__slip39_checklist_num_groups, Self::reset__slip39_checklist_num_groups),
+        (Qstr::MP_QSTR_reset__slip39_checklist_num_groups_x_template, Self::reset__slip39_checklist_num_groups_x_template),
+        (Qstr::MP_QSTR_reset__slip39_checklist_num_shares, Self::reset__slip39_checklist_num_shares),
+        (Qstr::MP_QSTR_reset__slip39_checklist_num_shares_x_template, Self::reset__slip39_checklist_num_shares_x_template),
+        (Qstr::MP_QSTR_reset__slip39_checklist_set_num_groups, Self::reset__slip39_checklist_set_num_groups),
+        (Qstr::MP_QSTR_reset__slip39_checklist_set_num_shares, Self::reset__slip39_checklist_set_num_shares),
+        (Qstr::MP_QSTR_reset__slip39_checklist_set_sizes, Self::reset__slip39_checklist_set_sizes),
+        (Qstr::MP_QSTR_reset__slip39_checklist_set_sizes_longer, Self::reset__slip39_checklist_set_sizes_longer),
+        (Qstr::MP_QSTR_reset__slip39_checklist_set_threshold, Self::reset__slip39_checklist_set_threshold),
+        (Qstr::MP_QSTR_reset__slip39_checklist_threshold_x_template, Self::reset__slip39_checklist_threshold_x_template),
+        (Qstr::MP_QSTR_reset__slip39_checklist_title, Self::reset__slip39_checklist_title),
+        (Qstr::MP_QSTR_reset__slip39_checklist_write_down, Self::reset__slip39_checklist_write_down),
+        (Qstr::MP_QSTR_reset__slip39_checklist_write_down_recovery, Self::reset__slip39_checklist_write_down_recovery),
+        (Qstr::MP_QSTR_reset__the_threshold_sets_the_number_of_shares, Self::reset__the_threshold_sets_the_number_of_shares),
+        (Qstr::MP_QSTR_reset__the_word_is_repeated, Self::reset__the_word_is_repeated),
+        (Qstr::MP_QSTR_reset__threshold_info, Self::reset__threshold_info),
+        (Qstr::MP_QSTR_reset__title_backup_is_done, Self::reset__title_backup_is_done),
+        (Qstr::MP_QSTR_reset__title_create_wallet, Self::reset__title_create_wallet),
+        (Qstr::MP_QSTR_reset__title_group_threshold, Self::reset__title_group_threshold),
+        (Qstr::MP_QSTR_reset__title_number_of_groups, Self::reset__title_number_of_groups),
+        (Qstr::MP_QSTR_reset__title_number_of_shares, Self::reset__title_number_of_shares),
+        (Qstr::MP_QSTR_reset__title_set_group_threshold, Self::reset__title_set_group_threshold),
+        (Qstr::MP_QSTR_reset__title_set_number_of_groups, Self::reset__title_set_number_of_groups),
+        (Qstr::MP_QSTR_reset__title_set_number_of_shares, Self::reset__title_set_number_of_shares),
+        (Qstr::MP_QSTR_reset__title_set_threshold, Self::reset__title_set_threshold),
+        (Qstr::MP_QSTR_reset__title_shamir_backup, Self::reset__title_shamir_backup),
+        (Qstr::MP_QSTR_reset__to_form_group_template, Self::reset__to_form_group_template),
+        (Qstr::MP_QSTR_reset__tos_link, Self::reset__tos_link),
+        (Qstr::MP_QSTR_reset__total_number_of_shares_in_group_template, Self::reset__total_number_of_shares_in_group_template),
+        (Qstr::MP_QSTR_reset__use_your_backup, Self::reset__use_your_backup),
+        (Qstr::MP_QSTR_reset__words_may_repeat, Self::reset__words_may_repeat),
+        (Qstr::MP_QSTR_reset__words_written_down_template, Self::reset__words_written_down_template),
+        (Qstr::MP_QSTR_reset__write_down_words_template, Self::reset__write_down_words_template),
+        (Qstr::MP_QSTR_reset__wrong_word_selected, Self::reset__wrong_word_selected),
+        (Qstr::MP_QSTR_reset__you_need_one_share, Self::reset__you_need_one_share),
+        (Qstr::MP_QSTR_reset__your_backup_is_done, Self::reset__your_backup_is_done),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ripple__confirm_tag, Self::ripple__confirm_tag),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_ripple__destination_tag_template, Self::ripple__destination_tag_template),
+        (Qstr::MP_QSTR_rotation__change_template, Self::rotation__change_template),
+        (Qstr::MP_QSTR_rotation__east, Self::rotation__east),
+        (Qstr::MP_QSTR_rotation__north, Self::rotation__north),
+        (Qstr::MP_QSTR_rotation__south, Self::rotation__south),
+        (Qstr::MP_QSTR_rotation__title_change, Self::rotation__title_change),
+        (Qstr::MP_QSTR_rotation__west, Self::rotation__west),
+        (Qstr::MP_QSTR_safety_checks__approve_unsafe_always, Self::safety_checks__approve_unsafe_always),
+        (Qstr::MP_QSTR_safety_checks__approve_unsafe_temporary, Self::safety_checks__approve_unsafe_temporary),
+        (Qstr::MP_QSTR_safety_checks__enforce_strict, Self::safety_checks__enforce_strict),
+        (Qstr::MP_QSTR_safety_checks__title, Self::safety_checks__title),
+        (Qstr::MP_QSTR_safety_checks__title_safety_override, Self::safety_checks__title_safety_override),
+        (Qstr::MP_QSTR_sd_card__all_data_will_be_lost, Self::sd_card__all_data_will_be_lost),
+        (Qstr::MP_QSTR_sd_card__card_required, Self::sd_card__card_required),
+        (Qstr::MP_QSTR_sd_card__disable, Self::sd_card__disable),
+        (Qstr::MP_QSTR_sd_card__disabled, Self::sd_card__disabled),
+        (Qstr::MP_QSTR_sd_card__enable, Self::sd_card__enable),
+        (Qstr::MP_QSTR_sd_card__enabled, Self::sd_card__enabled),
+        (Qstr::MP_QSTR_sd_card__error, Self::sd_card__error),
+        (Qstr::MP_QSTR_sd_card__format_card, Self::sd_card__format_card),
+        (Qstr::MP_QSTR_sd_card__insert_correct_card, Self::sd_card__insert_correct_card),
+        (Qstr::MP_QSTR_sd_card__please_insert, Self::sd_card__please_insert),
+        (Qstr::MP_QSTR_sd_card__please_unplug_and_insert, Self::sd_card__please_unplug_and_insert),
+        (Qstr::MP_QSTR_sd_card__problem_accessing, Self::sd_card__problem_accessing),
+        (Qstr::MP_QSTR_sd_card__refresh, Self::sd_card__refresh),
+        (Qstr::MP_QSTR_sd_card__refreshed, Self::sd_card__refreshed),
+        (Qstr::MP_QSTR_sd_card__restart, Self::sd_card__restart),
+        (Qstr::MP_QSTR_sd_card__title, Self::sd_card__title),
+        (Qstr::MP_QSTR_sd_card__title_problem, Self::sd_card__title_problem),
+        (Qstr::MP_QSTR_sd_card__unknown_filesystem, Self::sd_card__unknown_filesystem),
+        (Qstr::MP_QSTR_sd_card__unplug_and_insert_correct, Self::sd_card__unplug_and_insert_correct),
+        (Qstr::MP_QSTR_sd_card__use_different_card, Self::sd_card__use_different_card),
+        (Qstr::MP_QSTR_sd_card__wanna_format, Self::sd_card__wanna_format),
+        (Qstr::MP_QSTR_sd_card__wrong_sd_card, Self::sd_card__wrong_sd_card),
+        (Qstr::MP_QSTR_send__address_path, Self::send__address_path),
+        (Qstr::MP_QSTR_send__cancel_sign, Self::send__cancel_sign),
+        (Qstr::MP_QSTR_send__confirm_sending, Self::send__confirm_sending),
+        (Qstr::MP_QSTR_send__from_multiple_accounts, Self::send__from_multiple_accounts),
+        (Qstr::MP_QSTR_send__incl_transaction_fee, Self::send__incl_transaction_fee),
+        (Qstr::MP_QSTR_send__including_fee, Self::send__including_fee),
+        (Qstr::MP_QSTR_send__maximum_fee, Self::send__maximum_fee),
+        (Qstr::MP_QSTR_send__receiving_to_multisig, Self::send__receiving_to_multisig),
+        (Qstr::MP_QSTR_send__send_from, Self::send__send_from),
+        (Qstr::MP_QSTR_send__sign_transaction, Self::send__sign_transaction),
+        (Qstr::MP_QSTR_send__title_confirm_sending, Self::send__title_confirm_sending),
+        (Qstr::MP_QSTR_send__title_joint_transaction, Self::send__title_joint_transaction),
+        (Qstr::MP_QSTR_send__title_receiving_to, Self::send__title_receiving_to),
+        (Qstr::MP_QSTR_send__title_sending, Self::send__title_sending),
+        (Qstr::MP_QSTR_send__title_sending_amount, Self::send__title_sending_amount),
+        (Qstr::MP_QSTR_send__title_sending_to, Self::send__title_sending_to),
+        (Qstr::MP_QSTR_send__to_the_total_amount, Self::send__to_the_total_amount),
+        (Qstr::MP_QSTR_send__total_amount, Self::send__total_amount),
+        (Qstr::MP_QSTR_send__transaction_id, Self::send__transaction_id),
+        (Qstr::MP_QSTR_send__transaction_signed, Self::send__transaction_signed),
+        (Qstr::MP_QSTR_send__you_are_contributing, Self::send__you_are_contributing),
+        (Qstr::MP_QSTR_setting__adjust, Self::setting__adjust),
+        (Qstr::MP_QSTR_setting__apply, Self::setting__apply),
+        (Qstr::MP_QSTR_share_words__words_in_order, Self::share_words__words_in_order),
+        (Qstr::MP_QSTR_share_words__wrote_down_all, Self::share_words__wrote_down_all),
+        (Qstr::MP_QSTR_sign_message__bytes_template, Self::sign_message__bytes_template),
+        (Qstr::MP_QSTR_sign_message__confirm_address, Self::sign_message__confirm_address),
+        (Qstr::MP_QSTR_sign_message__confirm_message, Self::sign_message__confirm_message),
+        (Qstr::MP_QSTR_sign_message__confirm_without_review, Self::sign_message__confirm_without_review),
+        (Qstr::MP_QSTR_sign_message__message_size, Self::sign_message__message_size),
+        (Qstr::MP_QSTR_sign_message__verify_address, Self::sign_message__verify_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__account_index, Self::solana__account_index),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__associated_token_account, Self::solana__associated_token_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__base_fee, Self::solana__base_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__claim, Self::solana__claim),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__claim_question, Self::solana__claim_question),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__claim_recipient_warning, Self::solana__claim_recipient_warning),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__confirm_multisig, Self::solana__confirm_multisig),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__expected_fee, Self::solana__expected_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__instruction_accounts_template, Self::solana__instruction_accounts_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__instruction_data, Self::solana__instruction_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__instruction_is_multisig, Self::solana__instruction_is_multisig),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__is_provided_via_lookup_table_template, Self::solana__is_provided_via_lookup_table_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__lookup_table_address, Self::solana__lookup_table_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__max_fees_rent, Self::solana__max_fees_rent),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__max_rent_fee, Self::solana__max_rent_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__multiple_signers, Self::solana__multiple_signers),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__priority_fee, Self::solana__priority_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__stake, Self::solana__stake),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__stake_account, Self::solana__stake_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__stake_on_question, Self::solana__stake_on_question),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__stake_provider, Self::solana__stake_provider),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__stake_question, Self::solana__stake_question),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__stake_withdrawal_warning, Self::solana__stake_withdrawal_warning),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__stake_withdrawal_warning_title, Self::solana__stake_withdrawal_warning_title),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__title_token, Self::solana__title_token),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__transaction_contains_unknown_instructions, Self::solana__transaction_contains_unknown_instructions),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__transaction_fee, Self::solana__transaction_fee),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__transaction_requires_x_signers_template, Self::solana__transaction_requires_x_signers_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__unstake, Self::solana__unstake),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__unstake_question, Self::solana__unstake_question),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_solana__vote_account, Self::solana__vote_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__account_merge, Self::stellar__account_merge),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__account_thresholds, Self::stellar__account_thresholds),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__add_signer, Self::stellar__add_signer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__add_trust, Self::stellar__add_trust),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__all_will_be_sent_to, Self::stellar__all_will_be_sent_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__allow_trust, Self::stellar__allow_trust),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__asset, Self::stellar__asset),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__balance_id, Self::stellar__balance_id),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__bump_sequence, Self::stellar__bump_sequence),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__buying, Self::stellar__buying),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__claim_claimable_balance, Self::stellar__claim_claimable_balance),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__clear_data, Self::stellar__clear_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__clear_flags, Self::stellar__clear_flags),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__confirm_issuer, Self::stellar__confirm_issuer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__confirm_memo, Self::stellar__confirm_memo),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__confirm_network, Self::stellar__confirm_network),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__confirm_operation, Self::stellar__confirm_operation),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__confirm_stellar, Self::stellar__confirm_stellar),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__confirm_timebounds, Self::stellar__confirm_timebounds),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__create_account, Self::stellar__create_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__debited_amount, Self::stellar__debited_amount),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__delete, Self::stellar__delete),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__delete_passive_offer, Self::stellar__delete_passive_offer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__delete_trust, Self::stellar__delete_trust),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__destination, Self::stellar__destination),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__exchanges_require_memo, Self::stellar__exchanges_require_memo),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__final_confirm, Self::stellar__final_confirm),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__hash, Self::stellar__hash),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__high, Self::stellar__high),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__home_domain, Self::stellar__home_domain),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__inflation, Self::stellar__inflation),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__initial_balance, Self::stellar__initial_balance),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__initialize_signing_with, Self::stellar__initialize_signing_with),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__issuer_template, Self::stellar__issuer_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__key, Self::stellar__key),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__limit, Self::stellar__limit),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__low, Self::stellar__low),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__master_weight, Self::stellar__master_weight),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__medium, Self::stellar__medium),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__new_offer, Self::stellar__new_offer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__new_passive_offer, Self::stellar__new_passive_offer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__no_memo_set, Self::stellar__no_memo_set),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__no_restriction, Self::stellar__no_restriction),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__on_network_template, Self::stellar__on_network_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__path_pay, Self::stellar__path_pay),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__path_pay_at_least, Self::stellar__path_pay_at_least),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__pay, Self::stellar__pay),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__pay_at_most, Self::stellar__pay_at_most),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__preauth_transaction, Self::stellar__preauth_transaction),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__price_per_template, Self::stellar__price_per_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__private_network, Self::stellar__private_network),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__remove_signer, Self::stellar__remove_signer),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__revoke_trust, Self::stellar__revoke_trust),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__selling, Self::stellar__selling),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__set_data, Self::stellar__set_data),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__set_flags, Self::stellar__set_flags),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__set_sequence_to_template, Self::stellar__set_sequence_to_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__sign_tx_count_template, Self::stellar__sign_tx_count_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__sign_tx_fee_template, Self::stellar__sign_tx_fee_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__source_account, Self::stellar__source_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__testnet_network, Self::stellar__testnet_network),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__trusted_account, Self::stellar__trusted_account),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__update, Self::stellar__update),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__valid_from, Self::stellar__valid_from),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__valid_to, Self::stellar__valid_to),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__value_sha256, Self::stellar__value_sha256),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__wanna_clean_value_key_template, Self::stellar__wanna_clean_value_key_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_stellar__your_account, Self::stellar__your_account),
+        (Qstr::MP_QSTR_storage_msg__processing, Self::storage_msg__processing),
+        (Qstr::MP_QSTR_storage_msg__starting, Self::storage_msg__starting),
+        (Qstr::MP_QSTR_storage_msg__verifying_pin, Self::storage_msg__verifying_pin),
+        (Qstr::MP_QSTR_storage_msg__wrong_pin, Self::storage_msg__wrong_pin),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__baker_address, Self::tezos__baker_address),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__balance, Self::tezos__balance),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__ballot, Self::tezos__ballot),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__confirm_delegation, Self::tezos__confirm_delegation),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__confirm_origination, Self::tezos__confirm_origination),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__delegator, Self::tezos__delegator),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__proposal, Self::tezos__proposal),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__register_delegate, Self::tezos__register_delegate),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__remove_delegation, Self::tezos__remove_delegation),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__submit_ballot, Self::tezos__submit_ballot),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__submit_proposal, Self::tezos__submit_proposal),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_tezos__submit_proposals, Self::tezos__submit_proposals),
+        (Qstr::MP_QSTR_tutorial__continue, Self::tutorial__continue),
+        (Qstr::MP_QSTR_tutorial__did_you_know, Self::tutorial__did_you_know),
+        (Qstr::MP_QSTR_tutorial__exit, Self::tutorial__exit),
+        (Qstr::MP_QSTR_tutorial__first_wallet, Self::tutorial__first_wallet),
+        (Qstr::MP_QSTR_tutorial__get_started, Self::tutorial__get_started),
+        (Qstr::MP_QSTR_tutorial__lets_begin, Self::tutorial__lets_begin),
+        (Qstr::MP_QSTR_tutorial__menu, Self::tutorial__menu),
+        (Qstr::MP_QSTR_tutorial__middle_click, Self::tutorial__middle_click),
+        (Qstr::MP_QSTR_tutorial__press_and_hold, Self::tutorial__press_and_hold),
+        (Qstr::MP_QSTR_tutorial__ready_to_use, Self::tutorial__ready_to_use),
+        (Qstr::MP_QSTR_tutorial__ready_to_use_safe5, Self::tutorial__ready_to_use_safe5),
+        (Qstr::MP_QSTR_tutorial__restart_tutorial, Self::tutorial__restart_tutorial),
+        (Qstr::MP_QSTR_tutorial__scroll_down, Self::tutorial__scroll_down),
+        (Qstr::MP_QSTR_tutorial__sure_you_want_skip, Self::tutorial__sure_you_want_skip),
+        (Qstr::MP_QSTR_tutorial__swipe_up_and_down, Self::tutorial__swipe_up_and_down),
+        (Qstr::MP_QSTR_tutorial__title_easy_navigation, Self::tutorial__title_easy_navigation),
+        (Qstr::MP_QSTR_tutorial__title_handy_menu, Self::tutorial__title_handy_menu),
+        (Qstr::MP_QSTR_tutorial__title_hello, Self::tutorial__title_hello),
+        (Qstr::MP_QSTR_tutorial__title_hold, Self::tutorial__title_hold),
+        (Qstr::MP_QSTR_tutorial__title_lets_begin, Self::tutorial__title_lets_begin),
+        (Qstr::MP_QSTR_tutorial__title_screen_scroll, Self::tutorial__title_screen_scroll),
+        (Qstr::MP_QSTR_tutorial__title_skip, Self::tutorial__title_skip),
+        (Qstr::MP_QSTR_tutorial__title_tutorial_complete, Self::tutorial__title_tutorial_complete),
+        (Qstr::MP_QSTR_tutorial__title_well_done, Self::tutorial__title_well_done),
+        (Qstr::MP_QSTR_tutorial__use_trezor, Self::tutorial__use_trezor),
+        (Qstr::MP_QSTR_tutorial__welcome_press_right, Self::tutorial__welcome_press_right),
+        (Qstr::MP_QSTR_tutorial__welcome_safe5, Self::tutorial__welcome_safe5),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_u2f__get, Self::u2f__get),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_u2f__set_template, Self::u2f__set_template),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_u2f__title_get, Self::u2f__title_get),
+        #[cfg(feature = "universal_fw")]
+        (Qstr::MP_QSTR_u2f__title_set, Self::u2f__title_set),
+        (Qstr::MP_QSTR_wipe__info, Self::wipe__info),
+        (Qstr::MP_QSTR_wipe__title, Self::wipe__title),
+        (Qstr::MP_QSTR_wipe__want_to_wipe, Self::wipe__want_to_wipe),
+        (Qstr::MP_QSTR_wipe_code__change, Self::wipe_code__change),
+        (Qstr::MP_QSTR_wipe_code__changed, Self::wipe_code__changed),
+        (Qstr::MP_QSTR_wipe_code__diff_from_pin, Self::wipe_code__diff_from_pin),
+        (Qstr::MP_QSTR_wipe_code__disabled, Self::wipe_code__disabled),
+        (Qstr::MP_QSTR_wipe_code__enabled, Self::wipe_code__enabled),
+        (Qstr::MP_QSTR_wipe_code__enter_new, Self::wipe_code__enter_new),
+        (Qstr::MP_QSTR_wipe_code__info, Self::wipe_code__info),
+        (Qstr::MP_QSTR_wipe_code__invalid, Self::wipe_code__invalid),
+        (Qstr::MP_QSTR_wipe_code__mismatch, Self::wipe_code__mismatch),
+        (Qstr::MP_QSTR_wipe_code__reenter, Self::wipe_code__reenter),
+        (Qstr::MP_QSTR_wipe_code__reenter_to_confirm, Self::wipe_code__reenter_to_confirm),
+        (Qstr::MP_QSTR_wipe_code__title_check, Self::wipe_code__title_check),
+        (Qstr::MP_QSTR_wipe_code__title_invalid, Self::wipe_code__title_invalid),
+        (Qstr::MP_QSTR_wipe_code__title_settings, Self::wipe_code__title_settings),
+        (Qstr::MP_QSTR_wipe_code__turn_off, Self::wipe_code__turn_off),
+        (Qstr::MP_QSTR_wipe_code__turn_on, Self::wipe_code__turn_on),
+        (Qstr::MP_QSTR_wipe_code__wipe_code_mismatch, Self::wipe_code__wipe_code_mismatch),
+        (Qstr::MP_QSTR_word_count__title, Self::word_count__title),
+        (Qstr::MP_QSTR_words__account, Self::words__account),
+        (Qstr::MP_QSTR_words__account_colon, Self::words__account_colon),
+        (Qstr::MP_QSTR_words__address, Self::words__address),
+        (Qstr::MP_QSTR_words__amount, Self::words__amount),
+        (Qstr::MP_QSTR_words__are_you_sure, Self::words__are_you_sure),
+        (Qstr::MP_QSTR_words__array_of, Self::words__array_of),
+        (Qstr::MP_QSTR_words__blockhash, Self::words__blockhash),
+        (Qstr::MP_QSTR_words__buying, Self::words__buying),
+        (Qstr::MP_QSTR_words__cancel_and_exit, Self::words__cancel_and_exit),
+        (Qstr::MP_QSTR_words__confirm, Self::words__confirm),
+        (Qstr::MP_QSTR_words__confirm_fee, Self::words__confirm_fee),
+        (Qstr::MP_QSTR_words__contains, Self::words__contains),
+        (Qstr::MP_QSTR_words__continue_anyway, Self::words__continue_anyway),
+        (Qstr::MP_QSTR_words__continue_anyway_question, Self::words__continue_anyway_question),
+        (Qstr::MP_QSTR_words__continue_with, Self::words__continue_with),
+        (Qstr::MP_QSTR_words__error, Self::words__error),
+        (Qstr::MP_QSTR_words__fee, Self::words__fee),
+        (Qstr::MP_QSTR_words__from, Self::words__from),
+        (Qstr::MP_QSTR_words__good_to_know, Self::words__good_to_know),
+        (Qstr::MP_QSTR_words__important, Self::words__important),
+        (Qstr::MP_QSTR_words__instructions, Self::words__instructions),
+        (Qstr::MP_QSTR_words__keep_it_safe, Self::words__keep_it_safe),
+        (Qstr::MP_QSTR_words__know_what_your_doing, Self::words__know_what_your_doing),
+        (Qstr::MP_QSTR_words__my_trezor, Self::words__my_trezor),
+        (Qstr::MP_QSTR_words__no, Self::words__no),
+        (Qstr::MP_QSTR_words__not_recommended, Self::words__not_recommended),
+        (Qstr::MP_QSTR_words__operation_cancelled, Self::words__operation_cancelled),
+        (Qstr::MP_QSTR_words__outputs, Self::words__outputs),
+        (Qstr::MP_QSTR_words__please_check_again, Self::words__please_check_again),
+        (Qstr::MP_QSTR_words__please_try_again, Self::words__please_try_again),
+        (Qstr::MP_QSTR_words__really_wanna, Self::words__really_wanna),
+        (Qstr::MP_QSTR_words__recipient, Self::words__recipient),
+        (Qstr::MP_QSTR_words__settings, Self::words__settings),
+        (Qstr::MP_QSTR_words__sign, Self::words__sign),
+        (Qstr::MP_QSTR_words__signer, Self::words__signer),
+        (Qstr::MP_QSTR_words__title_check, Self::words__title_check),
+        (Qstr::MP_QSTR_words__title_done, Self::words__title_done),
+        (Qstr::MP_QSTR_words__title_group, Self::words__title_group),
+        (Qstr::MP_QSTR_words__title_information, Self::words__title_information),
+        (Qstr::MP_QSTR_words__title_remember, Self::words__title_remember),
+        (Qstr::MP_QSTR_words__title_share, Self::words__title_share),
+        (Qstr::MP_QSTR_words__title_shares, Self::words__title_shares),
+        (Qstr::MP_QSTR_words__title_success, Self::words__title_success),
+        (Qstr::MP_QSTR_words__title_summary, Self::words__title_summary),
+        (Qstr::MP_QSTR_words__title_threshold, Self::words__title_threshold),
+        (Qstr::MP_QSTR_words__try_again, Self::words__try_again),
+        (Qstr::MP_QSTR_words__unknown, Self::words__unknown),
+        (Qstr::MP_QSTR_words__unlocked, Self::words__unlocked),
+        (Qstr::MP_QSTR_words__warning, Self::words__warning),
+        (Qstr::MP_QSTR_words__writable, Self::words__writable),
+        (Qstr::MP_QSTR_words__yes, Self::words__yes),
+    ];
 }
