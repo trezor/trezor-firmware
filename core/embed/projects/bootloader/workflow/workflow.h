@@ -84,14 +84,10 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
                                                const image_header *const hdr);
 #endif
 
-size_t workflow_ifaces_init(const vendor_header *const vhdr,
-                            const image_header *const hdr,
-                            protob_io_t ifaces[2]);
+size_t workflow_ifaces_init(secbool usb21_landing, protob_io_t ifaces[2]);
 
 void workflow_ifaces_deinit(protob_io_t ifaces[2]);
 
 void workflow_ifaces_pause(protob_io_t ifaces[2]);
 
-void workflow_ifaces_resume(const vendor_header *const vhdr,
-                            const image_header *const hdr,
-                            protob_io_t ifaces[2]);
+void workflow_ifaces_resume(secbool usb21_landing, protob_io_t ifaces[2]);

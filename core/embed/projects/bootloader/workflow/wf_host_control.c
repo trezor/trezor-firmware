@@ -135,16 +135,11 @@ exit_host_control:
   return result;
 }
 
-size_t workflow_ifaces_init(const vendor_header *const vhdr,
-                            const image_header *const hdr,
-                            protob_io_t ifaces[2]) {
+size_t workflow_ifaces_init(secbool usb21_landing, protob_io_t ifaces[2]) {
   size_t cnt = 1;
   memset(ifaces, 0, sizeof(protob_io_t) * 2);
 
-  // if both are NULL, we don't have a firmware installed
-  // let's show a webusb landing page in this case
-  wire_iface_t *usb_iface =
-      usb_iface_init((vhdr == NULL && hdr == NULL) ? sectrue : secfalse);
+  wire_iface_t *usb_iface = usb_iface_init(usb21_landing);
 
   protob_init(&ifaces[0], usb_iface);
 
@@ -176,11 +171,9 @@ void workflow_ifaces_pause(protob_io_t ifaces[2]) {
 #endif
 }
 
-void workflow_ifaces_resume(const vendor_header *const vhdr,
-                            const image_header *const hdr,
-                            protob_io_t ifaces[2]) {
+void workflow_ifaces_resume(secbool usb21_landing, protob_io_t ifaces[2]) {
   if (ifaces == NULL) {
     return;
   }
-  workflow_ifaces_init(vhdr, hdr, ifaces);
+  workflow_ifaces_init(usb21_landing, ifaces);
 }

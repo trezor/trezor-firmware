@@ -131,3 +131,12 @@ void usb_iface_deinit(void) {
   memset(iface, 0, sizeof(wire_iface_t));
   usb_deinit();
 }
+
+secbool usb_show_landing(const vendor_header* const vhdr,
+                         const image_header* const hdr) {
+  // if both are NULL, we don't have a firmware installed
+  // let's show a webusb landing page in this case
+  secbool landing = (vhdr == NULL && hdr == NULL) ? sectrue : secfalse;
+
+  return landing;
+}

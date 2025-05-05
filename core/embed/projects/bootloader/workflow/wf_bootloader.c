@@ -33,6 +33,7 @@
 #include "antiglitch.h"
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
+#include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
 workflow_result_t workflow_menu(const vendor_header* const vhdr,
@@ -60,7 +61,7 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
     if (menu_result == MENU_BLUETOOTH) {
       workflow_ifaces_pause(ifaces);
       workflow_ble_pairing_request(vhdr, hdr);
-      workflow_ifaces_resume(vhdr, hdr, ifaces);
+      workflow_ifaces_resume(usb_show_landing(vhdr, hdr), ifaces);
       continue;
     }
 #endif
@@ -80,7 +81,9 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
     if (menu_result == MENU_WIPE) {  // wipe
       workflow_ifaces_pause(ifaces);
       workflow_result_t r = workflow_wipe_device(NULL);
-      workflow_ifaces_resume(vhdr, hdr, ifaces);
+      if (r == WF_CANCELLED) {
+        workflow_ifaces_resume(usb_show_landing(vhdr, hdr), ifaces);
+      }
       if (r == WF_ERROR || r == WF_OK_DEVICE_WIPED || r == WF_CANCELLED) {
         return r;
       }
@@ -133,7 +136,7 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
   uint32_t ui_res = 0;
 
   protob_io_t ifaces[2];
-  size_t num_ifaces = workflow_ifaces_init(NULL, NULL, ifaces);
+  size_t num_ifaces = workflow_ifaces_init(usb_show_landing(vhdr, hdr), ifaces);
 
   screen_t next_screen = SCREEN_WAIT_FOR_HOST;
 
@@ -152,7 +155,7 @@ static screen_t handle_wait_for_host(const vendor_header* vhdr,
           case CONNECT_PAIRING_MODE: {
             workflow_ifaces_pause(ifaces);
             workflow_result_t ble = workflow_ble_pairing_request(vhdr, hdr);
-            workflow_ifaces_resume(vhdr, hdr, ifaces);
+            workflow_ifaces_resume(usb_show_landing(vhdr, hdr), ifaces);
             if (ble == WF_OK_PAIRING_COMPLETED || ble == WF_OK_PAIRING_FAILED) {
               next_screen = SCREEN_WAIT_FOR_HOST;
             } else if (ble == WF_CANCELLED) {

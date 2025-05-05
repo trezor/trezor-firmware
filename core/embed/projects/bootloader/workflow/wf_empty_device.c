@@ -51,7 +51,7 @@ workflow_result_t workflow_empty_device(void) {
 #endif
 
   protob_io_t ifaces[2];
-  size_t num_ifaces = workflow_ifaces_init(NULL, NULL, ifaces);
+  size_t num_ifaces = workflow_ifaces_init(sectrue, ifaces);
 
   workflow_result_t res = WF_CANCELLED;
   uint32_t ui_result = WELCOME_CANCEL;

@@ -26,6 +26,7 @@
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
+#include "wire/wire_iface_usb.h"
 #include "workflow.h"
 
 workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
@@ -36,7 +37,7 @@ workflow_result_t workflow_auto_update(const vendor_header *const vhdr,
   uint32_t ui_result = CONNECT_CANCEL;
 
   protob_io_t ifaces[2];
-  size_t num_ifaces = workflow_ifaces_init(NULL, NULL, ifaces);
+  size_t num_ifaces = workflow_ifaces_init(usb_show_landing(vhdr, hdr), ifaces);
 
   c_layout_t layout;
   memset(&layout, 0, sizeof(layout));
