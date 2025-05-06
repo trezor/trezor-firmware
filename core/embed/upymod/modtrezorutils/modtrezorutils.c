@@ -49,15 +49,6 @@
 #include <sys/stack_utils.h>
 #endif
 
-static void ui_progress(void *context, uint32_t current, uint32_t total) {
-  mp_obj_t ui_wait_callback = (mp_obj_t)context;
-
-  if (mp_obj_is_callable(ui_wait_callback)) {
-    mp_call_function_2_protected(ui_wait_callback, mp_obj_new_int(current),
-                                 mp_obj_new_int(total));
-  }
-}
-
 /// def consteq(sec: bytes, pub: bytes) -> bool:
 ///     """
 ///     Compares the private information in `sec` with public, user-provided
@@ -168,14 +159,31 @@ STATIC mp_obj_t mod_trezorutils_firmware_hash(size_t n_args,
   vstr_t vstr = {0};
   vstr_init_len(&vstr, BLAKE2S_DIGEST_LENGTH);
 
-  if (sectrue != firmware_calc_hash(chal.buf, chal.len, (uint8_t *)vstr.buf,
-                                    vstr.len, ui_progress, ui_wait_callback)) {
+  if (firmware_hash_start(chal.buf, chal.len) < 0) {
     vstr_clear(&vstr);
-    mp_raise_msg(&mp_type_RuntimeError, "Failed to calculate firmware hash.");
+    mp_raise_msg(&mp_type_RuntimeError, "Failed to start firmware hash.");
+  }
+
+  int progress = 0;
+
+  while (progress < 100) {
+    progress = firmware_hash_continue((uint8_t *)vstr.buf, vstr.len);
+
+    if (progress < 0) {
+      vstr_clear(&vstr);
+      mp_raise_msg(&mp_type_RuntimeError, "Failed to calculate firmware hash.");
+      break;
+    }
+
+    if (mp_obj_is_callable(ui_wait_callback)) {
+      mp_call_function_2_protected(ui_wait_callback, mp_obj_new_int(progress),
+                                   mp_obj_new_int(100));
+    }
   }
 
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &vstr);
 }
+
 STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorutils_firmware_hash_obj, 0,
                                            2, mod_trezorutils_firmware_hash);
 

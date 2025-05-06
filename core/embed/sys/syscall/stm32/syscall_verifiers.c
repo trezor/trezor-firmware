@@ -712,25 +712,29 @@ access_violation:
 
 // ---------------------------------------------------------------------
 
-secbool firmware_calc_hash__verified(const uint8_t *challenge,
-                                     size_t challenge_len, uint8_t *hash,
-                                     size_t hash_len,
-                                     firmware_hash_callback_t callback,
-                                     void *callback_context) {
+int firmware_hash_start__verified(const uint8_t *challenge,
+                                  size_t challenge_len) {
   if (!probe_read_access(challenge, challenge_len)) {
     goto access_violation;
   }
 
+  return firmware_hash_start(challenge, challenge_len);
+
+access_violation:
+  apptask_access_violation();
+  return -1;
+}
+
+int firmware_hash_continue__verified(uint8_t *hash, size_t hash_len) {
   if (!probe_write_access(hash, hash_len)) {
     goto access_violation;
   }
 
-  return firmware_calc_hash(challenge, challenge_len, hash, hash_len, callback,
-                            callback_context);
+  return firmware_hash_continue(hash, hash_len);
 
 access_violation:
   apptask_access_violation();
-  return secfalse;
+  return -1;
 }
 
 secbool firmware_get_vendor__verified(char *buff, size_t buff_size) {
