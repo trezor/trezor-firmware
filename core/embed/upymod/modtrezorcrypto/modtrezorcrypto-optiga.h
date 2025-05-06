@@ -45,19 +45,21 @@ MP_DEFINE_EXCEPTION(SigningInaccessible, OptigaError)
 STATIC mp_obj_t mod_trezorcrypto_optiga_get_certificate(mp_obj_t cert_index) {
   mp_int_t idx = mp_obj_get_int(cert_index);
   if (idx < 0 || idx >= OPTIGA_CERT_COUNT) {
-    mp_raise_ValueError("Invalid index.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid index."));
   }
 
   size_t cert_size = 0;
   if (!optiga_cert_size(idx, &cert_size)) {
-    mp_raise_msg(&mp_type_OptigaError, "Failed to get certificate size.");
+    mp_raise_msg(&mp_type_OptigaError,
+                 MP_ERROR_TEXT("Failed to get certificate size."));
   }
 
   vstr_t cert = {0};
   vstr_init_len(&cert, cert_size);
   if (!optiga_read_cert(idx, (uint8_t *)cert.buf, cert.alloc, &cert_size)) {
     vstr_clear(&cert);
-    mp_raise_msg(&mp_type_OptigaError, "Failed to read certificate.");
+    mp_raise_msg(&mp_type_OptigaError,
+                 MP_ERROR_TEXT("Failed to read certificate."));
   }
 
   cert.len = cert_size;
@@ -78,13 +80,13 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
                                              mp_obj_t digest) {
   mp_int_t idx = mp_obj_get_int(key_index);
   if (idx < 0 || idx >= OPTIGA_ECC_KEY_COUNT) {
-    mp_raise_ValueError("Invalid index.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid index."));
   }
 
   mp_buffer_info_t dig = {0};
   mp_get_buffer_raise(digest, &dig, MP_BUFFER_READ);
   if (dig.len != 32) {
-    mp_raise_ValueError("Invalid length of digest.");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of digest."));
   }
 
   vstr_t sig = {0};
@@ -96,9 +98,10 @@ STATIC mp_obj_t mod_trezorcrypto_optiga_sign(mp_obj_t key_index,
   if (ret != OPTIGA_SIGN_SUCCESS) {
     vstr_clear(&sig);
     if (ret == OPTIGA_SIGN_INACCESSIBLE) {
-      mp_raise_msg(&mp_type_SigningInaccessible, "Signing inaccessible.");
+      mp_raise_msg(&mp_type_SigningInaccessible,
+                   MP_ERROR_TEXT("Signing inaccessible."));
     } else {
-      mp_raise_msg(&mp_type_OptigaError, "Signing failed.");
+      mp_raise_msg(&mp_type_OptigaError, MP_ERROR_TEXT("Signing failed."));
     }
   }
 

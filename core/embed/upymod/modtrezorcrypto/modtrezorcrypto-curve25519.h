@@ -51,7 +51,7 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_publickey(mp_obj_t secret_key) {
   mp_buffer_info_t sk = {0};
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   vstr_t pk = {0};
   vstr_init_len(&pk, 32);
@@ -72,10 +72,10 @@ STATIC mp_obj_t mod_trezorcrypto_curve25519_multiply(mp_obj_t secret_key,
   mp_get_buffer_raise(secret_key, &sk, MP_BUFFER_READ);
   mp_get_buffer_raise(public_key, &pk, MP_BUFFER_READ);
   if (sk.len != 32) {
-    mp_raise_ValueError("Invalid length of secret key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of secret key"));
   }
   if (pk.len != 32) {
-    mp_raise_ValueError("Invalid length of public key");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid length of public key"));
   }
   vstr_t out = {0};
   vstr_init_len(&out, 32);

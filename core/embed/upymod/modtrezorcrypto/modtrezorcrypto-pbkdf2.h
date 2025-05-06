@@ -89,7 +89,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_make_new(const mp_obj_type_t *type,
                             salt.len, blocknr);
   } else {
     m_del_obj(mp_obj_Pbkdf2_t, o);
-    mp_raise_ValueError("Invalid PRF");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid PRF"));
   }
   // constructor called with iterations as fourth parameter
   if (n_args > 3) {
@@ -111,7 +111,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_update(mp_obj_t self,
   } else if (o->prf == PRF_HMAC_SHA512) {
     pbkdf2_hmac_sha512_Update(&(o->ctx512), iter);
   } else {
-    mp_raise_ValueError("Invalid PRF");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid PRF"));
   }
 
   return mp_const_none;
@@ -139,7 +139,7 @@ STATIC mp_obj_t mod_trezorcrypto_Pbkdf2_key(mp_obj_t self) {
     pbkdf2_hmac_sha512_Final(&ctx, (uint8_t *)out.buf);
     memzero(&ctx, sizeof(PBKDF2_HMAC_SHA512_CTX));
   } else {
-    mp_raise_ValueError("Invalid PRF");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid PRF"));
   }
   return mp_obj_new_str_from_vstr(&mp_type_bytes, &out);
 }

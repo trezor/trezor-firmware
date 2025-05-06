@@ -35,6 +35,14 @@ def generate(env):
         # " | $PYTHON $MODULECOL > $TARGET"
     )
 
+    env["BUILDERS"]["CollectCompressed"] = SCons.Builder.Builder(
+        action="cat $SOURCES | sed -nr 's/.*MP_COMPRESSED_ROM_TEXT\\(\\\"(.*)\\\"\\).*/\\1/p' > $TARGET"
+    )
+
+    env["BUILDERS"]["GenerateCompressed"] = SCons.Builder.Builder(
+        action="$MAKECOMPRESSEDDATA $SOURCE > $TARGET",
+    )
+
     def generate_frozen_module(source, target, env, for_signature):
         target = str(target[0])
         source = str(source[0])

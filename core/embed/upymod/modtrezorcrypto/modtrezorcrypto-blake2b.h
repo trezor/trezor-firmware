@@ -81,8 +81,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
 
   if (key_len > 0 && personal_len > 0) {
     mp_raise_ValueError(
-        "Invalid Blake2b parameters: cannot use key and personal at the same "
-        "time");
+        MP_ERROR_TEXT("Cannot use Blake2b key and personal at the same time"));
   }
 
   mp_obj_Blake2b_t *o = m_new_obj_with_finaliser(mp_obj_Blake2b_t);
@@ -99,7 +98,7 @@ STATIC mp_obj_t mod_trezorcrypto_Blake2b_make_new(const mp_obj_type_t *type,
 
   if (res < 0) {
     m_del_obj(mp_obj_Blake2b_t, o);
-    mp_raise_ValueError("Invalid Blake2b parameters");
+    mp_raise_ValueError(MP_ERROR_TEXT("Invalid Blake2b parameters"));
   }
 
   // constructor called with data argument set
