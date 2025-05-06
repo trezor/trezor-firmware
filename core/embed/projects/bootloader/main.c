@@ -90,6 +90,25 @@ CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
 static void drivers_init(secbool *touch_initialized) {
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
+
+#ifdef USE_RGB_LED
+  rgb_led_init();
+#endif
+
+  //systick_delay_ms(5000);
+#ifdef USE_POWER_MANAGER
+  pm_init(false);
+  while (pm_turn_on() != PM_OK) {
+    rgb_led_set_color(0x400000);
+    systick_delay_ms(1000);
+    pm_hibernate();
+  }
+  pm_charging_enable();
+#endif
+
   random_delays_init();
 #ifdef USE_PVD
   pvd_init();
@@ -127,27 +146,19 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_OPTIGA
   optiga_hal_init();
 #endif
-#ifdef USE_BACKUP_RAM
-  backup_ram_init();
-#endif
 #ifdef USE_BUTTON
   button_init();
 #endif
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
 #endif
-#ifdef USE_RGB_LED
-  rgb_led_init();
-#endif
+
 #ifdef USE_BLE
   ble_init();
 #endif
 }
 
 static void drivers_deinit(void) {
-#ifdef USE_BACKUP_RAM
-  backup_ram_deinit();
-#endif
 #ifdef FIXED_HW_DEINIT
 #ifdef USE_BUTTON
   button_deinit();
@@ -162,6 +173,9 @@ static void drivers_deinit(void) {
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 #ifdef USE_POWER_MANAGER
   pm_deinit();
+#endif
+#ifdef USE_BACKUP_RAM
+  backup_ram_deinit();
 #endif
 }
 
@@ -341,10 +355,6 @@ int bootloader_main(void) {
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
     firmware_present_backup = firmware_present;
   }
-
-#ifdef USE_POWER_MANAGER
-  pm_init(false);
-#endif
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
