@@ -11,7 +11,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, LinearPlacement, Offset},
+        geometry::{Direction, LinearPlacement},
     },
 };
 
@@ -91,18 +91,11 @@ pub fn new_show_danger(
     let content_menu = VerticalMenuScreen::new(
         VerticalMenu::<ShortMenuVec>::empty()
             .with_separators()
-            .with_item(
-                Button::with_text(verb_cancel)
-                    .styled(theme::menu_item_title())
-                    .with_text_align(Alignment::Start)
-                    .with_content_offset(Offset::x(12)),
-            )
-            .with_item(
-                Button::with_text(TR::words__continue_anyway.into())
-                    .styled(theme::menu_item_title_orange())
-                    .with_text_align(Alignment::Start)
-                    .with_content_offset(Offset::x(12)),
-            ),
+            .with_item(Button::new_menu_item(verb_cancel, theme::menu_item_title()))
+            .with_item(Button::new_menu_item(
+                TR::words__continue_anyway.into(),
+                theme::menu_item_title_orange(),
+            )),
     )
     .with_header(
         Header::new(menu_title.unwrap_or("".into()))
