@@ -631,24 +631,14 @@ secbool firmware_get_vendor(char *buff, size_t buff_size) {
                          SYSCALL_FIRMWARE_GET_VENDOR);
 }
 
-static firmware_hash_callback_t firmware_hash_callback = NULL;
-
-static void firmware_hash_callback_wrapper(void *context, uint32_t progress,
-                                           uint32_t total) {
-  firmware_hash_callback(context, progress, total);
-  syscall_return_from_callback(0);
+int firmware_hash_start(const uint8_t *challenge, size_t challenge_len) {
+  return (int)syscall_invoke2((uint32_t)challenge, challenge_len,
+                              SYSCALL_FIRMWARE_HASH_START);
 }
 
-secbool firmware_calc_hash(const uint8_t *challenge, size_t challenge_len,
-                           uint8_t *hash, size_t hash_len,
-                           firmware_hash_callback_t callback,
-                           void *callback_context) {
-  firmware_hash_callback = callback;
-
-  return syscall_invoke6((uint32_t)challenge, challenge_len, (uint32_t)hash,
-                         hash_len, (uint32_t)firmware_hash_callback_wrapper,
-                         (uint32_t)callback_context,
-                         SYSCALL_FIRMWARE_CALC_HASH);
+int firmware_hash_continue(uint8_t *hash, size_t hash_len) {
+  return (int)syscall_invoke2((uint32_t)hash, hash_len,
+                              SYSCALL_FIRMWARE_HASH_CONTINUE);
 }
 
 #ifdef USE_BLE
