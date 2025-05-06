@@ -426,6 +426,36 @@ def test_credential_phase(client: Client) -> None:
     protocol._read_message(ThpEndResponse)
 
 
+def test_credential_request_in_encrypted_transport_phase(client: Client) -> None:
+    randomness_static = os.urandom(32)
+    protocol = prepare_protocol_for_pairing(client, randomness_static)
+    _nfc_pairing(client, protocol)
+
+    # Request credential with confirmation after pairing
+    host_static_privkey = curve25519.get_private_key(randomness_static)
+    host_static_pubkey = curve25519.get_public_key(host_static_privkey)
+    protocol._send_message(
+        ThpCredentialRequest(host_static_pubkey=host_static_pubkey, autoconnect=False)
+    )
+    credential_response = protocol._read_message(ThpCredentialResponse)
+
+    assert credential_response.credential is not None
+    credential = credential_response.credential
+    protocol._send_message(ThpEndRequest())
+    protocol._read_message(ThpEndResponse)
+
+    session = client.get_seedless_session()
+
+    session.call(
+        ThpCredentialRequest(
+            host_static_pubkey=host_static_pubkey,
+            autoconnect=True,
+            credential=credential,
+        ),
+        expect=ThpCredentialResponse,
+    )
+
+
 @pytest.mark.setup_client(passphrase=True)
 def test_channel_replacement(client: Client) -> None:
     assert client.features.passphrase_protection is True
