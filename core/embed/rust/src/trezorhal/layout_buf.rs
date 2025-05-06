@@ -21,7 +21,7 @@ impl<T> LayoutBuffer<T> {
     pub unsafe fn new(buffer: *mut c_layout_t) -> Self {
         let layout = unwrap!(NonNull::new(buffer));
         // SAFETY: the layout is non-null and properly aligned
-        let buffer = unsafe { (*layout.as_ptr()).buf };
+        let buffer = unsafe { &(*layout.as_ptr()).buf };
 
         let ptr = buffer.as_ptr();
         let addr = ptr as usize;
@@ -39,17 +39,17 @@ impl<T> LayoutBuffer<T> {
         }
     }
 
-    fn get_maybe_uninit(&self) -> &mut MaybeUninit<T> {
+    fn get_maybe_uninit(&mut self) -> &mut MaybeUninit<T> {
         // SAFETY: alignment and size are checked in `new()`
-        let buffer = unsafe { (*self.layout.as_ptr()).buf };
-        let layout = buffer.as_ptr() as *mut MaybeUninit<T>;
+        let buffer = unsafe { &mut (*self.layout.as_ptr()).buf };
+        let layout = buffer.as_mut_ptr() as *mut MaybeUninit<T>;
         // SAFETY: per safety assumptions of LayoutBuffer, we are allowed to mutably
         // borrow the memory.
         unsafe { &mut *layout }
     }
 
     /// Store a layout in the buffer.
-    pub fn store(&self, value: T) {
+    pub fn store(&mut self, value: T) {
         let layout = self.get_maybe_uninit();
         layout.write(value);
     }
@@ -61,7 +61,7 @@ impl<T> LayoutBuffer<T> {
     /// Caller is responsible for ensuring that the buffer contains a valid
     /// layout -- that is, that `store()` has previously been called on the
     /// underlying pointer.
-    pub unsafe fn get_mut(&self) -> &mut T {
+    pub unsafe fn get_mut(&mut self) -> &mut T {
         let layout = self.get_maybe_uninit();
         // SAFETY: safe under the safety assumptions of this function
         unsafe { layout.assume_init_mut() }
