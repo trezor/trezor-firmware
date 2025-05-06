@@ -188,6 +188,36 @@ void prodtest_pm_report(cli_t* cli) {
   cli_trace(cli, "  System voltage: %d.%03d V", (int)report.system_voltage_v,
             (int)(report.system_voltage_v * 1000) % 1000);
 
+  // Machine readable output into console
+  // WLC_connected, USB_connected,
+  // battery_voltage, battery_current, battery_temp, battery_SoC,
+  // battery_SoC_latched, pmic_temp, wireless_output_voltage, wireless_current,
+  // wireless_temp, system_voltage
+
+  cli_progress(cli, "%s %s %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d",
+               report.usb_connected ? "USB_connected" : "USB_disconnected",
+               report.wireless_charger_connected ? "WLC_connected" : "WLC_disconnected",
+               (int)report.battery_voltage_v,
+               (int)(report.battery_voltage_v * 1000) % 1000,
+               (int)report.battery_current_ma,
+               abs((int)(report.battery_current_ma * 1000) % 1000),
+               (int)report.battery_temp_c,
+               abs((int)(report.battery_temp_c * 1000) % 1000),
+               (int)(report.battery_soc * 100),
+               (int)(report.battery_soc * 10000) % 100,
+               (int)(report.battery_soc_latched * 100),
+               (int)(report.battery_soc_latched * 10000) % 100,
+               (int)report.pmic_temp_c,
+               (int)(report.pmic_temp_c * 1000) % 1000,
+               (int)report.wireless_output_voltage_v,
+               (int)(report.wireless_output_voltage_v * 1000) % 1000,
+               (int)report.wireless_current_ma,
+               (int)(report.wireless_current_ma * 1000) % 1000,
+               (int)report.wireless_temp_c,
+               (int)(report.wireless_temp_c * 1000) % 1000,
+               (int)report.system_voltage_v,
+               (int)(report.system_voltage_v * 1000) % 1000);
+
   cli_ok(cli, "");
 }
 
