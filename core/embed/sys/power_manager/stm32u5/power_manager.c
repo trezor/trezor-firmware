@@ -228,7 +228,12 @@ pm_status_t pm_turn_on(void) {
   }
 
   // Poll until at least single PMIC measurement is done
-  while(drv->pmic_last_update_ms == 0){};
+  uint32_t pmic_last_update_ms;
+  do{
+    irq_key_t irq_key = irq_lock();
+    pmic_last_update_ms = drv->pmic_last_update_ms;
+    irq_unlock(irq_key);
+  } while(pmic_last_update_ms == 0);
 
   // Check if device has enough power to startup
   if(drv->pmic_data.usb_status == 0x0 &&
