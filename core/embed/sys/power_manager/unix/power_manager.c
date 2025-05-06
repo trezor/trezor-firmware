@@ -19,13 +19,19 @@
 
 #include <trezor_rtl.h>
 
+#include <sys/power_manager.h>
+
 #include <SDL.h>
 
-bool powerctl_init(void) { return true; }
+pm_status_t pm_init(bool skip_boot_sequence) {
+  return PM_OK;
+}
 
-void powerctl_deinit(void) {}
+void pm_deinit(void) {
 
-bool powerctl_hibernate(void) {
+}
+
+pm_status_t pm_hibernate(void) {
   exit(1);
-  return true;
+  return PM_OK;
 }

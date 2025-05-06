@@ -251,6 +251,7 @@ def configure(
     ]
     paths += ["embed/sys/power_manager/inc"]
     defines += [("USE_POWER_MANAGER", "1")]
+    features_available.append("power_manager")
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

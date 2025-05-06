@@ -45,7 +45,6 @@ usb = []
 optiga = []
 ble = []
 tropic = []
-powerctl = []
 translations = ["crypto"]
 test = [
     "backlight",
