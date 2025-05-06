@@ -32,7 +32,7 @@ if TYPE_CHECKING:
             Failure,
             ThpCreateNewSession,
             ThpCredentialRequest,
-            ThpPairingCredential,
+            ThpCredentialResponse,
         )
 
 if utils.USE_THP:
@@ -289,10 +289,11 @@ if utils.USE_THP:
 
     async def handle_ThpCredentialRequest(
         message: ThpCredentialRequest,
-    ) -> ThpPairingCredential | Failure:
+    ) -> ThpCredentialResponse | Failure:
         from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
-        from trezor.messages import ThpCredentialMetadata
+        from trezor.messages import ThpCredentialMetadata, ThpCredentialResponse
         from trezor.wire.context import get_context
+        from trezor.wire.thp import crypto
         from trezor.wire.thp.session_context import GenericSessionContext
 
         from apps.thp.credential_manager import (
@@ -331,13 +332,19 @@ if utils.USE_THP:
             await ui.show_autoconnect_credential_confirmation_screen(
                 ctx, cred_metadata.host_name
             )
-        return issue_credential(
+        new_cred = issue_credential(
             host_static_pubkey=host_static_pubkey,
             credential_metadata=cred_metadata,
+        )
+        trezor_static_pubkey = crypto.get_trezor_static_pubkey()
+
+        return ThpCredentialResponse(
+            trezor_static_pubkey=trezor_static_pubkey, credential=new_cred
         )
 
     def _get_autoconnect_failure() -> Failure:
         from trezor.enums import FailureType
+        from trezor.messages import Failure
 
         return Failure(
             code=FailureType.DataError,
