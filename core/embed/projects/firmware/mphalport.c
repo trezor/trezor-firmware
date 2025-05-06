@@ -56,4 +56,4 @@ void mp_hal_delay_us(mp_uint_t usec) { systick_delay_us(usec); }
 
 mp_uint_t mp_hal_ticks_ms(void) { return systick_ms(); }
 
-mp_uint_t mp_hal_ticks_us(void) { return systick_ms() * 1000; }
+mp_uint_t mp_hal_ticks_us(void) { return systick_us(); }
