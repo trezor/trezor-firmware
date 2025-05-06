@@ -80,5 +80,5 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
  * @param temperature Battery temperature (°C)
  * @return Updated SOC estimate (0.0 to 1.0)
  */
-float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms, float voltage_V,
-                        float current_mA, float temperature);
+float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
+                        float voltage_V, float current_mA, float temperature);

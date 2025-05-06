@@ -75,22 +75,20 @@ void pm_monitor_power_sources(void) {
 
   // Fuel gauge not initialized yet, battery SoC not available,
   // Sample the battery data into the circular buffer, request new PMIC
-  if(!drv->fuel_gauge_initialized){
-
+  if (!drv->fuel_gauge_initialized) {
     pm_battery_sampling(drv->pmic_data.vbat, drv->pmic_data.ibat,
-      drv->pmic_data.ntc_temp);
+                        drv->pmic_data.ntc_temp);
 
     // Request fresh measurements
     npm1300_measure(pm_pmic_data_ready, NULL);
     drv->pmic_measurement_ready = false;
 
     return;
-
   }
 
   fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
-                          drv->pmic_data.vbat, drv->pmic_data.ibat,
-                          drv->pmic_data.ntc_temp);
+                    drv->pmic_data.vbat, drv->pmic_data.ibat,
+                    drv->pmic_data.ntc_temp);
 
   // Ceil the float soc to user friendly integer
   uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
@@ -122,7 +120,7 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
   pm_driver_t* drv = &g_pm;
 
   // Store measurement timestamp
-  if(drv->pmic_last_update_ms == 0) {
+  if (drv->pmic_last_update_ms == 0) {
     drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
   } else {
     // Timeout, reset the last update timestamp
