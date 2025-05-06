@@ -115,7 +115,8 @@ void pm_control_suspend() {
   touch_deinit();
 #endif
 #ifdef USE_BLE
-  ble_suspend();
+  ble_wakeup_params_t ble_wakeup_params = {0};
+  ble_suspend(&ble_wakeup_params);
 #endif
   int backlight_level = display_get_backlight();
   display_deinit(DISPLAY_RESET_CONTENT);
@@ -218,7 +219,7 @@ void pm_control_suspend() {
   tropic_init();
 #endif
 #ifdef USE_BLE
-  ble_resume();
+  ble_resume(&ble_wakeup_params);
 #endif
 }
 
