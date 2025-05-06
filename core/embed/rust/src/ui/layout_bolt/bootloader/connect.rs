@@ -96,7 +96,7 @@ impl Component for Connect {
             return Some(ConnectMsg::PairingMode);
         }
 
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         if let Some(ButtonMsg::Clicked) = self.menu.event(ctx, event) {
             return Some(ConnectMsg::Menu);
         };
@@ -107,7 +107,7 @@ impl Component for Connect {
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
         self.button.render(target);
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         self.menu.render(target);
 
         self.message.map(|t| {
