@@ -107,16 +107,24 @@ static void drivers_init(secbool *touch_initialized) {
   pm_init(false);
 
   while (!button_is_down(BTN_POWER)) {
+    // fuel gauge guess??
+    pm_charging_enable();
     // charing screen
+    // todo or nothing if charger is not connected
+
+    if (soc > 95) {
+      green
+    } else {
     rgb_led_set_color(0x0000FF);
   }
+  }
+
 
   while (pm_turn_on() != PM_OK) {
     rgb_led_set_color(0x400000);
     systick_delay_ms(1000);
     pm_hibernate();
   }
-  pm_charging_enable();
 #endif
 
   random_delays_init();

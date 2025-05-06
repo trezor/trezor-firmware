@@ -38,24 +38,16 @@ void pm_monitor_power_sources(void) {
 
   // Update fuel gauge state
   if (drv->fuel_gauge_initialized) {
-    if (drv->fuel_gauge_request_new_guess) {
-      // Request new single SoC guess based on the latest measurements
-      fuel_gauge_initial_guess(&drv->fuel_gauge, drv->pmic_data.vbat,
-                               drv->pmic_data.ibat, drv->pmic_data.ntc_temp);
 
-      drv->fuel_gauge_request_new_guess = false;
+    fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
+                      drv->pmic_data.vbat, drv->pmic_data.ibat,
+                      drv->pmic_data.ntc_temp);
 
-    } else {
-      fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
-                        drv->pmic_data.vbat, drv->pmic_data.ibat,
-                        drv->pmic_data.ntc_temp);
-
-      // Ceil the float soc to user friendly integer
-      uint8_t soc_ceiled_temp =
-          (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
-      if (soc_ceiled_temp != drv->soc_ceiled) {
-        drv->soc_ceiled = soc_ceiled_temp;
-      }
+    // Ceil the float soc to user friendly integer
+    uint8_t soc_ceiled_temp =
+        (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
+    if (soc_ceiled_temp != drv->soc_ceiled) {
+      drv->soc_ceiled = soc_ceiled_temp;
     }
 
   } else {

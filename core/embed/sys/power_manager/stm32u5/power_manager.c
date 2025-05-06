@@ -77,7 +77,6 @@ pm_status_t pm_init(bool inherit_state) {
         // Start in lowest state and wait for the bootup sequence to
         // finish (call of pm_turn_on())
         drv->state = PM_STATE_HIBERNATE;
-        drv->initialized = false;
     } else {
       // Backup RAM contain valid data
 
@@ -101,6 +100,7 @@ pm_status_t pm_init(bool inherit_state) {
 
 
 
+
   // Disable charging by default
   drv->charging_enabled = false;
 
@@ -114,7 +114,19 @@ pm_status_t pm_init(bool inherit_state) {
   // Initial power source measurement
   npm1300_measure(pm_pmic_data_ready, NULL);
 
+  if (!drv->fuel_gauge_initialized) {
+    // Wait for 1s to sample battery data
+    systick_delay_ms(1000);
+    pm_battery_initial_soc_guess();
+  }
+
+
+  drv->charging_enabled = true;
+  //todo enable full power monitor
+
+
   drv->initialized = true;
+
   return PM_OK;
 }
 
@@ -235,16 +247,6 @@ pm_status_t pm_turn_on(void) {
     irq_unlock(key);
   };
 
-  // Try to recover SoC from the backup RAM
-  backup_ram_power_manager_data_t pm_recovery_data;
-  backup_ram_status_t status =
-      backup_ram_read_power_manager_data(&pm_recovery_data);
-
-  bool battery_critical = status == BACKUP_RAM_OK &&
-                          pm_recovery_data.bat_critical;
-
-  drv->battery_critical = battery_critical;
-
 
   // Check if device has enough power to startup
   if (drv->pmic_data.usb_status == 0x0 &&
@@ -259,14 +261,6 @@ pm_status_t pm_turn_on(void) {
     return PM_REQUEST_REJECTED;
   }
 
-  if (status == BACKUP_RAM_OK && pm_recovery_data.soc != 0.0f) {
-    drv->fuel_gauge.soc = pm_recovery_data.soc;
-    drv->fuel_gauge.soc_latched = pm_recovery_data.soc;
-  } else {
-    // Wait for 1s to sample battery data
-    systick_delay_ms(1000);
-    pm_battery_initial_soc_guess();
-  }
 
   // Set monitoring timer with longer period
   systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
