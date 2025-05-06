@@ -234,15 +234,15 @@ pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
   }
 
   // Hibernate again
-  if (drv->request_hibernate) {
+  //if (drv->request_hibernate) {
     drv->request_hibernate = false;
 
     // Put PMIC into ship mode (ultra-low power)
     pm_control_hibernate();
     return PM_STATE_HIBERNATE;
-  }
+  //}
 
-  return drv->state;
+  //return drv->state;
 }
 
 // State enter/exit actions

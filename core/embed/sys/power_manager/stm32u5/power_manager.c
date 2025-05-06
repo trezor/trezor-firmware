@@ -40,7 +40,7 @@ static void pm_shutdown_timer_handler(void* context);
 
 // API Implementation
 
-pm_status_t pm_init(bool skip_bootup_sequence) {
+pm_status_t pm_init(bool inherit_state) {
   pm_driver_t* drv = &g_pm;
 
   if (drv->initialized) {
@@ -66,7 +66,6 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
                   PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
                   PM_FUEL_GAUGE_P_INIT);
 
-  if (skip_bootup_sequence) {
     // Skip bootup sequence and try to recover the power manages state left
     // by the bootloader in backup ram.
 
@@ -74,27 +73,33 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
     backup_ram_status_t status =
         backup_ram_read_power_manager_data(&pm_recovery_data);
 
-    if (status != BACKUP_RAM_OK &&
-        (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
-         pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
-      drv->state = PM_STATE_POWER_SAVE;
-      drv->fuel_gauge_request_new_guess = true;
-
+    if (status != BACKUP_RAM_OK) {
+        // Start in lowest state and wait for the bootup sequence to
+        // finish (call of pm_turn_on())
+        drv->state = PM_STATE_HIBERNATE;
+        drv->initialized = false;
     } else {
       // Backup RAM contain valid data
-      drv->state = pm_recovery_data.bootloader_exit_state;
+
+      if (inherit_state) {
+        if ((pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
+             pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
+          drv->state = PM_STATE_POWER_SAVE;
+        } else {
+          drv->state = pm_recovery_data.bootloader_exit_state;
+        }
+      } else {
+        drv->state = PM_STATE_HIBERNATE;
+      }
+      drv->battery_critical = pm_recovery_data.bat_critical;
       drv->fuel_gauge.soc = pm_recovery_data.soc;
-      drv->fuel_gauge_request_new_guess = false;
+      drv->fuel_gauge.soc_latched = pm_recovery_data.soc;
+      //drv->fuel_gauge_request_new_guess = false;
+      drv->fuel_gauge_initialized = true;
     }
 
-    drv->fuel_gauge_initialized = true;
 
-  } else {
-    // Start in lowest state and wait for the bootup sequence to
-    // finish (call of pm_turn_on())
-    drv->state = PM_STATE_HIBERNATE;
-    drv->initialized = false;
-  }
+
 
   // Disable charging by default
   drv->charging_enabled = false;
@@ -230,9 +235,20 @@ pm_status_t pm_turn_on(void) {
     irq_unlock(key);
   };
 
+  // Try to recover SoC from the backup RAM
+  backup_ram_power_manager_data_t pm_recovery_data;
+  backup_ram_status_t status =
+      backup_ram_read_power_manager_data(&pm_recovery_data);
+
+  bool battery_critical = status == BACKUP_RAM_OK &&
+                          pm_recovery_data.bat_critical;
+
+  drv->battery_critical = battery_critical;
+
+
   // Check if device has enough power to startup
   if (drv->pmic_data.usb_status == 0x0 &&
-      drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) {
+      ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) || (drv->battery_critical && drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V))) {
     return PM_REQUEST_REJECTED;
   }
 
@@ -243,20 +259,16 @@ pm_status_t pm_turn_on(void) {
     return PM_REQUEST_REJECTED;
   }
 
-  // Try to recover SoC from the backup RAM
-  backup_ram_power_manager_data_t pm_recovery_data;
-  backup_ram_status_t status =
-      backup_ram_read_power_manager_data(&pm_recovery_data);
-
   if (status == BACKUP_RAM_OK && pm_recovery_data.soc != 0.0f) {
     drv->fuel_gauge.soc = pm_recovery_data.soc;
+    drv->fuel_gauge.soc_latched = pm_recovery_data.soc;
   } else {
     // Wait for 1s to sample battery data
     systick_delay_ms(1000);
     pm_battery_initial_soc_guess();
   }
 
-  // Set monitoiring timer with longer period
+  // Set monitoring timer with longer period
   systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
 
   drv->fuel_gauge_initialized = true;
@@ -331,7 +343,7 @@ pm_status_t pm_store_data_to_backup_ram(void) {
   if (drv->battery_critical) {
     pm_data.soc = 0;
   } else {
-    pm_data.soc = drv->fuel_gauge.soc;
+    pm_data.soc = drv->fuel_gauge.soc_latched;
   }
 
   pm_data.bat_critical = drv->battery_critical;

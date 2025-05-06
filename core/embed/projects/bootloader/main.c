@@ -94,6 +94,10 @@ static void drivers_init(secbool *touch_initialized) {
   backup_ram_init();
 #endif
 
+#ifdef USE_BUTTON
+  button_init();
+#endif
+
 #ifdef USE_RGB_LED
   rgb_led_init();
 #endif
@@ -101,6 +105,12 @@ static void drivers_init(secbool *touch_initialized) {
   // systick_delay_ms(5000);
 #ifdef USE_POWER_MANAGER
   pm_init(false);
+
+  while (!button_is_down(BTN_POWER)) {
+    // charing screen
+    rgb_led_set_color(0x0000FF);
+  }
+
   while (pm_turn_on() != PM_OK) {
     rgb_led_set_color(0x400000);
     systick_delay_ms(1000);
@@ -146,9 +156,7 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_OPTIGA
   optiga_hal_init();
 #endif
-#ifdef USE_BUTTON
-  button_init();
-#endif
+
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
 #endif

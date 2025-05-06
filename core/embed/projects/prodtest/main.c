@@ -183,19 +183,6 @@ static void usb_init_all(void) {
   ensure(usb_start(), NULL);
 }
 
-// static void show_welcome_screen(void) {
-//   char device_id[FLASH_OTP_BLOCK_SIZE];
-//
-//   if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
-//                                 (uint8_t *)device_id, sizeof(device_id)) &&
-//       (device_id[0] != 0xFF)) {
-//     screen_prodtest_info(device_id, strnlen(device_id, sizeof(device_id) -
-//     1));
-//   } else {
-//     screen_prodtest_welcome();
-//   }
-// }
-
 // Set if the RGB LED must not be controlled by the main loop
 static bool g_rgbled_control_disabled = false;
 
@@ -207,6 +194,7 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_POWER_MANAGER
   pm_init(true);
+  pm_turn_on();
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);

@@ -10,40 +10,39 @@ use crate::ui::{
         TouchEvent::{TouchEnd, TouchMove, TouchStart},
     },
     geometry::{Alignment, Offset, Rect},
-    layout::simplified::{get_layout, init_layout, process_frame_event, show},
+    layout::simplified::{process_frame_event, show},
     layout_bolt::{fonts, prodtest::welcome::Welcome, theme, UIBolt},
     shape,
     shape::render_on_display,
-    ui_prodtest::ProdtestUI,
+    ui_prodtest::{ProdtestLayoutType, ProdtestUI},
 };
 use heapless::Vec;
 
 #[allow(clippy::large_enum_variant)]
-enum ProdtestLayout {
+pub enum ProdtestLayout {
     Welcome(Welcome),
 }
 
-impl ProdtestLayout {
-    fn process_event(&mut self, event: Option<Event>) -> u32 {
+impl ProdtestLayoutType for ProdtestLayout {
+    fn event(&mut self, event: Option<Event>) -> u32 {
         match self {
             ProdtestLayout::Welcome(f) => process_frame_event::<Welcome>(f, event),
         }
     }
+
+    fn show(&mut self) {
+        match self {
+            ProdtestLayout::Welcome(f) => show(f, true),
+        }
+    }
+
+    fn init_welcome(id: Option<&'static str>) -> Self {
+        Self::Welcome(Welcome::new(id))
+    }
 }
 
 impl ProdtestUI for UIBolt {
-    fn screen_prodtest_event(buf: &mut [u8], event: Option<Event>) -> u32 {
-        let layout = get_layout::<ProdtestLayout>(buf);
-        layout.process_event(event)
-    }
-
-    fn screen_prodtest_welcome(buf: &mut [u8], id: Option<&'static str>) {
-        let mut welcome = Welcome::new(id);
-
-        show(&mut welcome, true);
-
-        init_layout(buf, ProdtestLayout::Welcome(welcome));
-    }
+    type CLayoutType = ProdtestLayout;
 
     fn screen_prodtest_show_text(text: &str) {
         display::sync();

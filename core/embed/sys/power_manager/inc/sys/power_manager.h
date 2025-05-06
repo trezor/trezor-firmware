@@ -93,7 +93,7 @@ typedef struct {
 } pm_report_t;
 
 /* Public API functions */
-pm_status_t pm_init(bool skip_boot_sequence);
+pm_status_t pm_init(bool inherit_state);
 void pm_deinit(void);
 bool pm_get_events(pm_event_t* event_flags);
 pm_status_t pm_get_state(pm_state_t* state);
