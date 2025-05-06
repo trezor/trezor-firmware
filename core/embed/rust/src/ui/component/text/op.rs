@@ -199,9 +199,51 @@ impl<'a> OpTextLayout<'a> {
             .assert_if_debugging_ui("Could not push to self.ops - increase MAX_OPS.");
         self
     }
+    /// In-place muation to self.
+    pub fn push_item(&mut self, item: Op<'a>) {
+        self.ops
+            .push(item)
+            .assert_if_debugging_ui("Could not push - increase MAX_OPS.");
+    }
 
     pub fn text(self, text: impl Into<TString<'a>>, font: Font) -> Self {
         self.with_new_item(Op::Text(text.into(), font, false))
+    }
+
+    pub fn text_formatted(
+        mut self,
+        text: impl Into<TString<'a>>,
+        font: Font,
+        args: Vec<TString<'a>, 3>,
+    ) -> Self {
+        let raw_text= text.into();
+        let mut arg_start = 0;
+
+        raw_text.map(|t| {
+            for i in 0 .. t.len().saturating_sub(2) {
+                let argbuf = &t[i..(i + 3)].as_bytes();
+                if argbuf[0] == b'{' && argbuf[2] == b'}' && argbuf[1].is_ascii_digit() {
+                    let prefix_string = TString::get_slice(&raw_text, arg_start..i);
+                    let arg_value = args.get((argbuf[1] - b'0') as usize).unwrap();
+                    self.push_item(Op::Text(prefix_string, font, false));
+                    self.push_item(Op::Text(*arg_value, font, false));
+                    arg_start = i + 3;
+
+                    // prefix_string.map( |s| {
+                    //     dbg_println!("\n===debug===\n!{}!", s);
+                    // });
+                    // arg_value.map( |s| {
+                    //     dbg_println!("\n===debug===\n!{}!", s);
+                    // });
+                }
+            }
+
+            if arg_start < t.len() {
+                self.push_item(Op::Text(TString::skip_prefix(&raw_text, arg_start), font, false));
+            }
+
+        });
+        self
     }
 
     pub fn newline(self) -> Self {
@@ -269,4 +311,59 @@ pub enum Op<'a> {
     Chunkify(Option<Chunks>),
     /// Change the line vertical line spacing.
     LineSpacing(i16),
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ui::{
+        component::text::layout::TextNoOp, geometry::Point
+        , layout_bolt::{fonts, theme::{RESULT_FOOTER_START, RESULT_PADDING}},
+        layout_bolt::constant::WIDTH,
+    };
+
+    use super::*;
+    const TITLE_AREA_START: i16 = 70;
+    const MESSAGE_AREA_START: i16 = 116;
+
+    #[test]
+    fn test_op_text_formatter() {
+        let mut layout = OpTextLayout::new(TextStyle::new(
+            fonts::FONT_BOLD_UPPER,
+            Color::black(),
+            Color::white(),
+            Color::black(),
+            Color::white(),
+        ));
+        layout.place(Rect::new(
+            Point::new(RESULT_PADDING, MESSAGE_AREA_START),
+            Point::new(WIDTH - RESULT_PADDING+100, RESULT_FOOTER_START+100),
+        ));
+
+        layout = layout.text_formatted(
+            // "{0}",
+            "Argument 1 {0} - Argument 2 {1} - Argument 3 {2}",
+            fonts::FONT_BOLD_UPPER,
+            heapless::Vec::from_slice(&[
+                TString::from("ahoj"),
+                TString::from("krásný"),
+                TString::from("světe"),
+            ]).unwrap(),
+        );
+        
+        match layout.layout_content(0, &mut TextNoOp) {
+            LayoutFit::Fitting { .. } => {
+                assert!(true, "Layout Fits");
+            }
+            LayoutFit::OutOfBounds { .. } => {
+                assert!(false, "Layout does NOT fit");
+            }
+        }
+
+        // 17 is height of unprocessed 0 text in TextNoOp
+        assert!(layout.layout_content(0, &mut TextNoOp).height() >= 17);
+
+        //  len("Argument 1 ahoj - Argument 2 krásný - Argument 3 světe") = 57 with diactrics
+        assert_eq!(layout.layout_content(0, &mut TextNoOp).processed_chars(), 57);
+
+    }
 }

@@ -1,4 +1,4 @@
-use core::{convert::TryFrom, ops::Deref, ptr, slice, str};
+use core::{convert::TryFrom, ops::{Deref, Range}, ptr, slice, str};
 
 use crate::{error::Error, micropython::obj::Obj, strutil::hexlify};
 
@@ -102,6 +102,17 @@ impl StrBuffer {
             // given that `off` only advances by as much as `len` decreases, that should not be
             // possible either.
             off: self.off + off,
+        }
+    }
+
+    pub fn get_slice(&self, byte_range: Range<usize>) -> Self {
+        assert!(byte_range.end <= self.len as usize);
+        assert!(self.as_ref().is_char_boundary(byte_range.start));
+        assert!(self.as_ref().is_char_boundary(byte_range.end));
+        Self {
+            ptr: self.ptr,
+            len: (byte_range.end - byte_range.start) as u16,
+            off: byte_range.start as u16 + self.off,
         }
     }
 }
