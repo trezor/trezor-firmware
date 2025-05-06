@@ -227,7 +227,13 @@ pm_status_t pm_turn_on(void) {
   }
 
   // Poll until at least single PMIC measurement is done
-  while (drv->pmic_last_update_ms == 0) {
+  while (true) {
+    irq_key_t  key = irq_lock();
+    if (drv->pmic_last_update_ms  != 0) {
+      irq_unlock(key);
+      break;
+    }
+    irq_unlock(key);
   };
 
   // Check if device has enough power to startup

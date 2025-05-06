@@ -132,7 +132,7 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
     drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
   } else {
     // Timeout, reset the last update timestamp
-    drv->pmic_sampling_period_ms = drv->pmic_last_update_ms - systick_ms();
+    drv->pmic_sampling_period_ms = systick_ms() - drv->pmic_last_update_ms;
   }
 
   drv->pmic_last_update_ms = systick_ms();
