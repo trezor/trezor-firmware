@@ -19,13 +19,32 @@
 
 #include <trezor_rtl.h>
 
+#include <sys/power_manager.h>
+
 #include <SDL.h>
 
-bool powerctl_init(void) { return true; }
+pm_status_t pm_init(bool inherit_state) { return PM_OK; }
 
-void powerctl_deinit(void) {}
+void pm_deinit(void) {}
 
-bool powerctl_hibernate(void) {
+pm_status_t pm_hibernate(void) {
   exit(1);
-  return true;
+  return PM_OK;
+}
+pm_status_t pm_turn_on(void) { return PM_OK; }
+pm_status_t pm_charging_enable(void) { return PM_OK; }
+pm_status_t pm_charging_disable(void) { return PM_OK; }
+
+bool pm_get_events(pm_event_t* event_flags) {
+  memset(event_flags, 0, sizeof(pm_event_t));
+  return false;
+}
+
+pm_status_t pm_get_state(pm_state_t* state) {
+  state->usb_connected = true;
+  state->wireless_connected = false;
+  state->charging_status = PM_BATTERY_IDLE;
+  state->power_state = PM_STATE_ACTIVE;
+  state->soc = 100;
+  return PM_OK;
 }
