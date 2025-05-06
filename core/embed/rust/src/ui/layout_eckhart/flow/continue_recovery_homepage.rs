@@ -15,7 +15,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, LinearPlacement, Offset},
+        geometry::{Direction, LinearPlacement},
         layout::util::RecoveryType,
     },
 };
@@ -207,20 +207,16 @@ pub fn new_continue_recovery_homepage(
         ));
 
     let res = if show_instructions {
-        let content_menu = VerticalMenuScreen::new(
-            VerticalMenu::<ShortMenuVec>::empty().with_item(
-                Button::with_text(cancel_btn.into())
-                    .styled(theme::menu_item_title_orange())
-                    .with_text_align(Alignment::Start)
-                    .with_content_offset(Offset::x(12)),
-            ),
-        )
-        .with_header(Header::new(TString::empty()).with_close_button())
-        .map(|msg| match msg {
-            VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
-            VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
-            _ => None,
-        });
+        let content_menu =
+            VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
+                Button::new_menu_item(cancel_btn.into(), theme::menu_item_title_orange()),
+            ))
+            .with_header(Header::new(TString::empty()).with_close_button())
+            .map(|msg| match msg {
+                VerticalMenuScreenMsg::Selected(i) => Some(FlowMsg::Choice(i)),
+                VerticalMenuScreenMsg::Close => Some(FlowMsg::Cancelled),
+                _ => None,
+            });
 
         let mut res = SwipeFlow::new(&ContinueRecoveryBeforeShares::Main)?;
         res.add_page(&ContinueRecoveryBeforeShares::Main, content_main)?
@@ -229,22 +225,16 @@ pub fn new_continue_recovery_homepage(
     } else if pages.is_none() {
         let content_menu = VerticalMenuScreen::new(
             VerticalMenu::<ShortMenuVec>::empty()
-                .with_item(
-                    Button::with_text_and_subtext(
-                        TR::words__recovery_share.into(),
-                        TR::buttons__more_info.into(),
-                        None,
-                    )
-                    .styled(theme::menu_item_title())
-                    .with_text_align(Alignment::Start)
-                    .with_content_offset(Offset::x(12)),
-                )
-                .with_item(
-                    Button::with_text(cancel_btn.into())
-                        .styled(theme::menu_item_title_orange())
-                        .with_text_align(Alignment::Start)
-                        .with_content_offset(Offset::x(12)),
-                ),
+                .with_item(Button::new_menu_item_with_subtext(
+                    TR::words__recovery_share.into(),
+                    theme::menu_item_title(),
+                    TR::buttons__more_info.into(),
+                    None,
+                ))
+                .with_item(Button::new_menu_item(
+                    cancel_btn.into(),
+                    theme::menu_item_title_orange(),
+                )),
         )
         .with_header(Header::new(TR::recovery__title.into()).with_close_button())
         .map(|msg| match msg {
@@ -281,18 +271,14 @@ pub fn new_continue_recovery_homepage(
     } else {
         let content_menu = VerticalMenuScreen::new(
             VerticalMenu::<ShortMenuVec>::empty()
-                .with_item(
-                    Button::with_text(TR::recovery__title_remaining_shares.into())
-                        .styled(theme::menu_item_title())
-                        .with_text_align(Alignment::Start)
-                        .with_content_offset(Offset::x(12)),
-                )
-                .with_item(
-                    Button::with_text(cancel_btn.into())
-                        .styled(theme::menu_item_title_orange())
-                        .with_text_align(Alignment::Start)
-                        .with_content_offset(Offset::x(12)),
-                ),
+                .with_item(Button::new_menu_item(
+                    TR::recovery__title_remaining_shares.into(),
+                    theme::menu_item_title(),
+                ))
+                .with_item(Button::new_menu_item(
+                    cancel_btn.into(),
+                    theme::menu_item_title_orange(),
+                )),
         )
         .with_header(Header::new(TString::empty()).with_close_button())
         .map(|msg| match msg {
