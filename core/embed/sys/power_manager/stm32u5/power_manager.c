@@ -27,6 +27,9 @@
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
+
+#pragma GCC optimize ("O0")
+
 // Global driver instance
 pm_driver_t g_pm = {
     .initialized = false,
@@ -55,7 +58,7 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
   }
 
   // Initialize fuel gauge
-  fuel_gauge_init(&(drv->fuel_gauge), PM_FUEL_GAUGE_R, PM_FUEL_GAUGE_Q,
+  fuel_gauge_init(&drv->fuel_gauge, PM_FUEL_GAUGE_R, PM_FUEL_GAUGE_Q,
                   PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
                   PM_FUEL_GAUGE_P_INIT);
 
@@ -76,8 +79,8 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
     } else {
       // Backup RAM contain valid data
       drv->state = pm_recovery_data.bootloader_exit_state;
-      drv->fuel_gauge.soc = pm_recovery_data.soc;
-      drv->fuel_gauge_request_new_guess = false;
+      fuel_gauge_set_soc(&drv->fuel_gauge,pm_recovery_data.soc);
+
     }
 
     drv->fuel_gauge_initialized = true;
@@ -109,10 +112,6 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
 void pm_deinit(void) {
   pm_driver_t* drv = &g_pm;
 
-  if(drv->fuel_gauge_initialized){
-    pm_store_data_to_backup_ram();
-  }
-
   if (drv->monitoring_timer) {
     systimer_delete(drv->monitoring_timer);
     drv->monitoring_timer = NULL;
@@ -121,6 +120,10 @@ void pm_deinit(void) {
   if (drv->shutdown_timer) {
     systimer_delete(drv->shutdown_timer);
     drv->shutdown_timer = NULL;
+  }
+
+  if(drv->fuel_gauge_initialized){
+    pm_store_data_to_backup_ram();
   }
 
   npm1300_deinit();
@@ -249,7 +252,7 @@ pm_status_t pm_turn_on(void) {
       backup_ram_read_power_manager_data(&pm_recovery_data);
 
   if (status == BACKUP_RAM_OK && pm_recovery_data.soc != 0.0f) {
-    drv->fuel_gauge.soc = pm_recovery_data.soc;
+    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc);
   } else {
     // Wait for 1s to sample battery data
     systick_delay_ms(1000);
