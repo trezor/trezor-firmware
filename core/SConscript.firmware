@@ -90,10 +90,6 @@ CPPDEFINES_MOD += [
     ('DISABLE_ANIMATION', '1' if DISABLE_ANIMATION else '0'),
     ('LOG_STACK_USAGE', '1' if LOG_STACK_USAGE else '0'),
     ('BLOCK_ON_VCP', '1' if BLOCK_ON_VCP else '0'),
-    # `MICROPY_ROM_TEXT_COMPRESSION` requires `__builtin_strcmp` (since `-ffreestanding` is used)
-    # (https://github.com/micropython/micropython/pull/17196#issuecomment-2833593366)
-    ('strcmp', '__builtin_strcmp'),
-    ('MICROPY_ROM_TEXT_COMPRESSION', '1'),
 ]
 SOURCE_MOD += [
     'embed/upymod/trezorobj.c',
