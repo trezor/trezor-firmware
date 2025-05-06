@@ -31,3 +31,6 @@ pm_status_t pm_hibernate(void) {
   exit(1);
   return PM_OK;
 }
+pm_status_t pm_turn_on(void) { return PM_OK; }
+pm_status_t pm_charging_enable(void) { return PM_OK; }
+pm_status_t pm_charging_disable(void) { return PM_OK; }
