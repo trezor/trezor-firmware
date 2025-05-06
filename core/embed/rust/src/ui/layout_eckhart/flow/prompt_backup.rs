@@ -11,7 +11,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, LinearPlacement, Offset},
+        geometry::{Direction, LinearPlacement},
     },
 };
 
@@ -72,14 +72,12 @@ pub fn new_prompt_backup() -> Result<SwipeFlow, error::Error> {
             _ => None,
         });
 
-    let content_menu = VerticalMenuScreen::new(
-        VerticalMenu::<ShortMenuVec>::empty().with_item(
-            Button::with_text(TR::backup__title_skip.into())
-                .styled(theme::menu_item_title_orange())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
+    let content_menu = VerticalMenuScreen::new(VerticalMenu::<ShortMenuVec>::empty().with_item(
+        Button::new_menu_item(
+            TR::backup__title_skip.into(),
+            theme::menu_item_title_orange(),
         ),
-    )
+    ))
     .with_header(
         Header::new(title)
             .with_right_button(Button::with_icon(theme::ICON_CROSS), HeaderMsg::Cancelled),

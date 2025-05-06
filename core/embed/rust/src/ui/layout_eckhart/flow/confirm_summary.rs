@@ -13,7 +13,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, LinearPlacement, Offset},
+        geometry::{Direction, LinearPlacement},
     },
 };
 
@@ -139,29 +139,23 @@ pub fn new_confirm_summary(
     let mut menu_items = Vec::<usize, 3>::new();
 
     if account_paragraphs.is_some() {
-        menu.item(
-            Button::with_text(TR::address_details__account_info.into())
-                .styled(theme::menu_item_title())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        menu.item(Button::new_menu_item(
+            TR::address_details__account_info.into(),
+            theme::menu_item_title(),
+        ));
         unwrap!(menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
     if extra_paragraphs.is_some() {
-        menu.item(
-            Button::with_text(extra_title.unwrap_or(TR::buttons__more_info.into()))
-                .styled(theme::menu_item_title())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        menu.item(Button::new_menu_item(
+            extra_title.unwrap_or(TR::buttons__more_info.into()),
+            theme::menu_item_title(),
+        ));
         unwrap!(menu_items.push(MENU_ITEM_EXTRA_INFO));
     }
-    menu.item(
-        Button::with_text(verb_cancel.unwrap_or(TR::buttons__cancel.into()))
-            .styled(theme::menu_item_title_orange())
-            .with_text_align(Alignment::Start)
-            .with_content_offset(Offset::x(12)),
-    );
+    menu.item(Button::new_menu_item(
+        verb_cancel.unwrap_or(TR::buttons__cancel.into()),
+        theme::menu_item_title_orange(),
+    ));
     unwrap!(menu_items.push(MENU_ITEM_CANCEL));
     let content_menu = VerticalMenuScreen::new(menu)
         .with_header(Header::new(title).with_close_button())
