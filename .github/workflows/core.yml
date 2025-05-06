@@ -629,10 +629,6 @@ jobs:
         model: [T2T1, T3B1, T3T1, T3W1]
         asan: ${{ fromJSON(needs.param.outputs.asan) }}
         protocol: [v1]
-        include:
-          - model: T2T1
-            asan: noasan
-            protocol: v2
     env:
       TREZOR_PROFILING: ${{ matrix.asan == 'noasan' && '1' || '0' }}
       PYTEST_TIMEOUT: 400
