@@ -23,8 +23,8 @@
 #include <sys/types.h>
 #include <util/image.h>
 
-#ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
 #endif
 
 #include <io/display.h>
@@ -65,10 +65,10 @@ workflow_result_t workflow_menu(const vendor_header* const vhdr,
       continue;
     }
 #endif
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
     if (menu_result == MENU_POWER_OFF) {  // reboot
       display_fade(display_get_backlight(), 0, 200);
-      powerctl_hibernate();
+      pm_hibernate();
       // in case hibernation failed, continue with menu
       continue;
     }

@@ -29,6 +29,7 @@
 #include "power_manager_internal.h"
 
 #ifdef USE_OPTIGA
+#include <sec/optiga_hal.h>
 #include <sec/optiga_config.h>
 #include <sec/optiga_hal.h>
 #include <sec/optiga_transport.h>
@@ -52,6 +53,10 @@
 
 #ifdef USE_TROPIC
 #include <sec/tropic.h>
+#endif
+
+#ifdef USE_BLE
+#include <io/ble.h>
 #endif
 
 static void pm_background_tasks_suspend(void);
@@ -109,6 +114,9 @@ void pm_control_suspend() {
 #endif
 #ifdef USE_TOUCH
   touch_deinit();
+#endif
+#ifdef USE_BLE
+  ble_suspend();
 #endif
   int backlight_level = display_get_backlight();
   display_deinit(DISPLAY_RESET_CONTENT);
@@ -201,10 +209,17 @@ void pm_control_suspend() {
   secure_aes_init();
 #endif
 #ifdef USE_OPTIGA
+#ifdef BOOTLOADER
+  optiga_hal_init();
+#else
   optiga_init_and_configure();
+#endif
 #endif
 #ifdef USE_TROPIC
   tropic_init();
+#endif
+#ifdef USE_BLE
+  ble_resume();
 #endif
 
 

@@ -17,7 +17,7 @@ use crate::ui::{
     shape::{self, Renderer},
 };
 
-#[cfg(feature = "powerctl")]
+#[cfg(feature = "power_manager")]
 use crate::ui::layout_bolt::component::ButtonMsg::Clicked;
 
 #[repr(u32)]
@@ -58,7 +58,7 @@ impl Component for Welcome {
         if let Event::Button(_) = _event {
             return Some(WelcomeMsg::PairingMode);
         }
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         if let Some(Clicked) = self.menu.event(_ctx, _event) {
             return Some(WelcomeMsg::Menu);
         };
@@ -67,7 +67,7 @@ impl Component for Welcome {
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
         self.bg.render(target);
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         self.menu.render(target);
 
         shape::Text::new(

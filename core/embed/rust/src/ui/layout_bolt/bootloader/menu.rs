@@ -93,7 +93,7 @@ impl Component for Menu {
         self.reset.place(self.get_button_pos(1));
         #[cfg(feature = "ble")]
         self.bluetooth.place(self.get_button_pos(2));
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         self.poweroff.place(self.get_button_pos(3));
         bounds
     }
@@ -112,7 +112,7 @@ impl Component for Menu {
         if let Some(Clicked) = self.bluetooth.event(ctx, event) {
             return Some(Self::Msg::Bluetooth);
         }
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         if let Some(Clicked) = self.poweroff.event(ctx, event) {
             return Some(Self::Msg::PowerOff);
         }
@@ -128,7 +128,7 @@ impl Component for Menu {
         self.reset.render(target);
         #[cfg(feature = "ble")]
         self.bluetooth.render(target);
-        #[cfg(feature = "powerctl")]
+        #[cfg(feature = "power_manager")]
         self.poweroff.render(target);
     }
 }
