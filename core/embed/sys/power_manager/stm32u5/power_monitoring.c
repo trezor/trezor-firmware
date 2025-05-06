@@ -44,7 +44,6 @@ void pm_monitor_power_sources(void) {
 
       drv->fuel_gauge_request_new_guess = false;
 
-
     } else {
       fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
                         drv->pmic_data.vbat, drv->pmic_data.ibat,
@@ -129,7 +128,7 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
   pm_driver_t* drv = &g_pm;
 
   // Store measurement timestamp
-  if(drv->pmic_last_update_ms == 0) {
+  if (drv->pmic_last_update_ms == 0) {
     drv->pmic_sampling_period_ms = PM_BATTERY_SAMPLING_PERIOD_MS;
   } else {
     // Timeout, reset the last update timestamp

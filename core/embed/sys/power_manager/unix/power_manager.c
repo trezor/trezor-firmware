@@ -23,13 +23,9 @@
 
 #include <SDL.h>
 
-pm_status_t pm_init(bool skip_boot_sequence) {
-  return PM_OK;
-}
+pm_status_t pm_init(bool skip_boot_sequence) { return PM_OK; }
 
-void pm_deinit(void) {
-
-}
+void pm_deinit(void) {}
 
 pm_status_t pm_hibernate(void) {
   exit(1);

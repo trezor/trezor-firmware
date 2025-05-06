@@ -109,7 +109,7 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
 void pm_deinit(void) {
   pm_driver_t* drv = &g_pm;
 
-  if(drv->fuel_gauge_initialized){
+  if (drv->fuel_gauge_initialized) {
     pm_store_data_to_backup_ram();
   }
 
@@ -127,7 +127,6 @@ void pm_deinit(void) {
   stwlc38_deinit();
 
   drv->initialized = false;
-
 }
 
 pm_status_t pm_get_events(pm_event_t* event_flags) {
@@ -228,12 +227,13 @@ pm_status_t pm_turn_on(void) {
   }
 
   // Poll until at least single PMIC measurement is done
-  while(drv->pmic_last_update_ms == 0){};
+  while (drv->pmic_last_update_ms == 0) {
+  };
 
   // Check if device has enough power to startup
-  if(drv->pmic_data.usb_status == 0x0 &&
-     drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V){
-     return PM_REQUEST_REJECTED;
+  if (drv->pmic_data.usb_status == 0x0 &&
+      drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) {
+    return PM_REQUEST_REJECTED;
   }
 
   drv->request_turn_on = true;
@@ -382,8 +382,7 @@ pm_status_t pm_wakeup_flags_reset(void) {
   return PM_OK;
 }
 
-pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
-
+pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -394,5 +393,4 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
   *flags = drv->wakeup_flags;
   irq_unlock(irq_key);
   return PM_OK;
-
 }

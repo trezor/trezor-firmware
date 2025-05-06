@@ -29,7 +29,6 @@
 #include "power_manager_internal.h"
 
 #ifdef USE_OPTIGA
-#include <sec/optiga_hal.h>
 #include <sec/optiga_config.h>
 #include <sec/optiga_hal.h>
 #include <sec/optiga_transport.h>
@@ -82,7 +81,7 @@ pm_status_t pm_control_hibernate() {
   }
 
   // Wait for the device to power off
-  //systick_delay_ms(50);
+  // systick_delay_ms(50);
 
   return PM_ERROR;
 }
@@ -221,9 +220,6 @@ void pm_control_suspend() {
 #ifdef USE_BLE
   ble_resume();
 #endif
-
-
-
 }
 
 static void pm_background_tasks_suspend(void) {
