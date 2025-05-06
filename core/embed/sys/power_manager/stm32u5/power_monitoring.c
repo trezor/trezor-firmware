@@ -27,8 +27,6 @@
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
-#pragma GCC optimize ("O0")
-
 void pm_monitor_power_sources(void) {
   pm_driver_t* drv = &g_pm;
 

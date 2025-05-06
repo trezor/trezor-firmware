@@ -27,9 +27,6 @@
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
-
-#pragma GCC optimize ("O0")
-
 // Global driver instance
 pm_driver_t g_pm = {
     .initialized = false,
@@ -349,15 +346,25 @@ pm_status_t pm_store_data_to_backup_ram(void) {
   return PM_OK;
 }
 
-// Timer handlers
-static void pm_monitoring_timer_handler(void* context) {
-  pm_monitor_power_sources();
-}
+pm_status_t pm_wait_until_active(uint32_t timeout_ms){
 
-static void pm_shutdown_timer_handler(void* context) {
   pm_driver_t* drv = &g_pm;
-  drv->shutdown_timer_elapsed = true;
-  pm_process_state_machine();
+  uint32_t expire_time = ticks_timeout(timeout_ms);
+
+  while(1){
+
+    if(ticks_expired(expire_time)){
+      // Timeout expired
+      return PM_REQUEST_REJECTED;
+    }
+
+    if((drv->state == PM_STATE_ACTIVE) || (drv->state == PM_STATE_POWER_SAVE)){
+      return PM_OK;
+    }
+
+  }
+
+  return PM_OK;
 }
 
 pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags) {
@@ -398,4 +405,16 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
   irq_unlock(irq_key);
   return PM_OK;
 
+}
+
+
+// Timer handlers
+static void pm_monitoring_timer_handler(void* context) {
+  pm_monitor_power_sources();
+}
+
+static void pm_shutdown_timer_handler(void* context) {
+  pm_driver_t* drv = &g_pm;
+  drv->shutdown_timer_elapsed = true;
+  pm_process_state_machine();
 }
