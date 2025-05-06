@@ -315,6 +315,21 @@ if utils.USE_THP:
         if message.credential is None:
             return _get_autoconnect_failure()
         credential = decode_credential(message.credential)
+        if __debug__:
+            from trezor import log
+            from trezor.utils import get_bytes_as_str
+
+            log.warning(
+                __name__,
+                "Host key in message %s",
+                get_bytes_as_str(message.host_static_pubkey),
+            )
+            log.warning(
+                __name__,
+                "Host key in channel cache (from handshake) %s",
+                get_bytes_as_str(host_static_pubkey),
+            )
+
         if not validate_credential(credential, host_static_pubkey):
             return _get_autoconnect_failure()
 
