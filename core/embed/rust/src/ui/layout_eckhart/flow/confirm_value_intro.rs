@@ -12,7 +12,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, LinearPlacement, Offset},
+        geometry::{Direction, LinearPlacement},
         layout::util::StrOrBytes,
     },
 };
@@ -105,18 +105,14 @@ pub fn new_confirm_value_intro(
     });
 
     let menu_items = VerticalMenu::<ShortMenuVec>::empty()
-        .with_item(
-            Button::with_text(value_menu_label)
-                .styled(theme::menu_item_title())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        )
-        .with_item(
-            Button::with_text(cancel_menu_label)
-                .styled(theme::menu_item_title_orange())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        .with_item(Button::new_menu_item(
+            value_menu_label,
+            theme::menu_item_title(),
+        ))
+        .with_item(Button::new_menu_item(
+            cancel_menu_label,
+            theme::menu_item_title_orange(),
+        ));
 
     let content_menu = VerticalMenuScreen::new(menu_items)
         .with_header(Header::new(TString::empty()).with_close_button())

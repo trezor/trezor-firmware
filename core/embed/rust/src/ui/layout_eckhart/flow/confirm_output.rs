@@ -15,7 +15,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, LinearPlacement, Offset},
+        geometry::{Direction, LinearPlacement},
         layout::util::StrOrBytes,
     },
 };
@@ -218,29 +218,23 @@ fn content_main_menu(
     let mut main_menu = VerticalMenu::<ShortMenuVec>::empty();
     let mut main_menu_items = Vec::<usize, 3>::new();
     if address_params {
-        main_menu.item(
-            Button::with_text(address_title)
-                .styled(theme::menu_item_title())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        main_menu.item(Button::new_menu_item(
+            address_title,
+            theme::menu_item_title(),
+        ));
         unwrap!(main_menu_items.push(MENU_ITEM_ADDRESS_INFO));
     }
     if account_params {
-        main_menu.item(
-            Button::with_text(TR::address_details__account_info.into())
-                .styled(theme::menu_item_title())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        main_menu.item(Button::new_menu_item(
+            TR::address_details__account_info.into(),
+            theme::menu_item_title(),
+        ));
         unwrap!(main_menu_items.push(MENU_ITEM_ACCOUNT_INFO));
     }
-    main_menu.item(
-        Button::with_text(cancel_menu_label)
-            .styled(theme::menu_item_title_orange())
-            .with_text_align(Alignment::Start)
-            .with_content_offset(Offset::x(12)),
-    );
+    main_menu.item(Button::new_menu_item(
+        cancel_menu_label,
+        theme::menu_item_title_orange(),
+    ));
     unwrap!(main_menu_items.push(MENU_ITEM_CANCEL));
 
     VerticalMenuScreen::<ShortMenuVec>::new(main_menu)
@@ -436,29 +430,23 @@ pub fn new_confirm_output(
         let mut summary_menu_items = Vec::<usize, 3>::new();
 
         if extra_menu_item {
-            summary_menu.item(
-                Button::with_text(extra_title.unwrap_or(TString::empty()))
-                    .styled(theme::menu_item_title())
-                    .with_text_align(Alignment::Start)
-                    .with_content_offset(Offset::x(12)),
-            );
+            summary_menu.item(Button::new_menu_item(
+                extra_title.unwrap_or(TString::empty()),
+                theme::menu_item_title(),
+            ));
             unwrap!(summary_menu_items.push(MENU_ITEM_EXTRA_INFO));
         }
         if fee_menu_item {
-            summary_menu.item(
-                Button::with_text(TR::confirm_total__title_fee.into())
-                    .styled(theme::menu_item_title())
-                    .with_text_align(Alignment::Start)
-                    .with_content_offset(Offset::x(12)),
-            );
+            summary_menu.item(Button::new_menu_item(
+                TR::confirm_total__title_fee.into(),
+                theme::menu_item_title(),
+            ));
             unwrap!(summary_menu_items.push(MENU_ITEM_FEE_INFO));
         }
-        summary_menu.item(
-            Button::with_text(cancel_menu_label)
-                .styled(theme::menu_item_title_orange())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        summary_menu.item(Button::new_menu_item(
+            cancel_menu_label,
+            theme::menu_item_title_orange(),
+        ));
         unwrap!(summary_menu_items.push(MENU_ITEM_CANCEL));
         let content_summary_menu = VerticalMenuScreen::new(summary_menu)
             .with_header(Header::new(TString::empty()).with_close_button())

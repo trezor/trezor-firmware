@@ -8,7 +8,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, Offset},
+        geometry::Direction,
     },
 };
 
@@ -88,18 +88,14 @@ pub fn new_request_number(
         });
 
     let menu_items = VerticalMenu::<ShortMenuVec>::empty()
-        .with_item(
-            Button::with_text(TR::buttons__more_info.into())
-                .styled(theme::menu_item_title())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        )
-        .with_item(
-            Button::with_text(TR::buttons__cancel.into())
-                .styled(theme::menu_item_title_orange())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        .with_item(Button::new_menu_item(
+            TR::buttons__more_info.into(),
+            theme::menu_item_title(),
+        ))
+        .with_item(Button::new_menu_item(
+            TR::buttons__cancel.into(),
+            theme::menu_item_title_orange(),
+        ));
 
     let content_menu = VerticalMenuScreen::new(menu_items)
         .with_header(Header::new(TString::empty()).with_close_button())

@@ -9,7 +9,7 @@ use crate::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Alignment, Direction, Offset},
+        geometry::Direction,
     },
 };
 
@@ -83,20 +83,16 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     let mut menu_items = VerticalMenu::<ShortMenuVec>::empty();
 
     if let Some(extra_menu_label) = extra_menu_label {
-        menu_items.item(
-            Button::with_text(extra_menu_label)
-                .styled(theme::menu_item_title())
-                .with_text_align(Alignment::Start)
-                .with_content_offset(Offset::x(12)),
-        );
+        menu_items.item(Button::new_menu_item(
+            extra_menu_label,
+            theme::menu_item_title(),
+        ));
     }
 
-    menu_items.item(
-        Button::with_text(cancel_menu_label)
-            .styled(theme::menu_item_title_orange())
-            .with_text_align(Alignment::Start)
-            .with_content_offset(Offset::x(12)),
-    );
+    menu_items.item(Button::new_menu_item(
+        cancel_menu_label,
+        theme::menu_item_title_orange(),
+    ));
 
     let content_menu = VerticalMenuScreen::new(menu_items)
         .with_header(Header::new(TString::empty()).with_close_button())
