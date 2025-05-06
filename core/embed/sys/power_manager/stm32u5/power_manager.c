@@ -38,7 +38,7 @@ static void pm_shutdown_timer_handler(void* context);
 
 // API Implementation
 
-pm_status_t pm_init(bool skip_bootup_sequence) {
+pm_status_t pm_init(bool inherit_state) {
   pm_driver_t* drv = &g_pm;
 
   if (drv->initialized) {
@@ -59,38 +59,6 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
                   PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
                   PM_FUEL_GAUGE_P_INIT);
 
-  if (skip_bootup_sequence) {
-    // Skip bootup sequence and try to recover the power manages state left
-    // by the bootloader in backup ram.
-
-    backup_ram_power_manager_data_t pm_recovery_data;
-    backup_ram_status_t status =
-        backup_ram_read_power_manager_data(&pm_recovery_data);
-
-    if (status != BACKUP_RAM_OK &&
-        (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
-         pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
-      drv->state = PM_STATE_POWER_SAVE;
-      drv->fuel_gauge_request_new_guess = true;
-
-    } else {
-      // Backup RAM contain valid data
-      drv->state = pm_recovery_data.bootloader_exit_state;
-      fuel_gauge_set_soc(&drv->fuel_gauge,pm_recovery_data.soc);
-
-    }
-
-    drv->fuel_gauge_initialized = true;
-
-  } else {
-    // Start in lowest state and wait for the bootup sequence to
-    // finish (call of pm_turn_on())
-    drv->state = PM_STATE_HIBERNATE;
-    drv->initialized = false;
-  }
-
-  // Disable charging by default
-  drv->charging_enabled = false;
 
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
@@ -102,7 +70,54 @@ pm_status_t pm_init(bool skip_bootup_sequence) {
   // Initial power source measurement
   npm1300_measure(pm_pmic_data_ready, NULL);
 
+
+  // Try to recover SoC from the backup RAM
+  backup_ram_power_manager_data_t pm_recovery_data;
+  backup_ram_status_t status =
+      backup_ram_read_power_manager_data(&pm_recovery_data);
+
+  if (status == BACKUP_RAM_OK) {
+    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc);
+  } else {
+    // Wait for 1s to sample battery data
+    systick_delay_ms(1000);
+    pm_battery_initial_soc_guess();
+  }
+
+  if(inherit_state){
+
+    // Inherit power manager state left in beckup RAM from bootloader.
+    // in case of error, start with PM_STATE_POWER_SAVE as a lowest state in
+    // active mode.
+    if (status != BACKUP_RAM_OK &&
+      (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
+       pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
+
+        drv->state = PM_STATE_POWER_SAVE;
+
+    } else {
+
+      // Backup RAM contain valid data
+      drv->state = pm_recovery_data.bootloader_exit_state;
+
+    }
+
+  }else{
+
+    // Start in lowest state and wait for the bootup sequence to
+    // finish (call of pm_turn_on())
+    drv->state = PM_STATE_HIBERNATE;
+
+  }
+
+  // Fuel gauge SoC available, set fuel_gauge initialized.
+  drv->fuel_gauge_initialized = true;
+
+  // Enable charging by default
+  drv->charging_enabled = true;
+
   drv->initialized = true;
+
   return PM_OK;
 }
 
@@ -248,23 +263,8 @@ pm_status_t pm_turn_on(void) {
     return PM_REQUEST_REJECTED;
   }
 
-  // Try to recover SoC from the backup RAM
-  backup_ram_power_manager_data_t pm_recovery_data;
-  backup_ram_status_t status =
-      backup_ram_read_power_manager_data(&pm_recovery_data);
-
-  if (status == BACKUP_RAM_OK && pm_recovery_data.soc != 0.0f) {
-    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc);
-  } else {
-    // Wait for 1s to sample battery data
-    systick_delay_ms(1000);
-    pm_battery_initial_soc_guess();
-  }
-
   // Set monitoiring timer with longer period
   systimer_set_periodic(drv->monitoring_timer, PM_TIMER_PERIOD_MS);
-
-  drv->fuel_gauge_initialized = true;
 
   return PM_OK;
 }
