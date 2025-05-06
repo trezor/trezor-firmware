@@ -2,7 +2,7 @@ use crate::{
     error::Error,
     io::InputStream,
     micropython::{
-        buffer::{get_buffer, StrBuffer},
+        buffer::get_buffer,
         ffi,
         macros::{
             attr_tuple, obj_dict, obj_fn_0, obj_fn_1, obj_fn_2, obj_map, obj_module, obj_type,
@@ -20,24 +20,6 @@ use crate::{
 
 use super::translated_string::TranslatedString;
 
-impl TryFrom<TranslatedString> for StrBuffer {
-    type Error = Error;
-
-    fn try_from(value: TranslatedString) -> Result<Self, Self::Error> {
-        let blob = super::flash::get()?;
-        let translated = value.translate(blob.as_ref());
-        StrBuffer::alloc(translated)
-        // TODO fall back to English (which is static and can be converted
-        // infallibly) if the allocation fails?
-    }
-}
-
-fn translate(translation: TranslatedString) -> Result<Obj, Error> {
-    translation
-        .translate(super::flash::get()?.as_ref())
-        .try_into()
-}
-
 // SAFETY: Caller is supposed to be MicroPython, or copy MicroPython contracts
 // about the meaning of arguments.
 unsafe extern "C" fn tr_attr_fn(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) {
@@ -49,7 +31,9 @@ unsafe extern "C" fn tr_attr_fn(_self_in: Obj, attr: ffi::qstr, dest: *mut Obj) 
         }
         let attr = Qstr::from_u16(attr as u16);
         let result = if let Some(translation) = TranslatedString::from_qstr(attr) {
-            translate(translation)?
+            translation.map_translated(|t| t.try_into())?
+            // TODO fall back to English (which is static and can be converted
+            // infallibly) if the allocation fails?
         } else {
             return Err(Error::AttributeError(attr));
         };
