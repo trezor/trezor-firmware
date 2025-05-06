@@ -65,8 +65,8 @@
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
-#ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
 #endif
 
 #ifdef USE_BLE
@@ -160,8 +160,8 @@ static void drivers_deinit(void) {
 #endif
 #endif
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
-#ifdef USE_POWERCTL
-  powerctl_deinit();
+#ifdef USE_POWER_MANAGER
+  pm_deinit();
 #endif
 }
 
@@ -342,8 +342,8 @@ int bootloader_main(void) {
     firmware_present_backup = firmware_present;
   }
 
-#ifdef USE_POWERCTL
-  powerctl_init();
+#ifdef USE_POWER_MANAGER
+  pm_init(false);
 #endif
 
 #if PRODUCTION && !defined STM32U5
