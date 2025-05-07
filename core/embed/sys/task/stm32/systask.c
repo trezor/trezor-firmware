@@ -149,7 +149,11 @@ bool systask_init(systask_t* task, uint32_t stack_ptr, uint32_t stack_size,
   memset(task, 0, sizeof(systask_t));
   task->sp = stack_ptr + stack_size;
   task->sp_lim = stack_ptr + 256;
-  task->exc_return = 0xFFFFFFED;  // Thread mode, use PSP, pop FP context
+#if !defined(__ARM_FEATURE_CMSE) || (__ARM_FEATURE_CMSE == 3U)
+  task->exc_return = 0xFFFFFFED;  // Secure Thread mode, use PSP, pop FP context
+#else
+  task->exc_return = 0xFFFFFFAC;  // Thread mode, use PSP, pop FP context
+#endif
   task->id = id;
   task->mpu_mode = MPU_MODE_APP;
   task->applet = applet;
@@ -216,7 +220,11 @@ bool systask_push_call(systask_t* task, void* entrypoint, uint32_t arg1,
   }
 
   // Return to thread mode, use PSP, pop FP context
+#if !defined(__ARM_FEATURE_CMSE) || (__ARM_FEATURE_CMSE == 3U)
   task->exc_return = 0xFFFFFFED;
+#else
+  task->exc_return = 0xFFFFFFAC;
+#endif
 
   stk_frame[STK_FRAME_R0] = arg1;
   stk_frame[STK_FRAME_R1] = arg2;
