@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <memzero.h>
 #include <trezor_bsp.h>
 #include <trezor_model.h>
 #include <trezor_rtl.h>
@@ -30,7 +31,9 @@
 #include <util/rsod.h>
 #include <util/unit_properties.h>
 
+#include "rust_types.h"
 #include "rust_ui_prodtest.h"
+#include "sys/sysevent.h"
 
 #ifdef USE_BUTTON
 #include <io/button.h>
@@ -109,6 +112,11 @@
 // Command line interface context
 cli_t g_cli = {0};
 
+struct {
+  c_layout_t layout;
+  bool set;
+} g_layout __attribute__((aligned(4))) = {0};
+
 #define VCP_IFACE 0
 
 static size_t console_read(void *context, char *buf, size_t size) {
@@ -175,18 +183,6 @@ static void usb_init_all(void) {
   ensure(usb_start(), NULL);
 }
 
-static void show_welcome_screen(void) {
-  char device_id[FLASH_OTP_BLOCK_SIZE];
-
-  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
-                                (uint8_t *)device_id, sizeof(device_id)) &&
-      (device_id[0] != 0xFF)) {
-    screen_prodtest_info(device_id, strnlen(device_id, sizeof(device_id) - 1));
-  } else {
-    screen_prodtest_welcome();
-  }
-}
-
 // Set if the RGB LED must not be controlled by the main loop
 static bool g_rgbled_control_disabled = false;
 
@@ -198,6 +194,7 @@ static void drivers_init(void) {
 #endif
 #ifdef USE_POWER_MANAGER
   pm_init(true);
+  pm_turn_on();
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);
@@ -241,15 +238,27 @@ static void drivers_init(void) {
 #endif
 }
 
-#define BACKLIGHT_NORMAL 150
+void prodtest_show_homescreen(void) {
+  memset(&g_layout, 0, sizeof(g_layout));
+  g_layout.set = true;
+
+  char device_id[FLASH_OTP_BLOCK_SIZE] = {0};
+
+  if (sectrue == flash_otp_read(FLASH_OTP_BLOCK_DEVICE_ID, 0,
+                                (uint8_t *)device_id, sizeof(device_id)) &&
+      (device_id[0] != 0xFF)) {
+    screen_prodtest_welcome(&g_layout.layout, device_id,
+                            strnlen(device_id, sizeof(device_id) - 1));
+  } else {
+    screen_prodtest_welcome(&g_layout.layout, NULL, 0);
+  }
+}
 
 int main(void) {
   system_init(&rsod_panic_handler);
 
   drivers_init();
   usb_init_all();
-
-  show_welcome_screen();
 
   // Initialize command line interface
   cli_init(&g_cli, console_read, console_write, NULL);
@@ -276,22 +285,47 @@ int main(void) {
   rgb_led_set_color(RGBLED_GREEN);
 #endif
 
+  prodtest_show_homescreen();
+
   while (true) {
-    if (usb_vcp_can_read(VCP_IFACE)) {
-      cli_process_io(&g_cli);
+    sysevents_t awaited = {0};
+    awaited.read_ready |= 1 << VCP_IFACE;
+#ifdef USE_BUTTON
+    awaited.read_ready |= 1 << SYSHANDLE_BUTTON;
+#endif
+#ifdef USE_TOUCH
+    awaited.read_ready |= 1 << SYSHANDLE_TOUCH;
+#endif
+#ifdef USE_POWER_MANAGER
+    awaited.read_ready |= 1 << SYSHANDLE_POWER_MANAGER;
+#endif
+    sysevents_t signalled = {0};
+    sysevents_poll(&awaited, &signalled, 100);
+
+    if (signalled.read_ready & (1 << VCP_IFACE)) {
+      const cli_command_t *cmd = cli_process_io(&g_cli);
+
+      if (cmd != NULL) {
+        memzero(&g_layout, sizeof(g_layout));
+        cli_process_command(&g_cli, cmd);
+      }
+
+      continue;
     }
 
 #if defined USE_BUTTON && defined USE_POWER_MANAGER
-    button_event_t btn_event = {0};
-    if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
-      if (btn_event.event_type == BTN_EVENT_DOWN) {
-        btn_deadline = ticks_timeout(1000);
-      } else if (btn_event.event_type == BTN_EVENT_UP) {
-        if (ticks_expired(btn_deadline)) {
-          pm_hibernate();
-          rgb_led_set_color(RGBLED_YELLOW);
-          systick_delay_ms(1000);
-          rgb_led_set_color(0);
+    if (signalled.read_ready & (1 << SYSHANDLE_BUTTON)) {
+      button_event_t btn_event = {0};
+      if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
+        if (btn_event.event_type == BTN_EVENT_DOWN) {
+          btn_deadline = ticks_timeout(1000);
+        } else if (btn_event.event_type == BTN_EVENT_UP) {
+          if (ticks_expired(btn_deadline)) {
+            pm_hibernate();
+            rgb_led_set_color(RGBLED_YELLOW);
+            systick_delay_ms(1000);
+            rgb_led_set_color(0);
+          }
         }
       }
     }
@@ -305,6 +339,17 @@ int main(void) {
       rgb_led_set_color(0);
     }
 #endif
+
+    if (signalled.read_ready == 0) {
+      // timeout, let's wait again
+      continue;
+    }
+
+    // proceed to UI
+
+    if (g_layout.set) {
+      screen_prodtest_event(&g_layout.layout, &signalled);
+    }
   }
 
   return 0;
