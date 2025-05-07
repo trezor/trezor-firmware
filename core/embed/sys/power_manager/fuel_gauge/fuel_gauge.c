@@ -27,11 +27,11 @@ void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
   state->Q = Q;
   state->R_aggressive = R_aggressive;
   state->Q_aggressive = Q_aggressive;
-  state->P = P_init;
 
   // Initialize state
   state->soc = 0.0f;
   state->soc_latched = 0.0f;
+  state->P = P_init; // Initial error covariance
 }
 
 void fuel_gauge_reset(fuel_gauge_state_t* state) {
@@ -40,10 +40,11 @@ void fuel_gauge_reset(fuel_gauge_state_t* state) {
   state->soc_latched = 0.0f;
 }
 
-void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc) {
+void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P) {
   // Set SOC directly
   state->soc = soc;
   state->soc_latched = soc;
+  state->P = P; // Set error covariance
 }
 
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,

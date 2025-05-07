@@ -105,21 +105,16 @@ void pm_enter_active(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
+
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
-
     return PM_STATE_HIBERNATE;
   }
 
   // Handle suspend request
   if (drv->request_suspend) {
     drv->request_suspend = false;
-
-    if (drv->usb_connected || drv->wireless_connected) {
-      return PM_STATE_CHARGING;
-    }
-
     return PM_STATE_SUSPEND;
   }
 
@@ -138,21 +133,16 @@ void pm_enter_power_save(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
+
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
-
     return PM_STATE_HIBERNATE;
   }
 
   // Handle suspend request
   if (drv->request_suspend) {
     drv->request_suspend = false;
-
-    if (drv->usb_connected || drv->wireless_connected) {
-      return PM_STATE_CHARGING;
-    }
-
     return PM_STATE_SUSPEND;
   }
 
@@ -170,6 +160,13 @@ pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
+
+  // System is shutting down, but user can still hibernate the device early.
+  if (drv->request_hibernate) {
+      drv->request_hibernate = false;
+      return PM_STATE_HIBERNATE;
+  }
+
   // Return to power save if external power or battery recovered
   if (drv->usb_connected || !drv->battery_critical) {
     return PM_STATE_POWER_SAVE;
@@ -253,6 +250,7 @@ pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
 // State enter/exit actions
 
 void pm_enter_report_low_battery(pm_driver_t* drv) {
+
   // Set backlight to minimum
   backlight_set_max_level(0);
 
@@ -273,15 +271,14 @@ void pm_exit_shutting_down(pm_driver_t* drv) {
 void pm_enter_suspend(pm_driver_t* drv) {
 
   pm_control_suspend();
-  // Not implemented yet
+
 }
 
 void pm_enter_hibernate(pm_driver_t* drv) {
 
-  // TODO: Store power manager data with request to hibernate
-  // after reboot?
+  // Store power manager data with request to hibernate, power manager
+  // will try to hibernate immediately after reboot.
   pm_store_data_to_backup_ram();
-
   reboot_device();
 
 }
