@@ -287,12 +287,12 @@ def _maybe_confirm_set_language(
             yield i, min(size, len(data) - i)
 
     expected_responses_silent: list[Any] = [
-        messages.TranslationDataRequest(data_offset=off, data_length=len)
+        messages.DataChunkRequest(data_offset=off, data_length=len)
         for off, len in chunks(language_data, CHUNK_SIZE)
     ] + [message_filters.Success(), message_filters.Features()]
 
     expected_responses_confirm = expected_responses_silent[:]
-    # confirmation after first TranslationDataRequest
+    # confirmation after first DataChunkRequest
     expected_responses_confirm.insert(1, message_filters.ButtonRequest())
     # success screen before Success / Features
     expected_responses_confirm.insert(-2, message_filters.ButtonRequest())
