@@ -38,7 +38,8 @@ jobs:
       DISABLE_OPTIGA: 1
       STORAGE_INSECURE_TESTING_MODE: 1
       BOOTLOADER_DEVEL: ${{ matrix.model == 'T2B1' && '1' || '0' }}
-      TESTOPTS: "-k 'not authenticate and not recovery and not lots' --durations=50 --session-timeout 19800"  # 5.5h pytest global timeout
+      # TODO: enable SD-related tests after fixing #4924
+      TESTOPTS: "-m 'not sd_card' -k 'not authenticate' --durations=50 --session-timeout 19800"  # 5.5h pytest global timeout
       TT_UHUB_PORT: 1
     timeout-minutes: 360  # 6h CI job timeout
     steps:
