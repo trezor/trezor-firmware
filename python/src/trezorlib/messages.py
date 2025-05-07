@@ -7105,6 +7105,7 @@ class SolanaTxAdditionalInfo(protobuf.MessageType):
     FIELDS = {
         1: protobuf.Field("token_accounts_infos", "SolanaTxTokenAccountInfo", repeated=True, required=False, default=None),
         2: protobuf.Field("encoded_token", "bytes", repeated=False, required=False, default=None),
+        3: protobuf.Field("instruction", "SolanaInstruction", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -7112,9 +7113,11 @@ class SolanaTxAdditionalInfo(protobuf.MessageType):
         *,
         token_accounts_infos: Optional[Sequence["SolanaTxTokenAccountInfo"]] = None,
         encoded_token: Optional["bytes"] = None,
+        instruction: Optional["SolanaInstruction"] = None,
     ) -> None:
         self.token_accounts_infos: Sequence["SolanaTxTokenAccountInfo"] = token_accounts_infos if token_accounts_infos is not None else []
         self.encoded_token = encoded_token
+        self.instruction = instruction
 
 
 class SolanaSignTx(protobuf.MessageType):
@@ -7149,6 +7152,101 @@ class SolanaTxSignature(protobuf.MessageType):
         signature: "bytes",
     ) -> None:
         self.signature = signature
+
+
+class SolanaInstruction(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("id", "uint32", repeated=False, required=True),
+        2: protobuf.Field("name", "string", repeated=False, required=True),
+        3: protobuf.Field("is_multisig", "bool", repeated=False, required=False, default=None),
+        4: protobuf.Field("is_ui_hidden", "bool", repeated=False, required=False, default=None),
+        5: protobuf.Field("is_deprecated_warning", "bool", repeated=False, required=False, default=None),
+        6: protobuf.Field("parameters", "Parameter", repeated=True, required=False, default=None),
+        7: protobuf.Field("references", "string", repeated=True, required=False, default=None),
+        8: protobuf.Field("ui_properties", "UIProperty", repeated=True, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        id: "int",
+        name: "str",
+        parameters: Optional[Sequence["Parameter"]] = None,
+        references: Optional[Sequence["str"]] = None,
+        ui_properties: Optional[Sequence["UIProperty"]] = None,
+        is_multisig: Optional["bool"] = None,
+        is_ui_hidden: Optional["bool"] = None,
+        is_deprecated_warning: Optional["bool"] = None,
+    ) -> None:
+        self.parameters: Sequence["Parameter"] = parameters if parameters is not None else []
+        self.references: Sequence["str"] = references if references is not None else []
+        self.ui_properties: Sequence["UIProperty"] = ui_properties if ui_properties is not None else []
+        self.id = id
+        self.name = name
+        self.is_multisig = is_multisig
+        self.is_ui_hidden = is_ui_hidden
+        self.is_deprecated_warning = is_deprecated_warning
+
+
+class Parameter(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("name", "string", repeated=False, required=True),
+        2: protobuf.Field("type", "string", repeated=False, required=True),
+        3: protobuf.Field("is_optional", "bool", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        name: "str",
+        type: "str",
+        is_optional: Optional["bool"] = None,
+    ) -> None:
+        self.name = name
+        self.type = type
+        self.is_optional = is_optional
+
+
+class UIProperty(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("account", "string", repeated=False, required=False, default=None),
+        2: protobuf.Field("parameter", "string", repeated=False, required=False, default=None),
+        3: protobuf.Field("display_name", "string", repeated=False, required=True),
+        4: protobuf.Field("default_value_to_hide", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        display_name: "str",
+        account: Optional["str"] = None,
+        parameter: Optional["str"] = None,
+        default_value_to_hide: Optional["str"] = None,
+    ) -> None:
+        self.display_name = display_name
+        self.account = account
+        self.parameter = parameter
+        self.default_value_to_hide = default_value_to_hide
+
+
+class SolanaInstructionAck(protobuf.MessageType):
+    MESSAGE_WIRE_TYPE = None
+    FIELDS = {
+        1: protobuf.Field("success", "bool", repeated=False, required=True),
+        2: protobuf.Field("error", "string", repeated=False, required=False, default=None),
+    }
+
+    def __init__(
+        self,
+        *,
+        success: "bool",
+        error: Optional["str"] = None,
+    ) -> None:
+        self.success = success
+        self.error = error
 
 
 class StellarAsset(protobuf.MessageType):
