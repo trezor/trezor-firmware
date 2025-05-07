@@ -21,7 +21,6 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
-#include <io/display.h>
 #include <sys/bootargs.h>
 #include <sys/bootutils.h>
 #include <sys/irq.h>
@@ -31,6 +30,10 @@
 #include <sys/systick.h>
 #include <sys/sysutils.h>
 #include <util/image.h>
+
+#ifdef STM32F4
+#include <io/display.h>
+#endif
 
 #ifdef KERNEL_MODE
 

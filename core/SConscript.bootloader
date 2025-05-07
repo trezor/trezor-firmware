@@ -11,7 +11,7 @@ PRODUCTION = 0 if BOOTLOADER_QA else ARGUMENTS.get('PRODUCTION', '0') == '1'
 HW_REVISION = ARGUMENTS.get('HW_REVISION', None)
 UI_DEBUG_OVERLAY = ARGUMENTS.get('UI_DEBUG_OVERLAY', '0') == '1'
 
-FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d", "ble", "powerctl"]
+FEATURES_WANTED = ["input", "rgb_led", "consumption_mask", "usb", "optiga", "dma2d", "ble", "powerctl", "display"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
