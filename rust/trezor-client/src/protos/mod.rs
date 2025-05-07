@@ -29,7 +29,6 @@ mod generated {
         "bitcoin" => messages_bitcoin
         "ethereum" => messages_ethereum
         "ethereum" => messages_ethereum_eip712
-        "binance" => messages_binance
         "cardano" => messages_cardano
         "eos" => messages_eos
         "monero" => messages_monero

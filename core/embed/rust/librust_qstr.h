@@ -832,18 +832,6 @@ static void _librust_qstrs(void) {
   MP_QSTR_wrong_pin;
   MP_QSTR_xpubs;
 #if !BITCOIN_ONLY
-  MP_QSTR_binance__buy;
-  MP_QSTR_binance__confirm_cancel;
-  MP_QSTR_binance__confirm_input;
-  MP_QSTR_binance__confirm_order;
-  MP_QSTR_binance__confirm_output;
-  MP_QSTR_binance__order_id;
-  MP_QSTR_binance__pair;
-  MP_QSTR_binance__price;
-  MP_QSTR_binance__quantity;
-  MP_QSTR_binance__sell;
-  MP_QSTR_binance__sender_address;
-  MP_QSTR_binance__side;
   MP_QSTR_cardano__addr_base;
   MP_QSTR_cardano__addr_enterprise;
   MP_QSTR_cardano__addr_legacy;

@@ -38,7 +38,6 @@ on one page here.
 
   Commands:
     benchmark          Benchmark commands.
-    binance            Binance Chain commands.
     btc                Bitcoin and Bitcoin-like coins commands.
     cardano            Cardano commands.
     clear-session      Clear session (remove cached PIN, passphrase, etc.).
@@ -83,27 +82,6 @@ Benchmark commands.
   Commands:
     list-names  List names of all supported benchmarks
     run         Run benchmark
-
-Binance Chain commands.
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code::
-
-  trezorctl binance --help
-
-.. code::
-
-  Usage: trezorctl binance [OPTIONS] COMMAND [ARGS]...
-
-    Binance Chain commands.
-
-  Options:
-    --help  Show this message and exit.
-
-  Commands:
-    get-address     Get Binance address for specified path.
-    get-public-key  Get Binance public key.
-    sign-tx         Sign Binance transaction.
 
 Bitcoin and Bitcoin-like coins commands.
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

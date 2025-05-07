@@ -17,7 +17,6 @@ PATTERNS = (
 )
 
 ALTCOINS = (
-    "binance",
     "cardano",
     "eos",
     "ethereum",
