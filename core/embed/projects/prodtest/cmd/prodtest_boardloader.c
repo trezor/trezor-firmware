@@ -31,8 +31,8 @@ static void prodtest_boardloader_version(cli_t* cli) {
   cli_trace(cli, "Parsing boardloader capabilities...");
   parse_boardloader_capabilities();
 
-  const boardloader_version_t* v = get_boardloader_version();
-  cli_ok(cli, "%d.%d.%d", v->version_major, v->version_minor, v->version_patch);
+  boardloader_version_t v = get_boardloader_version();
+  cli_ok(cli, "%d.%d.%d", v.version_major, v.version_minor, v.version_patch);
 }
 
 // clang-format off
