@@ -290,7 +290,6 @@ if utils.USE_THP:
     async def handle_ThpCredentialRequest(
         message: ThpCredentialRequest,
     ) -> ThpCredentialResponse | Failure:
-        from storage.cache_common import CHANNEL_HOST_STATIC_PUBKEY
         from trezor.messages import ThpCredentialMetadata, ThpCredentialResponse
         from trezor.wire.context import get_context
         from trezor.wire.thp import crypto
@@ -307,31 +306,22 @@ if utils.USE_THP:
         # Assert that context `ctx` is `GenericSessionContext`
         assert isinstance(ctx, GenericSessionContext)
 
-        host_static_pubkey = ctx.channel.channel_cache.get(CHANNEL_HOST_STATIC_PUBKEY)
-
-        assert host_static_pubkey is not None
+        # Check that request contains a host static pubkey
+        if message.host_static_pubkey is None:
+            return _get_autoconnect_failure(
+                "Credential request must contain a host static pubkey."
+            )
 
         # Check that request contains valid credential
         if message.credential is None:
-            return _get_autoconnect_failure()
+            return _get_autoconnect_failure(
+                "Credential request must contain a previously issued pairing credential."
+            )
         credential = decode_credential(message.credential)
-        if __debug__:
-            from trezor import log
-            from trezor.utils import get_bytes_as_str
-
-            log.warning(
-                __name__,
-                "Host key in message %s",
-                get_bytes_as_str(message.host_static_pubkey),
+        if not validate_credential(credential, message.host_static_pubkey):
+            return _get_autoconnect_failure(
+                "Credential request contains an invalid pairing credential."
             )
-            log.warning(
-                __name__,
-                "Host key in channel cache (from handshake) %s",
-                get_bytes_as_str(host_static_pubkey),
-            )
-
-        if not validate_credential(credential, host_static_pubkey):
-            return _get_autoconnect_failure()
 
         autoconnect = False
         if message.autoconnect is not None:
@@ -348,7 +338,7 @@ if utils.USE_THP:
                 ctx, cred_metadata.host_name
             )
         new_cred = issue_credential(
-            host_static_pubkey=host_static_pubkey,
+            host_static_pubkey=message.host_static_pubkey,
             credential_metadata=cred_metadata,
         )
         trezor_static_pubkey = crypto.get_trezor_static_pubkey()
@@ -357,13 +347,13 @@ if utils.USE_THP:
             trezor_static_pubkey=trezor_static_pubkey, credential=new_cred
         )
 
-    def _get_autoconnect_failure() -> Failure:
+    def _get_autoconnect_failure(msg: str) -> Failure:
         from trezor.enums import FailureType
         from trezor.messages import Failure
 
         return Failure(
             code=FailureType.DataError,
-            message="Credential request must contain a valid credential (previously issued).",
+            message=msg,
         )
 
 else:
