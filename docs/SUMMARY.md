@@ -37,7 +37,7 @@
     - [Bitcoin signing](common/communication/bitcoin-signing.md)
   - [Reproducible builds](common/reproducible-build.md)
   - [Message Workflows](common/message-workflows.md)
-  - [Ethereum definitions](common/ethereum-definitions.md)
+  - [External definitions](common/external-definitions.md)
   - [Solana definitions](common/solana-definitions.md)
 - [Storage](storage/index.md)
 - [Tests](tests/index.md)

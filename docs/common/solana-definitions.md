@@ -19,7 +19,13 @@ typically one month before firmware release. This means that a client applicatio
 either always fetch fresh definitions from the official URLs, or refresh its local copy
 frequently.
 
-The base URL for the definitions is `https://data.trezor.io/firmware/solana-definitions/`.
+The base URL for the definitions is `https://data.trezor.io/firmware/definitions/solana`.
+
+To look up a token definition for a given mint account, use the following URL:
+
+`https://data.trezor.io/firmware/definitions/solana/token/<MINT_ACCOUNT>.dat`
+
+`<MINT_ACCOUNT>` is base58-encoded mint account of the token, e.g., `So11111111111111111111111111111111111111112`.
 
 ## Definition format
 
