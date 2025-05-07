@@ -77,7 +77,7 @@ pm_status_t pm_init(bool inherit_state) {
       backup_ram_read_power_manager_data(&pm_recovery_data);
 
   if (status == BACKUP_RAM_OK) {
-    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc);
+    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc, pm_recovery_data.P);
   } else {
     // Wait for 1s to sample battery data
     systick_delay_ms(1000);
@@ -228,11 +228,11 @@ pm_status_t pm_hibernate(void) {
   drv->request_hibernate = true;
   pm_process_state_machine();
 
-  if (drv->state != PM_STATE_HIBERNATE) {
-    return PM_REQUEST_REJECTED;
-  }
+  systick_delay_ms(50);
 
-  return PM_OK;
+  // Whenever hibernation request fall through, request was rejected
+  return PM_REQUEST_REJECTED;
+
 }
 
 pm_status_t pm_turn_on(void) {
@@ -324,7 +324,7 @@ pm_status_t pm_charging_disable(void) {
   return PM_OK;
 }
 
-pm_status_t pm_store_data_to_backup_ram(void) {
+pm_status_t pm_store_data_to_backup_ram() {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -333,12 +333,15 @@ pm_status_t pm_store_data_to_backup_ram(void) {
 
   backup_ram_power_manager_data_t pm_data = {0};
 
+  // Fuel gauge state
   if (drv->battery_critical) {
     pm_data.soc = 0;
   } else {
     pm_data.soc = drv->fuel_gauge.soc;
   }
+  pm_data.P = drv->fuel_gauge.P;
 
+  // Power manager state
   pm_data.bat_critical = drv->battery_critical;
   pm_data.bootloader_exit_state = drv->state;
 

@@ -44,7 +44,8 @@ typedef enum {
  * after power loss.
  */
 typedef struct {
-  float soc;  // Captured state of charge <0, 1>
+  float soc;  // Captured fuel gauge state of charge <0, 1>
+  float P;    // Captured fuel gauge covariance
   bool bat_critical;
   // Captures RTC time at which SOC was captured
   uint32_t last_capture_timestamp;

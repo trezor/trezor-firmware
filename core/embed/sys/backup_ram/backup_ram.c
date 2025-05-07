@@ -148,7 +148,7 @@ backup_ram_status_t backup_ram_erase_unused(void) {
 }
 
 backup_ram_status_t backup_ram_store_power_manager_data(
-    const backup_ram_power_manager_data_t *pm_data) {
+  const backup_ram_power_manager_data_t *pm_data) {
   backup_ram_driver_t *drv = &backup_ram_driver;
 
   if (!drv->initialized) {

@@ -59,7 +59,7 @@ void fuel_gauge_reset(fuel_gauge_state_t* state);
  * @param state Pointer to EKF state structure
  * @param soc State of charge (0.0 to 1.0)
  */
-void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc);
+void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P);
 
 /**
  * Make initial SOC guess based on OCV
