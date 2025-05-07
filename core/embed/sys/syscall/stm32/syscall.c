@@ -66,8 +66,13 @@ __attribute__((naked, no_stack_protector)) static uint32_t _invoke_app_callback(
       "vmov r0, s0            \n"  // Use FPU instruction to ensure lazy
                                    // stacking
 
+#if !defined(__ARM_FEATURE_CMSE) || (__ARM_FEATURE_CMSE == 3U)
       // return to Secure Thread mode (use Secure PSP)
       "ldr lr, = 0xFFFFFFFD   \n"
+#else
+      // return to Thread mode (use PSP)
+      "ldr lr, = 0xFFFFFFBC   \n"
+#endif
       "bx lr                  \n");
 }
 
