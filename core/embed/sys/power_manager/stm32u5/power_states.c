@@ -238,7 +238,7 @@ void pm_enter_hibernate(pm_driver_t* drv) {
   // Store power manager data with request to hibernate, power manager
   // will try to hibernate immediately after reboot.
   pm_store_data_to_backup_ram();
-  reboot_device();
+  reboot_to_off();
 }
 
 void pm_enter_charging(pm_driver_t* drv) {}
