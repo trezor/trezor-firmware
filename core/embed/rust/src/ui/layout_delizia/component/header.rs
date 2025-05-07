@@ -200,8 +200,16 @@ impl Component for Header {
             let subtitle_area = self.subtitle.place(remaining);
             self.area = title_area.outset(Insets::top(subtitle_area.height()));
         } else {
+            let (header_area, _) = if self.button.is_none() {
+                header_area.split_top(TITLE_HEIGHT + theme::SPACING * 2)
+            } else {
+                // when we have a button on the right side,
+                // give it one extra line, because otherwise the text we fit is very short!
+                header_area.split_top(TITLE_HEIGHT + TITLE_HEIGHT / 2 + theme::SPACING * 3)
+            };
             let title_area = self.title.place(header_area);
-            if title_area.height() < header_area.height() / 10 {
+            if title_area.height() <= TITLE_HEIGHT / 2 {
+                // just one line => center it
                 self.title
                     .place(title_area.translate(Offset::y(title_area.height() / 2)));
             } else {
