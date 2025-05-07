@@ -1,13 +1,18 @@
 #[cfg(feature = "touch")]
-use crate::ui::event::TouchEvent;
-use crate::ui::geometry::Rect;
+use crate::ui::{event::TouchEvent, geometry::Rect};
 #[cfg(feature = "touch")]
 use heapless::Vec;
 
-pub trait ProdtestUI {
-    fn screen_prodtest_welcome();
+use crate::ui::component::Event;
 
-    fn screen_prodtest_info(id: &str);
+pub trait ProdtestLayoutType {
+    fn event(&mut self, event: Option<Event>) -> u32;
+    fn show(&mut self);
+    fn init_welcome(id: Option<&'static str>) -> Self;
+}
+
+pub trait ProdtestUI {
+    type CLayoutType: ProdtestLayoutType;
 
     fn screen_prodtest_show_text(text: &str);
 
