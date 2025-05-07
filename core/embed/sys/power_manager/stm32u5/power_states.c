@@ -56,7 +56,7 @@ static const pm_state_handler_t state_handlers[] = {
         },
     [PM_STATE_CHARGING] =
         {
-            .enter = NULL,
+            .enter = pm_enter_charging,
             .handle = pm_handle_state_charging,
             .exit = NULL,
         },
@@ -98,38 +98,92 @@ void pm_process_state_machine(void) {
 
 // State handler implementations
 
-void pm_enter_active(pm_driver_t* drv) {
-  // Set unlimited backlight
-  backlight_set_max_level(255);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_ACTIVE);
-}
 
-pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
 
-  // Handle hibernate request
+  if (drv->request_turn_on) {
+    drv->request_turn_on = false;
+    return PM_STATE_POWER_SAVE;
+  }
+
+  // External power source, start charging
+  if (drv->usb_connected || drv->wireless_connected) {
+    return PM_STATE_CHARGING;
+  }
+
+  // Hibernate again
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
+
+    // Put PMIC into ship mode (ultra-low power)
+    pm_control_hibernate();
     return PM_STATE_HIBERNATE;
-  }
-
-  // Handle suspend request
-  if (drv->request_suspend) {
-    drv->request_suspend = false;
-    return PM_STATE_SUSPEND;
-  }
-
-  // Handle low battery with no external power
-  if (!drv->usb_connected && drv->battery_low) {
-    return PM_STATE_POWER_SAVE;
   }
 
   return drv->state;
 }
 
-void pm_enter_power_save(pm_driver_t* drv) {
-  // Limit backlight
-  backlight_set_max_level(130);
-  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_POWER_SAVE);
+pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
+
+  if (drv->request_turn_on) {
+    drv->request_turn_on = false;
+    return PM_STATE_POWER_SAVE;
+  }
+
+  // Go back to hibernate if external power was removed.
+  if (!drv->usb_connected && !drv->wireless_connected) {
+    return PM_STATE_HIBERNATE;
+  }
+
+  // Hibernate again
+  if (drv->request_hibernate) {
+    drv->request_hibernate = false;
+
+    // Device is charging, request is rejected with no action
+    return PM_STATE_CHARGING;
+  }
+
+  // Not implemented yet
+  return drv->state;
+}
+
+pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv) {
+  // immediatelly return to power save state after wakeup
+  return PM_STATE_POWER_SAVE;
+}
+
+pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
+  // Wait until RGB sequence is done and go back to hibernate
+  if (drv->request_hibernate) {
+    drv->request_hibernate = false;
+
+    // Device is charging, request is rejected with no action
+    return PM_STATE_HIBERNATE;
+  }
+
+  // Not implemented yet
+  return drv->state;
+}
+
+pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
+
+  // System is shutting down, but user can still hibernate the device early.
+  if (drv->request_hibernate) {
+      drv->request_hibernate = false;
+      return PM_STATE_HIBERNATE;
+  }
+
+  // Return to power save if external power or battery recovered
+  if (drv->usb_connected || !drv->battery_critical) {
+    return PM_STATE_POWER_SAVE;
+  }
+
+  // Enter hibernate when shutdown timer elapses
+  if (drv->shutdown_timer_elapsed) {
+    return PM_STATE_HIBERNATE;
+  }
+
+  return drv->state;
 }
 
 pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
@@ -159,89 +213,23 @@ pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
   return drv->state;
 }
 
-pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
+pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
 
-  // System is shutting down, but user can still hibernate the device early.
-  if (drv->request_hibernate) {
-      drv->request_hibernate = false;
-      return PM_STATE_HIBERNATE;
-  }
-
-  // Return to power save if external power or battery recovered
-  if (drv->usb_connected || !drv->battery_critical) {
-    return PM_STATE_POWER_SAVE;
-  }
-
-  // Enter hibernate when shutdown timer elapses
-  if (drv->shutdown_timer_elapsed) {
-    return PM_STATE_HIBERNATE;
-  }
-
-  return drv->state;
-}
-
-pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv) {
-  // immediatelly return to power save state after wakeup
-  return PM_STATE_POWER_SAVE;
-}
-
-pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
-  // Wait until RGB sequence is done and go back to hibernate
+  // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
-
-    // Device is charging, request is rejected with no action
     return PM_STATE_HIBERNATE;
   }
 
-  // Not implemented yet
-  return drv->state;
-}
+  // Handle suspend request
+  if (drv->request_suspend) {
+    drv->request_suspend = false;
+    return PM_STATE_SUSPEND;
+  }
 
-pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
-
-  if (drv->request_turn_on) {
-    drv->request_turn_on = false;
+  // Handle low battery with no external power
+  if (!drv->usb_connected && drv->battery_low) {
     return PM_STATE_POWER_SAVE;
-  }
-
-  // Go back to hibernate if external power was removed.
-  if (!drv->usb_connected && !drv->wireless_connected) {
-    return PM_STATE_HIBERNATE;
-  }
-
-  // Hibernate again
-  if (drv->request_hibernate) {
-    drv->request_hibernate = false;
-
-    // Device is charging, request is rejected with no action
-    return PM_STATE_CHARGING;
-  }
-
-  // Not implemented yet
-  return drv->state;
-}
-
-
-pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
-
-  if (drv->request_turn_on) {
-    drv->request_turn_on = false;
-    return PM_STATE_POWER_SAVE;
-  }
-
-  // External power source, start charging
-  if (drv->usb_connected || drv->wireless_connected) {
-    return PM_STATE_CHARGING;
-  }
-
-  // Hibernate again
-  if (drv->request_hibernate) {
-    drv->request_hibernate = false;
-
-    // Put PMIC into ship mode (ultra-low power)
-    pm_control_hibernate();
-    return PM_STATE_HIBERNATE;
   }
 
   return drv->state;
@@ -249,10 +237,23 @@ pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
 
 // State enter/exit actions
 
-void pm_enter_report_low_battery(pm_driver_t* drv) {
+void pm_enter_hibernate(pm_driver_t* drv) {
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_HIBERNATE);
 
-  // Set backlight to minimum
-  backlight_set_max_level(0);
+  // Store power manager data with request to hibernate, power manager
+  // will try to hibernate immediately after reboot.
+  pm_store_data_to_backup_ram();
+  reboot_device();
+
+}
+
+void pm_enter_charging(pm_driver_t* drv) {
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_CHARGING);
+}
+
+void pm_enter_suspend(pm_driver_t* drv) {
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_SUSPEND);
+  pm_control_suspend();
 
 }
 
@@ -262,23 +263,27 @@ void pm_enter_shutting_down(pm_driver_t* drv) {
   PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_SHUTTING_DOWN);
 }
 
+void pm_enter_power_save(pm_driver_t* drv) {
+  // Limit backlight
+  backlight_set_max_level(130);
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_POWER_SAVE);
+}
+
+void pm_enter_active(pm_driver_t* drv) {
+  // Set unlimited backlight
+  backlight_set_max_level(255);
+  PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_ACTIVE);
+}
+
+
 void pm_exit_shutting_down(pm_driver_t* drv) {
   // Stop the shutdown timer
   systimer_unset(drv->shutdown_timer);
   drv->shutdown_timer_elapsed = false;
 }
 
-void pm_enter_suspend(pm_driver_t* drv) {
 
-  pm_control_suspend();
 
-}
 
-void pm_enter_hibernate(pm_driver_t* drv) {
 
-  // Store power manager data with request to hibernate, power manager
-  // will try to hibernate immediately after reboot.
-  pm_store_data_to_backup_ram();
-  reboot_device();
 
-}
