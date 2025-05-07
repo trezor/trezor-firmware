@@ -59,7 +59,6 @@ pm_status_t pm_init(bool inherit_state) {
                   PM_FUEL_GAUGE_R_AGGRESSIVE, PM_FUEL_GAUGE_Q_AGGRESSIVE,
                   PM_FUEL_GAUGE_P_INIT);
 
-
   // Create monitoring timer
   drv->monitoring_timer = systimer_create(pm_monitoring_timer_handler, NULL);
   systimer_set_periodic(drv->monitoring_timer, PM_BATTERY_SAMPLING_PERIOD_MS);
@@ -70,44 +69,38 @@ pm_status_t pm_init(bool inherit_state) {
   // Initial power source measurement
   npm1300_measure(pm_pmic_data_ready, NULL);
 
-
   // Try to recover SoC from the backup RAM
   backup_ram_power_manager_data_t pm_recovery_data;
   backup_ram_status_t status =
       backup_ram_read_power_manager_data(&pm_recovery_data);
 
   if (status == BACKUP_RAM_OK) {
-    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc, pm_recovery_data.P);
+    fuel_gauge_set_soc(&drv->fuel_gauge, pm_recovery_data.soc,
+                       pm_recovery_data.P);
   } else {
     // Wait for 1s to sample battery data
     systick_delay_ms(1000);
     pm_battery_initial_soc_guess();
   }
 
-  if(inherit_state){
-
+  if (inherit_state) {
     // Inherit power manager state left in beckup RAM from bootloader.
     // in case of error, start with PM_STATE_POWER_SAVE as a lowest state in
     // active mode.
     if (status != BACKUP_RAM_OK &&
-      (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
-       pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
-
-        drv->state = PM_STATE_POWER_SAVE;
+        (pm_recovery_data.bootloader_exit_state != PM_STATE_POWER_SAVE &&
+         pm_recovery_data.bootloader_exit_state != PM_STATE_ACTIVE)) {
+      drv->state = PM_STATE_POWER_SAVE;
 
     } else {
-
       // Backup RAM contain valid data
       drv->state = pm_recovery_data.bootloader_exit_state;
-
     }
 
-  }else{
-
+  } else {
     // Start in lowest state and wait for the bootup sequence to
     // finish (call of pm_turn_on())
     drv->state = PM_STATE_HIBERNATE;
-
   }
 
   // Fuel gauge SoC available, set fuel_gauge initialized.
@@ -119,11 +112,11 @@ pm_status_t pm_init(bool inherit_state) {
   // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
   // propagates into power_monitor.
   bool state_machine_stabilized;
-  do{
+  do {
     irq_key_t irq_key = irq_lock();
     state_machine_stabilized = drv->state_machine_stabilized;
     irq_unlock(irq_key);
-  }while(!state_machine_stabilized);
+  } while (!state_machine_stabilized);
 
   drv->initialized = true;
 
@@ -143,7 +136,7 @@ void pm_deinit(void) {
     drv->shutdown_timer = NULL;
   }
 
-  if(drv->fuel_gauge_initialized){
+  if (drv->fuel_gauge_initialized) {
     pm_store_data_to_backup_ram();
   }
 
@@ -151,7 +144,6 @@ void pm_deinit(void) {
   stwlc38_deinit();
 
   drv->initialized = false;
-
 }
 
 pm_status_t pm_get_events(pm_event_t* event_flags) {
@@ -228,7 +220,6 @@ pm_status_t pm_hibernate(void) {
 
   // Whenever hibernation request fall through, request was rejected
   return PM_REQUEST_REJECTED;
-
 }
 
 pm_status_t pm_turn_on(void) {
@@ -240,16 +231,16 @@ pm_status_t pm_turn_on(void) {
 
   // Poll until at least single PMIC measurement is done
   uint32_t pmic_last_update_ms;
-  do{
+  do {
     irq_key_t irq_key = irq_lock();
     pmic_last_update_ms = drv->pmic_last_update_ms;
     irq_unlock(irq_key);
-  } while(pmic_last_update_ms == 0);
+  } while (pmic_last_update_ms == 0);
 
   // Check if device has enough power to startup
-  if(drv->pmic_data.usb_status == 0x0 &&
-     drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V){
-     return PM_REQUEST_REJECTED;
+  if (drv->pmic_data.usb_status == 0x0 &&
+      drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) {
+    return PM_REQUEST_REJECTED;
   }
 
   drv->request_turn_on = true;
@@ -350,22 +341,20 @@ pm_status_t pm_store_data_to_backup_ram() {
   return PM_OK;
 }
 
-pm_status_t pm_wait_until_active(uint32_t timeout_ms){
-
+pm_status_t pm_wait_until_active(uint32_t timeout_ms) {
   pm_driver_t* drv = &g_pm;
   uint32_t expire_time = ticks_timeout(timeout_ms);
 
-  while(1){
-
-    if(ticks_expired(expire_time)){
+  while (1) {
+    if (ticks_expired(expire_time)) {
       // Timeout expired
       return PM_REQUEST_REJECTED;
     }
 
-    if((drv->state == PM_STATE_ACTIVE) || (drv->state == PM_STATE_POWER_SAVE)){
+    if ((drv->state == PM_STATE_ACTIVE) ||
+        (drv->state == PM_STATE_POWER_SAVE)) {
       return PM_OK;
     }
-
   }
 
   return PM_OK;
@@ -396,8 +385,7 @@ pm_status_t pm_wakeup_flags_reset(void) {
   return PM_OK;
 }
 
-pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
-
+pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   pm_driver_t* drv = &g_pm;
 
   if (!drv->initialized) {
@@ -408,9 +396,7 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t *flags) {
   *flags = drv->wakeup_flags;
   irq_unlock(irq_key);
   return PM_OK;
-
 }
-
 
 // Timer handlers
 static void pm_monitoring_timer_handler(void* context) {

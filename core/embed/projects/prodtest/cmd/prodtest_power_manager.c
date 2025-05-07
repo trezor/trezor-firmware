@@ -312,10 +312,9 @@ void prodtest_pm_event_monitor(cli_t* cli) {
   }
 
   cli_progress(cli, "%s %s %d %d %d",
-              state.usb_connected ? "USB_connected" : "USB_disconnected",
-              state.wireless_connected ? "WLC_connected" : "WLC_disconnected",
-              state.charging_status, state.power_state, state.soc);
-
+               state.usb_connected ? "USB_connected" : "USB_disconnected",
+               state.wireless_connected ? "WLC_connected" : "WLC_disconnected",
+               state.charging_status, state.power_state, state.soc);
 
   cli_ok(cli, "");
 }

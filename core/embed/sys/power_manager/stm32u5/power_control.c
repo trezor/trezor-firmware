@@ -77,7 +77,7 @@ pm_status_t pm_control_hibernate() {
   }
 
   // Wait for the device to power off
-  //systick_delay_ms(50);
+  // systick_delay_ms(50);
 
   return PM_ERROR;
 }
@@ -206,9 +206,6 @@ void pm_control_suspend() {
 #ifdef USE_TROPIC
   tropic_init();
 #endif
-
-
-
 }
 
 static void pm_background_tasks_suspend(void) {

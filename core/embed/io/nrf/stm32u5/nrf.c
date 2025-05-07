@@ -25,9 +25,9 @@
 #include <io/nrf.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/power_manager.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
-#include <sys/power_manager.h>
 #include <util/tsqueue.h>
 
 #include "../crc8.h"
