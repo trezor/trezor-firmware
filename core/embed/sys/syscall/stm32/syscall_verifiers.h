@@ -183,11 +183,10 @@ void entropy_get__verified(uint8_t *buf);
 // ---------------------------------------------------------------------
 #include <util/fwutils.h>
 
-secbool firmware_calc_hash__verified(const uint8_t *challenge,
-                                     size_t challenge_len, uint8_t *hash,
-                                     size_t hash_len,
-                                     firmware_hash_callback_t callback,
-                                     void *callback_context);
+int firmware_hash_start__verified(const uint8_t *challenge,
+                                  size_t challenge_len);
+
+int firmware_hash_continue__verified(uint8_t *hash, size_t hash_len);
 
 secbool firmware_get_vendor__verified(char *buff, size_t buff_size);
 

@@ -93,16 +93,6 @@ static secbool storage_init_callback_wrapper(
   return result;
 }
 
-static firmware_hash_callback_t firmware_hash_callback = NULL;
-
-static void firmware_hash_callback_wrapper(void *context, uint32_t progress,
-                                           uint32_t total) {
-  g_in_app_callback = true;
-  invoke_app_callback((uint32_t)context, progress, total,
-                      firmware_hash_callback);
-  g_in_app_callback = false;
-}
-
 __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
                                                        uint32_t syscall) {
   switch (syscall) {
@@ -687,17 +677,16 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
       args[0] = firmware_get_vendor__verified(buff, buff_size);
     } break;
 
-    case SYSCALL_FIRMWARE_CALC_HASH: {
+    case SYSCALL_FIRMWARE_HASH_START: {
       const uint8_t *challenge = (const uint8_t *)args[0];
       size_t challenge_len = args[1];
-      uint8_t *hash = (uint8_t *)args[2];
-      size_t hash_len = args[3];
-      firmware_hash_callback = (firmware_hash_callback_t)args[4];
-      void *callback_context = (void *)args[5];
+      args[0] = firmware_hash_start__verified(challenge, challenge_len);
+    } break;
 
-      args[0] = firmware_calc_hash__verified(
-          challenge, challenge_len, hash, hash_len,
-          firmware_hash_callback_wrapper, callback_context);
+    case SYSCALL_FIRMWARE_HASH_CONTINUE: {
+      uint8_t *hash = (uint8_t *)args[0];
+      size_t hash_len = args[1];
+      args[0] = firmware_hash_continue__verified(hash, hash_len);
     } break;
 
 #ifdef USE_BLE

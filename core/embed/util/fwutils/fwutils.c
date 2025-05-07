@@ -21,9 +21,11 @@
 #include <trezor_model.h>
 #include <trezor_rtl.h>
 
+#include <sys/systask.h>
 #include <util/flash.h>
 #include <util/fwutils.h>
 #include <util/image.h>
+
 #include "blake2s.h"
 #include "flash_area.h"
 
@@ -31,51 +33,76 @@
 
 #define FW_HASHING_CHUNK_SIZE 1024
 
-secbool firmware_calc_hash(const uint8_t* challenge, size_t challenge_len,
-                           uint8_t* hash, size_t hash_len,
-                           firmware_hash_callback_t callback,
-                           void* callback_context) {
-  BLAKE2S_CTX ctx;
+typedef struct {
+  bool initialized;
+  BLAKE2S_CTX blake;
+  uint32_t fw_offset;
+  uint32_t fw_size;
+
+} firmware_hash_context_t;
+
+static firmware_hash_context_t g_hash_context[SYSTASK_MAX_TASKS];
+
+int firmware_hash_start(const uint8_t* challenge, size_t challenge_len) {
+  firmware_hash_context_t* ctx = &g_hash_context[systask_id(systask_active())];
+
+  int err;
 
   if (challenge_len != 0) {
-    if (blake2s_InitKey(&ctx, BLAKE2S_DIGEST_LENGTH, challenge,
-                        challenge_len) != 0) {
-      return secfalse;
-    }
+    err = blake2s_InitKey(&ctx->blake, BLAKE2S_DIGEST_LENGTH, challenge,
+                          challenge_len);
   } else {
-    blake2s_Init(&ctx, BLAKE2S_DIGEST_LENGTH);
+    err = blake2s_Init(&ctx->blake, BLAKE2S_DIGEST_LENGTH);
   }
 
-  uint32_t firmware_size = flash_area_get_size(&FIRMWARE_AREA);
-  uint32_t chunks = firmware_size / FW_HASHING_CHUNK_SIZE;
+  if (err != 0) {
+    return -1;
+  }
 
-  ensure((firmware_size % FW_HASHING_CHUNK_SIZE == 0) * sectrue,
+  ctx->fw_offset = 0;
+  ctx->fw_size = flash_area_get_size(&FIRMWARE_AREA);
+
+  ensure((ctx->fw_size % FW_HASHING_CHUNK_SIZE == 0) * sectrue,
          "Cannot compute FW hash.");
 
-  for (int i = 0; i < chunks; i++) {
-    if (callback != NULL && (i % 128 == 0)) {
-      callback(callback_context, i, chunks);
+  ctx->initialized = true;
+  return 0;
+}
+
+int firmware_hash_continue(uint8_t* hash, size_t hash_len) {
+  firmware_hash_context_t* ctx = &g_hash_context[systask_id(systask_active())];
+
+  memset(hash, 0, hash_len);
+
+  if (!ctx->initialized) {
+    return -1;
+  }
+
+  int n_chunks = 128;
+
+  while (ctx->fw_offset < ctx->fw_size && n_chunks > 0) {
+    const void* chunk_ptr = flash_area_get_address(
+        &FIRMWARE_AREA, ctx->fw_offset, FW_HASHING_CHUNK_SIZE);
+
+    int err = blake2s_Update(&ctx->blake, chunk_ptr, FW_HASHING_CHUNK_SIZE);
+    if (err != 0) {
+      ctx->initialized = false;
+      return -1;
     }
 
-    const void* data = flash_area_get_address(
-        &FIRMWARE_AREA, i * FW_HASHING_CHUNK_SIZE, FW_HASHING_CHUNK_SIZE);
+    ctx->fw_offset += FW_HASHING_CHUNK_SIZE;
+    --n_chunks;
+  }
 
-    if (data == NULL) {
-      return secfalse;
+  if (ctx->fw_offset >= ctx->fw_size) {
+    ctx->initialized = false;
+    int err = blake2s_Final(&ctx->blake, hash, hash_len);
+    if (err != 0) {
+      return -1;
     }
-
-    blake2s_Update(&ctx, data, FW_HASHING_CHUNK_SIZE);
   }
 
-  if (callback != NULL) {
-    callback(callback_context, chunks, chunks);
-  }
-
-  if (blake2s_Final(&ctx, hash, hash_len) != 0) {
-    return secfalse;
-  }
-
-  return sectrue;
+  return (100 * ctx->fw_offset) / ctx->fw_size;
 }
 
 secbool firmware_get_vendor(char* buff, size_t buff_size) {
