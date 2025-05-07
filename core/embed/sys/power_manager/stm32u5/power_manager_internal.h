@@ -50,15 +50,6 @@
 #define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
 #define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
 
-typedef enum {
-  PM_STATE_HIBERNATE,
-  PM_STATE_CHARGING,
-  PM_STATE_SUSPEND,
-  PM_STATE_SHUTTING_DOWN,
-  PM_STATE_POWER_SAVE,
-  PM_STATE_ACTIVE,
-} pm_internal_state_t;
-
 // Power manager battery sampling data structure)
 typedef struct {
   float vbat;      // Battery voltage [V]
@@ -145,12 +136,10 @@ pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv);
 pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv);
 pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv);
 
-void pm_enter_active(pm_driver_t* drv);
-void pm_enter_power_save(pm_driver_t* drv);
-void pm_enter_shutting_down(pm_driver_t* drv);
-void pm_exit_shutting_down(pm_driver_t* drv);
-void pm_enter_suspend(pm_driver_t* drv);
-void pm_enter_report_low_battery(pm_driver_t* drv);
-void pm_enter_charging(pm_driver_t* drv);
-void pm_exit_charging(pm_driver_t* drv);
 void pm_enter_hibernate(pm_driver_t* drv);
+void pm_enter_charging(pm_driver_t* drv);
+void pm_enter_suspend(pm_driver_t* drv);
+void pm_enter_shutting_down(pm_driver_t* drv);
+void pm_enter_power_save(pm_driver_t* drv);
+void pm_enter_active(pm_driver_t* drv);
+void pm_exit_shutting_down(pm_driver_t* drv);

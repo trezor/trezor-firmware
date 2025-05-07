@@ -189,20 +189,7 @@ pm_status_t pm_get_state(pm_state_t* state) {
     state->charging_status = PM_BATTERY_IDLE;
   }
 
-  switch (drv->state) {
-    case PM_STATE_POWER_SAVE:
-      state->power_mode = PM_POWER_MODE_POWER_SAVE;
-      break;
-    case PM_STATE_SHUTTING_DOWN:
-      state->power_mode = PM_POWER_MODE_SHUTTING_DOWN;
-      break;
-    case PM_STATE_ACTIVE:
-      state->power_mode = PM_POWER_MODE_ACTIVE;
-      break;
-    default:
-      state->power_mode = PM_POWER_MODE_NOT_INITIALIZED;
-  }
-
+  state->power_state = drv->state;
   state->soc = drv->soc_ceiled;
 
   irq_unlock(irq_key);
