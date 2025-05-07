@@ -17,25 +17,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TREZORHAL_BOARD_CAPABILITIES_H__
-#define __TREZORHAL_BOARD_CAPABILITIES_H__
-
-/*
-Simple key-tag-length-value structure at fixed boardloader address.
-
-* header 4 bytes `TRZC`
-* each field is 4 bytes or multiple (because of alignment)
-* 4 bytes are
-  * 1-byte tag+type - CapabilityTag
-  * 1 byte length - counting from next byte forward
-  * 0 or more bytes of data, doesn't have to be aligned
-
-Last tag must be terminator or all space used.
-*/
+#pragma once
 
 #include <trezor_types.h>
 
 #ifdef KERNEL_MODE
+
+typedef struct __attribute__((packed)) {
+  uint8_t version_major;
+  uint8_t version_minor;
+  uint8_t version_patch;
+  uint8_t version_build;
+} boardloader_version_t;
+
+// Structure holding board capabilities.
+// Older boardloaders can have it missing or reordered.
+//
+// Simple key-tag-length-value structure at fixed boardloader address.
+//
+//  header 4 bytes `TRZC`
+//  each field is 4 bytes or multiple (because of alignment)
+//  4 bytes are
+//  1-byte tag+type - CapabilityTag
+//  1 byte length - counting from next byte forward
+//  0 or more bytes of data, doesn't have to be aligned
+//
+// Last tag must be terminator or all space used.
 
 #define CAPABILITIES_HEADER "TRZC"
 
@@ -46,38 +53,29 @@ enum CapabilityTag {
   TAG_BOARDLOADER_VERSION = 0x03
 };
 
-typedef struct __attribute__((packed)) BoardloaderVersion {
-  uint8_t version_major;
-  uint8_t version_minor;
-  uint8_t version_patch;
-  uint8_t version_build;
-} boardloader_version_t;
-
-/*
- * Structure of current boardloader. Older boardloaders can have it missing,
- * reordered.
- */
-struct __attribute__((packed)) BoardCapabilities {
+typedef struct __attribute__((packed)) {
   uint8_t header[4];
   uint8_t model_tag;
   uint8_t model_length;
   uint32_t model_name;
   uint8_t version_tag;
   uint8_t version_length;
-  struct BoardloaderVersion version;
-  enum CapabilityTag terminator_tag;
+  boardloader_version_t version;
+  uint8_t terminator_tag;
   uint8_t terminator_length;
-};
+} board_capabilities_t;
 
-/*
- * Parse capabilities into RAM. Use while boardloader is accessible,
- * before MPU is active.
- */
+// Parses capabiilites from boardloader into RAM
+//
+// This function must be called before any other function
+// that uses the capabilities
 void parse_boardloader_capabilities();
 
-const uint32_t get_board_name();
-const boardloader_version_t* get_boardloader_version();
+// Gets four bytes containing characters identifying the board
+// (e.g. `T3T1` for Trezor Safe 5)
+uint32_t get_board_name();
+
+// Gets the boardloader version
+boardloader_version_t get_boardloader_version();
 
 #endif  // KERNEL_MODE
-
-#endif

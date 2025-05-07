@@ -27,13 +27,11 @@
 
 static uint32_t board_name = 0;
 
-static struct BoardloaderVersion boardloader_version;
+static boardloader_version_t boardloader_version = {0};
 
 const uint32_t get_board_name() { return board_name; }
 
-const boardloader_version_t *get_boardloader_version() {
-  return &boardloader_version;
-}
+boardloader_version_t get_boardloader_version() { return boardloader_version; }
 
 void parse_boardloader_capabilities() {
   mpu_mode_t mpu_mode = mpu_reconfig(MPU_MODE_BOARDCAPS);
