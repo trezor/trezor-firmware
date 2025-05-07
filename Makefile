@@ -144,7 +144,7 @@ bootloader_hashes: ## generate bootloader hashes
 bootloader_hashes_check: ## check generated bootloader hashes
 	./core/tools/bootloader_hashes.py --check
 
-lsgen: ## generate linker scripts hashes
+lsgen: ## generate linker scripts
 	lsgen
 
 lsgen_check: ## check generated linker scripts
