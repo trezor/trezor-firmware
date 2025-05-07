@@ -1,4 +1,14 @@
-use crate::ui::{ui_prodtest::ProdtestUI, util::from_c_array, ModelUI};
+use crate::{
+    trezorhal::{
+        layout_buf::{c_layout_t, LayoutBuffer},
+        sysevent::{parse_event, sysevents_t},
+    },
+    ui::{
+        ui_prodtest::{ProdtestLayoutType, ProdtestUI},
+        util::from_c_array,
+        ModelUI,
+    },
+};
 
 #[cfg(feature = "touch")]
 use crate::ui::geometry::{Offset, Point, Rect};
@@ -10,15 +20,30 @@ use cty::int16_t;
 use heapless::Vec;
 
 #[no_mangle]
-extern "C" fn screen_prodtest_welcome() {
-    ModelUI::screen_prodtest_welcome();
+extern "C" fn screen_prodtest_event(layout: *mut c_layout_t, signalled: &sysevents_t) -> u32 {
+    let e = parse_event(signalled);
+    // SAFETY: calling code is supposed to give us exclusive access to an already
+    // initialized layout
+    unsafe {
+        let mut layout = LayoutBuffer::<<ModelUI as ProdtestUI>::CLayoutType>::new(layout);
+        let layout = layout.get_mut();
+        layout.event(e)
+    }
 }
 
 #[no_mangle]
-extern "C" fn screen_prodtest_info(id: *const cty::c_char, id_len: u8) {
-    let id = unwrap!(unsafe { from_c_array(id, id_len as usize) });
+extern "C" fn screen_prodtest_welcome(layout: *mut c_layout_t, id: *const cty::c_char, id_len: u8) {
+    let id = if id.is_null() {
+        None
+    } else {
+        unsafe { from_c_array(id, id_len as usize) }
+    };
 
-    ModelUI::screen_prodtest_info(id);
+    let mut screen = <ModelUI as ProdtestUI>::CLayoutType::init_welcome(id);
+    screen.show();
+    // SAFETY: calling code is supposed to give us exclusive access to the layout
+    let mut layout = unsafe { LayoutBuffer::new(layout) };
+    layout.store(screen);
 }
 
 #[no_mangle]

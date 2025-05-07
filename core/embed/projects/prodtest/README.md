@@ -592,6 +592,16 @@ prodtest-wipe
 OK
 ```
 
+
+### prodtest-homescreen
+Shows prodtest homescreen, which displays essential information about the device.
+
+Example:
+```
+prodtest-homescreen
+OK
+```
+
 ### optiga-id-read
 Retrieves the coprocessor UID of the Optiga chip as a 27 byte hexadecimal string.
 
