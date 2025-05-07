@@ -273,7 +273,7 @@ void pm_enter_hibernate(pm_driver_t* drv) {
   // after reboot?
   pm_store_data_to_backup_ram();
 
-  reboot_device();
+  reboot_to_off();
 }
 
 #endif

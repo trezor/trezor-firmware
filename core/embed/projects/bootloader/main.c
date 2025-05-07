@@ -102,13 +102,17 @@ static void drivers_init(secbool *touch_initialized) {
   rgb_led_init();
 #endif
 
-  // systick_delay_ms(5000);
+ // systick_delay_ms(5000);
+
 #ifdef USE_POWER_MANAGER
   pm_init(false);
 
   boot_command_t cmd = bootargs_get_command();
 
-  secbool turn_on = cmd != BOOT_COMMAND_NONE;
+  bool turn_on = (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
+                    cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
+
+  pm_status_wait_for_data();
 
   while (!button_is_down(BTN_POWER) && !turn_on) {
     pm_state_t state;
@@ -118,9 +122,18 @@ static void drivers_init(secbool *touch_initialized) {
       // charing screen
       rgb_led_set_color(0x0000FF);
     } else {
-      rgb_led_set_color(0x400000);
-      systick_delay_ms(1000);
-      pm_hibernate();
+
+      if (!state.usb_connected && !state.wireless_connected) {
+        rgb_led_set_color(0xFF0000);
+        systick_delay_ms(1000);
+        pm_hibernate();
+        // systick_delay_ms(1000);
+        // reboot_to_off();
+      } else {
+        if (state.soc > 80) {
+          rgb_led_set_color(0x00FF00);
+        }
+      }
     }
   }
 
@@ -128,6 +141,8 @@ static void drivers_init(secbool *touch_initialized) {
     rgb_led_set_color(0x400000);
     systick_delay_ms(1000);
     pm_hibernate();
+    systick_delay_ms(1000);
+    reboot_to_off();
   }
 
 #endif

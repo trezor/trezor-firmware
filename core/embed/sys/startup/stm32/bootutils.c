@@ -213,6 +213,10 @@ __attribute__((noreturn)) void reboot_device(void) {
   reboot_with_args(BOOT_COMMAND_REBOOT, NULL, 0);
 }
 
+__attribute__((noreturn)) void reboot_to_off(void) {
+  reboot_with_args(BOOT_COMMAND_NONE, NULL, 0);
+}
+
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
 #ifndef RSOD_INFINITE_LOOP
   systick_delay_ms(10 * 1000);

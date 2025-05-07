@@ -36,17 +36,6 @@ void pm_monitor_power_sources(void) {
     return;
   }
 
-  // Check USB power source status
-  if (drv->pmic_data.usb_status != 0x0) {
-    if (!drv->usb_connected) {
-      drv->usb_connected = true;
-    }
-  } else {
-    if (drv->usb_connected) {
-      drv->usb_connected = false;
-    }
-  }
-
   // Check wireless charger status
   if (drv->wireless_data.vout_ready) {
     if (!drv->wireless_connected) {
@@ -127,6 +116,17 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
 
   // Copy PMIC data
   memcpy(&drv->pmic_data, report, sizeof(npm1300_report_t));
+
+  // Check USB power source status
+  if (drv->pmic_data.usb_status != 0x0) {
+    if (!drv->usb_connected) {
+      drv->usb_connected = true;
+    }
+  } else {
+    if (drv->usb_connected) {
+      drv->usb_connected = false;
+    }
+  }
 
   // Get wireless charger data
   stwlc38_get_report(&drv->wireless_data);

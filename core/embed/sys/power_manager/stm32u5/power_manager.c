@@ -355,6 +355,28 @@ pm_status_t pm_wait_until_active(uint32_t timeout_ms) {
   return PM_OK;
 }
 
+pm_status_t pm_status_wait_for_data(void) {
+
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  // todo wireless
+
+  uint32_t upd_time = 0;
+
+  do {
+
+    irq_key_t irq_key = irq_lock();
+    upd_time = drv->pmic_last_update_ms;
+    irq_unlock(irq_key);
+  } while (upd_time == 0);
+
+  return PM_OK;
+}
+
 pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags) {
   pm_driver_t* drv = &g_pm;
   if (!drv->initialized) {

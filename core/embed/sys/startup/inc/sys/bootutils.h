@@ -22,8 +22,12 @@
 
 #include <trezor_types.h>
 
-// Immediately resets the device and initiates the normal boot sequence.
+// Immediately resets the device and initiates the normal boot sequence as if the device was powered on
 void __attribute__((noreturn)) reboot_device(void);
+
+
+// Immediately resets the device
+void __attribute__((noreturn)) reboot_to_off(void);
 
 // Resets the device and enters the bootloader,
 // halting there and waiting for further user instructions.
