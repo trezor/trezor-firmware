@@ -42,7 +42,7 @@ Definitions for Ethereum chains (networks) and tokens (erc20) are split in two p
    and tokens in [`ethereum/tokens.json`](ethereum/tokens.json).
 2. external definitions - dynamically generated from multiple sources. Whole process is
    described in separate
-   [document](https://docs.trezor.io/trezor-firmware/common/ethereum-definitions.html).
+   [document](https://docs.trezor.io/trezor-firmware/common/external-definitions.html).
 
 We generally do not accept updates to the built-in definitions. Instead, make sure your
 network or token is included in the external definitions. A good place to start is the

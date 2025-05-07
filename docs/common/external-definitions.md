@@ -1,25 +1,34 @@
-# Ethereum definitions
+# External definitions
 
-For support of the huge number of EVM chains (networks) and ERC-20 tokens, Trezor needs
-to know parameters of those networks and tokens, namely:
+A lot of modern blockchains support _tokens_ tradeable on top of the base chain. For
+proper support in Trezor, we need to know parameters of the tokens that are not part of
+the signed data -- most typically, the name, currency symbol and the number of decimal
+places.
 
-* currency symbol and number of decimal places, to correctly display amounts,
-* SLIP44 identifier to unlock the appropriate BIP-32 subtrees.
+Similarly, the "Ethereum" implementation in Trezor actually supports any EVM chain, but
+we again need some identifying data about the chain in order to display amounts in an
+user-friendly way.
 
-A subset of Ethereum definitions is built into the firmware image. The rest is generated
-externally and must be sent to Trezor as a signed blob.
+Currently, Trezor has the capability to load external definitions of:
+
+* EVM chains (networks), identified by their chain ID,
+* ERC20 tokens, identified by the chain ID and token address,
+* Solana tokens, identified by the mint account.
 
 ## Built-in definitions
 
+A subset of definitions for the most common EVM chains and ERC20 tokens is baked into
+the firmware image.
+
 The set of built-in definitions is declared in the following files:
-* networks - [`networks.json`](https://github.com/trezor/trezor-firmware/blob/master/common/defs/ethereum/networks.json)
-* tokens - [`tokens.json`](https://github.com/trezor/trezor-firmware/blob/master/common/defs/ethereum/tokens.json)
+* networks - [`networks.json`](https://github.com/trezor/trezor-firmware/blob/main/common/defs/ethereum/networks.json)
+* tokens - [`tokens.json`](https://github.com/trezor/trezor-firmware/blob/main/common/defs/ethereum/tokens.json)
 
 These definitions need to be modified manually.
 
 ## External definitions
 
-A full list of Ethereum definitions is compiled from multiple sources and is available
+A full list of definitions is compiled from multiple sources and is available
 [in a separate repository](https://github.com/trezor/definitions).
 
 From this list, a collection of binary blobs is generated, signed, and made available
@@ -30,30 +39,32 @@ typically one month before firmware release. This means that a client applicatio
 either always fetch fresh definitions from the official URLs, or refresh its local copy
 frequently.
 
-### Retrieving the definitions
+## Retrieving the definitions
 
-The base URL for the definitions is `https://data.trezor.io/firmware/eth-definitions/`.
+The base URL for the definitions is `https://data.trezor.io/firmware/definitions/`.
 
-#### Known chain ID
+### EVM ecosystem
+
+#### Chain ID is known
 
 To look up a network definition by its chain ID, use the following URL:
 
-`https://data.trezor.io/firmware/eth-definitions/chain-id/<CHAIN_ID>/network.dat`
+`https://data.trezor.io/firmware/definitions/eth/chain-id/<CHAIN_ID>/network.dat`
 
 `<CHAIN_ID>` is a decimal number, e.g., `1` for Ethereum mainnet.
 
 To look up a token definition for a given chain ID and token address, use the following URL:
 
-`https://data.trezor.io/firmware/eth-definitions/chain-id/<CHAIN_ID>/token-<TOKEN_ADDRESS>.dat`
+`https://data.trezor.io/firmware/definitions/eth/chain-id/<CHAIN_ID>/token-<TOKEN_ADDRESS>.dat`
 
 `<CHAIN_ID>` is again a decimal number.<br>
 `<TOKEN_ADDRESS>` is all lowercase (no checksum) token address hex without the `0x` prefix.
 
 E.g., this is the URL for Görli TST token:
-[https://data.trezor.io/firmware/eth-definitions/chain-id/5/token-7af963cf6d228e564e2a0aa0ddbf06210b38615d.dat]
+[https://data.trezor.io/firmware/definitions/eth/chain-id/5/token-7af963cf6d228e564e2a0aa0ddbf06210b38615d.dat]
 
 
-#### Unknown chain ID
+#### Chain ID is not known
 
 Certain Ethereum calls, such as `EthereumGetAddress` and `EthereumSignMessage`, do not
 require the caller to know the chain ID, because their results do not depend on it.
@@ -61,7 +72,7 @@ require the caller to know the chain ID, because their results do not depend on 
 For this situation, it is possible to look up a network definition by a SLIP-44
 identifier on the following URL:
 
-`https://data.trezor.io/firmware/eth-definitions/slip44/<SLIP44_ID>/network.dat`
+`https://data.trezor.io/firmware/definitions/eth/slip44/<SLIP44_ID>/network.dat`
 
 `<SLIP44_ID>` is a decimal number, e.g., `60` for Ethereum mainnet.
 
@@ -74,17 +85,26 @@ derivation path.
 When using Ethereum's SLIP-44 number 60 in the derivation path, the caller does not need
 to provide the network definition, because Ethereum network is always built-in.
 
+### Solana
+
+To look up a token definition for a given token mint account, use the following URL:
+
+`https://data.trezor.io/firmware/definitions/solana/token/<MINT_ACCOUNT>.dat`
+
+`<MINT_ACCOUNT>` is base58-encoded mint account of the token, e.g., `So11111111111111111111111111111111111111112`.
+
 ### Full set of definitions
 
 It is possible to download the full set of signed definitions in a single tar archive
 from the following URL:
 
-[`https://data.trezor.io/firmware/eth-definitions/definitions.tar.xz`](https://data.trezor.io/firmware/eth-definitions/definitions.tar.xz).
+[`https://data.trezor.io/firmware/definitions/definitions.tar.xz`](https://data.trezor.io/firmware/definitions/definitions.tar.xz).
 
 ## Definition format
 
-Each definition is encoded as a protobuf message `EthereumNetworkInfo` or
-`EthereumTokenInfo` and packaged in the following binary format.
+Each definition is encoded as a protobuf message specified in the file
+[`messages-definitions.proto`](https://github.com/trezor/trezor-firmware/blob/main/common/protob/messages-definitions.proto)
+and packaged in the following binary format.
 
 All numbers are unsigned little endian.
 
@@ -124,7 +144,7 @@ For each leaf, its proof is a sequence of neighbor hashes going up the tree. One
 keep track of the proof is, whenever constructing an internal node, add the right hash
 to the left child's proof list and vice versa.
 
-A [reference implementation](https://github.com/trezor/trezor-firmware/blob/master/python/src/trezorlib/merkle_tree.py) is provided.
+A [reference implementation](https://github.com/trezor/trezor-firmware/blob/main/python/src/trezorlib/merkle_tree.py) is provided.
 
 ## Data sources
 
