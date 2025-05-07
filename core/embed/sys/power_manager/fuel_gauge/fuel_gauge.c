@@ -31,7 +31,7 @@ void fuel_gauge_init(fuel_gauge_state_t* state, float R, float Q,
   // Initialize state
   state->soc = 0.0f;
   state->soc_latched = 0.0f;
-  state->P = P_init; // Initial error covariance
+  state->P = P_init;  // Initial error covariance
 }
 
 void fuel_gauge_reset(fuel_gauge_state_t* state) {
@@ -44,7 +44,7 @@ void fuel_gauge_set_soc(fuel_gauge_state_t* state, float soc, float P) {
   // Set SOC directly
   state->soc = soc;
   state->soc_latched = soc;
-  state->P = P; // Set error covariance
+  state->P = P;  // Set error covariance
 }
 
 void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
@@ -60,8 +60,8 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
   state->soc_latched = state->soc;
 }
 
-float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms, float voltage_V,
-                        float current_mA, float temperature) {
+float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
+                        float voltage_V, float current_mA, float temperature) {
   // Determine if we're in discharge mode
   bool discharging_mode = current_mA >= 0.0f;
 
