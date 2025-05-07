@@ -10,9 +10,30 @@ from trezor.wire import DataError
 if TYPE_CHECKING:
     from trezor.enums import SafetyCheckLevel
     from trezor.messages import ApplySettings, Success
+    from trezor.ui import ProgressLayout
 
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
+
+
+async def _load_homescreen(length: int) -> bytes:
+    from trezor import utils, workflow
+    from trezor.ui.layouts.progress import progress
+
+    from apps.common import chunked
+
+    loader: ProgressLayout | None = None
+
+    def report(value: int) -> None:
+        nonlocal loader
+        if loader is None:
+            workflow.close_others()
+            loader = progress(TR.progress__please_wait)
+        loader.report(value)
+
+    buf = utils.empty_bytearray(length)
+    await chunked.get_all_chunks(buf, length, report=report)
+    return buf
 
 
 def _validate_homescreen(homescreen: bytes) -> None:
@@ -38,6 +59,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
         raise NotInitialized("Device is not initialized")
 
     homescreen = msg.homescreen  # local_cache_attribute
+    homescreen_length = msg.homescreen_length  # local_cache_attribute
     label = msg.label  # local_cache_attribute
     auto_lock_delay_ms = msg.auto_lock_delay_ms  # local_cache_attribute
     use_passphrase = msg.use_passphrase  # local_cache_attribute
@@ -52,6 +74,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
 
     if (
         homescreen is None
+        and homescreen_length is None
         and label is None
         and use_passphrase is None
         and passphrase_always_on_device is None
@@ -63,6 +86,12 @@ async def apply_settings(msg: ApplySettings) -> Success:
         and (haptic_feedback is None or not utils.USE_HAPTIC)
     ):
         raise ProcessError("No setting provided")
+
+    if homescreen_length is not None:
+        if homescreen is not None:
+            raise ProcessError("Mutually exclusive settings")
+
+        homescreen = await _load_homescreen(homescreen_length)
 
     if homescreen is not None:
         _validate_homescreen(homescreen)

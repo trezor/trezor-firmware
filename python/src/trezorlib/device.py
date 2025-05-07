@@ -44,6 +44,7 @@ RECOVERY_BACK = "\x08"  # backspace character, sent literally
 
 SLIP39_EXTENDABLE_MIN_VERSION = (2, 7, 1)
 ENTROPY_CHECK_MIN_VERSION = (2, 8, 7)
+HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 
 
 @session
@@ -69,7 +70,6 @@ def apply_settings(
     settings = messages.ApplySettings(
         label=label,
         use_passphrase=use_passphrase,
-        homescreen=homescreen,
         passphrase_always_on_device=passphrase_always_on_device,
         auto_lock_delay_ms=auto_lock_delay_ms,
         display_rotation=display_rotation,
@@ -79,16 +79,26 @@ def apply_settings(
         haptic_feedback=haptic_feedback,
     )
 
-    out = client.call(settings, expect=messages.Success)
+    if homescreen is not None:
+        if client.version < HOMESCREEN_STREAMING_MIN_VERSION:
+            settings.homescreen = homescreen
+        else:
+            settings.homescreen_length = len(homescreen)
+
+    response = client.call(settings)
+    if settings.homescreen_length is not None:
+        response = _send_chunked_data(client, response, homescreen or b"")
+    else:
+        messages.Success.ensure_isinstance(response)
     client.refresh_features()
-    return _return_success(out)
+    return _return_success(response)
 
 
-def _send_language_data(
+def _send_chunked_data(
     client: "TrezorClient",
     request: "messages.DataChunkRequest",
     language_data: bytes,
-) -> None:
+) -> "messages.Success":
     response = request
     while not isinstance(response, messages.Success):
         response = messages.DataChunkRequest.ensure_isinstance(response)
@@ -96,6 +106,7 @@ def _send_language_data(
         data_offset = response.data_offset
         chunk = language_data[data_offset : data_offset + data_length]
         response = client.call(messages.DataChunkAck(data_chunk=chunk))
+    return response
 
 
 @session
@@ -110,7 +121,7 @@ def change_language(
     response = client.call(msg)
     if data_length > 0:
         response = messages.DataChunkRequest.ensure_isinstance(response)
-        _send_language_data(client, response, language_data)
+        _send_chunked_data(client, response, language_data)
     else:
         messages.Success.ensure_isinstance(response)
     client.refresh_features()  # changing the language in features
@@ -624,7 +635,7 @@ def reboot_to_bootloader(
         )
     )
     if isinstance(response, messages.DataChunkRequest):
-        response = _send_language_data(client, response, language_data)
+        response = _send_chunked_data(client, response, language_data)
     return _return_success(messages.Success(message=""))
 
 

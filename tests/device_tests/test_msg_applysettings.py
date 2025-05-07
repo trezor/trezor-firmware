@@ -50,10 +50,17 @@ T1_HOMESCREEN = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x
 TR_HOMESCREEN = b"TOIG\x80\x00@\x00\x0c\x04\x00\x00\xa5RY\x96\xdc0\x08\xe4\x06\xdc\xff\x96\xdc\x80\xa8\x16\x90z\xd2y\xf9\x18{<m\xc9\x02j\xeb\xea_\xddy\xfe~\xf14:\xfc\xe2I\x00\xf8\xff\x13\xff\xfa\xc6>\xc0\xf1\xe5\xc9y\x0f\x95\x7f;C\xfe\xd0\xe1K\xefS\x96o\xf9\xb739\x1a\n\xc7\xde\x89\xff\x11\xd8=\xd5\xcf\xb1\x9f\xf7U\xf2\xa3spx\xb0&t\xe4\xaf3x\xcaT\xec\xe50k\xb4\xe8\nl\x16\xbf`'\xf3\xa7Z\x8d-\x98h\x1c\x03\x07\xf0\xcf\xf0\x8aD\x13\xec\x1f@y\x9e\xd8\xa3\xc6\x84F*\x1dx\x02U\x00\x10\xd3\x8cF\xbb\x97y\x18J\xa5T\x18x\x1c\x02\xc6\x90\xfd\xdc\x89\x1a\x94\xb3\xeb\x01\xdc\x9f2\x8c/\xe9/\x8c$\xc6\x9c\x1e\xf8C\x8f@\x17Q\x1d\x11F\x02g\xe4A \xebO\xad\xc6\xe3F\xa7\x8b\xf830R\x82\x0b\x8e\x16\x1dL,\x14\xce\x057tht^\xfe\x00\x9e\x86\xc2\x86\xa3b~^Bl\x18\x1f\xb9+w\x11\x14\xceO\xe9\xb6W\xd8\x85\xbeX\x17\xc2\x13,M`y\xd1~\xa3/\xcd0\xed6\xda\xf5b\x15\xb5\x18\x0f_\xf6\xe2\xdc\x8d\x8ez\xdd\xd5\r^O\x9e\xb6|\xc4e\x0f\x1f\xff0k\xd4\xb8\n\x12{\x8d\x8a>\x0b5\xa2o\xf2jZ\xe5\xee\xdc\x14\xd1\xbd\xd5\xad\x95\xbe\x8c\t\x8f\xb9\xde\xc4\xa551,#`\x94'\x1b\xe7\xd53u\x8fq\xbd4v>3\x8f\xcc\x1d\xbcV>\x90^\xb3L\xc3\xde0]\x05\xec\x83\xd0\x07\xd2(\xbb\xcf+\xd0\xc7ru\xecn\x14k-\xc0|\xd2\x0e\xe8\xe08\xa8<\xdaQ+{\xad\x01\x02#\x16\x12+\xc8\xe0P\x06\xedD7\xae\xd0\xa4\x97\x84\xe32\xca;]\xd04x:\x94`\xbe\xca\x89\xe2\xcb\xc5L\x03\xac|\xe7\xd5\x1f\xe3\x08_\xee!\x04\xd2\xef\x00\xd8\xea\x91p)\xed^#\xb1\xa78eJ\x00F*\xc7\xf1\x0c\x1a\x04\xf5l\xcc\xfc\xa4\x83,c\x1e\xb1>\xc5q\x8b\xe6Y9\xc7\x07\xfa\xcf\xf9\x15\x8a\xdd\x11\x1f\x98\x82\xbe>\xbe+u#g]aC\\\x1bC\xb1\xe8P\xce2\xd6\xb6r\x12\x1c*\xd3\x92\x9d9\xf9cB\x82\xf9S.\xc2B\xe7\x9d\xcf\xdb\xf3\xfd#\xfd\x94x9p<D?\x0e0\xd0)ufMK\x9d\x84\xbf\x95\x02\x15\x04\xaf\x9b\xd7|\x9f\xf5\xc2\x19D\xe1\xe8pC=\\\xb54\xff\xfd<\xfc\x8b\x83\x19\x9aZ\x99J\x9d\xa2oP6\xb2=\xe0\xe5=Z0\x7f\xb6\xe9\xb1\x98\n\xcc \xdb\x9f\xb6\xf4\xc2\x82Z:\t\xf2\xcd\x88\xe3\x8a0\n\x13\xdd\xf9;\xdbtr\xf4kj\xa6\x90\x9d\x97\x92+#\xf4;t\x1e6\x80\xcd)\xfe\xe1\xabdD(V\xf5\xcc\xcf\xbeY\xd8\xddX\x08*\xc5\xd6\xa1\xa2\xae\x89s]\xafj\x9b\x07\x8d\xcf\xb5\n\x162\xb7\xb0\x02p\xc0.{\xbf\xd6\xc7|\x8a\x8c\xc9g\xa8DO\x85\xf6<E\x05Ek\x8c\xbfU\x13bz\xcf\xd0\x07\xcd^\x0f\x9b\x951\xa1vb\x17u:\xd2X\x91/\x0f\x9a\xae\x16T\x81\xb6\x8e\xdc,\xb0\xa1=\x11af%^\xec\x95\x83\xa9\xb8+\xd0i\xe0+#%\x02\xfd2\x84\xf3\xde\x0c\x88\x8c\x80\xf7\xc2H\xaa#\x80m\xf4\x1e\xd4#\x04J\r\xb6\xf83s\x8c\x0e\x0bx\xabw\xbe\x90\x94\x90:C\x88\x9bR`B\xc02\x1a\x08\xca-M9\xac\xa3TP\xb1\x83\xf2\x8aT\xe9\xc0c9(\xe5d\xd1\xac\xfd\x83\xf3\xb4C\x95\x04doh\xd7M\xed \xd0\x90\xc9|\x8a\x1fX\x1f\x0eI\x12\x8e&\xc3\x91NM-\x02\xeckp\x1a/\x19\x9d\xf2\xb4$\x0eG:\xbe\xb2~\x10(,\x1cd\x07\xbb]n^F@\x173'\xc63\xdf!u\xf4F\xa9\xc3\x96E!e\xc2Iv\xe8zQH=v\x89\x9a\x04a^\x10\x06\x01\x04!2\xa6\x1b\xba\x111/\xfa\xfa\x9c\x15 @\xf6\xb9{&\xcc\x84\xfa\xd6\x81\x90\xd4\x92\xcf\x89/\xc8\x80\xadP\xa3\xf4Xa\x1f\x04A\x07\xe6N\xd2oEZ\xc9\xa6(!\x8e#|\x0e\xfbq\xce\xe6\x8b-;\x06_\x04n\xdc\x8d^\x05s\xd2\xa8\x0f\xfa/\xfa\xf8\xe1x\n\xa3\xf701i7\x0c \x87\xec#\x80\x9c^X\x02\x01C\xc7\x85\x83\x9dS\xf5\x07"
 
 
-def _set_expected_responses(client: Client):
+def _set_expected_responses(client: Client, homescreen: bytes | None = None):
     client.use_pin_sequence([PIN4])
     if client.model is models.T1B1:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_T1)
+    elif homescreen:
+        n_chunks = len(homescreen) // 1024 + 1
+        client.set_expected_responses(
+            [messages.ButtonRequest]
+            + n_chunks * [messages.DataChunkRequest]
+            + [messages.ButtonRequest, messages.Success, messages.Features]
+        )
     else:
         client.set_expected_responses(EXPECTED_RESPONSES_PIN_TT)
 
@@ -138,7 +145,7 @@ def test_apply_settings_passphrase_on_device(client: Client):
 @pytest.mark.models("safe3")
 def test_apply_homescreen_tr_toif_good(client: Client):
     with client:
-        _set_expected_responses(client)
+        _set_expected_responses(client, homescreen=TR_HOMESCREEN)
         device.apply_settings(client, homescreen=TR_HOMESCREEN)
 
         # Revert to default settings
@@ -147,17 +154,29 @@ def test_apply_homescreen_tr_toif_good(client: Client):
 
 
 @pytest.mark.models("safe3")
+def test_apply_homescreen_tr_toif_single_message(client: Client):
+    with client:
+        _set_expected_responses(client)
+        client.call(messages.ApplySettings(homescreen=TR_HOMESCREEN))
+        client.refresh_features()
+
+        # Revert to default settings
+        client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+        client.call(messages.ApplySettings(homescreen=b""))
+        client.refresh_features()
+
+
+@pytest.mark.models("safe3")
 @pytest.mark.setup_client(pin=None)  # so that "PIN NOT SET" is shown in the header
 def test_apply_homescreen_tr_toif_with_notification(client: Client):
     with client:
-        client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
         device.apply_settings(client, homescreen=TR_HOMESCREEN)
 
 
 @pytest.mark.models("safe3")
 def test_apply_homescreen_tr_toif_with_long_label(client: Client):
     with client:
-        _set_expected_responses(client)
+        _set_expected_responses(client, homescreen=TR_HOMESCREEN)
         device.apply_settings(client, homescreen=TR_HOMESCREEN)
 
     # Showing longer label
@@ -199,7 +218,7 @@ def test_apply_homescreen_toif(client: Client):
     img = b"TOIf\x90\x00\x90\x00~\x00\x00\x00\xed\xd2\xcb\r\x83@\x10D\xc1^.\xde#!\xac31\x99\x10\x8aC%\x14~\x16\x92Y9\x02WI3\x01<\xf5cI2d\x1es(\xe1[\xdbn\xba\xca\xe8s7\xa4\xd5\xd4\xb3\x13\xbdw\xf6:\xf3\xd1\xe7%\xc7]\xdd_\xb3\x9e\x9f\x9e\x9fN\xed\xaaE\xef\xdc\xcf$D\xa7\xa4X\r\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xf0OV"
 
     with pytest.raises(exceptions.TrezorFailure), client:
-        _set_expected_responses(client)
+        _set_expected_responses(client, homescreen=img)
         device.apply_settings(client, homescreen=img)
 
 
@@ -208,11 +227,27 @@ def test_apply_homescreen_jpeg(client: Client):
     with open(HERE / "test_bg.jpg", "rb") as f:
         img = f.read()
         with client:
-            _set_expected_responses(client)
+            _set_expected_responses(client, homescreen=img)
             device.apply_settings(client, homescreen=img)
 
-            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            client.set_expected_responses(
+                [messages.ButtonRequest, messages.Success, messages.Features]
+            )
             device.apply_settings(client, homescreen=b"")
+
+
+@pytest.mark.models(skip=["legacy", "safe3"])
+def test_apply_homescreen_jpeg_single_message(client: Client):
+    with open(HERE / "test_bg.jpg", "rb") as f:
+        img = f.read()
+        with client:
+            _set_expected_responses(client)
+            client.call(messages.ApplySettings(homescreen=img))
+            client.refresh_features()
+
+            client.set_expected_responses(EXPECTED_RESPONSES_NOPIN)
+            client.call(messages.ApplySettings(homescreen=b""))
+            client.refresh_features()
 
 
 @pytest.mark.models(skip=["legacy", "safe3"])
@@ -267,7 +302,7 @@ def test_apply_homescreen_jpeg_progressive(client: Client):
     )
 
     with pytest.raises(exceptions.TrezorFailure), client:
-        _set_expected_responses(client)
+        _set_expected_responses(client, homescreen=img)
         device.apply_settings(client, homescreen=img)
 
 
@@ -313,7 +348,7 @@ def test_apply_homescreen_jpeg_wrong_size(client: Client):
     )
 
     with pytest.raises(exceptions.TrezorFailure), client:
-        _set_expected_responses(client)
+        _set_expected_responses(client, homescreen=img)
         device.apply_settings(client, homescreen=img)
 
 
