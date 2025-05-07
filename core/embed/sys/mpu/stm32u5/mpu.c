@@ -203,16 +203,14 @@ static void mpu_init_fixed_regions(void) {
   SET_REGION( 2, BOOTLOADER_START,         BOOTLOADER_MAXSIZE,  FLASH_DATA,  YES,    NO );
   SET_REGION( 3, FIRMWARE_START,           FIRMWARE_MAXSIZE,    FLASH_DATA,  YES,    NO );
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,       SRAM,        YES,    NO );
-#endif
-#if defined(BOOTLOADER)
+#elif defined(BOOTLOADER)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, BOOTLOADER_START,         BOOTLOADER_MAXSIZE, FLASH_CODE,   NO,    NO );
   SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO );
   SET_REGION( 2, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_DATA,  YES,    NO );
   DIS_REGION( 3 );
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE ,     SRAM,        YES,    NO );
-#endif
-#if defined(KERNEL)
+#elif defined(KERNEL)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGRUN( 0, KERNEL_FLASH_START,       KERNEL_FLASH_SIZE,  FLASH_CODE,   NO,    NO ); // Kernel Code
   SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO ); // Kernel RAM
@@ -223,21 +221,22 @@ static void mpu_init_fixed_regions(void) {
 #else
   DIS_REGION( 4 );
 #endif
-#endif
-#if defined(FIRMWARE)
+
+#elif defined(FIRMWARE)
   //   REGION    ADDRESS                   SIZE                TYPE       WRITE   UNPRIV
   SET_REGION( 0, FIRMWARE_START,           FIRMWARE_MAXSIZE,   FLASH_CODE,   NO,    NO );
   SET_REGION( 1, MAIN_RAM_START,           MAIN_RAM_SIZE,      SRAM,        YES,    NO );
   DIS_REGION( 2 );
   DIS_REGION( 3 );
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,      SRAM,        YES,    NO );
-#endif
-#if defined(TREZOR_PRODTEST)
+#elif defined(TREZOR_PRODTEST)
   SET_REGION( 0, FIRMWARE_START,           1024,               FLASH_DATA,  YES,    NO );
   SET_REGION( 1, FIRMWARE_START + 1024,    FIRMWARE_MAXSIZE - 1024, FLASH_CODE,   NO,    NO );
   SET_REGION( 2, MAIN_RAM_START,           MAIN_RAM_SIZE,     SRAM,        YES,    NO );
   DIS_REGION( 3 );
   SET_REGION( 4, AUX1_RAM_START,           AUX1_RAM_SIZE,     SRAM,        YES,    NO );
+#else
+  #error "Unknown build target"
 #endif
 
   // Regions #5 to #7 are banked
