@@ -243,3 +243,5 @@ void pm_battery_initial_soc_guess(void) {
 
   fuel_gauge_initial_guess(&drv->fuel_gauge, vbat_g, ibat_g, ntc_temp_g);
 }
+
+#endif
