@@ -19,5 +19,9 @@
 
 #pragma once
 
+#include "rust_types.h"
+
 // Disable automatic control of RGB LED in prodtest main loop
 void prodtest_disable_rgbled_control(void);
+
+void prodtest_show_homescreen(void);

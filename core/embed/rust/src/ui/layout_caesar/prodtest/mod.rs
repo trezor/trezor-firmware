@@ -1,56 +1,49 @@
+mod welcome;
+
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
 use crate::ui::{
-    component::{base::Component, Qr},
+    component::Event,
     constant::screen,
     display,
     display::Color,
     geometry::{Alignment, Offset, Rect},
+    layout::simplified::{process_frame_event, show},
     layout_caesar::{fonts, UICaesar},
     shape,
     shape::render_on_display,
-    ui_prodtest::ProdtestUI,
+    ui_prodtest::{ProdtestLayoutType, ProdtestUI},
 };
+use welcome::Welcome;
+
 #[cfg(feature = "touch")]
 use heapless::Vec;
 
+#[allow(clippy::large_enum_variant)]
+pub enum ProdtestLayout {
+    Welcome(Welcome),
+}
+
+impl ProdtestLayoutType for ProdtestLayout {
+    fn event(&mut self, event: Option<Event>) -> u32 {
+        match self {
+            ProdtestLayout::Welcome(f) => process_frame_event::<Welcome>(f, event),
+        }
+    }
+
+    fn show(&mut self) {
+        match self {
+            ProdtestLayout::Welcome(f) => show(f, true),
+        }
+    }
+
+    fn init_welcome(id: Option<&'static str>) -> Self {
+        Self::Welcome(Welcome::new(id))
+    }
+}
+
 impl ProdtestUI for UICaesar {
-    fn screen_prodtest_welcome() {
-        display::sync();
-
-        render_on_display(None, Some(Color::black()), |target| {
-            let area = screen();
-            shape::Bar::new(area)
-                .with_fg(Color::white())
-                .with_bg(Color::white())
-                .render(target);
-        });
-
-        display::refresh();
-    }
-
-    fn screen_prodtest_info(id: &str) {
-        display::sync();
-        let qr = Qr::new(id, true);
-        let mut qr = unwrap!(qr).with_border(1);
-
-        let qr_width = 50;
-
-        let qr_area = Rect::from_center_and_size(screen().center(), Offset::uniform(qr_width))
-            .translate(Offset::y(-5));
-        qr.place(qr_area);
-
-        render_on_display(None, Some(Color::black()), |target| {
-            qr.render(target);
-
-            shape::Text::new(screen().bottom_center(), id, fonts::FONT_BOLD_UPPER)
-                .with_fg(Color::white())
-                .with_align(Alignment::Center)
-                .render(target);
-        });
-
-        display::refresh();
-    }
+    type CLayoutType = ProdtestLayout;
 
     fn screen_prodtest_show_text(text: &str) {
         display::sync();
