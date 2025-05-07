@@ -116,6 +116,15 @@ pm_status_t pm_init(bool inherit_state) {
   // Enable charging by default
   drv->charging_enabled = true;
 
+  // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
+  // propagates into power_monitor.
+  bool state_machine_stabilized;
+  do{
+    irq_key_t irq_key = irq_lock();
+    state_machine_stabilized = drv->state_machine_stabilized;
+    irq_unlock(irq_key);
+  }while(!state_machine_stabilized);
+
   drv->initialized = true;
 
   return PM_OK;
