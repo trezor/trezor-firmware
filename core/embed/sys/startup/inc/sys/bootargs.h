@@ -33,6 +33,8 @@ typedef enum {
   BOOT_COMMAND_INSTALL_UPGRADE = 0xFA4A5C8D,
   // Show RSOD and wait for user input
   BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0,
+  // Reboot the device as if it was powered on
+  BOOT_COMMAND_REBOOT = 0xA5C3D4E2,
 } boot_command_t;
 
 // Maximum size boot_args array
