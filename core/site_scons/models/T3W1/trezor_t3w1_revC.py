@@ -238,19 +238,20 @@ def configure(
         ("USE_OEM_KEYS_CHECK", "1"),
     ]
 
-    sources += [
-        "embed/sys/powerctl/npm1300/npm1300.c",
-        "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
-        "embed/sys/powerctl/fuel_gauge/battery_model.c",
-        "embed/sys/powerctl/stwlc38/stwlc38.c",
-        "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
-        "embed/sys/powerctl/stm32u5/powerctl.c",
-        "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
-        "embed/sys/powerctl/wakeup_flags.c",
-    ]
-    paths += ["embed/sys/powerctl/inc"]
-    defines += [("USE_POWERCTL", "1")]
-    features_available.append("powerctl")
+    if "powerctl" in features_wanted:
+        sources += [
+            "embed/sys/powerctl/npm1300/npm1300.c",
+            "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
+            "embed/sys/powerctl/fuel_gauge/battery_model.c",
+            "embed/sys/powerctl/stwlc38/stwlc38.c",
+            "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
+            "embed/sys/powerctl/stm32u5/powerctl.c",
+            "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
+            "embed/sys/powerctl/wakeup_flags.c",
+        ]
+        paths += ["embed/sys/powerctl/inc"]
+        defines += [("USE_POWERCTL", "1")]
+        features_available.append("powerctl")
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 
