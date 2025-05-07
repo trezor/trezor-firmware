@@ -98,9 +98,7 @@ void pm_process_state_machine(void) {
 
 // State handler implementations
 
-
 pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
-
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
     return PM_STATE_POWER_SAVE;
@@ -124,7 +122,6 @@ pm_internal_state_t pm_handle_state_hibernate(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
-
   if (drv->request_turn_on) {
     drv->request_turn_on = false;
     return PM_STATE_POWER_SAVE;
@@ -166,11 +163,10 @@ pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
-
   // System is shutting down, but user can still hibernate the device early.
   if (drv->request_hibernate) {
-      drv->request_hibernate = false;
-      return PM_STATE_HIBERNATE;
+    drv->request_hibernate = false;
+    return PM_STATE_HIBERNATE;
   }
 
   // Return to power save if external power or battery recovered
@@ -187,7 +183,6 @@ pm_internal_state_t pm_handle_state_shutting_down(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
-
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -214,7 +209,6 @@ pm_internal_state_t pm_handle_state_power_save(pm_driver_t* drv) {
 }
 
 pm_internal_state_t pm_handle_state_active(pm_driver_t* drv) {
-
   // Handle hibernate request
   if (drv->request_hibernate) {
     drv->request_hibernate = false;
@@ -244,7 +238,6 @@ void pm_enter_hibernate(pm_driver_t* drv) {
   // will try to hibernate immediately after reboot.
   pm_store_data_to_backup_ram();
   reboot_device();
-
 }
 
 void pm_enter_charging(pm_driver_t* drv) {
@@ -254,7 +247,6 @@ void pm_enter_charging(pm_driver_t* drv) {
 void pm_enter_suspend(pm_driver_t* drv) {
   PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_SUSPEND);
   pm_control_suspend();
-
 }
 
 void pm_enter_shutting_down(pm_driver_t* drv) {
@@ -275,15 +267,8 @@ void pm_enter_active(pm_driver_t* drv) {
   PM_SET_EVENT(drv->event_flags, PM_EVENT_ENTERED_MODE_ACTIVE);
 }
 
-
 void pm_exit_shutting_down(pm_driver_t* drv) {
   // Stop the shutdown timer
   systimer_unset(drv->shutdown_timer);
   drv->shutdown_timer_elapsed = false;
 }
-
-
-
-
-
-
