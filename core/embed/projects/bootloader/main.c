@@ -90,6 +90,56 @@ CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
 static void drivers_init(secbool *touch_initialized) {
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
+
+#ifdef USE_BUTTON
+  button_init();
+#endif
+
+#ifdef USE_RGB_LED
+  rgb_led_init();
+#endif
+
+#ifdef USE_POWER_MANAGER
+  pm_init(false);
+
+  boot_command_t cmd = bootargs_get_command();
+
+  bool turn_on =
+      (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
+       cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
+
+  while (!button_is_down(BTN_POWER) && !turn_on) {
+    pm_state_t state;
+    pm_get_state(&state);
+
+    if (state.charging_status == PM_BATTERY_CHARGING) {
+      // charing screen
+      rgb_led_set_color(0x0000FF);
+    } else {
+      if (!state.usb_connected && !state.wireless_connected) {
+        // device in just intended to be turned off
+        pm_hibernate();
+        systick_delay_ms(1000);
+        reboot_to_off();
+      } else {
+        // todo signal full battery if conditions are met
+      }
+    }
+  }
+
+  while (pm_turn_on() != PM_OK) {
+    rgb_led_set_color(0x400000);
+    systick_delay_ms(1000);
+    pm_hibernate();
+    systick_delay_ms(1000);
+    reboot_to_off();
+  }
+
+#endif
+
   random_delays_init();
 #ifdef USE_PVD
   pvd_init();
@@ -127,27 +177,17 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_OPTIGA
   optiga_hal_init();
 #endif
-#ifdef USE_BACKUP_RAM
-  backup_ram_init();
-#endif
-#ifdef USE_BUTTON
-  button_init();
-#endif
+
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
 #endif
-#ifdef USE_RGB_LED
-  rgb_led_init();
-#endif
+
 #ifdef USE_BLE
   ble_init();
 #endif
 }
 
 static void drivers_deinit(void) {
-#ifdef USE_BACKUP_RAM
-  backup_ram_deinit();
-#endif
 #ifdef FIXED_HW_DEINIT
 #ifdef USE_BUTTON
   button_deinit();
@@ -162,6 +202,9 @@ static void drivers_deinit(void) {
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
 #ifdef USE_POWER_MANAGER
   pm_deinit();
+#endif
+#ifdef USE_BACKUP_RAM
+  backup_ram_deinit();
 #endif
 }
 
@@ -341,10 +384,6 @@ int bootloader_main(void) {
         hdr, IMAGE_HEADER_SIZE + vhdr.hdrlen, &FIRMWARE_AREA);
     firmware_present_backup = firmware_present;
   }
-
-#ifdef USE_POWER_MANAGER
-  pm_init(false);
-#endif
 
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
