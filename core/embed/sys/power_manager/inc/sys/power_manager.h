@@ -45,11 +45,13 @@ typedef enum {
 } pm_charging_status_t;
 
 typedef enum {
-  PM_POWER_MODE_ACTIVE,
-  PM_POWER_MODE_POWER_SAVE,
-  PM_POWER_MODE_SHUTTING_DOWN,
-  PM_POWER_MODE_NOT_INITIALIZED,
-} pm_power_mode_t;
+  PM_STATE_HIBERNATE,
+  PM_STATE_CHARGING,
+  PM_STATE_SUSPEND,
+  PM_STATE_SHUTTING_DOWN,
+  PM_STATE_POWER_SAVE,
+  PM_STATE_ACTIVE,
+} pm_internal_state_t;
 
 /* Power system events */
 typedef enum {
@@ -59,17 +61,20 @@ typedef enum {
   PM_EVENT_USB_DISCONNECTED = 1 << 2,
   PM_EVENT_WIRELESS_CONNECTED = 1 << 3,
   PM_EVENT_WIRELESS_DISCONNECTED = 1 << 4,
-  PM_EVENT_ENTERED_MODE_ACTIVE = 1 << 5,
-  PM_EVENT_ENTERED_MODE_POWER_SAVE = 1 << 6,
-  PM_EVENT_ENTERED_MODE_SHUTTING_DOWN = 1 << 7,
-  PM_EVENT_SOC_UPDATED = 1 << 8,
+  PM_EVENT_ENTERED_MODE_HIBERNATE = 1 << 5,
+  PM_EVENT_ENTERED_MODE_CHARGING = 1 << 6,
+  PM_EVENT_ENTERED_MODE_SUSPEND = 1 << 7,
+  PM_EVENT_ENTERED_MODE_SHUTTING_DOWN = 1 << 8,
+  PM_EVENT_ENTERED_MODE_POWER_SAVE = 1 << 9,
+  PM_EVENT_ENTERED_MODE_ACTIVE = 1 << 10,
+  PM_EVENT_SOC_UPDATED = 1 << 11,
 } pm_event_t;
 
 typedef struct {
   bool usb_connected;
   bool wireless_connected;
   pm_charging_status_t charging_status;
-  pm_power_mode_t power_mode;
+  pm_internal_state_t power_state;
   uint8_t soc;
 } pm_state_t;
 
