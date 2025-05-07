@@ -247,35 +247,35 @@ void prodtest_pm_event_monitor(cli_t* cli) {
       cli_error(cli, CLI_ERROR, "Failed to get power manager events");
     }
 
-    if (event_flag & PM_EVENT_USB_CONNECTED) {
+    if (event_flag.flags.usb_connected) {
       cli_trace(cli, "USB connected");
     }
 
-    if (event_flag & PM_EVENT_USB_DISCONNECTED) {
+    if (event_flag.flags.usb_disconnected) {
       cli_trace(cli, "USB disconnected");
     }
 
-    if (event_flag & PM_EVENT_WIRELESS_CONNECTED) {
+    if (event_flag.flags.wireless_connected) {
       cli_trace(cli, "WLC connected");
     }
 
-    if (event_flag & PM_EVENT_WIRELESS_DISCONNECTED) {
+    if (event_flag.flags.wireless_disconnected) {
       cli_trace(cli, "WLC disconnected");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_ACTIVE) {
+    if (event_flag.flags.entered_mode_active) {
       cli_trace(cli, "Power manager entered active mode");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_POWER_SAVE) {
+    if (event_flag.flags.entered_mode_power_save) {
       cli_trace(cli, "Power manager entered power save mode");
     }
 
-    if (event_flag & PM_EVENT_ENTERED_MODE_SHUTTING_DOWN) {
+    if (event_flag.flags.entered_mode_shutting_down) {
       cli_trace(cli, "Power manager entered shutting down mode");
     }
 
-    if (event_flag & PM_EVENT_SOC_UPDATED) {
+    if (event_flag.flags.soc_updated) {
       status = pm_get_state(&state);
       cli_trace(cli, "Power manager SOC changed to %d %%", state.soc);
     }

@@ -52,17 +52,19 @@ typedef enum {
 } pm_power_mode_t;
 
 /* Power system events */
-typedef enum {
-  PM_EVENT_NONE = 0,
-  PM_EVENT_STATE_CHANGED = 1,
-  PM_EVENT_USB_CONNECTED = 1 << 1,
-  PM_EVENT_USB_DISCONNECTED = 1 << 2,
-  PM_EVENT_WIRELESS_CONNECTED = 1 << 3,
-  PM_EVENT_WIRELESS_DISCONNECTED = 1 << 4,
-  PM_EVENT_ENTERED_MODE_ACTIVE = 1 << 5,
-  PM_EVENT_ENTERED_MODE_POWER_SAVE = 1 << 6,
-  PM_EVENT_ENTERED_MODE_SHUTTING_DOWN = 1 << 7,
-  PM_EVENT_SOC_UPDATED = 1 << 8,
+typedef union {
+  uint32_t all;
+  struct {
+    bool state_changed : 1;
+    bool usb_connected : 1;
+    bool usb_disconnected : 1;
+    bool wireless_connected : 1;
+    bool wireless_disconnected : 1;
+    bool entered_mode_active : 1;
+    bool entered_mode_power_save : 1;
+    bool entered_mode_shutting_down : 1;
+    bool soc_updated : 1;
+  } flags;
 } pm_event_t;
 
 typedef struct {
@@ -93,7 +95,7 @@ typedef struct {
 /* Public API functions */
 pm_status_t pm_init(bool inherit_state);
 void pm_deinit(void);
-pm_status_t pm_get_events(pm_event_t* event_flags);
+bool pm_get_events(pm_event_t* event_flags);
 pm_status_t pm_get_state(pm_state_t* state);
 pm_status_t pm_suspend(void);
 pm_status_t pm_hibernate(void);
