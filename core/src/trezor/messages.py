@@ -2064,6 +2064,7 @@ if TYPE_CHECKING:
         experimental_features: "bool | None"
         hide_passphrase_from_host: "bool | None"
         haptic_feedback: "bool | None"
+        homescreen_length: "int | None"
 
         def __init__(
             self,
@@ -2078,6 +2079,7 @@ if TYPE_CHECKING:
             experimental_features: "bool | None" = None,
             hide_passphrase_from_host: "bool | None" = None,
             haptic_feedback: "bool | None" = None,
+            homescreen_length: "int | None" = None,
         ) -> None:
             pass
 

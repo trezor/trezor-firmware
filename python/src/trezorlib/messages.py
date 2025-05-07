@@ -3202,6 +3202,7 @@ class ApplySettings(protobuf.MessageType):
         10: protobuf.Field("experimental_features", "bool", repeated=False, required=False, default=None),
         11: protobuf.Field("hide_passphrase_from_host", "bool", repeated=False, required=False, default=None),
         13: protobuf.Field("haptic_feedback", "bool", repeated=False, required=False, default=None),
+        14: protobuf.Field("homescreen_length", "uint32", repeated=False, required=False, default=None),
     }
 
     def __init__(
@@ -3219,6 +3220,7 @@ class ApplySettings(protobuf.MessageType):
         experimental_features: Optional["bool"] = None,
         hide_passphrase_from_host: Optional["bool"] = None,
         haptic_feedback: Optional["bool"] = None,
+        homescreen_length: Optional["int"] = None,
     ) -> None:
         self.language = language
         self.label = label
@@ -3232,6 +3234,7 @@ class ApplySettings(protobuf.MessageType):
         self.experimental_features = experimental_features
         self.hide_passphrase_from_host = hide_passphrase_from_host
         self.haptic_feedback = haptic_feedback
+        self.homescreen_length = homescreen_length
 
 
 class ChangeLanguage(protobuf.MessageType):

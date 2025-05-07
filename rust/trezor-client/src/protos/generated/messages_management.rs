@@ -3275,6 +3275,8 @@ pub struct ApplySettings {
     pub hide_passphrase_from_host: ::std::option::Option<bool>,
     // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.haptic_feedback)
     pub haptic_feedback: ::std::option::Option<bool>,
+    // @@protoc_insertion_point(field:hw.trezor.messages.management.ApplySettings.homescreen_length)
+    pub homescreen_length: ::std::option::Option<u32>,
     // special fields
     // @@protoc_insertion_point(special_field:hw.trezor.messages.management.ApplySettings.special_fields)
     pub special_fields: ::protobuf::SpecialFields,
@@ -3576,8 +3578,27 @@ impl ApplySettings {
         self.haptic_feedback = ::std::option::Option::Some(v);
     }
 
+    // optional uint32 homescreen_length = 14;
+
+    pub fn homescreen_length(&self) -> u32 {
+        self.homescreen_length.unwrap_or(0)
+    }
+
+    pub fn clear_homescreen_length(&mut self) {
+        self.homescreen_length = ::std::option::Option::None;
+    }
+
+    pub fn has_homescreen_length(&self) -> bool {
+        self.homescreen_length.is_some()
+    }
+
+    // Param is passed by value, moved
+    pub fn set_homescreen_length(&mut self, v: u32) {
+        self.homescreen_length = ::std::option::Option::Some(v);
+    }
+
     fn generated_message_descriptor_data() -> ::protobuf::reflect::GeneratedMessageDescriptorData {
-        let mut fields = ::std::vec::Vec::with_capacity(12);
+        let mut fields = ::std::vec::Vec::with_capacity(13);
         let mut oneofs = ::std::vec::Vec::with_capacity(0);
         fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
             "language",
@@ -3639,6 +3660,11 @@ impl ApplySettings {
             |m: &ApplySettings| { &m.haptic_feedback },
             |m: &mut ApplySettings| { &mut m.haptic_feedback },
         ));
+        fields.push(::protobuf::reflect::rt::v2::make_option_accessor::<_, _>(
+            "homescreen_length",
+            |m: &ApplySettings| { &m.homescreen_length },
+            |m: &mut ApplySettings| { &mut m.homescreen_length },
+        ));
         ::protobuf::reflect::GeneratedMessageDescriptorData::new_2::<ApplySettings>(
             "ApplySettings",
             fields,
@@ -3693,6 +3719,9 @@ impl ::protobuf::Message for ApplySettings {
                 104 => {
                     self.haptic_feedback = ::std::option::Option::Some(is.read_bool()?);
                 },
+                112 => {
+                    self.homescreen_length = ::std::option::Option::Some(is.read_uint32()?);
+                },
                 tag => {
                     ::protobuf::rt::read_unknown_or_skip_group(tag, is, self.special_fields.mut_unknown_fields())?;
                 },
@@ -3741,6 +3770,9 @@ impl ::protobuf::Message for ApplySettings {
         if let Some(v) = self.haptic_feedback {
             my_size += 1 + 1;
         }
+        if let Some(v) = self.homescreen_length {
+            my_size += ::protobuf::rt::uint32_size(14, v);
+        }
         my_size += ::protobuf::rt::unknown_fields_size(self.special_fields.unknown_fields());
         self.special_fields.cached_size().set(my_size as u32);
         my_size
@@ -3783,6 +3815,9 @@ impl ::protobuf::Message for ApplySettings {
         if let Some(v) = self.haptic_feedback {
             os.write_bool(13, v)?;
         }
+        if let Some(v) = self.homescreen_length {
+            os.write_uint32(14, v)?;
+        }
         os.write_unknown_fields(self.special_fields.unknown_fields())?;
         ::std::result::Result::Ok(())
     }
@@ -3812,6 +3847,7 @@ impl ::protobuf::Message for ApplySettings {
         self.experimental_features = ::std::option::Option::None;
         self.hide_passphrase_from_host = ::std::option::Option::None;
         self.haptic_feedback = ::std::option::Option::None;
+        self.homescreen_length = ::std::option::Option::None;
         self.special_fields.clear();
     }
 
@@ -3829,6 +3865,7 @@ impl ::protobuf::Message for ApplySettings {
             experimental_features: ::std::option::Option::None,
             hide_passphrase_from_host: ::std::option::Option::None,
             haptic_feedback: ::std::option::Option::None,
+            homescreen_length: ::std::option::Option::None,
             special_fields: ::protobuf::SpecialFields::new(),
         };
         &instance
@@ -11648,7 +11685,7 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x1d\x01\x12\x18\n\x0eCapability_BLE\x10\x16\x1a\x04\x80\xa6\x1d\x01\x12\
     \x18\n\x0eCapability_NFC\x10\x17\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\
     \x18\x01\"\x0c\n\nLockDevice\"&\n\x07SetBusy\x12\x1b\n\texpiry_ms\x18\
-    \x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xf4\x04\n\rApplySetti\
+    \x01\x20\x01(\rR\x08expiryMs\"\x0c\n\nEndSession\"\xa1\x05\n\rApplySetti\
     ngs\x12\x1e\n\x08language\x18\x01\x20\x01(\tR\x08languageB\x02\x18\x01\
     \x12\x14\n\x05label\x18\x02\x20\x01(\tR\x05label\x12%\n\x0euse_passphras\
     e\x18\x03\x20\x01(\x08R\rusePassphrase\x12\x1e\n\nhomescreen\x18\x04\x20\
@@ -11661,13 +11698,14 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     or.messages.management.SafetyCheckLevelR\x0csafetyChecks\x123\n\x15exper\
     imental_features\x18\n\x20\x01(\x08R\x14experimentalFeatures\x129\n\x19h\
     ide_passphrase_from_host\x18\x0b\x20\x01(\x08R\x16hidePassphraseFromHost\
-    \x12'\n\x0fhaptic_feedback\x18\r\x20\x01(\x08R\x0ehapticFeedback\"T\n\
-    \x0eChangeLanguage\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndataLen\
-    gth\x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\"T\n\x10\
-    DataChunkRequest\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndataLengt\
-    h\x12\x1f\n\x0bdata_offset\x18\x02\x20\x02(\rR\ndataOffset\"-\n\x0cDataC\
-    hunkAck\x12\x1d\n\ndata_chunk\x18\x01\x20\x02(\x0cR\tdataChunk\"\"\n\nAp\
-    plyFlags\x12\x14\n\x05flags\x18\x01\x20\x02(\rR\x05flags\"#\n\tChangePin\
+    \x12'\n\x0fhaptic_feedback\x18\r\x20\x01(\x08R\x0ehapticFeedback\x12+\n\
+    \x11homescreen_length\x18\x0e\x20\x01(\rR\x10homescreenLength\"T\n\x0eCh\
+    angeLanguage\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndataLength\
+    \x12!\n\x0cshow_display\x18\x02\x20\x01(\x08R\x0bshowDisplay\"T\n\x10Dat\
+    aChunkRequest\x12\x1f\n\x0bdata_length\x18\x01\x20\x02(\rR\ndataLength\
+    \x12\x1f\n\x0bdata_offset\x18\x02\x20\x02(\rR\ndataOffset\"-\n\x0cDataCh\
+    unkAck\x12\x1d\n\ndata_chunk\x18\x01\x20\x02(\x0cR\tdataChunk\"\"\n\nApp\
+    lyFlags\x12\x14\n\x05flags\x18\x01\x20\x02(\rR\x05flags\"#\n\tChangePin\
     \x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06remove\"(\n\x0eChangeWipeC\
     ode\x12\x16\n\x06remove\x18\x01\x20\x01(\x08R\x06remove\"\xaa\x01\n\tSdP\
     rotect\x12]\n\toperation\x18\x01\x20\x02(\x0e2?.hw.trezor.messages.manag\
