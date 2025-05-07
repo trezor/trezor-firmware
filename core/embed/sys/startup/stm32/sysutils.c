@@ -245,6 +245,9 @@ __attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl(
       "MOV      R10, R0            \n"  // R11 is set to r11 argument
       "MOV      R12, R0            \n"
 
+#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
+      "MSR      MSPLIM, R1         \n"  // Disable MSPLIM
+#endif
       "LDR      R0, [LR]           \n"  // Initial MSP value
       "MSR      MSP, R0            \n"  // Set MSP
 
