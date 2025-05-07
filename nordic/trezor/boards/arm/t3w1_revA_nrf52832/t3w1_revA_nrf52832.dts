@@ -132,9 +132,13 @@
 			label = "mcuboot";
 			reg = <0x00000000 0xc000>;
 		};
-		slot0_partition: partition@c000 {
+		custom_partition: partition@c000 {
+			label = "custom_data";
+			reg = <0x0000c000 0x2000>;
+		};
+		slot0_partition: partition@e000 {
 			label = "image-0";
-			reg = <0x0000C000 0x6E000>;
+			reg = <0x0000e000 0x6c000>;
 		};
 		storage_partition: partition@7a000 {
 			label = "storage";
