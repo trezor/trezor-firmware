@@ -6,9 +6,9 @@ Common contains files shared among Trezor projects.
 
 JSON coin definitions and support tables.
 
-## Ethereum definitions
+## External definitions
 
-Description of Ethereum definitions and the process of their generation. See [Ethereum definitions](ethereum-definitions.md).
+Description of external definitions for the Ethereum and Solana tokens and the process of their generation. See [External definitions](external-definitions.md).
 
 ## Protobuf Definitions
 
