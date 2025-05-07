@@ -38,6 +38,22 @@ void prodtest_pm_hibernate(cli_t* cli) {
 
   cli_trace(cli, "Hibernating the device...");
 
+  pm_status_t status;
+  pm_state_t state;
+  status = pm_get_state(&state);
+
+  if (status != PM_OK) {
+    cli_error(cli, CLI_ERROR, "Failed to get power manager state");
+    return;
+  }
+
+  if (state.usb_connected || state.wireless_connected) {
+    cli_error(
+        cli, CLI_ERROR,
+        "Exteranl power source is connected, hibernation is not possible");
+    return;
+  }
+
   if (!pm_hibernate()) {
     cli_error(cli, CLI_ERROR, "Failed to hibernate.");
     return;
@@ -194,29 +210,29 @@ void prodtest_pm_report(cli_t* cli) {
   // battery_SoC_latched, pmic_temp, wireless_output_voltage, wireless_current,
   // wireless_temp, system_voltage
 
-  cli_progress(cli, "%s %s %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d",
-               report.usb_connected ? "USB_connected" : "USB_disconnected",
-               report.wireless_charger_connected ? "WLC_connected" : "WLC_disconnected",
-               (int)report.battery_voltage_v,
-               (int)(report.battery_voltage_v * 1000) % 1000,
-               (int)report.battery_current_ma,
-               abs((int)(report.battery_current_ma * 1000) % 1000),
-               (int)report.battery_temp_c,
-               abs((int)(report.battery_temp_c * 1000) % 1000),
-               (int)(report.battery_soc * 100),
-               (int)(report.battery_soc * 10000) % 100,
-               (int)(report.battery_soc_latched * 100),
-               (int)(report.battery_soc_latched * 10000) % 100,
-               (int)report.pmic_temp_c,
-               (int)(report.pmic_temp_c * 1000) % 1000,
-               (int)report.wireless_output_voltage_v,
-               (int)(report.wireless_output_voltage_v * 1000) % 1000,
-               (int)report.wireless_current_ma,
-               (int)(report.wireless_current_ma * 1000) % 1000,
-               (int)report.wireless_temp_c,
-               (int)(report.wireless_temp_c * 1000) % 1000,
-               (int)report.system_voltage_v,
-               (int)(report.system_voltage_v * 1000) % 1000);
+  cli_progress(
+      cli,
+      "%s %s %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d "
+      "%d.%03d",
+      report.usb_connected ? "USB_connected" : "USB_disconnected",
+      report.wireless_charger_connected ? "WLC_connected" : "WLC_disconnected",
+      (int)report.battery_voltage_v,
+      (int)(report.battery_voltage_v * 1000) % 1000,
+      (int)report.battery_current_ma,
+      abs((int)(report.battery_current_ma * 1000) % 1000),
+      (int)report.battery_temp_c,
+      abs((int)(report.battery_temp_c * 1000) % 1000),
+      (int)(report.battery_soc * 100), (int)(report.battery_soc * 10000) % 100,
+      (int)(report.battery_soc_latched * 100),
+      (int)(report.battery_soc_latched * 10000) % 100, (int)report.pmic_temp_c,
+      (int)(report.pmic_temp_c * 1000) % 1000,
+      (int)report.wireless_output_voltage_v,
+      (int)(report.wireless_output_voltage_v * 1000) % 1000,
+      (int)report.wireless_current_ma,
+      (int)(report.wireless_current_ma * 1000) % 1000,
+      (int)report.wireless_temp_c, (int)(report.wireless_temp_c * 1000) % 1000,
+      (int)report.system_voltage_v,
+      (int)(report.system_voltage_v * 1000) % 1000);
 
   cli_ok(cli, "");
 }
@@ -275,6 +291,18 @@ void prodtest_pm_event_monitor(cli_t* cli) {
       cli_trace(cli, "Power manager entered shutting down mode");
     }
 
+    if (event_flag & PM_EVENT_ENTERED_MODE_SUSPEND) {
+      cli_trace(cli, "Power manager entered suspend mode");
+    }
+
+    if (event_flag & PM_EVENT_ENTERED_MODE_CHARGING) {
+      cli_trace(cli, "Power manager entered charging mode");
+    }
+
+    if (event_flag & PM_EVENT_ENTERED_MODE_HIBERNATE) {
+      cli_trace(cli, "Power manager entered hibernate mode");
+    }
+
     if (event_flag & PM_EVENT_SOC_UPDATED) {
       status = pm_get_state(&state);
       cli_trace(cli, "Power manager SOC changed to %d %%", state.soc);
@@ -282,6 +310,12 @@ void prodtest_pm_event_monitor(cli_t* cli) {
 
     systick_delay_ms(50);
   }
+
+  cli_progress(cli, "%s %s %d %d %d",
+              state.usb_connected ? "USB_connected" : "USB_disconnected",
+              state.wireless_connected ? "WLC_connected" : "WLC_disconnected",
+              state.charging_status, state.power_state, state.soc);
+
 
   cli_ok(cli, "");
 }
