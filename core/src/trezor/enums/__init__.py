@@ -7,23 +7,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from enum import IntEnum
 
-    class BinanceOrderType(IntEnum):
-        OT_UNKNOWN = 0
-        MARKET = 1
-        LIMIT = 2
-        OT_RESERVED = 3
-
-    class BinanceOrderSide(IntEnum):
-        SIDE_UNKNOWN = 0
-        BUY = 1
-        SELL = 2
-
-    class BinanceTimeInForce(IntEnum):
-        TIF_UNKNOWN = 0
-        GTE = 1
-        TIF_RESERVED = 2
-        IOC = 3
-
     class FailureType(IntEnum):
         UnexpectedMessage = 1
         ButtonExpected = 2
@@ -574,16 +557,6 @@ if TYPE_CHECKING:
         EosTxActionRequest = 603
         EosTxActionAck = 604
         EosSignedTx = 605
-        BinanceGetAddress = 700
-        BinanceAddress = 701
-        BinanceGetPublicKey = 702
-        BinancePublicKey = 703
-        BinanceSignTx = 704
-        BinanceTxRequest = 705
-        BinanceTransferMsg = 706
-        BinanceOrderMsg = 707
-        BinanceCancelMsg = 708
-        BinanceSignedTx = 709
         WebAuthnListResidentCredentials = 800
         WebAuthnCredentials = 801
         WebAuthnAddResidentCredential = 802

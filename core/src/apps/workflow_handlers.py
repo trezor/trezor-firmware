@@ -208,14 +208,6 @@ def _find_message_handler_module(msg_type: int) -> str:
         if msg_type == MessageType.EosSignTx:
             return "apps.eos.sign_tx"
 
-        # binance
-        if msg_type == MessageType.BinanceGetAddress:
-            return "apps.binance.get_address"
-        if msg_type == MessageType.BinanceGetPublicKey:
-            return "apps.binance.get_public_key"
-        if msg_type == MessageType.BinanceSignTx:
-            return "apps.binance.sign_tx"
-
         # solana
         if msg_type == MessageType.SolanaGetPublicKey:
             return "apps.solana.get_public_key"

@@ -475,26 +475,6 @@ pub enum MessageType {
     MessageType_EosTxActionAck = 604,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_EosSignedTx)
     MessageType_EosSignedTx = 605,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceGetAddress)
-    MessageType_BinanceGetAddress = 700,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceAddress)
-    MessageType_BinanceAddress = 701,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceGetPublicKey)
-    MessageType_BinanceGetPublicKey = 702,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinancePublicKey)
-    MessageType_BinancePublicKey = 703,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceSignTx)
-    MessageType_BinanceSignTx = 704,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceTxRequest)
-    MessageType_BinanceTxRequest = 705,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceTransferMsg)
-    MessageType_BinanceTransferMsg = 706,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceOrderMsg)
-    MessageType_BinanceOrderMsg = 707,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceCancelMsg)
-    MessageType_BinanceCancelMsg = 708,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_BinanceSignedTx)
-    MessageType_BinanceSignedTx = 709,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WebAuthnListResidentCredentials)
     MessageType_WebAuthnListResidentCredentials = 800,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_WebAuthnCredentials)
@@ -766,16 +746,6 @@ impl ::protobuf::Enum for MessageType {
             603 => ::std::option::Option::Some(MessageType::MessageType_EosTxActionRequest),
             604 => ::std::option::Option::Some(MessageType::MessageType_EosTxActionAck),
             605 => ::std::option::Option::Some(MessageType::MessageType_EosSignedTx),
-            700 => ::std::option::Option::Some(MessageType::MessageType_BinanceGetAddress),
-            701 => ::std::option::Option::Some(MessageType::MessageType_BinanceAddress),
-            702 => ::std::option::Option::Some(MessageType::MessageType_BinanceGetPublicKey),
-            703 => ::std::option::Option::Some(MessageType::MessageType_BinancePublicKey),
-            704 => ::std::option::Option::Some(MessageType::MessageType_BinanceSignTx),
-            705 => ::std::option::Option::Some(MessageType::MessageType_BinanceTxRequest),
-            706 => ::std::option::Option::Some(MessageType::MessageType_BinanceTransferMsg),
-            707 => ::std::option::Option::Some(MessageType::MessageType_BinanceOrderMsg),
-            708 => ::std::option::Option::Some(MessageType::MessageType_BinanceCancelMsg),
-            709 => ::std::option::Option::Some(MessageType::MessageType_BinanceSignedTx),
             800 => ::std::option::Option::Some(MessageType::MessageType_WebAuthnListResidentCredentials),
             801 => ::std::option::Option::Some(MessageType::MessageType_WebAuthnCredentials),
             802 => ::std::option::Option::Some(MessageType::MessageType_WebAuthnAddResidentCredential),
@@ -1024,16 +994,6 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_EosTxActionRequest" => ::std::option::Option::Some(MessageType::MessageType_EosTxActionRequest),
             "MessageType_EosTxActionAck" => ::std::option::Option::Some(MessageType::MessageType_EosTxActionAck),
             "MessageType_EosSignedTx" => ::std::option::Option::Some(MessageType::MessageType_EosSignedTx),
-            "MessageType_BinanceGetAddress" => ::std::option::Option::Some(MessageType::MessageType_BinanceGetAddress),
-            "MessageType_BinanceAddress" => ::std::option::Option::Some(MessageType::MessageType_BinanceAddress),
-            "MessageType_BinanceGetPublicKey" => ::std::option::Option::Some(MessageType::MessageType_BinanceGetPublicKey),
-            "MessageType_BinancePublicKey" => ::std::option::Option::Some(MessageType::MessageType_BinancePublicKey),
-            "MessageType_BinanceSignTx" => ::std::option::Option::Some(MessageType::MessageType_BinanceSignTx),
-            "MessageType_BinanceTxRequest" => ::std::option::Option::Some(MessageType::MessageType_BinanceTxRequest),
-            "MessageType_BinanceTransferMsg" => ::std::option::Option::Some(MessageType::MessageType_BinanceTransferMsg),
-            "MessageType_BinanceOrderMsg" => ::std::option::Option::Some(MessageType::MessageType_BinanceOrderMsg),
-            "MessageType_BinanceCancelMsg" => ::std::option::Option::Some(MessageType::MessageType_BinanceCancelMsg),
-            "MessageType_BinanceSignedTx" => ::std::option::Option::Some(MessageType::MessageType_BinanceSignedTx),
             "MessageType_WebAuthnListResidentCredentials" => ::std::option::Option::Some(MessageType::MessageType_WebAuthnListResidentCredentials),
             "MessageType_WebAuthnCredentials" => ::std::option::Option::Some(MessageType::MessageType_WebAuthnCredentials),
             "MessageType_WebAuthnAddResidentCredential" => ::std::option::Option::Some(MessageType::MessageType_WebAuthnAddResidentCredential),
@@ -1281,16 +1241,6 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_EosTxActionRequest,
         MessageType::MessageType_EosTxActionAck,
         MessageType::MessageType_EosSignedTx,
-        MessageType::MessageType_BinanceGetAddress,
-        MessageType::MessageType_BinanceAddress,
-        MessageType::MessageType_BinanceGetPublicKey,
-        MessageType::MessageType_BinancePublicKey,
-        MessageType::MessageType_BinanceSignTx,
-        MessageType::MessageType_BinanceTxRequest,
-        MessageType::MessageType_BinanceTransferMsg,
-        MessageType::MessageType_BinanceOrderMsg,
-        MessageType::MessageType_BinanceCancelMsg,
-        MessageType::MessageType_BinanceSignedTx,
         MessageType::MessageType_WebAuthnListResidentCredentials,
         MessageType::MessageType_WebAuthnCredentials,
         MessageType::MessageType_WebAuthnAddResidentCredential,
@@ -1544,34 +1494,24 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_EosTxActionRequest => 221,
             MessageType::MessageType_EosTxActionAck => 222,
             MessageType::MessageType_EosSignedTx => 223,
-            MessageType::MessageType_BinanceGetAddress => 224,
-            MessageType::MessageType_BinanceAddress => 225,
-            MessageType::MessageType_BinanceGetPublicKey => 226,
-            MessageType::MessageType_BinancePublicKey => 227,
-            MessageType::MessageType_BinanceSignTx => 228,
-            MessageType::MessageType_BinanceTxRequest => 229,
-            MessageType::MessageType_BinanceTransferMsg => 230,
-            MessageType::MessageType_BinanceOrderMsg => 231,
-            MessageType::MessageType_BinanceCancelMsg => 232,
-            MessageType::MessageType_BinanceSignedTx => 233,
-            MessageType::MessageType_WebAuthnListResidentCredentials => 234,
-            MessageType::MessageType_WebAuthnCredentials => 235,
-            MessageType::MessageType_WebAuthnAddResidentCredential => 236,
-            MessageType::MessageType_WebAuthnRemoveResidentCredential => 237,
-            MessageType::MessageType_SolanaGetPublicKey => 238,
-            MessageType::MessageType_SolanaPublicKey => 239,
-            MessageType::MessageType_SolanaGetAddress => 240,
-            MessageType::MessageType_SolanaAddress => 241,
-            MessageType::MessageType_SolanaSignTx => 242,
-            MessageType::MessageType_SolanaTxSignature => 243,
-            MessageType::MessageType_NostrGetPubkey => 244,
-            MessageType::MessageType_NostrPubkey => 245,
-            MessageType::MessageType_NostrSignEvent => 246,
-            MessageType::MessageType_NostrEventSignature => 247,
-            MessageType::MessageType_BenchmarkListNames => 248,
-            MessageType::MessageType_BenchmarkNames => 249,
-            MessageType::MessageType_BenchmarkRun => 250,
-            MessageType::MessageType_BenchmarkResult => 251,
+            MessageType::MessageType_WebAuthnListResidentCredentials => 224,
+            MessageType::MessageType_WebAuthnCredentials => 225,
+            MessageType::MessageType_WebAuthnAddResidentCredential => 226,
+            MessageType::MessageType_WebAuthnRemoveResidentCredential => 227,
+            MessageType::MessageType_SolanaGetPublicKey => 228,
+            MessageType::MessageType_SolanaPublicKey => 229,
+            MessageType::MessageType_SolanaGetAddress => 230,
+            MessageType::MessageType_SolanaAddress => 231,
+            MessageType::MessageType_SolanaSignTx => 232,
+            MessageType::MessageType_SolanaTxSignature => 233,
+            MessageType::MessageType_NostrGetPubkey => 234,
+            MessageType::MessageType_NostrPubkey => 235,
+            MessageType::MessageType_NostrSignEvent => 236,
+            MessageType::MessageType_NostrEventSignature => 237,
+            MessageType::MessageType_BenchmarkListNames => 238,
+            MessageType::MessageType_BenchmarkNames => 239,
+            MessageType::MessageType_BenchmarkRun => 240,
+            MessageType::MessageType_BenchmarkResult => 241,
         };
         Self::enum_descriptor().value_by_index(index)
     }
@@ -1590,7 +1530,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\xacW\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x9bT\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1846,41 +1786,31 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     ignTx\x10\xda\x04\x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_EosTxAct\
     ionRequest\x10\xdb\x04\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_Eos\
     TxActionAck\x10\xdc\x04\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_E\
-    osSignedTx\x10\xdd\x04\x1a\x04\x98\xb5\x18\x01\x12(\n\x1dMessageType_Bin\
-    anceGetAddress\x10\xbc\x05\x1a\x04\x90\xb5\x18\x01\x12%\n\x1aMessageType\
-    _BinanceAddress\x10\xbd\x05\x1a\x04\x98\xb5\x18\x01\x12*\n\x1fMessageTyp\
-    e_BinanceGetPublicKey\x10\xbe\x05\x1a\x04\x90\xb5\x18\x01\x12'\n\x1cMess\
-    ageType_BinancePublicKey\x10\xbf\x05\x1a\x04\x98\xb5\x18\x01\x12$\n\x19M\
-    essageType_BinanceSignTx\x10\xc0\x05\x1a\x04\x90\xb5\x18\x01\x12'\n\x1cM\
-    essageType_BinanceTxRequest\x10\xc1\x05\x1a\x04\x98\xb5\x18\x01\x12)\n\
-    \x1eMessageType_BinanceTransferMsg\x10\xc2\x05\x1a\x04\x90\xb5\x18\x01\
-    \x12&\n\x1bMessageType_BinanceOrderMsg\x10\xc3\x05\x1a\x04\x90\xb5\x18\
-    \x01\x12'\n\x1cMessageType_BinanceCancelMsg\x10\xc4\x05\x1a\x04\x90\xb5\
-    \x18\x01\x12&\n\x1bMessageType_BinanceSignedTx\x10\xc5\x05\x1a\x04\x98\
-    \xb5\x18\x01\x126\n+MessageType_WebAuthnListResidentCredentials\x10\xa0\
-    \x06\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_WebAuthnCredentials\
-    \x10\xa1\x06\x1a\x04\x98\xb5\x18\x01\x124\n)MessageType_WebAuthnAddResid\
-    entCredential\x10\xa2\x06\x1a\x04\x90\xb5\x18\x01\x127\n,MessageType_Web\
-    AuthnRemoveResidentCredential\x10\xa3\x06\x1a\x04\x90\xb5\x18\x01\x12)\n\
-    \x1eMessageType_SolanaGetPublicKey\x10\x84\x07\x1a\x04\x90\xb5\x18\x01\
-    \x12&\n\x1bMessageType_SolanaPublicKey\x10\x85\x07\x1a\x04\x98\xb5\x18\
-    \x01\x12'\n\x1cMessageType_SolanaGetAddress\x10\x86\x07\x1a\x04\x90\xb5\
-    \x18\x01\x12$\n\x19MessageType_SolanaAddress\x10\x87\x07\x1a\x04\x98\xb5\
-    \x18\x01\x12#\n\x18MessageType_SolanaSignTx\x10\x88\x07\x1a\x04\x90\xb5\
-    \x18\x01\x12(\n\x1dMessageType_SolanaTxSignature\x10\x89\x07\x1a\x04\x98\
-    \xb5\x18\x01\x12%\n\x1aMessageType_NostrGetPubkey\x10\xd1\x0f\x1a\x04\
-    \x90\xb5\x18\x01\x12\"\n\x17MessageType_NostrPubkey\x10\xd2\x0f\x1a\x04\
-    \x98\xb5\x18\x01\x12%\n\x1aMessageType_NostrSignEvent\x10\xd3\x0f\x1a\
-    \x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_NostrEventSignature\x10\xd4\
-    \x0f\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_BenchmarkListNames\
-    \x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageType_BenchmarkNames\
-    \x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_BenchmarkRun\x10\
-    \x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_BenchmarkResult\x10\
-    \x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\x04\x08Z\x10\\\"\
-    \x04\x08G\x10J\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\xdb\x01\"\x06\x08\
-    \xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\x06\x08\xb5\x02\x10\
-    \xb8\x02\"\x06\x08\xe8\x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.pr\
-    otobufB\rTrezorMessage\x80\xa6\x1d\x01\
+    osSignedTx\x10\xdd\x04\x1a\x04\x98\xb5\x18\x01\x126\n+MessageType_WebAut\
+    hnListResidentCredentials\x10\xa0\x06\x1a\x04\x90\xb5\x18\x01\x12*\n\x1f\
+    MessageType_WebAuthnCredentials\x10\xa1\x06\x1a\x04\x98\xb5\x18\x01\x124\
+    \n)MessageType_WebAuthnAddResidentCredential\x10\xa2\x06\x1a\x04\x90\xb5\
+    \x18\x01\x127\n,MessageType_WebAuthnRemoveResidentCredential\x10\xa3\x06\
+    \x1a\x04\x90\xb5\x18\x01\x12)\n\x1eMessageType_SolanaGetPublicKey\x10\
+    \x84\x07\x1a\x04\x90\xb5\x18\x01\x12&\n\x1bMessageType_SolanaPublicKey\
+    \x10\x85\x07\x1a\x04\x98\xb5\x18\x01\x12'\n\x1cMessageType_SolanaGetAddr\
+    ess\x10\x86\x07\x1a\x04\x90\xb5\x18\x01\x12$\n\x19MessageType_SolanaAddr\
+    ess\x10\x87\x07\x1a\x04\x98\xb5\x18\x01\x12#\n\x18MessageType_SolanaSign\
+    Tx\x10\x88\x07\x1a\x04\x90\xb5\x18\x01\x12(\n\x1dMessageType_SolanaTxSig\
+    nature\x10\x89\x07\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_NostrGe\
+    tPubkey\x10\xd1\x0f\x1a\x04\x90\xb5\x18\x01\x12\"\n\x17MessageType_Nostr\
+    Pubkey\x10\xd2\x0f\x1a\x04\x98\xb5\x18\x01\x12%\n\x1aMessageType_NostrSi\
+    gnEvent\x10\xd3\x0f\x1a\x04\x90\xb5\x18\x01\x12*\n\x1fMessageType_NostrE\
+    ventSignature\x10\xd4\x0f\x1a\x04\x98\xb5\x18\x01\x12)\n\x1eMessageType_\
+    BenchmarkListNames\x10\x8cG\x1a\x04\x80\xa6\x1d\x01\x12%\n\x1aMessageTyp\
+    e_BenchmarkNames\x10\x8dG\x1a\x04\x80\xa6\x1d\x01\x12#\n\x18MessageType_\
+    BenchmarkRun\x10\x8eG\x1a\x04\x80\xa6\x1d\x01\x12&\n\x1bMessageType_Benc\
+    hmarkResult\x10\x8fG\x1a\x04\x80\xa6\x1d\x01\x1a\x04\xc8\xf3\x18\x01\"\
+    \x04\x08Z\x10\\\"\x04\x08G\x10J\"\x04\x08r\x10z\"\x06\x08\xdb\x01\x10\
+    \xdb\x01\"\x06\x08\xe0\x01\x10\xe0\x01\"\x06\x08\xac\x02\x10\xb0\x02\"\
+    \x06\x08\xb5\x02\x10\xb8\x02\"\x06\x08\xbc\x05\x10\xc5\x05\"\x06\x08\xe8\
+    \x07\x10\xcb\x08B8\n#com.satoshilabs.trezor.lib.protobufB\rTrezorMessage\
+    \x80\xa6\x1d\x01\
 ";
 
 /// `FileDescriptorProto` object which was a source for this generated file

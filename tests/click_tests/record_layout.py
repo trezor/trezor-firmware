@@ -14,7 +14,6 @@ import time
 import click
 
 from trezorlib import (
-    binance,
     btc,
     cardano,
     cosi,
@@ -35,7 +34,6 @@ from trezorlib.cli.trezorctl import cli as main
 from trezorlib import cli, debuglink, protobuf  # isort:skip
 
 MODULES = (
-    binance,
     btc,
     cardano,
     cosi,

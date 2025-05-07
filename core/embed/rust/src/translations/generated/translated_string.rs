@@ -37,30 +37,6 @@ pub enum TranslatedString {
     backup__title_backup_wallet = 23,  // "Back up wallet"
     backup__title_skip = 24,  // "Skip backup"
     backup__want_to_skip = 25,  // "Are you sure you want to skip the backup?"
-    #[cfg(feature = "universal_fw")]
-    binance__buy = 26,  // "Buy"
-    #[cfg(feature = "universal_fw")]
-    binance__confirm_cancel = 27,  // "Confirm cancel"
-    #[cfg(feature = "universal_fw")]
-    binance__confirm_input = 28,  // "Confirm input"
-    #[cfg(feature = "universal_fw")]
-    binance__confirm_order = 29,  // "Confirm order"
-    #[cfg(feature = "universal_fw")]
-    binance__confirm_output = 30,  // "Confirm output"
-    #[cfg(feature = "universal_fw")]
-    binance__order_id = 31,  // "Order ID:"
-    #[cfg(feature = "universal_fw")]
-    binance__pair = 32,  // "Pair:"
-    #[cfg(feature = "universal_fw")]
-    binance__price = 33,  // "Price:"
-    #[cfg(feature = "universal_fw")]
-    binance__quantity = 34,  // "Quantity:"
-    #[cfg(feature = "universal_fw")]
-    binance__sell = 35,  // "Sell"
-    #[cfg(feature = "universal_fw")]
-    binance__sender_address = 36,  // "Sender address:"
-    #[cfg(feature = "universal_fw")]
-    binance__side = 37,  // "Side:"
     bitcoin__commitment_data = 38,  // "Commitment data"
     bitcoin__confirm_locktime = 39,  // "Confirm locktime"
     bitcoin__create_proof_of_ownership = 40,  // "Do you want to create a proof of ownership?"
@@ -1446,30 +1422,6 @@ impl TranslatedString {
             (Self::backup__title_backup_wallet, "Back up wallet"),
             (Self::backup__title_skip, "Skip backup"),
             (Self::backup__want_to_skip, "Are you sure you want to skip the backup?"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__buy, "Buy"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__confirm_cancel, "Confirm cancel"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__confirm_input, "Confirm input"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__confirm_order, "Confirm order"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__confirm_output, "Confirm output"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__order_id, "Order ID:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__pair, "Pair:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__price, "Price:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__quantity, "Quantity:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__sell, "Sell"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__sender_address, "Sender address:"),
-            #[cfg(feature = "universal_fw")]
-            (Self::binance__side, "Side:"),
             (Self::bitcoin__commitment_data, "Commitment data"),
             (Self::bitcoin__confirm_locktime, "Confirm locktime"),
             (Self::bitcoin__create_proof_of_ownership, "Do you want to create a proof of ownership?"),
@@ -2868,30 +2820,6 @@ impl TranslatedString {
         (Qstr::MP_QSTR_backup__title_create_wallet_backup, Self::backup__title_create_wallet_backup),
         (Qstr::MP_QSTR_backup__title_skip, Self::backup__title_skip),
         (Qstr::MP_QSTR_backup__want_to_skip, Self::backup__want_to_skip),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__buy, Self::binance__buy),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__confirm_cancel, Self::binance__confirm_cancel),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__confirm_input, Self::binance__confirm_input),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__confirm_order, Self::binance__confirm_order),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__confirm_output, Self::binance__confirm_output),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__order_id, Self::binance__order_id),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__pair, Self::binance__pair),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__price, Self::binance__price),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__quantity, Self::binance__quantity),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__sell, Self::binance__sell),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__sender_address, Self::binance__sender_address),
-        #[cfg(feature = "universal_fw")]
-        (Qstr::MP_QSTR_binance__side, Self::binance__side),
         (Qstr::MP_QSTR_bitcoin__commitment_data, Self::bitcoin__commitment_data),
         (Qstr::MP_QSTR_bitcoin__confirm_locktime, Self::bitcoin__confirm_locktime),
         (Qstr::MP_QSTR_bitcoin__create_proof_of_ownership, Self::bitcoin__create_proof_of_ownership),
