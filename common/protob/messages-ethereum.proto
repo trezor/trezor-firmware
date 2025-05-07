@@ -36,7 +36,7 @@ message EthereumPublicKey {
 message EthereumGetAddress {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
     optional bool show_display = 2;     // optionally show on display before sending the result
-    optional bytes encoded_network = 3; // encoded Ethereum network, see ethereum-definitions.md for details
+    optional bytes encoded_network = 3; // encoded Ethereum network, see external-definitions.md for details
     optional bool chunkify = 4;         // display the address in chunks of 4 characters
 }
 
@@ -132,7 +132,7 @@ message EthereumTxAck {
 message EthereumSignMessage {
     repeated uint32 address_n = 1;      // BIP-32 path to derive the key from master node
     required bytes message = 2;         // message to be signed
-    optional bytes encoded_network = 3; // encoded Ethereum network, see ethereum-definitions.md for details
+    optional bytes encoded_network = 3; // encoded Ethereum network, see external-definitions.md for details
     optional bool chunkify = 4;         // display the address in chunks of 4 characters
 }
 
@@ -168,7 +168,7 @@ message EthereumSignTypedHash {
     repeated uint32 address_n = 1;              // BIP-32 path to derive the key from master node
     required bytes domain_separator_hash = 2;   // Hash of domainSeparator of typed data to be signed
     optional bytes message_hash = 3;            // Hash of the data of typed data to be signed (empty if domain-only data)
-    optional bytes encoded_network = 4;         // encoded Ethereum network, see ethereum-definitions.md for details
+    optional bytes encoded_network = 4;         // encoded Ethereum network, see external-definitions.md for details
 }
 
 /**
@@ -181,7 +181,7 @@ message EthereumTypedDataSignature {
 }
 
 /**
- * Contains an encoded network and/or token definition. See ethereum-definitions.md for details.
+ * Contains an encoded network and/or token definition. See external-definitions.md for details.
  * @embed
  */
 message EthereumDefinitions {
