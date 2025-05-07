@@ -44,6 +44,7 @@ RECOVERY_BACK = "\x08"  # backspace character, sent literally
 
 SLIP39_EXTENDABLE_MIN_VERSION = (2, 7, 1)
 ENTROPY_CHECK_MIN_VERSION = (2, 8, 7)
+HOMESCREEN_STREAMING_MIN_VERSION = (2, 8, 11)
 
 
 @session
@@ -69,7 +70,6 @@ def apply_settings(
     settings = messages.ApplySettings(
         label=label,
         use_passphrase=use_passphrase,
-        homescreen=homescreen,
         passphrase_always_on_device=passphrase_always_on_device,
         auto_lock_delay_ms=auto_lock_delay_ms,
         display_rotation=display_rotation,
@@ -79,12 +79,19 @@ def apply_settings(
         haptic_feedback=haptic_feedback,
     )
 
-    out = client.call(settings, expect=messages.Success)
+    if homescreen and client.version >= HOMESCREEN_STREAMING_MIN_VERSION:
+        settings.homescreen_length = len(homescreen)
+        response = client.call(settings, expect=messages.DataChunkRequest)
+        _send_chunked_data(client, response, homescreen)
+        out = messages.Success()
+    else:
+        settings.homescreen = homescreen
+        out = client.call(settings, expect=messages.Success)
     client.refresh_features()
     return _return_success(out)
 
 
-def _send_language_data(
+def _send_chunked_data(
     client: "TrezorClient",
     request: "messages.DataChunkRequest",
     language_data: bytes,
@@ -110,7 +117,7 @@ def change_language(
     response = client.call(msg)
     if data_length > 0:
         response = messages.DataChunkRequest.ensure_isinstance(response)
-        _send_language_data(client, response, language_data)
+        _send_chunked_data(client, response, language_data)
     else:
         messages.Success.ensure_isinstance(response)
     client.refresh_features()  # changing the language in features
@@ -624,7 +631,7 @@ def reboot_to_bootloader(
         )
     )
     if isinstance(response, messages.DataChunkRequest):
-        response = _send_language_data(client, response, language_data)
+        response = _send_chunked_data(client, response, language_data)
     return _return_success(messages.Success(message=""))
 
 

@@ -202,13 +202,14 @@ message EndSession {
  * Request: change some property of the device, e.g. label or homescreen
  * @start
  * @next Success
+ * @next DataChunkRequest
  * @next Failure
  */
 message ApplySettings {
     optional string language = 1 [deprecated=true];
     optional string label = 2;
     optional bool use_passphrase = 3;
-    optional bytes homescreen = 4;
+    optional bytes homescreen = 4;  // homescreen image in single array, deprecated for 14
     optional uint32 _passphrase_source = 5 [deprecated=true];   // ASK = 0; DEVICE = 1; HOST = 2;
     optional uint32 auto_lock_delay_ms = 6;
     optional DisplayRotation display_rotation = 7;  // rotation of display (in degrees from North)
@@ -217,6 +218,7 @@ message ApplySettings {
     optional bool experimental_features = 10;  // enable experimental message types
     optional bool hide_passphrase_from_host = 11;  // do not show passphrase coming from host
     optional bool haptic_feedback = 13;  // enable haptic feedback
+    optional uint32 homescreen_length = 14;  // byte length of new homescreen, device will request chunks
 }
 
 /**
