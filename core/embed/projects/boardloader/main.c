@@ -103,14 +103,14 @@ static void drivers_deinit(void) {
 #endif
 }
 
-struct BoardCapabilities capabilities
+board_capabilities_t capabilities
     __attribute__((section(".capabilities_section"))) = {
         .header = CAPABILITIES_HEADER,
         .model_tag = TAG_MODEL_NAME,
         .model_length = sizeof(uint32_t),
         .model_name = HW_MODEL,
         .version_tag = TAG_BOARDLOADER_VERSION,
-        .version_length = sizeof(struct BoardloaderVersion),
+        .version_length = sizeof(boardloader_version_t),
         .version = {.version_major = VERSION_MAJOR,
                     .version_minor = VERSION_MINOR,
                     .version_patch = VERSION_PATCH,
