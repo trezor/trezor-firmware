@@ -21,7 +21,7 @@ if BENCHMARK and PYOPT != '0':
   print("BENCHMARK=1 works only with PYOPT=0.")
   exit(1)
 
-FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "ble", "rgb_led", "powerctl"]
+FEATURES_WANTED = ["input", "sd_card", "dma2d", "optiga", "ble", "rgb_led", "powerctl", "display"]
 
 if not DISABLE_TROPIC:
     FEATURES_WANTED.append('tropic')
