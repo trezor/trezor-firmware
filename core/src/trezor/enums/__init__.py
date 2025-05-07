@@ -384,8 +384,8 @@ if TYPE_CHECKING:
         AuthenticateDevice = 97
         AuthenticityProof = 98
         ChangeLanguage = 990
-        TranslationDataRequest = 991
-        TranslationDataAck = 992
+        DataChunkRequest = 991
+        DataChunkAck = 992
         SetBrightness = 993
         SetU2FCounter = 63
         GetNextU2FCounter = 80

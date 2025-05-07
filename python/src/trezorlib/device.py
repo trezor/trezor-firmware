@@ -86,16 +86,16 @@ def apply_settings(
 
 def _send_language_data(
     client: "TrezorClient",
-    request: "messages.TranslationDataRequest",
+    request: "messages.DataChunkRequest",
     language_data: bytes,
 ) -> None:
     response = request
     while not isinstance(response, messages.Success):
-        response = messages.TranslationDataRequest.ensure_isinstance(response)
+        response = messages.DataChunkRequest.ensure_isinstance(response)
         data_length = response.data_length
         data_offset = response.data_offset
         chunk = language_data[data_offset : data_offset + data_length]
-        response = client.call(messages.TranslationDataAck(data_chunk=chunk))
+        response = client.call(messages.DataChunkAck(data_chunk=chunk))
 
 
 @session
@@ -109,7 +109,7 @@ def change_language(
 
     response = client.call(msg)
     if data_length > 0:
-        response = messages.TranslationDataRequest.ensure_isinstance(response)
+        response = messages.DataChunkRequest.ensure_isinstance(response)
         _send_language_data(client, response, language_data)
     else:
         messages.Success.ensure_isinstance(response)
@@ -623,7 +623,7 @@ def reboot_to_bootloader(
             language_data_length=len(language_data),
         )
     )
-    if isinstance(response, messages.TranslationDataRequest):
+    if isinstance(response, messages.DataChunkRequest):
         response = _send_language_data(client, response, language_data)
     return _return_success(messages.Success(message=""))
 

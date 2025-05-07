@@ -224,7 +224,7 @@ message ApplySettings {
  * Does not send the translation data itself, as they are too large for one message.
  * Device will request the translation data in chunks.
  * @start
- * @next TranslationDataRequest
+ * @next DataChunkRequest
  * @next Failure
  */
 message ChangeLanguage {
@@ -242,22 +242,22 @@ message ChangeLanguage {
 }
 
 /**
- * Response: Device asks for more data from transaction payload.
+ * Response: Device asks for more data from translation/homescreen image.
  * @end
- * @next TranslationDataAck
+ * @next DataChunkAck
  */
- message TranslationDataRequest {
+ message DataChunkRequest {
     required uint32 data_length = 1;    // Number of bytes being requested
     required uint32 data_offset = 2;    // Offset of the first byte being requested
 }
 
 /**
- * Request: Translation payload data.
- * @next TranslationDataRequest
+ * Request: Translation/homescreen payload data.
+ * @next DataChunkRequest
  * @next Success
  */
-message TranslationDataAck {
-    required bytes data_chunk = 1;  // Bytes from translation payload
+message DataChunkAck {
+    required bytes data_chunk = 1;  // Bytes from translation/homescreen payload
 }
 
 /**
@@ -598,6 +598,7 @@ message CancelAuthorization {
  * Request: Reboot firmware to bootloader
  * @start
  * @next Success
+ * @next DataChunkRequest
  */
 message RebootToBootloader {
     // Action to be performed after rebooting to bootloader

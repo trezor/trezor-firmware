@@ -2101,7 +2101,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ChangeLanguage"]:
             return isinstance(msg, cls)
 
-    class TranslationDataRequest(protobuf.MessageType):
+    class DataChunkRequest(protobuf.MessageType):
         data_length: "int"
         data_offset: "int"
 
@@ -2114,10 +2114,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TranslationDataRequest"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DataChunkRequest"]:
             return isinstance(msg, cls)
 
-    class TranslationDataAck(protobuf.MessageType):
+    class DataChunkAck(protobuf.MessageType):
         data_chunk: "bytes"
 
         def __init__(
@@ -2128,7 +2128,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TranslationDataAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DataChunkAck"]:
             return isinstance(msg, cls)
 
     class ApplyFlags(protobuf.MessageType):

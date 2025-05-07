@@ -125,10 +125,10 @@ pub enum MessageType {
     MessageType_AuthenticityProof = 98,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_ChangeLanguage)
     MessageType_ChangeLanguage = 990,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TranslationDataRequest)
-    MessageType_TranslationDataRequest = 991,
-    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_TranslationDataAck)
-    MessageType_TranslationDataAck = 992,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DataChunkRequest)
+    MessageType_DataChunkRequest = 991,
+    // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_DataChunkAck)
+    MessageType_DataChunkAck = 992,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SetBrightness)
     MessageType_SetBrightness = 993,
     // @@protoc_insertion_point(enum_value:hw.trezor.messages.MessageType.MessageType_SetU2FCounter)
@@ -571,8 +571,8 @@ impl ::protobuf::Enum for MessageType {
             97 => ::std::option::Option::Some(MessageType::MessageType_AuthenticateDevice),
             98 => ::std::option::Option::Some(MessageType::MessageType_AuthenticityProof),
             990 => ::std::option::Option::Some(MessageType::MessageType_ChangeLanguage),
-            991 => ::std::option::Option::Some(MessageType::MessageType_TranslationDataRequest),
-            992 => ::std::option::Option::Some(MessageType::MessageType_TranslationDataAck),
+            991 => ::std::option::Option::Some(MessageType::MessageType_DataChunkRequest),
+            992 => ::std::option::Option::Some(MessageType::MessageType_DataChunkAck),
             993 => ::std::option::Option::Some(MessageType::MessageType_SetBrightness),
             63 => ::std::option::Option::Some(MessageType::MessageType_SetU2FCounter),
             80 => ::std::option::Option::Some(MessageType::MessageType_GetNextU2FCounter),
@@ -819,8 +819,8 @@ impl ::protobuf::Enum for MessageType {
             "MessageType_AuthenticateDevice" => ::std::option::Option::Some(MessageType::MessageType_AuthenticateDevice),
             "MessageType_AuthenticityProof" => ::std::option::Option::Some(MessageType::MessageType_AuthenticityProof),
             "MessageType_ChangeLanguage" => ::std::option::Option::Some(MessageType::MessageType_ChangeLanguage),
-            "MessageType_TranslationDataRequest" => ::std::option::Option::Some(MessageType::MessageType_TranslationDataRequest),
-            "MessageType_TranslationDataAck" => ::std::option::Option::Some(MessageType::MessageType_TranslationDataAck),
+            "MessageType_DataChunkRequest" => ::std::option::Option::Some(MessageType::MessageType_DataChunkRequest),
+            "MessageType_DataChunkAck" => ::std::option::Option::Some(MessageType::MessageType_DataChunkAck),
             "MessageType_SetBrightness" => ::std::option::Option::Some(MessageType::MessageType_SetBrightness),
             "MessageType_SetU2FCounter" => ::std::option::Option::Some(MessageType::MessageType_SetU2FCounter),
             "MessageType_GetNextU2FCounter" => ::std::option::Option::Some(MessageType::MessageType_GetNextU2FCounter),
@@ -1066,8 +1066,8 @@ impl ::protobuf::Enum for MessageType {
         MessageType::MessageType_AuthenticateDevice,
         MessageType::MessageType_AuthenticityProof,
         MessageType::MessageType_ChangeLanguage,
-        MessageType::MessageType_TranslationDataRequest,
-        MessageType::MessageType_TranslationDataAck,
+        MessageType::MessageType_DataChunkRequest,
+        MessageType::MessageType_DataChunkAck,
         MessageType::MessageType_SetBrightness,
         MessageType::MessageType_SetU2FCounter,
         MessageType::MessageType_GetNextU2FCounter,
@@ -1319,8 +1319,8 @@ impl ::protobuf::EnumFull for MessageType {
             MessageType::MessageType_AuthenticateDevice => 46,
             MessageType::MessageType_AuthenticityProof => 47,
             MessageType::MessageType_ChangeLanguage => 48,
-            MessageType::MessageType_TranslationDataRequest => 49,
-            MessageType::MessageType_TranslationDataAck => 50,
+            MessageType::MessageType_DataChunkRequest => 49,
+            MessageType::MessageType_DataChunkAck => 50,
             MessageType::MessageType_SetBrightness => 51,
             MessageType::MessageType_SetU2FCounter => 52,
             MessageType::MessageType_GetNextU2FCounter => 53,
@@ -1530,7 +1530,7 @@ impl MessageType {
 }
 
 static file_descriptor_proto_data: &'static [u8] = b"\
-    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x9bT\
+    \n\x0emessages.proto\x12\x12hw.trezor.messages\x1a\roptions.proto*\x8fT\
     \n\x0bMessageType\x12(\n\x16MessageType_Initialize\x10\0\x1a\x0c\x80\xa6\
     \x1d\x01\xb0\xb5\x18\x01\x90\xb5\x18\x01\x12\x1e\n\x10MessageType_Ping\
     \x10\x01\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\x13MessageType_S\
@@ -1590,52 +1590,52 @@ static file_descriptor_proto_data: &'static [u8] = b"\
     \x10a\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_Auth\
     enticityProof\x10b\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12)\n\x1aMes\
     sageType_ChangeLanguage\x10\xde\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
-    \x01\x121\n\"MessageType_TranslationDataRequest\x10\xdf\x07\x1a\x08\x80\
-    \xa6\x1d\x01\x98\xb5\x18\x01\x12-\n\x1eMessageType_TranslationDataAck\
-    \x10\xe0\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x19MessageTy\
-    pe_SetBrightness\x10\xe1\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\
-    #\n\x19MessageType_SetU2FCounter\x10?\x1a\x04\x90\xb5\x18\x01\x12'\n\x1d\
-    MessageType_GetNextU2FCounter\x10P\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMes\
-    sageType_NextU2FCounter\x10Q\x1a\x04\x98\xb5\x18\x01\x125\n-MessageType_\
-    Deprecated_PassphraseStateRequest\x10M\x1a\x02\x08\x01\x121\n)MessageTyp\
-    e_Deprecated_PassphraseStateAck\x10N\x1a\x02\x08\x01\x12+\n\x19MessageTy\
-    pe_FirmwareErase\x10\x06\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\x90\xb5\
-    \x18\x01\x12,\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x0c\xb8\xb5\
-    \x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12-\n\x1bMessageType_FirmwareR\
-    equest\x10\x08\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\x98\xb5\x18\x01\
-    \x12(\n\x16MessageType_ProdTestT1\x10\x20\x1a\x0c\xb8\xb5\x18\x01\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12$\n\x15MessageType_BleUnpair\x10\xc1>\
-    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12&\n\x18MessageType_GetPublic\
-    Key\x10\x0b\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x15MessageTyp\
-    e_PublicKey\x10\x0c\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\x20\n\
-    \x12MessageType_SignTx\x10\x0f\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
-    \x12#\n\x15MessageType_TxRequest\x10\x15\x1a\x08\x80\xa6\x1d\x01\x98\xb5\
-    \x18\x01\x12\x1f\n\x11MessageType_TxAck\x10\x16\x1a\x08\x80\xa6\x1d\x01\
-    \x90\xb5\x18\x01\x12$\n\x16MessageType_GetAddress\x10\x1d\x1a\x08\x80\
-    \xa6\x1d\x01\x90\xb5\x18\x01\x12!\n\x13MessageType_Address\x10\x1e\x1a\
-    \x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12)\n\x1fMessageType_TxAckPaymentR\
-    equest\x10%\x1a\x04\x90\xb5\x18\x01\x12%\n\x17MessageType_SignMessage\
-    \x10&\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12'\n\x19MessageType_Veri\
-    fyMessage\x10'\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12*\n\x1cMessage\
-    Type_MessageSignature\x10(\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12(\
-    \n\x1aMessageType_GetOwnershipId\x10+\x1a\x08\x80\xa6\x1d\x01\x90\xb5\
-    \x18\x01\x12%\n\x17MessageType_OwnershipId\x10,\x1a\x08\x80\xa6\x1d\x01\
-    \x98\xb5\x18\x01\x12+\n\x1dMessageType_GetOwnershipProof\x101\x1a\x08\
-    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_OwnershipProof\
-    \x102\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_Auth\
-    orizeCoinJoin\x103\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMes\
-    sageType_CipherKeyValue\x10\x17\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
-    \x12*\n\x1cMessageType_CipheredKeyValue\x100\x1a\x08\x80\xa6\x1d\x01\x98\
-    \xb5\x18\x01\x12&\n\x18MessageType_SignIdentity\x105\x1a\x08\x80\xa6\x1d\
-    \x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_SignedIdentity\x106\x1a\x08\
-    \x80\xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_GetECDHSessionKey\
-    \x10=\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_ECDH\
-    SessionKey\x10>\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x123\n\x1dMessag\
-    eType_DebugLinkDecision\x10d\x1a\x10\xc0\xb5\x18\x01\xb0\xb5\x18\x01\x80\
-    \xa6\x1d\x01\xa0\xb5\x18\x01\x12/\n\x1dMessageType_DebugLinkGetState\x10\
-    e\x1a\x0c\x80\xa6\x1d\x01\xb0\xb5\x18\x01\xa0\xb5\x18\x01\x12(\n\x1aMess\
-    ageType_DebugLinkState\x10f\x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x12'\
-    \n\x19MessageType_DebugLinkStop\x10g\x1a\x08\x80\xa6\x1d\x01\xa0\xb5\x18\
+    \x01\x12+\n\x1cMessageType_DataChunkRequest\x10\xdf\x07\x1a\x08\x80\xa6\
+    \x1d\x01\x98\xb5\x18\x01\x12'\n\x18MessageType_DataChunkAck\x10\xe0\x07\
+    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x19MessageType_SetBright\
+    ness\x10\xe1\x07\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x19Messa\
+    geType_SetU2FCounter\x10?\x1a\x04\x90\xb5\x18\x01\x12'\n\x1dMessageType_\
+    GetNextU2FCounter\x10P\x1a\x04\x90\xb5\x18\x01\x12$\n\x1aMessageType_Nex\
+    tU2FCounter\x10Q\x1a\x04\x98\xb5\x18\x01\x125\n-MessageType_Deprecated_P\
+    assphraseStateRequest\x10M\x1a\x02\x08\x01\x121\n)MessageType_Deprecated\
+    _PassphraseStateAck\x10N\x1a\x02\x08\x01\x12+\n\x19MessageType_FirmwareE\
+    rase\x10\x06\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12\
+    ,\n\x1aMessageType_FirmwareUpload\x10\x07\x1a\x0c\xb8\xb5\x18\x01\x80\
+    \xa6\x1d\x01\x90\xb5\x18\x01\x12-\n\x1bMessageType_FirmwareRequest\x10\
+    \x08\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12(\n\x16M\
+    essageType_ProdTestT1\x10\x20\x1a\x0c\xb8\xb5\x18\x01\x80\xa6\x1d\x01\
+    \x90\xb5\x18\x01\x12$\n\x15MessageType_BleUnpair\x10\xc1>\x1a\x08\x80\
+    \xa6\x1d\x01\x90\xb5\x18\x01\x12&\n\x18MessageType_GetPublicKey\x10\x0b\
+    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x15MessageType_PublicKey\
+    \x10\x0c\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\x20\n\x12MessageTyp\
+    e_SignTx\x10\x0f\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12#\n\x15Messa\
+    geType_TxRequest\x10\x15\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12\x1f\
+    \n\x11MessageType_TxAck\x10\x16\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\
+    \x12$\n\x16MessageType_GetAddress\x10\x1d\x1a\x08\x80\xa6\x1d\x01\x90\
+    \xb5\x18\x01\x12!\n\x13MessageType_Address\x10\x1e\x1a\x08\x80\xa6\x1d\
+    \x01\x98\xb5\x18\x01\x12)\n\x1fMessageType_TxAckPaymentRequest\x10%\x1a\
+    \x04\x90\xb5\x18\x01\x12%\n\x17MessageType_SignMessage\x10&\x1a\x08\x80\
+    \xa6\x1d\x01\x90\xb5\x18\x01\x12'\n\x19MessageType_VerifyMessage\x10'\
+    \x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12*\n\x1cMessageType_MessageSi\
+    gnature\x10(\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12(\n\x1aMessageTy\
+    pe_GetOwnershipId\x10+\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12%\n\
+    \x17MessageType_OwnershipId\x10,\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\
+    \x12+\n\x1dMessageType_GetOwnershipProof\x101\x1a\x08\x80\xa6\x1d\x01\
+    \x90\xb5\x18\x01\x12(\n\x1aMessageType_OwnershipProof\x102\x1a\x08\x80\
+    \xa6\x1d\x01\x98\xb5\x18\x01\x12+\n\x1dMessageType_AuthorizeCoinJoin\x10\
+    3\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_CipherKe\
+    yValue\x10\x17\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\x01\x12*\n\x1cMessage\
+    Type_CipheredKeyValue\x100\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x12&\
+    \n\x18MessageType_SignIdentity\x105\x1a\x08\x80\xa6\x1d\x01\x90\xb5\x18\
+    \x01\x12(\n\x1aMessageType_SignedIdentity\x106\x1a\x08\x80\xa6\x1d\x01\
+    \x98\xb5\x18\x01\x12+\n\x1dMessageType_GetECDHSessionKey\x10=\x1a\x08\
+    \x80\xa6\x1d\x01\x90\xb5\x18\x01\x12(\n\x1aMessageType_ECDHSessionKey\
+    \x10>\x1a\x08\x80\xa6\x1d\x01\x98\xb5\x18\x01\x123\n\x1dMessageType_Debu\
+    gLinkDecision\x10d\x1a\x10\xc0\xb5\x18\x01\xb0\xb5\x18\x01\x80\xa6\x1d\
+    \x01\xa0\xb5\x18\x01\x12/\n\x1dMessageType_DebugLinkGetState\x10e\x1a\
+    \x0c\x80\xa6\x1d\x01\xb0\xb5\x18\x01\xa0\xb5\x18\x01\x12(\n\x1aMessageTy\
+    pe_DebugLinkState\x10f\x1a\x08\x80\xa6\x1d\x01\xa8\xb5\x18\x01\x12'\n\
+    \x19MessageType_DebugLinkStop\x10g\x1a\x08\x80\xa6\x1d\x01\xa0\xb5\x18\
     \x01\x12&\n\x18MessageType_DebugLinkLog\x10h\x1a\x08\x80\xa6\x1d\x01\xa8\
     \xb5\x18\x01\x12-\n\x1fMessageType_DebugLinkMemoryRead\x10n\x1a\x08\x80\
     \xa6\x1d\x01\xa0\xb5\x18\x01\x12)\n\x1bMessageType_DebugLinkMemory\x10o\
