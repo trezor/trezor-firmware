@@ -1,8 +1,16 @@
+#pragma once
+
 #include <trezor_types.h>
 
-void screen_prodtest_info(char* id, uint8_t id_len);
+#include <sys/sysevent.h>
 
-void screen_prodtest_welcome(void);
+#include "rust_types.h"
+// common event function for screens that need UI + communication
+uint32_t screen_prodtest_event(c_layout_t* layout, sysevents_t* signalled);
+
+// void screen_prodtest_info(char* id, uint8_t id_len);
+
+void screen_prodtest_welcome(c_layout_t* layout, char* id, uint8_t id_len);
 
 void screen_prodtest_bars(const char* colors, size_t color_count);
 
