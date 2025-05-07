@@ -115,6 +115,9 @@ void pm_monitor_power_sources(void) {
   // Request fresh measurements
   npm1300_measure(pm_pmic_data_ready, NULL);
   drv->pmic_measurement_ready = false;
+
+  drv->state_machine_stabilized = true;
+
 }
 
 // PMIC measurement callback
