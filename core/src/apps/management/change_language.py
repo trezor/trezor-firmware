@@ -135,12 +135,12 @@ async def do_change_language(
 
 
 async def _get_data_chunk(data_left: int, offset: int) -> bytes:
-    from trezor.messages import TranslationDataAck, TranslationDataRequest
+    from trezor.messages import DataChunkAck, DataChunkRequest
     from trezor.wire.context import call
 
     data_length = min(data_left, _CHUNK_SIZE)
-    req = TranslationDataRequest(data_length=data_length, data_offset=offset)
-    res = await call(req, TranslationDataAck)
+    req = DataChunkRequest(data_length=data_length, data_offset=offset)
+    res = await call(req, DataChunkAck)
     return res.data_chunk
 
 

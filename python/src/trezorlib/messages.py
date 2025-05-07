@@ -434,8 +434,8 @@ class MessageType(IntEnum):
     AuthenticateDevice = 97
     AuthenticityProof = 98
     ChangeLanguage = 990
-    TranslationDataRequest = 991
-    TranslationDataAck = 992
+    DataChunkRequest = 991
+    DataChunkAck = 992
     SetBrightness = 993
     SetU2FCounter = 63
     GetNextU2FCounter = 80
@@ -3251,7 +3251,7 @@ class ChangeLanguage(protobuf.MessageType):
         self.show_display = show_display
 
 
-class TranslationDataRequest(protobuf.MessageType):
+class DataChunkRequest(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 991
     FIELDS = {
         1: protobuf.Field("data_length", "uint32", repeated=False, required=True),
@@ -3268,7 +3268,7 @@ class TranslationDataRequest(protobuf.MessageType):
         self.data_offset = data_offset
 
 
-class TranslationDataAck(protobuf.MessageType):
+class DataChunkAck(protobuf.MessageType):
     MESSAGE_WIRE_TYPE = 992
     FIELDS = {
         1: protobuf.Field("data_chunk", "bytes", repeated=False, required=True),

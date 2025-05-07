@@ -10,7 +10,7 @@ SKIPPED_MESSAGES := Cardano DebugMonero Eos Monero Ontology Ripple SdProtect Tez
 	EthereumTypedDataValueRequest EthereumTypedDataValueAck ShowDeviceTutorial \
 	UnlockBootloader AuthenticateDevice AuthenticityProof \
 	Solana StellarClaimClaimableBalanceOp \
-	ChangeLanguage TranslationDataRequest TranslationDataAck \
+	ChangeLanguage DataChunkRequest DataChunkAck \
 	SetBrightness DebugLinkOptigaSetSecMax EntropyCheckReady EntropyCheckContinue \
 	BenchmarkListNames BenchmarkRun BenchmarkNames BenchmarkResult \
 	NostrGetPubkey NostrPubkey NostrSignEvent NostrEventSignature \
