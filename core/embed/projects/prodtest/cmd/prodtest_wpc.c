@@ -22,14 +22,13 @@
 #include <trezor_rtl.h>
 
 #include <rtl/cli.h>
-#include <sys/systick.h>
 #include <sys/power_manager.h>
+#include <sys/systick.h>
 
 #include <stdlib.h>
 #include "../stwlc38/stwlc38.h"
 
 static void prodtest_wpc_info(cli_t* cli) {
-
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
     return;
@@ -40,7 +39,6 @@ static void prodtest_wpc_info(cli_t* cli) {
 
   // Deinit power manager to not interfere with STWLC38
   pm_deinit();
-
 
   stwlc38_init();
 
@@ -77,7 +75,6 @@ static void prodtest_wpc_info(cli_t* cli) {
   cli_trace(cli, "  nvm_patch_err:     0x%X ", chip_info.nvm_patch_err);
   cli_trace(cli, "  nvm_prod_info_err: 0x%X ", chip_info.nvm_prod_info_err);
 
-
   stwlc38_deinit();
 
   // initlize power manager again
@@ -97,7 +94,6 @@ cleanup:
     cli_error(cli, CLI_ERROR, "Failed to reinitialize power manager.");
     return;
   }
-
 }
 
 static void prodtest_wpc_update(cli_t* cli) {
