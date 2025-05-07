@@ -69,6 +69,7 @@ typedef struct {
 // Power manager core driver structure
 typedef struct {
   bool initialized;
+  bool state_machine_stabilized;
   pm_internal_state_t state;
   pm_event_t event_flags;
 
