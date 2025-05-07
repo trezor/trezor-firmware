@@ -19,9 +19,11 @@ from typing import TYPE_CHECKING, Generator, Optional
 
 import pytest
 
-from trezorlib import exceptions
+from trezorlib import exceptions, messages
+from trezorlib.debuglink import SessionDebugWrapper as Session
+from trezorlib.transport.session import SessionV1
 
-from ..common import get_test_address
+from ..common import TEST_ADDRESS_N
 from .common import (
     CommonPass,
     PassphraseCategory,
@@ -77,6 +79,7 @@ SPECIAL_ACTIONS = [
 ]
 # fmt: on
 
+
 CATEGORY_ACTIONS = {
     PassphraseCategory.MENU: MENU_ACTIONS,
     PassphraseCategory.DIGITS: DIGITS_ACTIONS,
@@ -86,12 +89,29 @@ CATEGORY_ACTIONS = {
 }
 
 
+def _get_test_address(session: Session) -> None:
+    resp = session.call_raw(
+        messages.GetAddress(address_n=TEST_ADDRESS_N, coin_name="Testnet")
+    )
+    if isinstance(resp, messages.ButtonRequest):
+        resp = session._callback_button(resp)
+    if isinstance(resp, messages.PassphraseRequest):
+        resp = session.call_raw(messages.PassphraseAck(on_device=True))
+    if isinstance(resp, messages.ButtonRequest):
+        resp = session._callback_button(resp)
+    if isinstance(resp, messages.Address):
+        return resp.address
+    else:
+        raise exceptions.Cancelled
+
+
 @contextmanager
 def prepare_passphrase_dialogue(
     device_handler: "BackgroundDeviceHandler", address: Optional[str] = None
 ) -> Generator["DebugLink", None, None]:
     debug = device_handler.debuglink()
-    device_handler.run(get_test_address)  # type: ignore
+    session = SessionV1.new(device_handler.client)
+    device_handler.run_with_provided_session(session, _get_test_address)  # type: ignore
     layout = debug.read_layout()
     assert "PassphraseKeyboard" in layout.all_components()
     assert layout.passphrase() == ""

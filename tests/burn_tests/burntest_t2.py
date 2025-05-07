@@ -56,7 +56,7 @@ def pin_input_flow(client: Client, old_pin: str, new_pin: str):
 if __name__ == "__main__":
     wirelink = get_device()
     client = Client(wirelink)
-    client.open()
+    session = client.get_seedless_session()
 
     i = 0
 
@@ -76,10 +76,12 @@ if __name__ == "__main__":
 
         # change PIN
         new_pin = "".join(random.choices(string.digits, k=random.randint(6, 10)))
-        client.set_input_flow(pin_input_flow(client, last_pin, new_pin))
+        session.set_input_flow(pin_input_flow(client, last_pin, new_pin))
         device.change_pin(client)
-        client.set_input_flow(None)
+        session.set_input_flow(None)
         last_pin = new_pin
 
         print(f"iteration {i}")
         i = i + 1
+
+    wirelink.close()
