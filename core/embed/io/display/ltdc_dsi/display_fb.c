@@ -77,10 +77,10 @@ void display_set_unpriv_access(bool unpriv) {
 static uint8_t *get_fb_ptr(int16_t index) {
 #ifdef DISPLAY_GFXMMU
   if (index == 0) {
-    return (uint8_t *)GFXMMU_VIRTUAL_BUFFER0_BASE_S;
+    return (uint8_t *)GFXMMU_VIRTUAL_BUFFER0_BASE;
 #if (FRAME_BUFFER_COUNT > 1)
   } else if (index == 1) {
-    return (uint8_t *)GFXMMU_VIRTUAL_BUFFER1_BASE_S;
+    return (uint8_t *)GFXMMU_VIRTUAL_BUFFER1_BASE;
 #endif
 #else
   if (index == 0) {
