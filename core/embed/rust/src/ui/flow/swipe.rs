@@ -313,10 +313,21 @@ impl Layout<Result<Obj, Error>> for SwipeFlow {
         self.returned_value.as_ref()
     }
 
-    fn paint(&mut self) {
+    fn paint(&mut self) -> Result<(), Error> {
+        let mut overflow: bool = false;
         render_on_display(None, Some(Color::black()), |target| {
             self.render_state(self.state.index(), target);
+            #[cfg(feature = "ui_debug")]
+            if target.should_raise_overflow_exception() {
+                overflow = true;
+            }
         });
+
+        if overflow {
+            Err(Error::OutOfRange)
+        } else {
+            Ok(())
+        }
     }
 }
 
