@@ -256,7 +256,7 @@ impl<T: ValueInput> ValueInputDialog<T> {
     fn render_number<'s>(&'s self, target: &mut impl Renderer<'s>) {
         let mut buf = [0u8; 3];
 
-        let (num, label) = self.value_input.converted();
+        let (num, label) = self.value_input.repr();
 
         if let Some(num_str) = strutil::format_i64(num as i64, &mut buf) {
             let num_font = fonts::FONT_SATOSHI_EXTRALIGHT_72;
@@ -374,7 +374,7 @@ impl<T: ValueInput> crate::trace::Trace for ValueInputDialog<T> {
 
 pub trait ValueInput {
     fn num(&self) -> u32;
-    fn converted(&self) -> (u32, Option<ShortString>);
+    fn repr(&self) -> (u32, Option<ShortString>);
     fn increment(&mut self);
     fn decrement(&mut self);
     fn is_max(&self) -> bool;
@@ -392,7 +392,7 @@ impl ValueInput for NumberInput {
         self.value
     }
 
-    fn converted(&self) -> (u32, Option<ShortString>) {
+    fn repr(&self) -> (u32, Option<ShortString>) {
         (self.value, None)
     }
 
@@ -434,7 +434,7 @@ impl ValueInput for DurationInput {
         self.duration.to_millis()
     }
 
-    fn converted(&self) -> (u32, Option<ShortString>) {
+    fn repr(&self) -> (u32, Option<ShortString>) {
         let units = [
             (self.duration.to_days(), TR::plurals__lock_after_x_days),
             (self.duration.to_hours(), TR::plurals__lock_after_x_hours),
