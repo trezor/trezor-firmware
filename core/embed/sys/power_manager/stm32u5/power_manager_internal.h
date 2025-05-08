@@ -35,6 +35,7 @@
 #define PM_BATTERY_UNDERVOLT_RECOVERY_THR_V 3.1f
 #define PM_BATTERY_UNDERVOLT_RECOVERY_WPC_THR_V 3.2f
 #define PM_BATTERY_LOW_THRESHOLD_SOC 15
+#define PM_SOC_LIMIT_HYSTERESIS 5
 
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
 
@@ -77,6 +78,8 @@ typedef struct {
   uint8_t bat_sampling_buf_tail_idx;
   uint8_t bat_sampling_buf_head_idx;
   uint8_t soc_ceiled;
+  uint8_t soc_limit;
+  bool soc_limit_reached;
 
   // Battery charging state
   bool charging_enabled;
