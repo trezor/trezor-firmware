@@ -18,14 +18,11 @@
  */
 
 #include <io/backlight.h>
-#ifdef USE_BUTTON
-#include <io/button.h>
-#endif
 #include <sys/bootutils.h>
+#include <sys/pmic.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
-#include "../npm1300/npm1300.h"
 #include "power_manager_internal.h"
 
 // State handler lookup table
@@ -140,12 +137,11 @@ pm_internal_state_t pm_handle_state_charging(pm_driver_t* drv) {
     return PM_STATE_CHARGING;
   }
 
-  // Not implemented yet
   return drv->state;
 }
 
 pm_internal_state_t pm_handle_state_suspend(pm_driver_t* drv) {
-  // immediatelly return to power save state after wakeup
+  // immediately return to power save state after wakeup
   return PM_STATE_POWER_SAVE;
 }
 
@@ -158,7 +154,6 @@ pm_internal_state_t pm_handle_state_startup_rejected(pm_driver_t* drv) {
     return PM_STATE_HIBERNATE;
   }
 
-  // Not implemented yet
   return drv->state;
 }
 
