@@ -1,13 +1,10 @@
 use crate::{
     strutil::TString,
-    time::{Duration, Stopwatch},
     ui::{
         component::{text::TextStyle, Component, Event, EventCtx, Label},
         display::{Color, Icon},
-        geometry::{Alignment2D, Insets, Offset, Rect},
-        lerp::Lerp,
+        geometry::{Alignment2D, Insets, Rect},
         shape::{self, Renderer},
-        util::animation_disabled,
     },
 };
 
@@ -15,49 +12,6 @@ use super::{
     super::component::{Button, ButtonContent, ButtonMsg},
     constant, theme,
 };
-
-const ANIMATION_TIME_MS: u32 = 1000;
-
-#[derive(Default, Clone)]
-struct AttachAnimation {
-    pub timer: Stopwatch,
-}
-
-impl AttachAnimation {
-    pub fn is_active(&self) -> bool {
-        if animation_disabled() {
-            return false;
-        }
-
-        self.timer
-            .is_running_within(Duration::from_millis(ANIMATION_TIME_MS))
-    }
-
-    pub fn eval(&self) -> f32 {
-        if animation_disabled() {
-            return ANIMATION_TIME_MS as f32 / 1000.0;
-        }
-        self.timer.elapsed().to_millis() as f32 / 1000.0
-    }
-
-    pub fn get_title_offset(&self, t: f32) -> i16 {
-        let fnc = pareen::constant(0.0).seq_ease_in_out(
-            0.8,
-            easer::functions::Cubic,
-            0.2,
-            pareen::constant(1.0),
-        );
-        i16::lerp(0, 25, fnc.eval(t))
-    }
-
-    pub fn start(&mut self) {
-        self.timer.start();
-    }
-
-    pub fn reset(&mut self) {
-        self.timer = Stopwatch::new_stopped();
-    }
-}
 
 const BUTTON_EXPAND_BORDER: i16 = 32;
 
@@ -77,8 +31,6 @@ pub struct Header {
     /// icon in the top-left corner (used instead of left button)
     icon: Option<Icon>,
     icon_color: Option<Color>,
-    /// animation
-    anim: Option<AttachAnimation>,
 }
 
 #[derive(Copy, Clone)]
@@ -104,7 +56,6 @@ impl Header {
             left_button_msg: HeaderMsg::Cancelled,
             icon: None,
             icon_color: None,
-            anim: None,
         }
     }
 
@@ -215,20 +166,6 @@ impl Component for Header {
     fn event(&mut self, ctx: &mut EventCtx, event: Event) -> Option<Self::Msg> {
         self.title.event(ctx, event);
 
-        if let Some(anim) = &mut self.anim {
-            if let Event::Attach(_) = event {
-                anim.start();
-                ctx.request_paint();
-                ctx.request_anim_frame();
-            }
-            if let Event::Timer(EventCtx::ANIM_FRAME_TIMER) = event {
-                if anim.is_active() {
-                    ctx.request_anim_frame();
-                    ctx.request_paint();
-                }
-            }
-        }
-
         if let Some(ButtonMsg::Clicked) = self.left_button.event(ctx, event) {
             return Some(self.left_button_msg);
         };
@@ -240,24 +177,15 @@ impl Component for Header {
     }
 
     fn render<'s>(&'s self, target: &mut impl Renderer<'s>) {
-        let offset = if let Some(anim) = &self.anim {
-            Offset::x(anim.get_title_offset(anim.eval()))
-        } else {
-            Offset::zero()
-        };
-
-        // TODO: correct animation
-        target.with_origin(offset, &|target| {
-            self.right_button.render(target);
-            self.left_button.render(target);
-            if let Some(icon) = self.icon {
-                shape::ToifImage::new(self.area.left_center(), icon.toif)
-                    .with_fg(self.icon_color.unwrap_or(theme::GREY_LIGHT))
-                    .with_align(Alignment2D::CENTER_LEFT)
-                    .render(target);
-            }
-            self.title.render(target);
-        });
+        self.right_button.render(target);
+        self.left_button.render(target);
+        if let Some(icon) = self.icon {
+            shape::ToifImage::new(self.area.left_center(), icon.toif)
+                .with_fg(self.icon_color.unwrap_or(theme::GREY_LIGHT))
+                .with_align(Alignment2D::CENTER_LEFT)
+                .render(target);
+        }
+        self.title.render(target);
     }
 }
 
