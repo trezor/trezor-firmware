@@ -60,8 +60,8 @@ static void pm_background_tasks_resume(void);
 
 pm_status_t pm_control_hibernate() {
   // TEMPORARY FIX:
-  // Enable Backup domain retentaion in VBAT mode before entering the
-  // hiberbation. BREN bit can be accessed only in LDO mode.
+  // Enable Backup domain retention in VBAT mode before entering the
+  // hibernation. BREN bit can be accessed only in LDO mode.
   __HAL_RCC_PWR_CLK_ENABLE();
 
   // Switch to LDO regulator

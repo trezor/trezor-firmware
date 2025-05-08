@@ -84,7 +84,7 @@ pm_status_t pm_init(bool inherit_state) {
   }
 
   if (inherit_state) {
-    // Inherit power manager state left in beckup RAM from bootloader.
+    // Inherit power manager state left in backup RAM from bootloader.
     // in case of error, start with PM_STATE_POWER_SAVE as a lowest state in
     // active mode.
     if (status != BACKUP_RAM_OK &&
