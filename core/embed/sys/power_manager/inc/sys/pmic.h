@@ -17,17 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_NPM1300_H
-#define TREZORHAL_NPM1300_H
+#pragma once
 
 #include <trezor_types.h>
 
 // Charging current limits
-// - range of np1300 is 32-800mA
+// - range of pmic is 32-800mA
 // - used battery limit is 180mA
-#define NPM1300_CHARGING_LIMIT_MIN 32       // mA
-#define NPM1300_CHARGING_LIMIT_MAX 180      // mA
-#define NPM1300_CHARGING_LIMIT_DEFAULT 180  // mA
+#define PMIC_CHARGING_LIMIT_MIN 32       // mA
+#define PMIC_CHARGING_LIMIT_MAX 180      // mA
+#define PMIC_CHARGING_LIMIT_DEFAULT 180  // mA
 
 typedef struct {
   // Battery voltage [V]
@@ -43,25 +42,24 @@ typedef struct {
   // Die temperature [°C]
   float die_temp;
   // IBAT_MEAS_STATUS register value
-  // (for debugging purposes, see the NPM1300 datasheet)
+  // (for debugging purposes, see the datasheet)
   uint8_t ibat_meas_status;
   // BUCKSTATUS register value
-  // (for debugging purposes, see the NPM1300 datasheet)
+  // (for debugging purposes, see the datasheet)
   uint8_t buck_status;
   uint8_t usb_status;
-} npm1300_report_t;
+} pmic_report_t;
 
-typedef void (*npm1300_report_callback_t)(void* context,
-                                          npm1300_report_t* report);
+typedef void (*pmic_report_callback_t)(void* context, pmic_report_t* report);
 
-// Initializes NPM1300 PMIC driver
-bool npm1300_init(void);
+// Initializes PMIC driver
+bool pmic_init(void);
 
-// Deinitializes NPM1300 PMIC driver
-void npm1300_deinit(void);
+// Deinitializes  PMIC driver
+void pmic_deinit(void);
 
 // Gets the cause of the last restart
-uint8_t npm1300_restart_cause(void);
+uint8_t pmic_restart_cause(void);
 
 // Switches the device to ship mode.
 //
@@ -78,7 +76,7 @@ uint8_t npm1300_restart_cause(void);
 //
 // Returns `false` if the operation fails (likely due to uninitialized power
 // management).
-bool npm1300_enter_shipmode(void);
+bool pmic_enter_shipmode(void);
 
 // Starts the asynchronous measurement
 //
@@ -88,7 +86,7 @@ bool npm1300_enter_shipmode(void);
 // The function returns `false` if the measurement cannot be started
 // (e.g. because the previous measurement is still in progress or
 // the the driver is not initialized).
-bool npm1300_measure(npm1300_report_callback_t callback, void* context);
+bool pmic_measure(pmic_report_callback_t callback, void* context);
 
 // Synchroneous version of the `pmic_measure` function.
 //
@@ -97,12 +95,12 @@ bool npm1300_measure(npm1300_report_callback_t callback, void* context);
 //
 // Returns `true` if the measurement was successful and the report
 // is stored in the `report` structure.
-bool npm1300_measure_sync(npm1300_report_t* report);
+bool pmic_measure_sync(pmic_report_t* report);
 
 // Enables or disables the charging.
 //
 // The function returns `false` if the operation cannot be performed.
-bool npm1300_set_charging(bool enable);
+bool pmic_set_charging(bool enable);
 
 // Sets the charging current limit [mA].
 //
@@ -110,18 +108,16 @@ bool npm1300_set_charging(bool enable);
 // `NPM1300_CHARGING_LIMIT_MIN` and `NPM1300_CHARGING_LIMIT_MAX` constants.
 //
 // The function returns `false` if the operation cannot be performed.
-bool npm1300_set_charging_limit(int i_charge);
+bool pmic_set_charging_limit(int i_charge);
 
 // Gets the charging current limit [mA].
-int npm1300_get_charging_limit(void);
+int pmic_get_charging_limit(void);
 
 typedef enum {
-  NPM1300_BUCK_MODE_AUTO,
-  NPM1300_BUCK_MODE_PWM,
-  NPM1300_BUCK_MODE_PFM,
-} npm1300_buck_mode_t;
+  PMIC_BUCK_MODE_AUTO,
+  PMIC_BUCK_MODE_PWM,
+  PMIC_BUCK_MODE_PFM,
+} pmic_buck_mode_t;
 
 // Set the buck voltage regulator mode
-bool npm1300_set_buck_mode(npm1300_buck_mode_t buck_mode);
-
-#endif  // TREZORHAL_NPM1300_H
+bool pmic_set_buck_mode(pmic_buck_mode_t buck_mode);

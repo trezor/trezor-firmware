@@ -32,8 +32,8 @@
 #include <util/option_bytes.h>
 #include <util/rsod.h>
 
-#ifdef USE_POWER_MANAGER
-#include "../npm1300/npm1300.h"
+#ifdef USE_PMIC
+#include <sys/pmic.h>
 #endif
 
 #ifdef USE_PVD
@@ -72,8 +72,8 @@ static const uint8_t * const BOARDLOADER_KEYS[] = {
 };
 
 static void drivers_init(void) {
-#ifdef USE_POWER_MANAGER
-  npm1300_init();
+#ifdef USE_PMIC
+  pmic_init();
 #endif
 #ifdef USE_PVD
   pvd_init();
@@ -98,8 +98,8 @@ static void drivers_deinit(void) {
   // TODO
 #endif
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
-#ifdef USE_POWER_MANAGER
-  npm1300_deinit();
+#ifdef USE_PMIC
+  pmic_deinit();
 #endif
 }
 
