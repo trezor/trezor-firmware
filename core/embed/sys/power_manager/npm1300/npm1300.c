@@ -24,9 +24,9 @@
 
 #include <io/i2c_bus.h>
 #include <sys/irq.h>
+#include <sys/pmic.h>
 #include <sys/systimer.h>
 
-#include "npm1300.h"
 #include "npm1300_defs.h"
 
 #ifdef KERNEL_MODE
@@ -111,9 +111,9 @@ typedef struct {
   bool charging_requested;
 
   // Buck voltage regulator mode
-  npm1300_buck_mode_t buck_mode;            // written value
-  npm1300_buck_mode_t buck_mode_requested;  // requested value
-  npm1300_buck_mode_t buck_mode_set;        // value beeing written
+  pmic_buck_mode_t buck_mode;            // written value
+  pmic_buck_mode_t buck_mode_requested;  // requested value
+  pmic_buck_mode_t buck_mode_set;        // value beeing written
 
   // Enter ship mode
   bool shipmode_requested;
@@ -123,7 +123,7 @@ typedef struct {
   bool adc_readout_requested;
 
   // Report callback used for asynchronous measurements
-  npm1300_report_callback_t report_callback;
+  pmic_report_callback_t report_callback;
   void* report_callback_context;
 
 } npm1300_driver_t;
@@ -295,7 +295,7 @@ static bool npm1300_initialize(i2c_bus_t* bus, uint16_t i_charge,
   return true;
 }
 
-bool npm1300_init(void) {
+bool pmic_init(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (drv->initialized) {
@@ -304,17 +304,17 @@ bool npm1300_init(void) {
 
   memset(drv, 0, sizeof(npm1300_driver_t));
 
-  drv->i_charge = NPM1300_CHARGING_LIMIT_DEFAULT;  // mA
-  drv->i_limit = 500;                              // mA  (268mA-1340mA)
+  drv->i_charge = PMIC_CHARGING_LIMIT_DEFAULT;  // mA
+  drv->i_limit = 500;                           // mA  (268mA-1340mA)
 
   drv->i_charge_set = drv->i_charge;
   drv->i_charge_requested = drv->i_charge;
 
-  drv->buck_mode_requested = NPM1300_BUCK_MODE_AUTO;
-  drv->buck_mode_set = NPM1300_BUCK_MODE_AUTO;
-  drv->buck_mode = NPM1300_BUCK_MODE_AUTO;
+  drv->buck_mode_requested = PMIC_BUCK_MODE_AUTO;
+  drv->buck_mode_set = PMIC_BUCK_MODE_AUTO;
+  drv->buck_mode = PMIC_BUCK_MODE_AUTO;
 
-  drv->i2c_bus = i2c_bus_open(NPM1300_I2C_INSTANCE);
+  drv->i2c_bus = i2c_bus_open(PMIC_I2C_INSTANCE);
   if (drv->i2c_bus == NULL) {
     goto cleanup;
   }
@@ -337,11 +337,11 @@ bool npm1300_init(void) {
   return true;
 
 cleanup:
-  npm1300_deinit();
+  pmic_deinit();
   return false;
 }
 
-void npm1300_deinit(void) {
+void pmic_deinit(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   i2c_bus_close(drv->i2c_bus);
@@ -350,7 +350,7 @@ void npm1300_deinit(void) {
   memset(drv, 0, sizeof(npm1300_driver_t));
 }
 
-bool npm1300_enter_shipmode(void) {
+bool pmic_enter_shipmode(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
@@ -365,7 +365,7 @@ bool npm1300_enter_shipmode(void) {
   return true;
 }
 
-int npm1300_get_charging_limit(void) {
+int pmic_get_charging_limit(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
@@ -375,15 +375,15 @@ int npm1300_get_charging_limit(void) {
   return drv->i_charge_requested;
 }
 
-bool npm1300_set_charging_limit(int i_charge) {
+bool pmic_set_charging_limit(int i_charge) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
     return false;
   }
 
-  if (i_charge < NPM1300_CHARGING_LIMIT_MIN ||
-      i_charge > NPM1300_CHARGING_LIMIT_MAX) {
+  if (i_charge < PMIC_CHARGING_LIMIT_MIN ||
+      i_charge > PMIC_CHARGING_LIMIT_MAX) {
     // The value is out of range
     return false;
   }
@@ -396,7 +396,7 @@ bool npm1300_set_charging_limit(int i_charge) {
   return true;
 }
 
-bool npm1300_set_charging(bool enable) {
+bool pmic_set_charging(bool enable) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
@@ -411,7 +411,7 @@ bool npm1300_set_charging(bool enable) {
   return true;
 }
 
-bool npm1300_set_buck_mode(npm1300_buck_mode_t buck_mode) {
+bool pmic_set_buck_mode(pmic_buck_mode_t buck_mode) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
@@ -436,7 +436,7 @@ uint8_t npm1300_restart_cause(void) {
   return drv->restart_cause;
 }
 
-bool npm1300_measure(npm1300_report_callback_t callback, void* context) {
+bool pmic_measure(pmic_report_callback_t callback, void* context) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
@@ -470,25 +470,25 @@ typedef struct {
   // Set when the measurement is done
   volatile bool done;
   // Report structure where the measurement is stored
-  npm1300_report_t* report;
+  pmic_report_t* report;
 } npm1300_sync_measure_t;
 
 // Callback for the synchronous measurement
 static void npm1300_sync_measure_callback(void* context,
-                                          npm1300_report_t* report) {
+                                          pmic_report_t* report) {
   npm1300_sync_measure_t* ctx = (npm1300_sync_measure_t*)context;
   *ctx->report = *report;
   ctx->done = true;
 }
 
-bool npm1300_measure_sync(npm1300_report_t* report) {
+bool pmic_measure_sync(pmic_report_t* report) {
   npm1300_sync_measure_t measure = {
       .done = false,
       .report = report,
   };
 
   // Start asynchronous measurement
-  if (!npm1300_measure(npm1300_sync_measure_callback, &measure)) {
+  if (!pmic_measure(npm1300_sync_measure_callback, &measure)) {
     return false;
   }
 
@@ -505,8 +505,8 @@ bool npm1300_measure_sync(npm1300_report_t* report) {
 //
 // This function is called in the irq context.
 static void npm1300_calculate_report(npm1300_driver_t* drv,
-                                     npm1300_report_t* report) {
-  memset(report, 0, sizeof(npm1300_report_t));
+                                     pmic_report_t* report) {
+  memset(report, 0, sizeof(pmic_report_t));
 
   npm1300_adc_regs_t* r = &drv->adc_regs;
 
@@ -784,11 +784,11 @@ static void npm1300_i2c_callback(void* context, i2c_packet_t* packet) {
     case NPM1300_STATE_ADC_READOUT:
       drv->adc_readout_requested = false;
 
-      npm1300_report_t report;
+      pmic_report_t report;
       npm1300_calculate_report(drv, &report);
 
       // Invoke report callback
-      npm1300_report_callback_t report_callback = drv->report_callback;
+      pmic_report_callback_t report_callback = drv->report_callback;
       void* report_callback_context = drv->report_callback_context;
 
       // Clear the report callback before invoking it
@@ -848,9 +848,9 @@ static void npm1300_fsm_continue(npm1300_driver_t* drv) {
     }
   } else if (drv->buck_mode != drv->buck_mode_requested) {
     drv->buck_mode_set = drv->buck_mode_requested;
-    if (drv->buck_mode_set == NPM1300_BUCK_MODE_PWM) {
+    if (drv->buck_mode_set == PMIC_BUCK_MODE_PWM) {
       npm1300_i2c_submit(drv, npm1300_ops_buck_pwm);
-    } else if (drv->buck_mode_set == NPM1300_BUCK_MODE_PFM) {
+    } else if (drv->buck_mode_set == PMIC_BUCK_MODE_PFM) {
       npm1300_i2c_submit(drv, npm1300_ops_buck_pfm);
     } else {
       npm1300_i2c_submit(drv, npm1300_ops_buck_auto);

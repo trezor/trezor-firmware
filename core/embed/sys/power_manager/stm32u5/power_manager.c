@@ -19,11 +19,11 @@
 
 #include <sys/backup_ram.h>
 #include <sys/irq.h>
+#include <sys/pmic.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
 
-#include "../npm1300/npm1300.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
@@ -49,7 +49,7 @@ pm_status_t pm_init(bool inherit_state) {
   memset(drv, 0, sizeof(pm_driver_t));
 
   // Initialize hardware subsystems
-  if (!npm1300_init() || !stwlc38_init()) {
+  if (!pmic_init() || !stwlc38_init()) {
     pm_deinit();
     return PM_ERROR;
   }
@@ -67,7 +67,7 @@ pm_status_t pm_init(bool inherit_state) {
   drv->shutdown_timer = systimer_create(pm_shutdown_timer_handler, NULL);
 
   // Initial power source measurement
-  npm1300_measure(pm_pmic_data_ready, NULL);
+  pmic_measure(pm_pmic_data_ready, NULL);
 
   // Try to recover SoC from the backup RAM
   backup_ram_power_manager_data_t pm_recovery_data;
@@ -140,7 +140,7 @@ void pm_deinit(void) {
     pm_store_data_to_backup_ram();
   }
 
-  npm1300_deinit();
+  pmic_deinit();
   stwlc38_deinit();
 
   drv->initialized = false;

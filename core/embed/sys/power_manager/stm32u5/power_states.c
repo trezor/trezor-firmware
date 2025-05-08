@@ -18,14 +18,11 @@
  */
 
 #include <io/backlight.h>
-#ifdef USE_BUTTON
-#include <io/button.h>
-#endif
 #include <sys/bootutils.h>
+#include <sys/pmic.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
 
-#include "../npm1300/npm1300.h"
 #include "power_manager_internal.h"
 
 // State handler lookup table
