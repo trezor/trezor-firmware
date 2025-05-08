@@ -114,3 +114,4 @@ pm_status_t pm_store_data_to_backup_ram();
 pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags);
 pm_status_t pm_wakeup_flags_reset(void);
 pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags);
+pm_status_t pm_set_soc_limit(uint8_t limit);
