@@ -266,6 +266,7 @@ pm_status_t pm_get_report(pm_report_t* report) {
   irq_key_t irq_key = irq_lock();
 
   // Copy current data into report
+  report->power_state = drv->state;
   report->usb_connected = drv->usb_connected;
   report->wireless_charger_connected = drv->wireless_connected;
   report->system_voltage_v = drv->pmic_data.vsys;
