@@ -24,119 +24,6 @@ pub enum ValueInputScreenMsg {
     Menu,
 }
 
-pub trait ValueInput {
-    fn num(&self) -> u32;
-    fn converted(&self) -> (u32, Option<ShortString>);
-    fn increment(&mut self);
-    fn decrement(&mut self);
-    fn is_max(&self) -> bool;
-    fn is_min(&self) -> bool;
-}
-
-pub struct NumberInput {
-    value: u32,
-    min: u32,
-    max: u32,
-}
-
-impl ValueInput for NumberInput {
-    fn num(&self) -> u32 {
-        self.value
-    }
-
-    fn converted(&self) -> (u32, Option<ShortString>) {
-        (self.value, None)
-    }
-
-    fn increment(&mut self) {
-        self.value = self.value.saturating_add(1).min(self.max);
-    }
-
-    fn decrement(&mut self) {
-        self.value = self.value.saturating_sub(1).max(self.min);
-    }
-
-    fn is_max(&self) -> bool {
-        self.value == self.max
-    }
-
-    fn is_min(&self) -> bool {
-        self.value == self.min
-    }
-}
-
-impl NumberInput {
-    pub fn new(min: u32, max: u32, value: u32) -> Self {
-        Self {
-            value: value.clamp(min, max),
-            min,
-            max,
-        }
-    }
-}
-
-pub struct DurationInput {
-    duration: Duration,
-    min: Duration,
-    max: Duration,
-}
-
-impl ValueInput for DurationInput {
-    fn num(&self) -> u32 {
-        self.duration.to_millis()
-    }
-
-    fn converted(&self) -> (u32, Option<ShortString>) {
-        let units = [
-            (self.duration.to_days(), TR::plurals__lock_after_x_days),
-            (self.duration.to_hours(), TR::plurals__lock_after_x_hours),
-            (self.duration.to_mins(), TR::plurals__lock_after_x_minutes),
-        ];
-
-        for &(count, tr) in &units {
-            if count > 0 {
-                let plural =
-                    TString::from_translation(tr).map(|template| plural_form(template, count));
-                return (count, Some(plural));
-            }
-        }
-
-        // Fallback to seconds if all are 0
-        let count = self.duration.to_secs();
-        let plural = TString::from_translation(TR::plurals__lock_after_x_seconds)
-            .map(|template| plural_form(template, count));
-        (count, Some(plural))
-    }
-
-    fn increment(&mut self) {
-        self.duration = unwrap!(self.duration.increment_unit()).min(self.max);
-    }
-
-    fn decrement(&mut self) {
-        self.duration = unwrap!(self.duration.decrement_unit()).max(self.min);
-    }
-
-    fn is_max(&self) -> bool {
-        self.duration == self.max
-    }
-
-    fn is_min(&self) -> bool {
-        self.duration == self.min
-    }
-}
-
-impl DurationInput {
-    pub fn new(min: Duration, max: Duration, duration: Duration) -> Self {
-        let max_crop = max.crop_to_largest_unit();
-        let min_crop = min.crop_to_largest_unit();
-        Self {
-            duration: duration.clamp(min_crop, max_crop).crop_to_largest_unit(),
-            min: min_crop,
-            max: max_crop,
-        }
-    }
-}
-
 pub struct ValueInputScreen<T: ValueInput> {
     /// Screen header
     header: Header,
@@ -482,6 +369,119 @@ impl<T: ValueInput> crate::trace::Trace for ValueInputDialog<T> {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         t.component("ValueInput");
         t.int("value", self.value_input.num() as i64);
+    }
+}
+
+pub trait ValueInput {
+    fn num(&self) -> u32;
+    fn converted(&self) -> (u32, Option<ShortString>);
+    fn increment(&mut self);
+    fn decrement(&mut self);
+    fn is_max(&self) -> bool;
+    fn is_min(&self) -> bool;
+}
+
+pub struct NumberInput {
+    value: u32,
+    min: u32,
+    max: u32,
+}
+
+impl ValueInput for NumberInput {
+    fn num(&self) -> u32 {
+        self.value
+    }
+
+    fn converted(&self) -> (u32, Option<ShortString>) {
+        (self.value, None)
+    }
+
+    fn increment(&mut self) {
+        self.value = self.value.saturating_add(1).min(self.max);
+    }
+
+    fn decrement(&mut self) {
+        self.value = self.value.saturating_sub(1).max(self.min);
+    }
+
+    fn is_max(&self) -> bool {
+        self.value == self.max
+    }
+
+    fn is_min(&self) -> bool {
+        self.value == self.min
+    }
+}
+
+impl NumberInput {
+    pub fn new(min: u32, max: u32, value: u32) -> Self {
+        Self {
+            value: value.clamp(min, max),
+            min,
+            max,
+        }
+    }
+}
+
+pub struct DurationInput {
+    duration: Duration,
+    min: Duration,
+    max: Duration,
+}
+
+impl ValueInput for DurationInput {
+    fn num(&self) -> u32 {
+        self.duration.to_millis()
+    }
+
+    fn converted(&self) -> (u32, Option<ShortString>) {
+        let units = [
+            (self.duration.to_days(), TR::plurals__lock_after_x_days),
+            (self.duration.to_hours(), TR::plurals__lock_after_x_hours),
+            (self.duration.to_mins(), TR::plurals__lock_after_x_minutes),
+        ];
+
+        for &(count, tr) in &units {
+            if count > 0 {
+                let plural =
+                    TString::from_translation(tr).map(|template| plural_form(template, count));
+                return (count, Some(plural));
+            }
+        }
+
+        // Fallback to seconds if all are 0
+        let count = self.duration.to_secs();
+        let plural = TString::from_translation(TR::plurals__lock_after_x_seconds)
+            .map(|template| plural_form(template, count));
+        (count, Some(plural))
+    }
+
+    fn increment(&mut self) {
+        self.duration = unwrap!(self.duration.increment_unit()).min(self.max);
+    }
+
+    fn decrement(&mut self) {
+        self.duration = unwrap!(self.duration.decrement_unit()).max(self.min);
+    }
+
+    fn is_max(&self) -> bool {
+        self.duration == self.max
+    }
+
+    fn is_min(&self) -> bool {
+        self.duration == self.min
+    }
+}
+
+impl DurationInput {
+    pub fn new(min: Duration, max: Duration, duration: Duration) -> Self {
+        let max_crop = max.crop_to_largest_unit();
+        let min_crop = min.crop_to_largest_unit();
+        Self {
+            duration: duration.clamp(min_crop, max_crop).crop_to_largest_unit(),
+            min: min_crop,
+            max: max_crop,
+        }
     }
 }
 
