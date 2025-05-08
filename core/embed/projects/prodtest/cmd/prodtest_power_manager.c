@@ -175,6 +175,7 @@ void prodtest_pm_report(cli_t* cli) {
     return;
   }
   cli_trace(cli, "Power manager report:");
+  cli_trace(cli, "Power state %d", report.power_state);
   cli_trace(cli, "  USB %s",
             report.usb_connected ? "connected" : "disconnected");
   cli_trace(cli, "  WLC %s",
@@ -212,8 +213,10 @@ void prodtest_pm_report(cli_t* cli) {
 
   cli_progress(
       cli,
-      "%s %s %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d %d.%03d "
-      "%d.%03d",
+      "%d %s %s %d.%03d %d.%03d %d.%03d %d.%02d %d.%02d %d.%03d %d.%03d "
+      "%d.%03d "
+      "%d.%03d %d.%03d",
+      report.power_state,
       report.usb_connected ? "USB_connected" : "USB_disconnected",
       report.wireless_charger_connected ? "WLC_connected" : "WLC_disconnected",
       (int)report.battery_voltage_v,

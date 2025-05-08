@@ -80,6 +80,7 @@ typedef struct {
 
 /* Power system report */
 typedef struct {
+  pm_internal_state_t power_state;
   bool usb_connected;
   bool wireless_charger_connected;
   float system_voltage_v;
