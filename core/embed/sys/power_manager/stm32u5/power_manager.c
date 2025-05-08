@@ -401,6 +401,25 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   return PM_OK;
 }
 
+pm_status_t pm_set_soc_limit(uint8_t soc) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  if (soc > 100) {
+    return PM_ERROR;
+  }
+
+  if (soc != 0 && soc <= PM_SOC_LIMIT_HYSTERESIS) {
+    return PM_ERROR;
+  }
+
+  drv->soc_limit = soc;
+  return PM_OK;
+}
+
 // Timer handlers
 static void pm_monitoring_timer_handler(void* context) {
   pm_monitor_power_sources();

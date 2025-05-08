@@ -114,3 +114,4 @@ pm_status_t pm_wait_until_active(uint32_t timeout_ms);
 pm_status_t pm_wakeup_flags_set(pm_wakeup_flags_t flags);
 pm_status_t pm_wakeup_flags_reset(void);
 pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags);
+pm_status_t pm_set_soc_limit(uint8_t soc);
