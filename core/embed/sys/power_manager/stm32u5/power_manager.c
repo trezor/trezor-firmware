@@ -232,9 +232,17 @@ pm_status_t pm_turn_on(void) {
     irq_unlock(irq_key);
   } while (pmic_last_update_ms == 0);
 
+  bool usb_connected = drv->usb_connected;
+  bool wireless_connected =
+      drv->wireless_connected &&
+      drv->pmic_data.vbat > PM_BATTERY_UNDERVOLT_RECOVERY_WPC_THR_V;
+
   // Check if device has enough power to startup
-  if (drv->pmic_data.usb_status == 0x0 &&
-      drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) {
+  if ((!usb_connected && !wireless_connected) &&
+      (drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V ||
+       drv->battery_critical)) {
+    drv->battery_critical = true;
+    pm_store_data_to_backup_ram();
     return PM_REQUEST_REJECTED;
   }
 
