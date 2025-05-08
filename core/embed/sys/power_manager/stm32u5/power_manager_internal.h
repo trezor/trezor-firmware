@@ -50,7 +50,7 @@
 #define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
 #define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
 
-// Power manager battery sampling data structure)
+// Power manager battery sampling data structure
 typedef struct {
   float vbat;      // Battery voltage [V]
   float ibat;      // Battery current [mA]
