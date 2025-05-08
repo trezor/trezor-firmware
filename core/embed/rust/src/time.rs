@@ -23,19 +23,25 @@ impl Duration {
     }
 
     pub const fn from_secs(secs: u32) -> Self {
-        Self {
-            millis: secs * MILLIS_PER_SEC,
-        }
+        // Check for potential overflow
+        debug_assert!(secs < u32::MAX / MILLIS_PER_SEC);
+        Self::from_millis(secs * MILLIS_PER_SEC)
     }
 
     pub const fn from_mins(mins: u32) -> Self {
+        // Check for potential overflow
+        debug_assert!(mins < u32::MAX / MILLIS_PER_MINUTE);
         Self::from_millis(mins * MILLIS_PER_MINUTE)
     }
 
     pub const fn from_hours(hours: u32) -> Self {
+        // Check for potential overflow
+        debug_assert!(hours < u32::MAX / MILLIS_PER_HOUR);
         Self::from_millis(hours * MILLIS_PER_HOUR)
     }
     pub const fn from_days(days: u32) -> Self {
+        // Check for potential overflow
+        debug_assert!(days < u32::MAX / MILLIS_PER_DAY);
         Self::from_millis(days * MILLIS_PER_DAY)
     }
 
