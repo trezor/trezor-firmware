@@ -117,6 +117,9 @@ pm_status_t pm_init(bool inherit_state) {
   drv->charging_enabled = true;
   pm_charging_set_max_current(PM_BATTERY_CHARGING_CURRENT_MAX);
 
+  // Set default SOC limit
+  drv->soc_limit = 100;
+
   // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
   // propagates into power_monitor.
   bool state_machine_stabilized;
@@ -404,6 +407,25 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   irq_key_t irq_key = irq_lock();
   *flags = drv->wakeup_flags;
   irq_unlock(irq_key);
+  return PM_OK;
+}
+
+pm_status_t pm_set_soc_limit(uint8_t limit) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  if (limit > 100) {
+    return PM_ERROR;
+  }
+
+  if (limit <= PM_SOC_LIMIT_HYSTERESIS) {
+    return PM_ERROR;
+  }
+
+  drv->soc_limit = limit;
   return PM_OK;
 }
 
