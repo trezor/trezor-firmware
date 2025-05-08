@@ -70,8 +70,13 @@ impl Duration {
         self.millis.checked_sub(rhs.millis).map(Self::from_millis)
     }
 
-    /// Crops the duration to the nearest lower whole duration unit (day, hour,
-    /// minute, second)
+    /// Returns a new Duration containing only the largest complete time unit
+    /// (days, hours, minutes, or seconds)
+    ///
+    /// Examples:
+    /// - 1 day, 3 hours → 1 day
+    /// - 3 hours, 45 minutes → 3 hours
+    /// - 59 seconds → 59 seconds
     pub fn crop_to_largest_unit(self) -> Self {
         if self.millis >= MILLIS_PER_DAY {
             Duration::from_days(self.to_days())
@@ -84,7 +89,14 @@ impl Duration {
         }
     }
 
-    /// Increment by one unit of current magnitude, e.g. 59s → 60s, 1m → 2m.
+    /// Increment by one unit based on the current magnitude
+    ///
+    /// Examples:
+    /// - 59s → 1m (moves to the next unit when crossing a boundary)
+    /// - 1m → 2m
+    /// - 23h → 1d
+    ///
+    /// Returns None if addition would overflow
     pub fn increment_unit(self) -> Option<Self> {
         let base = self.crop_to_largest_unit();
 
@@ -101,7 +113,15 @@ impl Duration {
         base.checked_add(step)
     }
 
-    /// Decrement by one unit of current magnitude, saturates at zero.
+    /// Decrement by one unit based on the current magnitude
+    ///
+    /// Examples:
+    /// - 1m → 59s (moves to the previous unit at boundaries)
+    /// - 2m → 1m
+    /// - 1h → 59m
+    /// - 1d → 23h
+    ///
+    /// Returns None if subtraction would result in negative duration
     pub fn decrement_unit(self) -> Option<Self> {
         let base = self.crop_to_largest_unit();
 
