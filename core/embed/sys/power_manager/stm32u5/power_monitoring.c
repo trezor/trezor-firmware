@@ -19,11 +19,11 @@
  */
 
 #include <sys/backup_ram.h>
+#include <sys/pmic.h>
 #include <sys/systick.h>
 #include <trezor_rtl.h>
 
 #include "../fuel_gauge/fuel_gauge.h"
-#include "../npm1300/npm1300.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
@@ -80,7 +80,7 @@ void pm_monitor_power_sources(void) {
                         drv->pmic_data.ntc_temp);
 
     // Request fresh measurements
-    npm1300_measure(pm_pmic_data_ready, NULL);
+    pmic_measure(pm_pmic_data_ready, NULL);
     drv->pmic_measurement_ready = false;
 
     return;
@@ -111,14 +111,14 @@ void pm_monitor_power_sources(void) {
   pm_store_data_to_backup_ram();
 
   // Request fresh measurements
-  npm1300_measure(pm_pmic_data_ready, NULL);
+  pmic_measure(pm_pmic_data_ready, NULL);
   drv->pmic_measurement_ready = false;
 
   drv->state_machine_stabilized = true;
 }
 
 // PMIC measurement callback
-void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
+void pm_pmic_data_ready(void* context, pmic_report_t* report) {
   pm_driver_t* drv = &g_pm;
 
   // Store measurement timestamp
@@ -132,7 +132,7 @@ void pm_pmic_data_ready(void* context, npm1300_report_t* report) {
   drv->pmic_last_update_ms = systick_ms();
 
   // Copy PMIC data
-  memcpy(&drv->pmic_data, report, sizeof(npm1300_report_t));
+  memcpy(&drv->pmic_data, report, sizeof(pmic_report_t));
 
   // Get wireless charger data
   stwlc38_get_report(&drv->wireless_data);
@@ -152,22 +152,22 @@ void pm_charging_controller(pm_driver_t* drv) {
     }
   } else if (drv->usb_connected) {
     // USB connected, set maximum charging current right away
-    drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MAX;
+    drv->charging_current_target_ma = PMIC_CHARGING_LIMIT_MAX;
 
   } else if (drv->wireless_connected) {
     // Gradually increase charging current to the maximum
-    if (drv->charging_current_target_ma == NPM1300_CHARGING_LIMIT_MAX) {
+    if (drv->charging_current_target_ma == PMIC_CHARGING_LIMIT_MAX) {
       // No action required
     } else if (drv->charging_current_target_ma == 0) {
-      drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MIN;
+      drv->charging_current_target_ma = PMIC_CHARGING_LIMIT_MIN;
       drv->charging_target_timestamp = systick_ms();
     } else if (systick_ms() - drv->charging_target_timestamp >
                PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS) {
       drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
       drv->charging_target_timestamp = systick_ms();
 
-      if (drv->charging_current_target_ma > NPM1300_CHARGING_LIMIT_MAX) {
-        drv->charging_current_target_ma = NPM1300_CHARGING_LIMIT_MAX;
+      if (drv->charging_current_target_ma > PMIC_CHARGING_LIMIT_MAX) {
+        drv->charging_current_target_ma = PMIC_CHARGING_LIMIT_MAX;
       }
     }
 
@@ -177,15 +177,15 @@ void pm_charging_controller(pm_driver_t* drv) {
   }
 
   // Set charging target
-  if (drv->charging_current_target_ma != npm1300_get_charging_limit()) {
+  if (drv->charging_current_target_ma != pmic_get_charging_limit()) {
     // Set charging current limit
-    npm1300_set_charging_limit(drv->charging_current_target_ma);
+    pmic_set_charging_limit(drv->charging_current_target_ma);
   }
 
   if (drv->charging_current_target_ma == 0) {
-    npm1300_set_charging(false);
+    pmic_set_charging(false);
   } else {
-    npm1300_set_charging(true);
+    pmic_set_charging(true);
   }
 }
 

@@ -23,9 +23,9 @@
 #include <io/display.h>
 #include <io/usb.h>
 #include <sys/irq.h>
+#include <sys/pmic.h>
 #include <sys/systick.h>
 
-#include "../npm1300/npm1300.h"
 #include "power_manager_internal.h"
 
 #ifdef USE_OPTIGA
@@ -60,8 +60,8 @@ static void pm_background_tasks_resume(void);
 
 pm_status_t pm_control_hibernate() {
   // TEMPORARY FIX:
-  // Enable Backup domain retentaion in VBAT mode before entering the
-  // hiberbation. BREN bit can be accessed only in LDO mode.
+  // Enable Backup domain retention in VBAT mode before entering the
+  // hibernation. BREN bit can be accessed only in LDO mode.
   __HAL_RCC_PWR_CLK_ENABLE();
 
   // Switch to LDO regulator
@@ -72,7 +72,7 @@ pm_status_t pm_control_hibernate() {
   // Enable backup domain retention
   PWR->BDCR1 |= PWR_BDCR1_BREN;
 
-  if (!npm1300_enter_shipmode()) {
+  if (!pmic_enter_shipmode()) {
     return PM_ERROR;
   }
 
@@ -210,7 +210,7 @@ void pm_control_suspend() {
 
 static void pm_background_tasks_suspend(void) {
   // stwlc38
-  // npm1300
+  // pmic
   // nrf52
   // ble
   // powerctl
