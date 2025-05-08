@@ -19,12 +19,12 @@
 
 #pragma once
 
+#include <sys/pmic.h>
 #include <sys/power_manager.h>
 #include <sys/systimer.h>
 #include <trezor_types.h>
 
 #include "../fuel_gauge/fuel_gauge.h"
-#include "../npm1300/npm1300.h"
 #include "../stwlc38/stwlc38.h"
 
 // Power manager thresholds & timings
@@ -50,7 +50,7 @@
 #define PM_CLEAR_EVENT(flags, event) ((flags) &= ~(event))
 #define PM_CLEAR_ALL_EVENTS(flags) ((flags) = 0)
 
-// Power manager battery sampling data structure)
+// Power manager battery sampling data structure
 typedef struct {
   float vbat;      // Battery voltage [V]
   float ibat;      // Battery current [mA]
@@ -78,7 +78,7 @@ typedef struct {
   uint32_t charging_target_timestamp;
 
   // Power source hardware state
-  npm1300_report_t pmic_data;
+  pmic_report_t pmic_data;
   stwlc38_report_t wireless_data;
   uint32_t pmic_last_update_ms;
   uint32_t pmic_sampling_period_ms;
@@ -118,7 +118,7 @@ extern pm_driver_t g_pm;
 // Internal function declarations
 void pm_monitor_power_sources(void);
 void pm_process_state_machine(void);
-void pm_pmic_data_ready(void* context, npm1300_report_t* report);
+void pm_pmic_data_ready(void* context, pmic_report_t* report);
 void pm_charging_controller(pm_driver_t* drv);
 void pm_battery_sampling(float vbat, float ibat, float ntc_temp);
 void pm_battery_initial_soc_guess(void);
