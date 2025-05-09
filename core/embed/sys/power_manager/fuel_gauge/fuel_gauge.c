@@ -62,6 +62,11 @@ void fuel_gauge_initial_guess(fuel_gauge_state_t* state, float voltage_V,
 
 float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
                         float voltage_V, float current_mA, float temperature) {
+  if (current_mA == 0.0f) {
+    // No current flow, return latched SOC without updating
+    return state->soc_latched;
+  }
+
   // Determine if we're in discharge mode
   bool discharging_mode = current_mA >= 0.0f;
 
