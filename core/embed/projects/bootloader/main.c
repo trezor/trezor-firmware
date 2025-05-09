@@ -104,7 +104,10 @@ static secbool is_manufacturing_mode(void) {
   return manufacturing_mode;
 }
 
-static void boot_sequence(secbool manufacturing_mode) {
+__attribute__((optimize("-O0"))) static secbool boot_sequence(
+    secbool manufacturing_mode) {
+  secbool stay_in_bootloader = secfalse;
+
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
@@ -130,7 +133,28 @@ static void boot_sequence(secbool manufacturing_mode) {
     turn_on = true;
   }
 
-  while (!button_is_down(BTN_POWER) && !turn_on) {
+  uint32_t btn_pressed_down_ms = systick_ms();
+  bool btn_pressed = true;
+
+  while (!turn_on) {
+    if (!button_is_down(BTN_POWER)) {
+      if (btn_pressed) {
+        if (systick_ms() - btn_pressed_down_ms > 5000) {
+          stay_in_bootloader = sectrue;
+          break;
+        }
+        if (systick_ms() - btn_pressed_down_ms > 1000) {
+          break;
+        }
+      }
+      btn_pressed = false;
+    } else {
+      if (!btn_pressed) {
+        btn_pressed_down_ms = systick_ms();
+      }
+      btn_pressed = true;
+    }
+
     pm_state_t state;
     pm_get_state(&state);
 
@@ -138,7 +162,8 @@ static void boot_sequence(secbool manufacturing_mode) {
       // charing screen
       rgb_led_set_color(0x0000FF);
     } else {
-      if (!state.usb_connected && !state.wireless_connected) {
+      if (!button_is_down(BTN_POWER) && !state.usb_connected &&
+          !state.wireless_connected) {
         // device in just intended to be turned off
         pm_hibernate();
         systick_delay_ms(1000);
@@ -158,6 +183,8 @@ static void boot_sequence(secbool manufacturing_mode) {
   }
 
 #endif
+
+  return stay_in_bootloader;
 }
 
 static void drivers_init(secbool manufacturing_mode,
@@ -323,14 +350,13 @@ int main(void) {
 #else
 int bootloader_main(void) {
 #endif
-  secbool stay_in_bootloader = secfalse;
   secbool touch_initialized = secfalse;
 
   system_init(&rsod_panic_handler);
 
   secbool manufacturing_mode = is_manufacturing_mode();
 
-  boot_sequence(manufacturing_mode);
+  secbool stay_in_bootloader = boot_sequence(manufacturing_mode);
 
   drivers_init(manufacturing_mode, &touch_initialized);
 
@@ -426,6 +452,7 @@ int bootloader_main(void) {
   // delay to detect touch or skip if we know we are staying in bootloader
   // anyway
   uint32_t touched = 0;
+#ifndef USE_POWER_MANAGER
 #ifdef USE_TOUCH
   if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
     // Wait until the touch controller is ready
@@ -452,6 +479,7 @@ int bootloader_main(void) {
   if (button_is_down(BTN_LEFT)) {
     touched = 1;
   }
+#endif
 #endif
 
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
