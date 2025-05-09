@@ -16,6 +16,11 @@ use crate::trezorhal::touch::touch_get_event;
 #[cfg(feature = "touch")]
 use crate::ui::event::TouchEvent;
 
+#[cfg(feature = "power_manager")]
+use crate::trezorhal::power_manager::pm_parse_event;
+#[cfg(feature = "power_manager")]
+use crate::ui::event::PMEvent;
+
 #[cfg(feature = "button")]
 use crate::trezorhal::button::button_parse_event;
 #[cfg(feature = "button")]
@@ -119,6 +124,16 @@ pub fn parse_event(signalled: &sysevents_t) -> Option<Event> {
                 (event_type, ex, ey)
             };
             return Some(Event::Touch(unwrap!(TouchEvent::new(event_type, ex, ey))));
+        }
+    }
+
+    #[cfg(feature = "power_manager")]
+    if signalled.read_ready & (1 << ffi::syshandle_t_SYSHANDLE_POWER_MANAGER) != 0 {
+        let mut pm_event: ffi::pm_event_t = unsafe { mem::zeroed() };
+        let event_available = unsafe { ffi::pm_get_events(&mut pm_event) };
+        if event_available {
+            let pm_event = pm_parse_event(pm_event);
+            return Some(Event::PM(pm_event));
         }
     }
 

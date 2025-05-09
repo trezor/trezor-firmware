@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#ifdef KERNEL_MODE
 
 #include <sys/backup_ram.h>
 #include <sys/irq.h>
@@ -24,6 +25,7 @@
 #include <sys/systimer.h>
 #include <trezor_rtl.h>
 
+#include "../power_manager_poll.h"
 #include "../stwlc38/stwlc38.h"
 #include "power_manager_internal.h"
 
@@ -50,6 +52,11 @@ pm_status_t pm_init(bool inherit_state) {
 
   // Initialize hardware subsystems
   if (!pmic_init() || !stwlc38_init()) {
+    pm_deinit();
+    return PM_ERROR;
+  }
+
+  if (!pm_poll_init()) {
     pm_deinit();
     return PM_ERROR;
   }
@@ -126,6 +133,8 @@ pm_status_t pm_init(bool inherit_state) {
 void pm_deinit(void) {
   pm_driver_t* drv = &g_pm;
 
+  pm_poll_deinit();
+
   if (drv->monitoring_timer) {
     systimer_delete(drv->monitoring_timer);
     drv->monitoring_timer = NULL;
@@ -144,21 +153,6 @@ void pm_deinit(void) {
   stwlc38_deinit();
 
   drv->initialized = false;
-}
-
-pm_status_t pm_get_events(pm_event_t* event_flags) {
-  pm_driver_t* drv = &g_pm;
-
-  if (!drv->initialized) {
-    return PM_NOT_INITIALIZED;
-  }
-
-  irq_key_t irq_key = irq_lock();
-  *event_flags = drv->event_flags;
-  PM_CLEAR_ALL_EVENTS(drv->event_flags);
-  irq_unlock(irq_key);
-
-  return PM_OK;
 }
 
 pm_status_t pm_get_state(pm_state_t* state) {
@@ -237,9 +231,17 @@ pm_status_t pm_turn_on(void) {
     irq_unlock(irq_key);
   } while (pmic_last_update_ms == 0);
 
+  bool usb_connected = drv->usb_connected;
+  bool wireless_connected =
+      drv->wireless_connected &&
+      drv->pmic_data.vbat > PM_BATTERY_UNDERVOLT_RECOVERY_WPC_THR_V;
+
   // Check if device has enough power to startup
-  if (drv->pmic_data.usb_status == 0x0 &&
-      drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) {
+  if ((!usb_connected && !wireless_connected) &&
+      (drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_RECOVERY_THR_V ||
+       drv->battery_critical)) {
+    drv->battery_critical = true;
+    pm_store_data_to_backup_ram();
     return PM_REQUEST_REJECTED;
   }
 
@@ -399,6 +401,25 @@ pm_status_t pm_wakeup_flags_get(pm_wakeup_flags_t* flags) {
   return PM_OK;
 }
 
+pm_status_t pm_set_soc_limit(uint8_t soc) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  if (soc > 100) {
+    return PM_ERROR;
+  }
+
+  if (soc != 0 && soc <= PM_SOC_LIMIT_HYSTERESIS) {
+    return PM_ERROR;
+  }
+
+  drv->soc_limit = soc;
+  return PM_OK;
+}
+
 // Timer handlers
 static void pm_monitoring_timer_handler(void* context) {
   pm_monitor_power_sources();
@@ -409,3 +430,5 @@ static void pm_shutdown_timer_handler(void* context) {
   drv->shutdown_timer_elapsed = true;
   pm_process_state_machine();
 }
+
+#endif

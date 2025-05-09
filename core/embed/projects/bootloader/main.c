@@ -65,8 +65,11 @@
 #ifdef USE_BLE
 #include <io/ble.h>
 #endif
-#ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
+#endif
+#ifdef USE_HAPTIC
+#include <io/haptic.h>
 #endif
 
 #ifdef USE_BLE
@@ -89,15 +92,7 @@ void failed_jump_to_firmware(void);
 CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
-static void drivers_init(secbool *touch_initialized) {
-  random_delays_init();
-#ifdef USE_PVD
-  pvd_init();
-#endif
-#ifdef USE_HASH_PROCESSOR
-  hash_processor_init();
-#endif
-  display_init(DISPLAY_RESET_CONTENT);
+static secbool is_manufacturing_mode(void) {
   unit_properties_init();
 
 #if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
@@ -107,8 +102,123 @@ static void drivers_init(secbool *touch_initialized) {
       unit_properties()->locked ? secfalse : sectrue;
 #else
   const secbool manufacturing_mode = secfalse;
-  (void)manufacturing_mode;  // suppress unused variable warning
 #endif
+
+  return manufacturing_mode;
+}
+
+static secbool boot_sequence(secbool manufacturing_mode) {
+  secbool stay_in_bootloader = secfalse;
+
+#ifdef USE_BACKUP_RAM
+  backup_ram_init();
+#endif
+
+#ifdef USE_BUTTON
+  button_init();
+#endif
+
+#ifdef USE_RGB_LED
+  rgb_led_init();
+#endif
+
+#ifdef USE_HAPTIC
+  haptic_init();
+#endif
+
+#ifdef USE_POWER_MANAGER
+  pm_init(false);
+
+  boot_command_t cmd = bootargs_get_command();
+
+  bool turn_on =
+      (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
+       cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
+
+  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF) {
+    turn_on = true;
+  }
+
+  uint32_t press_start = 0;
+  bool turn_on_locked = false;
+  bool bld_locked = false;
+
+  while (!turn_on) {
+    bool btn_down = button_is_down(BTN_POWER);
+    if (btn_down) {
+      if (press_start == 0) {
+        press_start = systick_ms();
+        turn_on_locked = false;
+        bld_locked = false;
+      }
+
+      uint32_t elapsed = systick_ms() - press_start;
+      if (elapsed >= 3000 && !bld_locked) {
+#ifdef USE_HAPTIC
+        haptic_play(HAPTIC_BUTTON_PRESS);
+#endif
+        bld_locked = true;
+      } else if (elapsed >= 1000 && !turn_on_locked) {
+#ifdef USE_HAPTIC
+        haptic_play(HAPTIC_BUTTON_PRESS);
+#endif
+        turn_on_locked = true;
+      }
+    } else if (press_start != 0) {
+      // Button just released
+      if (bld_locked) {
+        stay_in_bootloader = sectrue;
+      }
+      if (turn_on_locked) {
+        break;
+      }
+      // reset to idle
+      press_start = 0;
+      turn_on_locked = false;
+      bld_locked = false;
+    }
+
+    pm_state_t state;
+    pm_get_state(&state);
+
+    if (state.charging_status == PM_BATTERY_CHARGING) {
+      // charing screen
+      rgb_led_set_color(0x0000FF);
+    } else {
+      if (!btn_down && !state.usb_connected && !state.wireless_connected) {
+        // device in just intended to be turned off
+        pm_hibernate();
+        systick_delay_ms(1000);
+        reboot_to_off();
+      } else {
+        // todo signal full battery if conditions are met
+      }
+    }
+  }
+
+  while (pm_turn_on() != PM_OK) {
+    rgb_led_set_color(0x400000);
+    systick_delay_ms(1000);
+    pm_hibernate();
+    systick_delay_ms(1000);
+    reboot_to_off();
+  }
+
+#endif
+
+  return stay_in_bootloader;
+}
+
+static void drivers_init(secbool manufacturing_mode,
+                         secbool *touch_initialized) {
+  random_delays_init();
+#ifdef USE_PVD
+  pvd_init();
+#endif
+#ifdef USE_HASH_PROCESSOR
+  hash_processor_init();
+#endif
+  display_init(DISPLAY_RESET_CONTENT);
 
 #ifdef USE_TAMPER
   tamper_init();
@@ -127,27 +237,17 @@ static void drivers_init(secbool *touch_initialized) {
 #ifdef USE_OPTIGA
   optiga_hal_init();
 #endif
-#ifdef USE_BACKUP_RAM
-  backup_ram_init();
-#endif
-#ifdef USE_BUTTON
-  button_init();
-#endif
+
 #ifdef USE_CONSUMPTION_MASK
   consumption_mask_init();
 #endif
-#ifdef USE_RGB_LED
-  rgb_led_init();
-#endif
+
 #ifdef USE_BLE
   ble_init();
 #endif
 }
 
 static void drivers_deinit(void) {
-#ifdef USE_BACKUP_RAM
-  backup_ram_deinit();
-#endif
 #ifdef FIXED_HW_DEINIT
 #ifdef USE_BUTTON
   button_deinit();
@@ -160,8 +260,14 @@ static void drivers_deinit(void) {
 #endif
 #endif
   display_deinit(DISPLAY_JUMP_BEHAVIOR);
-#ifdef USE_POWERCTL
-  powerctl_deinit();
+#ifdef USE_POWER_MANAGER
+  pm_deinit();
+#endif
+#ifdef USE_BACKUP_RAM
+  backup_ram_deinit();
+#endif
+#ifdef USE_HAPTIC
+  haptic_deinit();
 #endif
 }
 
@@ -269,12 +375,15 @@ int main(void) {
 #else
 int bootloader_main(void) {
 #endif
-  secbool stay_in_bootloader = secfalse;
   secbool touch_initialized = secfalse;
 
   system_init(&rsod_panic_handler);
 
-  drivers_init(&touch_initialized);
+  secbool manufacturing_mode = is_manufacturing_mode();
+
+  secbool stay_in_bootloader = boot_sequence(manufacturing_mode);
+
+  drivers_init(manufacturing_mode, &touch_initialized);
 
   ui_screen_boot_stage_1(false);
 
@@ -342,10 +451,6 @@ int bootloader_main(void) {
     firmware_present_backup = firmware_present;
   }
 
-#ifdef USE_POWERCTL
-  powerctl_init();
-#endif
-
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
   ensure_bootloader_min_version();
@@ -372,6 +477,7 @@ int bootloader_main(void) {
   // delay to detect touch or skip if we know we are staying in bootloader
   // anyway
   uint32_t touched = 0;
+#ifndef USE_POWER_MANAGER
 #ifdef USE_TOUCH
   if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
     // Wait until the touch controller is ready
@@ -398,6 +504,7 @@ int bootloader_main(void) {
   if (button_is_down(BTN_LEFT)) {
     touched = 1;
   }
+#endif
 #endif
 
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),

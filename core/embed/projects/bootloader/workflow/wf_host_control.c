@@ -45,8 +45,10 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
 
   sysevents_t awaited = {0};
 
-  for (size_t i = 0; i < ios->count; i++) {
-    awaited.read_ready |= 1 << protob_get_iface_flag(&ios->ifaces[i]);
+  if (ios != NULL) {
+    for (size_t i = 0; i < ios->count; i++) {
+      awaited.read_ready |= 1 << protob_get_iface_flag(&ios->ifaces[i]);
+    }
   }
 
 #ifdef USE_BLE
@@ -71,12 +73,14 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
     uint16_t msg_id = 0;
     protob_io_t *active_iface = NULL;
 
-    for (size_t i = 0; i < ios->count; i++) {
-      if (signalled.read_ready ==
-              (1 << protob_get_iface_flag(&ios->ifaces[i])) &&
-          sectrue == protob_get_msg_header(&ios->ifaces[i], &msg_id)) {
-        active_iface = &ios->ifaces[i];
-        break;
+    if (ios != NULL) {
+      for (size_t i = 0; i < ios->count; i++) {
+        if (signalled.read_ready ==
+                (1 << protob_get_iface_flag(&ios->ifaces[i])) &&
+            sectrue == protob_get_msg_header(&ios->ifaces[i], &msg_id)) {
+          active_iface = &ios->ifaces[i];
+          break;
+        }
       }
     }
 

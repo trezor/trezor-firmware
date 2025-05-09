@@ -17,15 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <trezor_rtl.h>
+#pragma once
 
-#include <SDL.h>
+// This module implements system event evaluation & polling mechanism for power
+// manager.
 
-bool powerctl_init(void) { return true; }
+bool pm_poll_init(void);
 
-void powerctl_deinit(void) {}
-
-bool powerctl_hibernate(void) {
-  exit(1);
-  return true;
-}
+void pm_poll_deinit(void);

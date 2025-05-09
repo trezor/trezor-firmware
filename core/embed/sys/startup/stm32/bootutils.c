@@ -34,9 +34,9 @@
 
 #ifdef KERNEL_MODE
 
-// Battery powered devices (USE_POWERCTL) should not stall
+// Battery powered devices (USE_POWER_MANAGER) should not stall
 // after showing RSOD, as it would drain the battery.
-#ifdef USE_POWERCTL
+#ifdef USE_POWER_MANAGER
 #ifdef RSOD_INFINITE_LOOP
 #error "RSOD_INFINITE_LOOP is not supported on battery powered devices"
 #endif
@@ -210,7 +210,11 @@ __attribute__((noreturn)) void reboot_and_upgrade(const uint8_t hash[32]) {
 }
 
 __attribute__((noreturn)) void reboot_device(void) {
-  reboot_with_args(BOOT_COMMAND_NONE, NULL, 0);
+  reboot_with_args(BOOT_COMMAND_REBOOT, NULL, 0);
+}
+
+__attribute__((noreturn)) void reboot_to_off(void) {
+  reboot_with_args(BOOT_COMMAND_POWER_OFF, NULL, 0);
 }
 
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {

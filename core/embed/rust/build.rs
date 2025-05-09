@@ -45,6 +45,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-I../sec/entropy/inc",
     "-I../sys/time/inc",
     "-I../sys/task/inc",
+    "-I../sys/power_manager/inc",
     "-I../util/flash/inc",
     "-I../util/translations/inc",
     "-I../models",
@@ -54,6 +55,7 @@ const DEFAULT_BINDGEN_MACROS_COMMON: &[&str] = &[
     "-DUSE_HAPTIC",
     "-DUSE_RGB_LED",
     "-DUSE_BLE",
+    "-DUSE_POWER_MANAGER",
     "-DUSE_HW_JPEG_DECODER",
 ];
 
@@ -443,6 +445,10 @@ fn generate_trezorhal_bindings() {
         .allowlist_type("syshandle_t")
         .allowlist_type("sysevents_t")
         .allowlist_function("sysevents_poll")
+        // power manager
+        .allowlist_type("pm_event_t")
+        .allowlist_function("pm_get_events")
+        .allowlist_function("pm_get_state")
         // c_layout
         .allowlist_type("c_layout_t");
 

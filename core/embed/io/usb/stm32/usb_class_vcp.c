@@ -331,7 +331,7 @@ secbool usb_vcp_add(const usb_vcp_info_t *info) {
   usb_set_iface_class(info->iface_num, &usb_vcp_class);
 
   // This just make the data interface slot occupied so it can't be reused
-  // by another class driver. Data interface dispatch functiona are not used.
+  // by another class driver. Data interface dispatch functions are not used.
   usb_set_iface_class(info->data_iface_num, &usb_vcp_data_class);
 
   return sectrue;
@@ -452,7 +452,7 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   USBD_LL_PrepareReceive(dev, state->ep_out, state->rx_packet,
                          state->max_packet_len);
 
-  uint8_t iface_num = state->desc_block->iface_data.bInterfaceNumber;
+  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
   syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
   if (!syshandle_register(handle, &usb_vcp_handle_vmt, state)) {
     return USBD_FAIL;
@@ -464,7 +464,7 @@ static uint8_t usb_vcp_class_init(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
 static uint8_t usb_vcp_class_deinit(USBD_HandleTypeDef *dev, uint8_t cfg_idx) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)dev->pUserData;
 
-  uint8_t iface_num = state->desc_block->iface_data.bInterfaceNumber;
+  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
   syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
   syshandle_unregister(handle);
 
@@ -607,7 +607,7 @@ static void on_event_poll(void *context, bool read_awaited,
                           bool write_awaited) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
 
-  uint8_t iface_num = state->desc_block->iface_data.bInterfaceNumber;
+  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
   syshandle_t handle = SYSHANDLE_USB_IFACE_0 + iface_num;
 
   // Only one task can read or write at a time. Therefore, we can
@@ -626,7 +626,7 @@ static void on_event_poll(void *context, bool read_awaited,
 static bool on_check_read_ready(void *context, systask_id_t task_id,
                                 void *param) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface_data.bInterfaceNumber;
+  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
@@ -637,7 +637,7 @@ static bool on_check_read_ready(void *context, systask_id_t task_id,
 static bool on_check_write_ready(void *context, systask_id_t task_id,
                                  void *param) {
   usb_vcp_state_t *state = (usb_vcp_state_t *)context;
-  uint8_t iface_num = state->desc_block->iface_data.bInterfaceNumber;
+  uint8_t iface_num = state->desc_block->iface_cdc.bInterfaceNumber;
 
   UNUSED(task_id);
   UNUSED(param);
