@@ -106,6 +106,11 @@ void nrf_start(void) {
   tsqueue_reset(&drv->tx_queue);
 
   drv->comm_running = true;
+
+  if (HAL_GPIO_ReadPin(NRF_IN_SPI_REQUEST_PORT, NRF_IN_SPI_REQUEST_PIN) ==
+      GPIO_PIN_SET) {
+    nrf_prepare_spi_data(drv);
+  }
 }
 
 static void nrf_complete_current_request(nrf_driver_t *drv,
@@ -336,9 +341,10 @@ void nrf_init(void) {
   HAL_SPI_Init(&drv->spi);
 
   drv->tx_request_id = -1;
-  nrf_register_listener(NRF_SERVICE_MANAGEMENT, nrf_management_rx_cb);
 
   drv->initialized = true;
+
+  nrf_register_listener(NRF_SERVICE_MANAGEMENT, nrf_management_rx_cb);
 
   drv->timer = systimer_create(nrf_timer_callback, drv);
   nrf_start();
@@ -802,7 +808,7 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
   }
 #endif
 
-  if (drv->initialized) {
+  if (drv->initialized && drv->comm_running) {
     if (HAL_GPIO_ReadPin(NRF_OUT_SPI_READY_PORT, NRF_OUT_SPI_READY_PIN) == 0) {
       nrf_prepare_spi_data(drv);
     }
