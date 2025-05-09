@@ -25,7 +25,7 @@
 
 // Defines boot command processed in bootloader on next reboot
 typedef enum {
-  // Normal boot sequence
+  // Default boot sequence
   BOOT_COMMAND_NONE = 0x00000000,
   // Stop and wait for further instructions
   BOOT_COMMAND_STOP_AND_WAIT = 0x0FC35A96,
@@ -35,6 +35,8 @@ typedef enum {
   BOOT_COMMAND_SHOW_RSOD = 0x7CD945A0,
   // Reboot the device as if it was powered on
   BOOT_COMMAND_REBOOT = 0xA5C3D4E2,
+  // Power of the device
+  BOOT_COMMAND_POWER_OFF = 0x24EEE8828,
 } boot_command_t;
 
 // Maximum size boot_args array

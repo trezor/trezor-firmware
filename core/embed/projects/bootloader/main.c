@@ -89,7 +89,22 @@ void failed_jump_to_firmware(void);
 CONFIDENTIAL volatile secbool dont_optimize_out_true = sectrue;
 CONFIDENTIAL void (*volatile firmware_jump_fn)(void) = failed_jump_to_firmware;
 
-static void drivers_init(secbool *touch_initialized) {
+static secbool is_manufacturing_mode(void) {
+  unit_properties_init();
+
+#if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
+  // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
+  // an exception until unit variant is written in OTP
+  const secbool manufacturing_mode =
+      unit_properties()->locked ? secfalse : sectrue;
+#else
+  const secbool manufacturing_mode = secfalse;
+#endif
+
+  return manufacturing_mode;
+}
+
+static void boot_sequence(secbool manufacturing_mode) {
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
@@ -110,6 +125,10 @@ static void drivers_init(secbool *touch_initialized) {
   bool turn_on =
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
        cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
+
+  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF) {
+    turn_on = true;
+  }
 
   while (!button_is_down(BTN_POWER) && !turn_on) {
     pm_state_t state;
@@ -139,7 +158,10 @@ static void drivers_init(secbool *touch_initialized) {
   }
 
 #endif
+}
 
+static void drivers_init(secbool manufacturing_mode,
+                         secbool *touch_initialized) {
   random_delays_init();
 #ifdef USE_PVD
   pvd_init();
@@ -148,17 +170,6 @@ static void drivers_init(secbool *touch_initialized) {
   hash_processor_init();
 #endif
   display_init(DISPLAY_RESET_CONTENT);
-  unit_properties_init();
-
-#if (defined TREZOR_MODEL_T3T1 || defined TREZOR_MODEL_T3W1)
-  // on T3T1 and T3W1, tester needs to run without touch and tamper, so making
-  // an exception until unit variant is written in OTP
-  const secbool manufacturing_mode =
-      unit_properties()->locked ? secfalse : sectrue;
-#else
-  const secbool manufacturing_mode = secfalse;
-  (void)manufacturing_mode;  // suppress unused variable warning
-#endif
 
 #ifdef USE_TAMPER
   tamper_init();
@@ -317,7 +328,11 @@ int bootloader_main(void) {
 
   system_init(&rsod_panic_handler);
 
-  drivers_init(&touch_initialized);
+  secbool manufacturing_mode = is_manufacturing_mode();
+
+  boot_sequence(manufacturing_mode);
+
+  drivers_init(manufacturing_mode, &touch_initialized);
 
   ui_screen_boot_stage_1(false);
 
