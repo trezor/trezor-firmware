@@ -10,29 +10,28 @@ from trezor.wire import DataError
 if TYPE_CHECKING:
     from trezor.enums import SafetyCheckLevel
     from trezor.messages import ApplySettings, Success
-    from trezor.ui import ProgressLayout
 
 
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
 
-async def _load_homescreen(length: int) -> bytes:
-    from trezor import utils, workflow
+async def _load_homescreen(length: int) -> bytearray:
+    from trezor import utils
     from trezor.ui.layouts.progress import progress
 
     from apps.common import chunked
 
-    loader: ProgressLayout | None = None
+    if length <= 0:
+        return bytearray()
+    elif length > utils.HOMESCREEN_MAXSIZE:
+        raise DataError(
+            f"Homescreen is too large, maximum size is {utils.HOMESCREEN_MAXSIZE} bytes"
+        )
 
-    def report(value: int) -> None:
-        nonlocal loader
-        if loader is None:
-            workflow.close_others()
-            loader = progress(TR.progress__please_wait)
-        loader.report(value)
+    loader = progress()
 
     buf = utils.empty_bytearray(length)
-    await chunked.get_all_chunks(buf, length, report=report)
+    await chunked.get_all_chunks(buf, length, report=loader.report)
     return buf
 
 

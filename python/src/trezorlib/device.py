@@ -79,26 +79,23 @@ def apply_settings(
         haptic_feedback=haptic_feedback,
     )
 
-    if homescreen is not None:
-        if client.version < HOMESCREEN_STREAMING_MIN_VERSION:
-            settings.homescreen = homescreen
-        else:
-            settings.homescreen_length = len(homescreen)
-
-    response = client.call(settings)
-    if settings.homescreen_length is not None:
-        response = _send_chunked_data(client, response, homescreen or b"")
+    if homescreen is not None and client.version >= HOMESCREEN_STREAMING_MIN_VERSION:
+        settings.homescreen_length = len(homescreen)
+        response = client.call(settings, expect=messages.DataChunkRequest)
+        _send_chunked_data(client, response, homescreen)
+        out = messages.Success()
     else:
-        messages.Success.ensure_isinstance(response)
+        settings.homescreen = homescreen
+        out = client.call(settings, expect=messages.Success)
     client.refresh_features()
-    return _return_success(response)
+    return _return_success(out)
 
 
 def _send_chunked_data(
     client: "TrezorClient",
     request: "messages.DataChunkRequest",
     language_data: bytes,
-) -> "messages.Success":
+) -> None:
     response = request
     while not isinstance(response, messages.Success):
         response = messages.DataChunkRequest.ensure_isinstance(response)
@@ -106,7 +103,6 @@ def _send_chunked_data(
         data_offset = response.data_offset
         chunk = language_data[data_offset : data_offset + data_length]
         response = client.call(messages.DataChunkAck(data_chunk=chunk))
-    return response
 
 
 @session

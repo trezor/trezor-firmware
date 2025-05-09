@@ -200,6 +200,7 @@ message EndSession {
  * Request: change some property of the device, e.g. label or homescreen
  * @start
  * @next Success
+ * @next DataChunkRequest
  * @next Failure
  */
 message ApplySettings {
