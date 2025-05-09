@@ -30,6 +30,8 @@
 
 #include <stdlib.h>
 
+#include "prodtest.h"
+
 void prodtest_pm_hibernate(cli_t* cli) {
   if (cli_arg_count(cli) > 0) {
     cli_error_arg_count(cli);
@@ -236,6 +238,8 @@ void prodtest_pm_report(cli_t* cli) {
       (int)report.wireless_temp_c, (int)(report.wireless_temp_c * 1000) % 1000,
       (int)report.system_voltage_v,
       (int)(report.system_voltage_v * 1000) % 1000);
+
+  prodtest_show_homescreen();
 
   cli_ok(cli, "");
 }

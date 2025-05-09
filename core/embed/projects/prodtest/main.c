@@ -252,6 +252,8 @@ void prodtest_show_homescreen(void) {
   } else {
     screen_prodtest_welcome(&g_layout.layout, NULL, 0);
   }
+
+  display_set_backlight(150);
 }
 
 int main(void) {
@@ -306,6 +308,7 @@ int main(void) {
       const cli_command_t *cmd = cli_process_io(&g_cli);
 
       if (cmd != NULL) {
+        screen_prodtest_bars("", 0);
         memzero(&g_layout, sizeof(g_layout));
         cli_process_command(&g_cli, cmd);
       }
