@@ -179,7 +179,7 @@ void pm_charging_controller(pm_driver_t* drv) {
   }
 
   if (drv->soc_limit > 0) {
-    if (drv->soc_ceiled > drv->soc_limit) {
+    if (drv->soc_ceiled >= drv->soc_limit) {
       // Set charging current limit to 0
       drv->soc_limit_reached = true;
     } else if (drv->soc_ceiled < drv->soc_limit - PM_SOC_LIMIT_HYSTERESIS) {
