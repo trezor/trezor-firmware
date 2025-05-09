@@ -194,6 +194,16 @@ int main(void) {
 
   drivers_init();
 
+#ifdef USE_BOOTARGS_RSOD
+  if (bootargs_get_command() == BOOT_COMMAND_SHOW_RSOD) {
+    // post mortem info was left in bootargs
+    boot_args_t args;
+    bootargs_get_args(&args);
+    rsod_terminal(&args.pminfo);
+    reboot_or_halt_after_rsod();
+  }
+#endif  // USE_BOOTARGS_RSOD
+
 #if PRODUCTION && !defined STM32U5
   // for STM32U5, this check is moved to boardloader
   ensure_bootloader_min_version();

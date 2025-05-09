@@ -256,6 +256,20 @@ int bootloader_main(void) {
 
   drivers_init(&touch_initialized);
 
+#ifdef USE_BOOTARGS_RSOD
+  if (bootargs_get_command() == BOOT_COMMAND_SHOW_RSOD) {
+    // post mortem info was left in bootargs
+    boot_args_t args;
+    bootargs_get_args(&args);
+#ifdef FANCY_FATAL_ERROR
+    rsod_gui(&args.pminfo);
+#else
+    rsod_terminal(&args.pminfo);
+#endif
+    reboot_or_halt_after_rsod();
+  }
+#endif  // USE_BOOTARGS_RSOD
+
   ui_screen_boot_stage_1(false);
 
 #ifdef TREZOR_EMULATOR
