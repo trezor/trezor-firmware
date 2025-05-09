@@ -20,6 +20,7 @@ use crate::ui::event::TouchEvent;
 use crate::trezorhal::button::button_parse_event;
 #[cfg(feature = "button")]
 use crate::trezorhal::ffi::button_get_event;
+use crate::trezorhal::time::ticks_ms;
 #[cfg(feature = "button")]
 use crate::ui::event::ButtonEvent;
 
@@ -130,7 +131,7 @@ pub fn sysevents_poll(ifaces: &[Syshandle]) -> Option<Event> {
     let mut signalled = Sysevents::zeroed();
 
     // SAFETY: safe.
-    unsafe { ffi::sysevents_poll(&awaited as _, &mut signalled as _, 100) };
+    unsafe { ffi::sysevents_poll(&awaited as _, &mut signalled as _, ticks_ms() + 100) };
 
     parse_event(&signalled)
 }

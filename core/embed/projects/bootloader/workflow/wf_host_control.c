@@ -62,7 +62,7 @@ workflow_result_t workflow_host_control(const vendor_header *const vhdr,
   for (;;) {
     sysevents_t signalled = {0};
 
-    sysevents_poll(&awaited, &signalled, 100);
+    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
     if (signalled.read_ready == 0) {
       continue;
