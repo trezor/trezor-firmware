@@ -69,10 +69,4 @@ boot_command_t bootargs_get_command();
 // Copies the boot arguments to the destination buffer
 void bootargs_get_args(boot_args_t* dest);
 
-// Returns a pointer to the boot arguments structure.
-//
-// This function is intended to be used only in rescue mode, when the MPU
-// is disabled and the caller has full access to the boot arguments area.
-boot_args_t* bootargs_ptr(void);
-
 #endif  // TREZORHAL_BOOTARGS_H

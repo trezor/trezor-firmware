@@ -17,10 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef TREZORHAL_BOOTUTILS_H
-#define TREZORHAL_BOOTUTILS_H
+#pragma once
 
-#include <trezor_types.h>
+#include <sys/systask.h>
 
 // Immediately resets the device and initiates the normal boot sequence as if
 // the device was powered on
@@ -42,6 +41,13 @@ void __attribute__((noreturn)) reboot_to_bootloader(void);
 // with the firmware installation.
 void __attribute__((noreturn)) reboot_and_upgrade(const uint8_t hash[32]);
 
+#ifdef USE_BOOTARGS_RSOD
+// Resets the device with post-mortem information in bootargs
+// so that the bootloader can display it.
+void __attribute__((noreturn))
+reboot_with_rsod(const systask_postmortem_t *pminfo);
+#endif
+
 // Allows the user to read the displayed error message and then
 // reboots the device or waits for power-off.
 //
@@ -57,5 +63,3 @@ void __attribute__((noreturn)) reboot_or_halt_after_rsod(void);
 // Before jumping, the function disables all interrupts and clears the
 // memory and registers that could contain sensitive information.
 void __attribute__((noreturn)) jump_to_next_stage(uint32_t vectbl_address);
-
-#endif  // TREZORHAL_BOOTUTILS_H

@@ -47,6 +47,11 @@ void system_deinit(void);
 //
 // The system will be in a state similar to a reset when `main()` is called
 // (but with some hardware peripherals still initialized and running).
+//
+// If `error_handler` is NULL the system will be reset immediately after
+// clearing the memory. If `USE_BOOTARGS_RSOD` is defined, the system will
+// leave the postmortem information in the bootargs allowing the bootloader
+// to display the RSOD.
 __attribute__((noreturn)) void system_emergency_rescue(
     systask_error_handler_t error_handler, const systask_postmortem_t* pminfo);
 

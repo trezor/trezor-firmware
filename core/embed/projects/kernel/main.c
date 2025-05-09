@@ -238,6 +238,8 @@ static void coreapp_init(applet_t *applet) {
   applet_init(applet, coreapp_header, &coreapp_layout, &coreapp_privileges);
 }
 
+#ifndef USE_BOOTARGS_RSOD
+
 // Shows RSOD (Red Screen of Death)
 static void show_rsod(const systask_postmortem_t *pminfo) {
 #ifdef RSOD_IN_COREAPP
@@ -281,13 +283,19 @@ static void init_and_show_rsod(const systask_postmortem_t *pminfo) {
   reboot_or_halt_after_rsod();
 }
 
+#endif  // USE_BOOTARGS_RSOD
+
 // Kernel panic handler
 // (may be called from interrupt context)
 static void kernel_panic(const systask_postmortem_t *pminfo) {
   // Since the system state is unreliable, enter emergency mode
   // and show the RSOD.
+#ifndef USE_BOOTARGS_RSOD
   system_emergency_rescue(&init_and_show_rsod, pminfo);
-  // The previous function call never returns
+#else
+  reboot_with_rsod(pminfo);
+#endif  // USE_BOOTARGS_RSOD
+  // We never get here
 }
 
 int main(void) {
@@ -318,11 +326,14 @@ int main(void) {
   // Release the coreapp resources
   applet_stop(&coreapp);
 
+#ifndef USE_BOOTARGS_RSOD
   // Coreapp crashed, show RSOD
   show_rsod(&coreapp.task.pminfo);
-
   // Reboots or halts (if RSOD_INFINITE_LOOP is defined)
   reboot_or_halt_after_rsod();
+#else
+  reboot_with_rsod(&coreapp.task.pminfo);
+#endif  // USE_BOOTARGS_RSOD
 
   return 0;
 }
