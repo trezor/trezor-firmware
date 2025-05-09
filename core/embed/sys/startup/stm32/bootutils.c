@@ -79,14 +79,6 @@ void bootargs_set(boot_command_t command, const void* args, size_t args_size) {
   mpu_restore(mode);
 }
 
-boot_args_t* bootargs_ptr(void) { return &g_boot_args; }
-
-#ifdef BOOTLOADER
-// Contains the current boot command saved during bootloader startup.
-boot_command_t g_boot_command_saved;
-
-boot_command_t bootargs_get_command() { return g_boot_command_saved; }
-
 void bootargs_get_args(boot_args_t* dest) {
   mpu_mode_t mode = mpu_reconfig(MPU_MODE_BOOTARGS);
 
@@ -94,6 +86,12 @@ void bootargs_get_args(boot_args_t* dest) {
 
   mpu_restore(mode);
 }
+
+#ifdef BOOTLOADER
+// Contains the current boot command saved during bootloader startup.
+boot_command_t g_boot_command_saved;
+
+boot_command_t bootargs_get_command() { return g_boot_command_saved; }
 
 void bootargs_init(uint32_t r11_register) {
 #ifdef STM32U5
@@ -214,6 +212,12 @@ __attribute__((noreturn)) void reboot_and_upgrade(const uint8_t hash[32]) {
 
 __attribute__((noreturn)) void reboot_device(void) {
   reboot_with_args(BOOT_COMMAND_NONE, NULL, 0);
+}
+
+__attribute__((noreturn)) void reboot_with_rsod(
+    const systask_postmortem_t* pminfo) {
+  // Set bootargs area to the new command and arguments
+  reboot_with_args(BOOT_COMMAND_SHOW_RSOD, pminfo, sizeof(*pminfo));
 }
 
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
