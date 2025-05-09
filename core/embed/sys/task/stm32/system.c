@@ -85,9 +85,12 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   // Reset peripherals (so we are sure that no DMA is pending)
   reset_peripherals_and_interrupts();
 
-  // Copy pminfo from to our stack
-  // MPU is now disable, we have full access to bootargs.
-  systask_postmortem_t pminfo = bootargs_ptr()->pminfo;
+  // Althought MPU is disabled, we need to change MPU driver state
+  mpu_reconfig(MPU_MODE_DISABLED);
+
+  // Copy bootargs to our stack
+  boot_args_t bootargs;
+  bootargs_get_args(&bootargs);
 
   // Clear unused part of our stack
   clear_unused_stack();
@@ -97,10 +100,13 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   uint32_t stack_chk_guard = __stack_chk_guard;
 
   // Clear all memory except our stack.
-  // NOTE: This also clear bootargs, so we don't pass pminfo structure
-  // to the bootloader for now.
+  // NOTE: This also clear bootargs, if the model doesn't support
+  // showing RSOD in the bootloader startup.
   memregion_t region = MEMREGION_ALL_ACCESSIBLE_RAM;
   MEMREGION_DEL_SECTION(&region, _stack_section);
+#ifdef USE_BOOTARGS_RSOD
+  MEMREGION_DEL_SECTION(&region, _bootargs_ram);
+#endif
   memregion_fill(&region, 0);
 
   // Reinitialize .bss, .data, ...
@@ -119,12 +125,16 @@ system_emergency_rescue_phase_2(uint32_t arg1, uint32_t arg2) {
   // in C code
 
   if (error_handler != NULL) {
-    error_handler(&pminfo);
+    error_handler(&bootargs.pminfo);
+    // We reach this point only if error_handler returns that's
+    // not expected to happen. We clear the memory again and reboot.
+    reboot_device();
   }
 
-  // We reach this point only if error_handler is NULL or
-  // if it returns. Neither is expected to happen.
-  reboot_device();
+  // We reach this point only if error_handler is NULL
+  // (if USE_BOOTARGS_RSOD is defined we leave postmortem info
+  // in bootargs, so it can be used by the bootloader)
+  NVIC_SystemReset();
 }
 
 __attribute((naked, noreturn, no_stack_protector)) void system_emergency_rescue(
