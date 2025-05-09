@@ -522,7 +522,7 @@ workflow_result_t workflow_firmware_update(protob_io_t *iface) {
 
     awaited.read_ready = 1 << protob_get_iface_flag(iface);
 
-    sysevents_poll(&awaited, &signalled, 100);
+    sysevents_poll(&awaited, &signalled, ticks_timeout(100));
 
     if (awaited.read_ready != signalled.read_ready) {
       continue;
