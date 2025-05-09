@@ -68,6 +68,9 @@
 #ifdef USE_POWER_MANAGER
 #include <sys/power_manager.h>
 #endif
+#ifdef USE_HAPTIC
+#include <io/haptic.h>
+#endif
 
 #ifdef USE_BLE
 #include "wire/wire_iface_ble.h"
@@ -104,7 +107,9 @@ static secbool is_manufacturing_mode(void) {
   return manufacturing_mode;
 }
 
-static void boot_sequence(secbool manufacturing_mode) {
+static secbool boot_sequence(secbool manufacturing_mode) {
+  secbool stay_in_bootloader = secfalse;
+
 #ifdef USE_BACKUP_RAM
   backup_ram_init();
 #endif
@@ -117,6 +122,10 @@ static void boot_sequence(secbool manufacturing_mode) {
   rgb_led_init();
 #endif
 
+#ifdef USE_HAPTIC
+  haptic_init();
+#endif
+
 #ifdef USE_POWER_MANAGER
   pm_init(false);
 
@@ -126,11 +135,49 @@ static void boot_sequence(secbool manufacturing_mode) {
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
        cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
 
-  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF) {
+  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF && !button_is_down(BTN_POWER)) {
     turn_on = true;
   }
 
-  while (!button_is_down(BTN_POWER) && !turn_on) {
+  uint32_t press_start = 0;
+  bool turn_on_locked = false;
+  bool bld_locked = false;
+
+  while (!turn_on) {
+    bool btn_down = button_is_down(BTN_POWER);
+    if (btn_down) {
+      if (press_start == 0) {
+        press_start = systick_ms();
+        turn_on_locked = false;
+        bld_locked = false;
+      }
+
+      uint32_t elapsed = systick_ms() - press_start;
+      if (elapsed >= 3000 && !bld_locked) {
+#ifdef USE_HAPTIC
+        haptic_play(HAPTIC_BUTTON_PRESS);
+#endif
+        bld_locked = true;
+      } else if ((elapsed >= 1000 || manufacturing_mode == sectrue) && !turn_on_locked) {
+#ifdef USE_HAPTIC
+        haptic_play(HAPTIC_BUTTON_PRESS);
+#endif
+        turn_on_locked = true;
+      }
+    } else if (press_start != 0) {
+      // Button just released
+      if (bld_locked) {
+        stay_in_bootloader = sectrue;
+      }
+      if (turn_on_locked) {
+        break;
+      }
+      // reset to idle
+      press_start = 0;
+      turn_on_locked = false;
+      bld_locked = false;
+    }
+
     pm_state_t state;
     pm_get_state(&state);
 
@@ -138,7 +185,7 @@ static void boot_sequence(secbool manufacturing_mode) {
       // charing screen
       rgb_led_set_color(0x0000FF);
     } else {
-      if (!state.usb_connected && !state.wireless_connected) {
+      if (!btn_down && !state.usb_connected && !state.wireless_connected) {
         // device in just intended to be turned off
         pm_hibernate();
         systick_delay_ms(1000);
@@ -158,6 +205,8 @@ static void boot_sequence(secbool manufacturing_mode) {
   }
 
 #endif
+
+  return stay_in_bootloader;
 }
 
 static void drivers_init(secbool manufacturing_mode,
@@ -216,6 +265,9 @@ static void drivers_deinit(void) {
 #endif
 #ifdef USE_BACKUP_RAM
   backup_ram_deinit();
+#endif
+#ifdef USE_HAPTIC
+  haptic_deinit();
 #endif
 }
 
@@ -323,14 +375,13 @@ int main(void) {
 #else
 int bootloader_main(void) {
 #endif
-  secbool stay_in_bootloader = secfalse;
   secbool touch_initialized = secfalse;
 
   system_init(&rsod_panic_handler);
 
   secbool manufacturing_mode = is_manufacturing_mode();
 
-  boot_sequence(manufacturing_mode);
+  secbool stay_in_bootloader = boot_sequence(manufacturing_mode);
 
   drivers_init(manufacturing_mode, &touch_initialized);
 
@@ -426,6 +477,7 @@ int bootloader_main(void) {
   // delay to detect touch or skip if we know we are staying in bootloader
   // anyway
   uint32_t touched = 0;
+#ifndef USE_POWER_MANAGER
 #ifdef USE_TOUCH
   if (firmware_present == sectrue && stay_in_bootloader != sectrue) {
     // Wait until the touch controller is ready
@@ -452,6 +504,7 @@ int bootloader_main(void) {
   if (button_is_down(BTN_LEFT)) {
     touched = 1;
   }
+#endif
 #endif
 
   ensure(dont_optimize_out_true * (firmware_present == firmware_present_backup),
