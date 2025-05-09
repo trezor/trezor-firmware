@@ -81,7 +81,7 @@ def apply_settings(
 
     if homescreen is not None and client.version >= HOMESCREEN_STREAMING_MIN_VERSION:
         settings.homescreen_length = len(homescreen)
-        response = client.call(settings, expect=messages.DataChunkRequest)
+        response = client.call(settings)
         _send_chunked_data(client, response, homescreen)
         out = messages.Success()
     else:
