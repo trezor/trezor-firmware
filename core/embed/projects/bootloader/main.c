@@ -68,6 +68,9 @@
 #ifdef USE_POWER_MANAGER
 #include <sys/power_manager.h>
 #endif
+#ifdef USE_HAPTIC
+#include <io/haptic.h>
+#endif
 
 #ifdef USE_BLE
 #include "wire/wire_iface_ble.h"
@@ -120,6 +123,10 @@ __attribute__((optimize("-O0"))) static secbool boot_sequence(
   rgb_led_init();
 #endif
 
+#ifdef USE_HAPTIC
+  haptic_init();
+#endif
+
 #ifdef USE_POWER_MANAGER
   pm_init(false);
 
@@ -133,26 +140,42 @@ __attribute__((optimize("-O0"))) static secbool boot_sequence(
     turn_on = true;
   }
 
-  uint32_t btn_pressed_down_ms = systick_ms();
-  bool btn_pressed = true;
+  uint32_t press_start = 0;
+  bool turn_on_locked = false;
+  bool bld_locked = false;
 
   while (!turn_on) {
-    if (!button_is_down(BTN_POWER)) {
-      if (btn_pressed) {
-        if (systick_ms() - btn_pressed_down_ms > 5000) {
-          stay_in_bootloader = sectrue;
-          break;
-        }
-        if (systick_ms() - btn_pressed_down_ms > 1000) {
-          break;
-        }
+    if (button_is_down(BTN_POWER)) {
+      if (press_start == 0) {
+        press_start = systick_ms();
+        turn_on_locked = false;
+        bld_locked = false;
       }
-      btn_pressed = false;
-    } else {
-      if (!btn_pressed) {
-        btn_pressed_down_ms = systick_ms();
+
+      uint32_t elapsed = systick_ms() - press_start;
+      if (elapsed >= 3000 && !bld_locked) {
+#ifdef USE_HAPTIC
+        haptic_play(HAPTIC_BUTTON_PRESS);
+#endif
+        bld_locked = true;
+      } else if (elapsed >= 1000 && !turn_on_locked) {
+#ifdef USE_HAPTIC
+        haptic_play(HAPTIC_BUTTON_PRESS);
+#endif
+        turn_on_locked = true;
       }
-      btn_pressed = true;
+    } else if (press_start != 0) {
+      // Button just released
+      if (bld_locked) {
+        stay_in_bootloader = sectrue;
+      }
+      if (turn_on_locked) {
+        break;
+      }
+      // reset to idle
+      press_start = 0;
+      turn_on_locked = false;
+      bld_locked = false;
     }
 
     pm_state_t state;
@@ -243,6 +266,9 @@ static void drivers_deinit(void) {
 #endif
 #ifdef USE_BACKUP_RAM
   backup_ram_deinit();
+#endif
+#ifdef USE_HAPTIC
+  haptic_deinit();
 #endif
 }
 
