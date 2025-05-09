@@ -107,8 +107,7 @@ static secbool is_manufacturing_mode(void) {
   return manufacturing_mode;
 }
 
-__attribute__((optimize("-O0"))) static secbool boot_sequence(
-    secbool manufacturing_mode) {
+static secbool boot_sequence(secbool manufacturing_mode) {
   secbool stay_in_bootloader = secfalse;
 
 #ifdef USE_BACKUP_RAM
@@ -145,7 +144,8 @@ __attribute__((optimize("-O0"))) static secbool boot_sequence(
   bool bld_locked = false;
 
   while (!turn_on) {
-    if (button_is_down(BTN_POWER)) {
+    bool btn_down = button_is_down(BTN_POWER);
+    if (btn_down) {
       if (press_start == 0) {
         press_start = systick_ms();
         turn_on_locked = false;
@@ -185,8 +185,7 @@ __attribute__((optimize("-O0"))) static secbool boot_sequence(
       // charing screen
       rgb_led_set_color(0x0000FF);
     } else {
-      if (!button_is_down(BTN_POWER) && !state.usb_connected &&
-          !state.wireless_connected) {
+      if (!btn_down && !state.usb_connected && !state.wireless_connected) {
         // device in just intended to be turned off
         pm_hibernate();
         systick_delay_ms(1000);
