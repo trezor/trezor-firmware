@@ -217,7 +217,7 @@ __attribute__((noreturn)) void reboot_device(void) {
 }
 
 __attribute__((noreturn)) void reboot_to_off(void) {
-  reboot_with_args(BOOT_COMMAND_NONE, NULL, 0);
+  reboot_with_args(BOOT_COMMAND_POWER_OFF, NULL, 0);
 }
 
 __attribute__((noreturn)) void reboot_or_halt_after_rsod(void) {
