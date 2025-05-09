@@ -89,6 +89,11 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
 
   // Enable BusFault and UsageFault handlers
   SCB->SHCSR |= (SCB_SHCSR_USGFAULTENA_Msk | SCB_SHCSR_BUSFAULTENA_Msk);
+
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+  // Enable SecureFault handler
+  SCB->SHCSR |= SCB_SHCSR_SECUREFAULTENA_Msk;
+#endif  
 }
 
 systask_t* systask_active(void) {
