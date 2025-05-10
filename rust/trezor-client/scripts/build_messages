@@ -19,7 +19,6 @@ FEATURES = {
     "Bitcoin": "bitcoin",
     "Ethereum": "ethereum",
     #
-    "Binance": "binance",
     "Cardano": "cardano",
     "EOS": "eos",
     "Monero": "monero",

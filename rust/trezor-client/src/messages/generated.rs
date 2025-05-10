@@ -89,20 +89,6 @@ trezor_message_impl! {
     BenchmarkResult => MessageType_BenchmarkResult,
 }
 
-#[cfg(feature = "binance")]
-trezor_message_impl! {
-    BinanceGetAddress => MessageType_BinanceGetAddress,
-    BinanceAddress => MessageType_BinanceAddress,
-    BinanceGetPublicKey => MessageType_BinanceGetPublicKey,
-    BinancePublicKey => MessageType_BinancePublicKey,
-    BinanceSignTx => MessageType_BinanceSignTx,
-    BinanceTxRequest => MessageType_BinanceTxRequest,
-    BinanceTransferMsg => MessageType_BinanceTransferMsg,
-    BinanceOrderMsg => MessageType_BinanceOrderMsg,
-    BinanceCancelMsg => MessageType_BinanceCancelMsg,
-    BinanceSignedTx => MessageType_BinanceSignedTx,
-}
-
 #[cfg(feature = "bitcoin")]
 trezor_message_impl! {
     GetPublicKey => MessageType_GetPublicKey,

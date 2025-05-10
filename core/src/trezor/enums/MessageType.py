@@ -232,16 +232,6 @@ if not utils.BITCOIN_ONLY:
     EosTxActionRequest = 603
     EosTxActionAck = 604
     EosSignedTx = 605
-    BinanceGetAddress = 700
-    BinanceAddress = 701
-    BinanceGetPublicKey = 702
-    BinancePublicKey = 703
-    BinanceSignTx = 704
-    BinanceTxRequest = 705
-    BinanceTransferMsg = 706
-    BinanceOrderMsg = 707
-    BinanceCancelMsg = 708
-    BinanceSignedTx = 709
     WebAuthnListResidentCredentials = 800
     WebAuthnCredentials = 801
     WebAuthnAddResidentCredential = 802

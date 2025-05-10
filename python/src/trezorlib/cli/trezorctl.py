@@ -32,7 +32,6 @@ from . import (
     AliasedGroup,
     TrezorConnection,
     benchmark,
-    binance,
     ble,
     btc,
     cardano,
@@ -76,7 +75,6 @@ COMMAND_ALIASES = {
     "encrypt-keyvalue": crypto.encrypt_keyvalue,
     "decrypt-keyvalue": crypto.decrypt_keyvalue,
     # currency name aliases:
-    "bnb": binance.cli,
     "eth": ethereum.cli,
     "ada": cardano.cli,
     "sol": solana.cli,
@@ -97,10 +95,10 @@ class TrezorctlGroup(AliasedGroup):
     """Command group that handles compatibility for trezorctl.
 
     With trezorctl 0.11.5, we started to convert old-style long commands
-    (such as "binance-sign-tx") to command groups ("binance") with subcommands
+    (such as "ethereum-sign-tx") to command groups ("ethereum") with subcommands
     ("sign-tx"). The `TrezorctlGroup` can perform subcommand lookup: if a command
-    "binance-sign-tx" does not exist in the default group, it tries to find "sign-tx"
-    subcommand of "binance" group.
+    "ethereum-sign-tx" does not exist in the default group, it tries to find "sign-tx"
+    subcommand of "ethereum" group.
     """
 
     def get_command(self, ctx: click.Context, cmd_name: str) -> Optional[click.Command]:
@@ -115,8 +113,8 @@ class TrezorctlGroup(AliasedGroup):
         if cmd:
             return cmd
 
-        # Old-style top-level commands looked like this: binance-sign-tx.
-        # We are moving to 'binance' command with 'sign-tx' subcommand.
+        # Old-style top-level commands looked like this: ethereum-sign-tx.
+        # We are moving to 'ethereum' command with 'sign-tx' subcommand.
         try:
             command, subcommand = cmd_name.split("-", maxsplit=1)
             # get_command can return None and the following line will fail.
@@ -401,7 +399,6 @@ def wait_for_emulator(obj: TrezorConnection, timeout: float) -> None:
 # Basic coin functions
 #
 
-cli.add_command(binance.cli)
 cli.add_command(btc.cli)
 cli.add_command(cardano.cli)
 cli.add_command(crypto.cli)

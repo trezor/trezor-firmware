@@ -147,7 +147,7 @@ message Features {
 
         Capability_Bitcoin = 1 [(bitcoin_only) = true];
         Capability_Bitcoin_like = 2;                    // Altcoins based on the Bitcoin source code
-        Capability_Binance = 3;
+        Capability_Binance = 3;                         // BNB Smart Chain
         Capability_Cardano = 4;
         Capability_Crypto = 5 [(bitcoin_only) = true];  // generic crypto operations for GPG, SSH, etc.
         Capability_EOS = 6;
