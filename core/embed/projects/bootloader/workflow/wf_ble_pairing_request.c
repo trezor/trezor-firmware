@@ -22,6 +22,7 @@
 #include <trezor_rtl.h>
 
 #include <io/ble.h>
+#include <sys/systick.h>
 
 #include "bootui.h"
 #include "rust_ui_bootloader.h"
@@ -87,7 +88,7 @@ workflow_result_t workflow_ble_pairing_request(const vendor_header *const vhdr,
   sysevents_t signalled = {0};
   awaited.read_ready |= 1 << SYSHANDLE_BLE;
 
-  sysevents_poll(&awaited, &signalled, 500);
+  sysevents_poll(&awaited, &signalled, ticks_timeout(500));
 
   if (signalled.read_ready == 1 << SYSHANDLE_BLE) {
     ble_event_t event = {0};
