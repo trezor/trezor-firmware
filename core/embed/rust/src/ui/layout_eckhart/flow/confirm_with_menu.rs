@@ -63,13 +63,17 @@ pub fn new_confirm_with_menu<T: AllowedTextContent + MaybeTrace + 'static>(
     cancel_menu_label: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     let cancel_menu_label = cancel_menu_label.unwrap_or(TR::buttons__cancel.into());
-    let confirm_label = confirm_label.unwrap_or(TR::buttons__confirm.into());
 
     // Value
-    let mut confirm_button = Button::with_text(confirm_label).styled(theme::button_confirm());
-    if hold {
-        confirm_button = confirm_button.with_long_press(theme::LOCK_HOLD_DURATION);
-    }
+    let confirm_button = if hold {
+        let confirm_label = confirm_label.unwrap_or(TR::buttons__hold_to_confirm.into());
+        Button::with_text(confirm_label)
+            .styled(theme::button_confirm())
+            .with_long_press(theme::LOCK_HOLD_DURATION)
+    } else {
+        let confirm_label = confirm_label.unwrap_or(TR::buttons__confirm.into());
+        Button::with_text(confirm_label).styled(theme::button_default())
+    };
     let content_value = TextScreen::new(content)
         .with_header(Header::new(title).with_menu_button())
         .with_action_bar(ActionBar::new_single(confirm_button))
