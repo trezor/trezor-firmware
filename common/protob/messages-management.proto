@@ -200,13 +200,14 @@ message EndSession {
  * Request: change some property of the device, e.g. label or homescreen
  * @start
  * @next Success
+ * @next DataChunkRequest
  * @next Failure
  */
 message ApplySettings {
     optional string language = 1 [deprecated=true];
     optional string label = 2;
     optional bool use_passphrase = 3;
-    optional bytes homescreen = 4;
+    optional bytes homescreen = 4;  // homescreen image in single array, deprecated for 14
     optional uint32 _passphrase_source = 5 [deprecated=true];   // ASK = 0; DEVICE = 1; HOST = 2;
     optional uint32 auto_lock_delay_ms = 6;
     optional DisplayRotation display_rotation = 7;  // rotation of display (in degrees from North)
@@ -215,6 +216,7 @@ message ApplySettings {
     optional bool experimental_features = 10;  // enable experimental message types
     optional bool hide_passphrase_from_host = 11;  // do not show passphrase coming from host
     optional bool haptic_feedback = 13;  // enable haptic feedback
+    optional uint32 homescreen_length = 14;  // byte length of new homescreen, device will request chunks
 }
 
 /**
@@ -222,7 +224,7 @@ message ApplySettings {
  * Does not send the translation data itself, as they are too large for one message.
  * Device will request the translation data in chunks.
  * @start
- * @next TranslationDataRequest
+ * @next DataChunkRequest
  * @next Failure
  */
 message ChangeLanguage {
@@ -240,22 +242,22 @@ message ChangeLanguage {
 }
 
 /**
- * Response: Device asks for more data from transaction payload.
+ * Response: Device asks for more data from translation/homescreen image.
  * @end
- * @next TranslationDataAck
+ * @next DataChunkAck
  */
- message TranslationDataRequest {
+ message DataChunkRequest {
     required uint32 data_length = 1;    // Number of bytes being requested
     required uint32 data_offset = 2;    // Offset of the first byte being requested
 }
 
 /**
- * Request: Translation payload data.
- * @next TranslationDataRequest
+ * Request: Translation/homescreen payload data.
+ * @next DataChunkRequest
  * @next Success
  */
-message TranslationDataAck {
-    required bytes data_chunk = 1;  // Bytes from translation payload
+message DataChunkAck {
+    required bytes data_chunk = 1;  // Bytes from translation/homescreen payload
 }
 
 /**
@@ -596,6 +598,7 @@ message CancelAuthorization {
  * Request: Reboot firmware to bootloader
  * @start
  * @next Success
+ * @next DataChunkRequest
  */
 message RebootToBootloader {
     // Action to be performed after rebooting to bootloader

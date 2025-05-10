@@ -2275,6 +2275,7 @@ if TYPE_CHECKING:
         experimental_features: "bool | None"
         hide_passphrase_from_host: "bool | None"
         haptic_feedback: "bool | None"
+        homescreen_length: "int | None"
 
         def __init__(
             self,
@@ -2289,6 +2290,7 @@ if TYPE_CHECKING:
             experimental_features: "bool | None" = None,
             hide_passphrase_from_host: "bool | None" = None,
             haptic_feedback: "bool | None" = None,
+            homescreen_length: "int | None" = None,
         ) -> None:
             pass
 
@@ -2312,7 +2314,7 @@ if TYPE_CHECKING:
         def is_type_of(cls, msg: Any) -> TypeGuard["ChangeLanguage"]:
             return isinstance(msg, cls)
 
-    class TranslationDataRequest(protobuf.MessageType):
+    class DataChunkRequest(protobuf.MessageType):
         data_length: "int"
         data_offset: "int"
 
@@ -2325,10 +2327,10 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TranslationDataRequest"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DataChunkRequest"]:
             return isinstance(msg, cls)
 
-    class TranslationDataAck(protobuf.MessageType):
+    class DataChunkAck(protobuf.MessageType):
         data_chunk: "bytes"
 
         def __init__(
@@ -2339,7 +2341,7 @@ if TYPE_CHECKING:
             pass
 
         @classmethod
-        def is_type_of(cls, msg: Any) -> TypeGuard["TranslationDataAck"]:
+        def is_type_of(cls, msg: Any) -> TypeGuard["DataChunkAck"]:
             return isinstance(msg, cls)
 
     class ApplyFlags(protobuf.MessageType):

@@ -15,6 +15,26 @@ if TYPE_CHECKING:
 BRT_PROTECT_CALL = ButtonRequestType.ProtectCall  # CACHE
 
 
+async def _load_homescreen(length: int) -> bytearray:
+    from trezor import utils
+    from trezor.ui.layouts.progress import progress
+
+    from apps.common import chunked
+
+    if length <= 0:
+        return bytearray()
+    elif length > utils.HOMESCREEN_MAXSIZE:
+        raise DataError(
+            f"Homescreen is too large, maximum size is {utils.HOMESCREEN_MAXSIZE} bytes"
+        )
+
+    loader = progress()
+
+    buf = utils.empty_bytearray(length)
+    await chunked.get_all_chunks(buf, length, report=loader.report)
+    return buf
+
+
 def _validate_homescreen(homescreen: bytes) -> None:
     if homescreen == b"":
         return
@@ -38,6 +58,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
         raise NotInitialized("Device is not initialized")
 
     homescreen = msg.homescreen  # local_cache_attribute
+    homescreen_length = msg.homescreen_length  # local_cache_attribute
     label = msg.label  # local_cache_attribute
     auto_lock_delay_ms = msg.auto_lock_delay_ms  # local_cache_attribute
     use_passphrase = msg.use_passphrase  # local_cache_attribute
@@ -52,6 +73,7 @@ async def apply_settings(msg: ApplySettings) -> Success:
 
     if (
         homescreen is None
+        and homescreen_length is None
         and label is None
         and use_passphrase is None
         and passphrase_always_on_device is None
@@ -63,6 +85,12 @@ async def apply_settings(msg: ApplySettings) -> Success:
         and (haptic_feedback is None or not utils.USE_HAPTIC)
     ):
         raise ProcessError("No setting provided")
+
+    if homescreen_length is not None:
+        if homescreen is not None:
+            raise ProcessError("Mutually exclusive settings")
+
+        homescreen = await _load_homescreen(homescreen_length)
 
     if homescreen is not None:
         _validate_homescreen(homescreen)
