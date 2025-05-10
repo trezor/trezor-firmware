@@ -15,15 +15,13 @@
 # If not, see <https://www.gnu.org/licenses/lgpl-3.0.html>.
 
 import sys
-from typing import TYPE_CHECKING
 
 import click
 
 from .. import ble, exceptions
+from ..client import TrezorClient
+from ..transport.ble import BleProxy
 from . import with_client
-
-if TYPE_CHECKING:
-    from ..client import TrezorClient
 
 
 @click.group(name="ble")
@@ -43,7 +41,7 @@ def unpair(
     client: "TrezorClient",
     all: bool,
 ) -> None:
-    """Erase bond of currently connected device, or all devices (on device side)"""
+    """Erase bond of currently connected device, or all devices (on device side)."""
 
     try:
         ble.unpair(client, all)
@@ -53,3 +51,29 @@ def unpair(
     except exceptions.TrezorException as e:
         click.echo(f"Unpair failed: {e}")
         sys.exit(3)
+
+
+@cli.command()
+def connect() -> None:
+    """Connect to the device via BLE. Device has to be disconnected beforehand.
+
+    If the device hasn't been paired you also need to have system bluetooth pairing dialog open.
+    """
+    ble = BleProxy()
+
+    click.echo("Scanning...")
+    devices = ble.scan()
+
+    if len(devices) == 0:
+        click.echo("No BLE devices found")
+        return
+    else:
+        click.echo(f"Found {len(devices)} BLE device(s)")
+
+    for address, name in devices:
+        click.echo(f"Device: {name}, {address}")
+
+    device = devices[0]
+    click.echo(f"Connecting to {device[1]}...")
+    ble.connect(device[0])
+    click.echo("Connected")

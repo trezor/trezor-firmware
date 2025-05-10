@@ -31,6 +31,7 @@ extras_require = {
     "qt-widgets": ["PyQt5"],
     "extra": ["Pillow>=10"],
     "stellar": ["stellar-sdk>=6"],
+    "ble": ["bleak>=0.22"],
 }
 
 extras_require["full"] = sum(extras_require.values(), [])

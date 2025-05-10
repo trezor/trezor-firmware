@@ -110,6 +110,7 @@ class Transport:
 
 
 def all_transports() -> Iterable[type["Transport"]]:
+    from .ble import BleTransport
     from .bridge import BridgeTransport
     from .hid import HidTransport
     from .udp import UdpTransport
@@ -120,6 +121,7 @@ def all_transports() -> Iterable[type["Transport"]]:
         HidTransport,
         UdpTransport,
         WebUsbTransport,
+        BleTransport,
     )
     return set(t for t in transports if t.ENABLED)
 
