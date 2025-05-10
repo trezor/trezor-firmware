@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - 'release/**'
+      - 'secfix/**'
 
 # cancel any previous runs on the same PR
 concurrency:
