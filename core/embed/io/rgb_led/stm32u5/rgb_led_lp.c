@@ -48,10 +48,52 @@ typedef struct {
 
 static rgb_led_t g_rgb_led = {0};
 
-static void rgb_led_set_default_pin_state(void) {
+static void rgb_led_set_default_pin_state_red(void) {
   HAL_GPIO_DeInit(RGB_LED_RED_PORT, RGB_LED_RED_PIN);
+}
+
+static void rgb_led_set_active_pin_state_red(void) {
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = RGB_LED_RED_PIN;
+  GPIO_InitStructure.Alternate = GPIO_AF1_LPTIM1;
+  HAL_GPIO_Init(RGB_LED_RED_PORT, &GPIO_InitStructure);
+}
+
+static void rgb_led_set_default_pin_state_green(void) {
   HAL_GPIO_DeInit(RGB_LED_GREEN_PORT, RGB_LED_GREEN_PIN);
+}
+
+static void rgb_led_set_active_pin_state_green(void) {
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = RGB_LED_GREEN_PIN;
+  GPIO_InitStructure.Alternate = GPIO_AF1_LPTIM1;
+  HAL_GPIO_Init(RGB_LED_GREEN_PORT, &GPIO_InitStructure);
+}
+
+static void rgb_led_set_default_pin_state_blue(void) {
   HAL_GPIO_DeInit(RGB_LED_BLUE_PORT, RGB_LED_BLUE_PIN);
+}
+
+static void rgb_led_set_active_pin_state_blue(void) {
+  GPIO_InitTypeDef GPIO_InitStructure = {0};
+  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+  GPIO_InitStructure.Pull = GPIO_NOPULL;
+  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStructure.Pin = RGB_LED_BLUE_PIN;
+  GPIO_InitStructure.Alternate = GPIO_AF4_LPTIM3;
+  HAL_GPIO_Init(RGB_LED_BLUE_PORT, &GPIO_InitStructure);
+}
+
+static void rgb_led_set_default_pin_state(void) {
+  rgb_led_set_default_pin_state_red();
+  rgb_led_set_default_pin_state_green();
+  rgb_led_set_default_pin_state_blue();
 }
 
 void rgb_led_init(void) {
@@ -86,6 +128,10 @@ void rgb_led_init(void) {
   __HAL_RCC_LPTIM3_CLK_ENABLE();
   __HAL_RCC_LPTIM3_FORCE_RESET();
   __HAL_RCC_LPTIM3_RELEASE_RESET();
+
+  RGB_LED_RED_CLK_ENA();
+  RGB_LED_GREEN_CLK_ENA();
+  RGB_LED_BLUE_CLK_ENA();
 
   drv->tim_1.State = HAL_LPTIM_STATE_RESET;
   drv->tim_1.Instance = LPTIM1;
@@ -141,25 +187,7 @@ void rgb_led_init(void) {
   while (__HAL_LPTIM_GET_FLAG(&drv->tim_3, LPTIM_FLAG_UPDATE) != true) {
   }
 
-  GPIO_InitTypeDef GPIO_InitStructure = {0};
-  GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
-  GPIO_InitStructure.Pull = GPIO_NOPULL;
-  GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
-
-  RGB_LED_RED_CLK_ENA();
-  GPIO_InitStructure.Pin = RGB_LED_RED_PIN;
-  GPIO_InitStructure.Alternate = GPIO_AF1_LPTIM1;
-  HAL_GPIO_Init(RGB_LED_RED_PORT, &GPIO_InitStructure);
-
-  RGB_LED_GREEN_CLK_ENA();
-  GPIO_InitStructure.Pin = RGB_LED_GREEN_PIN;
-  GPIO_InitStructure.Alternate = GPIO_AF2_LPTIM3;
-  HAL_GPIO_Init(RGB_LED_GREEN_PORT, &GPIO_InitStructure);
-
-  RGB_LED_BLUE_CLK_ENA();
-  GPIO_InitStructure.Pin = RGB_LED_BLUE_PIN;
-  GPIO_InitStructure.Alternate = GPIO_AF4_LPTIM3;
-  HAL_GPIO_Init(RGB_LED_BLUE_PORT, &GPIO_InitStructure);
+  rgb_led_set_default_pin_state();
 
   drv->initialized = true;
 }
@@ -201,21 +229,27 @@ void rgb_led_set_color(uint32_t color) {
   uint32_t blue = color & 0xFF;
 
   if (red != 0) {
+    rgb_led_set_active_pin_state_red();
     __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_1, LPTIM_CHANNEL_1);
   } else {
     __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_1, LPTIM_CHANNEL_1);
+    rgb_led_set_default_pin_state_red();
   }
 
   if (green != 0) {
+    rgb_led_set_active_pin_state_green();
     __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_3, LPTIM_CHANNEL_2);
   } else {
     __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_3, LPTIM_CHANNEL_2);
+    rgb_led_set_default_pin_state_green();
   }
 
   if (blue != 0) {
+    rgb_led_set_active_pin_state_blue();
     __HAL_LPTIM_CAPTURE_COMPARE_ENABLE(&drv->tim_3, LPTIM_CHANNEL_1);
   } else {
     __HAL_LPTIM_CAPTURE_COMPARE_DISABLE(&drv->tim_3, LPTIM_CHANNEL_1);
+    rgb_led_set_default_pin_state_blue();
   }
 
   __HAL_LPTIM_COMPARE_SET(&drv->tim_1, LPTIM_CHANNEL_1,
