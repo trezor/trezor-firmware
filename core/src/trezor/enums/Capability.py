@@ -12,6 +12,8 @@ PassphraseEntry = 17
 Translations = 19
 Brightness = 20
 Haptic = 21
+BLE = 22
+NFC = 23
 if not utils.BITCOIN_ONLY:
     Bitcoin_like = 2
     Binance = 3

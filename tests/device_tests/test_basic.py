@@ -30,6 +30,9 @@ def test_capabilities(client: Client):
     assert (messages.Capability.Translations in client.features.capabilities) == (
         client.model is not models.T1B1
     )
+    assert (messages.Capability.BLE in client.features.capabilities) == (
+        client.model is models.T3W1
+    )
 
 
 def test_ping(client: Client):
