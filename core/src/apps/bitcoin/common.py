@@ -6,6 +6,7 @@ from trezor.crypto import bech32
 from trezor.crypto.curve import bip340
 from trezor.enums import InputScriptType, OutputScriptType
 from trezor.messages import MultisigRedeemScriptType
+from trezor.utils import ensure
 
 if TYPE_CHECKING:
     from enum import IntEnum
@@ -120,8 +121,6 @@ def bip340_sign(node: bip32.HDNode, digest: bytes) -> bytes:
 
 
 def ecdsa_hash_pubkey(pubkey: bytes, coin: CoinInfo) -> bytes:
-    from trezor.utils import ensure
-
     ensure(
         coin.curve_name.startswith("secp256k1")
     )  # The following code makes sense only for Weiersrass curves
