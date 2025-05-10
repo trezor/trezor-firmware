@@ -261,8 +261,7 @@ fn content_menu_info(
         paragraphs
             .map_or_else(ParagraphVecShort::new, |p| p)
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical())
-            .with_spacing(12),
+            .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
     )
     .with_header(Header::new(title).with_close_button())
     .with_subtitle(subtitle.unwrap_or(TString::empty()))
@@ -302,8 +301,7 @@ pub fn new_confirm_output(
     let content_main = TextScreen::new(
         main_paragraphs
             .into_paragraphs()
-            .with_placement(LinearPlacement::vertical())
-            .with_spacing(12),
+            .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
     )
     .with_header(Header::new(title.unwrap_or(TString::empty())).with_menu_button())
     .with_action_bar(ActionBar::new_single(Button::with_text(
@@ -399,31 +397,29 @@ pub fn new_confirm_output(
         flow
     } else if let Some(summary_paragraphs) = summary_paragraphs {
         // Summary
-        let content_summary = TextScreen::new(
-            summary_paragraphs
-                .into_paragraphs()
-                .with_placement(LinearPlacement::vertical())
-                .with_spacing(12),
-        )
-        .with_header(
-            Header::new(summary_title.unwrap_or(TR::words__title_summary.into()))
-                .with_menu_button(),
-        )
-        .with_action_bar(ActionBar::new_double(
-            Button::with_icon(theme::ICON_CHEVRON_UP),
-            Button::with_text(TR::instructions__hold_to_sign.into())
-                .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                .styled(theme::button_confirm()),
-        ))
-        .map(|msg| match msg {
-            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-            TextScreenMsg::Menu => Some(FlowMsg::Info),
-        })
-        .one_button_request(ButtonRequest::from_num(
-            summary_br_code.unwrap(),
-            summary_br_name.unwrap(),
-        ));
+        let content_summary =
+            TextScreen::new(summary_paragraphs.into_paragraphs().with_placement(
+                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+            ))
+            .with_header(
+                Header::new(summary_title.unwrap_or(TR::words__title_summary.into()))
+                    .with_menu_button(),
+            )
+            .with_action_bar(ActionBar::new_double(
+                Button::with_icon(theme::ICON_CHEVRON_UP),
+                Button::with_text(TR::instructions__hold_to_sign.into())
+                    .with_long_press(theme::CONFIRM_HOLD_DURATION)
+                    .styled(theme::button_confirm()),
+            ))
+            .map(|msg| match msg {
+                TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+                TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+                TextScreenMsg::Menu => Some(FlowMsg::Info),
+            })
+            .one_button_request(ButtonRequest::from_num(
+                summary_br_code.unwrap(),
+                summary_br_name.unwrap(),
+            ));
 
         // SummaryMenu
         let mut summary_menu = VerticalMenu::<ShortMenuVec>::empty();
