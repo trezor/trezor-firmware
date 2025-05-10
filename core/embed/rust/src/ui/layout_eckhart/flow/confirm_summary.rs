@@ -6,17 +6,14 @@ use crate::{
     translations::TR,
     ui::{
         component::{
-            text::{
-                op::OpTextLayout,
-                paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
-            },
-            ComponentExt, FormattedText, MsgMap,
+            text::paragraphs::{Paragraph, ParagraphSource, ParagraphVecShort, Paragraphs},
+            ComponentExt, MsgMap,
         },
         flow::{
             base::{Decision, DecisionBuilder as _},
             FlowController, FlowMsg, SwipeFlow,
         },
-        geometry::{Direction, LinearPlacement, Offset},
+        geometry::{Direction, LinearPlacement},
     },
 };
 
@@ -26,7 +23,7 @@ use super::super::{
         ActionBar, Header, Hint, ShortMenuVec, TextScreen, TextScreenMsg, VerticalMenu,
         VerticalMenuScreen, VerticalMenuScreenMsg,
     },
-    fonts, theme,
+    theme,
 };
 
 const MENU_ITEM_CANCEL: usize = 0;
@@ -103,36 +100,33 @@ pub fn new_confirm_summary(
     verb_cancel: Option<TString<'static>>,
 ) -> Result<SwipeFlow, error::Error> {
     // Summary
-    let label_font = fonts::FONT_SATOSHI_REGULAR_22;
-    let amount_font = fonts::FONT_MONO_MEDIUM_38;
-    let mut ops = OpTextLayout::new(theme::firmware::TEXT_SMALL_LIGHT);
-    ops = ops
-        .text(amount_label, label_font)
-        .newline()
-        .offset(Offset::y(theme::PARAGRAPHS_SPACING + label_font.height))
-        .text(amount, amount_font)
-        .newline()
-        .offset(Offset::y(theme::TEXT_VERTICAL_SPACING))
-        .text(fee_label, label_font)
-        .newline()
-        .offset(Offset::y(theme::PARAGRAPHS_SPACING + label_font.height))
-        .text(fee, amount_font);
-    let content_summary = TextScreen::new(FormattedText::new(ops))
-        .with_header(Header::new(title).with_menu_button())
-        .with_action_bar(ActionBar::new_single(
-            Button::with_text(TR::instructions__hold_to_sign.into())
-                .with_long_press(theme::CONFIRM_HOLD_DURATION)
-                .styled(theme::button_confirm()),
-        ))
-        .with_hint(Hint::new_instruction(
-            TR::send__send_in_the_app,
-            Some(theme::ICON_INFO),
-        ))
-        .map(|msg| match msg {
-            TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
-            TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
-            TextScreenMsg::Menu => Some(FlowMsg::Info),
-        });
+    let summary_paragraphs = ParagraphVecShort::from_iter([
+        Paragraph::new(&theme::TEXT_SMALL_LIGHT, amount_label),
+        Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, amount),
+        Paragraph::new(&theme::TEXT_SMALL_LIGHT, fee_label),
+        Paragraph::new(&theme::TEXT_MONO_MEDIUM_LIGHT, fee),
+    ]);
+
+    let content_summary = TextScreen::new(
+        summary_paragraphs
+            .into_paragraphs()
+            .with_placement(LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING)),
+    )
+    .with_header(Header::new(title).with_menu_button())
+    .with_action_bar(ActionBar::new_single(
+        Button::with_text(TR::instructions__hold_to_sign.into())
+            .with_long_press(theme::CONFIRM_HOLD_DURATION)
+            .styled(theme::button_confirm()),
+    ))
+    .with_hint(Hint::new_instruction(
+        TR::send__send_in_the_app,
+        Some(theme::ICON_INFO),
+    ))
+    .map(|msg| match msg {
+        TextScreenMsg::Confirmed => Some(FlowMsg::Confirmed),
+        TextScreenMsg::Cancelled => Some(FlowMsg::Cancelled),
+        TextScreenMsg::Menu => Some(FlowMsg::Info),
+    });
 
     // Menu
     let mut menu = VerticalMenu::<ShortMenuVec>::empty();
