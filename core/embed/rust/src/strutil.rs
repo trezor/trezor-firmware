@@ -1,3 +1,5 @@
+use core::ops::Range;
+
 use heapless::String;
 
 #[cfg(feature = "micropython")]
@@ -63,13 +65,19 @@ pub enum TString<'a> {
     Translation {
         tr: TR,
         offset: u16,
+        /// Not the length of the actual string. Used for slicing.
+        end_at: u16,
     },
     Str(&'a str),
 }
 
 impl TString<'_> {
     pub fn len(&self) -> usize {
-        self.map(|s| s.len())
+        if let TString::Translation { end_at: v, .. } = self {
+            *v as usize
+        } else {
+            self.map(|s| s.len())
+        }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -92,7 +100,7 @@ impl TString<'_> {
             #[cfg(feature = "micropython")]
             Self::Allocated(buf) => fun(buf.as_ref()),
             #[cfg(feature = "translations")]
-            Self::Translation { tr, offset } => tr.map_translated(|s| fun(&s[*offset as usize..])),
+            Self::Translation { tr, offset, .. } => tr.map_translated(|s| fun(&s[*offset as usize..])),
             Self::Str(s) => fun(s),
         }
     }
@@ -106,11 +114,33 @@ impl TString<'_> {
             #[cfg(feature = "micropython")]
             Self::Allocated(s) => Self::Allocated(s.skip_prefix(skip_bytes)),
             #[cfg(feature = "translations")]
-            Self::Translation { tr, offset } => Self::Translation {
+            Self::Translation { tr, offset, end_at  } => Self::Translation {
                 tr: *tr,
                 offset: offset + skip_bytes as u16,
+                end_at: *end_at
             },
             Self::Str(s) => Self::Str(&s[skip_bytes..]),
+        }
+    }
+
+    pub fn get_slice(&self, byte_range: Range<usize>) -> Self {
+        self.map(|s| {
+            assert!(byte_range.end <= s.len());
+            assert!(s.is_char_boundary(byte_range.start));
+            assert!(s.is_char_boundary(byte_range.end));
+        });
+        match self {
+            #[cfg(feature = "micropython")]
+            Self::Allocated(s) => Self::Allocated(s.get_slice(byte_range)),
+            #[cfg(feature = "translations")]
+            Self::Translation { tr, offset, .. } => {
+                Self::Translation {
+                    tr: *tr,
+                    offset: byte_range.start as u16 + *offset,
+                    end_at: byte_range.end as u16 + *offset,
+                }
+            },
+            Self::Str(s) => Self::Str(&s[byte_range])
         }
     }
 }
@@ -118,7 +148,7 @@ impl TString<'_> {
 impl TString<'static> {
     #[cfg(feature = "translations")]
     pub const fn from_translation(tr: TR) -> Self {
-        Self::Translation { tr, offset: 0 }
+        Self::Translation { tr, offset: 0, end_at: u16::MAX }
     }
 
     #[cfg(feature = "micropython")]
@@ -206,11 +236,13 @@ impl ufmt::uDebug for TString<'_> {
                 f.write_str(")")?;
             }
             #[cfg(feature = "translations")]
-            TString::Translation { tr, offset } => {
+            TString::Translation { tr, offset, end_at } => {
                 f.write_str("Translation(")?;
                 tr.fmt(f)?;
                 f.write_str(", ")?;
                 offset.fmt(f)?;
+                f.write_str(", ")?;
+                end_at.fmt(f)?;
                 f.write_str(")")?;
             }
             TString::Str(s) => {
