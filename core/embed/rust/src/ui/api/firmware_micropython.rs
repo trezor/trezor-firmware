@@ -142,6 +142,10 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
         let page_counter: bool = kwargs.get_or(Qstr::MP_QSTR_page_counter, false)?;
         let prompt_screen: bool = kwargs.get_or(Qstr::MP_QSTR_prompt_screen, false)?;
         let cancel: bool = kwargs.get_or(Qstr::MP_QSTR_cancel, false)?;
+        let warning_footer: Option<TString> = kwargs
+            .get(Qstr::MP_QSTR_warning_footer)
+            .unwrap_or_else(|_| Obj::const_none())
+            .try_into_option()?;
 
         let layout_obj = ModelUI::confirm_value(
             title,
@@ -158,6 +162,7 @@ extern "C" fn new_confirm_value(n_args: usize, args: *const Obj, kwargs: *mut Ma
             page_counter,
             prompt_screen,
             cancel,
+            warning_footer,
         )?;
         Ok(layout_obj.into())
     };
@@ -1245,6 +1250,7 @@ pub static mp_module_trezorui_api: Module = obj_module! {
     ///     page_counter: bool = False,
     ///     prompt_screen: bool = False,
     ///     cancel: bool = False,
+    ///     warning_footer: str | None = None,
     /// ) -> LayoutObj[UiResult]:
     ///     """Confirm a generic piece of information on the screen.
     ///     The value can either be human readable text (`is_data=False`)

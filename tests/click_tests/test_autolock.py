@@ -439,7 +439,6 @@ def test_dryrun_enter_word_slowly(device_handler: "BackgroundDeviceHandler"):
 
 
 @pytest.mark.setup_client(pin=PIN4)
-@pytest.mark.models(skip=["eckhart"])
 def test_autolock_does_not_interrupt_preauthorized(
     device_handler: "BackgroundDeviceHandler",
 ):

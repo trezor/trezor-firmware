@@ -168,7 +168,7 @@ fn render_percentage<'s>(progress: u16, target: &mut impl Renderer<'s>) {
 impl crate::trace::Trace for ProgressScreen {
     fn trace(&self, t: &mut dyn crate::trace::Tracer) {
         if self.coinjoin_progress {
-            t.component("CoinjoinProgress");
+            t.component("CoinJoinProgress");
         } else {
             t.component("Progress");
         }

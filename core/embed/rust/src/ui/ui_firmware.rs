@@ -58,6 +58,7 @@ pub trait FirmwareUI {
         page_counter: bool,
         prompt_screen: bool,
         cancel: bool,
+        warning_footer: Option<TString<'static>>,
     ) -> Result<Gc<LayoutObj>, Error>; // TODO: return LayoutMaybeTrace
 
     fn confirm_value_intro(

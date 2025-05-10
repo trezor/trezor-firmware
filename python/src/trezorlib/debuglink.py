@@ -238,7 +238,13 @@ class LayoutContent(UnstructuredJSONReader):
         """What is on the screen, in one long string, so content can be
         asserted regardless of newlines. Also getting rid of possible ellipsis.
         """
-        content = self.screen_content().replace("\n", " ")
+        content = self.screen_content()
+
+        # Fix line-broken hyphenated words: 'Back- ups' -> 'Backups'
+        content = re.sub(r"-\s+", "", content)
+
+        # Replace remaining newlines with space
+        content = content.replace("\n", " ")
         if content.endswith("..."):
             content = content[:-3]
         if content.startswith("..."):
@@ -319,7 +325,18 @@ class LayoutContent(UnstructuredJSONReader):
 
     def button_contents(self) -> list[str]:
         """Getting list of button contents."""
-        buttons = self.find_unique_value_by_key("buttons", default={}, only_type=dict)
+
+        if self.action_bar() != "":
+            # ActionBar is used in Eckhart layout
+            buttons = self.find_unique_value_by_key(
+                "ActionBar", default={}, only_type=dict
+            )
+            button_keys = ("left_button", "", "right_button")
+        else:
+            buttons = self.find_unique_value_by_key(
+                "buttons", default={}, only_type=dict
+            )
+            button_keys = ("left_btn", "middle_btn", "right_btn")
 
         def get_button_content(btn_key: str) -> str:
             button_obj = buttons.get(btn_key, {})
@@ -336,7 +353,6 @@ class LayoutContent(UnstructuredJSONReader):
             # default value
             return "-"
 
-        button_keys = ("left_btn", "middle_btn", "right_btn")
         return [get_button_content(btn_key) for btn_key in button_keys]
 
     def seed_words(self) -> list[str]:

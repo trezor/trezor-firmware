@@ -128,9 +128,9 @@ impl ActionBar {
         Self::new(Mode::PaginateOnly, None, None, None)
     }
 
-    pub fn with_left_short(mut self) -> Self {
+    pub fn with_left_short(mut self, short: bool) -> Self {
         if let Mode::Double { ref mut left_short } = self.mode {
-            *left_short = true;
+            *left_short = short;
         }
         self
     }
