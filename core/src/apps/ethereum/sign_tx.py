@@ -123,30 +123,46 @@ async def confirm_tx_data(
     data_total_len: int,
 ) -> None:
     # function distinguishes between staking / smart contracts / regular transactions
-    from .layout import require_confirm_other_data, require_confirm_tx
+    from .layout import require_confirm_approve, require_confirm_other_data, require_confirm_tx
 
     if await handle_staking(msg, defs.network, address_bytes, maximum_fee, fee_items):
         return
 
-    # Handle ERC-20, currently only 'transfer' function
-    token, recipient, value = await _handle_erc20_transfer(msg, defs, address_bytes)
+    # Handle ERC-20 known functions
+    token, token_address, function, recipient, value = await _handle_erc20(msg, defs, address_bytes)
 
-    is_contract_interaction = token is None and data_total_len > 0
+    if function == 'approve':
+        await require_confirm_approve(
+            recipient,
+            value,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            msg.chain_id,
+            defs.network,
+            token,
+            token_address,
+            chunkify=bool(msg.chunkify),
+        )
+    else:
+        assert function == 'transfer' or function is None
 
-    if is_contract_interaction:
-        await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
+        is_contract_interaction = token is None and data_total_len > 0
 
-    await require_confirm_tx(
-        recipient,
-        value,
-        msg.address_n,
-        maximum_fee,
-        fee_items,
-        defs.network,
-        token,
-        is_contract_interaction=is_contract_interaction,
-        chunkify=bool(msg.chunkify),
-    )
+        if is_contract_interaction:
+            await require_confirm_other_data(msg.data_initial_chunk, data_total_len)
+
+        await require_confirm_tx(
+            recipient,
+            value,
+            msg.address_n,
+            maximum_fee,
+            fee_items,
+            defs.network,
+            token,
+            is_contract_interaction=is_contract_interaction,
+            chunkify=bool(msg.chunkify),
+        )
 
 
 async def handle_staking(
@@ -191,16 +207,19 @@ async def handle_staking(
     return False
 
 
-async def _handle_erc20_transfer(
+async def _handle_erc20(
     msg: MsgInSignTx,
     definitions: Definitions,
     address_bytes: bytes,
 ) -> tuple[EthereumTokenInfo | None, bytes, int]:
+    from trezor import TR
     from . import tokens
-    from .layout import require_confirm_unknown_token
+    from .layout import (require_confirm_address, require_confirm_unknown_token)
 
     data_initial_chunk = msg.data_initial_chunk  # local_cache_attribute
     token = None
+    token_address = None
+    function = None
     recipient = address_bytes
     value = int.from_bytes(msg.value, "big")
     if (
@@ -208,17 +227,35 @@ async def _handle_erc20_transfer(
         and len(msg.value) == 0
         and msg.data_length == 68
         and len(data_initial_chunk) == 68
-        and data_initial_chunk[:16]
-        == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
     ):
+        if (data_initial_chunk[:16] == b"\xa9\x05\x9c\xbb\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
+            function = 'transfer'
+        elif (data_initial_chunk[:16] == b"\x09\x5e\xa7\xb3\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"):
+            function = 'approve'
         token = definitions.get_token(address_bytes)
+        token_address = address_bytes
         recipient = data_initial_chunk[16:36]
-        value = int.from_bytes(data_initial_chunk[36:68], "big")
-
+        if all(byte == 255 for byte in data_initial_chunk[36:68]):
+            # from https://blocksecteam.medium.com/unlimited-approval-in-erc20-convenience-or-security-1c8dce421ed7
+            # "unlimited" approval means having the maximum value that can be represented in an uint256,
+            # so basically having all bytes set to "\xff"
+            # while we *could* parse this value here and check it later,
+            # it seems not only inefficient working with such a large number,
+            # but it also seems cleaner to handle this special case here, where we are decoding the function,
+            # and having the rest of the code already *know* whether we talk about an unlimited approval or not
+            # rather than having subsequent code check for the special case in multiple cases: when formatting, showing a warning, etc
+            value = None
+        else:
+            value = int.from_bytes(data_initial_chunk[36:68], "big")
         if token is tokens.UNKNOWN_TOKEN:
-            await require_confirm_unknown_token(address_bytes)
+            await require_confirm_unknown_token()
+            if function != 'approve':
+                # for unknown tokens, we also show the token address immediately after the warning,
+                # except in the case of the "approve" flow, which shows the token address later on
+                await require_confirm_address(address_bytes, TR.words__address, TR.ethereum__token_contract, TR.buttons__continue, "unknown_token")
 
-    return token, recipient, value
+
+    return token, token_address, function, recipient, value
 
 
 def _get_total_length(msg: EthereumSignTx, data_total: int) -> int:
