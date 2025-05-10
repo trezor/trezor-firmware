@@ -14,7 +14,7 @@ FEATURE_FLAGS = {
     "AES_GCM": True,
 }
 
-FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision"]
+FEATURES_WANTED = ["input", "sbu", "nfc", "sd_card", "rgb_led", "usb", "consumption_mask", "optiga", "haptic", "tropic", "ble", "hw_revision", "power_manager"]
 
 CCFLAGS_MOD = ''
 CPPPATH_MOD = []
@@ -137,7 +137,6 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_bootloader.c',
     'embed/projects/prodtest/cmd/prodtest_button.c',
     'embed/projects/prodtest/cmd/prodtest_display.c',
-    'embed/projects/prodtest/cmd/prodtest_fuel_gauge.c',
     'embed/projects/prodtest/cmd/prodtest_prodtest.c',
     'embed/projects/prodtest/cmd/prodtest_backup_ram.c',
     'embed/projects/prodtest/cmd/prodtest_get_cpuid.c',
@@ -150,8 +149,7 @@ SOURCE_PRODTEST = [
     'embed/projects/prodtest/cmd/prodtest_otp_batch.c',
     'embed/projects/prodtest/cmd/prodtest_otp_variant.c',
     'embed/projects/prodtest/cmd/prodtest_ping.c',
-    'embed/projects/prodtest/cmd/prodtest_pmic.c',
-    'embed/projects/prodtest/cmd/prodtest_powerctl.c',
+    'embed/projects/prodtest/cmd/prodtest_power_manager.c',
     'embed/projects/prodtest/cmd/prodtest_reboot.c',
     'embed/projects/prodtest/cmd/prodtest_rgbled.c',
     'embed/projects/prodtest/cmd/prodtest_sdcard.c',

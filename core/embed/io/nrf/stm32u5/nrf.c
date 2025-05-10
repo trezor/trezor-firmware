@@ -25,9 +25,9 @@
 #include <io/nrf.h>
 #include <sys/irq.h>
 #include <sys/mpu.h>
+#include <sys/power_manager.h>
 #include <sys/systick.h>
 #include <sys/systimer.h>
-#include <sys/wakeup_flags.h>
 #include <util/tsqueue.h>
 
 #include "../crc8.h"
@@ -797,7 +797,7 @@ void NRF_EXTI_INTERRUPT_HANDLER(void) {
 #ifdef USE_POWERCTL
   if (drv->wakeup) {
     // Inform the powerctl module about nrf/ble wakeup
-    wakeup_flags_set(WAKEUP_FLAG_BLE);
+    pm_wakeup_flags_set(PM_WAKEUP_FLAG_BLE);
     drv->wakeup = false;
   }
 #endif

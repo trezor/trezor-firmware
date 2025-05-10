@@ -78,8 +78,8 @@
 #include <sec/hash_processor.h>
 #endif
 
-#ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
 #endif
 
 #ifdef USE_STORAGE_HWKEY
@@ -193,8 +193,8 @@ static bool g_rgbled_control_disabled = false;
 void prodtest_disable_rgbled_control(void) { g_rgbled_control_disabled = true; }
 
 static void drivers_init(void) {
-#ifdef USE_POWERCTL
-  powerctl_init();
+#ifdef USE_POWER_MANAGER
+  pm_init(true);
 #endif
 
   display_init(DISPLAY_RESET_CONTENT);
@@ -261,13 +261,16 @@ int main(void) {
       &g_cli, &_prodtest_cli_cmd_section_start,
       &_prodtest_cli_cmd_section_end - &_prodtest_cli_cmd_section_start);
 
+  pm_turn_on();
+  pm_charging_enable();
+
 #ifdef USE_OPTIGA
   optiga_init();
   optiga_open_application();
   pair_optiga(&g_cli);
 #endif
 
-#if defined USE_BUTTON && defined USE_POWERCTL
+#if defined USE_BUTTON && defined USE_POWER_MANAGER
   uint32_t btn_deadline = 0;
 #endif
 
@@ -281,14 +284,14 @@ int main(void) {
       cli_process_io(&g_cli);
     }
 
-#if defined USE_BUTTON && defined USE_POWERCTL
+#if defined USE_BUTTON && defined USE_POWER_MANAGER
     button_event_t btn_event = {0};
     if (button_get_event(&btn_event) && btn_event.button == BTN_POWER) {
       if (btn_event.event_type == BTN_EVENT_DOWN) {
         btn_deadline = ticks_timeout(1000);
       } else if (btn_event.event_type == BTN_EVENT_UP) {
         if (ticks_expired(btn_deadline)) {
-          powerctl_hibernate();
+          pm_hibernate();
           rgb_led_set_color(RGBLED_YELLOW);
           systick_delay_ms(1000);
           rgb_led_set_color(0);
