@@ -5511,12 +5511,14 @@ if TYPE_CHECKING:
     class SolanaTxAdditionalInfo(protobuf.MessageType):
         token_accounts_infos: "list[SolanaTxTokenAccountInfo]"
         encoded_token: "bytes | None"
+        instruction: "SolanaInstruction | None"
 
         def __init__(
             self,
             *,
             token_accounts_infos: "list[SolanaTxTokenAccountInfo] | None" = None,
             encoded_token: "bytes | None" = None,
+            instruction: "SolanaInstruction | None" = None,
         ) -> None:
             pass
 
@@ -5554,6 +5556,88 @@ if TYPE_CHECKING:
 
         @classmethod
         def is_type_of(cls, msg: Any) -> TypeGuard["SolanaTxSignature"]:
+            return isinstance(msg, cls)
+
+    class SolanaInstruction(protobuf.MessageType):
+        id: "int"
+        name: "str"
+        is_multisig: "bool | None"
+        is_ui_hidden: "bool | None"
+        is_deprecated_warning: "bool | None"
+        parameters: "list[Parameter]"
+        references: "list[str]"
+        ui_properties: "list[UIProperty]"
+
+        def __init__(
+            self,
+            *,
+            id: "int",
+            name: "str",
+            parameters: "list[Parameter] | None" = None,
+            references: "list[str] | None" = None,
+            ui_properties: "list[UIProperty] | None" = None,
+            is_multisig: "bool | None" = None,
+            is_ui_hidden: "bool | None" = None,
+            is_deprecated_warning: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaInstruction"]:
+            return isinstance(msg, cls)
+
+    class Parameter(protobuf.MessageType):
+        name: "str"
+        type: "str"
+        is_optional: "bool | None"
+
+        def __init__(
+            self,
+            *,
+            name: "str",
+            type: "str",
+            is_optional: "bool | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["Parameter"]:
+            return isinstance(msg, cls)
+
+    class UIProperty(protobuf.MessageType):
+        account: "str | None"
+        parameter: "str | None"
+        display_name: "str"
+        default_value_to_hide: "str | None"
+
+        def __init__(
+            self,
+            *,
+            display_name: "str",
+            account: "str | None" = None,
+            parameter: "str | None" = None,
+            default_value_to_hide: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["UIProperty"]:
+            return isinstance(msg, cls)
+
+    class SolanaInstructionAck(protobuf.MessageType):
+        success: "bool"
+        error: "str | None"
+
+        def __init__(
+            self,
+            *,
+            success: "bool",
+            error: "str | None" = None,
+        ) -> None:
+            pass
+
+        @classmethod
+        def is_type_of(cls, msg: Any) -> TypeGuard["SolanaInstructionAck"]:
             return isinstance(msg, cls)
 
     class StellarAsset(protobuf.MessageType):

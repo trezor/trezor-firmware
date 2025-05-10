@@ -453,6 +453,13 @@ impl LayoutFit {
             LayoutFit::OutOfBounds { height, .. } => *height,
         }
     }
+    /// How many characters were processed.
+    pub fn processed_chars(&self) -> usize {
+        match self {
+            LayoutFit::Fitting { processed_chars, .. } => *processed_chars,
+            LayoutFit::OutOfBounds { processed_chars, .. } => *processed_chars,
+        }
+    }
 }
 
 /// Visitor for text segment operations.
@@ -586,7 +593,15 @@ pub mod trace {
             self.0.string(&"\n".into());
         }
     }
+
+    // impl TraceSink<'_> {
+    //     pub fn new(tracer: &mut dyn ListTracer) -> Self {
+    //         Self(&mut <dyn ListTracer>::new(tracer))
+    //     }
+    // }
 }
+
+
 
 /// Carries info about the content that was processed
 /// on the current line.
