@@ -471,9 +471,9 @@ impl FirmwareUI for UIEckhart {
             let [text, is_data]: [Obj; 2] = util::iter_into_array(para)?;
             let is_data = is_data.try_into()?;
             let style: &TextStyle = if is_data {
-                &theme::TEXT_SMALL_LIGHT
-            } else {
                 &theme::TEXT_MONO_MEDIUM_LIGHT
+            } else {
+                &theme::TEXT_SMALL_LIGHT
             };
             let text: TString = text.try_into()?;
             paragraphs.add(Paragraph::new(style, text));
