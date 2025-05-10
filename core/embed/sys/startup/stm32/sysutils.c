@@ -188,8 +188,11 @@ __attribute((naked, no_stack_protector)) void ensure_thread_mode(void) {
       "MRS     R0, CONTROL         \n"  // Clear SPSEL to use MSP for thread
       "BIC     R0, R0, #3          \n"  // Clear nPRIV to run in privileged mode
       "MSR     CONTROL, R0         \n"
-
+#if !defined(__ARM_FEATURE_CMSE) || (__ARM_FEATURE_CMSE == 3U)
       "LDR     LR, = 0xFFFFFFF9    \n"  // Return to Secure Thread mode, use MSP
+#else
+      "LDR     LR, = 0xFFFFFFB8    \n"  // Return to Thread mode, use MSP
+#endif
       "BX      LR                  \n");
 }
 
@@ -245,6 +248,9 @@ __attribute((naked, noreturn, no_stack_protector)) void jump_to_vectbl(
       "MOV      R10, R0            \n"  // R11 is set to r11 argument
       "MOV      R12, R0            \n"
 
+#if defined(__ARM_ARCH_8M_MAIN__) || defined(__ARM_ARCH_8M_BASE__)
+      "MSR      MSPLIM, R1         \n"  // Disable MSPLIM
+#endif
       "LDR      R0, [LR]           \n"  // Initial MSP value
       "MSR      MSP, R0            \n"  // Set MSP
 

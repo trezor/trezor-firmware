@@ -19,7 +19,7 @@ def configure(
     mcu = "STM32U5G9xx"
     linker_script = """embed/sys/linker/stm32u5g/{target}.ld"""
 
-    stm32u5_common_files(env, defines, sources, paths)
+    stm32u5_common_files(env, features_wanted, defines, sources, paths)
 
     env.get("ENV")[
         "CPU_ASFLAGS"
@@ -43,20 +43,21 @@ def configure(
         ("TERMINAL_Y_PADDING", "12"),
     ]
 
-    sources += [
-        "embed/io/display/ltdc_dsi/display_driver.c",
-        "embed/io/display/ltdc_dsi/panels/lx250a2401a/lx250a2401a.c",
-        "embed/io/display/ltdc_dsi/display_fb.c",
-        "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
-        "embed/io/display/ltdc_dsi/display_gfxmmu.c",
-        "embed/io/display/fb_queue/fb_queue.c",
-    ]
-    paths += ["embed/io/display/inc"]
+    if "display" in features_wanted:
+        sources += [
+            "embed/io/display/ltdc_dsi/display_driver.c",
+            "embed/io/display/ltdc_dsi/panels/lx250a2401a/lx250a2401a.c",
+            "embed/io/display/ltdc_dsi/display_fb.c",
+            "embed/io/display/ltdc_dsi/display_fb_rgb888.c",
+            "embed/io/display/ltdc_dsi/display_gfxmmu.c",
+            "embed/io/display/fb_queue/fb_queue.c",
+        ]
+        paths += ["embed/io/display/inc"]
 
-    features_available.append("backlight")
-    defines += [("USE_BACKLIGHT", "1")]
-    sources += ["embed/io/backlight/stm32u5/tps61062.c"]
-    paths += ["embed/io/backlight/inc"]
+        features_available.append("backlight")
+        defines += [("USE_BACKLIGHT", "1")]
+        sources += ["embed/io/backlight/stm32u5/tps61062.c"]
+        paths += ["embed/io/backlight/inc"]
 
     if "input" in features_wanted:
         sources += ["embed/io/touch/ft6x36/ft6x36.c"]
@@ -238,23 +239,21 @@ def configure(
         ("USE_OEM_KEYS_CHECK", "1"),
     ]
 
-    sources += [
-        "embed/sys/powerctl/npm1300/npm1300.c",
-        "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
-        "embed/sys/powerctl/fuel_gauge/battery_model.c",
-        "embed/sys/powerctl/stwlc38/stwlc38.c",
-        "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
-        "embed/sys/powerctl/stm32u5/powerctl.c",
-        "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
-        "embed/sys/powerctl/wakeup_flags.c",
-    ]
-    paths += ["embed/sys/powerctl/inc"]
-    defines += [("USE_POWERCTL", "1")]
-    features_available.append("powerctl")
+    if "powerctl" in features_wanted:
+        sources += [
+            "embed/sys/powerctl/npm1300/npm1300.c",
+            "embed/sys/powerctl/fuel_gauge/fuel_gauge.c",
+            "embed/sys/powerctl/fuel_gauge/battery_model.c",
+            "embed/sys/powerctl/stwlc38/stwlc38.c",
+            "embed/sys/powerctl/stwlc38/stwlc38_patching.c",
+            "embed/sys/powerctl/stm32u5/powerctl.c",
+            "embed/sys/powerctl/stm32u5/powerctl_suspend.c",
+            "embed/sys/powerctl/wakeup_flags.c",
+        ]
+        paths += ["embed/sys/powerctl/inc"]
+        defines += [("USE_POWERCTL", "1")]
+        features_available.append("powerctl")
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
-
-    defs = env.get("CPPDEFINES_IMPLICIT")
-    defs += ["__ARM_FEATURE_CMSE=3"]
 
     return features_available
