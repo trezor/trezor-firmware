@@ -225,10 +225,9 @@ impl FirmwareUI for UIEckhart {
         let flow = flow::new_confirm_with_menu(
             title,
             None,
-            paragraphs
-                .into_paragraphs()
-                .with_spacing(12)
-                .with_placement(LinearPlacement::vertical()),
+            paragraphs.into_paragraphs().with_placement(
+                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+            ),
             None,
             false,
             Some(TR::words__title_information.into()),
@@ -256,12 +255,9 @@ impl FirmwareUI for UIEckhart {
         ]);
 
         let layout = RootComponent::new(
-            TextScreen::new(
-                paragraphs
-                    .into_paragraphs()
-                    .with_placement(LinearPlacement::vertical())
-                    .with_spacing(12),
-            )
+            TextScreen::new(paragraphs.into_paragraphs().with_placement(
+                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+            ))
             .with_header(Header::new(TR::modify_amount__title.into()))
             .with_action_bar(ActionBar::new_double(
                 Button::with_icon(theme::ICON_CROSS),
@@ -352,10 +348,9 @@ impl FirmwareUI for UIEckhart {
         let flow = flow::new_confirm_with_menu(
             title,
             None,
-            paragraphs
-                .into_paragraphs()
-                .with_spacing(12)
-                .with_placement(LinearPlacement::vertical()),
+            paragraphs.into_paragraphs().with_placement(
+                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+            ),
             None,
             hold,
             None,
@@ -869,7 +864,9 @@ impl FirmwareUI for UIEckhart {
             theme::ICON_CHEVRON_RIGHT_MINI,
             theme::ICON_CHECKMARK_MINI,
             active,
-            paragraphs.into_paragraphs().with_spacing(40),
+            paragraphs
+                .into_paragraphs()
+                .with_placement(LinearPlacement::vertical().with_spacing(40)),
         )
         .with_check_width(32)
         .with_icon_done_color(theme::GREEN_LIGHT)
@@ -1060,13 +1057,11 @@ impl FirmwareUI for UIEckhart {
             }
         }
 
-        let screen = TextScreen::new(
-            paragraphs
-                .into_paragraphs()
-                .with_spacing(12)
-                .with_placement(LinearPlacement::vertical()),
-        )
-        .with_header(Header::new(title).with_close_button());
+        let screen =
+            TextScreen::new(paragraphs.into_paragraphs().with_placement(
+                LinearPlacement::vertical().with_spacing(theme::PARAGRAPHS_SPACING),
+            ))
+            .with_header(Header::new(title).with_close_button());
         let layout = RootComponent::new(screen);
         Ok(layout)
     }
