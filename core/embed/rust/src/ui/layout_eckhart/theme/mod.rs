@@ -54,6 +54,7 @@ pub const PADDING: i16 = 24; // px
 pub const HEADER_HEIGHT: i16 = 96; // [px]
 pub const SIDE_INSETS: Insets = Insets::sides(PADDING);
 pub const ACTION_BAR_HEIGHT: i16 = 90; // [px]
+pub const PARAGRAPHS_SPACING: i16 = 12; // px
 pub const TEXT_VERTICAL_SPACING: i16 = 24; // [px]
 
 // Tile pattern grid constants

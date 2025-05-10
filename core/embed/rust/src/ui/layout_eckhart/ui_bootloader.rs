@@ -38,8 +38,9 @@ pub type BootloaderString = String<128>;
 const RECONNECT_MESSAGE: &str = "Please reconnect\nthe device";
 
 const SCREEN: Rect = UIEckhart::SCREEN;
-// TODO: adjust offset
-const PROGRESS_TEXT_ORIGIN: Point = SCREEN.top_left().ofs(Offset::new(24, 48));
+const PROGRESS_TEXT_ORIGIN: Point = SCREEN
+    .top_left()
+    .ofs(Offset::new(theme::PADDING, theme::HEADER_HEIGHT));
 const SCREEN_BORDER_BLUE: ScreenBorder = ScreenBorder::new(BLUE);
 const SCREEN_BORDER_RED: ScreenBorder = ScreenBorder::new(RED);
 
@@ -57,16 +58,16 @@ impl UIEckhart {
         display::sync();
 
         render_on_display(None, Some(bg_color), |target| {
-            shape::Text::new(PROGRESS_TEXT_ORIGIN, text, fonts::FONT_SATOSHI_REGULAR_38)
-                .with_align(Alignment::Start)
-                .with_fg(BLD_FG)
-                .render(target);
-
             let border: &ScreenBorder = match bg_color {
                 RED => &SCREEN_BORDER_RED,
                 _ => &SCREEN_BORDER_BLUE,
             };
             render_loader(progress, border, target);
+
+            shape::Text::new(PROGRESS_TEXT_ORIGIN, text, fonts::FONT_SATOSHI_REGULAR_38)
+                .with_align(Alignment::Start)
+                .with_fg(BLD_FG)
+                .render(target);
 
             if let Some(center_text) = center_text {
                 shape::Text::new(SCREEN.center(), center_text, fonts::FONT_SATOSHI_REGULAR_38)
