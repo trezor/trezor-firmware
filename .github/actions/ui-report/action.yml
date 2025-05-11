@@ -19,6 +19,9 @@ runs:
       with:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-west-1
+    - name: Increase AWS S3 max concurrency for faster uploads
+      run: aws configure set default.s3.max_concurrent_requests 30
+      shell: sh
     - run: |
         MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
         OUTDIR=${{ github.run_id }}/$MODELJOB
