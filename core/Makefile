@@ -205,6 +205,11 @@ test_emu_click_ui: ## run click tests with UI testing
 	$(EMU_TEST) $(PYTEST) $(TESTPATH)/click_tests $(TESTOPTS) \
 		--ui=test --ui-check-missing --do-master-diff --lang=$(TEST_LANG)
 
+test_emu_click_ui_multicore: ## run click tests with UI testing using multiple cores
+	$(PYTEST) -n $(MULTICORE) $(TESTPATH)/click_tests $(TESTOPTS) --timeout $(PYTEST_TIMEOUT) \
+		--ui=test --ui-check-missing --do-master-diff --lang=$(TEST_LANG) \
+		--control-emulators --model=core --random-order-seed=$(RANDOM)
+
 test_emu_persistence: ## run persistence tests
 	$(PYTEST) $(TESTPATH)/persistence_tests $(TESTOPTS) --lang=$(TEST_LANG)
 
