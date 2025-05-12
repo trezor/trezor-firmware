@@ -93,7 +93,7 @@ void systask_scheduler_init(systask_error_handler_t error_handler) {
 #if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
   // Enable SecureFault handler
   SCB->SHCSR |= SCB_SHCSR_SECUREFAULTENA_Msk;
-#endif  
+#endif
 }
 
 systask_t* systask_active(void) {
@@ -380,6 +380,10 @@ __attribute((used)) static void systask_exit_fault(bool privileged,
     pminfo->fault.mmfar = SCB->MMFAR;
     pminfo->fault.bfar = SCB->BFAR;
     pminfo->fault.hfsr = SCB->HFSR;
+#if defined(__ARM_FEATURE_CMSE) && (__ARM_FEATURE_CMSE == 3U)
+    pminfo->fault.sfsr = SAU->SFSR;
+    pminfo->fault.sfar = SAU->SFAR;
+#endif
   }
 
   systask_kill(task);
