@@ -64,7 +64,6 @@ void pm_monitor_power_sources(void) {
   // Check battery voltage for critical (undervoltage) threshold
   if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
       !drv->battery_critical) {
-
     // Force Fuel gauge to 0, keep the covariance
     fuel_gauge_set_soc(&drv->fuel_gauge, 0.0f, drv->fuel_gauge.P);
 
@@ -95,7 +94,7 @@ void pm_monitor_power_sources(void) {
                     drv->pmic_data.ntc_temp);
 
   // Charging completed
-  if(drv->pmic_data.charge_status & 0x1){
+  if (drv->pmic_data.charge_status & 0x1) {
     // Force fuel gauge to 100%, keep the covariance
     fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
   }
@@ -162,28 +161,29 @@ void pm_charging_controller(pm_driver_t* drv) {
     }
   } else if (drv->usb_connected) {
     // USB connected, set maximum charging current right away
-    drv->charging_current_target_ma = PMIC_CHARGING_LIMIT_MAX;
+    drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
 
   } else if (drv->wireless_connected) {
     // Gradually increase charging current to the maximum
-    if (drv->charging_current_target_ma == PMIC_CHARGING_LIMIT_MAX) {
+    if (drv->charging_current_target_ma == drv->charging_current_max_limit_ma) {
       // No action required
     } else if (drv->charging_current_target_ma == 0) {
-      drv->charging_current_target_ma = PMIC_CHARGING_LIMIT_MIN;
+      drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
       drv->charging_target_timestamp = systick_ms();
     } else if (systick_ms() - drv->charging_target_timestamp >
                PM_WPC_CHARGE_CURR_STEP_TIMEOUT_MS) {
       drv->charging_current_target_ma += PM_WPC_CHARGE_CURR_STEP_MA;
       drv->charging_target_timestamp = systick_ms();
-
-      if (drv->charging_current_target_ma > PMIC_CHARGING_LIMIT_MAX) {
-        drv->charging_current_target_ma = PMIC_CHARGING_LIMIT_MAX;
-      }
     }
 
   } else {
     // Charging enabled but no external power source, clear charging target
     drv->charging_current_target_ma = 0;
+  }
+
+  // charging current software limit
+  if (drv->charging_current_target_ma > drv->charging_current_max_limit_ma) {
+    drv->charging_current_target_ma = drv->charging_current_max_limit_ma;
   }
 
   // Set charging target

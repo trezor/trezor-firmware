@@ -336,17 +336,16 @@ void prodtest_pm_precharge(cli_t* cli) {
   // due to effect of internal resistance of the battery. So battery voltage
   // will drop a bit after the charging is stopped.
 
-  // voltage while charging is being lifted due to charging with quite high charging
-  // current. When the test terminate by reaching the given woltage. The current
-  // and
+  // voltage while charging is being lifted due to charging with quite high
+  // charging current. When the test terminate by reaching the given woltage.
+  // The current and
   float precharge_voltage_V = 3.45f;
 
   pm_charging_enable();
 
   cli_trace(cli, "Precharging the device...");
 
-  while(true){
-
+  while (true) {
     pm_report_t report;
     pm_status_t status = pm_get_report(&report);
 
@@ -365,11 +364,10 @@ void prodtest_pm_precharge(cli_t* cli) {
               (int)(report.battery_voltage_v * 1000) % 1000,
               (int)precharge_voltage_V,
               (int)(precharge_voltage_V * 1000) % 1000);
-    cli_progress(cli,"%d.%03d %d.%03d",
-                (int)report.battery_voltage_v,
-                (int)(report.battery_voltage_v * 1000) % 1000,
-                (int)precharge_voltage_V,
-                (int)(precharge_voltage_V * 1000) % 1000);
+    cli_progress(cli, "%d.%03d %d.%03d", (int)report.battery_voltage_v,
+                 (int)(report.battery_voltage_v * 1000) % 1000,
+                 (int)precharge_voltage_V,
+                 (int)(precharge_voltage_V * 1000) % 1000);
 
     if (cli_aborted(cli)) {
       cli_trace(cli, "aborted");
@@ -377,7 +375,7 @@ void prodtest_pm_precharge(cli_t* cli) {
     }
 
     // Check if the battery voltage is above the precharge voltag
-    if(report.battery_voltage_v >= precharge_voltage_V){
+    if (report.battery_voltage_v >= precharge_voltage_V) {
       // Target achieved
       cli_trace(cli, "Battery voltage reached the target voltage.");
       break;
@@ -386,7 +384,6 @@ void prodtest_pm_precharge(cli_t* cli) {
 
   cli_ok(cli, "");
 }
-
 
 // clang-format off
 

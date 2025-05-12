@@ -34,7 +34,8 @@
 #define PM_BATTERY_UNDERVOLT_THR_V 3.0f
 #define PM_BATTERY_UNDERVOLT_RECOVERY_THR_V 3.3f
 #define PM_BATTERY_LOW_THRESHOLD_SOC 15
-
+#define PM_BATTERY_CHARGING_CURRENT_MAX PMIC_CHARGING_LIMIT_MAX
+#define PM_BATTERY_CHARGING_CURRENT_MIN PMIC_CHARGING_LIMIT_MIN
 #define PM_BATTERY_SAMPLING_BUF_SIZE 10
 
 #define PM_WPC_CHARGE_CURR_STEP_MA 50
@@ -75,6 +76,7 @@ typedef struct {
   // Battery charging state
   bool charging_enabled;
   uint16_t charging_current_target_ma;
+  uint16_t charging_current_max_limit_ma;
   uint32_t charging_target_timestamp;
 
   // Power source hardware state
