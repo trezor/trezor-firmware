@@ -106,8 +106,9 @@ pm_status_t pm_init(bool inherit_state) {
   // Fuel gauge SoC available, set fuel_gauge initialized.
   drv->fuel_gauge_initialized = true;
 
-  // Enable charging by default
+  // Enable charging by default to max current
   drv->charging_enabled = true;
+  pm_charging_set_max_current(PM_BATTERY_CHARGING_CURRENT_MAX);
 
   // Poll until fuel_gauge is initialized and first PMIC & WLC measurements
   // propagates into power_monitor.
@@ -294,7 +295,9 @@ pm_status_t pm_charging_enable(void) {
   }
 
   drv->charging_enabled = true;
+  irq_key_t irq_key = irq_lock();
   pm_charging_controller(drv);
+  irq_unlock(irq_key);
 
   return PM_OK;
 }
@@ -307,7 +310,29 @@ pm_status_t pm_charging_disable(void) {
   }
 
   drv->charging_enabled = false;
+  irq_key_t irq_key = irq_lock();
   pm_charging_controller(drv);
+  irq_unlock(irq_key);
+
+  return PM_OK;
+}
+
+pm_status_t pm_charging_set_max_current(uint16_t current_ma) {
+  pm_driver_t* drv = &g_pm;
+
+  if (!drv->initialized) {
+    return PM_NOT_INITIALIZED;
+  }
+
+  if (current_ma > PM_BATTERY_CHARGING_CURRENT_MAX) {
+    return PM_REQUEST_REJECTED;
+  }
+
+  if (current_ma < PM_BATTERY_CHARGING_CURRENT_MIN) {
+    return PM_REQUEST_REJECTED;
+  }
+
+  drv->charging_current_max_limit_ma = current_ma;
 
   return PM_OK;
 }
@@ -337,25 +362,6 @@ pm_status_t pm_store_data_to_backup_ram() {
 
   if (status != BACKUP_RAM_OK) {
     return PM_ERROR;
-  }
-
-  return PM_OK;
-}
-
-pm_status_t pm_wait_until_active(uint32_t timeout_ms) {
-  pm_driver_t* drv = &g_pm;
-  uint32_t expire_time = ticks_timeout(timeout_ms);
-
-  while (1) {
-    if (ticks_expired(expire_time)) {
-      // Timeout expired
-      return PM_REQUEST_REJECTED;
-    }
-
-    if ((drv->state == PM_STATE_ACTIVE) ||
-        (drv->state == PM_STATE_POWER_SAVE)) {
-      return PM_OK;
-    }
   }
 
   return PM_OK;
