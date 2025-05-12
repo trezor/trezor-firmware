@@ -19,7 +19,7 @@ import pytest
 
 from trezorlib import device, messages
 from trezorlib.debuglink import TrezorClientDebugLink as Client
-from trezorlib.exceptions import Cancelled, TrezorFailure
+from trezorlib.exceptions import TrezorFailure
 
 from .. import translations as TR
 from ..common import (
@@ -157,10 +157,8 @@ def test_repeated_backup_cancel(client: Client):
     layout = client.debug.read_layout()
     assert TR.recovery__unlock_repeated_backup in layout.text_content()
 
-    # send a Cancel message
-
-    with pytest.raises(Cancelled):
-        client.call(messages.Cancel())
+    # don't create a new backup
+    client.debug.press_no()
 
     client.refresh_features()
 
