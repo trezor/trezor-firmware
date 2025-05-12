@@ -44,6 +44,12 @@ typedef struct {
   uint32_t mmfar;
   // Address associated with the BusFault
   uint32_t bfar;
+#if defined(__ARM_FEATURE_CMSE)
+  // Secure Fault Status Register
+  uint32_t sfsr;
+  // Address associated with the SecureFault
+  uint32_t sfar;
+#endif
   // Stack pointer at the time of the fault
   // (MSP or PSP depending on the privilege level)
   uint32_t sp;
