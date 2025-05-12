@@ -135,7 +135,8 @@ static secbool boot_sequence(secbool manufacturing_mode) {
       (cmd == BOOT_COMMAND_INSTALL_UPGRADE || cmd == BOOT_COMMAND_REBOOT ||
        cmd == BOOT_COMMAND_SHOW_RSOD || cmd == BOOT_COMMAND_STOP_AND_WAIT);
 
-  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF && !button_is_down(BTN_POWER)) {
+  if (sectrue == manufacturing_mode && cmd != BOOT_COMMAND_POWER_OFF &&
+      !button_is_down(BTN_POWER)) {
     turn_on = true;
   }
 
@@ -158,7 +159,8 @@ static secbool boot_sequence(secbool manufacturing_mode) {
         haptic_play(HAPTIC_BUTTON_PRESS);
 #endif
         bld_locked = true;
-      } else if ((elapsed >= 1000 || manufacturing_mode == sectrue) && !turn_on_locked) {
+      } else if ((elapsed >= 1000 || manufacturing_mode == sectrue) &&
+                 !turn_on_locked) {
 #ifdef USE_HAPTIC
         haptic_play(HAPTIC_BUTTON_PRESS);
 #endif
