@@ -199,7 +199,7 @@ if FEATURE_FLAGS["SECP256K1_ZKP"]:
 if PQ_SIGNATURE_ALGORITHM:
     PQ_SIGNATURE_PATH = f'vendor/pqm4/mupq/pqclean/crypto_sign/{PQ_SIGNATURE_ALGORITHM}/clean/'
     PQ_SIGNATURE_PREFIX = f'PQCLEAN_{PQ_SIGNATURE_ALGORITHM.upper().replace("-", "")}_CLEAN'
-    PQ_SIGNATURE_CPPPATH = [PQ_SIGNATURE_PATH, 'vendor/trezor-crypto/pq_signature', 'vendor/trezor-crypto']
+    PQ_SIGNATURE_CPPPATH = [PQ_SIGNATURE_PATH, 'vendor/trezor-crypto/pq_signature', 'vendor/trezor-crypto', 'embed/sec/hash_processor/inc', 'embed/rtl/inc']
     PQ_SIGNATURE_CPPDEFINES = [('PQ_SIGNATURE_PREFIX', PQ_SIGNATURE_PREFIX)]
     PQ_SIGNATURE_CCFLAGS_MOD = "-Wno-unused-function -Wno-incompatible-pointer-types"
     if PQ_SIGNATURE_VERIFICATION_ONLY:

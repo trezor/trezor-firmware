@@ -66,6 +66,7 @@ STATIC mp_obj_t mod_trezorcrypto_Sha256_update(mp_obj_t self, mp_obj_t data) {
   mp_get_buffer_raise(data, &msg, MP_BUFFER_READ);
   if (msg.len > 0) {
     hash_processor_sha256_update(&(o->ctx), msg.buf, msg.len);
+    (void) o;
   }
   return mp_const_none;
 }

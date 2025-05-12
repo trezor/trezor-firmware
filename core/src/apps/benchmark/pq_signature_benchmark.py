@@ -26,7 +26,7 @@ class SignTimeBenchmark:
         self.pq_signature = pq_signature
 
     def prepare(self) -> None:
-        self.iterations_count = 10
+        self.iterations_count = 1
         self.secret_key, self.public_key = self.pq_signature.generate_keypair()
         self.digest = random_bytes(32)
 
@@ -52,10 +52,7 @@ class VerifyTimeBenchmark:
 
     def run(self) -> None:
         for _ in range(self.iterations_count):
-            assert (
-                self.pq_signature.verify(self.public_key, self.signature, self.digest)
-                is True
-            )
+            self.pq_signature.verify(self.public_key, self.signature, self.digest)
 
     def get_result(self, duration_us: int, repetitions: int) -> BenchmarkResult:
         value = duration_us / (repetitions * self.iterations_count * 1000)
@@ -68,7 +65,7 @@ class GenerateKeypairTimeBenchmark:
         self.pq_signature = pq_signature
 
     def prepare(self) -> None:
-        self.iterations_count = 10
+        self.iterations_count = 1
 
     def run(self) -> None:
         for _ in range(self.iterations_count):

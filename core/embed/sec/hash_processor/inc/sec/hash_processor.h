@@ -8,6 +8,8 @@
 typedef struct {
   uint32_t length;                         /*!< nb bytes in buffer */
   uint8_t buffer[HASH_SHA256_BUFFER_SIZE]; /*!< data being processed */
+  // uint8_t ctx[(54 + 3) * 4 + 1000];
+  bool saved;
 } hash_sha256_context_t;
 
 #ifdef KERNEL_MODE

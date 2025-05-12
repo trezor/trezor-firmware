@@ -39,6 +39,8 @@ def _categories_func(row: DataRow) -> str | None:
 
     for category, func in CATEGORIES.items():
         if func(row):
+            if "sha" in row.symbol_name:
+                print(row.symbol_name)
             return category
     return None
 

@@ -22,7 +22,7 @@ from .curve_benchmark import (
     SignBenchmark,
     VerifyBenchmark,
 )
-from .hash_benchmark import HashBenchmark, RateHashBenchmark
+from .hash_benchmark import HashBenchmark, RateHashBenchmark, TimeHashBenchmark
 
 
 # This is a wrapper above the trezor.crypto.curve.ed25519 module that satisfies SignCurve protocol, the modules uses `message` instead of `digest` in `sign()` and `verify()`
@@ -56,6 +56,7 @@ benchmarks = {
     "crypto/hash/sha3_512": HashBenchmark(lambda: sha3_512()),
     "crypto/hash/sha256": HashBenchmark(lambda: sha256()),
     "crypto/hash/rate_sha256": RateHashBenchmark(lambda: sha256()),
+    "crypto/hash/time_sha256": TimeHashBenchmark(lambda: sha256()),
     "crypto/hash/sha512": HashBenchmark(lambda: sha512()),
     "crypto/cipher/aes128-ecb/encrypt": EncryptBenchmark(
         lambda: aes(aes.ECB, random_bytes(16), random_bytes(16)), 16
