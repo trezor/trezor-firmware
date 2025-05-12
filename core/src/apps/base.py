@@ -1,6 +1,5 @@
 from typing import TYPE_CHECKING
 
-import storage.cache as storage_cache
 import storage.device as storage_device
 from storage.cache_common import APP_COMMON_BUSY_DEADLINE_MS, APP_COMMON_SEED
 from trezor import TR, config, utils, wire, workflow
@@ -239,15 +238,8 @@ async def handle_GetFeatures(msg: GetFeatures) -> Features:
 
 
 async def handle_Cancel(msg: Cancel) -> Success:
-    close_others = True
-    if storage_cache.homescreen_shown is storage_cache.HOMESCREEN_ON:
-        # Homescreen is shown and only this task is running
-        if len(workflow.tasks) == 1 and next(iter(workflow.tasks)).is_running():
-            # Prevent homescreen flickering on Cancel
-            close_others = False
-
-    if close_others:
-        workflow.close_others()
+    # Prevent homescreen flickering on Cancel
+    workflow.close_others(close_default=False)
 
     raise wire.ActionCancelled
 
