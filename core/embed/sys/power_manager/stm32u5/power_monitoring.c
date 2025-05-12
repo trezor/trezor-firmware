@@ -64,6 +64,10 @@ void pm_monitor_power_sources(void) {
   // Check battery voltage for critical (undervoltage) threshold
   if ((drv->pmic_data.vbat < PM_BATTERY_UNDERVOLT_THR_V) &&
       !drv->battery_critical) {
+
+    // Force Fuel gauge to 0, keep the covariance
+    fuel_gauge_set_soc(&drv->fuel_gauge, 0.0f, drv->fuel_gauge.P);
+
     drv->battery_critical = true;
   } else if (drv->pmic_data.vbat > (PM_BATTERY_UNDERVOLT_RECOVERY_THR_V) &&
              drv->battery_critical) {
@@ -89,6 +93,12 @@ void pm_monitor_power_sources(void) {
   fuel_gauge_update(&drv->fuel_gauge, drv->pmic_sampling_period_ms,
                     drv->pmic_data.vbat, drv->pmic_data.ibat,
                     drv->pmic_data.ntc_temp);
+
+  // Charging completed
+  if(drv->pmic_data.charge_status & 0x1){
+    // Force fuel gauge to 100%, keep the covariance
+    fuel_gauge_set_soc(&drv->fuel_gauge, 1.0f, drv->fuel_gauge.P);
+  }
 
   // Ceil the float soc to user friendly integer
   uint8_t soc_ceiled_temp = (int)(drv->fuel_gauge.soc_latched * 100 + 0.999f);
