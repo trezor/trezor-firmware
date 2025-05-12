@@ -244,17 +244,21 @@ impl Button {
     pub fn content_height(&self) -> i16 {
         match &self.content {
             ButtonContent::Empty => 0,
-            ButtonContent::Text(_) => self.style().font.allcase_text_height(),
+            ButtonContent::Text(text) => text.map(|s| self.style().font.visible_text_height(s)),
             ButtonContent::Icon(icon) => icon.toif.height(),
             ButtonContent::IconAndText(child) => {
-                let text_height = self.style().font.allcase_text_height();
+                let text_height = child.text.map(|s| self.style().font.visible_text_height(s));
                 let icon_height = child.icon.toif.height();
                 text_height.max(icon_height)
             }
-            ButtonContent::TextAndSubtext { subtext_style, .. } => {
-                self.style().font.allcase_text_height()
+            ButtonContent::TextAndSubtext {
+                text,
+                subtext,
+                subtext_style,
+            } => {
+                text.map(|s| self.style().font.visible_text_height(s))
                     + Self::LINE_SPACING
-                    + subtext_style.text_font.allcase_text_height()
+                    + subtext.map(|s| subtext_style.text_font.visible_text_height(s))
             }
             #[cfg(feature = "micropython")]
             ButtonContent::HomeBar(_) => theme::ACTION_BAR_HEIGHT,
@@ -391,8 +395,10 @@ impl Button {
                 subtext,
                 subtext_style,
             } => {
-                let text_y_offset =
-                    Offset::y(self.content_height() / 2 - stylesheet.font.allcase_text_height());
+                let text_y_offset = Offset::y(
+                    self.content_height() / 2
+                        - text.map(|s| stylesheet.font.visible_text_height(s)),
+                );
                 let subtext_y_offset = Offset::y(self.content_height() / 2);
                 let start_of_baseline = match self.text_align {
                     Alignment::Start => self.area.left_center() + self.content_offset,
