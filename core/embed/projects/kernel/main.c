@@ -66,8 +66,8 @@
 #include <sec/tropic.h>
 #endif
 
-#ifdef USE_POWERCTL
-#include <sys/powerctl.h>
+#ifdef USE_POWER_MANAGER
+#include <sys/power_manager.h>
 #endif
 
 #ifdef USE_PVD
@@ -103,8 +103,8 @@ void drivers_init() {
   backup_ram_init();
 #endif
 
-#ifdef USE_POWERCTL
-  powerctl_init();
+#ifdef USE_POWER_MANAGER
+  pm_init(true);
 #endif
 
 #ifdef USE_TAMPER
