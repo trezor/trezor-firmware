@@ -74,14 +74,20 @@ float fuel_gauge_update(fuel_gauge_state_t* state, uint32_t dt_ms,
   float R = state->R;
   float Q = state->Q;
 
+  // When in low temperature or at the edge of the charging/dischargins
+  // profile, use more agressive EKF settings to rely more on the ocv
+  // curves rather then on current model
   if (temperature < 10.0f) {
-    // Cold temperature - use more conservative values
-    R = 10.0f;
-    Q = 0.01f;
-  } else if (state->soc_latched < 0.2f) {
-    // Low SOC - use aggressive values to track more closely
     R = state->R_aggressive;
     Q = state->Q_aggressive;
+  } else {
+    if (discharging_mode && state->soc_latched < 0.2f) {
+      R = state->R_aggressive;
+      Q = state->Q_aggressive;
+    } else if (!discharging_mode && state->soc_latched > 0.8f) {
+      R = state->R_aggressive;
+      Q = state->Q_aggressive;
+    }
   }
 
   // Convert milliseconds to seconds
