@@ -241,9 +241,7 @@ def configure(
     ]
 
     if ("pmic" in features_wanted) or ("power_manager" in features_wanted):
-        sources += [
-            "embed/sys/power_manager/npm1300/npm1300.c"
-        ]
+        sources += ["embed/sys/power_manager/npm1300/npm1300.c"]
         paths += ["embed/sys/power_manager/inc"]
         defines += ["USE_PMIC"]
         features_available.append("pmic")
@@ -262,7 +260,6 @@ def configure(
         paths += ["embed/sys/power_manager/inc"]
         defines += [("USE_POWER_MANAGER", "1")]
         features_available.append("power_manager")
-
 
     env.get("ENV")["LINKER_SCRIPT"] = linker_script
 

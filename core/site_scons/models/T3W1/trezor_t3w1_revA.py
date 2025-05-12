@@ -236,9 +236,7 @@ def configure(
     ]
 
     if ("pmic" in features_wanted) or ("power_manager" in features_wanted):
-        sources += [
-            "embed/sys/power_manager/npm1300/npm1300.c"
-        ]
+        sources += ["embed/sys/power_manager/npm1300/npm1300.c"]
         paths += ["embed/sys/power_manager/inc"]
         defines += ["USE_PMIC"]
         features_available.append("pmic")
