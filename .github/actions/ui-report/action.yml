@@ -20,7 +20,7 @@ runs:
         role-to-assume: arn:aws:iam::538326561891:role/gh_actions_deploy_dev_firmware_data
         aws-region: eu-west-1
     - name: Increase AWS S3 max concurrency for faster uploads
-      run: aws configure set default.s3.max_concurrent_requests 30
+      run: aws configure set default.s3.max_concurrent_requests 50
       shell: sh
     - run: |
         MODELJOB=${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}
@@ -39,15 +39,22 @@ runs:
           cp .github/actions/ui-report/failure.png $OUTDIR/status.png
         fi
       shell: sh
-    - name: Upload report
+    - name: Upload test results
       run: |
-        aws s3 sync --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}
-        echo "[UI test report](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}/index.html)" >> $GITHUB_STEP_SUMMARY
-      shell: sh
-    - name: Upload test screen recording
-      run: |
-        aws s3 sync --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests
+        # Upload report
+        aws s3 cp --recursive --only-show-errors ${{ github.run_id }} s3://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }} &
+        PID1=$!
+
+        # Upload test screen recording
+        aws s3 sync --only-show-errors ci/ui_test_records s3://data.trezor.io/dev/firmware/ui_tests &
+        PID2=$!
         # TODO: generate directory listing / autoindex
+
+        # Wait for the above sync jobs to finish (fail if one of them fails)
+        wait $PID1
+        wait $PID2
+
+        echo "[UI test report](https://data.trezor.io/dev/firmware/ui_report/${{ github.run_id }}/${{ inputs.model }}-${{ inputs.lang }}-${{ github.job }}/index.html)" >> $GITHUB_STEP_SUMMARY
       shell: sh
     - uses: actions/upload-artifact@v4
       with:
