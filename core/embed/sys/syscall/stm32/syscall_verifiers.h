@@ -144,20 +144,19 @@ bool __wur optiga_random_buffer__verified(uint8_t *dest, size_t size);
 void storage_init__verified(PIN_UI_WAIT_CALLBACK callback, const uint8_t *salt,
                             const uint16_t salt_len);
 
-secbool storage_unlock__verified(const uint8_t *pin, size_t pin_len,
+secbool storage_unlock__verified(const storage_pin_t *pin,
                                  const uint8_t *ext_salt);
 
-secbool storage_change_pin__verified(const uint8_t *oldpin, size_t oldpin_len,
-                                     const uint8_t *newpin, size_t newpin_len,
+secbool storage_change_pin__verified(const storage_pin_t *oldpin,
+                                     const storage_pin_t *newpin,
                                      const uint8_t *old_ext_salt,
                                      const uint8_t *new_ext_salt);
 
-void storage_ensure_not_wipe_code__verified(const uint8_t *pin, size_t pin_len);
+void storage_ensure_not_wipe_code__verified(const storage_pin_t *pin);
 
-secbool storage_change_wipe_code__verified(const uint8_t *pin, size_t pin_len,
+secbool storage_change_wipe_code__verified(const storage_pin_t *pin,
                                            const uint8_t *ext_salt,
-                                           const uint8_t *wipe_code,
-                                           size_t wipe_code_len);
+                                           const storage_pin_t *wipe_code);
 
 secbool storage_get__verified(const uint16_t key, void *val,
                               const uint16_t max_len, uint16_t *len);

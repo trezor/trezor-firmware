@@ -541,11 +541,10 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_UNLOCK: {
-      const uint8_t *pin = (const uint8_t *)args[0];
-      size_t pin_len = args[1];
-      const uint8_t *ext_salt = (const uint8_t *)args[2];
+      const storage_pin_t *pin = (const storage_pin_t *)args[0];
+      const uint8_t *ext_salt = (const uint8_t *)args[1];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_unlock__verified(pin, pin_len, ext_salt);
+      args[0] = storage_unlock__verified(pin, ext_salt);
     } break;
 
     case SYSCALL_STORAGE_HAS_PIN: {
@@ -564,22 +563,19 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_CHANGE_PIN: {
-      const uint8_t *oldpin = (const uint8_t *)args[0];
-      size_t oldpin_len = args[1];
-      const uint8_t *newpin = (const uint8_t *)args[2];
-      size_t newpin_len = args[3];
-      const uint8_t *old_ext_salt = (const uint8_t *)args[4];
-      const uint8_t *new_ext_salt = (const uint8_t *)args[5];
+      const storage_pin_t *oldpin = (const storage_pin_t *)args[0];
+      const storage_pin_t *newpin = (const storage_pin_t *)args[1];
+      const uint8_t *old_ext_salt = (const uint8_t *)args[2];
+      const uint8_t *new_ext_salt = (const uint8_t *)args[3];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_change_pin__verified(
-          oldpin, oldpin_len, newpin, newpin_len, old_ext_salt, new_ext_salt);
+      args[0] = storage_change_pin__verified(oldpin, newpin, old_ext_salt,
+                                             new_ext_salt);
     } break;
 
     case SYSCALL_STORAGE_ENSURE_NOT_WIPE_CODE: {
-      const uint8_t *pin = (const uint8_t *)args[0];
-      size_t pin_len = args[1];
+      const storage_pin_t *pin = (const storage_pin_t *)args[0];
       mpu_reconfig(MPU_MODE_STORAGE);
-      storage_ensure_not_wipe_code__verified(pin, pin_len);
+      storage_ensure_not_wipe_code__verified(pin);
     } break;
 
     case SYSCALL_STORAGE_HAS_WIPE_CODE: {
@@ -588,14 +584,11 @@ __attribute((no_stack_protector)) void syscall_handler(uint32_t *args,
     } break;
 
     case SYSCALL_STORAGE_CHANGE_WIPE_CODE: {
-      const uint8_t *pin = (const uint8_t *)args[0];
-      size_t pin_len = args[1];
-      const uint8_t *ext_salt = (const uint8_t *)args[2];
-      const uint8_t *wipe_code = (const uint8_t *)args[3];
-      size_t wipe_code_len = args[4];
+      const storage_pin_t *pin = (const storage_pin_t *)args[0];
+      const uint8_t *ext_salt = (const uint8_t *)args[1];
+      const storage_pin_t *wipe_code = (const storage_pin_t *)args[2];
       mpu_reconfig(MPU_MODE_STORAGE);
-      args[0] = storage_change_wipe_code__verified(pin, pin_len, ext_salt,
-                                                   wipe_code, wipe_code_len);
+      args[0] = storage_change_wipe_code__verified(pin, ext_salt, wipe_code);
     } break;
 
     case SYSCALL_STORAGE_HAS: {

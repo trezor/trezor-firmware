@@ -86,8 +86,12 @@ STATIC mp_obj_t mod_trezorconfig_unlock(mp_obj_t pin, mp_obj_t ext_salt) {
     if (ext_salt_b.len != EXTERNAL_SALT_SIZE)
       mp_raise_msg(&mp_type_ValueError, "Invalid length of external salt.");
   }
+  const storage_pin_t _pin = {
+      .text = pin_b.buf,
+      .len = pin_b.len,
+  };
 
-  if (sectrue != storage_unlock(pin_b.buf, pin_b.len, ext_salt_b.buf)) {
+  if (sectrue != storage_unlock(&_pin, ext_salt_b.buf)) {
     return mp_const_false;
   }
   return mp_const_true;
@@ -186,8 +190,17 @@ STATIC mp_obj_t mod_trezorconfig_change_pin(size_t n_args,
     new_ext_salt = ext_salt_b.buf;
   }
 
-  if (sectrue != storage_change_pin(oldpin.buf, oldpin.len, newpin.buf,
-                                    newpin.len, old_ext_salt, new_ext_salt)) {
+  storage_pin_t _oldpin = {
+      .text = oldpin.buf,
+      .len = oldpin.len,
+  };
+  storage_pin_t _newpin = {
+      .text = newpin.buf,
+      .len = newpin.len,
+  };
+
+  if (sectrue !=
+      storage_change_pin(&_oldpin, &_newpin, old_ext_salt, new_ext_salt)) {
     return mp_const_false;
   }
   return mp_const_true;
@@ -202,7 +215,11 @@ STATIC MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(mod_trezorconfig_change_pin_obj, 4,
 STATIC mp_obj_t mod_trezorconfig_ensure_not_wipe_code(mp_obj_t pin) {
   mp_buffer_info_t pin_b = {0};
   mp_get_buffer_raise(pin, &pin_b, MP_BUFFER_READ);
-  storage_ensure_not_wipe_code(pin_b.buf, pin_b.len);
+  const storage_pin_t _pin = {
+      .text = pin_b.buf,
+      .len = pin_b.len,
+  };
+  storage_ensure_not_wipe_code(&_pin);
   return mp_const_none;
 }
 STATIC MP_DEFINE_CONST_FUN_OBJ_1(mod_trezorconfig_ensure_not_wipe_code_obj,
@@ -246,8 +263,17 @@ STATIC mp_obj_t mod_trezorconfig_change_wipe_code(size_t n_args,
     ext_salt = ext_salt_b.buf;
   }
 
-  if (sectrue != storage_change_wipe_code(pin_b.buf, pin_b.len, ext_salt,
-                                          wipe_code_b.buf, wipe_code_b.len)) {
+  storage_pin_t pin = {
+      .text = pin_b.buf,
+      .len = pin_b.len,
+  };
+
+  storage_pin_t wipe_code = {
+      .text = wipe_code_b.buf,
+      .len = wipe_code_b.len,
+  };
+
+  if (sectrue != storage_change_wipe_code(&pin, ext_salt, &wipe_code)) {
     return mp_const_false;
   }
   return mp_const_true;
