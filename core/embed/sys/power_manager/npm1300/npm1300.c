@@ -62,6 +62,7 @@ typedef struct {
   uint8_t adc_gp1_result_lsbs;
   uint8_t adc_vbat2_result_msb;
   uint8_t adc_ibat_meas_status;
+  uint8_t charging_status;
   uint8_t buck_status;
   uint8_t usb_status;
 } npm1300_adc_regs_t;
@@ -426,7 +427,7 @@ bool pmic_set_buck_mode(pmic_buck_mode_t buck_mode) {
   return true;
 }
 
-uint8_t npm1300_restart_cause(void) {
+uint8_t pmic_restart_cause(void) {
   npm1300_driver_t* drv = &g_npm1300_driver;
 
   if (!drv->initialized) {
@@ -675,6 +676,7 @@ static const i2c_op_t npm1300_ops_adc_readout[] = {
     NPM_READ_FIELD(NPM1300_ADCGP1RESULTLSBS, adc_regs.adc_gp1_result_lsbs),
     NPM_READ_FIELD(NPM1300_ADCVBAT2RESULTMSB, adc_regs.adc_vbat2_result_msb),
     NPM_READ_FIELD(NPM1300_ADCIBATMEASSTATUS, adc_regs.adc_ibat_meas_status),
+    NPM_READ_FIELD(NPM1300_BCHGCHARGESTATUS, adc_regs.charging_status),
     NPM_READ_FIELD(NPM1300_BUCKSTATUS, adc_regs.buck_status),
     NPM_READ_FIELD(NPM1300_USBCDETECTSTATUS, adc_regs.usb_status),
 };

@@ -46,6 +46,7 @@ typedef struct {
   uint8_t ibat_meas_status;
   // BUCKSTATUS register value
   // (for debugging purposes, see the datasheet)
+  uint8_t charge_status;
   uint8_t buck_status;
   uint8_t usb_status;
 } pmic_report_t;
