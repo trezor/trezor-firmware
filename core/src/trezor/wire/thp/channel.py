@@ -169,7 +169,7 @@ class Channel:
             from trezor.messages import Failure
 
             return self.write(
-                Failure(code=FailureType.DeviceIsBusy, message="FALLBACK!"),
+                Failure(code=FailureType.Busy, message="FALLBACK!"),
                 session_id=self.fallback_session_id or 0,
                 fallback=True,
             )
