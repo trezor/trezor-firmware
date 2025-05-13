@@ -38,6 +38,15 @@ pub type ExternalSalt = [u8; ffi::EXTERNAL_SALT_SIZE as usize];
 /// Static reference to the currently set PIN callback function.
 static mut PIN_UI_CALLBACK: Option<PinDelayCallback> = None;
 
+impl From<&str> for ffi::storage_pin_t {
+    fn from(s: &str) -> Self {
+        Self {
+            text: s.as_ptr(),
+            len: s.len(),
+        }
+    }
+}
+
 /// C-compatible wrapper for the Rust callback.
 unsafe extern "C" fn callback_wrapper(
     wait: u32,
@@ -135,11 +144,7 @@ pub fn lock() {
 /// Returns true if the PIN + salt combination is correct.
 pub fn unlock(pin: &str, salt: Option<&ExternalSalt>) -> bool {
     let salt = salt.map(|s| s.as_ptr()).unwrap_or(ptr::null());
-    let pin = ffi::storage_pin_t {
-        text: pin.as_ptr(),
-        len: pin.len(),
-    };
-    ffi::sectrue == unsafe { ffi::storage_unlock(&pin, salt) }
+    ffi::sectrue == unsafe { ffi::storage_unlock(&pin.into(), salt) }
 }
 
 /// Change PIN and/or external salt.
@@ -151,19 +156,11 @@ pub fn change_pin(
     old_salt: Option<&ExternalSalt>,
     new_salt: Option<&ExternalSalt>,
 ) -> bool {
-    let old_pin = ffi::storage_pin_t {
-        text: old_pin.as_ptr(),
-        len: old_pin.len(),
-    };
-    let new_pin = ffi::storage_pin_t {
-        text: new_pin.as_ptr(),
-        len: new_pin.len(),
-    };
     ffi::sectrue
         == unsafe {
             ffi::storage_change_pin(
-                &old_pin,
-                &new_pin,
+                &old_pin.into(),
+                &new_pin.into(),
                 old_salt.map(|s| s.as_ptr()).unwrap_or(ptr::null()),
                 new_salt.map(|s| s.as_ptr()).unwrap_or(ptr::null()),
             )
@@ -182,11 +179,7 @@ pub fn get_pin_remaining() -> u32 {
 
 pub fn ensure_not_wipe_pin(pin: &str) {
     unsafe {
-        let pin = ffi::storage_pin_t {
-            text: pin.as_ptr(),
-            len: pin.len(),
-        };
-        ffi::storage_ensure_not_wipe_code(&pin);
+        ffi::storage_ensure_not_wipe_code(&pin.into());
     }
 }
 
