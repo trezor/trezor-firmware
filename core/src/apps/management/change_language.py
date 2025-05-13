@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 async def change_language(msg: ChangeLanguage) -> Success:
-    from trezor import utils, workflow
+    from trezor import utils
     from trezor.messages import Success
     from trezor.ui.layouts.progress import progress
 
@@ -20,7 +20,6 @@ async def change_language(msg: ChangeLanguage) -> Success:
     def report(value: int) -> None:
         nonlocal loader
         if loader is None:
-            workflow.close_others()
             loader = progress(TR.language__progress)
         loader.report(value)
 
