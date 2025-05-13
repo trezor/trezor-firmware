@@ -482,6 +482,12 @@ combine_fw: ## combine boardloader + bootloader + firmware into one combined ima
 		-b FIRMWARE $(FIRMWARE_BUILD_DIR)/firmware.bin
 endif
 
+combine_to_hex: ## convert combined image to hex format
+	arm-none-eabi-objcopy \
+      -I binary -O ihex \
+      --change-section-address .data=$(BOARDLOADER_START) \
+      $(PRODTEST_BUILD_DIR)/combined.bin $(PRODTEST_BUILD_DIR)/combined.hex
+
 upload: ## upload firmware using trezorctl
 	trezorctl firmware_update -s -f $(FIRMWARE_BUILD_DIR)/firmware.bin
 
