@@ -1,4 +1,5 @@
 use crate::{
+    strutil::TString,
     translations::TR,
     ui::{
         component::{Component, Event, EventCtx, Timeout},
@@ -126,6 +127,14 @@ impl ActionBar {
     /// messages.
     pub fn new_paginate_only() -> Self {
         Self::new(Mode::PaginateOnly, None, None, None)
+    }
+
+    pub fn new_text_only(text: TString<'static>) -> Self {
+        Self::new_single(
+            Button::with_text(text)
+                .styled(theme::button_always_disabled())
+                .initially_enabled(false),
+        )
     }
 
     pub fn with_left_short(mut self, short: bool) -> Self {
