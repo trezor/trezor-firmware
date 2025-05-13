@@ -23,8 +23,8 @@ def test_capabilities(session: Session):
     assert (messages.Capability.Translations in session.features.capabilities) == (
         session.model is not models.T1B1
     )
-    assert (messages.Capability.BLE in client.features.capabilities) == (
-        client.model is models.T3W1
+    assert (messages.Capability.BLE in session.features.capabilities) == (
+        session.model is models.T3W1
     )
 
 
