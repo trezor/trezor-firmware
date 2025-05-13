@@ -154,7 +154,7 @@ def network_from_address_n(
 
     # unharden the slip44 part if needed
     slip44 = unharden(address_n[1])
-    return source.get_network_by_slip44(slip44)
+    return source.get_eth_network_by_slip44(slip44)
 
 
 # ====== Client functions ====== #
