@@ -37,24 +37,6 @@ if TYPE_CHECKING:
 
 pytestmark = pytest.mark.models("safe3")
 
-# Testing the maximum length is really 50
-# TODO: show some UI message when length reaches 50?
-
-AAA_50 = 50 * "a"
-AAA_50_ADDRESS = "miPeCUxf1Ufh5DtV3AuBopNM8YEDvnQZMh"
-assert len(AAA_50) == 50
-
-AAA_49 = AAA_50[:-1]
-AAA_49_ADDRESS = "n2MPUjAB86MuVmyYe8HCgdznJS1FXk3qvg"
-assert len(AAA_49) == 49
-assert AAA_49_ADDRESS != AAA_50_ADDRESS
-
-AAA_51 = AAA_50 + "a"
-AAA_51_ADDRESS = "miPeCUxf1Ufh5DtV3AuBopNM8YEDvnQZMh"
-assert len(AAA_51) == 51
-assert AAA_51_ADDRESS == AAA_50_ADDRESS
-
-
 BACK = "inputs__back"
 SHOW = "inputs__show"
 ENTER = "inputs__enter"
@@ -186,16 +168,7 @@ def cancel(debug: "DebugLink") -> None:
     delete_char(debug)
 
 
-VECTORS = (  # passphrase, address
-    (CommonPass.SHORT, CommonPass.SHORT_ADDRESS),
-    (CommonPass.WITH_SPACE, CommonPass.WITH_SPACE_ADDRESS),
-    (CommonPass.RANDOM_25, CommonPass.RANDOM_25_ADDRESS),
-    (AAA_49, AAA_49_ADDRESS),
-    (AAA_50, AAA_50_ADDRESS),
-)
-
-
-@pytest.mark.parametrize("passphrase, address", VECTORS)
+@pytest.mark.parametrize("passphrase, address", CommonPass.VECTORS)
 @pytest.mark.setup_client(passphrase=True)
 def test_passphrase_input(
     device_handler: "BackgroundDeviceHandler", passphrase: str, address: str
@@ -207,22 +180,22 @@ def test_passphrase_input(
 
 
 @pytest.mark.setup_client(passphrase=True)
-def test_passphrase_input_over_50_chars(device_handler: "BackgroundDeviceHandler"):
-    with prepare_passphrase_dialogue(device_handler, AAA_51_ADDRESS) as debug:  # type: ignore
-        # First 50 chars
-        input_passphrase(debug, AAA_51[:-1])
+def test_passphrase_input_too_long(device_handler: "BackgroundDeviceHandler"):
+    with prepare_passphrase_dialogue(device_handler, CommonPass.TOO_LONG_ADDRESS) as debug:  # type: ignore
+        # First 128 chars
+        input_passphrase(debug, CommonPass.TOO_LONG[:-1])
         layout = debug.read_layout()
-        assert AAA_51[:-1] in layout.passphrase()
+        assert CommonPass.TOO_LONG[:-1] in layout.passphrase()
 
         show_passphrase(debug)
 
         # Over-limit character
-        press_char(debug, AAA_51[-1])
+        press_char(debug, CommonPass.TOO_LONG[-1])
 
         # No change
         layout = debug.read_layout()
-        assert AAA_51[:-1] in layout.passphrase()
-        assert AAA_51 not in layout.passphrase()
+        assert CommonPass.TOO_LONG[:-1] in layout.passphrase()
+        assert CommonPass.TOO_LONG not in layout.passphrase()
 
         show_passphrase(debug)
         enter_passphrase(debug)
