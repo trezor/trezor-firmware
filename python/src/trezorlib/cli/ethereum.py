@@ -180,20 +180,20 @@ class CliSource(definitions.Source):
     token: Optional[bytes] = None
     delegate: definitions.Source = definitions.NullSource()
 
-    def get_network(self, chain_id: int) -> Optional[bytes]:
+    def get_eth_network(self, chain_id: int) -> Optional[bytes]:
         if self.network is not None:
             return self.network
-        return self.delegate.get_network(chain_id)
+        return self.delegate.get_eth_network(chain_id)
 
-    def get_network_by_slip44(self, slip44: int) -> Optional[bytes]:
+    def get_eth_network_by_slip44(self, slip44: int) -> Optional[bytes]:
         if self.network is not None:
             return self.network
-        return self.delegate.get_network_by_slip44(slip44)
+        return self.delegate.get_eth_network_by_slip44(slip44)
 
-    def get_token(self, chain_id: int, address: Any) -> Optional[bytes]:
+    def get_eth_token(self, chain_id: int, address: Any) -> Optional[bytes]:
         if self.token is not None:
             return self.token
-        return self.delegate.get_token(chain_id, address)
+        return self.delegate.get_eth_token(chain_id, address)
 
 
 DEFINITIONS_SOURCE = CliSource()
@@ -397,7 +397,7 @@ def sign_tx(
         click.echo("Can't send tokens and custom data at the same time")
         sys.exit(1)
 
-    encoded_network = DEFINITIONS_SOURCE.get_network(chain_id)
+    encoded_network = DEFINITIONS_SOURCE.get_eth_network(chain_id)
     address_n = tools.parse_path(address)
     from_address = ethereum.get_address(
         client, address_n, encoded_network=encoded_network
@@ -411,7 +411,7 @@ def sign_tx(
     if data:
         # use token definition regardless of whether the data is an ERC-20 transfer
         # -- this might prove useful in the future
-        encoded_token = DEFINITIONS_SOURCE.get_token(chain_id, to_address)
+        encoded_token = DEFINITIONS_SOURCE.get_eth_token(chain_id, to_address)
         data_bytes = ethereum.decode_hex(data)
     else:
         # force use provided token definition even if no data (that is what the user
