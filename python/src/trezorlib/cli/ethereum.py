@@ -199,6 +199,20 @@ class CliSource(definitions.Source):
 DEFINITIONS_SOURCE = CliSource()
 
 
+def _network_def_from_address_n(address_n: tools.Address) -> Optional[bytes]:
+    """Get network definition bytes based on address_n.
+
+    Tries to extract the slip44 identifier and lookup the network definition.
+    Returns None on failure.
+    """
+    if len(address_n) < 2:
+        return None
+
+    # unharden the slip44 part if needed
+    slip44 = tools.unharden(address_n[1])
+    return DEFINITIONS_SOURCE.get_eth_network_by_slip44(slip44)
+
+
 #####################
 #
 # commands start here
@@ -274,7 +288,7 @@ def get_address(
 ) -> str:
     """Get Ethereum address in hex encoding."""
     address_n = tools.parse_path(address)
-    network = ethereum.network_from_address_n(address_n, DEFINITIONS_SOURCE)
+    network = _network_def_from_address_n(address_n)
     return ethereum.get_address(client, address_n, show_display, network, chunkify)
 
 
@@ -532,7 +546,7 @@ def sign_message(
 ) -> Dict[str, str]:
     """Sign message with Ethereum address."""
     address_n = tools.parse_path(address)
-    network = ethereum.network_from_address_n(address_n, DEFINITIONS_SOURCE)
+    network = _network_def_from_address_n(address_n)
     ret = ethereum.sign_message(client, address_n, message, network, chunkify=chunkify)
     output = {
         "message": message,
@@ -561,7 +575,7 @@ def sign_typed_data(
     - recursive structs
     """
     address_n = tools.parse_path(address)
-    network = ethereum.network_from_address_n(address_n, DEFINITIONS_SOURCE)
+    network = _network_def_from_address_n(address_n)
     defs = EthereumDefinitions(encoded_network=network)
     data = json.loads(file.read())
     ret = ethereum.sign_typed_data(
@@ -616,7 +630,7 @@ def sign_typed_data_hash(
     address_n = tools.parse_path(address)
     domain_hash = ethereum.decode_hex(domain_hash_hex)
     message_hash = ethereum.decode_hex(message_hash_hex) if message_hash_hex else None
-    network = ethereum.network_from_address_n(address_n, DEFINITIONS_SOURCE)
+    network = _network_def_from_address_n(address_n)
     ret = ethereum.sign_typed_data_hash(
         client, address_n, domain_hash, message_hash, network
     )

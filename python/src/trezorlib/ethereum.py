@@ -140,23 +140,6 @@ def encode_data(value: Any, type_name: str) -> bytes:
     raise ValueError(f"Unsupported data type for direct field encoding: {type_name}")
 
 
-def network_from_address_n(
-    address_n: "Address",
-    source: definitions.Source,
-) -> Optional[bytes]:
-    """Get network definition bytes based on address_n.
-
-    Tries to extract the slip44 identifier and lookup the network definition.
-    Returns None on failure.
-    """
-    if len(address_n) < 2:
-        return None
-
-    # unharden the slip44 part if needed
-    slip44 = unharden(address_n[1])
-    return source.get_eth_network_by_slip44(slip44)
-
-
 # ====== Client functions ====== #
 
 
